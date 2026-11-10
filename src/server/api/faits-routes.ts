@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { FAITS_BODY_MAX_BYTES, SessionFactsPayloadSchema } from '@/capture/api-contract';
-import { recordFacts } from '@/server/ingest/record-facts';
+import {
+  FAITS_BODY_MAX_BYTES,
+  RETRAIT_BODY_MAX_BYTES,
+  RetraitRequestSchema,
+  SessionFactsPayloadSchema,
+} from '@/capture/api-contract';
+import { recordFacts, withdrawUsages } from '@/server/ingest/record-facts';
 import { logError } from '@/server/log';
 import { enqueueResume } from '@/server/sessions/resume-queue';
 import { enqueueRangement } from '@/server/sessions/threads-queue';
@@ -46,5 +51,20 @@ export const faitsRoutes = new Hono<ApiEnv>()
         }
       }
       return c.body(null, 202);
+    },
+  )
+  // `leon retirer-crochets` : l'accord de l'outil retiré sur le poste l'est aussi sur le serveur.
+  .post(
+    '/retrait',
+    requireApiToken,
+    bodyLimit({
+      maxSize: RETRAIT_BODY_MAX_BYTES,
+      onError: (c) => c.json({ error: 'Request too large' }, 413),
+    }),
+    async (c) => {
+      const parsed = RetraitRequestSchema.safeParse(await c.req.json().catch(() => undefined));
+      if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
+      await withdrawUsages(c.var.ctx, parsed.data.outil);
+      return c.body(null, 204);
     },
   );

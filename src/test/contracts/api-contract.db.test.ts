@@ -38,6 +38,7 @@ const SERVED = {
   contexte: ['POST', { body: {} }],
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
+  retrait: ['POST', { body: {} }],
 } as const;
 // Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
 // jeton ni session. Leur sonde est un POST sans corps valide, qui répond 400 : la route existe (ni 404) et ne demande
@@ -165,6 +166,8 @@ describe('routes de l’API', () => {
       token,
       body: { projet: 'github.com/acme/leon', branche: null, session: 'session-courante' },
     });
+    // Le retrait de l'accord d'un outil (`leon retirer-crochets`) : 204, sans corps.
+    const retrait = await apiRequest(API_PATHS.retrait, { token, body: { outil: 'claude_code' } });
 
     // `leon login` : le jeton que la CLI vient de tirer, enregistré contre le code signé que la page d'autorisation lui a rendu.
     const computerToken = generateApiToken();
@@ -186,8 +189,9 @@ describe('routes de l’API', () => {
       briefing.status,
       faits.status,
       contexte.status,
+      retrait.status,
       ordinateurs.status,
-    ]).toEqual([200, 202, 200, 202, 200, 201]);
+    ]).toEqual([200, 202, 200, 202, 200, 204, 201]);
     const profile = ViewerProfileSchema.parse(await me.json());
     expect(profile.userId).toBe(paul.userId);
     expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(2);

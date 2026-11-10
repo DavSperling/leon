@@ -11,6 +11,7 @@ export const API_PATHS = {
   contexte: '/api/v1/contexte',
   ordinateurs: '/api/v1/ordinateurs', // POST : leon login échange le code signé contre l'enregistrement du jeton
   jeton: '/api/v1/jeton', // DELETE : un jeton se révoque lui-même (leon logout)
+  retrait: '/api/v1/retrait', // POST : le retrait de l'accord d'un outil atteint le serveur (leon retirer-crochets)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -117,6 +118,12 @@ export const SessionFactsPayloadSchema = z
   })
   .strict();
 export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;
+
+// Le retrait de l'accord d'un outil (T43, amendé le 06/11) : le serveur vide les usages de toutes les sessions de cet
+// outil dont le porteur est l'auteur. Un nouvel envoi de faits, après un nouvel accord, les rouvre.
+export const RETRAIT_BODY_MAX_BYTES = 1024;
+export const RetraitRequestSchema = z.object({ outil: z.enum(CODE_SESSION_KINDS) }).strict();
+export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 
 // Le bloc de démarrage (C3) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les

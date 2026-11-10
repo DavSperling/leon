@@ -2,6 +2,7 @@ import { eq, sql } from 'drizzle-orm';
 import { type SessionFactsPayload, TEXTE_MAX } from '@/capture/api-contract';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { factText, recheckCommand, type SessionFacts } from '@/capture/session-facts';
+import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
@@ -65,4 +66,16 @@ export async function recordFacts(
       });
     return { sourceId, resume: updated?.resume === true };
   });
+}
+
+// Le retrait de l'accord d'un outil (T43, amendé le 06/11) : les usages de toutes les sessions de cet outil dont le
+// porteur est l'auteur, dans son organisation, sont vidés ; jamais ceux d'un collègue, même partagés avec lui. Le
+// résumé et l'état du fil relisent l'usage avant l'appel et à l'écriture : plus rien ne part au modèle. Les faits
+// restent ; le prochain envoi de faits remplace les usages (recordFacts).
+export async function withdrawUsages(ctx: TenantContext, kind: CodeSessionKind): Promise<void> {
+  await withTenant(ctx, (tx) =>
+    tx.execute(sql`update sources s set metadata = s.metadata || '{"usages": []}'::jsonb
+      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${kind}
+        and s.metadata->'usages' <> '[]'::jsonb`),
+  );
 }

@@ -52,15 +52,14 @@ import { linkPrs } from './start-context';
 //   injecté entre au condensé comme l'agent, un tour capté avant la marque comme l'utilisateur, sans rien prouver.
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
-// shortcut: le retrait (`leon retirer-crochets`) ne se fait que sur le poste ; l'usage relu ici est celui du dernier
-// envoi de faits (`metadata.usages`), et cet envoi doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel
-// comme à l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais
-// après : RESUME_LINES le dit. Un résumé qui attend plus longtemps (file chargée, serveur arrêté, reprises) n'est écrit
-// qu'au prochain envoi de faits de la session. Faire vider `usages` par le serveur au retrait le jour où ce délai gêne.
-// Au lot 12, c'est une condition, pas une option : l'état d'un fil relit des sessions anciennes, où cette borne ne
-// joue pas, et leur `metadata.usages` garde `resume` après un retrait que le serveur ignore. Avant l'étape `fil`, le
-// retrait doit atteindre le serveur (vider `usages` des sources de l'outil), sinon revoir la phrase du retrait de
-// RESUME_LINES (T43 du plan de la mémoire à disposition).
+// Le retrait atteint le serveur (T43, amendé le 06/11) : la route du retrait (faits-routes.ts) vide `metadata.usages`
+// des sessions de l'outil, et l'usage relu ici n'y est plus.
+// shortcut: `leon retirer-crochets` n'appelle pas encore la route (PR 3b du lot 12) ; d'ici là, l'usage relu est celui
+// du dernier envoi de faits, qui doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel comme à
+// l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais après :
+// RESUME_LINES le dit. Un résumé qui attend plus longtemps (file chargée, serveur arrêté, reprises) n'est écrit qu'au
+// prochain envoi de faits de la session. Revoir la borne et la phrase du retrait de RESUME_LINES quand la CLI appelle
+// la route.
 // shortcut: aucun plafond par membre ni par organisation, seulement des bornes par appel : un porteur du jeton du poste
 // peut multiplier les sessions, donc les appels, et retarder ceux des autres (file commune). appels_modele compte le
 // coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.

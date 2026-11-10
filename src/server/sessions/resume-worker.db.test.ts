@@ -4,7 +4,7 @@ import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
-import { recordFacts } from '@/server/ingest/record-facts';
+import { recordFacts, withdrawUsages } from '@/server/ingest/record-facts';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import type { ChatMessage, Llm } from '@/server/llm/llm';
 import { fetchPassageContext, fetchSource } from '@/server/search/context';
@@ -737,6 +737,31 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toEqual([]);
     expect((await sourceRow(seeded.sourceId))?.metadata.resume).toBeUndefined();
     expect(mocks.runs).toEqual([]);
+  });
+});
+
+// Le retrait atteint le serveur (T43, amendé le 06/11) : un résumé déjà en file, dont les faits datent de moins d'une
+// heure, n'appelle plus le modèle.
+describe('après le retrait de l’accord', () => {
+  it('un résumé en file n’appelle plus le modèle', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const llm = answer(SUMMARY);
+
+    await withdrawUsages(paul, 'claude_code');
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+    expect(llm.calls).toEqual([]);
+    expect(await resumeTurns(seeded.sourceId)).toEqual([]);
+  });
+
+  it('le retrait d’un autre outil ne l’arrête pas', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+
+    await withdrawUsages(paul, 'codex');
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
   });
 });
 

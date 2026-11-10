@@ -114,7 +114,10 @@ type Read = {
   // `prs` : les sources GitHub des PR dont l'état entre au condensé, des entrées de la version (D33).
   model: {
     input: { sessions: FilSession[]; sources: FilSource[] };
+    // Le numéro du résumé de chaque session candidate ; seules celles du condensé s'écrivent (writeModelState).
     tours: EtatSession;
+    // Les sessions dont le résumé est nouveau : l'appel ne part que si l'une d'elles entre au condensé.
+    nouveaux: string[];
     prs: string[];
   } | null;
 };
@@ -282,7 +285,12 @@ async function readFil(
   );
   return {
     list,
-    model: { input: { sessions: input, sources }, tours, prs: prSources.map((one) => one.id) },
+    model: {
+      input: { sessions: input, sources },
+      tours,
+      nouveaux: withResume.filter((one) => one.nouveau).map((one) => one.id),
+      prs: prSources.map((one) => one.id),
+    },
   };
 }
 
@@ -326,6 +334,12 @@ async function writeModelState(
   kept: { texte: string; cites: string[] } | null,
   model: { tours: EtatSession; prs: string[] },
 ): Promise<FilStateOutcome | null> {
+  // Seuls les résumés entrés au condensé sont pris ; une session écartée garde son ancien numéro, toujours nouvelle.
+  const pris = Object.fromEntries(
+    condense.sessions.flatMap((id) =>
+      model.tours[id] === undefined ? [] : [[id, model.tours[id]]],
+    ),
+  );
   if (!(await lockFil(tx, ctx, filId))) return 'sans-objet';
   const {
     rows: [still],
@@ -353,7 +367,8 @@ async function writeModelState(
     if (typeof written !== 'object') return 'sans-objet';
   }
   await tx.execute(sql`update sources s set metadata = s.metadata
-      || jsonb_build_object('etat_session', jsonb_build_object('tours', ${JSON.stringify(model.tours)}::jsonb))
+      || jsonb_build_object('etat_session', jsonb_build_object('tours',
+        coalesce(s.metadata->'etat_session'->'tours', '{}'::jsonb) || ${JSON.stringify(pris)}::jsonb))
     where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
   return kept === null ? null : 'modele';
 }
@@ -371,7 +386,8 @@ export async function updateFilState(
   const { llm } = deps;
   if (llm !== null && read.model !== null) {
     const condense = condenseFil(read.model.input);
-    if (condense.sessions.length > 0) {
+    const { nouveaux } = read.model;
+    if (condense.sessions.some((id) => nouveaux.includes(id))) {
       const kept = filterFilState(await askModel(llm, condense), condense);
       const { model } = read;
       const written = await withTenant(ctx, (tx) =>

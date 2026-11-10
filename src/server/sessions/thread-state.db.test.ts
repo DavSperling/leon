@@ -267,6 +267,34 @@ describe('updateFilState', () => {
     expect(await versions(filId)).toHaveLength(1);
   });
 
+  it('une session écartée du condensé (plus de 20) : son résumé n’est pas pris, et seul il ne fait pas d’appel', async () => {
+    const { paul } = await team();
+    const recent = [];
+    for (let i = 0; i < 20; i += 1) recent.push(await codeSession(paul));
+    const old = await codeSession(paul);
+    // La plus ancienne : la 21e, hors des 20 sessions du condensé.
+    await adminDb
+      .update(sources)
+      .set({ lastTurnAt: new Date('2026-10-01T09:00:00.000Z') })
+      .where(eq(sources.id, old.id));
+    const filId = await fil(paul, [old.id, ...recent.map((one) => one.id)]);
+
+    expect(await updateFilState(job(paul, filId), { llm: answer(etat(recent[0]?.id ?? '')) })).toBe(
+      'modele',
+    );
+    const [row] = await adminDb
+      .select({ metadata: sources.metadata })
+      .from(sources)
+      .where(eq(sources.id, filId));
+    const pris = (row?.metadata.etat_session as { tours: Record<string, string> }).tours;
+    expect(Object.keys(pris).sort()).toEqual(recent.map((one) => one.id).sort());
+
+    // La seule session nouvelle n'entre pas au condensé : aucun appel.
+    const llm = answer(etat(recent[0]?.id ?? ''));
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('inchange');
+    expect(llm.calls).toEqual([]);
+  });
+
   it('second état, après un nouveau résumé : v2, et ni l’un ni l’autre dans la recherche', async () => {
     const { paul } = await team();
     const one = await codeSession(paul);

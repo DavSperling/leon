@@ -135,14 +135,24 @@ describe('uninstallAntigravityHooks', () => {
     await writeConsent(home, 'antigravity', 2);
     const out: string[] = [];
 
+    const told: string[] = [];
+
     const code = await uninstallAntigravityHooks(
       { home },
-      { out: (text) => out.push(text), err: () => {} },
+      {
+        out: (text) => out.push(text),
+        err: () => {},
+        // Le serveur de la connexion, simulé (T43) : il apprend le retrait.
+        withdraw: async (outil) => {
+          told.push(outil);
+        },
+      },
     );
 
     expect(code).toBe(0);
     expect(await readHooks()).toEqual(userEntry);
     expect(out.join('\n')).toContain('nothing is sent from or to Antigravity anymore');
     expect(await consentWithdrawn(home, 'antigravity')).toBe(true);
+    expect(told).toEqual(['antigravity']);
   });
 });

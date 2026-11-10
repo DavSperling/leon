@@ -19,6 +19,7 @@ import {
   countOf,
   createFactsSender,
   createIngestSender,
+  createWithdrawalSender,
   type FactsSender,
   type ImportDeps,
   IngestResponseError,
@@ -543,6 +544,33 @@ describe('createFactsSender', () => {
     await expect(reply(401)(payload)).rejects.toBeInstanceOf(TokenRefusedError);
     await expect(reply(404)(payload)).rejects.toMatchObject({ status: 404 });
     await expect(reply(400)(payload)).rejects.toBeInstanceOf(IngestResponseError);
+  });
+});
+
+// Le retrait de l'accord d'un outil atteint le serveur (T43) : `leon retirer-crochets` et le rattrapage.
+describe('createWithdrawalSender', () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+
+  it('poste l’outil sur la route du retrait, avec le jeton, et accepte le 204 sans corps', async () => {
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 204 }));
+
+    await createWithdrawalSender(fetchImpl as typeof fetch, env)('codex');
+
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.href).toBe(new URL(API_PATHS.retrait, env.url).href);
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ outil: 'codex' }),
+    });
+  });
+
+  it('un serveur d’avant la route (404) ou un jeton refusé : l’envoi échoue', async () => {
+    const reply = (status: number) =>
+      createWithdrawalSender((async () => new Response('{}', { status })) as typeof fetch, env);
+
+    await expect(reply(404)('claude_code')).rejects.toMatchObject({ status: 404 });
+    await expect(reply(401)('claude_code')).rejects.toBeInstanceOf(TokenRefusedError);
   });
 });
 

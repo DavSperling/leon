@@ -8,16 +8,24 @@
 // - passe Claude Code en version 0 dans `accord.json` (consent.ts), même quand les réglages n'ont pas pu être lus ou
 //   écrits : plus rien ne part alors (leon.ts), ni d'un crochet resté dans les réglages d'un projet, ni de
 //   `import-claude-code` ;
+// - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des
+//   sessions de l'outil déjà envoyées : seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
+//   appris (`retrait_serveur_le`, consent.ts). Un échec (pas de connexion, serveur injoignable ou plus ancien que la
+//   route) n'est qu'une ligne : le retrait sur le poste reste fait et le code de sortie ne change pas. Le rattrapage
+//   (`leon rattraper`, catchUpWithdrawals) le redit plus tard, comme pour les retraits faits avant la route ;
 // - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json` et
 //   que les réglages et l'accord ont bien été retirés : ses crochets n'en ont plus besoin. Un fichier qui n'est pas un
 //   lanceur écrit par Leon est gardé ;
 // - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
 //   les commandes de Leon qu'il retire.
 import { join } from 'node:path';
+import type { CodeSessionKind } from '../capture/turn';
 import {
   anyToolInstalled,
   CONSENT_AGAIN_HINT,
   consentPath,
+  pendingServerWithdrawals,
+  recordServerWithdrawal,
   withdrawalRecorded,
   writeConsent,
 } from './consent';
@@ -74,7 +82,49 @@ export function removeLeonHooks(settings: Json): { settings: Json; removed: Remo
 }
 
 export type UninstallOptions = { configDir: string; home: string };
-export type UninstallDeps = { out: (text: string) => void; err: (text: string) => void };
+// `withdraw` : l'appel de la route du retrait, au serveur de la connexion du moment (createWithdrawalSender).
+export type WithdrawalSender = (outil: CodeSessionKind) => Promise<void>;
+export type UninstallDeps = {
+  out: (text: string) => void;
+  err: (text: string) => void;
+  withdraw: WithdrawalSender;
+};
+
+// Message fixe : ni l'adresse du serveur ni le jeton.
+export const WITHDRAWAL_NOT_TOLD_MESSAGE =
+  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again.';
+
+// Rend false si le serveur devait apprendre le retrait et ne l'a pas appris. Une date qui ne s'écrit pas fait seulement
+// redire le retrait au serveur, qui le prend autant de fois qu'on le lui dit.
+async function tellServer(
+  home: string,
+  outil: CodeSessionKind,
+  send: WithdrawalSender,
+): Promise<boolean> {
+  if (!(await pendingServerWithdrawals(home)).includes(outil)) return true;
+  try {
+    await send(outil);
+  } catch {
+    return false;
+  }
+  await recordServerWithdrawal(home, outil).catch(() => {});
+  return true;
+}
+
+// Après le retrait sur le poste, dans les trois commandes de retrait.
+export async function withdrawOnServer(
+  home: string,
+  outil: CodeSessionKind,
+  deps: UninstallDeps,
+): Promise<void> {
+  if (!(await tellServer(home, outil, deps.withdraw))) deps.err(WITHDRAWAL_NOT_TOLD_MESSAGE);
+}
+
+// Le rattrapage (`leon rattraper`, détaché, sans un mot) : les retraits que le serveur n'a pas appris, faits avant que
+// la commande ne l'appelle ou hors ligne. Une fois chacun : la date de sa réponse les retire de l'attente.
+export async function catchUpWithdrawals(home: string, send: WithdrawalSender): Promise<void> {
+  for (const outil of await pendingServerWithdrawals(home)) await tellServer(home, outil, send);
+}
 
 // Rend true si les réglages n'ont plus de crochet de Leon (retirés à l'instant ou absents).
 async function removeFromSettings(path: string, deps: UninstallDeps): Promise<boolean> {
@@ -156,6 +206,7 @@ export async function uninstallHooks(
 ): Promise<number> {
   const settingsDone = await removeFromSettings(join(options.configDir, SETTINGS_FILE), deps);
   const consentDone = await withdrawConsent(options.home, deps);
+  if (consentDone) await withdrawOnServer(options.home, 'claude_code', deps);
   if (settingsDone && consentDone) await removeUnusedLauncher(options.home, deps);
   deps.out('The sessions already sent stay in Leon: there is no way to delete them yet.');
   return settingsDone && consentDone ? 0 : 1;

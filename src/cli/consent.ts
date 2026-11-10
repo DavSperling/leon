@@ -9,6 +9,9 @@
 // (« Nothing is captured from Codex sessions for now ») : sans `capture_le`, rien n'est capté de cet outil, et le
 // rattrapage ne lit que les fichiers modifiés après cette date. Claude Code n'en a pas besoin : sa capture date du
 // lot 1. Le retrait l'efface, comme le reste.
+// `retrait_serveur_le` (T43), sur une entrée en version 0 seulement : la date où le serveur de la connexion a appris le
+// retrait (POST /api/v1/retrait). Sans elle, la commande de retrait ou le rattrapage le lui redit ; un nouvel accord
+// (writeConsent) réécrit l'entrée et l'efface.
 // La CLI le relit avant chaque envoi : une CLI mise à jour par `git pull` n'envoie rien de plus que ce que
 // l'utilisateur a accepté. Un fichier absent ne vaut aucun accord (les textes partent, comme avant ce chantier) ; un
 // fichier présent mais illisible vaut un retrait : il ne peut venir que d'une retouche à la main, l'écriture étant
@@ -18,7 +21,7 @@ import { chmod, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promi
 import { join } from 'node:path';
 import { z } from 'zod';
 import { USAGES, type Usage } from '../capture/api-contract';
-import type { CodeSessionKind } from '../capture/turn';
+import { CODE_SESSION_KINDS, type CodeSessionKind } from '../capture/turn';
 import type { Outil } from './hook-commands';
 
 // Les outils qui ont une entrée : ceux que Leon capte, et ceux dont il pose seulement les crochets (Codex au lot 4).
@@ -43,6 +46,7 @@ const EntrySchema = z.object({
   capture_le: z.iso.datetime({ offset: true }).optional().catch(undefined),
 });
 const WithdrawnSchema = z.object({ version: z.literal(0) });
+const UntoldSchema = WithdrawnSchema.extend({ retrait_serveur_le: z.undefined().optional() });
 
 // `usages_le` : la date de chaque usage accepté ; au rattrapage, un usage ne part qu'avec les sessions modifiées après
 // elle (import-claude-code.ts). `refus` : les usages refusés, que l'installateur ne propose plus.
@@ -114,6 +118,29 @@ export async function consentWithdrawn(home: string, tool: ConsentTool): Promise
 export async function withdrawalRecorded(home: string, tool: ConsentTool): Promise<boolean> {
   const entries = await readEntries(home);
   return entries !== null && WithdrawnSchema.safeParse(entries[tool]).success;
+}
+
+// Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un fichier illisible n'en donne
+// aucun : il vaut un retrait sur le poste, sans dire de quels outils.
+export async function pendingServerWithdrawals(home: string): Promise<CodeSessionKind[]> {
+  const entries = await readEntries(home);
+  if (entries === null) return [];
+  return CODE_SESSION_KINDS.filter((tool) => UntoldSchema.safeParse(entries[tool]).success);
+}
+
+// Date la réponse du serveur au retrait, seulement sur une entrée encore en version 0 : un nouvel accord écrit entre
+// l'envoi et sa réponse est gardé tel quel.
+export async function recordServerWithdrawal(
+  home: string,
+  tool: CodeSessionKind,
+  now: Date = new Date(),
+): Promise<void> {
+  const entries = await readEntries(home);
+  if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return;
+  await writeEntries(home, {
+    ...entries,
+    [tool]: { ...(entries[tool] as object), retrait_serveur_le: now.toISOString() },
+  });
 }
 
 // Reste-t-il un outil dont l'accord n'est pas retiré ? Le lanceur ~/.leon/bin/leon n'est effacé (`leon

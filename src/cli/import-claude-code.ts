@@ -3,6 +3,7 @@ import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import {
   API_PATHS,
+  type RetraitRequest,
   type SessionFacts,
   type SessionFactsPayload,
   type Usage,
@@ -136,6 +137,17 @@ export function createFactsSender(
 ): FactsSender {
   return async (payload) => {
     await post(fetchImpl, env, API_PATHS.faits, payload, options);
+  };
+}
+
+// Le retrait de l'accord d'un outil (T43) : le serveur vide les usages de ses sessions, et répond 204, sans corps.
+export function createWithdrawalSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: Sending = {},
+): (outil: CodeSessionKind) => Promise<void> {
+  return async (outil) => {
+    await post(fetchImpl, env, API_PATHS.retrait, { outil } satisfies RetraitRequest, options);
   };
 }
 

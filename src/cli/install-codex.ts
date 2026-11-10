@@ -45,7 +45,7 @@ import {
   parseSettings,
   writeAtomically,
 } from './install-hooks';
-import { removeUnusedLauncher, type UninstallDeps } from './uninstall-hooks';
+import { removeUnusedLauncher, type UninstallDeps, withdrawOnServer } from './uninstall-hooks';
 
 export const CODEX_HOOKS_FILE = 'hooks.json';
 // Le même délai que Claude Code : 7,5 s au pire pour la commande (briefing.ts).
@@ -285,8 +285,9 @@ export async function installCodexHook(
   return 0;
 }
 
-// Le retrait : les crochets de Leon pour Codex (tous évènements), puis l'accord de Codex en version 0, puis le lanceur
-// s'il ne sert plus à aucun outil. Rend 0 si tout est retiré (ou l'était déjà).
+// Le retrait : les crochets de Leon pour Codex (tous évènements), puis l'accord de Codex en version 0, puis le serveur
+// de la connexion (withdrawOnServer), puis le lanceur s'il ne sert plus à aucun outil. Rend 0 si tout est retiré (ou
+// l'était déjà).
 export async function uninstallCodexHook(
   options: { codexDir: string; home: string },
   deps: UninstallDeps,
@@ -355,6 +356,7 @@ export async function uninstallCodexHook(
       consentDone = false;
     }
   }
+  if (consentDone) await withdrawOnServer(options.home, 'codex', deps);
   if (hooksDone && consentDone) await removeUnusedLauncher(options.home, deps);
   return hooksDone && consentDone ? 0 : 1;
 }

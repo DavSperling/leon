@@ -11,7 +11,9 @@ import {
   consentPath,
   consentWithdrawn,
   factsConsent,
+  pendingServerWithdrawals,
   recordCapture,
+  recordServerWithdrawal,
   withdrawalRecorded,
   writeConsent,
 } from './consent';
@@ -397,6 +399,52 @@ describe('withdrawalRecorded : le retrait est bien écrit', () => {
 
     await writeRaw('{"outils": {"claude_code": {"vers');
     expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
+  });
+});
+
+// Le retrait atteint le serveur (T43) : la date de sa réponse évite de le lui redire, et un nouvel accord l'efface.
+describe('pendingServerWithdrawals et recordServerWithdrawal : le retrait que le serveur n’a pas appris', () => {
+  it('un outil en version 0 sans date est en attente ; daté, il ne l’est plus', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await writeConsent(home, 'codex', 2);
+
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+
+    await recordServerWithdrawal(home, 'claude_code', new Date('2026-11-10T09:00:00Z'));
+
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
+      version: 0,
+      installe_le: expect.any(String),
+      retrait_serveur_le: '2026-11-10T09:00:00.000Z',
+    });
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(true);
+  });
+
+  it('un nouvel accord efface la date : le retrait suivant est de nouveau en attente', async () => {
+    await writeConsent(home, 'cursor', 0);
+    await recordServerWithdrawal(home, 'cursor');
+
+    await writeConsent(home, 'cursor', 2, new Date('2026-11-10T10:00:00Z'));
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.cursor).toEqual({
+      version: 2,
+      installe_le: '2026-11-10T10:00:00.000Z',
+    });
+
+    await writeConsent(home, 'cursor', 0);
+    expect(await pendingServerWithdrawals(home)).toEqual(['cursor']);
+  });
+
+  it('ne date pas un accord en cours, et ne voit rien dans un fichier absent ou illisible', async () => {
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+
+    await writeConsent(home, 'codex', 2);
+    const before = await readFile(consentPath(home), 'utf8');
+    await recordServerWithdrawal(home, 'codex');
+    expect(await readFile(consentPath(home), 'utf8')).toBe(before);
+
+    await writeRaw('{"outils": {"claude_code": {"vers');
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
   });
 });
 

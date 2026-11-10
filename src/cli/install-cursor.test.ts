@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { consentWithdrawn, factsConsent, writeConsent } from './consent';
+import { consentWithdrawn, factsConsent, pendingServerWithdrawals, writeConsent } from './consent';
 import { launcherCommand } from './hook-commands';
 import {
   CURSOR_CONSENT_LINES,
@@ -12,6 +12,7 @@ import {
 } from './install-cursor';
 import { protectedCloneWarning } from './install-outil';
 import { writeLauncher } from './launcher';
+import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_MESSAGE } from './uninstall-hooks';
 
 // L'installateur et le retrait des crochets de Cursor (T29), toujours dans un HOME temporaire : jamais le vrai ~/.cursor.
 
@@ -56,12 +57,13 @@ async function install(answers: (string | null)[] = ['oui'], assumeYes = false) 
   return { code, out: out.join('\n'), err: err.join('\n'), asked };
 }
 
-async function uninstall() {
+// Le serveur de la connexion, simulé (T43) : il apprend le retrait, ou échoue.
+async function uninstall(withdraw: UninstallDeps['withdraw'] = async () => {}) {
   const out: string[] = [];
   const err: string[] = [];
   const code = await uninstallCursorHooks(
     { home },
-    { out: (text) => out.push(text), err: (text) => err.push(text) },
+    { out: (text) => out.push(text), err: (text) => err.push(text), withdraw },
   );
   return { code, out: out.join('\n'), err: err.join('\n') };
 }
@@ -159,6 +161,24 @@ describe('uninstallCursorHooks', () => {
     expect(code).toBe(0);
     expect(out).toContain('nothing to remove');
     expect(await consentWithdrawn(home, 'cursor')).toBe(true);
+  });
+
+  it('le serveur apprend le retrait de Cursor ; s’il échoue, une ligne, et le retrait local reste fait', async () => {
+    await writeConsent(home, 'cursor', 2);
+    const told: string[] = [];
+
+    const failed = await uninstall(async () => {
+      throw new Error('fetch failed');
+    });
+    expect(failed.code).toBe(0);
+    expect(failed.err).toBe(WITHDRAWAL_NOT_TOLD_MESSAGE);
+    expect(await consentWithdrawn(home, 'cursor')).toBe(true);
+
+    await uninstall(async (outil) => {
+      told.push(outil);
+    });
+    expect(told).toEqual(['cursor']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
   });
 });
 

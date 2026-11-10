@@ -15,7 +15,12 @@ import {
   readHookStdin,
 } from './capture-session';
 import { captureTools, catchUp, readEntryFile } from './catch-up';
-import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
+import {
+  CONSENT_WITHDRAWN_MESSAGE,
+  consentWithdrawn,
+  factsConsent,
+  pendingServerWithdrawals,
+} from './consent';
 import { startDetached } from './detach';
 import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import { OUTILS, type Outil } from './hook-commands';
@@ -23,6 +28,7 @@ import {
   countOf,
   createFactsSender,
   createIngestSender,
+  createWithdrawalSender,
   type ImportDeps,
   type ImportSummary,
   importClaudeCode,
@@ -50,7 +56,7 @@ import {
   startBackgroundUpdate,
 } from './self-update';
 import { ensureLauncher, isLeonRepo, runSetup } from './setup';
-import { uninstallHooks } from './uninstall-hooks';
+import { catchUpWithdrawals, type UninstallDeps, uninstallHooks } from './uninstall-hooks';
 
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts). Cette valeur ne vaut que sous la
 // forme clone : dans le fichier construit (vite.cli.config.ts), import.meta.url pointe vers ~/.leon/cli/<version>/,
@@ -127,7 +133,8 @@ Commands:
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
                            antigravity: the entry "leon" of ~/.gemini/config/hooks.json
   retirer-crochets     Remove the Leon hooks from Claude Code's settings and withdraw your consent in
-                       ~/.leon/accord.json: from then on, nothing is sent from Claude Code. The launcher
+                       ~/.leon/accord.json: from then on, nothing is sent from Claude Code, and the Leon
+                       server of the connection is told. The launcher
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
       --outil <tool>       the tool to remove: claude_code (the default), codex, cursor or antigravity
   --version            Print the version of this CLI ("dev" when run from a clone)
@@ -207,9 +214,16 @@ async function runBriefingCommand(
       fetch,
       out: console.log,
       err: console.error,
-      // Le rattrapage des outils dont la capture est acceptée (T19), détaché lui aussi.
+      // Le rattrapage des outils dont la capture est acceptée (T19), et des retraits que le serveur n'a pas appris
+      // (T43), détaché lui aussi.
       scheduleCatchUp: async () => {
-        if ((await captureTools(homedir())).length > 0) startDetached(['rattraper']);
+        const home = homedir();
+        if (
+          (await captureTools(home)).length > 0 ||
+          (await pendingServerWithdrawals(home)).length > 0
+        ) {
+          startDetached(['rattraper']);
+        }
       },
       // La mise à jour automatique (S12) : décidée et lancée détachée, une fois le bloc écrit.
       scheduleUpdate: () =>
@@ -292,7 +306,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
   }
 }
 
-// Un délai par requête, pour le rattrapage qui n'a pas de crochet pour le borner.
+// Un délai par requête, pour le rattrapage et le retrait, qu'aucun crochet ne borne.
 const REQUEST_TIMEOUT_MS = 30_000;
 const timedFetch: typeof fetch = (input, init) =>
   fetch(input, { ...init, signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
@@ -358,10 +372,13 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
   }
 }
 
-// `leon rattraper` (T19), lancé détaché au démarrage d'une session : sans outil dont la capture est acceptée, rien.
+// `leon rattraper` (T19), lancé détaché au démarrage d'une session : sans outil dont la capture est acceptée ni retrait
+// que le serveur n'a pas appris (T43), rien. Les retraits d'abord : ils ne dépendent d'aucune capture.
 async function runCatchUp(): Promise<number> {
-  if ((await captureTools(homedir())).length === 0) return 0;
+  const withdrawals = await pendingServerWithdrawals(homedir());
+  if ((await captureTools(homedir())).length === 0 && withdrawals.length === 0) return 0;
   const env = await resolveServerEnv(process.env, homedir());
+  await catchUpWithdrawals(homedir(), createWithdrawalSender(timedFetch, env));
   const summary = await catchUp({
     send: createIngestSender(timedFetch, env),
     sendFacts: createFactsSender(timedFetch, env),
@@ -444,6 +461,15 @@ async function runInstallHooks(args: string[]): Promise<number> {
   }
 }
 
+// Le retrait prévient le serveur de la connexion du moment (T43). Sans connexion, l'appel échoue comme un serveur
+// injoignable : la commande le dit en une ligne, sans changer son code de sortie.
+const uninstallDeps = (): UninstallDeps => ({
+  out: console.log,
+  err: console.error,
+  withdraw: async (outil) =>
+    createWithdrawalSender(timedFetch, await resolveServerEnv(process.env, homedir()))(outil),
+});
+
 // Comme l'installateur, le retrait vise les réglages de CLAUDE_CONFIG_DIR si elle est posée, sinon ~/.claude.
 // `--outil` n'accepte que les outils que Leon capte (claude_code au lot 1) : un autre, ou une option inconnue,
 // arrête la commande sans rien retirer. Le message ne recopie pas la valeur reçue.
@@ -453,21 +479,19 @@ async function runUninstallHooks(args: string[]): Promise<number> {
   if (values.outil !== undefined && !tools.includes(values.outil)) {
     throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
   }
-  if (values.outil === 'cursor') {
-    return uninstallCursorHooks({ home: homedir() }, { out: console.log, err: console.error });
-  }
+  if (values.outil === 'cursor') return uninstallCursorHooks({ home: homedir() }, uninstallDeps());
   if (values.outil === 'antigravity') {
-    return uninstallAntigravityHooks({ home: homedir() }, { out: console.log, err: console.error });
+    return uninstallAntigravityHooks({ home: homedir() }, uninstallDeps());
   }
   if (values.outil === 'codex') {
     return uninstallCodexHook(
       { codexDir: codexHome(homedir(), process.env), home: homedir() },
-      { out: console.log, err: console.error },
+      uninstallDeps(),
     );
   }
   const configDir = claudeConfigDir(process.env);
   if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
-  return uninstallHooks({ configDir, home: homedir() }, { out: console.log, err: console.error });
+  return uninstallHooks({ configDir, home: homedir() }, uninstallDeps());
 }
 
 const loginDeps = (signal: AbortSignal): LoginDeps => ({

@@ -10,12 +10,18 @@ import {
   consentPath,
   consentWithdrawn,
   factsConsent,
+  pendingServerWithdrawals,
   writeConsent,
 } from './consent';
 import { launcherHookCommand, launcherPath } from './hook-commands';
 import { installHooks, SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
-import { uninstallHooks } from './uninstall-hooks';
+import {
+  catchUpWithdrawals,
+  type UninstallDeps,
+  uninstallHooks,
+  WITHDRAWAL_NOT_TOLD_MESSAGE,
+} from './uninstall-hooks';
 
 // Le retrait des crochets et de l'accord (T08), toujours sur des dossiers temporaires : jamais le vrai ~/.claude ni
 // le vrai ~/.leon.
@@ -57,11 +63,35 @@ async function writeSettings(content: unknown): Promise<string> {
 
 const readSettings = async () => JSON.parse(await readFile(settingsPath, 'utf8'));
 
+// Le serveur de la connexion, simulé : il note les outils dont il apprend le retrait, et peut échouer.
+type FakeServer = { told: string[]; fails: boolean; withdraw: UninstallDeps['withdraw'] };
+function fakeServer(): FakeServer {
+  const server: FakeServer = {
+    told: [],
+    fails: false,
+    withdraw: async (outil) => {
+      // Le retrait local est déjà écrit quand le serveur l'apprend.
+      expect(await consentWithdrawn(home, outil)).toBe(true);
+      if (server.fails) throw new Error('fetch failed');
+      server.told.push(outil);
+    },
+  };
+  return server;
+}
+let server: FakeServer;
+beforeEach(() => {
+  server = fakeServer();
+});
+
 async function uninstall(): Promise<{ code: number; output: string }> {
   const lines: string[] = [];
   const code = await uninstallHooks(
     { configDir, home },
-    { out: (text) => lines.push(text), err: (text) => lines.push(text) },
+    {
+      out: (text) => lines.push(text),
+      err: (text) => lines.push(text),
+      withdraw: server.withdraw,
+    },
   );
   return { code, output: lines.join('\n') };
 }
@@ -193,6 +223,7 @@ describe('uninstallHooks : retirer les crochets de Leon', () => {
     expect(await readFile(settingsPath, 'utf8')).toBe(settingsBefore);
     expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
     expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+    expect(server.told).toEqual(['claude_code']); // le serveur l'a appris au premier passage
   });
 
   it('sans réglages : ne crée rien, et retire quand même l’accord', async () => {
@@ -436,6 +467,7 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
     expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
       version: 0,
       installe_le: expect.any(String),
+      retrait_serveur_le: expect.any(String),
     });
   });
 
@@ -486,6 +518,89 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
   });
 });
 
+// Le retrait atteint le serveur de la connexion du moment (T43) : il y vide les usages des sessions déjà envoyées.
+describe('uninstallHooks : le serveur apprend le retrait', () => {
+  it('l’apprend une fois le retrait local écrit, et la date de sa réponse évite de le lui redire', async () => {
+    await writeConsent(home, 'claude_code', 2);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(server.told).toEqual(['claude_code']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  it('injoignable, ancien ou sans connexion : une ligne, le retrait local reste fait, même code de sortie', async () => {
+    await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
+    await writeConsent(home, 'claude_code', 2);
+    await writeLauncher(home, { kind: 'clone', repoDir: REPO });
+    server.fails = true;
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toBe(
+      removedText().replace(
+        'The sessions already sent',
+        `${WITHDRAWAL_NOT_TOLD_MESSAGE}\nLauncher removed: ${launcherPath(home)} (no other tool uses it).\nThe sessions already sent`,
+      ),
+    );
+    expect(WITHDRAWAL_NOT_TOLD_MESSAGE).toBe(
+      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again.',
+    );
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+  });
+
+  it('un retrait d’avant, que le serveur n’a pas appris : relancer la commande le lui dit', async () => {
+    await writeConsent(home, 'claude_code', 0);
+
+    const run = await uninstall();
+
+    expect(run.output).toContain(`Consent already withdrawn in ${consentPath(home)}.`);
+    expect(server.told).toEqual(['claude_code']);
+  });
+
+  it('un accord qui ne s’écrit pas : rien ne part au serveur', async () => {
+    home = join(dir, 'home-fichier');
+    await writeFile(home, '');
+
+    await uninstall();
+
+    expect(server.told).toEqual([]);
+  });
+});
+
+// Le rattrapage (`leon rattraper`, lancé détaché au démarrage d'une session) : les retraits faits avant que la commande
+// n'appelle le serveur, ou hors ligne.
+describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le poste', () => {
+  it('une fois chaque outil retiré, puis plus ; un outil en cours n’est pas cité', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await writeConsent(home, 'codex', 0);
+    await writeConsent(home, 'cursor', 2);
+
+    await catchUpWithdrawals(home, server.withdraw);
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['claude_code', 'codex']);
+  });
+
+  it('un échec garde l’outil en attente pour le rattrapage suivant ; un nouvel accord efface la date', async () => {
+    await writeConsent(home, 'antigravity', 0);
+    server.fails = true;
+    await catchUpWithdrawals(home, server.withdraw);
+    server.fails = false;
+    await catchUpWithdrawals(home, server.withdraw);
+    expect(server.told).toEqual(['antigravity']);
+
+    await writeConsent(home, 'antigravity', 2);
+    await writeConsent(home, 'antigravity', 0);
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['antigravity', 'antigravity']);
+  });
+});
+
 // La vraie commande, lancée comme le script `leon` (sans pnpm ni .env.local), sur un HOME et un CLAUDE_CONFIG_DIR
 // temporaires. LEON_URL vise un port fermé : un envoi qui partirait malgré l'accord retiré échouerait sans rien
 // atteindre, et le message attendu ne serait pas celui-là.
@@ -530,6 +645,8 @@ describe('leon retirer-crochets : la vraie commande', () => {
 
     expect(removed.code).toBe(0);
     expect(removed.stdout).toBe(`${removedText()}\n`);
+    // Le serveur de LEON_URL ne répond pas (port fermé) : une ligne, et le retrait local est fait.
+    expect(removed.stderr).toBe(`${WITHDRAWAL_NOT_TOLD_MESSAGE}\n`);
     expect(await readSettings()).toEqual({});
 
     const hookJson = JSON.stringify({

@@ -251,6 +251,11 @@ describe('la page Documentation', () => {
       expect(resume).toContain('<code>~/.leon/bin/leon retirer-crochets</code>');
       expect(readText('src/cli/install-hooks.ts')).toContain('may still be written within an hour');
       expect(resume).toContain(locale === 'en' ? 'within an hour' : 'dans l’heure');
+      // Le retrait prévient le serveur de la connexion (T43), et le texte de l'usage le dit aussi.
+      expect(readText('src/cli/install-hooks.ts')).toContain('it tells the Leon server');
+      expect(resume).toContain(
+        locale === 'en' ? 'tells the Leon server' : 'prévient le serveur de Leon',
+      );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
     },
   );

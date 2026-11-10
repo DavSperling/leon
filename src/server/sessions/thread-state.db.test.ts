@@ -396,6 +396,32 @@ describe('updateFilState', () => {
     expect(promptOf(llm)).not.toContain('Ancien');
   });
 
+  it('une session avec resume, sans tour marqué (une CLI d’avant la route du retrait), n’entre pas au condensé', async () => {
+    const { paul } = await team();
+    const avant = await codeSession(paul, {
+      kind: 'codex',
+      tours: [
+        { role: 'user', text: 'Récit d’avant la marque.' },
+        { role: 'assistant', text: 'Réponse d’avant la marque.' },
+      ],
+      resume: 'Résumé d’avant la marque.',
+    });
+    const filId = await fil(paul, [avant.id]);
+    const seule = answer('jamais lu');
+
+    expect(await updateFilState(job(paul, filId), { llm: seule })).toBe('serveur');
+    expect(seule.calls).toEqual([]);
+
+    const fresh = await codeSession(paul);
+    await setLists(filId, [avant.id, fresh.id], []);
+    const llm = answer(etat(fresh.id));
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+    expect(promptOf(llm)).not.toContain(avant.id);
+    expect(promptOf(llm)).not.toContain('d’avant la marque');
+    expect((await versions(filId))[1]?.entrees).toEqual([fresh.id]);
+  });
+
   it('l’usage resume retiré pendant l’appel : rien n’est écrit', async () => {
     const { paul } = await team();
     const one = await codeSession(paul);

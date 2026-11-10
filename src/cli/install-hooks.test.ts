@@ -1012,8 +1012,9 @@ describe('installHooks : l’usage resume', () => {
 
     expect(run.code).toBe(0);
     expect(run.questions).toHaveLength(2);
-    expect(run.questions[1]).toContain('[y/N]');
-    expect(run.questions[1]).toContain(consentPath(home));
+    expect(run.questions[1]).toBe(
+      `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${consentPath(home)})? [y/N] `,
+    );
     expect(run.output.indexOf(RESUME_TEXT)).toBeGreaterThan(run.output.indexOf(CONSENT_TEXT));
     expect(run.output).toContain('Nothing was added: no session is summarized.');
     expect(run.output).toContain(REFUSED_LINE);

@@ -538,7 +538,7 @@ async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<
   const path = consentPath(options.home);
   for (const line of ['', ...RESUME_LINES]) deps.out(line);
   const answer = await deps.ask(
-    `\nAlso let Leon's model provider write a summary of each session (recorded in ${path})? [y/N] `,
+    `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${path})? [y/N] `,
   );
   if (!isYes(answer)) {
     deps.out('Nothing was added: no session is summarized.');

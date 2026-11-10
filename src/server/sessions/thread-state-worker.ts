@@ -48,6 +48,10 @@ import {
 //   Le numéro, pas la date : un tour est daté du début de sa transaction, et un résumé validé après la lecture d'un
 //   autre peut être plus ancien que lui. Une session ou une source liée de plus ne change que l'état déterministe.
 // - L'usage `resume` est relu sous le verrou du fil, juste avant d'écrire : retiré pendant l'appel, rien n'est écrit.
+// - Une session n'entre au condensé que si une CLI qui dit ses retraits au serveur l'a envoyée, celle qui marque les
+//   tours (USAGE_RESUME). Une CLI d'avant retirait l'accord sur le poste seul, et avec le dernier outil effaçait le
+//   lanceur : aucun crochet ne reste pour rattraper ce retrait, et ses sessions gardent `resume` ici pour toujours.
+//   Elles restent à l'état déterministe jusqu'à leur prochain envoi par une CLI à jour.
 // - Sans modèle, sans résumé nouveau, ou quand la liste blanche ne garde rien, l'état est la liste déterministe des
 //   sessions, des PR et des sources liées visibles, écrite par le serveur quand elle change ; une version lisible du
 //   modèle n'est pas écrasée (D33). Un modèle en échec n'écrit rien : l'ancien état reste, et pg-boss reprend le job.
@@ -55,8 +59,9 @@ import {
 // amendé le 06/11), sans la borne d'une heure du résumé : l'état relit des sessions anciennes par nature. `leon
 // retirer-crochets` appelle la route, et le poste la rappelle plus tard s'il n'a pas pu (catchUpWithdrawals,
 // uninstall-hooks.ts) : d'ici là, et pour une connexion d'avant, que le retrait ne joint pas, les sessions déjà
-// envoyées partent encore au modèle de l'état (RESUME_LINES le dit). Rappeler la route pour chaque connexion qui a reçu
-// des faits avec `resume` le jour où un poste change de serveur ou d'organisation (T43 amendé le 10/11).
+// envoyées par une CLI à jour partent encore au modèle de l'état (RESUME_LINES le dit). Rappeler la route pour chaque
+// connexion qui a reçu des faits avec `resume` le jour où un poste change de serveur ou d'organisation (T43 amendé le
+// 10/11).
 // shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
 // la colonne vient avec T44, qui les y ajoute (T44 amendé le 10/11).
 
@@ -75,7 +80,11 @@ const SESSION_TAIL_CHARS = 8000;
 const SOURCE_TURNS_MAX = 20;
 const SOURCE_TEXT_CHARS = 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const USAGE_RESUME = sql`coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false)`;
+// L'usage `resume`, sur une session envoyée par une CLI qui dit ses retraits au serveur : seule celle-là marque les
+// tours (`turns.injecte` non null, PR 3b du lot 12).
+const USAGE_RESUME = sql`(coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, false)
+  and exists (select 1 from turns t
+    where t.tenant_id = s.tenant_id and t.source_id = s.id and t.injecte is not null))`;
 
 type SessionRow = {
   id: string;

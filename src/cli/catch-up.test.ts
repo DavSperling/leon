@@ -200,7 +200,9 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
     expect(facts[1]?.project).toBe('github.com/demo/leon');
   });
 
-  it('envoie les tours injectés avec leur marque, et les messages tapés marqués false (T43)', async () => {
+  // L'accord promet que le contexte que Codex ajoute lui-même ne part pas (CODEX_CONSENT_LINES) : le tour injecté reste
+  // sur le poste, et le curseur ne le renvoie pas au Stop suivant.
+  it('garde les tours injectés sur le poste ; les messages tapés partent marqués false (T43)', async () => {
     const path = await rollout('2', MAINTENANT, SANS_GIT);
     await captureToolFile('codex', path, { fin: false }, captureDeps());
 
@@ -210,9 +212,12 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
         .map((turn) => [turn.role, 'injecte' in turn ? turn.injecte : 'sans marque']),
     ).toEqual([
       ['user', false],
-      ['user', true],
       ['assistant', 'sans marque'],
     ]);
+
+    sent = [];
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+    expect(sent).toEqual([]);
   });
 
   it('sans branche dans le rollout, prend celle que lit git à la capture', async () => {
@@ -504,8 +509,8 @@ describe('Cursor : capter à chaque stop, rattraper', () => {
       external_id: CONVERSATION,
       project: 'github.com/demo/leon',
     });
-    // Cinq tours, et les deux messages que Cursor écrit lui-même, marqués (T43).
-    expect(sentIds()).toHaveLength(7);
+    // Cinq tours : les deux messages que Cursor écrit lui-même restent sur le poste (CURSOR_CONSENT_LINES).
+    expect(sentIds()).toHaveLength(5);
     expect(facts[0]).toMatchObject({
       kind: 'cursor',
       fin: false,

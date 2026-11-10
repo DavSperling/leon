@@ -21,7 +21,8 @@
 // de démarrage de Leon, que Codex range là), le contexte que Codex pose en rôle `user` (`<environment_context>`, les
 // instructions et `AGENTS.md`, les compétences…), `compacted`, et les blocs de Leon (stripLeonBlocks). Les tours
 // injectés (rapport de sous-agent, notification, sortie d'une commande `!`, crochet) ne sont jamais des messages de la
-// personne (T63) : ils partent marqués `injecte` (T43), et ne comptent ni comme échange ni pour le titre.
+// personne (T63) : ils sont marqués `injecte` (T43), ne comptent ni comme échange ni pour le titre, et restent sur le
+// poste (captureToolFile).
 //
 // Les gestes : les `item_completed` en historique paginé. Le texte des appels (`exec`, `apply_patch`) n'est lu qu'en
 // repli, pour un rollout à l'ancien format.
@@ -45,7 +46,7 @@ export type CodexSession = {
   sessionId: string; // l'id du fil (`session_meta.id`)
   cwd: string | null;
   title: string | null;
-  // Les tours envoyés : ceux de la personne et de l'assistant ; un tour `user` porte `injecte`.
+  // Les tours de la personne et de l'assistant ; un tour `user` porte `injecte`.
   turns: Turn[];
   // `session_meta.git` : la branche et le commit au démarrage, dans un dépôt git (absents hors dépôt, ou avant le
   // premier commit).

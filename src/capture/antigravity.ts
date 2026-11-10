@@ -42,8 +42,8 @@ export type AntigravitySession = {
   sessionId: string; // la conversation (le dossier `brain/<conversation>`)
   cwd: string | null;
   title: string | null;
-  // Les messages d'utilisateur qu'Antigravity écrit lui-même, jamais un message de la personne (T63), partent marqués
-  // `injecte` (T43), comme tout tour `user`.
+  // Les messages d'utilisateur qu'Antigravity écrit lui-même, jamais un message de la personne (T63), sont marqués
+  // `injecte` (T43), comme tout tour `user`, et restent sur le poste (captureToolFile).
   turns: Turn[];
   branche: null; // le transcript n'en porte pas : la capture la lit par git
 };

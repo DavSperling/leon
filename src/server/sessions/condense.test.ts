@@ -199,6 +199,36 @@ describe('condenseSession', () => {
     expect(preuves.has(unknown.id)).toBe(false);
   });
 
+  // L'état d'un fil (T43) cite ces ids, et le serveur en écrit la provenance (D23, D36).
+  it('rend la provenance de chaque id gardé : toi pour un tour tapé, l’agent sinon, l’équipe pour une PR et un commit', () => {
+    const typed = turn({ role: 'user' });
+    const agent = turn({ role: 'assistant' });
+    const injected = turn({ role: 'user', injecte: true });
+    const unknown = turn({ role: 'user', injecte: null });
+    const { ids } = condenseSession({
+      faits: facts({ prs: [PR_12], commits: ['abc1234'] }),
+      turns: [typed, agent, injected, unknown],
+    });
+
+    expect(Object.fromEntries(ids)).toEqual({
+      'acme/leon#12': 'équipe',
+      abc1234: 'équipe',
+      [typed.id]: 'toi',
+      [agent.id]: 'agent',
+      [injected.id]: 'agent',
+      [unknown.id]: 'agent',
+    });
+  });
+
+  it('tient dans la borne qu’on lui donne, en gardant la fin', () => {
+    const turns = Array.from({ length: 10 }, () => turn({ text: 'x'.repeat(1000) }));
+    const { texte, ids } = condenseSession({ faits: facts(), turns }, 3000);
+
+    expect(texte.length).toBeLessThanOrEqual(3000);
+    expect(texte).toContain(`id="${turns.at(-1)?.id}"`);
+    expect(ids.has(turns[0]?.id ?? '')).toBe(false);
+  });
+
   it('échappe l’état d’une tâche hors de la liste, comme tout attribut', () => {
     const { texte } = condenseSession({
       faits: facts({

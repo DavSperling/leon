@@ -11,6 +11,7 @@ import { fetchPassageContext, fetchSource } from '@/server/search/context';
 import { indexIngestRun } from '@/server/search/index-run';
 import { searchPassages } from '@/server/search/search';
 import { adminDb, adminPool } from '@/test/db';
+import { seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import type { ResumeJob } from './resume-queue';
@@ -20,6 +21,7 @@ import type { ResumeJob } from './resume-queue';
 
 const mocks = vi.hoisted(() => ({
   enqueueResume: vi.fn(),
+  enqueueFilMaj: vi.fn(),
   work: vi.fn(),
   runs: [] as string[],
 }));
@@ -27,6 +29,10 @@ vi.mock('./resume-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./resume-queue')>()),
   enqueueResume: mocks.enqueueResume,
   getResumeBoss: async () => ({ work: mocks.work }),
+}));
+vi.mock('./threads-queue', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('./threads-queue')>()),
+  enqueueFilMaj: mocks.enqueueFilMaj,
 }));
 vi.mock('@/server/ingest/ingest-turns', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/ingest/ingest-turns')>()),
@@ -44,6 +50,8 @@ const tenantIds: string[] = [];
 beforeEach(() => {
   mocks.enqueueResume.mockReset();
   mocks.enqueueResume.mockResolvedValue(undefined);
+  mocks.enqueueFilMaj.mockReset();
+  mocks.enqueueFilMaj.mockResolvedValue(undefined);
   mocks.runs.length = 0;
 });
 afterAll(() => dropTeams(tenantIds));
@@ -742,6 +750,44 @@ describe('summarizeSession', () => {
 
 // Le retrait atteint le serveur (T43, amendé le 06/11) : un résumé déjà en file, dont les faits datent de moins d'une
 // heure, n'appelle plus le modèle.
+describe('l’état des fils (T43)', () => {
+  it('un résumé écrit met en file l’état des fils de la session, et d’eux seuls', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const other = await session(paul);
+    const filId = await seedThread(paul);
+    const otherFil = await seedThread(paul);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: seeded.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, filId));
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: other.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, otherFil));
+
+    expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
+
+    expect(mocks.enqueueFilMaj.mock.calls).toEqual([
+      [{ tenantId: paul.tenantId, sourceId: filId, ownerUserId: paul.userId }],
+    ]);
+  });
+
+  it('rien à retenir : aucun état de fil en file', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const filId = await seedThread(paul);
+    await adminDb
+      .update(sources)
+      .set({ metadata: { sessions: [{ id: seeded.sourceId, kind: 'claude_code' }] } })
+      .where(eq(sources.id, filId));
+
+    expect(await summarizeSession(seeded.job, { llm: answer('Rien à retenir.') })).toBe('rien');
+
+    expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
+  });
+});
+
 describe('après le retrait de l’accord', () => {
   it('un résumé en file n’appelle plus le modèle', async () => {
     const { paul } = await team();

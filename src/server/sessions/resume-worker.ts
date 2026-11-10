@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { type PassationType, parseNote } from '@/capture/passation-format';
+import { parseNote } from '@/capture/passation-format';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, type TurnRole } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
@@ -20,7 +20,7 @@ import {
   type CondenseTurn,
   condenseSession,
 } from './condense';
-import { buildResumePrompt, RIEN_A_RETENIR } from './resume-prompt';
+import { buildResumePrompt, HEADING, RIEN_A_RETENIR, TAGS } from './resume-prompt';
 import {
   enqueueResume,
   getResumeBoss,
@@ -31,6 +31,8 @@ import {
   ResumeJobSchema,
 } from './resume-queue';
 import { linkPrs } from './start-context';
+import { findFils, has } from './threads';
+import { enqueueFilMaj } from './threads-queue';
 
 // Le worker du résumé d'une session (T23, D8 et D9 du plan mémoire des sessions ; D23, D25 et D30 du plan de la
 // mémoire à disposition). Pour une session close, un appel au modèle (étape `resume`) sur son condensé (condense.ts),
@@ -50,6 +52,7 @@ import { linkPrs } from './start-context';
 //   `[décision]` seulement si sa source est un id vérifié du condensé (D23) ; les relations viennent des faits.
 // - Un tour `user` ne prouve une `[décision]` que marqué tapé par la personne (`turns.injecte` false, T43) : un tour
 //   injecté entre au condensé comme l'agent, un tour capté avant la marque comme l'utilisateur, sans rien prouver.
+// - Un résumé écrit met en file l'état des fils de sa session (thread-state-worker.ts, T43).
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
 // Le retrait atteint le serveur (T43, amendé le 06/11) : la route du retrait (faits-routes.ts) vide `metadata.usages`
@@ -180,14 +183,6 @@ async function askModel(llm: Llm, condense: Condense): Promise<string> {
   return answer;
 }
 
-const TAGS: Record<PassationType, string> = {
-  en_cours: 'en-cours',
-  prochaine_etape: 'prochaine-étape',
-  essai_rate: 'essai-raté',
-  question: 'question',
-  decision: 'décision',
-};
-const HEADING = "## Où j'en suis";
 const SOURCE = /\(source:\s*([^()\s]+)\)\s*$/;
 // Une cible de relation tient sur une ligne et ne ferme pas le lien : une branche nommée sur le poste (ou masquée,
 // « [secret masqué] ») qui en sortirait n'est pas écrite.
@@ -304,7 +299,24 @@ export async function summarizeSession(
   const runId = await withTenant(ctx, (tx) => writeResume(tx, ctx, job.sourceId, read.last, texte));
   if (runId === null) return texte === null ? 'rien' : 'sans-objet';
   await enqueueIndexing(ctx, runId);
+  await queueFilStates(ctx, job.sourceId);
   return 'ecrit';
+}
+
+// Un résumé écrit rend la session nouvelle pour l'état de ses fils (T43) : il les met en file `fil-maj`. Le résumé est
+// écrit : une file indisponible ne le défait pas, elle est seulement journalisée, et le prochain changement du fil le
+// remet en file.
+async function queueFilStates(ctx: TenantContext, sessionId: string): Promise<void> {
+  try {
+    const fils = await withTenant(ctx, (tx) =>
+      findFils(tx, ctx, null, [has('sessions', { id: sessionId })]),
+    );
+    for (const fil of fils) {
+      await enqueueFilMaj({ tenantId: ctx.tenantId, sourceId: fil.id, ownerUserId: ctx.userId });
+    }
+  } catch (error) {
+    logError('resume.fil_maj_enqueue', error, { tenantId: ctx.tenantId, sourceId: sessionId });
+  }
 }
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte capté (une

@@ -57,6 +57,7 @@ export const EnvSchema = z
     ),
     LEON_MODEL_POINT: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_POINT').optional()),
     LEON_MODEL_RESUME: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_RESUME').optional()),
+    LEON_MODEL_FIL: z.preprocess(emptyIsAbsent, supportedModel('LEON_MODEL_FIL').optional()),
     // L'en-tête où le proxy de confiance (Caddy) pose l'adresse du client, qu'il écrase à chaque requête : la
     // limite de débit de la connexion la lit (rate-limit.ts). Absent : aucun en-tête n'est cru, toutes les
     // tentatives comptent par adresse sur une clé commune. Obligatoire en production.

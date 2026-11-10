@@ -1,3 +1,4 @@
+import type { PassationType } from '@/capture/passation-format';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import type { Condense } from './condense';
@@ -12,6 +13,16 @@ import type { Condense } from './condense';
 // (T43, condense.ts). Un tour de="utilisateur" sans la marque, capté avant elle, peut être injecté : le prompt le dit.
 
 export const RIEN_A_RETENIR = 'rien à retenir';
+// Le titre et les balises du format, tels que le serveur les réécrit (resume-worker.ts, et l'état d'un fil,
+// thread-state.ts).
+export const HEADING = "## Où j'en suis";
+export const TAGS: Record<PassationType, string> = {
+  en_cours: 'en-cours',
+  prochaine_etape: 'prochaine-étape',
+  essai_rate: 'essai-raté',
+  question: 'question',
+  decision: 'décision',
+};
 
 const SYSTEM = `Tu es Leon, la mémoire de l'équipe. Tu écris le résumé d'une session de travail entre une personne et son agent de code, pour qu'elle, ou un autre agent, reprenne là où elle s'est arrêtée.
 

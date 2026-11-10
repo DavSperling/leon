@@ -37,6 +37,11 @@ vi.mock('@/server/sessions/thread-links', () => ({
     mocks.order.push('liens');
   }),
 }));
+vi.mock('@/server/sessions/thread-state-worker', () => ({
+  startFilStateWorker: vi.fn(async () => {
+    mocks.order.push('etats');
+  }),
+}));
 vi.mock('@/server/connectors/worker', () => ({
   startConnectorWorker: vi.fn(async () => {
     mocks.order.push('connecteurs');
@@ -75,13 +80,21 @@ afterEach(() => {
 });
 
 describe('démarrage des tâches de fond', () => {
-  it('lance l’indexation, le point du matin, le résumé, le rangement des sessions et la liaison des sources, puis la relève des connecteurs, même sans clé Anthropic', async () => {
+  it('lance l’indexation, le point du matin, le résumé, le rangement des sessions, la liaison des sources et l’état des fils, puis la relève des connecteurs, même sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
 
     await startNodeInstrumentation();
 
     // L'indexation d'abord : la relève met des jobs dans sa file dès son premier passage.
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'connecteurs']);
+    expect(mocks.order).toEqual([
+      'recherche',
+      'point',
+      'resume',
+      'fils',
+      'liens',
+      'etats',
+      'connecteurs',
+    ]);
   });
 
   // Le tri par modèle n'existe plus : la clé Anthropic ne change que le modèle donné au point du matin.
@@ -97,7 +110,15 @@ describe('démarrage des tâches de fond', () => {
     await startNodeInstrumentation();
 
     expect(mocks.order).toEqual(without);
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'connecteurs']);
+    expect(mocks.order).toEqual([
+      'recherche',
+      'point',
+      'resume',
+      'fils',
+      'liens',
+      'etats',
+      'connecteurs',
+    ]);
   });
 
   it('lance l’indexation et le point du matin sans clé des connecteurs ni clé Anthropic', async () => {
@@ -105,7 +126,7 @@ describe('démarrage des tâches de fond', () => {
 
     await startNodeInstrumentation();
 
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'etats']);
   });
 
   it("ne prévient pas de l'absence de clé Anthropic", async () => {
@@ -125,7 +146,7 @@ describe('démarrage des tâches de fond', () => {
 
     expect(startConnectorWorker).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(NO_KEY));
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens']);
+    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'etats']);
   });
 
   it('signale les paires OAuth incomplètes au démarrage', async () => {

@@ -20,6 +20,16 @@ describe('modelForStep', () => {
     expect(modelForStep('resume', env)).toBe('claude-haiku-5-5');
   });
 
+  it('prend Haiku 5.5 pour l’état d’un fil (D23)', () => {
+    expect(modelForStep('fil', env)).toBe('claude-haiku-5-5');
+  });
+
+  it('suit LEON_MODEL_FIL', () => {
+    const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_FIL: 'claude-sonnet-5-5' });
+    expect(modelForStep('fil', reglee)).toBe('claude-sonnet-5-5');
+    expect(modelForStep('resume', reglee)).toBe('claude-haiku-5-5');
+  });
+
   it('suit LEON_MODEL_RESUME', () => {
     const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_RESUME: 'claude-sonnet-5-5' });
     expect(modelForStep('resume', reglee)).toBe('claude-sonnet-5-5');
@@ -61,6 +71,7 @@ describe('EFFORT_BY_STEP', () => {
       discussion: 'medium',
       point: 'medium',
       resume: 'low',
+      fil: 'low',
     });
   });
 });

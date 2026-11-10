@@ -120,4 +120,44 @@ describe('sources_lues_pendant', () => {
     expect(await lues(paul, [hers])).toEqual([]);
     expect(await lues(marie, [hers])).toEqual([autre]);
   });
+
+  // Cursor date tous les tours d'une capture à l'heure du fichier (cursor.ts) : la fenêtre commence un jour plus tôt.
+  // Les autres outils gardent leurs 10 minutes.
+  it('une session Cursor : une lecture 25 minutes avant son premier tour compte ; Claude Code, non', async () => {
+    const { members } = await newTeam(['Paul'], tenantIds);
+    const [paul] = members as [TenantContext];
+    const ts = new Date('2026-11-05T09:30:00.000Z');
+    const session = async (kind: 'cursor' | 'claude_code') =>
+      (
+        await seedRun(paul, {
+          kind,
+          turns: [
+            { text: 'demande', ts },
+            { text: 'réponse', ts },
+          ],
+        })
+      ).sourceId;
+    const [cursor, claude] = [await session('cursor'), await session('claude_code')];
+    const lue = (await seedRun(paul, { kind: 'slack' })).sourceId;
+    await adminDb.insert(readLog).values({
+      tenantId: paul.tenantId,
+      userId: paul.userId,
+      client: 'cli',
+      tool: 'search',
+      sourceId: lue,
+      acl: [paul.userId],
+      at: new Date('2026-11-05T09:05:00.000Z'),
+    });
+    const lues = (sessions: string[]) =>
+      withTenant(paul, async (tx) =>
+        (
+          await tx.execute<{ id: string }>(
+            sql`select sources_lues_pendant(${`{${sessions.join(',')}}`}::uuid[]) as id`,
+          )
+        ).rows.map((row) => row.id),
+      );
+
+    expect(await lues([cursor])).toEqual([lue]);
+    expect(await lues([claude])).toEqual([]);
+  });
 });

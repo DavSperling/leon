@@ -31,7 +31,12 @@ export const contextRoutes = new Hono<ApiEnv>().post(
     // Deux transactions indépendantes, en parallèle : le point du matin ouvre la sienne.
     const [{ sessions, equipe }, briefing] = await Promise.all([
       readStartContext(c.var.ctx, { projet, branche, session }),
-      briefingResponse(c.var.ctx, projet, { modelReady: getLlm(env) !== null }),
+      // Le point injecté est une lecture, notée avec la session (D35) ; le corps n'a pas d'`outil` : `cli`.
+      briefingResponse(c.var.ctx, projet, {
+        modelReady: getLlm(env) !== null,
+        client: 'cli',
+        session,
+      }),
     ]);
     return c.json({
       texte: renderContext({

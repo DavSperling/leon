@@ -361,9 +361,14 @@ async function lockFil(tx: Tx, ctx: TenantContext, filId: string): Promise<boole
   return row?.libre === true;
 }
 
+// shortcut: au-delà de ENTREES_MAX entrées (lectures en cascade d'un fil à l'autre), l'état reste déterministe ;
+// relever le plafond ou couper la cascade quand le compteur fil.entrees_trop monte.
+export const ENTREES_MAX = 500;
+
 // L'état du modèle, sous le verrou du fil (lockFil, D34), dans une transaction : l'usage `resume` des sessions du
-// condensé relu, la version écrite en compare-and-set, puis `etat_session`. Sans rien de gardé, seul `etat_session`
-// avance (pas de second appel pour le même résumé), et rend null : l'appelant passe à l'état déterministe.
+// condensé relu, la version écrite en compare-and-set, puis `etat_session`. Sans rien de gardé, ou avec trop
+// d'entrées (ENTREES_MAX, compté sans texte ni id), seul `etat_session` avance (pas de second appel pour le même
+// résumé), et rend null : l'appelant passe à l'état déterministe.
 async function writeModelState(
   tx: Tx,
   ctx: TenantContext,
@@ -388,6 +393,7 @@ async function writeModelState(
       and s.kind = any(${textArray(CODE_SESSION_KINDS)})
       and s.id = any(${textArray(condense.sessions)}::uuid[]) and ${USAGE_RESUME}`);
   if (still?.n !== condense.sessions.length) return 'sans-objet';
+  let wrote = false;
   if (kept !== null) {
     const { rows: lues } = await tx.execute<{ id: string }>(
       sql`select sources_lues_pendant(${textArray(condense.sessions)}::uuid[]) as id`,
@@ -400,26 +406,30 @@ async function writeModelState(
         ...lues.map((one) => one.id),
       ]),
     ];
-    const written = await writeVersion(tx, ctx, {
-      sourceId: filId,
-      attendue,
-      texte: kept.texte,
-      entrees,
-      // Les tours cités, pour la provenance seulement (D33) : ni une session, ni une source, ni une PR, ni un commit.
-      tours: kept.cites.filter((id) => UUID.test(id) && !entrees.includes(id)),
-      ecritPar: 'modele',
-      motif: 'rangement',
-      etape: 'fil',
-      modele: modelForStep('fil', env),
-    });
-    if (written === 'depassee') return 'depassee';
-    if (typeof written !== 'object') return 'sans-objet';
+    if (entrees.length > ENTREES_MAX) console.info('[leon]', 'fil.entrees_trop');
+    else {
+      const written = await writeVersion(tx, ctx, {
+        sourceId: filId,
+        attendue,
+        texte: kept.texte,
+        entrees,
+        // Les tours cités, pour la provenance seulement (D33) : ni une session, ni une source, ni une PR, ni un commit.
+        tours: kept.cites.filter((id) => UUID.test(id) && !entrees.includes(id)),
+        ecritPar: 'modele',
+        motif: 'rangement',
+        etape: 'fil',
+        modele: modelForStep('fil', env),
+      });
+      if (written === 'depassee') return 'depassee';
+      if (typeof written !== 'object') return 'sans-objet';
+      wrote = true;
+    }
   }
   await tx.execute(sql`update sources s set metadata = s.metadata
       || jsonb_build_object('etat_session', jsonb_build_object('tours',
         coalesce(s.metadata->'etat_session'->'tours', '{}'::jsonb) || ${JSON.stringify(pris)}::jsonb))
     where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
-  return kept === null ? null : 'modele';
+  return wrote ? 'modele' : null;
 }
 
 export async function updateFilState(

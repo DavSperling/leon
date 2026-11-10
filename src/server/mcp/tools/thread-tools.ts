@@ -1,5 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
+import { VERSION_N_MAX } from '@/capture/api-contract';
 import { PROJECT_INPUT_MAX_CHARS, projectKeyFromInput } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { readDossier, readThread, readVersions } from '@/server/sessions/thread-read';
@@ -121,6 +122,7 @@ export function registerThreadTools(server: McpServer, ctx: TenantContext, clien
           .number()
           .int()
           .min(1)
+          .max(VERSION_N_MAX)
           .nullish()
           .describe('A version number: returns its full text. Without it: the list of versions.'),
       }),

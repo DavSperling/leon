@@ -345,6 +345,7 @@ const dossier = (overrides: Partial<Dossier['fils'][number]> = {}, total = 1): D
         { repo: 'acme/leon', numero: 12, etat: 'merged' },
         { repo: 'acme/leon', numero: 13, etat: null },
       ],
+      prsTotal: 2,
       liees: 3,
       etatCourt: 'Le worker avance.',
       entrees: [],
@@ -365,8 +366,14 @@ describe('renderDossier', () => {
   });
 
   it('sans première ligne (état déterministe) : la ligne se ferme seule', () => {
-    expect(renderDossier(dossier({ etatCourt: '', prs: [], liees: 0 }))).toContain(
+    expect(renderDossier(dossier({ etatCourt: '', prs: [], prsTotal: 0, liees: 0 }))).toContain(
       `<fil id="${FIL_ID}" titre="paul/fil" outils="Claude Code, Codex" date="2026-11-05" liees="0"/>`,
+    );
+  });
+
+  it('une liste de PR coupée le dit, avec son total', () => {
+    expect(renderDossier(dossier({ prsTotal: 34 }))).toContain(
+      'prs="acme/leon#12 merged, acme/leon#13" prs_total="34"',
     );
   });
 

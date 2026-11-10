@@ -240,6 +240,8 @@ export function renderDossier(dossier: Dossier): string {
           ['outils', fil.outils.map((kind) => SOURCE_KIND_LABELS[kind]).join(', ')],
           ['date', fil.derniereDate === null ? null : isoDate(fil.derniereDate)],
           ['prs', fil.prs.map(prText).join(', ')],
+          // Une liste coupée le dit (D27) : les PR rendues sont les plus récentes.
+          ['prs_total', fil.prsTotal > fil.prs.length ? String(fil.prsTotal) : null],
           ['liees', String(fil.liees)],
         ],
         fil.etatCourt,

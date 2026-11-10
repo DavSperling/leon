@@ -118,7 +118,7 @@ Commands:
                        current branch)
   search <query>       Search Leon, within this repository only
   versions <id>        List the readable versions of a thread's state
-      --read <n>           print version n instead (nothing is restored: only the site does that)
+      --read <n>           print version n instead (nothing is restored from your computer)
                        These four print to standard output and write nothing on disk. They need a connection and
                        the reading consent (\`lecture\`) of one of your code tools, which leon setup does not offer yet
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection

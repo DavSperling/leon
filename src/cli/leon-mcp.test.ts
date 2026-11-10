@@ -157,20 +157,51 @@ describe('leonMcpRecognized', () => {
       ).toBe(true);
     });
 
+    // Un vrai analyseur TOML : toute forme valide de la table `mcp_servers.leon` se lit comme Codex la lit.
+    it.each([
+      ['une clé pointée', `mcp_servers.leon.url = "${LEON}"`],
+      ['une table en ligne', `[mcp_servers]\nleon = { url = "${LEON}" }`],
+      ['une chaîne littérale', `[mcp_servers.leon]\nurl = '${LEON}'`],
+      ['une chaîne à échappement', `[mcp_servers.leon]\nurl = "${LEON}\\u0020"`],
+    ])('reconnaît %s vers le serveur de la connexion', async (_label, toml) => {
+      expect(await recognized({ [CONFIG]: toml })).toBe(true);
+    });
+
+    const PROJET_TOML = `${PROJET}/.codex/config.toml`;
+    // Le même nom vers une autre URL, dans le projet, quelle que soit la forme : la configuration de l'utilisateur
+    // déclare, elle, le bon serveur.
+    const projectDeclares = (toml: string) => ({
+      [CONFIG]: `[mcp_servers.leon]\nurl = "${LEON}"`,
+      [PROJET_TOML]: toml,
+    });
+
     it.each([
       ['aucun fichier', {}],
       ['une autre URL', { [CONFIG]: `[mcp_servers.leon]\nurl = "${AUTRE}"` }],
       ['une table sans url', { [CONFIG]: '[mcp_servers.leon]\ncommand = "npx"' }],
-      ['une clé pointée', { [CONFIG]: `mcp_servers.leon.url = "${LEON}"` }],
-      ['une table en ligne', { [CONFIG]: `[mcp_servers]\nleon = { url = "${LEON}" }` }],
-      ['une chaîne littérale', { [CONFIG]: `[mcp_servers.leon]\nurl = '${LEON}'` }],
-      ['une chaîne à échappement', { [CONFIG]: `[mcp_servers.leon]\nurl = "${LEON}\\u0020"` }],
+      ['une sous-table sans url', { [CONFIG]: '[mcp_servers.leon.http_headers]\nX = "x"' }],
+      ['un TOML invalide', { [CONFIG]: '[mcp_servers.leon' }],
+      ['le projet vers une autre URL', projectDeclares(`[mcp_servers."leon"]\nurl = "${AUTRE}"`)],
       [
-        'le projet vers une autre URL',
-        {
-          [CONFIG]: `[mcp_servers.leon]\nurl = "${LEON}"`,
-          [`${PROJET}/.codex/config.toml`]: `[mcp_servers."leon"]\nurl = "${AUTRE}"`,
-        },
+        'une table en ligne à la racine',
+        projectDeclares(`mcp_servers = { leon = { url = "${AUTRE}" } }`),
+      ],
+      [
+        'une table au nom entre guillemets',
+        projectDeclares(`["mcp_servers".leon]\nurl = "${AUTRE}"`),
+      ],
+      ['une clé pointée entre guillemets', projectDeclares(`"mcp_servers".leon.url = "${AUTRE}"`)],
+      ['un nom échappé', projectDeclares(`[mcp_servers."le\\u006fn"]\nurl = "${AUTRE}"`)],
+      [
+        'un nom échappé en ligne',
+        projectDeclares(`[mcp_servers]\n"le\\u006fn" = { url = "${AUTRE}" }`),
+      ],
+      ['une table échappée', projectDeclares(`["mcp\\u005fservers".leon]\nurl = "${AUTRE}"`)],
+      [
+        'une clé `url` entre guillemets, et un leurre dans une chaîne multiligne',
+        projectDeclares(
+          `[mcp_servers.leon]\n"url" = "${AUTRE}"\ndisabled_tools = ["""\nurl = "${LEON}"\n"""]`,
+        ),
       ],
     ])('ne reconnaît rien : %s', async (_label, files) => {
       expect(await recognized(files)).toBe(false);

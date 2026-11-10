@@ -7,13 +7,18 @@
 // - Seule l'URL de la déclaration `leon` est lue, jamais ses en-têtes ni un jeton, et rien n'est écrit ni journalisé.
 // - Claude Code : `.claude.json` (dans CLAUDE_CONFIG_DIR quand elle est posée, sinon le dossier personnel), son
 //   `mcpServers` et celui de chacun de ses projets (portées utilisateur et locale), puis le `.mcp.json` du projet.
-//   Codex : `config.toml` de CODEX_HOME (sinon ~/.codex) et du projet (`.codex/`), sa table `[mcp_servers.leon]`.
+//   Codex : `config.toml` de CODEX_HOME (sinon ~/.codex) et du projet (`.codex/`), sa table `mcp_servers.leon`, lue
+//   par un analyseur TOML (smol-toml).
 //   Cursor : `mcp.json` de ~/.cursor et du projet (`.cursor/`). Formats publics de ces outils.
 // shortcut: la configuration MCP d'Antigravity n'est pas relevée : son serveur `leon` n'est jamais reconnu. La relever
 // au prochain essai, avec la forme de ses appels MCP (antigravity.ts).
 // shortcut: un `managed-mcp.json` de Claude Code (posé par une entreprise) n'est pas lu : le lire si une organisation y
 // déclare un serveur `leon`.
+// shortcut: un serveur `leon` déclaré au lancement (`claude --mcp-config …`, surtout avec `--strict-mcp-config`, ou
+// `codex -c mcp_servers.leon.url=…`) n'est pas vu, et c'est lui que la session utilise : s'il pointe ailleurs, ses
+// outils locaux ne rendent pas la session externe (échec ouvert). Le lire si un orchestrateur lance un outil ainsi.
 import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { LEON_MCP_SERVER } from '../capture/session-facts';
 import type { CodeSessionKind } from '../capture/turn';
 import { codexHome, cursorHome } from './outils';
@@ -37,7 +42,8 @@ const record = (value: unknown): Record<string, unknown> | null =>
     ? (value as Record<string, unknown>)
     : null;
 
-// `{ mcpServers: { leon: { url } } }` : la forme de Claude Code (`.mcp.json`) et de Cursor (`mcp.json`).
+// `{ mcpServers: { leon: { url } } }` : la forme de Claude Code (`.mcp.json`) et de Cursor (`mcp.json`), et celle de
+// `mcp_servers` chez Codex.
 function serversUrls(servers: unknown): Urls {
   if (servers === undefined) return [];
   const all = record(servers);
@@ -70,38 +76,16 @@ function jsonUrls(text: string, withProjects: boolean): Urls {
   return urls;
 }
 
-const LEON_KEY = String.raw`(?:"${LEON_MCP_SERVER}"|'${LEON_MCP_SERVER}'|${LEON_MCP_SERVER})`;
-const LEON_TABLE = new RegExp(String.raw`^\[\s*mcp_servers\s*\.\s*${LEON_KEY}\s*\]\s*(?:#.*)?$`);
-const LEON_SUBTABLE = new RegExp(String.raw`^\[\s*mcp_servers\s*\.\s*${LEON_KEY}\s*\.`);
-const SERVERS_TABLE = /^\[\s*mcp_servers\s*\]\s*(?:#.*)?$/;
-const URL_LINE = /^url\s*=\s*"([^"\\]*)"\s*(?:#.*)?$/;
-// Une déclaration de `leon` hors de sa table : une clé pointée, ou une table en ligne sous [mcp_servers].
-const DOTTED = new RegExp(String.raw`^mcp_servers\s*\.\s*${LEON_KEY}\s*[.=]`);
-const INLINE = new RegExp(String.raw`^${LEON_KEY}\s*[.=]`);
-
-// `config.toml` de Codex, ligne à ligne : seule la table `[mcp_servers.leon]` et une `url` en chaîne simple se lisent.
-// Toute autre façon de déclarer `leon` est une forme inconnue.
+// `config.toml` de Codex, lu par un analyseur TOML : la même table `mcp_servers.leon` que Codex, quelle que soit sa
+// forme (table, clé pointée, table en ligne, nom échappé). Un TOML que l'analyseur refuse est une forme inconnue.
 function tomlUrls(text: string): Urls {
-  const urls: string[] = [];
-  // Une sous-table (`[mcp_servers.leon.http_headers]`) déclare aussi `leon`, sans en dire l'URL.
-  let declared = false;
-  let table: 'leon' | 'servers' | 'autre' = 'autre';
-  for (const raw of text.split('\n')) {
-    const line = raw.trim();
-    if (line === '' || line.startsWith('#')) continue;
-    if (line.startsWith('[')) {
-      table = LEON_TABLE.test(line) ? 'leon' : SERVERS_TABLE.test(line) ? 'servers' : 'autre';
-      declared ||= table === 'leon' || LEON_SUBTABLE.test(line);
-      continue;
-    }
-    if (DOTTED.test(line) || (table === 'servers' && INLINE.test(line))) return null;
-    if (table !== 'leon' || !/^url\s*=/.test(line)) continue;
-    const url = URL_LINE.exec(line)?.[1];
-    if (url === undefined) return null;
-    urls.push(url);
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = parse(text);
+  } catch {
+    return null;
   }
-  if (!declared) return [];
-  return urls.length > 0 ? urls : [null];
+  return serversUrls(parsed.mcp_servers);
 }
 
 type ConfigFile = { path: string; urls: (text: string) => Urls };

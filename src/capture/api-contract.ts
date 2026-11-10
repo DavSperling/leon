@@ -182,8 +182,10 @@ export const ChercherRequestSchema = z.object({ ...ReadBase, requete: z.string()
 export type ChercherRequest = z.infer<typeof ChercherRequestSchema>;
 // L'historique d'un fil (C12) : sans `n`, ses versions lisibles ; avec `n`, le texte de l'une. Rien ne restaure par le
 // poste (D33) : la restauration se fait sur le site (T55).
+// `n` : borné à l'int4 de versions_memoire.n, sinon la requête échouerait en base au lieu de rendre le texte fixe.
+export const VERSION_N_MAX = 2_147_483_647;
 export const VersionsRequestSchema = z
-  .object({ ...ReadBase, id: z.uuid(), n: z.number().int().positive().optional() })
+  .object({ ...ReadBase, id: z.uuid(), n: z.number().int().min(1).max(VERSION_N_MAX).optional() })
   .strict();
 export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
 // Le rendu gardé (D25), le même que celui du MCP.

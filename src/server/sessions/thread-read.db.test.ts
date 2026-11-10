@@ -339,12 +339,48 @@ describe('le journal (D35)', () => {
       { tool: 'thread', client: 'claude_code', session: 's-1' },
     );
 
+    // Une ligne par source, même lue deux fois (entrée de l'état et source liée).
     const rows = await readsBy(paul);
-    expect(rows).toHaveLength(4);
+    expect(rows).toHaveLength(3);
     expect(rows.map(({ tool, client, session }) => ({ tool, client, session }))).toEqual(
-      Array(4).fill({ tool: 'thread', client: 'claude_code', session: 's-1' }),
+      Array(3).fill({ tool: 'thread', client: 'claude_code', session: 's-1' }),
     );
-    expect(rows.map((row) => row.sourceId).sort()).toEqual([id, one, message, message].sort());
+    expect(rows.map((row) => row.sourceId).sort()).toEqual([id, one, message].sort());
+  });
+
+  it('une seule ligne par source pour un appel, même entrée de plusieurs états ou de plusieurs versions', async () => {
+    const [paul] = await team();
+    const one = await session(paul);
+    const [first, second] = [
+      await fil(paul, { sessions: [one] }),
+      await fil(paul, { branches: ['paul/autre'], sessions: [one] }),
+    ];
+    for (const id of [first, second]) {
+      await write(paul, {
+        sourceId: id,
+        attendue: 0,
+        texte: modelState(one),
+        entrees: [one],
+        ecritPar: 'modele',
+      });
+    }
+    await write(paul, {
+      sourceId: first,
+      attendue: 1,
+      texte: modelState(one),
+      entrees: [one],
+      ecritPar: 'modele',
+    });
+    const counts = async () => {
+      const rows = await readsBy(paul);
+      await adminDb.delete(readLog).where(eq(readLog.userId, paul.userId));
+      return rows.map((row) => row.sourceId).sort();
+    };
+
+    await readDossier(paul, { projet: PROJECT, branche: null });
+    expect(await counts()).toEqual([first, second, one].sort());
+    await readVersions(paul, { projet: PROJECT, id: first });
+    expect(await counts()).toEqual([first, one].sort());
   });
 
   it('ce que le journal n’a pas noté n’est pas rendu', async () => {
@@ -411,6 +447,7 @@ describe('readDossier', () => {
           outils: ['claude_code'],
           derniereDate: NOV_5,
           prs: [],
+          prsTotal: 0,
           liees: 1,
           etatCourt: '',
           entrees: [],
@@ -421,6 +458,7 @@ describe('readDossier', () => {
           outils: ['codex', 'claude_code'],
           derniereDate: new Date('2026-11-06T10:00:00.000Z'),
           prs: [{ repo: 'acme/leon', numero: 12, etat: 'open' }],
+          prsTotal: 1,
           liees: 0,
           etatCourt: `Le worker de l'état est branché. (de: toi; source: ${s2})`,
           entrees: [s2],
@@ -466,6 +504,16 @@ describe('readDossier', () => {
 
     expect(dossier.fils[0]).toMatchObject({ id, etatCourt: '', entrees: [] });
     expect(masked(info)).toHaveLength(1);
+  });
+
+  it('20 PR au plus par fil, les plus récentes, sur leur total', async () => {
+    const [paul] = await team();
+    await fil(paul, { prs: Array.from({ length: 21 }, (_, n) => n + 1) });
+
+    const [one] = (await readDossier(paul, { projet: PROJECT, branche: null })).fils;
+
+    expect(one?.prsTotal).toBe(21);
+    expect(one?.prs.map((pr) => pr.numero)).toEqual(Array.from({ length: 20 }, (_, n) => n + 2));
   });
 
   it('20 fils au plus, sur leur total', async () => {

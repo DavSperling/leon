@@ -63,6 +63,8 @@ export type DossierFil = {
   outils: SourceKind[];
   derniereDate: Date | null;
   prs: ThreadPr[];
+  // Le nombre de PR du fil, pour signaler la coupe (D27).
+  prsTotal: number;
   // Le nombre de sources liées que le lecteur voit.
   liees: number;
   etatCourt: string;
@@ -238,6 +240,7 @@ export async function readDossier(
         outils: [...new Set(read.shown.sessions.map((one) => one.kind))],
         derniereDate: read.shown.sessions[0]?.date ?? null,
         prs: (prs[index] ?? []).map((pr) => ({ ...pr, etat: etats[next++] ?? null })),
+        prsTotal: read.list.prs.length,
         liees: read.list.sources.length,
         etatCourt: etatCourt(state.etat),
         entrees: state.entrees,

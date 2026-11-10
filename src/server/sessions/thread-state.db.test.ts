@@ -3,8 +3,9 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 import { extractClaudeCodeFacts, type SessionFacts } from '@/capture/session-facts';
 import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { briefingResponse } from '@/server/briefing/briefings';
 import { readLog, sources, turns, versionsMemoire } from '@/server/db/schema/memory';
-import { passages } from '@/server/db/schema/search';
+import { briefings, passages } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
 import { withdrawUsages } from '@/server/ingest/record-facts';
 import { createFakeLlm } from '@/server/llm/fake-llm';
@@ -29,7 +30,7 @@ vi.mock('./threads-queue', async (importOriginal) => ({
   getThreadsBoss: async () => ({ work: mocks.work }),
 }));
 
-const { startFilStateWorker, updateFilState } = await import('./thread-state-worker');
+const { ENTREES_MAX, startFilStateWorker, updateFilState } = await import('./thread-state-worker');
 
 const PROJECT = 'github.com/acme/leon';
 const tenantIds: string[] = [];
@@ -811,6 +812,81 @@ describe('updateFilState : les sources lues pendant les sessions', () => {
       expect((await readLatest(paul, filId)).version).toBeNull();
     },
   );
+
+  // Le point du matin du bloc de démarrage, noté avec l'id de la session (context-routes.ts) : ses sources entrent aux
+  // entrées, même lues des jours après le dernier tour.
+  it('une source du point lue par le bloc de démarrage, puis rendue privée : l’état du modèle ne se lit plus', async () => {
+    const { paul, marie } = await team();
+    const perso = await seedRun(marie, {
+      kind: 'github',
+      externalId: 'pr:marie/perso#4',
+      acl: [marie.tenantId],
+      status: 'done',
+      metadata: { nature: 'ticket', origin: { repo: 'marie/perso', cote: 'equipe' } },
+    });
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    await adminDb.insert(briefings).values({
+      tenantId: paul.tenantId,
+      userId: paul.userId,
+      project: PROJECT,
+      markdown: '# Point du matin\n- Marie a demandé la revue [1].',
+      sourceIds: [perso.sourceId],
+      preparedAt: new Date(),
+      stale: false,
+      acl: [paul.userId],
+    });
+    const point = await briefingResponse(paul, PROJECT, {
+      modelReady: false,
+      client: 'cli',
+      session: await sessionExternalId(one.id),
+    });
+    expect(point.projet).toBe(PROJECT);
+
+    expect(await updateFilState(job(paul, filId), { llm: answer(etat(one.id)) })).toBe('modele');
+    await withTenant(marie, (tx) => tx.execute(sql`select aligner_sources_github()`));
+
+    expect((await versions(filId))[0]?.entrees).toContain(perso.sourceId);
+    expect((await readLatest(paul, filId)).version).toBeNull();
+  });
+
+  // Les lectures en cascade d'un fil à l'autre : au-delà du plafond, l'état reste déterministe, et rien du modèle ne
+  // s'écrit.
+  it('plus de ENTREES_MAX sources lues pendant la session : l’état du serveur, jamais celui du modèle', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul);
+    const filId = await fil(paul, [one.id]);
+    const lues = await adminDb
+      .insert(sources)
+      .values(
+        Array.from({ length: ENTREES_MAX + 1 }, () => ({
+          tenantId: paul.tenantId,
+          kind: 'slack' as const,
+          externalId: crypto.randomUUID(),
+          ownerUserId: paul.userId,
+          acl: [paul.tenantId],
+        })),
+      )
+      .returning({ id: sources.id });
+    await adminDb.insert(readLog).values(
+      lues.map(({ id }) => ({
+        tenantId: paul.tenantId,
+        userId: paul.userId,
+        client: 'cli',
+        tool: 'threads' as const,
+        sourceId: id,
+        acl: [paul.tenantId],
+        at: IN_WINDOW,
+      })),
+    );
+    const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+
+    expect(await updateFilState(job(paul, filId), { llm: answer(etat(one.id)) })).toBe('serveur');
+
+    expect((await versions(filId)).map((one) => one.ecritPar)).toEqual(['serveur']);
+    expect(info.mock.calls.filter((call) => call[1] === 'fil.entrees_trop')).toHaveLength(1);
+    info.mockRestore();
+  });
 
   // Repris de T43 : lire Leon ne rend pas la session externe (D36), son récit entre au condensé.
   it('dans une session qui a lu `leon thread` et l’outil thread de Leon, les tours de l’utilisateur entrent au condensé, ceux de l’agent marqués', async () => {

@@ -245,22 +245,24 @@ export async function readBriefing(
 // La réponse de la route du crochet et de l'outil MCP (C8) : le dernier point, sinon le message qui dit pourquoi il
 // n'y en a pas. `modelReady` : le serveur a un modèle (getLlm), donc un point manquant sera préparé ; sans modèle,
 // rien n'est mis en file et le message le dit. `project` null : aucun projet connu (l'outil MCP appelé sans projet).
-// `client` (l'outil MCP) : le point rendu est noté au journal des lectures, une ligne par source fournie au modèle ;
-// un point dont une source n'a pas pu être notée (devenue invisible entre-temps) n'est pas rendu.
+// Le point rendu est noté au journal des lectures (D35), une ligne par source fournie au modèle, sessions comprises :
+// `client`, l'outil MCP ou `cli` (le bloc de démarrage et la route du point), et `session`, celle du bloc quand il la
+// donne. L'état d'un fil écrit d'après cette session les compte parmi ses entrées. Un point dont une source n'a pas
+// pu être notée (devenue invisible entre-temps) n'est pas rendu.
 export async function briefingResponse(
   ctx: TenantContext,
   project: string | null,
-  deps: { modelReady: boolean; client?: string },
+  deps: { modelReady: boolean; client: string; session?: string },
 ): Promise<BriefingResponse> {
   const briefing =
     project === null ? null : await readBriefing(ctx, project, { refresh: deps.modelReady });
   const logged =
     briefing === null ||
-    deps.client === undefined ||
     (
       await recordReads(ctx, {
         tool: 'briefing',
         client: deps.client,
+        session: deps.session,
         reads: briefing.sourceIds.map((sourceId) => ({ sourceId })),
         whole: true,
       })

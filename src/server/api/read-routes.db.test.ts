@@ -327,6 +327,8 @@ describe('POST /api/v1/versions', () => {
     expect(await texte(await post(API_PATHS.versions, paul.token, { id, n: 2 }))).toBe(
       'Version 2 of this thread is not readable, or does not exist.',
     );
+    // Au-delà de l'int4 de versions_memoire.n : refusé, jamais une erreur de la base.
+    expect((await post(API_PATHS.versions, paul.token, { id, n: 2_147_483_648 })).status).toBe(400);
     expect((await readsBy(paul)).every((row) => row.tool === 'versions')).toBe(true);
     // Le fil d'un collègue, ou d'un autre projet : introuvable.
     expect(await texte(await post(API_PATHS.versions, marie.token, { id }))).toBe(THREAD_NOT_FOUND);

@@ -2,7 +2,7 @@
 // `leon threads` (le dossier), `leon thread [id]` (un fil, sans id celui de la branche courante), `leon search
 // <requête>` (la recherche bornée au dépôt) et `leon versions <id> [--read <n>]` (l'historique d'un fil). Elles
 // appellent les routes de lecture et écrivent le texte gardé que rend le serveur sur la sortie standard, rien sur le
-// disque (D31). Aucune ne restaure une version : seul le site le fait (D33, T55).
+// disque (D31). Aucune ne restaure une version : le site le fera (D33, T55).
 // - L'usage `lecture` vaut pour les commandes du poste dès qu'un outil l'a accepté (D30) : la commande envoie les usages
 //   de tous les outils, et le serveur refuse sans lui (403).
 // - Un 404 (serveur plus ancien que la route) ou un 403 : un message fixe sur la sortie d'erreur, et le code 0 (C11).
@@ -151,7 +151,9 @@ export async function runReadCommand(
     deps.err(`Leon: leon ${command} unavailable (response ${response.status} from the server).`);
   } else {
     const parsed = ReadResponseSchema.safeParse(await response.json().catch(() => null));
-    if (parsed.success) deps.out(parsed.data.texte);
+    // Sans caractères de contrôle (sauf \n et \t) : un texte capté, écrit par un tiers, ne doit pas pouvoir piloter
+    // le terminal (séquences ESC, OSC 8, OSC 52).
+    if (parsed.success) deps.out(parsed.data.texte.replace(/(?![\n\t])\p{Cc}/gu, ''));
     else deps.err(`Leon: leon ${command} unavailable (unexpected response from the server).`);
   }
   return 0;

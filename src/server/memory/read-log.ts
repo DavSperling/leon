@@ -9,7 +9,7 @@ import { withTenant } from '@/server/db/with-tenant';
 
 export type ReadTool = (typeof readLog.tool.enumValues)[number];
 
-// Note qu'un assistant a reçu ces sources (et ces passages), une ligne par lecture, chacune avec l'accès qu'a sa
+// Note qu'un assistant a reçu ces sources (et ces passages), une ligne par lecture distincte, chacune avec l'accès qu'a sa
 // source à cet instant : seuls ceux qui la voient voient la lecture. Rend les sources notées ; une source que le
 // lecteur ne voit pas (inconnue, privée à un autre, devenue invisible entre sa lecture et ce journal) n'est pas
 // notée, et l'appelant ne rend alors pas ce qu'il en a lu. `whole` : tout ou rien, pour une lecture qui ne se rend
@@ -25,7 +25,14 @@ export async function recordReads(
   },
 ): Promise<Set<string>> {
   if (input.reads.length === 0) return new Set();
-  const wanted = [...new Set(input.reads.map((read) => read.sourceId))];
+  // Une ligne par paire (source, passage) : une source lue deux fois dans un appel (entrée de deux états) ne multiplie
+  // pas le journal, que l'état du modèle relit (sources_lues_pendant).
+  const reads = [
+    ...new Map(
+      input.reads.map((read) => [`${read.sourceId}/${read.passageId ?? ''}`, read]),
+    ).values(),
+  ];
+  const wanted = [...new Set(reads.map((read) => read.sourceId))];
   return withTenant(ctx, async (tx) => {
     const visible = await tx
       .select({ id: sources.id, acl: sources.acl })
@@ -33,7 +40,7 @@ export async function recordReads(
       .where(inArray(sources.id, wanted));
     const aclOf = new Map(visible.map((source) => [source.id, source.acl]));
     if (input.whole && aclOf.size < wanted.length) return new Set<string>();
-    const rows = input.reads.flatMap((read) => {
+    const rows = reads.flatMap((read) => {
       const acl = aclOf.get(read.sourceId);
       return acl
         ? [

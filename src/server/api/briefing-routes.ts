@@ -10,13 +10,18 @@ import { type ApiEnv, requireApiToken } from './require-api-token';
 // dernier point prêt, même périmé (son recalcul est déjà en file), sans jamais attendre le modèle. Rien de prêt (ou
 // un point qui a reçu une source que l'utilisateur ne voit plus) : le message d'attente, et le recalcul est mis en
 // file par readBriefing ; sans modèle sur ce serveur, un message qui le dit, et rien en file (aucun point ne serait
-// préparé). Le crochet abandonne au bout de 3 secondes : tout se lit dans une seule transaction.
+// préparé). Le crochet abandonne au bout de 3 secondes : le point se lit dans une transaction, et sa lecture se note
+// au journal dans une seconde.
 
 export const briefingRoutes = new Hono<ApiEnv>().get('/briefing', requireApiToken, async (c) => {
   const project = ProjectSchema.safeParse(c.req.query(BRIEFING_PROJECT_PARAM));
   // Sans la valeur reçue : une adresse de remote peut porter un jeton.
   if (!project.success) return c.json({ error: 'Missing or invalid project' }, 400);
   return c.json(
-    await briefingResponse(c.var.ctx, project.data, { modelReady: getLlm(env) !== null }),
+    // Le point rendu est une lecture (D35), sans session : la date la relie.
+    await briefingResponse(c.var.ctx, project.data, {
+      modelReady: getLlm(env) !== null,
+      client: 'cli',
+    }),
   );
 });

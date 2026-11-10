@@ -83,6 +83,18 @@ describe('runReadCommand', () => {
     expect(byId.sent().body).toEqual({ id: ID, projet: 'github.com/acme/leon', usages: [] });
   });
 
+  it('le texte du serveur perd ses caractères de contrôle, sauf \\n et \\t', async () => {
+    const { deps, out } = setup(() =>
+      Response.json({
+        texte: 'a\t\x1b]8;;https://piege\x07Voir la PR\x1b]8;;\x07\n\x1b[2K\x1b[1Ab\x9b',
+      }),
+    );
+
+    await runReadCommand('search', ['x'], deps);
+
+    expect(out).toEqual(['a\t]8;;https://piegeVoir la PR]8;;\n[2K[1Ab']);
+  });
+
   it('leon search : la requête, bornée au dépôt par le serveur', async () => {
     const { deps, sent } = setup();
 

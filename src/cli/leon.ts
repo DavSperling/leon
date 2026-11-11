@@ -35,8 +35,11 @@ import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
 import { installHooks } from './install-hooks';
 import {
   type LoginDeps,
+  type LoginResult,
+  loginComputer,
   openInBrowser,
   parseLoginArgs,
+  RELAUNCH_WAIT_MS,
   readTokenFromInput,
   runLogin,
   runLogout,
@@ -51,7 +54,7 @@ import {
   scheduleUpdate,
   startBackgroundUpdate,
 } from './self-update';
-import { ensureLauncher, isLeonRepo, runSetup } from './setup';
+import { ensureLauncher, isLeonRepo, runSetup, type SetupLogin } from './setup';
 import {
   connectionWithdrawal,
   tellBeforeConsent,
@@ -79,13 +82,17 @@ const HELP = `Usage: leon <command>
 Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
-                       Cursor, Antigravity), after showing what is sent and asking.
+                       Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
+                       the usages (\`lecture\`, \`resume\`) once for all these tools; when it opens the browser, the
+                       authorization page shows \`lecture\` as a box, yours to tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
       --depot <path>       run Leon from this clone (pnpm) instead of the installed copy: the launcher is written in
                            its clone form
-      --yes                do not ask for confirmation (a launcher that points to a clone is still asked about)
+      --yes                do not ask for confirmation (a launcher that points to a clone is still asked about); it
+                           gives no usage by itself: on a computer already connected, it opens the authorization
+                           page again (about 100 seconds) when a usage of the tools found here is not chosen yet
   import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
@@ -93,7 +100,9 @@ Commands:
   briefing             Send the project key (plus the current Git branch and the session id, if ~/.leon/accord.json
                        allows it) and print the block that comes back: your recent sessions on this repository and
                        the project's morning briefing (for Claude Code's SessionStart hook: the hook JSON is read
-                       from standard input)
+                       from standard input). With the reading consent (\`lecture\`) of the tool, it also sends that
+                       consent and the Leon command of this computer, and your threads of this repository come back
+                       instead of your sessions, with how to read one
   capter-session       Send the session that is ending: the text of the exchanges, with its project, and the actions
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
@@ -120,7 +129,7 @@ Commands:
   versions <id>        List the readable versions of a thread's state
       --read <n>           print version n instead (nothing is restored from your computer)
                        These four print to standard output and write nothing on disk. They need a connection and
-                       the reading consent (\`lecture\`) of one of your code tools, which leon setup does not offer yet
+                       the reading consent (\`lecture\`) of one of your code tools, which leon setup offers in a terminal
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -137,7 +146,8 @@ Commands:
   installer-crochets   For a clone: write the clone form of the launcher ~/.leon/bin/leon, then the SessionStart
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
-                       after confirmation (only the consent when the hooks are already there)
+                       after confirmation (only the consent when the hooks are already there); in a terminal, then
+                       the usages (\`lecture\`, \`resume\`) that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
@@ -218,6 +228,8 @@ async function runBriefingCommand(
   try {
     return await runBriefing({
       ...(outil ? { outil, evenement } : {}),
+      // Depuis un clone, la consigne du bloc cite pnpm dans ce clone quand le lanceur manque.
+      ...(CLI_VERSION === 'dev' ? { depot: CLI_REPO_DIR } : {}),
       stdin: process.stdin,
       env: process.env,
       cwd: process.cwd(),
@@ -457,25 +469,17 @@ async function runInstallHooks(args: string[]): Promise<number> {
     // Les crochets appellent le lanceur (K9) : sous la forme clone, il lance pnpm dans ce dépôt (setup.ts).
     const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
     const assumeYes = values.oui ?? false;
+    // Seul un terminal fait demander un usage (D30) : une réponse lue d'un tube peut venir d'un agent.
+    const usages = { home: io.home, assumeYes, interactive: process.stdin.isTTY === true };
     if (!(await ensureLauncher({ kind: 'clone', repoDir }, { ...io, yes: assumeYes }))) return 1;
     // Un retrait que le serveur n'a pas appris se dit avant le nouvel accord, qui effacerait son attente (T43).
     await tellBeforeConsent(io.home, uninstallDeps());
-    if (values.outil === 'cursor') {
-      return await installCursorHooks({ home: io.home, assumeYes }, io);
-    }
-    if (values.outil === 'antigravity') {
-      return await installAntigravityHooks({ home: io.home, assumeYes }, io);
-    }
+    if (values.outil === 'cursor') return await installCursorHooks(usages, io);
+    if (values.outil === 'antigravity') return await installAntigravityHooks(usages, io);
     if (values.outil === 'codex') {
-      return await installCodexHook(
-        { codexDir: codexHome(io.home, process.env), home: io.home, assumeYes },
-        io,
-      );
+      return await installCodexHook({ codexDir: codexHome(io.home, process.env), ...usages }, io);
     }
-    return await installHooks(
-      { repoDir, configDir, home: io.home, assumeYes, interactive: process.stdin.isTTY === true },
-      io,
-    );
+    return await installHooks({ repoDir, configDir, ...usages }, io);
   } finally {
     asker.close();
   }
@@ -538,13 +542,17 @@ async function runLoginCommand(args: string[]): Promise<number> {
 }
 
 // `leon setup` : la même connexion par le navigateur, mais l'entrée standard reste ouverte pour les questions qui
-// suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin.
-async function loginForSetup(url: string | undefined): Promise<number> {
+// suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin. Elle demande les cases de la
+// page (T64) ; la relance d'un ordinateur déjà connecté attend moins longtemps.
+async function loginForSetup({ url, usages, relance, attendu }: SetupLogin): Promise<LoginResult> {
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once('SIGINT', cancel);
   try {
-    return await runLogin({ url, withToken: false }, loginDeps(abort.signal));
+    return await loginComputer(
+      { url, withToken: false, usages, attendu },
+      { ...loginDeps(abort.signal), ...(relance ? { timeoutMs: RELAUNCH_WAIT_MS } : {}) },
+    );
   } finally {
     process.off('SIGINT', cancel);
   }

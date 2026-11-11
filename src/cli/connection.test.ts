@@ -48,6 +48,34 @@ describe('writeConnection et readConnection', () => {
     expect(await readdir(join(home, '.leon'))).toEqual(['connexion.json']);
   });
 
+  // `par` (C16 du plan de la mémoire à disposition) : « jeton » quand `leon login --with-token` l'a écrite. Facultatif, et
+  // jamais une raison de croire l'ordinateur déconnecté.
+  it('relit `par`, et une connexion sans lui reste valide', async () => {
+    await writeConnection(home, { ...CONNECTION, par: 'jeton' });
+    expect(await readConnection(home)).toEqual({ ...CONNECTION, par: 'jeton' });
+
+    await writeConnection(home, CONNECTION);
+    const saved = await readConnection(home);
+    expect(saved).toEqual(CONNECTION);
+    expect(saved).not.toHaveProperty('par');
+  });
+
+  it.each([
+    ['une autre valeur', 'navigateur'],
+    ['autre chose qu’un texte', 1],
+    ['nul', null],
+  ])(
+    'un `par` retouché à la main (%s) laisse la connexion valide, sans lui',
+    async (_name, par) => {
+      await writeRaw(JSON.stringify({ ...CONNECTION, par }));
+
+      const saved = await readConnection(home);
+
+      expect(saved).toMatchObject(CONNECTION);
+      expect(saved?.par).toBeUndefined();
+    },
+  );
+
   it('remplace une connexion existante, toujours en 0600', async () => {
     await writeConnection(home, CONNECTION);
     const other = { ...CONNECTION, jeton: `leon_${'b'.repeat(43)}`, espace: 'Autre' };

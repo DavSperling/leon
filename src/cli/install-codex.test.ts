@@ -10,6 +10,7 @@ import {
   installCodexHook,
   uninstallCodexHook,
 } from './install-codex';
+import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
 import { writeLauncher } from './launcher';
 import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
@@ -65,12 +66,17 @@ async function writeHooks(content: unknown): Promise<string> {
 }
 const readHooks = async () => JSON.parse(await readFile(hooksPath, 'utf8'));
 
-async function install(answers: (string | null)[] = ['oui'], assumeYes = false) {
+// `usages` : le terminal (`interactive`) et les usages déjà tranchés dans le passage (T47).
+async function install(
+  answers: (string | null)[] = ['oui'],
+  assumeYes = false,
+  usages: UsageOptions = {},
+) {
   const out: string[] = [];
   const err: string[] = [];
   const asked: string[] = [];
   const code = await installCodexHook(
-    { codexDir, home, assumeYes },
+    { codexDir, home, assumeYes, ...usages },
     {
       out: (text) => out.push(text),
       err: (text) => err.push(text),
@@ -256,6 +262,98 @@ describe('installCodexHook', () => {
 
     expect((await factsConsent(home, 'codex'))?.capture_le).toBeUndefined();
     expect((await readHooks()).hooks.Stop).toBeUndefined();
+  });
+});
+
+// T47 (décisions d'Amos du 11/11) : Codex propose `lecture` puis `resume`, avec les textes de Claude Code, dans un
+// terminal, après l'accord de base et la capture ; ils s'écrivent sous l'entrée de Codex seule.
+describe('installCodexHook : les usages', () => {
+  const terminal = { interactive: true };
+  const rawEntry = async (tool = 'codex') =>
+    JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils[tool];
+
+  it('dans un terminal, après l’accord : lecture puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
+    await writeConsent(home, 'claude_code', 2);
+
+    const { code, out, asked } = await install(['oui', '', 'oui'], false, terminal);
+
+    expect(code).toBe(0);
+    expect(asked).toHaveLength(3);
+    expect(asked[1]).toContain('[Y/n]');
+    expect(asked[2]).toContain('[y/N]');
+    expect(out.indexOf(LECTURE_LINES.join('\n'))).toBeGreaterThan(out.indexOf('Consent recorded'));
+    expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(LECTURE_LINES.join('\n')),
+    );
+    expect(await factsConsent(home, 'codex')).toMatchObject({ usages: ['lecture', 'resume'] });
+    expect(await rawEntry('claude_code')).toEqual({ version: 2, installe_le: expect.any(String) });
+  });
+
+  it('crochets et capture en place, sans usage : plus de « nothing to do » ; un refus cite --outil codex', async () => {
+    await install();
+    const hooks = await readFile(hooksPath, 'utf8');
+
+    const { code, out } = await install(['non', 'non'], false, terminal);
+
+    expect(code).toBe(0);
+    expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
+    expect(out).not.toContain('nothing to do');
+    expect(out).toContain(
+      'This answer is kept: you will not be asked again. To change it, run `~/.leon/bin/leon retirer-crochets --outil codex` (it also removes the hooks of this tool and withdraws its consent), then `~/.leon/bin/leon setup` again.',
+    );
+    expect(await factsConsent(home, 'codex')).toMatchObject({
+      usages: [],
+      refus: ['lecture', 'resume'],
+    });
+    expect(await readFile(hooksPath, 'utf8')).toBe(hooks);
+
+    const again = await install([], false, terminal);
+
+    expect(again.asked).toEqual([]);
+    expect(again.out).toContain('nothing to do');
+  });
+
+  it('la capture refusée : aucun usage n’est proposé', async () => {
+    const { asked } = await install(['non', 'oui', 'oui'], false, terminal);
+
+    expect(asked).toHaveLength(1);
+    expect(await factsConsent(home, 'codex')).toBeNull();
+  });
+
+  it.each([
+    ['hors terminal, même avec « y »', ['oui', '', 'y'], false, {}],
+    ['avec --oui, même dans un terminal', [], true, terminal],
+  ])('%s : ni question ni usage', async (_name, answers, assumeYes, usages) => {
+    const { out, asked } = await install(answers, assumeYes, usages);
+
+    expect(asked.length).toBeLessThanOrEqual(1);
+    expect(out).not.toContain(LECTURE_LINES[0]);
+    expect(await factsConsent(home, 'codex')).toMatchObject({ usages: [], refus: [] });
+  });
+
+  it('une décision du passage s’écrit sans question (la page « Autoriser », setup)', async () => {
+    const { asked } = await install(['oui'], false, {
+      decisions: new Map([
+        ['lecture', true],
+        ['resume', false],
+      ]),
+    });
+
+    expect(asked).toHaveLength(1);
+    expect(await factsConsent(home, 'codex')).toMatchObject({
+      usages: ['lecture'],
+      refus: ['resume'],
+    });
+  });
+
+  it('le retrait efface usages, refus et capture ; une réinstallation dans un terminal les repropose', async () => {
+    await install(['oui', 'oui', 'non'], false, terminal);
+
+    await uninstall();
+
+    expect(await rawEntry()).toEqual({ version: 0, installe_le: expect.any(String) });
+    const again = await install(['oui', null, null], false, terminal);
+    expect(again.asked).toHaveLength(3);
   });
 });
 

@@ -40,9 +40,10 @@ const PATHS = {
 // La recherche calcule des vecteurs : plus que les 3 s du bloc de démarrage.
 const TIMEOUT_MS = 30_000;
 
-// Tant que `leon setup` ne propose pas l'usage `lecture` (T47), toute lecture du poste reçoit ce refus.
+// Le refus du serveur quand aucun outil du poste n'a l'usage `lecture` : `leon setup` le propose dans un terminal (T47),
+// sauf à un outil qui l'a refusé, jusqu'au retrait de cet outil.
 export const READING_NOT_ALLOWED_MESSAGE =
-  'Leon: none of your code tools has accepted reading Leon from this computer (the `lecture` consent), and `leon setup` does not offer it yet: nothing was read.';
+  'Leon: none of your code tools has accepted reading Leon from this computer (the `lecture` consent): nothing was read. To accept it, run `~/.leon/bin/leon setup` in a terminal. A tool where you refused it is not asked again until you remove its hooks with `~/.leon/bin/leon retirer-crochets` (with `--outil <tool>` for Codex, Cursor or Antigravity).';
 export const routeMissingMessage = (command: ReadCommand) =>
   `Leon: this Leon server does not have \`leon ${command}\` yet (route missing).`;
 

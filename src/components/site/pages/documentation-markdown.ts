@@ -103,7 +103,7 @@ export function documentationMarkdown({
     sent: [
       md('sent.lead'),
       list(
-        (['where', 'end', 'tools', 'secrets', 'start', 'resume'] as const).map((k) =>
+        (['where', 'end', 'tools', 'secrets', 'start', 'lecture', 'resume'] as const).map((k) =>
           md(`sent.${k}`),
         ),
       ),

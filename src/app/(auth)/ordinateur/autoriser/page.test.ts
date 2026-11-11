@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createTranslator } from 'next-intl';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { LECTURE_LINES } from '@/cli/install-hooks';
 import { Button } from '@/components/verre/ui/button';
 import { nb } from '@/lib/verre/nb';
 import { getSession, getUserContext } from '@/server/auth/session';
@@ -161,6 +162,74 @@ describe('page d’autorisation', () => {
   });
 });
 
+// Les cases que `leon setup` demande (T64, C16) : natives et cochées par défaut, pour partir avant l'hydratation ou sans
+// JavaScript (une case qui ne part pas deviendrait un refus gardé).
+describe('les cases de la page', () => {
+  const ASKED = { ...PARAMS, usages: 'lecture' };
+  const inputs = (node: ReactNode) => elements(node).filter((el) => el.type === 'input');
+  const boxes = (node: ReactNode) => inputs(node).filter((el) => el.props.type === 'checkbox');
+
+  it('montre la case demandée, native et cochée, avec son texte, avant « Autoriser »', async () => {
+    const page = await render(ASKED);
+
+    const [form] = elements(page).filter((el) => el.type === 'form');
+    const shown = boxes(form);
+    expect(shown.map((el) => [el.props.name, el.props.value, el.props.defaultChecked])).toEqual([
+      ['usage', 'lecture', true],
+    ]);
+    expect(shown[0]?.props.checked).toBeUndefined(); // non contrôlée : rien n'attend React
+    expect(
+      inputs(form)
+        .filter((el) => el.props.type === 'hidden')
+        .map((el) => [el.props.name, el.props.value]),
+    ).toEqual([
+      ['port', 4242],
+      ['etat', ETAT],
+      ['empreinte', EMPREINTE],
+      ['usages', 'lecture'],
+    ]);
+    const all = elements(form);
+    expect(all.indexOf(shown[0] as never)).toBeLessThan(all.findIndex((el) => el.type === Button));
+    const text = textOf(page);
+    const { usages } = fr.computer.authorize;
+    expect(text).toContain(nb(usages.title));
+    expect(text).toContain(nb(usages.hint));
+    expect(text).toContain(nb(usages.lecture.title));
+    expect(text).toContain('Leon place dans le contexte de l’agent');
+  });
+
+  it('la case est nommée par son titre et décrite par son texte', async () => {
+    const page = await render(ASKED);
+
+    const [box] = boxes(page);
+    const label = elements(page).find((el) => el.type === 'label');
+    expect(label?.props.htmlFor).toBe(box?.props.id);
+    const described = elements(page).find((el) => el.props.id === box?.props['aria-describedby']);
+    expect(described?.type).toBe('ul');
+  });
+
+  it.each([
+    ['sans paramètre usages', PARAMS],
+    ['avec une valeur que la page ne montre pas encore', { ...PARAMS, usages: 'rappel' }],
+    ['avec une valeur inconnue', { ...PARAMS, usages: 'tout' }],
+  ])('%s : ni case ni champ caché', async (_name, params) => {
+    const page = await render(params);
+
+    expect(boxes(page)).toEqual([]);
+    expect(inputs(page).map((el) => el.props.name)).toEqual(['port', 'etat', 'empreinte']);
+    expect(textOf(page)).not.toContain(nb(fr.computer.authorize.usages.title));
+  });
+
+  it('sans session, renvoie vers /connexion avec les quatre paramètres', async () => {
+    vi.mocked(getSession).mockResolvedValue(null);
+
+    await redirectsTo(
+      { ...ASKED, usages: 'lecture,inconnu' },
+      `/connexion?port=4242&etat=${ETAT}&empreinte=${EMPREINTE}&usages=lecture`,
+    );
+  });
+});
+
 describe('textes', () => {
   it.each([
     [
@@ -177,6 +246,33 @@ describe('textes', () => {
     const t = createTranslator({ locale, messages, namespace: 'computer.authorize' });
 
     expect(t('question', { space: 'Acme' })).toBe(expected);
+  });
+
+  // Contrat avec les installateurs : la case dit, en anglais, mot pour mot, ce que dit le terminal (LECTURE_LINES).
+  it('le texte anglais de la case lecture est celui des installateurs, mot pour mot', () => {
+    const t = createTranslator({
+      locale: 'en',
+      messages: en,
+      namespace: 'computer.authorize.usages.lecture',
+    });
+    const code = (chunks: string) => `\`${chunks}\``;
+
+    expect([
+      t('title'),
+      ...(['p1', 'p2', 'p3'] as const).map((key) => `  - ${t.markup(key, { code })}`),
+    ]).toEqual(LECTURE_LINES);
+  });
+
+  it('le français a le même nombre de lignes et les mêmes commandes', () => {
+    const lines = (messages: typeof fr | typeof en) =>
+      Object.values(messages.computer.authorize.usages.lecture).join('\n');
+
+    expect(Object.keys(fr.computer.authorize.usages.lecture)).toEqual(
+      Object.keys(en.computer.authorize.usages.lecture),
+    );
+    expect(lines(fr).match(/<code>[^<]+<\/code>/g)).toEqual(
+      lines(en).match(/<code>[^<]+<\/code>/g),
+    );
   });
 
   it('l’anglais a les autres textes de la page', () => {

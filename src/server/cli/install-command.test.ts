@@ -139,6 +139,36 @@ describe('claudeCodeInstructions', () => {
     },
   );
 
+  // T64 : les cases de la page « Autoriser » sont à l'humain. L'agent n'y coche rien, n'y clique pas et n'ouvre pas
+  // l'adresse dans un navigateur qu'il pilote ; il sait aussi qu'un ordinateur déjà connecté peut rouvrir la page.
+  it.each([
+    [
+      'en',
+      [
+        'they are mine',
+        'Never tick, untick or click anything on that page',
+        'never open its address in a browser you control',
+        'about 100 seconds',
+      ],
+    ],
+    [
+      'fr',
+      [
+        'elles sont à moi',
+        'Ne coche, ne décoche et ne clique jamais rien sur cette page',
+        "n'ouvre jamais son adresse dans un navigateur que tu pilotes",
+        'environ 100 secondes',
+      ],
+    ],
+  ] as const)(
+    'dit à Claude Code que les cases de la page ne sont pas à lui (%s)',
+    (locale, words) => {
+      const text = claudeCodeInstructions(translator(locale), 'https://leon.example') ?? '';
+
+      for (const word of words) expect(text, word).toContain(word);
+    },
+  );
+
   // La consigne cite le message que le script d'installation écrit sans terminal, et la fin de la commande qu'il
   // affiche : ce que Claude Code reconnaît dans la sortie du script doit y être, mot pour mot.
   it.each(['en', 'fr'] as const)(

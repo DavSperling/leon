@@ -12,8 +12,9 @@ import { deterministicState } from './thread-state';
 import { type Read, readFil } from './thread-state-worker';
 import { FIL, type Fil, findFils, has, listOf } from './threads';
 
-// La lecture commune des fils (T44, T45, T54 ; C9, C12, D24, D27, D33, D35 du plan de la mémoire à disposition) : le
-// dossier d'un projet, un fil et son historique, pour les routes de lecture (read-routes.ts) et les outils du MCP. Tout
+// La lecture commune des fils (T44, T45, T46, T54 ; C9, C12, D24, D27, D33, D35 du plan de la mémoire à disposition) :
+// le dossier d'un projet, un fil et son historique, pour les routes de lecture (read-routes.ts) et les outils du MCP,
+// et les clés des fils pour le sommaire du démarrage (start-context.ts). Tout
 // se lit sous les droits du lecteur (withTenant), le filtre owner_user_id en plus de la sécurité par ligne : la
 // politique equipe_lit (0057) ouvrirait sinon à un manager les fils d'un subordonné. Rien ne s'écrit ici, hors du
 // journal, et rien ne part en file.
@@ -57,7 +58,8 @@ export type ThreadRead = {
   tickets: Bounded<string>;
   liees: Bounded<{ id: string; kind: SourceKind; titre: string | null }>;
 };
-export type DossierFil = {
+// Les clés d'un fil (D25), tout ce que le sommaire du démarrage en pousse (T46) : ni titre de PR, ni état, ni texte.
+export type FilKeys = {
   id: string;
   titre: string;
   outils: SourceKind[];
@@ -67,9 +69,8 @@ export type DossierFil = {
   prsTotal: number;
   // Le nombre de sources liées que le lecteur voit.
   liees: number;
-  etatCourt: string;
-  entrees: string[];
 };
+export type DossierFil = FilKeys & { etatCourt: string; entrees: string[] };
 export type Dossier = { fils: DossierFil[]; total: number };
 // `texte` : la première ligne dans la liste, le texte entier pour une version demandée par son numéro.
 export type VersionLine = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'> & {
@@ -206,35 +207,38 @@ export async function readThread(
   };
 }
 
-// Les fils de l'auteur sur ce projet, hors absorbés : celui de la branche d'abord (hors main et master), puis par
-// date de mise à jour, 20 au plus.
-export async function readDossier(
+// Les fils de l'auteur sur ce projet, hors absorbés, et leurs clés : celui de la branche d'abord (hors main et master),
+// puis par date de mise à jour, `max` au plus, dans la transaction de l'appelant. Ni version ni journal : le sommaire du
+// démarrage s'en tient là (start-context.ts, T46), le dossier y ajoute l'état et note ce qu'il rend.
+export async function readFilKeys(
+  tx: Tx,
   ctx: TenantContext,
   input: { projet: string; branche?: string | null },
-  journal: Journal,
-): Promise<Dossier> {
+  max: number,
+): Promise<{ total: number; fils: Array<{ keys: FilKeys; read: Read }> }> {
   const branche = input.branche && !DEFAULT_BRANCHES.has(input.branche) ? input.branche : null;
-  const { fils, total } = await withTenant(ctx, async (tx) => {
-    const { rows } = await tx.execute<{ id: string; total: number }>(sql`
-      select s.id, (count(*) over ())::int as total from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-        and s.metadata->>'project' = ${input.projet} and s.metadata->>'absorbe_par' is null
-      order by ${branche === null ? sql`` : sql`${has('branches', branche)} desc nulls last,`}
-        coalesce((s.metadata->>'maj_le')::timestamptz, s.created_at) desc, s.id
-      limit ${DOSSIER_FILS_MAX}`);
-    // shortcut: 4 requêtes par fil (readFil, la version), 20 fils au plus ; les grouper quand la mesure du lot 11
-    // dépasse 200 ms.
-    const reads: Array<{ read: Read; state: Awaited<ReturnType<typeof stateOf>> }> = [];
-    for (const row of rows) {
-      const read = await readFil(tx, ctx, row.id, false);
-      if (read) reads.push({ read, state: await stateOf(tx, ctx, read) });
-    }
-    const prs = reads.map(({ read }) => read.list.prs.slice(-FIL_PRS_MAX));
-    const etats = await prStates(tx, ctx, prs.flat());
-    let next = 0;
-    return {
-      total: rows[0]?.total ?? 0,
-      fils: reads.map(({ read, state }, index) => ({
+  const { rows } = await tx.execute<{ id: string; total: number }>(sql`
+    select s.id, (count(*) over ())::int as total from sources s
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
+      and s.metadata->>'project' = ${input.projet} and s.metadata->>'absorbe_par' is null
+    order by ${branche === null ? sql`` : sql`${has('branches', branche)} desc nulls last,`}
+      coalesce((s.metadata->>'maj_le')::timestamptz, s.created_at) desc, s.id
+    limit ${max}`);
+  // shortcut: 3 requêtes par fil (readFil), plus la version au dossier, 20 fils au plus ; les grouper quand la mesure
+  // du lot 11 dépasse 200 ms.
+  const reads: Read[] = [];
+  for (const row of rows) {
+    const read = await readFil(tx, ctx, row.id, false);
+    if (read) reads.push(read);
+  }
+  const prs = reads.map((read) => read.list.prs.slice(-FIL_PRS_MAX));
+  const etats = await prStates(tx, ctx, prs.flat());
+  let next = 0;
+  return {
+    total: rows[0]?.total ?? 0,
+    fils: reads.map((read, index) => ({
+      read,
+      keys: {
         id: read.fil.id,
         titre: filTitle(read.fil),
         outils: [...new Set(read.shown.sessions.map((one) => one.kind))],
@@ -242,10 +246,25 @@ export async function readDossier(
         prs: (prs[index] ?? []).map((pr) => ({ ...pr, etat: etats[next++] ?? null })),
         prsTotal: read.list.prs.length,
         liees: read.list.sources.length,
-        etatCourt: etatCourt(state.etat),
-        entrees: state.entrees,
-      })),
-    };
+      },
+    })),
+  };
+}
+
+// Le dossier : les clés des fils (readFilKeys), 20 au plus, et la première ligne de leur état.
+export async function readDossier(
+  ctx: TenantContext,
+  input: { projet: string; branche?: string | null },
+  journal: Journal,
+): Promise<Dossier> {
+  const { fils, total } = await withTenant(ctx, async (tx) => {
+    const listed = await readFilKeys(tx, ctx, input, DOSSIER_FILS_MAX);
+    const fils: DossierFil[] = [];
+    for (const { keys, read } of listed.fils) {
+      const state = await stateOf(tx, ctx, read);
+      fils.push({ ...keys, etatCourt: etatCourt(state.etat), entrees: state.entrees });
+    }
+    return { total: listed.total, fils };
   });
   const logged = await recordReads(ctx, {
     ...journal,

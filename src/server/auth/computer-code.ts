@@ -1,5 +1,6 @@
 import { createHmac, hkdfSync, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
+import { USAGES, type Usage } from '@/capture/api-contract';
 import { env } from '@/server/env';
 
 // Une charge JSON signée par HMAC, une clé par « but » (purpose) : signPayload / verifyPayload. Signée, pas
@@ -14,12 +15,19 @@ const VERSION = 1;
 const TTL_SECONDS = 120;
 const PURPOSE = 'ordinateur';
 
+// Tous les usages que le serveur connaît, pas seulement ceux que la page montre à ce lot : un code signé avant un
+// retour en arrière se vérifie encore.
+const UsagesSchema = z.array(z.enum(USAGES)).max(USAGES.length);
 const PayloadSchema = z.strictObject({
   v: z.literal(VERSION),
   e: z.string().regex(/^[0-9a-f]{64}$/), // SHA-256 du jeton, comme hashApiToken
   u: z.string().min(1),
   t: z.string().min(1),
   x: z.number().int(), // expiration, secondes depuis 1970
+  // Les cases de la page (T64, C16 du plan de la mémoire à disposition) : montrées (m), puis cochées parmi elles (g).
+  // Lisibles de qui voit l'adresse de retour, mais pas modifiables. Absentes quand la page n'en montrait aucune.
+  m: UsagesSchema.optional(),
+  g: UsagesSchema.optional(),
 });
 export type ComputerCodePayload = z.infer<typeof PayloadSchema>;
 
@@ -72,8 +80,10 @@ export function verifyPayload(
   return claims;
 }
 
+// Sans case montrée, ni m ni g : le code est alors celui d'avant T64, qu'un serveur plus ancien (deux instances pendant
+// un déploiement) vérifie encore.
 export function signComputerCode(
-  claims: Pick<ComputerCodePayload, 'e' | 'u' | 't'>,
+  claims: Pick<ComputerCodePayload, 'e' | 'u' | 't'> & { m?: Usage[]; g?: Usage[] },
   { secret, now = Date.now() }: Options = {},
 ): string {
   const payload: ComputerCodePayload = {
@@ -82,6 +92,7 @@ export function signComputerCode(
     u: claims.u,
     t: claims.t,
     x: Math.floor(now / 1000) + TTL_SECONDS,
+    ...(claims.m?.length ? { m: claims.m, g: claims.g ?? [] } : {}),
   };
   return signPayload(PURPOSE, payload, { secret });
 }

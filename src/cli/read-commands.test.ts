@@ -156,14 +156,17 @@ describe('runReadCommand', () => {
     expect(err).toEqual([routeMissingMessage('versions')]);
   });
 
-  it('sans l’usage `lecture` (403) : le message dit que `leon setup` ne le propose pas encore, le code 0', async () => {
+  // T47 : `leon setup` propose l'usage dans un terminal ; un refus n'est plus redemandé avant le retrait de l'outil.
+  it('sans l’usage `lecture` (403) : le message dit de lancer `leon setup` dans un terminal, le code 0', async () => {
     const { deps, out, err } = setup(() => Response.json({ error: 'x' }, { status: 403 }));
 
     expect(await runReadCommand('thread', [], deps)).toBe(0);
 
     expect(out).toEqual([]);
     expect(err).toEqual([READING_NOT_ALLOWED_MESSAGE]);
-    expect(READING_NOT_ALLOWED_MESSAGE).toContain('`leon setup` does not offer it yet');
+    expect(READING_NOT_ALLOWED_MESSAGE).toBe(
+      'Leon: none of your code tools has accepted reading Leon from this computer (the `lecture` consent): nothing was read. To accept it, run `~/.leon/bin/leon setup` in a terminal. A tool where you refused it is not asked again until you remove its hooks with `~/.leon/bin/leon retirer-crochets` (with `--outil <tool>` for Codex, Cursor or Antigravity).',
+    );
   });
 
   it('serveur absent : sans connexion, un message fixe et le code 0, sans rien demander', async () => {

@@ -49,6 +49,7 @@ import {
   type Json,
   load,
   parseSettings,
+  REMINDER_HOOK,
   SETTINGS_FILE,
   writeAtomically,
 } from './install-hooks';
@@ -59,13 +60,13 @@ const README_HINT = `see the README, section "Retirer les crochets"`;
 
 export type RemovedHook = { event: string; command: string };
 
-// Les réglages sans les crochets de Leon, sans modifier l'objet reçu.
+// Les réglages sans les crochets de Leon, celui de message (`rappel`, T49) compris, sans modifier l'objet reçu.
 export function removeLeonHooks(settings: Json): { settings: Json; removed: RemovedHook[] } {
   const next = structuredClone(settings);
   const removed: RemovedHook[] = [];
   const hooksRoot = next.hooks;
   if (!isRecord(hooksRoot)) return { settings: next, removed };
-  for (const spec of HOOKS) {
+  for (const spec of [...HOOKS, REMINDER_HOOK]) {
     const groups = hooksRoot[spec.event];
     if (!Array.isArray(groups)) continue;
     const kept: unknown[] = [];

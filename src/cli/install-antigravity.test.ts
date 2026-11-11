@@ -10,7 +10,7 @@ import {
   installAntigravityHooks,
   uninstallAntigravityHooks,
 } from './install-antigravity';
-import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
+import { LECTURE_LINES, RAPPEL_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
 
 // L'installateur et le retrait des crochets d'Antigravity (T34), toujours dans un HOME temporaire : jamais le vrai
 // ~/.gemini.
@@ -133,19 +133,20 @@ describe('installAntigravityHooks', () => {
   });
 });
 
-// T47 (décisions d'Amos du 11/11) : Antigravity propose `lecture` puis `resume`, avec les textes de Claude Code, dans
-// un terminal, après l'accord de base et la capture.
+// T47 (décisions d'Amos du 11/11) : Antigravity propose `lecture`, `rappel` (depuis l'essai de l'appli 2.0.6 du 11/11),
+// puis `resume`, avec les textes de Claude Code, dans un terminal, après l'accord de base et la capture.
 describe('installAntigravityHooks : les usages', () => {
-  it('dans un terminal, après l’accord : lecture puis resume, écrits pour Antigravity seul', async () => {
-    const { code, out, asked } = await install(['oui', 'oui', 'non'], { interactive: true });
+  it('dans un terminal, après l’accord : lecture, rappel puis resume, écrits pour Antigravity seul', async () => {
+    const { code, out, asked } = await install(['oui', 'oui', 'oui', 'non'], { interactive: true });
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(3);
+    expect(asked).toHaveLength(4);
     expect(out).toContain(LECTURE_LINES.join('\n'));
+    expect(out).toContain(RAPPEL_LINES.join('\n'));
     expect(out).toContain(RESUME_LINES.join('\n'));
     expect(out).toContain('`~/.leon/bin/leon retirer-crochets --outil antigravity`');
     expect(await factsConsent(home, 'antigravity')).toMatchObject({
-      usages: ['lecture'],
+      usages: ['lecture', 'rappel'],
       refus: ['resume'],
     });
   });
@@ -154,9 +155,26 @@ describe('installAntigravityHooks : les usages', () => {
     await install();
 
     expect((await install([])).out).toContain('nothing to do');
-    const { out, asked } = await install([null, null], { interactive: true });
-    expect(asked).toHaveLength(2);
+    const { out, asked } = await install([null, null, null], { interactive: true });
+    expect(asked).toHaveLength(3);
     expect(out).not.toContain('nothing to do');
+  });
+  // T49, amendé le 11/11 au soir : PreInvocation reçoit le message dans l'appli 2.0.6 (annexe 05) ; le crochet déjà posé
+  // porte le rappel, sans crochet de plus.
+  it('rappel : une décision de la page l’écrit pour Antigravity, sans le redemander ni changer ses crochets', async () => {
+    await writeHooks(userEntry);
+    const { asked } = await install(['oui', 'non', 'non'], {
+      interactive: true,
+      decisions: new Map([['rappel', true]]),
+    });
+
+    expect(asked).toHaveLength(3);
+    expect(asked.some((question) => question.includes('remind'))).toBe(false);
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({
+      usages: ['rappel'],
+      refus: ['lecture', 'resume'],
+    });
+    expect(await readHooks()).toEqual({ ...userEntry, leon: leonEntry() });
   });
 });
 

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   requeueStaleRuns: vi.fn(),
   failRun: vi.fn(),
   resolveTenantContext: vi.fn(),
+  purgeCited: vi.fn(),
 }));
 
 vi.mock('@/server/pipeline/queue', async (importOriginal) => ({
@@ -31,6 +32,7 @@ vi.mock('@/server/auth/tenant-context', () => ({
   resolveTenantContext: mocks.resolveTenantContext,
 }));
 vi.mock('./index-run', () => ({ indexIngestRun: mocks.indexIngestRun }));
+vi.mock('@/server/sessions/reminder', () => ({ purgeCited: mocks.purgeCited }));
 vi.mock('./embed-missing', () => ({
   embedMissingBatch: mocks.embedMissingBatch,
   dropOldVectors: mocks.dropOldVectors,
@@ -71,6 +73,7 @@ beforeEach(() => {
   mocks.dropOldVectors.mockResolvedValue(0);
   mocks.requeueStaleRuns.mockResolvedValue(0);
   mocks.resolveTenantContext.mockResolvedValue(ctx);
+  mocks.purgeCited.mockResolvedValue(0);
 });
 
 afterEach(() => {
@@ -117,6 +120,24 @@ describe('startSearchWorker', () => {
     expect(mocks.schedule).toHaveBeenCalledWith('pipeline-requeue', '* * * * *');
     await handlerOf('pipeline-requeue')();
     expect(mocks.requeueStaleRuns).toHaveBeenCalledExactlyOnceWith(5);
+  });
+
+  it('le même tic purge les fils déjà rappelés une fois par heure, et une purge ratée ne l’arrête pas', async () => {
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const now = vi.spyOn(Date, 'now').mockReturnValue(10 * 3_600_000);
+    await startSearchWorker({ embedder: null });
+    mocks.purgeCited.mockRejectedValueOnce(new Error('pool épuisé'));
+
+    await handlerOf('pipeline-requeue')();
+    now.mockReturnValue(10 * 3_600_000 + 59 * 60_000);
+    await handlerOf('pipeline-requeue')();
+    expect(mocks.purgeCited).toHaveBeenCalledTimes(1);
+    now.mockReturnValue(11 * 3_600_000);
+    await handlerOf('pipeline-requeue')();
+
+    expect(mocks.purgeCited).toHaveBeenCalledTimes(2);
+    expect(mocks.requeueStaleRuns).toHaveBeenCalledTimes(3);
+    expect(log).toHaveBeenCalledOnce();
   });
 
   it('complète les vecteurs manquants, 500 à la fois, à chaque tic quand un fournisseur est réglé', async () => {

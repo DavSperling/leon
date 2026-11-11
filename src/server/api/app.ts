@@ -13,6 +13,7 @@ import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
 import { oauthRoutes } from './oauth-routes';
 import { readRoutes } from './read-routes';
+import { reminderRoutes } from './reminder-routes';
 import type { ApiEnv } from './require-api-token';
 import { sessionRoutes } from './session-routes';
 
@@ -33,6 +34,7 @@ app.route('/v1', faitsRoutes);
 app.route('/v1', contextRoutes);
 app.route('/v1', computerRoutes);
 app.route('/v1', readRoutes);
+app.route('/v1', reminderRoutes);
 // Routes de l'interface, au cookie de session : chacune pose ses propres contrôles (jamais un `use` global,
 // qui s'appliquerait aussi aux routes à jeton montées sous /v1).
 app.route('/v1', sessionRoutes);

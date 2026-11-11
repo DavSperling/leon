@@ -16,6 +16,7 @@ export const API_PATHS = {
   fil: '/api/v1/fil', // POST : un fil, sans id celui de la branche (leon thread)
   chercher: '/api/v1/chercher', // POST : la recherche bornée au dépôt du projet (leon search)
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
+  rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -108,10 +109,11 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
-// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : T49 y ajoutera
-// `rappel`, T57 `noter`. À part de USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de
-// ce lot sait écrire.
-export const AUTHORIZE_USAGES = ['lecture'] as const satisfies readonly Usage[];
+// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
+// `rappel` (T49, avec son crochet) ; T57 y ajoutera `noter`. À part de USAGES : la page ne montre, et `leon setup` ne
+// demande, que ce qu'un installateur de ce lot sait écrire (`rappel` pour les quatre outils, depuis l'essai
+// d'Antigravity 2.0.6 du 11/11).
+export const AUTHORIZE_USAGES = ['lecture', 'rappel'] as const satisfies readonly Usage[];
 export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
@@ -209,3 +211,23 @@ export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
 // Le rendu gardé (D25), le même que celui du MCP.
 export const ReadResponseSchema = z.object({ texte: z.string() });
 export type ReadResponse = z.infer<typeof ReadResponseSchema>;
+
+// Le rappel à chaque message (C8, D26) : les 2 000 premiers caractères du message, masqués sur le poste, contre une
+// ligne de clés balisée, ou un texte vide. Sans `rappel` dans `usages`, vide sans aucune recherche. 16 Kio : un message
+// de 2 000 caractères peut peser 8 Kio en JSON. `branche` départage deux fils à égalité ; `outil` ne sert qu'au
+// compteur. Un serveur ancien répond 404 : la CLI ne sort rien, avec le code 0.
+export const RAPPEL_BODY_MAX_BYTES = 16 * 1024;
+export const RAPPEL_MESSAGE_MAX = 2000;
+export const RappelRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    branche: z.string().min(1).max(200).nullable(), // tête détachée : null
+    session: z.string().min(1).max(200),
+    message: z.string().max(RAPPEL_MESSAGE_MAX),
+    outil: z.enum(CODE_SESSION_KINDS),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length),
+  })
+  .strict();
+export type RappelRequest = z.infer<typeof RappelRequestSchema>;
+export const RappelResponseSchema = z.object({ texte: z.string() });
+export type RappelResponse = z.infer<typeof RappelResponseSchema>;

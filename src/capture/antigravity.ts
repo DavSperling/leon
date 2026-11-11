@@ -10,9 +10,10 @@
 // - clés des étapes vues : `step_index`, `source`, `type`, `status`, `created_at`, `content`, `thinking`, `tool_calls`,
 //   `exit_code` (les commandes, dans l'IDE) ;
 // - types d'étapes vus : USER_INPUT, PLANNER_RESPONSE, CONVERSATION_HISTORY, KNOWLEDGE_ARTIFACTS, CHECKPOINT,
-//   SYSTEM_MESSAGE, GENERIC, RUN_COMMAND, VIEW_FILE, CODE_ACTION, GREP_SEARCH, LIST_DIRECTORY ; outils vus : run_command,
-//   view_file, write_to_file, replace_file_content, grep_search, list_dir, manage_task, schedule ;
-// - le message que le crochet injecte (`ephemeralMessage`) n'y laisse aucune trace.
+//   SYSTEM_MESSAGE, GENERIC, RUN_COMMAND, VIEW_FILE, CODE_ACTION, GREP_SEARCH, LIST_DIRECTORY,
+//   EPHEMERAL_MESSAGE ; outils vus : run_command, view_file, write_to_file, replace_file_content, grep_search, list_dir, manage_task, schedule ;
+// - le message que le crochet injecte (`ephemeralMessage`) n'y laisse aucune trace en 2.0.1 ; en 2.0.6 il s'écrit en
+//   EPHEMERAL_MESSAGE, que ce lecteur ignore (seuls USER_INPUT et PLANNER_RESPONSE font des tours).
 // shortcut: `manage_task` (la liste de tâches de l'agent) n'est pas encore lu, faute d'avoir relevé la forme de ses
 // arguments ; à relever au prochain essai (le rapport du témoin la donne) pour remplir `taches`.
 // - une étape par ligne : `{ step_index, source, type, created_at, content, thinking?, tool_calls? }`, où `tool_calls`

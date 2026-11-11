@@ -41,6 +41,32 @@
 - **La durée de vie de l'`ephemeralMessage`** : au second message, le modèle cite-t-il encore les mots témoins ? Si non, le bloc ne vaut que pour le premier appel, et c'est la consigne de lecture (`leon fil`, lot 12) qui porte la suite ; ou bien il faut l'injecter au premier appel de chaque message (`invocationNum` 0), au prix de 8 000 octets à chaque message.
 - **Les arguments de `manage_task`**, la liste de tâches de l'agent, pour remplir `taches` : le rapport du témoin donne désormais les noms des arguments de chaque outil, jamais leurs valeurs.
 
+## L'essai du 11/11 : le rappel à chaque message (appli 2.0.6)
+
+11 novembre 2026 · Amos (avec Claude) · pour le lot 13 du [plan de la mémoire à disposition](../../../plans/2026-11-03-memoire-a-disposition.md) (T49)
+
+> Essai fait dans **l'appli Antigravity 2.0.6**, sur macOS, dans une conversation neuve, **sans dossier ouvert**, en trois messages. Un crochet témoin ([`essais/antigravity-temoin-rappel.mjs`](../essais/antigravity-temoin-rappel.mjs)), posé par Amos sous l'entrée `leon-temoin` de `~/.gemini/config/hooks.json`, est branché sur SessionStart, PreInvocation et Stop. Il ne note que des formes : les clés, les longueurs, des compteurs et la présence de mots témoins, jamais un texte de conversation. Au premier appel du modèle de chaque message, il injecte un mot témoin différent (HERON-41, HERON-87, HERON-23), puis regarde au Stop si la réponse le cite.
+
+**Verdict : le rappel à chaque message est possible dans Antigravity 2.0.6.** Le crochet reçoit le message, et ce qu'il injecte au premier appel de chaque message atteint le modèle.
+
+| Question | Résultat |
+|---|---|
+| Le message dans l'entrée | L'entrée de PreInvocation porte un champ nouveau, **`lastUserInput`** : le texte du message qu'on vient d'envoyer. Sur un message de 3 lignes et 134 caractères, il est strictement égal au texte du dernier `USER_INPUT` du transcript (entre `<USER_REQUEST>` et `</USER_REQUEST>`). SessionStart et Stop le portent aussi. La 2.0.1 ne l'avait pas. |
+| Les clés de l'entrée de PreInvocation | `artifactDirectoryPath`, `conversationId`, `initialNumSteps`, `invocationNum`, `lastUserInput`, `modelName`, `transcriptPath`, `workspacePaths`. |
+| Le message dans le transcript | Déjà écrit quand le crochet se lance (vu à 5, 7 et 10 ms) : une seconde source, si `lastUserInput` manquait. |
+| `invocationNum` | 0 au premier appel du modèle de chaque message (3 messages sur 3). |
+| L'injection à chaque message | Une sortie `{"injectSteps":[{"ephemeralMessage":…}]}` rendue à `invocationNum` 0 atteint le modèle **à chaque message**, pas seulement au premier : chacun des trois mots témoins est cité dans la réponse du message où il a été injecté. L'appli attend le crochet : le témoin dormait 1 s à chaque fois. |
+| L'étape injectée dans le transcript | Elle s'y écrit maintenant, sous le type `EPHEMERAL_MESSAGE` (en 2.0.1, elle ne laissait aucune trace). Le lecteur de Leon ne fait des tours que de `USER_INPUT` et de `PLANNER_RESPONSE` : elle n'est pas recaptée. |
+| `transcriptPath` | Il désigne `transcript_full.jsonl` dans l'appli 2.0.6. |
+| `workspacePaths` | Vide, puisqu'aucun dossier n'était ouvert. Sans dossier, Leon n'a pas de projet. |
+| SessionStart | Maintenant appelé par l'appli, au premier message, 160 ms avant le premier PreInvocation. Leon ne s'en sert pas. |
+
+**Ce que ça change.** Leon pose le rappel à chaque message dans Antigravity aussi (T49, amendée le 11/11), par le crochet PreInvocation déjà en place, quand `invocationNum` vaut 0 et que `lastUserInput` n'est pas vide. Le point « la durée de vie de l'`ephemeralMessage` » ci-dessus est levé pour la 2.0.6 : une étape injectée vaut pour le message où elle est injectée, et on peut en injecter une à chaque message.
+
+**Non essayés :** l'IDE Antigravity, `agy`, toute autre version que la 2.0.6, le crochet de Leon lui-même (seul le témoin a tourné), et un message qui enchaîne plusieurs appels du modèle : les trois messages de l'essai n'en ont fait qu'un chacun, et un `invocationNum` supérieur à 0 n'a été vu qu'à l'essai du 8/11.
+
+**Remise en état.** Amos a retiré le témoin après l'essai. `~/.gemini/config/hooks.json`, que le témoin avait créé, est supprimé.
+
 ## Remise en état
 
 `~/.gemini/config/hooks.json` n'existait pas avant l'essai : après `retirer`, il ne contenait que `{}` et a été supprimé. Rien d'autre n'a été changé dans `~/.gemini`. Le journal du témoin (`~/.leon-essai/`) et le dossier de test sont à effacer à la main.

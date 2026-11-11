@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
-// Les lignes du texte de chaque case, celles du terminal (LECTURE_LINES pour `lecture`, testé mot pour mot).
+// Les lignes du texte de chaque case, celles du terminal (LECTURE_LINES, RAPPEL_LINES, testés mot pour mot).
 const USAGE_LINES = ['p1', 'p2', 'p3'] as const;
 
 // Là où `leon login` envoie le navigateur (K3 du plan « CLI sans clone »). Paramètres invalides : la page le dit,

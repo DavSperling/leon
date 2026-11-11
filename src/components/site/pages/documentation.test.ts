@@ -367,6 +367,49 @@ describe('la page Documentation', () => {
     },
   );
 
+  // L'usage `rappel` (T49 ; décisions d'Amos du 11/11 pour le lot 13) : coché par défaut comme `lecture`, pour Claude
+  // Code (`leon reminder`), Codex, Cursor et Antigravity ; la page dit ce qui part à chaque message, vers qui, ce
+  // qui revient, et ce qui est gardé.
+  it.each(LOCALES)(
+    'dit ce que l’usage rappel envoie et rend, pour quels outils (%s)',
+    (locale, messages) => {
+      const { rappel, lead, tools } = messages.site.documentation.sent;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>rappel</code>',
+        '<code>leon reminder</code>',
+        '<code>[Y/n]</code>',
+        '<code>--yes</code>',
+        '<code>retirer-crochets</code>',
+        'Claude Code',
+        'Codex',
+        'Cursor',
+        'Antigravity',
+        words('2,000', '2 000'),
+        words('24 hours', '24 heures'),
+        words('1.5 seconds', '1,5 seconde'),
+      ])
+        expect(rappel, term).toContain(term);
+      expect(rappel).toContain(words('checked by default', 'coché par défaut'));
+      expect(rappel).toContain(words('neither stores nor logs', 'ne garde ni ne journalise'));
+      expect(lead).toContain(words('the reminder', 'le rappel'));
+      expect(tools).toContain('<code>rappel</code>');
+      // Le rappel vaut aussi pour Antigravity (appli 2.0.6) : l'ancien « jamais pour Antigravity » ne revient pas.
+      expect(rappel).toContain('2.0.6');
+      expect(rappel).not.toContain(words('never for Antigravity', 'jamais pour Antigravity'));
+      expect(tools).not.toContain(
+        words(
+          'except <code>rappel</code> for Antigravity',
+          'sauf <code>rappel</code> pour Antigravity',
+        ),
+      );
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        rappel.replace(/<\/?code>/g, '`'),
+      );
+    },
+  );
+
   // T64 : les cases de la page « Autoriser » sont à l'humain ; l'agent qui installe n'y touche pas.
   it.each(LOCALES)(
     'dit que les cases de la page « Autoriser » sont à l’humain (%s)',

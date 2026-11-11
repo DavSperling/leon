@@ -650,13 +650,11 @@ describe('structuredContent des lectures des fils', () => {
 const lesson = (overrides: Partial<Lesson> = {}): Lesson => ({
   id: FIL_ID,
   projet: 'github.com/acme/leon',
-  origine: 'humain',
   frequence: 0,
   accepteeLe: NOV_5,
   n: 2,
   texte: 'Lancer pnpm typecheck avant de pousser.',
   entrees: [],
-  creeLe: NOV_5,
   ...overrides,
 });
 

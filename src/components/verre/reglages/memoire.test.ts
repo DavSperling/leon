@@ -30,6 +30,7 @@ const THREAD: MemoryThread = {
   titre: 'Refonte du rappel',
   projet: 'github.com/acme/app',
   absorbe: false,
+  n: 2,
   versions: [version(1), version(2, { ecritPar: 'humain', motif: 'restauration' })],
 };
 const MERGED: MemoryThread = {
@@ -37,6 +38,7 @@ const MERGED: MemoryThread = {
   id: '22222222-2222-4222-8222-222222222222',
   titre: 'Ancien fil',
   absorbe: true,
+  n: 0,
   versions: [],
 };
 const LESSON: MemoryLesson = {
@@ -64,6 +66,9 @@ const render = (props: Partial<Props> = {}, locale: 'en' | 'fr' = 'en') =>
     }),
   );
 const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+// La ligne de l'historique de la version n d'un fil ou d'une leçon, reconnue à son panneau.
+const versionRow = (html: string, id: string, n: number) =>
+  text(html.split('<li').find((part) => part.includes(`id="version-${id}-${n}"`)) ?? '');
 
 describe('outcomeOf : ce que la section fait d’une réponse des actions', () => {
   it('un succès ne rend aucune erreur', () => {
@@ -156,6 +161,38 @@ describe('MemorySection', () => {
     expect(html.split(`aria-describedby="texte-${LESSON.id}"`).length - 1).toBe(3);
     expect(html).toContain(`id="titre-${THREAD.id}"`);
     expect(html).toContain(`aria-describedby="titre-${THREAD.id}"`);
+  });
+
+  it('« Remettre cette version » sur une version ancienne, jamais sur la dernière', () => {
+    const html = render();
+    expect(versionRow(html, THREAD.id, 1)).toContain('Put this version back');
+    expect(versionRow(html, THREAD.id, 2)).toContain('(latest)');
+    expect(versionRow(html, THREAD.id, 2)).not.toContain('Put this version back');
+    expect(versionRow(html, LESSON.id, 1)).toContain('Put this version back');
+    expect(versionRow(html, LESSON.id, 2)).not.toContain('Put this version back');
+  });
+
+  it('la dernière version d’un fil illisible : « Remettre » sur toutes les versions montrées, aucune n’est « dernière »', () => {
+    const html = render({
+      data: { threads: [{ ...THREAD, n: 3 }], lessons: [], repos: [] },
+    });
+    expect(versionRow(html, THREAD.id, 1)).toContain('Put this version back');
+    expect(versionRow(html, THREAD.id, 2)).toContain('Put this version back');
+    expect(versionRow(html, THREAD.id, 2)).not.toContain('(latest)');
+  });
+
+  it('sans connexion récente, aucun « Remettre cette version », même pour un fil d’une seule version lisible', () => {
+    const html = render({
+      recent: false,
+      data: {
+        threads: [{ ...THREAD, n: 3, versions: [version(1)] }],
+        lessons: [LESSON],
+        repos: [],
+      },
+    });
+    expect(text(html)).not.toContain('Put this version back');
+    // « Reconnectez-vous » : une fois pour les leçons, une fois pour le fil, qui a une version à remettre.
+    expect(html.split('href="/connexion?retour=memoire"').length - 1).toBe(2);
   });
 
   it('sans leçon ni fil : deux états vides', () => {

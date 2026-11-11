@@ -7,9 +7,8 @@ import { FIL, type Fil } from '@/server/sessions/threads';
 import { listLessons } from './lessons';
 import {
   type Cible,
-  type EcritPar,
-  listVersions,
-  type Motif,
+  type HistoryVersion,
+  historiesIn,
   readVersion,
   restoreVersion,
 } from './versions';
@@ -21,13 +20,15 @@ import {
 // n'est noté au journal (D35). Les actions du site (reglages/actions.ts) les appellent sous la session du navigateur.
 
 // Ce que l'historique montre d'une version (C12) : son numéro, sa date, qui l'a écrite et pourquoi.
-export type MemoryVersion = { n: number; creeLe: Date; ecritPar: EcritPar; motif: Motif };
+export type MemoryVersion = HistoryVersion;
 export type MemoryThread = {
   id: string;
   titre: string;
   projet: string | null;
   // Fusionné dans un autre fil (D21) : il reste, masqué ailleurs, avec ses versions.
   absorbe: boolean;
+  // Le numéro de sa dernière version, lisible ou non (0 sans version) : celui que « Remettre » attend (D34).
+  n: number;
   versions: MemoryVersion[];
 };
 export type MemoryLesson = {
@@ -42,52 +43,45 @@ export type MemoryLesson = {
 // Une cible de l'historique : un fil de l'auteur, ou une de ses leçons non retirées.
 export type MemoryTarget = { cible: 'fil' | 'lecon'; id: string };
 
-const history = async (ctx: TenantContext, cible: Cible): Promise<MemoryVersion[]> =>
-  (await listVersions(ctx, cible)).map(({ n, creeLe, ecritPar, motif }) => ({
-    n,
-    creeLe,
-    ecritPar,
-    motif,
-  }));
-
-// Les fils de l'auteur, tous dépôts confondus, absorbés compris, du plus récent au plus ancien.
-// shortcut: tous les fils, une lecture de l'historique par fil ; à paginer si un auteur en a des centaines.
+// Les fils de l'auteur, tous dépôts confondus, absorbés compris, du plus récent au plus ancien, avec leur historique
+// lu d'un coup.
+// shortcut: tous les fils, sans pagination ; à paginer si un auteur en a des centaines.
 export async function listMemoryThreads(ctx: TenantContext): Promise<MemoryThread[]> {
-  const { rows } = await withTenant(ctx, (tx) =>
-    tx.execute<Fil>(sql`
+  return withTenant(ctx, async (tx) => {
+    const { rows } = await tx.execute<Fil>(sql`
       select s.id, s.metadata from sources s
       where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-      order by s.created_at desc, s.id`),
-  );
-  const threads: MemoryThread[] = [];
-  for (const fil of rows) {
-    const projet = fil.metadata.project;
-    threads.push({
-      id: fil.id,
-      titre: filTitle(fil),
-      projet: typeof projet === 'string' ? projet : null,
-      absorbe: fil.metadata.absorbe_par != null,
-      versions: await history(ctx, fil.id),
+      order by s.created_at desc, s.id`);
+    const histories = await historiesIn(tx, ctx, { sourceIds: rows.map((fil) => fil.id) });
+    return rows.map((fil) => {
+      const projet = fil.metadata.project;
+      const history = histories.get(fil.id);
+      return {
+        id: fil.id,
+        titre: filTitle(fil),
+        projet: typeof projet === 'string' ? projet : null,
+        absorbe: fil.metadata.absorbe_par != null,
+        n: history?.n ?? 0,
+        versions: history?.versions ?? [],
+      };
     });
-  }
-  return threads;
+  });
 }
 
 // Les leçons non retirées de l'auteur, tous dépôts confondus, dans l'ordre de D37, avec leurs versions lisibles.
-// shortcut: une lecture de l'historique par leçon ; à regrouper si un auteur en a des centaines.
 export async function listMemoryLessons(ctx: TenantContext): Promise<MemoryLesson[]> {
-  const lessons: MemoryLesson[] = [];
-  for (const lesson of await listLessons(ctx)) {
-    lessons.push({
-      id: lesson.id,
-      projet: lesson.projet,
-      texte: lesson.texte,
-      n: lesson.n,
-      accepteeLe: lesson.accepteeLe,
-      versions: await history(ctx, { leconId: lesson.id }),
-    });
-  }
-  return lessons;
+  const lessons = await listLessons(ctx);
+  const histories = await withTenant(ctx, (tx) =>
+    historiesIn(tx, ctx, { leconIds: lessons.map((lesson) => lesson.id) }),
+  );
+  return lessons.map((lesson) => ({
+    id: lesson.id,
+    projet: lesson.projet,
+    texte: lesson.texte,
+    n: lesson.n,
+    accepteeLe: lesson.accepteeLe,
+    versions: histories.get(lesson.id)?.versions ?? [],
+  }));
 }
 
 // Les dépôts des fils de l'auteur, une fois chacun : le choix du dépôt d'une leçon (ou « tous mes dépôts »).

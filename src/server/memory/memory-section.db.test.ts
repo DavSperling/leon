@@ -99,6 +99,7 @@ describe('listMemoryThreads', () => {
       titre: 'feat/garde',
       projet: PROJET,
       absorbe: false,
+      n: 3,
       versions: [1, 2, 3].map((n) => ({
         n,
         creeLe: expect.any(Date),
@@ -130,6 +131,44 @@ describe('listMemoryThreads', () => {
     const [listed] = await listMemoryThreads(alice);
 
     expect(listed?.versions.map((one) => one.n)).toEqual([1]);
+    // Le numéro de la dernière, lisible ou non : celui que la restauration attend (D34).
+    expect(listed?.n).toBe(2);
+  });
+
+  it('la dernière version illisible : remettre v1 avec le numéro rendu par la liste donne v5', async () => {
+    const [alice, paul] = await pair();
+    const fil = await thread(alice);
+    const { sourceId: pr } = await seedSource(paul, { kind: 'github' });
+    await adminDb
+      .update(sources)
+      .set({ acl: [paul.tenantId] })
+      .where(eq(sources.id, pr));
+    await threeVersions(alice, fil);
+    await version(alice, fil, 3, [pr]);
+    await adminDb
+      .update(sources)
+      .set({ acl: [paul.userId] })
+      .where(eq(sources.id, pr));
+    const [listed] = await listMemoryThreads(alice);
+    expect(listed?.versions.map((one) => one.n)).toEqual([1, 2, 3]);
+
+    expect(
+      await restoreMemoryVersion(alice, { cible: 'fil', id: fil, n: 1, depuis: listed?.n ?? 0 }),
+    ).toEqual({ n: 5 });
+    expect((await stored(fil)).at(-1)).toMatchObject({
+      n: 5,
+      texte: 'Version 1.',
+      ecritPar: 'humain',
+    });
+  });
+
+  it('un fil sans version : aucune version, et 0', async () => {
+    const [alice] = await pair();
+    await thread(alice);
+
+    expect(await listMemoryThreads(alice)).toEqual([
+      expect.objectContaining({ n: 0, versions: [] }),
+    ]);
   });
 });
 

@@ -701,6 +701,37 @@ describe('deleteAccount : une version écrite au même instant', () => {
     expect(await versionsOf(alice.userId)).toEqual([]);
   });
 
+  it("le verrou d'une leçon prend l'organisation avant la leçon, l'ordre de la suppression", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [, alice] = people as [TenantContext, TenantContext];
+    const written = await writeLesson(alice, { texte: 'Relancer les tests.' });
+    if (typeof written !== 'object') throw new Error('leçon de test non écrite');
+    // Tient l'organisation, comme lockMembers dans deleteAccount.
+    const holding = await adminPool.connect();
+    const probe = await adminPool.connect();
+    let locking: Promise<boolean> = Promise.resolve(false);
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from organization where id = $1 for update', [tenantId]);
+      locking = withTenant(alice, (tx) => lockTarget(tx, alice, { leconId: written.id }));
+      await pause();
+      // Le verrou attend l'organisation sans tenir la leçon : la suppression pourra la prendre.
+      await probe.query('begin');
+      await expect(
+        probe.query('select 1 from lecons where id = $1 for update nowait', [written.id]),
+      ).resolves.toMatchObject({ rowCount: 1 });
+      await probe.query('rollback');
+      await holding.query('commit');
+      await expect(locking).resolves.toBe(true);
+    } finally {
+      await probe.query('rollback');
+      probe.release();
+      await holding.query('rollback');
+      holding.release();
+      await locking.catch(() => undefined);
+    }
+  });
+
   it('une note écrite pendant la suppression ne garde aucune version', async () => {
     const { people } = await team(['owner', 'member']);
     const [, alice] = people as [TenantContext, TenantContext];

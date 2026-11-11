@@ -462,7 +462,9 @@ describe('POST /api/v1/lecons', () => {
   it('n’écrit, ne corrige, ne retire ni ne restaure rien : le corps est strict et aucune autre route n’existe', async () => {
     const [paul] = await team();
     const id = await lesson(paul, 'Règle du dépôt.', PROJECT);
-    const before = await adminDb.select().from(lecons);
+    // Bornée à l'espace du test : les autres fichiers en base écrivent des leçons en même temps.
+    const mine = () => adminDb.select().from(lecons).where(eq(lecons.tenantId, paul.tenantId));
+    const before = await mine();
 
     for (const extra of [
       { texte: 'Écrite par jeton.' },
@@ -476,7 +478,7 @@ describe('POST /api/v1/lecons', () => {
     for (const path of ['restaurer', 'ecrire', 'retirer', 'corriger']) {
       expect((await post(`${API_PATHS.lecons}/${path}`, paul.token, { id })).status).toBe(404);
     }
-    expect(await adminDb.select().from(lecons)).toEqual(before);
+    expect(await mine()).toEqual(before);
   });
 });
 

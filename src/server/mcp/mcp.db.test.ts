@@ -1402,9 +1402,13 @@ describe('lectures des fils', () => {
       if (typeof written !== 'object') throw new Error(`leçon non écrite : ${written}`);
       return written.id;
     };
-    const tables = async () => ({
-      lecons: await adminDb.select().from(lecons),
-      versions: await adminDb.select().from(versionsMemoire),
+    // Bornées à l'espace du test : les autres fichiers en base écrivent des leçons en même temps.
+    const tables = async (ctx: TenantContext) => ({
+      lecons: await adminDb.select().from(lecons).where(eq(lecons.tenantId, ctx.tenantId)),
+      versions: await adminDb
+        .select()
+        .from(versionsMemoire)
+        .where(eq(versionsMemoire.tenantId, ctx.tenantId)),
     });
 
     it('liste les leçons du dépôt et celles sans dépôt, le texte dans content seulement, et les note au journal', async () => {
@@ -1491,7 +1495,7 @@ describe('lectures des fils', () => {
     it('ne fait que lire : aucune leçon ni version ne change, et l’outil n’offre rien qui écrive', async () => {
       const { paul } = await setupTeam();
       const id = await lesson(paul, 'Règle du dépôt.', PROJECT);
-      const before = await tables();
+      const before = await tables(paul);
       const client = await connect(paul);
 
       await call(client, 'lessons', { projet: PROJECT });
@@ -1504,7 +1508,7 @@ describe('lectures des fils', () => {
         retiree: true,
       });
 
-      expect(await tables()).toEqual(before);
+      expect(await tables(paul)).toEqual(before);
       const { tools } = await client.listTools();
       const tool = tools.find((one) => one.name === 'lessons');
       expect(`${tool?.description} ${JSON.stringify(tool?.inputSchema)}`).not.toMatch(

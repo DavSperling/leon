@@ -520,11 +520,12 @@ function ThreadsSection({
     <Section title={t('threadsTitle')} description={t('threadsDescription')} className="mt-0">
       <ErrorNotice error={ctl.error} max={max} />
       {/* « Remettre » est le seul geste de cette partie : sans lui, rien à dire */}
-      {ctl.stale && threads.some((thread) => thread.versions.length > 1) && (
-        <div className="mb-4">
-          <Reconnect />
-        </div>
-      )}
+      {ctl.stale &&
+        threads.some((thread) => thread.versions.some((version) => version.n !== thread.n)) && (
+          <div className="mb-4">
+            <Reconnect />
+          </div>
+        )}
       {threads.length > 0 ? (
         <GlassCard className="p-1.5">
           <ul aria-label={t('threadsTitle')} className="divide-y divide-line">
@@ -546,7 +547,7 @@ function ThreadsSection({
                   cible="fil"
                   id={thread.id}
                   versions={thread.versions}
-                  latest={thread.versions.at(-1)?.n ?? 0}
+                  latest={thread.n}
                   ctl={ctl}
                   describedBy={`titre-${thread.id}`}
                 />

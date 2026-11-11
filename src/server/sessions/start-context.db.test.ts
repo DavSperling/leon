@@ -1,5 +1,6 @@
 import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { SECRET_MASK } from '@/capture/mask-secrets';
 import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_TIME_ZONE } from '@/server/briefing/briefing-prompt';
@@ -813,6 +814,27 @@ describe('readStartContext : les leçons', () => {
     expect(await retireLesson(paul, id)).toBe(true);
 
     expect(await lessons(paul)).toEqual([]);
+  });
+
+  it('un faux secret dans une leçon est masqué dans le bloc', async () => {
+    const { paul } = await setup();
+    const key = `sk-ant-${'aB3dE5gH7jK9mN1pQ2sT'.repeat(2)}`;
+    await lesson(paul, `La clé : ${key}`, PROJECT);
+
+    const block = renderContext({
+      project: PROJECT,
+      ...(await readStartContext(paul, {
+        projet: PROJECT,
+        branche: null,
+        session: 'courante',
+        lecture: true,
+      })),
+      briefing: '',
+      max: 8000,
+    });
+
+    expect(block).toContain(`La clé : ${SECRET_MASK}`);
+    expect(block).not.toContain('sk-ant-');
   });
 
   it('les leçons lues ne sont pas notées au journal des lectures', async () => {

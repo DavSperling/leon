@@ -23,27 +23,23 @@ const IdSchema = z.uuid();
 export type Lesson = {
   id: string;
   projet: string | null;
-  origine: (typeof lecons.$inferSelect)['origine'];
   frequence: number;
   accepteeLe: Date;
   // Sa dernière version, lisible (D33).
   n: number;
   texte: string;
   entrees: string[];
-  creeLe: Date;
 };
 
 type Row = {
   id: string;
   projet: string | null;
-  origine: Lesson['origine'];
   frequence: number;
   // Le pilote rend une date en texte à une requête brute.
   acceptee_le: string;
   n: number;
   texte: string;
   entrees: string[];
-  cree_le: string;
 };
 
 // Les leçons non retirées de l'auteur qui passent `filtre`, chacune avec sa dernière version si elle est lisible ;
@@ -51,10 +47,10 @@ type Row = {
 // d'abord, puis les plus fréquentes, puis les plus récemment acceptées.
 async function select(tx: Tx, ctx: TenantContext, filtre: SQL): Promise<Lesson[]> {
   const { rows } = await tx.execute<Row>(sql`
-    select l.id, l.projet, l.origine, l.frequence, l.acceptee_le, d.n, d.texte, d.entrees, d.cree_le
+    select l.id, l.projet, l.frequence, l.acceptee_le, d.n, d.texte, d.entrees
       from lecons l
       cross join lateral (
-        select v.n, v.texte, v.entrees, v.cree_le, ${LISIBLE} as lisible
+        select v.n, v.texte, v.entrees, ${LISIBLE} as lisible
           from versions_memoire v left join versions_memoire o on o.id = v.restaure_de
          where v.tenant_id = l.tenant_id and v.lecon_id = l.id
          order by v.n desc limit 1) d
@@ -64,13 +60,11 @@ async function select(tx: Tx, ctx: TenantContext, filtre: SQL): Promise<Lesson[]
   return rows.map((row) => ({
     id: row.id,
     projet: row.projet,
-    origine: row.origine,
     frequence: row.frequence,
     accepteeLe: new Date(row.acceptee_le),
     n: row.n,
     texte: row.texte,
     entrees: row.entrees,
-    creeLe: new Date(row.cree_le),
   }));
 }
 

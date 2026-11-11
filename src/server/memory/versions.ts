@@ -263,6 +263,45 @@ export async function listVersions(ctx: TenantContext, cible: Cible): Promise<Ve
   }));
 }
 
+// Ce que l'historique du site montre d'une version (C12) : son numéro, sa date, qui l'a écrite et pourquoi.
+export type HistoryVersion = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'>;
+
+// L'historique de plusieurs fils ou leçons en une requête, dans la transaction de l'appelant (la section Mémoire du
+// site, T55) : pour chaque id, ses versions lisibles, de la plus ancienne à la plus récente, et `n`, le numéro de sa
+// dernière, lisible ou non, que la restauration attend (D34). Un id sans version n'est pas dans la table.
+export async function historiesIn(
+  tx: Tx,
+  ctx: TenantContext,
+  ids: { sourceIds?: string[]; leconIds?: string[] },
+): Promise<Map<string, { n: number; versions: HistoryVersion[] }>> {
+  const { rows } = await tx.execute<
+    Pick<Row, 'n' | 'ecrit_par' | 'motif' | 'cree_le'> & { cible: string; lisible: boolean }
+  >(sql`
+    select coalesce(v.source_id, v.lecon_id) as cible, v.n, v.ecrit_par, v.motif, v.cree_le,
+      ${LISIBLE} as lisible
+    from versions_memoire v left join versions_memoire o on o.id = v.restaure_de
+    where v.tenant_id = ${ctx.tenantId}
+      and (v.source_id = any(${textArray(ids.sourceIds ?? [])}::uuid[])
+        or v.lecon_id = any(${textArray(ids.leconIds ?? [])}::uuid[]))
+    order by v.n`);
+  const histories = new Map<string, { n: number; versions: HistoryVersion[] }>();
+  for (const row of rows) {
+    const history = histories.get(row.cible) ?? { n: 0, versions: [] };
+    // Dans l'ordre des n : la dernière ligne lue est la dernière version.
+    history.n = row.n;
+    if (row.lisible) {
+      history.versions.push({
+        n: row.n,
+        creeLe: new Date(row.cree_le),
+        ecritPar: row.ecrit_par,
+        motif: row.motif,
+      });
+    }
+    histories.set(row.cible, history);
+  }
+  return histories;
+}
+
 // La lecture de l'état : `n`, le numéro de la dernière version (0 sans version), que l'écriture suivante attend ;
 // `version`, elle-même si elle est lisible. Sinon null : l'appelant rend l'état déterministe (T43, T44), jamais une
 // version plus ancienne (D33).

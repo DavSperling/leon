@@ -1,8 +1,9 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { lecons, readLog, sources, versionsMemoire } from '@/server/db/schema/memory';
+import { withTenant } from '@/server/db/with-tenant';
 import { adminDb } from '@/test/db';
 import { seedSource } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
@@ -219,6 +220,13 @@ describe('correctLesson', () => {
   it('deux corrections depuis la même version : une seule passe, l’autre « modifiée entre-temps »', async () => {
     const [alice] = await pair();
     const id = await written(alice, 'Première.');
+    // Le pool chauffé (5 connexions, client.ts) : les deux corrections partent vraiment ensemble, et seul le verrou de
+    // la leçon (lockTarget) fait lire n=2 à la seconde, au lieu de buter sur la contrainte unique.
+    await Promise.all(
+      Array.from({ length: 5 }, () =>
+        withTenant(alice, (tx) => tx.execute(sql`select pg_sleep(0.2)`)),
+      ),
+    );
 
     const results = await Promise.all([
       correctLesson(alice, { id, texte: 'Onglet A.', depuis: 1 }),

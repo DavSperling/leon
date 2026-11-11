@@ -6,22 +6,33 @@ import { auth } from '@/server/auth/auth';
 import { DeletionRefused, deleteAccount, deleteOrganization } from '@/server/auth/delete-account';
 import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
-import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
+import {
+  getSession,
+  requireUserContext,
+  signedInRecently,
+  signOutCurrentUser,
+} from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
+import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
+import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
 import fr from '../../../../messages/fr.json';
 import {
   changePasswordAction,
+  correctLessonAction,
   createInvitationAction,
   createTokenAction,
   deleteAccountAction,
   deleteOrganizationAction,
   disableTotpAction,
   enableTotpAction,
+  readMemoryVersionAction,
   regenerateBackupCodesAction,
+  restoreMemoryVersionAction,
+  retireLessonAction,
   revokeTokenAction,
   setDepotEquipeAction,
   setLocaleAction,
@@ -29,11 +40,13 @@ import {
   updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
+  writeLessonAction,
 } from './actions';
 
 vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
   getSession: vi.fn(),
+  signedInRecently: vi.fn(),
   requestHeaders: vi.fn(async () => new Headers()),
   signOutCurrentUser: vi.fn(),
 }));
@@ -70,6 +83,15 @@ vi.mock('@/server/auth/delete-account', () => ({
   deleteOrganization: vi.fn(),
 }));
 vi.mock('@/server/connectors/github/depots-equipe', () => ({ setDepotEquipe: vi.fn() }));
+vi.mock('@/server/memory/lessons', () => ({
+  correctLesson: vi.fn(),
+  retireLesson: vi.fn(),
+  writeLesson: vi.fn(),
+}));
+vi.mock('@/server/memory/memory-section', () => ({
+  readMemoryVersion: vi.fn(),
+  restoreMemoryVersion: vi.fn(),
+}));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
   RESEND_BATCH_MAX: 100,
@@ -763,5 +785,170 @@ describe('deleteAccountAction', () => {
 
     expect(auth.api.verifyPassword).not.toHaveBeenCalled();
     expect(deleteAccount).not.toHaveBeenCalled();
+  });
+});
+
+// La section Mémoire (T55 ; D33, D34, D37, C12, C13 du plan de la mémoire à disposition) : sous la session du navigateur
+// seulement (requireUserContext). Écrire, corriger et remettre exigent une connexion de moins d'une heure, retirer non.
+// Les cas en base (v4 après v3, la version d'un collègue, un fil absorbé, une version illisible) sont dans
+// src/server/memory/memory-section.db.test.ts.
+describe('les actions de la section Mémoire', () => {
+  const LECON = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c5e';
+  const FIL = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c5f';
+  const writers = () => [writeLesson, correctLesson, restoreMemoryVersion].map(vi.mocked);
+
+  beforeEach(() => {
+    vi.mocked(signedInRecently).mockResolvedValue(true);
+  });
+
+  it('écrire une leçon : le texte et le dépôt choisi, ou tous mes dépôts', async () => {
+    vi.mocked(writeLesson).mockResolvedValue({ id: LECON, n: 1 });
+
+    await expect(
+      writeLessonAction({ texte: 'Relancer les tests.', projet: 'github.com/acme/leon' }),
+    ).resolves.toEqual({ ok: true, id: LECON, n: 1 });
+    await writeLessonAction({ texte: 'Écrire en français.', projet: null });
+
+    expect(vi.mocked(writeLesson).mock.calls).toEqual([
+      [ctx, { texte: 'Relancer les tests.', projet: 'github.com/acme/leon' }],
+      [ctx, { texte: 'Écrire en français.', projet: undefined }],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it('corriger une leçon : une nouvelle version, depuis celle lue ; dépassée, « modifiée entre-temps »', async () => {
+    vi.mocked(correctLesson).mockResolvedValueOnce({ n: 2 }).mockResolvedValueOnce('depassee');
+    const input = { id: LECON, texte: 'Relancer les tests en base.', depuis: 1 };
+
+    await expect(correctLessonAction(input)).resolves.toEqual({ ok: true, n: 2 });
+    await expect(correctLessonAction(input)).resolves.toEqual({ error: 'modifiee' });
+
+    expect(correctLesson).toHaveBeenCalledWith(ctx, input);
+  });
+
+  it('remettre une version d’un fil ou d’une leçon ; dépassée, « modifiée entre-temps »', async () => {
+    vi.mocked(restoreMemoryVersion)
+      .mockResolvedValueOnce({ n: 4 })
+      .mockResolvedValueOnce('depassee')
+      .mockResolvedValueOnce('introuvable');
+    const fil = { cible: 'fil' as const, id: FIL, n: 1, depuis: 3 };
+
+    await expect(restoreMemoryVersionAction(fil)).resolves.toEqual({ ok: true, n: 4 });
+    await expect(restoreMemoryVersionAction(fil)).resolves.toEqual({ error: 'modifiee' });
+    await expect(
+      restoreMemoryVersionAction({ cible: 'lecon', id: LECON, n: 1, depuis: 2 }),
+    ).resolves.toEqual({ error: 'introuvable' });
+
+    expect(vi.mocked(restoreMemoryVersion).mock.calls).toEqual([
+      [ctx, fil],
+      [ctx, fil],
+      [ctx, { cible: 'lecon', id: LECON, n: 1, depuis: 2 }],
+    ]);
+  });
+
+  it('avec une session de plus d’une heure, écrire, corriger ou remettre donne « reconnexion », sans rien écrire', async () => {
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+
+    await expect(writeLessonAction({ texte: 'Bien.', projet: null })).resolves.toEqual({
+      error: 'reconnexion',
+    });
+    await expect(correctLessonAction({ id: LECON, texte: 'Bien.', depuis: 1 })).resolves.toEqual({
+      error: 'reconnexion',
+    });
+    await expect(
+      restoreMemoryVersionAction({ cible: 'fil', id: FIL, n: 1, depuis: 3 }),
+    ).resolves.toEqual({ error: 'reconnexion' });
+
+    for (const writer of writers()) expect(writer).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('retirer une leçon n’exige pas une connexion récente', async () => {
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+    vi.mocked(retireLesson).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await expect(retireLessonAction(LECON)).resolves.toEqual({ ok: true });
+    await expect(retireLessonAction(LECON)).resolves.toEqual({ error: 'introuvable' });
+
+    expect(retireLesson).toHaveBeenCalledWith(ctx, LECON);
+  });
+
+  it('ouvre le texte d’une version lisible ; une version illisible ou introuvable ne s’ouvre pas', async () => {
+    const version = {
+      n: 1,
+      texte: 'Version 1.',
+      creeLe: new Date(),
+      ecritPar: 'serveur' as const,
+      motif: 'rangement' as const,
+    };
+    vi.mocked(readMemoryVersion).mockResolvedValueOnce(version).mockResolvedValueOnce(null);
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+
+    await expect(readMemoryVersionAction({ cible: 'fil', id: FIL, n: 1 })).resolves.toEqual({
+      ok: true,
+      version,
+    });
+    await expect(readMemoryVersionAction({ cible: 'fil', id: FIL, n: 2 })).resolves.toEqual({
+      error: 'introuvable',
+    });
+    expect(readMemoryVersion).toHaveBeenCalledWith(ctx, { cible: 'fil', id: FIL, n: 1 });
+  });
+
+  it.each([
+    ['écrire, sans objet', () => writeLessonAction(null as never)],
+    ['écrire, un texte qui n’est pas une chaîne', () => writeLessonAction({ texte: 1 } as never)],
+    [
+      'corriger, un numéro décimal',
+      () => correctLessonAction({ id: LECON, texte: 'x', depuis: 1.5 }),
+    ],
+    [
+      'remettre, une cible inconnue',
+      () => restoreMemoryVersionAction({ cible: 'note', id: FIL, n: 1, depuis: 2 } as never),
+    ],
+    [
+      'remettre, un id qui n’est pas un uuid',
+      () => restoreMemoryVersionAction({ cible: 'fil', id: 'leon:fil:<script>', n: 1, depuis: 2 }),
+    ],
+    [
+      'remettre, un numéro hors de l’int4',
+      () => restoreMemoryVersionAction({ cible: 'fil', id: FIL, n: 2 ** 31, depuis: 2 }),
+    ],
+    ['ouvrir, un numéro nul', () => readMemoryVersionAction({ cible: 'lecon', id: LECON, n: 0 })],
+    ['retirer, un id qui n’est pas une chaîne', () => retireLessonAction(42 as never)],
+  ])('%s : « invalide », sans rien appeler ni recopier', async (_name, call) => {
+    const result = await call();
+
+    expect(result).toEqual({ error: 'invalide' });
+    for (const writer of [...writers(), vi.mocked(retireLesson), vi.mocked(readMemoryVersion)])
+      expect(writer).not.toHaveBeenCalled();
+  });
+
+  it('écrire ou corriger un texte refusé par lessons.ts : « invalide », sans recopier le texte', async () => {
+    vi.mocked(writeLesson).mockResolvedValue('invalide');
+    vi.mocked(correctLesson).mockResolvedValue('invalide');
+    const long = 'x'.repeat(301);
+
+    const results = [
+      await writeLessonAction({ texte: long, projet: null }),
+      await correctLessonAction({ id: LECON, texte: long, depuis: 1 }),
+    ];
+
+    expect(results).toEqual([{ error: 'invalide' }, { error: 'invalide' }]);
+    expect(JSON.stringify(results)).not.toContain('xxx');
+  });
+
+  it('sans session du navigateur, rien n’est appelé : la connexion', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(writeLessonAction({ texte: 'Bien.', projet: null })).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+    await expect(retireLessonAction(LECON)).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(readMemoryVersionAction({ cible: 'fil', id: FIL, n: 1 })).rejects.toThrow(
+      'NEXT_REDIRECT /connexion',
+    );
+
+    for (const writer of [...writers(), vi.mocked(retireLesson), vi.mocked(readMemoryVersion)])
+      expect(writer).not.toHaveBeenCalled();
   });
 });

@@ -63,12 +63,17 @@ export function returnUrl({ port, etat }: AuthorizeParams, outcome: { code: stri
   return `http://127.0.0.1:${port}/retour?${query}`;
 }
 
+// La section Mémoire des réglages (T55) : sa reconnexion (/connexion?retour=memoire) y ramène, par cette seule valeur.
+export const MEMORY_RETURN_PATH = '/reglages#memoire';
+
 // Où va la connexion qui suit une page d'autorisation sans session : le champ `retour` du formulaire revient d'un
 // navigateur, donc il ne vaut rien tel quel. Pour un ordinateur, on n'en garde que ses paramètres, revalidés ;
 // pour un assistant (/oauth/autoriser), la forme de la demande (oauthReturnPath, qui ne lit pas le client : la page le
-// fait à chaque affichage). Dans les deux cas le chemin est rebâti. Tout autre contenu : l'accueil.
+// fait à chaque affichage). Dans les deux cas le chemin est rebâti. Ou la section Mémoire, valeur fixe. Tout autre
+// contenu : l'accueil.
 export function pathAfterSignIn(value: unknown): string {
   if (typeof value !== 'string') return '/';
+  if (value === MEMORY_RETURN_PATH) return MEMORY_RETURN_PATH;
   const oauth = `${AUTHORIZE_PATH}?`;
   if (value.startsWith(oauth))
     return (

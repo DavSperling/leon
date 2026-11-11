@@ -22,6 +22,10 @@ declare global {
 
 const SCRIPT = 'https://accounts.google.com/gsi/client';
 
+// Pas sur la reconnexion de la section Mémoire (/connexion?retour=memoire, T55) : One Tap ramène toujours à l'accueil.
+export const offersOneTap = (search: string) =>
+  new URLSearchParams(search).get('retour') !== 'memoire';
+
 /**
  * La fenêtre « Continuer en tant que… » de Google, en haut à droite du site, pour qui n'a pas de session Leon et a
  * un compte Google ouvert dans le navigateur. Google seul décide de l'afficher (refus récents, navigateur…).
@@ -30,6 +34,7 @@ export function GoogleOneTap({ clientId }: { clientId: string }) {
   useEffect(() => {
     let stopped = false;
     const start = async () => {
+      if (!offersOneTap(window.location.search)) return;
       // Une personne déjà connectée à Leon ne se voit rien proposer.
       const session = await fetch('/api/auth/get-session', { credentials: 'same-origin' })
         .then((r) => (r.ok ? r.json() : null))

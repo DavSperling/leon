@@ -5,7 +5,11 @@ import { AuthForm } from '@/components/verre/auth/auth-form';
 import { OtherSignIn, type SocialProvider } from '@/components/verre/auth/other-sign-in';
 import { Notice } from '@/components/verre/ui/feedback';
 import { emailEnabled, socialProviders } from '@/server/auth/auth';
-import { authorizePath, parseAuthorizeParams } from '@/server/auth/computer-authorize';
+import {
+  authorizePath,
+  MEMORY_RETURN_PATH,
+  parseAuthorizeParams,
+} from '@/server/auth/computer-authorize';
 import { anyVerifiedSso } from '@/server/auth/sso';
 import { oauthReturnPath } from '@/server/oauth/authorize';
 
@@ -19,6 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
 // partir des trois paramètres validés (computer-authorize.ts) et non copié de l'adresse.
 // `?response_type=&client_id=…` : /oauth/autoriser (un assistant), sans session ; même retour, rebâti à partir des
 // huit paramètres connus (oauthReturnPath : la forme seulement, la page d'autorisation juge le reste).
+// `?retour=memoire` : la reconnexion de la section Mémoire (T55), qui y revient par une valeur fixe. La page ne
+// redirige jamais une personne déjà connectée : une session de plus d'une heure se reconnecte ici.
 export default async function SignInPage({
   searchParams,
 }: {
@@ -31,7 +37,7 @@ export default async function SignInPage({
   const authorization = parseAuthorizeParams(query);
   const returnTo = authorization
     ? authorizePath(authorization)
-    : (oauthReturnPath(query) ?? undefined);
+    : (oauthReturnPath(query) ?? (query.retour === 'memoire' ? MEMORY_RETURN_PATH : undefined));
   const t = await getTranslations('deleteAccount');
   const a = await getTranslations('auth');
   return (

@@ -3,6 +3,7 @@ import { oauthReturnPath } from '@/server/oauth/authorize';
 import {
   authorizePath,
   authorizeQuery,
+  MEMORY_RETURN_PATH,
   parseAuthorizeParams,
   pathAfterSignIn,
   returnUrl,
@@ -233,5 +234,25 @@ describe('pathAfterSignIn : la demande OAuth d’un assistant', () => {
   it('une demande d’ordinateur et une demande OAuth ne se mélangent pas', () => {
     expect(pathAfterSignIn(`/ordinateur/autoriser?${new URLSearchParams(REQUEST)}`)).toBe('/');
     expect(pathAfterSignIn(authorizePath(PARAMS))).toBe(authorizePath(PARAMS));
+  });
+});
+
+// T55 : la reconnexion demandée par la section Mémoire (/connexion?retour=memoire) y ramène, par une valeur fixe.
+describe('pathAfterSignIn : le retour vers la section Mémoire', () => {
+  it('accepte la valeur fixe /reglages#memoire', () => {
+    expect(MEMORY_RETURN_PATH).toBe('/reglages#memoire');
+    expect(pathAfterSignIn('/reglages#memoire')).toBe('/reglages#memoire');
+  });
+
+  it.each([
+    ['un autre site', 'https://evil.example/reglages#memoire'],
+    ['une adresse sans schéma', '//evil.example/reglages#memoire'],
+    ['la valeur courte de l’adresse', 'memoire'],
+    ['les réglages sans la section', '/reglages'],
+    ['une autre section', '/reglages#securite'],
+    ['un paramètre en plus', '/reglages?x=1#memoire'],
+    ['un autre chemin', '/reglages/../x#memoire'],
+  ])('refuse %s : l’accueil', (_name, value) => {
+    expect(pathAfterSignIn(value)).toBe('/');
   });
 });

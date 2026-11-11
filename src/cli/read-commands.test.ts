@@ -12,7 +12,8 @@ import {
   runReadCommand,
 } from './read-commands';
 
-// Les commandes de lecture du poste (T44, T54) : `leon threads`, `leon thread [id]`, `leon search`, `leon versions`.
+// Les commandes de lecture du poste (T44, T54, T55) : `leon threads`, `leon thread [id]`, `leon search`, `leon versions`,
+// `leon lessons [id]`.
 
 const ENV = { LEON_URL: 'http://localhost:3000', LEON_TOKEN: `leon_${'a'.repeat(43)}` };
 const ID = '0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b';
@@ -117,6 +118,23 @@ describe('runReadCommand', () => {
     expect(one.sent().body).toMatchObject({ id: ID, n: 2 });
   });
 
+  it('leon lessons : sans id, les leçons du projet, sans branche ; avec un id, cette leçon seule', async () => {
+    const list = setup();
+    expect(await runReadCommand('lessons', [], list.deps)).toBe(0);
+    expect(list.sent()).toEqual({
+      path: API_PATHS.lecons,
+      body: { projet: 'github.com/acme/leon', usages: [] },
+    });
+    expect(list.out).toEqual([TEXTE]);
+
+    const one = setup();
+    await runReadCommand('lessons', [ID], one.deps);
+    expect(one.sent()).toEqual({
+      path: API_PATHS.lecons,
+      body: { id: ID, projet: 'github.com/acme/leon', usages: [] },
+    });
+  });
+
   it('envoie les usages de tous les outils du poste : `lecture` accepté par un seul suffit (D30)', async () => {
     await writeConsent(home, 'claude_code', 2);
     await writeConsent(home, 'codex', 2);
@@ -140,6 +158,9 @@ describe('runReadCommand', () => {
     ['threads', ['x']],
     ['thread', [ID, '--read', '1']],
     ['search', ['x'.repeat(5000)]],
+    ['lessons', ['pas-un-id']],
+    ['lessons', [ID, ID]],
+    ['lessons', [ID, '--read', '1']],
   ] as const)('%s %j : une erreur d’usage, rien n’est envoyé', async (command, args) => {
     const { deps, fetchImpl } = setup();
 
@@ -154,6 +175,18 @@ describe('runReadCommand', () => {
 
     expect(out).toEqual([]);
     expect(err).toEqual([routeMissingMessage('versions')]);
+  });
+
+  it('leon lessons sur un serveur ancien (404) : un message fixe, rien sur la sortie standard, le code 0', async () => {
+    const { deps, out, err } = setup(() => new Response('{}', { status: 404 }));
+
+    expect(await runReadCommand('lessons', [], deps)).toBe(0);
+
+    expect(out).toEqual([]);
+    expect(err).toEqual([routeMissingMessage('lessons')]);
+    expect(routeMissingMessage('lessons')).toBe(
+      'Leon: this Leon server does not have `leon lessons` yet (route missing).',
+    );
   });
 
   // T47 : `leon setup` propose l'usage dans un terminal ; un refus n'est plus redemandé avant le retrait de l'outil.
@@ -200,6 +233,7 @@ describe('runReadCommand', () => {
     for (const command of ['threads', 'thread'] as const) await runReadCommand(command, [], deps);
     await runReadCommand('search', ['x'], deps);
     await runReadCommand('versions', [ID, '--read', '1'], deps);
+    await runReadCommand('lessons', [], deps);
 
     expect(await readdir(home)).toEqual([]);
   });

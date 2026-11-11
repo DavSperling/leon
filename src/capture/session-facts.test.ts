@@ -289,13 +289,14 @@ describe('extractClaudeCodeFacts', () => {
       'leon search "route des faits"',
       '~/.leon/bin/leon search route',
       'pnpm leon versions 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --read 2',
-      'leon lecons',
+      'leon lessons',
+      'leon lessons 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b',
       'leon noter "reprendre la route"',
     ])('la commande « %s » ne rend pas la session externe', (command) => {
       expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(false);
     });
 
-    it.each(['threads', 'thread', 'versions', 'remember'])(
+    it.each(['threads', 'thread', 'versions', 'lessons', 'remember'])(
       'l’outil %s du serveur de Leon reconnu ne rend pas la session externe',
       (tool) => {
         const contenu = appel('l1', `mcp__leon__${tool}`, {});
@@ -308,7 +309,6 @@ describe('extractClaudeCodeFacts', () => {
       ['mcp__leon__search', LEON],
       ['mcp__leon__fetch', LEON],
       ['mcp__leon__briefing', LEON],
-      ['mcp__leon__lessons', LEON],
       // le nom complet exact, jamais un suffixe ni un autre serveur
       ['mcp__autre__thread', LEON],
       ['mcp__leon_bis__thread', LEON],

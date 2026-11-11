@@ -2,6 +2,7 @@ import { stripHighlightMarks } from '@/lib/highlight';
 import { GITHUB_FACT_KEYS } from '@/server/connectors/github/map';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
+import type { Lesson } from '@/server/memory/lessons';
 import {
   type ContextTurn,
   PAGE_SIZE,
@@ -12,6 +13,7 @@ import {
 import type { Bounded, Dossier, ThreadRead, VersionsRead } from '@/server/sessions/thread-read';
 import type {
   FetchOutput,
+  LessonsOutput,
   SearchOutput,
   ThreadOutput,
   ThreadsOutput,
@@ -212,6 +214,7 @@ export function fetchStructured(fetched: Fetched): FetchOutput {
 // Les textes fixes des lectures : un fil introuvable (d'un collègue, d'un autre projet, absorbé sans fil gardé) se dit
 // comme un fil qui n'existe pas.
 export const THREAD_NOT_FOUND = 'No thread found.';
+export const LESSON_NOT_FOUND = 'No lesson found.';
 
 const prText = (pr: ThreadRead['prs']['items'][number]) =>
   `${prKey(pr)}${pr.etat === null ? '' : ` ${pr.etat}`}`;
@@ -293,9 +296,10 @@ export function renderFil(read: ThreadRead): string {
   ].join('\n');
 }
 
-// L'historique d'un fil (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un numéro,
-// le texte de cette version. Rien ne propose de restaurer (D33).
+// L'historique d'un fil ou d'une leçon (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un
+// numéro, le texte de cette version. Rien ne propose de restaurer (D33).
 export function renderVersions(read: VersionsRead): string {
+  const [wrapper, noun] = read.lecon ? ['lecon', 'lesson'] : ['fil', 'thread'];
   const versionAttributes = (one: VersionsRead['versions'][number]): Array<[string, string]> => [
     ['n', String(one.n)],
     ['date', isoDate(one.creeLe)],
@@ -304,11 +308,11 @@ export function renderVersions(read: VersionsRead): string {
   ];
   if (read.n !== null) {
     const [one] = read.versions;
-    if (!one) return `Version ${read.n} of this thread is not readable, or does not exist.`;
+    if (!one) return `Version ${read.n} of this ${noun} is not readable, or does not exist.`;
     return [
       DATA_GUARD_LINE,
       `<version${dataAttributes([
-        ['fil', read.id],
+        [wrapper, read.id],
         ['titre', read.titre],
         ...versionAttributes(one),
       ])}>`,
@@ -316,16 +320,39 @@ export function renderVersions(read: VersionsRead): string {
       '</version>',
     ].join('\n');
   }
-  if (read.versions.length === 0) return 'No readable version of this thread.';
+  if (read.versions.length === 0) return `No readable version of this ${noun}.`;
   return [
     DATA_GUARD_LINE,
-    `<fil${dataAttributes([
+    `<${wrapper}${dataAttributes([
       ['id', read.id],
       ['titre', read.titre],
     ])}>`,
     ...read.versions.map((one) => element('version', versionAttributes(one), one.texte)),
-    '</fil>',
+    `</${wrapper}>`,
     'To read one version, ask for it by its number.',
+  ].join('\n');
+}
+
+// Les leçons acceptées (C13, D25, D37) : une ligne chacune, son texte échappé (le seul texte que Leon rend ici : celui
+// qu'un humain a relu), avec son dépôt, sa version et sa date d'acceptation ; la fréquence quand le rêve l'a comptée.
+export function renderLessons(lessons: Lesson[]): string {
+  if (lessons.length === 0) return 'No lessons for this project yet.';
+  return [
+    DATA_GUARD_LINE,
+    `${plural(lessons.length, 'lesson')}.`,
+    ...lessons.map((lesson) =>
+      element(
+        'lecon',
+        [
+          ['id', lesson.id],
+          ['depot', lesson.projet],
+          ['version', String(lesson.n)],
+          ['acceptee', isoDate(lesson.accepteeLe)],
+          ['frequence', lesson.frequence > 0 ? String(lesson.frequence) : null],
+        ],
+        lesson.texte,
+      ),
+    ),
   ].join('\n');
 }
 
@@ -354,6 +381,17 @@ export function threadStructured(read: ThreadRead): ThreadOutput {
     sessions: read.sessions.items.map((one) => ({ id: one.id, date: iso(one.date) })),
     prs: prKeys(read.prs.items),
     liees: read.liees.items.map((one) => one.id),
+  };
+}
+
+// Les leçons : des clés seulement (id, version, date) ; le texte n'est que dans `content`, derrière la ligne de garde.
+export function lessonsStructured(lessons: Lesson[]): LessonsOutput {
+  return {
+    lessons: lessons.map((lesson) => ({
+      id: lesson.id,
+      version: lesson.n,
+      date: iso(lesson.accepteeLe),
+    })),
   };
 }
 

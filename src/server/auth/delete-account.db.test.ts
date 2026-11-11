@@ -1,12 +1,19 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { PipedreamConfig } from '@/server/connectors/pipedream';
 import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
-import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
+import { lecons, readLog, sources, turns, versionsMemoire } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
-import { lockTarget, type WriteInput, writeVersion } from '@/server/memory/versions';
+import { correctLesson, writeLesson } from '@/server/memory/lessons';
+import { recordReads } from '@/server/memory/read-log';
+import {
+  lockTarget,
+  restoreVersion,
+  type WriteInput,
+  writeVersion,
+} from '@/server/memory/versions';
 import { adminDb, adminPool } from '@/test/db';
 import {
   createTestTenant,
@@ -57,6 +64,32 @@ async function team(roles: string[]) {
   }
   return { tenantId, people };
 }
+
+// Une leçon, corrigée puis restaurée (restaure_de pointe dans ses versions), et lue une fois : de quoi remplir
+// lecons, versions_memoire et read_log.
+async function seedLesson(ctx: TenantContext): Promise<string> {
+  const written = await writeLesson(ctx, { texte: 'Relancer les tests en base.' });
+  if (typeof written !== 'object') throw new Error('leçon de test non écrite');
+  await correctLesson(ctx, { id: written.id, texte: 'Relancer toute la suite.', depuis: 1 });
+  await restoreVersion(ctx, { leconId: written.id, n: 1, depuis: 2 });
+  await recordReads(ctx, { tool: 'lessons', client: 'cli', reads: [{ leconId: written.id }] });
+  return written.id;
+}
+const lessonRows = async (tenantId: string) => {
+  const { rows } = await adminPool.query<{ lecons: number; versions: number; lectures: number }>(
+    `select (select count(*)::int from lecons where tenant_id = $1) as lecons,
+            (select count(*)::int from versions_memoire where tenant_id = $1 and lecon_id is not null) as versions,
+            (select count(*)::int from read_log where tenant_id = $1 and lecon_id is not null) as lectures`,
+    [tenantId],
+  );
+  return rows[0];
+};
+
+const versionsOfLessons = (userId: string) =>
+  adminDb
+    .select({ n: versionsMemoire.n })
+    .from(versionsMemoire)
+    .where(and(eq(versionsMemoire.ownerUserId, userId), isNotNull(versionsMemoire.leconId)));
 
 const userRow = async (userId: string) =>
   (await adminDb.select().from(users).where(eq(users.id, userId)))[0];
@@ -468,6 +501,25 @@ describe('deleteAccount', () => {
     expect((await userRow(stranger.userId))?.deletedAt).toBeNull();
   });
 
+  it('efface ses leçons, leurs versions et leurs lectures, pas celles d’un collègue', async () => {
+    const { people } = await team(['owner', 'member']);
+    const [bob, alice] = people as [TenantContext, TenantContext];
+    await seedLesson(alice);
+    const kept = await seedLesson(bob);
+
+    await deleteAccount(alice, null, false);
+
+    expect(await adminDb.select().from(lecons).where(eq(lecons.ownerUserId, alice.userId))).toEqual(
+      [],
+    );
+    expect(await versionsOfLessons(alice.userId)).toEqual([]);
+    expect(await adminDb.select().from(readLog).where(eq(readLog.userId, alice.userId))).toEqual(
+      [],
+    );
+    expect((await adminDb.select().from(lecons).where(eq(lecons.id, kept))).length).toBe(1);
+    expect(await versionsOfLessons(bob.userId)).toHaveLength(3);
+  });
+
   it("ne laisse jamais l'organisation sans propriétaire", async () => {
     const { tenantId, people } = await team(['owner', 'owner', 'member']);
     const [a, b] = people as [TenantContext, TenantContext, TenantContext];
@@ -620,6 +672,64 @@ describe('deleteAccount : une version écrite au même instant', () => {
     await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
     expect(await adminDb.select().from(sources).where(eq(sources.id, thread))).toEqual([]);
     expect(await versionsOf(alice.userId)).toEqual([]);
+  });
+
+  it("ne se bloque pas avec l'écriture d'une version d'une leçon qui tient déjà la leçon", async () => {
+    const { people } = await team(['owner', 'member']);
+    const [, alice] = people as [TenantContext, TenantContext];
+    const written = await writeLesson(alice, { texte: 'Relancer les tests.' });
+    if (typeof written !== 'object') throw new Error('leçon de test non écrite');
+    const lesson = { leconId: written.id };
+    let leaving: Promise<unknown> = Promise.resolve();
+
+    const corrected = await withTenant(alice, async (tx) => {
+      expect(await lockTarget(tx, alice, lesson)).toBe(true);
+      leaving = deleteAccount(alice, null, false);
+      await pause();
+      // La leçon d'abord, et cette insertion attendrait l'organisation que la suppression tient, qui attend la leçon.
+      return writeVersion(tx, alice, {
+        ...version(''),
+        sourceId: undefined,
+        ...lesson,
+        attendue: 1,
+      });
+    });
+
+    expect(corrected).toEqual({ n: 2 });
+    await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+    expect(await adminDb.select().from(lecons).where(eq(lecons.id, written.id))).toEqual([]);
+    expect(await versionsOf(alice.userId)).toEqual([]);
+  });
+
+  it("le verrou d'une leçon prend l'organisation avant la leçon, l'ordre de la suppression", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [, alice] = people as [TenantContext, TenantContext];
+    const written = await writeLesson(alice, { texte: 'Relancer les tests.' });
+    if (typeof written !== 'object') throw new Error('leçon de test non écrite');
+    // Tient l'organisation, comme lockMembers dans deleteAccount.
+    const holding = await adminPool.connect();
+    const probe = await adminPool.connect();
+    let locking: Promise<boolean> = Promise.resolve(false);
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from organization where id = $1 for update', [tenantId]);
+      locking = withTenant(alice, (tx) => lockTarget(tx, alice, { leconId: written.id }));
+      await pause();
+      // Le verrou attend l'organisation sans tenir la leçon : la suppression pourra la prendre.
+      await probe.query('begin');
+      await expect(
+        probe.query('select 1 from lecons where id = $1 for update nowait', [written.id]),
+      ).resolves.toMatchObject({ rowCount: 1 });
+      await probe.query('rollback');
+      await holding.query('commit');
+      await expect(locking).resolves.toBe(true);
+    } finally {
+      await probe.query('rollback');
+      probe.release();
+      await holding.query('rollback');
+      holding.release();
+      await locking.catch(() => undefined);
+    }
   });
 
   it('une note écrite pendant la suppression ne garde aucune version', async () => {
@@ -795,6 +905,18 @@ describe('deleteOrganization', () => {
     expect(
       await adminDb.select().from(organizations).where(eq(organizations.id, otherOwner.tenantId)),
     ).toHaveLength(1);
+  });
+
+  it("passe avec des leçons et leurs versions, restaurations comprises, et n'en laisse aucune ligne", async () => {
+    const { tenantId, people } = await team(['owner', 'member']);
+    const [owner, member] = people as [TenantContext, TenantContext];
+    await seedLesson(owner);
+    await seedLesson(member);
+    expect(await lessonRows(tenantId)).toEqual({ lecons: 2, versions: 6, lectures: 2 });
+
+    await expect(deleteOrganization(owner)).resolves.toMatchObject({ organizationDeleted: true });
+
+    expect(await lessonRows(tenantId)).toEqual({ lecons: 0, versions: 0, lectures: 0 });
   });
 
   it('garde le compte du propriétaire qui appartient aussi à une autre organisation', async () => {

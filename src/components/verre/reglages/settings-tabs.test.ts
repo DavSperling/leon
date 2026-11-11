@@ -15,6 +15,11 @@ describe('tabOf', () => {
     expect(tabOf('#claude-code')).toBeUndefined();
   });
 
+  // T55 : la section Mémoire est le cinquième onglet ; /connexion?retour=memoire y ramène par #memoire.
+  it('ouvre Mémoire pour #memoire', () => {
+    expect(tabOf('#memoire')).toBe('memoire');
+  });
+
   it('garde les autres ancres : un onglet par son nom, #membres dans Équipe, le reste rien', () => {
     expect(tabOf('#securite')).toBe('securite');
     expect(tabOf('#membres')).toBe('equipe');

@@ -45,6 +45,7 @@ const SERVED = {
   fil: ['POST', { body: {} }],
   chercher: ['POST', { body: {} }],
   versions: ['POST', { body: {} }],
+  lecons: ['POST', { body: {} }],
   rappel: ['POST', { body: {} }],
 } as const;
 // Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
@@ -271,10 +272,13 @@ it('les routes de lecture rendent des réponses conformes au schéma que la CLI 
   }
 });
 
-// Rien ne restaure une version par le poste ni par le MCP (D33, tranché le 05/11) : seule l'action du site le fera (T55).
-it('aucune route à jeton ni aucun outil MCP ne restaure une version', () => {
+// Rien ne restaure une version par le poste ni par le MCP (D33, tranché le 05/11), et rien n'y écrit, ne corrige ni ne
+// retire une leçon : seules les actions du site le font (T55).
+it('aucune route à jeton ni aucun outil MCP ne restaure une version, ni n’écrit, ne corrige ou ne retire une leçon', () => {
   const offenders = productionSources('src/server/api/**/*.ts', 'src/server/mcp/**/*.ts')
-    .filter(({ text }) => /\brestoreVersion\b/.test(text))
+    .filter(({ text }) =>
+      /\b(restoreVersion|restoreMemoryVersion|writeLesson|correctLesson|retireLesson)\b/.test(text),
+    )
     .map(({ path }) => path);
   expect(offenders).toEqual([]);
 });

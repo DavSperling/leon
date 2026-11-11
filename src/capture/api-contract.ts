@@ -16,6 +16,7 @@ export const API_PATHS = {
   fil: '/api/v1/fil', // POST : un fil, sans id celui de la branche (leon thread)
   chercher: '/api/v1/chercher', // POST : la recherche bornée au dépôt du projet (leon search)
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
+  lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
@@ -208,6 +209,10 @@ export const VersionsRequestSchema = z
   .object({ ...ReadBase, id: z.uuid(), n: z.number().int().min(1).max(VERSION_N_MAX).optional() })
   .strict();
 export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
+// Les leçons (C13) : sans `id`, les leçons lisibles et non retirées du dépôt et sans dépôt ; avec `id`, une leçon. Aucun
+// champ n'écrit, ne corrige, ne retire ni ne restaure : cela se fait sur le site seulement (D37).
+export const LeconsRequestSchema = z.object({ ...ReadBase, id: z.uuid().optional() }).strict();
+export type LeconsRequest = z.infer<typeof LeconsRequestSchema>;
 // Le rendu gardé (D25), le même que celui du MCP.
 export const ReadResponseSchema = z.object({ texte: z.string() });
 export type ReadResponse = z.infer<typeof ReadResponseSchema>;

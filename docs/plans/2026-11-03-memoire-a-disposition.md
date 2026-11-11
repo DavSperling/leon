@@ -1118,6 +1118,25 @@ Contrat : `api-contract.db.test.ts`.
 >   - `src/app/(auth)/actions.test.ts` : une connexion lancée depuis la section Mémoire y revient ; un `retour` inconnu mène à l'accueil ;
 >   - contrat : la configuration de Better Auth n'a pas le plugin `bearer`.
 
+> **Amendé le 11/11 (décisions d'Amos pour le lot 13, points 2, 5 et 6 ; la forme technique est un choix de Claude) :**
+> - **Les noms.** La commande est `leon lessons [<id>]`, l'outil MCP `lessons`, et la valeur du journal (`read_log.tool`) `lessons`. Le chemin du serveur reste `POST /api/v1/lecons`, et la table `lecons`. Partout où cette tâche écrit `leon lecons` ou l'outil `lecons`, lire ces noms.
+> - **La migration `0066-lecons`.** En plus de C13 :
+>   - `versions_memoire.source_id` et `read_log.source_id` deviennent facultatifs, chacun avec un check « exactement une cible » ;
+>   - `versions_memoire` gagne `unique (lecon_id, n)` et, pour `restaure_de`, une clé étrangère jumelle de celle de 0052 (`tenant_id, lecon_id, restaure_de`) ;
+>   - la fonction `sources_lues_pendant` de 0064 est recréée pour ne rendre que les lignes dont `source_id` n'est pas nul. Sinon une lecture de leçon mettrait un NULL dans les entrées de l'état d'un fil, et le rendrait illisible (D33) ;
+>   - le check de `read_log.tool` gagne `lessons`. Le test de 0064 exige que `lecons` reste refusé.
+> - **Les versions d'une leçon.** `src/server/memory/versions.ts` prend une cible : un fil ou une note (`sourceId`), ou une leçon (`leconId`). Le verrou d'une leçon suit l'ordre de `lockTarget` : l'organisation en `FOR KEY SHARE`, puis la ligne de `lecons` en `FOR UPDATE`. Une leçon n'a pas la condition `resume` (D33). La route et l'outil `versions` acceptent l'id d'une leçon du projet ou sans dépôt (C12) ; les notes viennent avec T57.
+> - **Le journal.** Une lecture demandée (`leon lessons`, l'outil `lessons`, les versions d'une leçon) est notée par `lecon_id`. Les leçons poussées au démarrage (T56) ne sont pas notées, comme le sommaire des fils : des centaines de lignes par démarrage n'apprendraient rien.
+> - **La connexion récente** (décision 5). `signedInRecently` compare `session.session.createdAt` à une heure. Toute connexion compte : le mot de passe (avec la 2FA), Google, Microsoft, la fenêtre « Continuer en tant que… » de Google, le SSO d'entreprise. Aucune reconnexion n'est forcée chez le fournisseur : Google et Microsoft repassent en un clic. C'est une limite connue (vigilance 2).
+>   - Quand la session a plus d'une heure, la section Mémoire montre « Reconnectez-vous » à la place des gestes qui l'exigent, avec un lien vers `/connexion?retour=memoire`.
+>   - Sur cette page, la fenêtre « Continuer en tant que… » ne s'ouvre pas, et toute connexion faite depuis elle (mot de passe, 2FA, Google, Microsoft, SSO) ramène à `/reglages#memoire`. `pathAfterSignIn` n'accepte que cette valeur fixe, en plus des deux retours d'autorisation.
+>   - L'action vérifie de nouveau côté serveur : passé l'heure, elle rend « reconnexion » sans rien écrire.
+> - **La section Mémoire** est un cinquième onglet des réglages (`#memoire`), en anglais et en français comme le reste du site (les mêmes clés dans `messages/en.json` et `messages/fr.json`). Le dépôt d'une leçon se choisit parmi les dépôts des fils de l'auteur, ou « tous mes dépôts ».
+> - **Le texte de `lecture`** (décision 6). Sa deuxième ligne gagne les leçons, `leon lessons` et l'outil `lessons` : « The agent can read your work threads on this repository, their summaries and their state, the lessons you accepted, and the memory of this repository that you can see, with the commands `leon threads`, `leon thread`, `leon search`, `leon versions` and `leon lessons`, or with the tools `threads`, `thread`, `versions` and `lessons` if the Leon MCP server is connected to the tool. » Le reste ne change pas. Il est repris mot pour mot dans `LECTURE_LINES`, sur la page « Autoriser » et dans la documentation. Les accords déjà donnés valent pour le nouveau texte, sans être redemandés.
+> - **Les outils locaux.** `LEON_LOCAL_TOOLS` gagne `lessons` (D36, A14) : les deux tests qui le figeaient comme externe sont inversés (`src/capture/session-facts.test.ts`, `src/capture/codex.test.ts`), et le README suit. `MCP_INSTRUCTIONS` nomme huit outils.
+> - **Fichiers en plus :** `src/components/site/google-one-tap.tsx`, `src/cli/install-hooks.ts` (`LECTURE_LINES`) et son test, `src/app/(auth)/ordinateur/autoriser/page.test.ts`, `messages/en.json`, `messages/fr.json`, `src/capture/session-facts.ts` et les deux tests ci-dessus, `src/server/api/read-routes.ts` et `src/server/mcp/tools/thread-tools.ts` (les versions d'une leçon), `src/server/db/tenant-integrity.db.test.ts`, le README.
+> - **Tests en plus :** une lecture de leçon ne met aucun NULL dans les entrées de l'état d'un fil ; les versions d'une leçon se lisent par la route et l'outil `versions`, celles d'une leçon d'un autre dépôt sont introuvables ; avec `retour=memoire`, la connexion ramène à `/reglages#memoire`, et la fenêtre de Google ne s'ouvre pas ; `pathAfterSignIn` refuse tout autre chemin.
+
 **Fichiers :**
 - `src/server/db/migrations/NNNN-lecons.sql` (nouveau : `lecons`, ses clés étrangères, ses droits et sa RLS ; `versions_memoire` gagne `lecon_id` et le check « une seule cible » ; le check de `read_log.tool` gagne `lecons`, et `read_log` gagne `lecon_id`, C13) et son test db ;
 - `src/server/db/schema/memory.ts`, `src/server/memory/read-log.ts` (`recordReads` accepte une leçon) ;
@@ -1157,6 +1176,12 @@ Contrat : `api-contract.db.test.ts`.
 - contrats : `api-contract.db.test.ts`, `mcp-descriptions.test.ts`, `rls-coverage.db.test.ts`.
 
 ### T56 · Les leçons au démarrage (après T46 et T55)
+
+> **Amendé le 11/11 (décision 8 d'Amos pour le lot 13, choix laissé à Claude) :**
+> - **Avec l'usage `lecture`, des leçons et aucun fil**, le bloc garde « mes sessions » et l'équipe, puis les leçons (leur en-tête, et « N autres leçons » s'il en reste), puis le point du matin. Il ne porte pas de consigne de lecture : il n'y a aucun fil à lire.
+> - La ligne « N autres leçons » cite `<commande> lessons`, le nom anglais de la commande.
+> - Les leçons poussées ne sont pas notées au journal (T55 amendée).
+> - **Test en plus :** avec `lecture`, des leçons et aucun fil, le bloc porte « mes sessions », l'équipe, l'en-tête des leçons et les leçons, sans consigne de lecture, en 8 000 octets.
 
 **Fichiers :** `src/server/sessions/start-context.ts`, `src/server/sessions/render-context.ts`, `src/capture/strip-leon-blocks.ts` et leurs tests.
 

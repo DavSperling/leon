@@ -66,10 +66,13 @@ describe('POST /api/v1/ordinateurs', () => {
       .from(users)
       .where(eq(users.id, paul.userId));
     expect(account?.email).toMatch(/@test\.leon$/);
+    // `usages` et `refus` (T64, C16) : toujours des tableaux, vides sans case sur la page.
     expect(body).toEqual({
       espace: 'Organisation de test',
       ordinateur: 'MacBook-Pro',
       compte: account?.email,
+      usages: [],
+      refus: [],
     });
     expect(JSON.stringify(body)).not.toContain(token);
     expect(await rowsOf(token)).toMatchObject([
@@ -85,6 +88,34 @@ describe('POST /api/v1/ordinateurs', () => {
     const me = await apiRequest(API_PATHS.me, { token });
     expect(me.status).toBe(200);
     expect(ViewerProfileSchema.parse(await me.json()).userId).toBe(paul.userId);
+  });
+
+  // Les cases de la page (T64, C16) : la 201 rend les cochées (`usages`) et les décochées (`refus`), recalculées depuis
+  // la charge signée : un `g` hors de `m` n'est jamais rendu.
+  it.each([
+    ['cochée', { m: ['lecture'], g: ['lecture'] }, { usages: ['lecture'], refus: [] }],
+    ['décochée', { m: ['lecture'], g: [] }, { usages: [], refus: ['lecture'] }],
+    ['un g hors de m', { m: ['lecture'], g: ['resume'] }, { usages: [], refus: ['lecture'] }],
+    [
+      'plusieurs',
+      { m: ['lecture', 'noter'], g: ['noter'] },
+      { usages: ['noter'], refus: ['lecture'] },
+    ],
+  ] as const)('rend les cases de la page : %s', async (_cas, boxes, expected) => {
+    const { paul } = await setup();
+    const token = generateApiToken();
+    const code = signComputerCode({
+      e: hashApiToken(token),
+      u: paul.userId,
+      t: paul.tenantId,
+      m: [...boxes.m],
+      g: [...boxes.g],
+    });
+
+    const response = await exchange(token, code);
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject(expected);
   });
 
   it('répond 409 au même code présenté une seconde fois : une seule ligne', async () => {

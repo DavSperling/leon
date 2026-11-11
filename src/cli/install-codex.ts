@@ -47,7 +47,10 @@ import {
   isYes,
   type Json,
   load,
+  offerUsages,
   parseSettings,
+  type UsageOptions,
+  usagesToOffer,
   writeAtomically,
 } from './install-hooks';
 import { removeUnusedLauncher, type UninstallDeps, withdrawOnServer } from './uninstall-hooks';
@@ -77,7 +80,11 @@ export const CODEX_CONSENT_LINES = [
 const APPROVAL_LINE =
   'Codex runs a new hook only once you approve it: at the next start of Codex, type /hooks and approve the Leon hooks (in the Codex app: Settings › Hooks). A Leon hook you already approved stays approved.';
 
-export type CodexInstallOptions = { codexDir: string; home: string; assumeYes: boolean };
+export type CodexInstallOptions = {
+  codexDir: string;
+  home: string;
+  assumeYes: boolean;
+} & UsageOptions;
 
 type CodexEvent = 'SessionStart' | 'Stop' | 'SessionEnd';
 type Change = { event: CodexEvent; action: 'ajout' | 'mise-a-jour' | 'inchange'; handler: Json };
@@ -205,7 +212,7 @@ async function codexWarnings(codexDir: string, settings: Json): Promise<string[]
 }
 
 // Rend le code de sortie : 0 si les crochets et l'accord (capture comprise) sont en place ou si l'utilisateur a refusé,
-// 1 sinon.
+// 1 sinon, ou si un usage accepté n'a pas pu s'écrire. Les usages se proposent après la capture (offerUsages, T47).
 export async function installCodexHook(
   options: CodexInstallOptions,
   deps: InstallDeps,
@@ -225,8 +232,12 @@ export async function installCodexHook(
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   for (const line of await codexWarnings(options.codexDir, settings)) deps.out(line);
   if (unchanged && consent?.capture_le) {
-    deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
-    return 0;
+    if (usagesToOffer(consent, options).length === 0) {
+      deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
+      return 0;
+    }
+    deps.out(`The Leon hooks are already in place in ${path}.`);
+    return (await offerUsages('codex', options, deps)) ? 0 : 1;
   }
 
   for (const line of [
@@ -287,7 +298,7 @@ export async function installCodexHook(
     }
     deps.out(`Consent recorded in ${consentFile}.`);
   }
-  return 0;
+  return (await offerUsages('codex', options, deps)) ? 0 : 1;
 }
 
 // Le retrait : les crochets de Leon pour Codex (tous évènements), puis l'accord de Codex en version 0, puis le serveur

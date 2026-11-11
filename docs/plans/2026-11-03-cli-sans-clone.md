@@ -101,10 +101,14 @@ Toute écriture passe par un fichier voisin puis un `rename`, et refuse un lien 
 
 `url` passe le même contrôle que `LEON_URL` (`isAllowedServerUrl`, `env.ts`) ; `jeton` passe `API_TOKEN_PATTERN`. Un fichier illisible ou invalide vaut « pas connecté », avec un message fixe qui ne recopie aucune valeur.
 
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** `par`, facultatif : `"jeton"` quand `leon login --with-token` a écrit la connexion ; une connexion par le navigateur ne l'a pas. `leon setup --yes` ne rouvre pas alors la page d'autorisation (S10). Une autre valeur, retouchée à la main, est ignorée sans rendre la connexion invalide.
+
 **K3. La page d'autorisation** : `GET /ordinateur/autoriser?port=<p>&etat=<e>&empreinte=<h>`.
 - `port` : entier de 1024 à 65535 ;
 - `etat` : 22 à 64 caractères `[A-Za-z0-9_-]` ;
 - `empreinte` : 64 caractères hexadécimaux minuscules (SHA-256 du jeton, comme `hashApiToken`).
+
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** un quatrième paramètre, facultatif : `usages`, les cases que `leon setup` demande, séparées par des virgules (200 caractères au plus). La page ne garde que les usages qu'elle sait montrer (`AUTHORIZE_USAGES`, `lecture` au lot 12), sans doublon ; une valeur inconnue, un paramètre répété ou trop long sont écartés, et le lien reste valable. Il survit à la connexion (`authorizeQuery`, `pathAfterSignIn`) ; sans lui, l'adresse et la page sont celles d'avant. Le retour vers `127.0.0.1` ne le porte jamais.
 
 Un paramètre invalide affiche une erreur, sans bouton. « Autoriser » est une action serveur (POST, même origine) qui rend K4 et renvoie le navigateur vers `http://127.0.0.1:<port>/retour?code=<K4>&etat=<e>`. « Annuler » renvoie vers `http://127.0.0.1:<port>/retour?refus=1&etat=<e>`. La page n'est jamais affichée dans un cadre (déjà le cas, `next.config.ts`).
 
@@ -113,6 +117,8 @@ Un paramètre invalide affiche une erreur, sans bouton. « Autoriser » est une 
 - `signature` = HMAC-SHA256 de `charge` (sa forme base64url), avec la clé HKDF-SHA256(`BETTER_AUTH_SECRET`, sel vide, info `leon:ordinateur:v1`, 32 octets) ;
 - vérifiée en temps constant (`timingSafeEqual`), puis l'expiration.
 
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** la charge gagne `m` et `g`, facultatifs, après `x` : les cases montrées sur la page, puis les cochées parmi elles, des valeurs de `USAGES` (tous les usages du serveur). Elles ne sont dans la charge que si la page en montrait : sans case, le code est celui d'avant, qu'un serveur plus ancien vérifie encore. Toujours la version 1.
+
 **K5. `POST /api/v1/ordinateurs`** (en-tête `Authorization: Bearer <jeton tiré par la CLI>`, qui n'existe pas encore en base) :
 - entrée `{ code, nom }` en `.strict()`, 2 Ko au plus ; `nom` : 1 à 60 caractères après retrait des caractères de contrôle, sinon « ordinateur » ;
 - vérifie K4, puis `hashApiToken(jeton) === charge.e`, puis l'adhésion en cours de `charge.u` à `charge.t` (comme `verifyApiToken`) ;
@@ -120,6 +126,8 @@ Un paramètre invalide affiche une erreur, sans bouton. « Autoriser » est une 
 - réponses : 201 `{ espace, ordinateur, compte }` (`compte` : l'e-mail du compte autorisé, que la CLI affiche) ; 400 (entrée) ; 401 (code faux, expiré, empreinte différente, membre parti), sans dire lequel ; 409 (empreinte déjà en base).
 
 Elle n'est pas montée derrière `requireApiToken`, puisque le jeton n'existe pas encore.
+
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** la 201 rend aussi `usages` (`m` ∩ `g`) et `refus` (`m` \ `g`), toujours deux tableaux, vides sans case. `ComputerResponseSchema` les lit avec tolérance (`[]` s'ils manquent ou sont mal formés) : la CLI ne refuse jamais une connexion à cause d'eux, et n'en garde que ce qu'elle a demandé.
 
 **K6. `DELETE /api/v1/jeton`** (jeton) : révoque le jeton qui fait la requête. 204, ou 401.
 
@@ -193,6 +201,8 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 
 **Tests :** paramètres invalides (port 80, port 70000, empreinte de 63 caractères, `etat` trop court) : pas de bouton ; l'action rend une adresse `http://127.0.0.1:<port>/retour?…` dont le code se vérifie avec l'empreinte reçue ; un `port` de la forme `1234@evil.example` est refusé. Les textes en anglais et en français.
 
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** avec `usages`, la page montre une case native par usage, cochée par défaut, avec son texte (en anglais, celui de l'installateur, mot pour mot), et une ligne qui dit que les cases sont à l'humain ; l'action met les cases montrées et cochées dans K4. « Annuler » ne signe rien. L'avertissement ne change pas.
+
 ### S04 · Les routes `POST /api/v1/ordinateurs` et `DELETE /api/v1/jeton`
 
 **Fichiers :** `src/server/api/computer-routes.ts` (nouveau), `src/server/api/app.ts`, `src/capture/api-contract.ts` (`API_PATHS.ordinateurs`, `API_PATHS.jeton`), `src/server/api/computer-routes.db.test.ts` (nouveau), `src/server/api/api-contract.db.test.ts`.
@@ -232,6 +242,8 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 - `env.test.ts` : E5 dans les quatre cas ;
 - `login.test.ts`, avec un faux serveur et un faux navigateur : le parcours complet écrit K2 ; un `etat` faux est refusé et l'écoute reste ouverte jusqu'au bon ; un refus n'écrit rien ; le délai dépassé n'écrit rien ; une requête qui n'est pas `GET /retour` reçoit 404 ; l'ancien jeton est révoqué après l'écriture du nouveau ; le jeton n'apparaît dans aucune sortie (on capture `out` et `err`) ;
 - `--with-token` : jeton refusé par `/api/v1/me`, rien n'est écrit.
+
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :** `leon login` lancé seul ne change pas : aucune case demandée, rien d'écrit dans `~/.leon/accord.json`. `leon setup` passe une option interne `usages` (`loginComputer`), qui va dans l'adresse de K3, et reçoit les cases cochées et décochées que la 201 rend, filtrées sur sa demande. `--with-token` écrit `par` (K2) et ne rend aucune case. L'attente du navigateur est de 5 minutes, ou de 100 secondes pour la relance de S10 ; les messages disent l'attente réelle. Relecture du 11/11 : la relance de S10 passe aussi `attendu`, le compte et l'espace de la connexion ; après K5, `GET /api/v1/me` avec le nouveau jeton doit les rendre, sinon le nouveau jeton est révoqué (K6), `connexion.json` ne change pas et la commande rend 1.
 
 **Essai réel :** sur le Mac d'Amos, contre `pnpm dev`, puis contre la production après déploiement : Safari, Chrome et Firefox. Noter dans la PR ce que chacun affiche au retour vers `127.0.0.1`.
 
@@ -305,6 +317,12 @@ Le lanceur ne dépend pas des versions : les liens `runtime/actuel` et `cli/actu
 5. finit par une ligne par outil, le chemin du lanceur (« To run Leon later: ~/.leon/bin/leon <command> ») et, sous la forme installée, une ligne sur les mises à jour automatiques (au plus une par jour, depuis le serveur connecté ; `~/.leon/bin/leon update --previous` revient à la version d'avant).
 
 `--yes` accepte tout, sauf le remplacement d'un lanceur pointé vers un autre clone. `installer-crochets` reste, pour la forme clone, et écrit lui aussi les commandes K9.
+
+> **Amendé le 11/11 (T64 du plan de la mémoire à disposition, C16) :**
+> - `--yes` n'ajoute jamais un usage de lui-même (D30 du plan de la mémoire à disposition) ;
+> - avant l'étape 2, `leon setup` lit les outils trouvés et `accord.json`, et demande à `leon login` les cases des usages cochés par défaut qui manquent sans refus à l'un d'eux (`lecture` au lot 12). Ce que l'humain coche ou décoche sur la page passe aux installateurs, qui l'écrivent après leur accord de base et ne le redemandent pas ;
+> - avec `--yes`, sur un ordinateur connecté auquel il manque l'un de ces usages, `leon setup` relance `leon login` (100 secondes d'attente) : seulement si `GET /api/v1/me` a répondu 200, vers l'adresse de la connexion enregistrée, jamais `LEON_URL`, et pas après `--with-token` (une ligne dit de lancer `leon setup` dans un terminal). Une relance en échec garde la connexion d'avant, et l'installation continue sans usage. Relecture du 11/11 : la relance doit retrouver le compte et l'espace que `GET /api/v1/me` rend au jeton de la connexion (S05), et une relance qui lève (écoute sur 127.0.0.1 refusée) compte comme une relance en échec ;
+> - dans un terminal, sans `--yes`, les usages se demandent une fois pour tous les outils du passage (T47).
 
 **Tests :** ordinateur déjà connecté : pas de `login` ; jeton révoqué (401), autre `--url`, variables seules : `login` ; serveur injoignable : pas de `login` ; Claude Code absent : rien n'est écrit dans `~/.claude` ; Codex présent : « not supported yet », rien n'est écrit dans `~/.codex` ; l'accord n'est écrit qu'après la confirmation ; relancé, `setup` n'écrit rien (idempotent).
 

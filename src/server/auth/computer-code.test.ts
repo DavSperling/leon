@@ -113,6 +113,66 @@ describe('code signé de l’ordinateur', () => {
   );
 });
 
+// Les cases de la page « Autoriser » (T64, C16) : montrées (m), puis cochées parmi elles (g), dans la charge signée.
+describe('code signé de l’ordinateur : les cases de la page', () => {
+  const WITH = { ...GOOD, m: ['lecture'], g: ['lecture'] };
+
+  it('m et g se relisent signés, après l’expiration', () => {
+    const code = signComputerCode({ ...CLAIMS, m: ['lecture'], g: ['lecture'] }, OPTS);
+
+    expect(verifyComputerCode(code, OPTS)).toEqual(WITH);
+    expect(code).toBe(signed(WITH));
+  });
+
+  it('sans case montrée, le code est celui d’avant : un serveur plus ancien le vérifie encore', () => {
+    expect(signComputerCode({ ...CLAIMS, m: [], g: [] }, OPTS)).toBe(signed(GOOD));
+    expect(signComputerCode({ ...CLAIMS, m: [], g: ['lecture'] }, OPTS)).toBe(signed(GOOD));
+  });
+
+  it('un code sans m ni g se vérifie encore, sans eux', () => {
+    const payload = verifyComputerCode(signed(GOOD), OPTS);
+
+    expect(payload).toEqual(GOOD);
+    expect(payload?.m).toBeUndefined();
+    expect(payload?.g).toBeUndefined();
+  });
+
+  it('une case décochée : g vide', () => {
+    const code = signComputerCode({ ...CLAIMS, m: ['lecture'], g: [] }, OPTS);
+
+    expect(verifyComputerCode(code, OPTS)).toEqual({ ...GOOD, m: ['lecture'], g: [] });
+  });
+
+  it('un g ou un m retouché sous la signature d’origine est refusé', () => {
+    const [, signature = ''] = signComputerCode({ ...CLAIMS, m: ['lecture'], g: [] }, OPTS).split(
+      '.',
+    );
+    for (const forged of [WITH, { ...GOOD, m: [], g: [] }, GOOD]) {
+      const body = Buffer.from(JSON.stringify(forged)).toString('base64url');
+      expect(verifyComputerCode(`${body}.${signature}`, OPTS)).toBeNull();
+    }
+  });
+
+  // Un retour en arrière d'un lot à l'autre ne casse pas un code en vol : la charge connaît tous les usages du serveur.
+  it('accepte un usage connu du serveur que la page ne montre pas encore', () => {
+    expect(verifyComputerCode(signed({ ...GOOD, m: ['noter'], g: [] }), OPTS)).toEqual({
+      ...GOOD,
+      m: ['noter'],
+      g: [],
+    });
+  });
+
+  it.each([
+    ['une valeur inconnue dans m', { ...GOOD, m: ['inconnu'], g: [] }],
+    ['une valeur inconnue dans g', { ...GOOD, m: ['lecture'], g: ['admin'] }],
+    ['m qui n’est pas un tableau', { ...GOOD, m: 'lecture', g: [] }],
+    ['g qui n’est pas un tableau', { ...GOOD, m: ['lecture'], g: true }],
+    ['plus de valeurs que d’usages connus', { ...GOOD, m: Array(6).fill('lecture'), g: [] }],
+  ])('refuse, même bien signée : %s', (_, payload) => {
+    expect(verifyComputerCode(signed(payload), OPTS)).toBeNull();
+  });
+});
+
 // La signature générale (M02) : même forme que K4, une clé par but (info « leon:<but>:v1 »). Recalculée ici, hors du code testé.
 const signedFor = (purpose: string, payload: unknown, secret = SECRET) => {
   const body = Buffer.from(

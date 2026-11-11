@@ -182,6 +182,18 @@ describe('addUsage : un usage accepté à part, daté (C7 révisé)', () => {
     else expect(await readFile(consentPath(home), 'utf8')).toBe(before);
   });
 
+  // T47 : `lecture` s'écrit comme `resume`, pour chaque outil qui a son accord de base.
+  it.each(['claude_code', 'codex'] as const)('ajoute lecture, daté, pour %s', async (tool) => {
+    await writeConsent(home, tool, 2);
+
+    await addUsage(home, tool, 'lecture', new Date('2026-11-11T09:00:00Z'));
+
+    expect(await factsConsent(home, tool)).toMatchObject({
+      usages: ['lecture'],
+      usages_le: { lecture: new Date('2026-11-11T09:00:00Z') },
+    });
+  });
+
   it('le retrait (version 0) efface les usages', async () => {
     await writeConsent(home, 'claude_code', 2);
     await addUsage(home, 'claude_code', 'resume');

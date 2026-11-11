@@ -12,6 +12,10 @@ export const API_PATHS = {
   ordinateurs: '/api/v1/ordinateurs', // POST : leon login échange le code signé contre l'enregistrement du jeton
   jeton: '/api/v1/jeton', // DELETE : un jeton se révoque lui-même (leon logout)
   retrait: '/api/v1/retrait', // POST : le retrait de l'accord d'un outil atteint le serveur (leon retirer-crochets)
+  dossier: '/api/v1/dossier', // POST : les fils du projet (leon threads)
+  fil: '/api/v1/fil', // POST : un fil, sans id celui de la branche (leon thread)
+  chercher: '/api/v1/chercher', // POST : la recherche bornée au dépôt du projet (leon search)
+  versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -21,10 +25,15 @@ export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 oct
 // La réponse 201 de POST /api/v1/ordinateurs (K5 du plan « CLI sans clone ») : le nom de l'espace, celui de
 // l'ordinateur tel que le serveur l'a retenu, et l'e-mail du compte autorisé. `leon login` écrit les deux premiers
 // dans connexion.json et affiche les trois : sur une machine partagée, le compte montre une autorisation donnée par un autre.
+// `usages` et `refus` (T64, C16 du plan de la mémoire à disposition) : les cases de la page « Autoriser », cochées et
+// décochées. Lus avec tolérance : un serveur plus ancien ne les rend pas, un plus récent peut en rendre d'inconnus ; ce
+// n'est jamais une raison de refuser la connexion. La CLI n'en garde que ce qu'elle a demandé (login.ts).
 export const ComputerResponseSchema = z.object({
   espace: z.string(),
   ordinateur: z.string(),
   compte: z.string(),
+  usages: z.array(z.string()).catch([]),
+  refus: z.array(z.string()).catch([]),
 });
 export type ComputerResponse = z.infer<typeof ComputerResponseSchema>;
 
@@ -99,6 +108,11 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
+// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : T49 y ajoutera
+// `rappel`, T57 `noter`. À part de USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de
+// ce lot sait écrire.
+export const AUTHORIZE_USAGES = ['lecture'] as const satisfies readonly Usage[];
+export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
 // plus ancien perd les faits, jamais les tours. `accord` est la version d'accord de l'outil sur le poste : la CLI
@@ -140,17 +154,58 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 
 // Le bloc de démarrage (C3) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
-// journaux d'URL.
+// journaux d'URL. `usages` : ceux de l'outil dont le crochet demande le bloc ; avec `lecture`, le sommaire de ses fils
+// et la consigne de lecture, qui cite `commande` (T46 du plan de la mémoire à disposition). Les deux sont facultatifs :
+// une CLI plus ancienne reçoit le bloc d'avant.
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
+// La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
+// au plus, donc 200 octets, sans saut de ligne ni `<` ni accent grave. L'apostrophe entoure un chemin à espaces
+// (leonCommand, briefing.ts).
+export const CommandeSchema = z.string().regex(/^[A-Za-z0-9 ._/~'-]{1,200}$/);
 export const ContextRequestSchema = z
   .object({
     projet: ProjectSchema,
     branche: z.string().min(1).max(200).nullable(), // tête détachée : null
     session: z.string().min(1).max(200), // la session qui démarre, exclue du bloc
     max: z.number().int().positive().optional(),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
+    commande: CommandeSchema.optional(),
   })
   .strict();
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;
 export const ContextResponseSchema = z.object({ texte: z.string() });
 export type ContextResponse = z.infer<typeof ContextResponseSchema>;
+
+// Les lectures (C9, C11, C12) : POST, pour que la branche et la requête n'aillent pas dans les journaux d'URL. Chaque corps
+// porte les usages de l'outil : sans `lecture`, le serveur refuse. `session` et `outil` vont au journal des lectures
+// quand ils sont connus (D35) ; sans outil, la lecture vient de la CLI seule.
+export const READ_BODY_MAX_BYTES = 4 * 1024;
+const ReadBase = {
+  projet: ProjectSchema,
+  session: z.string().min(1).max(200).optional(),
+  outil: z.enum(CODE_SESSION_KINDS).optional(),
+  usages: z.array(z.enum(USAGES)).max(USAGES.length),
+};
+const Branche = z.string().min(1).max(200).nullable().optional(); // tête détachée : null
+export const DossierRequestSchema = z.object({ ...ReadBase, branche: Branche }).strict();
+export type DossierRequest = z.infer<typeof DossierRequestSchema>;
+// Sans id : le fil de la branche.
+export const FilRequestSchema = z
+  .object({ ...ReadBase, id: z.uuid().optional(), branche: Branche })
+  .strict();
+export type FilRequest = z.infer<typeof FilRequestSchema>;
+// `requete` n'a pas de borne propre, comme l'outil `search` : les 4 Kio du corps suffisent.
+export const ChercherRequestSchema = z.object({ ...ReadBase, requete: z.string().min(1) }).strict();
+export type ChercherRequest = z.infer<typeof ChercherRequestSchema>;
+// L'historique d'un fil (C12) : sans `n`, ses versions lisibles ; avec `n`, le texte de l'une. Rien ne restaure par le
+// poste (D33) : la restauration se fait sur le site (T55).
+// `n` : borné à l'int4 de versions_memoire.n, sinon la requête échouerait en base au lieu de rendre le texte fixe.
+export const VERSION_N_MAX = 2_147_483_647;
+export const VersionsRequestSchema = z
+  .object({ ...ReadBase, id: z.uuid(), n: z.number().int().min(1).max(VERSION_N_MAX).optional() })
+  .strict();
+export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
+// Le rendu gardé (D25), le même que celui du MCP.
+export const ReadResponseSchema = z.object({ texte: z.string() });
+export type ReadResponse = z.infer<typeof ReadResponseSchema>;

@@ -77,7 +77,19 @@ export const computerRoutes = new Hono<ComputerEnv>()
         return c.json({ error: 'Internal error' }, 500);
       }
       if (!registered) return c.json({ error: 'Token already registered' }, 409);
-      return c.json({ espace: organizationName, ordinateur, compte: email }, 201);
+      // Les cases de la page (T64, C16) : cochées (`usages`) et décochées (`refus`), recalculées depuis la charge signée.
+      const shown = claims.m ?? [];
+      const ticked = claims.g ?? [];
+      return c.json(
+        {
+          espace: organizationName,
+          ordinateur,
+          compte: email,
+          usages: shown.filter((usage) => ticked.includes(usage)),
+          refus: shown.filter((usage) => !ticked.includes(usage)),
+        },
+        201,
+      );
     },
   )
   // `leon logout` : le jeton qui fait la requête, et lui seul. Déjà révoqué entre-temps (deux appels à la fois) :

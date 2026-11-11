@@ -338,8 +338,8 @@ describe('extractCodexFacts', () => {
         externe(
           commande('pnpm test'),
           commande('git fetch origin && git pull --ff-only'),
-          commande('~/.leon/bin/leon fil'),
-          commande('leon chercher "route des faits"'),
+          commande('~/.leon/bin/leon thread'),
+          commande('leon search "route des faits"'),
           element({ type: 'FileChange', id: 'p', changes: {}, status: 'completed' }),
           element({ type: 'FunctionCallOutput', id: 'f', name: 'update_plan' }),
           element({ type: 'Reasoning', id: 'r' }),
@@ -349,11 +349,49 @@ describe('extractCodexFacts', () => {
       ).toBe(false);
     });
 
-    // shortcut: tout appel MCP compte, même vers Leon, jusqu'à T44 (lot 12).
-    it('un outil du serveur MCP de Leon compte encore, tant que T44 ne sait pas le reconnaître', () => {
-      expect(externe(element({ type: 'McpToolCall', id: 'm', server: 'leon', tool: 'fil' }))).toBe(
-        true,
-      );
+    // Lire Leon (T44 ; D36, A14) : les outils locaux du serveur `leon`, quand la CLI l'a reconnu à son URL.
+    it('un outil local du serveur MCP de Leon reconnu : non ; search, fetch, un autre serveur, ou non reconnu : oui', () => {
+      const mcp = (server: string, tool: string, leon: boolean) =>
+        extractCodexFacts(
+          session(element({ type: 'McpToolCall', id: 'm', server, tool, status: 'completed' })),
+          RACINE,
+          null,
+          leon,
+        ).externe;
+      for (const tool of ['threads', 'thread', 'versions', 'remember']) {
+        expect(mcp('leon', tool, true), tool).toBe(false);
+        expect(mcp('leon', tool, false), tool).toBe(true);
+      }
+      for (const tool of ['search', 'fetch', 'briefing', 'lessons', 'thread_x']) {
+        expect(mcp('leon', tool, true), tool).toBe(true);
+      }
+      expect(mcp('leon_bis', 'thread', true)).toBe(true);
+      expect(mcp('Leon', 'thread', true)).toBe(true);
+      // La fin de l'appel, quand le rollout la garde aussi : la même règle.
+      const fin = (server: string, tool: string) =>
+        extractCodexFacts(
+          session(
+            element({ type: 'McpToolCall', id: 'm', server, tool, status: 'completed' }),
+            ligne('event_msg', {
+              type: 'mcp_tool_call_end',
+              call_id: 'm',
+              invocation: { server, tool },
+            }),
+          ),
+          RACINE,
+          null,
+          true,
+        ).externe;
+      expect(fin('leon', 'thread')).toBe(false);
+      expect(fin('leon', 'search')).toBe(true);
+      expect(
+        extractCodexFacts(
+          session(ligne('event_msg', { type: 'mcp_tool_call_end', call_id: 'm' })),
+          RACINE,
+          null,
+          true,
+        ).externe,
+      ).toBe(true);
     });
 
     it('une commande refusée n’a pas tourné : ni externe, ni commande', () => {
@@ -470,6 +508,21 @@ describe('extractCodexFacts', () => {
           RACINE,
         ).externe;
       expect(appel('fil', { namespace: 'mcp__leon__' })).toBe(true);
+      // shortcut de codex.ts : à l'ancien format, même un outil local de Leon reconnu compte.
+      expect(
+        extractCodexFacts(
+          ancien({
+            type: 'function_call',
+            name: 'thread',
+            namespace: 'mcp__leon__',
+            arguments: '{}',
+            call_id: 'x',
+          }),
+          RACINE,
+          null,
+          true,
+        ).externe,
+      ).toBe(true);
       expect(appel('outil_inconnu')).toBe(true);
       expect(appel('update_plan')).toBe(false);
     });

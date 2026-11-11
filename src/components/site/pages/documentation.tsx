@@ -6,14 +6,15 @@ import { CodeLine, CopyButton } from '@/components/verre/ui/copy';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { CtaLink } from '../parts';
-import { SECTIONS, settingsPath } from './documentation-markdown';
+import { READ_COMMANDS, SECTIONS, settingsPath } from './documentation-markdown';
 import { type DocumentationView, ViewSwitch } from './documentation-view';
 import { PageHero, PageSection } from './page-hero';
 
 // Page « Documentation » : brancher Leon à ses outils de code (le chemin « Je demande à Claude », puis le terminal) et
 // ce qu'il faut en savoir. Chaque commande et chaque option citée existe dans src/cli (documentation.test.ts le vérifie) ;
 // « Ce qui part » résume le texte d'accord de `leon setup` (CONSENT_LINES, puis l'usage `resume`, RESUME_LINES,
-// install-hooks.ts, état des fils compris), sans rien promettre de plus.
+// install-hooks.ts, état des fils compris), sans rien promettre de plus. « Lire Leon » cite les commandes de lecture
+// (read-commands.ts) et le signal externe (leon-mcp.ts).
 // Le mode « Pour un agent » montre la même page en Markdown (documentation-markdown.ts, aussi servi sur /documentation.md) ;
 // SECTIONS (les ancres du plan et leur clé dans site.documentation) est commune aux deux.
 
@@ -212,13 +213,23 @@ export function DocumentationPage({
               <DocSection id="ce-qui-part" title={t('sent.title')}>
                 {p('sent.lead')}
                 <ul className={cn(LIST, 'list-disc')}>
-                  {(['where', 'end', 'tools', 'secrets', 'start', 'resume'] as const).map(
-                    (item) => (
-                      <li key={item}>{rich(`sent.${item}`)}</li>
-                    ),
-                  )}
+                  {(
+                    ['where', 'end', 'tools', 'secrets', 'start', 'lecture', 'resume'] as const
+                  ).map((item) => (
+                    <li key={item}>{rich(`sent.${item}`)}</li>
+                  ))}
                 </ul>
                 {p('sent.server')}
+              </DocSection>
+
+              <DocSection id="lire" title={t('read.title')}>
+                {p('read.lead')}
+                <Block>{READ_COMMANDS}</Block>
+                <ul className={cn(LIST, 'list-disc')}>
+                  {(['output', 'consent', 'external'] as const).map((item) => (
+                    <li key={item}>{rich(`read.${item}`)}</li>
+                  ))}
+                </ul>
               </DocSection>
 
               <DocSection id="mises-a-jour" title={t('updates.title')}>

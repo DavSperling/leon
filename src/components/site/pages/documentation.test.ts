@@ -86,6 +86,7 @@ const ANCHORS = [
   'terminal',
   'autoriser',
   'ce-qui-part',
+  'lire',
   'mises-a-jour',
   'deconnecter',
   'problemes',
@@ -93,7 +94,7 @@ const ANCHORS = [
 ];
 
 describe('la page Documentation', () => {
-  it.each(LOCALES)('a ses neuf sections et son plan, avec une ancre chacune (%s)', (locale) => {
+  it.each(LOCALES)('a ses dix sections et son plan, avec une ancre chacune (%s)', (locale) => {
     const html = render(locale);
 
     for (const id of ANCHORS) {
@@ -184,7 +185,17 @@ describe('la page Documentation', () => {
     // `--bare` et `claude -p` sont ceux de Claude Code, cités par le texte d'accord de `leon setup`.
     const flags = new Set(codes.flatMap((code) => code.match(/--[a-z-]+/g) ?? []));
     expect([...flags].toSorted()).toEqual(
-      ['--bare', '--depot', '--oui', '--previous', '--url', '--with-token', '--yes'].toSorted(),
+      [
+        '--bare',
+        '--depot',
+        '--oui',
+        '--outil',
+        '--previous',
+        '--read',
+        '--url',
+        '--with-token',
+        '--yes',
+      ].toSorted(),
     );
     for (const flag of flags) if (flag !== '--bare') expect(cli, flag).toContain(flag);
     // Les mots seuls, sans « leon » devant, sont aussi des commandes de la CLI.
@@ -311,6 +322,86 @@ describe('la page Documentation', () => {
           : 'Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté',
       );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
+  // L'usage `lecture` (T47, T64) : coché par défaut, demandé une fois pour tous les outils, dans le terminal ou par une
+  // case de la page « Autoriser » ; la page dit ce qu'il pousse au démarrage, ce que l'agent peut lire, qu'il ne permet
+  // jamais d'écrire, et sa portée : le jeton de l'ordinateur.
+  it.each(LOCALES)(
+    'dit ce que l’usage lecture pousse et permet, et qu’il se choisit sur la page (%s)',
+    (locale, messages) => {
+      const { lecture, lead, start } = messages.site.documentation.sent;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>lecture</code>',
+        '<code>[Y/n]</code>',
+        '<code>--yes</code>',
+        '<code>leon threads</code>',
+        '<code>leon thread</code>',
+        '<code>leon search</code>',
+        '<code>leon versions</code>',
+        '<code>retirer-crochets</code>',
+      ])
+        expect(lecture, term).toContain(term);
+      expect(lecture).toContain(words('checked by default', 'coché par défaut'));
+      expect(lecture).toContain(
+        words('never lets an agent write', 'ne permet jamais à un agent d’écrire'),
+      );
+      expect(lecture).toContain(words('every agent on the computer', 'tout agent de l’ordinateur'));
+      expect(lecture).toContain(words('A refusal is kept', 'Un refus est gardé'));
+      expect(lead).toContain(words('gives no usage by itself', 'ne donne aucun usage de lui-même'));
+      expect(start).toContain('<code>lecture</code>');
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        lecture.replace(/<\/?code>/g, '`'),
+      );
+      expect(textOf(render(locale))).toContain(
+        words(
+          'The lecture usage (reading Leon) is checked by default',
+          'L’usage lecture (lire Leon) est coché par défaut',
+        ),
+      );
+    },
+  );
+
+  // T64 : les cases de la page « Autoriser » sont à l'humain ; l'agent qui installe n'y touche pas.
+  it.each(LOCALES)(
+    'dit que les cases de la page « Autoriser » sont à l’humain (%s)',
+    (locale, messages) => {
+      const { authorize, claude } = messages.site.documentation;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      expect(authorize.p1).toContain(words('They are yours', 'Elles sont à vous'));
+      expect(authorize.p2).toContain(words('100 seconds', '100 secondes'));
+      expect(claude.ask4).toContain('5 minutes');
+      expect(claude.ask4).toContain(words('100 seconds', '100 secondes'));
+      expect(claude.ask4).toContain(words('a browser it controls', 'un navigateur qu’il pilote'));
+      expect(claude.ask3).toContain(
+        words('gives no usage by itself', 'ne donne aucun usage de lui-même'),
+      );
+      expect(messages.claudeCode.withClaudeLead).toContain(
+        words(
+          'never ticks them or clicks for you',
+          'ne les coche jamais et ne clique pas à votre place',
+        ),
+      );
+    },
+  );
+
+  // `resume` se propose aussi pour Codex, Cursor et Antigravity (décision d'Amos du 11/11) : leur retrait passe par
+  // `--outil`.
+  it.each(LOCALES)(
+    'dit que resume et lecture se proposent aussi pour Codex, Cursor et Antigravity (%s)',
+    (_locale, messages) => {
+      const { resume, tools } = messages.site.documentation.sent;
+      const { read } = messages.site.documentation;
+
+      expect(resume).toContain('<code>--outil codex</code>');
+      expect(tools).toContain('<code>lecture</code>');
+      expect(tools).toContain('<code>resume</code>');
+      expect(read.consent).not.toMatch(/not offer it yet|ne le propose pas encore/);
+      expect(read.consent).toContain('<code>~/.leon/bin/leon setup</code>');
     },
   );
 

@@ -192,16 +192,43 @@ describe('leon installer-crochets', () => {
   // La porte de D30 (`interactive: process.stdin.isTTY === true`, leon.ts) : une réponse lue d'un tube peut venir d'un
   // agent. Le « y » d'après l'accord de base n'est donc jamais lu comme un usage, ni la question posée.
   it(
-    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et l’usage resume n’est pas montré',
+    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et les usages ne sont pas montrés',
     async () => {
-      const outcome = await leon(['installer-crochets', '--depot', fakeRepo], 'y\ny\n');
+      const outcome = await leon(['installer-crochets', '--depot', fakeRepo], 'y\ny\ny\n');
 
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).not.toContain('usage "resume"');
+      expect(outcome.stdout).not.toContain('usage "lecture"');
       expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
       expect((await readConsent()).outils.claude_code).toEqual({
         version: 2,
         installe_le: expect.any(String),
+      });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Les trois autres outils passent la même porte (T47) : leurs usages ne se donnent jamais par un tube.
+  it.each(['codex', 'cursor', 'antigravity'] as const)(
+    '--outil %s, « y » trois fois par un tube : l’accord et la capture seuls, ni usage ni refus',
+    async (outil) => {
+      await rm(join(home, `.${outil === 'antigravity' ? 'gemini' : outil}`), {
+        recursive: true,
+        force: true,
+      });
+
+      const outcome = await leon(
+        ['installer-crochets', '--depot', fakeRepo, '--outil', outil],
+        'y\ny\ny\n',
+      );
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).not.toContain('usage "lecture"');
+      expect(outcome.stdout).not.toContain('usage "resume"');
+      expect((await readConsent()).outils[outil]).toEqual({
+        version: 2,
+        installe_le: expect.any(String),
+        capture_le: expect.any(String),
       });
     },
     TEST_TIMEOUT_MS,

@@ -1,5 +1,6 @@
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -8,6 +9,7 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   type BriefingResponse,
+  CommandeSchema,
   type ContextRequest,
 } from '../capture/api-contract';
 import {
@@ -16,10 +18,12 @@ import {
   briefingDirectory,
   fetchBriefingText,
   fetchStartText,
+  leonCommand,
   runBriefing,
 } from './briefing';
 import { writeConnection } from './connection';
-import { CONSENT_WITHDRAWN_MESSAGE, writeConsent } from './consent';
+import { addUsage, CONSENT_WITHDRAWN_MESSAGE, writeConsent } from './consent';
+import { launcherPath } from './hook-commands';
 import type { GitRunner } from './project-key';
 
 const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
@@ -151,9 +155,29 @@ describe('fetchStartText', () => {
     );
   });
 
+  // Un serveur plus ancien que `usages` et `commande` (C3 est strict) répond 400 : le point du matin seul, comme un 404.
+  it('retombe sur le point du matin seul sur un 400 (serveur plus ancien que les usages du bloc)', async () => {
+    const fetchImpl = vi.fn(async (url: URL) =>
+      url.pathname === API_PATHS.contexte
+        ? new Response('{}', { status: 400 })
+        : Response.json(briefing),
+    );
+
+    expect(
+      await fetchStartText(asFetch(fetchImpl), env, {
+        ...request,
+        usages: ['lecture'],
+        commande: '~/.leon/bin/leon',
+      }),
+    ).toBe(briefing.markdown);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    const [url] = fetchImpl.mock.calls[1] as unknown as [URL];
+    expect(url.pathname).toBe(API_PATHS.briefing);
+  });
+
   it.each([
     ['un 401', new Response('{}', { status: 401 })],
-    ['un 400', new Response('{}', { status: 400 })],
     ['un 500', new Response('{}', { status: 500 })],
     ['un corps non conforme', Response.json({ texte: 3 })],
     ['un corps non JSON', new Response('<html>', { status: 200 })],
@@ -273,6 +297,7 @@ describe('runBriefing', () => {
     scheduleCatchUp?: () => Promise<unknown>;
     outil?: 'codex' | 'cursor' | 'antigravity';
     evenement?: 'demarrage' | 'prompt';
+    depot?: string;
   }) {
     const out: string[] = [];
     const err: string[] = [];
@@ -297,6 +322,7 @@ describe('runBriefing', () => {
         ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
         ...(input.outil ? { outil: input.outil } : {}),
         ...(input.evenement ? { evenement: input.evenement } : {}),
+        ...(input.depot ? { depot: input.depot } : {}),
       });
     // Le corps de la demande du bloc : le projet, la branche et la session.
     const asked = () => {
@@ -575,6 +601,142 @@ describe('runBriefing', () => {
     const [address, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
     expect(address.origin).toBe(env.url);
     expect(init.headers).toMatchObject({ Authorization: `Bearer ${env.token}` });
+  });
+
+  // T46 : avec l'usage `lecture` de l'outil du crochet, et de lui seul, ses usages et la commande posée partent dans
+  // C3 ; sans lui, le corps de toujours (le texte de l'accord de base ne dit que le projet, la branche et la session).
+  describe('l’usage `lecture` (le sommaire des fils)', () => {
+    let lecteurs: string;
+    beforeAll(async () => {
+      lecteurs = await mkdtemp(join(tmpdir(), 'leon-lecture-'));
+    });
+    afterAll(() => rm(lecteurs, { recursive: true, force: true }));
+    // Un poste dont les outils ont ces usages, avec ou sans le lanceur ~/.leon/bin/leon.
+    async function poste(
+      name: string,
+      usages: Partial<Record<'claude_code' | 'codex', Array<'lecture' | 'resume'>>>,
+      lanceur = true,
+    ): Promise<string> {
+      const home = join(lecteurs, name);
+      for (const [tool, list] of Object.entries(usages)) {
+        await writeConsent(home, tool as 'claude_code' | 'codex', 2);
+        for (const usage of list) await addUsage(home, tool as 'claude_code' | 'codex', usage);
+      }
+      if (lanceur) {
+        await mkdir(join(home, '.leon', 'bin'), { recursive: true });
+        await writeFile(launcherPath(home), '#!/bin/sh\n');
+      }
+      return home;
+    }
+    const codexJson = (home: string) =>
+      Readable.from([
+        JSON.stringify({
+          session_id: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
+          transcript_path: join(home, '.codex', 'sessions', '2026', '11', '06', 'rollout.jsonl'),
+          cwd: '/projets/leon',
+          hook_event_name: 'SessionStart',
+          source: 'startup',
+        }),
+      ]);
+    const git = { remotes: { '/projets/leon': 'git@github.com:DavSperling/Leon.git' } };
+
+    it('Claude Code : ses usages et le lanceur, avec le tilde', async () => {
+      const home = await poste('claude', { claude_code: ['lecture', 'resume'], codex: [] });
+      const { run, asked } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home,
+        ...git,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(asked()).toEqual({
+        projet: PROJECT,
+        branche: null,
+        session: SESSION,
+        usages: ['lecture', 'resume'],
+        commande: '~/.leon/bin/leon',
+      });
+    });
+
+    it('`crochet codex demarrage` : les usages de Codex, jamais ceux de Claude Code, et inversement', async () => {
+      const home = await poste('codex', { claude_code: ['resume'], codex: ['lecture'] });
+      const codexRun = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+      const claudeRun = setup({ stdin: Readable.from([hookJson('/projets/leon')]), home, ...git });
+
+      expect(await codexRun.run()).toBe(0);
+      expect(await claudeRun.run()).toBe(0);
+
+      expect(codexRun.asked()).toMatchObject({ usages: ['lecture'], commande: '~/.leon/bin/leon' });
+      expect(claudeRun.asked()).toEqual({ projet: PROJECT, branche: null, session: SESSION });
+    });
+
+    it('sans `lecture` : ni usages ni commande', async () => {
+      const home = await poste('resume', { codex: ['resume'] });
+      const { run, asked } = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+
+      expect(await run()).toBe(0);
+
+      expect(asked()).toEqual({
+        projet: PROJECT,
+        branche: null,
+        session: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
+      });
+    });
+
+    it('sans lanceur, depuis un clone : pnpm dans le clone, avec le tilde sous le dossier personnel', async () => {
+      const home = await poste('clone', { claude_code: ['lecture'] }, false);
+      const { run, asked } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home,
+        depot: join(home, 'code', 'leon'),
+        ...git,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(asked().commande).toBe('pnpm --dir ~/code/leon leon');
+    });
+  });
+
+  // La commande que cite la consigne (C3 `commande`, D24).
+  describe('leonCommand', () => {
+    let home: string;
+    beforeAll(async () => {
+      home = await mkdtemp(join(tmpdir(), 'leon-commande-'));
+    });
+    afterAll(() => rm(home, { recursive: true, force: true }));
+
+    it('sans lanceur : pnpm dans le clone, `leon` hors d’un clone ou hors de la borne de C3', async () => {
+      expect(await leonCommand(home, '/opt/leon')).toBe('pnpm --dir /opt/leon leon');
+      expect(await leonCommand(home, `${home}/leon`)).toBe('pnpm --dir ~/leon leon');
+      expect(await leonCommand(home, undefined)).toBe('leon');
+      expect(await leonCommand(home, "/opt/l'eon")).toBe('leon');
+      expect(await leonCommand(home, `/opt/${'a'.repeat(200)}`)).toBe('leon');
+    });
+
+    it('un chemin à espaces passe entre apostrophes, et le shell le lit en un seul argument, tilde développé', async () => {
+      const inHome = await leonCommand(home, `${home}/code/Leon Project`);
+      const outside = await leonCommand(home, '/opt/Leon Project');
+      expect(inHome).toBe("pnpm --dir ~/'code/Leon Project' leon");
+      expect(outside).toBe("pnpm --dir '/opt/Leon Project' leon");
+      // Le shell reçoit les mots de la commande : chacun sur sa ligne.
+      const words = (command: string) =>
+        execFileSync('sh', ['-c', `printf '%s\\n' ${command}`], {
+          env: { ...process.env, HOME: home },
+          encoding: 'utf8',
+        });
+      expect(words(inHome)).toBe(`pnpm\n--dir\n${home}/code/Leon Project\nleon\n`);
+      expect(words(outside)).toBe('pnpm\n--dir\n/opt/Leon Project\nleon\n');
+      expect(CommandeSchema.safeParse(inHome).success).toBe(true);
+    });
+
+    it('avec le lanceur : lui, même depuis un clone', async () => {
+      await mkdir(join(home, '.leon', 'bin'), { recursive: true });
+      await writeFile(launcherPath(home), '#!/bin/sh\n');
+
+      expect(await leonCommand(home, '/opt/leon')).toBe('~/.leon/bin/leon');
+    });
   });
 
   it('accord retiré : code 0, le seul message du retrait, sans rien demander ni lancer git', async () => {

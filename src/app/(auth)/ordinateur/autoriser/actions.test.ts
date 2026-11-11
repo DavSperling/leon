@@ -22,9 +22,12 @@ const form = (fields: Record<string, string>) => {
   return data;
 };
 
-// L'adresse vers laquelle l'action renvoie le navigateur (le mock de redirect la glisse dans l'erreur).
-const target = async (fields: Record<string, string>) => {
-  const error = await authorizeComputerAction(form(fields)).then(
+// L'adresse vers laquelle l'action renvoie le navigateur (le mock de redirect la glisse dans l'erreur). `ticked` : les
+// cases cochées, une valeur par case, comme les poste un formulaire natif.
+const target = async (fields: Record<string, string>, ticked: string[] = []) => {
+  const data = form(fields);
+  for (const usage of ticked) data.append('usage', usage);
+  const error = await authorizeComputerAction(data).then(
     () => new Error('pas de redirection'),
     (caught: Error) => caught,
   );
@@ -76,6 +79,61 @@ describe('« Autoriser »', () => {
 
     expect(await target({ ...FIELDS, decision: 'allow' })).toBe(
       authorizePath({ port: 4242, etat: ETAT, empreinte: EMPREINTE }),
+    );
+  });
+});
+
+// Les cases (T64, C16) : la page envoie celles qu'elle montre (`usages`, revalidé ici) et celles qui sont cochées
+// (`usage`) ; l'action met les premières dans `m`, et les cochées parmi elles dans `g`.
+describe('« Autoriser » : les cases de la page', () => {
+  const claims = async (fields: Record<string, string>, ticked: string[] = []) => {
+    const url = new URL(await target({ ...FIELDS, decision: 'allow', ...fields }, ticked));
+    expect([...url.searchParams.keys()]).toEqual(['code', 'etat']);
+    return verifyComputerCode(url.searchParams.get('code') ?? '');
+  };
+
+  it('montrée et cochée : dans m et dans g', async () => {
+    expect(await claims({ usages: 'lecture' }, ['lecture'])).toMatchObject({
+      m: ['lecture'],
+      g: ['lecture'],
+    });
+  });
+
+  it('montrée et décochée : dans m seulement', async () => {
+    expect(await claims({ usages: 'lecture' })).toMatchObject({ m: ['lecture'], g: [] });
+  });
+
+  it('une case postée que la page ne montrait pas est ignorée : g reste dans m', async () => {
+    const payload = await claims({}, ['lecture', 'noter']);
+
+    expect(payload?.m).toBeUndefined();
+    expect(payload?.g).toBeUndefined();
+    expect(await claims({ usages: 'lecture' }, ['lecture', 'noter', 'resume'])).toMatchObject({
+      m: ['lecture'],
+      g: ['lecture'],
+    });
+  });
+
+  it('une valeur inconnue est écartée, de m comme de g', async () => {
+    expect(
+      await claims({ usages: 'lecture,inconnu,rappel' }, ['inconnu', 'lecture']),
+    ).toMatchObject({ m: ['lecture'], g: ['lecture'] });
+    const none = await claims({ usages: 'inconnu' }, ['inconnu']);
+    expect(none?.m).toBeUndefined();
+  });
+
+  it('« Annuler » ne signe rien et ne porte aucun usage', async () => {
+    expect(await target({ ...FIELDS, usages: 'lecture', decision: 'cancel' }, ['lecture'])).toBe(
+      `http://127.0.0.1:4242/retour?refus=1&etat=${ETAT}`,
+    );
+    expect(getUserContext).not.toHaveBeenCalled();
+  });
+
+  it('sans session, rend la main à la page avec ses cases', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(null);
+
+    expect(await target({ ...FIELDS, usages: 'lecture', decision: 'allow' }, ['lecture'])).toBe(
+      authorizePath({ port: 4242, etat: ETAT, empreinte: EMPREINTE, usages: ['lecture'] }),
     );
   });
 });

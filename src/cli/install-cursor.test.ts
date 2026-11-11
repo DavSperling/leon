@@ -10,6 +10,7 @@ import {
   installCursorHooks,
   uninstallCursorHooks,
 } from './install-cursor';
+import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
 import { protectedCloneWarning } from './install-outil';
 import { writeLauncher } from './launcher';
 import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
@@ -39,12 +40,17 @@ async function writeHooks(content: unknown): Promise<string> {
 }
 const readHooks = async () => JSON.parse(await readFile(hooksPath, 'utf8'));
 
-async function install(answers: (string | null)[] = ['oui'], assumeYes = false) {
+// `usages` : le terminal (`interactive`) et les usages déjà tranchés dans le passage (T47).
+async function install(
+  answers: (string | null)[] = ['oui'],
+  assumeYes = false,
+  usages: UsageOptions = {},
+) {
   const out: string[] = [];
   const err: string[] = [];
   const asked: string[] = [];
   const code = await installCursorHooks(
-    { home, assumeYes },
+    { home, assumeYes, ...usages },
     {
       out: (text) => out.push(text),
       err: (text) => err.push(text),
@@ -138,6 +144,66 @@ describe('installCursorHooks', () => {
       expect(err).toContain('Nothing was written');
       expect(await readFile(hooksPath, 'utf8')).toBe(text);
     }
+  });
+});
+
+// T47 (décisions d'Amos du 11/11) : Cursor propose `lecture` puis `resume`, avec les textes de Claude Code, dans un
+// terminal, après l'accord de base et la capture (install-outil.ts, partagé avec Antigravity).
+describe('installCursorHooks : les usages', () => {
+  const terminal = { interactive: true };
+
+  it('dans un terminal, après l’accord : lecture puis resume, avec les mêmes textes, écrits pour Cursor seul', async () => {
+    const { code, out, asked } = await install(['oui', 'non', 'oui'], false, terminal);
+
+    expect(code).toBe(0);
+    expect(asked).toHaveLength(3);
+    expect(out.indexOf(LECTURE_LINES.join('\n'))).toBeGreaterThan(out.indexOf('Consent recorded'));
+    expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(LECTURE_LINES.join('\n')),
+    );
+    expect(out).toContain('`~/.leon/bin/leon retirer-crochets --outil cursor`');
+    expect(await factsConsent(home, 'cursor')).toMatchObject({
+      usages: ['resume'],
+      refus: ['lecture'],
+    });
+    expect(await factsConsent(home, 'claude_code')).toBeNull();
+  });
+
+  it('crochets et capture en place, sans usage : plus de « nothing to do », le fichier n’est pas touché', async () => {
+    await install();
+    const before = await readFile(hooksPath, 'utf8');
+
+    const { out, asked } = await install(['', null], false, terminal);
+
+    expect(asked).toHaveLength(2);
+    expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
+    expect(out).not.toContain('nothing to do');
+    expect((await factsConsent(home, 'cursor'))?.usages).toEqual(['lecture']);
+    expect(await readFile(hooksPath, 'utf8')).toBe(before);
+  });
+
+  it.each([
+    ['la capture refusée', ['non', 'oui', 'oui'], false, terminal],
+    ['hors terminal, même avec « y »', ['oui', '', 'y'], false, {}],
+    ['avec --oui, même dans un terminal', [], true, terminal],
+  ])('%s : ni question ni usage', async (_name, answers, assumeYes, usages) => {
+    const { out, asked } = await install(answers, assumeYes, usages);
+
+    expect(asked.length).toBeLessThanOrEqual(1);
+    expect(out).not.toContain(LECTURE_LINES[0]);
+    expect((await factsConsent(home, 'cursor'))?.usages ?? []).toEqual([]);
+    expect((await factsConsent(home, 'cursor'))?.refus ?? []).toEqual([]);
+  });
+
+  it('le retrait efface usages, refus et capture ; une réinstallation dans un terminal les repropose', async () => {
+    await install(['oui', 'oui', 'non'], false, terminal);
+
+    await uninstall();
+
+    expect(
+      JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils.cursor,
+    ).toEqual({ version: 0, installe_le: expect.any(String) });
+    expect((await install(['oui', null, null], false, terminal)).asked).toHaveLength(3);
   });
 });
 

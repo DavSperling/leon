@@ -5,6 +5,7 @@ import {
   BriefingResponseSchema,
   ComputerResponseSchema,
   ContextResponseSchema,
+  ReadResponseSchema,
   RetraitRequestSchema,
   SessionFactsPayloadSchema,
   ViewerProfileSchema,
@@ -40,6 +41,10 @@ const SERVED = {
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
   retrait: ['POST', { body: {} }],
+  dossier: ['POST', { body: {} }],
+  fil: ['POST', { body: {} }],
+  chercher: ['POST', { body: {} }],
+  versions: ['POST', { body: {} }],
 } as const;
 // Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
 // jeton ni session. Leur sonde est un POST sans corps valide, qui répond 400 : la route existe (ni 404) et ne demande
@@ -207,8 +212,70 @@ describe('routes de l’API', () => {
     expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({
       ordinateur: 'MacBook-Pro',
       compte: profile.email,
+      usages: [],
+      refus: [],
     });
   });
+});
+
+// Les cases de la page « Autoriser » (T64, C16) : la 201 les rend sous la forme que `leon login` lit.
+it('POST /api/v1/ordinateurs rend les cases de la page sous la forme que la CLI lit', async () => {
+  const {
+    members: [paul],
+  } = await createTestTenant(['Paul']);
+  if (!paul) throw new Error('membre de test manquant');
+  const token = generateApiToken();
+
+  const response = await apiRequest(API_PATHS.ordinateurs, {
+    token,
+    body: {
+      code: signComputerCode({
+        e: hashApiToken(token),
+        u: paul.userId,
+        t: paul.tenantId,
+        m: ['lecture'],
+        g: ['lecture'],
+      }),
+      nom: 'MacBook-Pro',
+    },
+  });
+
+  expect(response.status).toBe(201);
+  expect(ComputerResponseSchema.parse(await response.json())).toMatchObject({
+    usages: ['lecture'],
+    refus: [],
+  });
+});
+
+// Les lectures (C9, C11, C12) : `{ texte }`, même pour un fil introuvable, que la CLI ne lit jamais comme un 404.
+it('les routes de lecture rendent des réponses conformes au schéma que la CLI valide', async () => {
+  const {
+    members: [paul],
+  } = await createTestTenant(['Paul']);
+  if (!paul) throw new Error('membre de test manquant');
+  const { token } = await createApiToken(paul, 'test');
+  const base = { projet: 'github.com/acme/leon', usages: ['lecture'] };
+  const id = crypto.randomUUID();
+
+  const responses = await Promise.all([
+    apiRequest(API_PATHS.dossier, { token, body: { ...base, branche: null } }),
+    apiRequest(API_PATHS.fil, { token, body: { ...base, id } }),
+    apiRequest(API_PATHS.chercher, { token, body: { ...base, requete: 'reprise' } }),
+    apiRequest(API_PATHS.versions, { token, body: { ...base, id, n: 1 } }),
+  ]);
+
+  expect(responses.map((response) => response.status)).toEqual([200, 200, 200, 200]);
+  for (const response of responses) {
+    expect(ReadResponseSchema.parse(await response.json()).texte).not.toBe('');
+  }
+});
+
+// Rien ne restaure une version par le poste ni par le MCP (D33, tranché le 05/11) : seule l'action du site le fera (T55).
+it('aucune route à jeton ni aucun outil MCP ne restaure une version', () => {
+  const offenders = productionSources('src/server/api/**/*.ts', 'src/server/mcp/**/*.ts')
+    .filter(({ text }) => /\brestoreVersion\b/.test(text))
+    .map(({ path }) => path);
+  expect(offenders).toEqual([]);
 });
 
 describe('clients de l’API', () => {

@@ -187,8 +187,10 @@ export function parseAntigravitySession(
 // Cursor (#160) : tout autre outil (la recherche web, un outil MCP, une page web, le navigateur, un sous-agent, un outil
 // inconnu) rend la session externe, une commande aussi si elle va sur le réseau. Les étapes connues de ces outils
 // (EXTERNAL_STEPS) la rendent externe même sans leur appel.
-// shortcut: `schedule` compte comme externe tant qu'on ne sait pas ce qu'il fait, à revoir au prochain essai ; un outil
-// du serveur MCP de Leon compte encore, jusqu'à T44.
+// shortcut: `schedule` compte comme externe tant qu'on ne sait pas ce qu'il fait, à revoir au prochain essai.
+// shortcut: un outil du serveur MCP de Leon compte encore, même local (D36) : ni la forme d'un appel MCP dans le
+// transcript (l'étape CALL_MCP_TOOL ne dit pas le serveur) ni la configuration MCP d'Antigravity ne sont relevées
+// (T44 ; leon-mcp.ts). Les relever au prochain essai, avec l'URL que pose l'installation du connecteur.
 const LOCAL_TOOLS = new Set([
   'run_command',
   'view_file',

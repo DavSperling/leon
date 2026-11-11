@@ -18,7 +18,7 @@ Vérifier à chaque client :
 1. **L'inscription.** La page « Connect an assistant » (« Brancher un assistant » en français) s'ouvre avec le nom du client. La ligne « Name declared by the application » est là pour une inscription (DCR) et absente pour un document CIMD. Noter lequel des deux, et le comparer à la colonne « Inscription ».
 2. **L'hôte.** La ligne « You will be sent to … » nomme l'hôte de la colonne « Retour », ou « an application on this computer » pour un retour en bouclage.
 3. **« Authorize ».** Le client revient connecté, sans erreur. Réglages › Assistants connectés montre une ligne au nom du client.
-4. **`tools/list`** rend quatre outils : `search`, `fetch`, `briefing`, `remember`.
+4. **`tools/list`** rend sept outils : `search`, `fetch`, `threads`, `thread`, `versions`, `briefing`, `remember`.
 5. **`search` puis `fetch`** sur une question dont Leon connaît la réponse : le client cite ses sources.
 6. **Le renouvellement.** L'accès dure une heure : au-delà, le client répond encore sans redemander l'autorisation, et la ligne de Réglages passe de « never used » à « used ».
 7. **La révocation.** « Revoke » dans Réglages ; l'appel suivant reçoit un 401 avec `WWW-Authenticate` et `resource_metadata`, et le client propose de se reconnecter. Noter ce qu'il affiche.

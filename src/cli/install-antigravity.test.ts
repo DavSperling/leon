@@ -10,6 +10,7 @@ import {
   installAntigravityHooks,
   uninstallAntigravityHooks,
 } from './install-antigravity';
+import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
 
 // L'installateur et le retrait des crochets d'Antigravity (T34), toujours dans un HOME temporaire : jamais le vrai
 // ~/.gemini.
@@ -50,12 +51,13 @@ async function writeHooks(content: unknown): Promise<string> {
 }
 const readHooks = async () => JSON.parse(await readFile(hooksPath, 'utf8'));
 
-async function install(answers: (string | null)[] = ['oui']) {
+// `usages` : le terminal (`interactive`) et les usages déjà tranchés dans le passage (T47).
+async function install(answers: (string | null)[] = ['oui'], usages: UsageOptions = {}) {
   const out: string[] = [];
   const err: string[] = [];
   const asked: string[] = [];
   const code = await installAntigravityHooks(
-    { home, assumeYes: false },
+    { home, assumeYes: false, ...usages },
     {
       out: (text) => out.push(text),
       err: (text) => err.push(text),
@@ -128,6 +130,33 @@ describe('installAntigravityHooks', () => {
     expect(code).toBe(1);
     expect(err).toContain('Nothing was written');
     expect(await readFile(hooksPath, 'utf8')).toBe(text);
+  });
+});
+
+// T47 (décisions d'Amos du 11/11) : Antigravity propose `lecture` puis `resume`, avec les textes de Claude Code, dans
+// un terminal, après l'accord de base et la capture.
+describe('installAntigravityHooks : les usages', () => {
+  it('dans un terminal, après l’accord : lecture puis resume, écrits pour Antigravity seul', async () => {
+    const { code, out, asked } = await install(['oui', 'oui', 'non'], { interactive: true });
+
+    expect(code).toBe(0);
+    expect(asked).toHaveLength(3);
+    expect(out).toContain(LECTURE_LINES.join('\n'));
+    expect(out).toContain(RESUME_LINES.join('\n'));
+    expect(out).toContain('`~/.leon/bin/leon retirer-crochets --outil antigravity`');
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({
+      usages: ['lecture'],
+      refus: ['resume'],
+    });
+  });
+
+  it('crochets et capture en place, sans usage : plus de « nothing to do » ; hors terminal, rien', async () => {
+    await install();
+
+    expect((await install([])).out).toContain('nothing to do');
+    const { out, asked } = await install([null, null], { interactive: true });
+    expect(asked).toHaveLength(2);
+    expect(out).not.toContain('nothing to do');
   });
 });
 

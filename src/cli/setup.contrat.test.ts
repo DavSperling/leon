@@ -152,15 +152,16 @@ describe('leon setup', () => {
   // La porte de D30 (`interactive: process.stdin.isTTY === true`, leon.ts) : une réponse lue d'un tube peut venir d'un
   // agent. Le « y » d'après l'accord de base n'est donc jamais lu comme un usage, ni la question posée.
   it(
-    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et l’usage resume n’est pas montré',
+    'sur « y » puis « y » par un tube : l’accord de base seul, ni usage ni refus, et les usages ne sont pas montrés',
     async () => {
       await connect();
 
-      const outcome = await leon(['setup', '--depot', clone], 'y\ny\n');
+      const outcome = await leon(['setup', '--depot', clone], 'y\ny\ny\n');
 
       expect(outcome.code).toBe(0);
       expect(outcome.stdout).toContain('Claude Code: hooks installed');
       expect(outcome.stdout).not.toContain('usage "resume"');
+      expect(outcome.stdout).not.toContain('usage "lecture"');
       expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
       expect(
         JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils.claude_code,

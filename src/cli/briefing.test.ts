@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -8,6 +9,7 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   type BriefingResponse,
+  CommandeSchema,
   type ContextRequest,
 } from '../capture/api-contract';
 import {
@@ -711,6 +713,22 @@ describe('runBriefing', () => {
       expect(await leonCommand(home, undefined)).toBe('leon');
       expect(await leonCommand(home, "/opt/l'eon")).toBe('leon');
       expect(await leonCommand(home, `/opt/${'a'.repeat(200)}`)).toBe('leon');
+    });
+
+    it('un chemin à espaces passe entre apostrophes, et le shell le lit en un seul argument, tilde développé', async () => {
+      const inHome = await leonCommand(home, `${home}/code/Leon Project`);
+      const outside = await leonCommand(home, '/opt/Leon Project');
+      expect(inHome).toBe("pnpm --dir ~/'code/Leon Project' leon");
+      expect(outside).toBe("pnpm --dir '/opt/Leon Project' leon");
+      // Le shell reçoit les mots de la commande : chacun sur sa ligne.
+      const words = (command: string) =>
+        execFileSync('sh', ['-c', `printf '%s\\n' ${command}`], {
+          env: { ...process.env, HOME: home },
+          encoding: 'utf8',
+        });
+      expect(words(inHome)).toBe(`pnpm\n--dir\n${home}/code/Leon Project\nleon\n`);
+      expect(words(outside)).toBe('pnpm\n--dir\n/opt/Leon Project\nleon\n');
+      expect(CommandeSchema.safeParse(inHome).success).toBe(true);
     });
 
     it('avec le lanceur : lui, même depuis un clone', async () => {

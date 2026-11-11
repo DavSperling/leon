@@ -20,9 +20,9 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   type BriefingResponse,
-  CommandeSchema,
   type ContextResponse,
 } from '../capture/api-contract';
+import { leonCommand } from './briefing';
 import { addUsage, consentPath, writeConsent } from './consent';
 
 const run = promisify(execFile);
@@ -195,7 +195,6 @@ describe('leon briefing : la vraie commande', () => {
     "avec l'usage `lecture`, envoie aussi les usages de Claude Code et la commande de ce clone",
     async () => {
       await addUsage(home, 'claude_code', 'lecture');
-      const clone = `pnpm --dir ${resolve(REPO_ROOT)} leon`;
 
       const outcome = await runCommand(hookJson(repo));
 
@@ -205,7 +204,7 @@ describe('leon briefing : la vraie commande', () => {
         branche: BRANCH,
         session: SESSION,
         usages: ['lecture'],
-        commande: CommandeSchema.safeParse(clone).success ? clone : 'leon',
+        commande: await leonCommand(home, resolve(REPO_ROOT)),
       });
     },
     TEST_TIMEOUT_MS,

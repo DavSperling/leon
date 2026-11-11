@@ -158,7 +158,9 @@ export function briefingDirectory(
 
 // La commande Leon posée sur le poste, que cite la consigne du bloc (C3 `commande`, D24) : le lanceur, écrit avec le
 // tilde (le chemin du dossier personnel porte le nom de la personne, et part au fournisseur du modèle) ; sans lui,
-// depuis un clone, pnpm dans ce clone ; sinon, ou quand elle sortirait de la borne de C3, `leon`.
+// depuis un clone, pnpm dans ce clone ; sinon, ou quand elle sortirait de la borne de C3, `leon`. Un chemin à espaces
+// passe entre apostrophes, le tilde hors d'elles pour que le shell le développe encore (`~/'code/Leon Project'`) ;
+// un chemin qui porte lui-même une apostrophe donne `leon`.
 export async function leonCommand(home: string, depot: string | undefined): Promise<string> {
   try {
     await access(launcherPath(home));
@@ -167,8 +169,11 @@ export async function leonCommand(home: string, depot: string | undefined): Prom
     // Pas de lanceur : la forme du clone, s'il y en a un.
   }
   if (depot === undefined) return 'leon';
-  const dir = depot.startsWith(`${home}/`) ? `~${depot.slice(home.length)}` : depot;
-  const command = `pnpm --dir ${dir} leon`;
+  const inHome = depot.startsWith(`${home}/`);
+  const path = inHome ? depot.slice(home.length + 1) : depot;
+  if (!/^[A-Za-z0-9 ._/-]+$/.test(path)) return 'leon';
+  const quoted = path.includes(' ') ? `'${path}'` : path;
+  const command = `pnpm --dir ${inHome ? `~/${quoted}` : quoted} leon`;
   return CommandeSchema.safeParse(command).success ? command : 'leon';
 }
 

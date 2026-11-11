@@ -146,6 +146,7 @@ describe('POST /api/v1/contexte', () => {
     ['avec < dans la commande', { commande: 'S3cret-xyz <x>' }],
     ['avec un caractère non ASCII dans la commande', { commande: 'S3cret-xyzé' }],
     ['avec une commande vide', { commande: '' }],
+    ['avec un accent grave dans la commande', { commande: 'S3cret-xyz`x`' }],
     ['avec un usage inconnu', { usages: ['S3cret-xyz'] }],
   ])('répond 400 %s, sans recopier la valeur reçue', async (_cas, extra) => {
     const { token } = await setup();
@@ -356,6 +357,17 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
     await seedFil(paul, { branches: ['paul/contexte'] });
     const commande = `pnpm --dir ~/${'a'.repeat(200 - 'pnpm --dir ~/ leon'.length)} leon`;
     expect(bytes(commande)).toBe(200);
+
+    expect(await contexte(token, { usages: ['lecture'], commande })).toContain(
+      `\`${commande} thread <id>\``,
+    );
+  });
+
+  it('accepte un chemin de clone entre apostrophes (leonCommand), et le cite au caractère près', async () => {
+    const { paul, token } = await setup();
+    await seedFil(paul, { branches: ['paul/contexte'] });
+    // Deux espaces de suite : le rendu ne doit pas les fondre en une, le chemin désignerait un autre dossier.
+    const commande = "pnpm --dir ~/'code/Leon  Project' leon";
 
     expect(await contexte(token, { usages: ['lecture'], commande })).toContain(
       `\`${commande} thread <id>\``,

@@ -160,8 +160,9 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
 // La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
-// au plus, donc 200 octets, sans saut de ligne ni `<`.
-export const CommandeSchema = z.string().regex(/^[A-Za-z0-9 ._/~-]{1,200}$/);
+// au plus, donc 200 octets, sans saut de ligne ni `<` ni accent grave. L'apostrophe entoure un chemin à espaces
+// (leonCommand, briefing.ts).
+export const CommandeSchema = z.string().regex(/^[A-Za-z0-9 ._/~'-]{1,200}$/);
 export const ContextRequestSchema = z
   .object({
     projet: ProjectSchema,

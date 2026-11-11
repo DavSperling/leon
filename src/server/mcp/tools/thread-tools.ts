@@ -121,7 +121,9 @@ export function registerThreadTools(server: McpServer, ctx: TenantContext, clien
         id: z
           .string()
           .max(ID_MAX_CHARS)
-          .describe('A thread id returned by threads, or a lesson id returned by lessons.'),
+          .describe(
+            'A thread id returned by threads, a lesson id returned by lessons, or the id of a note saved for this project.',
+          ),
         n: z
           .number()
           .int()

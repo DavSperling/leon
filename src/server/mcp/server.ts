@@ -27,6 +27,6 @@ export function createLeonMcpServer(
   registerThreadTools(server, ctx, client);
   registerLessonsTool(server, ctx, client);
   registerBriefingTool(server, ctx, client);
-  registerRememberTool(server, ctx);
+  registerRememberTool(server, ctx, client);
   return server;
 }

@@ -296,10 +296,14 @@ export function renderFil(read: ThreadRead): string {
   ].join('\n');
 }
 
-// L'historique d'un fil ou d'une leçon (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un
+// L'historique d'un fil, d'une note ou d'une leçon (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un
 // numéro, le texte de cette version. Rien ne propose de restaurer (D33).
 export function renderVersions(read: VersionsRead): string {
-  const [wrapper, noun] = read.lecon ? ['lecon', 'lesson'] : ['fil', 'thread'];
+  const [wrapper, noun] = read.lecon
+    ? ['lecon', 'lesson']
+    : read.note
+      ? ['note', 'note']
+      : ['fil', 'thread'];
   const versionAttributes = (one: VersionsRead['versions'][number]): Array<[string, string]> => [
     ['n', String(one.n)],
     ['date', isoDate(one.creeLe)],

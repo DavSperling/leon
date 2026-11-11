@@ -11,6 +11,7 @@ import { contextRoutes } from './context-routes';
 import { faitsRoutes } from './faits-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
+import { notesRoutes } from './notes-routes';
 import { oauthRoutes } from './oauth-routes';
 import { readRoutes } from './read-routes';
 import { reminderRoutes } from './reminder-routes';
@@ -35,6 +36,7 @@ app.route('/v1', contextRoutes);
 app.route('/v1', computerRoutes);
 app.route('/v1', readRoutes);
 app.route('/v1', reminderRoutes);
+app.route('/v1', notesRoutes);
 // Routes de l'interface, au cookie de session : chacune pose ses propres contrôles (jamais un `use` global,
 // qui s'appliquerait aussi aux routes à jeton montées sous /v1).
 app.route('/v1', sessionRoutes);

@@ -18,6 +18,7 @@ export const API_PATHS = {
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
   lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
+  noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -236,3 +237,26 @@ export const RappelRequestSchema = z
 export type RappelRequest = z.infer<typeof RappelRequestSchema>;
 export const RappelResponseSchema = z.object({ texte: z.string() });
 export type RappelResponse = z.infer<typeof RappelResponseSchema>;
+
+// Les notes de l'agent (C14, D38) : une note privée, neuve, ou la version suivante d'une note (`note` et `version`,
+// ensemble), en compare-and-set, seulement depuis le même outil. `texte` est masqué sur le poste, puis de nouveau par le
+// serveur. `session` est une indication déclarée. Sans `noter` dans `usages`, le serveur refuse. 201 { id, n }, ou 409
+// (version dépassée, autre outil, note introuvable). Un serveur ancien répond 404 : la commande le dit sur la sortie
+// d'erreur, avec le code 0. 16 Kio : 4 000 caractères peuvent peser 16 Ko en JSON, comme le rappel.
+export const NOTER_BODY_MAX_BYTES = 16 * 1024;
+export const NOTE_TEXTE_MAX = 4000;
+export const NoterRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    outil: z.enum(CODE_SESSION_KINDS),
+    session: z.string().min(1).max(200).optional(),
+    texte: z.string().min(1).max(NOTE_TEXTE_MAX),
+    note: z.uuid().optional(),
+    version: z.number().int().min(1).max(VERSION_N_MAX).optional(),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length),
+  })
+  .strict()
+  .refine((body) => (body.note === undefined) === (body.version === undefined));
+export type NoterRequest = z.infer<typeof NoterRequestSchema>;
+export const NoterResponseSchema = z.object({ id: z.uuid(), n: z.number().int().positive() });
+export type NoterResponse = z.infer<typeof NoterResponseSchema>;

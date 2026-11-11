@@ -6,6 +6,7 @@ import { oneLine } from '@/server/memory/labels';
 import { lessonIdInScope } from '@/server/memory/lessons';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
 import {
+  CIBLES,
   type Cible,
   latestIn,
   listVersions,
@@ -84,13 +85,14 @@ export type VersionLine = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'> &
   texte: string;
   entrees: string[];
 };
-// `lecon` : l'historique d'une leçon, qui n'a pas de titre (`titre` vide).
+// `lecon`, `note` : l'historique d'une leçon ou d'une note, qui n'ont pas de titre (`titre` vide).
 export type VersionsRead = {
   id: string;
   titre: string;
   n: number | null;
   versions: VersionLine[];
   lecon?: boolean;
+  note?: boolean;
 };
 
 // Un compteur, relevé par T38 : une ligne par état masqué par la règle de lecture, sans texte ni id.
@@ -296,27 +298,30 @@ export async function readDossier(
   };
 }
 
-// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris, ou d'une de ses leçons du projet ou sans
-// dépôt (T55) : sans `n`, ses versions lisibles ; avec `n`, le texte de celle-ci, si elle est lisible. Une note n'a pas
-// de projet (remember-tool.ts) : elle est introuvable ici. Une leçon retirée garde son historique (D33). Rien ne
-// restaure (D33) : seule l'action du site le fait (T55).
+// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris, d'une de ses notes de ce projet (T57),
+// ou d'une de ses leçons du projet ou sans dépôt (T55) : sans `n`, ses versions lisibles ; avec `n`, le texte de
+// celle-ci, si elle est lisible. Une note de remember n'a pas de projet : elle est introuvable ici, ses versions ne se
+// lisent que sur le site. Une leçon retirée garde son historique (D33). Rien ne restaure (D33) : seule l'action du site
+// le fait (T55).
 export async function readVersions(
   ctx: TenantContext,
   input: { projet: string; id: string; n?: number },
   journal: Journal,
 ): Promise<VersionsRead | null> {
   if (!UUID.test(input.id)) return null;
-  const fil = await withTenant(ctx, async (tx) => {
-    const { rows } = await tx.execute<Fil>(sql`
-      select s.id, s.metadata from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-        and s.id = ${input.id} and s.metadata->>'project' = ${input.projet}`);
+  const source = await withTenant(ctx, async (tx) => {
+    const { rows } = await tx.execute<Fil & { kind: string }>(sql`
+      select s.id, s.kind, s.metadata from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+        and s.kind = any(${textArray(CIBLES)}) and s.id = ${input.id}
+        and s.metadata->>'project' = ${input.projet}`);
     return rows[0];
   });
-  const leconId = fil ? null : await lessonIdInScope(ctx, input.id, input.projet);
-  if (!fil && leconId === null) return null;
-  const targetId = fil?.id ?? leconId ?? '';
-  const cible: Cible = fil ? fil.id : { leconId: targetId };
+  const fil = source?.kind === FIL ? source : undefined;
+  const leconId = source ? null : await lessonIdInScope(ctx, input.id, input.projet);
+  if (!source && leconId === null) return null;
+  const targetId = source?.id ?? leconId ?? '';
+  const cible: Cible = source ? source.id : { leconId: targetId };
   let versions: VersionLine[];
   if (input.n === undefined) {
     versions = (await listVersions(ctx, cible)).map((one) => ({
@@ -345,7 +350,7 @@ export async function readVersions(
   const logged = await recordReads(ctx, {
     ...journal,
     reads: [
-      fil ? { sourceId: targetId } : { leconId: targetId },
+      source ? { sourceId: targetId } : { leconId: targetId },
       ...versions.flatMap((one) => one.entrees).map((sourceId) => ({ sourceId })),
     ],
   });
@@ -355,7 +360,7 @@ export async function readVersions(
     titre: fil ? filTitle(fil) : '',
     n: input.n ?? null,
     versions: versions.filter((one) => allLogged(one.entrees, logged)),
-    ...(fil ? {} : { lecon: true }),
+    ...(fil ? {} : source ? { note: true } : { lecon: true }),
   };
 }
 

@@ -520,6 +520,44 @@ describe('deleteAccount', () => {
     expect(await versionsOfLessons(bob.userId)).toHaveLength(3);
   });
 
+  // Les notes de l'agent (D38, T57) sont privées et partent avec le compte, leurs versions comprises ; ses autres
+  // sources restent.
+  it('efface ses notes et leurs versions, pas celles d’un collègue', async () => {
+    const { people } = await team(['owner', 'member']);
+    const [bob, alice] = people as [TenantContext, TenantContext];
+    const seedNote = async (ctx: TenantContext) => {
+      const { sourceId } = await seedSource(ctx, { kind: 'mcp_remember' });
+      await adminPool.query(
+        `insert into versions_memoire (tenant_id, owner_user_id, source_id, n, texte, ecrit_par, motif, acl)
+         values ($1, $2, $3, 1, 'Note.', 'agent', 'note', array[$2::uuid])`,
+        [ctx.tenantId, ctx.userId, sourceId],
+      );
+      return sourceId;
+    };
+    const aliceNote = await seedNote(alice);
+    const bobNote = await seedNote(bob);
+    const { sourceId: session } = await seedSource(alice);
+
+    await deleteAccount(alice, null, false);
+
+    expect(
+      (
+        await adminDb
+          .select({ id: sources.id })
+          .from(sources)
+          .where(inArray(sources.id, [aliceNote, bobNote, session]))
+      )
+        .map((row) => row.id)
+        .sort(),
+    ).toEqual([bobNote, session].sort());
+    expect(
+      await adminDb
+        .select({ owner: versionsMemoire.ownerUserId })
+        .from(versionsMemoire)
+        .where(inArray(versionsMemoire.sourceId, [aliceNote, bobNote])),
+    ).toEqual([{ owner: bob.userId }]);
+  });
+
   it("ne laisse jamais l'organisation sans propriétaire", async () => {
     const { tenantId, people } = await team(['owner', 'owner', 'member']);
     const [a, b] = people as [TenantContext, TenantContext, TenantContext];
@@ -732,7 +770,7 @@ describe('deleteAccount : une version écrite au même instant', () => {
     }
   });
 
-  it('une note écrite pendant la suppression ne garde aucune version', async () => {
+  it('une note écrite pendant la suppression ne garde aucune version, et part avec le compte', async () => {
     const { people } = await team(['owner', 'member']);
     const [, alice] = people as [TenantContext, TenantContext];
     const { sourceId: note } = await seedSource(alice, { kind: 'mcp_remember' });
@@ -754,7 +792,7 @@ describe('deleteAccount : une version écrite au même instant', () => {
       holding.release();
     }
 
-    expect(await adminDb.select().from(sources).where(eq(sources.id, note))).toHaveLength(1);
+    expect(await adminDb.select().from(sources).where(eq(sources.id, note))).toEqual([]);
     expect(await versionsOf(alice.userId)).toEqual([]);
   });
 

@@ -375,6 +375,24 @@ describe('filterFilState', () => {
     );
   });
 
+  // T57 : une note de remember (outil `mcp:<libellé>`) n'est pas plus preuve qu'une note de leon note (D36).
+  it('retire une décision qui ne cite qu’une note de remember, la ligne garde la provenance « agent »', () => {
+    const { one } = fixture();
+    const note = source({ kind: 'mcp_remember', nature: 'note', outil: 'mcp:claude-ai' });
+    const condense = condenseFil({ sessions: [one], sources: [note] });
+    expect(condense.texte).toContain('de="agent (note, mcp:claude-ai)"');
+
+    expect(
+      filterFilState(
+        [
+          `- [décision] On supprime le cache (source: ${note.id})`,
+          `- [question] Le cache (source: ${note.id})`,
+        ].join('\n'),
+        condense,
+      )?.texte,
+    ).toBe(`- [question] Le cache (de: agent; source: ${note.id})`);
+  });
+
   it('retire [consigne], les titres et les relations écrits par le modèle', () => {
     const { typed, condense } = fixture();
     const answer = [

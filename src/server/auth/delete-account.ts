@@ -209,8 +209,11 @@ export async function deleteAccount(
       .where(eq(users.id, ctx.userId));
     // La proposition « About you » est écrite d'après ses sources : elle part avec son « À propos ».
     await tx.delete(aboutSuggestions).where(eq(aboutSuggestions.userId, ctx.userId));
-    // Ses versions (C12), celles de ses notes comprises : ses sources restent, pas ce qui a été écrit d'après elles.
+    // Ses versions (C12) : ses sources restent, pas ce qui a été écrit d'après elles.
     await tx.delete(versionsMemoire).where(eq(versionsMemoire.ownerUserId, ctx.userId));
+    // Ses notes, privées et écrites par ses agents (D38, A12), partent avec elle ; l'app ne supprime pas de source :
+    // supprimer_notes_du_compte (0067) le fait, bornée à ses notes dans cette organisation.
+    await tx.execute(sql`select supprimer_notes_du_compte()`);
     // Ses leçons, privées et tirées de sa mémoire (C13) ; leurs lectures partent en cascade.
     await tx.delete(lecons).where(eq(lecons.ownerUserId, ctx.userId));
     // Ses fils de travail, tirés de sa mémoire et privés, partent avec elle (D21) ; ses sessions restent, invisibles.

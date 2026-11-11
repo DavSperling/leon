@@ -211,6 +211,9 @@ describe('extractAntigravityFacts', () => {
           call('manage_task', {}),
           call('run_command', { CommandLine: 'pnpm test' }),
           call('run_command', { CommandLine: '~/.leon/bin/leon thread' }),
+          call('run_command', {
+            CommandLine: '~/.leon/bin/leon note --tool antigravity --session s-1 "reprendre"',
+          }),
         ),
       ).toBe(false);
     });

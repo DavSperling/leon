@@ -115,6 +115,42 @@ describe('stripLeonBlocks', () => {
     },
   );
 
+  // La phrase de `leon note` (T57) est dans la même balise, avec ou sans fil, et seule sans session : recaptée, la
+  // commande qu'elle cite reviendrait dans la session comme un geste de l'agent.
+  it.each([
+    ['avec des fils', true, true],
+    ['sans fil', true, false],
+    ['seule', false, false],
+  ])('retire la phrase de leon note (%s)', (_cas, avecSession, avecFils) => {
+    const block = renderContext({
+      project: PROJECT,
+      sessions: avecSession ? [{ kind: 'claude_code', lastTs: PREPARED_AT, faits: null }] : [],
+      fils: avecFils
+        ? [
+            {
+              id: '00000001-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+              titre: 'paul/fil',
+              outils: ['codex'],
+              derniereDate: PREPARED_AT,
+              prs: [],
+              prsTotal: 0,
+              liees: 0,
+            },
+          ]
+        : [],
+      commande: '~/.leon/bin/leon',
+      note: { outil: 'claude_code', session: 'session-1' },
+      briefing: BRIEFING,
+      max: 8000,
+    });
+
+    expect(block).toContain(
+      '`~/.leon/bin/leon note --tool claude_code --session session-1 "<texte>"`',
+    );
+    expect(prepareTurnText(stripLeonBlocks(block))).toBeNull();
+    expect(stripLeonBlocks(`${block}\nOn reprend ?`)).not.toMatch(/note --tool|note privée/);
+  });
+
   it('retire le point du matin seul, que donne un serveur plus ancien', () => {
     expect(prepareTurnText(stripLeonBlocks(BRIEFING))).toBeNull();
   });

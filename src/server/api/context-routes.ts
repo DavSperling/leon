@@ -20,6 +20,8 @@ import { type ApiEnv, requireApiToken } from './require-api-token';
 // de lecture qui cite `commande` ; sans fil, le bloc d'avant. Avec le même usage, mes leçons acceptées (T56), après
 // l'équipe, dans l'une et l'autre forme ; elles ne sont pas notées au journal des lectures. Ni modèle ni vecteur : le
 // crochet abandonne au bout de 3 secondes. `commande` n'est jamais journalisée : sous la forme clone, elle porte un chemin du poste.
+// Avec l'usage `noter` et l'outil du crochet (T57), la phrase de `leon note`, qui cite l'outil et la session, avec ou
+// sans `lecture`.
 // Le jeton est vérifié avant de lire le corps.
 export const contextRoutes = new Hono<ApiEnv>().post(
   '/contexte',
@@ -32,12 +34,12 @@ export const contextRoutes = new Hono<ApiEnv>().post(
     const parsed = ContextRequestSchema.safeParse(await c.req.json().catch(() => undefined));
     // Sans les valeurs reçues : une adresse de remote peut porter un jeton.
     if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
-    const { projet, branche, session, max, usages, commande } = parsed.data;
+    const { projet, branche, session, max, usages, commande, outil } = parsed.data;
     const { ctx } = c.var;
     // Deux transactions indépendantes, en parallèle : le point du matin ouvre la sienne.
     const [{ sessions, equipe, fils, lecons, recentes }, briefing] = await Promise.all([
       readStartContext(ctx, { projet, branche, session, lecture: usages?.includes('lecture') }),
-      // Le point injecté est une lecture, notée avec la session (D35) ; le corps n'a pas d'`outil` : `cli`.
+      // Le point injecté est une lecture, notée avec la session (D35), en `cli` : l'outil n'arrive qu'avec `noter`.
       briefingResponse(ctx, projet, {
         modelReady: getLlm(env) !== null,
         client: 'cli',
@@ -65,6 +67,7 @@ export const contextRoutes = new Hono<ApiEnv>().post(
         fils,
         lecons,
         commande,
+        note: usages?.includes('noter') && outil ? { outil, session } : undefined,
         briefing: briefing.markdown,
         max: Math.min(max ?? CONTEXT_MAX_BYTES, CONTEXT_MAX_BYTES),
       }),

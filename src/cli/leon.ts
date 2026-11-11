@@ -44,6 +44,7 @@ import {
   runLogin,
   runLogout,
 } from './login';
+import { runNoteCommand } from './note-command';
 import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
 import { runReadCommand } from './read-commands';
@@ -143,6 +144,16 @@ Commands:
                        repositories (with an id: that lesson only). Lessons are written on the website only
                        These five print to standard output and write nothing on disk. They need a connection and
                        the reading consent (\`lecture\`) of one of your code tools, which leon setup offers in a terminal
+  note <text>          Save a private note of the agent to Leon, or the next version of one. Only with the \`noter\`
+                       consent of that tool in ~/.leon/accord.json: then the text, with secrets masked (4,000
+                       characters at most), the project, the tool, the session and the consents of that tool go to
+                       your Leon server. The note stays private to you; Leon's search finds it, and it is never put as
+                       is in the context of a session. Prints the id and the version number, writes nothing on disk.
+                       The start block of a session gives this command with --tool and --session filled in
+      --tool <tool>        the code tool that writes it: claude_code, codex, cursor or antigravity (required)
+      --session <id>       the session it is written in
+      --note <id>          with --version: write the next version of this note (only from the tool that wrote it)
+      --version <n>        the number of the last version of that note you read
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -675,6 +686,17 @@ async function main(argv: string[]): Promise<number> {
       command === 'lessons'
     ) {
       return await runReadCommand(command, args, {
+        env: process.env,
+        home: homedir(),
+        cwd: process.cwd(),
+        git: gitInDirectory,
+        fetch,
+        out: console.log,
+        err: console.error,
+      });
+    }
+    if (command === 'note') {
+      return await runNoteCommand(args, {
         env: process.env,
         home: homedir(),
         cwd: process.cwd(),

@@ -340,6 +340,7 @@ describe('extractCodexFacts', () => {
           commande('git fetch origin && git pull --ff-only'),
           commande('~/.leon/bin/leon thread'),
           commande('leon search "route des faits"'),
+          commande('~/.leon/bin/leon note --tool codex --session s-1 "reprendre la route"'),
           element({ type: 'FileChange', id: 'p', changes: {}, status: 'completed' }),
           element({ type: 'FunctionCallOutput', id: 'f', name: 'update_plan' }),
           element({ type: 'Reasoning', id: 'r' }),

@@ -614,7 +614,7 @@ describe('runBriefing', () => {
     // Un poste dont les outils ont ces usages, avec ou sans le lanceur ~/.leon/bin/leon.
     async function poste(
       name: string,
-      usages: Partial<Record<'claude_code' | 'codex', Array<'lecture' | 'resume'>>>,
+      usages: Partial<Record<'claude_code' | 'codex', Array<'lecture' | 'resume' | 'noter'>>>,
       lanceur = true,
     ): Promise<string> {
       const home = join(lecteurs, name);
@@ -682,6 +682,61 @@ describe('runBriefing', () => {
         branche: null,
         session: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
       });
+    });
+
+    // T57 (amendée le 11/11) : `outil` ne part qu'avec l'usage `noter` de l'outil du crochet, et avec lui ses usages et
+    // la commande, que cite la phrase de `leon note`, même sans `lecture`.
+    it('avec `noter` : l’outil du crochet, ses usages et la commande, même sans `lecture`', async () => {
+      const home = await poste('noter', { claude_code: ['noter'], codex: ['lecture', 'noter'] });
+      const claudeRun = setup({ stdin: Readable.from([hookJson('/projets/leon')]), home, ...git });
+      const codexRun = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+
+      expect(await claudeRun.run()).toBe(0);
+      expect(await codexRun.run()).toBe(0);
+
+      expect(claudeRun.asked()).toEqual({
+        projet: PROJECT,
+        branche: null,
+        session: SESSION,
+        usages: ['noter'],
+        commande: '~/.leon/bin/leon',
+        outil: 'claude_code',
+      });
+      expect(codexRun.asked()).toMatchObject({
+        usages: ['lecture', 'noter'],
+        commande: '~/.leon/bin/leon',
+        outil: 'codex',
+      });
+    });
+
+    it('avec `lecture` sans `noter` : pas d’outil', async () => {
+      const home = await poste('lecture-seule', { codex: ['lecture'] });
+      const { run, asked } = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+
+      expect(await run()).toBe(0);
+
+      expect(asked()).not.toHaveProperty('outil');
+      expect(asked()).toMatchObject({ usages: ['lecture'] });
+    });
+
+    it('avec `noter`, un serveur plus ancien que `outil` (400) : le point du matin seul, comme aujourd’hui', async () => {
+      const home = await poste('noter-ancien', { claude_code: ['noter'] });
+      const fetchImpl = vi.fn(async (url: URL) =>
+        url.pathname === API_PATHS.contexte
+          ? new Response('{}', { status: 400 })
+          : Response.json(briefing),
+      );
+      const { run, out, err } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home,
+        fetch: fetchImpl,
+        ...git,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([briefing.markdown]);
+      expect(err).toEqual([]);
     });
 
     it('sans lanceur, depuis un clone : pnpm dans le clone, avec le tilde sous le dossier personnel', async () => {

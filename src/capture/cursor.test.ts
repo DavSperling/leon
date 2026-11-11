@@ -170,6 +170,9 @@ describe('extractCursorFacts', () => {
           tool('Shell', { command: 'pnpm test' }),
           tool('Shell', { command: '~/.leon/bin/leon thread' }),
           tool('Shell', { command: 'leon search "route des faits"' }),
+          tool('Shell', {
+            command: '~/.leon/bin/leon note --tool cursor --session s-1 "reprendre"',
+          }),
           tool('run_terminal_cmd', { command: 'git status' }),
           tool('edit_file', { target_file: 'b.ts' }),
         ),

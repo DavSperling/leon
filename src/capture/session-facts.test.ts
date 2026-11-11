@@ -291,7 +291,10 @@ describe('extractClaudeCodeFacts', () => {
       'pnpm leon versions 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --read 2',
       'leon lessons',
       'leon lessons 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b',
-      'leon noter "reprendre la route"',
+      // T57 : `leon note`, à la place de `leon noter`, telle que la phrase du bloc la donne.
+      'leon note "reprendre la route"',
+      '~/.leon/bin/leon note --tool claude_code --session 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b "reprendre la route"',
+      'pnpm --dir ~/code/leon leon note --tool claude_code --note 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --version 2 "suite"',
     ])('la commande « %s » ne rend pas la session externe', (command) => {
       expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(false);
     });

@@ -160,7 +160,9 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
 // journaux d'URL. `usages` : ceux de l'outil dont le crochet demande le bloc ; avec `lecture`, le sommaire de ses fils
 // et la consigne de lecture, qui cite `commande` (T46 du plan de la mémoire à disposition). Les deux sont facultatifs :
-// une CLI plus ancienne reçoit le bloc d'avant.
+// une CLI plus ancienne reçoit le bloc d'avant. `outil` (C14, T57) : l'outil du crochet, que la CLI n'envoie qu'avec
+// son usage `noter` (un serveur plus ancien refuserait le champ, et le bloc avec lui) ; la phrase de `leon note` le cite
+// avec la session.
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
 // La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
@@ -175,6 +177,7 @@ export const ContextRequestSchema = z
     max: z.number().int().positive().optional(),
     usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
     commande: CommandeSchema.optional(),
+    outil: z.enum(CODE_SESSION_KINDS).optional(),
   })
   .strict();
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;

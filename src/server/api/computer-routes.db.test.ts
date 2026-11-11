@@ -405,6 +405,24 @@ describe('POST /api/v1/ordinateurs : le réglage noter du compte (T65, C16)', ()
 
     expect(await noterRefuseLe(paul)).toBeNull();
   });
+
+  // Choix assumé (computer-routes.ts) : la connexion est déjà faite, l'échec est journalisé et l'échange répond 201.
+  it('une erreur à l’écriture du réglage ne défait pas la connexion : 201, l’erreur journalisée', async () => {
+    const { paul } = await setup();
+    const token = generateApiToken();
+    vi.spyOn(db, 'update').mockImplementation(() => {
+      throw new Error('panne de la base');
+    });
+    const logged = spyConsole();
+
+    const response = await exchange(token, codeWith(token, paul, ['noter'], []));
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ usages: [], refus: ['noter'] });
+    expect(await rowsOf(token)).toHaveLength(1);
+    expect(logged().join('\n')).toContain('computer.noter_failed');
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
 });
 
 describe('POST /api/v1/usages (T65, C16)', () => {

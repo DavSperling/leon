@@ -1225,6 +1225,11 @@ Contrat : `api-contract.db.test.ts`.
 > - **Les migrations :** `0067-supprimer-notes` (T57), puis `0068-noter-refuse` (T65).
 > - **Fichiers en plus :** `src/server/memory/memory-section.ts`, `src/server/sessions/thread-read.ts` et `src/server/mcp/tools/thread-tools.ts` (les versions d'une note), `src/server/sessions/start-context.ts` (la phrase), `src/capture/session-facts.ts` et son test (`leon note` compte comme une commande locale), `src/cli/install-codex.ts`, `src/cli/install-outil.ts`, la documentation du site et le README.
 > - **Tests en plus :** la phrase avec une session sûre, et sans `--session` quand la session porte un caractère de shell (`$(`, un guillemet, une espace) ; le pire cas du bloc de T56 refait avec `noter`, une session de 200 caractères et beaucoup de leçons ; la CLI n'envoie pas `outil` sans `noter` ; les versions d'une note du projet se lisent par la route et l'outil `versions`, celles d'une note de `remember` non ; `noter` est proposé aux quatre outils, dans l'ordre.
+>
+> **Amendé le 12/11 (relecture d'ensemble du bloc 3, choix de Claude) :**
+> - La phrase du bloc écrit `<commande> note --tool <outil> --session <session> -- "<texte>"` : `--` fait lire comme texte une note qui commence par un tiret (une puce). Elle dit la note « privée, comme tes sessions », le mot du texte de `noter` : un manager la voit par la recherche, comme les sessions (`equipe_lit`, 0057). Une session qui commence par un tiret n'est pas citée.
+> - Une note d'avant ce lot n'a pas d'outil connu : seul l'ancien `remember` a pu l'écrire. Tout client MCP (`mcp:<libellé>`) en écrit la version suivante, et sa v1 naît alors de son tour ; un outil de code reçoit 409. Le site ne la remet pas tant qu'elle n'a que son tour : « Remettre » ne s'offre pas pour la dernière version.
+> - `remember` compte `about` dans les 4 000 caractères : au-delà, il refuse sans rien écrire, plutôt que de couper la fin.
 
 **Fichiers :**
 - `src/server/memory/notes.ts` (nouveau : `writeNote`, le chemin commun) et `src/server/memory/notes.db.test.ts` (nouveau), `src/server/memory/versions.ts` (`restoreVersion` d'une note passe par `writeNote`) ;

@@ -1413,7 +1413,7 @@ describe('installHooks : l’usage noter', () => {
     expect(refuseNotes).not.toHaveBeenCalled();
     expect(run.output).toContain(NOTES_REOPEN_LINE);
     expect(NOTES_REOPEN_LINE).toBe(
-      'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on only in the Memory section of the Leon website settings.',
+      'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on in the Memory section of the Leon website settings.',
     );
   });
 
@@ -1456,6 +1456,8 @@ describe('notesRefusal', () => {
   it('envoie { noter: false } au serveur de la connexion, avec son jeton et un délai court ; 204 : vrai', async () => {
     await writeConnection(home, CONNECTION);
     const fetchImpl = vi.fn(async () => new Response(null, { status: 204 }));
+    // Le délai court (T65) : 3 s, qu'un serveur muet ne dépasse jamais.
+    const timeout = vi.spyOn(AbortSignal, 'timeout');
 
     expect(await notesRefusal(fetchImpl as typeof fetch, home)()).toBe(true);
 
@@ -1467,7 +1469,8 @@ describe('notesRefusal', () => {
       headers: { Authorization: `Bearer ${FAKE_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ noter: false }),
     });
-    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(timeout).toHaveBeenCalledWith(3_000);
+    expect(init.signal).toBe(timeout.mock.results[0]?.value);
   });
 
   it.each([

@@ -139,7 +139,8 @@ Commands:
   thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the
                        current branch)
   search <query>       Search Leon, within this repository only
-  versions <id>        List the readable versions of a thread's state, or of a lesson
+  versions <id>        List the readable versions of a thread's state, of a lesson, or of a note saved for this
+                       project
       --read <n>           print version n instead (nothing is restored from your computer)
   lessons [id]         Print the lessons you accepted for this repository, and those that apply to all your
                        repositories (with an id: that lesson only). Lessons are written on the website only
@@ -150,7 +151,8 @@ Commands:
                        characters at most), the project, the tool, the session and the consents of that tool go to
                        your Leon server. The note stays private to you; Leon's search finds it, and it is never put as
                        is in the context of a session. Prints the id and the version number, writes nothing on disk.
-                       The start block of a session gives this command with --tool and --session filled in
+                       The start block of a session gives this command with --tool and --session filled in, and
+                       -- before the text, so that a text starting with a dash is not read as an option
       --tool <tool>        the code tool that writes it: claude_code, codex, cursor or antigravity (required)
       --session <id>       the session it is written in
       --note <id>          with --version: write the next version of this note (only from the tool that wrote it)

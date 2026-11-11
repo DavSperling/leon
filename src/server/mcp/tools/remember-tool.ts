@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
-import { VERSION_N_MAX } from '@/capture/api-contract';
+import { NOTE_TEXTE_MAX, VERSION_N_MAX } from '@/capture/api-contract';
 import { notesRefusedAt } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { writeNote } from '@/server/memory/notes';
@@ -12,7 +12,7 @@ import { guarded } from './guarded';
 // T65 (D30, C16) : il lit d'abord le réglage `noter` du compte, sur la ligne du porteur du jeton (ordinateur, manuel ou
 // assistant) ; daté, il refuse sans rien écrire, par un message fixe qui ne recopie pas le texte reçu.
 export const RememberInputSchema = z.object({
-  text: z.string().min(1).max(4000),
+  text: z.string().min(1).max(NOTE_TEXTE_MAX),
   about: z.string().max(200).optional(),
   note: z
     .uuid()
@@ -29,6 +29,8 @@ export const RememberInputSchema = z.object({
 
 export const NOTES_TURNED_OFF =
   'Notes are turned off for this Leon account. They can be turned back on in the Memory section of the Leon website settings.';
+
+const NOTE_TOO_LONG = `Note too long (${NOTE_TEXTE_MAX} characters at most, \`about\` included): nothing was saved.`;
 
 const refusal = (text: string) => ({ isError: true, content: [{ type: 'text' as const, text }] });
 const REFUSALS = {
@@ -52,9 +54,12 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext, clie
       if ((note === undefined) !== (version === undefined)) {
         return refusal('Give note and version together.');
       }
+      // `about` compte dans les 4 000 caractères (C14) : au-delà, un refus, plutôt que writeNote ne coupe la fin.
+      const texte = about ? `About ${about}: ${text}` : text;
+      if (texte.length > NOTE_TEXTE_MAX) return refusal(NOTE_TOO_LONG);
       if (await notesRefusedAt(ctx)) return refusal(NOTES_TURNED_OFF);
       const written = await writeNote(ctx, {
-        texte: about ? `About ${about}: ${text}` : text,
+        texte,
         outil: `mcp:${client}`,
         note,
         version,

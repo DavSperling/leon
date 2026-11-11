@@ -296,14 +296,17 @@ export function renderFil(read: ThreadRead): string {
   ].join('\n');
 }
 
+// La balise et le nom, en anglais, de chaque cible d'un historique.
+const VERSIONS_OF = {
+  fil: ['fil', 'thread'],
+  note: ['note', 'note'],
+  lecon: ['lecon', 'lesson'],
+} as const;
+
 // L'historique d'un fil, d'une note ou d'une leçon (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un
 // numéro, le texte de cette version. Rien ne propose de restaurer (D33).
 export function renderVersions(read: VersionsRead): string {
-  const [wrapper, noun] = read.lecon
-    ? ['lecon', 'lesson']
-    : read.note
-      ? ['note', 'note']
-      : ['fil', 'thread'];
+  const [wrapper, noun] = VERSIONS_OF[read.kind];
   const versionAttributes = (one: VersionsRead['versions'][number]): Array<[string, string]> => [
     ['n', String(one.n)],
     ['date', isoDate(one.creeLe)],

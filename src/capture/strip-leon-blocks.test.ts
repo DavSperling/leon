@@ -145,7 +145,7 @@ describe('stripLeonBlocks', () => {
     });
 
     expect(block).toContain(
-      '`~/.leon/bin/leon note --tool claude_code --session session-1 "<texte>"`',
+      '`~/.leon/bin/leon note --tool claude_code --session session-1 -- "<texte>"`',
     );
     expect(prepareTurnText(stripLeonBlocks(block))).toBeNull();
     expect(stripLeonBlocks(`${block}\nOn reprend ?`)).not.toMatch(/note --tool|note privée/);

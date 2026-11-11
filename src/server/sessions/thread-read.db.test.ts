@@ -548,6 +548,7 @@ describe('readVersions', () => {
 
     expect(await readVersions(paul, { projet: PROJECT, id })).toEqual({
       id,
+      kind: 'fil',
       titre: 'paul/fil',
       n: null,
       versions: [

@@ -11,8 +11,7 @@ import { searchPassages } from '@/server/search/search';
 import { adminDb } from '@/test/db';
 import { seedSource, seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
-import { writeNote } from './notes';
-import { restoreVersion } from './versions';
+import { restoreNote, writeNote } from './notes';
 
 // Les notes de l'agent (T57 ; D33, D34, D38, C12, C14 du plan de la mémoire à disposition) : writeNote est le seul
 // chemin qui crée ou réécrit une note. Sa dernière version est aussi son tour indexé ; les anciennes sont hors de la
@@ -238,7 +237,7 @@ describe('une note écrite avant ce lot', () => {
     const [alice] = await pair();
     const id = await oldNote(alice);
 
-    expect(await restoreVersion(alice, { sourceId: id, n: 1, depuis: 1 })).toEqual({ n: 2 });
+    expect(await restoreNote(alice, { note: id, n: 1, depuis: 1 })).toEqual({ n: 2 });
 
     const [first, second] = await stored(id);
     expect(first).toMatchObject({ n: 1, texte: 'Ancienne note sur Redis.', ecritPar: 'agent' });
@@ -251,22 +250,42 @@ describe('une note écrite avant ce lot', () => {
     });
   });
 
-  it("n'a pas d'outil connu : aucun agent ne la réécrit, et rien n'est écrit", async () => {
+  // Seul l'ancien remember a pu l'écrire : tout client MCP en écrit la suite (D38), un outil de code jamais.
+  it('reçoit sa v1 depuis son tour, à sa première nouvelle version par un client MCP ; un outil de code est refusé', async () => {
     const [alice] = await pair();
     const id = await oldNote(alice);
 
-    for (const outil of ['mcp:claude-ai', 'claude_code']) {
-      expect(
-        await writeNote(alice, { texte: 'Réécrite.', outil, note: id, version: 1 }),
-        outil,
-      ).toBe('autre_outil');
-    }
+    expect(
+      await writeNote(alice, { texte: 'Réécrite.', outil: 'claude_code', note: id, version: 1 }),
+    ).toBe('autre_outil');
     expect(await stored(id)).toEqual([]);
-    expect(await turnTexts(id)).toEqual(['Ancienne note sur Redis.']);
+
+    expect(
+      await writeNote(alice, { texte: 'Réécrite.', outil: 'mcp:claude-ai', note: id, version: 1 }),
+    ).toEqual({ id, n: 2 });
+
+    const [first, second] = await stored(id);
+    expect(first).toMatchObject({ n: 1, texte: 'Ancienne note sur Redis.', ecritPar: 'agent' });
+    expect(second).toMatchObject({ n: 2, texte: 'Réécrite.', outil: 'mcp:claude-ai' });
+    expect(await turnTexts(id)).toEqual(['Réécrite.']);
+  });
+
+  it('après une restauration sur le site, son outil reste inconnu : un client MCP en écrit la suite', async () => {
+    const [alice] = await pair();
+    const id = await oldNote(alice);
+    await writeNote(alice, { texte: 'Deux.', outil: 'mcp:claude-ai', note: id, version: 1 });
+    expect(await restoreNote(alice, { note: id, n: 1, depuis: 2 })).toEqual({ n: 3 });
+
+    expect(await writeNote(alice, { texte: 'Quatre.', outil: 'codex', note: id, version: 3 })).toBe(
+      'autre_outil',
+    );
+    expect(
+      await writeNote(alice, { texte: 'Quatre.', outil: 'mcp:chatgpt', note: id, version: 3 }),
+    ).toEqual({ id, n: 4 });
   });
 });
 
-describe('restoreVersion d’une note', () => {
+describe('restoreNote', () => {
   it('passe par writeNote : le tour prend le texte restauré, ses passages partent, l’indexation est en file', async () => {
     const [alice] = await pair();
     const { id } = await note(alice, 'Zorglub garde le cache.');
@@ -280,7 +299,7 @@ describe('restoreVersion d’une note', () => {
     expect(await hits(alice, 'quokka')).toEqual([id]);
     vi.mocked(enqueuePipelineStep).mockClear();
 
-    expect(await restoreVersion(alice, { sourceId: id, n: 1, depuis: 2 })).toEqual({ n: 3 });
+    expect(await restoreNote(alice, { note: id, n: 1, depuis: 2 })).toEqual({ n: 3 });
 
     expect(await hits(alice, 'quokka')).toEqual([]);
     expect(enqueuePipelineStep).toHaveBeenCalledTimes(1);
@@ -297,7 +316,7 @@ describe('restoreVersion d’une note', () => {
     const [alice] = await pair();
     const { id } = await note(alice, 'Un.', 'codex');
     await writeNote(alice, { texte: 'Deux.', outil: 'codex', note: id, version: 1 });
-    expect(await restoreVersion(alice, { sourceId: id, n: 1, depuis: 2 })).toEqual({ n: 3 });
+    expect(await restoreNote(alice, { note: id, n: 1, depuis: 2 })).toEqual({ n: 3 });
 
     expect(
       await writeNote(alice, { texte: 'Quatre.', outil: 'claude_code', note: id, version: 3 }),
@@ -317,7 +336,7 @@ describe('restoreVersion d’une note', () => {
     await writeNote(alice, { texte: 'Quokka.', outil: 'claude_code', note: id, version: 1 });
     await indexLast(alice);
 
-    expect(await restoreVersion(alice, { sourceId: id, n: 1, depuis: 1 })).toBe('depassee');
+    expect(await restoreNote(alice, { note: id, n: 1, depuis: 1 })).toBe('depassee');
 
     expect(await turnTexts(id)).toEqual(['Quokka.']);
     expect(

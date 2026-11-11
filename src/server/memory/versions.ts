@@ -6,9 +6,6 @@ import { organizations, users } from '@/server/db/schema/auth';
 import { lecons, sources, versionsMemoire } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { textArray } from '@/server/search/filters-sql';
-// Un cycle voulu : notes.ts écrit par writeVersion, et une note se restaure par son chemin (restoreNote). Aucun des
-// deux modules n'en lit l'autre à son chargement.
-import { restoreNote } from './notes';
 
 // Les versions de la mémoire (T53 ; D33, D34 et C12 du plan de la mémoire à disposition) : l'état d'un fil, les
 // notes de l'agent et les leçons (T55, 0066) s'écrivent v1, v2, v3, en ajout seul, hors de la recherche et de fetch
@@ -84,8 +81,9 @@ export type WriteInput = {
 // 'gardee' : la liste du serveur n'écrase pas une version lisible du modèle (D33).
 export type WriteResult = { n: number } | 'depassee' | 'gardee' | 'introuvable';
 
-// Un compteur, relevé par T38 : une ligne par événement, sans texte ni id.
-const count = (evenement: 'ecrite' | 'depassee' | 'restauree') =>
+// Un compteur, relevé par T38 : une ligne par événement, sans texte ni id. restoreNote (notes.ts) compte aussi ses
+// restaurations.
+export const count = (evenement: 'ecrite' | 'depassee' | 'restauree') =>
   console.info('[leon]', `versions.${evenement}`);
 
 // `o` : la version d'origine d'un texte restauré.
@@ -327,30 +325,16 @@ export async function latestIn(
 }
 
 // Remet la version n, si elle est lisible et que la dernière est encore `depuis` : v(depuis+1), écrite par l'humain,
-// avec son texte et ses entrées. Seule l'action du site l'appelle (T55). Une note passe par le chemin de writeNote
-// (restoreNote, T57) : son tour indexé prend le texte restauré, dans la même transaction (D33, D38).
-// `restaure_de` pointe vers le texte d'origine : une version du modèle restaurée suit ses règles (D33). La cible est
-// un fil ou une note (`sourceId`), ou une leçon (`leconId`).
+// avec son texte et ses entrées. Seule l'action du site l'appelle (T55). Une note n'y passe pas : elle se restaure par
+// le chemin de writeNote (restoreNote, T57), où son tour indexé prend le texte restauré (D33, D38), et l'action du
+// site l'y envoie (restoreMemoryVersion). `restaure_de` pointe vers le texte d'origine : une version du modèle
+// restaurée suit ses règles (D33). La cible est un fil (`sourceId`) ou une leçon (`leconId`).
 export async function restoreVersion(
   ctx: TenantContext,
   input: { sourceId?: string; leconId?: string; n: number; depuis: number },
 ): Promise<WriteResult | 'illisible'> {
   const cible = cibleOf(input);
   if (cible === null) return 'illisible';
-  if (typeof cible === 'string') {
-    // Le kind d'une source ne change jamais : le lire avant la transaction de la restauration ne laisse aucune course.
-    const [source] = await withTenant(ctx, (tx) =>
-      tx
-        .select({ kind: sources.kind })
-        .from(sources)
-        .where(and(eq(sources.tenantId, ctx.tenantId), eq(sources.id, cible))),
-    );
-    if (source?.kind === 'mcp_remember') {
-      const restored = await restoreNote(ctx, { note: cible, n: input.n, depuis: input.depuis });
-      if (typeof restored === 'object') count('restauree');
-      return restored;
-    }
-  }
   return withTenant(ctx, async (tx) => {
     const chosen = await readable(tx, ctx, cible, input.n);
     if (!chosen) return 'illisible';

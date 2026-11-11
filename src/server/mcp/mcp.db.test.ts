@@ -339,6 +339,37 @@ describe('serveur MCP', () => {
     });
   });
 
+  // `about` compte dans les 4 000 caractères d'une note : au-delà, remember refuse plutôt que de couper la fin.
+  it('remember refuse une note que `about` fait dépasser 4 000 caractères, sans rien écrire ; 4 000 tout juste passe', async () => {
+    const paul = await setupPaul();
+    const client = await connect(paul);
+    const prefix = 'About ACME: '.length;
+
+    const tooLong = await call(client, 'remember', {
+      text: `${'a'.repeat(4000 - prefix - 13)}FIN-IMPORTANTE`,
+      about: 'ACME',
+    });
+    const atLimit = await call(client, 'remember', {
+      text: `${'a'.repeat(4000 - prefix - 14)}FIN-IMPORTANTE`,
+      about: 'ACME',
+    });
+
+    expect(tooLong).toMatchObject({
+      isError: true,
+      text: 'Note too long (4000 characters at most, `about` included): nothing was saved.',
+    });
+    expect(tooLong.text).not.toContain('FIN');
+    const { id } = atLimit.structuredContent as { id: string };
+    const written = await adminDb
+      .select({ id: versionsMemoire.sourceId, texte: versionsMemoire.texte })
+      .from(versionsMemoire)
+      .where(eq(versionsMemoire.tenantId, paul.tenantId));
+    expect(written).toHaveLength(1);
+    expect(written[0]?.id).toBe(id);
+    expect(written[0]?.texte).toHaveLength(4000);
+    expect(written[0]?.texte.endsWith('FIN-IMPORTANTE')).toBe(true);
+  });
+
   // T65 (D30, C16) : remember lit le réglage `noter` du compte, sur la ligne du porteur, avant d'écrire.
   describe('remember et le réglage noter du compte', () => {
     const NOTES_OFF =

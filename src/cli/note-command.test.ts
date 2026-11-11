@@ -109,6 +109,23 @@ describe('runNoteCommand', () => {
     ]);
   });
 
+  // La phrase du bloc écrit `-- "<texte>"` (render-context.ts) : une note qui commence par une puce ou un tiret n'est
+  // pas lue comme une option.
+  it.each([
+    ['une puce markdown', '- piste 1\n- piste 2'],
+    ['deux tirets', '--x reste du texte'],
+  ])('un texte après -- qui commence par %s part tel quel', async (_cas, text) => {
+    await consent({ claude_code: ['noter'] });
+    const { deps, out, sent } = setup();
+
+    expect(
+      await runNoteCommand(['--tool', 'claude_code', '--session', SESSION, '--', text], deps),
+    ).toBe(0);
+
+    expect(sent().body).toMatchObject({ outil: 'claude_code', session: SESSION, texte: text });
+    expect(out).toHaveLength(1);
+  });
+
   it('masque le texte en entier, puis le coupe à 4 000 caractères : un faux secret ne part jamais', async () => {
     await consent({ claude_code: ['noter'] });
     const sentText = async (text: string) => {

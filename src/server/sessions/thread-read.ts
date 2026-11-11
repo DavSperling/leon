@@ -85,14 +85,13 @@ export type VersionLine = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'> &
   texte: string;
   entrees: string[];
 };
-// `lecon`, `note` : l'historique d'une leçon ou d'une note, qui n'ont pas de titre (`titre` vide).
+// `kind` : l'historique d'un fil, d'une note ou d'une leçon ; une note et une leçon n'ont pas de titre (`titre` vide).
 export type VersionsRead = {
   id: string;
+  kind: 'fil' | 'note' | 'lecon';
   titre: string;
   n: number | null;
   versions: VersionLine[];
-  lecon?: boolean;
-  note?: boolean;
 };
 
 // Un compteur, relevé par T38 : une ligne par état masqué par la règle de lecture, sans texte ni id.
@@ -357,10 +356,10 @@ export async function readVersions(
   if (!logged.has(targetId)) return null;
   return {
     id: targetId,
+    kind: fil ? 'fil' : source ? 'note' : 'lecon',
     titre: fil ? filTitle(fil) : '',
     n: input.n ?? null,
     versions: versions.filter((one) => allLogged(one.entrees, logged)),
-    ...(fil ? {} : source ? { note: true } : { lecon: true }),
   };
 }
 

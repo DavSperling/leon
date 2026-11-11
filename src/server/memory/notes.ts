@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
+import { NOTE_TEXTE_MAX } from '@/capture/api-contract';
 import { factText } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, ProjectSchema } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -8,7 +9,14 @@ import { sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { createIngestRun, enqueueIndexing, insertNewTurns } from '@/server/ingest/ingest-turns';
-import { type EcritPar, lockTarget, readable, type WriteInput, writeVersion } from './versions';
+import {
+  count,
+  type EcritPar,
+  lockTarget,
+  readable,
+  type WriteInput,
+  writeVersion,
+} from './versions';
 
 // Les notes de l'agent (T57 ; D33, D34, D38 et C14 du plan de la mémoire à disposition) : writeNote est le seul chemin
 // qui crée ou réécrit une note, pour `leon note` (POST /api/v1/noter) comme pour `remember` (MCP). Une note est une
@@ -23,16 +31,15 @@ import { type EcritPar, lockTarget, readable, type WriteInput, writeVersion } fr
 // - Le tour prend le nouveau texte et ses passages partent dans la même transaction ; l'indexation est mise en file
 //   après la validation, comme ingestTurns et writeResume.
 // - Une note écrite avant ce lot n'a pas de version : son tour vaut v1, écrite à sa première nouvelle version ou
-//   restauration. Elle n'a pas non plus d'outil connu : aucun agent ne la réécrit, seul le site la restaure.
+//   restauration. Elle n'a pas non plus d'outil connu : seul l'ancien remember a pu l'écrire, donc tout client MCP
+//   (`mcp:<libellé>`) en écrit la suite, jamais un outil de code (D38).
 
-// C14 : 4 000 caractères au plus, comme une version (C12).
-export const NOTE_MAX = 4000;
 // Le titre de la source : le début du texte de la dernière version, comme l'ancien remember.
 const TITLE_MAX = 80;
 
 // `metadata.outil` : un outil de code (`leon note`), ou `mcp:<libellé>` (`remember`), le libellé du client au motif de
 // read_log.client (client-label.ts).
-export const NoteOutilSchema = z.union([
+const NoteOutilSchema = z.union([
   z.enum(CODE_SESSION_KINDS),
   z.string().regex(/^mcp:[a-z0-9._-]{1,40}$/),
 ]);
@@ -46,8 +53,8 @@ const InputSchema = z.object({
   note: z.uuid().optional(),
   version: z.number().int().min(1).optional(),
 });
-export type NoteInput = z.input<typeof InputSchema>;
-export type NoteResult =
+type NoteInput = z.input<typeof InputSchema>;
+type NoteResult =
   | { id: string; n: number }
   | 'depassee'
   | 'autre_outil'
@@ -122,7 +129,7 @@ async function rewrite(
   const written = await writeVersion(tx, ctx, { ...version, sourceId: id, attendue: note.last.n });
   // Sous le verrou, jamais « dépassée » : seul un compte supprimé n'écrit plus.
   if (typeof written !== 'object') return 'introuvable';
-  const texte = factText(version.texte, NOTE_MAX);
+  const texte = factText(version.texte, NOTE_TEXTE_MAX);
   await tx
     .update(turns)
     .set({ text: texte, ts: sql`now()` })
@@ -204,7 +211,7 @@ export async function writeNote(ctx: TenantContext, input: NoteInput): Promise<N
   if (!parsed.success) return 'invalide';
   const { outil, session, projet, note, version } = parsed.data;
   if ((note === undefined) !== (version === undefined)) return 'invalide';
-  const texte = factText(parsed.data.texte, NOTE_MAX).trim();
+  const texte = factText(parsed.data.texte, NOTE_TEXTE_MAX).trim();
   if (texte === '') return 'invalide';
   const done = await withTenant(ctx, async (tx) => {
     if (note === undefined || version === undefined) {
@@ -214,7 +221,8 @@ export async function writeNote(ctx: TenantContext, input: NoteInput): Promise<N
     if (locked === null) return 'introuvable';
     if (locked.last.n !== version) return 'depassee';
     const owner = locked.last.ecritPar === 'humain' ? locked.outil : locked.last.outil;
-    if (owner !== outil) return 'autre_outil';
+    // Un outil inconnu (une note d'avant ce lot) : celui de l'ancien remember, un client MCP.
+    if (owner === null ? !outil.startsWith('mcp:') : owner !== outil) return 'autre_outil';
     if (!(await backfill(tx, ctx, note, locked))) return 'introuvable';
     const written = await rewrite(tx, ctx, note, locked, {
       texte,
@@ -232,7 +240,7 @@ export async function writeNote(ctx: TenantContext, input: NoteInput): Promise<N
 }
 
 // La restauration d'une note (D33, C12), par le même chemin : v(depuis+1), écrite par l'humain, avec le texte et les
-// entrées de la version n si elle est lisible. Seule restoreVersion l'appelle, pour l'action du site (T55).
+// entrées de la version n si elle est lisible. Seule l'action du site l'appelle (restoreMemoryVersion, T55).
 export async function restoreNote(
   ctx: TenantContext,
   input: { note: string; n: number; depuis: number },
@@ -255,6 +263,7 @@ export async function restoreNote(
     });
   });
   if (typeof done !== 'object') return done;
+  count('restauree');
   await enqueueIndexing(ctx, done.run);
   return { n: done.n };
 }

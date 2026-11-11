@@ -1,11 +1,12 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { oneLine, SOURCE_KIND_LABELS } from '@/lib/labels';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { lecons } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { filTitle } from '@/server/sessions/thread-read';
 import { FIL, type Fil } from '@/server/sessions/threads';
+import { oneLine, SOURCE_KIND_LABELS } from './labels';
 import { listLessons } from './lessons';
+import { restoreNote } from './notes';
 import {
   type Cible,
   type HistoryVersion,
@@ -85,10 +86,11 @@ export async function listMemoryThreads(ctx: TenantContext): Promise<MemoryThrea
 }
 
 // `metadata.outil` d'une note : un outil de code, ou `mcp:<libellé>` pour remember (notes.ts).
+// La table est élargie, pas la clé : un libellé de client MCP n'est pas un kind.
 const toolLabel = (outil: string | null): string | null =>
   outil === null
     ? null
-    : (SOURCE_KIND_LABELS[outil as keyof typeof SOURCE_KIND_LABELS] ?? outil.replace(/^mcp:/, ''));
+    : ((SOURCE_KIND_LABELS as Record<string, string>)[outil] ?? outil.replace(/^mcp:/, ''));
 
 // Les notes de l'auteur, du plus récent au plus ancien, avec leur historique lu d'un coup. Le filtre de l'auteur est
 // celui des fils : equipe_lit (0057) montrerait sinon à un manager les notes d'un subordonné.
@@ -150,7 +152,7 @@ export async function listMemoryRepos(ctx: TenantContext): Promise<string[]> {
   return rows.map((row) => row.projet);
 }
 
-// La cible si elle est à l'auteur : un fil, une note (que restoreVersion remet par writeNote, T57), ou une leçon non
+// La cible si elle est à l'auteur : un fil, une note (que restoreNote remet par writeNote, T57), ou une leçon non
 // retirée. Le kind compte : un fil ne s'ouvre pas comme une note. Sinon null : celle d'un collègue est introuvable.
 async function targetOf(ctx: TenantContext, target: MemoryTarget): Promise<Cible | null> {
   return withTenant(ctx, async (tx) => {
@@ -197,11 +199,17 @@ export async function restoreMemoryVersion(
 ): Promise<{ n: number } | 'depassee' | 'introuvable'> {
   const cible = await targetOf(ctx, input);
   if (cible === null) return 'introuvable';
-  const restored = await restoreVersion(ctx, {
-    ...(typeof cible === 'string' ? { sourceId: cible } : cible),
-    n: input.n,
-    depuis: input.depuis,
-  });
+  const { n, depuis } = input;
+  // Une note se remet par le chemin de writeNote, qui réécrit aussi son tour indexé (T57) ; un fil ou une leçon, par
+  // restoreVersion.
+  const restored =
+    input.cible === 'note' && typeof cible === 'string'
+      ? await restoreNote(ctx, { note: cible, n, depuis })
+      : await restoreVersion(ctx, {
+          ...(typeof cible === 'string' ? { sourceId: cible } : cible),
+          n,
+          depuis,
+        });
   if (typeof restored === 'object' || restored === 'depassee') return restored;
   // « gardee » ne vaut que pour la liste du serveur ; « illisible » : la version n'est pas à montrer.
   return 'introuvable';

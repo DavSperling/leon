@@ -467,7 +467,7 @@ export const notesRefusal =
   };
 // Messages fixes : ni l'adresse du serveur ni le jeton.
 export const NOTES_REOPEN_LINE =
-  'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on only in the Memory section of the Leon website settings.';
+  'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on in the Memory section of the Leon website settings.';
 export const NOTES_REFUSAL_FAILED =
   'Leon: the Leon server could not be told of this refusal (no connection, server unreachable or too slow, or older than this CLI): `remember` stays on for the assistants connected to this workspace. Turn it off in the Memory section of the Leon website settings.';
 

@@ -1,7 +1,8 @@
-// `leon note "<texte>" --tool <outil> [--session <id>] [--note <id> --version <n>]` (T57, amendée le 11/11 ; C14, D30,
+// `leon note --tool <outil> [--session <id>] [--note <id> --version <n>] -- "<texte>"` (T57, amendée le 11/11 ; C14, D30,
 // D31, D38 du plan de la mémoire à disposition) : le brouillon privé de l'agent de code, par la route des notes
 // (API_PATHS.noter), le chemin de `remember`. La phrase du bloc de démarrage la donne, l'outil et la session déjà
-// remplis (render-context.ts).
+// remplis (render-context.ts), avec `--` devant le texte : parseArgs lit ce qui le suit comme du texte, même une puce
+// (`- …`).
 // - Elle n'envoie que les usages de l'outil de `--tool` (son accord dans ~/.leon/accord.json), jamais ceux d'un autre.
 //   Sans accord, ou sans `noter` pour cet outil, rien ne part, et un message fixe le dit.
 // - Le texte part masqué en entier (maskSecrets), puis coupé à 4 000 caractères, comme le rappel ; le serveur le masque
@@ -65,7 +66,7 @@ function parse(args: string[]) {
   if (tool === undefined) throw new Error(`leon note needs ${TOOLS_HINT}.`);
   const text = positionals.join(' ');
   if (text.trim() === '')
-    throw new Error('leon note needs a text: leon note --tool <tool> "<text>".');
+    throw new Error('leon note needs a text: leon note --tool <tool> -- "<text>".');
   const { session, note, version } = values;
   if (session !== undefined && !NoterRequestSchema.shape.session.safeParse(session).success) {
     throw new Error('leon note: --session takes 1 to 200 characters.');

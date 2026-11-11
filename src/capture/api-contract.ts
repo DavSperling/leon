@@ -144,15 +144,22 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 
 // Le bloc de démarrage (C3) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
-// journaux d'URL.
+// journaux d'URL. `usages` : ceux de l'outil dont le crochet demande le bloc ; avec `lecture`, le sommaire de ses fils
+// et la consigne de lecture, qui cite `commande` (T46 du plan de la mémoire à disposition). Les deux sont facultatifs :
+// une CLI plus ancienne reçoit le bloc d'avant.
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
+// La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
+// au plus, donc 200 octets, sans saut de ligne ni `<`.
+export const CommandeSchema = z.string().regex(/^[A-Za-z0-9 ._/~-]{1,200}$/);
 export const ContextRequestSchema = z
   .object({
     projet: ProjectSchema,
     branche: z.string().min(1).max(200).nullable(), // tête détachée : null
     session: z.string().min(1).max(200), // la session qui démarre, exclue du bloc
     max: z.number().int().positive().optional(),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
+    commande: CommandeSchema.optional(),
   })
   .strict();
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;

@@ -53,6 +53,32 @@ describe('stripLeonBlocks', () => {
     },
   );
 
+  // Le sommaire des fils (T46) : la consigne de lecture est dans la balise, elle part avec elle.
+  it('retire le sommaire des fils et sa consigne de lecture', () => {
+    const sommaire = renderContext({
+      project: PROJECT,
+      sessions: [],
+      fils: [
+        {
+          id: '00000001-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+          titre: 'paul/fil',
+          outils: ['codex'],
+          derniereDate: PREPARED_AT,
+          prs: [],
+          prsTotal: 0,
+          liees: 0,
+        },
+      ],
+      commande: '~/.leon/bin/leon',
+      briefing: BRIEFING,
+      max: 8000,
+    });
+
+    expect(sommaire).toContain('`~/.leon/bin/leon thread <id>`');
+    expect(prepareTurnText(stripLeonBlocks(sommaire))).toBeNull();
+    expect(stripLeonBlocks(`${sommaire}\nOn reprend ?`)).not.toContain('thread');
+  });
+
   it('retire le point du matin seul, que donne un serveur plus ancien', () => {
     expect(prepareTurnText(stripLeonBlocks(BRIEFING))).toBeNull();
   });

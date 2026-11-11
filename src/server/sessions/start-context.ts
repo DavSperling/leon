@@ -5,7 +5,9 @@ import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
-import { TEAM_LINES_MAX } from './render-context';
+import { SOMMAIRE_FILS_MAX, TEAM_LINES_MAX } from './render-context';
+import { type FilKeys, readFilKeys } from './thread-read';
+import { RANGEMENT_IDLE_SECONDS } from './threads-queue';
 
 // « Mes sessions » du bloc de démarrage (T04, D7 du plan mémoire des sessions) : un périmètre, pas un sujet. Les
 // sessions de code du lecteur sur ce dépôt, lues par leurs métadonnées (les faits rangés par la route des faits,
@@ -16,6 +18,9 @@ import { TEAM_LINES_MAX } from './render-context';
 // « L'équipe sur ce dépôt » (T14, décision E) : les PR récentes de l'équipe, lues de la même façon et dans la même
 // transaction, sans aucun appel à GitHub, et seulement pour un lecteur dont la propre relève GitHub vient de lire ce
 // dépôt d'équipe (D14).
+// Avec l'usage `lecture` de l'outil (T46, D24 et D30 du plan de la mémoire à disposition), les clés de mes fils sur ce
+// projet, dans la même transaction, à la place de mes sessions ; sans fil, mes sessions. Et toujours, les sessions dont
+// le rangement attend encore (recentSessions), que la route avance.
 
 // Contraintes globales du plan : 4 sessions au plus, sur 7 jours ; 10 lignes d'équipe, fusionnées depuis 72 h ou
 // ouvertes et modifiées depuis 30 jours ; un dépôt confirmé depuis moins de 24 h.
@@ -207,56 +212,89 @@ export async function linkPrs(
   });
 }
 
-export async function readStartContext(
+// Mes sessions sur ce projet, hors celle qui démarre : 4 au plus sur 7 jours, la branche courante d'abord, leurs PR
+// reliées.
+async function readMine(
+  tx: Tx,
   ctx: TenantContext,
   input: { projet: string; branche: string | null; session: string },
-): Promise<{ sessions: StartSession[]; equipe: TeamPr[] }> {
+): Promise<StartSession[]> {
+  // `owner_user_id` en plus de la sécurité par ligne : la session d'un collègue partagée avec le lecteur n'est
+  // pas « mes sessions ».
+  const { rows } = await tx.execute<SessionRow>(sql`
+    select s.kind, s.metadata->'faits' as faits, extract(epoch from l.last_ts) as last_epoch
+    from sources s
+    cross join lateral (select ${LAST_TS_SQL} as last_ts) l
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+      and s.kind = any(${textArray(CODE_SESSION_KINDS)})
+      and s.metadata->>'project' = ${input.projet}
+      and s.metadata->'faits' is not null
+      and s.external_id <> ${input.session}
+      and l.last_ts >= now() - make_interval(days => ${START_SESSIONS_DAYS})
+    order by coalesce(s.metadata->>'branche' = ${input.branche}, false) desc, l.last_ts desc, s.id
+    limit ${START_SESSIONS_MAX}`);
+  const sessions = rows.map((row) => {
+    const faits = SessionFactsSchema.safeParse(row.faits);
+    return {
+      kind: row.kind,
+      lastTs: epochToDate(row.last_epoch),
+      faits: faits.success ? faits.data : null,
+    };
+  });
+  const linked = await linkPrs(
+    tx,
+    ctx,
+    input.projet,
+    sessions.map((session) => session.faits),
+  );
+  return sessions.map(({ faits, ...session }, index) => {
+    if (!faits) return { ...session, faits: null };
+    const prs = linked[index] ?? [];
+    const after = session.lastTs.getTime();
+    return {
+      ...session,
+      faits: {
+        ...faits,
+        prs: prs.map(({ fini: _fini, ...pr }) => pr),
+        perime: prs.some((pr) => (pr.etat === 'merged' || pr.etat === 'closed') && pr.fini > after),
+      },
+    };
+  });
+}
+
+// Mes sessions de code sur ce projet dont les faits sont arrivés depuis moins de 15 minutes, hors celle qui démarre :
+// leur rangement attend peut-être encore (threads-queue.ts). Des ids seulement.
+async function recentSessions(
+  tx: Tx,
+  ctx: TenantContext,
+  input: { projet: string; session: string },
+): Promise<string[]> {
+  const { rows } = await tx.execute<{ id: string }>(sql`
+    select s.id from sources s
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+      and s.kind = any(${textArray(CODE_SESSION_KINDS)})
+      and s.metadata->>'project' = ${input.projet}
+      and s.external_id <> ${input.session}
+      and (s.metadata->>'faits_le')::timestamptz >= now() - make_interval(secs => ${RANGEMENT_IDLE_SECONDS})`);
+  return rows.map((row) => row.id);
+}
+
+export async function readStartContext(
+  ctx: TenantContext,
+  input: { projet: string; branche: string | null; session: string; lecture?: boolean },
+): Promise<{ sessions: StartSession[]; equipe: TeamPr[]; fils: FilKeys[]; recentes: string[] }> {
   return withTenant(ctx, async (tx) => {
-    // `owner_user_id` en plus de la sécurité par ligne : la session d'un collègue partagée avec le lecteur n'est
-    // pas « mes sessions ».
-    const { rows } = await tx.execute<SessionRow>(sql`
-      select s.kind, s.metadata->'faits' as faits, extract(epoch from l.last_ts) as last_epoch
-      from sources s
-      cross join lateral (select ${LAST_TS_SQL} as last_ts) l
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
-        and s.kind = any(${textArray(CODE_SESSION_KINDS)})
-        and s.metadata->>'project' = ${input.projet}
-        and s.metadata->'faits' is not null
-        and s.external_id <> ${input.session}
-        and l.last_ts >= now() - make_interval(days => ${START_SESSIONS_DAYS})
-      order by coalesce(s.metadata->>'branche' = ${input.branche}, false) desc, l.last_ts desc, s.id
-      limit ${START_SESSIONS_MAX}`);
-    const sessions = rows.map((row) => {
-      const faits = SessionFactsSchema.safeParse(row.faits);
-      return {
-        kind: row.kind,
-        lastTs: epochToDate(row.last_epoch),
-        faits: faits.success ? faits.data : null,
-      };
-    });
-    const linked = await linkPrs(
-      tx,
-      ctx,
-      input.projet,
-      sessions.map((session) => session.faits),
-    );
-    const start = sessions.map(({ faits, ...session }, index) => {
-      if (!faits) return { ...session, faits: null };
-      const prs = linked[index] ?? [];
-      const after = session.lastTs.getTime();
-      return {
-        ...session,
-        faits: {
-          ...faits,
-          prs: prs.map(({ fini: _fini, ...pr }) => pr),
-          perime: prs.some(
-            (pr) => (pr.etat === 'merged' || pr.etat === 'closed') && pr.fini > after,
-          ),
-        },
-      };
-    });
+    const fils = input.lecture
+      ? (await readFilKeys(tx, ctx, input, SOMMAIRE_FILS_MAX)).fils.map(({ keys }) => keys)
+      : [];
+    const sessions = fils.length > 0 ? [] : await readMine(tx, ctx, input);
     const repo = repoOf(input.projet);
-    return { sessions: start, equipe: repo ? await readTeamPrs(tx, ctx, input.projet, repo) : [] };
+    return {
+      sessions,
+      fils,
+      equipe: repo ? await readTeamPrs(tx, ctx, input.projet, repo) : [],
+      recentes: await recentSessions(tx, ctx, input),
+    };
   });
 }
 

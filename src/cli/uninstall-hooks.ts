@@ -159,14 +159,14 @@ async function tellServer(
   outil: CodeSessionKind,
   send: WithdrawalSender,
 ): Promise<Told> {
-  const retireLe = await withdrawalToTell(home, outil);
-  if (retireLe === null) return 'told';
+  const toTell = await withdrawalToTell(home, outil);
+  if (toTell === null) return 'told';
   try {
-    await send(outil, retireLe);
+    await send(outil, toTell.retireLe);
   } catch (error) {
     return error instanceof TokenRefusedError ? 'refused' : 'failed';
   }
-  await recordServerWithdrawal(home, outil).catch(() => {});
+  await recordServerWithdrawal(home, outil, toTell.entree).catch(() => {});
   return 'told';
 }
 

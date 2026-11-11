@@ -32,7 +32,13 @@ import {
   purgeOldEntries,
   readEntryFile,
 } from './catch-up';
-import { addUsage, recordCapture, recordServerWithdrawal, writeConsent } from './consent';
+import {
+  addUsage,
+  recordCapture,
+  recordServerWithdrawal,
+  withdrawalToTell,
+  writeConsent,
+} from './consent';
 import { IngestResponseError, TokenRefusedError } from './import-claude-code';
 import { cursorSlug as cursorSlugOf } from './outils';
 
@@ -416,7 +422,11 @@ describe('catchUpNeeded : le rattrapage a-t-il quelque chose à faire', () => {
     await writeConsent(home, 'claude_code', 0);
     expect(await catchUpNeeded(home)).toBe(true);
 
-    await recordServerWithdrawal(home, 'claude_code');
+    await recordServerWithdrawal(
+      home,
+      'claude_code',
+      (await withdrawalToTell(home, 'claude_code'))?.entree ?? '',
+    );
     expect(await catchUpNeeded(home)).toBe(false);
   });
 });

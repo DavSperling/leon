@@ -148,16 +148,19 @@ const withdrawalDate = (entry: unknown): string => {
 // outil, relue au moment d'envoyer ; null s'il n'est plus en version 0 (un nouvel accord est écrit). Une date absente,
 // illisible ou que Postgres refuse (retouchée à la main) vaut l'heure du moment : le retrait part quand même. Une date à
 // venir aussi, mesurée par la même horloge : le serveur la garderait (greatest) et fermerait ce jeton au-delà d'un
-// nouvel accord.
+// nouvel accord. `entree` : la date de l'entrée telle quelle, que recordServerWithdrawal note une fois le retrait
+// appris.
 export async function withdrawalToTell(
   home: string,
   tool: CodeSessionKind,
   now: Date = new Date(),
-): Promise<string | null> {
+): Promise<{ retireLe: string; entree: string } | null> {
   const entries = await readEntries(home);
   if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return null;
-  const date = DatePosteSchema.safeParse(withdrawalDate(entries[tool]));
-  return date.success && new Date(date.data) <= now ? date.data : now.toISOString();
+  const entree = withdrawalDate(entries[tool]);
+  const date = DatePosteSchema.safeParse(entree);
+  const retireLe = date.success && new Date(date.data) <= now ? date.data : now.toISOString();
+  return { retireLe, entree };
 }
 
 // Les outils retirés (version 0) dont le serveur n'a pas encore appris le retrait. Un accord illisible n'en donne
@@ -173,14 +176,20 @@ export async function pendingServerWithdrawals(home: string): Promise<CodeSessio
   );
 }
 
-// Note que le serveur a appris le retrait de cet outil, seulement s'il est encore en version 0 : un nouvel accord écrit
-// entre l'envoi et sa réponse est gardé tel quel. accord.json n'est que lu.
-export async function recordServerWithdrawal(home: string, tool: CodeSessionKind): Promise<void> {
+// Note que le serveur a appris le retrait de cet outil daté `entree` (celui que withdrawalToTell a lu pour l'envoyer),
+// seulement si c'est encore lui : un nouvel accord, ou un nouveau retrait, écrit entre l'envoi et sa réponse reste en
+// attente. accord.json n'est que lu.
+export async function recordServerWithdrawal(
+  home: string,
+  tool: CodeSessionKind,
+  entree: string,
+): Promise<void> {
   const entries = await readEntries(home);
   if (entries === null || !WithdrawnSchema.safeParse(entries[tool]).success) return;
+  if (withdrawalDate(entries[tool]) !== entree) return;
   await writeEntries(
     home,
-    { ...(await readServerWithdrawals(home)), [tool]: withdrawalDate(entries[tool]) },
+    { ...(await readServerWithdrawals(home)), [tool]: entree },
     serverWithdrawalsPath(home),
   );
 }

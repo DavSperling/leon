@@ -727,6 +727,29 @@ describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le po
 
     expect(server.told).toEqual(['claude_code']);
   });
+
+  // Un nouvel accord puis un nouveau retrait, écrits pendant l'envoi du premier : le serveur n'a reçu que la première
+  // date, le second retrait reste en attente et se dit au prochain rattrapage.
+  it('n’apprend que le retrait envoyé, pas un retrait écrit pendant l’envoi', async () => {
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T09:00:00Z'));
+    const withdraw = server.withdraw;
+    server.withdraw = async (outil, retireLe) => {
+      await withdraw(outil, retireLe);
+      await writeConsent(home, 'claude_code', 2, new Date('2026-11-10T10:00:00Z'));
+      await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T11:00:00Z'));
+    };
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z']);
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+
+    server.withdraw = withdraw;
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z', '2026-11-10T11:00:00.000Z']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
 });
 
 // Les crochets lancés hors du terminal (Dock) lisent connexion.json ; la commande lit d'abord LEON_URL et LEON_TOKEN.

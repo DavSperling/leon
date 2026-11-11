@@ -716,8 +716,8 @@ describe('setup : les outils de code', () => {
   });
 
   // Décision d'Amos du 11/11 : une question par usage pour tous les outils trouvés, au premier qui en manque ; la
-  // réponse s'écrit pour chacun, après son accord de base. Antigravity se trouve par ~/.gemini comme par son dossier
-  // propre (#162).
+  // réponse s'écrit pour chacun, après son accord de base. Antigravity se trouve par son dossier propre sous ~/.gemini
+  // (#162).
   const allTools = async () => {
     await hasClaudeCode();
     for (const tool of ['.codex', '.cursor', join('.gemini', 'antigravity')]) {
@@ -921,7 +921,7 @@ describe('setup : les outils de code', () => {
       'To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity',
     );
     expect(leftover.output).toContain(
-      'Antigravity: not found (hooks of an earlier setup left in place, see above)',
+      'Antigravity: not found (hooks or capture consent of an earlier setup left in place, see above)',
     );
 
     const withdrawn = await uninstallAntigravityHooks(

@@ -500,7 +500,9 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
     const dir = await firstDirectory(tool.dirs(home, env));
     if (dir === null && tool.install === installAntigravity && (await antigravityLeftover(home))) {
       out(ANTIGRAVITY_LEFTOVER);
-      summary.push(`${tool.label}: not found (hooks of an earlier setup left in place, see above)`);
+      summary.push(
+        `${tool.label}: not found (hooks or capture consent of an earlier setup left in place, see above)`,
+      );
     } else if (dir === null) {
       summary.push(`${tool.label}: not found`);
     } else if (!tool.install) {

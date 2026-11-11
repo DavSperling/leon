@@ -896,7 +896,7 @@ describe('runBriefing', () => {
     });
   });
 
-  // T49 : le rappel à chaque message de Cursor et de Codex, par `leon crochet <outil> prompt`, avec l'usage `rappel`.
+  // T49 : le rappel à chaque message de Cursor, de Codex et d'Antigravity, par `leon crochet <outil> prompt`, avec l'usage `rappel`.
   describe('le rappel à chaque message (Cursor, Codex, Antigravity)', () => {
     const REMINDER = '<rappel-leon>Le fil amos/etude (id 3f2a) touche à ce message.</rappel-leon>';
     // Le serveur : le bloc sur `/contexte`, la ligne de rappel (ou ce que `reminder` fait de la requête) sur `/rappel`.
@@ -1186,36 +1186,192 @@ describe('runBriefing', () => {
       });
     });
 
-    it('Antigravity : jamais de rappel, même avec `rappel` écrit à la main dans l’accord', async () => {
-      const agyHome = await mkdtemp(join(homes, 'agy-rappel-'));
-      await writeConsent(agyHome, 'antigravity', 2);
-      await addUsage(agyHome, 'antigravity', 'rappel');
-      const agyJson = () =>
-        Readable.from([
-          JSON.stringify({
-            conversationId: 'agy-2',
-            invocationNum: 0,
-            prompt: 'où en est la branche etude ?',
-            transcriptPath:
-              '/Users/demo/.gemini/antigravity/brain/agy-2/.system_generated/logs/transcript.jsonl',
-            workspacePaths: ['/projets/leon'],
-          }),
-        ]);
+    it('Cursor sans dossier de travail : aucune requête de rappel, le bloc ne change pas', async () => {
+      const home = await mkdtemp(join(homes, 'cursor-sans-dossier-'));
+      await writeConsent(home, 'cursor', 2);
+      await addUsage(home, 'cursor', 'rappel');
       const fetchImpl = answers();
-
-      for (let call = 0; call < 2; call++) {
-        const harness = setup({
-          stdin: agyJson(),
-          home: agyHome,
-          outil: 'antigravity',
+      const noWorkspace = () =>
+        setup({
+          stdin: Readable.from([
+            JSON.stringify({
+              conversation_id: 'c-7',
+              hook_event_name: 'beforeSubmitPrompt',
+              prompt: 'où en est la branche etude ?',
+              workspace_roots: [],
+              cursor_version: '3.29.9',
+            }),
+          ]),
+          home,
+          outil: 'cursor',
           evenement: 'prompt',
           fetch: fetchImpl,
         });
-        await harness.run();
-        expect(harness.out.join('')).not.toContain('rappel-leon');
-      }
 
+      const first = noWorkspace();
+      await first.run();
+      expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+        continue: true,
+        additional_context: BLOCK,
+      });
+      const next = noWorkspace();
+      await next.run();
+      expect(next.out).toEqual(['{"continue":true}']);
+
+      expect(blockRequests(fetchImpl)).toHaveLength(1);
       expect(reminders(fetchImpl)).toEqual([]);
+    });
+
+    // Recalé sur l'essai du 11/11 (appli 2.0.6) : PreInvocation porte `lastUserInput`, et `invocationNum` vaut 0 au premier
+    // appel du modèle de chaque message.
+    describe('Antigravity', () => {
+      const agyJson = (conversation: string, fields: Record<string, unknown> = {}) =>
+        Readable.from([
+          JSON.stringify({
+            artifactDirectoryPath: `/Users/demo/.gemini/antigravity/brain/${conversation}`,
+            conversationId: conversation,
+            initialNumSteps: 1,
+            invocationNum: 0,
+            lastUserInput: 'où en est la branche etude ?',
+            modelName: 'demo',
+            transcriptPath: `/Users/demo/.gemini/antigravity/brain/${conversation}/.system_generated/logs/transcript_full.jsonl`,
+            workspacePaths: ['/projets/leon'],
+            ...fields,
+          }),
+        ]);
+      let withRappel: string;
+      let withoutRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'agy-rappel-'));
+        await writeConsent(withRappel, 'antigravity', 2);
+        await addUsage(withRappel, 'antigravity', 'rappel');
+        withoutRappel = await mkdtemp(join(homes, 'agy-sans-'));
+        await writeConsent(withoutRappel, 'antigravity', 2);
+        await addUsage(withoutRappel, 'antigravity', 'lecture');
+      });
+      const agy = (input: {
+        conversation: string;
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        fields?: Record<string, unknown>;
+      }) =>
+        setup({
+          stdin: agyJson(input.conversation, input.fields),
+          home: input.home,
+          outil: 'antigravity',
+          evenement: 'prompt',
+          remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+          fetch: input.fetch,
+        });
+      const injected = (out: string[]) => out.map((line) => JSON.parse(line));
+
+      it('le premier message : le bloc et le rappel ensemble ; le suivant, à invocationNum 0 : la ligne dans ephemeralMessage', async () => {
+        const fetchImpl = answers();
+        const first = agy({ conversation: 'agy-2', home: withRappel, fetch: fetchImpl });
+        expect(await first.run()).toBe(0);
+        expect(injected(first.out)).toEqual([
+          { injectSteps: [{ ephemeralMessage: `${BLOCK}\n${REMINDER}` }] },
+        ]);
+
+        const next = agy({
+          conversation: 'agy-2',
+          home: withRappel,
+          fetch: fetchImpl,
+          fields: { lastUserInput: 'et la PR 167 ?' },
+        });
+        expect(await next.run()).toBe(0);
+        expect(injected(next.out)).toEqual([{ injectSteps: [{ ephemeralMessage: REMINDER }] }]);
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toHaveLength(2);
+        expect(reminders(fetchImpl).at(-1)).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'agy-2',
+          message: 'et la PR 167 ?',
+          outil: 'antigravity',
+          usages: ['rappel'],
+        });
+      });
+
+      it('à invocationNum 1, ou sans lastUserInput : aucune requête de rappel, et la sortie d’avant', async () => {
+        const fetchImpl = answers();
+        // Une version sans `lastUserInput` (comme la 2.0.1) : le bloc seul au premier message.
+        const old = agy({
+          conversation: 'agy-3',
+          home: withRappel,
+          fetch: fetchImpl,
+          fields: { lastUserInput: undefined },
+        });
+        await old.run();
+        expect(injected(old.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        for (const fields of [
+          { invocationNum: 1 },
+          { lastUserInput: undefined },
+          { lastUserInput: '' },
+        ]) {
+          const next = agy({ conversation: 'agy-3', home: withRappel, fetch: fetchImpl, fields });
+          await next.run();
+          expect(next.out).toEqual(['{}']);
+        }
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('sans l’usage rappel : rien ne change, aucune requête après le premier message', async () => {
+        const fetchImpl = answers();
+        const first = agy({ conversation: 'agy-4', home: withoutRappel, fetch: fetchImpl });
+        await first.run();
+        expect(injected(first.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        const calls = fetchImpl.mock.calls.length;
+        const next = agy({ conversation: 'agy-4', home: withoutRappel, fetch: fetchImpl });
+        await next.run();
+
+        expect(next.out).toEqual(['{}']);
+        expect(fetchImpl.mock.calls).toHaveLength(calls);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('sans dossier de travail : aucune requête de rappel, le bloc ne change pas', async () => {
+        const fetchImpl = answers();
+        for (let call = 0; call < 2; call++) {
+          const harness = agy({
+            conversation: 'agy-5',
+            home: withRappel,
+            fetch: fetchImpl,
+            fields: { workspacePaths: [] },
+          });
+          await harness.run();
+          expect(injected(harness.out)).toEqual([
+            call === 0 ? { injectSteps: [{ ephemeralMessage: BLOCK }] } : {},
+          ]);
+        }
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('un serveur de rappel lent, ou ancien : le message passe', async () => {
+        const slow = server(neverAnswers);
+        const first = agy({ conversation: 'agy-6', home: withRappel, fetch: slow });
+        const started = Date.now();
+        await first.run();
+        expect(Date.now() - started).toBeLessThan(3000);
+        expect(injected(first.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        const next = agy({ conversation: 'agy-6', home: withRappel, fetch: slow });
+        const nextStarted = Date.now();
+        expect(await next.run()).toBe(0);
+        expect(Date.now() - nextStarted).toBeLessThan(2000);
+        expect(next.out).toEqual(['{}']);
+
+        const old = server(() => new Response('{}', { status: 404 }));
+        const oldNext = agy({ conversation: 'agy-6', home: withRappel, fetch: old });
+        await oldNext.run();
+        expect(oldNext.out).toEqual(['{}']);
+      });
     });
   });
 

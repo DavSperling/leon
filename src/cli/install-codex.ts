@@ -244,7 +244,7 @@ export async function installCodexHook(
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   for (const line of await codexWarnings(options.codexDir, settings)) deps.out(line);
   if (unchanged && consent?.capture_le) {
-    if (usagesToOffer('codex', consent, options).length === 0) {
+    if (usagesToOffer(consent, options).length === 0) {
       deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
       return 0;
     }

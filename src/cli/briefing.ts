@@ -243,7 +243,9 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     const consent = await factsConsent(deps.home, outil ?? 'claude_code');
     // Le rappel (T49) : à chaque message d'un outil qui le donne à son crochet, avec l'usage `rappel` de cet outil.
     const message = adapter && evenement === 'prompt' ? adapter.message(parseInput(stdin)) : null;
-    const reminder = consent?.usages.includes('rappel') ? message : null;
+    // Sans dossier de travail dans l'entrée, pas de rappel : le crochet de Cursor et celui d'Antigravity ne tournent pas
+    // depuis lui, et il n'y aurait aucun projet où chercher.
+    const reminder = consent?.usages.includes('rappel') && entree?.dossier ? message : null;
     // Codex reçoit son bloc au démarrage : à ses messages, le rappel seul, sans un mot d'erreur quand il manque.
     if (adapter && evenement === 'prompt' && !adapter.uneFois && reminder === null) return 0;
     if (outil !== undefined && consent === null) {

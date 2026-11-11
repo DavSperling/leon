@@ -737,7 +737,7 @@ describe('setup : les outils de code', () => {
   it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
     await allTools();
 
-    // Claude Code, lecture, rappel, resume, puis Codex, Cursor (refusé) et Antigravity (sans rappel).
+    // Claude Code, lecture, rappel, resume, puis Codex, Cursor (refusé) et Antigravity, rappel compris.
     const run = await setup({}, { interactive: true, answers: ['y', '', '', 'n', 'y', 'n', 'y'] });
 
     expect(run.code).toBe(0);
@@ -745,16 +745,12 @@ describe('setup : les outils de code', () => {
     expect(checkedAsked(run)).toHaveLength(2);
     expect(run.output.split('usage "lecture"')).toHaveLength(2);
     expect(run.output.split('usage "rappel"')).toHaveLength(2);
-    for (const tool of ['claude_code', 'codex'] as const) {
+    for (const tool of ['claude_code', 'codex', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({
         usages: ['lecture', 'rappel'],
         refus: ['resume'],
       });
     }
-    expect(await factsConsent(home, 'antigravity')).toMatchObject({
-      usages: ['lecture'],
-      refus: ['resume'],
-    });
     // Un outil dont l'accord de base est refusé n'en reçoit aucun.
     expect(await factsConsent(home, 'cursor')).toBeNull();
     expect(run.output).toContain('`~/.leon/bin/leon retirer-crochets --outil codex`');
@@ -1268,9 +1264,9 @@ describe('setup : les cases de la page « Autoriser »', () => {
     });
   });
 
-  // T49 : la case `rappel` se demande pour Claude Code, Codex et Cursor, jamais pour Antigravity seul (PreInvocation ne
-  // reçoit pas le message) ; cochée, elle s'écrit, et le crochet de message de Claude Code est posé.
-  it('rappel : demandé pour Claude Code, écrit avec son crochet, jamais pour Antigravity', async () => {
+  // T49 : la case `rappel` se demande pour les quatre outils (Antigravity depuis l'essai de l'appli 2.0.6 du 11/11, son
+  // crochet PreInvocation reçoit le message) ; cochée, elle s'écrit, et le crochet de message de Claude Code est posé.
+  it('rappel : demandé pour Claude Code, écrit avec son crochet, et pour Antigravity', async () => {
     await hasClaudeCode();
     await mkdir(join(home, '.gemini', 'antigravity'), { recursive: true });
 
@@ -1281,7 +1277,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
       usages: ['lecture', 'rappel'],
     });
     expect(await factsConsent(home, 'antigravity')).toMatchObject({
-      usages: ['lecture'],
+      usages: ['lecture', 'rappel'],
       refus: [],
     });
     const settings = JSON.parse(await readFile(join(claudeDir, 'settings.json'), 'utf8'));
@@ -1290,12 +1286,12 @@ describe('setup : les cases de la page « Autoriser »', () => {
     ]);
   });
 
-  it('Antigravity seul : la case rappel n’est pas demandée', async () => {
+  it('Antigravity seul : la case rappel est demandée pour lui', async () => {
     await mkdir(join(home, '.gemini', 'antigravity'), { recursive: true });
 
     const run = await setup({ yes: true });
 
-    expect(run.asked).toEqual([{ usages: ['lecture'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
   });
 });
 

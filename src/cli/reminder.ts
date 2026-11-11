@@ -1,8 +1,8 @@
 // Le rappel à chaque message (T49 du plan de la mémoire à disposition ; C8, D26) : à chaque message de la personne, le
 // crochet demande au serveur la ligne de clés des fils qui touchent ce message (la route `rappel`, C8), et l'imprime,
 // ou n'imprime rien.
-// - `askReminder` est le cœur commun : Claude Code (la commande `leon reminder` ci-dessous) comme Cursor et Codex
-//   (`leon crochet <outil> prompt`, briefing.ts) l'appellent. Sans l'usage `rappel` dans l'accord de l'outil, rien ne part.
+// - `askReminder` est le cœur commun : Claude Code (la commande `leon reminder` ci-dessous) comme Cursor, Codex et
+//   Antigravity (`leon crochet <outil> prompt`, briefing.ts) l'appellent. Sans l'usage `rappel` dans l'accord de l'outil, rien ne part.
 // - Le message part masqué (maskSecrets), puis coupé à 2 000 caractères ; le serveur le masque de nouveau et ne le
 //   stocke ni ne le journalise. Un seul signal de 1,5 s couvre la demande : un serveur lent, absent ou ancien (404,
 //   400) donne un texte vide, jamais une erreur, et le message de la personne passe toujours.

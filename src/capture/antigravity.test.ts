@@ -94,6 +94,38 @@ describe('parseAntigravitySession', () => {
     expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(0);
   });
 
+  // Depuis l'appli 2.0.6 (annexe 05, essai du 11/11), ce que Leon injecte s'écrit dans le transcript, en
+  // `EPHEMERAL_MESSAGE` : ni le bloc ni le rappel ne reviennent comme un tour.
+  it('une étape EPHEMERAL_MESSAGE ne devient jamais un tour, même avec une ligne <rappel-leon>', () => {
+    const lines = [
+      step({
+        step_index: 1,
+        type: 'USER_INPUT',
+        source: 'USER_EXPLICIT',
+        content: '<USER_REQUEST>Où en est la branche etude ?</USER_REQUEST>',
+      }),
+      ...['SYSTEM', 'USER_EXPLICIT'].map((source, index) =>
+        step({
+          step_index: 2 + index,
+          type: 'EPHEMERAL_MESSAGE',
+          source,
+          // Du texte autour de la balise : seul le type d'étape l'écarte, pas le retrait des blocs de Leon.
+          content:
+            'Ajouté par un crochet :\n<rappel-leon>Le fil amos/etude (id 3f2a) touche à ce message.</rappel-leon>',
+        }),
+      ),
+      step({ step_index: 4, type: 'PLANNER_RESPONSE', content: 'La branche est prête.' }),
+    ].join('\n');
+
+    const session = parseAntigravitySession(lines, FILE);
+
+    expect(session?.turns.map((t) => [t.external_id, t.role, t.text])).toEqual([
+      [`${CONVERSATION}:000001`, 'user', 'Où en est la branche etude ?'],
+      [`${CONVERSATION}:000004`, 'assistant', 'La branche est prête.'],
+    ]);
+    expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(1);
+  });
+
   it('retire les blocs de Leon ; sans date, un tour prend l’heure du fichier', () => {
     const session = parseAntigravitySession(
       [

@@ -368,7 +368,7 @@ describe('la page Documentation', () => {
   );
 
   // L'usage `rappel` (T49 ; décisions d'Amos du 11/11 pour le lot 13) : coché par défaut comme `lecture`, pour Claude
-  // Code (`leon reminder`), Codex et Cursor, jamais Antigravity ; la page dit ce qui part à chaque message, vers qui, ce
+  // Code (`leon reminder`), Codex, Cursor et Antigravity ; la page dit ce qui part à chaque message, vers qui, ce
   // qui revient, et ce qui est gardé.
   it.each(LOCALES)(
     'dit ce que l’usage rappel envoie et rend, pour quels outils (%s)',

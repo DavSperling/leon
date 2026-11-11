@@ -170,7 +170,7 @@ export const LECTURE_LINES = [
 ];
 
 // Le texte de l'usage `rappel` (C7 révisé, D26, C8 ; décisions d'Amos du 11/11 pour le lot 13), testé mot pour mot : un
-// seul texte, sans nom d'outil, le même dans les installateurs de Claude Code, Codex et Cursor et sur la page « Autoriser ».
+// seul texte, sans nom d'outil, le même dans les installateurs des quatre outils et sur la page « Autoriser ».
 // Ce qui part à chaque message et vers qui (askReminder, reminder.ts : le corps de C8, un seul signal de 1,5 s), ce que
 // le serveur en fait et rend (src/server/sessions/reminder.ts : ni stocké ni journalisé, une ligne de clés), et ce qu'il
 // garde (rappels_cites, purgé après 24 h par le tic horaire de worker.ts).
@@ -620,21 +620,15 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   },
 };
 
-// Antigravity n'a pas de rappel : son crochet PreInvocation ne reçoit pas le message (annexe 05). Jamais de `rappel` sans
-// crochet (T64) : ni proposé dans le terminal, ni demandé à la page (setup.ts), ni écrit pour lui.
-export const usageOffered = (tool: ConsentTool, usage: Usage): boolean =>
-  !(tool === 'antigravity' && usage === 'rappel');
-
 // Les usages qui restent pour un outil sur son accord de base : manquants et jamais refusés (A16), puis tranchés dans
 // ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
+// Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05).
 export function usagesToOffer(
-  tool: ConsentTool,
   consent: FactsConsent | null,
   options: UsageOptions & { assumeYes: boolean },
 ): (typeof OFFERED)[number][] {
   if (consent === null) return [];
   return OFFERED.filter((usage) => {
-    if (!usageOffered(tool, usage)) return false;
     if (consent.usages.includes(usage) || consent.refus.includes(usage)) return false;
     const decided = options.decisions?.get(usage);
     return decided === undefined
@@ -655,7 +649,7 @@ export async function offerUsages(
 ): Promise<boolean> {
   const path = consentPath(options.home);
   const decisions: UsageDecisions = options.decisions ?? new Map();
-  const pending = usagesToOffer(tool, await factsConsent(options.home, tool), {
+  const pending = usagesToOffer(await factsConsent(options.home, tool), {
     ...options,
     decisions,
   });
@@ -770,7 +764,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
-      if (usagesToOffer('claude_code', consent, options).length === 0) {
+      if (usagesToOffer(consent, options).length === 0) {
         deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }

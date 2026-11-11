@@ -119,7 +119,9 @@ Commands:
                        input), for codex, cursor or antigravity: \`demarrage\` (start of a session) and \`prompt\` (first
                        message of a conversation, once: Cursor, Antigravity) print the same block as briefing, in the
                        format of the tool; \`prompt\` also prints the reminder of \`leon reminder\` at each message
-                       of Cursor and Codex, if their \`rappel\` consent is recorded (for Codex it prints only that);
+                       of Cursor, Codex and Antigravity, if their \`rappel\` consent is recorded (for Codex it prints only
+                       that; for Antigravity, at the first model call of each message, in a version whose hook
+                       receives the message, tried with the app 2.0.6); never without a working folder in the hook JSON;
                        \`tour\` (after each turn) and \`fin\` (end of a session) send the new exchanges of the session,
                        and its actions, if ~/.leon/accord.json allows the capture of this tool, and print only what the
                        tool expects (Cursor, Antigravity: \`{}\`). Any other tool or event prints nothing

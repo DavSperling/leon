@@ -31,11 +31,16 @@
 // - SessionStart n'est jamais appelé : le bloc arrive par PreInvocation (avant chaque appel au modèle), une seule fois
 //   par conversation (témoin, sur `conversationId` : `invocationNum` repart à 0 à chaque message). La forme qui atteint
 //   le modèle est `{"injectSteps":[{"ephemeralMessage":…}]}` (la seconde de C5) ; `systemMessage` n'a pas pu être
-//   essayée, faute de SessionStart. Le message injecté ne laisse aucune trace dans le transcript ;
+//   essayée, faute de SessionStart. En 2.0.1, le message injecté ne laisse aucune trace dans le transcript ;
 // - Stop part une fois par message, avec `fullyIdle: true` ; rien n'est capté tant qu'il est faux. Sans bloc, la réponse
 //   est `{}` : jamais `decision`, qui ferait continuer Stop.
-// shortcut: la durée de vie d'un `ephemeralMessage` (le modèle le voit-il encore au message suivant ?), l'IDE 2.5.5 et
-// `agy` restent à essayer.
+// Recalé sur l'essai réel du 11/11 dans l'appli 2.0.6 (même annexe, « L'essai du 11/11 ») : l'entrée de PreInvocation
+// porte aussi `lastUserInput`, le message qu'on vient d'envoyer, et `invocationNum` vaut 0 au premier appel du modèle de
+// chaque message. Une étape `ephemeralMessage` rendue à ce moment atteint le modèle à chaque message : le rappel (T49)
+// passe donc par le même crochet, à `invocationNum` 0 seulement. L'étape injectée s'écrit maintenant dans le transcript
+// (`EPHEMERAL_MESSAGE`), que la capture ne reprend pas. Une version plus ancienne, sans `lastUserInput`, n'a pas de rappel.
+// shortcut: essayé dans l'appli 2.0.6 avec un crochet témoin seulement ; l'IDE et `agy` restent à essayer, et un
+// `invocationNum` supérieur à 0 n'a été vu qu'en 2.0.1 : à reprendre au premier essai du crochet de Leon lui-même.
 import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { extractAntigravityFacts, parseAntigravitySession } from '../capture/antigravity';
@@ -93,8 +98,8 @@ export type Adaptateur = {
   // Les dossiers où l'outil écrit ses sessions : seul un fichier qui y est se lit.
   racines: (home: string, env: Env) => string[];
   entree: (input: unknown, home: string, env: Env) => EntreeCrochet;
-  // Le message de la personne que porte l'entrée du crochet de message (`prompt`), pour le rappel (T49) ; null : l'outil
-  // ne le donne pas à son crochet (Antigravity : PreInvocation ne le reçoit pas, annexe 05), jamais de rappel.
+  // Le message de la personne que porte l'entrée du crochet de message (`prompt`), pour le rappel (T49) ; null : pas de
+  // rappel pour cet appel (Antigravity : un appel suivant du même message, ou une version dont l'entrée ne le porte pas).
   message: (input: unknown) => string | null;
   lire: (contenu: string, fichier: FichierSession) => SessionOutil | null;
   // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts).
@@ -264,7 +269,9 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
     injection: (texte) => JSON.stringify({ injectSteps: [{ ephemeralMessage: texte }] }),
     vide: () => '{}',
     uneFois: true,
-    message: () => null,
+    // Le premier appel du modèle de ce message seulement : aux suivants, le rappel est déjà passé.
+    message: (input) =>
+      field(input, 'invocationNum') === 0 ? text(field(input, 'lastUserInput')) : null,
     racines: (home) => antigravityBrains(home),
     entree: (input, home, env) => {
       const transcript = absolute(field(input, 'transcriptPath'));

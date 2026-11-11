@@ -226,9 +226,10 @@ function renderSommaire(input: {
   const frame = (inner: string[]) => [...head(inner), consigne, CONTEXT_BLOCK_CLOSE].join('\n');
   const lines = [`## Mes fils sur ${field(input.project)}`];
   for (const fil of input.fils.slice(0, SOMMAIRE_FILS_MAX)) {
-    const next = [...lines, filLine(input.project, fil)];
+    const line = filLine(input.project, fil);
+    const next = [...lines, line];
     if (bytes(head(next).join('\n')) <= SESSIONS_BYTES_MAX && bytes(frame(next)) <= input.max)
-      lines.push(filLine(input.project, fil));
+      lines.push(line);
   }
   if (lines.length === 1) return '';
   return frame([

@@ -79,6 +79,42 @@ describe('stripLeonBlocks', () => {
     expect(stripLeonBlocks(`${sommaire}\nOn reprend ?`)).not.toContain('thread');
   });
 
+  // Les leçons (T56) sont dans la même balise, avec ou sans fil : recaptées, elles reviendraient en preuves d'elles-mêmes.
+  it.each([true, false])(
+    'retire les leçons poussées au démarrage (avec des fils : %s)',
+    (avecFils) => {
+      const block = renderContext({
+        project: PROJECT,
+        sessions: [{ kind: 'claude_code', lastTs: PREPARED_AT, faits: null }],
+        fils: avecFils
+          ? [
+              {
+                id: '00000001-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+                titre: 'paul/fil',
+                outils: ['codex'],
+                derniereDate: PREPARED_AT,
+                prs: [],
+                prsTotal: 0,
+                liees: 0,
+              },
+            ]
+          : [],
+        lecons: Array.from({ length: 40 }, (_, n) => ({
+          texte: `Leçon ${n} : relancer les tests en base avant de pousser, ${'x'.repeat(200)}`,
+          accepteeLe: PREPARED_AT,
+        })),
+        commande: '~/.leon/bin/leon',
+        briefing: BRIEFING,
+        max: 8000,
+      });
+
+      expect(block).toContain('Leçon 0 : relancer les tests');
+      expect(block).toContain('`~/.leon/bin/leon lessons`');
+      expect(prepareTurnText(stripLeonBlocks(block))).toBeNull();
+      expect(stripLeonBlocks(`${block}\nOn reprend ?`)).not.toMatch(/Leçon|lessons|acceptée/);
+    },
+  );
+
   it('retire le point du matin seul, que donne un serveur plus ancien', () => {
     expect(prepareTurnText(stripLeonBlocks(BRIEFING))).toBeNull();
   });

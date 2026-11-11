@@ -13,6 +13,7 @@ import { BRIEFING_BLOCK_CLOSE, renderBriefing } from '@/server/briefing/briefing
 import { readLog, sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
+import { writeLesson } from '@/server/memory/lessons';
 import { writeVersion } from '@/server/memory/versions';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
@@ -327,10 +328,11 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
     expect(await adminDb.select().from(readLog).where(eq(readLog.userId, paul.userId))).toEqual([]);
   });
 
-  it('sans `lecture`, ou avec une CLI d’avant les usages, avec des fils : le bloc de main, sans fil ni consigne', async () => {
+  it('sans `lecture`, ou avec une CLI d’avant les usages, avec des fils et des leçons : le bloc de main, sans fil, leçon ni consigne', async () => {
     const { paul, token } = await setup();
     await seedCodeSession(paul);
     const id = await seedFil(paul, { branches: ['paul/contexte'] });
+    await writeLesson(paul, { texte: 'Une leçon acceptée.', projet: PROJECT });
 
     const sansLecture = await contexte(token, { usages: ['resume'], commande: '~/.leon/bin/leon' });
     const ancienne = await contexte(token);
@@ -340,6 +342,7 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
     expect(ancienne).not.toContain(id);
     expect(ancienne.match(UUIDS)).toBeNull();
     expect(ancienne).not.toContain('thread');
+    expect(ancienne).not.toMatch(/leçon|lessons/i);
   });
 
   it('avec `lecture` et aucun fil : le bloc de main, mot pour mot (le post-it)', async () => {
@@ -350,6 +353,28 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
 
     expect(text).toBe(await contexte(token));
     expect(text).toContain('## Mes dernières sessions sur github.com/acme/leon');
+  });
+
+  // T56, amendé le 11/11 : les leçons passent avec ou sans fil ; sans fil, pas de consigne de lecture.
+  it('avec `lecture`, des leçons et aucun fil : mes sessions, puis les leçons, sans consigne ni journal', async () => {
+    const { paul, marie, token } = await setup();
+    await seedCodeSession(paul);
+    await writeLesson(paul, { texte: 'Relancer les tests en base.', projet: PROJECT });
+    await writeLesson(paul, { texte: 'Ailleurs.', projet: 'github.com/acme/autre' });
+    await writeLesson(marie, { texte: 'À Marie.', projet: PROJECT });
+
+    const text = await contexte(token, { usages: ['lecture'], commande: 'leon' });
+
+    expect(text).toContain('## Mes dernières sessions sur github.com/acme/leon');
+    expect(text).toMatch(
+      /\n## Leçons acceptées par toi : .*\n- Relancer les tests en base\. · acceptée par toi le \d\d\/\d\d\n<\/contexte-leon>/,
+    );
+    expect(text).not.toContain('Ailleurs');
+    expect(text).not.toContain('À Marie');
+    expect(text).not.toContain('thread');
+    expect(bytes(text)).toBeLessThanOrEqual(CONTEXT_MAX_BYTES);
+    // Les leçons poussées ne sont pas notées (T55 amendée).
+    expect(await adminDb.select().from(readLog).where(eq(readLog.userId, paul.userId))).toEqual([]);
   });
 
   it('accepte une commande de 200 octets, et la cite telle quelle', async () => {

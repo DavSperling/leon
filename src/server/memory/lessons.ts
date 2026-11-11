@@ -78,13 +78,14 @@ async function select(tx: Tx, ctx: TenantContext, filtre: SQL): Promise<Lesson[]
 // l'auteur, tous dépôts confondus (la section Mémoire du site).
 export async function listLessons(ctx: TenantContext, projet?: string): Promise<Lesson[]> {
   return withTenant(ctx, (tx) =>
-    select(
-      tx,
-      ctx,
-      projet === undefined ? sql`true` : sql`(l.projet = ${projet} or l.projet is null)`,
-    ),
+    projet === undefined ? select(tx, ctx, sql`true`) : lessonsOfProject(tx, ctx, projet),
   );
 }
+
+// Les leçons de ce dépôt et celles sans dépôt, dans la transaction de l'appelant : le bloc de démarrage les lit avec ses
+// fils (T56). Rien au journal : les leçons poussées ne sont pas notées (T55 amendée).
+export const lessonsOfProject = (tx: Tx, ctx: TenantContext, projet: string) =>
+  select(tx, ctx, sql`(l.projet = ${projet} or l.projet is null)`);
 
 // Une leçon de l'auteur, non retirée et lisible ; sinon null.
 export async function readLesson(ctx: TenantContext, id: string): Promise<Lesson | null> {

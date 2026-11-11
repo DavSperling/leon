@@ -22,11 +22,12 @@ describe('privilèges', () => {
     );
   });
 
-  // Les tests db peuvent changer d'organisation dans une transaction, comme la boucle du déploiement de 0048.
+  // Les tests db peuvent changer d'organisation dans une transaction, comme la boucle du déploiement de 0048. Le
+  // contexte, ce sont les réglages `app.*` : le rappel pose les siens (`leon.*`, T48), hors de ce contexte.
   it('pose le contexte de tenant à un seul endroit : withTenant', () => {
     const allowed = (path: string) =>
       isTestSupport(path) || path === 'src/server/db/with-tenant.ts';
-    expect(offenders(/set_config\(/, allowed)).toEqual([]);
+    expect(offenders(/set_config\(\s*'app\./, allowed)).toEqual([]);
   });
 
   it('réserve le rôle propriétaire (adminDb, adminPool) aux tests', () => {

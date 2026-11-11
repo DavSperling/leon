@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { boolean, integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { AUTHOR_SIDES, SOURCE_KINDS, TURN_CAPTURE_MODES, TURN_ROLES } from '@/capture/turn';
 import { organizations, users } from './auth';
 
@@ -123,3 +132,23 @@ export const versionsMemoire = pgTable('versions_memoire', {
   creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
   acl: acl(),
 });
+
+// Les fils déjà cités par le rappel dans une session (0065, T48) : jamais le message. Purgés après 24 h.
+export const rappelsCites = pgTable(
+  'rappels_cites',
+  {
+    tenantId: tenantId(),
+    ownerUserId: uuid('owner_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    // L'id de session de l'outil, déclaré par la CLI (C8).
+    session: text('session').notNull(),
+    // Clé étrangère composée (tenant_id, fil_id) en SQL, on delete cascade.
+    filId: uuid('fil_id').notNull(),
+    creeLe: timestamp('cree_le', { withTimezone: true }).notNull().defaultNow(),
+    acl: acl(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.tenantId, table.ownerUserId, table.session, table.filId] }),
+  ],
+);

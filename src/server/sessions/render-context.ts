@@ -199,7 +199,7 @@ function readingInstruction(project: string, commande: string): string {
 
 // Une ligne du sommaire (D24, D25) : des clés seulement, l'id d'abord, celui que `thread` accepte. Le titre est la
 // branche réduite (filTitle, thread-read.ts), jamais celui d'une session ni d'une PR.
-function filLine(project: string, fil: FilKeys): string {
+export function filLine(project: string, fil: FilKeys): string {
   const parts = [
     field(fil.id),
     field(fil.titre),

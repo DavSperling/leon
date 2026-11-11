@@ -209,11 +209,12 @@ export async function readThread(
 
 // Les fils de l'auteur sur ce projet, hors absorbés, et leurs clés : celui de la branche d'abord (hors main et master),
 // puis par date de mise à jour, `max` au plus, dans la transaction de l'appelant. Ni version ni journal : le sommaire du
-// démarrage s'en tient là (start-context.ts, T46), le dossier y ajoute l'état et note ce qu'il rend.
+// démarrage s'en tient là (start-context.ts, T46), le dossier y ajoute l'état et note ce qu'il rend. `ids` : parmi
+// ceux-là seulement (les fils que cite le rappel, reminder.ts).
 export async function readFilKeys(
   tx: Tx,
   ctx: TenantContext,
-  input: { projet: string; branche?: string | null },
+  input: { projet: string; branche?: string | null; ids?: string[] },
   max: number,
 ): Promise<{ total: number; fils: Array<{ keys: FilKeys; read: Read }> }> {
   const branche = input.branche && !DEFAULT_BRANCHES.has(input.branche) ? input.branche : null;
@@ -221,6 +222,7 @@ export async function readFilKeys(
     select s.id, (count(*) over ())::int as total from sources s
     where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
       and s.metadata->>'project' = ${input.projet} and s.metadata->>'absorbe_par' is null
+      ${input.ids === undefined ? sql`` : sql`and s.id = any(${textArray(input.ids)}::uuid[])`}
     order by ${branche === null ? sql`` : sql`${has('branches', branche)} desc nulls last,`}
       coalesce((s.metadata->>'maj_le')::timestamptz, s.created_at) desc, s.id
     limit ${max}`);

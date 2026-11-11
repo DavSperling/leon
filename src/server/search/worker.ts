@@ -8,6 +8,7 @@ import {
   PipelineJobSchema,
 } from '@/server/pipeline/queue';
 import { failRun } from '@/server/pipeline/runs';
+import { purgeCited } from '@/server/sessions/reminder';
 import { dropOldVectors, embedMissingBatch, requeueStaleRuns } from './embed-missing';
 import { indexIngestRun } from './index-run';
 
@@ -31,6 +32,9 @@ const EMBED_TICK_MS = 45_000;
 // Vecteurs d'un ancien modèle retirés par tic (audit 2 n° 7 bis), une fois les nouveaux écrits (audit 3 n° 4).
 const OLD_VECTORS_PER_TICK = 5000;
 const EVERY_MINUTE = '* * * * *';
+// La purge des fils déjà rappelés (rappels_cites, T48) passe par le tic `requeue` une fois par heure, sans file ni
+// planning de plus : chaque sondage de pg-boss coûte de l'egress Supabase. Une ligne vit donc 25 h au plus.
+const PURGE_EVERY_MS = 60 * 60_000;
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte
 // capté (une erreur de base cite ses paramètres) ; seulement son résumé (safeErrorSummary).
@@ -77,8 +81,13 @@ async function registerWorkers(
   );
 
   const tick = { batchSize: 1, localConcurrency: 1, ...polling };
+  let purgedAt = 0;
   await boss.schedule(PIPELINE_QUEUES.requeue, EVERY_MINUTE);
   await boss.work(PIPELINE_QUEUES.requeue, tick, async () => {
+    if (Date.now() - purgedAt >= PURGE_EVERY_MS) {
+      purgedAt = Date.now();
+      await purgeCited().catch((error) => logError('reminder.purge_failed', error));
+    }
     await requeueStaleRuns(STALE_RUN_MINUTES).catch((error) =>
       rethrowSummary('search.requeue_tick_failed', error),
     );

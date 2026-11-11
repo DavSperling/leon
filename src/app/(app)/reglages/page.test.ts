@@ -10,6 +10,7 @@ import { signedInRecently } from '@/server/auth/session';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import {
   listMemoryLessons,
+  listMemoryNotes,
   listMemoryRepos,
   listMemoryThreads,
 } from '@/server/memory/memory-section';
@@ -36,6 +37,7 @@ vi.mock('@/server/memory/lessons', () => ({ LESSON_MAX: 300 }));
 vi.mock('@/server/memory/memory-section', () => ({
   listMemoryThreads: vi.fn(async () => []),
   listMemoryLessons: vi.fn(async () => []),
+  listMemoryNotes: vi.fn(async () => []),
   listMemoryRepos: vi.fn(async () => []),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
@@ -223,16 +225,22 @@ describe('page de Réglages : l’onglet Mémoire', () => {
     return findAll(panels.memoire, MemorySection)[0]?.props;
   };
 
-  it('donne à la section ses leçons, ses fils, ses dépôts, le plafond de 300 et la connexion récente', async () => {
+  it('donne à la section ses leçons, ses fils, ses notes, ses dépôts, le plafond de 300 et la connexion récente', async () => {
     vi.mocked(listMemoryThreads).mockResolvedValue([]);
     vi.mocked(listMemoryLessons).mockResolvedValue([]);
+    vi.mocked(listMemoryNotes).mockResolvedValue([]);
     vi.mocked(listMemoryRepos).mockResolvedValue(['github.com/acme/app']);
 
     const props = await memoire();
 
     expect(props?.recent).toBe(true);
     expect(props?.max).toBe(300);
-    expect(props?.data).toEqual({ threads: [], lessons: [], repos: ['github.com/acme/app'] });
+    expect(props?.data).toEqual({
+      threads: [],
+      lessons: [],
+      notes: [],
+      repos: ['github.com/acme/app'],
+    });
   });
 
   it('passe recent à false quand la connexion a plus d’une heure', async () => {
@@ -242,6 +250,8 @@ describe('page de Réglages : l’onglet Mémoire', () => {
 
   it('une lecture qui échoue donne data null, pas une page cassée', async () => {
     vi.mocked(listMemoryLessons).mockRejectedValueOnce(new Error('base absente'));
+    expect((await memoire())?.data).toBeNull();
+    vi.mocked(listMemoryNotes).mockRejectedValueOnce(new Error('base absente'));
     expect((await memoire())?.data).toBeNull();
   });
 });

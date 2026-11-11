@@ -2,7 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { MemoryLesson, MemoryThread } from '@/server/memory/memory-section';
+import type { MemoryLesson, MemoryNote, MemoryThread } from '@/server/memory/memory-section';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { ALL_REPOS, MemorySection, outcomeOf, projectOf } from './memoire';
@@ -50,6 +50,28 @@ const LESSON: MemoryLesson = {
   versions: [version(1, { ecritPar: 'humain', motif: 'acceptation' }), version(2)],
 };
 
+const NOTE: MemoryNote = {
+  id: '44444444-4444-4444-8444-444444444444',
+  titre: 'Le cache tombe le lundi matin.',
+  outil: 'Claude Code',
+  projet: 'github.com/acme/app',
+  creeLe: DAY,
+  n: 2,
+  versions: [
+    version(1, { ecritPar: 'agent', motif: 'note' }),
+    version(2, { ecritPar: 'agent', motif: 'note' }),
+  ],
+};
+const WEB_NOTE: MemoryNote = {
+  ...NOTE,
+  id: '55555555-5555-4555-8555-555555555555',
+  titre: 'Relire le plan.',
+  outil: 'claude-ai',
+  projet: null,
+  n: 1,
+  versions: [version(1, { ecritPar: 'agent', motif: 'note' })],
+};
+
 type Props = Parameters<typeof MemorySection>[0];
 const render = (props: Partial<Props> = {}, locale: 'en' | 'fr' = 'en') =>
   renderToStaticMarkup(
@@ -60,7 +82,12 @@ const render = (props: Partial<Props> = {}, locale: 'en' | 'fr' = 'en') =>
       children: createElement(MemorySection, {
         recent: true,
         max: 300,
-        data: { threads: [THREAD, MERGED], lessons: [LESSON], repos: ['github.com/acme/app'] },
+        data: {
+          threads: [THREAD, MERGED],
+          lessons: [LESSON],
+          notes: [NOTE, WEB_NOTE],
+          repos: ['github.com/acme/app'],
+        },
         ...props,
       }),
     }),
@@ -174,7 +201,7 @@ describe('MemorySection', () => {
 
   it('la dernière version d’un fil illisible : « Remettre » sur toutes les versions montrées, aucune n’est « dernière »', () => {
     const html = render({
-      data: { threads: [{ ...THREAD, n: 3 }], lessons: [], repos: [] },
+      data: { threads: [{ ...THREAD, n: 3 }], lessons: [], notes: [], repos: [] },
     });
     expect(versionRow(html, THREAD.id, 1)).toContain('Put this version back');
     expect(versionRow(html, THREAD.id, 2)).toContain('Put this version back');
@@ -187,6 +214,7 @@ describe('MemorySection', () => {
       data: {
         threads: [{ ...THREAD, n: 3, versions: [version(1)] }],
         lessons: [LESSON],
+        notes: [],
         repos: [],
       },
     });
@@ -198,10 +226,58 @@ describe('MemorySection', () => {
     expect(text(html).split('You can still remove a lesson.').length - 1).toBe(1);
   });
 
-  it('sans leçon ni fil : deux états vides', () => {
-    const html = render({ data: { threads: [], lessons: [], repos: [] } });
+  it('sans leçon, fil ni note : trois états vides', () => {
+    const html = render({ data: { threads: [], lessons: [], notes: [], repos: [] } });
     expect(text(html)).toContain('No lesson yet.');
     expect(text(html)).toContain('No work thread yet.');
+    expect(text(html)).toContain('No agent note yet.');
+  });
+
+  it('montre les notes de l’agent après les fils : début du texte, outil, dépôt s’il y en a un, date', () => {
+    const html = render();
+    const notes = text(html.slice(html.indexOf('Agent notes')));
+    expect(html.indexOf('Work threads')).toBeLessThan(html.indexOf('Agent notes'));
+    expect(notes).toContain('Le cache tombe le lundi matin.');
+    expect(notes).toContain('Claude Code');
+    expect(notes).toContain('acme/app');
+    expect(notes).toContain('Written');
+    expect(notes).toContain('Relire le plan.');
+    expect(notes).toContain('claude-ai');
+    expect(html).toContain('dateTime="2026-11-10T09:00:00.000Z"');
+    // une note sans dépôt n'en montre pas : le seul « acme/app » de la partie est celui de la première
+    expect(notes.split('acme/app').length - 1).toBe(1);
+  });
+
+  it('relie « Historique » au début du texte de sa note, et « Remettre » : jamais sur la dernière version', () => {
+    const html = render();
+    expect(html).toContain(`id="note-${NOTE.id}"`);
+    expect(html).toContain(`aria-describedby="note-${NOTE.id}"`);
+    expect(versionRow(html, NOTE.id, 1)).toContain('Put this version back');
+    expect(versionRow(html, NOTE.id, 1)).toContain('An agent');
+    expect(versionRow(html, NOTE.id, 2)).toContain('(latest)');
+    expect(versionRow(html, NOTE.id, 2)).not.toContain('Put this version back');
+    expect(versionRow(html, WEB_NOTE.id, 1)).not.toContain('Put this version back');
+  });
+
+  it('sans connexion récente : aucun « Remettre » pour une note, et un avis qui ne parle que de remettre une version', () => {
+    const html = render({
+      recent: false,
+      data: { threads: [], lessons: [], notes: [NOTE], repos: [] },
+    });
+    expect(text(html)).not.toContain('Put this version back');
+    const notes = text(html.slice(html.indexOf('Agent notes')));
+    expect(notes).toContain('Sign in again to put back a version.');
+    expect(notes).not.toContain('remove a lesson');
+    expect(html).toContain('href="/connexion?retour=memoire"');
+  });
+
+  it('sans connexion récente, une note sans version à remettre ne demande pas de reconnexion', () => {
+    const html = render({
+      recent: false,
+      data: { threads: [], lessons: [], notes: [WEB_NOTE], repos: [] },
+    });
+    const notes = text(html.slice(html.indexOf('Agent notes')));
+    expect(notes).not.toContain('Sign in again');
   });
 
   it('une lecture en échec : une erreur annoncée, ni liste ni champ', () => {
@@ -216,5 +292,7 @@ describe('MemorySection', () => {
     expect(text(html)).toContain('Leçons');
     expect(text(html)).toContain('Fils de travail');
     expect(text(html)).toContain('Tous mes dépôts');
+    expect(text(html)).toContain('Notes de l’agent');
+    expect(text(html)).toContain('Écrite le');
   });
 });

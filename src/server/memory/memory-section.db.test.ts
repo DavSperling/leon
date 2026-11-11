@@ -1,26 +1,37 @@
 import { and, asc, eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setManager } from '@/server/auth/organisation';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members } from '@/server/db/schema/auth';
 import { sources, versionsMemoire } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
+import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { indexIngestRun } from '@/server/search/index-run';
+import { searchPassages } from '@/server/search/search';
 import { adminDb } from '@/test/db';
 import { seedSource, seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { correctLesson, retireLesson, writeLesson } from './lessons';
 import {
   listMemoryLessons,
+  listMemoryNotes,
   listMemoryRepos,
   listMemoryThreads,
   readMemoryVersion,
   restoreMemoryVersion,
 } from './memory-section';
+import { writeNote } from './notes';
 import { writeVersion } from './versions';
 
 // La section Mémoire du site (T55 ; D33, D34, D37, C12, C13 du plan de la mémoire à disposition) : les fils de l'auteur,
 // absorbés compris, et ses leçons, avec leurs versions lisibles ; le texte d'une version ; la restauration, sur le site
-// seulement, en nouvelle version écrite par l'humain.
+// seulement, en nouvelle version écrite par l'humain. T57 y ajoute les notes de l'agent : leur liste, le texte d'une
+// version, et la remise par le chemin de writeNote (le tour indexé suit).
+
+// writeNote met l'indexation en file : pas de pg-boss ici, et le point du matin n'est pas signalé.
+vi.mock('@/server/pipeline/queue');
+vi.mock('@/server/briefing/queue');
+beforeEach(() => vi.mocked(enqueuePipelineStep).mockReset());
 
 const tenantIds: string[] = [];
 afterAll(() => dropTeams(tenantIds));
@@ -80,6 +91,33 @@ const lesson = async (ctx: TenantContext, texte: string, projet?: string) => {
   if (typeof result !== 'object') throw new Error(`leçon non écrite : ${result}`);
   return result.id;
 };
+
+// Une note de l'auteur par writeNote, avec son outil et son dépôt ; `outil` à `mcp:<libellé>` pour remember.
+async function note(ctx: TenantContext, texte: string, outil = 'claude_code', projet?: string) {
+  const written = await writeNote(ctx, { texte, outil, projet });
+  if (typeof written !== 'object') throw new Error(`note non écrite : ${written}`);
+  return written.id;
+}
+const rewriteNote = (
+  ctx: TenantContext,
+  id: string,
+  texte: string,
+  version: number,
+  outil: string,
+) => writeNote(ctx, { texte, outil, note: id, version });
+// L'indexation que writeNote a mise en file, lancée à la main : le dernier run demandé.
+async function indexLast(ctx: TenantContext): Promise<void> {
+  const job = vi.mocked(enqueuePipelineStep).mock.calls.at(-1)?.[1] as
+    | { ingestRunId: string }
+    | undefined;
+  if (!job) throw new Error('aucune indexation en file');
+  await indexIngestRun(
+    { ingestRunId: job.ingestRunId, tenantId: ctx.tenantId, userId: ctx.userId },
+    { embedder: null },
+  );
+}
+const hits = async (ctx: TenantContext, query: string) =>
+  (await searchPassages(ctx, { query })).hits.map((hit) => hit.sourceId);
 
 describe('listMemoryThreads', () => {
   it('les fils de l’auteur, absorbés compris, avec leurs versions lisibles ; ni ceux d’un collègue, ni une note', async () => {
@@ -191,9 +229,20 @@ describe('un manager, même avec l’équipe', () => {
     expect(await setManager(alice, await memberOf(paul), await memberOf(alice))).toBe('ok');
     const fil = await thread(paul, { project: 'github.com/paul/perso' });
     await version(paul, fil, 0);
+    const noteId = await note(
+      paul,
+      'La note privée de Paul.',
+      'claude_code',
+      'github.com/paul/perso',
+    );
     const manager = { ...alice, equipe: true };
 
     expect(await listMemoryThreads(manager)).toEqual([]);
+    expect(await listMemoryNotes(manager)).toEqual([]);
+    expect(await readMemoryVersion(manager, { cible: 'note', id: noteId, n: 1 })).toBeNull();
+    expect(
+      await restoreMemoryVersion(manager, { cible: 'note', id: noteId, n: 1, depuis: 1 }),
+    ).toBe('introuvable');
     expect(await listMemoryRepos(manager)).toEqual([]);
     expect(await readMemoryVersion(manager, { cible: 'fil', id: fil, n: 1 })).toBeNull();
     expect(await restoreMemoryVersion(manager, { cible: 'fil', id: fil, n: 1, depuis: 1 })).toBe(
@@ -372,5 +421,124 @@ describe('restoreMemoryVersion', () => {
     expect(await restoreMemoryVersion(alice, { cible: 'lecon', id, n: 2, depuis: 3 })).toBe(
       'introuvable',
     );
+  });
+});
+
+describe('listMemoryNotes', () => {
+  it('les notes de l’auteur, celles de leon note et celles de remember, avec leur outil, leur dépôt et leurs versions ; ni un fil, ni la note d’un collègue', async () => {
+    const [alice, paul] = await pair();
+    const cli = await note(alice, 'Le cache tombe le lundi.', 'claude_code', PROJET);
+    const web = await note(alice, 'Penser à relire le plan.', 'mcp:claude-ai');
+    await rewriteNote(alice, cli, 'Le cache tombe le lundi matin.', 1, 'claude_code');
+    await thread(alice);
+    await note(paul, 'La note de Paul.');
+
+    const notes = await listMemoryNotes(alice);
+
+    expect(notes.map((one) => one.id).sort()).toEqual([cli, web].sort());
+    expect(notes.find((one) => one.id === cli)).toEqual({
+      id: cli,
+      titre: 'Le cache tombe le lundi matin.',
+      outil: 'Claude Code',
+      projet: PROJET,
+      creeLe: expect.any(Date),
+      n: 2,
+      versions: [
+        { n: 1, creeLe: expect.any(Date), ecritPar: 'agent', motif: 'note' },
+        { n: 2, creeLe: expect.any(Date), ecritPar: 'agent', motif: 'note' },
+      ],
+    });
+    expect(notes.find((one) => one.id === web)).toMatchObject({
+      outil: 'claude-ai',
+      projet: null,
+      n: 1,
+    });
+  });
+
+  it('une note d’avant les versions : aucune version, et 0 ; sans outil connu, ni outil ni dépôt', async () => {
+    const [alice] = await pair();
+    const { sourceId } = await seedSource(alice, { kind: 'mcp_remember', title: 'Ancienne note.' });
+
+    expect(await listMemoryNotes(alice)).toEqual([
+      expect.objectContaining({
+        id: sourceId,
+        titre: 'Ancienne note.',
+        outil: null,
+        projet: null,
+        n: 0,
+        versions: [],
+      }),
+    ]);
+  });
+
+  it('le titre tient sur une ligne', async () => {
+    const [alice] = await pair();
+    await note(alice, 'Première ligne.\nDeuxième ligne.');
+
+    expect((await listMemoryNotes(alice))[0]?.titre).toBe('Première ligne. Deuxième ligne.');
+  });
+});
+
+describe('une note : le texte d’une version', () => {
+  it('s’ouvre pour son auteur ; celle d’un collègue est introuvable, et un fil ne s’ouvre pas comme une note', async () => {
+    const [alice, paul] = await pair();
+    const id = await note(alice, 'Zorglub garde le cache.');
+    await rewriteNote(alice, id, 'Quokka garde le cache.', 1, 'claude_code');
+    const fil = await thread(alice);
+    await version(alice, fil, 0);
+
+    expect(await readMemoryVersion(alice, { cible: 'note', id, n: 1 })).toEqual({
+      n: 1,
+      texte: 'Zorglub garde le cache.',
+      creeLe: expect.any(Date),
+      ecritPar: 'agent',
+      motif: 'note',
+    });
+    expect(await readMemoryVersion(alice, { cible: 'note', id, n: 3 })).toBeNull();
+    expect(await readMemoryVersion(paul, { cible: 'note', id, n: 1 })).toBeNull();
+    expect(await readMemoryVersion(alice, { cible: 'note', id: fil, n: 1 })).toBeNull();
+  });
+});
+
+describe('une note : remettre une version', () => {
+  it('v1 après v2 donne v3, écrite par l’humain, et la recherche ne rend plus le texte de v2', async () => {
+    const [alice] = await pair();
+    const id = await note(alice, 'Zorglub garde le cache.');
+    await rewriteNote(alice, id, 'Quokka garde le cache.', 1, 'claude_code');
+    await indexLast(alice);
+    expect(await hits(alice, 'quokka')).toEqual([id]);
+
+    expect(await restoreMemoryVersion(alice, { cible: 'note', id, n: 1, depuis: 2 })).toEqual({
+      n: 3,
+    });
+    await indexLast(alice);
+
+    const [listed] = await listMemoryNotes(alice);
+    expect(listed).toMatchObject({ n: 3, titre: 'Zorglub garde le cache.' });
+    expect(listed?.versions.at(-1)).toMatchObject({
+      n: 3,
+      ecritPar: 'humain',
+      motif: 'restauration',
+    });
+    expect(await stored(id)).toHaveLength(3);
+    expect(await hits(alice, 'quokka')).toEqual([]);
+    expect(await hits(alice, 'zorglub')).toEqual([id]);
+  });
+
+  it('depuis une version dépassée : « depassee », rien n’est écrit ; la note d’un collègue : introuvable', async () => {
+    const [alice, paul] = await pair();
+    const id = await note(alice, 'Un.');
+    await rewriteNote(alice, id, 'Deux.', 1, 'claude_code');
+
+    expect(await restoreMemoryVersion(alice, { cible: 'note', id, n: 1, depuis: 1 })).toBe(
+      'depassee',
+    );
+    expect(await restoreMemoryVersion(paul, { cible: 'note', id, n: 1, depuis: 2 })).toBe(
+      'introuvable',
+    );
+    expect(await restoreMemoryVersion(alice, { cible: 'note', id, n: 9, depuis: 2 })).toBe(
+      'introuvable',
+    );
+    expect(await stored(id)).toHaveLength(2);
   });
 });

@@ -48,6 +48,7 @@ import { env } from '@/server/env';
 import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import {
+  type MemoryTarget,
   type MemoryVersion,
   readMemoryVersion,
   restoreMemoryVersion,
@@ -556,7 +557,7 @@ export async function removeSsoAction(): Promise<{ ok: boolean }> {
   return { ok };
 }
 
-// La section Mémoire (T55 ; D33, D34, D37, C12, C13 du plan de la mémoire à disposition) : les seuls gestes qui
+// La section Mémoire (T55, T57 ; D33, D34, D37, C12, C13 du plan de la mémoire à disposition) : les seuls gestes qui
 // écrivent, corrigent, retirent une leçon ou remettent une version, sous la session du navigateur (requireUserContext ;
 // sans le plugin bearer, aucun jeton n'y arrive). Écrire, corriger et remettre exigent une connexion de moins d'une
 // heure (signedInRecently) : sinon « reconnexion », rien n'est écrit, et la section mène à /connexion?retour=memoire.
@@ -565,7 +566,7 @@ export type MemoryError = 'reconnexion' | 'modifiee' | 'introuvable' | 'invalide
 
 // Le numéro d'une version : un int4, comme versions_memoire.n.
 const VersionNumberSchema = z.int().min(1).max(2_147_483_647);
-const MemoryTargetSchema = z.object({ cible: z.enum(['fil', 'lecon']), id: z.uuid() });
+const MemoryTargetSchema = z.object({ cible: z.enum(['fil', 'note', 'lecon']), id: z.uuid() });
 const WriteLessonSchema = z.object({ texte: z.string(), projet: z.string().nullable() });
 const CorrectLessonSchema = z.object({
   id: z.string(),
@@ -626,9 +627,9 @@ export async function retireLessonAction(
   return { ok: true };
 }
 
-// « Remettre cette version » d'un fil ou d'une leçon : v(depuis+1), écrite par l'humain, rien n'est effacé (D33).
+// « Remettre cette version » d'un fil, d'une note (par writeNote, T57) ou d'une leçon : v(depuis+1), écrite par l'humain, rien n'est effacé (D33).
 export async function restoreMemoryVersionAction(input: {
-  cible: 'fil' | 'lecon';
+  cible: MemoryTarget['cible'];
   id: string;
   n: number;
   depuis: number;
@@ -646,7 +647,7 @@ export async function restoreMemoryVersionAction(input: {
 
 // Le texte d'une version de l'historique, si elle est lisible (D33). Lire n'exige pas de connexion récente.
 export async function readMemoryVersionAction(input: {
-  cible: 'fil' | 'lecon';
+  cible: MemoryTarget['cible'];
   id: string;
   n: number;
 }): Promise<

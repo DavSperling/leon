@@ -846,6 +846,32 @@ describe('les actions de la section Mémoire', () => {
     ]);
   });
 
+  it('remettre une version d’une note : la cible note, dépassée « modifiée entre-temps »', async () => {
+    vi.mocked(restoreMemoryVersion)
+      .mockResolvedValueOnce({ n: 3 })
+      .mockResolvedValueOnce('depassee');
+    const note = { cible: 'note' as const, id: FIL, n: 1, depuis: 2 };
+
+    await expect(restoreMemoryVersionAction(note)).resolves.toEqual({ ok: true, n: 3 });
+    await expect(restoreMemoryVersionAction(note)).resolves.toEqual({ error: 'modifiee' });
+
+    expect(vi.mocked(restoreMemoryVersion).mock.calls).toEqual([
+      [ctx, note],
+      [ctx, note],
+    ]);
+  });
+
+  it('avec une session de plus d’une heure, remettre une note donne « reconnexion », sans rien écrire', async () => {
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+
+    await expect(
+      restoreMemoryVersionAction({ cible: 'note', id: FIL, n: 1, depuis: 2 }),
+    ).resolves.toEqual({ error: 'reconnexion' });
+
+    expect(restoreMemoryVersion).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it('avec une session de plus d’une heure, écrire, corriger ou remettre donne « reconnexion », sans rien écrire', async () => {
     vi.mocked(signedInRecently).mockResolvedValue(false);
 
@@ -888,10 +914,11 @@ describe('les actions de la section Mémoire', () => {
       ok: true,
       version,
     });
-    await expect(readMemoryVersionAction({ cible: 'fil', id: FIL, n: 2 })).resolves.toEqual({
+    await expect(readMemoryVersionAction({ cible: 'note', id: FIL, n: 2 })).resolves.toEqual({
       error: 'introuvable',
     });
     expect(readMemoryVersion).toHaveBeenCalledWith(ctx, { cible: 'fil', id: FIL, n: 1 });
+    expect(readMemoryVersion).toHaveBeenCalledWith(ctx, { cible: 'note', id: FIL, n: 2 });
   });
 
   it.each([
@@ -903,7 +930,7 @@ describe('les actions de la section Mémoire', () => {
     ],
     [
       'remettre, une cible inconnue',
-      () => restoreMemoryVersionAction({ cible: 'note', id: FIL, n: 1, depuis: 2 } as never),
+      () => restoreMemoryVersionAction({ cible: 'session', id: FIL, n: 1, depuis: 2 } as never),
     ],
     [
       'remettre, un id qui n’est pas un uuid',

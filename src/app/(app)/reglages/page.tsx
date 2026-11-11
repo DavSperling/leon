@@ -41,6 +41,7 @@ import { logError } from '@/server/log';
 import { LESSON_MAX } from '@/server/memory/lessons';
 import {
   listMemoryLessons,
+  listMemoryNotes,
   listMemoryRepos,
   listMemoryThreads,
 } from '@/server/memory/memory-section';
@@ -88,8 +89,13 @@ export default async function SettingsPage({
     managersSeeAll(ctx),
     signedInRecently(),
     // Une lecture qui échoue donne une erreur dans l'onglet, pas une page cassée ni une liste vide.
-    Promise.all([listMemoryThreads(ctx), listMemoryLessons(ctx), listMemoryRepos(ctx)]).then(
-      ([threads, lessons, repos]) => ({ threads, lessons, repos }),
+    Promise.all([
+      listMemoryThreads(ctx),
+      listMemoryLessons(ctx),
+      listMemoryNotes(ctx),
+      listMemoryRepos(ctx),
+    ]).then(
+      ([threads, lessons, notes, repos]) => ({ threads, lessons, notes, repos }),
       (error) => {
         logError('settings.memory', error);
         return null;

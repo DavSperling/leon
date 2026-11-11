@@ -85,8 +85,9 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`resume\`) once for all these tools; when it opens the browser, the
-                       authorization page shows \`lecture\` as a box, yours to tick or untick.
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) once for all these tools; when it opens
+                       the browser, the authorization page shows \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to
+                       tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -171,7 +172,7 @@ Commands:
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
                        after confirmation (only the consent when the hooks are already there); in a terminal, then
-                       the usages (\`lecture\`, \`resume\`) that are neither accepted nor refused
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;

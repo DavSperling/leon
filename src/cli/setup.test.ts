@@ -672,11 +672,11 @@ describe('setup : les outils de code', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'y'] },
+      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', 'y'] },
     );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(4);
+    expect(run.questions).toHaveLength(5);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: ['resume'],
@@ -702,9 +702,9 @@ describe('setup : les outils de code', () => {
     await hasClaudeCode();
     const first = await setup(
       {},
-      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'n'] },
+      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', 'n'] },
     );
-    expect(first.questions).toHaveLength(4);
+    expect(first.questions).toHaveLength(5);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: [],
@@ -712,6 +712,7 @@ describe('setup : les outils de code', () => {
     });
     await addUsage(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
+    await addRefusal(home, 'claude_code', 'noter');
     const consent = await readFile(consentPath(home), 'utf8');
 
     const second = await setup({}, { interactive: true });
@@ -731,23 +732,27 @@ describe('setup : les outils de code', () => {
       await mkdir(join(home, tool), { recursive: true });
     }
   };
-  // Les usages cochés par défaut : `lecture` et `rappel`.
+  // Les usages cochés par défaut : `lecture`, `rappel` et `noter`.
   const checkedAsked = (run: Run) => run.questions.filter((question) => question.includes('[Y/n]'));
 
   it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
     await allTools();
 
-    // Claude Code, lecture, rappel, resume, puis Codex, Cursor (refusé) et Antigravity, rappel compris.
-    const run = await setup({}, { interactive: true, answers: ['y', '', '', 'n', 'y', 'n', 'y'] });
+    // Claude Code, lecture, rappel, noter, resume, puis Codex, Cursor (refusé) et Antigravity, rappel compris.
+    const run = await setup(
+      {},
+      { interactive: true, answers: ['y', '', '', '', 'n', 'y', 'n', 'y'] },
+    );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(7);
-    expect(checkedAsked(run)).toHaveLength(2);
+    expect(run.questions).toHaveLength(8);
+    expect(checkedAsked(run)).toHaveLength(3);
     expect(run.output.split('usage "lecture"')).toHaveLength(2);
     expect(run.output.split('usage "rappel"')).toHaveLength(2);
+    expect(run.output.split('usage "noter"')).toHaveLength(2);
     for (const tool of ['claude_code', 'codex', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({
-        usages: ['lecture', 'rappel'],
+        usages: ['lecture', 'rappel', 'noter'],
         refus: ['resume'],
       });
     }
@@ -761,14 +766,18 @@ describe('setup : les outils de code', () => {
     await setup({ yes: true });
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
+    await addRefusal(home, 'claude_code', 'noter');
     await addUsage(home, 'claude_code', 'resume');
     const claudeCode = await factsConsent(home, 'claude_code');
     await mkdir(join(home, '.cursor'));
 
-    const run = await setup({}, { interactive: true, answers: ['y', 'y', 'plus tard', 'n'] });
+    const run = await setup(
+      {},
+      { interactive: true, answers: ['y', 'y', 'plus tard', 'plus tard', 'n'] },
+    );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(4);
+    expect(run.questions).toHaveLength(5);
     expect(run.questions[1]).toContain('[Y/n]');
     expect(await factsConsent(home, 'claude_code')).toEqual(claudeCode);
     expect(await factsConsent(home, 'cursor')).toMatchObject({
@@ -782,10 +791,10 @@ describe('setup : les outils de code', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', null, null, null, 'y', 'y', 'y'] },
+      { interactive: true, answers: ['y', null, null, null, null, 'y', 'y', 'y'] },
     );
 
-    expect(run.questions).toHaveLength(7);
+    expect(run.questions).toHaveLength(8);
     for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
     }
@@ -1047,7 +1056,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
     const run = await setup({ yes: true }, { page: { usages: ['lecture'] } });
 
     expect(run.code).toBe(0);
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
     expect(run.questions).toEqual([]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
@@ -1076,6 +1085,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
     await writeConsent(home, 'claude_code', 2);
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
+    await addRefusal(home, 'claude_code', 'noter');
     await rm(join(home, '.leon', 'connexion.json'));
     const decided = await setup({ yes: true });
     expect(decided.asked).toEqual([{ usages: [], relance: false }]);
@@ -1095,7 +1105,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     expect(run.code).toBe(0);
     expect(run.logins).toEqual([CONNECTION.url]);
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: true }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: true }]);
     expect(run.output).toContain(RELAUNCH);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: ['lecture'] });
   });
@@ -1107,7 +1117,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const again = await setup({ yes: true });
 
-    expect(again.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: true }]);
+    expect(again.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: true }]);
     expect(again.attendus).toEqual([{ userId: PROFILE.userId, tenantId: PROFILE.tenantId }]);
     expect(again.requests[0]).toEqual({
       url: 'https://leon.example/api/v1/me',
@@ -1122,19 +1132,21 @@ describe('setup : les cases de la page « Autoriser »', () => {
     const run = await setup({ yes: true, url: 'https://leon.example/' });
 
     expect(run.logins).toEqual([CONNECTION.url]);
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: true }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: true }]);
   });
 
   it('un refus sur la page : pas de relance au setup --yes suivant', async () => {
     await connect();
     await hasClaudeCode();
-    await setup({ yes: true }, { page: { refus: ['lecture', 'rappel'] } });
+    await setup({ yes: true }, { page: { refus: ['lecture', 'rappel', 'noter'] } });
 
     const second = await setup({ yes: true });
 
     expect(second.logins).toEqual([]);
     expect(second.output).not.toContain(RELAUNCH);
-    expect(await factsConsent(home, 'claude_code')).toMatchObject({ refus: ['lecture', 'rappel'] });
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      refus: ['lecture', 'rappel', 'noter'],
+    });
   });
 
   it('une relance en échec garde la connexion : les crochets sont posés, sans usage, et la ligne le dit', async () => {
@@ -1191,7 +1203,10 @@ describe('setup : les cases de la page « Autoriser »', () => {
     await connect();
     await hasClaudeCode();
 
-    const run = await setup({}, { interactive: true, answers: ['y', '', 'plus tard', 'n'] });
+    const run = await setup(
+      {},
+      { interactive: true, answers: ['y', '', 'plus tard', 'plus tard', 'n'] },
+    );
 
     expect(run.logins).toEqual([]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1205,15 +1220,15 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup(
       {},
-      { interactive: true, page: { refus: ['lecture', 'rappel'] }, answers: ['y', 'n'] },
+      { interactive: true, page: { refus: ['lecture', 'rappel', 'noter'] }, answers: ['y', 'n'] },
     );
 
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
     expect(run.questions).toHaveLength(2);
     expect(run.questions.filter((question) => question.includes('[Y/n]'))).toEqual([]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       usages: [],
-      refus: ['lecture', 'rappel', 'resume'],
+      refus: ['lecture', 'rappel', 'resume', 'noter'],
     });
   });
 
@@ -1234,12 +1249,13 @@ describe('setup : les cases de la page « Autoriser »', () => {
     await setup({ yes: true });
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
+    await addRefusal(home, 'claude_code', 'noter');
     const claudeCode = await factsConsent(home, 'claude_code');
     await mkdir(join(home, '.cursor'));
 
     const run = await setup({ yes: true }, { page: { usages: ['lecture'] } });
 
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: true }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: true }]);
     expect(await factsConsent(home, 'claude_code')).toEqual(claudeCode);
     expect(await factsConsent(home, 'cursor')).toMatchObject({ usages: ['lecture'], refus: [] });
   });
@@ -1249,14 +1265,14 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup({}, { page: { usages: ['lecture'] }, answers: ['n'] });
 
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
     expect(await exists(consentPath(home))).toBe(false);
   });
 
   it('un usage que setup n’a pas demandé n’est jamais écrit, même rendu par la page', async () => {
     await hasClaudeCode();
 
-    await setup({ yes: true }, { page: { usages: ['lecture', 'resume'], refus: ['noter'] } });
+    await setup({ yes: true }, { page: { usages: ['lecture', 'resume'], refus: ['coulisses'] } });
 
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       usages: ['lecture'],
@@ -1272,7 +1288,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup({ yes: true }, { page: { usages: ['lecture', 'rappel'] } });
 
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       usages: ['lecture', 'rappel'],
     });
@@ -1286,12 +1302,34 @@ describe('setup : les cases de la page « Autoriser »', () => {
     ]);
   });
 
+  // T57 : la case `noter` se demande comme les autres ; cochée, elle s'écrit, sans crochet de plus. --yes ne la donne
+  // jamais de lui-même.
+  it('noter : coché sur la page, il est écrit ; --yes seul ne l’ajoute pas', async () => {
+    await hasClaudeCode();
+
+    const alone = await setup({ yes: true }, { interactive: true });
+
+    expect(alone.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
+    expect(alone.questions).toEqual([]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
+
+    const run = await setup({ yes: true }, { page: { usages: ['noter'] } });
+
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: true }]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['noter'],
+      refus: [],
+    });
+    const settings = JSON.parse(await readFile(join(claudeDir, 'settings.json'), 'utf8'));
+    expect(settings.hooks.UserPromptSubmit).toBeUndefined();
+  });
+
   it('Antigravity seul : la case rappel est demandée pour lui', async () => {
     await mkdir(join(home, '.gemini', 'antigravity'), { recursive: true });
 
     const run = await setup({ yes: true });
 
-    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel'], relance: false }]);
+    expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
   });
 });
 

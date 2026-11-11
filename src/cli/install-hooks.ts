@@ -45,7 +45,7 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
-// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture`, `rappel` puis `resume` (C7 révisé)
+// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture`, `rappel`, `noter` puis `resume` (C7 révisé)
 //   qui ne sont ni acceptés ni refusés, avec leur texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube
 //   peut venir d'un agent, qui ne donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à
 //   disposition). Un refus s'écrit daté (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait. Les installateurs
@@ -179,6 +179,20 @@ export const RAPPEL_LINES = [
   '  - Each time you send a message, the hook sends the first 2,000 characters of your message (secrets masked before sending, and again by the server) only to the Leon server this computer is connected to, with the project key, the current Git branch, the session id, the name of the tool and the usages this tool accepted. The server neither stores nor logs your message: it only looks for those of your work threads on this repository that it touches.',
   "  - When it touches one or two of your threads not yet cited in this session, the server sends back one line of keys (their id, branch, tools, dates, pull request numbers and states, number of linked sources), which the tool adds to the agent's context: the model provider of the tool sees it. Otherwise nothing is added. The hook waits 1.5 seconds at most: without an answer by then, your message goes on without it.",
   '  - To cite a thread only once per session, the server keeps the list of the threads already cited in each session (never the message) for 24 hours, then deletes it within the next hour.',
+];
+
+// Le texte de l'usage `noter` (C7 révisé, D30, D38, C14 ; T57 amendée le 11/11, décision 7 d'Amos pour le lot 13), testé
+// mot pour mot : un seul texte, sans nom d'outil, le même dans les quatre installateurs et sur la page « Autoriser ».
+// Ce qui part avec `leon note` (note-command.ts : le texte masqué puis coupé à 4 000 caractères, le projet, l'outil, la
+// session, les usages de cet outil seul), ce qui est gardé (notes.ts : une source privée, versionnée, que la recherche
+// trouve, jamais poussée), ce que la requête de démarrage envoie en plus (briefing.ts : usages, commande et outil) et la
+// phrase qu'elle place (render-context.ts, `--session` seulement sûre pour un shell), et ce que décocher coupe : la
+// phrase et `leon note` pour l'outil, et `remember` pour l'espace par le réglage du compte (C16, T65).
+export const NOTER_LINES = [
+  'Agent notes (usage "noter", asked separately):',
+  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note stays private to you, like your sessions, and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
+  '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all the assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
 ];
 
 export type Json = Record<string, unknown>;
@@ -576,7 +590,7 @@ const refusedLine = (tool: ConsentTool, leon: string): string =>
     : `This answer is kept: you will not be asked again. To change it, run \`~/.leon/bin/leon retirer-crochets --outil ${tool}\` (it also removes the hooks of this tool and withdraws its consent), then \`~/.leon/bin/leon setup\` again.`;
 
 // Les usages proposés à l'installation, dans cet ordre (C7 révisé, A16 ; décisions d'Amos du 11/11 pour le lot 13).
-// `lecture` et `rappel` sont cochés par défaut, en [Y/n] : Entrée, y, yes, o et oui les acceptent ; n, no et non les
+// `lecture`, `rappel` et `noter` sont cochés par défaut, en [Y/n] : Entrée, y, yes, o et oui les acceptent ; n, no et non les
 // refusent ; une autre réponse ou une entrée fermée ne tranchent rien (décision d'Amos du 11/11 : une faute de frappe ne
 // vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est pas, en [y/N] : seul un oui l'accepte, et seule une entrée
 // fermée ne tranche rien (D30).
@@ -592,7 +606,7 @@ type Offer = {
   recorded: string;
   without: string; // ce qui manque sans l'usage
 };
-const OFFERED = ['lecture', 'rappel', 'resume'] as const;
+const OFFERED = ['lecture', 'rappel', 'noter', 'resume'] as const;
 const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   lecture: {
     lines: LECTURE_LINES,
@@ -609,6 +623,14 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
     answer: checkedByDefault,
     recorded: 'Reminder recorded',
     without: 'Leon reminds the agent of no thread at each message',
+  },
+  noter: {
+    lines: NOTER_LINES,
+    question: (path) =>
+      `\nLet the agents of the code tools set up now keep private notes in Leon (recorded in ${path})? [Y/n] `,
+    answer: checkedByDefault,
+    recorded: 'Agent notes recorded',
+    without: 'the agent writes no note to Leon',
   },
   resume: {
     lines: RESUME_LINES,

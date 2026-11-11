@@ -426,6 +426,48 @@ describe('la page Documentation', () => {
     },
   );
 
+  // L'usage `noter` (T57 ; décisions d'Amos du 11/11 pour le lot 13) : coché par défaut comme `lecture`, pour les quatre
+  // outils, sans crochet de plus ; la page dit ce que `leon note` envoie, ce qui est gardé, ce que la requête de
+  // démarrage envoie en plus, et que le refuser coupe aussi `remember` pour l'espace (T65).
+  it.each(LOCALES)(
+    'dit ce que l’usage noter envoie et garde, et qu’il coupe aussi remember (%s)',
+    (locale, messages) => {
+      const { noter, lead, tools } = messages.site.documentation.sent;
+      const { authorize } = messages.site.documentation;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>noter</code>',
+        '<code>leon note</code>',
+        '<code>remember</code>',
+        '<code>[Y/n]</code>',
+        '<code>--yes</code>',
+        '<code>retirer-crochets</code>',
+        'Claude Code',
+        'Codex',
+        'Cursor',
+        'Antigravity',
+        words('4,000', '4 000'),
+      ])
+        expect(noter, term).toContain(term);
+      expect(noter).toContain(words('checked by default', 'coché par défaut'));
+      expect(noter).toContain(words('the name of the tool', 'le nom de l’outil'));
+      expect(noter).toContain(words('Memory section', 'section Mémoire'));
+      expect(lead).toContain(words('the agent’s notes', 'les notes de l’agent'));
+      expect(tools).toContain('<code>noter</code>');
+      expect(authorize.p1).toContain(words('the agent’s notes', 'les notes de l’agent'));
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        noter.replace(/<\/?code>/g, '`'),
+      );
+      expect(textOf(render(locale))).toContain(
+        words(
+          'The noter usage (the agent’s notes) is checked by default',
+          'L’usage noter (les notes de l’agent) est coché par défaut',
+        ),
+      );
+    },
+  );
+
   // T64 : les cases de la page « Autoriser » sont à l'humain ; l'agent qui installe n'y touche pas.
   it.each(LOCALES)(
     'dit que les cases de la page « Autoriser » sont à l’humain (%s)',

@@ -104,9 +104,19 @@ export function documentationMarkdown({
     sent: [
       md('sent.lead'),
       list(
-        (['where', 'end', 'tools', 'secrets', 'start', 'lecture', 'rappel', 'resume'] as const).map(
-          (k) => md(`sent.${k}`),
-        ),
+        (
+          [
+            'where',
+            'end',
+            'tools',
+            'secrets',
+            'start',
+            'lecture',
+            'rappel',
+            'noter',
+            'resume',
+          ] as const
+        ).map((k) => md(`sent.${k}`)),
       ),
       md('sent.server'),
     ],

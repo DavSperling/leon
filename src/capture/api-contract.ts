@@ -112,10 +112,10 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
 // Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
-// `rappel` (T49, avec son crochet) ; T57 y ajoutera `noter`. À part de USAGES : la page ne montre, et `leon setup` ne
-// demande, que ce qu'un installateur de ce lot sait écrire (`rappel` pour les quatre outils, depuis l'essai
-// d'Antigravity 2.0.6 du 11/11).
-export const AUTHORIZE_USAGES = ['lecture', 'rappel'] as const satisfies readonly Usage[];
+// `rappel` (T49, avec son crochet), puis `noter` (T57, sans crochet), dans l'ordre des questions du terminal. À part de
+// USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de ce lot sait écrire (les trois
+// pour les quatre outils, `rappel` depuis l'essai d'Antigravity 2.0.6 du 11/11).
+export const AUTHORIZE_USAGES = ['lecture', 'rappel', 'noter'] as const satisfies readonly Usage[];
 export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur

@@ -14,8 +14,8 @@
 // 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
 //    d'une installation d'avant (`pnpm … leon …`) sont remplacés sur place, l'accord déjà donné est gardé (S11) ;
 // 5. finit par une ligne par outil, le chemin du lanceur et, sous la forme installée, les mises à jour automatiques.
-// Dans un terminal, sans --yes, les usages (`lecture`, `resume`) se demandent une fois pour tous les outils du passage :
-// au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
+// Dans un terminal, sans --yes, les usages (`lecture`, `rappel`, `noter`, `resume`) se demandent une fois pour tous les
+// outils du passage : au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
 // l'écrivent chacun après son accord de base. Les cases tranchées sur la page passent par les mêmes décisions : elles ne
 // sont pas redemandées. --yes n'ajoute jamais un usage de lui-même : seules les cases de la page en donnent.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un

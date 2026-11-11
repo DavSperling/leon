@@ -10,7 +10,13 @@ import {
   installCodexHook,
   uninstallCodexHook,
 } from './install-codex';
-import { LECTURE_LINES, RAPPEL_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
+import {
+  LECTURE_LINES,
+  NOTER_LINES,
+  RAPPEL_LINES,
+  RESUME_LINES,
+  type UsageOptions,
+} from './install-hooks';
 import { writeLauncher } from './launcher';
 import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
@@ -279,16 +285,27 @@ describe('installCodexHook : les usages', () => {
   const rawEntry = async (tool = 'codex') =>
     JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils[tool];
 
-  it('dans un terminal, après l’accord : lecture puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
+  it('dans un terminal, après l’accord : lecture, rappel, noter puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
     await writeConsent(home, 'claude_code', 2);
 
-    const { code, out, asked } = await install(['oui', '', 'plus tard', 'oui'], false, terminal);
+    const { code, out, asked } = await install(
+      ['oui', '', 'plus tard', 'plus tard', 'oui'],
+      false,
+      terminal,
+    );
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(4);
+    expect(asked).toHaveLength(5);
     expect(asked[1]).toContain('[Y/n]');
     expect(asked[2]).toContain('[Y/n]');
-    expect(asked[3]).toContain('[y/N]');
+    expect(asked[3]).toContain('[Y/n]');
+    expect(asked[4]).toContain('[y/N]');
+    expect(out.indexOf(NOTER_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(RAPPEL_LINES.join('\n')),
+    );
+    expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(NOTER_LINES.join('\n')),
+    );
     expect(out.indexOf(LECTURE_LINES.join('\n'))).toBeGreaterThan(out.indexOf('Consent recorded'));
     expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
       out.indexOf(LECTURE_LINES.join('\n')),
@@ -301,7 +318,7 @@ describe('installCodexHook : les usages', () => {
     await install();
     const hooks = await readFile(hooksPath, 'utf8');
 
-    const { code, out } = await install(['non', 'non', 'non'], false, terminal);
+    const { code, out } = await install(['non', 'non', 'non', 'non'], false, terminal);
 
     expect(code).toBe(0);
     expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
@@ -311,7 +328,7 @@ describe('installCodexHook : les usages', () => {
     );
     expect(await factsConsent(home, 'codex')).toMatchObject({
       usages: [],
-      refus: ['lecture', 'rappel', 'resume'],
+      refus: ['lecture', 'rappel', 'resume', 'noter'],
     });
     expect(await readFile(hooksPath, 'utf8')).toBe(hooks);
 
@@ -361,8 +378,8 @@ describe('installCodexHook : les usages', () => {
 
     expect(await rawEntry()).toEqual({ version: 0, installe_le: expect.any(String) });
     expect((await readHooks()).hooks).toBeUndefined();
-    const again = await install(['oui', null, null, null], false, terminal);
-    expect(again.asked).toHaveLength(4);
+    const again = await install(['oui', null, null, null, null], false, terminal);
+    expect(again.asked).toHaveLength(5);
   });
 });
 

@@ -736,7 +736,10 @@ describe('connectionWithdrawal : le retrait se dit à chaque connexion que les c
   const RETIRE_LE = '2026-11-10T09:00:00.000Z';
   type Request = { url: string; authorization: string | null; body: unknown };
 
-  async function withdrawWith(env: Record<string, string>): Promise<Request[]> {
+  async function withdrawWith(
+    env: Record<string, string>,
+    status: (url: string) => number = () => 204,
+  ): Promise<Request[]> {
     await writeConnection(home, {
       url: 'http://127.0.0.1:4000',
       jeton: SAVED,
@@ -751,11 +754,43 @@ describe('connectionWithdrawal : le retrait se dit à chaque connexion que les c
         authorization: new Headers(init?.headers).get('Authorization'),
         body: JSON.parse(String(init?.body)),
       });
-      return new Response(null, { status: 204 });
+      return new Response(null, { status: status(String(url)) });
     }) as typeof fetch;
     await connectionWithdrawal(fetchImpl, env, home)('claude_code', RETIRE_LE);
     return requests;
   }
+
+  it('le serveur du terminal en échec : la connexion enregistrée l’apprend quand même, puis l’échec lève', async () => {
+    const requests: Request[] = [];
+    await expect(
+      withdrawWith({ LEON_URL: 'http://127.0.0.1:5000', LEON_TOKEN: TERMINAL }, (url) => {
+        requests.push({ url, authorization: null, body: null });
+        return url.startsWith('http://127.0.0.1:5000') ? 503 : 204;
+      }),
+    ).rejects.toThrow();
+
+    expect(requests.map((request) => request.url)).toEqual([
+      'http://127.0.0.1:5000/api/v1/retrait',
+      'http://127.0.0.1:4000/api/v1/retrait',
+    ]);
+  });
+
+  it('le jeton du terminal refusé : la connexion enregistrée l’apprend, et le refus reste un refus', async () => {
+    const tried: string[] = [];
+    const error = await withdrawWith(
+      { LEON_URL: 'http://127.0.0.1:5000', LEON_TOKEN: TERMINAL },
+      (url) => {
+        tried.push(url);
+        return url.startsWith('http://127.0.0.1:5000') ? 401 : 204;
+      },
+    ).catch((caught: unknown) => caught);
+
+    expect(tried).toEqual([
+      'http://127.0.0.1:5000/api/v1/retrait',
+      'http://127.0.0.1:4000/api/v1/retrait',
+    ]);
+    expect(error).toBeInstanceOf(TokenRefusedError);
+  });
 
   it('deux jetons : aux deux, à la même date', async () => {
     const requests = await withdrawWith({

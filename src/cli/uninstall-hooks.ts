@@ -107,9 +107,10 @@ const WITHDRAWAL_TIMEOUT_MS = 15_000;
 
 // La route du retrait au serveur de la connexion du moment, relue à chaque appel : sans connexion, l'appel échoue comme
 // un serveur injoignable. Les crochets lancés hors du terminal (Dock) lisent connexion.json, la commande lit d'abord
-// LEON_URL et LEON_TOKEN : la date du retrait se pose sur chaque jeton (T43), donc sur les deux quand ils diffèrent. Le
-// premier échec lève : rien n'est noté, et le retrait se redit en entier, sans risque (le serveur garde la plus grande
-// date).
+// LEON_URL et LEON_TOKEN : la date du retrait se pose sur chaque jeton (T43), donc sur les deux quand ils diffèrent.
+// Chacun est tenté, même après l'échec de l'autre (un LEON_TOKEN révoqué ne bloque pas la connexion enregistrée), puis
+// le premier échec lève : rien n'est noté, et le retrait se redit en entier, sans risque (le serveur garde la plus
+// grande date).
 export const connectionWithdrawal =
   (
     fetchImpl: typeof fetch,
@@ -123,11 +124,13 @@ export const connectionWithdrawal =
       saved && saved.jeton !== first.token
         ? [first, { url: saved.url, token: saved.jeton }]
         : [first];
+    const failures: unknown[] = [];
     for (const server of servers) {
       await createWithdrawalSender(fetchImpl, server, {
         signal: AbortSignal.timeout(WITHDRAWAL_TIMEOUT_MS),
-      })(outil, retireLe);
+      })(outil, retireLe).catch((error: unknown) => failures.push(error));
     }
+    if (failures.length > 0) throw failures[0];
   };
 
 // Messages fixes : ni l'adresse du serveur ni le jeton. Le premier quand un outil garde ses crochets (son démarrage

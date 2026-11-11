@@ -2,10 +2,17 @@ import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssistantsSection } from '@/components/verre/reglages/assistants';
 import { ComputersSection } from '@/components/verre/reglages/computers';
+import { MemorySection } from '@/components/verre/reglages/memoire';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { type ApiTokenRow, listApiTokens } from '@/server/auth/api-tokens';
+import { signedInRecently } from '@/server/auth/session';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
+import {
+  listMemoryLessons,
+  listMemoryRepos,
+  listMemoryThreads,
+} from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
 import SettingsPage from './page';
 
@@ -23,7 +30,15 @@ vi.mock('@/server/auth/session', () => ({
     principals: ['u1', 't1'],
   })),
   getSession: vi.fn(async () => ({ user: { name: 'Paul', email: 'paul@example.com' } })),
+  signedInRecently: vi.fn(async () => true),
 }));
+vi.mock('@/server/memory/lessons', () => ({ LESSON_MAX: 300 }));
+vi.mock('@/server/memory/memory-section', () => ({
+  listMemoryThreads: vi.fn(async () => []),
+  listMemoryLessons: vi.fn(async () => []),
+  listMemoryRepos: vi.fn(async () => []),
+}));
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({
   listMembers: vi.fn(async () => []),
   canInvite: vi.fn(async () => false),
@@ -101,6 +116,7 @@ async function integrations(tokens: ApiTokenRow[]) {
 }
 
 beforeEach(() => {
+  vi.mocked(signedInRecently).mockResolvedValue(true);
   vi.mocked(installCommand).mockReturnValue(COMMAND);
   vi.mocked(claudeCodeInstructions).mockReturnValue(INSTRUCTIONS);
 });
@@ -195,5 +211,37 @@ describe('page de Réglages : jetons, ordinateurs et assistants connectés', () 
     expect(shown.computers).toEqual([]);
     expect(shown.assistants).toEqual([]);
     expect(shown.tokens?.map((t) => t.name)).toEqual(['Ordinateur : x', 'Claude']);
+  });
+});
+
+// T55 : le cinquième onglet. La page lit la connexion récente et la mémoire de l'auteur, et les donne à la section.
+describe('page de Réglages : l’onglet Mémoire', () => {
+  const memoire = async () => {
+    const page = (await SettingsPage(PROPS)) as ReactElement;
+    const [tabs] = findAll(page, SettingsTabs);
+    const panels = tabs?.props.panels as Record<string, ReactNode>;
+    return findAll(panels.memoire, MemorySection)[0]?.props;
+  };
+
+  it('donne à la section ses leçons, ses fils, ses dépôts, le plafond de 300 et la connexion récente', async () => {
+    vi.mocked(listMemoryThreads).mockResolvedValue([]);
+    vi.mocked(listMemoryLessons).mockResolvedValue([]);
+    vi.mocked(listMemoryRepos).mockResolvedValue(['github.com/acme/app']);
+
+    const props = await memoire();
+
+    expect(props?.recent).toBe(true);
+    expect(props?.max).toBe(300);
+    expect(props?.data).toEqual({ threads: [], lessons: [], repos: ['github.com/acme/app'] });
+  });
+
+  it('passe recent à false quand la connexion a plus d’une heure', async () => {
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+    expect((await memoire())?.recent).toBe(false);
+  });
+
+  it('une lecture qui échoue donne data null, pas une page cassée', async () => {
+    vi.mocked(listMemoryLessons).mockRejectedValueOnce(new Error('base absente'));
+    expect((await memoire())?.data).toBeNull();
   });
 });

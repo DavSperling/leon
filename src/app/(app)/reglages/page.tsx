@@ -13,6 +13,7 @@ import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
 import { GroupsSection } from '@/components/verre/reglages/groups';
 import { ManagersSection } from '@/components/verre/reglages/managers';
 import { MembersSection } from '@/components/verre/reglages/members';
+import { MemorySection } from '@/components/verre/reglages/memoire';
 import { PreferencesSettings } from '@/components/verre/reglages/preferences';
 import { INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
 import {
@@ -30,12 +31,19 @@ import { deletionInfo } from '@/server/auth/delete-account';
 import { listGroups } from '@/server/auth/groupes';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
-import { getSession, requireUserContext } from '@/server/auth/session';
+import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
 import { env } from '@/server/env';
+import { logError } from '@/server/log';
+import { LESSON_MAX } from '@/server/memory/lessons';
+import {
+  listMemoryLessons,
+  listMemoryRepos,
+  listMemoryThreads,
+} from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -64,6 +72,8 @@ export default async function SettingsPage({
     sso,
     groups,
     seeAll,
+    recent,
+    memory,
   ] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
@@ -76,6 +86,15 @@ export default async function SettingsPage({
     readSsoSetup(ctx),
     listGroups(ctx),
     managersSeeAll(ctx),
+    signedInRecently(),
+    // Une lecture qui échoue donne une erreur dans l'onglet, pas une page cassée ni une liste vide.
+    Promise.all([listMemoryThreads(ctx), listMemoryLessons(ctx), listMemoryRepos(ctx)]).then(
+      ([threads, lessons, repos]) => ({ threads, lessons, repos }),
+      (error) => {
+        logError('settings.memory', error);
+        return null;
+      },
+    ),
   ]);
   const { annuaire, error } = await searchParams;
   const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
@@ -153,6 +172,7 @@ export default async function SettingsPage({
               )}
             </>
           ),
+          memoire: <MemorySection recent={recent} max={LESSON_MAX} data={memory} />,
           integrations: (
             <>
               <ComputersSection

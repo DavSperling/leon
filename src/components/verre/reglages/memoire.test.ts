@@ -1,0 +1,180 @@
+import { NextIntlClientProvider } from 'next-intl';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it, vi } from 'vitest';
+import type { MemoryLesson, MemoryThread } from '@/server/memory/memory-section';
+import en from '../../../../messages/en.json';
+import fr from '../../../../messages/fr.json';
+import { ALL_REPOS, MemorySection, outcomeOf, projectOf } from './memoire';
+
+// Les actions importent Better Auth : seul le dessin de la section se teste ici, et les décisions pures qu'elle prend.
+vi.mock('@/app/(app)/reglages/actions', () => ({
+  writeLessonAction: vi.fn(),
+  correctLessonAction: vi.fn(),
+  retireLessonAction: vi.fn(),
+  restoreMemoryVersionAction: vi.fn(),
+  readMemoryVersionAction: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+const DAY = new Date('2026-11-10T09:00:00Z');
+const version = (n: number, over: Partial<MemoryThread['versions'][number]> = {}) => ({
+  n,
+  creeLe: DAY,
+  ecritPar: 'modele' as const,
+  motif: 'rangement' as const,
+  ...over,
+});
+const THREAD: MemoryThread = {
+  id: '11111111-1111-4111-8111-111111111111',
+  titre: 'Refonte du rappel',
+  projet: 'github.com/acme/app',
+  absorbe: false,
+  versions: [version(1), version(2, { ecritPar: 'humain', motif: 'restauration' })],
+};
+const MERGED: MemoryThread = {
+  ...THREAD,
+  id: '22222222-2222-4222-8222-222222222222',
+  titre: 'Ancien fil',
+  absorbe: true,
+  versions: [],
+};
+const LESSON: MemoryLesson = {
+  id: '33333333-3333-4333-8333-333333333333',
+  projet: null,
+  texte: 'Lancer pnpm test:db avant de pousser.',
+  n: 2,
+  accepteeLe: DAY,
+  versions: [version(1, { ecritPar: 'humain', motif: 'acceptation' }), version(2)],
+};
+
+type Props = Parameters<typeof MemorySection>[0];
+const render = (props: Partial<Props> = {}, locale: 'en' | 'fr' = 'en') =>
+  renderToStaticMarkup(
+    createElement(NextIntlClientProvider, {
+      locale,
+      messages: locale === 'en' ? en : fr,
+      // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
+      children: createElement(MemorySection, {
+        recent: true,
+        max: 300,
+        data: { threads: [THREAD, MERGED], lessons: [LESSON], repos: ['github.com/acme/app'] },
+        ...props,
+      }),
+    }),
+  );
+const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+describe('outcomeOf : ce que la section fait d’une réponse des actions', () => {
+  it('un succès ne rend aucune erreur', () => {
+    expect(outcomeOf({ ok: true })).toEqual({ kind: 'ok' });
+  });
+
+  it('« reconnexion » demande la reconnexion, sans erreur ni rechargement', () => {
+    expect(outcomeOf({ error: 'reconnexion' })).toEqual({ kind: 'reconnect' });
+  });
+
+  it('« modifiée entre-temps » est une erreur claire, et la liste se recharge', () => {
+    expect(outcomeOf({ error: 'modifiee' })).toEqual({
+      kind: 'error',
+      message: 'errorModified',
+      reload: true,
+    });
+  });
+
+  it('introuvable recharge aussi ; invalide et le reste ne rechargent pas', () => {
+    expect(outcomeOf({ error: 'introuvable' })).toEqual({
+      kind: 'error',
+      message: 'errorNotFound',
+      reload: true,
+    });
+    expect(outcomeOf({ error: 'invalide' })).toEqual({
+      kind: 'error',
+      message: 'errorInvalid',
+      reload: false,
+    });
+    expect(outcomeOf({ error: 'autre' })).toEqual({
+      kind: 'error',
+      message: 'errorFailed',
+      reload: false,
+    });
+  });
+});
+
+describe('projectOf : le dépôt choisi pour une leçon', () => {
+  it('« tous mes dépôts » est null, un dépôt est lui-même', () => {
+    expect(projectOf(ALL_REPOS)).toBeNull();
+    expect(projectOf('github.com/acme/app')).toBe('github.com/acme/app');
+  });
+});
+
+describe('MemorySection', () => {
+  it('montre les leçons : texte, dépôt, date, et le compte des caractères du champ', () => {
+    const html = render();
+    expect(text(html)).toContain('Lancer pnpm test:db avant de pousser.');
+    expect(text(html)).toContain('All my repositories');
+    expect(text(html)).toContain('0 / 300');
+    expect(html).toContain('dateTime="2026-11-10T09:00:00.000Z"');
+  });
+
+  it('chaque champ a son libellé relié, et le choix du dépôt part de « tous mes dépôts »', () => {
+    const html = render();
+    expect(html).toMatch(/<label for="([^"]+)"[^>]*>New lesson<\/label>/);
+    expect(html).toMatch(/<label for="([^"]+)"[^>]*>Repository<\/label>/);
+    expect(html).toContain('maxLength="300"');
+  });
+
+  it('montre les fils, absorbés compris, avec leur historique à ouvrir', () => {
+    const html = render();
+    expect(text(html)).toContain('Refonte du rappel');
+    expect(text(html)).toContain('Ancien fil');
+    expect(text(html)).toContain('Merged into another thread');
+    expect(text(html)).toContain('acme/app');
+    expect(html).toContain('aria-expanded="false"');
+  });
+
+  it('sans connexion récente : « Reconnectez-vous » et le lien de retour, ni champ d’écriture, ni « Corriger »', () => {
+    const html = render({ recent: false });
+    expect(text(html)).toContain('Sign in again to write');
+    expect(html).toContain('href="/connexion?retour=memoire"');
+    expect(html).not.toContain('New lesson');
+    expect(text(html)).not.toContain('Edit');
+    // retirer reste possible (D37)
+    expect(text(html)).toContain('Remove');
+  });
+
+  it('avec une connexion récente, pas de message de reconnexion, « Corriger » et « Retirer » sont là', () => {
+    const html = render();
+    expect(html).not.toContain('retour=memoire');
+    expect(text(html)).toContain('Edit');
+    expect(text(html)).toContain('Remove');
+  });
+
+  it('relie « Corriger », « Retirer » et « Historique » au texte de leur leçon, ou au titre de leur fil', () => {
+    const html = render();
+    expect(html).toContain(`id="texte-${LESSON.id}"`);
+    expect(html.split(`aria-describedby="texte-${LESSON.id}"`).length - 1).toBe(3);
+    expect(html).toContain(`id="titre-${THREAD.id}"`);
+    expect(html).toContain(`aria-describedby="titre-${THREAD.id}"`);
+  });
+
+  it('sans leçon ni fil : deux états vides', () => {
+    const html = render({ data: { threads: [], lessons: [], repos: [] } });
+    expect(text(html)).toContain('No lesson yet.');
+    expect(text(html)).toContain('No work thread yet.');
+  });
+
+  it('une lecture en échec : une erreur annoncée, ni liste ni champ', () => {
+    const html = render({ data: null });
+    expect(html).toContain('role="alert"');
+    expect(text(html)).toContain('Couldn’t load your memory');
+    expect(html).not.toContain('<textarea');
+  });
+
+  it('se dessine en français avec les mêmes clés', () => {
+    const html = render({}, 'fr');
+    expect(text(html)).toContain('Leçons');
+    expect(text(html)).toContain('Fils de travail');
+    expect(text(html)).toContain('Tous mes dépôts');
+  });
+});

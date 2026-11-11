@@ -1,6 +1,6 @@
 'use client';
 
-import { Blocks, ShieldCheck, UserRound, Users } from 'lucide-react';
+import { Blocks, Brain, ShieldCheck, UserRound, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 import { Tabs } from 'radix-ui';
@@ -8,15 +8,22 @@ import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { ROW, ROW_ICON } from '@/components/verre/shell/sidebar';
 import { cn, spring, useMinWidth } from '@/lib/verre';
 
-const TABS = ['profil', 'securite', 'equipe', 'integrations'] as const;
+const TABS = ['profil', 'securite', 'equipe', 'integrations', 'memoire'] as const;
 type Tab = (typeof TABS)[number];
 const LABELS = {
   profil: 'tabProfile',
   securite: 'tabSecurity',
   equipe: 'tabTeam',
   integrations: 'tabIntegrations',
+  memoire: 'tabMemory',
 } as const;
-const ICONS = { profil: UserRound, securite: ShieldCheck, equipe: Users, integrations: Blocks };
+const ICONS = {
+  profil: UserRound,
+  securite: ShieldCheck,
+  equipe: Users,
+  integrations: Blocks,
+  memoire: Brain,
+};
 
 // Les ancres des sections (liens de Connexions, « un jeton créé ci-dessus ») ouvrent l'onglet qui les contient.
 const SECTIONS: Record<string, Tab> = {

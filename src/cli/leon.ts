@@ -93,7 +93,9 @@ Commands:
   briefing             Send the project key (plus the current Git branch and the session id, if ~/.leon/accord.json
                        allows it) and print the block that comes back: your recent sessions on this repository and
                        the project's morning briefing (for Claude Code's SessionStart hook: the hook JSON is read
-                       from standard input)
+                       from standard input). With the reading consent (\`lecture\`) of the tool, it also sends that
+                       consent and the Leon command of this computer, and your threads of this repository come back
+                       instead of your sessions, with how to read one
   capter-session       Send the session that is ending: the text of the exchanges, with its project, and the actions
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
@@ -218,6 +220,8 @@ async function runBriefingCommand(
   try {
     return await runBriefing({
       ...(outil ? { outil, evenement } : {}),
+      // Depuis un clone, la consigne du bloc cite pnpm dans ce clone quand le lanceur manque.
+      ...(CLI_VERSION === 'dev' ? { depot: CLI_REPO_DIR } : {}),
       stdin: process.stdin,
       env: process.env,
       cwd: process.cwd(),

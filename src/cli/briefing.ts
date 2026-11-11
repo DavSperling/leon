@@ -3,6 +3,10 @@
 // (`/contexte`). Un serveur plus ancien que cette route répond 404 : la commande retombe sur le point du matin seul
 // (`/briefing`), comme avant. Le bloc envoie la branche et la session, et donne mes sessions au modèle : il attend
 // l'accord local en version 2 (C7, consent.ts). Sans lui (crochets installés avant ce chantier), le point seul.
+// Avec l'usage `lecture` de l'outil du crochet (T46 du plan de la mémoire à disposition), le bloc envoie aussi les
+// usages de cet outil, jamais ceux d'un autre, et la commande Leon posée sur le poste (leonCommand) : le serveur rend
+// alors le sommaire des fils et la consigne de lecture. Un serveur plus ancien que ces champs répond 400 : le point du
+// matin seul, comme pour un 404.
 //
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
@@ -26,12 +30,14 @@
 // l'installateur des crochets (T14) doit poser. En pratique, Claude Code ferme l'entrée tout de suite et git répond
 // en quelques millisecondes : la commande dure le temps de la requête.
 import { randomUUID } from 'node:crypto';
+import { access } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
 import { z } from 'zod';
 import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   BriefingResponseSchema,
+  CommandeSchema,
   type ContextRequest,
   ContextRequestSchema,
   ContextResponseSchema,
@@ -39,7 +45,7 @@ import {
 import { isOtherToolHook, readHookStdin } from './capture-session';
 import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
-import type { Outil } from './hook-commands';
+import { launcherPath, type Outil } from './hook-commands';
 import { ADAPTATEURS } from './outils';
 import { type GitRunner, projectKeyFor } from './project-key';
 import { startOutput } from './start-output';
@@ -84,7 +90,8 @@ export async function fetchBriefingText(
 }
 
 // Le bloc de démarrage (C3), en POST pour que la branche n'aille pas dans les journaux d'URL. Un seul délai de 3 s
-// couvre la demande et, sur un 404 (serveur plus ancien que la route), le repli sur le point du matin seul.
+// couvre la demande et, sur un 404 (serveur plus ancien que la route) ou un 400 (plus ancien que `usages` et
+// `commande`), le repli sur le point du matin seul.
 export async function fetchStartText(
   fetchImpl: typeof fetch,
   env: ServerEnv,
@@ -98,7 +105,7 @@ export async function fetchStartText(
       body: JSON.stringify(request),
       signal,
     });
-    if (response.status === 404)
+    if (response.status === 404 || response.status === 400)
       return await fetchBriefingText(fetchImpl, env, request.projet, signal);
     if (!response.ok) return null;
     const parsed = ContextResponseSchema.safeParse(await response.json());
@@ -149,6 +156,22 @@ export function briefingDirectory(
   return cwd;
 }
 
+// La commande Leon posée sur le poste, que cite la consigne du bloc (C3 `commande`, D24) : le lanceur, écrit avec le
+// tilde (le chemin du dossier personnel porte le nom de la personne, et part au fournisseur du modèle) ; sans lui,
+// depuis un clone, pnpm dans ce clone ; sinon, ou quand elle sortirait de la borne de C3, `leon`.
+export async function leonCommand(home: string, depot: string | undefined): Promise<string> {
+  try {
+    await access(launcherPath(home));
+    return '~/.leon/bin/leon';
+  } catch {
+    // Pas de lanceur : la forme du clone, s'il y en a un.
+  }
+  if (depot === undefined) return 'leon';
+  const dir = depot.startsWith(`${home}/`) ? `~${depot.slice(home.length)}` : depot;
+  const command = `pnpm --dir ${dir} leon`;
+  return CommandeSchema.safeParse(command).success ? command : 'leon';
+}
+
 export type BriefingCommandDeps = {
   stdin: Parameters<typeof readHookStdin>[0];
   env: Record<string, string | undefined>;
@@ -168,6 +191,8 @@ export type BriefingCommandDeps = {
   // L'évènement de cet outil : le démarrage, ou le premier message (`prompt` : Cursor, Antigravity, une fois par
   // conversation). Absent : le démarrage.
   evenement?: 'demarrage' | 'prompt';
+  // Le dépôt de Leon quand la CLI tourne depuis un clone : sans lanceur, la consigne cite pnpm dans ce clone.
+  depot?: string;
 };
 
 // Le JSON de l'entrée, ou null s'il est vide ou illisible.
@@ -209,7 +234,10 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
         deps.err(CONSENT_WITHDRAWN_MESSAGE);
         return 0;
       }
-    } else if ((await factsConsent(deps.home, outil)) === null) {
+    }
+    // L'accord de l'outil du crochet, le seul dont les usages partent (T46).
+    const consent = await factsConsent(deps.home, outil ?? 'claude_code');
+    if (outil !== undefined && consent === null) {
       // Un autre outil n'a pas d'« avant ce chantier » : sans son accord (retiré, ou jamais donné), rien ne part.
       deps.err(`Leon: no consent recorded for ${ADAPTATEURS[outil].label}: nothing is sent.`);
       return 0;
@@ -221,7 +249,7 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     const server = await resolveServerEnv(deps.env, deps.home);
     const directory = entree?.dossier ?? briefingDirectory(stdin, deps.env, deps.cwd);
     let text: string | null;
-    if (outil === undefined && (await factsConsent(deps.home, 'claude_code')) === null) {
+    if (consent === null) {
       // Sans l'accord du bloc : ni branche ni session ne partent, le point du matin seul, comme avant.
       text = await fetchBriefingText(deps.fetch, server, await projectKeyFor(directory, deps.git));
     } else {
@@ -234,6 +262,10 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
         projet,
         branche,
         session: conversation ?? startingSession(stdin),
+        // Seulement avec `lecture` : le texte de l'accord de base ne dit que le projet, la branche et la session.
+        ...(consent.usages.includes('lecture')
+          ? { usages: consent.usages, commande: await leonCommand(deps.home, deps.depot) }
+          : {}),
       });
     }
     if (text === null) {

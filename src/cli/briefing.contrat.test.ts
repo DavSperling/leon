@@ -12,7 +12,7 @@ import { execFile, spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -20,9 +20,10 @@ import {
   API_PATHS,
   BRIEFING_PROJECT_PARAM,
   type BriefingResponse,
+  CommandeSchema,
   type ContextResponse,
 } from '../capture/api-contract';
-import { consentPath, writeConsent } from './consent';
+import { addUsage, consentPath, writeConsent } from './consent';
 
 const run = promisify(execFile);
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -184,6 +185,27 @@ describe('leon briefing : la vraie commande', () => {
         projet: 'github.com/acme/leon',
         branche: BRANCH,
         session: SESSION,
+      });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // T46 : depuis ce clone, sans lanceur dans le HOME du test, la consigne citera pnpm dans le dépôt qui lance la commande.
+  it(
+    "avec l'usage `lecture`, envoie aussi les usages de Claude Code et la commande de ce clone",
+    async () => {
+      await addUsage(home, 'claude_code', 'lecture');
+      const clone = `pnpm --dir ${resolve(REPO_ROOT)} leon`;
+
+      const outcome = await runCommand(hookJson(repo));
+
+      expect(outcome).toMatchObject({ code: 0, stdout: `${BLOCK}\n`, stderr: '' });
+      expect(JSON.parse(received[0]?.body ?? '')).toEqual({
+        projet: 'github.com/acme/leon',
+        branche: BRANCH,
+        session: SESSION,
+        usages: ['lecture'],
+        commande: CommandeSchema.safeParse(clone).success ? clone : 'leon',
       });
     },
     TEST_TIMEOUT_MS,

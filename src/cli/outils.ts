@@ -93,6 +93,9 @@ export type Adaptateur = {
   // Les dossiers où l'outil écrit ses sessions : seul un fichier qui y est se lit.
   racines: (home: string, env: Env) => string[];
   entree: (input: unknown, home: string, env: Env) => EntreeCrochet;
+  // Le message de la personne que porte l'entrée du crochet de message (`prompt`), pour le rappel (T49) ; null : l'outil
+  // ne le donne pas à son crochet (Antigravity : PreInvocation ne le reçoit pas, annexe 05), jamais de rappel.
+  message: (input: unknown) => string | null;
   lire: (contenu: string, fichier: FichierSession) => SessionOutil | null;
   // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts).
   faits: (
@@ -182,6 +185,7 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       }),
     vide: () => null,
     uneFois: false,
+    message: (input) => text(field(input, 'prompt')),
     racines: (home, env) => [join(codexHome(home, env), 'sessions')],
     entree: (input, home, env) => ({
       session: text(field(input, 'session_id')),
@@ -208,6 +212,7 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       ),
     vide: (evenement) => (evenement === 'prompt' ? '{"continue":true}' : '{}'),
     uneFois: true,
+    message: (input) => text(field(input, 'prompt')),
     racines: (home) => [join(cursorHome(home), 'projects')],
     entree: (input, home, env) => {
       const conversation =
@@ -259,6 +264,7 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
     injection: (texte) => JSON.stringify({ injectSteps: [{ ephemeralMessage: texte }] }),
     vide: () => '{}',
     uneFois: true,
+    message: () => null,
     racines: (home) => antigravityBrains(home),
     entree: (input, home, env) => {
       const transcript = absolute(field(input, 'transcriptPath'));

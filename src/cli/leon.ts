@@ -47,6 +47,7 @@ import {
 import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
 import { runReadCommand } from './read-commands';
+import { runReminder } from './reminder';
 import {
   NODE_DIST,
   nodePlatform,
@@ -107,11 +108,18 @@ Commands:
                        of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
                        JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
+  reminder             Print a one-line reminder of your threads that touch the message you are sending, or nothing
+                       (for Claude Code's UserPromptSubmit hook: the hook JSON is read from standard input). Only with
+                       the \`rappel\` consent of Claude Code in ~/.leon/accord.json: then the first 2,000 characters of
+                       the message, with secrets masked, and the project, the branch, the session and the consents of
+                       the tool, go to your Leon server, which neither stores nor logs the message. A slow, missing or
+                       older server prints nothing, within 2 seconds
   crochet <tool> <event>
                        The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
                        input), for codex, cursor or antigravity: \`demarrage\` (start of a session) and \`prompt\` (first
                        message of a conversation, once: Cursor, Antigravity) print the same block as briefing, in the
-                       format of the tool;
+                       format of the tool; \`prompt\` also prints the reminder of \`leon reminder\` at each message
+                       of Cursor and Codex, if their \`rappel\` consent is recorded (for Codex it prints only that);
                        \`tour\` (after each turn) and \`fin\` (end of a session) send the new exchanges of the session,
                        and its actions, if ~/.leon/accord.json allows the capture of this tool, and print only what the
                        tool expects (Cursor, Antigravity: \`{}\`). Any other tool or event prints nothing
@@ -260,6 +268,28 @@ async function runBriefingCommand(
     });
   } catch {
     console.error('Leon: briefing unavailable (unexpected error).');
+    return 0;
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
+// Le crochet UserPromptSubmit de Claude Code : sa sortie standard va au contexte du modèle, seule la ligne de rappel
+// y passe, et le code de sortie vaut toujours 0 (reminder.ts).
+async function runReminderCommand(): Promise<number> {
+  try {
+    return await runReminder({
+      stdin: process.stdin,
+      env: process.env,
+      cwd: process.cwd(),
+      home: homedir(),
+      git: gitInDirectory,
+      fetch,
+      out: console.log,
+      err: console.error,
+    });
+  } catch {
+    console.error('Leon: reminder unavailable (unexpected error).');
     return 0;
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
@@ -616,6 +646,7 @@ async function main(argv: string[]): Promise<number> {
   try {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
+    if (command === 'reminder') return await runReminderCommand();
     if (command === 'capter-session') return await runCaptureSession(args);
     // Les crochets des autres outils (C6) : le démarrage et le premier message (le bloc), le tour et la fin (la capture).
     // Un outil ou un évènement inconnu ne fait rien et sort avec 0, pour qu'un crochet d'une version plus récente ne

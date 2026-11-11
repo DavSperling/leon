@@ -156,7 +156,7 @@ describe('la ligne pnpm des crochets', () => {
 
 describe('la CLI de Leon', () => {
   it(
-    'connaît les deux sous-commandes lancées par les crochets',
+    'connaît les sous-commandes lancées par les crochets',
     async () => {
       const { stdout } = await run(
         process.execPath,
@@ -169,6 +169,7 @@ describe('la CLI de Leon', () => {
 
       expect(stdout).toMatch(/^ {2}briefing /m);
       expect(stdout).toMatch(/^ {2}capter-session /m);
+      expect(stdout).toMatch(/^ {2}reminder /m);
     },
     TEST_TIMEOUT_MS,
   );

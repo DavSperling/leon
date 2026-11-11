@@ -896,6 +896,329 @@ describe('runBriefing', () => {
     });
   });
 
+  // T49 : le rappel à chaque message de Cursor et de Codex, par `leon crochet <outil> prompt`, avec l'usage `rappel`.
+  describe('le rappel à chaque message (Cursor, Codex, Antigravity)', () => {
+    const REMINDER = '<rappel-leon>Le fil amos/etude (id 3f2a) touche à ce message.</rappel-leon>';
+    // Le serveur : le bloc sur `/contexte`, la ligne de rappel (ou ce que `reminder` fait de la requête) sur `/rappel`.
+    const server = (reminder: (url: URL, init: RequestInit) => Response | Promise<Response>) =>
+      vi.fn(async (url: URL, init: RequestInit) =>
+        url.pathname === API_PATHS.rappel
+          ? reminder(url, init)
+          : url.pathname === API_PATHS.contexte
+            ? Response.json({ texte: BLOCK })
+            : new Response('{}', { status: 404 }),
+      );
+    const answers = () => server(() => Response.json({ texte: REMINDER }));
+    const neverAnswers = (_url: URL, init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      });
+    // Les requêtes de rappel, dans l'ordre : leur corps.
+    const reminders = (fetchImpl: ReturnType<typeof vi.fn>) =>
+      (fetchImpl.mock.calls as unknown as [URL, RequestInit][])
+        .filter(([url]) => url.pathname === API_PATHS.rappel)
+        .map(([, init]) => JSON.parse(String(init.body)) as Record<string, unknown>);
+    const blockRequests = (fetchImpl: ReturnType<typeof vi.fn>) =>
+      (fetchImpl.mock.calls as unknown as [URL][]).filter(
+        ([url]) => url.pathname === API_PATHS.contexte,
+      );
+
+    describe('Cursor', () => {
+      const promptJson = (conversation: string, prompt = 'où en est la branche etude ?') =>
+        Readable.from([
+          JSON.stringify({
+            conversation_id: conversation,
+            hook_event_name: 'beforeSubmitPrompt',
+            prompt,
+            workspace_roots: ['/projets/leon'],
+            cursor_version: '3.29.9',
+          }),
+        ]);
+      const remotes = { '/projets/leon': 'git@github.com:Acme/Leon.git' };
+      let withRappel: string;
+      let withoutRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'cursor-rappel-'));
+        await writeConsent(withRappel, 'cursor', 2);
+        await addUsage(withRappel, 'cursor', 'rappel');
+        withoutRappel = await mkdtemp(join(homes, 'cursor-sans-'));
+        await writeConsent(withoutRappel, 'cursor', 2);
+        await addUsage(withoutRappel, 'cursor', 'lecture');
+      });
+      const cursor = (input: {
+        conversation: string;
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        prompt?: string;
+      }) =>
+        setup({
+          stdin: promptJson(input.conversation, input.prompt),
+          home: input.home,
+          outil: 'cursor',
+          evenement: 'prompt',
+          remotes,
+          fetch: input.fetch,
+        });
+
+      it('un message suivant, avec rappel : la ligne dans additional_context, le message de l’entrée envoyé', async () => {
+        const fetchImpl = answers();
+        await cursor({ conversation: 'c-1', home: withRappel, fetch: fetchImpl }).run();
+
+        const next = cursor({ conversation: 'c-1', home: withRappel, fetch: fetchImpl });
+        expect(await next.run()).toBe(0);
+
+        expect(next.out.map((line) => JSON.parse(line))).toEqual([
+          { continue: true, additional_context: REMINDER },
+        ]);
+        expect(blockRequests(fetchImpl)).toHaveLength(1); // le bloc n'est venu qu'une fois
+        expect(reminders(fetchImpl).at(-1)).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'c-1',
+          message: 'où en est la branche etude ?',
+          outil: 'cursor',
+          usages: ['rappel'],
+        });
+      });
+
+      it('le premier message : le bloc et le rappel demandés ensemble, rendus en une seule sortie', async () => {
+        const fetchImpl = answers();
+        const first = cursor({ conversation: 'c-2', home: withRappel, fetch: fetchImpl });
+
+        expect(await first.run()).toBe(0);
+
+        expect(first.out).toHaveLength(1);
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: `${BLOCK}\n${REMINDER}`,
+        });
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toHaveLength(1);
+        // Le bloc est parti avant le rappel, et le témoin est écrit : le message suivant ne le redemande pas.
+        const second = cursor({ conversation: 'c-2', home: withRappel, fetch: fetchImpl });
+        await second.run();
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+      });
+
+      it('sans l’usage rappel : rien ne change, aucune requête après le premier message', async () => {
+        const fetchImpl = answers();
+        const first = cursor({ conversation: 'c-3', home: withoutRappel, fetch: fetchImpl });
+        await first.run();
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: BLOCK,
+        });
+
+        const calls = fetchImpl.mock.calls.length;
+        const next = cursor({ conversation: 'c-3', home: withoutRappel, fetch: fetchImpl });
+        await next.run();
+
+        expect(next.out).toEqual(['{"continue":true}']);
+        expect(fetchImpl.mock.calls).toHaveLength(calls);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('un serveur de rappel lent, ou ancien : le message passe, le bloc du premier message arrive quand même', async () => {
+        const slow = server(neverAnswers);
+        const first = cursor({ conversation: 'c-4', home: withRappel, fetch: slow });
+        const started = Date.now();
+        await first.run();
+        expect(Date.now() - started).toBeLessThan(3000);
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: BLOCK,
+        });
+
+        const next = cursor({ conversation: 'c-4', home: withRappel, fetch: slow });
+        const nextStarted = Date.now();
+        expect(await next.run()).toBe(0);
+        expect(Date.now() - nextStarted).toBeLessThan(2000);
+        expect(next.out).toEqual(['{"continue":true}']);
+
+        const old = server(() => new Response('{}', { status: 404 }));
+        const oldNext = cursor({ conversation: 'c-4', home: withRappel, fetch: old });
+        await oldNext.run();
+        expect(oldNext.out).toEqual(['{"continue":true}']);
+      });
+
+      it('le bloc en panne mais le rappel qui répond : la ligne passe, et le bloc sera redemandé', async () => {
+        const fetchImpl = vi.fn(async (url: URL) =>
+          url.pathname === API_PATHS.rappel
+            ? Response.json({ texte: REMINDER })
+            : new Response('{}', { status: 500 }),
+        );
+        const first = cursor({ conversation: 'c-5', home: withRappel, fetch: fetchImpl });
+
+        await first.run();
+
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: REMINDER,
+        });
+        const retry = cursor({ conversation: 'c-5', home: withRappel, fetch: answers() });
+        await retry.run();
+        expect(JSON.parse(retry.out[0] ?? '{}')).toHaveProperty(
+          'additional_context',
+          `${BLOCK}\n${REMINDER}`,
+        );
+      });
+
+      it('rien dans la ligne du serveur ni message : {"continue":true}, et un message vide ne part pas', async () => {
+        const fetchImpl = server(() => Response.json({ texte: '' }));
+        await cursor({ conversation: 'c-6', home: withRappel, fetch: fetchImpl }).run();
+
+        const empty = cursor({ conversation: 'c-6', home: withRappel, fetch: fetchImpl });
+        await empty.run();
+        expect(empty.out).toEqual(['{"continue":true}']);
+
+        const before = reminders(fetchImpl).length;
+        const noMessage = cursor({
+          conversation: 'c-6',
+          home: withRappel,
+          fetch: fetchImpl,
+          prompt: '',
+        });
+        await noMessage.run();
+        expect(noMessage.out).toEqual(['{"continue":true}']);
+        expect(reminders(fetchImpl)).toHaveLength(before);
+      });
+    });
+
+    describe('Codex', () => {
+      const promptJson = (prompt = 'où en est la branche etude ?') =>
+        Readable.from([
+          JSON.stringify({
+            session_id: 'codex-1',
+            hook_event_name: 'UserPromptSubmit',
+            cwd: '/projets/leon',
+            prompt,
+          }),
+        ]);
+      let withRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'codex-rappel-'));
+        await writeConsent(withRappel, 'codex', 2);
+        await addUsage(withRappel, 'codex', 'rappel');
+      });
+      const codexPrompt = (input: {
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        prompt?: string;
+        scheduleUpdate?: () => Promise<unknown>;
+        scheduleCatchUp?: () => Promise<unknown>;
+      }) =>
+        setup({
+          stdin: promptJson(input.prompt),
+          home: input.home,
+          outil: 'codex',
+          evenement: 'prompt',
+          remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+          fetch: input.fetch,
+          ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
+          ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
+        });
+
+      it('avec rappel : la ligne dans la forme de Codex, à chaque message, sans bloc ni rattrapage', async () => {
+        const fetchImpl = answers();
+        const scheduleUpdate = vi.fn(async () => undefined);
+        const scheduleCatchUp = vi.fn(async () => undefined);
+
+        const harness = codexPrompt({
+          home: withRappel,
+          fetch: fetchImpl,
+          scheduleUpdate,
+          scheduleCatchUp,
+        });
+        expect(await harness.run()).toBe(0);
+        await codexPrompt({ home: withRappel, fetch: fetchImpl }).run();
+
+        expect(harness.out.map((line) => JSON.parse(line))).toEqual([
+          {
+            hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: REMINDER },
+          },
+        ]);
+        expect(blockRequests(fetchImpl)).toEqual([]);
+        expect(reminders(fetchImpl)).toHaveLength(2);
+        expect(reminders(fetchImpl)[0]).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'codex-1',
+          message: 'où en est la branche etude ?',
+          outil: 'codex',
+          usages: ['rappel'],
+        });
+        expect(scheduleUpdate).not.toHaveBeenCalled();
+        expect(scheduleCatchUp).not.toHaveBeenCalled();
+      });
+
+      it('sans l’usage rappel, ou sans accord : rien sur la sortie, aucune requête', async () => {
+        for (const home of [codex, notAgreed]) {
+          const fetchImpl = answers();
+          const harness = codexPrompt({ home, fetch: fetchImpl });
+
+          expect(await harness.run()).toBe(0);
+
+          expect(harness.out).toEqual([]);
+          expect(harness.err).toEqual([]);
+          expect(fetchImpl).not.toHaveBeenCalled();
+        }
+      });
+
+      it.each([
+        ['un serveur lent', server(neverAnswers)],
+        ['un serveur ancien (404)', server(() => new Response('{}', { status: 404 }))],
+        ['un serveur ancien (400)', server(() => new Response('{}', { status: 400 }))],
+        ['un texte vide', server(() => Response.json({ texte: '' }))],
+      ])('%s : rien sur la sortie standard, code 0', async (_name, fetchImpl) => {
+        const harness = codexPrompt({ home: withRappel, fetch: fetchImpl });
+        const started = Date.now();
+
+        expect(await harness.run()).toBe(0);
+
+        expect(Date.now() - started).toBeLessThan(2000);
+        expect(harness.out).toEqual([]);
+      });
+
+      it('un message vide ne part pas', async () => {
+        const fetchImpl = answers();
+        const harness = codexPrompt({ home: withRappel, fetch: fetchImpl, prompt: '' });
+        await harness.run();
+        expect(harness.out).toEqual([]);
+        expect(fetchImpl).not.toHaveBeenCalled();
+      });
+    });
+
+    it('Antigravity : jamais de rappel, même avec `rappel` écrit à la main dans l’accord', async () => {
+      const agyHome = await mkdtemp(join(homes, 'agy-rappel-'));
+      await writeConsent(agyHome, 'antigravity', 2);
+      await addUsage(agyHome, 'antigravity', 'rappel');
+      const agyJson = () =>
+        Readable.from([
+          JSON.stringify({
+            conversationId: 'agy-2',
+            invocationNum: 0,
+            prompt: 'où en est la branche etude ?',
+            transcriptPath:
+              '/Users/demo/.gemini/antigravity/brain/agy-2/.system_generated/logs/transcript.jsonl',
+            workspacePaths: ['/projets/leon'],
+          }),
+        ]);
+      const fetchImpl = answers();
+
+      for (let call = 0; call < 2; call++) {
+        const harness = setup({
+          stdin: agyJson(),
+          home: agyHome,
+          outil: 'antigravity',
+          evenement: 'prompt',
+          fetch: fetchImpl,
+        });
+        await harness.run();
+        expect(harness.out.join('')).not.toContain('rappel-leon');
+      }
+
+      expect(reminders(fetchImpl)).toEqual([]);
+    });
+  });
+
   // Le rattrapage (T19, catch-up.ts) : lancé détaché au démarrage de tout outil, une fois la sortie écrite, avant la mise
   // à jour automatique ; son échec ne change rien au crochet.
   describe('rattrapage', () => {

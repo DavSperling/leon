@@ -245,10 +245,12 @@ describe('la page Documentation', () => {
     const { tools } = messages.site.documentation.sent;
     const { claude } = messages.site.documentation.requirements;
 
-    for (const tool of ['Codex', 'Cursor', 'Gemini / Antigravity']) {
+    for (const tool of ['Codex', 'Cursor', 'Antigravity']) {
       expect(tools).toContain(tool);
       expect(claude).toContain(tool);
     }
+    // #162 : ~/.gemini seul est Gemini CLI, que `leon setup` ne branche pas.
+    expect(`${tools} ${claude}`).not.toContain('Gemini / Antigravity');
     expect(tools).toContain('<code>!</code>');
     expect(tools).toContain(
       locale === 'en'

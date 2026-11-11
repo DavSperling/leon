@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { consentWithdrawn, factsConsent, pendingServerWithdrawals, writeConsent } from './consent';
-import { launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
+import { CATCH_UP_WHEN, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import {
   CODEX_CONSENT_LINES,
   CODEX_HOOKS_FILE,
@@ -143,6 +143,7 @@ describe('installCodexHook', () => {
     expect(text).toContain('the new exchanges of the session');
     expect(text).toContain('never their other arguments');
     expect(text).toContain('only Codex sessions changed after you accept');
+    expect(text).toContain(CATCH_UP_WHEN);
     expect(text).not.toContain('Nothing is captured');
     expect(asked).toHaveLength(1);
   });

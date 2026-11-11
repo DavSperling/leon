@@ -6,6 +6,7 @@ import { API_PATHS, type AuthorizeUsage, type Usage } from '../capture/api-contr
 import { type Connection, readConnection, writeConnection } from './connection';
 import { addRefusal, addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
+import { uninstallAntigravityHooks } from './install-antigravity';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, previousLauncherScripts, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
@@ -715,8 +716,8 @@ describe('setup : les outils de code', () => {
   });
 
   // Décision d'Amos du 11/11 : une question par usage pour tous les outils trouvés, au premier qui en manque ; la
-  // réponse s'écrit pour chacun, après son accord de base. Antigravity se trouve par ~/.gemini comme par son dossier
-  // propre (#162).
+  // réponse s'écrit pour chacun, après son accord de base. Antigravity se trouve par son dossier propre sous ~/.gemini
+  // (#162).
   const allTools = async () => {
     await hasClaudeCode();
     for (const tool of ['.codex', '.cursor', join('.gemini', 'antigravity')]) {
@@ -872,9 +873,9 @@ describe('setup : les outils de code', () => {
     expect((await factsConsent(home, 'cursor'))?.capture_le).toBeInstanceOf(Date);
   });
 
-  it('Antigravity présent : son entrée `leon` est posée et son accord de capture écrit', async () => {
+  it('Antigravity présent (ici l’IDE) : son entrée `leon` est posée et son accord de capture écrit', async () => {
     await hasClaudeCode();
-    await mkdir(join(home, '.gemini'));
+    await mkdir(join(home, '.gemini', 'antigravity-ide'), { recursive: true });
 
     const run = await setup({ yes: true });
 
@@ -883,8 +884,54 @@ describe('setup : les outils de code', () => {
       await readFile(join(home, '.gemini', 'config', 'hooks.json'), 'utf8'),
     );
     expect(leon.Stop[0].command).toBe(launcherCommand(home, 'antigravity', 'tour'));
-    expect(run.output).toContain('Gemini / Antigravity: hooks installed');
+    expect(run.output).toContain(
+      `Antigravity found in ${join(home, '.gemini', 'antigravity-ide')}.`,
+    );
+    expect(run.output).toContain('Antigravity: hooks installed');
     expect((await factsConsent(home, 'antigravity'))?.capture_le).toBeInstanceOf(Date);
+  });
+
+  // ~/.gemini est aussi le dossier de Gemini CLI : sans dossier propre à Antigravity, rien n'est posé, même avec --yes.
+  it('Gemini CLI seul : Antigravity n’est pas trouvé, ni crochet ni accord', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.gemini'));
+    await writeFile(join(home, '.gemini', 'settings.json'), '{}');
+
+    const run = await setup({ yes: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('Antigravity: not found');
+    expect(run.output).not.toContain('retirer-crochets --outil antigravity');
+    expect(await readdir(join(home, '.gemini'))).toEqual(['settings.json']);
+    expect(await factsConsent(home, 'antigravity')).toBeNull();
+  });
+
+  // Avant #162, le seul ~/.gemini de Gemini CLI faisait poser Antigravity : le setup suivant dit ce qui reste, et la
+  // commande qu'il donne le retire bien.
+  it('Gemini CLI seul après une installation d’Antigravity : la ligne dit ce qui reste et comment le retirer', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.gemini', 'antigravity'), { recursive: true });
+    expect((await setup({ yes: true })).output).toContain('Antigravity: hooks installed');
+    await rm(join(home, '.gemini', 'antigravity'), { recursive: true });
+
+    const leftover = await setup({ yes: true });
+
+    expect(leftover.code).toBe(0);
+    expect(leftover.output).toContain(
+      'To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity',
+    );
+    expect(leftover.output).toContain(
+      'Antigravity: not found (hooks or capture consent of an earlier setup left in place, see above)',
+    );
+
+    const withdrawn = await uninstallAntigravityHooks(
+      { home },
+      { out: () => {}, err: () => {}, withdraw: async () => {} },
+    );
+    expect(withdrawn).toBe(0);
+    const after = await setup({ yes: true });
+    expect(after.output).toContain('Antigravity: not found');
+    expect(after.output).not.toContain('retirer-crochets --outil antigravity');
   });
 
   it('Codex présent : son crochet de démarrage est posé et son accord écrit', async () => {
@@ -928,7 +975,7 @@ describe('setup : les outils de code', () => {
       '  Claude Code: hooks installed',
       '  Codex: hooks installed (approve them with /hooks in Codex)',
       '  Cursor: not found',
-      '  Gemini / Antigravity: not found',
+      '  Antigravity: not found',
       '',
       'To run Leon later: ~/.leon/bin/leon <command>',
       UPDATES,

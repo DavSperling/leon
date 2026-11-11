@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { consentWithdrawn, factsConsent, writeConsent } from './consent';
-import { launcherCommand } from './hook-commands';
+import { CATCH_UP_WHEN, launcherCommand } from './hook-commands';
 import {
   ANTIGRAVITY_CONSENT_LINES,
   antigravityHooksPath,
@@ -93,6 +93,7 @@ describe('installAntigravityHooks', () => {
     expect(text).toContain('labeled as written by Antigravity, not by you');
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
+    expect(text).toContain(CATCH_UP_WHEN);
     expect(asked).toHaveLength(1);
     await expect(readFile(hooksPath)).rejects.toThrow();
     expect(await factsConsent(home, 'antigravity')).toBeNull();

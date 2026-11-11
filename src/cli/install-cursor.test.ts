@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { consentWithdrawn, factsConsent, pendingServerWithdrawals, writeConsent } from './consent';
-import { launcherCommand } from './hook-commands';
+import { CATCH_UP_WHEN, launcherCommand } from './hook-commands';
 import {
   CURSOR_CONSENT_LINES,
   cursorHooksPath,
@@ -113,6 +113,7 @@ describe('installCursorHooks', () => {
     expect(text).toContain('labeled as written by Cursor, not by you');
     expect(text).toContain("so it is given to Cursor's model");
     expect(text).toContain('state.vscdb) are never read');
+    expect(text).toContain(CATCH_UP_WHEN);
     expect(text).toContain('once per conversation');
     expect(asked).toHaveLength(1);
     await expect(readFile(hooksPath)).rejects.toThrow();

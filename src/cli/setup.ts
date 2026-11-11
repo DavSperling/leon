@@ -35,8 +35,10 @@ import {
 import { type Connection, readConnection } from './connection';
 import { type ConsentTool, factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
+import { ANTIGRAVITY_VARIANTS } from './find-sessions';
 import { launcherPath } from './hook-commands';
 import {
+  ANTIGRAVITY_ENTRY,
   addAntigravityHooks,
   antigravityHooksPath,
   installAntigravityHooks,
@@ -105,6 +107,11 @@ const isDirectory = (path: string) =>
     (info) => info.isDirectory(),
     () => false,
   );
+
+async function firstDirectory(paths: string[]): Promise<string | null> {
+  for (const path of paths) if (await isDirectory(path)) return path;
+  return null;
+}
 
 // L'origine d'une adresse de serveur (sans chemin, compte ni jeton), seulement si c'est une adresse simple : https, ou
 // http sur la machine seule, et rien d'autre que des caractères d'hôte (la commande d'installation se copie dans un shell).
@@ -295,23 +302,40 @@ const CONSENT_TOOLS = new Map<Installer, ConsentTool>([
 const claudeDir = (home: string, env: SetupDeps['env']) =>
   env.CLAUDE_CONFIG_DIR || join(home, '.claude');
 
-// Les outils de code que Leon sait capter, et le dossier de réglages qui prouve qu'ils sont là. `install` n'existe que
-// pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5, Cursor au lot 8,
-// Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
+// Les outils de code que Leon sait capter, et les dossiers qui prouvent qu'ils sont là : le premier qui existe. `install`
+// n'existe que pour ceux dont l'installateur est écrit (Claude Code au lot 1 du plan mémoire, Codex aux lots 4 et 5,
+// Cursor au lot 8, Antigravity au lot 9) : un outil sans installateur serait détecté mais dit « not supported yet ».
 const TOOLS: {
   label: string;
-  dir: (home: string, env: SetupDeps['env']) => string;
+  dirs: (home: string, env: SetupDeps['env']) => string[];
   install?: (configDir: string, ctx: InstallContext) => Promise<Installed>;
 }[] = [
   {
     label: 'Claude Code',
-    dir: claudeDir,
+    dirs: (home, env) => [claudeDir(home, env)],
     install: installClaudeCode,
   },
-  { label: 'Codex', dir: (home, env) => codexHome(home, env), install: installCodex },
-  { label: 'Cursor', dir: (home) => cursorHome(home), install: installCursor },
-  { label: 'Gemini / Antigravity', dir: (home) => geminiHome(home), install: installAntigravity },
+  { label: 'Codex', dirs: (home, env) => [codexHome(home, env)], install: installCodex },
+  { label: 'Cursor', dirs: (home) => [cursorHome(home)], install: installCursor },
+  // ~/.gemini est aussi le dossier de Gemini CLI : seuls ceux de l'appli, de l'IDE et d'`agy` prouvent Antigravity.
+  {
+    label: 'Antigravity',
+    dirs: (home) => ANTIGRAVITY_VARIANTS.map((variant) => join(geminiHome(home), variant)),
+    install: installAntigravity,
+  },
 ];
+
+// Un Antigravity introuvable dont Leon a pourtant posé l'entrée ou daté la capture : un poste qui n'a que Gemini CLI,
+// pris pour Antigravity avant #162 (le seul `~/.gemini` suffisait). Rien ne part sans dossier d'Antigravity, mais tout
+// reprendrait à son premier lancement, et le setup suivant ne dirait rien : la ligne le dit, avec la commande qui retire.
+async function antigravityLeftover(home: string): Promise<boolean> {
+  const hooks = parseSettings(await load(antigravityHooksPath(home)));
+  if (hooks?.[ANTIGRAVITY_ENTRY] !== undefined) return true;
+  return (await factsConsent(home, 'antigravity'))?.capture_le !== undefined;
+}
+
+const ANTIGRAVITY_LEFTOVER =
+  'Antigravity was not found, but an earlier `leon setup` left its hooks or its capture consent in place (Gemini CLI alone used to be taken for Antigravity). Nothing is sent while Antigravity is not installed; if it is installed later, they apply from its first launch. To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity';
 
 // Les cases à demander sur la page « Autoriser » (T64, C16) : les usages cochés par défaut qu'elle sait montrer, qui
 // manquent sans refus à l'un des outils trouvés dont l'installateur existe (les mêmes dossiers que la boucle de
@@ -320,8 +344,7 @@ async function usagesForPage(home: string, env: SetupDeps['env']): Promise<Autho
   const missing = new Set<AuthorizeUsage>();
   for (const tool of TOOLS) {
     const outil = tool.install && CONSENT_TOOLS.get(tool.install);
-    // À la fusion de #162 (`dir` devient `dirs`) : `!(await firstDirectory(tool.dirs(home, env)))`.
-    if (!outil || !(await isDirectory(tool.dir(home, env)))) continue;
+    if (!outil || (await firstDirectory(tool.dirs(home, env))) === null) continue;
     const consent = await factsConsent(home, outil);
     for (const usage of AUTHORIZE_USAGES) {
       if (!consent?.usages.includes(usage) && !consent?.refus.includes(usage)) missing.add(usage);
@@ -474,8 +497,13 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
   const summary: string[] = [];
   let failed = false;
   for (const tool of TOOLS) {
-    const dir = tool.dir(home, env);
-    if (!(await isDirectory(dir))) {
+    const dir = await firstDirectory(tool.dirs(home, env));
+    if (dir === null && tool.install === installAntigravity && (await antigravityLeftover(home))) {
+      out(ANTIGRAVITY_LEFTOVER);
+      summary.push(
+        `${tool.label}: not found (hooks or capture consent of an earlier setup left in place, see above)`,
+      );
+    } else if (dir === null) {
       summary.push(`${tool.label}: not found`);
     } else if (!tool.install) {
       out(`${tool.label} found in ${dir}: not supported yet, nothing is written there.`);

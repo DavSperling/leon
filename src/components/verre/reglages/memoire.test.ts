@@ -193,6 +193,9 @@ describe('MemorySection', () => {
     expect(text(html)).not.toContain('Put this version back');
     // « Reconnectez-vous » : une fois pour les leçons, une fois pour le fil, qui a une version à remettre.
     expect(html.split('href="/connexion?retour=memoire"').length - 1).toBe(2);
+    // Celui des fils ne parle que de remettre une version, pas de retirer une leçon.
+    expect(text(html)).toContain('Sign in again to put back a version.');
+    expect(text(html).split('You can still remove a lesson.').length - 1).toBe(1);
   });
 
   it('sans leçon ni fil : deux états vides', () => {

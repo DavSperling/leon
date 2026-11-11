@@ -783,6 +783,7 @@
     "threadsTitle": "Fils de travail",
     "threadsDescription": "Les fils que Leon a bâtis à partir de vos sessions, fusionnés compris. Ouvrez l’historique d’un fil pour lire une ancienne version et la remettre.",
     "reconnect": "Reconnectez-vous pour écrire, corriger ou remettre une version. Votre dernière connexion date de plus d’une heure. Vous pouvez toujours retirer une leçon.",
+    "reconnectThreads": "Reconnectez-vous pour remettre une version. Votre dernière connexion date de plus d’une heure.",
     "reconnectLink": "Se reconnecter",
     "newLesson": "Nouvelle leçon",
     "lessonText": "Leçon",

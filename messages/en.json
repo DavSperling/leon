@@ -783,6 +783,7 @@
     "threadsTitle": "Work threads",
     "threadsDescription": "The threads Leon built from your sessions, merged ones included. Open the history of a thread to read an old version and put it back.",
     "reconnect": "Sign in again to write, edit or put back a version. Your last sign-in was more than an hour ago. You can still remove a lesson.",
+    "reconnectThreads": "Sign in again to put back a version. Your last sign-in was more than an hour ago.",
     "reconnectLink": "Sign in again",
     "newLesson": "New lesson",
     "lessonText": "Lesson",

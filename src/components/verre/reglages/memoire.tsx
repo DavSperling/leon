@@ -112,7 +112,8 @@ function ErrorNotice({ error, max }: { error: ErrorKey | null; max: number }) {
   );
 }
 
-function Reconnect() {
+// `threads` : la partie des fils, où le seul geste coupé est « Remettre ».
+function Reconnect({ threads = false }: { threads?: boolean }) {
   const t = useTranslations('memory');
   return (
     <Notice
@@ -124,7 +125,7 @@ function Reconnect() {
         </Button>
       }
     >
-      {nb(t('reconnect'))}
+      {nb(t(threads ? 'reconnectThreads' : 'reconnect'))}
     </Notice>
   );
 }
@@ -523,7 +524,7 @@ function ThreadsSection({
       {ctl.stale &&
         threads.some((thread) => thread.versions.some((version) => version.n !== thread.n)) && (
           <div className="mb-4">
-            <Reconnect />
+            <Reconnect threads />
           </div>
         )}
       {threads.length > 0 ? (

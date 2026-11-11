@@ -35,8 +35,11 @@ import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
 import { installHooks } from './install-hooks';
 import {
   type LoginDeps,
+  type LoginResult,
+  loginComputer,
   openInBrowser,
   parseLoginArgs,
+  RELAUNCH_WAIT_MS,
   readTokenFromInput,
   runLogin,
   runLogout,
@@ -51,7 +54,7 @@ import {
   scheduleUpdate,
   startBackgroundUpdate,
 } from './self-update';
-import { ensureLauncher, isLeonRepo, runSetup } from './setup';
+import { ensureLauncher, isLeonRepo, runSetup, type SetupLogin } from './setup';
 import {
   connectionWithdrawal,
   tellBeforeConsent,
@@ -80,13 +83,16 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`resume\`) once for all these tools.
+                       the usages (\`lecture\`, \`resume\`) once for all these tools; when it opens the browser, the
+                       authorization page shows \`lecture\` as a box, yours to tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
       --depot <path>       run Leon from this clone (pnpm) instead of the installed copy: the launcher is written in
                            its clone form
-      --yes                do not ask for confirmation (a launcher that points to a clone is still asked about)
+      --yes                do not ask for confirmation (a launcher that points to a clone is still asked about); it
+                           gives no usage by itself: on a computer already connected, it opens the authorization
+                           page again (about 100 seconds) when a usage of the tools found here is not chosen yet
   import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
@@ -536,13 +542,17 @@ async function runLoginCommand(args: string[]): Promise<number> {
 }
 
 // `leon setup` : la même connexion par le navigateur, mais l'entrée standard reste ouverte pour les questions qui
-// suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin.
-async function loginForSetup(url: string | undefined): Promise<number> {
+// suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin. Elle demande les cases de la
+// page (T64) ; la relance d'un ordinateur déjà connecté attend moins longtemps.
+async function loginForSetup({ url, usages, relance }: SetupLogin): Promise<LoginResult> {
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once('SIGINT', cancel);
   try {
-    return await runLogin({ url, withToken: false }, loginDeps(abort.signal));
+    return await loginComputer(
+      { url, withToken: false, usages },
+      { ...loginDeps(abort.signal), ...(relance ? { timeoutMs: RELAUNCH_WAIT_MS } : {}) },
+    );
   } finally {
     process.off('SIGINT', cancel);
   }

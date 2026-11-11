@@ -2,8 +2,8 @@ import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { API_PATHS } from '../capture/api-contract';
-import { type Connection, writeConnection } from './connection';
+import { API_PATHS, type AuthorizeUsage, type Usage } from '../capture/api-contract';
+import { type Connection, readConnection, writeConnection } from './connection';
 import { addRefusal, addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
@@ -68,11 +68,15 @@ type Run = {
   output: string;
   questions: string[];
   logins: Array<string | undefined>;
+  // Ce que chaque `leon login` demandait : les cases de la page, et s'il relançait un ordinateur déjà connecté.
+  asked: { usages: string[]; relance: boolean }[];
   requests: Request[];
 };
 
 // `answers` : ce que « tape » l'utilisateur à chaque question ; une question non prévue fait échouer le test.
 // `login` : ce que fait `leon login` ; par défaut il réussit et écrit la connexion, comme le vrai.
+// `page` : ce que l'humain coche et décoche sur la page « Autoriser », que le faux `leon login` rend tel quel (le vrai
+// le filtre sur sa demande, login.test.ts) ; par défaut rien, comme un serveur plus ancien.
 // `me` : ce que répond GET /api/v1/me au jeton de la connexion (200 par défaut) ; 'unreachable' : le serveur ne répond pas.
 async function setup(
   options: Partial<SetupOptions> = {},
@@ -80,6 +84,7 @@ async function setup(
     answers?: (string | null)[];
     env?: Record<string, string>;
     loginCode?: number;
+    page?: { usages?: Usage[]; refus?: Usage[] };
     me?: number | 'unreachable';
     whileAsking?: () => Promise<void>;
     // Appelé à chaque requête, avant sa réponse : ce que le disque porte à ce moment-là.
@@ -90,6 +95,7 @@ async function setup(
   const lines: string[] = [];
   const questions: string[] = [];
   const logins: Array<string | undefined> = [];
+  const asked: Run['asked'] = [];
   const requests: Request[] = [];
   const answers = [...(extra.answers ?? [])];
   const deps: SetupDeps = {
@@ -105,11 +111,15 @@ async function setup(
       if (answer === undefined) throw new Error('question inattendue');
       return answer;
     },
-    login: async (url) => {
+    login: async ({ url, usages, relance }) => {
       logins.push(url);
+      asked.push({ usages: [...usages], relance });
       const code = extra.loginCode ?? 0;
-      if (code === 0) await connect();
-      return code;
+      if (code !== 0) return { code, usages: [], refus: [] };
+      await connect();
+      // Tel quel, même hors de la demande : setup ne doit écrire que ce qu'il a demandé.
+      const page = (list: Usage[] = []) => list as AuthorizeUsage[];
+      return { code, usages: page(extra.page?.usages), refus: page(extra.page?.refus) };
     },
     fetch: async (input, init) => {
       requests.push({
@@ -122,7 +132,7 @@ async function setup(
     },
   };
   const code = await runSetup({ yes: false, ...options }, deps);
-  return { code, output: lines.join('\n'), questions, logins, requests };
+  return { code, output: lines.join('\n'), questions, logins, asked, requests };
 }
 
 // Tout ce que `setup` laisse sur le disque : chemin → droits, date de modification et contenu (un fichier de travail
@@ -931,6 +941,206 @@ describe('setup : les outils de code', () => {
     expect(hooks.SessionStart[0].hooks[0].command).toBe(launcherHookCommand(home, 'briefing'));
     expect(await readFile(launcherPath(home), 'utf8')).toContain(`--dir '${clone}' leon`);
     expect(run.output).toContain('pnpm');
+  });
+});
+
+// Les cases de la page « Autoriser » (T64, C16 du plan de la mémoire à disposition) : `leon setup` demande à `leon login`
+// les usages cochés par défaut qui manquent sans refus aux outils trouvés, et passe ce que l'humain y tranche aux
+// installateurs, qui l'écrivent après leur accord de base. Avec --yes, un ordinateur déjà connecté rouvre la page pour eux.
+describe('setup : les cases de la page « Autoriser »', () => {
+  beforeEach(installLeon);
+  const RELAUNCH =
+    'Usages of your coding tools are not chosen yet (such as reading Leon): opening the authorization page of Leon again, so that you choose them in your browser. This computer stays connected meanwhile.';
+  const RELAUNCH_FAILED =
+    'Nothing was chosen on the authorization page: this computer stays connected as before, and no usage was added. To choose them, run `~/.leon/bin/leon setup` again, or in a terminal. If this computer was connected with `leon login --with-token`, run that once more: `leon setup --yes` then stops opening the page.';
+  const WITH_TOKEN =
+    'This computer was connected with `leon login --with-token`: `leon setup --yes` does not open the authorization page. To choose the usages of your coding tools (such as reading Leon), run `~/.leon/bin/leon setup` in a terminal.';
+
+  it('--yes sur un ordinateur non connecté : la case cochée s’écrit, aucune autre, sans question', async () => {
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true }, { page: { usages: ['lecture'] } });
+
+    expect(run.code).toBe(0);
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: false }]);
+    expect(run.questions).toEqual([]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      version: 2,
+      usages: ['lecture'],
+      refus: [],
+    });
+    expect(run.output).toContain('Reading Leon recorded');
+  });
+
+  it('--yes sur un ordinateur non connecté : la case décochée s’écrit en refus', async () => {
+    await hasClaudeCode();
+
+    await setup({ yes: true }, { page: { refus: ['lecture'] } });
+
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: [],
+      refus: ['lecture'],
+    });
+  });
+
+  it('sans outil trouvé, ou quand tous ont tranché, aucune case n’est demandée', async () => {
+    const none = await setup({ yes: true });
+    expect(none.asked).toEqual([{ usages: [], relance: false }]);
+
+    await hasClaudeCode();
+    await writeConsent(home, 'claude_code', 2);
+    await addRefusal(home, 'claude_code', 'lecture');
+    await rm(join(home, '.leon', 'connexion.json'));
+    const decided = await setup({ yes: true });
+    expect(decided.asked).toEqual([{ usages: [], relance: false }]);
+  });
+
+  it('--yes sur un ordinateur connecté auquel manque lecture : relance login vers la connexion enregistrée, jamais LEON_URL', async () => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup(
+      { yes: true },
+      {
+        page: { usages: ['lecture'] },
+        env: { LEON_URL: 'http://localhost:3000', LEON_TOKEN: `leon_${'y'.repeat(43)}` },
+      },
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.logins).toEqual([CONNECTION.url]);
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: true }]);
+    expect(run.output).toContain(RELAUNCH);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: ['lecture'] });
+  });
+
+  it('--url de la même origine : la relance vise ce serveur-là', async () => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true, url: 'https://leon.example/' });
+
+    expect(run.logins).toEqual([CONNECTION.url]);
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: true }]);
+  });
+
+  it('un refus sur la page : pas de relance au setup --yes suivant', async () => {
+    await connect();
+    await hasClaudeCode();
+    await setup({ yes: true }, { page: { refus: ['lecture'] } });
+
+    const second = await setup({ yes: true });
+
+    expect(second.logins).toEqual([]);
+    expect(second.output).not.toContain(RELAUNCH);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ refus: ['lecture'] });
+  });
+
+  it('une relance en échec garde la connexion : les crochets sont posés, sans usage, et la ligne le dit', async () => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true }, { loginCode: 1 });
+
+    expect(run.code).toBe(0);
+    expect(run.logins).toHaveLength(1);
+    expect(run.output).toContain(RELAUNCH_FAILED);
+    expect(await readConnection(home)).toEqual(CONNECTION);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      version: 2,
+      usages: [],
+      refus: [],
+    });
+    expect(run.output).toContain('Claude Code: hooks installed');
+  });
+
+  it.each([
+    ['ne répond pas', 'unreachable' as const],
+    ['répond 500', 500],
+  ])('pas de relance quand GET /api/v1/me %s', async (_name, me) => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true }, { me });
+
+    expect(run.logins).toEqual([]);
+    expect(run.output).not.toContain(RELAUNCH);
+  });
+
+  it('sans --yes, pas de relance : dans un terminal, la question vient sur place', async () => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup({}, { interactive: true, answers: ['y', '', 'n'] });
+
+    expect(run.logins).toEqual([]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture'],
+      refus: ['resume'],
+    });
+  });
+
+  it('une case tranchée sur la page n’est pas redemandée dans le terminal du même passage', async () => {
+    await hasClaudeCode();
+
+    const run = await setup(
+      {},
+      { interactive: true, page: { refus: ['lecture'] }, answers: ['y', 'n'] },
+    );
+
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: false }]);
+    expect(run.questions).toHaveLength(2);
+    expect(run.questions.filter((question) => question.includes('[Y/n]'))).toEqual([]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: [],
+      refus: ['lecture', 'resume'],
+    });
+  });
+
+  it('connexion par --with-token : pas de relance, une ligne sur la sortie', async () => {
+    await writeConnection(home, { ...CONNECTION, par: 'jeton' });
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true });
+
+    expect(run.logins).toEqual([]);
+    expect(run.output).toContain(WITH_TOKEN);
+    expect(run.output).toContain('Claude Code: hooks installed');
+  });
+
+  it('lecture refusé dans Claude Code et Cursor nouveau : la page est demandée, lecture s’écrit pour Cursor seul', async () => {
+    await connect();
+    await hasClaudeCode();
+    await setup({ yes: true });
+    await addRefusal(home, 'claude_code', 'lecture');
+    const claudeCode = await factsConsent(home, 'claude_code');
+    await mkdir(join(home, '.cursor'));
+
+    const run = await setup({ yes: true }, { page: { usages: ['lecture'] } });
+
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: true }]);
+    expect(await factsConsent(home, 'claude_code')).toEqual(claudeCode);
+    expect(await factsConsent(home, 'cursor')).toMatchObject({ usages: ['lecture'], refus: [] });
+  });
+
+  it('rien ne s’écrit pour un outil dont l’accord de base n’est pas donné', async () => {
+    await hasClaudeCode();
+
+    const run = await setup({}, { page: { usages: ['lecture'] }, answers: ['n'] });
+
+    expect(run.asked).toEqual([{ usages: ['lecture'], relance: false }]);
+    expect(await exists(consentPath(home))).toBe(false);
+  });
+
+  it('un usage que setup n’a pas demandé n’est jamais écrit, même rendu par la page', async () => {
+    await hasClaudeCode();
+
+    await setup({ yes: true }, { page: { usages: ['lecture', 'resume'], refus: ['rappel'] } });
+
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture'],
+      refus: [],
+    });
   });
 });
 

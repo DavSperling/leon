@@ -5,7 +5,10 @@
 // 2. relance `leon login` quand l'ordinateur n'est pas (ou plus) connecté : ni connexion ni variables, jeton de la
 //    connexion révoqué (GET /api/v1/me répond 401), `--url` d'un autre serveur que celui de la connexion, ou seulement
 //    LEON_URL et LEON_TOKEN (un Claude Code lancé depuis le Dock ne voit pas ces variables) ; sinon dit à quel serveur
-//    (son origine). Un serveur qui ne répond pas, ou une autre erreur, ne bloque pas : l'ordinateur compte pour connecté ;
+//    (son origine). Un serveur qui ne répond pas, ou une autre erreur, ne bloque pas : l'ordinateur compte pour connecté.
+//    La page « Autoriser » montre en cases les usages cochés par défaut qui manquent sans refus aux outils trouvés (T64,
+//    C16 du plan de la mémoire à disposition) : lus avant la connexion. Avec --yes, un ordinateur déjà connecté rouvre
+//    la page pour eux (moins de 2 minutes d'attente), sauf après `leon login --with-token` ;
 // 3. cherche les outils de code (leur dossier de réglages existe) : ceux dont l'installateur existe sont proposés, les
 //    autres sont dits « not supported yet » et rien n'est écrit chez eux ;
 // 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
@@ -13,7 +16,8 @@
 // 5. finit par une ligne par outil, le chemin du lanceur et, sous la forme installée, les mises à jour automatiques.
 // Dans un terminal, sans --yes, les usages (`lecture`, `resume`) se demandent une fois pour tous les outils du passage :
 // au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
-// l'écrivent chacun après son accord de base.
+// l'écrivent chacun après son accord de base. Les cases tranchées sur la page passent par les mêmes décisions : elles ne
+// sont pas redemandées. --yes n'ajoute jamais un usage de lui-même : seules les cases de la page en donnent.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
 // fichier que Leon n'a pas écrit). Relancée, la commande n'écrit rien de ce qui est déjà en place.
 //
@@ -23,8 +27,9 @@
 // leurs.
 import { access, readFile, stat } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
+import { AUTHORIZE_USAGES, type AuthorizeUsage } from '../capture/api-contract';
 import { type Connection, readConnection } from './connection';
-import { factsConsent } from './consent';
+import { type ConsentTool, factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath } from './hook-commands';
 import {
@@ -52,12 +57,15 @@ import {
   previousLauncherScripts,
   writeLauncher,
 } from './launcher';
-import { requestMe } from './login';
+import { type LoginResult, requestMe } from './login';
 import { cursorHome, geminiHome } from './outils';
 import { isAllowedServerUrl } from './server-url';
 import { connectionWithdrawal, tellBeforeConsent } from './uninstall-hooks';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
+// Une connexion par `leon login` : `url`, l'option --url de `leon setup`, ou la connexion enregistrée pour une relance ;
+// `usages`, les cases à demander sur la page ; `relance`, l'ordinateur est déjà connecté (l'attente est plus courte).
+export type SetupLogin = { url: string | undefined; usages: AuthorizeUsage[]; relance: boolean };
 export type SetupDeps = {
   home: string;
   env: Record<string, string | undefined>;
@@ -67,8 +75,8 @@ export type SetupDeps = {
   ask: (question: string) => Promise<string | null>;
   // L'entrée standard est un terminal : seul il fait demander un usage (les installateurs).
   interactive?: boolean;
-  // `leon login` (leon.ts) : rend son code de sortie. `url` : l'option --url de `leon setup`.
-  login: (url: string | undefined) => Promise<number>;
+  // `leon login` (leon.ts) : rend son code de sortie et les cases tranchées sur la page.
+  login: (request: SetupLogin) => Promise<LoginResult>;
   // Pour demander à GET /api/v1/me si le jeton de la connexion vaut encore.
   fetch: typeof fetch;
 };
@@ -262,6 +270,16 @@ async function installAntigravity(_dir: string, ctx: InstallContext): Promise<In
   );
 }
 
+// L'entrée d'accord.json de chaque installateur (consent.ts) : lue avant la connexion, pour savoir quelles cases demander
+// sur la page (T64).
+type Installer = (configDir: string, ctx: InstallContext) => Promise<Installed>;
+const CONSENT_TOOLS = new Map<Installer, ConsentTool>([
+  [installClaudeCode, 'claude_code'],
+  [installCodex, 'codex'],
+  [installCursor, 'cursor'],
+  [installAntigravity, 'antigravity'],
+]);
+
 // Le dossier de réglages de Claude Code (CLAUDE_CONFIG_DIR, sinon ~/.claude), comme claudeConfigDir (env.ts), mais sous
 // le dossier personnel reçu : les tests n'ont pas le vrai.
 const claudeDir = (home: string, env: SetupDeps['env']) =>
@@ -285,47 +303,101 @@ const TOOLS: {
   { label: 'Gemini / Antigravity', dir: (home) => geminiHome(home), install: installAntigravity },
 ];
 
-// Pourquoi l'ordinateur est à reconnecter, ou null s'il est connecté. Seules les adresses de serveur se disent, par leur
-// origine : ni chemin ni, jamais, le jeton.
+// Les cases à demander sur la page « Autoriser » (T64, C16) : les usages cochés par défaut qu'elle sait montrer, qui
+// manquent sans refus à l'un des outils trouvés dont l'installateur existe (les mêmes dossiers que la boucle de
+// runSetup). Un outil sans accord de base, ou retiré, n'a ni usage ni refus.
+async function usagesForPage(home: string, env: SetupDeps['env']): Promise<AuthorizeUsage[]> {
+  const missing = new Set<AuthorizeUsage>();
+  for (const tool of TOOLS) {
+    const outil = tool.install && CONSENT_TOOLS.get(tool.install);
+    if (!outil || !(await isDirectory(tool.dir(home, env)))) continue;
+    const consent = await factsConsent(home, outil);
+    for (const usage of AUTHORIZE_USAGES) {
+      if (!consent?.usages.includes(usage) && !consent?.refus.includes(usage)) missing.add(usage);
+    }
+  }
+  return AUTHORIZE_USAGES.filter((usage) => missing.has(usage));
+}
+
+// Pourquoi l'ordinateur est à reconnecter (`reason`), ou null s'il est connecté ; `verified` : le serveur a reconnu son
+// jeton (GET /api/v1/me à 200). Seules les adresses de serveur se disent, par leur origine : ni chemin ni, jamais, le
+// jeton.
 async function reconnectReason(
   options: SetupOptions,
   deps: Pick<SetupDeps, 'fetch'>,
   saved: Connection | null,
   server: ServerEnv | null,
-): Promise<string | null> {
+): Promise<{ reason: string | null; verified: boolean }> {
   if (saved === null) {
-    return server === null
-      ? 'This computer is not connected to Leon yet: running `~/.leon/bin/leon login`.'
-      : 'This computer is connected only by LEON_URL and LEON_TOKEN, which a Claude Code started from the Dock or an editor does not see: running `~/.leon/bin/leon login`.';
+    return {
+      reason:
+        server === null
+          ? 'This computer is not connected to Leon yet: running `~/.leon/bin/leon login`.'
+          : 'This computer is connected only by LEON_URL and LEON_TOKEN, which a Claude Code started from the Dock or an editor does not see: running `~/.leon/bin/leon login`.',
+      verified: false,
+    };
   }
   const current = new URL(saved.url).origin;
   if (options.url !== undefined) {
     const wanted = isAllowedServerUrl(options.url) ? new URL(options.url).origin : null;
     if (wanted !== current) {
-      return `This computer is connected to ${current}, not to the server of --url${wanted === null ? '' : ` (${wanted})`}: connecting it again.`;
+      return {
+        reason: `This computer is connected to ${current}, not to the server of --url${wanted === null ? '' : ` (${wanted})`}: connecting it again.`,
+        verified: false,
+      };
     }
   }
   // C'est le jeton de la connexion qu'on contrôle, même si des variables passent avant lui : les crochets lancés hors
   // d'un terminal n'ont que lui. Un serveur muet ou une autre erreur ne prouvent rien : on ne bloque pas hors ligne.
   const me = await requestMe(current, saved.jeton, deps.fetch);
   await me?.body?.cancel().catch(() => {});
-  return me?.status === 401
-    ? 'This computer was disconnected from Leon (its token was revoked): connecting it again.'
-    : null;
+  return {
+    reason:
+      me?.status === 401
+        ? 'This computer was disconnected from Leon (its token was revoked): connecting it again.'
+        : null,
+    verified: me?.status === 200,
+  };
 }
 
-// Connecte l'ordinateur s'il ne l'est pas ou plus (rend le code de sortie de `leon login`), sinon dit à quel serveur.
-async function ensureConnected(options: SetupOptions, deps: SetupDeps): Promise<number> {
+const RELAUNCH =
+  'Usages of your coding tools are not chosen yet (such as reading Leon): opening the authorization page of Leon again, so that you choose them in your browser. This computer stays connected meanwhile.';
+const RELAUNCH_FAILED =
+  'Nothing was chosen on the authorization page: this computer stays connected as before, and no usage was added. To choose them, run `~/.leon/bin/leon setup` again, or in a terminal. If this computer was connected with `leon login --with-token`, run that once more: `leon setup --yes` then stops opening the page.';
+const WITH_TOKEN =
+  'This computer was connected with `leon login --with-token`: `leon setup --yes` does not open the authorization page. To choose the usages of your coding tools (such as reading Leon), run `~/.leon/bin/leon setup` in a terminal.';
+
+// Connecte l'ordinateur s'il ne l'est pas ou plus, en demandant les cases `asked` sur la page (rend ce que rend `leon
+// login`), sinon dit à quel serveur. Avec --yes, un ordinateur connecté rouvre la page pour ces cases (T64) : vers sa
+// connexion enregistrée, jamais LEON_URL, et seulement si le serveur a reconnu son jeton (hors ligne, la relance
+// attendrait pour rien) ; pas après `--with-token`, que rien ne rouvre. Si la relance échoue (annulée, refusée, délai
+// passé), la connexion d'avant reste et l'installation continue.
+async function ensureConnected(
+  options: SetupOptions,
+  deps: SetupDeps,
+  asked: AuthorizeUsage[],
+): Promise<LoginResult> {
   const server = await resolveServerEnv(deps.env, deps.home).catch(() => null);
-  const reason = await reconnectReason(options, deps, await readConnection(deps.home), server);
+  const saved = await readConnection(deps.home);
+  const { reason, verified } = await reconnectReason(options, deps, saved, server);
   if (reason !== null) {
     deps.out(reason);
-    return deps.login(options.url);
+    return deps.login({ url: options.url, usages: asked, relance: false });
   }
   // Pas de raison, donc une connexion enregistrée, donc un serveur.
   if (server)
     deps.out(`This computer is already connected to Leon (${new URL(server.url).origin}).`);
-  return 0;
+  const unchanged: LoginResult = { code: 0, usages: [], refus: [] };
+  if (!options.yes || asked.length === 0 || !verified || saved === null) return unchanged;
+  if (saved.par === 'jeton') {
+    deps.out(WITH_TOKEN);
+    return unchanged;
+  }
+  deps.out(RELAUNCH);
+  const again = await deps.login({ url: saved.url, usages: asked, relance: true });
+  if (again.code === 0) return again;
+  deps.out(RELAUNCH_FAILED);
+  return unchanged;
 }
 
 export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<number> {
@@ -359,12 +431,13 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
     repoDir === undefined ? { kind: 'installee' } : { kind: 'clone', repoDir };
   if (!(await ensureLauncher(form, { home, yes: options.yes, out, err, ask }))) return 1;
 
-  const code = await ensureConnected(options, deps);
-  if (code !== 0) {
+  const asked = await usagesForPage(home, env);
+  const connection = await ensureConnected(options, deps, asked);
+  if (connection.code !== 0) {
     err(
       'Leon: setup stopped: this computer is not connected, so no hook was installed. Run `~/.leon/bin/leon setup` again once it is.',
     );
-    return code;
+    return connection.code;
   }
 
   // Un retrait que le serveur n'a pas appris (fait avant la route, ou hors ligne) se dit avant tout nouvel accord, qui
@@ -372,6 +445,12 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
   await tellBeforeConsent(home, { err, withdraw: connectionWithdrawal(deps.fetch, env, home) });
 
   const decisions: UsageDecisions = new Map();
+  // Ce que l'humain a tranché sur la page, pour les seules cases demandées : chaque installateur l'écrit après son accord
+  // de base, là où l'usage manque sans refus, et ne le redemande pas.
+  for (const usage of asked) {
+    if (connection.usages.includes(usage)) decisions.set(usage, true);
+    else if (connection.refus.includes(usage)) decisions.set(usage, false);
+  }
   const summary: string[] = [];
   let failed = false;
   for (const tool of TOOLS) {

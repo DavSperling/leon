@@ -15,6 +15,9 @@ const ConnectionSchema = z.object({
   ordinateur: z.string(),
   espace: z.string(),
   cree_le: z.iso.datetime({ offset: true }),
+  // « jeton » quand `leon login --with-token` l'a écrite (C16 du plan de la mémoire à disposition) : `leon setup --yes`
+  // ne rouvre pas alors la page « Autoriser ». Retouché à la main, il est ignoré, sans rendre la connexion invalide.
+  par: z.literal('jeton').optional().catch(undefined),
 });
 export type Connection = z.infer<typeof ConnectionSchema>;
 

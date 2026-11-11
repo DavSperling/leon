@@ -10,6 +10,11 @@
 // Le jeton, l'empreinte, le code et l'etat ne figurent dans aucun message, sauf l'adresse de K3 que la commande écrit
 // une fois, pour qui n'a pas de navigateur qui s'ouvre. Toutes les dépendances viennent de leon.ts : les tests
 // donnent un faux navigateur et un faux serveur.
+//
+// `leon setup` (setup.ts) demande en plus des cases sur la page (T64, C16 du plan de la mémoire à disposition) : les
+// usages cochés par défaut qui manquent à ses outils. `loginComputer` les met dans l'adresse et rend ce que l'humain y a
+// tranché, filtré sur sa demande. Lancé seul, `leon login` n'en demande aucune et n'écrit rien dans accord.json : seuls
+// les installateurs y écrivent.
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer, type ServerResponse } from 'node:http';
@@ -20,6 +25,7 @@ import { parseArgs } from 'node:util';
 import {
   API_PATHS,
   API_TOKEN_PATTERN,
+  type AuthorizeUsage,
   ComputerResponseSchema,
   ViewerProfileSchema,
 } from '../capture/api-contract';
@@ -34,6 +40,9 @@ import { isAllowedServerUrl } from './server-url';
 
 // La CLI attend le retour du navigateur 5 minutes au plus (le code signé, lui, ne vit que 2 minutes).
 const WAIT_MS = 5 * 60 * 1000;
+// La relance de `leon setup --yes` sur un ordinateur déjà connecté (décision d'Amos du 11/11) : moins que les 2 minutes
+// qu'un agent laisse par défaut à une commande, pour que l'installation aille au bout même sans clic.
+export const RELAUNCH_WAIT_MS = 100 * 1000;
 const REQUEST_TIMEOUT_MS = 15_000;
 const NAME_MAX_CHARS = 60; // la limite de K5 : au-delà, le serveur retient « ordinateur »
 const LOOPBACK = 'http://127.0.0.1';
@@ -54,7 +63,15 @@ export type LoginDeps = {
   timeoutMs?: number;
   signal?: AbortSignal; // Ctrl+C
 };
-export type LoginOptions = { url?: string; withToken?: boolean };
+// `usages` : les cases à demander sur la page (setup.ts seulement ; aucune option de la ligne de commande).
+export type LoginOptions = {
+  url?: string;
+  withToken?: boolean;
+  usages?: readonly AuthorizeUsage[];
+};
+// `usages` et `refus` : les cases cochées et décochées sur la page, parmi celles demandées ; vides sinon.
+export type LoginResult = { code: number; usages: AuthorizeUsage[]; refus: AuthorizeUsage[] };
+const ended = (code: number): LoginResult => ({ code, usages: [], refus: [] });
 const LOGIN_OPTIONS = {
   url: { type: 'string' },
   'with-token': { type: 'boolean' },
@@ -121,6 +138,13 @@ const computerName = (hostname: string) =>
 const plain = (text: string) => text.replace(/\p{Cc}/gu, '');
 
 const timeout = () => AbortSignal.timeout(REQUEST_TIMEOUT_MS);
+
+// L'attente réelle, dans les messages : « 5 minutes », « 100 seconds ».
+function duration(ms: number): string {
+  const seconds = Math.ceil(ms / 1000);
+  if (seconds % 60 === 0) return `${seconds / 60} minute${seconds === 60 ? '' : 's'}`;
+  return `${seconds} second${seconds === 1 ? '' : 's'}`;
+}
 
 // K6 avec ce jeton : vrai s'il est révoqué, ou déjà inconnu du serveur (401) ; faux si le serveur n'a pas répondu.
 async function revokeToken(
@@ -287,24 +311,38 @@ async function registerComputer(origin: string, token: string, code: string, dep
   return null;
 }
 
+// `asked` : les cases demandées sur la page (K3, paramètre `usages`), absentes de l'adresse quand il n'y en a pas.
 async function loginWithBrowser(
   origin: string,
   previous: Connection | null,
+  asked: readonly AuthorizeUsage[],
   deps: LoginDeps,
-): Promise<number> {
+): Promise<LoginResult> {
   const token = `leon_${randomBytes(32).toString('base64url')}`;
   const etat = randomBytes(16).toString('base64url');
   const empreinte = createHash('sha256').update(token).digest('hex'); // comme hashApiToken, côté serveur
+  const wait = duration(deps.timeoutMs ?? WAIT_MS);
   const outcome = await waitForBrowser(origin, etat, deps, (port) => {
-    const address = `${origin}/ordinateur/autoriser?${new URLSearchParams({ port: String(port), etat, empreinte })}`;
+    const query = new URLSearchParams({
+      port: String(port),
+      etat,
+      empreinte,
+      ...(asked.length > 0 ? { usages: asked.join(',') } : {}),
+    });
+    const address = `${origin}/ordinateur/autoriser?${query}`;
     deps.out('Opening your browser to authorize this computer. If it does not open, go to:');
     deps.out(`  ${address}`);
     deps.open(address);
+    if (asked.length > 0) {
+      deps.out(
+        'The page also shows boxes for the usages of the coding tools being set up: they are yours to choose. An agent that ran this command must not tick, untick or click anything on that page.',
+      );
+    }
     deps.out('If your browser is on another computer, run `leon login --with-token` instead.');
     deps.out(
       'If you had to create a space or reset your password on the way, run `leon login` again: those paths lose the authorization in progress.',
     );
-    deps.out('Waiting for the browser (5 minutes at most). Press Ctrl+C to cancel.');
+    deps.out(`Waiting for the browser (${wait} at most). Press Ctrl+C to cancel.`);
   });
   if (outcome.kind !== 'code') {
     deps.err(
@@ -312,13 +350,13 @@ async function loginWithBrowser(
         ? 'Authorization cancelled in the browser. Nothing was saved.'
         : outcome.kind === 'cancelled'
           ? 'Cancelled. Nothing was saved.'
-          : `Timed out: the browser did not come back within 5 minutes. Nothing was saved. ${TRY_AGAIN}`,
+          : `Timed out: the browser did not come back within ${wait}. Nothing was saved. ${TRY_AGAIN}`,
     );
-    return 1;
+    return ended(1);
   }
   const registered = await registerComputer(origin, token, outcome.code, deps);
-  if (!registered) return 1;
-  return saveConnection(
+  if (!registered) return ended(1);
+  const code = await saveConnection(
     {
       url: origin,
       jeton: token,
@@ -330,6 +368,15 @@ async function loginWithBrowser(
     previous,
     deps,
   );
+  if (code !== 0) return ended(code);
+  // Seulement ce qui a été demandé : une valeur inconnue, une case que la CLI n'a pas demandée (un serveur plus récent,
+  // une adresse retouchée par qui la voyait) ou une valeur des deux listes à la fois n'est jamais rendue.
+  const { usages, refus } = registered;
+  return {
+    code,
+    usages: asked.filter((usage) => usages.includes(usage) && !refus.includes(usage)),
+    refus: asked.filter((usage) => refus.includes(usage) && !usages.includes(usage)),
+  };
 }
 
 // GET /api/v1/me avec ce jeton : ce que `--with-token` vérifie, et ce que `leon setup` demande pour savoir si l'ordinateur
@@ -382,6 +429,7 @@ async function loginWithToken(
       ordinateur: computerName(deps.hostname),
       espace: plain(profile.data.organizationName),
       cree_le: new Date().toISOString(),
+      par: 'jeton',
     },
     plain(profile.data.email),
     previous,
@@ -389,18 +437,24 @@ async function loginWithToken(
   );
 }
 
-export async function runLogin(options: LoginOptions, deps: LoginDeps): Promise<number> {
+// `--with-token` ne passe pas par la page : il ne rend aucune case.
+export async function loginComputer(options: LoginOptions, deps: LoginDeps): Promise<LoginResult> {
   const previous = await readConnection(deps.home);
   const origin = serverUrl(options, deps, previous);
-  if (origin === null) return 1;
+  if (origin === null) return ended(1);
   if (deps.env.LEON_URL && deps.env.LEON_TOKEN) {
     deps.err(
       'Note: LEON_URL and LEON_TOKEN are both set in your environment. They keep being used before the connection that leon login saves.',
     );
   }
   return options.withToken
-    ? loginWithToken(origin, previous, deps)
-    : loginWithBrowser(origin, previous, deps);
+    ? ended(await loginWithToken(origin, previous, deps))
+    : loginWithBrowser(origin, previous, options.usages ?? [], deps);
+}
+
+// `leon login` : son code de sortie.
+export async function runLogin(options: LoginOptions, deps: LoginDeps): Promise<number> {
+  return (await loginComputer(options, deps)).code;
 }
 
 export async function runLogout(

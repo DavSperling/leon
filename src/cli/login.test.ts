@@ -11,7 +11,15 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS, API_TOKEN_PATTERN } from '../capture/api-contract';
 import { authorizePath, parseAuthorizeParams, returnUrl } from '../server/auth/computer-authorize';
 import { connectionPath, readConnection, writeConnection } from './connection';
-import { type LoginDeps, parseLoginArgs, readTokenFromInput, runLogin, runLogout } from './login';
+import {
+  type LoginDeps,
+  loginComputer,
+  parseLoginArgs,
+  RELAUNCH_WAIT_MS,
+  readTokenFromInput,
+  runLogin,
+  runLogout,
+} from './login';
 
 // `leon login` et `leon logout` contre un faux serveur de Leon et un faux navigateur, tous deux sur 127.0.0.1. Ces
 // tests ouvrent des ports : hors de la sandbox. La connexion s'écrit toujours dans un HOME temporaire.
@@ -45,6 +53,9 @@ async function startLeon(
     revoke?: number;
     espace?: string;
     compte?: string;
+    // Les cases de la page dans la 201 (T64) : absentes par défaut, comme chez un serveur plus ancien.
+    usages?: unknown;
+    refus?: unknown;
   } = {},
 ): Promise<FakeLeon> {
   const calls: Call[] = [];
@@ -67,6 +78,8 @@ async function startLeon(
             espace: answers.espace ?? 'Acme',
             ordinateur: nom,
             compte: answers.compte ?? 'paul@example.com',
+            ...(answers.usages === undefined ? {} : { usages: answers.usages }),
+            ...(answers.refus === undefined ? {} : { refus: answers.refus }),
           })
         : json(status, {});
     }
@@ -655,8 +668,151 @@ describe('leon login : rien de secret dans les messages', () => {
   });
 });
 
+// T64 : `leon setup` demande des cases sur la page « Autoriser » par le paramètre `usages`, et `leon login` lui rend ce
+// que l'humain y a tranché, filtré sur ce qu'il a demandé. Lancé seul, rien ne change.
+describe('leon login : les cases de la page « Autoriser »', () => {
+  const BOXES_LINE =
+    'The page also shows boxes for the usages of the coding tools being set up: they are yours to choose. An agent that ran this command must not tick, untick or click anything on that page.';
+  const NONE = { code: 0, usages: [], refus: [] };
+  const restart = async (answers: Parameters<typeof startLeon>[1]) => {
+    await leon.close();
+    leon = await startLeon(home, answers);
+  };
+  const approving = () => {
+    const seen: string[] = [];
+    const run = setup(
+      async (params, address) => {
+        seen.push(address);
+        await approve(params);
+      },
+      { env: { LEON_URL: leon.url } },
+    );
+    return { run, seen };
+  };
+
+  it('avec une demande, l’adresse porte usages=lecture, que la page accepte, et la sortie dit que les cases sont à l’humain', async () => {
+    const { run, seen } = approving();
+
+    const result = await loginComputer({ usages: ['lecture'] }, run.deps);
+    await run.browsed();
+
+    expect(result).toEqual(NONE); // la 201 du faux serveur n'en porte pas
+    const [address = ''] = seen;
+    expect(authorizeParams(address).keys).toEqual(['empreinte', 'etat', 'port', 'usages']);
+    expect(new URL(address).searchParams.get('usages')).toBe('lecture');
+    expect(parseAuthorizeParams(Object.fromEntries(new URL(address).searchParams))?.usages).toEqual(
+      ['lecture'],
+    );
+    expect(run.out).toContain(BOXES_LINE);
+  });
+
+  it.each([
+    ['cochée', { usages: ['lecture'], refus: [] }, { code: 0, usages: ['lecture'], refus: [] }],
+    ['décochée', { usages: [], refus: ['lecture'] }, { code: 0, usages: [], refus: ['lecture'] }],
+  ])('rend la case %s que la 201 porte', async (_name, answers, expected) => {
+    await restart(answers);
+    const { run } = approving();
+
+    expect(await loginComputer({ usages: ['lecture'] }, run.deps)).toEqual(expected);
+    await run.browsed();
+  });
+
+  it.each([
+    [
+      'une valeur inconnue et des usages non demandés',
+      { usages: ['lecture', 'inconnu', 'rappel'], refus: ['noter', 'resume'] },
+      { code: 0, usages: ['lecture'], refus: [] },
+    ],
+    ['des listes nulles', { usages: null, refus: null }, NONE],
+    ['du texte au lieu d’une liste', { usages: 'lecture', refus: 'lecture' }, NONE],
+    ['une liste qui mêle autre chose', { usages: ['lecture', 42], refus: [{}] }, NONE],
+    ['une valeur dans les deux listes', { usages: ['lecture'], refus: ['lecture'] }, NONE],
+    ['un serveur plus ancien, sans elles', {}, NONE],
+  ])(
+    'connecte quand même, et ne rend que ce qui a été demandé : %s',
+    async (_name, answers, expected) => {
+      await restart(answers);
+      const { run } = approving();
+
+      expect(await loginComputer({ usages: ['lecture'] }, run.deps)).toEqual(expected);
+      await run.browsed();
+      expect((await readConnection(home))?.url).toBe(leon.url);
+    },
+  );
+
+  it('lancé seul : aucune case demandée, rien de rendu même si la 201 en porte, et accord.json n’est pas écrit', async () => {
+    await restart({ usages: ['lecture'], refus: [] });
+    const { run, seen } = approving();
+
+    expect(await loginComputer({}, run.deps)).toEqual(NONE);
+    await run.browsed();
+
+    expect(authorizeParams(seen[0] ?? '').keys).toEqual(['empreinte', 'etat', 'port']);
+    expect(run.out).not.toContain(BOXES_LINE);
+    expect(await stat(join(home, '.leon', 'accord.json')).catch(() => null)).toBeNull();
+  });
+
+  it('une autorisation annulée ne rend aucun usage', async () => {
+    await restart({ usages: ['lecture'], refus: [] });
+    const run = setup((params) => comeBack(params, { refus: '1', etat: params.etat }), {
+      env: { LEON_URL: leon.url },
+    });
+
+    expect(await loginComputer({ usages: ['lecture'] }, run.deps)).toEqual({ ...NONE, code: 1 });
+    await run.browsed();
+  });
+
+  // La relance de `leon setup --yes` attend moins que les 2 minutes qu'un agent laisse à une commande (décision d'Amos du
+  // 11/11) ; la première connexion garde ses 5 minutes. Les phrases disent l'attente réelle.
+  it('dit l’attente réelle : 5 minutes par défaut, 100 secondes pour la relance', async () => {
+    expect(RELAUNCH_WAIT_MS).toBe(100_000);
+    const first = setup((params) => approve(params), { timeoutMs: undefined });
+    expect(await runLogin({}, first.deps)).toBe(0);
+    await first.browsed();
+    const again = setup((params) => approve(params), { timeoutMs: RELAUNCH_WAIT_MS });
+    expect(await runLogin({}, again.deps)).toBe(0);
+    await again.browsed();
+
+    expect(first.out).toContain(
+      'Waiting for the browser (5 minutes at most). Press Ctrl+C to cancel.',
+    );
+    expect(again.out).toContain(
+      'Waiting for the browser (100 seconds at most). Press Ctrl+C to cancel.',
+    );
+  });
+
+  it('au bout du délai, le dit avec sa durée', async () => {
+    const run = setup(async () => {}, { timeoutMs: 1000 });
+
+    expect(await runLogin({}, run.deps)).toBe(1);
+
+    expect(run.err.join('\n')).toContain(
+      'Timed out: the browser did not come back within 1 second. Nothing was saved.',
+    );
+  });
+});
+
 describe('leon login --with-token', () => {
   const TOKEN = `leon_${'t'.repeat(43)}`;
+
+  // `par` (C16) : `leon setup --yes` ne relance pas la page pour une connexion faite sans navigateur.
+  it('écrit `par: jeton`, ne rend aucun usage ; une connexion par le navigateur ensuite le retire', async () => {
+    const run = setup(async () => {}, { readToken: async () => TOKEN });
+
+    expect(await loginComputer({ withToken: true, usages: ['lecture'] }, run.deps)).toEqual({
+      code: 0,
+      usages: [],
+      refus: [],
+    });
+    expect((await readConnection(home))?.par).toBe('jeton');
+
+    const browser = setup((params) => approve(params));
+    expect(await runLogin({}, browser.deps)).toBe(0);
+    await browser.browsed();
+    const saved = await readConnection(home);
+    expect(saved?.jeton).not.toBe(TOKEN);
+    expect(saved).not.toHaveProperty('par');
+  });
 
   it('vérifie le jeton par /api/v1/me, puis écrit connexion.json, sans ouvrir de navigateur', async () => {
     const run = setup(async () => {}, { readToken: async () => `${TOKEN}\n` });

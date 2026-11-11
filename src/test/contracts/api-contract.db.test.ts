@@ -212,7 +212,38 @@ describe('routes de l’API', () => {
     expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({
       ordinateur: 'MacBook-Pro',
       compte: profile.email,
+      usages: [],
+      refus: [],
     });
+  });
+});
+
+// Les cases de la page « Autoriser » (T64, C16) : la 201 les rend sous la forme que `leon login` lit.
+it('POST /api/v1/ordinateurs rend les cases de la page sous la forme que la CLI lit', async () => {
+  const {
+    members: [paul],
+  } = await createTestTenant(['Paul']);
+  if (!paul) throw new Error('membre de test manquant');
+  const token = generateApiToken();
+
+  const response = await apiRequest(API_PATHS.ordinateurs, {
+    token,
+    body: {
+      code: signComputerCode({
+        e: hashApiToken(token),
+        u: paul.userId,
+        t: paul.tenantId,
+        m: ['lecture'],
+        g: ['lecture'],
+      }),
+      nom: 'MacBook-Pro',
+    },
+  });
+
+  expect(response.status).toBe(201);
+  expect(ComputerResponseSchema.parse(await response.json())).toMatchObject({
+    usages: ['lecture'],
+    refus: [],
   });
 });
 

@@ -25,10 +25,15 @@ export const API_TOKEN_PATTERN = /^leon_[A-Za-z0-9_-]{43}$/; // 'leon_' + 32 oct
 // La réponse 201 de POST /api/v1/ordinateurs (K5 du plan « CLI sans clone ») : le nom de l'espace, celui de
 // l'ordinateur tel que le serveur l'a retenu, et l'e-mail du compte autorisé. `leon login` écrit les deux premiers
 // dans connexion.json et affiche les trois : sur une machine partagée, le compte montre une autorisation donnée par un autre.
+// `usages` et `refus` (T64, C16 du plan de la mémoire à disposition) : les cases de la page « Autoriser », cochées et
+// décochées. Lus avec tolérance : un serveur plus ancien ne les rend pas, un plus récent peut en rendre d'inconnus ; ce
+// n'est jamais une raison de refuser la connexion. La CLI n'en garde que ce qu'elle a demandé (login.ts).
 export const ComputerResponseSchema = z.object({
   espace: z.string(),
   ordinateur: z.string(),
   compte: z.string(),
+  usages: z.array(z.string()).catch([]),
+  refus: z.array(z.string()).catch([]),
 });
 export type ComputerResponse = z.infer<typeof ComputerResponseSchema>;
 
@@ -103,6 +108,11 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
+// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : T49 y ajoutera
+// `rappel`, T57 `noter`. À part de USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de
+// ce lot sait écrire.
+export const AUTHORIZE_USAGES = ['lecture'] as const satisfies readonly Usage[];
+export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
 // plus ancien perd les faits, jamais les tours. `accord` est la version d'accord de l'outil sur le poste : la CLI

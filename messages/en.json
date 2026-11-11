@@ -1762,6 +1762,16 @@
       "title": "Connect this computer",
       "question": "Authorize this computer to send your coding sessions to Leon, in the {space} workspace?",
       "warning": "If you didn’t run the command yourself, or ask Claude Code to run it, cancel.",
+      "usages": {
+        "title": "Usages for the coding tools being set up",
+        "hint": "These boxes are yours: untick what you don’t want before you click “Authorize”. An agent that ran the command for you must never tick, untick or click anything on this page.",
+        "lecture": {
+          "title": "Reading Leon (usage \"lecture\", asked separately):",
+          "p1": "At the start of each session or conversation, Leon places in the agent's context the summary of your work threads on this repository (keys only: their id, branch, tools, dates, pull request numbers and states, number of linked sources), which replaces the list of your recent sessions, the lessons you accepted, and an instruction to read the thread of its task. The model provider of the tool sees them.",
+          "p2": "The agent can read your work threads on this repository, their summaries and their state, and the memory of this repository that you can see, with the commands <code>leon threads</code>, <code>leon thread</code>, <code>leon search</code> and <code>leon versions</code>, or with the tools <code>threads</code>, <code>thread</code> and <code>versions</code> if the Leon MCP server is connected to the tool. The model provider of the tool sees what it reads. This usage never lets an agent write anything to Leon.",
+          "p3": "The <code>leon</code> commands use the token of this computer: once one of your code tools accepts this usage, they work for every agent on this computer. Refusing it in a tool only removes, in that tool, the summary, the lessons and the instruction placed at the start."
+        }
+      },
       "allow": "Authorize",
       "cancel": "Cancel",
       "invalidTitle": "Link not valid",

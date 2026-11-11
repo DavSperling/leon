@@ -37,6 +37,21 @@ describe('page de connexion', () => {
     );
   });
 
+  // Les cases que `leon setup` demande (T64) survivent à la connexion, revalidées.
+  it('garde le paramètre usages, sans ses valeurs inconnues', async () => {
+    const props = await formProps({ ...PARAMS, usages: 'lecture,inconnu' });
+
+    expect(props?.returnTo).toBe(
+      authorizePath({
+        port: 4242,
+        etat: PARAMS.etat,
+        empreinte: PARAMS.empreinte,
+        usages: ['lecture'],
+      }),
+    );
+    expect(props?.returnTo).toMatch(/&usages=lecture$/);
+  });
+
   it.each([
     ['sans paramètres', {}],
     ['un port invalide', { ...PARAMS, port: '80' }],

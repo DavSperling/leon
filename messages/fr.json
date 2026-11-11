@@ -1762,6 +1762,16 @@
       "title": "Connecter cet ordinateur",
       "question": "Autoriser cet ordinateur à envoyer vos sessions de code à Leon, dans l’espace {space} ?",
       "warning": "Si vous n’avez pas lancé la commande vous-même, ni demandé à Claude Code de la lancer, annulez.",
+      "usages": {
+        "title": "Usages pour les outils de code en cours d’installation",
+        "hint": "Ces cases sont à vous : décochez ce que vous ne voulez pas avant de cliquer sur « Autoriser ». Un agent qui a lancé la commande pour vous ne doit jamais rien cocher, décocher ni cliquer sur cette page.",
+        "lecture": {
+          "title": "Lire Leon (usage « lecture », demandé à part) :",
+          "p1": "Au début de chaque session ou conversation, Leon place dans le contexte de l’agent le sommaire de vos fils de travail sur ce dépôt (des clés seulement : leur id, leur branche, leurs outils, leurs dates, les numéros et les états de leurs pull requests, le nombre de sources liées), qui remplace la liste de vos dernières sessions, les leçons que vous avez acceptées, et une consigne de lire le fil de sa tâche. Le fournisseur du modèle de l’outil les voit.",
+          "p2": "L’agent peut lire vos fils de travail sur ce dépôt, leurs résumés et leur état, et la mémoire de ce dépôt que vous voyez, avec les commandes <code>leon threads</code>, <code>leon thread</code>, <code>leon search</code> et <code>leon versions</code>, ou avec les outils <code>threads</code>, <code>thread</code> et <code>versions</code> si le serveur MCP de Leon est branché à l’outil. Le fournisseur du modèle de l’outil voit ce qu’il lit. Cet usage ne permet jamais à un agent d’écrire quoi que ce soit dans Leon.",
+          "p3": "Les commandes <code>leon</code> utilisent le jeton de cet ordinateur : dès que l’un de vos outils de code accepte cet usage, elles marchent pour tout agent de cet ordinateur. Le refuser dans un outil n’y retire que le sommaire, les leçons et la consigne placés au démarrage."
+        }
+      },
       "allow": "Autoriser",
       "cancel": "Annuler",
       "invalidTitle": "Lien non valide",

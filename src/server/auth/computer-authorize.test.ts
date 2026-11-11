@@ -78,6 +78,64 @@ describe('authorizePath et authorizeQuery', () => {
   });
 });
 
+// Les cases que `leon setup` demande (T64, C16) : facultatives, et jamais une raison de refuser le lien. La page ne
+// montre que ce qu'elle sait montrer à ce lot (`lecture`).
+describe('le paramètre usages (T64)', () => {
+  it('rend les cases demandées que la page sait montrer, sans doublon', () => {
+    expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture' })).toEqual({
+      ...PARAMS,
+      usages: ['lecture'],
+    });
+    expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture,lecture' })?.usages).toEqual([
+      'lecture',
+    ]);
+    expect(parseAuthorizeParams({ ...GOOD, usages: 'rappel,lecture,noter' })?.usages).toEqual([
+      'lecture',
+    ]);
+  });
+
+  it.each([
+    ['une valeur inconnue', 'inconnu'],
+    ['un usage que la page ne montre pas encore', 'rappel'],
+    ['un usage qui n’est jamais coché par défaut', 'resume'],
+    ['vide', ''],
+    ['une chaîne trop longue', `lecture,${'x'.repeat(300)}`],
+    ['un paramètre répété', ['lecture', 'lecture']],
+    ['autre chose qu’une chaîne', 42],
+    ['un fichier', new File([], 'lecture')],
+  ])('écarte %s, sans jamais refuser le lien', (_name, usages) => {
+    const params = parseAuthorizeParams({ ...GOOD, usages });
+    expect(params).toEqual(PARAMS);
+    expect(params?.usages).toBeUndefined();
+  });
+
+  it('authorizeQuery ne l’ajoute que s’il en reste : sans lui, l’adresse est celle d’avant', () => {
+    expect(authorizeQuery({ ...PARAMS, usages: ['lecture'] })).toBe(
+      `port=4242&etat=${ETAT}&empreinte=${EMPREINTE}&usages=lecture`,
+    );
+    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'rappel' });
+    expect(ignored && authorizeQuery(ignored)).toBe(authorizeQuery(PARAMS));
+  });
+
+  it('pathAfterSignIn le garde, et en retire une valeur inconnue', () => {
+    const asked = authorizePath({ ...PARAMS, usages: ['lecture'] });
+
+    expect(pathAfterSignIn(asked)).toBe(asked);
+    expect(pathAfterSignIn(`${authorizePath(PARAMS)}&usages=lecture%2Cinconnu`)).toBe(asked);
+    expect(pathAfterSignIn(`${authorizePath(PARAMS)}&usages=inconnu`)).toBe(authorizePath(PARAMS));
+  });
+
+  it('returnUrl ne le porte jamais : les cases ne partent que dans le code signé', () => {
+    const params = { ...PARAMS, usages: ['lecture' as const] };
+
+    expect([...new URL(returnUrl(params, { code: 'a.b' })).searchParams.keys()]).toEqual([
+      'code',
+      'etat',
+    ]);
+    expect(returnUrl(params, 'refus')).toBe(`http://127.0.0.1:4242/retour?refus=1&etat=${ETAT}`);
+  });
+});
+
 describe('returnUrl (K3)', () => {
   it('« Autoriser » : le code et l’etat, sur 127.0.0.1 au port validé', () => {
     expect(returnUrl(PARAMS, { code: 'charge.signature' })).toBe(

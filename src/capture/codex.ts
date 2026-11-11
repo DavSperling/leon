@@ -33,6 +33,8 @@ import {
   buildFacts,
   type FactsRecord,
   isExternalCommand,
+  LEON_LOCAL_TOOLS,
+  LEON_MCP_SERVER,
   newFactsRecord,
   recordCommand,
   recordFile,
@@ -268,8 +270,10 @@ const LOCAL_FUNCTIONS = new Set([
 // Les éléments de tour (`item_completed`) qui n'apportent rien d'ailleurs : les autres (`McpToolCall`, `WebSearch`,
 // `CollabAgentToolCall`, `SubAgentActivity`, `DynamicToolCall`, `Extension`, `ImageGeneration`, tout type inconnu)
 // rendent la session externe. Une commande l'est si elle va sur le réseau (isExternalCommand).
-// shortcut: un appel MCP compte toujours, même vers Leon : les outils `dossier`, `fil`, `lecons`, `versions` et
-// `remember` du serveur MCP de Leon (D36) ne compteront plus quand T44 (lot 12) saura le reconnaître à son URL.
+// Un `McpToolCall` vers un outil local du serveur `leon` (LEON_LOCAL_TOOLS, D36) ne compte pas, quand la CLI a reconnu
+// ce serveur à l'URL de `config.toml` (leon-mcp.ts) : `server` et `tool` se comparent en entier.
+// shortcut: à l'ancien format (avant l'historique paginé), tout appel MCP compte, même vers Leon : sa forme
+// (`namespace`) n'est relevée que par un test ; la lire si un poste garde un Codex d'avant la 0.16x.
 // shortcut: tout sous-agent rend la session externe : l'essai T15 n'a pas relevé ses échanges, le tri de T63 (un
 // sous-agent qui ne lit que le dépôt) viendra avec la capture complète (lot 14).
 const LOCAL_ITEMS = new Set([
@@ -395,10 +399,18 @@ type Reading = {
   cwd: string;
   errors: number;
   external: boolean;
+  leonMcp: boolean;
+};
+
+const McpItemSchema = z.object({ server: z.literal(LEON_MCP_SERVER), tool: z.string() });
+const isLeonLocalCall = (item: unknown) => {
+  const call = McpItemSchema.safeParse(item);
+  return call.success && LEON_LOCAL_TOOLS.includes(call.data.tool);
 };
 
 // Un élément de tour typé par Codex (historique paginé).
 function readItem(reading: Reading, item: z.infer<typeof ItemSchema>): void {
+  if (item.type === 'McpToolCall' && reading.leonMcp && isLeonLocalCall(item)) return;
   if (!LOCAL_ITEMS.has(item.type)) {
     reading.external = true;
     return;
@@ -444,12 +456,14 @@ function readItem(reading: Reading, item: z.infer<typeof ItemSchema>): void {
 // écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. `brancheLue` : la branche que lit git au
 // moment de la capture, prise seulement quand le rollout n'en porte pas (hors dépôt git au démarrage, ou avant le
 // premier commit).
+// `leonMcp` : le serveur `leon` de la configuration de Codex est celui de la connexion (leon-mcp.ts).
 // shortcut: une branche lue à la capture n'est marquée comme telle que dans le code : C1 n'a pas de champ pour le dire,
 // en ajouter un (le serveur d'abord) si le bloc doit la distinguer.
 export function extractCodexFacts(
   content: string,
   root: string | null,
   brancheLue: string | null = null,
+  leonMcp = false,
 ): SessionFacts {
   const meta = firstMeta(content);
   const session = parseCodexSession(content);
@@ -461,6 +475,7 @@ export function extractCodexFacts(
     cwd: meta?.cwd || root || '/',
     errors: 0,
     external: false,
+    leonMcp,
   };
   const calls = new Map<string, CodexCall>();
   let start: string | null = null;
@@ -476,8 +491,14 @@ export function extractCodexFacts(
         const item = ItemSchema.safeParse((line.payload as { item?: unknown }).item);
         if (item.success) readItem(reading, item.data);
       }
-      // L'ancien format garde aussi ces évènements-là.
-      if (payload.data.type === 'mcp_tool_call_end' || payload.data.type === 'web_search_end') {
+      // L'ancien format garde aussi ces évènements-là. La fin d'un appel MCP porte `invocation` (`server`, `tool`).
+      const invocation = (line.payload as { invocation?: unknown }).invocation;
+      const leonCall =
+        payload.data.type === 'mcp_tool_call_end' && leonMcp && isLeonLocalCall(invocation);
+      if (
+        (payload.data.type === 'mcp_tool_call_end' && !leonCall) ||
+        payload.data.type === 'web_search_end'
+      ) {
         reading.external = true;
       }
       const applied = !typed ? PatchApplyEndSchema.safeParse(line.payload) : null;

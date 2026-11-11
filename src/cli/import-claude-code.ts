@@ -225,6 +225,8 @@ export async function importSession(
 // dans `content` ; un autre outil donne les siens (`kind`, `faits`), relevés par son lecteur.
 // shortcut: un worktree hors du clone (../leon-wt) perd ses fichiers, seuls ceux de `.claude/worktrees/` du clone
 // sont gardés (extractClaudeCodeFacts) ; prendre la racine du dépôt de chaque fichier le jour où ça manque.
+// shortcut: l'import ne lit pas la configuration MCP (leon-mcp.ts) : un outil du serveur de Leon y rend la session
+// externe (échec fermé), le crochet de fin la relit. La lire ici si l'import doit rattraper ces sessions.
 export async function sendSessionFacts(
   session: Pick<CodeSession, 'sessionId'>,
   source: { content: string; root: string | null; fin: boolean; faits?: SessionFacts },

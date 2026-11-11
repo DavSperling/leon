@@ -580,6 +580,46 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     expect((await factsOf(async () => null, '/p'))?.fichiers).toEqual([]);
   });
 
+  // Lire Leon par son serveur MCP (T44, D36) : reconnu à l'URL de la configuration de Claude Code, lue à la capture.
+  describe('un outil local du serveur MCP de Leon', () => {
+    const MCP = 'http://localhost:3000/api/mcp';
+    const reading = [
+      conversationLine(1, 'user', 'Lis le fil', '/p'),
+      conversationLine(
+        2,
+        'assistant',
+        [{ type: 'tool_use', id: 'm1', name: 'mcp__leon__thread', input: { projet: 'x' } }],
+        '/p',
+      ),
+    ].join('\n');
+    const externeWith = async (config: string | null, mcpUrl: string | undefined) => {
+      const facts = vi.fn<FactsSender>(async () => {});
+      const { deps } = makeDeps({
+        readFile: async (path) => {
+          if (path === '/t/s1.jsonl') return reading;
+          if (path === `${HOME}/.claude.json` && config !== null) return config;
+          throw Object.assign(new Error('absent'), { code: 'ENOENT' });
+        },
+        facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
+      });
+      expect(await captureSessionFromHook(HOOK, { ...deps, mcpUrl })).toBe(0);
+      return facts.mock.calls[0]?.[0].faits.externe;
+    };
+    const leonAt = (url: string) => JSON.stringify({ mcpServers: { leon: { type: 'http', url } } });
+
+    it('le serveur `leon` vers le serveur de la connexion : la session n’est pas externe', async () => {
+      expect(await externeWith(leonAt(MCP), MCP)).toBe(false);
+    });
+
+    it.each([
+      ['vers une autre URL', leonAt('https://autre.example/api/mcp'), MCP],
+      ['sans configuration', null, MCP],
+      ['sans connexion', leonAt(MCP), undefined],
+    ])('%s : la session reste externe', async (_label, config, mcpUrl) => {
+      expect(await externeWith(config, mcpUrl)).toBe(true);
+    });
+  });
+
   it('des tours refusés : les faits ne partent pas', async () => {
     const facts = vi.fn<FactsSender>(async () => {});
     const { deps } = makeDeps({

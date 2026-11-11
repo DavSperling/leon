@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 import {
   API_PATHS,
@@ -7,11 +8,11 @@ import {
 } from '@/capture/api-contract';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { BRIEFING_BLOCK_CLOSE, renderBriefing } from '@/server/briefing/briefing-prompt';
-import { sources } from '@/server/db/schema/memory';
+import { readLog, sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
-import { createTestTenant } from '@/test/fixtures';
+import { createTestTenant, seedSource } from '@/test/fixtures';
 
 const PROJECT = 'github.com/acme/leon';
 const bytes = (text: string) => Buffer.byteLength(text, 'utf8');
@@ -65,6 +66,33 @@ describe('POST /api/v1/contexte', () => {
 
     expect(response.status).toBe(413);
     expect(await response.json()).toEqual({ error: 'Request too large' });
+  });
+
+  // Le point injecté est une lecture (D35) : l'état d'un fil écrit d'après cette session le comptera parmi ses entrées.
+  it('note chaque source du point au journal des lectures, avec la session du corps', async () => {
+    const { paul, token } = await setup();
+    const sourceIds = [(await seedSource(paul)).sourceId, (await seedSource(paul)).sourceId];
+    await adminDb.insert(briefings).values({
+      tenantId: paul.tenantId,
+      userId: paul.userId,
+      project: PROJECT,
+      markdown: '# Point du matin\n- Le jeton est corrigé [1].',
+      sourceIds,
+      preparedAt: new Date(),
+      stale: false,
+      acl: [paul.userId],
+    });
+
+    const response = await apiRequest(API_PATHS.contexte, { token, body: body() });
+
+    expect(ContextResponseSchema.parse(await response.json()).texte).toContain(
+      'Le jeton est corrigé',
+    );
+    const rows = await adminDb.select().from(readLog).where(eq(readLog.userId, paul.userId));
+    expect(rows.map((row) => row.sourceId).sort()).toEqual(sourceIds.sort());
+    expect(rows.map(({ tool, client, session }) => ({ tool, client, session }))).toEqual(
+      Array(2).fill({ tool: 'briefing', client: 'cli', session: 'session-courante' }),
+    );
   });
 
   it('borne le bloc à 8 000 octets, même quand on en demande plus, et à `max` en dessous', async () => {

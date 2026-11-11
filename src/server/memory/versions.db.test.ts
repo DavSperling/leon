@@ -10,6 +10,7 @@ import { adminDb } from '@/test/db';
 import { seedSource, seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
 import {
+  latestIn,
   listVersions,
   readLatest,
   readVersion,
@@ -221,6 +222,53 @@ describe('la lecture des versions', () => {
 
     expect(await readLatest(alice, thread)).toEqual({ n: 1, version: null });
     expect((await readLatest(alice, note)).version?.texte).toBe('Ma note.');
+  });
+
+  it('l’historique dit pour chaque version le début de son texte, ses entrées et si elle vient du modèle (T54)', async () => {
+    const [alice] = await pair();
+    const thread = await seedThread(alice);
+    const code = await session(alice);
+    const long = `## Où j'en suis\n${'é'.repeat(700)}`;
+    await write(alice, {
+      sourceId: thread,
+      attendue: 0,
+      texte: '- session [[x]]',
+      entrees: [code],
+    });
+    await write(alice, {
+      sourceId: thread,
+      attendue: 1,
+      texte: long,
+      entrees: [code],
+      ecritPar: 'modele',
+    });
+    await restoreVersion(alice, { sourceId: thread, n: 2, depuis: 2 });
+
+    const list = await listVersions(alice, thread);
+
+    expect(list.map(({ n, duModele, entrees }) => ({ n, duModele, entrees }))).toEqual([
+      { n: 1, duModele: false, entrees: [code] },
+      { n: 2, duModele: true, entrees: [code] },
+      // Une restauration d'une version du modèle compte comme une version du modèle (D33).
+      { n: 3, duModele: true, entrees: [code] },
+    ]);
+    expect(list[0]?.debut).toBe('- session [[x]]');
+    expect(list[0]?.creeLe).toBeInstanceOf(Date);
+    expect(list[1]?.debut).toBe(long.slice(0, 600));
+  });
+
+  it('latestIn lit la dernière version dans la transaction de l’appelant, avec son origine', async () => {
+    const [alice] = await pair();
+    const thread = await seedThread(alice);
+    const code = await session(alice);
+    await write(alice, { sourceId: thread, attendue: 0, entrees: [code], ecritPar: 'modele' });
+
+    const read = await withTenant(alice, (tx) => latestIn(tx, alice, thread));
+
+    expect(read).toEqual(await readLatest(alice, thread));
+    expect(read.version).toMatchObject({ n: 1, duModele: true, entrees: [code] });
+    // Une date, pas le texte que rend le pilote pour une requête brute.
+    expect(read.version?.creeLe).toBeInstanceOf(Date);
   });
 
   it("la version d'un collègue est introuvable par la lecture", async () => {

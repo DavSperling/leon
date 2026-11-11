@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DocumentationPage } from './documentation';
-import { documentationMarkdown, SECTIONS } from './documentation-markdown';
+import { documentationMarkdown, READ_COMMANDS, SECTIONS } from './documentation-markdown';
 
 // L'interrupteur de la page lit le routeur ; ici, la page ne sert qu'à comparer ses commandes.
 vi.mock('next/navigation', () => ({
@@ -112,7 +112,8 @@ describe('documentationMarkdown', () => {
       expect(md).toContain('```sh\npnpm leon installer-crochets\n```');
       // un seul bloc de consigne, et les blocs sont tous fermés
       expect(md.match(/^```text$/gm)).toHaveLength(1);
-      expect(md.match(/^```/gm)?.length).toBe(12);
+      expect(md).toContain(`\`\`\`sh\n${READ_COMMANDS}\n\`\`\``);
+      expect(md.match(/^```/gm)?.length).toBe(14);
     },
   );
 

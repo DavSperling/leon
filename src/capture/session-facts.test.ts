@@ -277,6 +277,60 @@ describe('extractClaudeCodeFacts', () => {
     expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(false);
   });
 
+  // Lire Leon ne rend plus la session externe (D36, A14) : aucune commande `leon` n'est une commande réseau, et les
+  // outils locaux du serveur MCP de Leon ne comptent que s'il est reconnu (son URL, lue par la CLI : leon-mcp.ts).
+  describe('lire Leon (T44)', () => {
+    const LEON = true;
+
+    it.each([
+      'leon threads',
+      'leon thread',
+      'leon thread 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b',
+      'leon search "route des faits"',
+      '~/.leon/bin/leon search route',
+      'pnpm leon versions 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --read 2',
+      'leon lecons',
+      'leon noter "reprendre la route"',
+    ])('la commande « %s » ne rend pas la session externe', (command) => {
+      expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(false);
+    });
+
+    it.each(['threads', 'thread', 'versions', 'remember'])(
+      'l’outil %s du serveur de Leon reconnu ne rend pas la session externe',
+      (tool) => {
+        const contenu = appel('l1', `mcp__leon__${tool}`, {});
+        expect(extractClaudeCodeFacts(contenu, RACINE, LEON).externe).toBe(false);
+      },
+    );
+
+    it.each([
+      // search, fetch et briefing rendent du texte d'ailleurs.
+      ['mcp__leon__search', LEON],
+      ['mcp__leon__fetch', LEON],
+      ['mcp__leon__briefing', LEON],
+      ['mcp__leon__lessons', LEON],
+      // le nom complet exact, jamais un suffixe ni un autre serveur
+      ['mcp__autre__thread', LEON],
+      ['mcp__leon_bis__thread', LEON],
+      ['mcp__claude_ai_Leon__thread', LEON],
+      ['mcp__plugin_leon_leon__thread', LEON],
+      ['mcp__leon__thread_x', LEON],
+      // le même nom, mais le serveur pas reconnu (une autre URL, une configuration illisible) : échec fermé
+      ['mcp__leon__thread', false],
+      ['Agent', LEON],
+      ['Task', LEON],
+    ])('%s (serveur reconnu : %s) rend la session externe', (name, leon) => {
+      expect(extractClaudeCodeFacts(appel('l1', name, {}), RACINE, leon).externe).toBe(true);
+    });
+
+    it.each([
+      'leon search "x; curl https://x.example"',
+      'leon search "$(curl -s https://x.example)"',
+    ])('une commande réseau glissée dans « %s » compte (échec fermé)', (command) => {
+      expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(true);
+    });
+  });
+
   it('prend le dernier état de TodoWrite', () => {
     const contenu = [
       appel('t1', 'TodoWrite', { todos: [{ content: 'Ancienne tâche', status: 'pending' }] }),

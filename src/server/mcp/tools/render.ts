@@ -9,14 +9,23 @@ import {
   type SourceHit,
   type SourceInfo,
 } from '@/server/search/types';
-import type { FetchOutput, SearchOutput } from './output-schemas';
+import type { Bounded, Dossier, ThreadRead, VersionsRead } from '@/server/sessions/thread-read';
+import type {
+  FetchOutput,
+  SearchOutput,
+  ThreadOutput,
+  ThreadsOutput,
+  VersionsOutput,
+} from './output-schemas';
 
 // Ce que les outils `search` et `fetch` rendent au client MCP : un texte pour l'assistant et un
 // `structuredContent` pour le code. Tout ce qui vient de la mémoire (titres, extraits, noms, liens, texte des
 // tours) est de la donnée captée, jamais une consigne : le texte la met entre balises, derrière la ligne de
 // garde, et aucune donnée ne peut fermer sa balise ni en ouvrir une (échappement de prompt-guard.ts, que la
 // réponse en tête et la discussion partagent). Les outils de l'agent de discussion (T11) reprennent ces blocs
-// (`renderHit`, `renderTurn`, `sourceAttributes`) avec leur propre numérotation.
+// (`renderHit`, `renderTurn`, `sourceAttributes`) avec leur propre numérotation. Les lectures des fils (T44, T45,
+// T54) rendent ici, sous la même garde, le texte des routes de lecture et des outils `threads`, `thread` et
+// `versions` : jamais un titre de PR (D25).
 
 // L'état d'un ticket ou d'une PR (github/map.ts) se lit « clé : valeur », dans son ordre : `merged · equipe` ne dirait
 // pas ce qu'est chaque valeur. Les autres clés (repo, board, list…) gardent leur valeur seule, en tête.
@@ -42,7 +51,14 @@ export function sourceAttributes(source: SourceInfo, n?: number): string {
   ]);
 }
 
+const prKey = (pr: { repo: string; numero: number }) => `${pr.repo}#${pr.numero}`;
+
 export function renderHit(hit: SourceHit, n: number): string {
+  // Une session de code : son fil et ses PR, en clés (T45).
+  const thread = dataAttributes([
+    ['fil', hit.thread],
+    ['prs', hit.prs?.map(prKey).join(', ')],
+  ]);
   const passages = hit.passages.map(
     (passage) =>
       `<passage${dataAttributes([
@@ -51,7 +67,7 @@ export function renderHit(hit: SourceHit, n: number): string {
         ['auteur', passage.authorName],
       ])}>${escapeData(stripHighlightMarks(passage.snippet))}</passage>`,
   );
-  return [`<source${sourceAttributes(hit, n)}>`, ...passages, '</source>'].join('\n');
+  return [`<source${sourceAttributes(hit, n)}${thread}>`, ...passages, '</source>'].join('\n');
 }
 
 const plural = (count: number, word: string): string => `${count} ${word}${count > 1 ? 's' : ''}`;
@@ -60,16 +76,19 @@ export function unknownPeopleLines(names: string[]): string[] {
   return names.map((name) => `No one on the team is called "${escapeData(oneLine(name))}".`);
 }
 
-export function renderSearch(page: SearchPage, pageNumber: number): string {
+// `pageHint` : faux pour une recherche sans pages (la route /chercher), qui n'invite pas à demander la suivante.
+export function renderSearch(page: SearchPage, pageNumber: number, pageHint = true): string {
   const unknown = unknownPeopleLines(page.unknownPeople);
   if (page.hits.length === 0) return ['No results.', ...unknown].join('\n');
   const first = (pageNumber - 1) * PAGE_SIZE;
   const more = first + page.hits.length < page.totalSources;
   return [
     DATA_GUARD_LINE,
-    `${plural(page.hits.length, 'source')} of ${page.totalSources} (page ${pageNumber}).${
-      more ? ` For more, ask for page ${pageNumber + 1}.` : ''
-    }`,
+    pageHint
+      ? `${plural(page.hits.length, 'source')} of ${page.totalSources} (page ${pageNumber}).${
+          more ? ` For more, ask for page ${pageNumber + 1}.` : ''
+        }`
+      : `${plural(page.hits.length, 'source')} of ${page.totalSources}.`,
     ...unknown,
     ...page.hits.map((hit, index) => renderHit(hit, first + index + 1)),
   ].join('\n');
@@ -118,6 +137,8 @@ export function searchStructured(page: SearchPage, pageNumber: number): SearchOu
         ts: iso(passage.ts),
         authorName: passage.authorName,
       })),
+      ...(hit.thread === undefined ? {} : { thread: hit.thread }),
+      ...(hit.prs === undefined ? {} : { prs: hit.prs }),
     })),
   };
 }
@@ -185,5 +206,191 @@ export function fetchStructured(fetched: Fetched): FetchOutput {
       text: turn.text,
       isHit: turn.isHit,
     })),
+  };
+}
+
+// Les textes fixes des lectures : un fil introuvable (d'un collègue, d'un autre projet, absorbé sans fil gardé) se dit
+// comme un fil qui n'existe pas.
+export const THREAD_NOT_FOUND = 'No thread found.';
+
+const prText = (pr: ThreadRead['prs']['items'][number]) =>
+  `${prKey(pr)}${pr.etat === null ? '' : ` ${pr.etat}`}`;
+// Une liste coupée le dit (D27) : les éléments rendus sont les plus récents.
+const cut = (list: Bounded<unknown>, word: string): string[] =>
+  list.total > list.items.length
+    ? [`Showing ${list.items.length} of ${list.total} ${word}, the most recent.`]
+    : [];
+const element = (name: string, attributes: Array<[string, string | null]>, text = '') =>
+  text === ''
+    ? `<${name}${dataAttributes(attributes)}/>`
+    : `<${name}${dataAttributes(attributes)}>${escapeData(text)}</${name}>`;
+
+// Le dossier (C9) : une ligne de clés par fil, et la première ligne de son état, échappée.
+export function renderDossier(dossier: Dossier): string {
+  if (dossier.fils.length === 0) return 'No threads on this project yet.';
+  return [
+    DATA_GUARD_LINE,
+    `${plural(dossier.fils.length, 'thread')} of ${dossier.total}.`,
+    ...dossier.fils.map((fil) =>
+      element(
+        'fil',
+        [
+          ['id', fil.id],
+          ['titre', fil.titre],
+          ['outils', fil.outils.map((kind) => SOURCE_KIND_LABELS[kind]).join(', ')],
+          ['date', fil.derniereDate === null ? null : isoDate(fil.derniereDate)],
+          ['prs', fil.prs.map(prText).join(', ')],
+          // Une liste coupée le dit (D27) : les PR rendues sont les plus récentes.
+          ['prs_total', fil.prsTotal > fil.prs.length ? String(fil.prsTotal) : null],
+          ['liees', String(fil.liees)],
+        ],
+        fil.etatCourt,
+      ),
+    ),
+  ].join('\n');
+}
+
+// Un fil (C9) : sa version quand l'état est elle, son état, puis ses sessions, PR, tickets et sources liées, en clés,
+// chaque coupe signalée.
+export function renderFil(read: ThreadRead): string {
+  return [
+    DATA_GUARD_LINE,
+    `<fil${dataAttributes([
+      ['id', read.id],
+      ['titre', read.titre],
+      ['version', read.version === null ? null : String(read.version.n)],
+      ['date', read.version === null ? null : isoDate(read.version.creeLe)],
+      ['par', read.version?.ecritPar],
+    ])}>`,
+    ...(read.etat === '' ? [] : ['<etat>', escapeData(read.etat), '</etat>']),
+    ...cut(read.sessions, 'sessions'),
+    ...read.sessions.items.map((one) =>
+      element('session', [
+        ['id', one.id],
+        ['outil', SOURCE_KIND_LABELS[one.kind]],
+        ['date', isoDate(one.date)],
+      ]),
+    ),
+    ...cut(read.prs, 'pull requests'),
+    ...read.prs.items.map((pr) =>
+      element('pr', [
+        ['depot', pr.repo],
+        ['numero', String(pr.numero)],
+        ['etat', pr.etat],
+      ]),
+    ),
+    ...cut(read.tickets, 'tickets'),
+    ...read.tickets.items.map((ticket) => element('ticket', [['id', ticket]])),
+    ...cut(read.liees, 'linked sources'),
+    ...read.liees.items.map((one) =>
+      element('source', [
+        ['id', one.id],
+        ['outil', SOURCE_KIND_LABELS[one.kind]],
+        ['titre', one.titre],
+      ]),
+    ),
+    '</fil>',
+  ].join('\n');
+}
+
+// L'historique d'un fil (C12) : sans numéro, une ligne par version lisible avec sa première ligne ; avec un numéro,
+// le texte de cette version. Rien ne propose de restaurer (D33).
+export function renderVersions(read: VersionsRead): string {
+  const versionAttributes = (one: VersionsRead['versions'][number]): Array<[string, string]> => [
+    ['n', String(one.n)],
+    ['date', isoDate(one.creeLe)],
+    ['par', one.ecritPar],
+    ['motif', one.motif],
+  ];
+  if (read.n !== null) {
+    const [one] = read.versions;
+    if (!one) return `Version ${read.n} of this thread is not readable, or does not exist.`;
+    return [
+      DATA_GUARD_LINE,
+      `<version${dataAttributes([
+        ['fil', read.id],
+        ['titre', read.titre],
+        ...versionAttributes(one),
+      ])}>`,
+      escapeData(one.texte),
+      '</version>',
+    ].join('\n');
+  }
+  if (read.versions.length === 0) return 'No readable version of this thread.';
+  return [
+    DATA_GUARD_LINE,
+    `<fil${dataAttributes([
+      ['id', read.id],
+      ['titre', read.titre],
+    ])}>`,
+    ...read.versions.map((one) => element('version', versionAttributes(one), one.texte)),
+    '</fil>',
+    'To read one version, ask for it by its number.',
+  ].join('\n');
+}
+
+// Le `structuredContent` des lectures des fils au MCP (C9, D25) : des clés seulement. L'état, la première ligne d'une
+// version et le titre d'une source liée ne vont que dans le texte gardé.
+const prKeys = (prs: Array<{ repo: string; numero: number }>) =>
+  prs.map(({ repo, numero }) => ({ repo, numero }));
+
+export function threadsStructured(dossier: Dossier): ThreadsOutput {
+  return {
+    total: dossier.total,
+    threads: dossier.fils.map((fil) => ({
+      id: fil.id,
+      titre: fil.titre,
+      date: fil.derniereDate === null ? null : iso(fil.derniereDate),
+      prs: prKeys(fil.prs),
+    })),
+  };
+}
+
+export function threadStructured(read: ThreadRead): ThreadOutput {
+  return {
+    id: read.id,
+    titre: read.titre,
+    version: read.version === null ? null : { n: read.version.n, date: iso(read.version.creeLe) },
+    sessions: read.sessions.items.map((one) => ({ id: one.id, date: iso(one.date) })),
+    prs: prKeys(read.prs.items),
+    liees: read.liees.items.map((one) => one.id),
+  };
+}
+
+export function versionsStructured(read: VersionsRead): VersionsOutput {
+  return {
+    id: read.id,
+    titre: read.titre,
+    versions: read.versions.map((one) => ({ n: one.n, date: iso(one.creeLe), par: one.ecritPar })),
+  };
+}
+
+// `fetch` d'un id de fil (D35) : le contrat de ChatGPT, avec dans `text` le texte gardé de `thread`, ligne de garde en
+// tête (décision d'Amos du 10/11). Un fil n'a pas de tour. Sa date : sa dernière session, à défaut sa version.
+export function threadFetchStructured(read: ThreadRead): FetchOutput {
+  const last = read.sessions.items[0]?.date ?? read.version?.creeLe;
+  const label = SOURCE_KIND_LABELS.leon_fil;
+  return {
+    id: read.id,
+    title: read.titre,
+    text: renderFil(read),
+    url: '',
+    metadata: {
+      outil: label,
+      nature: 'fil_de_travail',
+      ...(last === undefined ? {} : { date: isoDate(last) }),
+    },
+    source: {
+      sourceId: read.id,
+      kind: 'leon_fil',
+      kindLabel: label,
+      nature: 'fil_de_travail',
+      title: read.titre,
+      url: null,
+      origin: {},
+      lastTs: last === undefined ? '' : iso(last),
+    },
+    truncated: false,
+    turns: [],
   };
 }

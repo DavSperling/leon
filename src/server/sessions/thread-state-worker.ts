@@ -1,6 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
-import { CAPTURE_KINDS, CODE_SESSION_KINDS, type TurnRole } from '@/capture/turn';
+import {
+  CAPTURE_KINDS,
+  CODE_SESSION_KINDS,
+  type CodeSessionKind,
+  type SourceKind,
+  type TurnRole,
+} from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { env } from '@/server/env';
@@ -62,8 +68,9 @@ import {
 // envoyées par une CLI à jour partent encore au modèle de l'état (RESUME_LINES le dit). Rappeler la route pour chaque
 // connexion qui a reçu des faits avec `resume` le jour où un poste change de serveur ou d'organisation (T43 amendé le
 // 10/11).
-// shortcut: les sources lues pendant une session (`read_log.session`, D35) n'entrent ni au condensé ni aux entrées :
-// la colonne vient avec T44, qui les y ajoute (T44 amendé le 10/11).
+// - Les sources que l'auteur a lues pendant les sessions du condensé (D35, T44) entrent aux entrées de l'état du
+//   modèle, par la date ou par l'id de la session (sources_lues_pendant, 0064) : l'une rendue invisible, l'état se
+//   cache. Le texte qu'elles ont apporté n'entre au condensé que par le récit de la session.
 
 export type FilStateOutcome = 'modele' | 'serveur' | 'inchange' | 'depassee' | 'sans-objet';
 
@@ -88,7 +95,7 @@ const USAGE_RESUME = sql`(coalesce(s.metadata->'usages' @> '["resume"]'::jsonb, 
 
 type SessionRow = {
   id: string;
-  kind: string;
+  kind: CodeSessionKind;
   faits: unknown;
   resume: boolean;
   last_epoch: string;
@@ -118,8 +125,15 @@ type TailRow = {
 };
 // Les résumés pris en compte (D21) : pour chaque session, le numéro de son dernier résumé.
 type EtatSession = Record<string, string>;
-type Read = {
+export type Read = {
+  fil: Fil;
   list: Parameters<typeof deterministicState>[0];
+  // Ce que la lecture commune rend de chaque élément de `list` (thread-read.ts) : l'outil et la date d'une session,
+  // l'outil et le titre d'une source liée.
+  shown: {
+    sessions: Array<{ id: string; kind: SourceKind; date: Date }>;
+    sources: Array<{ id: string; kind: SourceKind; title: string | null }>;
+  };
   // Le condensé à faire, quand un résumé est nouveau depuis le dernier état.
   // `prs` : les sources GitHub des PR dont l'état entre au condensé, des entrées de la version (D33).
   model: {
@@ -168,8 +182,8 @@ async function readTail(
 
 // Le fil de l'auteur, hors absorbé, ses sessions de code et ses sources liées qu'il voit ; avec `withModel`, et un
 // résumé nouveau, de quoi faire le condensé. Les textes (résumés, sources liées) ne se lisent que pour lui : l'état
-// déterministe n'a besoin que des ids.
-async function readFil(
+// déterministe n'a besoin que des ids. La lecture commune (thread-read.ts) la reprend sans le modèle.
+export async function readFil(
   tx: Tx,
   ctx: TenantContext,
   filId: string,
@@ -198,8 +212,12 @@ async function readFil(
       and s.id = any(${textArray(ids(fil, 'sessions'))}::uuid[])
     order by ${LAST_TS_SQL} desc, s.id`);
   // Une note ou une conversation captée : seulement celle de l'auteur, comme la liaison (thread-links.ts).
-  const { rows: linked } = await tx.execute<{ id: string }>(sql`
-    select s.id from sources s
+  const { rows: linked } = await tx.execute<{
+    id: string;
+    kind: SourceKind;
+    title: string | null;
+  }>(sql`
+    select s.id, s.kind, s.title from sources s
     where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(ids(fil, 'liees'))}::uuid[])
       and s.kind = any(${textArray([...LINKED_KINDS])})
       and (s.kind <> all(${textArray(CAPTURE_KINDS)}) or s.owner_user_id = ${ctx.userId})
@@ -213,12 +231,21 @@ async function readFil(
     prs,
     sources: linked.map((one) => one.id),
   };
+  const shown = {
+    sessions: sessions.map((one) => ({
+      id: one.id,
+      kind: one.kind,
+      date: epochToDate(one.last_epoch),
+    })),
+    sources: linked,
+  };
 
   const withResume = sessions.flatMap((one) => {
     const faits = SessionFactsSchema.safeParse(one.faits);
     return one.resume && faits.success ? [{ ...one, faits: faits.data }] : [];
   });
-  if (!withModel || !withResume.some((one) => one.nouveau)) return { list, model: null };
+  if (!withModel || !withResume.some((one) => one.nouveau))
+    return { fil, list, shown, model: null };
   const tours: EtatSession = Object.fromEntries(
     withResume.flatMap((one) => (one.resume_tour === null ? [] : [[one.id, one.resume_tour]])),
   );
@@ -294,7 +321,9 @@ async function readFil(
     }),
   );
   return {
+    fil,
     list,
+    shown,
     model: {
       input: { sessions: input, sources },
       tours,
@@ -332,9 +361,14 @@ async function lockFil(tx: Tx, ctx: TenantContext, filId: string): Promise<boole
   return row?.libre === true;
 }
 
+// shortcut: au-delà de ENTREES_MAX entrées (lectures en cascade d'un fil à l'autre), l'état reste déterministe ;
+// relever le plafond ou couper la cascade quand le compteur fil.entrees_trop monte.
+export const ENTREES_MAX = 500;
+
 // L'état du modèle, sous le verrou du fil (lockFil, D34), dans une transaction : l'usage `resume` des sessions du
-// condensé relu, la version écrite en compare-and-set, puis `etat_session`. Sans rien de gardé, seul `etat_session`
-// avance (pas de second appel pour le même résumé), et rend null : l'appelant passe à l'état déterministe.
+// condensé relu, la version écrite en compare-and-set, puis `etat_session`. Sans rien de gardé, ou avec trop
+// d'entrées (ENTREES_MAX, compté sans texte ni id), seul `etat_session` avance (pas de second appel pour le même
+// résumé), et rend null : l'appelant passe à l'état déterministe.
 async function writeModelState(
   tx: Tx,
   ctx: TenantContext,
@@ -359,28 +393,43 @@ async function writeModelState(
       and s.kind = any(${textArray(CODE_SESSION_KINDS)})
       and s.id = any(${textArray(condense.sessions)}::uuid[]) and ${USAGE_RESUME}`);
   if (still?.n !== condense.sessions.length) return 'sans-objet';
+  let wrote = false;
   if (kept !== null) {
-    const entrees = [...new Set([...condense.sessions, ...condense.sources, ...model.prs])];
-    const written = await writeVersion(tx, ctx, {
-      sourceId: filId,
-      attendue,
-      texte: kept.texte,
-      entrees,
-      // Les tours cités, pour la provenance seulement (D33) : ni une session, ni une source, ni une PR, ni un commit.
-      tours: kept.cites.filter((id) => UUID.test(id) && !entrees.includes(id)),
-      ecritPar: 'modele',
-      motif: 'rangement',
-      etape: 'fil',
-      modele: modelForStep('fil', env),
-    });
-    if (written === 'depassee') return 'depassee';
-    if (typeof written !== 'object') return 'sans-objet';
+    const { rows: lues } = await tx.execute<{ id: string }>(
+      sql`select sources_lues_pendant(${textArray(condense.sessions)}::uuid[]) as id`,
+    );
+    const entrees = [
+      ...new Set([
+        ...condense.sessions,
+        ...condense.sources,
+        ...model.prs,
+        ...lues.map((one) => one.id),
+      ]),
+    ];
+    if (entrees.length > ENTREES_MAX) console.info('[leon]', 'fil.entrees_trop');
+    else {
+      const written = await writeVersion(tx, ctx, {
+        sourceId: filId,
+        attendue,
+        texte: kept.texte,
+        entrees,
+        // Les tours cités, pour la provenance seulement (D33) : ni une session, ni une source, ni une PR, ni un commit.
+        tours: kept.cites.filter((id) => UUID.test(id) && !entrees.includes(id)),
+        ecritPar: 'modele',
+        motif: 'rangement',
+        etape: 'fil',
+        modele: modelForStep('fil', env),
+      });
+      if (written === 'depassee') return 'depassee';
+      if (typeof written !== 'object') return 'sans-objet';
+      wrote = true;
+    }
   }
   await tx.execute(sql`update sources s set metadata = s.metadata
       || jsonb_build_object('etat_session', jsonb_build_object('tours',
         coalesce(s.metadata->'etat_session'->'tours', '{}'::jsonb) || ${JSON.stringify(pris)}::jsonb))
     where s.tenant_id = ${ctx.tenantId} and s.id = ${filId}`);
-  return kept === null ? null : 'modele';
+  return wrote ? 'modele' : null;
 }
 
 export async function updateFilState(

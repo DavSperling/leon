@@ -167,7 +167,8 @@ function intersect<T>(a: T[] | undefined, b: T[] | undefined): T[] | undefined {
 
 // Les filtres passés à part et ceux écrits dans la requête s'appliquent tous deux : les outils et les types se
 // croisent, la date la plus étroite l'emporte, les auteurs s'additionnent (comme deux `de:`). Une liste vide
-// ne restreint rien. `impossible` : deux listes sans rien en commun. Le dépôt ne vient que des paramètres.
+// ne restreint rien. `impossible` : deux listes sans rien en commun, ou un fil sans source. Le dépôt et le fil ne
+// viennent que des paramètres.
 function mergeFilters(
   explicit: SearchFilters,
   inline: Omit<SearchFilters, 'authorEmails' | 'authorNames'>,
@@ -189,7 +190,7 @@ function mergeFilters(
   const since = latest(explicit.since, inline.since);
   const until = earliest(explicit.until, inline.until);
   return {
-    impossible: tools?.length === 0 || natures?.length === 0,
+    impossible: tools?.length === 0 || natures?.length === 0 || explicit.fil?.length === 0,
     filters: {
       ...(tools ? { tools } : {}),
       ...(natures ? { natures } : {}),
@@ -198,6 +199,7 @@ function mergeFilters(
       ...(since ? { since } : {}),
       ...(until ? { until } : {}),
       ...(explicit.depot ? { depot: explicit.depot } : {}),
+      ...(explicit.fil ? { fil: explicit.fil } : {}),
     },
   };
 }

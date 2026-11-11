@@ -163,6 +163,11 @@ describe('extractAntigravityFacts', () => {
       expect(externe(call('schedule', { Prompt: 'x' }))).toBe(true);
     });
 
+    // shortcut d'antigravity.ts : la forme d'un appel MCP n'est pas relevée, même un outil local de Leon compte.
+    it('un outil du serveur MCP de Leon : oui, faute d’en connaître la forme', () => {
+      expect(externe(call('mcp_leon_thread', {}))).toBe(true);
+    });
+
     it('lire, écrire, chercher, lister, la liste de tâches, les commandes locales, `leon` : non', () => {
       expect(
         externe(
@@ -173,7 +178,7 @@ describe('extractAntigravityFacts', () => {
           call('replace_file_content', { TargetFile: `${RACINE}/a.ts` }),
           call('manage_task', {}),
           call('run_command', { CommandLine: 'pnpm test' }),
-          call('run_command', { CommandLine: '~/.leon/bin/leon fil' }),
+          call('run_command', { CommandLine: '~/.leon/bin/leon thread' }),
         ),
       ).toBe(false);
     });

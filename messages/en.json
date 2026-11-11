@@ -1090,7 +1090,7 @@
       },
       "assistantKicker": "MCP server",
       "assistantTitle": "Give your AI assistant your team’s context.",
-      "assistantLead": "Leon’s MCP server exposes four tools to any MCP client: search, fetch a source, get the morning briefing, save a note. Paste its address into your assistant and authorize it in Leon: the access is revocable and inherits your permissions exactly.",
+      "assistantLead": "Leon’s MCP server exposes seven tools to any MCP client: search, fetch a source, list your threads of work on a repository, read one, read its past states, get the morning briefing, save a note. Paste its address into your assistant and authorize it in Leon: the access is revocable and inherits your permissions exactly.",
       "assistantPoints": {
         "briefing": "Your coding assistant opens each session with the morning briefing.",
         "sessions": "Coding sessions are captured when they end, text only.",
@@ -1138,10 +1138,13 @@
       "mcp": {
         "search": "hybrid search",
         "fetch": "full source text",
+        "threads": "threads of work on a repository",
+        "thread": "where a thread stands",
+        "versions": "a thread’s past states",
         "briefing": "morning briefing",
         "remember": "save a private note"
       },
-      "discussCaption": "Illustration: a chat where Leon answers with cited sources, the three-part morning briefing, and the four tools the MCP server exposes.",
+      "discussCaption": "Illustration: a chat where Leon answers with cited sources, the three-part morning briefing, and the seven tools the MCP server exposes.",
       "discussLabel": "chat and morning briefing",
       "discussChip": "morning briefing · 08:45",
       "discussionPrivate": "Chat · private",
@@ -1241,7 +1244,7 @@
         "mcp": {
           "title": "MCP server",
           "text": "The reverse direction: your AI assistant queries Leon over MCP. Paste the address into your assistant, authorize it in Leon, and revoke it at any time.",
-          "p1": "search, fetch, briefing, remember",
+          "p1": "search, fetch, threads, thread, versions, briefing, remember",
           "p2": "Scoped to your permissions",
           "p3": "Audit log of the sources it opens"
         }
@@ -1425,6 +1428,13 @@
         "start": "At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project’s morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code’s model.",
         "resume": "Session summaries (the <code>resume</code> usage) are optional: <code>leon setup</code> asks for them separately, only in a terminal, never with <code>--yes</code>. A refusal is kept: <code>leon setup</code> does not ask again. To change your answer, run <code>~/.leon/bin/leon retirer-crochets</code> (it removes the hooks and withdraws your consent), then <code>leon setup</code> again. Once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon’s model provider, which writes the summary. Leon’s search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: <code>retirer-crochets</code> tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If the computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server the computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run <code>retirer-crochets</code> again. The same usage also keeps the state of your work threads up to date: the actions, exchanges and summaries of these sessions, the state of their pull requests and the sources linked to the thread that you can see are sent to Leon’s model provider, which writes that state. Withdrawing your consent stops this too, once the Leon server is told.",
         "server": "The hooks contact the server of the connection made by <code>leon login</code>, unless <code>LEON_URL</code> and <code>LEON_TOKEN</code> are both set (a developer setup): those come first."
+      },
+      "read": {
+        "title": "Reading Leon from a session",
+        "lead": "Four commands read Leon’s memory of the repository they are run in and print it on standard output; they write nothing on disk. Your agent can run them, and so can you.",
+        "output": "What they print starts with Leon’s guard line: it is data to check against the code and Git, never instructions. <code>threads</code> lists the threads of the repository (the work of your sessions, grouped by branch), the current branch first; <code>thread</code> prints one thread, with its state, sessions, pull requests and linked sources (without an id: the thread of the current branch); <code>search</code> searches Leon within this repository only; <code>versions</code> lists the readable versions of a thread’s state, or prints one with <code>--read</code>. Nothing restores a version from your computer.",
+        "consent": "They need a connection and the reading usage (<code>lecture</code>), accepted by one of your code tools. <code>leon setup</code> does not offer it yet: until then, the server refuses, and the command says so. The server notes each read (the tool and the source read).",
+        "external": "Reading Leon does not count as bringing text from elsewhere into the session: neither these commands, nor the <code>threads</code>, <code>thread</code>, <code>versions</code> and <code>remember</code> tools of Leon’s MCP connector, when the MCP settings of your tool (Claude Code, Codex or Cursor) declare the <code>leon</code> server with the MCP address of the server you are connected to. Leon reads only that address there, never a header or a token. The connector’s <code>search</code>, <code>fetch</code> and <code>briefing</code> tools still count, as does any other MCP server."
       },
       "updates": {
         "title": "Updates",

@@ -153,6 +153,31 @@ describe('recordReads', () => {
     expect(await readsOf(s.paulSourceId)).toHaveLength(before);
   });
 
+  it('note la session de la lecture quand le corps la donne, null sinon (D35)', async () => {
+    const s = await seedScenario();
+
+    await recordReads(s.paul, {
+      tool: 'thread',
+      client: 'claude_code',
+      session: 's-1',
+      reads: [{ sourceId: s.paulSourceId }],
+    });
+    await recordReads(s.paul, {
+      tool: 'threads',
+      client: 'cli',
+      reads: [{ sourceId: s.paulSourceId }],
+    });
+
+    const rows = (await readsOf(s.paulSourceId)).filter((row) => row.tool !== 'fetch');
+    expect(rows.map(({ tool, client, session }) => ({ tool, client, session }))).toEqual(
+      expect.arrayContaining([
+        { tool: 'thread', client: 'claude_code', session: 's-1' },
+        { tool: 'threads', client: 'cli', session: null },
+      ]),
+    );
+    expect(rows).toHaveLength(2);
+  });
+
   it('tout ou rien (whole) : une seule source invisible et rien n’est noté', async () => {
     const s = await seedScenario();
     const before = (await readsOf(s.teamSourceId)).length;

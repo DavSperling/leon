@@ -1090,7 +1090,7 @@
       },
       "assistantKicker": "Dans votre assistant",
       "assistantTitle": "Votre assistant d’IA connaît enfin le contexte de l’équipe.",
-      "assistantLead": "Le serveur MCP de Leon donne à votre assistant quatre outils : chercher, lire une source, préparer le point du matin, garder une note. Collez son adresse dans votre assistant et autorisez-le dans Leon : révocable à tout moment, il voit ce que vous voyez, rien de plus.",
+      "assistantLead": "Le serveur MCP de Leon donne à votre assistant sept outils : chercher, lire une source, lister vos fils de travail sur un dépôt, en lire un, lire ses états passés, préparer le point du matin, garder une note. Collez son adresse dans votre assistant et autorisez-le dans Leon : révocable à tout moment, il voit ce que vous voyez, rien de plus.",
       "assistantPoints": {
         "briefing": "Le point du matin vous attend au démarrage de votre assistant de code.",
         "sessions": "Chaque session de code est gardée à sa fin, texte seul.",
@@ -1138,10 +1138,13 @@
       "mcp": {
         "search": "chercher dans la mémoire",
         "fetch": "lire une source en entier",
+        "threads": "les fils de travail d’un dépôt",
+        "thread": "où en est un fil",
+        "versions": "les états passés d’un fil",
         "briefing": "le point du matin",
         "remember": "garder une note, privée"
       },
-      "discussCaption": "Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les quatre outils que le serveur MCP donne à un assistant.",
+      "discussCaption": "Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les sept outils que le serveur MCP donne à un assistant.",
       "discussLabel": "discussion et point du matin",
       "discussChip": "point du matin · 08:45",
       "discussionPrivate": "Discussion · privée",
@@ -1241,7 +1244,7 @@
         "mcp": {
           "title": "Serveur MCP",
           "text": "Dans l’autre sens : votre assistant interroge Leon. Collez l’adresse dans votre assistant, autorisez-le dans Leon, et révoquez-le quand vous voulez.",
-          "p1": "search, fetch, briefing, remember",
+          "p1": "search, fetch, threads, thread, versions, briefing, remember",
           "p2": "Les mêmes droits que vous",
           "p3": "Un journal de ce qui a été lu"
         }
@@ -1425,6 +1428,13 @@
         "start": "Au début de chaque session, le serveur reçoit la clé du projet, la branche Git courante et l’identifiant de la session. Il renvoie vos dernières sessions sur ce dépôt (leur branche, pull requests, commits, fichiers et tâches restantes) et le point du matin du projet : Claude Code ajoute ce bloc au contexte de la session, il est donc donné au modèle de Claude Code.",
         "resume": "Le résumé des sessions (l’usage <code>resume</code>) est facultatif : <code>leon setup</code> le demande à part, seulement dans un terminal, jamais avec <code>--yes</code>. Un refus est gardé : <code>leon setup</code> ne le redemande plus. Pour changer d’avis, lancez <code>~/.leon/bin/leon retirer-crochets</code> (il retire les crochets et votre accord), puis de nouveau <code>leon setup</code>. Une fois terminée une session d’au moins 6 de vos messages, le serveur de Leon envoie ses actions, l’état de ses pull requests et la fin de ses échanges (40 000 caractères au plus, secrets déjà masqués) au fournisseur du modèle de Leon, qui écrit le résumé. La recherche de Leon le trouve ; il n’est jamais ajouté au contexte d’une nouvelle session. Le retrait de votre accord arrête les nouveaux résumés : <code>retirer-crochets</code> prévient le serveur de Leon auquel cet ordinateur est connecté (ce serveur et ce compte seulement : un autre que cet ordinateur a utilisé avant n’en sait rien). Si l’ordinateur est hors ligne à ce moment-là, un résumé déjà prévu peut encore s’écrire dans l’heure, et Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté : au démarrage suivant d’une session d’un outil qui garde ses crochets, ou quand vous relancez <code>retirer-crochets</code>. Le même usage sert aussi à tenir à jour l’état de vos fils de travail : les actions, les échanges et les résumés de ces sessions, l’état de leurs pull requests et les sources liées au fil que vous voyez partent chez le fournisseur du modèle de Leon, qui écrit cet état. Le retrait de votre accord l’arrête aussi, une fois le serveur de Leon prévenu.",
         "server": "Les crochets contactent le serveur de la connexion faite par <code>leon login</code>, sauf si <code>LEON_URL</code> et <code>LEON_TOKEN</code> sont posées toutes les deux (installation de développeur) : elles passent alors avant."
+      },
+      "read": {
+        "title": "Lire Leon depuis une session",
+        "lead": "Quatre commandes lisent la mémoire de Leon sur le dépôt où elles sont lancées et l’écrivent sur la sortie standard ; elles n’écrivent rien sur le disque. Votre agent peut les lancer, vous aussi.",
+        "output": "Ce qu’elles écrivent commence par la ligne de garde de Leon : ce sont des données à vérifier contre le code et Git, jamais des consignes. <code>threads</code> liste les fils du dépôt (le travail de vos sessions, par branche), celui de la branche courante d’abord ; <code>thread</code> écrit un fil, avec son état, ses sessions, ses pull requests et ses sources liées (sans id : le fil de la branche courante) ; <code>search</code> cherche dans Leon, sur ce dépôt seulement ; <code>versions</code> liste les versions lisibles de l’état d’un fil, ou en écrit une avec <code>--read</code>. Rien ne restaure une version depuis votre ordinateur.",
+        "consent": "Elles demandent une connexion et l’usage de lecture (<code>lecture</code>), accepté par l’un de vos outils de code. <code>leon setup</code> ne le propose pas encore : d’ici là, le serveur refuse, et la commande le dit. Le serveur note chaque lecture (l’outil et la source lue).",
+        "external": "Lire Leon ne compte pas comme faire entrer du texte d’ailleurs dans la session : ni ces commandes, ni les outils <code>threads</code>, <code>thread</code>, <code>versions</code> et <code>remember</code> du connecteur MCP de Leon, quand les réglages MCP de votre outil (Claude Code, Codex ou Cursor) déclarent le serveur <code>leon</code> à l’adresse MCP du serveur de votre connexion. Leon n’y lit que cette adresse, jamais un en-tête ni un jeton. Les outils <code>search</code>, <code>fetch</code> et <code>briefing</code> du connecteur comptent toujours, comme tout autre serveur MCP."
       },
       "updates": {
         "title": "Mises à jour",

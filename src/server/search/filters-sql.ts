@@ -49,9 +49,9 @@ function validDate(date: Date | undefined): Date | null {
   return date && !Number.isNaN(date.getTime()) ? date : null;
 }
 
-// Les conditions sur la source (alias `s`) : l'outil, la nature et le dépôt. Le dépôt garde les sessions de code
-// qui y ont été faites, avec leurs résumés (des tours de la session), et les sources GitHub du dépôt, dont
-// `origin.repo` garde la casse de GitHub ; rien des autres outils. Une clé `dossier:` n'est le dépôt d'aucune source
+// Les conditions sur la source (alias `s`) : l'outil, la nature, le dépôt et le fil (ses sources, T45). Le dépôt
+// garde les sessions de code qui y ont été faites, avec leurs résumés (des tours de la session), et les sources
+// GitHub du dépôt, dont `origin.repo` garde la casse de GitHub ; rien des autres outils. Une clé `dossier:` n'est le dépôt d'aucune source
 // GitHub. Pour GitHub, la comparaison de projectIsKnown (briefings.ts) ; les sessions, celles de CODE_SESSION_KINDS,
 // ici comme là-bas. Sous RLS, elle se fait ligne à ligne parmi les sources de
 // l'organisation (sources_github_repo_idx n'y sert pas, voir 0047).
@@ -67,6 +67,7 @@ export function sourceConditions(filters: SearchFilters): SQL {
         or (s.kind = 'github' and 'github.com/' || lower(s.metadata->'origin'->>'repo') = ${filters.depot})`,
     );
   }
+  if (filters.fil) conditions.push(sql`s.id = any(${textArray(filters.fil)}::uuid[])`);
   return allOf(conditions);
 }
 

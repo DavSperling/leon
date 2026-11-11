@@ -3,13 +3,16 @@ import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { recordReads } from '@/server/memory/read-log';
 import { fetchPassageContext, fetchSource, SOURCE_MAX_CHARS } from '@/server/search/context';
+import { readThread } from '@/server/sessions/thread-read';
+import { FIL } from '@/server/sessions/threads';
 import { guarded } from './guarded';
 import { FetchOutputSchema } from './output-schemas';
-import { fetchStructured, renderFetched } from './render';
+import { fetchStructured, renderFetched, renderFil, threadFetchStructured } from './render';
 
 // L'outil `fetch` : lire un passage trouvé par `search` avec les tours qui l'entourent, ou une source entière
 // (coupée à SOURCE_MAX_CHARS caractères). Chaque lecture est notée dans le journal des lectures, avec l'assistant
-// qui lit.
+// qui lit. Un fil de travail n'a pas de tour (D35) : son id rend le texte gardé de l'outil `thread`, par la lecture
+// commune (thread-read.ts), dans `content` comme dans `text` (décision d'Amos du 10/11).
 
 // Tours rendus avant et après le tour d'un passage : passés tels quels à la lecture, pour que la description
 // dise ce que fait l'outil quel que soit le défaut de `fetchPassageContext`.
@@ -74,6 +77,20 @@ export function registerFetchTool(server: McpServer, ctx: TenantContext, client:
         passageId != null
           ? await fetchPassageContext(ctx, passageId, NEIGHBOUR_WINDOW)
           : await fetchSource(ctx, (sourceId ?? id) as string);
+      if (read?.source.kind === FIL) {
+        // Un fil de l'auteur, sur tout projet (`fetch` n'en a pas) ; un id absorbé mène au fil gardé. La lecture
+        // commune note au journal ce qu'elle rend ; introuvable, jamais une source vide.
+        const thread = await readThread(
+          ctx,
+          { projet: null, id: read.source.sourceId },
+          { tool: 'fetch', client },
+        );
+        if (thread === null) return refusal(NOT_FOUND);
+        return {
+          content: [{ type: 'text', text: renderFil(thread) }],
+          structuredContent: threadFetchStructured(thread),
+        };
+      }
       if (!read) return refusal(NOT_FOUND);
       const fetched = { truncated: false, ...read };
       // Le journal d'abord : une lecture que Leon ne peut pas noter (la source a perdu ses droits entre-temps)

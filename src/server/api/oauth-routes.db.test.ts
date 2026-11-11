@@ -413,6 +413,9 @@ describe('POST /api/oauth/jeton : authorization_code (L8)', () => {
       'fetch',
       'remember',
       'search',
+      'thread',
+      'threads',
+      'versions',
     ]);
     // F9 : un jeton d'assistant n'ouvre que /api/mcp.
     expect((await apiRequest(API_PATHS.me, { token: body.access_token })).status).toBe(401);

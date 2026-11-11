@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-// Ce que `search` et `fetch` rendent en `structuredContent`, annoncé au client dans `tools/list` (`outputSchema`).
+// Ce que `search`, `fetch` et les lectures des fils rendent en `structuredContent`, annoncé au client dans `tools/list`
+// (`outputSchema`).
 // Le serveur vérifie chaque réponse contre ce schéma, et les tests s'en servent pour typer ce qu'ils lisent : la
 // forme n'est plus écrite à la main à deux endroits.
 //
@@ -18,6 +19,9 @@ const SourceSchema = z.object({
   origin: z.record(z.string(), z.string()),
   lastTs: z.string(),
 });
+
+// Une PR, par ses clés (D25) : jamais son titre.
+const PrKeySchema = z.object({ repo: z.string(), numero: z.number().int() });
 
 const PassageSchema = z.object({
   passageId: z.string(),
@@ -44,6 +48,9 @@ export const SearchOutputSchema = z.object({
           'Source relevance, for information only: sources are returned in ranking order, and those that contain only some of the searched words come after the others, whatever their score.',
         ),
       passages: z.array(PassageSchema),
+      // Une session de code (T45) : le fil qui la tient, à lire avec thread, et les PR de ses faits.
+      thread: z.string().optional(),
+      prs: z.array(PrKeySchema).optional(),
     }),
   ),
 });
@@ -69,5 +76,40 @@ export const FetchOutputSchema = z.object({
   ),
 });
 
+// Les lectures des fils (T45, T54 ; C9, C12, D25) : des clés seulement (id, titre, dates, numéros), jamais l'état, la
+// première ligne d'une version ni le titre d'une source liée, qui ne vont que dans `content`, derrière la ligne de garde.
+export const ThreadsOutputSchema = z.object({
+  threads: z.array(
+    z.object({
+      id: z.string(),
+      titre: z.string(),
+      date: z.string().nullable(),
+      prs: z.array(PrKeySchema),
+    }),
+  ),
+  // Les fils du projet, au-delà des 20 rendus.
+  total: z.number().int(),
+});
+
+export const ThreadOutputSchema = z.object({
+  id: z.string(),
+  titre: z.string(),
+  // La version rendue, quand l'état est elle.
+  version: z.object({ n: z.number().int(), date: z.string() }).nullable(),
+  sessions: z.array(z.object({ id: z.string(), date: z.string() })),
+  prs: z.array(PrKeySchema),
+  // Les sources liées, à ouvrir avec fetch.
+  liees: z.array(z.string()),
+});
+
+export const VersionsOutputSchema = z.object({
+  id: z.string(),
+  titre: z.string(),
+  versions: z.array(z.object({ n: z.number().int(), date: z.string(), par: z.string() })),
+});
+
 export type SearchOutput = z.infer<typeof SearchOutputSchema>;
 export type FetchOutput = z.infer<typeof FetchOutputSchema>;
+export type ThreadsOutput = z.infer<typeof ThreadsOutputSchema>;
+export type ThreadOutput = z.infer<typeof ThreadOutputSchema>;
+export type VersionsOutput = z.infer<typeof VersionsOutputSchema>;

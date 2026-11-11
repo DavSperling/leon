@@ -23,6 +23,8 @@ import { prepareTurnText, removeBlocks } from './prepare-turn-text';
 import {
   buildFacts,
   isExternalCommand,
+  LEON_LOCAL_TOOLS,
+  LEON_MCP_SERVER,
   newFactsRecord,
   recordCommand,
   recordFile,
@@ -157,7 +159,11 @@ export function parseCursorSession(content: string, file: CursorFile): CursorSes
 
 // Les outils de Cursor relevés (3.13, et les noms de la 2.4 vus dans state.vscdb) qui n'apportent rien d'ailleurs. On
 // échoue fermé : tout autre nom (WebSearch, WebFetch, Task, un outil MCP, un outil inconnu) rend la session externe.
-// shortcut: un outil du serveur MCP de Leon compte encore, jusqu'à T44 (lot 12) ; tout sous-agent aussi (T63).
+// Un outil local du serveur `leon` (LEON_LOCAL_TOOLS, D36), `mcp_leon_<outil>` en entier, ne compte pas quand la CLI a
+// reconnu ce serveur à l'URL de `mcp.json` (leon-mcp.ts).
+// shortcut: la forme `mcp_<serveur>_<outil>` d'un appel MCP dans le transcript vient des tests du lot 8, pas de l'essai
+// T26 ; la vérifier au prochain essai (le rapport du témoin). Une autre forme laisse la session externe (échec fermé).
+// shortcut: tout sous-agent rend la session externe (T63).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -192,6 +198,7 @@ const LOCAL_TOOLS = new Set([
   'todo_write',
   'create_plan',
 ]);
+const LEON_TOOLS = new Set(LEON_LOCAL_TOOLS.map((tool) => `mcp_${LEON_MCP_SERVER}_${tool}`));
 const SHELL_TOOLS = new Set(['Shell', 'run_terminal_cmd']);
 const FILE_TOOLS = new Set([
   'Write',
@@ -234,6 +241,7 @@ const PATCH_FILE = /^\*\*\* (?:Add File|Update File|Delete File|Move to): (.+)$/
 // Les gestes d'une session Cursor, à partir de son transcript. `root` est la racine du dépôt ; `brancheLue`, la
 // branche que lit git à la capture (le transcript n'en porte pas). Sans sortie d'outil dans le transcript, une commande
 // n'est jamais marquée en erreur, et ni commit ni PR ne se relèvent : les erreurs sont les tours finis en erreur.
+// `leonMcp` : le serveur `leon` de la configuration de Cursor est celui de la connexion (leon-mcp.ts).
 // shortcut: l'essai T26 n'a trouvé aucune sortie d'outil dans le transcript ; relever commits et PR le jour où Cursor
 // les écrit.
 export function extractCursorFacts(
@@ -241,6 +249,7 @@ export function extractCursorFacts(
   file: CursorFile,
   root: string | null,
   brancheLue: string | null = null,
+  leonMcp = false,
 ): SessionFacts {
   const record = newFactsRecord();
   const lines = parseLines(content);
@@ -255,7 +264,7 @@ export function extractCursorFacts(
       const tool = ToolUseSchema.safeParse(block);
       if (!tool.success) continue;
       const { name, input } = tool.data;
-      if (!LOCAL_TOOLS.has(name)) external = true;
+      if (!LOCAL_TOOLS.has(name) && !(leonMcp && LEON_TOOLS.has(name))) external = true;
       if (SHELL_TOOLS.has(name)) {
         const command = CommandSchema.safeParse(input);
         if (command.success) {

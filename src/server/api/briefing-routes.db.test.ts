@@ -5,6 +5,7 @@ import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
 import { BRIEFING_QUEUES, briefingKey, getBriefingBoss } from '@/server/briefing/queue';
+import { readLog } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import * as getLlmModule from '@/server/llm/get-llm';
@@ -138,6 +139,20 @@ describe('GET /api/v1/briefing', () => {
       .from(briefings)
       .where(and(eq(briefings.userId, alice.userId), eq(briefings.project, project)));
     expect(row?.lastReadAt).not.toBeNull();
+  });
+
+  it('note chaque source du point rendu au journal des lectures, sans session', async () => {
+    const project = uniqueProject();
+    const { sourceId } = await seedRun(alice, { kind: 'slack', status: 'done' });
+    await seedBriefing(alice, project, { sourceIds: [sourceId] });
+
+    const response = await apiRequest(briefingUrl(project), { token: aliceToken });
+
+    expect((await response.json()).projet).toBe(project);
+    const rows = await adminDb.select().from(readLog).where(eq(readLog.sourceId, sourceId));
+    expect(
+      rows.map(({ userId, tool, client, session }) => ({ userId, tool, client, session })),
+    ).toEqual([{ userId: alice.userId, tool: 'briefing', client: 'cli', session: null }]);
   });
 
   it('ne rend jamais le point d’un autre', async () => {

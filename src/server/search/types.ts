@@ -13,11 +13,14 @@ export type SearchFilters = {
   // Une clé de projet (PROJECT_KEY_PATTERN, lue par projectKeyFromInput) : les sessions du dépôt, leurs résumés et ses
   // sources GitHub (T25). Paramètre des outils seulement, la barre n'a pas de `depot:`.
   depot?: string;
+  // Les sources d'un fil (T45) : ses sessions et ses sources liées visibles, résolues par l'outil (thread-read.ts).
+  // Paramètre des outils seulement. Vide (un fil introuvable, d'un collègue) : aucun résultat.
+  fil?: string[];
 };
 
 export type ParsedQuery = {
   text: string;
-  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot'>;
+  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot' | 'fil'>;
   people: string[];
 };
 
@@ -40,6 +43,9 @@ export type SourceHit = {
   lastTs: Date;
   passages: PassageHit[];
   score: number;
+  // Une session de code trouvée (T45, D35) : le fil de l'auteur qui la tient et les PR de ses faits, des clés (D25).
+  thread?: string;
+  prs?: Array<{ repo: string; numero: number }>;
 };
 
 export type SearchPage = {

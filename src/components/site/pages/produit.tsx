@@ -254,8 +254,16 @@ function FindVisual() {
   );
 }
 
-// Les quatre outils du serveur MCP, sous leur vrai nom ; ce qu'ils font est dans site.product.mcp.
-const MCP_TOOLS = ['search', 'fetch', 'briefing', 'remember'] as const;
+// Les sept outils du serveur MCP, sous leur vrai nom ; ce qu'ils font est dans site.product.mcp.
+const MCP_TOOLS = [
+  'search',
+  'fetch',
+  'threads',
+  'thread',
+  'versions',
+  'briefing',
+  'remember',
+] as const;
 
 function DiscussVisual() {
   const t = useTranslations('site.product');

@@ -811,6 +811,36 @@ describe('filtres', () => {
     ]);
   });
 
+  // T45 : le filtre `fil` porte les sources d'un fil, résolues par l'outil (thread-read.ts). Il ne vient que des
+  // paramètres, se croise avec les autres, et une liste vide (un fil introuvable) ne rend rien, requête vide comprise.
+  it('restreignent aux sources d’un fil ; une liste vide ne rend rien', async () => {
+    const { tenantId, alice } = await team();
+    const word = 'tartempion';
+    const kept = await seedIndexed(alice, { title: 'Session du fil', turns: [{ text: word }] });
+    const linked = await seedIndexed(alice, {
+      kind: 'slack',
+      acl: [tenantId],
+      title: 'Canal relié',
+      turns: [{ text: word }],
+    });
+    await seedIndexed(alice, { title: 'Session hors fil', turns: [{ text: word }] });
+    const fil = [kept.sourceId, linked.sourceId];
+
+    expect(titles(await search(alice, word, { filters: { fil } })).toSorted()).toEqual([
+      'Canal relié',
+      'Session du fil',
+    ]);
+    expect(titles(await search(alice, '', { filters: { fil } })).toSorted()).toEqual([
+      'Canal relié',
+      'Session du fil',
+    ]);
+    expect(titles(await search(alice, word, { filters: { fil, tools: ['slack'] } }))).toEqual([
+      'Canal relié',
+    ]);
+    expect(titles(await search(alice, word, { filters: { fil: [] } }))).toEqual([]);
+    expect(titles(await search(alice, '', { filters: { fil: [] } }))).toEqual([]);
+  });
+
   // T39 : un fil de travail a la nature fil_de_travail par son type (D21), et `type` le filtre comme les autres. Il n'a
   // ni tour ni passage, la recherche ne le rend donc jamais : la condition se vérifie sur la source.
   it('donnent au fil de travail la nature fil_de_travail, que filtre type', async () => {

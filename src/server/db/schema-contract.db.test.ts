@@ -150,16 +150,19 @@ describe('suppression du tri (0010)', () => {
     expect(rows).toEqual([{ found: null }]);
   });
 
-  it('read_log pointe vers une source et un passage facultatif, plus vers une fiche', async () => {
+  // Depuis 0066, une lecture vise une source ou une leçon : source_id devient facultatif, sous le check « exactement
+  // une cible » (0066-lecons.db.test.ts).
+  it('read_log pointe vers une source ou une leçon et un passage facultatif, plus vers une fiche', async () => {
     const { rows } = await adminPool.query<{ column_name: string; is_nullable: string }>(
       `select column_name, is_nullable from information_schema.columns
         where table_schema = 'public' and table_name = 'read_log'
-          and column_name in ('card_id', 'source_id', 'passage_id')
+          and column_name in ('card_id', 'source_id', 'passage_id', 'lecon_id')
         order by column_name`,
     );
     expect(rows).toEqual([
+      { column_name: 'lecon_id', is_nullable: 'YES' },
       { column_name: 'passage_id', is_nullable: 'YES' },
-      { column_name: 'source_id', is_nullable: 'NO' },
+      { column_name: 'source_id', is_nullable: 'YES' },
     ]);
   });
 

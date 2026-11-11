@@ -14,6 +14,7 @@ vi.mock('@/app/(app)/reglages/actions', () => ({
   retireLessonAction: vi.fn(),
   restoreMemoryVersionAction: vi.fn(),
   readMemoryVersionAction: vi.fn(),
+  setNotesOpenAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
@@ -87,6 +88,7 @@ const render = (props: Partial<Props> = {}, locale: 'en' | 'fr' = 'en') =>
           lessons: [LESSON],
           notes: [NOTE, WEB_NOTE],
           repos: ['github.com/acme/app'],
+          notesOpen: true,
         },
         ...props,
       }),
@@ -201,7 +203,7 @@ describe('MemorySection', () => {
 
   it('la dernière version d’un fil illisible : « Remettre » sur toutes les versions montrées, aucune n’est « dernière »', () => {
     const html = render({
-      data: { threads: [{ ...THREAD, n: 3 }], lessons: [], notes: [], repos: [] },
+      data: { threads: [{ ...THREAD, n: 3 }], lessons: [], notes: [], repos: [], notesOpen: true },
     });
     expect(versionRow(html, THREAD.id, 1)).toContain('Put this version back');
     expect(versionRow(html, THREAD.id, 2)).toContain('Put this version back');
@@ -215,6 +217,7 @@ describe('MemorySection', () => {
         threads: [{ ...THREAD, n: 3, versions: [version(1)] }],
         lessons: [LESSON],
         notes: [],
+        notesOpen: true,
         repos: [],
       },
     });
@@ -227,7 +230,9 @@ describe('MemorySection', () => {
   });
 
   it('sans leçon, fil ni note : trois états vides', () => {
-    const html = render({ data: { threads: [], lessons: [], notes: [], repos: [] } });
+    const html = render({
+      data: { threads: [], lessons: [], notes: [], repos: [], notesOpen: true },
+    });
     expect(text(html)).toContain('No lesson yet.');
     expect(text(html)).toContain('No work thread yet.');
     expect(text(html)).toContain('No agent note yet.');
@@ -262,7 +267,7 @@ describe('MemorySection', () => {
   it('sans connexion récente : aucun « Remettre » pour une note, et un avis qui ne parle que de remettre une version', () => {
     const html = render({
       recent: false,
-      data: { threads: [], lessons: [], notes: [NOTE], repos: [] },
+      data: { threads: [], lessons: [], notes: [NOTE], repos: [], notesOpen: true },
     });
     expect(text(html)).not.toContain('Put this version back');
     const notes = text(html.slice(html.indexOf('Agent notes')));
@@ -274,7 +279,7 @@ describe('MemorySection', () => {
   it('sans connexion récente, une note sans version à remettre ne demande pas de reconnexion', () => {
     const html = render({
       recent: false,
-      data: { threads: [], lessons: [], notes: [WEB_NOTE], repos: [] },
+      data: { threads: [], lessons: [], notes: [WEB_NOTE], repos: [], notesOpen: true },
     });
     const notes = text(html.slice(html.indexOf('Agent notes')));
     expect(notes).not.toContain('Sign in again');
@@ -294,5 +299,30 @@ describe('MemorySection', () => {
     expect(text(html)).toContain('Tous mes dépôts');
     expect(text(html)).toContain('Notes de l’agent');
     expect(text(html)).toContain('Écrite le');
+  });
+});
+
+// T65 (C16) : l'interrupteur du réglage `noter` du compte, en tête des notes ; il suit `notesOpen`.
+describe('l’interrupteur des notes', () => {
+  const switchTag = (html: string) => /<button[^>]*role="switch"[^>]*>/.exec(html)?.[0] ?? '';
+
+  it.each([
+    ['en', en],
+    ['fr', fr],
+  ] as const)('ouvert : coché, avec son libellé et son texte (%s)', (locale, messages) => {
+    const html = render({}, locale);
+
+    expect(switchTag(html)).toContain('aria-checked="true"');
+    const notes = text(html.slice(html.indexOf(messages.memory.notesTitle)));
+    expect(notes).toContain(messages.memory.notesToggle);
+    expect(notes).toContain(messages.memory.notesToggleHint);
+  });
+
+  it('coupé : décoché', () => {
+    const html = render({
+      data: { threads: [], lessons: [], notes: [], repos: [], notesOpen: false },
+    });
+
+    expect(switchTag(html)).toContain('aria-checked="false"');
   });
 });

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { DeletionRefused, deleteAccount, deleteOrganization } from '@/server/auth/delete-account';
-import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
+import { createInvitationLink, setMemberPlacement, setNotesRefused } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
@@ -37,6 +37,7 @@ import {
   setDepotEquipeAction,
   setLocaleAction,
   setMemberPlacementAction,
+  setNotesOpenAction,
   updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
@@ -69,6 +70,7 @@ vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiT
 vi.mock('@/server/auth/members', () => ({
   createInvitationLink: vi.fn(),
   setMemberPlacement: vi.fn(),
+  setNotesRefused: vi.fn(),
 }));
 vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
 // La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
@@ -977,5 +979,44 @@ describe('les actions de la section Mémoire', () => {
 
     for (const writer of [...writers(), vi.mocked(retireLesson), vi.mocked(readMemoryVersion)])
       expect(writer).not.toHaveBeenCalled();
+  });
+});
+
+// T65 (C16) : l'interrupteur des notes de la section Mémoire, sous la session du navigateur, dans les deux sens. Il
+// n'écrit aucun texte poussé : pas de connexion récente exigée (D37).
+describe('setNotesOpenAction', () => {
+  beforeEach(() => {
+    vi.mocked(setNotesRefused).mockResolvedValue(true);
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+  });
+
+  it('coupe puis rouvre les notes sur la ligne du lecteur, même connecté depuis plus d’une heure', async () => {
+    await expect(setNotesOpenAction(false)).resolves.toEqual({ ok: true });
+    await expect(setNotesOpenAction(true)).resolves.toEqual({ ok: true });
+
+    expect(vi.mocked(setNotesRefused).mock.calls).toEqual([
+      [ctx, true],
+      [ctx, false],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it('une ligne absente (plus membre) rend ok: false', async () => {
+    vi.mocked(setNotesRefused).mockResolvedValue(false);
+
+    await expect(setNotesOpenAction(false)).resolves.toEqual({ ok: false });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([['oui'], [null], [1]])('%j : ok: false, rien ne change', async (value) => {
+    await expect(setNotesOpenAction(value as never)).resolves.toEqual({ ok: false });
+    expect(setNotesRefused).not.toHaveBeenCalled();
+  });
+
+  it('sans session du navigateur, rien ne change : la connexion', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(setNotesOpenAction(false)).rejects.toThrow('NEXT_REDIRECT /connexion');
+    expect(setNotesRefused).not.toHaveBeenCalled();
   });
 });

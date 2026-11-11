@@ -29,7 +29,7 @@ import { directoryState } from '@/server/auth/annuaire';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { listGroups } from '@/server/auth/groupes';
-import { canInvite, getMembership, listMembers } from '@/server/auth/members';
+import { canInvite, getMembership, listMembers, notesRefusedAt } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
 import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
@@ -94,8 +94,15 @@ export default async function SettingsPage({
       listMemoryLessons(ctx),
       listMemoryNotes(ctx),
       listMemoryRepos(ctx),
+      notesRefusedAt(ctx),
     ]).then(
-      ([threads, lessons, notes, repos]) => ({ threads, lessons, notes, repos }),
+      ([threads, lessons, notes, repos, refusedAt]) => ({
+        threads,
+        lessons,
+        notes,
+        repos,
+        notesOpen: refusedAt === null, // le réglage `noter` du compte (T65)
+      }),
       (error) => {
         logError('settings.memory', error);
         return null;

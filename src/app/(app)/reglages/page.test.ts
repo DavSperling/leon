@@ -6,6 +6,7 @@ import { MemorySection } from '@/components/verre/reglages/memoire';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { TokensSection } from '@/components/verre/reglages/tokens';
 import { type ApiTokenRow, listApiTokens } from '@/server/auth/api-tokens';
+import { notesRefusedAt } from '@/server/auth/members';
 import { signedInRecently } from '@/server/auth/session';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import {
@@ -45,6 +46,7 @@ vi.mock('@/server/auth/members', () => ({
   listMembers: vi.fn(async () => []),
   canInvite: vi.fn(async () => false),
   getMembership: vi.fn(async () => null),
+  notesRefusedAt: vi.fn(async () => null),
 }));
 vi.mock('@/server/auth/delete-account', () => ({
   deletionInfo: vi.fn(async () => ({ isOwner: false })),
@@ -240,7 +242,18 @@ describe('page de Réglages : l’onglet Mémoire', () => {
       lessons: [],
       notes: [],
       repos: ['github.com/acme/app'],
+      notesOpen: true,
     });
+  });
+
+  // T65 (C16) : l'interrupteur des notes montre le réglage `noter` du compte, lu sur la ligne du lecteur.
+  it('le réglage noter daté donne notesOpen à false', async () => {
+    vi.mocked(notesRefusedAt).mockResolvedValueOnce(new Date('2026-11-01T10:00:00Z'));
+
+    expect((await memoire())?.data).toMatchObject({ notesOpen: false });
+    expect(notesRefusedAt).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'u1', tenantId: 't1' }),
+    );
   });
 
   it('passe recent à false quand la connexion a plus d’une heure', async () => {

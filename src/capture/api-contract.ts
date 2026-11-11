@@ -19,6 +19,7 @@ export const API_PATHS = {
   lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
   noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
+  usages: '/api/v1/usages', // POST : un « non » à `noter` dans le terminal coupe `remember` pour le compte (C16)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -263,3 +264,11 @@ export const NoterRequestSchema = z
 export type NoterRequest = z.infer<typeof NoterRequestSchema>;
 export const NoterResponseSchema = z.object({ id: z.uuid(), n: z.number().int().positive() });
 export type NoterResponse = z.infer<typeof NoterResponseSchema>;
+
+// Le refus de `noter` pour le compte (C16, T65) : l'installateur l'envoie sur un « non » dans le terminal, avec la
+// connexion de l'ordinateur, et le serveur date le réglage du membre ; `remember` refuse alors d'écrire. Un refus
+// seulement : le jeton d'un ordinateur est lisible de tout agent du poste, rouvrir passe par le navigateur (la section
+// Mémoire du site). 204, sans corps ; un serveur ancien répond 404, et l'installation continue.
+export const USAGES_BODY_MAX_BYTES = 1024;
+export const UsagesRequestSchema = z.strictObject({ noter: z.literal(false) });
+export type UsagesRequest = z.infer<typeof UsagesRequestSchema>;

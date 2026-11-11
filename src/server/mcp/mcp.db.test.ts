@@ -1,12 +1,15 @@
+import { randomUUID } from 'node:crypto';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { DrizzleQueryError, eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS } from '@/capture/api-contract';
 import { app } from '@/server/api/app';
-import { createApiToken } from '@/server/auth/api-tokens';
+import { createApiToken, createGrant } from '@/server/auth/api-tokens';
+import { setNotesRefused } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_NO_MODEL_MARKDOWN, BRIEFING_PENDING_MARKDOWN } from '@/server/briefing/briefings';
 import { requestBriefingRefreshNow } from '@/server/briefing/queue';
+import { members as memberRows } from '@/server/db/schema/auth';
 import { lecons, readLog, sources, versionsMemoire } from '@/server/db/schema/memory';
 import { briefings, passages } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
@@ -55,8 +58,13 @@ afterEach(async () => {
 const tenantIds: string[] = [];
 afterAll(() => dropTeams(tenantIds));
 
-async function connect(ctx: TenantContext, userAgent = 'claude-code/2.1.296'): Promise<Client> {
-  const { token } = await createApiToken(ctx, 'test');
+// `token` : un jeton déjà tiré (celui d'un assistant, T65) ; sinon un jeton manuel neuf.
+async function connect(
+  ctx: TenantContext,
+  userAgent = 'claude-code/2.1.296',
+  token?: string,
+): Promise<Client> {
+  token ??= (await createApiToken(ctx, 'test')).token;
   const transport = new StreamableHTTPClientTransport(
     new URL(`http://localhost:3000${API_PATHS.mcp}`),
     {
@@ -328,6 +336,100 @@ describe('serveur MCP', () => {
     expect(stale).toMatchObject({
       isError: true,
       text: 'This note changed since that version: fetch it again before writing.',
+    });
+  });
+
+  // T65 (D30, C16) : remember lit le réglage `noter` du compte, sur la ligne du porteur, avant d'écrire.
+  describe('remember et le réglage noter du compte', () => {
+    const NOTES_OFF =
+      'Notes are turned off for this Leon account. They can be turned back on in the Memory section of the Leon website settings.';
+    const notesOf = (who: TenantContext) =>
+      adminDb.select({ id: sources.id }).from(sources).where(eq(sources.ownerUserId, who.userId));
+    const versionsOf = (who: TenantContext) =>
+      adminDb
+        .select({ id: versionsMemoire.id })
+        .from(versionsMemoire)
+        .where(eq(versionsMemoire.ownerUserId, who.userId));
+    // Un assistant branché par OAuth (claude.ai) : son jeton n'ouvre que /api/mcp (F9).
+    async function connectAssistant(ctx: TenantContext): Promise<Client> {
+      const grant = await createGrant(ctx, {
+        grantId: `grant-${randomUUID()}`,
+        clientRef: 'claude-ai',
+        clientName: 'Claude',
+        clientHost: 'claude.ai',
+        name: 'Claude',
+      });
+      if (!grant) throw new Error('jeton d’assistant non créé');
+      return connect(ctx, 'Claude-AI/1.0', grant.accessToken);
+    }
+
+    it('sans réglage, remember écrit, avec un jeton d’assistant comme avec un jeton d’ordinateur', async () => {
+      const paul = await setupPaul();
+
+      const byComputer = await call(await connect(paul), 'remember', { text: 'Une.' });
+      const byAssistant = await call(await connectAssistant(paul), 'remember', { text: 'Deux.' });
+
+      expect(byComputer.isError).toBeUndefined();
+      expect(byAssistant.isError).toBeUndefined();
+      expect(await notesOf(paul)).toHaveLength(2);
+    });
+
+    it('réglage daté : isError, rien d’écrit, un message qui dit où rouvrir sans recopier le texte', async () => {
+      const paul = await setupPaul();
+      const first = await call(await connect(paul), 'remember', { text: 'Avant.' });
+      const { id } = first.structuredContent as { id: string };
+      await setNotesRefused(paul, true);
+
+      for (const client of [await connect(paul), await connectAssistant(paul)]) {
+        const fresh = await call(client, 'remember', { text: 'Le code secret du coffre.' });
+        const next = await call(client, 'remember', { text: 'Suite.', note: id, version: 1 });
+
+        expect(fresh).toMatchObject({ isError: true, text: NOTES_OFF });
+        expect(next).toMatchObject({ isError: true, text: NOTES_OFF });
+        expect(JSON.stringify(fresh)).not.toContain('coffre');
+      }
+      expect(await notesOf(paul)).toEqual([{ id }]);
+      expect(await versionsOf(paul)).toHaveLength(1);
+    });
+
+    it('remis à nul, remember écrit de nouveau', async () => {
+      const paul = await setupPaul();
+      const client = await connect(paul);
+      await setNotesRefused(paul, true);
+      expect(await call(client, 'remember', { text: 'Refusée.' })).toMatchObject({
+        isError: true,
+      });
+
+      await setNotesRefused(paul, false);
+      const written = await call(client, 'remember', { text: 'Acceptée.' });
+
+      expect(written.isError).toBeUndefined();
+      expect(await notesOf(paul)).toHaveLength(1);
+    });
+
+    // Seule la ligne de Paul dans cet espace est datée : Marie dans le même espace, et Paul dans un autre, écrivent.
+    // Lire par l'utilisateur seul, ou par l'espace seul, ferait lire la même ligne à deux d'entre eux.
+    it('le réglage d’un collègue, ou le sien dans un autre espace, ne compte pas', async () => {
+      const { paul, marie } = await setupTeam();
+      const other = await newTeam(['Autre'], tenantIds);
+      await adminDb.insert(memberRows).values({
+        organizationId: other.tenantId,
+        userId: paul.userId,
+        role: 'member',
+        createdAt: new Date(Date.now() - 60_000),
+      });
+      const paulElsewhere = { ...paul, tenantId: other.tenantId };
+      await setNotesRefused(paul, true);
+
+      const byPaul = await call(await connect(paul), 'remember', { text: 'Refusée.' });
+      const byMarie = await call(await connect(marie), 'remember', { text: 'De Marie.' });
+      const elsewhere = await call(await connect(paulElsewhere), 'remember', { text: 'Ailleurs.' });
+
+      expect(byPaul).toMatchObject({ isError: true, text: NOTES_OFF });
+      expect(byMarie.isError).toBeUndefined();
+      expect(elsewhere.isError).toBeUndefined();
+      expect(await notesOf(paul)).toHaveLength(1);
+      expect(await notesOf(marie)).toHaveLength(1);
     });
   });
 

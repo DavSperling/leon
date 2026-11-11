@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LECTURE_LINES, NOTER_LINES, RAPPEL_LINES } from '@/cli/install-hooks';
 import { Button } from '@/components/verre/ui/button';
 import { nb } from '@/lib/verre/nb';
+import { notesRefusedAt } from '@/server/auth/members';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 import en from '../../../../../messages/en.json';
@@ -14,6 +15,7 @@ import AuthorizePage, { generateMetadata } from './page';
 
 vi.mock('@/server/auth/session', () => ({ getSession: vi.fn(), getUserContext: vi.fn() }));
 vi.mock('@/server/auth/viewer', () => ({ getViewerProfile: vi.fn() }));
+vi.mock('@/server/auth/members', () => ({ notesRefusedAt: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -53,6 +55,7 @@ beforeEach(() => {
   vi.mocked(getSession).mockResolvedValue({ user: { id: 'u1' } } as never);
   vi.mocked(getUserContext).mockResolvedValue(CTX);
   vi.mocked(getViewerProfile).mockResolvedValue({ organizationName: 'Acme' } as never);
+  vi.mocked(notesRefusedAt).mockResolvedValue(null);
 });
 
 describe('paramètres invalides (K3)', () => {
@@ -220,6 +223,21 @@ describe('les cases de la page', () => {
     ]);
     expect(textOf(page)).toContain(nb(fr.computer.authorize.usages.noter.title));
     expect(textOf(page)).toContain('leon note');
+  });
+
+  // T65 (C16) : le réglage `noter` du compte daté (un « non » déjà donné), la case `noter` part décochée ; les autres
+  // restent cochées. Le réglage se lit sur la ligne du lecteur.
+  it('réglage noter daté : la case noter est décochée, les autres cochées', async () => {
+    vi.mocked(notesRefusedAt).mockResolvedValue(new Date('2026-11-01T10:00:00Z'));
+
+    const page = await render({ ...PARAMS, usages: 'lecture,rappel,noter' });
+
+    expect(boxes(page).map((el) => [el.props.value, el.props.defaultChecked])).toEqual([
+      ['lecture', true],
+      ['rappel', true],
+      ['noter', false],
+    ]);
+    expect(notesRefusedAt).toHaveBeenCalledWith(CTX);
   });
 
   it('la case est nommée par son titre et décrite par son texte', async () => {

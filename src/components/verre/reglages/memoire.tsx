@@ -3,12 +3,13 @@
 import { BookOpen, GitBranch, StickyNote } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRef, useState, useTransition } from 'react';
+import { useOptimistic, useRef, useState, useTransition } from 'react';
 import {
   correctLessonAction,
   readMemoryVersionAction,
   restoreMemoryVersionAction,
   retireLessonAction,
+  setNotesOpenAction,
   writeLessonAction,
 } from '@/app/(app)/reglages/actions';
 import { repoOf } from '@/capture/turn';
@@ -22,6 +23,7 @@ import {
   Notice,
   Section,
   Select,
+  Switch,
   Textarea,
   toast,
 } from '@/components/verre';
@@ -578,13 +580,55 @@ function ThreadsSection({
   );
 }
 
+// Le réglage `noter` du compte (T65, C16), comme l'interrupteur des managers : il suit le clic tout de suite, et un refus
+// le remet comme la page le relit. Ni texte poussé ni connexion récente (D37).
+function NotesSwitch({ open }: { open: boolean }) {
+  const t = useTranslations('memory');
+  const [shown, setShown] = useOptimistic(open);
+  const [, startTransition] = useTransition();
+  const toggle = (next: boolean) =>
+    startTransition(async () => {
+      setShown(next);
+      try {
+        const { ok } = await setNotesOpenAction(next);
+        if (!ok) toast.error(t('notesToggleFailed'));
+      } catch {
+        toast.error(t('notesToggleFailed'));
+      }
+    });
+  return (
+    <GlassCard className="mb-4 grid gap-2 p-4">
+      <Switch
+        label={t('notesToggle')}
+        checked={shown}
+        onCheckedChange={toggle}
+        aria-describedby="notes-remember"
+      />
+      <p id="notes-remember" className="text-label text-muted">
+        {nb(t('notesToggleHint'))}
+      </p>
+    </GlassCard>
+  );
+}
+
 // Les notes de l'agent (D38) : le texte se lit dans l'historique, la liste n'en montre que le début. Aucune écriture
 // depuis le site, hors « Remettre cette version ».
-function NotesSection({ notes, max, ctl }: { notes: MemoryNote[]; max: number; ctl: Control }) {
+function NotesSection({
+  notes,
+  open,
+  max,
+  ctl,
+}: {
+  notes: MemoryNote[];
+  open: boolean;
+  max: number;
+  ctl: Control;
+}) {
   const t = useTranslations('memory');
   const locale = useLocale();
   return (
     <Section title={t('notesTitle')} description={t('notesDescription')} className="mt-0">
+      <NotesSwitch open={open} />
       <ErrorNotice error={ctl.error} max={max} />
       {ctl.stale && hasOlderVersion(notes) && (
         <div className="mb-4">
@@ -650,6 +694,7 @@ export type MemoryData = {
   lessons: MemoryLesson[];
   notes: MemoryNote[];
   repos: string[];
+  notesOpen: boolean; // le réglage `noter` du compte est nul : `remember` écrit (T65)
 };
 
 /** L'onglet Mémoire : `data` est null quand la page n'a pas pu lire (une erreur, pas une liste vide). */
@@ -679,7 +724,7 @@ export function MemorySection({
     <div className="grid gap-12">
       <LessonsSection lessons={data.lessons} repos={data.repos} max={max} ctl={lessons} />
       <ThreadsSection threads={data.threads} max={max} ctl={threads} />
-      <NotesSection notes={data.notes} max={max} ctl={notes} />
+      <NotesSection notes={data.notes} open={data.notesOpen} max={max} ctl={notes} />
     </div>
   );
 }

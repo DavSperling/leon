@@ -146,6 +146,29 @@ export async function getMembership(
   return row ?? null;
 }
 
+// Le réglage `noter` du compte (T65 ; D30, C16 du plan de la mémoire à disposition) : "noterRefuseLe", sur la seule
+// ligne du lecteur (son utilisateur ET son organisation), comme onboarding.ts. Daté, `remember` refuse d'écrire ; nul,
+// il écrit. Celui d'un collègue, ou le sien dans un autre espace, ne compte pas. Rend la date, null si le réglage est
+// ouvert ou si le lecteur n'est plus membre.
+export async function notesRefusedAt(ctx: TenantContext): Promise<Date | null> {
+  const [row] = await db
+    .select({ at: members.noterRefuseLe })
+    .from(members)
+    .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+    .limit(1);
+  return row?.at ?? null;
+}
+
+// `refused` : true date le réglage, false le remet à nul. Vrai si la ligne du lecteur existe.
+export async function setNotesRefused(ctx: TenantContext, refused: boolean): Promise<boolean> {
+  const rows = await db
+    .update(members)
+    .set({ noterRefuseLe: refused ? sql`now()` : null })
+    .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+    .returning({ id: members.id });
+  return rows.length > 0;
+}
+
 // Le lien en clair n'est renvoyé qu'ici, une seule fois ; null si le lecteur n'est ni propriétaire ni administrateur.
 // Il porte le poste de l'invité (recopié sur le membre à son arrivée) et le nom saisi pour s'y retrouver (vide = nul).
 export async function createInvitationLink(

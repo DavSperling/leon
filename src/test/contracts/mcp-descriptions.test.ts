@@ -8,7 +8,7 @@ import {
   NEIGHBOUR_TURNS,
 } from '@/server/mcp/tools/fetch-tool';
 import { SearchOutputSchema } from '@/server/mcp/tools/output-schemas';
-import { RememberInputSchema } from '@/server/mcp/tools/remember-tool';
+import { NOTES_TURNED_OFF, RememberInputSchema } from '@/server/mcp/tools/remember-tool';
 import {
   SEARCH_DESCRIPTION,
   SEARCH_PAGE_MAX,
@@ -22,6 +22,7 @@ import {
   readToolFilters,
 } from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
+import en from '../../../messages/en.json';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
 // citent des noms et des chiffres du code. S'ils ne les reprennent pas, ils mentent sans qu'aucun test ne casse.
@@ -198,5 +199,14 @@ describe('description de remember', () => {
         .map((schema) => description(schema))
         .join(' '),
     ).not.toMatch(/restor|restaur/i);
+  });
+});
+
+// T65 (C16) : le refus de remember, réglage `noter` daté, dit où le rouvrir, par les noms anglais du site : la section
+// Mémoire (son onglet) des réglages.
+describe('refus de remember quand les notes sont coupées', () => {
+  it('nomme l’onglet Mémoire et les réglages du site, tels que le site anglais les nomme', () => {
+    expect(NOTES_TURNED_OFF).toContain(`${en.settings.tabMemory} section`);
+    expect(NOTES_TURNED_OFF).toContain(`website ${en.navigation.settings.toLowerCase()}`);
   });
 });

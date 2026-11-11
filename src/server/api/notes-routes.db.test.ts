@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vites
 import { API_PATHS, NOTER_BODY_MAX_BYTES, NoterResponseSchema } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { createApiToken } from '@/server/auth/api-tokens';
+import { setNotesRefused } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources, turns, versionsMemoire } from '@/server/db/schema/memory';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
@@ -53,6 +54,17 @@ const notesOf = (ctx: TenantContext) =>
   adminDb.select().from(sources).where(eq(sources.ownerUserId, ctx.userId));
 
 describe('POST /api/v1/noter', () => {
+  // T65 (C14, C16) : `leon note` suit l'usage `noter` de l'outil, pas le réglage `noter` du compte, qui ne coupe que
+  // `remember`.
+  it('écrit encore quand le réglage noter du compte est daté', async () => {
+    const paul = await member();
+    await setNotesRefused(paul, true);
+
+    await created(await post(paul.token, {}));
+
+    expect(await notesOf(paul)).toHaveLength(1);
+  });
+
   it('répond 401 sans jeton', async () => {
     const response = await apiRequest(API_PATHS.noter, { body: base });
     expect(response.status).toBe(401);

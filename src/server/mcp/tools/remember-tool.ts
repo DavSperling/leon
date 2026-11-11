@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { VERSION_N_MAX } from '@/capture/api-contract';
+import { notesRefusedAt } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { writeNote } from '@/server/memory/notes';
 import { guarded } from './guarded';
@@ -8,6 +9,8 @@ import { guarded } from './guarded';
 // `remember` (T57 ; D36, D38, C14 du plan de la mémoire à disposition) : le chemin de `leon note`, writeNote, avec le
 // client pour outil (`mcp:<libellé>`). Sans `note`, une note neuve ; avec `note` et `version`, la version suivante de
 // la note, si elle vient du même client. Il ne rend qu'un id et un numéro, jamais le texte.
+// T65 (D30, C16) : il lit d'abord le réglage `noter` du compte, sur la ligne du porteur du jeton (ordinateur, manuel ou
+// assistant) ; daté, il refuse sans rien écrire, par un message fixe qui ne recopie pas le texte reçu.
 export const RememberInputSchema = z.object({
   text: z.string().min(1).max(4000),
   about: z.string().max(200).optional(),
@@ -23,6 +26,9 @@ export const RememberInputSchema = z.object({
     .optional()
     .describe('With note: the number of its last version you read. Required with note.'),
 });
+
+export const NOTES_TURNED_OFF =
+  'Notes are turned off for this Leon account. They can be turned back on in the Memory section of the Leon website settings.';
 
 const refusal = (text: string) => ({ isError: true, content: [{ type: 'text' as const, text }] });
 const REFUSALS = {
@@ -46,6 +52,7 @@ export function registerRememberTool(server: McpServer, ctx: TenantContext, clie
       if ((note === undefined) !== (version === undefined)) {
         return refusal('Give note and version together.');
       }
+      if (await notesRefusedAt(ctx)) return refusal(NOTES_TURNED_OFF);
       const written = await writeNote(ctx, {
         texte: about ? `About ${about}: ${text}` : text,
         outil: `mcp:${client}`,

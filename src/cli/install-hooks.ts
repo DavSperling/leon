@@ -50,7 +50,8 @@
 //   peut venir d'un agent, qui ne donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à
 //   disposition). Un refus s'écrit daté (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait. Les installateurs
 //   des autres outils (install-outil.ts, install-codex.ts) font de même par offerUsages, et un usage tranché dans le
-//   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé ;
+//   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé. Un « non » du terminal à `noter` coupe aussi
+//   `remember` pour le compte, par la route à jeton du refus (C16, T65) ; un « oui » ne le rouvre pas, et le dit ;
 // - pose le crochet de message (UserPromptSubmit, `leon reminder`, T49) seulement une fois l'usage `rappel` donné, par une
 //   seconde écriture des réglages après les usages (writeReminderHook), même quand les deux autres sont déjà en place ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
@@ -78,7 +79,8 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
-import type { Usage } from '../capture/api-contract';
+import { API_PATHS, type Usage, type UsagesRequest } from '../capture/api-contract';
+import { readConnection } from './connection';
 import {
   addRefusal,
   addUsage,
@@ -434,7 +436,40 @@ export type InstallDeps = {
   err: (text: string) => void;
   // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse (D30).
   ask: (question: string) => Promise<string | null>;
+  // Le refus de `noter` pour le compte (C16, T65 ; notesRefusal) : vrai si le serveur l'a pris. Absent, il n'a pas pu
+  // partir, comme sans connexion.
+  refuseNotes?: () => Promise<boolean>;
 };
+
+// Un « non » à `noter` dans le terminal (T65, C16) : la route du refus (API_PATHS.usages, `{ noter: false }`), avec la
+// connexion de l'ordinateur (~/.leon/connexion.json), sous un délai court. Vrai sur 204 ; faux sans connexion, sur
+// toute autre réponse (un serveur ancien répond 404) ou si le serveur est absent ou lent : l'installation continue.
+const NOTES_REFUSAL_TIMEOUT_MS = 3_000;
+export const notesRefusal =
+  (fetchImpl: typeof fetch, home: string): (() => Promise<boolean>) =>
+  async () => {
+    const connection = await readConnection(home);
+    if (!connection) return false;
+    try {
+      const response = await fetchImpl(new URL(API_PATHS.usages, connection.url), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${connection.jeton}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ noter: false } satisfies UsagesRequest),
+        signal: AbortSignal.timeout(NOTES_REFUSAL_TIMEOUT_MS),
+      });
+      return response.status === 204;
+    } catch {
+      return false;
+    }
+  };
+// Messages fixes : ni l'adresse du serveur ni le jeton.
+export const NOTES_REOPEN_LINE =
+  'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on only in the Memory section of the Leon website settings.';
+export const NOTES_REFUSAL_FAILED =
+  'Leon: the Leon server could not be told of this refusal (no connection, server unreachable or too slow, or older than this CLI): `remember` stays on for the assistants connected to this workspace. Turn it off in the Memory section of the Leon website settings.';
 
 const ACTION_LABELS: Record<HookChange['action'], string> = {
   ajout: 'add',
@@ -682,6 +717,11 @@ export async function offerUsages(
       for (const line of ['', ...offer.lines]) deps.out(line);
       accepted = offer.answer(await deps.ask(offer.question(path)));
       decisions.set(usage, accepted);
+      // La réponse du terminal à `noter` vaut aussi pour `remember` (T65) ; une case de la page passe par l'échange du code.
+      if (usage === 'noter' && accepted === true) deps.out(NOTES_REOPEN_LINE);
+      if (usage === 'noter' && accepted === false && !(await deps.refuseNotes?.())) {
+        deps.err(NOTES_REFUSAL_FAILED);
+      }
     }
     if (accepted === true) {
       try {

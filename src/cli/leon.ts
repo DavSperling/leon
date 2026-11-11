@@ -32,7 +32,7 @@ import {
 import { installAntigravityHooks, uninstallAntigravityHooks } from './install-antigravity';
 import { codexHome, installCodexHook, uninstallCodexHook } from './install-codex';
 import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
-import { installHooks } from './install-hooks';
+import { installHooks, notesRefusal } from './install-hooks';
 import {
   type LoginDeps,
   type LoginResult,
@@ -514,7 +514,13 @@ async function runInstallHooks(args: string[]): Promise<number> {
   const asker = createAsker();
   try {
     // Les crochets appellent le lanceur (K9) : sous la forme clone, il lance pnpm dans ce dépôt (setup.ts).
-    const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
+    const io = {
+      home: homedir(),
+      out: console.log,
+      err: console.error,
+      ask: asker.ask,
+      refuseNotes: notesRefusal(fetch, homedir()), // un « non » à `noter` coupe aussi `remember` (T65)
+    };
     const assumeYes = values.oui ?? false;
     // Seul un terminal fait demander un usage (D30) : une réponse lue d'un tube peut venir d'un agent.
     const usages = { home: io.home, assumeYes, interactive: process.stdin.isTTY === true };

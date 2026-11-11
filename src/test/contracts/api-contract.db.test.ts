@@ -48,6 +48,7 @@ const SERVED = {
   lecons: ['POST', { body: {} }],
   rappel: ['POST', { body: {} }],
   noter: ['POST', { body: {} }],
+  usages: ['POST', { body: {} }],
 } as const;
 // Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
 // jeton ni session. Leur sonde est un POST sans corps valide, qui répond 400 : la route existe (ni 404) et ne demande

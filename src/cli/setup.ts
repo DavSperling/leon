@@ -52,6 +52,7 @@ import {
   isYes,
   type Json,
   load,
+  notesRefusal,
   parseSettings,
   SETTINGS_FILE,
   type UsageDecisions,
@@ -202,6 +203,7 @@ type InstallContext = {
   repoDir: string | undefined;
   yes: boolean;
   decisions: UsageDecisions; // les usages tranchés dans ce passage, pour tous ses outils
+  refuseNotes: () => Promise<boolean>; // un « non » du terminal à `noter` (T65, C16)
 } & Pick<SetupDeps, 'out' | 'err' | 'ask' | 'interactive'>;
 
 async function installClaudeCode(configDir: string, ctx: InstallContext): Promise<Installed> {
@@ -214,7 +216,7 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
       interactive: ctx.interactive,
       decisions: ctx.decisions,
     },
-    { out: ctx.out, err: ctx.err, ask: ctx.ask },
+    { out: ctx.out, err: ctx.err, ask: ctx.ask, refuseNotes: ctx.refuseNotes },
   );
   if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
   const inPlace = await claudeCodeHooksInPlace(configDir, ctx.home);
@@ -519,6 +521,7 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
         ask,
         interactive: deps.interactive,
         decisions,
+        refuseNotes: notesRefusal(deps.fetch, home),
       });
       failed ||= result.failed;
       summary.push(`${tool.label}: ${result.status}`);

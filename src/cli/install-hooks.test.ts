@@ -13,7 +13,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { API_PATHS } from '../capture/api-contract';
 import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
 import { writeConnection } from './connection';
@@ -25,6 +26,9 @@ import {
   installHooks,
   isLeonHandler,
   isYes,
+  NOTES_REFUSAL_FAILED,
+  NOTES_REOPEN_LINE,
+  notesRefusal,
   SESSION_END_TIMEOUT_S,
   SESSION_START_TIMEOUT_S,
   SETTINGS_FILE,
@@ -114,6 +118,7 @@ async function install(
     interactive?: boolean;
     decisions?: UsageDecisions;
     answers?: (string | null)[];
+    refuseNotes?: () => Promise<boolean>;
   } = {},
   hook?: () => Promise<void>,
 ): Promise<Run> {
@@ -139,6 +144,7 @@ async function install(
         if (answer === undefined) throw new Error('question inattendue');
         return answer;
       },
+      refuseNotes: options.refuseNotes,
     },
   );
   return { code, output: lines.join('\n'), questions };
@@ -1375,6 +1381,115 @@ describe('installHooks : l’usage noter', () => {
 
     expect(run.questions).toEqual([]);
     expect((await factsConsent(home, 'claude_code'))?.usages).toEqual(['noter']);
+  });
+
+  // T65 (C16) : un « non » du terminal date aussi le réglage `noter` du compte, par la route à jeton ; un « oui » ne le
+  // rouvre pas (la route n'accepte qu'un refus) et le dit. Un serveur ancien, absent ou lent n'arrête rien.
+  it('un « non » dans le terminal appelle la route du refus, une fois, et l’installation continue', async () => {
+    const refuseNotes = vi.fn(async () => true);
+
+    const run = await install({
+      interactive: true,
+      answers: ['oui', null, null, 'non', null],
+      refuseNotes,
+    });
+
+    expect(run.code).toBe(0);
+    expect(refuseNotes).toHaveBeenCalledTimes(1);
+    expect(run.questions.at(-1)).toBe(resumeQuestion());
+    expect(run.output).not.toContain(NOTES_REFUSAL_FAILED);
+    expect(run.output).not.toContain(NOTES_REOPEN_LINE);
+  });
+
+  it('un « oui » ne l’appelle pas, et dit en une ligne fixe où se rouvrent des notes coupées', async () => {
+    const refuseNotes = vi.fn(async () => true);
+
+    const run = await install({
+      interactive: true,
+      answers: ['oui', null, null, '', null],
+      refuseNotes,
+    });
+
+    expect(refuseNotes).not.toHaveBeenCalled();
+    expect(run.output).toContain(NOTES_REOPEN_LINE);
+    expect(NOTES_REOPEN_LINE).toBe(
+      'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on only in the Memory section of the Leon website settings.',
+    );
+  });
+
+  it.each([
+    ['tranché par la page (--yes)', { assumeYes: true, decisions: new Map([['noter', false]]) }],
+    ['sans réponse', { interactive: true, answers: ['oui', null, null, null, null] }],
+  ] as const)('%s : ni appel ni ligne', async (_cas, options) => {
+    const refuseNotes = vi.fn(async () => true);
+
+    const run = await install({ ...options, refuseNotes } as never);
+
+    expect(refuseNotes).not.toHaveBeenCalled();
+    expect(run.output).not.toContain(NOTES_REOPEN_LINE);
+  });
+
+  it('un refus que le serveur n’a pas pris (404, absent, lent) : un message fixe, et l’installation continue', async () => {
+    const run = await install({
+      interactive: true,
+      answers: ['oui', null, null, 'non', null],
+      refuseNotes: async () => false,
+    });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(NOTES_REFUSAL_FAILED);
+    expect(run.questions.at(-1)).toBe(resumeQuestion());
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ refus: ['noter'] });
+  });
+});
+
+// L'appel de la route du refus (C16), avec la connexion de l'ordinateur : rien d'autre ne part.
+describe('notesRefusal', () => {
+  const CONNECTION = {
+    url: 'https://leon.example',
+    jeton: FAKE_TOKEN,
+    ordinateur: 'MacBook-Pro',
+    espace: 'Acme',
+    cree_le: '2026-11-03T10:00:00.000Z',
+  };
+
+  it('envoie { noter: false } au serveur de la connexion, avec son jeton et un délai court ; 204 : vrai', async () => {
+    await writeConnection(home, CONNECTION);
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 204 }));
+
+    expect(await notesRefusal(fetchImpl as typeof fetch, home)()).toBe(true);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.href).toBe(`https://leon.example${API_PATHS.usages}`);
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FAKE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ noter: false }),
+    });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it.each([
+    ['un serveur ancien (404)', async () => new Response(null, { status: 404 })],
+    ['un jeton refusé (401)', async () => new Response(null, { status: 401 })],
+    [
+      'un serveur absent ou lent',
+      async () => {
+        throw new TypeError('fetch failed');
+      },
+    ],
+  ])('%s : faux', async (_cas, impl) => {
+    await writeConnection(home, CONNECTION);
+
+    expect(await notesRefusal(vi.fn(impl) as typeof fetch, home)()).toBe(false);
+  });
+
+  it('sans connexion : faux, sans rien envoyer', async () => {
+    const fetchImpl = vi.fn();
+
+    expect(await notesRefusal(fetchImpl as typeof fetch, home)()).toBe(false);
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 });
 

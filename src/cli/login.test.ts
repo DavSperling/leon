@@ -56,6 +56,9 @@ async function startLeon(
     // Les cases de la page dans la 201 (T64) : absentes par défaut, comme chez un serveur plus ancien.
     usages?: unknown;
     refus?: unknown;
+    // Ce que /api/v1/me rend au jeton qu'on lui présente : un compte et un espace tirés au hasard par défaut.
+    userId?: string;
+    tenantId?: string;
   } = {},
 ): Promise<FakeLeon> {
   const calls: Call[] = [];
@@ -91,8 +94,8 @@ async function startLeon(
     if (request.method === 'GET' && request.url === API_PATHS.me) {
       return (answers.me ?? 200) === 200
         ? json(200, {
-            userId: crypto.randomUUID(),
-            tenantId: crypto.randomUUID(),
+            userId: answers.userId ?? crypto.randomUUID(),
+            tenantId: answers.tenantId ?? crypto.randomUUID(),
             userName: 'Paul',
             email: answers.compte ?? 'paul@example.com',
             organizationName: answers.espace ?? 'Acme',
@@ -789,6 +792,68 @@ describe('leon login : les cases de la page « Autoriser »', () => {
     expect(run.err.join('\n')).toContain(
       'Timed out: the browser did not come back within 1 second. Nothing was saved.',
     );
+  });
+});
+
+// La relance de `leon setup --yes` (S10) ne sert qu'à faire choisir les cases : elle ne doit jamais relier l'ordinateur à
+// un autre compte ou à un autre espace que ceux de sa connexion. `attendu` les porte ; le /me du nouveau jeton les vérifie.
+describe('leon login : la relance garde le compte et l’espace de la connexion', () => {
+  const USER = '6f1c2a4e-0b7d-4c1e-9a3f-2d5b8e7c1a90';
+  const TENANT = '2b9e4d7a-5c3f-4e8b-a1d6-7f0c9e2b4a13';
+  const attendu = { userId: USER, tenantId: TENANT };
+  const MISMATCH =
+    'The authorization page was approved from another account or workspace than the one this computer is connected to: nothing was changed, and the new authorization was revoked.';
+  const restart = async (answers: Parameters<typeof startLeon>[1]) => {
+    await leon.close();
+    leon = await startLeon(home, answers);
+    await writeConnection(home, {
+      url: leon.url,
+      jeton: OLD_TOKEN,
+      ordinateur: 'Ancien',
+      espace: 'Acme',
+      cree_le: '2026-10-01T10:00:00.000Z',
+    });
+    return readFile(connectionPath(home), 'utf8');
+  };
+  const deleted = () => leon.calls.filter((call) => call.method === 'DELETE').map(tokenOf);
+
+  it.each([
+    ['un autre espace', { userId: USER, tenantId: '9a7c5e3b-1d4f-4a6c-8e2b-0f9d7c5a3e18' }],
+    ['un autre compte', { userId: '3e8d1b6f-7a2c-4f9e-b5d0-1c4a8e6f2b97', tenantId: TENANT }],
+    ['un /me en erreur', { me: 500 }],
+  ])(
+    'approuvée depuis %s : connexion.json ne change pas, seul le nouveau jeton est révoqué, et rien n’est rendu',
+    async (_name, answers) => {
+      const before = await restart({ ...answers, usages: ['lecture'], refus: [] });
+      const run = setup((params) => approve(params), { env: {} });
+
+      const result = await loginComputer({ usages: ['lecture'], attendu }, run.deps);
+      await run.browsed();
+
+      expect(result).toEqual({ code: 1, usages: [], refus: [] });
+      expect(await readFile(connectionPath(home), 'utf8')).toBe(before);
+      const fresh = tokenOf(registerCall(leon));
+      expect(fresh).not.toBe(OLD_TOKEN);
+      const me = leon.calls.find((call) => call.method === 'GET' && call.path === API_PATHS.me);
+      expect(tokenOf(me)).toBe(fresh);
+      expect(deleted()).toEqual([fresh]);
+      expect(run.err).toContain(MISMATCH);
+      expect(run.out.join('\n')).not.toContain('Connected to');
+    },
+  );
+
+  it('le même compte et le même espace : la connexion est remplacée comme avant, et l’ancien jeton révoqué', async () => {
+    await restart({ ...attendu, usages: ['lecture'], refus: [] });
+    const run = setup((params) => approve(params), { env: {} });
+
+    const result = await loginComputer({ usages: ['lecture'], attendu }, run.deps);
+    await run.browsed();
+
+    expect(result).toEqual({ code: 0, usages: ['lecture'], refus: [] });
+    const fresh = tokenOf(registerCall(leon));
+    expect((await readConnection(home))?.jeton).toBe(fresh);
+    expect(deleted()).toEqual([OLD_TOKEN]);
+    expect(run.err).toEqual([]);
   });
 });
 

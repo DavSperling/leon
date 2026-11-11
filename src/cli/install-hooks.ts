@@ -144,13 +144,14 @@ export const RESUME_LINES = [
 
 // Le texte de l'usage `lecture` (C7 révisé, D24, D30 ; décisions d'Amos du 11/11), testé mot pour mot : un seul texte,
 // sans nom d'outil, le même dans les quatre installateurs et sur la page « Autoriser » (T64). Ce que le bloc de démarrage
-// pousse avec lui (T46 ; les leçons du lot 13, nommées dès maintenant pour ne pas redemander l'accord), ce que l'agent
+// pousse avec lui (T46 ; les leçons du lot 13, nommées dès maintenant pour ne pas redemander l'accord), ce que la
+// requête de démarrage envoie en plus pour cela (les usages de l'outil et la commande, C3), ce que l'agent
 // peut lire (les vrais noms des commandes et des outils), et la portée réelle : le jeton est celui de l'ordinateur, et
 // les commandes envoient les usages de tous ses outils (read-commands.ts). Il ne promet donc jamais qu'un refus empêche
 // un agent de lire.
 export const LECTURE_LINES = [
   'Reading Leon (usage "lecture", asked separately):',
-  "  - At the start of each session or conversation, Leon places in the agent's context the summary of your work threads on this repository (keys only: their id, branch, tools, dates, pull request numbers and states, number of linked sources), which replaces the list of your recent sessions, the lessons you accepted, and an instruction to read the thread of its task. The model provider of the tool sees them.",
+  "  - At the start of each session or conversation, Leon places in the agent's context the summary of your work threads on this repository (keys only: their id, branch, tools, dates, pull request numbers and states, number of linked sources), which replaces the list of your recent sessions, the lessons you accepted, and an instruction to read the thread of its task. The model provider of the tool sees them. For this, the start request also sends the Leon server the usages this tool accepted and the Leon command of this computer (such as `~/.leon/bin/leon`), which the instruction cites.",
   '  - The agent can read your work threads on this repository, their summaries and their state, and the memory of this repository that you can see, with the commands `leon threads`, `leon thread`, `leon search` and `leon versions`, or with the tools `threads`, `thread` and `versions` if the Leon MCP server is connected to the tool. The model provider of the tool sees what it reads. This usage never lets an agent write anything to Leon.',
   '  - The `leon` commands use the token of this computer: once one of your code tools accepts this usage, they work for every agent on this computer. Refusing it in a tool only removes, in that tool, the summary, the lessons and the instruction placed at the start.',
 ];

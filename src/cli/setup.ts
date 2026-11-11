@@ -27,7 +27,11 @@
 // leurs.
 import { access, readFile, stat } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
-import { AUTHORIZE_USAGES, type AuthorizeUsage } from '../capture/api-contract';
+import {
+  AUTHORIZE_USAGES,
+  type AuthorizeUsage,
+  ViewerProfileSchema,
+} from '../capture/api-contract';
 import { type Connection, readConnection } from './connection';
 import { type ConsentTool, factsConsent } from './consent';
 import { resolveServerEnv, type ServerEnv } from './env';
@@ -64,8 +68,14 @@ import { connectionWithdrawal, tellBeforeConsent } from './uninstall-hooks';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
 // Une connexion par `leon login` : `url`, l'option --url de `leon setup`, ou la connexion enregistrée pour une relance ;
-// `usages`, les cases à demander sur la page ; `relance`, l'ordinateur est déjà connecté (l'attente est plus courte).
-export type SetupLogin = { url: string | undefined; usages: AuthorizeUsage[]; relance: boolean };
+// `usages`, les cases à demander sur la page ; `relance`, l'ordinateur est déjà connecté (l'attente est plus courte) ;
+// `attendu`, le compte et l'espace de la connexion, que la relance doit retrouver (sinon rien ne change).
+export type SetupLogin = {
+  url: string | undefined;
+  usages: AuthorizeUsage[];
+  relance: boolean;
+  attendu?: { userId: string; tenantId: string };
+};
 export type SetupDeps = {
   home: string;
   env: Record<string, string | undefined>;
@@ -310,6 +320,7 @@ async function usagesForPage(home: string, env: SetupDeps['env']): Promise<Autho
   const missing = new Set<AuthorizeUsage>();
   for (const tool of TOOLS) {
     const outil = tool.install && CONSENT_TOOLS.get(tool.install);
+    // À la fusion de #162 (`dir` devient `dirs`) : `!(await firstDirectory(tool.dirs(home, env)))`.
     if (!outil || !(await isDirectory(tool.dir(home, env)))) continue;
     const consent = await factsConsent(home, outil);
     for (const usage of AUTHORIZE_USAGES) {
@@ -319,22 +330,22 @@ async function usagesForPage(home: string, env: SetupDeps['env']): Promise<Autho
   return AUTHORIZE_USAGES.filter((usage) => missing.has(usage));
 }
 
-// Pourquoi l'ordinateur est à reconnecter (`reason`), ou null s'il est connecté ; `verified` : le serveur a reconnu son
-// jeton (GET /api/v1/me à 200). Seules les adresses de serveur se disent, par leur origine : ni chemin ni, jamais, le
-// jeton.
+// Pourquoi l'ordinateur est à reconnecter (`reason`), ou null s'il est connecté ; `attendu` : le compte et l'espace du
+// jeton de la connexion, quand le serveur le reconnaît (GET /api/v1/me à 200, avec un profil), sinon null. Seules les
+// adresses de serveur se disent, par leur origine : ni chemin ni, jamais, le jeton.
 async function reconnectReason(
   options: SetupOptions,
   deps: Pick<SetupDeps, 'fetch'>,
   saved: Connection | null,
   server: ServerEnv | null,
-): Promise<{ reason: string | null; verified: boolean }> {
+): Promise<{ reason: string | null; attendu: { userId: string; tenantId: string } | null }> {
   if (saved === null) {
     return {
       reason:
         server === null
           ? 'This computer is not connected to Leon yet: running `~/.leon/bin/leon login`.'
           : 'This computer is connected only by LEON_URL and LEON_TOKEN, which a Claude Code started from the Dock or an editor does not see: running `~/.leon/bin/leon login`.',
-      verified: false,
+      attendu: null,
     };
   }
   const current = new URL(saved.url).origin;
@@ -343,20 +354,24 @@ async function reconnectReason(
     if (wanted !== current) {
       return {
         reason: `This computer is connected to ${current}, not to the server of --url${wanted === null ? '' : ` (${wanted})`}: connecting it again.`,
-        verified: false,
+        attendu: null,
       };
     }
   }
   // C'est le jeton de la connexion qu'on contrôle, même si des variables passent avant lui : les crochets lancés hors
   // d'un terminal n'ont que lui. Un serveur muet ou une autre erreur ne prouvent rien : on ne bloque pas hors ligne.
   const me = await requestMe(current, saved.jeton, deps.fetch);
-  await me?.body?.cancel().catch(() => {});
+  const profile =
+    me?.status === 200 ? ViewerProfileSchema.safeParse(await me.json().catch(() => null)) : null;
+  if (me?.status !== 200) await me?.body?.cancel().catch(() => {});
   return {
     reason:
       me?.status === 401
         ? 'This computer was disconnected from Leon (its token was revoked): connecting it again.'
         : null,
-    verified: me?.status === 200,
+    attendu: profile?.success
+      ? { userId: profile.data.userId, tenantId: profile.data.tenantId }
+      : null,
   };
 }
 
@@ -370,8 +385,9 @@ const WITH_TOKEN =
 // Connecte l'ordinateur s'il ne l'est pas ou plus, en demandant les cases `asked` sur la page (rend ce que rend `leon
 // login`), sinon dit à quel serveur. Avec --yes, un ordinateur connecté rouvre la page pour ces cases (T64) : vers sa
 // connexion enregistrée, jamais LEON_URL, et seulement si le serveur a reconnu son jeton (hors ligne, la relance
-// attendrait pour rien) ; pas après `--with-token`, que rien ne rouvre. Si la relance échoue (annulée, refusée, délai
-// passé), la connexion d'avant reste et l'installation continue.
+// attendrait pour rien) ; pas après `--with-token`, que rien ne rouvre. La relance doit retrouver le compte et l'espace
+// de la connexion (`attendu`, login.ts). Si elle échoue (annulée, refusée, délai passé, autre compte ou autre espace,
+// page qui ne s'ouvre pas), la connexion d'avant reste et l'installation continue.
 async function ensureConnected(
   options: SetupOptions,
   deps: SetupDeps,
@@ -379,7 +395,7 @@ async function ensureConnected(
 ): Promise<LoginResult> {
   const server = await resolveServerEnv(deps.env, deps.home).catch(() => null);
   const saved = await readConnection(deps.home);
-  const { reason, verified } = await reconnectReason(options, deps, saved, server);
+  const { reason, attendu } = await reconnectReason(options, deps, saved, server);
   if (reason !== null) {
     deps.out(reason);
     return deps.login({ url: options.url, usages: asked, relance: false });
@@ -388,14 +404,18 @@ async function ensureConnected(
   if (server)
     deps.out(`This computer is already connected to Leon (${new URL(server.url).origin}).`);
   const unchanged: LoginResult = { code: 0, usages: [], refus: [] };
-  if (!options.yes || asked.length === 0 || !verified || saved === null) return unchanged;
+  if (!options.yes || asked.length === 0 || attendu === null || saved === null) return unchanged;
   if (saved.par === 'jeton') {
     deps.out(WITH_TOKEN);
     return unchanged;
   }
   deps.out(RELAUNCH);
-  const again = await deps.login({ url: saved.url, usages: asked, relance: true });
-  if (again.code === 0) return again;
+  // La page ne s'ouvre pas toujours (écoute sur 127.0.0.1 refusée dans un bac à sable) : l'ancienne connexion reste. Le
+  // message de l'erreur n'est pas recopié : il renvoie vers `--with-token`, qu'un agent ne doit pas demander.
+  const again = await deps
+    .login({ url: saved.url, usages: asked, relance: true, attendu })
+    .catch(() => null);
+  if (again?.code === 0) return again;
   deps.out(RELAUNCH_FAILED);
   return unchanged;
 }

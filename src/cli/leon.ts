@@ -544,13 +544,13 @@ async function runLoginCommand(args: string[]): Promise<number> {
 // `leon setup` : la même connexion par le navigateur, mais l'entrée standard reste ouverte pour les questions qui
 // suivent (l'accord de chaque outil) : elle n'est fermée que par la commande, à la fin. Elle demande les cases de la
 // page (T64) ; la relance d'un ordinateur déjà connecté attend moins longtemps.
-async function loginForSetup({ url, usages, relance }: SetupLogin): Promise<LoginResult> {
+async function loginForSetup({ url, usages, relance, attendu }: SetupLogin): Promise<LoginResult> {
   const abort = new AbortController();
   const cancel = () => abort.abort();
   process.once('SIGINT', cancel);
   try {
     return await loginComputer(
-      { url, withToken: false, usages },
+      { url, withToken: false, usages, attendu },
       { ...loginDeps(abort.signal), ...(relance ? { timeoutMs: RELAUNCH_WAIT_MS } : {}) },
     );
   } finally {

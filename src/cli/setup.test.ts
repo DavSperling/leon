@@ -26,6 +26,14 @@ const CONNECTION: Connection = {
   espace: 'Acme',
   cree_le: '2026-11-03T10:00:00.000Z',
 };
+// Ce que GET /api/v1/me rend au jeton de la connexion : le compte et l'espace que la relance doit retrouver.
+const PROFILE = {
+  userId: '6f1c2a4e-0b7d-4c1e-9a3f-2d5b8e7c1a90',
+  tenantId: '2b9e4d7a-5c3f-4e8b-a1d6-7f0c9e2b4a13',
+  userName: 'Paul',
+  email: 'paul@example.com',
+  organizationName: 'Acme',
+};
 
 let dir: string;
 let home: string;
@@ -70,6 +78,8 @@ type Run = {
   logins: Array<string | undefined>;
   // Ce que chaque `leon login` demandait : les cases de la page, et s'il relançait un ordinateur déjà connecté.
   asked: { usages: string[]; relance: boolean }[];
+  // Le compte et l'espace que chaque `leon login` devait retrouver (la relance seulement).
+  attendus: ({ userId: string; tenantId: string } | undefined)[];
   requests: Request[];
 };
 
@@ -77,7 +87,9 @@ type Run = {
 // `login` : ce que fait `leon login` ; par défaut il réussit et écrit la connexion, comme le vrai.
 // `page` : ce que l'humain coche et décoche sur la page « Autoriser », que le faux `leon login` rend tel quel (le vrai
 // le filtre sur sa demande, login.test.ts) ; par défaut rien, comme un serveur plus ancien.
-// `me` : ce que répond GET /api/v1/me au jeton de la connexion (200 par défaut) ; 'unreachable' : le serveur ne répond pas.
+// `me` : ce que répond GET /api/v1/me au jeton de la connexion (200 et PROFILE par défaut) ; 'unreachable' : le serveur ne
+// répond pas ; 'malformed' : 200 avec un corps qui n'est pas un profil.
+// `loginThrows` : la relance lève, comme le vrai `leon login` quand l'écoute sur 127.0.0.1 est refusée (bac à sable).
 async function setup(
   options: Partial<SetupOptions> = {},
   extra: {
@@ -85,7 +97,8 @@ async function setup(
     env?: Record<string, string>;
     loginCode?: number;
     page?: { usages?: Usage[]; refus?: Usage[] };
-    me?: number | 'unreachable';
+    me?: number | 'unreachable' | 'malformed';
+    loginThrows?: boolean;
     whileAsking?: () => Promise<void>;
     // Appelé à chaque requête, avant sa réponse : ce que le disque porte à ce moment-là.
     whileFetching?: (url: string, init?: RequestInit) => Promise<void>;
@@ -96,6 +109,7 @@ async function setup(
   const questions: string[] = [];
   const logins: Array<string | undefined> = [];
   const asked: Run['asked'] = [];
+  const attendus: Run['attendus'] = [];
   const requests: Request[] = [];
   const answers = [...(extra.answers ?? [])];
   const deps: SetupDeps = {
@@ -111,9 +125,15 @@ async function setup(
       if (answer === undefined) throw new Error('question inattendue');
       return answer;
     },
-    login: async ({ url, usages, relance }) => {
+    login: async ({ url, usages, relance, attendu }) => {
       logins.push(url);
       asked.push({ usages: [...usages], relance });
+      attendus.push(attendu);
+      if (relance && extra.loginThrows) {
+        throw new Error(
+          'Could not listen on 127.0.0.1 (EPERM). Run `leon login --with-token` instead.',
+        );
+      }
       const code = extra.loginCode ?? 0;
       if (code !== 0) return { code, usages: [], refus: [] };
       await connect();
@@ -128,11 +148,16 @@ async function setup(
       });
       await extra.whileFetching?.(String(input), init);
       if (extra.me === 'unreachable') throw new TypeError('fetch failed');
-      return new Response('{}', { status: extra.me ?? 200 });
+      const status = extra.me === 'malformed' ? 200 : (extra.me ?? 200);
+      const profile =
+        extra.me !== 'malformed' &&
+        status === 200 &&
+        new URL(String(input)).pathname === API_PATHS.me;
+      return new Response(profile ? JSON.stringify(PROFILE) : '{}', { status });
     },
   };
   const code = await runSetup({ yes: false, ...options }, deps);
-  return { code, output: lines.join('\n'), questions, logins, asked, requests };
+  return { code, output: lines.join('\n'), questions, logins, asked, attendus, requests };
 }
 
 // Tout ce que `setup` laisse sur le disque : chemin → droits, date de modification et contenu (un fichier de travail
@@ -1014,6 +1039,21 @@ describe('setup : les cases de la page « Autoriser »', () => {
     expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: ['lecture'] });
   });
 
+  it('la relance reçoit le compte et l’espace de la connexion, lus par GET /api/v1/me avec son jeton ; la première connexion, aucun', async () => {
+    await hasClaudeCode();
+    const first = await setup({ yes: true });
+    expect(first.attendus).toEqual([undefined]);
+
+    const again = await setup({ yes: true });
+
+    expect(again.asked).toEqual([{ usages: ['lecture'], relance: true }]);
+    expect(again.attendus).toEqual([{ userId: PROFILE.userId, tenantId: PROFILE.tenantId }]);
+    expect(again.requests[0]).toEqual({
+      url: 'https://leon.example/api/v1/me',
+      authorization: `Bearer ${FAKE_TOKEN}`,
+    });
+  });
+
   it('--url de la même origine : la relance vise ce serveur-là', async () => {
     await connect();
     await hasClaudeCode();
@@ -1054,9 +1094,28 @@ describe('setup : les cases de la page « Autoriser »', () => {
     expect(run.output).toContain('Claude Code: hooks installed');
   });
 
+  it('une relance qui lève (écoute sur 127.0.0.1 refusée) garde la connexion : les crochets sont posés, sans usage', async () => {
+    await connect();
+    await hasClaudeCode();
+
+    const run = await setup({ yes: true }, { loginThrows: true });
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(RELAUNCH_FAILED);
+    expect(run.output).toContain('Claude Code: hooks installed');
+    expect(run.output).not.toContain('--with-token` instead');
+    expect(await readConnection(home)).toEqual(CONNECTION);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      version: 2,
+      usages: [],
+      refus: [],
+    });
+  });
+
   it.each([
     ['ne répond pas', 'unreachable' as const],
     ['répond 500', 500],
+    ['rend un corps qui n’est pas un profil', 'malformed' as const],
   ])('pas de relance quand GET /api/v1/me %s', async (_name, me) => {
     await connect();
     await hasClaudeCode();

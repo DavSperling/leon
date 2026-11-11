@@ -14,7 +14,8 @@
 // `leon setup` (setup.ts) demande en plus des cases sur la page (T64, C16 du plan de la mémoire à disposition) : les
 // usages cochés par défaut qui manquent à ses outils. `loginComputer` les met dans l'adresse et rend ce que l'humain y a
 // tranché, filtré sur sa demande. Lancé seul, `leon login` n'en demande aucune et n'écrit rien dans accord.json : seuls
-// les installateurs y écrivent.
+// les installateurs y écrivent. Quand `leon setup` rouvre la page sur un ordinateur déjà connecté, le nouveau jeton doit
+// avoir le compte et l'espace de la connexion (`attendu`) : sinon il est révoqué et rien ne change.
 import { spawn } from 'node:child_process';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { createServer, type ServerResponse } from 'node:http';
@@ -47,6 +48,8 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const NAME_MAX_CHARS = 60; // la limite de K5 : au-delà, le serveur retient « ordinateur »
 const LOOPBACK = 'http://127.0.0.1';
 
+const OTHER_ACCOUNT =
+  'The authorization page was approved from another account or workspace than the one this computer is connected to: nothing was changed, and the new authorization was revoked.';
 const UNREACHABLE =
   'Could not reach the server. Check the address and your network, then try again.';
 const TRY_AGAIN = 'Run `leon login` to try again.';
@@ -63,11 +66,13 @@ export type LoginDeps = {
   timeoutMs?: number;
   signal?: AbortSignal; // Ctrl+C
 };
-// `usages` : les cases à demander sur la page (setup.ts seulement ; aucune option de la ligne de commande).
+// `usages` : les cases à demander sur la page ; `attendu` : le compte et l'espace que la relance de `leon setup` doit
+// retrouver (setup.ts seulement ; aucune option de la ligne de commande).
 export type LoginOptions = {
   url?: string;
   withToken?: boolean;
   usages?: readonly AuthorizeUsage[];
+  attendu?: { userId: string; tenantId: string };
 };
 // `usages` et `refus` : les cases cochées et décochées sur la page, parmi celles demandées ; vides sinon.
 export type LoginResult = { code: number; usages: AuthorizeUsage[]; refus: AuthorizeUsage[] };
@@ -148,7 +153,7 @@ function duration(ms: number): string {
 
 // K6 avec ce jeton : vrai s'il est révoqué, ou déjà inconnu du serveur (401) ; faux si le serveur n'a pas répondu.
 async function revokeToken(
-  connection: Connection,
+  connection: Pick<Connection, 'url' | 'jeton'>,
   deps: Pick<LoginDeps, 'fetch'>,
 ): Promise<boolean> {
   try {
@@ -312,10 +317,12 @@ async function registerComputer(origin: string, token: string, code: string, dep
 }
 
 // `asked` : les cases demandées sur la page (K3, paramètre `usages`), absentes de l'adresse quand il n'y en a pas.
+// `attendu` : le compte et l'espace que le nouveau jeton doit avoir (la relance de `leon setup`), sinon rien ne change.
 async function loginWithBrowser(
   origin: string,
   previous: Connection | null,
   asked: readonly AuthorizeUsage[],
+  attendu: LoginOptions['attendu'],
   deps: LoginDeps,
 ): Promise<LoginResult> {
   const token = `leon_${randomBytes(32).toString('base64url')}`;
@@ -356,6 +363,23 @@ async function loginWithBrowser(
   }
   const registered = await registerComputer(origin, token, outcome.code, deps);
   if (!registered) return ended(1);
+  // La relance ne sert qu'à choisir les cases : un navigateur ouvert sur un autre compte ou un autre espace ne doit pas y
+  // relier l'ordinateur. Les ids, pas les noms d'espace, qui ne sont pas uniques. On révoque le nouveau jeton seulement.
+  if (attendu) {
+    const me = await requestMe(origin, token, deps.fetch);
+    const profile = ViewerProfileSchema.safeParse(
+      me?.status === 200 ? await me.json().catch(() => null) : null,
+    );
+    if (
+      !profile.success ||
+      profile.data.userId !== attendu.userId ||
+      profile.data.tenantId !== attendu.tenantId
+    ) {
+      await revokeToken({ url: origin, jeton: token }, deps);
+      deps.err(OTHER_ACCOUNT);
+      return ended(1);
+    }
+  }
   const code = await saveConnection(
     {
       url: origin,
@@ -449,7 +473,7 @@ export async function loginComputer(options: LoginOptions, deps: LoginDeps): Pro
   }
   return options.withToken
     ? ended(await loginWithToken(origin, previous, deps))
-    : loginWithBrowser(origin, previous, options.usages ?? [], deps);
+    : loginWithBrowser(origin, previous, options.usages ?? [], options.attendu, deps);
 }
 
 // `leon login` : son code de sortie.

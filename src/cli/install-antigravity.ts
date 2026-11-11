@@ -5,7 +5,8 @@
 // l'appli 2.0.1 (annexe 05) : l'appli lit `~/.gemini/config/hooks.json` sans approbation, après une relance.
 // - le fichier est un objet d'entrées nommées : `{ "<nom>": { "<Évènement>": [ { "type": "command", "command",
 //   "timeout" } ], "enabled": true } }`. Seule l'entrée nommée `leon` est touchée ;
-// - PreInvocation (10 s, `crochet antigravity prompt`) donne le bloc, une fois par conversation. Pas de SessionStart :
+// - PreInvocation (10 s, `crochet antigravity prompt`) donne le bloc, une fois par conversation, et, avec l'usage
+//   rappel, la ligne de rappel à chaque message (invocationNum 0, lastUserInput). Pas de SessionStart :
 //   l'appli 2.0.1 ne l'appelle jamais. Une entrée `leon` d'avant l'essai, qui le portait, perd ce crochet à la mise à jour ;
 // - Stop (30 s, `crochet antigravity tour`) capte, une fois la conversation inactive (`fullyIdle`) ;
 // - les crochets observés tournent en moins de 10 ms ; PreToolUse et PostToolUse n'ont pas tourné, Leon ne s'en sert pas ;

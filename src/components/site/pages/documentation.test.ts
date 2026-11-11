@@ -395,6 +395,15 @@ describe('la page Documentation', () => {
       expect(rappel).toContain(words('neither stores nor logs', 'ne garde ni ne journalise'));
       expect(lead).toContain(words('the reminder', 'le rappel'));
       expect(tools).toContain('<code>rappel</code>');
+      // Le rappel vaut aussi pour Antigravity (appli 2.0.6) : l'ancien « jamais pour Antigravity » ne revient pas.
+      expect(rappel).toContain('2.0.6');
+      expect(rappel).not.toContain(words('never for Antigravity', 'jamais pour Antigravity'));
+      expect(tools).not.toContain(
+        words(
+          'except <code>rappel</code> for Antigravity',
+          'sauf <code>rappel</code> pour Antigravity',
+        ),
+      );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
         rappel.replace(/<\/?code>/g, '`'),
       );

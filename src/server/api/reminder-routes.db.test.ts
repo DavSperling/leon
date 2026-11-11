@@ -184,7 +184,7 @@ describe('POST /api/v1/rappel', () => {
       throw new Error('jamais appelé');
     });
 
-    const line = await texte(await post(paul.token));
+    const { result: line, queries } = await spied(async () => texte(await post(paul.token)));
 
     expect(line).toMatch(/^<rappel-leon>[^\n]*<\/rappel-leon>$/);
     expect(line).toContain(id);
@@ -193,6 +193,8 @@ describe('POST /api/v1/rappel', () => {
     expect(line).toContain('thread');
     expect(line).not.toMatch(/reprendre|cités/);
     expect(embedder).not.toHaveBeenCalled();
+    // Jamais searchPassages : aucune requête ne lit les passages ni leurs vecteurs (D26).
+    expect(queries.filter((one) => /passages|passage_vectors/.test(one.text))).toEqual([]);
   });
 
   it('les fichiers du fil comptent aussi', async () => {
@@ -204,11 +206,32 @@ describe('POST /api/v1/rappel', () => {
     );
   });
 
+  it('une lettre de trop se trouve par les trigrammes, pas par le plein texte', async () => {
+    const [paul] = await team();
+    const id = await fil(paul, {
+      mots: [{ id: await pr(paul), mots: 'Connecteur et installateur' }],
+    });
+
+    expect(
+      await texte(await post(paul.token, { message: 'le connnecteur et l’installlateur' })),
+    ).toContain(id);
+  });
+
   it('un seul mot trouvé ne suffit pas ; une branche citée telle quelle, si', async () => {
     const [paul] = await team();
     const id = await fil(paul, { branches: ['amos/a'], mots: [] });
 
     expect(await texte(await post(paul.token, { message: 'je suis sur amos' }))).toBe('');
+    // Pas un morceau d'un autre nom.
+    for (const message of [
+      'sur amos/ab',
+      'sur amos/a/b',
+      'sur amos/a-b',
+      'sur xamos/a',
+      'sur paul/amos/a',
+    ]) {
+      expect(await texte(await post(paul.token, { message }))).toBe('');
+    }
     expect(await texte(await post(paul.token, { message: 'je suis sur amos/a' }))).toContain(id);
   });
 
@@ -219,6 +242,22 @@ describe('POST /api/v1/rappel', () => {
     expect(await texte(await post(paul.token))).toContain(id);
     expect(await texte(await post(paul.token))).toBe('');
     expect(await texte(await post(paul.token, { session: 'session-2' }))).toContain(id);
+  });
+
+  it('un troisième fil touché est cité au message suivant de la session', async () => {
+    const [paul] = await team();
+    const mots = async () => [{ id: await pr(paul), mots: 'Purge des rappels' }];
+    const fils = [
+      await fil(paul, { mots: await mots() }),
+      await fil(paul, { mots: await mots() }),
+      await fil(paul, { mots: await mots() }),
+    ];
+
+    const first = await texte(await post(paul.token));
+    const second = await texte(await post(paul.token));
+
+    expect(fils.filter((id) => first.includes(id))).toHaveLength(2);
+    expect(fils.filter((id) => second.includes(id) && !first.includes(id))).toHaveLength(1);
   });
 
   it('deux messages en même temps ne citent le fil qu’une fois', async () => {
@@ -247,20 +286,38 @@ describe('POST /api/v1/rappel', () => {
 
   it('le fil d’un collègue n’est jamais cité', async () => {
     const [paul, marie] = await team();
-    await fil(marie, { mots: [{ id: await pr(marie), mots: 'Purge des rappels' }] });
+    const id = await fil(marie, { mots: [{ id: await pr(marie), mots: 'Purge des rappels' }] });
+    // Visible de Paul par la sécurité par ligne : seul le filtre de l'auteur l'écarte.
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId, paul.userId] })
+      .where(eq(sources.id, id));
 
     expect(await texte(await post(paul.token))).toBe('');
+    const { rows } = await adminPool.query('select 1 from rappels_cites where fil_id = $1', [id]);
+    expect(rows).toEqual([]);
   });
 
   it('un fil absorbé n’est jamais cité', async () => {
     const [paul] = await team();
     const garde = await fil(paul, { mots: [] });
-    await fil(paul, {
-      absorbe_par: garde,
-      mots: [{ id: await pr(paul), mots: 'Purge des rappels' }],
-    });
+    const absorbe = async () =>
+      fil(paul, {
+        absorbe_par: garde,
+        mots: [{ id: await pr(paul), mots: 'reprendre la purge des rappels cités' }],
+      });
+    const absorbes = [await absorbe(), await absorbe()];
+    // Moins bien classé que les deux absorbés : il ne passe que s'ils ne prennent pas les deux places.
+    const valide = await fil(paul, { mots: [{ id: await pr(paul), mots: 'Purge des rappels' }] });
 
-    expect(await texte(await post(paul.token))).toBe('');
+    const line = await texte(await post(paul.token));
+
+    expect(line).toContain(valide);
+    for (const id of absorbes) expect(line).not.toContain(id);
+    const { rows } = await adminPool.query('select 1 from rappels_cites where fil_id = any($1)', [
+      absorbes,
+    ]);
+    expect(rows).toEqual([]);
   });
 
   it('une PR liée rendue privée ne laisse plus ses mots', async () => {
@@ -279,16 +336,26 @@ describe('POST /api/v1/rappel', () => {
   it('deux fils au plus, celui de la branche courante d’abord à égalité', async () => {
     const [paul] = await team();
     const mots = async () => [{ id: await pr(paul), mots: 'Purge des rappels' }];
+    // Le fil de la branche courante est le plus ancien : la date ne le ferait pas passer devant.
     const fils = [
-      await fil(paul, { mots: await mots() }),
-      await fil(paul, { mots: await mots() }),
       await fil(paul, { branches: ['paul/courante'], mots: await mots() }),
+      await fil(paul, { mots: await mots() }),
+      await fil(paul, { mots: await mots() }),
     ];
 
     const line = await texte(await post(paul.token, { branche: 'paul/courante' }));
 
     expect(fils.filter((id) => line.includes(id))).toHaveLength(2);
-    expect(line).toContain(fils[2]);
+    expect(line).toContain(fils[0]);
+  });
+
+  it('un caractère NUL dans le message ne fait pas d’erreur', async () => {
+    const [paul] = await team();
+    const id = await fil(paul, { mots: [{ id: await pr(paul), mots: 'Purge des rappels' }] });
+
+    expect(
+      await texte(await post(paul.token, { message: 'la purge\u0000 des rappels' })),
+    ).toContain(id);
   });
 
   it('le message ne va ni en base, ni dans la console : seule la requête set_config porte ses mots', async () => {

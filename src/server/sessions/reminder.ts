@@ -4,7 +4,7 @@ import { maskSecrets } from '@/capture/mask-secrets';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { withTenant } from '@/server/db/with-tenant';
-import { FUNCTION_WORDS } from '@/server/search/query-terms';
+import { NORMALIZED, normalize } from '@/server/search/query-terms';
 import { filLine } from './render-context';
 import { DEFAULT_BRANCHES } from './start-context';
 import { readFilKeys } from './thread-read';
@@ -30,6 +30,9 @@ import { FIL, has } from './threads';
 
 const MOTS_MAX = 24;
 const CITES_MAX = 2;
+// shortcut: seuls les 100 fils les plus récents (celui de la branche courante d'abord) sont lus, pour tenir les 300 ms
+// (environ 2 ms par fil) ; un fil plus ancien n'est plus rappelé. La clôture des fils dormants (lot 15) lève la limite.
+const FILS_MAX = 100;
 // shortcut: deux mots trouvés, et 0,8 de ressemblance en trigrammes pour un mot de 4 lettres au moins, des valeurs
 // prudentes ; le lot 11 (T38) les règle sur des cas réels.
 const MOTS_SEUIL = 2;
@@ -38,18 +41,13 @@ const OPEN = '<rappel-leon>';
 const CLOSE = '</rappel-leon>';
 const UUID_RE = '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
-// Sans accents ni casse, comme query-terms.ts compare ses mots outils.
-const normalize = (word: string) =>
-  word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/'/g, '’');
-const OUTILS = new Set([...FUNCTION_WORDS].map(normalize));
-
 // Les mots utiles d'un message, en minuscules, accents gardés (le dictionnaire français en a besoin) : des lettres et
 // des chiffres, deux au moins, hors mots outils, sans doublon, dans l'ordre du message, MOTS_MAX au plus.
 export function usefulWords(message: string): string[] {
   const words = new Map<string, string>();
   for (const word of message.match(/[\p{L}\p{N}]+/gu) ?? []) {
     const key = normalize(word);
-    if ([...key].length < 2 || OUTILS.has(key) || words.has(key)) continue;
+    if ([...key].length < 2 || NORMALIZED.has(key) || words.has(key)) continue;
     words.set(key, word.toLowerCase());
     if (words.size === MOTS_MAX) break;
   }
@@ -60,14 +58,13 @@ export function usefulWords(message: string): string[] {
 const count = (issue: 'sans_usage' | 'vide' | 'cite', outil: string) =>
   console.info('[leon]', `rappel.${issue}`, outil);
 
-const num = (value: number) => sql.raw(String(value));
-
 export async function reminderText(ctx: TenantContext, input: RappelRequest): Promise<string> {
   if (!input.usages.includes('rappel')) {
     count('sans_usage', input.outil);
     return '';
   }
-  const texte = maskSecrets(input.message);
+  // Postgres refuse un NUL dans un texte (22021) : ôté, il ne fait plus d'erreur 500.
+  const texte = maskSecrets(input.message).replaceAll('\u0000', '');
   const mots = usefulWords(texte);
   if (mots.length === 0) {
     count('vide', input.outil);
@@ -99,6 +96,8 @@ export async function reminderText(ctx: TenantContext, input: RappelRequest): Pr
           and s.metadata->>'project' = ${input.projet} and s.metadata->>'absorbe_par' is null
           and not exists (select 1 from rappels_cites r where r.tenant_id = ${ctx.tenantId}
             and r.owner_user_id = ${ctx.userId} and r.session = ${input.session} and r.fil_id = s.id)
+        order by courante desc, date desc, s.id
+        limit ${FILS_MAX}
       ),
       -- Calculés une fois par fil (materialized) ; les trigrammes cherchent dans ses mots distincts (uniques), pas
       -- dans le texte entier : sur 50 fils, la médiane de la route passe de 480 à 130 ms (la mesure de T48).
@@ -114,7 +113,7 @@ export async function reminderText(ctx: TenantContext, input: RappelRequest): Pr
         select t.id, t.date, t.courante,
           (select count(*) from mots
             where t.tsv @@ (websearch_to_tsquery('french', m) || websearch_to_tsquery('simple', m))
-               or (char_length(m) >= 4 and word_similarity(m, t.uniques) >= ${num(TRIGRAMMES_SEUIL)})) as trouves,
+               or (char_length(m) >= 4 and word_similarity(m, t.uniques) >= ${TRIGRAMMES_SEUIL})) as trouves,
           -- Une branche ou un fichier à séparateur cité tel quel, pas un morceau d'un autre nom (cites, thread-links.ts).
           exists (select 1 from unnest(t.cles) c
             where c ~ '[/_.-]' and strpos(current_setting('leon.rappel_texte'), c) > 0
@@ -124,9 +123,9 @@ export async function reminderText(ctx: TenantContext, input: RappelRequest): Pr
         from textes t
       ),
       choisis as (
-        select id from notes where trouves >= ${num(MOTS_SEUIL)} or cite
+        select id from notes where trouves >= ${MOTS_SEUIL} or cite
         order by cite desc, trouves desc, courante desc, date desc, id
-        limit ${num(CITES_MAX)}
+        limit ${CITES_MAX}
       )
       insert into rappels_cites (tenant_id, owner_user_id, session, fil_id, acl)
       select ${ctx.tenantId}, ${ctx.userId}, ${input.session}, id, array[${ctx.userId}]::uuid[] from choisis

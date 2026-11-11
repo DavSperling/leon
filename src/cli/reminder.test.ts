@@ -122,7 +122,7 @@ describe('askReminder', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it('coupe le message à 2 000 caractères puis le masque : un faux secret ne part jamais', async () => {
+  it('masque le message puis le coupe à 2 000 caractères : un faux secret ne part jamais', async () => {
     const fetchImpl = answering(() => Response.json({ texte: '' }));
     const message = `${'a '.repeat(900)}${FAKE_SECRET} ${'b'.repeat(500)}`;
 
@@ -133,10 +133,15 @@ describe('askReminder', () => {
     expect(sent).not.toContain(FAKE_SECRET);
     expect(sent.length).toBeLessThanOrEqual(RAPPEL_MESSAGE_MAX);
 
-    // Le secret au-delà des 2 000 premiers caractères n'est même pas lu.
+    // Le secret au-delà des 2 000 premiers caractères ne part pas.
     const far = answering(() => Response.json({ texte: '' }));
     await ask(far, { message: `${'a'.repeat(RAPPEL_MESSAGE_MAX)}${FAKE_SECRET}` });
     expect(bodyOf(far).message).toBe('a'.repeat(RAPPEL_MESSAGE_MAX));
+
+    // À cheval sur la borne, coupé avant le masque, il serait trop court pour son motif et partirait en morceau.
+    const across = answering(() => Response.json({ texte: '' }));
+    await ask(across, { message: `${'a '.repeat((RAPPEL_MESSAGE_MAX - 20) / 2)}${FAKE_SECRET}` });
+    expect(bodyOf(across).message).not.toContain('sk-ant-');
   });
 
   it('un message qui grossit en étant masqué reste sous la borne du serveur', async () => {

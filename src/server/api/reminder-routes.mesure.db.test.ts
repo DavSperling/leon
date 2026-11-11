@@ -8,14 +8,14 @@ import { adminDb } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 
 // La mesure de T48 (plan de la mémoire à disposition), hors CI : `LEON_MESURE=oui pnpm test:db <ce fichier>`. Sur 50
-// fils d'un même auteur (50 fichiers et une dizaine de sources liées chacun, 2 000 caractères de mots), et 2 000 autres
-// sources, POST /rappel est chronométrée dans le processus, sans le réseau entre le serveur et la base, avec un message
-// de 2 000 caractères. Une session neuve par appel : la recherche et l'écriture des fils cités tournent à chaque fois.
+// puis 300 fils d'un même auteur (50 fichiers et une dizaine de sources liées chacun, 2 000 caractères de mots ;
+// au-delà de 100 fils, seuls les plus récents sont lus, FILS_MAX de reminder.ts), et 2 000 autres sources, POST /rappel est
+// chronométrée dans le processus, sans le réseau entre le serveur et la base, avec un message de 2 000 caractères. Une
+// session neuve par appel : la recherche et l'écriture des fils cités tournent à chaque fois.
 // 300 ms visés (D26).
 
 const MESURE = process.env.LEON_MESURE === 'oui';
 const PROJECT = 'github.com/acme/leon';
-const FILS = 50;
 const LIEES = 12;
 const AUTRES = 2000;
 const RUNS = 30;
@@ -38,13 +38,13 @@ const quantile = (values: number[], q: number) =>
   [...values].sort((a, b) => a - b)[Math.min(values.length - 1, Math.floor(values.length * q))] ??
   0;
 
-async function seed() {
+async function seed(nombre: number) {
   const {
     members: [paul],
   } = await createTestTenant(['Paul']);
   if (!paul) throw new Error('membre de test manquant');
   const own = { tenantId: paul.tenantId, ownerUserId: paul.userId };
-  const liees = Array.from({ length: FILS * LIEES }, (_, n) => ({
+  const liees = Array.from({ length: nombre * LIEES }, (_, n) => ({
     ...own,
     acl: [paul.tenantId],
     id: randomUUID(),
@@ -59,7 +59,7 @@ async function seed() {
     externalId: randomUUID(),
     title: 'Canal produit',
   }));
-  const fils = Array.from({ length: FILS }, (_, n) => ({
+  const fils = Array.from({ length: nombre }, (_, n) => ({
     ...own,
     acl: [paul.userId],
     kind: 'leon_fil' as const,
@@ -98,34 +98,38 @@ const MESSAGE =
   );
 
 describe.skipIf(!MESURE)('mesure de POST /api/v1/rappel (T48)', () => {
-  it('le chronométrage de bout en bout, sur 50 fils', async () => {
-    const token = await seed();
-    const call = () =>
-      apiRequest(API_PATHS.rappel, {
-        token,
-        body: {
-          projet: PROJECT,
-          branche: 'paul/fil-7-version',
-          session: randomUUID(),
-          message: MESSAGE,
-          outil: 'claude_code',
-          usages: ['rappel'],
-        },
-      });
-    for (let n = 0; n < 3; n++) await call();
+  it.each([50, 300])(
+    'le chronométrage de bout en bout, sur %i fils',
+    async (nombre) => {
+      const token = await seed(nombre);
+      const call = () =>
+        apiRequest(API_PATHS.rappel, {
+          token,
+          body: {
+            projet: PROJECT,
+            branche: 'paul/fil-7-version',
+            session: randomUUID(),
+            message: MESSAGE,
+            outil: 'claude_code',
+            usages: ['rappel'],
+          },
+        });
+      for (let n = 0; n < 3; n++) await call();
 
-    const times: number[] = [];
-    let cites = 0;
-    for (let n = 0; n < RUNS; n++) {
-      const started = performance.now();
-      const response = await call();
-      const { texte } = (await response.json()) as { texte: string };
-      times.push(performance.now() - started);
-      expect(response.status).toBe(200);
-      if (texte !== '') cites++;
-    }
-    console.log(
-      `rappel, ${RUNS} appels sur ${FILS} fils (${cites} avec une ligne) : médiane ${quantile(times, 0.5).toFixed(1)} ms, p95 ${quantile(times, 0.95).toFixed(1)} ms, max ${Math.max(...times).toFixed(1)} ms`,
-    );
-  }, 300_000);
+      const times: number[] = [];
+      let cites = 0;
+      for (let n = 0; n < RUNS; n++) {
+        const started = performance.now();
+        const response = await call();
+        const { texte } = (await response.json()) as { texte: string };
+        times.push(performance.now() - started);
+        expect(response.status).toBe(200);
+        if (texte !== '') cites++;
+      }
+      console.log(
+        `rappel, ${RUNS} appels sur ${nombre} fils (${cites} avec une ligne) : médiane ${quantile(times, 0.5).toFixed(1)} ms, p95 ${quantile(times, 0.95).toFixed(1)} ms, max ${Math.max(...times).toFixed(1)} ms`,
+      );
+    },
+    300_000,
+  );
 });

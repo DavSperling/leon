@@ -942,7 +942,7 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 
     expect(run.code).toBe(0);
     expect(run.output).toContain(
-      `Both Leon hooks are already in place in ${settingsPath}, but your consent was withdrawn: for now, they send nothing.`,
+      `The Leon hooks are already in place in ${settingsPath}, but your consent was withdrawn: for now, they send nothing.`,
     );
     expect(run.output).toContain('Nothing was written: the hooks keep sending nothing.');
     expect(run.output).not.toContain('only the text of the exchanges');
@@ -1516,7 +1516,7 @@ describe('installHooks : l’usage resume', () => {
 
     expect(run.code).toBe(0);
     expect(run.questions).toEqual([lectureQuestion(), rappelQuestion(), resumeQuestion()]);
-    expect(run.output).toContain(`Both Leon hooks are already in place in ${settingsPath}.`);
+    expect(run.output).toContain(`The Leon hooks are already in place in ${settingsPath}.`);
     expect(run.output).not.toContain('nothing to do');
     expect(run.output).toContain(LECTURE_TEXT);
     expect(run.output).toContain(RESUME_TEXT);

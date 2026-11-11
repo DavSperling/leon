@@ -3,13 +3,15 @@
 // ou n'imprime rien.
 // - `askReminder` est le cœur commun : Claude Code (la commande `leon reminder` ci-dessous) comme Cursor et Codex
 //   (`leon crochet <outil> prompt`, briefing.ts) l'appellent. Sans l'usage `rappel` dans l'accord de l'outil, rien ne part.
-// - Le message part coupé à 2 000 caractères, puis masqué (maskSecrets) ; le serveur le masque de nouveau et ne le stocke
-//   ni ne le journalise. Un seul signal de 1,5 s couvre la demande : un serveur lent, absent ou ancien (404, 400) donne
-//   un texte vide, jamais une erreur, et le message de la personne passe toujours.
+// - Le message part masqué (maskSecrets), puis coupé à 2 000 caractères ; le serveur le masque de nouveau et ne le
+//   stocke ni ne le journalise. Un seul signal de 1,5 s couvre la demande : un serveur lent, absent ou ancien (404,
+//   400) donne un texte vide, jamais une erreur, et le message de la personne passe toujours.
 // - Claude Code : le crochet UserPromptSubmit (5 s) écrit sur l'entrée standard un JSON qui porte `prompt`, `session_id`
 //   et `cwd` (doc officielle des crochets, https://code.claude.com/docs/en/hooks), et sa sortie standard va au contexte
 //   du modèle : seule la ligne y passe, les messages vont sur la sortie d'erreur. Le code de sortie vaut toujours 0.
-//   Au pire, 1 s d'entrée + 1,5 s de réseau + le démarrage de Node tiennent sous les 5 s du crochet.
+//   Au pire, 1 s d'entrée + 3 s de git (projectKeyFor, currentBranch) + 1,5 s de réseau + le démarrage de Node.
+// shortcut: un git qui met 3 s à répondre (disque réseau) fait dépasser les 5 s du crochet, et Claude Code envoie le
+// message sans rappel après 5 s d'attente ; un délai global pour toute la commande, si le cas se présente.
 // shortcut: une entrée de plus de 64 Kio (un message collé énorme) est lue vide (readHookStdin) : pas de rappel pour ce
 // message-là, à lever si le cas se présente.
 import { z } from 'zod';
@@ -50,9 +52,9 @@ export async function askReminder(args: ReminderArgs): Promise<string> {
     projet: args.projet,
     branche: args.branche,
     session: args.session,
-    // Recoupé après le masque : « [secret masqué] » peut être plus long que ce qu'il remplace, et le serveur refuse
-    // (400) un message de plus de 2 000 caractères.
-    message: maskSecrets(message.slice(0, RAPPEL_MESSAGE_MAX)).slice(0, RAPPEL_MESSAGE_MAX),
+    // Masqué en entier, puis coupé : coupé d'abord, un secret à cheval sur la borne serait trop court pour son motif
+    // et partirait en morceau. Le serveur refuse (400) un message de plus de 2 000 caractères.
+    message: maskSecrets(message).slice(0, RAPPEL_MESSAGE_MAX),
     outil: args.outil,
     usages: consent.usages,
   };

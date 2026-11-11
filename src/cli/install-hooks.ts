@@ -771,10 +771,10 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     for (const line of alerts) deps.out(line);
     if (consented) {
       if (usagesToOffer('claude_code', consent, options).length === 0) {
-        deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+        deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }
-      deps.out(`Both Leon hooks are already in place in ${path}.`);
+      deps.out(`The Leon hooks are already in place in ${path}.`);
       return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
     }
     // Des crochets posés avant l'accord, ou restés après son retrait (retrait des réglages raté, crochets remis à la
@@ -782,8 +782,8 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     const withdrawn = await consentWithdrawn(options.home, 'claude_code');
     deps.out(
       withdrawn
-        ? `Both Leon hooks are already in place in ${path}, but your consent was withdrawn: for now, they send nothing.`
-        : `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
+        ? `The Leon hooks are already in place in ${path}, but your consent was withdrawn: for now, they send nothing.`
+        : `The Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
     );
     for (const line of ['', ...CONSENT_LINES]) deps.out(line);
     if (!options.assumeYes) {

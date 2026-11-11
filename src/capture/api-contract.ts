@@ -104,8 +104,16 @@ export type Usage = (typeof USAGES)[number];
 // plus ancien perd les faits, jamais les tours. `accord` est la version d'accord de l'outil sur le poste : la CLI
 // n'envoie de faits qu'à partir de la version 2, la seule qu'elle écrit ; 3 et 4, jamais émises, restent acceptées par
 // prudence (C7 révisé). `usages` : ceux que l'outil a acceptés, rangés dans `metadata.usages` à chaque envoi ; la CLI
-// ne l'envoie que s'il y en a, et un envoi sans lui n'en donne aucun.
+// ne l'envoie que s'il y en a, et un envoi sans lui n'en donne aucun. `accord_le` part avec eux : la date de l'accord
+// de l'outil sur le poste (`installe_le`). Le serveur ignore les usages s'il n'est pas postérieur au dernier retrait de
+// l'outil sur ce jeton, ou s'il manque après un retrait (T43, le retrait daté).
 export const FAITS_BODY_MAX_BYTES = 64 * 1024;
+// Une date du poste que Postgres lit en timestamptz (`accord_le`, `retire_le`, et l'`installe_le` d'accord.json qui les
+// donne) : z.iso.datetime laisse passer l'an 0000 et les décalages de ±16:00 à ±23:59, que `::timestamptz` refuse
+// (22008, 22009). Pas de borne haute : le serveur n'a pas l'horloge du poste.
+export const DatePosteSchema = z.iso
+  .datetime({ offset: true })
+  .refine((date) => !date.startsWith('0000') && !/[+-](1[6-9]|2\d):\d\d$/.test(date));
 export const SessionFactsPayloadSchema = z
   .object({
     kind: z.enum(CODE_SESSION_KINDS),
@@ -113,6 +121,7 @@ export const SessionFactsPayloadSchema = z
     project: ProjectSchema.optional(),
     accord: z.number().int().min(2).max(4),
     usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
+    accord_le: DatePosteSchema.optional(),
     faits: SessionFactsSchema,
     fin: z.boolean(), // une vraie fin de session (SessionEnd), ou un fichier resté immobile
   })
@@ -120,9 +129,13 @@ export const SessionFactsPayloadSchema = z
 export type SessionFactsPayload = z.infer<typeof SessionFactsPayloadSchema>;
 
 // Le retrait de l'accord d'un outil (T43, amendé le 06/11) : le serveur vide les usages de toutes les sessions de cet
-// outil dont le porteur est l'auteur. Un nouvel envoi de faits, après un nouvel accord, les rouvre.
+// outil dont le porteur est l'auteur. `retire_le` : la date du retrait sur le poste (l'`installe_le` de l'entrée en
+// version 0), même horloge que `accord_le`. Le serveur la garde pour ce jeton : seuls des faits envoyés sous un accord
+// postérieur rouvrent les usages, jamais des faits partis avant le retrait et arrivés après lui.
 export const RETRAIT_BODY_MAX_BYTES = 1024;
-export const RetraitRequestSchema = z.object({ outil: z.enum(CODE_SESSION_KINDS) }).strict();
+export const RetraitRequestSchema = z
+  .object({ outil: z.enum(CODE_SESSION_KINDS), retire_le: DatePosteSchema })
+  .strict();
 export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 
 // Le bloc de démarrage (C3) : mes dernières sessions sur ce dépôt, puis le point du matin, assemblés par le serveur

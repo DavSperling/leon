@@ -18,8 +18,9 @@ import { textArray } from '@/server/search/filters-sql';
 // - L'état d'un fil est sa dernière version si elle est lisible, sinon l'état déterministe, jamais une plus ancienne.
 // - Restaurer écrit une nouvelle version, rien n'est effacé ; seule l'action du site restaure (T55).
 // shortcut: l'usage `resume` se lit dans `metadata.usages` des sessions, que la route du retrait vide (faits-routes.ts,
-// T43 amendé le 06/11) ; `leon retirer-crochets` ne l'appelle qu'à la PR 3b du lot 12 : d'ici là, un retrait sur le
-// poste seul laisse rendre une version du modèle.
+// T43 amendé le 06/11) ; `leon retirer-crochets` l'appelle, et le poste la rappelle plus tard s'il n'a pas pu : d'ici
+// là, et pour une connexion d'avant, que le retrait ne joint pas, une version du modèle reste rendue. À revoir avec la
+// limite de thread-state-worker.ts.
 
 export type EcritPar = (typeof versionsMemoire.$inferSelect)['ecritPar'];
 export type Motif = (typeof versionsMemoire.$inferSelect)['motif'];

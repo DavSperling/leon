@@ -32,8 +32,8 @@ export const faitsRoutes = new Hono<ApiEnv>()
         }));
         return c.json({ error: 'Invalid request', issues }, 400);
       }
-      const { ctx } = c.var;
-      const { sourceId, resume } = await recordFacts(ctx, parsed.data);
+      const { ctx, tokenId } = c.var;
+      const { sourceId, resume } = await recordFacts(ctx, parsed.data, tokenId);
       const job = { tenantId: ctx.tenantId, sourceId, ownerUserId: ctx.userId };
       // Le rangement en fils (T40), sans condition d'usage : il ne lit que les clés des faits, rien ne sort de Leon.
       // Les faits sont rangés : une file indisponible ne les fait pas perdre, et l'envoi suivant remet la session en
@@ -53,7 +53,7 @@ export const faitsRoutes = new Hono<ApiEnv>()
       return c.body(null, 202);
     },
   )
-  // `leon retirer-crochets` : l'accord de l'outil retiré sur le poste l'est aussi sur le serveur.
+  // `leon retirer-crochets` : l'accord de l'outil retiré sur le poste l'est aussi sur le serveur, daté sur ce jeton.
   .post(
     '/retrait',
     requireApiToken,
@@ -64,7 +64,7 @@ export const faitsRoutes = new Hono<ApiEnv>()
     async (c) => {
       const parsed = RetraitRequestSchema.safeParse(await c.req.json().catch(() => undefined));
       if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
-      await withdrawUsages(c.var.ctx, parsed.data.outil);
+      await withdrawUsages(c.var.ctx, c.var.tokenId, parsed.data);
       return c.body(null, 204);
     },
   );

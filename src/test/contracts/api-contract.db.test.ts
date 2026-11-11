@@ -5,6 +5,7 @@ import {
   BriefingResponseSchema,
   ComputerResponseSchema,
   ContextResponseSchema,
+  RetraitRequestSchema,
   SessionFactsPayloadSchema,
   ViewerProfileSchema,
 } from '@/capture/api-contract';
@@ -167,7 +168,13 @@ describe('routes de l’API', () => {
       body: { projet: 'github.com/acme/leon', branche: null, session: 'session-courante' },
     });
     // Le retrait de l'accord d'un outil (`leon retirer-crochets`) : 204, sans corps.
-    const retrait = await apiRequest(API_PATHS.retrait, { token, body: { outil: 'claude_code' } });
+    const retrait = await apiRequest(API_PATHS.retrait, {
+      token,
+      body: RetraitRequestSchema.parse({
+        outil: 'claude_code',
+        retire_le: '2026-11-10T10:00:00.000Z',
+      }),
+    });
 
     // `leon login` : le jeton que la CLI vient de tirer, enregistré contre le code signé que la page d'autorisation lui a rendu.
     const computerToken = generateApiToken();

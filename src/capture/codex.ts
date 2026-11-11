@@ -21,7 +21,7 @@
 // de démarrage de Leon, que Codex range là), le contexte que Codex pose en rôle `user` (`<environment_context>`, les
 // instructions et `AGENTS.md`, les compétences…), `compacted`, et les blocs de Leon (stripLeonBlocks). Les tours
 // injectés (rapport de sous-agent, notification, sortie d'une commande `!`, crochet) ne sont jamais des messages de la
-// personne (T63) : ils sont comptés à part, et ne partent pas encore.
+// personne (T63) : ils partent marqués `injecte` (T43), et ne comptent ni comme échange ni pour le titre.
 //
 // Les gestes : les `item_completed` en historique paginé. Le texte des appels (`exec`, `apply_patch`) n'est lu qu'en
 // repli, pour un rollout à l'ancien format.
@@ -39,18 +39,14 @@ import {
   replaceTasks,
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
-import type { Turn } from './turn';
+import { isTypedTurn, type Turn } from './turn';
 
 export type CodexSession = {
   sessionId: string; // l'id du fil (`session_meta.id`)
   cwd: string | null;
   title: string | null;
-  // Les tours envoyés : les messages tapés par la personne, et ceux de l'assistant.
+  // Les tours envoyés : ceux de la personne et de l'assistant ; un tour `user` porte `injecte`.
   turns: Turn[];
-  // Les tours injectés, jamais un message de la personne (T63). Ils partiront marqués `injecte` quand le contrat
-  // d'envoi aura ce champ (T43 du lot 12).
-  // shortcut: ils ne partent pas du tout d'ici là, les envoyer avec `injecte: true` une fois TurnSchema étendu.
-  injectes: number;
   // `session_meta.git` : la branche et le commit au démarrage, dans un dépôt git (absents hors dépôt, ou avant le
   // premier commit).
   branche: string | null;
@@ -214,7 +210,6 @@ export function parseCodexSession(content: string): CodexSession | null {
   const meta = firstMeta(content);
   if (meta === null || !isOwnSession(meta)) return null;
   const turns: Turn[] = [];
-  let injectes = 0;
   for (const { line, index } of ownLines(content)) {
     if (line.type !== 'response_item') continue;
     const message = MessageSchema.safeParse(line.payload);
@@ -222,14 +217,8 @@ export function parseCodexSession(content: string): CodexSession | null {
     const { role, content: items } = message.data;
     if (role !== 'user' && role !== 'assistant') continue; // developer, system
     const texts = messageTexts(items);
-    if (role === 'user') {
-      const kind = userTextKind(texts);
-      if (kind === 'contexte') continue;
-      if (kind === 'injecte') {
-        injectes += 1;
-        continue;
-      }
-    }
+    const kind = role === 'user' ? userTextKind(texts) : null;
+    if (kind === 'contexte') continue;
     // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.
     const text = prepareTurnText(stripLeonBlocks(texts.join('\n\n')));
     if (text === null) continue;
@@ -239,15 +228,15 @@ export function parseCodexSession(content: string): CodexSession | null {
       text,
       ts: line.timestamp,
       capture_mode: 'file',
+      ...(kind === null ? {} : { injecte: kind === 'injecte' }),
     });
   }
-  const firstUserText = turns.find((turn) => turn.role === 'user')?.text;
+  const firstUserText = turns.find(isTypedTurn)?.text;
   return {
     sessionId: meta.id,
     cwd: meta.cwd ?? null,
     title: firstUserText ? firstUserText.slice(0, TITLE_FROM_TEXT_MAX) : null,
     turns,
-    injectes,
     branche: meta.git?.branch || null,
     commit: meta.git?.commit_hash || null,
     origine: meta.history_base?.thread_id ?? null,
@@ -552,7 +541,7 @@ export function extractCodexFacts(
     branch: meta?.git?.branch || brancheLue,
     errors: reading.errors,
     external: reading.external,
-    echanges: session?.turns.filter((turn) => turn.role === 'user').length ?? 0,
+    echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start,
     end,
   });

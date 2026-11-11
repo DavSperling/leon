@@ -14,7 +14,12 @@
 import { lstat, mkdir, readdir, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { captureToolFile, readCursor, type ToolCaptureDeps } from './capture-session';
-import { CONSENT_WITHDRAWN_MESSAGE, consentWithdrawn, factsConsent } from './consent';
+import {
+  CONSENT_WITHDRAWN_MESSAGE,
+  consentWithdrawn,
+  factsConsent,
+  pendingServerWithdrawals,
+} from './consent';
 import { OUTILS, type Outil } from './hook-commands';
 import {
   type FactsSender,
@@ -24,6 +29,7 @@ import {
 } from './import-claude-code';
 import { ADAPTATEURS } from './outils';
 import { purgeOldTemoins } from './temoins';
+import { catchUpWithdrawals, type WithdrawalSender } from './uninstall-hooks';
 
 export const entriesDir = (home: string): string => join(home, '.leon', 'entrees');
 export const ENTRY_MAX_AGE_MS = 24 * 60 * 60_000;
@@ -59,13 +65,19 @@ export async function purgeOldEntries(home: string, now: Date): Promise<void> {
   }
 }
 
-// Les outils dont l'accord porte la capture : ceux que le rattrapage lit. Le démarrage n'en lance un que s'il y en a.
+// Les outils dont l'accord porte la capture : ceux que le rattrapage lit.
 export async function captureTools(home: string): Promise<Outil[]> {
   const tools: Outil[] = [];
   for (const outil of OUTILS) {
     if ((await factsConsent(home, outil))?.capture_le) tools.push(outil);
   }
   return tools;
+}
+
+// Le démarrage ne lance `leon rattraper` (scheduleCatchUp, leon.ts), et il ne travaille, que s'il y a un outil à capter
+// ou un retrait que le serveur n'a pas appris (T43) : celui-ci ne dépend d'aucune capture.
+export async function catchUpNeeded(home: string): Promise<boolean> {
+  return (await captureTools(home)).length > 0 || (await pendingServerWithdrawals(home)).length > 0;
 }
 
 // Un seul rattrapage à la fois : deux sessions ouvertes ensemble en lancent deux. Un verrou de plus de 10 min est
@@ -91,19 +103,24 @@ export type CatchUpDeps = Omit<ToolCaptureDeps, 'facts'> & {
   env: Record<string, string | undefined>;
   now: () => Date;
   sendFacts: FactsSender;
+  // La route du retrait (T43), pour les retraits que le serveur n'a pas appris.
+  withdraw: WithdrawalSender;
 };
 
 export type CatchUpSummary = { sessions: number; failures: number };
 
-// Le rattrapage de tous les outils qui l'ont accepté. Un jeton refusé l'arrête.
+// Le rattrapage de tous les outils qui l'ont accepté. Un jeton refusé l'arrête. Les retraits que le serveur n'a pas
+// appris d'abord, sous le même verrou : deux rattrapages lancés ensemble ne les disent qu'une fois, et ils ne
+// dépendent d'aucune capture.
 export async function catchUp(deps: CatchUpDeps): Promise<CatchUpSummary> {
   const summary: CatchUpSummary = { sessions: 0, failures: 0 };
   const now = deps.now();
   await purgeOldEntries(deps.home, now);
   await purgeOldTemoins(deps.home, now);
   const tools = await captureTools(deps.home);
-  if (tools.length === 0 || !(await takeLock(deps.home, now))) return summary;
+  if (!(await catchUpNeeded(deps.home)) || !(await takeLock(deps.home, now))) return summary;
   try {
+    await catchUpWithdrawals(deps.home, deps.withdraw);
     for (const outil of tools) await catchUpTool(outil, deps, summary);
   } finally {
     await unlink(lockPath(deps.home)).catch(() => {});
@@ -127,12 +144,17 @@ async function catchUpTool(outil: Outil, deps: CatchUpDeps, summary: CatchUpSumm
     );
     const facts: ImportDeps['facts'] = {
       accord: consent.version,
+      accordLe: consent.installe_le,
       usages,
       send: deps.sendFacts,
     };
+    const withdrawn = () => consentWithdrawn(deps.home, outil);
     try {
       const fin = deps.now().getTime() - file.mtimeMs >= IDLE_MS;
-      if ((await captureToolFile(outil, file.path, { fin }, { ...deps, facts })) === 'capte') {
+      if (
+        (await captureToolFile(outil, file.path, { fin }, { ...deps, facts, withdrawn })) ===
+        'capte'
+      ) {
         summary.sessions += 1;
       }
     } catch (error) {

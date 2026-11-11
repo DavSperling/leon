@@ -218,8 +218,8 @@ describe('la page Documentation', () => {
       const start = source.indexOf('const CONSENT_LINES = [');
       const block = source.slice(start, source.indexOf('\n];', start));
       const quoted = [...block.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-      const tools = /such as (.+?);/.exec(block)?.[1]?.split(/, | or /);
-      expect(quoted).toEqual(['claude -p', '--bare']);
+      const tools = /developer tools such as (.+?);/.exec(block)?.[1]?.split(/, | or /);
+      expect(quoted).toEqual(['claude -p', '--bare', '!', '/', '!']);
       expect(tools).toEqual(['git', 'gh', 'pnpm', 'docker']);
 
       const sent = Object.values(messages.site.documentation.sent).join('\n');
@@ -227,6 +227,25 @@ describe('la page Documentation', () => {
         expect(sent, term).toContain(`<code>${term}</code>`);
     },
   );
+
+  // `leon setup` branche aussi Codex, Cursor et Antigravity (setup.ts) : la page le dit, avec ce que leurs textes d'accord
+  // disent des messages que l'outil écrit lui-même (T43, décision d'Amos du 10/11).
+  it.each(LOCALES)('dit ce qui part des autres outils de code (%s)', (locale, messages) => {
+    const { tools } = messages.site.documentation.sent;
+    const { claude } = messages.site.documentation.requirements;
+
+    for (const tool of ['Codex', 'Cursor', 'Gemini / Antigravity']) {
+      expect(tools).toContain(tool);
+      expect(claude).toContain(tool);
+    }
+    expect(tools).toContain('<code>!</code>');
+    expect(tools).toContain(
+      locale === 'en'
+        ? 'labeled as written by the tool, not by you'
+        : 'marqués comme écrits par l’outil et non par vous',
+    );
+    expect(claude).not.toContain('not supported yet');
+  });
 
   // `leon setup` propose aussi l'usage `resume` (RESUME_LINES) : la page dit qu'il est à part, ce qu'il envoie, à qui.
   it.each(LOCALES)(
@@ -242,16 +261,79 @@ describe('la page Documentation', () => {
       expect(resume).toContain(
         locale === 'en' ? 'Leon’s model provider' : 'fournisseur du modèle de Leon',
       );
-      // Le même usage couvrira l'état des fils (lot 12, D23) : le texte d'accord le dit déjà, la page aussi.
-      expect(readText('src/cli/install-hooks.ts')).toContain('the state of your work threads');
-      expect(resume).toContain(locale === 'en' ? 'your work threads' : 'vos fils de travail');
+      // Le même usage tient à jour l'état des fils (lot 12, D23), au présent : le texte d'accord le dit, la page aussi,
+      // avec ce que le retrait en arrête.
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'The same usage also keeps the state of your work threads up to date',
+      );
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'Withdrawing your consent stops this too, once the Leon server is told.',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'The same usage also keeps the state of your work threads up to date'
+          : 'Le même usage sert aussi à tenir à jour l’état de vos fils de travail',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'Withdrawing your consent stops this too, once the Leon server is told.'
+          : 'Le retrait de votre accord l’arrête aussi, une fois le serveur de Leon prévenu.',
+      );
+      expect(resume).not.toContain(locale === 'en' ? 'Later' : 'Plus tard');
       // Un refus est gardé (A16) : la page dit qu'il n'est plus redemandé, comment revenir dessus, et le délai du
       // retrait que dit RESUME_LINES.
       expect(resume).toContain(locale === 'en' ? 'A refusal is kept' : 'Un refus est gardé');
       expect(resume).toContain('<code>~/.leon/bin/leon retirer-crochets</code>');
       expect(readText('src/cli/install-hooks.ts')).toContain('may still be written within an hour');
       expect(resume).toContain(locale === 'en' ? 'within an hour' : 'dans l’heure');
+      // Le retrait prévient le serveur de la connexion (T43), et le texte de l'usage le dit aussi.
+      expect(readText('src/cli/install-hooks.ts')).toContain('it tells the Leon server');
+      expect(resume).toContain(
+        locale === 'en' ? 'tells the Leon server' : 'prévient le serveur de Leon',
+      );
+      // Seulement le serveur et le compte de la connexion du moment (T43 amendé le 10/11).
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'only that server and account: one this computer used before is not told',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'only that server and account: one this computer used before is not told'
+          : 'ce serveur et ce compte seulement : un autre que cet ordinateur a utilisé avant n’en sait rien',
+      );
+      // Un retrait resté en attente se dit au serveur de la connexion du moment où il part : après un changement de
+      // connexion, l'ancien serveur n'en sait rien.
+      expect(readText('src/cli/install-hooks.ts')).toContain(
+        'Leon later tells the server this computer is connected to by then',
+      );
+      expect(resume).toContain(
+        locale === 'en'
+          ? 'Leon later tells the server the computer is connected to by then'
+          : 'Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté',
+      );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
+  // Partir : le retrait d'abord, tant que la connexion lui permet de prévenir le serveur ; `logout` l'effacerait, et le
+  // lanceur qui le lance part avec le dernier outil.
+  it.each(LOCALES)(
+    'dit de retirer les crochets avant de révoquer l’ordinateur (%s)',
+    (locale, messages) => {
+      const { remove, all } = messages.site.documentation.disconnect;
+
+      expect(remove).not.toContain(locale === 'en' ? 'logout</code> first' : 'logout</code> avant');
+      // Le lanceur reste tant que le serveur n'a pas appris chaque retrait (removeUnusedLauncher), et révoquer avant
+      // rendrait le retrait impossible à dire (401).
+      expect(remove).toContain(
+        locale === 'en'
+          ? 'deletes the launcher once no other tool uses it and the server was told of each withdrawal'
+          : 'efface le lanceur une fois qu’aucun outil ne l’utilise plus et que le serveur a appris chaque retrait',
+      );
+      expect(all).toBe(
+        locale === 'en'
+          ? 'To leave completely: <code>retirer-crochets</code> (run it again until it no longer says the Leon server could not be told), then revoke the computer in Settings, then delete the <code>~/.leon</code> folder.'
+          : 'Pour partir complètement : <code>retirer-crochets</code> (relancez-le tant qu’il dit que le serveur de Leon n’a pas pu être prévenu), puis révoquez l’ordinateur dans Réglages, puis supprimez le dossier <code>~/.leon</code>.',
+      );
     },
   );
 

@@ -26,12 +26,19 @@ import {
   type CatchUpDeps,
   captureTools,
   catchUp,
+  catchUpNeeded,
   ENTRY_MAX_AGE_MS,
   entriesDir,
   purgeOldEntries,
   readEntryFile,
 } from './catch-up';
-import { addUsage, recordCapture, writeConsent } from './consent';
+import {
+  addUsage,
+  recordCapture,
+  recordServerWithdrawal,
+  withdrawalToTell,
+  writeConsent,
+} from './consent';
 import { IngestResponseError, TokenRefusedError } from './import-claude-code';
 import { cursorSlug as cursorSlugOf } from './outils';
 
@@ -54,6 +61,7 @@ let codexDir: string;
 let env: Record<string, string | undefined>;
 let sent: IngestPayload[];
 let facts: SessionFactsPayload[];
+let told: string[];
 
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'leon-rattrapage-'));
@@ -62,6 +70,7 @@ beforeEach(async () => {
   env = { CODEX_HOME: codexDir };
   sent = [];
   facts = [];
+  told = [];
 });
 afterEach(async () => {
   await rm(dir, { recursive: true, force: true });
@@ -93,6 +102,7 @@ function captureDeps(overrides: Partial<ToolCaptureDeps> = {}): ToolCaptureDeps 
     },
     facts: {
       accord: 2,
+      accordLe: INSTALLE,
       send: async (payload) => {
         facts.push(payload);
       },
@@ -112,6 +122,9 @@ function catchUpDeps(overrides: Partial<CatchUpDeps> = {}): CatchUpDeps {
     ...capture,
     sendFacts: async (payload) => {
       facts.push(payload);
+    },
+    withdraw: async (outil) => {
+      told.push(outil);
     },
     env,
     now: () => MAINTENANT,
@@ -144,6 +157,33 @@ describe('turnsAfter : le curseur', () => {
   it('rend les tours d’après le dernier envoyé', () => {
     expect(turnsAfter(tours, curseur(2, 'b')).map((t) => t.external_id)).toEqual(['c']);
     expect(turnsAfter(tours, curseur(3, 'c'))).toEqual([]);
+  });
+
+  // Une CLI d'avant la marque écartait les tours injectés, et son curseur ne les comptait pas. Les renvoyer maintenant
+  // les daterait, chez Cursor, de l'heure du fichier : ils passeraient après les tours tapés qui les suivent.
+  it('reprend après le dernier envoyé un curseur qui ne comptait pas les tours injectés', () => {
+    const tour = (id: string, injecte?: boolean) => ({
+      external_id: id,
+      role: 'user' as const,
+      text: id,
+      ts: '2026-11-06T09:00:00.000Z',
+      capture_mode: 'file' as const,
+      ...(injecte === undefined ? {} : { injecte }),
+    });
+    const avecInjectes = [
+      tour('a', false),
+      tour('i1', true),
+      tour('b'),
+      tour('i2', true),
+      tour('c', false),
+    ];
+
+    expect(turnsAfter(avecInjectes, curseur(2, 'b')).map((t) => t.external_id)).toEqual([
+      'i2',
+      'c',
+    ]);
+    expect(turnsAfter(avecInjectes, curseur(3, 'c'))).toEqual([]);
+    expect(turnsAfter(avecInjectes, curseur(2, 'x'))).toHaveLength(5);
   });
 
   it('sans curseur, ou un fichier qui ne commence plus pareil, rend tout', () => {
@@ -198,6 +238,21 @@ describe('captureToolFile : Codex, à chaque Stop', () => {
     expect(facts[1]?.faits.commandes).toHaveLength(4);
     expect(facts[1]?.faits.branche).toBe('demo/codex-faits');
     expect(facts[1]?.project).toBe('github.com/demo/leon');
+  });
+
+  it('envoie les tours injectés avec leur marque, et les messages tapés marqués false (T43)', async () => {
+    const path = await rollout('2', MAINTENANT, SANS_GIT);
+    await captureToolFile('codex', path, { fin: false }, captureDeps());
+
+    expect(
+      sent
+        .flatMap((payload) => payload.turns)
+        .map((turn) => [turn.role, 'injecte' in turn ? turn.injecte : 'sans marque']),
+    ).toEqual([
+      ['user', false],
+      ['user', true],
+      ['assistant', 'sans marque'],
+    ]);
   });
 
   it('sans branche dans le rollout, prend celle que lit git à la capture', async () => {
@@ -349,6 +404,33 @@ describe('l’entrée du crochet de fin', () => {
   });
 });
 
+// La condition qui fait lancer `leon rattraper` au démarrage d'une session (scheduleCatchUp, leon.ts) et le fait
+// travailler : une capture acceptée (T19), ou un retrait que le serveur n'a pas appris (T43), même sans aucune capture.
+describe('catchUpNeeded : le rattrapage a-t-il quelque chose à faire', () => {
+  it('rien d’accepté ni de retiré : non', async () => {
+    expect(await catchUpNeeded(home)).toBe(false);
+    await writeConsent(home, 'claude_code', 2);
+    expect(await catchUpNeeded(home)).toBe(false);
+  });
+
+  it('une capture acceptée : oui', async () => {
+    await consentToCapture();
+    expect(await catchUpNeeded(home)).toBe(true);
+  });
+
+  it('un retrait que le serveur n’a pas appris, sans aucune capture : oui, puis non une fois appris', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    expect(await catchUpNeeded(home)).toBe(true);
+
+    await recordServerWithdrawal(
+      home,
+      'claude_code',
+      (await withdrawalToTell(home, 'claude_code'))?.entree ?? '',
+    );
+    expect(await catchUpNeeded(home)).toBe(false);
+  });
+});
+
 describe('catchUp : le rattrapage', () => {
   it('sans accord de capture, aucun rollout n’est ouvert (crochets de Leon recopiés par Codex, accord du lot 4)', async () => {
     await rollout('1', MAINTENANT);
@@ -449,6 +531,47 @@ describe('catchUp : le rattrapage', () => {
   });
 });
 
+// Les retraits que le serveur n'a pas appris (T43) se disent sous le verrou du rattrapage, avant les captures : deux
+// `leon rattraper` lancés ensemble ne les disent qu'une fois.
+describe('catchUp : les retraits que le serveur n’a pas appris', () => {
+  it('les dit une fois, même sans aucune capture acceptée', async () => {
+    await writeConsent(home, 'claude_code', 0);
+
+    await catchUp(catchUpDeps());
+    await catchUp(catchUpDeps());
+
+    expect(told).toEqual(['claude_code']);
+  });
+
+  it('verrou déjà pris par un autre rattrapage : rien n’est dit', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await mkdir(join(home, '.leon', 'curseurs'), { recursive: true });
+    await writeFile(join(home, '.leon', 'curseurs', 'rattrapage.verrou'), 'en cours');
+
+    await catchUp(catchUpDeps({ now: () => new Date() }));
+
+    expect(told).toEqual([]);
+  });
+
+  // Le serveur n'ignore les usages des faits partis sous l'ancien accord qu'une fois le retrait appris (record-facts.ts) :
+  // avant (poste hors ligne, envoi du retrait pas encore fait), ils y remettraient l'usage `resume`. L'accord est relu
+  // juste avant.
+  it('un retrait écrit pendant l’envoi des tours : les faits ne partent pas', async () => {
+    await consentToCapture();
+    await rollout('1', MAINTENANT);
+    const send: CatchUpDeps['send'] = async (payload) => {
+      sent.push(payload);
+      await writeConsent(home, 'codex', 0);
+      return RESULT;
+    };
+
+    await catchUp(catchUpDeps({ send }));
+
+    expect(sent).not.toEqual([]);
+    expect(facts).toEqual([]);
+  });
+});
+
 // T28, T29 : Cursor. Son transcript ne dit ni le dossier ni l'heure : le crochet donne le dossier, le fichier son heure.
 describe('Cursor : capter à chaque stop, rattraper', () => {
   const CURSOR_FIXTURE = new URL(
@@ -489,7 +612,8 @@ describe('Cursor : capter à chaque stop, rattraper', () => {
       external_id: CONVERSATION,
       project: 'github.com/demo/leon',
     });
-    expect(sentIds()).toHaveLength(5);
+    // Cinq tours, et les deux messages que Cursor écrit lui-même, marqués (T43).
+    expect(sentIds()).toHaveLength(7);
     expect(facts[0]).toMatchObject({
       kind: 'cursor',
       fin: false,

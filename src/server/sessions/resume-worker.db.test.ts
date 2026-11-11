@@ -1,6 +1,7 @@
 import { and, eq, like, sql } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionFacts } from '@/capture/session-facts';
+import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
@@ -15,6 +16,10 @@ import { seedThread } from '@/test/fixtures';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import type { ResumeJob } from './resume-queue';
+
+// Le retrait de la route (faits-routes.ts), daté de maintenant, sous un jeton sans ligne : seuls les usages sont vidés.
+const withdraw = (ctx: TenantContext, outil: CodeSessionKind) =>
+  withdrawUsages(ctx, crypto.randomUUID(), { outil, retire_le: new Date().toISOString() });
 
 // Le worker du résumé (T23), avec le faux modèle, sur la base de test. La file est simulée (resume-queue.db.test.ts
 // vérifie la vraie) ; l'indexation aussi : le run créé est noté, puis indexé ici à la main (indexIngestRun).
@@ -179,15 +184,20 @@ async function addTurn(
 async function finir(owner: TenantContext, sourceId: string) {
   const externalId = `session-${crypto.randomUUID()}`;
   await adminDb.update(sources).set({ externalId }).where(eq(sources.id, sourceId));
-  await recordFacts(owner, {
-    kind: 'claude_code',
-    external_id: externalId,
-    project: PROJECT,
-    accord: 2,
-    usages: ['resume'],
-    faits: facts(),
-    fin: true,
-  });
+  // Le dernier argument : un jeton sans ligne, sans date de retrait (record-facts.ts).
+  await recordFacts(
+    owner,
+    {
+      kind: 'claude_code',
+      external_id: externalId,
+      project: PROJECT,
+      accord: 2,
+      usages: ['resume'],
+      faits: facts(),
+      fin: true,
+    },
+    crypto.randomUUID(),
+  );
 }
 
 const answer = (text: string) => createFakeLlm({ texts: [text] });
@@ -705,15 +715,19 @@ describe('summarizeSession', () => {
     const llm: Llm = {
       ...answer(SUMMARY),
       async *streamText() {
-        await recordFacts(paul, {
-          kind: 'claude_code',
-          external_id: externalId,
-          project: PROJECT,
-          accord: 2,
-          usages: ['resume'],
-          faits: facts({ branche: 'paul/pendant' }),
-          fin: true,
-        });
+        await recordFacts(
+          paul,
+          {
+            kind: 'claude_code',
+            external_id: externalId,
+            project: PROJECT,
+            accord: 2,
+            usages: ['resume'],
+            faits: facts({ branche: 'paul/pendant' }),
+            fin: true,
+          },
+          crypto.randomUUID(),
+        );
         yield SUMMARY;
       },
     };
@@ -794,7 +808,7 @@ describe('après le retrait de l’accord', () => {
     const seeded = await session(paul);
     const llm = answer(SUMMARY);
 
-    await withdrawUsages(paul, 'claude_code');
+    await withdraw(paul, 'claude_code');
 
     expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
     expect(llm.calls).toEqual([]);
@@ -805,7 +819,7 @@ describe('après le retrait de l’accord', () => {
     const { paul } = await team();
     const seeded = await session(paul);
 
-    await withdrawUsages(paul, 'codex');
+    await withdraw(paul, 'codex');
 
     expect(await summarizeSession(seeded.job, { llm: answer(SUMMARY) })).toBe('ecrit');
   });

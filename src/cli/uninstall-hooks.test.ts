@@ -4,18 +4,29 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { writeConnection } from './connection';
 import {
   addRefusal,
   addUsage,
   consentPath,
   consentWithdrawn,
   factsConsent,
+  pendingServerWithdrawals,
   writeConsent,
 } from './consent';
 import { launcherHookCommand, launcherPath } from './hook-commands';
+import { TokenRefusedError } from './import-claude-code';
 import { installHooks, SETTINGS_FILE } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
-import { uninstallHooks } from './uninstall-hooks';
+import {
+  catchUpWithdrawals,
+  connectionWithdrawal,
+  type UninstallDeps,
+  uninstallHooks,
+  WITHDRAWAL_NOT_TOLD_LAST_MESSAGE,
+  WITHDRAWAL_NOT_TOLD_MESSAGE,
+  WITHDRAWAL_REFUSED_MESSAGE,
+} from './uninstall-hooks';
 
 // Le retrait des crochets et de l'accord (T08), toujours sur des dossiers temporaires : jamais le vrai ~/.claude ni
 // le vrai ~/.leon.
@@ -57,11 +68,45 @@ async function writeSettings(content: unknown): Promise<string> {
 
 const readSettings = async () => JSON.parse(await readFile(settingsPath, 'utf8'));
 
+// Le serveur de la connexion, simulé : il note les outils dont il apprend le retrait, avec sa date, et peut échouer.
+type FakeServer = {
+  told: string[];
+  dates: string[];
+  fails: boolean;
+  refuses: boolean;
+  withdraw: UninstallDeps['withdraw'];
+};
+function fakeServer(): FakeServer {
+  const server: FakeServer = {
+    told: [],
+    dates: [],
+    fails: false,
+    refuses: false,
+    withdraw: async (outil, retireLe) => {
+      // Le retrait local est déjà écrit quand le serveur l'apprend.
+      expect(await consentWithdrawn(home, outil)).toBe(true);
+      if (server.fails) throw new Error('fetch failed');
+      if (server.refuses) throw new TokenRefusedError();
+      server.told.push(outil);
+      server.dates.push(retireLe);
+    },
+  };
+  return server;
+}
+let server: FakeServer;
+beforeEach(() => {
+  server = fakeServer();
+});
+
 async function uninstall(): Promise<{ code: number; output: string }> {
   const lines: string[] = [];
   const code = await uninstallHooks(
     { configDir, home },
-    { out: (text) => lines.push(text), err: (text) => lines.push(text) },
+    {
+      out: (text) => lines.push(text),
+      err: (text) => lines.push(text),
+      withdraw: server.withdraw,
+    },
   );
   return { code, output: lines.join('\n') };
 }
@@ -193,6 +238,7 @@ describe('uninstallHooks : retirer les crochets de Leon', () => {
     expect(await readFile(settingsPath, 'utf8')).toBe(settingsBefore);
     expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
     expect(await readdir(configDir)).toEqual([SETTINGS_FILE]);
+    expect(server.told).toEqual(['claude_code']); // le serveur l'a appris au premier passage
   });
 
   it('sans réglages : ne crée rien, et retire quand même l’accord', async () => {
@@ -322,7 +368,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
         `Launcher removed: ${launcherPath(home)} (no other tool uses it).\nThe sessions already sent`,
       ),
     );
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('sans réglages à retirer non plus : l’accord est retiré, donc le lanceur ne sert plus', async () => {
@@ -331,7 +381,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
     const run = await uninstall();
 
     expect(run.code).toBe(0);
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('un autre outil garde son accord : le lanceur reste, sans un mot de plus', async () => {
@@ -355,7 +409,11 @@ describe('uninstallHooks : le lanceur part avec le dernier outil', () => {
 
     await uninstall();
 
-    expect(await readdir(join(home, '.leon'))).toEqual(['accord.json']);
+    // Le lanceur et son dossier sont partis ; restent l'accord et ce que le serveur a appris.
+    expect((await readdir(join(home, '.leon'))).sort()).toEqual([
+      'accord.json',
+      'retraits-serveur.json',
+    ]);
   });
 
   it('une entrée d’un autre outil que le schéma ne connaît pas compte comme installée : le lanceur reste', async () => {
@@ -486,6 +544,297 @@ describe('uninstallHooks : l’accord passe en version 0', () => {
   });
 });
 
+// Le retrait atteint le serveur de la connexion du moment (T43) : il y vide les usages des sessions déjà envoyées.
+describe('uninstallHooks : le serveur apprend le retrait', () => {
+  it('l’apprend une fois le retrait local écrit, et la date de sa réponse évite de le lui redire', async () => {
+    await writeConsent(home, 'claude_code', 2);
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(server.told).toEqual(['claude_code']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  // Le dernier outil : plus aucun crochet ne lancera le rattrapage. La ligne dit de relancer la commande, et le lanceur,
+  // qui la lance, reste jusque-là.
+  it('dernier outil, injoignable, ancien ou sans connexion : une ligne vraie, le lanceur gardé, le retrait local fait, même code de sortie', async () => {
+    await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
+    await writeConsent(home, 'claude_code', 2);
+    await writeLauncher(home, { kind: 'clone', repoDir: REPO });
+    server.fails = true;
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toBe(
+      removedText().replace(
+        'The sessions already sent',
+        `${WITHDRAWAL_NOT_TOLD_LAST_MESSAGE}\nLauncher kept: ${launcherPath(home)} (until the Leon server is told of the withdrawal).\nThe sessions already sent`,
+      ),
+    );
+    expect(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE).toBe(
+      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online. If this computer is not connected, run `leon login` first.',
+    );
+    expect(await readFile(launcherPath(home), 'utf8')).toBe(
+      launcherScript(home, { kind: 'clone', repoDir: REPO }),
+    );
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(true);
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+
+    // Relancée une fois en ligne : le serveur l'apprend, et le lanceur part.
+    server.fails = false;
+    const again = await uninstall();
+
+    expect(server.told).toEqual(['claude_code']);
+    expect(again.output).toContain(
+      `Launcher removed: ${launcherPath(home)} (no other tool uses it).`,
+    );
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  it('un autre outil garde ses crochets : la ligne renvoie au démarrage de ses sessions', async () => {
+    await writeConsent(home, 'codex', 2);
+    await writeConsent(home, 'claude_code', 2);
+    server.fails = true;
+
+    const run = await uninstall();
+
+    expect(run.output).toContain(WITHDRAWAL_NOT_TOLD_MESSAGE);
+    expect(WITHDRAWAL_NOT_TOLD_MESSAGE).toBe(
+      'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again. If this computer is not connected, run `leon login` first.',
+    );
+  });
+
+  // Un ordinateur révoqué dans Réglages : relancer la commande ne suffit pas, il faut d'abord un jeton qui vaut.
+  it('jeton refusé : une ligne qui dit de se reconnecter, sans jeton ni adresse', async () => {
+    await writeConsent(home, 'claude_code', 2);
+    server.refuses = true;
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(WITHDRAWAL_REFUSED_MESSAGE);
+    expect(run.output).not.toContain(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE);
+    expect(WITHDRAWAL_REFUSED_MESSAGE).toBe(
+      'Leon: the Leon server refused the token of this computer, so it could not be told of this withdrawal. Your consent is withdrawn on this computer all the same; run `leon login`, then this command again.',
+    );
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+  });
+
+  it('dit aussi au serveur un autre retrait resté en attente, pour que le lanceur puisse partir', async () => {
+    await writeConsent(home, 'codex', 0);
+    await writeConsent(home, 'claude_code', 2);
+    await writeLauncher(home, { kind: 'clone', repoDir: REPO });
+
+    const run = await uninstall();
+
+    expect(server.told).toEqual(['claude_code', 'codex']);
+    expect(run.output).toContain(
+      `Launcher removed: ${launcherPath(home)} (no other tool uses it).`,
+    );
+  });
+
+  it('un retrait d’avant, que le serveur n’a pas appris : relancer la commande le lui dit', async () => {
+    await writeConsent(home, 'claude_code', 0);
+
+    const run = await uninstall();
+
+    expect(run.output).toContain(`Consent already withdrawn in ${consentPath(home)}.`);
+    expect(server.told).toEqual(['claude_code']);
+  });
+
+  it('un accord qui ne s’écrit pas : rien ne part au serveur', async () => {
+    home = join(dir, 'home-fichier');
+    await writeFile(home, '');
+
+    await uninstall();
+
+    expect(server.told).toEqual([]);
+  });
+});
+
+// Le rattrapage (`leon rattraper`, lancé détaché au démarrage d'une session) : les retraits faits avant que la commande
+// n'appelle le serveur, ou hors ligne.
+describe('catchUpWithdrawals : le serveur apprend les retraits restés sur le poste', () => {
+  it('une fois chaque outil retiré, puis plus ; un outil en cours n’est pas cité', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await writeConsent(home, 'codex', 0);
+    await writeConsent(home, 'cursor', 2);
+
+    await catchUpWithdrawals(home, server.withdraw);
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['claude_code', 'codex']);
+  });
+
+  it('un échec garde l’outil en attente pour le rattrapage suivant ; un nouveau retrait l’est de nouveau', async () => {
+    await writeConsent(home, 'antigravity', 0, new Date('2026-11-10T09:00:00Z'));
+    server.fails = true;
+    expect(await catchUpWithdrawals(home, server.withdraw)).toBe('failed');
+    server.fails = false;
+    expect(await catchUpWithdrawals(home, server.withdraw)).toBe('told');
+    expect(server.told).toEqual(['antigravity']);
+
+    await writeConsent(home, 'antigravity', 2, new Date('2026-11-10T10:00:00Z'));
+    await writeConsent(home, 'antigravity', 0, new Date('2026-11-10T11:00:00Z'));
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['antigravity', 'antigravity']);
+  });
+
+  // T43, le retrait daté : le serveur ignore ensuite les usages des faits envoyés sous un accord qui ne suit pas cette
+  // date, mesurée par la même horloge que celle de l'accord (writeConsent).
+  it('dit au serveur la date de l’entrée en version 0, relue au moment d’envoyer', async () => {
+    await writeConsent(home, 'codex', 0, new Date('2026-11-10T09:00:00Z'));
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['codex']);
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z']);
+  });
+
+  it('une date retouchée à la main, absente ou illisible, vaut l’heure du moment', async () => {
+    await mkdir(join(home, '.leon'), { recursive: true });
+    await writeFile(
+      consentPath(home),
+      JSON.stringify({
+        outils: { codex: { version: 0 }, cursor: { version: 0, installe_le: 'hier' } },
+      }),
+    );
+    const before = Date.now();
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.told).toEqual(['codex', 'cursor']);
+    for (const date of server.dates) {
+      expect(Date.parse(date)).toBeGreaterThanOrEqual(before);
+      expect(Date.parse(date)).toBeLessThanOrEqual(Date.now());
+    }
+  });
+
+  it('un outil qui n’est plus en version 0 au moment d’envoyer ne part pas', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await writeConsent(home, 'codex', 0);
+    const withdraw = server.withdraw;
+    // Un nouvel accord de Codex, écrit pendant l'envoi du retrait de Claude Code.
+    server.withdraw = async (outil, retireLe) => {
+      await withdraw(outil, retireLe);
+      await writeConsent(home, 'codex', 2);
+    };
+
+    expect(await catchUpWithdrawals(home, server.withdraw)).toBe('told');
+
+    expect(server.told).toEqual(['claude_code']);
+  });
+
+  // Un nouvel accord puis un nouveau retrait, écrits pendant l'envoi du premier : le serveur n'a reçu que la première
+  // date, le second retrait reste en attente et se dit au prochain rattrapage.
+  it('n’apprend que le retrait envoyé, pas un retrait écrit pendant l’envoi', async () => {
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T09:00:00Z'));
+    const withdraw = server.withdraw;
+    server.withdraw = async (outil, retireLe) => {
+      await withdraw(outil, retireLe);
+      await writeConsent(home, 'claude_code', 2, new Date('2026-11-10T10:00:00Z'));
+      await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T11:00:00Z'));
+    };
+
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z']);
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+
+    server.withdraw = withdraw;
+    await catchUpWithdrawals(home, server.withdraw);
+
+    expect(server.dates).toEqual(['2026-11-10T09:00:00.000Z', '2026-11-10T11:00:00.000Z']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+});
+
+// Les crochets lancés hors du terminal (Dock) lisent connexion.json ; la commande lit d'abord LEON_URL et LEON_TOKEN.
+describe('connectionWithdrawal : le retrait se dit à chaque connexion que les crochets peuvent prendre', () => {
+  const SAVED = `leon_${'a'.repeat(43)}`;
+  const TERMINAL = `leon_${'b'.repeat(43)}`;
+  const RETIRE_LE = '2026-11-10T09:00:00.000Z';
+  type Request = { url: string; authorization: string | null; body: unknown };
+
+  async function withdrawWith(
+    env: Record<string, string>,
+    status: (url: string) => number = () => 204,
+  ): Promise<Request[]> {
+    await writeConnection(home, {
+      url: 'http://127.0.0.1:4000',
+      jeton: SAVED,
+      ordinateur: 'portable',
+      espace: 'acme',
+      cree_le: '2026-11-01T10:00:00.000Z',
+    });
+    const requests: Request[] = [];
+    const fetchImpl = (async (url: URL | RequestInfo, init?: RequestInit) => {
+      requests.push({
+        url: String(url),
+        authorization: new Headers(init?.headers).get('Authorization'),
+        body: JSON.parse(String(init?.body)),
+      });
+      return new Response(null, { status: status(String(url)) });
+    }) as typeof fetch;
+    await connectionWithdrawal(fetchImpl, env, home)('claude_code', RETIRE_LE);
+    return requests;
+  }
+
+  it('le serveur du terminal en échec : la connexion enregistrée l’apprend quand même, puis l’échec lève', async () => {
+    const requests: Request[] = [];
+    await expect(
+      withdrawWith({ LEON_URL: 'http://127.0.0.1:5000', LEON_TOKEN: TERMINAL }, (url) => {
+        requests.push({ url, authorization: null, body: null });
+        return url.startsWith('http://127.0.0.1:5000') ? 503 : 204;
+      }),
+    ).rejects.toThrow();
+
+    expect(requests.map((request) => request.url)).toEqual([
+      'http://127.0.0.1:5000/api/v1/retrait',
+      'http://127.0.0.1:4000/api/v1/retrait',
+    ]);
+  });
+
+  it('le jeton du terminal refusé : la connexion enregistrée l’apprend, et le refus reste un refus', async () => {
+    const tried: string[] = [];
+    const error = await withdrawWith(
+      { LEON_URL: 'http://127.0.0.1:5000', LEON_TOKEN: TERMINAL },
+      (url) => {
+        tried.push(url);
+        return url.startsWith('http://127.0.0.1:5000') ? 401 : 204;
+      },
+    ).catch((caught: unknown) => caught);
+
+    expect(tried).toEqual([
+      'http://127.0.0.1:5000/api/v1/retrait',
+      'http://127.0.0.1:4000/api/v1/retrait',
+    ]);
+    expect(error).toBeInstanceOf(TokenRefusedError);
+  });
+
+  it('deux jetons : aux deux, à la même date', async () => {
+    const requests = await withdrawWith({
+      LEON_URL: 'http://127.0.0.1:5000',
+      LEON_TOKEN: TERMINAL,
+    });
+
+    const body = { outil: 'claude_code', retire_le: RETIRE_LE };
+    expect(requests).toEqual([
+      { url: 'http://127.0.0.1:5000/api/v1/retrait', authorization: `Bearer ${TERMINAL}`, body },
+      { url: 'http://127.0.0.1:4000/api/v1/retrait', authorization: `Bearer ${SAVED}`, body },
+    ]);
+  });
+
+  it('un seul jeton : une fois', async () => {
+    const requests = await withdrawWith({ LEON_URL: 'http://127.0.0.1:4000', LEON_TOKEN: SAVED });
+
+    expect(requests.map((request) => request.authorization)).toEqual([`Bearer ${SAVED}`]);
+  });
+});
+
 // La vraie commande, lancée comme le script `leon` (sans pnpm ni .env.local), sur un HOME et un CLAUDE_CONFIG_DIR
 // temporaires. LEON_URL vise un port fermé : un envoi qui partirait malgré l'accord retiré échouerait sans rien
 // atteindre, et le message attendu ne serait pas celui-là.
@@ -530,6 +879,8 @@ describe('leon retirer-crochets : la vraie commande', () => {
 
     expect(removed.code).toBe(0);
     expect(removed.stdout).toBe(`${removedText()}\n`);
+    // Le serveur de LEON_URL ne répond pas (port fermé) : une ligne, et le retrait local est fait.
+    expect(removed.stderr).toBe(`${WITHDRAWAL_NOT_TOLD_LAST_MESSAGE}\n`);
     expect(await readSettings()).toEqual({});
 
     const hookJson = JSON.stringify({
@@ -597,7 +948,12 @@ describe('le README', () => {
 
     expect(section).toContain('~/.leon/bin/leon retirer-crochets');
     expect(section).toMatch(/lanceur[^\n]*effacé avec le dernier outil/);
-    expect(section).toContain('leon logout');
+    expect(section).toMatch(/gardé tant que le serveur n'a pas appris/);
+    // `leon logout` d'abord effacerait la connexion par laquelle le retrait prévient le serveur.
+    expect(section).toMatch(
+      /partir complètement : `leon retirer-crochets` d'abord[^\n]*révoquez cet ordinateur dans Réglages/,
+    );
+    expect(section).not.toContain("`leon logout` d'abord");
   });
 
   it('l’aide de la commande dit la même chose : le lanceur part avec le dernier outil', async () => {
@@ -605,5 +961,6 @@ describe('le README', () => {
     const help = source.slice(source.indexOf('retirer-crochets     Remove'));
 
     expect(help).toContain('~/.leon/bin/leon goes too, once no tool is left that uses it');
+    expect(help).toContain('and the server was told');
   });
 });

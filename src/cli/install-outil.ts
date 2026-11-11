@@ -25,7 +25,7 @@ import {
   writeAtomically,
 } from './install-hooks';
 import { ADAPTATEURS } from './outils';
-import { removeUnusedLauncher, type UninstallDeps } from './uninstall-hooks';
+import { removeUnusedLauncher, type UninstallDeps, withdrawOnServer } from './uninstall-hooks';
 
 export type ToolHookChange = {
   event: string;
@@ -167,7 +167,8 @@ async function writeSettings(
 }
 
 // Le retrait : les crochets de Leon pour l'outil (`remove` rend les réglages sans eux, et les lignes retirées), puis son
-// accord en version 0, puis le lanceur s'il ne sert plus à aucun outil. Rend 0 si tout est retiré (ou l'était déjà).
+// accord en version 0, puis le serveur de la connexion (withdrawOnServer), puis le lanceur s'il ne sert plus à aucun
+// outil. Rend 0 si tout est retiré (ou l'était déjà).
 export async function uninstallToolHooks(
   options: { outil: Outil; path: string; home: string },
   remove: (settings: Json) => { next: Json; removed: string[] },
@@ -215,6 +216,7 @@ export async function uninstallToolHooks(
       consentDone = false;
     }
   }
+  if (consentDone) await withdrawOnServer(home, deps);
   if (hooksDone && consentDone) await removeUnusedLauncher(home, deps);
   return hooksDone && consentDone ? 0 : 1;
 }

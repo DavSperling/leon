@@ -3,6 +3,7 @@ import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import {
   API_PATHS,
+  type RetraitRequest,
   type SessionFacts,
   type SessionFactsPayload,
   type Usage,
@@ -47,16 +48,19 @@ export type ImportDeps = {
   // Avec lui, l'import calcule la clé de projet de chaque session sur son dossier de départ, comme le crochet de fin
   // de session : une session rattrapée par l'import entre dans le point du matin de son projet.
   git?: GitRunner;
-  // L'accord retiré (consent.ts), relu avant chaque session : un `leon retirer-crochets` lancé pendant un long import
-  // l'arrête, sans autre envoi. La borne d'une heure du résumé (resume-worker.ts) en dépend.
+  // L'accord retiré (consent.ts), relu avant chaque session et avant ses faits (sendSessionFacts) : un `leon
+  // retirer-crochets` lancé pendant un long import l'arrête, sans autre envoi. La borne d'une heure du résumé
+  // (resume-worker.ts) en dépend. Les crochets de fin et le rattrapage le donnent aussi, pour les faits.
   withdrawn?: () => Promise<boolean>;
-  // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est
-  // la version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé). `depuis`, la date de
-  // l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; de
+  // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est la
+  // version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé), `accordLe` la date de l'accord
+  // (`installe_le`), qui part avec eux (`accord_le`, T43 : le serveur la compare au dernier retrait). `depuis`, la date
+  // de l'accord : au rattrapage, seuls les fichiers modifiés ensuite envoient leurs faits (vigilance 4 du plan) ; de
   // même, `usagesDepuis` : un usage ne part qu'avec les fichiers modifiés après sa date (`resume` accepté ce jour ne
   // fait pas résumer les sessions finies avant). Le crochet de fin de session, lui, n'en a pas besoin.
   facts?: {
     accord: number;
+    accordLe: Date;
     usages?: Usage[];
     send: FactsSender;
     depuis?: Date;
@@ -136,6 +140,19 @@ export function createFactsSender(
 ): FactsSender {
   return async (payload) => {
     await post(fetchImpl, env, API_PATHS.faits, payload, options);
+  };
+}
+
+// Le retrait de l'accord d'un outil (T43), daté (`retire_le`) : le serveur vide les usages de ses sessions, garde la
+// date pour ce jeton, et répond 204, sans corps.
+export function createWithdrawalSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: Sending = {},
+): (outil: CodeSessionKind, retireLe: string) => Promise<void> {
+  return async (outil, retireLe) => {
+    const request: RetraitRequest = { outil, retire_le: retireLe };
+    await post(fetchImpl, env, API_PATHS.retrait, request, options);
   };
 }
 
@@ -220,8 +237,10 @@ export async function sendSessionFacts(
     external_id: session.sessionId,
     ...(options.projectKey === undefined ? {} : { project: options.projectKey }),
     accord: deps.facts.accord,
-    // Sans usage, pas de champ : le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
-    ...(deps.facts.usages?.length ? { usages: deps.facts.usages } : {}),
+    // Sans usage, ni l'un ni l'autre : le corps reste celui qu'un serveur d'avant C7 révisé accepte (`.strict()`).
+    ...(deps.facts.usages?.length
+      ? { usages: deps.facts.usages, accord_le: deps.facts.accordLe.toISOString() }
+      : {}),
     faits: source.faits ?? extractClaudeCodeFacts(source.content, source.root),
     fin: source.fin,
   };
@@ -229,6 +248,10 @@ export async function sendSessionFacts(
     deps.out(JSON.stringify(payload));
     return true;
   }
+  // L'accord relu juste avant : rien ne part une fois le retrait écrit sur le poste. Des faits déjà partis, qui
+  // arrivent au serveur après la route du retrait (T43), n'y remettent aucun usage : leur `accord_le` ne suit pas la
+  // date du retrait que le serveur garde pour ce jeton (record-facts.ts).
+  if (await deps.withdrawn?.()) return true;
   try {
     await deps.facts.send(payload);
     return true;

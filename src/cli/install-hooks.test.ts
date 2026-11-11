@@ -861,7 +861,7 @@ describe('installHooks : le texte du consentement', () => {
 // part, et ce qui est donné au modèle de Claude Code.
 const CONSENT_TEXT = [
   'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
-  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
+  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
   '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ].join('\n');
@@ -991,8 +991,8 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 const RESUME_TEXT = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
-  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries; one already planned may still be written within an hour.",
-  "  - Later, the same usage will also keep the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server will send to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider will write that state. It will stay private to you, like the summary.",
+  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
+  "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you, like the summary. Withdrawing your consent stops this too, once the Leon server is told.",
 ].join('\n');
 
 // Après un refus, la ligne fixe qui dit comment revenir dessus (C7 révisé, A16), avec la commande de la forme de Leon :
@@ -1012,8 +1012,9 @@ describe('installHooks : l’usage resume', () => {
 
     expect(run.code).toBe(0);
     expect(run.questions).toHaveLength(2);
-    expect(run.questions[1]).toContain('[y/N]');
-    expect(run.questions[1]).toContain(consentPath(home));
+    expect(run.questions[1]).toBe(
+      `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${consentPath(home)})? [y/N] `,
+    );
     expect(run.output.indexOf(RESUME_TEXT)).toBeGreaterThan(run.output.indexOf(CONSENT_TEXT));
     expect(run.output).toContain('Nothing was added: no session is summarized.');
     expect(run.output).toContain(REFUSED_LINE);

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { organizations, users } from './auth';
 
 // Jetons d'accès : seul le SHA-256 du jeton est stocké. Pas de RLS, toujours filtrés par user_id et tenant_id.
@@ -29,4 +29,7 @@ export const apiTokens = pgTable('api_tokens', {
   refreshExpiresAt: timestamp('refresh_expires_at', { withTimezone: true }),
   previousRefreshHash: text('previous_refresh_hash').unique(),
   refreshRotatedAt: timestamp('refresh_rotated_at', { withTimezone: true }),
+  // La date du dernier retrait de chaque outil sur ce jeton (0063, T43) : recordFacts ignore les usages des faits
+  // envoyés sous un accord qui ne la suit pas.
+  retraits: jsonb('retraits').$type<Record<string, string>>().notNull().default({}),
 });

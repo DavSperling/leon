@@ -38,6 +38,7 @@ import { resolveServerEnv, type ServerEnv } from './env';
 import { ANTIGRAVITY_VARIANTS } from './find-sessions';
 import { launcherPath } from './hook-commands';
 import {
+  ANTIGRAVITY_ENTRY,
   addAntigravityHooks,
   antigravityHooksPath,
   installAntigravityHooks,
@@ -324,6 +325,18 @@ const TOOLS: {
   },
 ];
 
+// Un Antigravity introuvable dont Leon a pourtant posé l'entrée ou daté la capture : un poste qui n'a que Gemini CLI,
+// pris pour Antigravity avant #162 (le seul `~/.gemini` suffisait). Rien ne part sans dossier d'Antigravity, mais tout
+// reprendrait à son premier lancement, et le setup suivant ne dirait rien : la ligne le dit, avec la commande qui retire.
+async function antigravityLeftover(home: string): Promise<boolean> {
+  const hooks = parseSettings(await load(antigravityHooksPath(home)));
+  if (hooks?.[ANTIGRAVITY_ENTRY] !== undefined) return true;
+  return (await factsConsent(home, 'antigravity'))?.capture_le !== undefined;
+}
+
+const ANTIGRAVITY_LEFTOVER =
+  'Antigravity was not found, but an earlier `leon setup` left its hooks or its capture consent in place (Gemini CLI alone used to be taken for Antigravity). Nothing is sent while Antigravity is not installed; if it is installed later, they apply from its first launch. To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity';
+
 // Les cases à demander sur la page « Autoriser » (T64, C16) : les usages cochés par défaut qu'elle sait montrer, qui
 // manquent sans refus à l'un des outils trouvés dont l'installateur existe (les mêmes dossiers que la boucle de
 // runSetup). Un outil sans accord de base, ou retiré, n'a ni usage ni refus.
@@ -485,7 +498,10 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
   let failed = false;
   for (const tool of TOOLS) {
     const dir = await firstDirectory(tool.dirs(home, env));
-    if (dir === null) {
+    if (dir === null && tool.install === installAntigravity && (await antigravityLeftover(home))) {
+      out(ANTIGRAVITY_LEFTOVER);
+      summary.push(`${tool.label}: not found (hooks of an earlier setup left in place, see above)`);
+    } else if (dir === null) {
       summary.push(`${tool.label}: not found`);
     } else if (!tool.install) {
       out(`${tool.label} found in ${dir}: not supported yet, nothing is written there.`);

@@ -6,6 +6,7 @@ import { API_PATHS, type AuthorizeUsage, type Usage } from '../capture/api-contr
 import { type Connection, readConnection, writeConnection } from './connection';
 import { addRefusal, addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
+import { uninstallAntigravityHooks } from './install-antigravity';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, previousLauncherScripts, writeLauncher } from './launcher';
 import { runSetup, type SetupDeps, type SetupOptions } from './setup';
@@ -900,8 +901,37 @@ describe('setup : les outils de code', () => {
 
     expect(run.code).toBe(0);
     expect(run.output).toContain('Antigravity: not found');
+    expect(run.output).not.toContain('retirer-crochets --outil antigravity');
     expect(await readdir(join(home, '.gemini'))).toEqual(['settings.json']);
     expect(await factsConsent(home, 'antigravity')).toBeNull();
+  });
+
+  // Avant #162, le seul ~/.gemini de Gemini CLI faisait poser Antigravity : le setup suivant dit ce qui reste, et la
+  // commande qu'il donne le retire bien.
+  it('Gemini CLI seul après une installation d’Antigravity : la ligne dit ce qui reste et comment le retirer', async () => {
+    await hasClaudeCode();
+    await mkdir(join(home, '.gemini', 'antigravity'), { recursive: true });
+    expect((await setup({ yes: true })).output).toContain('Antigravity: hooks installed');
+    await rm(join(home, '.gemini', 'antigravity'), { recursive: true });
+
+    const leftover = await setup({ yes: true });
+
+    expect(leftover.code).toBe(0);
+    expect(leftover.output).toContain(
+      'To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity',
+    );
+    expect(leftover.output).toContain(
+      'Antigravity: not found (hooks of an earlier setup left in place, see above)',
+    );
+
+    const withdrawn = await uninstallAntigravityHooks(
+      { home },
+      { out: () => {}, err: () => {}, withdraw: async () => {} },
+    );
+    expect(withdrawn).toBe(0);
+    const after = await setup({ yes: true });
+    expect(after.output).toContain('Antigravity: not found');
+    expect(after.output).not.toContain('retirer-crochets --outil antigravity');
   });
 
   it('Codex présent : son crochet de démarrage est posé et son accord écrit', async () => {

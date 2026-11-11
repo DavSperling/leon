@@ -23,7 +23,6 @@ import {
   countOf,
   createFactsSender,
   createIngestSender,
-  createWithdrawalSender,
   type ImportDeps,
   type ImportSummary,
   importClaudeCode,
@@ -381,7 +380,8 @@ async function runCatchUp(): Promise<number> {
   const summary = await catchUp({
     send: createIngestSender(timedFetch, env),
     sendFacts: createFactsSender(timedFetch, env),
-    withdraw: createWithdrawalSender(timedFetch, env),
+    // Les deux connexions, comme la commande de retrait : un LEON_TOKEN refusé ne bloque pas connexion.json.
+    withdraw: connectionWithdrawal(timedFetch, process.env, homedir()),
     out: () => {},
     git: gitInDirectory,
     readFile: (path) => readFile(path, 'utf8'),

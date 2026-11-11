@@ -15,6 +15,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS } from '../capture/api-contract';
+import { writeConnection } from './connection';
 import { consentPath, factsConsent, serverWithdrawalsPath, writeConsent } from './consent';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
@@ -30,6 +31,8 @@ let configDir: string;
 let server: Server;
 let origin: string;
 let received: Received[];
+// Les jetons que le faux serveur refuse (401) sur la route du retrait.
+let refused: Set<string>;
 
 // La version de Claude Code dans accord.json au moment où le serveur reçoit la requête.
 const versionNow = () => {
@@ -46,6 +49,7 @@ beforeEach(async () => {
   configDir = join(dir, 'claude');
   await mkdir(home, { recursive: true });
   received = [];
+  refused = new Set();
   server = createServer((request, response) => {
     const chunks: Buffer[] = [];
     request.on('data', (chunk: Buffer) => chunks.push(chunk));
@@ -57,8 +61,9 @@ beforeEach(async () => {
         body: text ? JSON.parse(text) : null,
         version: versionNow(),
       });
-      // La route du retrait répond 204, sans corps.
-      response.writeHead(request.url === API_PATHS.retrait ? 204 : 404);
+      // La route du retrait répond 204, sans corps, ou 401 à un jeton refusé.
+      const status = refused.has(request.headers.authorization ?? '') ? 401 : 204;
+      response.writeHead(request.url === API_PATHS.retrait ? status : 404);
       response.end();
     });
   });
@@ -149,6 +154,32 @@ describe('le retrait atteint le serveur : les vraies commandes', () => {
       expect(run.stderr).toBe('');
       expect(received).toEqual([told('claude_code', await installedAt())]);
       expect(await toldAt()).toEqual(expect.any(String));
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // Le terminal (LEON_TOKEN) et connexion.json ont deux jetons : le rattrapage, comme la commande, le dit aux deux, même
+  // quand le jeton du terminal est refusé.
+  it(
+    'leon rattraper dit le retrait à la connexion enregistrée même quand le jeton du terminal est refusé',
+    async () => {
+      const saved = `leon_${'s'.repeat(43)}`;
+      await writeConnection(home, {
+        url: origin,
+        jeton: saved,
+        ordinateur: 'portable',
+        espace: 'acme',
+        cree_le: '2026-11-01T10:00:00.000Z',
+      });
+      refused.add(`Bearer ${TOKEN}`);
+      await writeConsent(home, 'claude_code', 0, RETIRE_LE);
+
+      await leon(['rattraper']);
+
+      expect(received.map((one) => one.authorization)).toEqual([
+        `Bearer ${TOKEN}`,
+        `Bearer ${saved}`,
+      ]);
     },
     TEST_TIMEOUT_MS,
   );

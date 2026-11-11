@@ -119,8 +119,9 @@ Commands:
                            the launcher ~/.leon/bin/leon passes once it has handed control back to Codex)
   rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex, Cursor, Antigravity):
                        send what their hooks missed since the last capture (a session left with /quit, a failed
-                       upload). Only the files changed since that consent are read. Started in the background when a
-                       session starts
+                       upload). Only the files changed since that consent are read. Started in the background by
+                       Leon's start hook: at the start of a Claude Code or Codex session, or at the first message of a
+                       Cursor or Antigravity conversation
   threads              Print the threads of this repository (the work of your sessions, grouped by branch), the
                        current branch first
   thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the

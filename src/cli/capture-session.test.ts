@@ -26,6 +26,7 @@ import {
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
 const HOME = '/home/demo';
+const ACCORD_LE = new Date('2026-11-01T10:00:00.000Z'); // la date de l'accord (installe_le, consent.ts)
 const RESULT: IngestResult = {
   sourceId: crypto.randomUUID(),
   inserted: 2,
@@ -168,6 +169,34 @@ describe('captureSessionFromHook : une session qui se termine', () => {
       project: 'github.com/acme/leon',
     });
     expect(payload?.turns.map((turn) => turn.external_id)).toEqual(['u-1', 'u-2', 'u-4']);
+  });
+
+  // La marque des tours injectés va jusqu'au serveur, où seul un tour `user` marqué false prouve une décision (T43).
+  it('envoie la marque de chaque tour `user` telle quelle ; un tour de l’assistant n’en porte pas', async () => {
+    const { deps, send } = makeDeps({
+      session: [
+        conversationLine(
+          1,
+          'user',
+          '<task-notification>\n<status>completed</status>\n</task-notification>',
+        ),
+        conversationLine(2, 'user', 'Corrige le test.'),
+        conversationLine(3, 'assistant', [{ type: 'text', text: 'Corrigé.' }]),
+      ].join('\n'),
+    });
+
+    await captureSessionFromHook(HOOK, deps);
+
+    expect(
+      sentPayloads(send)[0]?.turns.map((turn) => [
+        turn.external_id,
+        'injecte' in turn ? turn.injecte : 'sans marque',
+      ]),
+    ).toEqual([
+      ['u-1', true],
+      ['u-2', false],
+      ['u-3', 'sans marque'],
+    ]);
   });
 
   it('dit combien de tours sont nouveaux, au pluriel comme au singulier', async () => {
@@ -444,7 +473,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
         events.push('tours');
         return RESULT;
       },
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
@@ -471,7 +500,11 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
         async () => new Response(JSON.stringify({ error: 'MOT-DU-SERVEUR' }), { status }),
       );
       const { deps, send } = makeDeps({
-        facts: { accord: 2, send: createFactsSender(fetchImpl as unknown as typeof fetch, env) },
+        facts: {
+          accord: 2,
+          accordLe: ACCORD_LE,
+          send: createFactsSender(fetchImpl as unknown as typeof fetch, env),
+        },
       });
 
       expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
@@ -488,6 +521,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     const { deps } = makeDeps({
       facts: {
         accord: 2,
+        accordLe: ACCORD_LE,
         send: async () => {
           throw new TypeError(`fetch failed : MOT-DE-L-ERREUR ${SECRETS.anthropic}`);
         },
@@ -524,7 +558,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     const { deps } = makeDeps({
       session: writingSession(start),
       git,
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
     return facts.mock.calls[0]?.[0].faits;
@@ -552,7 +586,7 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
       send: async () => {
         throw new IngestResponseError(500);
       },
-      facts: { accord: 2, send: facts },
+      facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
     });
 
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);

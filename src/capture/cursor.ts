@@ -29,17 +29,15 @@ import {
   replaceTasks,
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
-import type { Turn } from './turn';
+import { isTypedTurn, type Turn } from './turn';
 
 export type CursorSession = {
   sessionId: string; // la conversation (le nom du fichier)
   cwd: string | null; // jamais dans le transcript : le crochet le donne
   title: string | null;
+  // Les messages que Cursor injecte en rôle `user`, jamais un message de la personne (T63), partent marqués `injecte`
+  // (T43), comme tout tour `user`.
   turns: Turn[];
-  // Les messages que Cursor injecte en rôle `user`, jamais un message de la personne (T63). Ils partiront marqués
-  // `injecte` quand le contrat d'envoi aura ce champ (T43).
-  // shortcut: ils ne partent pas d'ici là.
-  injectes: number;
   branche: null; // le transcript n'en porte pas : la capture la lit par git
 };
 
@@ -128,21 +126,13 @@ export function parseCursorSession(content: string, file: CursorFile): CursorSes
   );
   const ts = file.mtime.toISOString();
   const turns: Turn[] = [];
-  let injectes = 0;
   let rank = 0;
   for (const line of lines) {
     if (line.role !== 'user' && line.role !== 'assistant') continue;
     rank += 1;
-    let text = texts(line).join('\n\n');
-    if (line.role === 'user') {
-      const user = userText(text, wrapped);
-      if (user.kind === 'injecte') {
-        injectes += 1;
-        continue;
-      }
-      text = user.text;
-    }
-    const prepared = prepareTurnText(stripLeonBlocks(text));
+    const text = texts(line).join('\n\n');
+    const user = line.role === 'user' ? userText(text, wrapped) : null;
+    const prepared = prepareTurnText(stripLeonBlocks(user?.text ?? text));
     if (prepared === null) continue;
     turns.push({
       external_id: turnId(conversation, rank),
@@ -150,15 +140,15 @@ export function parseCursorSession(content: string, file: CursorFile): CursorSes
       text: prepared,
       ts,
       capture_mode: 'file',
+      ...(user === null ? {} : { injecte: user.kind === 'injecte' }),
     });
   }
-  const firstUserText = turns.find((turn) => turn.role === 'user')?.text;
+  const firstUserText = turns.find(isTypedTurn)?.text;
   return {
     sessionId: conversation,
     cwd: null,
     title: firstUserText ? firstUserText.slice(0, TITLE_FROM_TEXT_MAX) : null,
     turns,
-    injectes,
     branche: null,
   };
 }
@@ -316,7 +306,7 @@ export function extractCursorFacts(
     branch: brancheLue,
     errors,
     external,
-    echanges: session?.turns.filter((turn) => turn.role === 'user').length ?? 0,
+    echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start: null,
     end: fin,
   });

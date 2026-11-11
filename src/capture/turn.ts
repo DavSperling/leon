@@ -122,9 +122,18 @@ export const TurnSchema = z
     text: z.string().min(1).max(TURN_TEXT_MAX),
     ts: z.iso.datetime({ offset: true }),
     capture_mode: z.enum(CAPTURE_MODES),
+    // Un tour `user` que la personne n'a pas tapé (rapport de sous-agent, notification de tâche, sortie de crochet…) :
+    // true ; tapé par elle : false. Absent, il est rangé « inconnu » (null) : une CLI d'avant la marque (T43). Seul un
+    // tour `user` marqué false prouve une `[décision]`.
+    injecte: z.boolean().optional(),
   })
   .strict();
 export type Turn = z.infer<typeof TurnSchema>;
+
+// Un message tapé par la personne : un tour `user` marqué false. Les lecteurs des outils de code posent la marque sur
+// chaque tour `user` ; seuls ceux-là comptent comme échanges (C1) et donnent le titre d'une session.
+export const isTypedTurn = (turn: Pick<Turn, 'role' | 'injecte'>): boolean =>
+  turn.role === 'user' && turn.injecte === false;
 
 // La clé du projet d'une session (C8) : un dépôt GitHub (`github.com/<propriétaire>/<dépôt>`, en minuscules)
 // ou, faute de dépôt, le dossier (`dossier:` et 16 hexadécimaux). Jamais une adresse de remote : elle peut porter un jeton.

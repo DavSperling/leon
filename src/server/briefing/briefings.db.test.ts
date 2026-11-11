@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members, users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
@@ -13,6 +13,7 @@ import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
 import { readAbout, saveAbout } from './about';
 import {
+  BRIEFING_DAILY_CAP,
   BRIEFING_PENDING_MARKDOWN,
   latestBriefingProject,
   readBriefing,
@@ -101,6 +102,13 @@ beforeAll(async () => {
   const team = await newTeam(['Alice Martin', 'Bob Durand'], tenantIds);
   tenantId = team.tenantId;
   [alice, bob] = team.members as [TenantContext, TenantContext];
+});
+
+// Le plafond du jour (BRIEFING_DAILY_CAP) compterait les points d'Alice et de Bob d'un test à l'autre.
+beforeEach(async () => {
+  await adminPool.query('delete from points_par_jour where user_id = any($1)', [
+    [alice.userId, bob.userId],
+  ]);
 });
 
 afterAll(async () => {
@@ -248,24 +256,71 @@ describe('refreshBriefing', () => {
 
     expect((await rowOf(alice, seeded.project))?.markdown).toContain('Point qui tient [1].');
   });
+
+  it(`passé ${BRIEFING_DAILY_CAP} points payés dans la journée, n’appelle plus le modèle et garde le point`, async () => {
+    const seeded = await seedProject(alice);
+    // Hier ne compte pas, et s'efface au premier point du jour.
+    await adminPool.query(
+      "insert into points_par_jour (user_id, jour, nombre) values ($1, (now() at time zone 'UTC')::date - 1, $2)",
+      [alice.userId, BRIEFING_DAILY_CAP],
+    );
+    await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']) });
+    const counted = await adminPool.query('select nombre from points_par_jour where user_id = $1', [
+      alice.userId,
+    ]);
+    expect(counted.rows).toEqual([{ nombre: 1 }]);
+
+    // Cinq recalculs simultanés quand il ne reste qu'un point : un seul passe.
+    await adminPool.query('update points_par_jour set nombre = $2 where user_id = $1', [
+      alice.userId,
+      BRIEFING_DAILY_CAP - 1,
+    ]);
+    const tries = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        adminPool.query<{ ok: boolean }>('select reserver_point($1, $2) as ok', [
+          alice.userId,
+          BRIEFING_DAILY_CAP,
+        ]),
+      ),
+    );
+    expect(tries.filter((result) => result.rows[0]?.ok === true)).toHaveLength(1);
+
+    await adminPool.query('update briefings set stale = true where user_id = $1 and project = $2', [
+      alice.userId,
+      seeded.project,
+    ]);
+    const llm = writes(['Point de trop [1].']);
+    await refreshBriefing(alice, seeded.project, { llm });
+
+    expect(llm.calls).toEqual([]);
+    const row = await rowOf(alice, seeded.project);
+    expect(row?.stale).toBe(true);
+    expect(row?.markdown).toContain('Point [1].');
+    // Bob a son propre compteur.
+    const theirs = await seedProject(bob);
+    const forBob = writes(['Point de Bob [1].']);
+    await refreshBriefing(bob, theirs.project, { llm: forBob });
+    expect(forBob.calls).toHaveLength(1);
+  });
 });
 
 describe('readBriefing', () => {
   it('rend le dernier point, même périmé, et note l’heure de lecture', async () => {
     const seeded = await seedProject(alice);
-    const now = new Date();
-    await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']), now });
-    // Lu hier : le signal qui l'a marqué périmé a déjà mis son recalcul en file (queue.ts), la lecture n'en ajoute pas.
+    await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']) });
+    // Préparé avant-hier, lu hier : le signal qui l'a marqué périmé a déjà mis son recalcul en file (queue.ts), la
+    // lecture n'en ajoute pas.
     await adminPool.query(
-      "update briefings set stale = true, last_read_at = now() - interval '1 day' where user_id = $1 and project = $2",
+      "update briefings set stale = true, prepared_at = now() - interval '2 days', last_read_at = now() - interval '1 day' where user_id = $1 and project = $2",
       [alice.userId, seeded.project],
     );
+    const preparedAt = (await rowOf(alice, seeded.project))?.preparedAt;
     const before = Date.now();
 
     const read = await readBriefing(alice, seeded.project);
 
     expect(read?.markdown).toContain('Point [1].');
-    expect(read?.preparedAt.getTime()).toBe(now.getTime());
+    expect(read?.preparedAt.getTime()).toBe(preparedAt?.getTime());
     const lastReadAt = (await rowOf(alice, seeded.project))?.lastReadAt?.getTime() ?? 0;
     expect(lastReadAt).toBeGreaterThanOrEqual(before - 1000);
     expect(await jobsFor(alice, seeded.project)).toEqual([]);
@@ -275,13 +330,45 @@ describe('readBriefing', () => {
     const seeded = await seedProject(alice);
     await refreshBriefing(alice, seeded.project, { llm: writes(['Point [1].']), now: new Date() });
     await adminPool.query(
-      "update briefings set stale = true, last_read_at = now() - interval '8 days' where user_id = $1 and project = $2",
+      "update briefings set stale = true, prepared_at = now() - interval '9 days', last_read_at = now() - interval '8 days' where user_id = $1 and project = $2",
       [alice.userId, seeded.project],
     );
 
     expect((await readBriefing(alice, seeded.project))?.markdown).toContain('Point');
 
-    expect(await jobsFor(alice, seeded.project)).toHaveLength(1);
+    const jobs = await jobsFor(alice, seeded.project);
+    expect(jobs).toHaveLength(1);
+    expect((jobs[0]?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
+  });
+
+  // Le signal ne refait pas un point dont personne n'a lu la version actuelle (queue.ts) : c'est la lecture qui le
+  // remet en file, sans repayer un point moins de 30 minutes après le précédent.
+  it('un point périmé dont personne n’a lu la version actuelle : rendu, et remis en file 30 minutes après sa préparation', async () => {
+    const recent = await seedProject(alice);
+    const older = await seedProject(alice);
+    for (const { project } of [recent, older]) {
+      await refreshBriefing(alice, project, { llm: writes(['Point [1].']) });
+    }
+    // Lus il y a trois heures, refaits depuis (il y a 10 minutes, il y a 2 heures), puis de nouveau périmés.
+    for (const [project, preparedAgo] of [
+      [recent.project, '10 minutes'],
+      [older.project, '2 hours'],
+    ]) {
+      await adminPool.query(
+        "update briefings set stale = true, last_read_at = now() - interval '3 hours', prepared_at = now() - $3::interval where user_id = $1 and project = $2",
+        [alice.userId, project, preparedAgo],
+      );
+    }
+
+    expect((await readBriefing(alice, recent.project))?.markdown).toContain('Point');
+    expect((await readBriefing(alice, older.project))?.markdown).toContain('Point');
+
+    const [later] = await jobsFor(alice, recent.project);
+    const wait = (later?.startAfter.getTime() ?? 0) - Date.now();
+    expect(wait).toBeGreaterThan(19 * 60_000);
+    expect(wait).toBeLessThan(21 * 60_000);
+    const [soon] = await jobsFor(alice, older.project);
+    expect((soon?.startAfter.getTime() ?? Infinity) - Date.now()).toBeLessThan(5000);
   });
 
   it.each(['claude_code', 'codex', 'cursor', 'antigravity'] as const)(
@@ -412,9 +499,11 @@ describe('saveAbout', () => {
     await refreshBriefing(alice, forgotten.project, { llm: writes(['Vieux point [1].']) });
     const theirs = await seedProject(bob);
     await refreshBriefing(bob, theirs.project, { llm: writes(['Point de Bob [1].']) });
+    const unread = await seedProject(alice);
+    await refreshBriefing(alice, unread.project, { llm: writes(['Point pas encore lu [1].']) });
     await adminPool.query(
-      "update briefings set last_read_at = case when project = $2 then now() - interval '8 days' else now() end where user_id = any($1)",
-      [[alice.userId, bob.userId], forgotten.project],
+      "update briefings set last_read_at = case when project = $2 then now() - interval '8 days' when project = $3 then prepared_at - interval '1 hour' else now() end where user_id = any($1)",
+      [[alice.userId, bob.userId], forgotten.project, unread.project],
     );
 
     await saveAbout(alice, 'Lead back-end, la migration Stripe ce mois-ci.');
@@ -423,10 +512,13 @@ describe('saveAbout', () => {
     expect((await rowOf(alice, mine.project))?.stale).toBe(true);
     expect((await rowOf(alice, forgotten.project))?.stale).toBe(true);
     expect((await rowOf(bob, theirs.project))?.stale).toBe(false);
-    // Lu dans la semaine : refait dans 30 minutes, comme après un signal. Plus lu : refait à sa prochaine lecture.
+    // Lu dans la semaine : refait dans 30 minutes, comme après un signal. Plus lu, ou version actuelle pas encore lue :
+    // refait à sa prochaine lecture.
     const [queued] = await jobsFor(alice, mine.project);
     expect((queued?.startAfter.getTime() ?? 0) - Date.now()).toBeGreaterThan(20 * 60_000);
     expect(await jobsFor(alice, forgotten.project)).toEqual([]);
+    expect((await rowOf(alice, unread.project))?.stale).toBe(true);
+    expect(await jobsFor(alice, unread.project)).toEqual([]);
     expect(await jobsFor(bob, theirs.project)).toEqual([]);
 
     const llm = writes(['Second point [1].']);

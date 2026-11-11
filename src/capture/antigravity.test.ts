@@ -29,7 +29,6 @@ describe('parseAntigravitySession', () => {
       sessionId: CONVERSATION,
       cwd: RACINE,
       title: 'Ajoute le lecteur des sessions Antigravity.',
-      injectes: 0,
       branche: null,
     });
     expect(session?.turns.map((t) => [t.external_id, t.role, t.text, t.ts])).toEqual([
@@ -58,7 +57,7 @@ describe('parseAntigravitySession', () => {
     );
   });
 
-  it('ne lit pas la conversation d’un sous-agent ; compte à part un message que l’outil écrit', () => {
+  it('ne lit pas la conversation d’un sous-agent ; garde, marqué, un message que l’outil écrit', () => {
     const sub = step({
       type: 'USER_INPUT',
       source: 'USER_EXPLICIT',
@@ -66,11 +65,33 @@ describe('parseAntigravitySession', () => {
     });
     expect(parseAntigravitySession(sub, FILE)).toBeNull();
 
-    const injected = parseAntigravitySession(
-      step({ type: 'USER_INPUT', source: 'SYSTEM', content: 'Relance automatique' }),
-      FILE,
-    );
-    expect(injected).toMatchObject({ turns: [], injectes: 1 });
+    const lines = [
+      step({ step_index: 1, type: 'USER_INPUT', source: 'SYSTEM', content: 'Relance automatique' }),
+      step({
+        step_index: 2,
+        type: 'USER_INPUT',
+        source: 'USER_EXPLICIT',
+        content: '<USER_REQUEST>Corrige le test.</USER_REQUEST>',
+      }),
+    ].join('\n');
+    const session = parseAntigravitySession(lines, FILE);
+    expect(session?.turns.map((t) => [t.external_id, t.text, t.injecte])).toEqual([
+      [`${CONVERSATION}:000001`, 'Relance automatique', true],
+      [`${CONVERSATION}:000002`, 'Corrige le test.', false],
+    ]);
+    // Ni titre ni échange tirés du message injecté.
+    expect(session?.title).toBe('Corrige le test.');
+    expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(1);
+  });
+
+  // Échec fermé : seul `USER_EXPLICIT` dit le message tapé ; une étape sans `source` est un format inconnu.
+  it('marque injecté un message sans `source`, qui ne compte pas comme échange', () => {
+    const lines = JSON.stringify({
+      type: 'USER_INPUT',
+      content: '<USER_REQUEST>Sans source</USER_REQUEST>',
+    });
+    expect(parseAntigravitySession(lines, FILE)?.turns.map((t) => t.injecte)).toEqual([true]);
+    expect(extractAntigravityFacts(lines, FILE, RACINE).echanges).toBe(0);
   });
 
   it('retire les blocs de Leon ; sans date, un tour prend l’heure du fichier', () => {
@@ -91,6 +112,7 @@ describe('parseAntigravitySession', () => {
         text: 'Question',
         ts: FILE.mtime.toISOString(),
         capture_mode: 'file',
+        injecte: false,
       },
     ]);
   });
@@ -135,12 +157,21 @@ describe('extractAntigravityFacts', () => {
       );
     });
 
-    it('lire, écrire, les commandes locales, `leon` : non', () => {
+    // Échec fermé (#160) : seuls les outils locaux relevés à l'essai T31 laissent la session non externe.
+    it('un outil inconnu, ou `schedule` tant qu’on ne sait pas ce qu’il fait : oui', () => {
+      expect(externe(call('outil_invente', { Query: 'x' }))).toBe(true);
+      expect(externe(call('schedule', { Prompt: 'x' }))).toBe(true);
+    });
+
+    it('lire, écrire, chercher, lister, la liste de tâches, les commandes locales, `leon` : non', () => {
       expect(
         externe(
           call('view_file', { AbsolutePath: `${RACINE}/a.ts` }),
           call('grep_search', { Query: 'x' }),
+          call('list_dir', { DirectoryPath: RACINE }),
           call('write_to_file', { TargetFile: `${RACINE}/a.ts` }),
+          call('replace_file_content', { TargetFile: `${RACINE}/a.ts` }),
+          call('manage_task', {}),
           call('run_command', { CommandLine: 'pnpm test' }),
           call('run_command', { CommandLine: '~/.leon/bin/leon fil' }),
         ),

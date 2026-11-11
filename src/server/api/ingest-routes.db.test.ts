@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
 import { INGEST_BODY_MAX_BYTES, IngestResultSchema } from '@/capture/turn';
 import { createApiToken } from '@/server/auth/api-tokens';
-import { sources } from '@/server/db/schema/memory';
+import { sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { apiRequest } from '@/test/api-request';
@@ -104,6 +104,41 @@ describe('POST /api/v1/ingest', () => {
       tx.select({ metadata: sources.metadata }).from(sources).where(eq(sources.id, sourceId)),
     );
     expect(stored?.metadata).toMatchObject({ project: 'github.com/acme/leon' });
+  });
+
+  // La marque des tours injectés (T43) : vraie, fausse, ou inconnue (null) quand la CLI ne l'envoie pas.
+  it('range la marque injecte de chaque tour : vraie, fausse, et nulle sans le champ', async () => {
+    const { paul, paulToken } = await setup();
+    const [base] = validBody().turns;
+    const body = {
+      source: { kind: 'claude_code', external_id: `session-${crypto.randomUUID()}` },
+      turns: [
+        { ...base, external_id: 'tape', injecte: false },
+        {
+          ...base,
+          external_id: 'injecte',
+          injecte: true,
+          text: '<task-notification>fini</task-notification>',
+        },
+        { ...base, external_id: 'inconnu' },
+      ],
+    };
+
+    const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    const { sourceId } = IngestResultSchema.parse(await response.json());
+    const stored = await withTenant(paul, (tx) =>
+      tx
+        .select({ externalId: turns.externalId, injecte: turns.injecte })
+        .from(turns)
+        .where(eq(turns.sourceId, sourceId)),
+    );
+    expect(Object.fromEntries(stored.map((row) => [row.externalId, row.injecte]))).toEqual({
+      tape: false,
+      injecte: true,
+      inconnu: null,
+    });
   });
 
   it("répond 400 à un projet qui n'est pas une clé, sans renvoyer la valeur reçue", async () => {

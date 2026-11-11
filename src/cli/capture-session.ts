@@ -135,8 +135,10 @@ function warn(message: string): void {
 function failureMessage(error: unknown): string {
   if (error instanceof TokenRefusedError)
     return 'token refused by the server, session not captured.';
-  // Le serveur valide strictement la source : un serveur sans la tâche T12 refuse `source.project` par un 400.
-  // Ordre de déploiement : le serveur d'abord, la CLI ensuite.
+  // Le serveur valide strictement la source et les tours : un serveur sans la tâche T12 refuse `source.project` par un
+  // 400, un serveur d'avant la marque des tours injectés (T43), `injecte`. Le fichier reste sur le poste : le curseur
+  // d'un autre outil n'avance pas, Claude Code se rattrape par `leon import-claude-code`. Ordre de déploiement : le
+  // serveur d'abord, la CLI ensuite.
   if (error instanceof IngestResponseError && error.status === 400) {
     return 'the server does not recognize this upload (it may be older than the CLI), session not captured.';
   }
@@ -324,9 +326,11 @@ export async function writeCursor(
 // fichier au même chemin) repart de zéro.
 export function turnsAfter(turns: Turn[], cursor: Curseur | null): Turn[] {
   if (cursor === null || cursor.tours === 0 || cursor.tours > turns.length) return turns;
-  return turns[cursor.tours - 1]?.external_id === cursor.dernier
-    ? turns.slice(cursor.tours)
-    : turns;
+  if (turns[cursor.tours - 1]?.external_id === cursor.dernier) return turns.slice(cursor.tours);
+  // Le curseur d'une CLI d'avant la marque (T43) : elle écartait les tours injectés, et ne les comptait pas. Ceux d'avant
+  // son dernier tour restent sur le poste ; renvoyés, Cursor les daterait de l'heure du fichier, après les suivants.
+  const last = turns.filter((turn) => turn.injecte !== true)[cursor.tours - 1];
+  return last?.external_id === cursor.dernier ? turns.slice(turns.indexOf(last) + 1) : turns;
 }
 
 export type ToolCaptureDeps = ImportDeps & {

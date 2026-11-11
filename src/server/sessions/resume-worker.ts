@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { type PassationType, parseNote } from '@/capture/passation-format';
+import { parseNote } from '@/capture/passation-format';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, type TurnRole } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
@@ -20,7 +20,7 @@ import {
   type CondenseTurn,
   condenseSession,
 } from './condense';
-import { buildResumePrompt, RIEN_A_RETENIR } from './resume-prompt';
+import { buildResumePrompt, HEADING, RIEN_A_RETENIR, TAGS } from './resume-prompt';
 import {
   enqueueResume,
   getResumeBoss,
@@ -31,6 +31,8 @@ import {
   ResumeJobSchema,
 } from './resume-queue';
 import { linkPrs } from './start-context';
+import { findFils, has } from './threads';
+import { enqueueFilMaj } from './threads-queue';
 
 // Le worker du résumé d'une session (T23, D8 et D9 du plan mémoire des sessions ; D23, D25 et D30 du plan de la
 // mémoire à disposition). Pour une session close, un appel au modèle (étape `resume`) sur son condensé (condense.ts),
@@ -48,20 +50,20 @@ import { linkPrs } from './start-context';
 //   ni dans le report, ni dans le condensé suivant, ni dans le point du matin (gather.ts). Il est à son auteur seul.
 // - La réponse passe par la liste blanche (D8 amendée) : « ## Où j'en suis » et les types de la passation, une
 //   `[décision]` seulement si sa source est un id vérifié du condensé (D23) ; les relations viennent des faits.
+// - Un tour `user` ne prouve une `[décision]` que marqué tapé par la personne (`turns.injecte` false, T43) : un tour
+//   injecté entre au condensé comme l'agent, un tour capté avant la marque comme l'utilisateur, sans rien prouver.
+// - Un résumé écrit met en file l'état des fils de sa session (thread-state-worker.ts, T43).
 //
 // Sans modèle, un job finit sans rien faire, comme le point du matin.
-// shortcut: la capture ne marque pas encore les tours `user` injectés (T43) : en attendant, aucun tour ne prouve une
-// `[décision]`, seulement une PR ou un commit du condensé (D23, D36). Quand `turns.injecte` existe (lot 12), passer
-// `injecte` à condenseSession et garder ses preuves telles quelles.
-// shortcut: le retrait (`leon retirer-crochets`) ne se fait que sur le poste ; l'usage relu ici est celui du dernier
-// envoi de faits (`metadata.usages`), et cet envoi doit dater de moins d'une heure (`metadata.faits_le`), avant l'appel
-// comme à l'écriture. Un résumé déjà en file peut donc encore s'écrire dans l'heure qui suit le dernier envoi, jamais
-// après : RESUME_LINES le dit. Un résumé qui attend plus longtemps (file chargée, serveur arrêté, reprises) n'est écrit
-// qu'au prochain envoi de faits de la session. Faire vider `usages` par le serveur au retrait le jour où ce délai gêne.
-// Au lot 12, c'est une condition, pas une option : l'état d'un fil relit des sessions anciennes, où cette borne ne
-// joue pas, et leur `metadata.usages` garde `resume` après un retrait que le serveur ignore. Avant l'étape `fil`, le
-// retrait doit atteindre le serveur (vider `usages` des sources de l'outil), sinon revoir la phrase du retrait de
-// RESUME_LINES (T43 du plan de la mémoire à disposition).
+// Le retrait atteint le serveur (T43, amendé le 06/11) : la route du retrait (faits-routes.ts) vide `metadata.usages`
+// des sessions de l'outil, et l'usage relu ici n'y est plus. `leon retirer-crochets` l'appelle, et le poste la rappelle
+// plus tard s'il n'a pas pu (catchUpWithdrawals, uninstall-hooks.ts).
+// shortcut: un retrait que le serveur n'a pas encore appris (poste hors ligne, connexion d'avant) laisse l'usage dans
+// `metadata.usages` : l'usage relu doit donc aussi venir du dernier envoi de faits, qui doit dater de moins d'une heure
+// (`metadata.faits_le`), avant l'appel comme à l'écriture. Un résumé déjà en file peut ainsi encore s'écrire dans
+// l'heure qui suit le dernier envoi, jamais après : RESUME_LINES le dit. Un résumé qui attend plus longtemps (file
+// chargée, serveur arrêté, reprises) n'est écrit qu'au prochain envoi de faits de la session. La borne reste tant qu'un
+// retrait peut manquer le serveur.
 // shortcut: aucun plafond par membre ni par organisation, seulement des bornes par appel : un porteur du jeton du poste
 // peut multiplier les sessions, donc les appels, et retarder ceux des autres (file commune). appels_modele compte le
 // coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.
@@ -90,6 +92,7 @@ type TailRow = {
   id: string;
   external_id: string;
   role: TurnRole;
+  injecte: boolean | null;
   epoch: string;
   text: string;
   arrived_epoch: string;
@@ -124,10 +127,10 @@ async function readSession(
   // La fin des tours, sans les résumés, en CONDENSE_MAX_CHARS caractères au plus (le condensé n'en garde pas plus) :
   // une session de 5 000 tours n'est pas lue en entier. `arrived` : le dernier tour capté, sur toute la session.
   const { rows } = await tx.execute<TailRow>(sql`
-    select id, external_id, role, extract(epoch from ts) as epoch, text,
+    select id, external_id, role, injecte, extract(epoch from ts) as epoch, text,
       extract(epoch from arrived) as arrived_epoch
     from (
-      select t.id, t.external_id, t.role, t.ts, t.created_at, t.text,
+      select t.id, t.external_id, t.role, t.injecte, t.ts, t.created_at, t.text,
         sum(char_length(t.text)) over (order by t.ts desc, t.created_at desc, t.id desc) as running,
         max(t.created_at) over () as arrived
       from turns t
@@ -142,6 +145,7 @@ async function readSession(
     role: row.role,
     ts: epochToDate(row.epoch),
     text: row.text,
+    injecte: row.injecte,
   }));
   const last = turns.at(-1);
   if (!last || last.id === source.dernier) return null;
@@ -180,14 +184,6 @@ async function askModel(llm: Llm, condense: Condense): Promise<string> {
   return answer;
 }
 
-const TAGS: Record<PassationType, string> = {
-  en_cours: 'en-cours',
-  prochaine_etape: 'prochaine-étape',
-  essai_rate: 'essai-raté',
-  question: 'question',
-  decision: 'décision',
-};
-const HEADING = "## Où j'en suis";
 const SOURCE = /\(source:\s*([^()\s]+)\)\s*$/;
 // Une cible de relation tient sur une ligne et ne ferme pas le lien : une branche nommée sur le poste (ou masquée,
 // « [secret masqué] ») qui en sortirait n'est pas écrite.
@@ -300,14 +296,28 @@ export async function summarizeSession(
   }
   const condense = condenseSession({ faits: read.condenseFacts, turns: read.turns });
   const answer = await askModel(llm, condense);
-  // Sans la marque des tours injectés, seules les PR et les commits prouvent (voir le shortcut en tête).
-  const turnIds = new Set(read.turns.map((turn) => turn.id));
-  const preuves = new Set([...condense.preuves].filter((id) => !turnIds.has(id)));
-  const texte = isNothing(answer) ? null : filterResume(answer, preuves, read.faits);
+  const texte = isNothing(answer) ? null : filterResume(answer, condense.preuves, read.faits);
   const runId = await withTenant(ctx, (tx) => writeResume(tx, ctx, job.sourceId, read.last, texte));
   if (runId === null) return texte === null ? 'rien' : 'sans-objet';
   await enqueueIndexing(ctx, runId);
+  await queueFilStates(ctx, job.sourceId);
   return 'ecrit';
+}
+
+// Un résumé écrit rend la session nouvelle pour l'état de ses fils (T43) : il les met en file `fil-maj`. Le résumé est
+// écrit : une file indisponible ne le défait pas, elle est seulement journalisée, et le prochain changement du fil le
+// remet en file.
+async function queueFilStates(ctx: TenantContext, sessionId: string): Promise<void> {
+  try {
+    const fils = await withTenant(ctx, (tx) =>
+      findFils(tx, ctx, null, [has('sessions', { id: sessionId })]),
+    );
+    for (const fil of fils) {
+      await enqueueFilMaj({ tenantId: ctx.tenantId, sourceId: fil.id, ownerUserId: ctx.userId });
+    }
+  } catch (error) {
+    logError('resume.fil_maj_enqueue', error, { tenantId: ctx.tenantId, sourceId: sessionId });
+  }
 }
 
 // pg-boss relance ce qu'on lui renvoie : jamais l'erreur d'origine, dont le message peut citer du texte capté (une

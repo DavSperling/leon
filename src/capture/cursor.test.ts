@@ -31,15 +31,23 @@ describe('parseCursorSession', () => {
       sessionId: CONVERSATION,
       cwd: null,
       title: 'Ajoute le lecteur des sessions Cursor.',
-      injectes: 2,
       branche: null,
     });
-    expect(session?.turns.map((t) => [t.external_id, t.role, t.text])).toEqual([
-      [`${CONVERSATION}:000001`, 'user', 'Ajoute le lecteur des sessions Cursor.'],
-      [`${CONVERSATION}:000002`, 'assistant', 'Je regarde le format.'],
-      [`${CONVERSATION}:000005`, 'assistant', 'Le lecteur est écrit.'],
-      [`${CONVERSATION}:000008`, 'user', 'Merci, ouvre la PR.'],
-      [`${CONVERSATION}:000009`, 'assistant', 'PR ouverte.'],
+    // Les messages que Cursor écrit lui-même (retour d'un sous-agent, reprise après interruption) sont marqués par le
+    // lecteur ; ils partent marqués, comme le dit l'accord (CURSOR_CONSENT_LINES).
+    expect(session?.turns.map((t) => [t.external_id, t.role, t.text, t.injecte])).toEqual([
+      [`${CONVERSATION}:000001`, 'user', 'Ajoute le lecteur des sessions Cursor.', false],
+      [`${CONVERSATION}:000002`, 'assistant', 'Je regarde le format.', undefined],
+      [`${CONVERSATION}:000005`, 'assistant', 'Le lecteur est écrit.', undefined],
+      [
+        `${CONVERSATION}:000006`,
+        'user',
+        'Perform any necessary follow-up actions in response to the subagent completion above.',
+        true,
+      ],
+      [`${CONVERSATION}:000007`, 'user', 'Continue where you left off.', true],
+      [`${CONVERSATION}:000008`, 'user', 'Merci, ouvre la PR.', false],
+      [`${CONVERSATION}:000009`, 'assistant', 'PR ouverte.', undefined],
     ]);
     expect(new Set(session?.turns.map((t) => t.ts))).toEqual(new Set([FILE.mtime.toISOString()]));
   });
@@ -47,8 +55,19 @@ describe('parseCursorSession', () => {
   it('un transcript qui n’enveloppe jamais : chaque message de la personne compte', () => {
     const session = parseCursorSession(line('user', text('Bonjour')), FILE);
 
-    expect(session?.turns.map((t) => t.text)).toEqual(['Bonjour']);
-    expect(session?.injectes).toBe(0);
+    expect(session?.turns.map((t) => [t.text, t.injecte])).toEqual([['Bonjour', false]]);
+  });
+
+  it('le titre vient du premier message tapé, jamais d’un message injecté', () => {
+    const session = parseCursorSession(
+      [
+        line('user', query('Briefly inform the user about the task result')),
+        line('user', query('Relis le diff.')),
+      ].join('\n'),
+      FILE,
+    );
+
+    expect(session?.title).toBe('Relis le diff.');
   });
 
   it('retire les blocs de Leon, et écarte un message qui n’a rien d’autre', () => {

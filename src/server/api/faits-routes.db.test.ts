@@ -1,13 +1,14 @@
 import { and, eq, sql } from 'drizzle-orm';
+import type { PoolClient } from 'pg';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, FAITS_BODY_MAX_BYTES } from '@/capture/api-contract';
+import { API_PATHS, FAITS_BODY_MAX_BYTES, RETRAIT_BODY_MAX_BYTES } from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { apiRequest } from '@/test/api-request';
-import { adminDb } from '@/test/db';
+import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 
 // Les files du résumé (T23) et du rangement (T40) sont simulées : le vrai pg-boss est vérifié dans
@@ -29,8 +30,8 @@ async function setup() {
   const { members } = await createTestTenant(['Paul', 'Marie']);
   const [paul, marie] = members;
   if (!paul || !marie) throw new Error('membres de test manquants');
-  const { token } = await createApiToken(paul, 'test');
-  return { paul, marie, paulToken: token };
+  const { id, token } = await createApiToken(paul, 'test');
+  return { paul, marie, paulToken: token, paulTokenId: id };
 }
 
 const facts = (extra: Partial<SessionFacts> = {}): SessionFacts => ({
@@ -48,6 +49,12 @@ const facts = (extra: Partial<SessionFacts> = {}): SessionFacts => ({
   ...extra,
 });
 
+// Les dates du poste, une même horloge : l'accord et le retrait (consent.ts).
+const AVANT = '2026-11-10T09:00:00.000Z';
+const RETIRE_LE = '2026-11-10T10:00:00.000Z';
+const ENTRE = '2026-11-10T10:30:00.000Z';
+const APRES = '2026-11-10T11:00:00.000Z';
+
 const validBody = (externalId = `session-${crypto.randomUUID()}`) => ({
   kind: 'claude_code',
   external_id: externalId,
@@ -63,6 +70,35 @@ async function dbNow(): Promise<number> {
     sql`select (extract(epoch from now()) * 1000)::float8 as ms`,
   );
   return Number(rows[0]?.ms);
+}
+
+type Settled<T> = { promise: Promise<T>; done: boolean };
+// Une requête lancée sans l'attendre : `done` dit si elle a fini.
+function settled<T>(promise: Promise<T>): Settled<T> {
+  const state = { promise, done: false };
+  const finish = () => {
+    state.done = true;
+  };
+  promise.then(finish, finish);
+  return state;
+}
+
+const backendPid = async (client: PoolClient): Promise<number> =>
+  Number((await client.query<{ pid: number }>('select pg_backend_pid() as pid')).rows[0]?.pid);
+
+// La requête qui attend une ligne tenue par ce processus de Postgres : la table de la ligne, et son processus à elle
+// (5 s au plus).
+async function blockedBehind(pid: number): Promise<{ relation: string; pid: number }> {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const { rows } = await adminPool.query<{ relation: string; pid: number }>(
+      `select l.relation::regclass::text as relation, l.pid from pg_locks l
+       where l.locktype = 'tuple' and $1 = any(pg_blocking_pids(l.pid))`,
+      [pid],
+    );
+    if (rows[0]) return rows[0];
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error('aucune requête n’attend cette transaction');
 }
 
 // Les métadonnées des sources que ce membre possède pour cette session, lues hors RLS.
@@ -157,6 +193,24 @@ describe('POST /api/v1/faits', () => {
       issues: [{ path: 'usages.1', code: 'invalid_value' }],
     });
   });
+
+  // `accord_le` est lu en timestamptz : une date que Postgres refuse (l'an 0000, un décalage au-delà de ±15:59) est
+  // refusée à l'entrée, et non par une erreur 500 dans la transaction.
+  it.each(['0000-01-01T00:00:00Z', '2026-11-10T10:00:00+16:00'])(
+    'répond 400 à la date d’accord %s',
+    async (accord_le) => {
+      const { paulToken } = await setup();
+      const body = { ...validBody(), usages: ['resume'], accord_le };
+
+      const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'accord_le', code: 'custom' }],
+      });
+    },
+  );
 
   it.each([
     ['privée', (marie: TenantContext) => [marie.userId]],
@@ -464,5 +518,251 @@ describe('POST /api/v1/faits', () => {
 
     expect(response.status).toBe(202);
     expect((await storedMetadata(paul, body.external_id))[0]?.metadata.fin).toBe(true);
+  });
+});
+
+// Le retrait de l'accord atteint le serveur (T43, amendé le 06/11) : il vide les usages de toutes les sessions de
+// l'outil dont le porteur est l'auteur. Le résumé et l'état du fil relisent l'usage : plus rien ne part au modèle.
+describe('POST /api/v1/retrait', () => {
+  // Une session de ce membre pour cet outil, envoyée par la route des faits avec ces usages.
+  async function sent(token: string, kind: string, usages: string[]) {
+    const body = { ...validBody(), kind, usages };
+    expect((await apiRequest(API_PATHS.faits, { token, body })).status).toBe(202);
+    return body;
+  }
+
+  it('répond 401 sans jeton', async () => {
+    const response = await apiRequest(API_PATHS.retrait, { body: { outil: 'claude_code' } });
+    expect(response.status).toBe(401);
+    expect(response.headers.get('WWW-Authenticate')).toBe('Bearer');
+  });
+
+  // `retire_le` est obligatoire : sans lui, le serveur ne saurait pas quels faits suivent le retrait.
+  it.each([
+    [{ outil: 'claude_ai', retire_le: RETIRE_LE }],
+    [{ outil: 'claude_code', retire_le: RETIRE_LE, tout: true }],
+    [{ outil: 'claude_code' }],
+    [{ outil: 'claude_code', retire_le: '2026-11-10' }],
+    [{ outil: 'claude_code', retire_le: '2026-11-10T10:00:00' }],
+    // Des dates que Postgres refuse : un 400, et non un 500 dans la transaction.
+    [{ outil: 'claude_code', retire_le: '0000-01-01T00:00:00Z' }],
+    [{ outil: 'claude_code', retire_le: '2026-11-10T10:00:00+16:00' }],
+    [{}],
+  ])('répond 400 à %j', async (body) => {
+    const { paulToken } = await setup();
+    const response = await apiRequest(API_PATHS.retrait, { token: paulToken, body });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid request' });
+  });
+
+  it('répond 413 à un corps de 1 Kio + 1 octet', async () => {
+    const { paulToken } = await setup();
+    const envelope = JSON.stringify('');
+    const filler = 'a'.repeat(RETRAIT_BODY_MAX_BYTES + 1 - envelope.length);
+
+    const response = await apiRequest(API_PATHS.retrait, { token: paulToken, body: filler });
+
+    expect(response.status).toBe(413);
+  });
+
+  it('vide les usages des sessions de l’outil du porteur, ni d’un autre outil ni d’un collègue', async () => {
+    const { paul, marie, paulToken } = await setup();
+    const { token: marieToken } = await createApiToken(marie, 'test');
+    const first = await sent(paulToken, 'claude_code', ['resume', 'lecture']);
+    const second = await sent(paulToken, 'claude_code', ['resume']);
+    const codex = await sent(paulToken, 'codex', ['resume']);
+    const hers = await sent(marieToken, 'claude_code', ['resume']);
+    // Sa session partagée avec Paul : il la lit, elle reste à elle.
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId, paul.userId] })
+      .where(eq(sources.externalId, hers.external_id));
+
+    const response = await apiRequest(API_PATHS.retrait, {
+      token: paulToken,
+      body: { outil: 'claude_code', retire_le: RETIRE_LE },
+    });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe('');
+    const usages = async (owner: TenantContext, externalId: string) =>
+      (await storedMetadata(owner, externalId))[0]?.metadata.usages;
+    expect(await usages(paul, first.external_id)).toEqual([]);
+    expect(await usages(paul, second.external_id)).toEqual([]);
+    expect(await usages(paul, codex.external_id)).toEqual(['resume']);
+    expect(await usages(marie, hers.external_id)).toEqual(['resume']);
+    // Les faits restent : seul l'accord est retiré.
+    expect((await storedMetadata(paul, first.external_id))[0]?.metadata.faits).toEqual(facts());
+
+    // Un nouvel accord, postérieur au retrait : l'envoi de faits suivant rouvre la session (record-facts.ts).
+    await apiRequest(API_PATHS.faits, { token: paulToken, body: { ...first, accord_le: APRES } });
+    expect(await usages(paul, first.external_id)).toEqual(['resume', 'lecture']);
+  });
+});
+
+// Le retrait daté (T43, amendé le 10/11) : le serveur garde, par jeton (l'ordinateur) et par outil, la date du dernier
+// retrait. Des faits envoyés sous un accord qui ne lui est pas postérieur, partis avant lui mais arrivés après, ne
+// remettent aucun usage : la session ne part plus au modèle.
+describe('le retrait daté', () => {
+  const withdraw = (token: string, outil = 'claude_code', retire_le = RETIRE_LE) =>
+    apiRequest(API_PATHS.retrait, { token, body: { outil, retire_le } });
+  const resumeBody = (extra: Record<string, unknown> = {}) => ({
+    ...validBody(),
+    usages: ['resume'],
+    ...extra,
+  });
+  const usagesOf = async (owner: TenantContext, externalId: string) =>
+    (await storedMetadata(owner, externalId))[0]?.metadata.usages;
+
+  it.each([
+    ['un accord plus ancien que le retrait', { accord_le: AVANT }],
+    ['un accord de la même milliseconde', { accord_le: RETIRE_LE }],
+    ['aucune date d’accord', {}],
+  ])('des faits avec %s arrivent sans usage, et sans résumé en file', async (_, extra) => {
+    const { paul, paulToken } = await setup();
+    expect((await withdraw(paulToken)).status).toBe(204);
+    const body = resumeBody(extra);
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    expect(await usagesOf(paul, body.external_id)).toEqual([]);
+    expect(enqueueResume).not.toHaveBeenCalled();
+    // Les faits et le rangement restent : seul l'usage est retiré.
+    expect((await storedMetadata(paul, body.external_id))[0]?.metadata.faits).toEqual(facts());
+    expect(enqueueRangement).toHaveBeenCalledTimes(1);
+  });
+
+  it('des faits sous un accord postérieur au retrait rouvrent les usages', async () => {
+    const { paul, paulToken } = await setup();
+    await withdraw(paulToken);
+    const body = resumeBody({ accord_le: APRES });
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(await usagesOf(paul, body.external_id)).toEqual(['resume']);
+    expect(enqueueResume).toHaveBeenCalledTimes(1);
+  });
+
+  // Par jeton, pas par personne : la date d'un retrait sur un ordinateur ne retire pas les usages des prochains faits d'un
+  // autre qui garde son accord.
+  it('la date d’un ordinateur ne touche pas les faits d’un autre ordinateur de la même personne', async () => {
+    const { paul, paulToken } = await setup();
+    const { token: otherComputer } = await createApiToken(paul, 'autre ordinateur');
+    await withdraw(paulToken);
+    const body = resumeBody({ accord_le: AVANT });
+
+    await apiRequest(API_PATHS.faits, { token: otherComputer, body });
+
+    expect(await usagesOf(paul, body.external_id)).toEqual(['resume']);
+  });
+
+  it('la date d’un outil ne touche pas les faits d’un autre outil', async () => {
+    const { paul, paulToken } = await setup();
+    await withdraw(paulToken, 'codex');
+    const body = resumeBody({ accord_le: AVANT });
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(await usagesOf(paul, body.external_id)).toEqual(['resume']);
+  });
+
+  it('deux retraits gardent la plus grande date', async () => {
+    const { paul, paulToken } = await setup();
+    await withdraw(paulToken, 'claude_code', APRES);
+    await withdraw(paulToken, 'claude_code', RETIRE_LE);
+    const body = resumeBody({ accord_le: ENTRE });
+
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(await usagesOf(paul, body.external_id)).toEqual([]);
+  });
+
+  // L'ordre des deux requêtes, sur deux connexions. Un premier envoi crée la session et fait servir le jeton :
+  // verifyApiToken n'écrit pas last_used_at dans la minute (LAST_USED_PRECISION_MS), seule la route attend donc la ligne
+  // du jeton. La route des faits, arrêtée sur la source par une transaction tierce, tient déjà le jeton (FOR SHARE) : le
+  // vrai retrait attend sur api_tokens, derrière elle, puis vide les usages qu'elle a écrits.
+  it('un envoi de faits qui a lu le jeton fait attendre le retrait, qui vide ensuite ses usages', async () => {
+    const { paul, paulToken } = await setup();
+    const body = resumeBody();
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    const blocker = await adminPool.connect();
+    try {
+      await blocker.query('begin');
+      await blocker.query('select 1 from sources where external_id = $1 for update', [
+        body.external_id,
+      ]);
+      const sending = settled(apiRequest(API_PATHS.faits, { token: paulToken, body }));
+      const faits = await blockedBehind(await backendPid(blocker));
+      expect(faits.relation).toBe('sources');
+      const withdrawal = settled(withdraw(paulToken));
+      expect((await blockedBehind(faits.pid)).relation).toBe('api_tokens');
+      expect(withdrawal.done).toBe(false);
+      await blocker.query('commit');
+      expect((await sending.promise).status).toBe(202);
+      expect((await withdrawal.promise).status).toBe(204);
+    } finally {
+      await blocker.query('rollback'); // sans effet après le commit ; débloque la route si un test échoue avant
+      blocker.release();
+    }
+
+    expect(await usagesOf(paul, body.external_id)).toEqual([]);
+  });
+
+  // Les suppressions (deleteAccount, deleteOrganization) prennent l'organisation FOR UPDATE (lockMembers), puis
+  // révoquent les jetons. L'envoi d'une session neuve prend l'organisation avant le jeton : il attend la suppression au
+  // lieu de tenir le jeton qu'elle attend, que sa clé étrangère vers l'organisation ferait attendre à son tour.
+  it('une suppression en cours fait attendre l’envoi d’une session neuve, sans interblocage', async () => {
+    const { paul, paulToken } = await setup();
+    const body = resumeBody();
+    const client = await adminPool.connect();
+    try {
+      // Ce que fait la suppression du compte : l'organisation, puis les jetons révoqués, avant le commit.
+      await client.query('begin');
+      await client.query('select 1 from organization where id = $1 for update', [paul.tenantId]);
+      const sending = settled(apiRequest(API_PATHS.faits, { token: paulToken, body }));
+      expect((await blockedBehind(await backendPid(client))).relation).toBe('organization');
+      await client.query('update api_tokens set revoked_at = now() where user_id = $1', [
+        paul.userId,
+      ]);
+      await client.query('commit');
+      expect((await sending.promise).status).toBe(202);
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
+
+    expect(await usagesOf(paul, body.external_id)).toEqual(['resume']);
+  });
+
+  it('un retrait en cours fait attendre l’envoi de faits, qui lit ensuite sa date', async () => {
+    const { paul, paulToken, paulTokenId } = await setup();
+    const body = resumeBody({ accord_le: AVANT });
+    await apiRequest(API_PATHS.faits, { token: paulToken, body });
+    enqueueResume.mockClear();
+    const client = await adminPool.connect();
+    try {
+      // Ce que fait la route du retrait : la date posée sur le jeton, puis les usages vidés, avant le commit.
+      await client.query('begin');
+      await client.query(
+        `update api_tokens set retraits = jsonb_build_object('claude_code', $2::text) where id = $1`,
+        [paulTokenId, RETIRE_LE],
+      );
+      await client.query(
+        `update sources set metadata = metadata || '{"usages": []}'::jsonb where external_id = $1`,
+        [body.external_id],
+      );
+      const sending = settled(apiRequest(API_PATHS.faits, { token: paulToken, body }));
+      expect((await blockedBehind(await backendPid(client))).relation).toBe('api_tokens');
+      expect(sending.done).toBe(false);
+      await client.query('commit');
+      expect((await sending.promise).status).toBe(202);
+    } finally {
+      await client.query('rollback');
+      client.release();
+    }
+
+    expect(await usagesOf(paul, body.external_id)).toEqual([]);
+    expect(enqueueResume).not.toHaveBeenCalled();
   });
 });

@@ -5,7 +5,7 @@ import { users } from '@/server/db/schema/auth';
 import { aboutSuggestions, briefings } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
-import { BRIEFING_DELAY_SECONDS, BRIEFING_READ_DAYS, enqueueBriefingRefresh } from './queue';
+import { BRIEFING_DELAY_SECONDS, enqueueBriefingRefresh, refreshOnSignal } from './queue';
 
 // Ce que l'utilisateur dit de lui dans Réglages > Profil (son rôle, ses sujets du moment) : seul son point du matin
 // le lit, pour choisir ce qui compte pour lui. La limite est aussi celle de la base (0036-a-propos.sql).
@@ -16,10 +16,11 @@ export async function readAbout(userId: string): Promise<string | null> {
   return row?.about ?? null;
 }
 
-// Marque périmés les points de la personne, et refait dans 30 minutes ceux qu'elle a lus dans la semaine ; les autres
-// se refont à leur prochaine lecture (readBriefing). Comme un signal (signalProjectActivity). `write` est exécuté dans
-// la même transaction que le marquage : ce qui change le point (le texte « À propos », le poste) et `stale` se posent
-// ensemble. Les points sont sous les droits de la personne : `ctx` est le sien, jamais celui d'un administrateur.
+// Marque périmés les points de la personne, et refait dans 30 minutes ceux dont elle a lu la version actuelle dans la
+// semaine ; les autres se refont à leur prochaine lecture (readBriefing). Comme un signal (refreshOnSignal). `write`
+// est exécuté dans la même transaction que le marquage : ce qui change le point (le texte « À propos », le poste) et
+// `stale` se posent ensemble. Les points sont sous les droits de la personne : `ctx` est le sien, jamais celui d'un
+// administrateur.
 export async function markBriefingsStale(
   ctx: TenantContext,
   write?: (tx: Tx) => Promise<unknown>,
@@ -30,11 +31,14 @@ export async function markBriefingsStale(
       .update(briefings)
       .set({ stale: true })
       .where(eq(briefings.userId, ctx.userId))
-      .returning({ project: briefings.project, lastReadAt: briefings.lastReadAt });
+      .returning({
+        project: briefings.project,
+        preparedAt: briefings.preparedAt,
+        lastReadAt: briefings.lastReadAt,
+      });
   });
-  const readSince = new Date(Date.now() - BRIEFING_READ_DAYS * 24 * 60 * 60 * 1000);
   for (const point of points) {
-    if (point.lastReadAt === null || point.lastReadAt <= readSince) continue;
+    if (!refreshOnSignal(point)) continue;
     try {
       await enqueueBriefingRefresh(
         { tenantId: ctx.tenantId, userId: ctx.userId, project: point.project },

@@ -153,7 +153,13 @@ describe('leon import-claude-code : la vraie commande', () => {
       ]);
       expect(facts[0]?.body).toMatchObject({ accord: 2 });
       expect(facts[0]?.body).not.toHaveProperty('usages');
-      expect(facts[1]?.body).toMatchObject({ accord: 2, usages: ['resume'] });
+      expect(facts[0]?.body).not.toHaveProperty('accord_le');
+      // La date de l'accord part avec les usages (T43, le retrait daté).
+      expect(facts[1]?.body).toMatchObject({
+        accord: 2,
+        usages: ['resume'],
+        accord_le: '2026-10-30T10:00:00.000Z',
+      });
     },
     TEST_TIMEOUT_MS,
   );

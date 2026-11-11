@@ -39,6 +39,9 @@ export async function startNodeInstrumentation() {
   // La liaison des sources aux fils (T42) : par leurs clés exactes, sinon par la proximité de leurs vecteurs.
   const { startThreadLinksWorker } = await import('@/server/sessions/thread-links');
   await startThreadLinksWorker({ embedder });
+  // L'état des fils (T43) : par le modèle après un résumé nouveau ; sans modèle, la liste déterministe.
+  const { startFilStateWorker } = await import('@/server/sessions/thread-state-worker');
+  await startFilStateWorker({ llm });
   // La relève des connecteurs a besoin de sa propre clé, celle qui déchiffre les clés des outils.
   if (env.LEON_CONNECTORS_KEY) {
     const { startConnectorWorker } = await import('@/server/connectors/worker');

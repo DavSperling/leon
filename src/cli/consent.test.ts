@@ -11,8 +11,12 @@ import {
   consentPath,
   consentWithdrawn,
   factsConsent,
+  pendingServerWithdrawals,
   recordCapture,
+  recordServerWithdrawal,
+  serverWithdrawalsPath,
   withdrawalRecorded,
+  withdrawalToTell,
   writeConsent,
 } from './consent';
 
@@ -68,6 +72,15 @@ describe('factsConsent : les faits ne partent que si l’accord le permet', () =
       '{"outils":{"claude_code":{"version":"2","installe_le":"2026-11-02T14:00:00Z"}}}',
     ],
     ['sans date', '{"outils":{"claude_code":{"version":2}}}'],
+    // Des dates que Postgres refuse : envoyées en `accord_le`, le serveur répondrait 400 à chaque envoi.
+    [
+      'en l’an 0000',
+      '{"outils":{"claude_code":{"version":2,"installe_le":"0000-01-01T00:00:00Z"}}}',
+    ],
+    [
+      'à un décalage de +16:00',
+      '{"outils":{"claude_code":{"version":2,"installe_le":"2026-11-02T14:00:00+16:00"}}}',
+    ],
   ])('un fichier illisible (%s) ne vaut aucun accord', async (_name, content) => {
     await writeRaw(content);
 
@@ -397,6 +410,113 @@ describe('withdrawalRecorded : le retrait est bien écrit', () => {
 
     await writeRaw('{"outils": {"claude_code": {"vers');
     expect(await withdrawalRecorded(home, 'claude_code')).toBe(false);
+  });
+});
+
+// Le retrait atteint le serveur (T43) : ce qu'il a appris s'écrit à part (retraits-serveur.json), jamais dans
+// accord.json, que le rattrapage, lancé en tâche de fond, ne doit pas réécrire sous une commande de retrait.
+describe('pendingServerWithdrawals et recordServerWithdrawal : le retrait que le serveur n’a pas appris', () => {
+  // Le serveur apprend le retrait tel que withdrawalToTell l'a lu pour l'envoyer.
+  const learn = async (tool: 'claude_code' | 'codex' | 'cursor') =>
+    recordServerWithdrawal(home, tool, (await withdrawalToTell(home, tool))?.entree ?? '');
+
+  it('n’apprend pas un retrait écrit après celui qui a été envoyé', async () => {
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T09:00:00Z'));
+    const sent = await withdrawalToTell(home, 'claude_code');
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-10T10:00:00Z'));
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T11:00:00Z'));
+
+    await recordServerWithdrawal(home, 'claude_code', sent?.entree ?? '');
+
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+  });
+
+  it('un outil en version 0 non appris est en attente ; appris, il ne l’est plus', async () => {
+    await writeConsent(home, 'claude_code', 0, new Date('2026-11-10T08:00:00Z'));
+    await writeConsent(home, 'codex', 2);
+
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+
+    await learn('claude_code');
+
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+    expect(JSON.parse(await readFile(serverWithdrawalsPath(home), 'utf8'))).toEqual({
+      outils: { claude_code: '2026-11-10T08:00:00.000Z' },
+    });
+    expect((await stat(serverWithdrawalsPath(home))).mode & 0o777).toBe(0o600);
+    expect(await withdrawalRecorded(home, 'claude_code')).toBe(true);
+  });
+
+  it('ne réécrit jamais accord.json : un retrait écrit au même moment reste tel quel', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    const before = await stat(consentPath(home));
+    const text = await readFile(consentPath(home), 'utf8');
+
+    await learn('claude_code');
+
+    expect((await stat(consentPath(home))).ino).toBe(before.ino);
+    expect(await readFile(consentPath(home), 'utf8')).toBe(text);
+  });
+
+  it('un nouvel accord met fin à l’attente ; le retrait suivant est de nouveau en attente', async () => {
+    await writeConsent(home, 'cursor', 0, new Date('2026-11-10T09:00:00Z'));
+    await learn('cursor');
+
+    await writeConsent(home, 'cursor', 2, new Date('2026-11-10T10:00:00Z'));
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+
+    await writeConsent(home, 'cursor', 0, new Date('2026-11-10T11:00:00Z'));
+    expect(await pendingServerWithdrawals(home)).toEqual(['cursor']);
+  });
+
+  it('n’apprend pas un accord en cours, et ne voit rien dans un accord absent ou illisible', async () => {
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+
+    await writeConsent(home, 'codex', 2);
+    await learn('codex');
+    await writeConsent(home, 'codex', 0);
+    expect(await pendingServerWithdrawals(home)).toEqual(['codex']);
+
+    await writeRaw('{"outils": {"claude_code": {"vers');
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  it('un retraits-serveur.json illisible ne vaut rien : le retrait est de nouveau en attente', async () => {
+    await writeConsent(home, 'claude_code', 0);
+    await learn('claude_code');
+    await writeFile(serverWithdrawalsPath(home), '{"outils": {"claude');
+
+    expect(await pendingServerWithdrawals(home)).toEqual(['claude_code']);
+  });
+});
+
+// `retire_le` (T43, le retrait daté) : la date de l'entrée en version 0, mesurée par l'horloge de l'accord.
+describe('withdrawalToTell : la date du retrait à dire au serveur', () => {
+  const now = new Date('2026-11-10T12:00:00Z');
+  const withdrawnAt = (installe_le: string) =>
+    writeRaw(JSON.stringify({ outils: { claude_code: { version: 0, installe_le } } }));
+
+  it('la date de l’entrée en version 0, telle quelle ; rien pour un outil qui n’y est plus', async () => {
+    await withdrawnAt('2026-11-10T11:00:00+01:00');
+    expect(await withdrawalToTell(home, 'claude_code', now)).toEqual({
+      retireLe: '2026-11-10T11:00:00+01:00',
+      entree: '2026-11-10T11:00:00+01:00',
+    });
+    expect(await withdrawalToTell(home, 'codex', now)).toBeNull();
+  });
+
+  // Postgres refuse les deux premières (400 à la route), et une date à venir fermerait ce jeton au-delà d'un nouvel
+  // accord : toutes valent l'heure du moment, comme une date illisible.
+  it.each([
+    ['l’an 0000', '0000-01-01T00:00:00Z'],
+    ['un décalage de +20:00', '2026-11-10T10:00:00+20:00'],
+    ['une date à venir', '2099-01-01T00:00:00Z'],
+  ])('une date retouchée à la main (%s) vaut l’heure du moment', async (_name, date) => {
+    await withdrawnAt(date);
+    expect(await withdrawalToTell(home, 'claude_code', now)).toEqual({
+      retireLe: now.toISOString(),
+      entree: date,
+    });
   });
 });
 

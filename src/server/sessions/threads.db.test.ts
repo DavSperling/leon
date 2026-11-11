@@ -78,14 +78,19 @@ async function session(
   extra: Partial<SessionFacts> = {},
   externalId = `session-${randomUUID()}`,
 ): Promise<string> {
-  const { sourceId } = await recordFacts(owner, {
-    kind: 'claude_code',
-    external_id: externalId,
-    project: PROJECT,
-    accord: 2,
-    faits: facts(extra),
-    fin: true,
-  });
+  // Le dernier argument : un jeton sans ligne, sans date de retrait (record-facts.ts).
+  const { sourceId } = await recordFacts(
+    owner,
+    {
+      kind: 'claude_code',
+      external_id: externalId,
+      project: PROJECT,
+      accord: 2,
+      faits: facts(extra),
+      fin: true,
+    },
+    crypto.randomUUID(),
+  );
   return sourceId;
 }
 
@@ -498,14 +503,18 @@ describe('fileSession, une session sans clé (T41)', () => {
     const withdrawn = await session(paul, { branche: 'main' }, withdrawnId);
     await summarize(paul, withdrawn, `${NEAR}, suite`);
     await session(paul, { branche: 'main' }, withdrawnId);
-    const { sourceId: elsewhere } = await recordFacts(paul, {
-      kind: 'claude_code',
-      external_id: `session-${randomUUID()}`,
-      project: 'github.com/acme/autre',
-      accord: 2,
-      faits: facts({ branche: 'main' }),
-      fin: true,
-    });
+    const { sourceId: elsewhere } = await recordFacts(
+      paul,
+      {
+        kind: 'claude_code',
+        external_id: `session-${randomUUID()}`,
+        project: 'github.com/acme/autre',
+        accord: 2,
+        faits: facts({ branche: 'main' }),
+        fin: true,
+      },
+      crypto.randomUUID(),
+    );
     await summarize(paul, elsewhere, NEAR);
     // Sans aucun fil : rien à rejoindre.
     const alone = await session(marie, { branche: 'main' });

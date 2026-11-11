@@ -5,6 +5,7 @@ import {
   BriefingResponseSchema,
   ComputerResponseSchema,
   ContextResponseSchema,
+  RetraitRequestSchema,
   SessionFactsPayloadSchema,
   ViewerProfileSchema,
 } from '@/capture/api-contract';
@@ -38,6 +39,7 @@ const SERVED = {
   contexte: ['POST', { body: {} }],
   ordinateurs: ['POST', { body: {} }], // sans jeton : 401 avant de lire le corps
   jeton: ['DELETE', {}],
+  retrait: ['POST', { body: {} }],
 } as const;
 // Publiques par nature (L4, L8) : l'inscription d'un client OAuth et l'échange du code contre les jetons se font sans
 // jeton ni session. Leur sonde est un POST sans corps valide, qui répond 400 : la route existe (ni 404) et ne demande
@@ -133,6 +135,15 @@ describe('routes de l’API', () => {
           ts: '2026-10-13T09:00:00+02:00',
           capture_mode: 'network',
         },
+        // La marque des tours injectés (T43) est au contrat : le serveur l'accepte avant que la CLI ne l'envoie.
+        {
+          external_id: 'msg-2',
+          role: 'user',
+          text: 'Rapport du sous-agent',
+          ts: '2026-10-13T09:01:00+02:00',
+          capture_mode: 'network',
+          injecte: true,
+        },
       ],
     };
 
@@ -156,6 +167,14 @@ describe('routes de l’API', () => {
       token,
       body: { projet: 'github.com/acme/leon', branche: null, session: 'session-courante' },
     });
+    // Le retrait de l'accord d'un outil (`leon retirer-crochets`) : 204, sans corps.
+    const retrait = await apiRequest(API_PATHS.retrait, {
+      token,
+      body: RetraitRequestSchema.parse({
+        outil: 'claude_code',
+        retire_le: '2026-11-10T10:00:00.000Z',
+      }),
+    });
 
     // `leon login` : le jeton que la CLI vient de tirer, enregistré contre le code signé que la page d'autorisation lui a rendu.
     const computerToken = generateApiToken();
@@ -177,11 +196,12 @@ describe('routes de l’API', () => {
       briefing.status,
       faits.status,
       contexte.status,
+      retrait.status,
       ordinateurs.status,
-    ]).toEqual([200, 202, 200, 202, 200, 201]);
+    ]).toEqual([200, 202, 200, 202, 200, 204, 201]);
     const profile = ViewerProfileSchema.parse(await me.json());
     expect(profile.userId).toBe(paul.userId);
-    expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(1);
+    expect(IngestResultSchema.parse(await ingest.json()).inserted).toBe(2);
     expect(BriefingResponseSchema.parse(await briefing.json()).projet).toBeNull();
     expect(ContextResponseSchema.parse(await contexte.json()).texte).not.toBe('');
     expect(ComputerResponseSchema.parse(await ordinateurs.json())).toMatchObject({

@@ -155,6 +155,7 @@ describe('jeton assistant', () => {
     ['POST', API_PATHS.faits],
     ['POST', API_PATHS.contexte],
     ['DELETE', API_PATHS.jeton],
+    ['POST', API_PATHS.retrait],
   ])('%s %s répond 401 à un jeton assistant', async (method, path) => {
     const token = await assistantToken(await signUp());
 

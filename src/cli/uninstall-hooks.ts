@@ -8,20 +8,39 @@
 // - passe Claude Code en version 0 dans `accord.json` (consent.ts), même quand les réglages n'ont pas pu être lus ou
 //   écrits : plus rien ne part alors (leon.ts), ni d'un crochet resté dans les réglages d'un projet, ni de
 //   `import-claude-code` ;
-// - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json` et
-//   que les réglages et l'accord ont bien été retirés : ses crochets n'en ont plus besoin. Un fichier qui n'est pas un
-//   lanceur écrit par Leon est gardé ;
+// - prévient ensuite le serveur de la connexion du moment (POST /api/v1/retrait, T43), qui vide les usages des sessions
+//   de l'outil déjà envoyées, et garde la date du retrait pour ce jeton : des faits partis avant lui, sous l'accord
+//   d'avant, n'y remettent aucun usage (aux deux connexions du poste quand leurs jetons diffèrent :
+//   connectionWithdrawal). Seulement une fois l'accord retiré sur le poste, et tant qu'il ne l'a pas
+//   appris (retraits-serveur.json, consent.ts). Les retraits d'autres outils restés en attente partent avec. Un échec
+//   (pas de connexion, serveur injoignable ou plus ancien que la route, jeton refusé) n'est qu'une ligne : le retrait
+//   sur le poste reste fait et le code de sortie ne change pas. Le rattrapage (`leon rattraper`, lancé au démarrage
+//   d'une session d'un outil qui garde ses crochets) le redit plus tard, comme pour les retraits faits avant la route ;
+//   pour le dernier outil, aucun crochet ne reste : la ligne dit de relancer la commande. `leon setup` et
+//   `installer-crochets` le redisent aussi avant d'écrire un nouvel accord, qui mettrait fin à l'attente
+//   (tellBeforeConsent) ;
+// - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json`, que
+//   les réglages et l'accord ont bien été retirés et que le serveur a appris chaque retrait : ses crochets n'en ont plus
+//   besoin, et relancer la commande ne sert plus. Un fichier qui n'est pas un lanceur écrit par Leon est gardé ;
 // - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
 //   les commandes de Leon qu'il retire.
+import { access } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { CodeSessionKind } from '../capture/turn';
+import { readConnection } from './connection';
 import {
   anyToolInstalled,
   CONSENT_AGAIN_HINT,
   consentPath,
+  pendingServerWithdrawals,
+  recordServerWithdrawal,
   withdrawalRecorded,
+  withdrawalToTell,
   writeConsent,
 } from './consent';
+import { resolveServerEnv } from './env';
 import { launcherPath } from './hook-commands';
+import { createWithdrawalSender, TokenRefusedError } from './import-claude-code';
 import {
   errorCode,
   HOOKS,
@@ -74,7 +93,119 @@ export function removeLeonHooks(settings: Json): { settings: Json; removed: Remo
 }
 
 export type UninstallOptions = { configDir: string; home: string };
-export type UninstallDeps = { out: (text: string) => void; err: (text: string) => void };
+// `withdraw` : l'appel de la route du retrait, au serveur de la connexion du moment (connectionWithdrawal), avec la
+// date du retrait sur le poste (`retire_le`).
+export type WithdrawalSender = (outil: CodeSessionKind, retireLe: string) => Promise<void>;
+export type UninstallDeps = {
+  out: (text: string) => void;
+  err: (text: string) => void;
+  withdraw: WithdrawalSender;
+};
+
+// Une commande lancée à la main (retrait, `leon setup`) n'attend pas un serveur muet plus longtemps.
+const WITHDRAWAL_TIMEOUT_MS = 15_000;
+
+// La route du retrait au serveur de la connexion du moment, relue à chaque appel : sans connexion, l'appel échoue comme
+// un serveur injoignable. Les crochets lancés hors du terminal (Dock) lisent connexion.json, la commande lit d'abord
+// LEON_URL et LEON_TOKEN : la date du retrait se pose sur chaque jeton (T43), donc sur les deux quand ils diffèrent.
+// Chacun est tenté, même après l'échec de l'autre (un LEON_TOKEN révoqué ne bloque pas la connexion enregistrée), puis
+// le premier échec lève : rien n'est noté, et le retrait se redit en entier, sans risque (le serveur garde la plus
+// grande date).
+export const connectionWithdrawal =
+  (
+    fetchImpl: typeof fetch,
+    env: Record<string, string | undefined>,
+    home: string,
+  ): WithdrawalSender =>
+  async (outil, retireLe) => {
+    const first = await resolveServerEnv(env, home);
+    const saved = await readConnection(home);
+    const servers =
+      saved && saved.jeton !== first.token
+        ? [first, { url: saved.url, token: saved.jeton }]
+        : [first];
+    const failures: unknown[] = [];
+    for (const server of servers) {
+      await createWithdrawalSender(fetchImpl, server, {
+        signal: AbortSignal.timeout(WITHDRAWAL_TIMEOUT_MS),
+      })(outil, retireLe).catch((error: unknown) => failures.push(error));
+    }
+    if (failures.length > 0) throw failures[0];
+  };
+
+// Messages fixes : ni l'adresse du serveur ni le jeton. Le premier quand un outil garde ses crochets (son démarrage
+// lance le rattrapage), le second pour le dernier outil, le troisième quand le serveur refuse le jeton (ordinateur
+// révoqué dans Réglages) : relancer ne suffit pas, il faut d'abord se reconnecter. Sans connexion non plus (`leon
+// logout`, pas de connexion.json) : ni le démarrage (runBriefing s'arrête sur resolveServerEnv) ni la commande relancée
+// ne joignent le serveur avant `leon login`, que les deux premiers disent donc.
+export const WITHDRAWAL_NOT_TOLD_MESSAGE =
+  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; Leon tells the server at the next session start of a tool that still has its hooks, or when you run this command again. If this computer is not connected, run `leon login` first.';
+export const WITHDRAWAL_NOT_TOLD_LAST_MESSAGE =
+  'Leon: the Leon server could not be told of this withdrawal (no connection, server unreachable, or older than this CLI). Your consent is withdrawn on this computer all the same; no tool keeps Leon hooks to tell the server later, so run this command again once online. If this computer is not connected, run `leon login` first.';
+export const WITHDRAWAL_REFUSED_MESSAGE =
+  'Leon: the Leon server refused the token of this computer, so it could not be told of this withdrawal. Your consent is withdrawn on this computer all the same; run `leon login`, then this command again.';
+// Avant un nouvel accord (tellBeforeConsent) : l'accord réécrit l'entrée, et le retrait n'attend plus.
+export const EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE =
+  'Leon: the Leon server could not be told of an earlier withdrawal of your consent (no connection, server unreachable, older than this CLI, or token refused): if you give your consent again now, the sessions sent before that withdrawal keep, on that server, the usages you had accepted for them.';
+
+// `refused` : le serveur a refusé le jeton (401) ; `failed` : tout autre échec.
+export type Told = 'told' | 'refused' | 'failed';
+
+// Une date qui ne s'écrit pas fait seulement redire le retrait au serveur, qui le prend autant de fois qu'on le lui dit.
+// La date du retrait est relue juste avant l'envoi : un outil qu'un nouvel accord a sorti de la version 0 n'attend plus
+// rien du serveur (pendingServerWithdrawals ne le cite plus), et ne part pas.
+async function tellServer(
+  home: string,
+  outil: CodeSessionKind,
+  send: WithdrawalSender,
+): Promise<Told> {
+  const toTell = await withdrawalToTell(home, outil);
+  if (toTell === null) return 'told';
+  try {
+    await send(outil, toTell.retireLe);
+  } catch (error) {
+    return error instanceof TokenRefusedError ? 'refused' : 'failed';
+  }
+  await recordServerWithdrawal(home, outil, toTell.entree).catch(() => {});
+  return 'told';
+}
+
+// Les retraits que le serveur n'a pas appris (faits à l'instant, avant que la commande ne l'appelle, ou hors ligne), une
+// fois chacun : la date de sa réponse les retire de l'attente. Rend `told` si chacun est appris, sinon pourquoi pas
+// (un jeton refusé d'abord : c'est lui qu'il faut réparer).
+export async function catchUpWithdrawals(home: string, send: WithdrawalSender): Promise<Told> {
+  const outcomes: Told[] = [];
+  for (const outil of await pendingServerWithdrawals(home)) {
+    outcomes.push(await tellServer(home, outil, send));
+  }
+  if (outcomes.includes('refused')) return 'refused';
+  return outcomes.includes('failed') ? 'failed' : 'told';
+}
+
+// Après le retrait sur le poste, dans les trois commandes de retrait.
+export async function withdrawOnServer(home: string, deps: UninstallDeps): Promise<void> {
+  const outcome = await catchUpWithdrawals(home, deps.withdraw);
+  if (outcome === 'refused') deps.err(WITHDRAWAL_REFUSED_MESSAGE);
+  if (outcome === 'failed') {
+    deps.err(
+      (await anyToolInstalled(home))
+        ? WITHDRAWAL_NOT_TOLD_MESSAGE
+        : WITHDRAWAL_NOT_TOLD_LAST_MESSAGE,
+    );
+  }
+}
+
+// Avant d'écrire un nouvel accord (`leon setup`, `installer-crochets`) : writeConsent réécrit l'entrée restée en version
+// 0, et l'attente disparaît sans que plus rien ne la redise. Un échec ne bloque pas l'installation ; une ligne dit ce
+// qu'il laisse.
+export async function tellBeforeConsent(
+  home: string,
+  deps: Pick<UninstallDeps, 'err' | 'withdraw'>,
+): Promise<void> {
+  if ((await catchUpWithdrawals(home, deps.withdraw)) !== 'told') {
+    deps.err(EARLIER_WITHDRAWAL_NOT_TOLD_MESSAGE);
+  }
+}
 
 // Rend true si les réglages n'ont plus de crochet de Leon (retirés à l'instant ou absents).
 async function removeFromSettings(path: string, deps: UninstallDeps): Promise<boolean> {
@@ -132,10 +263,20 @@ async function withdrawConsent(home: string, deps: UninstallDeps): Promise<boole
 }
 
 // Le lanceur ne part qu'avec le dernier outil, et seulement si tout a été retiré : des réglages restés en place
-// appelleraient un lanceur disparu. Le code de sortie ne change pas : un lanceur qui reste n'est pas un échec.
+// appelleraient un lanceur disparu. Il reste aussi tant que le serveur n'a pas appris un retrait : c'est lui qui relance
+// la commande. Le code de sortie ne change pas : un lanceur qui reste n'est pas un échec.
 export async function removeUnusedLauncher(home: string, deps: UninstallDeps): Promise<void> {
   if (await anyToolInstalled(home)) return;
   const path = launcherPath(home);
+  if ((await pendingServerWithdrawals(home)).length > 0) {
+    const present = await access(path).then(
+      () => true,
+      () => false,
+    );
+    if (present)
+      deps.out(`Launcher kept: ${path} (until the Leon server is told of the withdrawal).`);
+    return;
+  }
   try {
     const outcome = await removeLauncher(home);
     if (outcome === 'retire') deps.out(`Launcher removed: ${path} (no other tool uses it).`);
@@ -156,6 +297,7 @@ export async function uninstallHooks(
 ): Promise<number> {
   const settingsDone = await removeFromSettings(join(options.configDir, SETTINGS_FILE), deps);
   const consentDone = await withdrawConsent(options.home, deps);
+  if (consentDone) await withdrawOnServer(options.home, deps);
   if (settingsDone && consentDone) await removeUnusedLauncher(options.home, deps);
   deps.out('The sessions already sent stay in Leon: there is no way to delete them yet.');
   return settingsDone && consentDone ? 0 : 1;

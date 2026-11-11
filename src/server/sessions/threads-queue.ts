@@ -9,8 +9,8 @@ import { getBoss } from '@/server/pipeline/queue';
 //   seul en cours par session. Avec `fin`, il part tout de suite ; sans, dans 15 min, et les envois suivants le
 //   trouvent en attente.
 // - `fil-maj` : le rangement y met un fil qui change, pour que son état soit refait (T43). « stately », clé
-//   (organisation, fil), jamais la session (D34) : une mise à jour en attente et une en cours par fil. Son worker
-//   vient avec T43 ; d'ici là, au plus un job attend par fil.
+//   (organisation, fil), jamais la session (D34) : une mise à jour en attente et une en cours par fil. Son worker est
+//   thread-state-worker.ts ; un résumé écrit y met aussi les fils de sa session (resume-worker.ts).
 // - `relier-source` : l'indexation y met une source qu'un fil peut relier (LINKED_KINDS), et le rangement un fil qui
 //   change ; le worker (thread-links.ts) les relie selon D22. « stately », clé (organisation, source ou fil), tout de
 //   suite : une liaison en attente et une en cours par clé.

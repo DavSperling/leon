@@ -64,7 +64,6 @@ describe('parseCodexSession', () => {
       sessionId: THREAD,
       cwd: RACINE,
       title: 'Ajoute le lecteur des sessions Codex, puis ouvre la PR.',
-      injectes: 0,
       branche: 'demo/codex-faits',
       commit: '0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c',
       origine: null,
@@ -93,7 +92,7 @@ describe('parseCodexSession', () => {
     ]);
   });
 
-  it('lit rollout-sans-git : pas de branche, et la sortie d’une commande `!` comptée comme injectée', () => {
+  it('lit rollout-sans-git : pas de branche, et la sortie d’une commande `!` marquée injectée', () => {
     const lue = parseCodexSession(fixture('rollout-sans-git'));
 
     expect(lue).toMatchObject({
@@ -101,11 +100,15 @@ describe('parseCodexSession', () => {
       cwd: '/Users/demo/notes',
       branche: null,
       commit: null,
-      injectes: 1,
     });
-    expect(lue?.turns.map((t) => [t.role, t.text])).toEqual([
-      ['user', 'Quelle est la date de sortie de la version 2 ?'],
-      ['assistant', "La version 2 sort en décembre, d'après la page du projet."],
+    expect(lue?.turns.map((t) => [t.role, t.text, t.injecte])).toEqual([
+      ['user', 'Quelle est la date de sortie de la version 2 ?', false],
+      [
+        'user',
+        '<user_shell_command>\n<command>ls</command>\n<result>notes.md</result>\n</user_shell_command>',
+        true,
+      ],
+      ['assistant', "La version 2 sort en décembre, d'après la page du projet.", undefined],
     ]);
   });
 
@@ -192,25 +195,31 @@ describe('parseCodexSession', () => {
     expect(parseCodexSession(ancien)?.turns[0]?.external_id).toBe('l1@2026-01-02T09:00:01.000Z');
   });
 
-  it('compte à part les tours injectés : rapport de sous-agent, interruption, crochet', () => {
-    const lue = parseCodexSession(
-      session(
-        message('user', 'Lance un sous-agent sur les tests.'),
-        message(
-          'user',
-          '<subagent_notification>{"agent_id":"a","status":{"completed":"Tout passe."}}</subagent_notification>',
-        ),
-        message('user', '<turn_aborted>\nThe user interrupted.\n</turn_aborted>'),
-        message('user', '<hook_prompt hook_run_id="h1">Relis le diff.</hook_prompt>'),
-        message('assistant', 'Les tests passent.'),
+  it('garde les tours injectés, marqués : rapport de sous-agent, interruption, crochet ; ni titre ni échange', () => {
+    ordinal = 1;
+    const contenu = session(
+      message('user', '<turn_aborted>\nThe user interrupted.\n</turn_aborted>'),
+      message('user', 'Lance un sous-agent sur les tests.'),
+      message(
+        'user',
+        '<subagent_notification>{"agent_id":"a","status":{"completed":"Tout passe."}}</subagent_notification>',
       ),
+      message('user', '<hook_prompt hook_run_id="h1">Relis le diff.</hook_prompt>'),
+      message('assistant', 'Les tests passent.'),
     );
+    const lue = parseCodexSession(contenu);
 
-    expect(lue?.injectes).toBe(3);
-    expect(lue?.turns.map((t) => t.text)).toEqual([
-      'Lance un sous-agent sur les tests.',
-      'Les tests passent.',
+    expect(
+      lue?.turns.map((t) => [t.external_id, t.role, 'injecte' in t ? t.injecte : 'sans marque']),
+    ).toEqual([
+      ['o1@2026-11-06T09:00:01.000Z', 'user', true],
+      ['o2@2026-11-06T09:00:02.000Z', 'user', false],
+      ['o3@2026-11-06T09:00:03.000Z', 'user', true],
+      ['o4@2026-11-06T09:00:04.000Z', 'user', true],
+      ['o5@2026-11-06T09:00:05.000Z', 'assistant', 'sans marque'],
     ]);
+    expect(lue?.title).toBe('Lance un sous-agent sur les tests.');
+    expect(extractCodexFacts(contenu, RACINE).echanges).toBe(1);
   });
 
   it('retire les blocs de Leon d’un message, et écarte un message qui n’a rien d’autre', () => {

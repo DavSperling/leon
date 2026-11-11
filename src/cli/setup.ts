@@ -14,9 +14,10 @@
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
 // fichier que Leon n'a pas écrit). Relancée, la commande n'écrit rien de ce qui est déjà en place.
 //
-// Rien ici ne touche à `~/.leon/accord.json` hors de `installHooks` : l'accord reste écrit après la confirmation de
-// l'outil (C7 du plan mémoire). Les dépendances (dossier personnel, environnement, questions, `leon login`) viennent de
-// leon.ts : les tests donnent les leurs.
+// Rien ici ne touche à `~/.leon/accord.json` hors de `installHooks`, sinon la date d'un retrait que le serveur apprend
+// (tellBeforeConsent, T43) : l'accord reste écrit après la confirmation de l'outil (C7 du plan mémoire). Les
+// dépendances (dossier personnel, environnement, questions, `leon login`) viennent de leon.ts : les tests donnent les
+// leurs.
 import { access, readFile, stat } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
 import { type Connection, readConnection } from './connection';
@@ -51,6 +52,7 @@ import {
 import { requestMe } from './login';
 import { cursorHome, geminiHome } from './outils';
 import { isAllowedServerUrl } from './server-url';
+import { connectionWithdrawal, tellBeforeConsent } from './uninstall-hooks';
 
 export type SetupOptions = { url?: string; depot?: string; yes: boolean };
 export type SetupDeps = {
@@ -362,6 +364,10 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
     );
     return code;
   }
+
+  // Un retrait que le serveur n'a pas appris (fait avant la route, ou hors ligne) se dit avant tout nouvel accord, qui
+  // effacerait son attente : après le retrait du dernier outil, plus aucun crochet ne lance le rattrapage.
+  await tellBeforeConsent(home, { err, withdraw: connectionWithdrawal(deps.fetch, env, home) });
 
   const summary: string[] = [];
   let failed = false;

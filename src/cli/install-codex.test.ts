@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { consentWithdrawn, factsConsent, writeConsent } from './consent';
+import { consentWithdrawn, factsConsent, pendingServerWithdrawals, writeConsent } from './consent';
 import { CATCH_UP_WHEN, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import {
   CODEX_CONSENT_LINES,
@@ -11,6 +11,7 @@ import {
   uninstallCodexHook,
 } from './install-codex';
 import { writeLauncher } from './launcher';
+import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
 // L'installateur et le retrait des crochets de Codex (T17, T20), toujours sur des dossiers temporaires : jamais le vrai
 // ~/.codex ni le vrai ~/.leon.
@@ -82,12 +83,13 @@ async function install(answers: (string | null)[] = ['oui'], assumeYes = false) 
   return { code, out: out.join('\n'), err: err.join('\n'), asked };
 }
 
-async function uninstall() {
+// Le serveur de la connexion, simulé : il note les outils dont il apprend le retrait (T43), ou échoue.
+async function uninstall(withdraw: UninstallDeps['withdraw'] = async () => {}) {
   const out: string[] = [];
   const err: string[] = [];
   const code = await uninstallCodexHook(
     { codexDir, home },
-    { out: (text) => out.push(text), err: (text) => err.push(text) },
+    { out: (text) => out.push(text), err: (text) => err.push(text), withdraw },
   );
   return { code, out: out.join('\n'), err: err.join('\n') };
 }
@@ -130,6 +132,7 @@ describe('installCodexHook', () => {
     expect(out).toContain('  SessionEnd · timeout 3 s · add');
     expect(out).toContain(`    ${launcherCommand(home, 'codex', 'fin')}`);
     const text = CODEX_CONSENT_LINES.join('\n');
+    expect(text).toContain('labeled as written by Codex, not by you');
     expect(text).toContain("so it is given to Codex's model");
     expect(text).toContain('the new exchanges of the session');
     expect(text).toContain('never their other arguments');
@@ -296,5 +299,31 @@ describe('uninstallCodexHook', () => {
     expect(code).toBe(0);
     expect(out).toContain('nothing to remove');
     expect(await consentWithdrawn(home, 'codex')).toBe(true);
+  });
+
+  it('le serveur apprend le retrait de Codex, une fois l’accord retiré sur le poste', async () => {
+    await writeConsent(home, 'codex', 2);
+    const told: string[] = [];
+
+    await uninstall(async (outil) => {
+      expect(await consentWithdrawn(home, outil)).toBe(true);
+      told.push(outil);
+    });
+
+    expect(told).toEqual(['codex']);
+    expect(await pendingServerWithdrawals(home)).toEqual([]);
+  });
+
+  it('un serveur qui ne l’apprend pas : une ligne, le retrait local reste fait, code 0', async () => {
+    await writeConsent(home, 'codex', 2);
+
+    const { code, err } = await uninstall(async () => {
+      throw new Error('Response 404 from the Leon server.');
+    });
+
+    expect(code).toBe(0);
+    expect(err).toBe(WITHDRAWAL_NOT_TOLD_LAST_MESSAGE);
+    expect(await consentWithdrawn(home, 'codex')).toBe(true);
+    expect(await pendingServerWithdrawals(home)).toEqual(['codex']);
   });
 });

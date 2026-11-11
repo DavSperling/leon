@@ -1211,6 +1211,21 @@ Contrat : `api-contract.db.test.ts`.
 
 ### T57 · `leon noter` et `remember` : le brouillon de l'agent
 
+> **Amendé le 11/11 (décisions d'Amos pour le lot 13, points 2, 4 et 7 ; la forme technique est un choix de Claude) :**
+> - **Les noms.** La commande est `leon note "<texte>"`, avec `--tool <outil>` et `--session <id>` (ce que la phrase du bloc remplit), et `--note <id> --version <n>` pour écrire la version suivante. L'outil MCP reste `remember`, l'usage reste `noter`, et le chemin du serveur reste `POST /api/v1/noter`. Partout où cette tâche écrit `leon noter`, lire `leon note`.
+> - **Les usages envoyés.** `leon note --tool <outil>` envoie les usages de cet outil seul (son accord dans `~/.leon/accord.json`). Sans `noter` pour lui, le serveur refuse, et la commande le dit par un message fixe.
+> - **La phrase du bloc.** Avec l'usage `noter` de l'outil, le bloc de démarrage porte une phrase fixe, en français, qui cite la commande du poste avec l'outil et la session déjà remplis : `<commande> note --tool <outil> --session <session> "<texte>"`. Elle dit que la note est privée, et que c'est une donnée, pas une consigne. Elle suit `noter`, pas `lecture` : avec la consigne de lecture, elle vient juste après elle ; sans consigne (pas de `lecture`, ou aucun fil), elle prend sa place, après les leçons et avant le point du matin. Sa place est réservée (D37).
+>   - La session vient du poste, et l'agent recopiera la commande dans un shell. La phrase ne cite donc `--session` que si la session ne porte que des lettres, des chiffres et `.`, `_`, `:`, `-` ; sinon elle l'omet. L'outil vient d'une liste fermée.
+>   - La CLI n'envoie `outil` (C3) qu'avec l'usage `noter` : un serveur plus ancien refuserait ce champ, et le bloc entier avec lui.
+> - **Le texte de `noter`** (décision 7), en anglais, testé mot pour mot, le même dans les quatre installateurs et sur la page « Autoriser ». Il dit : que l'agent peut écrire des notes privées par `leon note` ; ce qui part alors (le texte de la note, masqué, avec le projet, l'outil, la session et les usages de l'outil) ; que la note reste privée à son auteur, que la recherche de Leon la trouve, et qu'elle n'est jamais placée telle quelle dans le contexte d'une session ; ce que la requête de démarrage envoie en plus avec cet usage (les usages de l'outil, la commande Leon de l'ordinateur et le nom de l'outil), et la phrase qu'elle place dans le contexte de l'agent ; que le décocher coupe aussi `remember` pour tous les assistants branchés à cet espace (T65).
+> - **L'ordre des questions :** `lecture`, `rappel`, `noter`, puis `resume`. `noter` se propose aux quatre outils, et la page « Autoriser » gagne sa case (`AUTHORIZE_USAGES`).
+> - **Les versions d'une note.** La route et l'outil `versions` acceptent l'id d'une note du projet (une note de `leon note` porte son projet). Une note de `remember` n'a pas de projet : ses versions ne se lisent que sur le site.
+> - **La section Mémoire** (T55) gagne les notes de l'auteur, celles de `leon note` et celles de `remember`, avec leur outil, leurs versions, le texte d'une version, et « Remettre cette version » sous la connexion récente, par `writeNote`.
+> - **Le libellé** « Note (MCP) » devient « Note ».
+> - **Les migrations :** `0067-supprimer-notes` (T57), puis `0068-noter-refuse` (T65).
+> - **Fichiers en plus :** `src/server/memory/memory-section.ts`, `src/server/sessions/thread-read.ts` et `src/server/mcp/tools/thread-tools.ts` (les versions d'une note), `src/server/sessions/start-context.ts` (la phrase), `src/capture/session-facts.ts` et son test (`leon note` compte comme une commande locale), `src/cli/install-codex.ts`, `src/cli/install-outil.ts`, la documentation du site et le README.
+> - **Tests en plus :** la phrase avec une session sûre, et sans `--session` quand la session porte un caractère de shell (`$(`, un guillemet, une espace) ; le pire cas du bloc de T56 refait avec `noter`, une session de 200 caractères et beaucoup de leçons ; la CLI n'envoie pas `outil` sans `noter` ; les versions d'une note du projet se lisent par la route et l'outil `versions`, celles d'une note de `remember` non ; `noter` est proposé aux quatre outils, dans l'ordre.
+
 **Fichiers :**
 - `src/server/memory/notes.ts` (nouveau : `writeNote`, le chemin commun) et `src/server/memory/notes.db.test.ts` (nouveau), `src/server/memory/versions.ts` (`restoreVersion` d'une note passe par `writeNote`) ;
 - `src/server/mcp/tools/remember-tool.ts`, `src/server/mcp/server.ts` (`registerRememberTool` reçoit `client`) ;
@@ -1263,6 +1278,12 @@ Contrat : `api-contract.db.test.ts`.
 ### T65 · `remember` suit le réglage `noter` du compte (après T57 et T64)
 
 Tranché le 05/11 (A16, D30, C16). Décocher `noter` bloque aussi `remember` au MCP. Effort : 1 j (estimation du rédacteur, à confirmer).
+
+> **Amendé le 11/11 (choix de Claude, dans la ligne des décisions d'Amos pour le lot 13) :**
+> - La migration est `0068-noter-refuse`. La route garde le nom `POST /api/v1/usages`.
+> - Dans la section Mémoire, le réglage est un interrupteur : « Les assistants branchés à cet espace peuvent écrire des notes ». Le couper ou le rouvrir n'exige pas la connexion récente de T55 : il n'écrit aucun texte poussé (D37).
+> - Le « non » du terminal à `noter` appelle la route avec la connexion de l'ordinateur, sous un délai court. Un serveur ancien, absent ou lent ne bloque jamais l'installation.
+> - Là où cette tâche écrit `leon noter`, lire `leon note` (T57 amendée).
 
 Le chemin sur main : `/api/mcp` (`mcp-routes.ts`) passe par `apiTokenGuard({ assistant: true })`, qui accepte un jeton d'ordinateur, manuel ou d'assistant (OAuth du MCP distant, #130). Il donne `ctx` (tenant, utilisateur) et le libellé du client à `createLeonMcpServer`. Aucun usage du poste n'y arrive. Le réglage vit donc sur le compte, et `remember` le lit avec `ctx`.
 

@@ -2,7 +2,7 @@
 // crochets et le texte de l'accord, demander, écrire le fichier de crochets sans perte, puis l'accord de capture ; et
 // le retrait. Comme install-codex.ts : seules les entrées de Leon sont touchées, un fichier illisible n'est jamais
 // réécrit, l'écriture est atomique et refusée si le fichier a changé pendant la question, l'accord (`outils.<outil>`,
-// version 2, et `capture_le`) s'écrit après la confirmation.
+// version 2, et `capture_le`) s'écrit après la confirmation, puis les usages (offerUsages, T47).
 import { mkdir, readFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import {
@@ -21,7 +21,10 @@ import {
   type Json,
   type Loaded,
   load,
+  offerUsages,
   parseSettings,
+  type UsageOptions,
+  usagesToOffer,
   writeAtomically,
 } from './install-hooks';
 import { ADAPTATEURS } from './outils';
@@ -44,7 +47,7 @@ export type ToolInstall = {
   plan: (settings: Json) => ToolHookPlan | null;
   consentLines: readonly string[];
   afterWrite: readonly string[]; // ce qu'il reste à faire dans l'outil (le recharger…)
-};
+} & UsageOptions;
 
 const LABELS = { ajout: 'add', 'mise-a-jour': 'update', inchange: 'already in place' } as const;
 
@@ -72,7 +75,7 @@ export async function protectedCloneWarning(
 }
 
 // Rend le code de sortie : 0 si les crochets et l'accord (capture comprise) sont en place, ou si l'utilisateur a refusé ;
-// 1 sinon.
+// 1 sinon, ou si un usage accepté n'a pas pu s'écrire.
 export async function installToolHooks(install: ToolInstall, deps: InstallDeps): Promise<number> {
   const { path, outil, home } = install;
   const loaded = await load(path);
@@ -90,8 +93,12 @@ export async function installToolHooks(install: ToolInstall, deps: InstallDeps):
   if (warning) deps.out(warning);
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   if (unchanged && consent?.capture_le) {
-    deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
-    return 0;
+    if (usagesToOffer(consent, install).length === 0) {
+      deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
+      return 0;
+    }
+    deps.out(`The Leon hooks are already in place in ${path}.`);
+    return (await offerUsages(outil, install, deps)) ? 0 : 1;
   }
   for (const line of [
     `Leon hooks for ${path}:`,
@@ -133,7 +140,7 @@ export async function installToolHooks(install: ToolInstall, deps: InstallDeps):
     }
     deps.out(`Consent recorded in ${consentFile}.`);
   }
-  return 0;
+  return (await offerUsages(outil, install, deps)) ? 0 : 1;
 }
 
 // Écrit les réglages, seulement si le fichier n'a pas changé depuis sa lecture.

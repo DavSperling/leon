@@ -45,10 +45,12 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
-// - une fois l'accord de base en place, propose à part l'usage `resume` (C7 révisé) s'il n'est ni accepté ni refusé,
-//   avec son texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube peut venir d'un agent, qui ne
-//   donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à disposition). Un refus s'écrit daté
-//   (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait ;
+// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture` puis `resume` (C7 révisé) qui ne
+//   sont ni acceptés ni refusés, avec leur texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube
+//   peut venir d'un agent, qui ne donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à
+//   disposition). Un refus s'écrit daté (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait. Les installateurs
+//   des autres outils (install-outil.ts, install-codex.ts) font de même par offerUsages, et un usage tranché dans le
+//   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -74,9 +76,11 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
+import type { Usage } from '../capture/api-contract';
 import {
   addRefusal,
   addUsage,
+  type ConsentTool,
   consentPath,
   consentWithdrawn,
   FACTS_VERSION,
@@ -130,11 +134,25 @@ const CONSENT_LINES = [
 // Leon (le condensé de T22, à partir de 6 échanges, après la clôture de D9), et où va le résumé (T23 : à l'auteur seul,
 // indexé ; jamais dans le bloc de démarrage, D25), et la limite du retrait (resume-worker.ts). Puis l'état des fils
 // du lot 12 (D23, D30 : l'usage `resume` le couvre aussi ; écrit au futur avant lui, pour ne pas redemander l'accord).
-const RESUME_LINES = [
+// Les quatre installateurs le montrent tel quel (décision d'Amos du 11/11).
+export const RESUME_LINES = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
   "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
   "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you, like the summary. Withdrawing your consent stops this too, once the Leon server is told.",
+];
+
+// Le texte de l'usage `lecture` (C7 révisé, D24, D30 ; décisions d'Amos du 11/11), testé mot pour mot : un seul texte,
+// sans nom d'outil, le même dans les quatre installateurs et sur la page « Autoriser » (T64). Ce que le bloc de démarrage
+// pousse avec lui (T46 ; les leçons du lot 13, nommées dès maintenant pour ne pas redemander l'accord), ce que l'agent
+// peut lire (les vrais noms des commandes et des outils), et la portée réelle : le jeton est celui de l'ordinateur, et
+// les commandes envoient les usages de tous ses outils (read-commands.ts). Il ne promet donc jamais qu'un refus empêche
+// un agent de lire.
+export const LECTURE_LINES = [
+  'Reading Leon (usage "lecture", asked separately):',
+  "  - At the start of each session or conversation, Leon places in the agent's context the summary of your work threads on this repository (keys only: their id, branch, tools, dates, pull request numbers and states, number of linked sources), which replaces the list of your recent sessions, the lessons you accepted, and an instruction to read the thread of its task. The model provider of the tool sees them.",
+  '  - The agent can read your work threads on this repository, their summaries and their state, and the memory of this repository that you can see, with the commands `leon threads`, `leon thread`, `leon search` and `leon versions`, or with the tools `threads`, `thread` and `versions` if the Leon MCP server is connected to the tool. The model provider of the tool sees what it reads. This usage never lets an agent write anything to Leon.',
+  '  - The `leon` commands use the token of this computer: once one of your code tools accepts this usage, they work for every agent on this computer. Refusing it in a tool only removes, in that tool, the summary, the lessons and the instruction placed at the start.',
 ];
 
 export type Json = Record<string, unknown>;
@@ -353,17 +371,22 @@ export async function writeAtomically(path: string, loaded: Loaded, text: string
   }
 }
 
+// Les usages tranchés dans ce passage, pour tous ses outils (`leon setup`, puis la page « Autoriser » au T64) : true
+// accepté, false refusé, null demandé sans réponse (rien n'est écrit, ni redemandé avant le passage suivant). Chaque
+// installateur les écrit après son accord de base, là où l'usage manque sans refus, et y range les réponses du terminal.
+export type UsageDecisions = Map<Usage, boolean | null>;
+// `interactive` : l'entrée standard est un terminal (`process.stdin.isTTY`). Sans lui, aucun usage n'est demandé.
+export type UsageOptions = { interactive?: boolean; decisions?: UsageDecisions };
+
 // `home` : le dossier qui porte `.leon` : l'accord (consent.ts) et le lanceur que les crochets appellent.
 // `repoDir` : le clone de Leon sous la forme clone ; absent sous la forme installée, où ni pnpm ni `.env.local` ne sont
 // en jeu et où il n'y a pas de clone dont avertir.
-// `interactive` : l'entrée standard est un terminal (`process.stdin.isTTY`). Sans lui, aucun usage n'est demandé.
 export type InstallOptions = {
   repoDir?: string;
   configDir: string;
   home: string;
   assumeYes: boolean;
-  interactive?: boolean;
-};
+} & UsageOptions;
 export type InstallDeps = {
   out: (text: string) => void;
   err: (text: string) => void;
@@ -512,60 +535,117 @@ async function recordConsent(home: string, deps: InstallDeps): Promise<boolean> 
   return true;
 }
 
-// L'usage `resume` est-il à proposer ? Seulement sur l'accord de base, dans un terminal, sans --oui (D30), et s'il n'a
-// été ni accepté ni refusé (A16).
-const offersResume = (options: InstallOptions, consent: FactsConsent | null): boolean =>
-  !options.assumeYes &&
-  options.interactive === true &&
-  consent !== null &&
-  !consent.usages.includes('resume') &&
-  !consent.refus.includes('resume');
-
 // La commande `leon` de cette forme : rien de Leon n'est dans le PATH, la forme installée passe par son lanceur.
 const leonCommand = (options: InstallOptions): string =>
   options.repoDir === undefined ? '~/.leon/bin/leon' : 'pnpm leon';
 
-// Après un refus, comment revenir dessus (choix du plan) : le retrait efface usages et refus, et dit lui-même comment
-// redonner l'accord (CONSENT_AGAIN_HINT, le lanceur ayant pu partir avec lui).
-const refusedLine = (options: InstallOptions): string =>
-  `This answer is kept: you will not be asked again. To change it, run \`${leonCommand(options)} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`;
+// Après un refus, comment revenir dessus (choix du plan) : le retrait de l'outil efface usages et refus. Celui de Claude
+// Code dit lui-même comment redonner l'accord (CONSENT_AGAIN_HINT, le lanceur ayant pu partir avec lui) ; ceux des autres
+// outils passent par le lanceur, qui reste tant qu'un outil l'utilise.
+const refusedLine = (tool: ConsentTool, leon: string): string =>
+  tool === 'claude_code'
+    ? `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`
+    : `This answer is kept: you will not be asked again. To change it, run \`~/.leon/bin/leon retirer-crochets --outil ${tool}\` (it also removes the hooks of this tool and withdraws its consent), then \`~/.leon/bin/leon setup\` again.`;
 
-// Propose l'usage `resume`, après l'accord de base, avec son texte, en [y/N] : jamais coché d'avance. Un refus (non, ou
-// rien) ne change pas ce qui part ; il s'écrit daté, pour ne plus être redemandé. Rend false si l'usage accepté n'a pas
-// pu s'écrire ; un refus qui ne s'écrit pas n'est qu'une question qui reviendra.
-async function offerResume(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
-  if (!offersResume(options, await factsConsent(options.home, 'claude_code'))) return true;
+// Les usages proposés à l'installation, dans cet ordre (C7 révisé, A16). `lecture` est coché par défaut, en [Y/n] :
+// Entrée, y, yes, o et oui l'acceptent ; n, no et non le refusent ; une autre réponse ou une entrée fermée ne tranchent
+// rien (décision d'Amos du 11/11 : une faute de frappe ne vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est
+// pas, en [y/N] : seul un oui l'accepte, et seule une entrée fermée ne tranche rien (D30).
+type Offer = {
+  lines: readonly string[];
+  question: (path: string) => string;
+  answer: (text: string | null) => boolean | null;
+  recorded: string;
+  without: string; // ce qui manque sans l'usage
+};
+const OFFERED = ['lecture', 'resume'] as const;
+const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
+  lecture: {
+    lines: LECTURE_LINES,
+    question: (path) =>
+      `\nLet the agents of the code tools set up now read Leon this way (recorded in ${path})? [Y/n] `,
+    answer: (text) => {
+      if (text === null) return null;
+      if (text.trim() === '' || isYes(text)) return true;
+      return /^(?:n|no|non)$/i.test(text.trim()) ? false : null;
+    },
+    recorded: 'Reading Leon recorded',
+    without: 'Leon places no summary of your threads at the start of a session',
+  },
+  resume: {
+    lines: RESUME_LINES,
+    question: (path) =>
+      `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${path})? [y/N] `,
+    answer: (text) => (text === null ? null : isYes(text)),
+    recorded: 'Session summaries recorded',
+    without: 'no session is summarized',
+  },
+};
+
+// Les usages qui restent pour un outil sur son accord de base : manquants et jamais refusés (A16), puis tranchés dans
+// ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
+export function usagesToOffer(
+  consent: FactsConsent | null,
+  options: UsageOptions & { assumeYes: boolean },
+): (typeof OFFERED)[number][] {
+  if (consent === null) return [];
+  return OFFERED.filter((usage) => {
+    if (consent.usages.includes(usage) || consent.refus.includes(usage)) return false;
+    const decided = options.decisions?.get(usage);
+    return decided === undefined
+      ? options.interactive === true && !options.assumeYes
+      : decided !== null;
+  });
+}
+
+// Propose un à un, après l'accord de base, les usages qui restent pour cet outil, avec leur texte ; une décision du
+// passage n'est pas redemandée, et une réponse du terminal y est rangée pour les outils suivants. Un refus ne change
+// pas ce qui part ; il s'écrit daté, pour ne plus être redemandé. Rend false si un usage accepté n'a pas pu s'écrire
+// (les suivants ne sont pas demandés) ; un refus qui ne s'écrit pas n'est qu'une question qui reviendra.
+// `leon` : la commande de la forme de Leon, pour la ligne qui suit un refus de Claude Code.
+export async function offerUsages(
+  tool: ConsentTool,
+  options: UsageOptions & { home: string; assumeYes: boolean; leon?: string },
+  deps: InstallDeps,
+): Promise<boolean> {
   const path = consentPath(options.home);
-  for (const line of ['', ...RESUME_LINES]) deps.out(line);
-  const answer = await deps.ask(
-    `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${path})? [y/N] `,
-  );
-  if (!isYes(answer)) {
-    deps.out('Nothing was added: no session is summarized.');
-    // Une entrée fermée (Ctrl+D) n'est pas une réponse (D30) : rien n'est gardé, la question reviendra.
-    if (answer === null) return true;
+  const decisions: UsageDecisions = options.decisions ?? new Map();
+  const pending = usagesToOffer(await factsConsent(options.home, tool), { ...options, decisions });
+  for (const usage of pending) {
+    const offer = OFFERS[usage];
+    let accepted = decisions.get(usage);
+    if (accepted === undefined) {
+      for (const line of ['', ...offer.lines]) deps.out(line);
+      accepted = offer.answer(await deps.ask(offer.question(path)));
+      decisions.set(usage, accepted);
+    }
+    if (accepted === true) {
+      try {
+        await addUsage(options.home, tool, usage);
+      } catch (error) {
+        const code = errorCode(error);
+        deps.err(
+          `Leon: could not write ${path}${code ? ` (${code})` : ''}: ${offer.without}. Run the command again.`,
+        );
+        return false;
+      }
+      deps.out(`${offer.recorded} in ${path}.`);
+      continue;
+    }
+    deps.out(`Nothing was added: ${offer.without}.`);
+    // Pas de réponse (entrée fermée, ou ni oui ni non) : rien n'est gardé, la question reviendra (D30).
+    if (accepted === null) continue;
     try {
-      await addRefusal(options.home, 'claude_code', 'resume');
+      await addRefusal(options.home, tool, usage);
     } catch (error) {
       const code = errorCode(error);
       deps.err(
         `Leon: could not write ${path}${code ? ` (${code})` : ''}: your answer is not kept, the question will come back.`,
       );
-      return true;
+      continue;
     }
-    deps.out(refusedLine(options));
-    return true;
+    deps.out(refusedLine(tool, options.leon ?? '~/.leon/bin/leon'));
   }
-  try {
-    await addUsage(options.home, 'claude_code', 'resume');
-  } catch (error) {
-    const code = errorCode(error);
-    deps.err(
-      `Leon: could not write ${path}${code ? ` (${code})` : ''}: no session is summarized. Run the command again.`,
-    );
-    return false;
-  }
-  deps.out(`Session summaries recorded in ${path}.`);
   return true;
 }
 
@@ -606,12 +686,12 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
-      if (!offersResume(options, consent)) {
+      if (usagesToOffer(consent, options).length === 0) {
         deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }
       deps.out(`Both Leon hooks are already in place in ${path}.`);
-      return (await offerResume(options, deps)) ? 0 : 1;
+      return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
     }
     // Des crochets posés avant l'accord, ou restés après son retrait (retrait des réglages raté, crochets remis à la
     // main) : seul l'accord est demandé, et les réglages ne sont pas touchés.
@@ -635,7 +715,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
         return 0;
       }
     }
-    return (await recordConsent(options.home, deps)) && (await offerResume(options, deps)) ? 0 : 1;
+    return (await recordConsent(options.home, deps)) && (await offerClaudeCodeUsages(options, deps))
+      ? 0
+      : 1;
   }
 
   const backupPlan: BackupPlan =
@@ -688,5 +770,9 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     `Claude Code reloads this file by itself; if it does not, the hooks apply from its next start. To remove them, run \`${leonCommand(options)} retirer-crochets\` (it also withdraws your consent).`,
   );
   if (!consented && !(await recordConsent(options.home, deps))) return 1;
-  return (await offerResume(options, deps)) ? 0 : 1;
+  return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
+}
+
+function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
+  return offerUsages('claude_code', { ...options, leon: leonCommand(options) }, deps);
 }

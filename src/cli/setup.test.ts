@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { API_PATHS } from '../capture/api-contract';
 import { type Connection, writeConnection } from './connection';
-import { addUsage, consentPath, factsConsent, writeConsent } from './consent';
+import { addRefusal, addUsage, consentPath, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript, previousLauncherScripts, writeLauncher } from './launcher';
@@ -77,7 +77,7 @@ type Run = {
 async function setup(
   options: Partial<SetupOptions> = {},
   extra: {
-    answers?: string[];
+    answers?: (string | null)[];
     env?: Record<string, string>;
     loginCode?: number;
     me?: number | 'unreachable';
@@ -630,13 +630,14 @@ describe('setup : les outils de code', () => {
   });
 
   // L'usage `resume` (C7 révisé, D30) : demandé à part dans un terminal, jamais donné par --yes ni hors d'un terminal.
+  // `lecture` est demandé avant lui : « plus tard » ne le tranche pas (décision d'Amos du 11/11).
   it('dans un terminal, propose l’usage resume après l’accord de base ; accepté, il est écrit', async () => {
     await hasClaudeCode();
 
-    const run = await setup({}, { interactive: true, answers: ['y', 'y'] });
+    const run = await setup({}, { interactive: true, answers: ['y', 'plus tard', 'y'] });
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(2);
+    expect(run.questions).toHaveLength(3);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: ['resume'],
@@ -660,8 +661,8 @@ describe('setup : les outils de code', () => {
   // C7 révisé, A16 : un refus s'écrit daté ; setup relancé ne le propose plus, et ne fait perdre ni usage ni refus.
   it('dans un terminal, un refus de l’usage resume s’écrit ; relancée, setup ne le redemande pas et garde l’accord tel quel', async () => {
     await hasClaudeCode();
-    const first = await setup({}, { interactive: true, answers: ['y', 'n'] });
-    expect(first.questions).toHaveLength(2);
+    const first = await setup({}, { interactive: true, answers: ['y', 'plus tard', 'n'] });
+    expect(first.questions).toHaveLength(3);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: [],
@@ -676,6 +677,84 @@ describe('setup : les outils de code', () => {
     expect(second.questions).toEqual([]);
     expect(second.output).toContain('Claude Code: hooks installed');
     expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+  });
+
+  // Décision d'Amos du 11/11 : une question par usage pour tous les outils trouvés, au premier qui en manque ; la
+  // réponse s'écrit pour chacun, après son accord de base. Antigravity se trouve par ~/.gemini comme par son dossier
+  // propre (#162).
+  const allTools = async () => {
+    await hasClaudeCode();
+    for (const tool of ['.codex', '.cursor', join('.gemini', 'antigravity')]) {
+      await mkdir(join(home, tool), { recursive: true });
+    }
+  };
+  const lectureAsked = (run: Run) => run.questions.filter((question) => question.includes('[Y/n]'));
+
+  it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
+    await allTools();
+
+    // Claude Code, lecture, resume, puis Codex, Cursor (refusé) et Antigravity.
+    const run = await setup({}, { interactive: true, answers: ['y', '', 'n', 'y', 'n', 'y'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(6);
+    expect(lectureAsked(run)).toHaveLength(1);
+    expect(run.output.split('usage "lecture"')).toHaveLength(2);
+    for (const tool of ['claude_code', 'codex', 'antigravity'] as const) {
+      expect(await factsConsent(home, tool), tool).toMatchObject({
+        usages: ['lecture'],
+        refus: ['resume'],
+      });
+    }
+    // Un outil dont l'accord de base est refusé n'en reçoit aucun.
+    expect(await factsConsent(home, 'cursor')).toBeNull();
+    expect(run.output).toContain('`~/.leon/bin/leon retirer-crochets --outil codex`');
+  });
+
+  it('seulement pour les outils qui en manquent sans refus : la question vient au premier d’entre eux', async () => {
+    await hasClaudeCode();
+    await setup({ yes: true });
+    await addRefusal(home, 'claude_code', 'lecture');
+    await addUsage(home, 'claude_code', 'resume');
+    const claudeCode = await factsConsent(home, 'claude_code');
+    await mkdir(join(home, '.cursor'));
+
+    const run = await setup({}, { interactive: true, answers: ['y', 'y', 'n'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(3);
+    expect(run.questions[1]).toContain('[Y/n]');
+    expect(await factsConsent(home, 'claude_code')).toEqual(claudeCode);
+    expect(await factsConsent(home, 'cursor')).toMatchObject({
+      usages: ['lecture'],
+      refus: ['resume'],
+    });
+  });
+
+  it('une entrée fermée ou une autre réponse : rien n’est écrit, ni redemandé dans le passage', async () => {
+    await allTools();
+
+    const run = await setup({}, { interactive: true, answers: ['y', null, null, 'y', 'y', 'y'] });
+
+    expect(run.questions).toHaveLength(6);
+    for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
+      expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
+    }
+  });
+
+  it.each([
+    ['--yes, même dans un terminal', { yes: true }, { interactive: true }],
+    ['hors terminal, même avec « y »', {}, { answers: Array<string>(8).fill('y') }],
+  ])('%s : aucun usage ni refus, pour aucun des quatre outils', async (_name, options, extra) => {
+    await allTools();
+
+    const run = await setup(options, extra);
+
+    expect(run.questions.length).toBeLessThanOrEqual(4);
+    expect(run.output).not.toContain('usage "lecture"');
+    for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
+      expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
+    }
   });
 
   it('installée : n’annonce pas que les crochets ont besoin de pnpm et de Node dans le PATH', async () => {

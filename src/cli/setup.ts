@@ -11,10 +11,13 @@
 // 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
 //    d'une installation d'avant (`pnpm … leon …`) sont remplacés sur place, l'accord déjà donné est gardé (S11) ;
 // 5. finit par une ligne par outil, le chemin du lanceur et, sous la forme installée, les mises à jour automatiques.
+// Dans un terminal, sans --yes, les usages (`lecture`, `resume`) se demandent une fois pour tous les outils du passage :
+// au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
+// l'écrivent chacun après son accord de base.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
 // fichier que Leon n'a pas écrit). Relancée, la commande n'écrit rien de ce qui est déjà en place.
 //
-// Rien ici ne touche à `~/.leon/accord.json` hors de `installHooks`, sinon la date d'un retrait que le serveur apprend
+// Rien ici ne touche à `~/.leon/accord.json` hors des installateurs, sinon la date d'un retrait que le serveur apprend
 // (tellBeforeConsent, T43) : l'accord reste écrit après la confirmation de l'outil (C7 du plan mémoire). Les
 // dépendances (dossier personnel, environnement, questions, `leon login`) viennent de leon.ts : les tests donnent les
 // leurs.
@@ -40,6 +43,7 @@ import {
   load,
   parseSettings,
   SETTINGS_FILE,
+  type UsageDecisions,
 } from './install-hooks';
 import type { ToolHookPlan } from './install-outil';
 import {
@@ -61,7 +65,7 @@ export type SetupDeps = {
   err: (text: string) => void;
   // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse.
   ask: (question: string) => Promise<string | null>;
-  // L'entrée standard est un terminal : seul il fait demander un usage (installHooks).
+  // L'entrée standard est un terminal : seul il fait demander un usage (les installateurs).
   interactive?: boolean;
   // `leon login` (leon.ts) : rend son code de sortie. `url` : l'option --url de `leon setup`.
   login: (url: string | undefined) => Promise<number>;
@@ -172,6 +176,7 @@ type InstallContext = {
   home: string;
   repoDir: string | undefined;
   yes: boolean;
+  decisions: UsageDecisions; // les usages tranchés dans ce passage, pour tous ses outils
 } & Pick<SetupDeps, 'out' | 'err' | 'ask' | 'interactive'>;
 
 async function installClaudeCode(configDir: string, ctx: InstallContext): Promise<Installed> {
@@ -182,6 +187,7 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
       home: ctx.home,
       assumeYes: ctx.yes,
       interactive: ctx.interactive,
+      decisions: ctx.decisions,
     },
     { out: ctx.out, err: ctx.err, ask: ctx.ask },
   );
@@ -190,9 +196,16 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
   return { failed: false, status: inPlace ? 'hooks installed' : 'skipped (not confirmed)' };
 }
 
+const usageOptions = (ctx: InstallContext) => ({
+  home: ctx.home,
+  assumeYes: ctx.yes,
+  interactive: ctx.interactive,
+  decisions: ctx.decisions,
+});
+
 // Le crochet de Codex (T17), comme celui de Claude Code : la ligne finale distingue un « non » d'une installation.
 async function installCodex(codexDir: string, ctx: InstallContext): Promise<Installed> {
-  const code = await installCodexHook({ codexDir, home: ctx.home, assumeYes: ctx.yes }, ctx);
+  const code = await installCodexHook({ codexDir, ...usageOptions(ctx) }, ctx);
   if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
   const settings = parseSettings(await load(join(codexDir, CODEX_HOOKS_FILE)));
   const inPlace =
@@ -228,7 +241,7 @@ async function toolInstalled(
 }
 
 async function installCursor(_dir: string, ctx: InstallContext): Promise<Installed> {
-  const code = await installCursorHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  const code = await installCursorHooks(usageOptions(ctx), ctx);
   return toolInstalled(
     code,
     'cursor',
@@ -239,7 +252,7 @@ async function installCursor(_dir: string, ctx: InstallContext): Promise<Install
 }
 
 async function installAntigravity(_dir: string, ctx: InstallContext): Promise<Installed> {
-  const code = await installAntigravityHooks({ home: ctx.home, assumeYes: ctx.yes }, ctx);
+  const code = await installAntigravityHooks(usageOptions(ctx), ctx);
   return toolInstalled(
     code,
     'antigravity',
@@ -358,6 +371,7 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
   // effacerait son attente : après le retrait du dernier outil, plus aucun crochet ne lance le rattrapage.
   await tellBeforeConsent(home, { err, withdraw: connectionWithdrawal(deps.fetch, env, home) });
 
+  const decisions: UsageDecisions = new Map();
   const summary: string[] = [];
   let failed = false;
   for (const tool of TOOLS) {
@@ -377,6 +391,7 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
         err,
         ask,
         interactive: deps.interactive,
+        decisions,
       });
       failed ||= result.failed;
       summary.push(`${tool.label}: ${result.status}`);

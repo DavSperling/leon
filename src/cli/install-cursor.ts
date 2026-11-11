@@ -12,7 +12,12 @@ import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { type Evenement, isLeonLauncherCommand, launcherCommand } from './hook-commands';
 import { type InstallDeps, isRecord, type Json } from './install-hooks';
-import { installToolHooks, type ToolHookPlan, uninstallToolHooks } from './install-outil';
+import {
+  installToolHooks,
+  type ToolHookPlan,
+  type ToolInstall,
+  uninstallToolHooks,
+} from './install-outil';
 import { cursorHome } from './outils';
 import type { UninstallDeps } from './uninstall-hooks';
 
@@ -103,15 +108,14 @@ export function addCursorHooks(settings: Json, home: string): ToolHookPlan | nul
 }
 
 export async function installCursorHooks(
-  options: { home: string; assumeYes: boolean },
+  options: Pick<ToolInstall, 'home' | 'assumeYes' | 'interactive' | 'decisions'>,
   deps: InstallDeps,
 ): Promise<number> {
   return installToolHooks(
     {
+      ...options,
       outil: 'cursor',
       path: cursorHooksPath(options.home),
-      home: options.home,
-      assumeYes: options.assumeYes,
       plan: (settings) => addCursorHooks(settings, options.home),
       consentLines: CURSOR_CONSENT_LINES,
       afterWrite: AFTER_WRITE,

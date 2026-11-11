@@ -344,6 +344,7 @@ describe('la page Documentation', () => {
         '<code>leon thread</code>',
         '<code>leon search</code>',
         '<code>leon versions</code>',
+        '<code>leon lessons</code>',
         '<code>retirer-crochets</code>',
       ])
         expect(lecture, term).toContain(term);
@@ -364,6 +365,21 @@ describe('la page Documentation', () => {
           'L’usage lecture (lire Leon) est coché par défaut',
         ),
       );
+    },
+  );
+
+  // Les commandes de lecture (T44, T54, T55) : cinq, dont `leon lessons`, et l'outil `lessons` du connecteur MCP, qui ne
+  // rend pas la session externe.
+  it.each(LOCALES)(
+    'la section lire nomme leon lessons et l’outil lessons (%s)',
+    (locale, messages) => {
+      const { output, external } = messages.site.documentation.read;
+      const markdown = documentationMarkdown({ locale, messages, ...GIVEN });
+
+      expect(output).toContain('<code>lessons</code>');
+      expect(external).toContain('<code>lessons</code>');
+      expect(markdown).toContain('~/.leon/bin/leon lessons [id]');
+      expect(textOf(render(locale))).toContain('leon lessons [id]');
     },
   );
 

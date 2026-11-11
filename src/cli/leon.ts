@@ -137,9 +137,11 @@ Commands:
   thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the
                        current branch)
   search <query>       Search Leon, within this repository only
-  versions <id>        List the readable versions of a thread's state
+  versions <id>        List the readable versions of a thread's state, or of a lesson
       --read <n>           print version n instead (nothing is restored from your computer)
-                       These four print to standard output and write nothing on disk. They need a connection and
+  lessons [id]         Print the lessons you accepted for this repository, and those that apply to all your
+                       repositories (with an id: that lesson only). Lessons are written on the website only
+                       These five print to standard output and write nothing on disk. They need a connection and
                        the reading consent (\`lecture\`) of one of your code tools, which leon setup offers in a terminal
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
@@ -669,7 +671,8 @@ async function main(argv: string[]): Promise<number> {
       command === 'threads' ||
       command === 'thread' ||
       command === 'search' ||
-      command === 'versions'
+      command === 'versions' ||
+      command === 'lessons'
     ) {
       return await runReadCommand(command, args, {
         env: process.env,

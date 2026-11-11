@@ -5,6 +5,7 @@ import {
   ChercherRequestSchema,
   DossierRequestSchema,
   FilRequestSchema,
+  LeconsRequestSchema,
   READ_BODY_MAX_BYTES,
   type ReadResponse,
   VersionsRequestSchema,
@@ -13,20 +14,23 @@ import type { CodeSessionKind } from '@/capture/turn';
 import { getEmbedder } from '@/server/embeddings/registry';
 import { env } from '@/server/env';
 import {
+  LESSON_NOT_FOUND,
   renderDossier,
   renderFil,
+  renderLessons,
   renderSearch,
   renderVersions,
   THREAD_NOT_FOUND,
 } from '@/server/mcp/tools/render';
 import { logHits, mentionThreads } from '@/server/mcp/tools/search-tool';
+import { readLessons } from '@/server/memory/lessons';
 import type { ReadTool } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import { type Journal, readDossier, readThread, readVersions } from '@/server/sessions/thread-read';
 import { type ApiEnv, requireApiToken } from './require-api-token';
 
-// Les routes de lecture (T44, T54 ; C9, C11, C12, D27, D30 du plan de la mémoire à disposition), qu'appellent
-// `leon threads`, `leon thread`, `leon search` et `leon versions`. Chacune : le jeton avant le corps, 4 Kio au plus en
+// Les routes de lecture (T44, T54, T55 ; C9, C11, C12, C13, D27, D30 du plan de la mémoire à disposition), qu'appellent
+// `leon threads`, `leon thread`, `leon search`, `leon versions` et `leon lessons`. Chacune : le jeton avant le corps, 4 Kio au plus en
 // `.strict()`, un 400 qui ne recopie aucune valeur, l'usage `lecture` de l'outil, puis la lecture commune sous les
 // droits du porteur (thread-read.ts), notée au journal, et son rendu gardé, le même que le MCP. `outil` et `session`
 // vont au journal (D35) ; sans outil, la lecture vient de la CLI seule.
@@ -35,7 +39,9 @@ import { type ApiEnv, requireApiToken } from './require-api-token';
 // - /chercher : la recherche existante, bornée au dépôt du projet par le filtre `depot`, qui ne vient que des
 //   paramètres (search.ts) : la requête ne peut pas l'élargir. Sans filtre `type` (QD9), une page, sans pages. Une
 //   session trouvée cite son fil et ses PR, comme au MCP.
-// - /versions : l'historique d'un fil, sans aucune restauration (D33, T55 la fera sur le site).
+// - /versions : l'historique d'un fil ou d'une leçon, sans aucune restauration (D33 : le site seul restaure).
+// - /lecons : les leçons du dépôt et celles sans dépôt, ou une seule par son id ; aucune écriture : les leçons
+//   s'écrivent sur le site seulement (D37).
 
 type ReadBody = { session?: string; outil?: CodeSessionKind; usages: string[] };
 
@@ -88,5 +94,11 @@ export const readRoutes = new Hono<ApiEnv>()
     answer(c, VersionsRequestSchema, 'versions', async (body, journal) => {
       const read = await readVersions(c.var.ctx, body, journal);
       return read === null ? THREAD_NOT_FOUND : renderVersions(read);
+    }),
+  )
+  .post('/lecons', requireApiToken, limit, (c) =>
+    answer(c, LeconsRequestSchema, 'lessons', async (body, journal) => {
+      const read = await readLessons(c.var.ctx, body, journal);
+      return read === null ? LESSON_NOT_FOUND : renderLessons(read);
     }),
   );

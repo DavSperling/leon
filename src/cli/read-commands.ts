@@ -1,8 +1,9 @@
-// Les commandes de lecture du poste (T44, T54 ; C9, C11, C12, D27, D30, D31 du plan de la mémoire à disposition) :
-// `leon threads` (le dossier), `leon thread [id]` (un fil, sans id celui de la branche courante), `leon search
-// <requête>` (la recherche bornée au dépôt) et `leon versions <id> [--read <n>]` (l'historique d'un fil). Elles
-// appellent les routes de lecture et écrivent le texte gardé que rend le serveur sur la sortie standard, rien sur le
-// disque (D31). Aucune ne restaure une version : le site le fera (D33, T55).
+// Les commandes de lecture du poste (T44, T54, T55 ; C9, C11, C12, C13, D27, D30, D31 du plan de la mémoire à
+// disposition) : `leon threads` (le dossier), `leon thread [id]` (un fil, sans id celui de la branche courante), `leon
+// search <requête>` (la recherche bornée au dépôt), `leon versions <id> [--read <n>]` (l'historique d'un fil ou d'une
+// leçon) et `leon lessons [id]` (les leçons acceptées du dépôt, ou une seule). Elles appellent les routes de lecture
+// et écrivent le texte gardé que rend le serveur sur la sortie standard, rien sur le disque (D31). Aucune n'écrit une
+// leçon ni ne restaure une version : le site seul le fait (D33, D37).
 // - L'usage `lecture` vaut pour les commandes du poste dès qu'un outil l'a accepté (D30) : la commande envoie les usages
 //   de tous les outils, et le serveur refuse sans lui (403).
 // - Un 404 (serveur plus ancien que la route) ou un 403 : un message fixe sur la sortie d'erreur, et le code 0 (C11).
@@ -28,7 +29,7 @@ import { resolveServerEnv } from './env';
 import { OUTILS } from './hook-commands';
 import { type GitRunner, projectKeyFor } from './project-key';
 
-export const READ_COMMANDS = ['threads', 'thread', 'search', 'versions'] as const;
+export const READ_COMMANDS = ['threads', 'thread', 'search', 'versions', 'lessons'] as const;
 export type ReadCommand = (typeof READ_COMMANDS)[number];
 
 const PATHS = {
@@ -36,6 +37,7 @@ const PATHS = {
   thread: API_PATHS.fil,
   search: API_PATHS.chercher,
   versions: API_PATHS.versions,
+  lessons: API_PATHS.lecons,
 } as const;
 // La recherche calcule des vecteurs : plus que les 3 s du bloc de démarrage.
 const TIMEOUT_MS = 30_000;
@@ -68,6 +70,7 @@ async function acceptedUsages(home: string): Promise<Usage[]> {
 }
 
 const ID_HINT = 'the id of a thread (a uuid, as `leon threads` prints it)';
+const LESSON_ID_HINT = 'the id of a lesson (a uuid, as `leon lessons` prints it)';
 
 // Le corps de la route, sans projet ni usages, d'après les arguments ; une erreur d'usage lève (code 1).
 async function bodyOf(
@@ -95,8 +98,11 @@ async function bodyOf(
   const [id, ...rest] = positionals;
   if (rest.length > 0) throw new Error(`leon ${command} takes one id.`);
   if (id !== undefined && !FilRequestSchema.shape.id.safeParse(id).success) {
-    throw new Error(`leon ${command}: the id must be ${ID_HINT}.`);
+    throw new Error(
+      `leon ${command}: the id must be ${command === 'lessons' ? LESSON_ID_HINT : ID_HINT}.`,
+    );
   }
+  if (command === 'lessons') return id === undefined ? {} : { id };
   if (command === 'thread') return id === undefined ? { branche: await branch() } : { id };
   if (id === undefined) throw new Error(`leon versions needs ${ID_HINT}.`);
   const { read } = values;
@@ -106,7 +112,7 @@ async function bodyOf(
   return read === undefined ? { id } : { id, n: Number(read) };
 }
 
-// `leon threads|thread|search|versions` : le texte du serveur sur la sortie standard, sinon un message fixe sur la
+// `leon threads|thread|search|versions|lessons` : le texte du serveur sur la sortie standard, sinon un message fixe sur la
 // sortie d'erreur. Le code vaut 0, sauf pour une erreur d'usage, qui lève.
 export async function runReadCommand(
   command: ReadCommand,

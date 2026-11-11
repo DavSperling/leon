@@ -3,8 +3,15 @@ import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { oneLine } from '@/server/memory/labels';
+import { lessonIdInScope } from '@/server/memory/lessons';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
-import { latestIn, listVersions, readVersion, type Version } from '@/server/memory/versions';
+import {
+  type Cible,
+  latestIn,
+  listVersions,
+  readVersion,
+  type Version,
+} from '@/server/memory/versions';
 import { textArray } from '@/server/search/filters-sql';
 import { HEADING } from './resume-prompt';
 import { DEFAULT_BRANCHES, type PrState, prStates } from './start-context';
@@ -77,7 +84,14 @@ export type VersionLine = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'> &
   texte: string;
   entrees: string[];
 };
-export type VersionsRead = { id: string; titre: string; n: number | null; versions: VersionLine[] };
+// `lecon` : l'historique d'une leçon, qui n'a pas de titre (`titre` vide).
+export type VersionsRead = {
+  id: string;
+  titre: string;
+  n: number | null;
+  versions: VersionLine[];
+  lecon?: boolean;
+};
 
 // Un compteur, relevé par T38 : une ligne par état masqué par la règle de lecture, sans texte ni id.
 const countMasked = () => console.info('[leon]', 'fil.etat_masque');
@@ -282,9 +296,10 @@ export async function readDossier(
   };
 }
 
-// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris : sans `n`, ses versions lisibles ; avec
-// `n`, le texte de celle-ci, si elle est lisible. Une note n'a pas de projet (remember-tool.ts) : elle est
-// introuvable ici. Rien ne restaure (D33) : seule l'action du site le fait (T55).
+// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris, ou d'une de ses leçons du projet ou sans
+// dépôt (T55) : sans `n`, ses versions lisibles ; avec `n`, le texte de celle-ci, si elle est lisible. Une note n'a pas
+// de projet (remember-tool.ts) : elle est introuvable ici. Une leçon retirée garde son historique (D33). Rien ne
+// restaure (D33) : seule l'action du site le fait (T55).
 export async function readVersions(
   ctx: TenantContext,
   input: { projet: string; id: string; n?: number },
@@ -298,10 +313,13 @@ export async function readVersions(
         and s.id = ${input.id} and s.metadata->>'project' = ${input.projet}`);
     return rows[0];
   });
-  if (!fil) return null;
+  const leconId = fil ? null : await lessonIdInScope(ctx, input.id, input.projet);
+  if (!fil && leconId === null) return null;
+  const targetId = fil?.id ?? leconId ?? '';
+  const cible: Cible = fil ? fil.id : { leconId: targetId };
   let versions: VersionLine[];
   if (input.n === undefined) {
-    versions = (await listVersions(ctx, fil.id)).map((one) => ({
+    versions = (await listVersions(ctx, cible)).map((one) => ({
       n: one.n,
       creeLe: one.creeLe,
       ecritPar: one.ecritPar,
@@ -310,7 +328,7 @@ export async function readVersions(
       entrees: sourcesOf(one),
     }));
   } else {
-    const one = await readVersion(ctx, fil.id, input.n);
+    const one = await readVersion(ctx, cible, input.n);
     versions = one
       ? [
           {
@@ -326,14 +344,18 @@ export async function readVersions(
   }
   const logged = await recordReads(ctx, {
     ...journal,
-    reads: [fil.id, ...versions.flatMap((one) => one.entrees)].map((sourceId) => ({ sourceId })),
+    reads: [
+      fil ? { sourceId: targetId } : { leconId: targetId },
+      ...versions.flatMap((one) => one.entrees).map((sourceId) => ({ sourceId })),
+    ],
   });
-  if (!logged.has(fil.id)) return null;
+  if (!logged.has(targetId)) return null;
   return {
-    id: fil.id,
-    titre: filTitle(fil),
+    id: targetId,
+    titre: fil ? filTitle(fil) : '',
     n: input.n ?? null,
     versions: versions.filter((one) => allLogged(one.entrees, logged)),
+    ...(fil ? {} : { lecon: true }),
   };
 }
 

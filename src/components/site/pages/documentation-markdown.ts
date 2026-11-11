@@ -31,6 +31,7 @@ export const READ_COMMANDS = [
   '~/.leon/bin/leon thread [id]',
   '~/.leon/bin/leon search "<query>"',
   '~/.leon/bin/leon versions <id> --read <n>',
+  '~/.leon/bin/leon lessons [id]',
 ].join('\n');
 
 /** Le chemin d'un écran de Réglages, « Réglages › Intégrations › … » : le même sur la page et dans le Markdown. */

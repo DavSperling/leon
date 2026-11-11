@@ -107,7 +107,13 @@ const LOCAL_TOOLS = new Set([
 // quand la CLI a reconnu le serveur à l'URL de sa configuration (leon-mcp.ts). `search`, `fetch` et `briefing` rendent
 // des sources de connecteurs : ils comptent. Chaque outil se compare à son nom complet exact, jamais à un suffixe.
 export const LEON_MCP_SERVER = 'leon';
-export const LEON_LOCAL_TOOLS: readonly string[] = ['threads', 'thread', 'versions', 'remember'];
+export const LEON_LOCAL_TOOLS: readonly string[] = [
+  'threads',
+  'thread',
+  'versions',
+  'lessons',
+  'remember',
+];
 const LEON_CLAUDE_TOOLS = new Set(
   LEON_LOCAL_TOOLS.map((tool) => `mcp__${LEON_MCP_SERVER}__${tool}`),
 );

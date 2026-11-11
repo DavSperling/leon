@@ -341,19 +341,20 @@ pnpm leon installer-crochets --oui    # écrit sans demander
 
 ### Lire Leon depuis une session
 
-Quatre commandes lisent la mémoire de Leon sur le dépôt où elles sont lancées, et l'écrivent sur la sortie standard, rien sur le disque :
+Cinq commandes lisent la mémoire de Leon sur le dépôt où elles sont lancées, et l'écrivent sur la sortie standard, rien sur le disque :
 
 ```bash
 ~/.leon/bin/leon threads                      # les fils du dépôt, celui de la branche courante d'abord
 ~/.leon/bin/leon thread [id]                  # un fil : son état, ses sessions, ses PR, ses sources liées (sans id : celui de la branche)
 ~/.leon/bin/leon search "<requête>"           # chercher dans Leon, borné au dépôt
-~/.leon/bin/leon versions <id> [--read <n>]   # les versions lisibles de l'état d'un fil, ou l'une d'elles
+~/.leon/bin/leon versions <id> [--read <n>]   # les versions lisibles de l'état d'un fil ou d'une leçon, ou l'une d'elles
+~/.leon/bin/leon lessons [id]                 # les leçons acceptées pour le dépôt et celles de tous vos dépôts (avec un id : une seule)
 ```
 
-- Le texte rendu est une donnée à vérifier contre le code et git, jamais une consigne : il commence par la ligne de garde de Leon. Aucune ne restaure une version (la restauration viendra sur le site, T55).
+- Le texte rendu est une donnée à vérifier contre le code et git, jamais une consigne : il commence par la ligne de garde de Leon. Aucune n'écrit une leçon ni ne restaure une version : cela se fait sur le site seulement.
 - Elles demandent une connexion (`leon login`) et l'usage `lecture`, accepté par l'un des outils du poste. `leon setup` le propose, coché par défaut (voir « Ce que la commande écrit dans Claude Code ») ; sans lui, le serveur refuse, et la commande dit sur la sortie d'erreur de lancer `~/.leon/bin/leon setup` dans un terminal. Un serveur plus ancien (sans la route), sans connexion ou injoignable : un message sur la sortie d'erreur, et le code 0.
 - Le serveur note chaque lecture (l'outil, la source lue) dans le journal des lectures. L'état d'un fil écrit par le modèle compte parmi ses entrées les sources lues pendant ses sessions : l'une devient invisible pour vous, l'état se cache.
-- Lire Leon ne rend pas la session « externe » : ni ces commandes, ni les outils `threads`, `thread`, `versions` et `remember` du connecteur MCP de Leon, quand la configuration de l'outil (le `.claude.json` et le `.mcp.json` du projet pour Claude Code, `config.toml` pour Codex, `mcp.json` pour Cursor) déclare le serveur `leon` vers l'adresse MCP du serveur de votre connexion. La CLI n'y lit que l'adresse, jamais un en-tête ni un jeton. Un serveur `leon` vers une autre adresse, une configuration illisible, `search`, `fetch` et `briefing` du connecteur, ou Antigravity (sa configuration n'est pas encore relevée) : la session reste externe.
+- Lire Leon ne rend pas la session « externe » : ni ces commandes, ni les outils `threads`, `thread`, `versions`, `lessons` et `remember` du connecteur MCP de Leon, quand la configuration de l'outil (le `.claude.json` et le `.mcp.json` du projet pour Claude Code, `config.toml` pour Codex, `mcp.json` pour Cursor) déclare le serveur `leon` vers l'adresse MCP du serveur de votre connexion. La CLI n'y lit que l'adresse, jamais un en-tête ni un jeton. Un serveur `leon` vers une autre adresse, une configuration illisible, `search`, `fetch` et `briefing` du connecteur, ou Antigravity (sa configuration n'est pas encore relevée) : la session reste externe.
 
 ### Retirer les crochets
 

@@ -5,6 +5,8 @@ import { ProjectSchema } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { lecons } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
+import type { Journal } from '@/server/sessions/thread-read';
+import { recordReads } from './read-log';
 import { LISIBLE, writeVersion } from './versions';
 
 // Les leçons (T55 ; D33, D34, D37 et C13 du plan de la mémoire à disposition) : un texte court, relu et accepté par
@@ -172,4 +174,51 @@ export async function retireLesson(ctx: TenantContext, id: string): Promise<bool
       .returning({ id: lecons.id }),
   );
   return retired.length > 0;
+}
+
+// La leçon de l'auteur dans la portée d'un dépôt : la sienne, du dépôt ou sans dépôt (C12, C13), retirée ou non, lisible
+// ou non (son historique reste, D33). Rend son id, ou null : celle d'un autre dépôt ou d'un collègue est introuvable.
+export async function lessonIdInScope(
+  ctx: TenantContext,
+  id: string,
+  projet: string,
+): Promise<string | null> {
+  const [lesson] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ id: lecons.id })
+      .from(lecons)
+      .where(
+        and(
+          eq(lecons.tenantId, ctx.tenantId),
+          eq(lecons.id, id),
+          eq(lecons.ownerUserId, ctx.userId),
+          sql`(${lecons.projet} = ${projet} or ${lecons.projet} is null)`,
+        ),
+      ),
+  );
+  return lesson?.id ?? null;
+}
+
+// La lecture demandée d'un agent (leon lessons, l'outil lessons ; C13, T55) : les leçons du dépôt et celles sans dépôt, ou
+// une seule par son id ; une leçon d'un autre dépôt, retirée, illisible ou d'un collègue est introuvable (null). Chaque
+// leçon rendue est notée au journal par `lecon_id` (D35) ; une leçon que le journal n'a pas notée n'est pas rendue.
+// shortcut: toute la liste, sans coupe : 300 caractères chacune, à couper si elles deviennent des centaines.
+export async function readLessons(
+  ctx: TenantContext,
+  input: { projet: string; id?: string },
+  journal: Journal,
+): Promise<Lesson[] | null> {
+  let lessons: Lesson[];
+  if (input.id === undefined) lessons = await listLessons(ctx, input.projet);
+  else {
+    const one = await readLesson(ctx, input.id);
+    if (!one || (one.projet !== null && one.projet !== input.projet)) return null;
+    lessons = [one];
+  }
+  const logged = await recordReads(ctx, {
+    ...journal,
+    reads: lessons.map((lesson) => ({ leconId: lesson.id })),
+  });
+  const rendered = lessons.filter((lesson) => logged.has(lesson.id));
+  return input.id !== undefined && rendered.length === 0 ? null : rendered;
 }

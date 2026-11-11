@@ -411,6 +411,7 @@ describe('POST /api/oauth/jeton : authorization_code (L8)', () => {
     expect(tools.map((tool) => tool.name).sort()).toEqual([
       'briefing',
       'fetch',
+      'lessons',
       'remember',
       'search',
       'thread',

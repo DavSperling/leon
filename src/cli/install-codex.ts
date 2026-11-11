@@ -49,9 +49,11 @@ import {
   load,
   offerUsages,
   parseSettings,
+  USER_PROMPT_TIMEOUT_S,
   type UsageOptions,
   usagesToOffer,
   writeAtomically,
+  writeReminderHook,
 } from './install-hooks';
 import { removeUnusedLauncher, type UninstallDeps, withdrawOnServer } from './uninstall-hooks';
 
@@ -86,15 +88,23 @@ export type CodexInstallOptions = {
   assumeYes: boolean;
 } & UsageOptions;
 
-type CodexEvent = 'SessionStart' | 'Stop' | 'SessionEnd';
+type CodexEvent = 'SessionStart' | 'Stop' | 'SessionEnd' | 'UserPromptSubmit';
 type Change = { event: CodexEvent; action: 'ajout' | 'mise-a-jour' | 'inchange'; handler: Json };
 type Plan = { next: Json; changes: Change[] };
 
-// Les crochets de Leon pour Codex, dans cet ordre : chacun dans la liste de son évènement.
+// Les crochets de Leon pour Codex, dans cet ordre : chacun dans la liste de son évènement. Avec `reminder` (l'usage
+// `rappel`, T49), le crochet de message en plus : son entrée porte `prompt`, il répond par `additionalContext`
+// (briefing.ts ; doc officielle relue le 11/11).
 export function codexHooks(
   home: string,
+  reminder = false,
 ): { event: CodexEvent; evenement: Evenement; handler: Json }[] {
   const command = (evenement: Evenement) => launcherCommand(home, 'codex', evenement);
+  const prompt = {
+    event: 'UserPromptSubmit' as const,
+    evenement: 'prompt' as const,
+    handler: { type: 'command', command: command('prompt'), timeout: USER_PROMPT_TIMEOUT_S },
+  };
   return [
     {
       event: 'SessionStart',
@@ -121,18 +131,19 @@ export function codexHooks(
       evenement: 'fin',
       handler: { type: 'command', command: command('fin'), timeout: CODEX_FIN_TIMEOUT_S },
     },
+    ...(reminder ? [prompt] : []),
   ];
 }
 
 // Les réglages avec les crochets de Leon, sans modifier l'objet reçu : une entrée de Leon déjà là est mise à jour sur
 // place (les doublons partent), sinon un groupe s'ajoute en fin de la liste de son évènement. null : une forme que la
 // doc ne connaît pas (on n'écrit rien).
-export function addCodexHooks(settings: Json, home: string): Plan | null {
+export function addCodexHooks(settings: Json, home: string, reminder = false): Plan | null {
   const next = structuredClone(settings);
   const hooksRoot = next.hooks ?? {};
   if (!isRecord(hooksRoot)) return null;
   const changes: Change[] = [];
-  for (const { event, evenement, handler: wanted } of codexHooks(home)) {
+  for (const { event, evenement, handler: wanted } of codexHooks(home, reminder)) {
     const groups = hooksRoot[event] ?? [];
     if (!Array.isArray(groups)) return null;
     let found = false;
@@ -220,24 +231,25 @@ export async function installCodexHook(
   const path = join(options.codexDir, CODEX_HOOKS_FILE);
   const loaded = await load(path);
   const settings = parseSettings(loaded);
-  const plan = settings && addCodexHooks(settings, options.home);
+  const consentFile = consentPath(options.home);
+  const consent = await factsConsent(options.home, 'codex');
+  const plan =
+    settings && addCodexHooks(settings, options.home, consent?.usages.includes('rappel'));
   if (settings === null || plan === null) {
     deps.err(
       `Leon: ${path} is unreadable or does not have the expected shape. Nothing was written: fix the file and run the command again.`,
     );
     return 1;
   }
-  const consentFile = consentPath(options.home);
-  const consent = await factsConsent(options.home, 'codex');
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   for (const line of await codexWarnings(options.codexDir, settings)) deps.out(line);
   if (unchanged && consent?.capture_le) {
-    if (usagesToOffer(consent, options).length === 0) {
+    if (usagesToOffer('codex', consent, options).length === 0) {
       deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
       return 0;
     }
     deps.out(`The Leon hooks are already in place in ${path}.`);
-    return (await offerUsages('codex', options, deps)) ? 0 : 1;
+    return offerCodexUsages(path, options, deps);
   }
 
   for (const line of [
@@ -298,7 +310,27 @@ export async function installCodexHook(
     }
     deps.out(`Consent recorded in ${consentFile}.`);
   }
-  return (await offerUsages('codex', options, deps)) ? 0 : 1;
+  return offerCodexUsages(path, options, deps);
+}
+
+// Les usages, puis le crochet de message si `rappel` est donné (T49) : en fin de liste, à approuver par /hooks.
+async function offerCodexUsages(
+  path: string,
+  options: CodexInstallOptions,
+  deps: InstallDeps,
+): Promise<number> {
+  if (!(await offerUsages('codex', options, deps))) return 1;
+  if (!(await factsConsent(options.home, 'codex'))?.usages.includes('rappel')) return 0;
+  const outcome = await writeReminderHook(
+    path,
+    (settings) => addCodexHooks(settings, options.home, true)?.next ?? null,
+    deps,
+  );
+  if (outcome === 'ecrit') {
+    deps.out(`Reminder hook installed in ${path}.`);
+    deps.out(APPROVAL_LINE);
+  }
+  return outcome === 'echec' ? 1 : 0;
 }
 
 // Le retrait : les crochets de Leon pour Codex (tous évènements), puis l'accord de Codex en version 0, puis le serveur

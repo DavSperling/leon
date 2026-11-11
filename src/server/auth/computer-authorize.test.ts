@@ -89,14 +89,16 @@ describe('le paramètre usages (T64)', () => {
     expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture,lecture' })?.usages).toEqual([
       'lecture',
     ]);
+    // Dans l'ordre de la page (AUTHORIZE_USAGES), sans `noter`, qu'elle ne montre pas encore (T57).
     expect(parseAuthorizeParams({ ...GOOD, usages: 'rappel,lecture,noter' })?.usages).toEqual([
       'lecture',
+      'rappel',
     ]);
   });
 
   it.each([
     ['une valeur inconnue', 'inconnu'],
-    ['un usage que la page ne montre pas encore', 'rappel'],
+    ['un usage que la page ne montre pas encore', 'noter'],
     ['un usage qui n’est jamais coché par défaut', 'resume'],
     ['vide', ''],
     ['une chaîne trop longue', `lecture,${'x'.repeat(300)}`],
@@ -113,7 +115,7 @@ describe('le paramètre usages (T64)', () => {
     expect(authorizeQuery({ ...PARAMS, usages: ['lecture'] })).toBe(
       `port=4242&etat=${ETAT}&empreinte=${EMPREINTE}&usages=lecture`,
     );
-    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'rappel' });
+    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'noter' });
     expect(ignored && authorizeQuery(ignored)).toBe(authorizeQuery(PARAMS));
   });
 

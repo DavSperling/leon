@@ -55,6 +55,7 @@ import {
   parseSettings,
   SETTINGS_FILE,
   type UsageDecisions,
+  usageOffered,
 } from './install-hooks';
 import type { ToolHookPlan } from './install-outil';
 import {
@@ -338,7 +339,7 @@ const ANTIGRAVITY_LEFTOVER =
   'Antigravity was not found, but an earlier `leon setup` left its hooks or its capture consent in place (Gemini CLI alone used to be taken for Antigravity). Nothing is sent while Antigravity is not installed; if it is installed later, they apply from its first launch. To remove them: ~/.leon/bin/leon retirer-crochets --outil antigravity';
 
 // Les cases à demander sur la page « Autoriser » (T64, C16) : les usages cochés par défaut qu'elle sait montrer, qui
-// manquent sans refus à l'un des outils trouvés dont l'installateur existe (les mêmes dossiers que la boucle de
+// manquent sans refus à l'un des outils trouvés dont l'installateur existe et qui le propose (les mêmes dossiers que la boucle de
 // runSetup). Un outil sans accord de base, ou retiré, n'a ni usage ni refus.
 async function usagesForPage(home: string, env: SetupDeps['env']): Promise<AuthorizeUsage[]> {
   const missing = new Set<AuthorizeUsage>();
@@ -347,6 +348,7 @@ async function usagesForPage(home: string, env: SetupDeps['env']): Promise<Autho
     if (!outil || (await firstDirectory(tool.dirs(home, env))) === null) continue;
     const consent = await factsConsent(home, outil);
     for (const usage of AUTHORIZE_USAGES) {
+      if (!usageOffered(outil, usage)) continue; // pas de `rappel` pour Antigravity (install-hooks.ts)
       if (!consent?.usages.includes(usage) && !consent?.refus.includes(usage)) missing.add(usage);
     }
   }

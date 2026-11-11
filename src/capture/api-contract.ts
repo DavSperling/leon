@@ -109,10 +109,10 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
-// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : T49 y ajoutera
-// `rappel`, T57 `noter`. À part de USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de
-// ce lot sait écrire.
-export const AUTHORIZE_USAGES = ['lecture'] as const satisfies readonly Usage[];
+// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
+// `rappel` (T49, avec son crochet) ; T57 y ajoutera `noter`. À part de USAGES : la page ne montre, et `leon setup` ne
+// demande, que ce qu'un installateur de ce lot sait écrire (`rappel`, jamais pour Antigravity : setup.ts).
+export const AUTHORIZE_USAGES = ['lecture', 'rappel'] as const satisfies readonly Usage[];
 export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur

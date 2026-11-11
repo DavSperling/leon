@@ -158,6 +158,20 @@ describe('installAntigravityHooks : les usages', () => {
     expect(asked).toHaveLength(2);
     expect(out).not.toContain('nothing to do');
   });
+  // T49 : PreInvocation ne reçoit pas le message (annexe 05) : jamais de `rappel` sans crochet (T64).
+  it('rappel : jamais proposé, et une décision de la page ne l’écrit pas pour Antigravity', async () => {
+    const { asked } = await install(['oui', 'non', 'non'], {
+      interactive: true,
+      decisions: new Map([['rappel', true]]),
+    });
+
+    expect(asked).toHaveLength(3);
+    expect(asked.some((question) => question.includes('remind'))).toBe(false);
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({
+      usages: [],
+      refus: ['lecture', 'resume'],
+    });
+  });
 });
 
 describe('uninstallAntigravityHooks', () => {

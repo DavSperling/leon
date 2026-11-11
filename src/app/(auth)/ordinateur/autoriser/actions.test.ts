@@ -115,9 +115,9 @@ describe('« Autoriser » : les cases de la page', () => {
   });
 
   it('une valeur inconnue est écartée, de m comme de g', async () => {
-    expect(
-      await claims({ usages: 'lecture,inconnu,rappel' }, ['inconnu', 'lecture']),
-    ).toMatchObject({ m: ['lecture'], g: ['lecture'] });
+    expect(await claims({ usages: 'lecture,inconnu,noter' }, ['inconnu', 'lecture'])).toMatchObject(
+      { m: ['lecture'], g: ['lecture'] },
+    );
     const none = await claims({ usages: 'inconnu' }, ['inconnu']);
     expect(none?.m).toBeUndefined();
   });

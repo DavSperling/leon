@@ -123,7 +123,7 @@ export const HOOKS: readonly HookSpec[] = [
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session stays private to its author.',
+    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session is read by you and, on the Leon website, by the managers above you.',
   },
 ];
 
@@ -138,11 +138,12 @@ export const REMINDER_HOOK: HookSpec = {
 
 // Ce qui est lu, ce qui part et ce qui est donné au modèle de Claude Code : le texte de l'accord en version 2 (C7),
 // testé mot pour mot (install-hooks.test.ts). Le changer, c'est changer ce que l'utilisateur a accepté.
-// Amendé le 12/11, décision 7 d'Amos, sans redemander l'accord : le rapport final de chaque sous-agent.
+// Amendé le 12/11, décision 7 d'Amos, sans redemander l'accord : le rapport final de chaque sous-agent. Amendé le 12/11,
+// décision 4 d'Amos, sans redemander l'accord : qui lit la session (l'auteur, et ses managers sur le site, 0057).
 const CONSENT_LINES = [
   'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
   "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; the final report of each subagent, labeled the same way; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
-  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  '  - Secrets are masked before sending, and again by the server. Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ];
 
@@ -150,12 +151,14 @@ const CONSENT_LINES = [
 // Leon (le condensé de T22, à partir de 6 échanges, après la clôture de D9), et où va le résumé (T23 : à l'auteur seul,
 // indexé ; jamais dans le bloc de démarrage, D25), et la limite du retrait (resume-worker.ts). Puis l'état des fils
 // du lot 12 (D23, D30 : l'usage `resume` le couvre aussi ; écrit au futur avant lui, pour ne pas redemander l'accord).
-// Les quatre installateurs le montrent tel quel (décision d'Amos du 11/11).
+// Les quatre installateurs le montrent tel quel (décision d'Amos du 11/11). Amendé le 12/11, décision 4 d'Amos, sans
+// redemander l'accord : le résumé se lit comme la session (l'auteur, et ses managers sur le site) ; l'état d'un fil,
+// lui, reste à l'auteur seul (`versions_memoire` n'a pas la lecture d'équipe).
 export const RESUME_LINES = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
-  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
-  "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you, like the summary. Withdrawing your consent stops this too, once the Leon server is told.",
+  "  - The summary is read like the session: by you and, on the Leon website, by the managers above you. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
+  "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you. Withdrawing your consent stops this too, once the Leon server is told.",
 ];
 
 // Le texte de l'usage `lecture` (C7 révisé, D24, D30 ; décisions d'Amos du 11/11), testé mot pour mot : un seul texte,
@@ -190,12 +193,24 @@ export const RAPPEL_LINES = [
 // session, les usages de cet outil seul), ce qui est gardé (notes.ts : une source privée, versionnée, que la recherche
 // trouve, jamais poussée), ce que la requête de démarrage envoie en plus (briefing.ts : usages, commande et outil) et la
 // phrase qu'elle place (render-context.ts, `--session` seulement sûre pour un shell), et ce que décocher coupe : la
-// phrase et `leon note` pour l'outil, et `remember` pour l'espace par le réglage du compte (C16, T65).
+// phrase et `leon note` pour l'outil, et `remember` pour l'espace par le réglage du compte (C16, T65). Amendé le 12/11,
+// décision 4 d'Amos, sans redemander l'accord : la note se lit comme les sessions (l'auteur, et ses managers sur le site).
 export const NOTER_LINES = [
   'Agent notes (usage "noter", asked separately):',
-  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note stays private to you, like your sessions, and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
   "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
   '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all your assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
+];
+
+// Le texte de l'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14), testé mot pour
+// mot : ce qu'extractBackstage relève (session-backstage.ts : le raisonnement non vide, la consigne et le rapport final
+// de chaque sous-agent, les appels réduits), comment c'est préparé (masque, blocs de Leon retirés, 20 000 caractères),
+// qui le lit (comme la session, 0057) et où il ne va jamais (D23, QD9). Pour Claude Code seul (usagesToOffer).
+export const COULISSES_LINES = [
+  'Full capture (usage "coulisses", optional, asked separately):',
+  "  - At the end of each session, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, when Claude Code writes its text in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument.",
+  "  - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and read like it: by you and, on the Leon website, by the managers above you. Leon's search always finds it. It is never placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.",
+  '  - Withdrawing your consent stops this sending. What was already sent stays in Leon.',
 ];
 
 export type Json = Record<string, unknown>;
@@ -629,7 +644,7 @@ const refusedLine = (tool: ConsentTool, leon: string): string =>
 // `lecture`, `rappel` et `noter` sont cochés par défaut, en [Y/n] : Entrée, y, yes, o et oui les acceptent ; n, no et non les
 // refusent ; une autre réponse ou une entrée fermée ne tranchent rien (décision d'Amos du 11/11 : une faute de frappe ne
 // vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est pas, en [y/N] : seul un oui l'accepte, et seule une entrée
-// fermée ne tranche rien (D30).
+// fermée ne tranche rien (D30). `coulisses` (lot 14) se place juste avant `resume`, en [y/N] comme lui.
 const checkedByDefault = (text: string | null): boolean | null => {
   if (text === null) return null;
   if (text.trim() === '' || isYes(text)) return true;
@@ -642,7 +657,7 @@ type Offer = {
   recorded: string;
   without: string; // ce qui manque sans l'usage
 };
-const OFFERED = ['lecture', 'rappel', 'noter', 'resume'] as const;
+const OFFERED = ['lecture', 'rappel', 'noter', 'coulisses', 'resume'] as const;
 const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   lecture: {
     lines: LECTURE_LINES,
@@ -668,6 +683,14 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
     recorded: 'Agent notes recorded',
     without: 'the agent writes no note to Leon',
   },
+  coulisses: {
+    lines: COULISSES_LINES,
+    question: (path) =>
+      `\nAlso send Leon what happens behind the exchanges of each session: the reasoning, the subagents and the reduced tool calls (recorded in ${path})? [y/N] `,
+    answer: (text) => (text === null ? null : isYes(text)),
+    recorded: 'Full capture recorded',
+    without: 'nothing behind the exchanges is sent',
+  },
   resume: {
     lines: RESUME_LINES,
     question: (path) =>
@@ -680,13 +703,17 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
 
 // Les usages qui restent pour un outil sur son accord de base : manquants et jamais refusés (A16), puis tranchés dans
 // ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
-// Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05).
+// Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05). Sauf
+// `coulisses`, pour Claude Code seul (décision 2 d'Amos pour le lot 14) : un « oui » de `leon setup` ne s'écrit pas dans
+// l'accord d'un outil dont la CLI ne relève pas encore les coulisses, qui partiraient sans redemander une fois relevées.
 export function usagesToOffer(
+  tool: ConsentTool,
   consent: FactsConsent | null,
   options: UsageOptions & { assumeYes: boolean },
 ): (typeof OFFERED)[number][] {
   if (consent === null) return [];
   return OFFERED.filter((usage) => {
+    if (usage === 'coulisses' && tool !== 'claude_code') return false;
     if (consent.usages.includes(usage) || consent.refus.includes(usage)) return false;
     const decided = options.decisions?.get(usage);
     return decided === undefined
@@ -707,7 +734,7 @@ export async function offerUsages(
 ): Promise<boolean> {
   const path = consentPath(options.home);
   const decisions: UsageDecisions = options.decisions ?? new Map();
-  const pending = usagesToOffer(await factsConsent(options.home, tool), {
+  const pending = usagesToOffer(tool, await factsConsent(options.home, tool), {
     ...options,
     decisions,
   });
@@ -827,7 +854,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
-      if (usagesToOffer(consent, options).length === 0) {
+      if (usagesToOffer('claude_code', consent, options).length === 0) {
         deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }

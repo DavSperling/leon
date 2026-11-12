@@ -223,6 +223,7 @@ export function DocumentationPage({
                       'lecture',
                       'rappel',
                       'noter',
+                      'coulisses',
                       'resume',
                     ] as const
                   ).map((item) => (

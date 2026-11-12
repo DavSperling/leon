@@ -11,6 +11,7 @@ import {
   uninstallAntigravityHooks,
 } from './install-antigravity';
 import {
+  COULISSES_LINES,
   LECTURE_LINES,
   NOTER_LINES,
   RAPPEL_LINES,
@@ -99,6 +100,11 @@ describe('installAntigravityHooks', () => {
     expect(text).toContain('labeled as written by Antigravity, not by you');
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
+    // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).
+    expect(text).toContain(
+      'Each conversation is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+    );
+    expect(text).not.toContain('private');
     expect(text).toContain(CATCH_UP_WHEN);
     expect(asked).toHaveLength(1);
     await expect(readFile(hooksPath)).rejects.toThrow();
@@ -170,6 +176,17 @@ describe('installAntigravityHooks : les usages', () => {
     const { out, asked } = await install([null, null, null, null], { interactive: true });
     expect(asked).toHaveLength(4);
     expect(out).not.toContain('nothing to do');
+  });
+  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul, tant que la CLI ne relève pas celles d'Antigravity.
+  it('coulisses n’est ni demandé ni écrit pour Antigravity, même tranché oui dans le passage par Claude Code', async () => {
+    const { out, asked } = await install(['oui', null, null, null, null], {
+      interactive: true,
+      decisions: new Map([['coulisses', true]]),
+    });
+
+    expect(asked).toHaveLength(5);
+    expect(out).not.toContain(COULISSES_LINES[0]);
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({ usages: [], refus: [] });
   });
   // T49, amendé le 11/11 au soir : PreInvocation reçoit le message dans l'appli 2.0.6 (annexe 05) ; le crochet déjà posé
   // porte le rappel, sans crochet de plus.

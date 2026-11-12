@@ -666,17 +666,18 @@ describe('setup : les outils de code', () => {
   });
 
   // L'usage `resume` (C7 révisé, D30) : demandé à part dans un terminal, jamais donné par --yes ni hors d'un terminal.
-  // `lecture` et `rappel` sont demandés avant lui : « plus tard » ne les tranche pas (décision d'Amos du 11/11).
+  // `lecture` et `rappel` sont demandés avant lui : « plus tard » ne les tranche pas (décision d'Amos du 11/11). Puis
+  // `coulisses` (lot 14), juste avant lui : une entrée fermée ne le tranche pas.
   it('dans un terminal, propose l’usage resume après l’accord de base ; accepté, il est écrit', async () => {
     await hasClaudeCode();
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', 'y'] },
+      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', null, 'y'] },
     );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(5);
+    expect(run.questions).toHaveLength(6);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: ['resume'],
@@ -702,9 +703,9 @@ describe('setup : les outils de code', () => {
     await hasClaudeCode();
     const first = await setup(
       {},
-      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', 'n'] },
+      { interactive: true, answers: ['y', 'plus tard', 'plus tard', 'plus tard', null, 'n'] },
     );
-    expect(first.questions).toHaveLength(5);
+    expect(first.questions).toHaveLength(6);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: [],
@@ -713,6 +714,7 @@ describe('setup : les outils de code', () => {
     await addUsage(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
     await addRefusal(home, 'claude_code', 'noter');
+    await addRefusal(home, 'claude_code', 'coulisses');
     const consent = await readFile(consentPath(home), 'utf8');
 
     const second = await setup({}, { interactive: true });
@@ -738,14 +740,15 @@ describe('setup : les outils de code', () => {
   it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
     await allTools();
 
-    // Claude Code, lecture, rappel, noter, resume, puis Codex, Cursor (refusé) et Antigravity, rappel compris.
+    // Claude Code, lecture, rappel, noter, coulisses (sans réponse), resume, puis Codex, Cursor (refusé) et
+    // Antigravity, rappel compris.
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', '', '', '', 'n', 'y', 'n', 'y'] },
+      { interactive: true, answers: ['y', '', '', '', null, 'n', 'y', 'n', 'y'] },
     );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(8);
+    expect(run.questions).toHaveLength(9);
     expect(checkedAsked(run)).toHaveLength(3);
     expect(run.output.split('usage "lecture"')).toHaveLength(2);
     expect(run.output.split('usage "rappel"')).toHaveLength(2);
@@ -761,12 +764,36 @@ describe('setup : les outils de code', () => {
     expect(run.output).toContain('`~/.leon/bin/leon retirer-crochets --outil codex`');
   });
 
+  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul. Demandé une fois, à son passage, le « oui » ne
+  // s'écrit ni pour Codex, ni pour Cursor, ni pour Antigravity, qui passent après lui.
+  it('dans un terminal : un oui à coulisses ne s’écrit que pour Claude Code', async () => {
+    await allTools();
+
+    const run = await setup(
+      {},
+      { interactive: true, answers: ['y', null, null, null, 'y', null, 'y', 'y', 'y'] },
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toHaveLength(9);
+    expect(run.questions[4]).toContain('[y/N]');
+    expect(run.output.split('usage "coulisses"')).toHaveLength(2);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['coulisses'],
+      refus: [],
+    });
+    for (const tool of ['codex', 'cursor', 'antigravity'] as const) {
+      expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
+    }
+  });
+
   it('seulement pour les outils qui en manquent sans refus : la question vient au premier d’entre eux', async () => {
     await hasClaudeCode();
     await setup({ yes: true });
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
     await addRefusal(home, 'claude_code', 'noter');
+    await addRefusal(home, 'claude_code', 'coulisses');
     await addUsage(home, 'claude_code', 'resume');
     const claudeCode = await factsConsent(home, 'claude_code');
     await mkdir(join(home, '.cursor'));
@@ -791,10 +818,10 @@ describe('setup : les outils de code', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', null, null, null, null, 'y', 'y', 'y'] },
+      { interactive: true, answers: ['y', null, null, null, null, null, 'y', 'y', 'y'] },
     );
 
-    expect(run.questions).toHaveLength(8);
+    expect(run.questions).toHaveLength(9);
     for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
     }
@@ -1205,7 +1232,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', '', 'plus tard', 'plus tard', 'n'] },
+      { interactive: true, answers: ['y', '', 'plus tard', 'plus tard', null, 'n'] },
     );
 
     expect(run.logins).toEqual([]);
@@ -1220,11 +1247,15 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup(
       {},
-      { interactive: true, page: { refus: ['lecture', 'rappel', 'noter'] }, answers: ['y', 'n'] },
+      {
+        interactive: true,
+        page: { refus: ['lecture', 'rappel', 'noter'] },
+        answers: ['y', null, 'n'],
+      },
     );
 
     expect(run.asked).toEqual([{ usages: ['lecture', 'rappel', 'noter'], relance: false }]);
-    expect(run.questions).toHaveLength(2);
+    expect(run.questions).toHaveLength(3);
     expect(run.questions.filter((question) => question.includes('[Y/n]'))).toEqual([]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       usages: [],

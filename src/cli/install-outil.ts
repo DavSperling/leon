@@ -93,7 +93,7 @@ export async function installToolHooks(install: ToolInstall, deps: InstallDeps):
   if (warning) deps.out(warning);
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   if (unchanged && consent?.capture_le) {
-    if (usagesToOffer(consent, install).length === 0) {
+    if (usagesToOffer(outil, consent, install).length === 0) {
       deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
       return 0;
     }

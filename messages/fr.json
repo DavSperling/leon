@@ -993,7 +993,7 @@
       "aside": "Leon en bref",
       "points": {
         "sources": "Chaque réponse cite sa source, ou dit « je ne sais pas ».",
-        "private": "Vos conversations d’IA et vos discussions restent privées.",
+        "private": "Vos discussions avec Leon restent privées. Vos conversations d’IA sont lues par vous et, sur le site de Leon, par vos managers en remontant.",
         "tools": "{count} outils branchables, relevés toutes les 15 minutes."
       },
       "steps": {
@@ -1060,7 +1060,7 @@
       "semantic": "par le sens",
       "team": "Visible de l’équipe",
       "teamTools": "outils de l’équipe",
-      "you": "Vous seul",
+      "you": "Vous et vos managers",
       "aiConversations": "conversations d’IA"
     },
     "sample": {
@@ -1076,7 +1076,7 @@
       "pill": "La mémoire d’entreprise des PME",
       "title": "Ce qui a été promis à vos clients, ",
       "titleAccent": "retrouvé avec sa source.",
-      "lead": "Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous seul, et répond en citant la source. Quand rien ne répond, il le dit.",
+      "lead": "Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous et à vos managers, et répond en citant la source. Quand rien ne répond, il le dit.",
       "betaNote": "Bêta ouverte · aucune facturation à ce jour",
       "toolsTitle": "{count} outils, ",
       "toolsTitleAccent": "et vos assistants d’IA.",
@@ -1096,7 +1096,7 @@
         },
         "privateAi": {
           "title": "Chacun parle à son IA dans son coin",
-          "text": "Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde, pour vous seul, avec le reste."
+          "text": "Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde avec le reste, lues par vous et, sur le site de Leon, par vos managers en remontant."
         }
       },
       "tasks": {
@@ -1113,7 +1113,7 @@
       "step1Text": "Une clé d’API ou un bouton de connexion, parmi {count} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.",
       "step1Extension": "Extension · assistant web",
       "step2Title": "Leon garde le brut",
-      "step2Text": "Tel quel, avec un lien vers l’original. Vos conversations d’IA restent à vous. Les secrets reconnaissables sont masqués avant d’être gardés.",
+      "step2Text": "Tel quel, avec un lien vers l’original. Vos conversations d’IA sont lues par vous et, sur le site de Leon, par vos managers en remontant. Les secrets reconnaissables sont masqués avant d’être gardés.",
       "step2Date": "3 oct.",
       "step2Quote": "« On peut s’engager sur le 15 novembre pour la V2… »",
       "step2Open": "Ouvrir dans Granola ↗",
@@ -1162,9 +1162,9 @@
       "terminal": "assistant de code · serveur MCP de Leon",
       "terminalSearch": "« reprise des données ACME »",
       "terminalRemember": "« reprise reportée au 2 déc. »",
-      "terminalSaved": "note gardée, visible de vous seul",
+      "terminalSaved": "note gardée, lue comme vos sessions",
       "briefingMeta": "08:45 · 250 mots au plus",
-      "securityTitle": "Chaque entreprise dans son espace. Vos conversations à vous.",
+      "securityTitle": "Chaque entreprise dans son espace. Vos conversations, à vous et à vos managers.",
       "securityLink": "Tout sur la sécurité",
       "securityNotYet": "Ce qui n’est pas encore là est écrit aussi : ",
       "securityList": "la liste",
@@ -1176,7 +1176,7 @@
     "product": {
       "heroTitle": "Tout ce qui se dit, gardé tel quel, retrouvé avec sa source.",
       "heroAccent": "retrouvé avec sa source.",
-      "heroLead": "Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous seul, puis répond en citant ses sources. Personne ne remplit de fiche pour lui.",
+      "heroLead": "Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous et à vos managers, puis répond en citant ses sources. Personne ne remplit de fiche pour lui.",
       "flowCaption": "Les quatre étapes : capter, garder, retrouver, discuter.",
       "captureCaption": "Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin.",
       "captureLabel": "ce que Leon capte",
@@ -1295,7 +1295,7 @@
           "text": "Pour deux assistants d’IA sur le web. Un écran de consentement, un interrupteur par site, une pause.",
           "p1": "Jamais en navigation privée",
           "p2": "Jamais de pièce jointe",
-          "p3": "Conversations privées à leur auteur"
+          "p3": "Conversations lues par leur auteur et ses managers"
         },
         "coding": {
           "title": "Assistant de code",
@@ -1339,7 +1339,7 @@
       "connectLead": "Personne ne remplit de fiche ensuite : Leon relit l’outil de lui-même.",
       "aiKicker": "Conversations d’IA",
       "aiTitle": "Les conversations avec vos assistants d’IA.",
-      "aiLead": "Ce qui se dit avec un assistant est souvent ce qu’on ne retrouve nulle part ailleurs. Leon le garde, pour la personne qui l’a écrit.",
+      "aiLead": "Ce qui se dit avec un assistant est souvent ce qu’on ne retrouve nulle part ailleurs. Leon le garde, pour la personne qui l’a écrit et, sur le site de Leon, pour ses managers en remontant.",
       "plannedTitle": "Ce qui n’est pas encore branchable.",
       "plannedLead": "Nous le disons pour que vous ne le découvriez pas après coup.",
       "ctaTitle": "Branchez un premier outil.",
@@ -1393,8 +1393,8 @@
       "whoTitle": "Deux règles, faciles à retenir.",
       "teamTitle": "Visible de toute l’équipe",
       "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf les mails, Google Drive et Slack : ils restent privés à qui les branche.",
-      "youTitle": "Privé, à vous seul",
-      "youText": "Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.",
+      "youTitle": "Pas partagé avec l’équipe",
+      "youText": "Vous le lisez et, sur le site de Leon, vos managers en remontant aussi, sauf vos discussions avec Leon, qui restent à vous seul. Aucun autre collègue ne le voit, ni dans la recherche, ni dans une réponse.",
       "frankly": "Franchement",
       "notYetTitle": "Ce qui n’est pas encore là.",
       "notYetLead": "Nous préférons l’écrire ici plutôt que de vous le laisser découvrir. Nous tenons cette liste à jour.",

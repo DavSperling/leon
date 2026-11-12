@@ -993,7 +993,7 @@
       "aside": "Leon at a glance",
       "points": {
         "sources": "Every answer cites its sources, or says it doesn’t know.",
-        "private": "Your chats and AI conversations are private to you.",
+        "private": "Your chats with Leon are private to you. Your AI conversations are read by you and, on the Leon website, by the managers above you.",
         "tools": "{count} connectors, synced every 15 minutes."
       },
       "steps": {
@@ -1060,7 +1060,7 @@
       "semantic": "vector",
       "team": "Shared with the team",
       "teamTools": "team tools",
-      "you": "Private to you",
+      "you": "You and your managers",
       "aiConversations": "AI conversations"
     },
     "sample": {
@@ -1096,7 +1096,7 @@
         },
         "privateAi": {
           "title": "Decisions happen in private AI chats",
-          "text": "People work through decisions with AI assistants, and those threads stay buried in each person’s history. Leon indexes them, privately, alongside everything else."
+          "text": "People work through decisions with AI assistants, and those threads stay buried in each person’s history. Leon indexes them alongside everything else, read by their author and, on the Leon website, by the managers above them."
         }
       },
       "tasks": {
@@ -1106,14 +1106,14 @@
       },
       "chatQuestion": "Should we keep the queue in Postgres instead of Redis?",
       "chatAnswer": "Yes: one database, fewer moving parts to operate…",
-      "chatNote": "private to its author",
+      "chatNote": "read by its author and their managers",
       "stepsTitle": "Connect your tools once, then ask Leon what they contain.",
       "stepsLead": "Leon syncs every 15 minutes and stores each item verbatim. Your team keeps working in the tools it already uses.",
       "step1Title": "Connect your tools",
       "step1Text": "OAuth or an API key, across {count} connectors. The browser extension and a coding-assistant hook bring in AI conversations.",
       "step1Extension": "Extension · web AI assistant",
       "step2Title": "Leon indexes the originals",
-      "step2Text": "Stored verbatim, with a deep link back to the source. AI conversations stay private to their author. Credentials and tokens are redacted before storage.",
+      "step2Text": "Stored verbatim, with a deep link back to the source. AI conversations are read by their author and, on the Leon website, by the managers above them. Credentials and tokens are redacted before storage.",
       "step2Date": "Oct 3",
       "step2Quote": "“We can commit to November 15 for V2…”",
       "step2Open": "Open in Granola ↗",
@@ -1162,9 +1162,9 @@
       "terminal": "coding assistant · Leon MCP server",
       "terminalSearch": "“ACME data migration”",
       "terminalRemember": "“migration moved to Dec 2”",
-      "terminalSaved": "note saved · private to you",
+      "terminalSaved": "note saved · read like your sessions",
       "briefingMeta": "08:45 · 250 words max",
-      "securityTitle": "Each company’s data is isolated in Postgres, and AI conversations stay with their author.",
+      "securityTitle": "Each company’s data is isolated in Postgres, and AI conversations are read only by their author and the managers above them.",
       "securityLink": "More on security",
       "securityNotYet": "We also publish what’s missing: ",
       "securityList": "see the list",
@@ -1176,7 +1176,7 @@
     "product": {
       "heroTitle": "Everything your team writes and says, indexed and cited.",
       "heroAccent": "indexed and cited.",
-      "heroLead": "Leon syncs your tools and AI assistants, stores every item verbatim, keeps AI conversations private to their author, and answers with sentence-level citations.",
+      "heroLead": "Leon syncs your tools and AI assistants, stores every item verbatim, keeps AI conversations to their author and the managers above them, and answers with sentence-level citations.",
       "flowCaption": "The four stages: capture, store, search, chat.",
       "captureCaption": "Illustration: connected tools syncing every 15 minutes, the browser extension with a per-site toggle, and a coding-assistant session sent when it ends.",
       "captureLabel": "what Leon ingests",
@@ -1295,7 +1295,7 @@
           "text": "Captures conversations from two web-based AI assistants. Explicit consent, a per-site toggle and a pause button.",
           "p1": "Paused in private windows",
           "p2": "Attachments are skipped",
-          "p3": "Private to the author"
+          "p3": "Read by the author and their managers"
         },
         "coding": {
           "title": "Coding assistant",
@@ -1339,7 +1339,7 @@
       "connectLead": "After that, Leon re-syncs on its own every 15 minutes.",
       "aiKicker": "AI conversations",
       "aiTitle": "Your conversations with AI assistants.",
-      "aiLead": "What gets worked out with an AI assistant often exists nowhere else. Leon indexes it, visible only to its author.",
+      "aiLead": "What gets worked out with an AI assistant often exists nowhere else. Leon indexes it, read by its author and, on the Leon website, by the managers above them.",
       "plannedTitle": "Not supported yet.",
       "plannedLead": "Listed here so you know before you sign up.",
       "ctaTitle": "Connect your first tool.",
@@ -1393,8 +1393,8 @@
       "whoTitle": "Two visibility rules cover everything Leon stores.",
       "teamTitle": "Shared with the team",
       "teamText": "Content from shared connections, as in the source tool. Email, Google Drive and Slack are the exception: they stay private to whoever connects them.",
-      "youTitle": "Private to you",
-      "youText": "No one else sees it, in search results or in answers.",
+      "youTitle": "Not shared with the team",
+      "youText": "Only you and, on the Leon website, the managers above you read it, except your chats with Leon, which stay yours alone. No other colleague sees it, in search results or in answers.",
       "frankly": "Known gaps",
       "notYetTitle": "What’s missing.",
       "notYetLead": "We would rather you read it here than discover it later. This list is kept current.",

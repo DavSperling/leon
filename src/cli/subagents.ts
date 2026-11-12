@@ -8,7 +8,8 @@ const MetaSchema = z.object({ toolUseId: z.string() });
 // Les échanges des sous-agents d'une session Claude Code, pour le tri de T63 (extractClaudeCodeFacts) : `id` de
 // l'appel Agent ou Task (le `toolUseId` du `meta.json`) → contenu de `agent-<agentId>.jsonl`. Le dossier se trouve par
 // le nom du fichier de la session, jamais par le sessionId écrit dans ses lignes : `<dossier>/<nom sans .jsonl>/subagents/`,
-// à plat, sans descendre dans `workflows/`. Ce qui ne se lit pas est laissé de côté : son appel restera externe.
+// à plat, sans descendre dans `workflows/`. Ce qui ne se lit pas est laissé de côté : son appel restera externe. Deux
+// meta.json pour un même toolUseId (forme que l'annexe 08 n'a pas vue) : l'appel reste externe aussi.
 // Sans `readdir`, aucun sous-agent n'est lu.
 export async function loadSubagents(
   sessionFile: string,
@@ -22,12 +23,18 @@ export async function loadSubagents(
   if (!readdir || !isAbsolute(sessionFile) || !sessionFile.endsWith('.jsonl')) return subagents;
   const dir = join(dirname(sessionFile), basename(sessionFile, '.jsonl'), 'subagents');
   const names = await readdir(dir).catch(() => []);
+  const seen = new Set<string>();
   for (const name of names) {
     const agentId = META_FILE.exec(name)?.[1];
     if (agentId === undefined) continue;
     try {
-      const meta = MetaSchema.parse(JSON.parse(await deps.readFile(join(dir, name))));
-      subagents.set(meta.toolUseId, await deps.readFile(join(dir, `agent-${agentId}.jsonl`)));
+      const { toolUseId } = MetaSchema.parse(JSON.parse(await deps.readFile(join(dir, name))));
+      if (seen.has(toolUseId)) {
+        subagents.delete(toolUseId);
+        continue;
+      }
+      seen.add(toolUseId);
+      subagents.set(toolUseId, await deps.readFile(join(dir, `agent-${agentId}.jsonl`)));
     } catch {
       // meta.json illisible ou .jsonl absent : l'appel reste externe (échec fermé)
     }

@@ -269,12 +269,9 @@ describe('parseClaudeCodeSession', () => {
       const content = [
         typed,
         call(2, 'toolu_1'),
-        result(
-          3,
-          'toolu_1',
-          completed(['Note du harnais.', 'a.txt dit bonjour.', 'Fin du harnais.']),
-          { timestamp: '2026-10-13T08:05:00.000Z' },
-        ),
+        result(3, 'toolu_1', completed(['Note du harnais.', 'a.txt dit bonjour.']), {
+          timestamp: '2026-10-13T08:05:00.000Z',
+        }),
         line('assistant', 4, [{ type: 'text', text: 'Le sous-agent a lu a.txt.' }]),
       ].join('\n');
 
@@ -291,31 +288,25 @@ describe('parseClaudeCodeSession', () => {
       expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
     });
 
-    it('garde tous les blocs quand les comptes du harnais sont absents ou hors bornes', () => {
-      const texts = ['Premier.', 'Second.'];
+    // Le compte des notes est la seule borne lue : `content` est fait des notes puis du rapport (annexe 08), la fin du
+    // harnais n'est que dans le bloc tool_result. Un compte absent, mal formé ou trop grand : rien n'est capté.
+    it.each([
+      ['absent', undefined],
+      ['en chaîne', '1'],
+      ['négatif', -1],
+      ['fractionnaire', 0.5],
+      ['égal au nombre de blocs', 2],
+      ['plus grand que le nombre de blocs', 3],
+    ])('ne capte rien quand le compte des notes du harnais est %s', (_cas, harnessNoteCount) => {
       const content = [
-        call(1, 'toolu_1'),
-        result(
-          2,
-          'toolu_1',
-          completed(texts, { harnessNoteCount: undefined, harnessTailCount: undefined }),
-        ),
-        call(3, 'toolu_2'),
-        result(4, 'toolu_2', completed(texts, { harnessNoteCount: 2, harnessTailCount: 1 })),
-        call(5, 'toolu_3'),
-        result(6, 'toolu_3', completed(texts, { harnessNoteCount: -1, harnessTailCount: 0 })),
-        call(7, 'toolu_4'),
-        result(8, 'toolu_4', completed(texts, { harnessNoteCount: 0.5, harnessTailCount: 0 })),
+        typed,
+        call(2, 'toolu_1'),
+        result(3, 'toolu_1', completed(['Note du harnais.', 'Rapport.'], { harnessNoteCount })),
       ].join('\n');
 
-      expect(turnsOf(content)).toEqual(
-        ['uuid-2', 'uuid-4', 'uuid-6', 'uuid-8'].map((id) => [
-          id,
-          'user',
-          true,
-          'Premier.\n\nSecond.',
-        ]),
-      );
+      expect(turnsOf(content)).toEqual([
+        ['uuid-1', 'user', false, 'Lance un sous-agent sur a.txt.'],
+      ]);
     });
 
     it('ne capte rien sans rapport fini : tâche de fond lancée, pas de toolUseResult, une erreur, un autre outil, une ligne isSidechain', () => {
@@ -356,11 +347,11 @@ describe('parseClaudeCodeSession', () => {
       const leon = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
       const content = [
         call(1, 'toolu_1'),
-        result(2, 'toolu_1', completed(['x', `Rapport. ${leon}`, 'y'])),
+        result(2, 'toolu_1', completed(['x', `Rapport. ${leon}`])),
         call(3, 'toolu_2'),
-        result(4, 'toolu_2', completed(['x', 'Clé lue : sk-ant-FAKE00000000000000000000000', 'y'])),
+        result(4, 'toolu_2', completed(['x', 'Clé lue : sk-ant-FAKE00000000000000000000000'])),
         call(5, 'toolu_3'),
-        result(6, 'toolu_3', completed(['x', 'r'.repeat(25_000), 'y'])),
+        result(6, 'toolu_3', completed(['x', 'r'.repeat(25_000)])),
       ].join('\n');
 
       const turns = parseClaudeCodeSession(content)?.turns ?? [];
@@ -378,7 +369,7 @@ describe('parseClaudeCodeSession', () => {
     it('capte le rapport d’un appel Task, l’ancien nom, comme celui d’un appel Agent', () => {
       const content = [
         call(1, 'toolu_1', 'Task'),
-        result(2, 'toolu_1', completed(['x', 'Rapport.', 'y'])),
+        result(2, 'toolu_1', completed(['x', 'Rapport.'])),
       ].join('\n');
 
       expect(turnsOf(content)).toEqual([['uuid-2', 'user', true, 'Rapport.']]);
@@ -433,6 +424,30 @@ describe('parseClaudeCodeSession', () => {
         ['uuid-2', true, notification, '2026-10-13T08:06:00.000Z'],
       ]);
       expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
+    });
+
+    // L'annexe 08 ne garantit `uuid` que sur les lignes de conversation : sans lui, l'identifiant vient de l'horodatage.
+    it('capte une notification queued_command sans uuid, sous un identifiant stable', () => {
+      const content = [
+        typed,
+        JSON.stringify({
+          type: 'attachment',
+          sessionId: 'session-1',
+          timestamp: '2026-10-13T08:07:00.000Z',
+          attachment: {
+            type: 'queued_command',
+            commandMode: 'task-notification',
+            prompt: '<task-notification>\n<result>Fini.</result>\n</task-notification>',
+          },
+        }),
+      ].join('\n');
+
+      expect(parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.injecte])).toEqual(
+        [
+          ['uuid-1', false],
+          ['attachment@2026-10-13T08:07:00.000Z', true],
+        ],
+      );
     });
   });
 

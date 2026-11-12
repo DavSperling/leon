@@ -10,7 +10,7 @@ import {
   TACHES_MAX,
   TEXTE_MAX,
 } from './api-contract';
-import { parseClaudeCodeSession } from './claude-code';
+import { parseClaudeCodeSession, SUBAGENT_TOOLS } from './claude-code';
 import { maskSecrets } from './mask-secrets';
 import { isTypedTurn } from './turn';
 
@@ -37,6 +37,7 @@ const LineSchema = z.object({
     .optional(),
 });
 type Line = z.infer<typeof LineSchema>;
+const LineTypeSchema = LineSchema.pick({ type: true });
 
 const ToolUseSchema = z.object({
   type: z.literal('tool_use'),
@@ -280,7 +281,6 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
 // Les échanges des sous-agents d'une session : `id` du bloc tool_use de l'appel Agent ou Task → contenu du fichier
 // `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
 export type Subagents = ReadonlyMap<string, string>;
-const SUBAGENT_TOOLS = new Set(['Agent', 'Task']);
 
 // `visited` : les appels Agent ou Task déjà jugés. Un appel revu (le même bloc sur deux lignes) n'apporte rien de plus :
 // s'il était externe, la session l'est déjà.
@@ -298,8 +298,10 @@ function isExternalAnyCall(
 }
 
 // Un sous-agent rend la session externe si l'un de ses appels l'est, par la même règle, ou si l'on ne sait pas tout ce
-// qu'il a fait (échec fermé) : une ligne illisible, ou pas de rapport final (la dernière ligne de conversation n'est pas
-// un message assistant fini par end_turn : coupé, ou encore en cours). Toutes ses lignes portent isSidechain.
+// qu'il a fait (échec fermé) : une ligne qui n'est pas du JSON, une ligne sans type ou une ligne de conversation hors de
+// la forme connue, ou pas de rapport final (la dernière ligne de conversation n'est pas un message assistant fini par
+// end_turn : coupé, ou encore en cours). Une ligne d'un autre type se saute, quelle que soit sa forme. Toutes ses lignes
+// portent isSidechain.
 function isExternalSubagent(
   content: string,
   leonMcp: boolean,
@@ -309,9 +311,18 @@ function isExternalSubagent(
   let finished = false;
   for (const raw of content.split('\n')) {
     if (raw.trim() === '') continue;
-    const line = parseLine(raw);
-    if (!line) return true;
-    if (line.type !== 'user' && line.type !== 'assistant') continue;
+    let json: unknown;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      return true;
+    }
+    const kind = LineTypeSchema.safeParse(json);
+    if (!kind.success) return true;
+    if (kind.data.type !== 'user' && kind.data.type !== 'assistant') continue;
+    const parsed = LineSchema.safeParse(json);
+    if (!parsed.success) return true;
+    const line = parsed.data;
     finished = line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
     const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {

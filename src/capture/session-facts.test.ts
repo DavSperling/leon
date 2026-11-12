@@ -410,6 +410,10 @@ describe('extractClaudeCodeFacts', () => {
     it.each([
       ['du JSON illisible', 'ceci n’est pas du JSON'],
       ['une ligne hors forme', JSON.stringify({ type: 42 })],
+      [
+        'une ligne assistant hors forme',
+        JSON.stringify({ type: 'assistant', ...SA, message: 'x' }),
+      ],
     ])('une ligne illisible dans le fichier (%s) : externe', (_cas, ligne) => {
       expect(externe(new Map([['a1', sousAgent(ligne)]]))).toBe(true);
     });
@@ -417,6 +421,29 @@ describe('extractClaudeCodeFacts', () => {
     it('lit les lignes non conversationnelles et les lignes vides sans échouer', () => {
       const bruit = JSON.stringify({ type: 'api-request-blob', message: { content: [] } });
       expect(externe(new Map([['a1', sousAgent(bruit, '', '  ')]]))).toBe(false);
+    });
+
+    // Une ligne d'un autre type n'est pas de la conversation : sa forme ne compte pas, comme dans le fichier de la session.
+    it.each([
+      ['un timestamp en nombre', { type: 'api-request', timestamp: 1731405600000 }],
+      ['un message en chaîne', { type: 'api-request-shape', message: 'x' }],
+    ])('saute une ligne non conversationnelle hors du schéma (%s) : non externe', (_cas, ligne) => {
+      expect(externe(new Map([['a1', sousAgent(JSON.stringify(ligne))]]))).toBe(false);
+    });
+
+    it('un rapport suivi de lignes non conversationnelles : non externe', () => {
+      const cout = JSON.stringify({ type: 'cost-state' });
+      expect(externe(new Map([['a1', [consigne, rapport, cout].join('\n')]]))).toBe(false);
+    });
+
+    it('un appel Task relié à un sous-agent qui ne fait que Read : non externe', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'Read', {}))]]);
+      expect(externe(subagents, false, appel('a1', 'Task', { prompt: 'Cherche.' }))).toBe(false);
+    });
+
+    it('un cycle (le sous-agent de a1 relance a1) : le calcul se termine', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('a1', 'Agent', {}))]]);
+      expect(externe(subagents)).toBe(false);
     });
 
     it.each([

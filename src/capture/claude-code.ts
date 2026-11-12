@@ -42,21 +42,22 @@ type Line = z.infer<typeof LineSchema>;
 
 const TextBlockSchema = z.object({ type: z.literal('text'), text: z.string() });
 
-// Le rapport d'un sous-agent (décision 7 d'Amos du 12/11), dans la forme de l'annexe 08 (Claude Code 2.1.322).
-const SUBAGENT_TOOLS = new Set(['Agent', 'Task']);
+// Le rapport d'un sous-agent (décision 7 d'Amos du 12/11), dans la forme de l'annexe 08 (Claude Code 2.1.322). Les noms
+// de l'outil des sous-agents servent aussi au tri de T63 (session-facts.ts).
+export const SUBAGENT_TOOLS: ReadonlySet<string> = new Set(['Agent', 'Task']);
 const ToolUseBlockSchema = z.object({
   type: z.literal('tool_use'),
   id: z.string(),
   name: z.string(),
 });
 const ToolResultBlockSchema = z.object({ type: z.literal('tool_result'), tool_use_id: z.string() });
-// Un compte qui n'est pas un entier positif vaut absent : on garde alors tous les blocs.
-const HarnessCountSchema = z.number().int().nonnegative().optional().catch(undefined);
+// `content` : les `harnessNoteCount` notes du harnais, puis le rapport (annexe 08). Sans ce compte, entier positif ou
+// nul, la ligne n'a pas la forme connue : rien n'est capté. `harnessTailCount` n'est pas lu : la fin du harnais
+// (l'agentId, <usage>) n'est vue que dans le bloc tool_result, pas dans `content`.
 const ReportSchema = z.object({
   status: z.literal('completed'),
   content: z.array(TextBlockSchema),
-  harnessNoteCount: HarnessCountSchema,
-  harnessTailCount: HarnessCountSchema,
+  harnessNoteCount: z.number().int().nonnegative(),
 });
 const QueuedNotificationSchema = z.object({
   type: z.literal('queued_command'),
@@ -182,7 +183,8 @@ function collectSubagentCalls(line: ConversationLine, calls: Set<string>): void 
 }
 
 // Le rapport d'un appel `Agent` ou `Task` vu plus haut, s'il est fini : les blocs de `toolUseResult.content`, sans les
-// notes du harnais au début ni sa fin. Jamais le texte brut du tool_result, qui mêle le rapport au harnais.
+// notes du harnais au début. Plus de notes que de blocs : rien ne reste, rien n'est capté. Jamais le texte brut du
+// tool_result, qui mêle le rapport au harnais.
 function reportTurn(line: ConversationLine, calls: ReadonlySet<string>): Turn | null {
   if (line.type !== 'user' || !Array.isArray(line.message.content)) return null;
   const answersCall = line.message.content.some((block) => {
@@ -191,25 +193,27 @@ function reportTurn(line: ConversationLine, calls: ReadonlySet<string>): Turn | 
   });
   const report = ReportSchema.safeParse(line.toolUseResult);
   if (!answersCall || !report.success) return null;
-  const { content, harnessNoteCount: notes = 0, harnessTailCount: tail = 0 } = report.data;
-  const kept =
-    notes + tail <= content.length ? content.slice(notes, content.length - tail) : content;
-  return injectedTurn(line.uuid, line.timestamp, kept.map((block) => block.text).join('\n\n'));
+  const { content, harnessNoteCount } = report.data;
+  const kept = content.slice(harnessNoteCount).map((block) => block.text);
+  return injectedTurn(line.uuid, line.timestamp, kept.join('\n\n'));
 }
 
 // La notification d'une tâche de fond arrivée pendant que l'agent travaillait : une ligne `attachment`, la seule lue.
+// L'annexe 08 ne garantit `uuid` que sur les lignes de conversation : sans lui, l'identifiant vient de l'horodatage.
+// shortcut: deux notifications sans uuid à la même milliseconde n'en font qu'une ; à revoir si le script témoin relève
+// des lignes queued_command sans uuid.
 function queuedNotificationTurn(line: Line): Turn | null {
   const queued = QueuedNotificationSchema.safeParse(line.attachment);
   if (
     line.type !== 'attachment' ||
     !queued.success ||
-    line.uuid === undefined ||
     line.sessionId === undefined ||
     line.timestamp === undefined ||
     isAside(line)
   )
     return null;
-  return injectedTurn(line.uuid, line.timestamp, queued.data.prompt);
+  const id = line.uuid ?? `attachment@${line.timestamp}`;
+  return injectedTurn(id, line.timestamp, queued.data.prompt);
 }
 
 // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.

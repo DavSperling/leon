@@ -107,6 +107,26 @@ describe('loadSubagents', () => {
     expect(await loadSubagents(SESSION, deps)).toEqual(new Map([['toolu_2', 'y']]));
   });
 
+  // Deux fichiers pour un même appel : on ne sait pas lequel juger, l'appel reste externe, quel que soit l'ordre.
+  it.each([
+    [['agent-a1.meta.json', 'agent-b2.meta.json', 'agent-c3.meta.json']],
+    [['agent-c3.meta.json', 'agent-b2.meta.json', 'agent-a1.meta.json']],
+  ])('écarte un toolUseId porté par deux meta.json (ordre %j)', async (noms) => {
+    const deps = disque(
+      {
+        [`${DOSSIER}/agent-a1.meta.json`]: meta('toolu_1'),
+        [`${DOSSIER}/agent-a1.jsonl`]: 'web',
+        [`${DOSSIER}/agent-b2.meta.json`]: meta('toolu_1'),
+        [`${DOSSIER}/agent-b2.jsonl`]: 'depot',
+        [`${DOSSIER}/agent-c3.meta.json`]: meta('toolu_2'),
+        [`${DOSSIER}/agent-c3.jsonl`]: 'y',
+      },
+      { [DOSSIER]: noms },
+    );
+
+    expect(await loadSubagents(SESSION, deps)).toEqual(new Map([['toolu_2', 'y']]));
+  });
+
   it('rend une table vide pour un dossier absent', async () => {
     expect(await loadSubagents(SESSION, disque({}, {}))).toEqual(new Map());
   });

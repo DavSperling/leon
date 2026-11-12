@@ -223,7 +223,8 @@ function releve({ lignes, illisibles, octets }) {
   const balises = [];
   lignes.forEach((l, i) => {
     compter(r.types_de_ligne, etiquette(l));
-    fusionner((noeuds[ident(l.type)] ??= noeud()), l, null, '');
+    // Une forme par étiquette : les clés d'une ligne attachment queued_command (uuid compris) se lisent à part.
+    fusionner((noeuds[etiquette(l)] ??= noeud()), l, null, '');
     if (l.message !== null && typeof l.message === 'object') blocsEtRaisonnement(r, l);
     const b = balisesDe(l, i + 1);
     if (b) balises.push(b);
@@ -328,11 +329,27 @@ function lier(dans, { bloc, res }, sous) {
     par: trouves.filter((t) => t.chemin === relies[0]).map((t) => t.par),
     fichiers_relies: relies,
   };
+  // Les comptes du harnais face aux blocs de toolUseResult.content : des nombres, jamais un texte.
+  const nombre = (v) => (typeof v === 'number' ? v : `<${typeDe(v)}>`);
+  const blocsTur = Array.isArray(tur?.content) ? tur.content : null;
+  if (tur !== undefined) {
+    lien.harnais = {
+      harnessNoteCount: nombre(tur?.harnessNoteCount),
+      harnessTailCount: nombre(tur?.harnessTailCount),
+      blocs_de_content: blocsTur === null ? null : blocsTur.length,
+    };
+  }
   const cible = sous.find((s) => s.chemin === relies[0]);
   if (cible) {
     const consigne = texteDe(cible.f.lignes.find((l) => estRole(l, 'user'))?.message?.content);
     const rapport = texteDe(dernierMessage(cible.f.lignes).flatMap(blocsDe));
-    Object.assign(lien, comparer('consigne', 'consigne_contenue', prompt, consigne), comparer('rapport', 'rapport_contenu', texte, rapport));
+    Object.assign(
+      lien,
+      comparer('consigne', 'consigne_contenue', prompt, consigne),
+      comparer('rapport', 'rapport_contenu', texte, rapport),
+      // Le dernier bloc de content est-il le rapport ? Sinon, la fin du harnais y est peut-être (harnessTailCount).
+      comparer('dernier_bloc_de_content', 'dernier_bloc_de_content_contenu', blocsTur?.at(-1)?.text, rapport),
+    );
   }
   return lien;
 }

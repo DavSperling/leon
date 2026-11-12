@@ -114,7 +114,7 @@ Ses réponses au questionnaire d'ouverture du lot 14. Elles priment sur le texte
 
 1. **Trois PR, à la suite, jamais empilées, puis une quatrième** : l'essai et le sous-agent qui ne lit que le dépôt (T50, T63) ; puis le serveur (T51) ; puis la CLI des coulisses (T52). Ces trois PR se font pour Claude Code. Une quatrième, à la fin, porte Codex, Cursor et Antigravity (point 2).
 2. **Un essai par outil.** Pour Codex, Cursor et Antigravity, la forme du raisonnement, des sous-agents et des appels d'outils se relève par un essai réel, fait avec Amos devant chaque appli, comme pour Antigravity le 11/11. La quatrième PR porte, pour chaque outil dont l'essai est bon, sa règle du sous-agent (T63) et ses coulisses (T52). Un essai négatif s'arrête à son annexe. D'ici là, un sous-agent y rend toujours la session externe, aucune coulisse n'en part, et l'usage `coulisses` n'est ni proposé ni écrit pour ces outils.
-3. **Qui lit les coulisses : comme la session.** L'auteur, et ses managers en remontant, sur le site seulement (la règle du 28/10, politique `equipe_lit` de la migration 0057). Jamais un pair, ni par `leon search`, ni par le MCP. Les notes de l'agent se lisent de même : c'est ce que fait le code depuis le lot 13, et D38, qui les disait « visibles de leur auteur seul », est amendée. Aucune règle de lecture nouvelle dans la base.
+3. **Qui lit les coulisses : comme la session.** L'auteur les lit partout où il lit ses sessions (le site, `leon search`, le MCP). Ses managers en remontant les lisent aussi, sur le site seulement (la règle du 28/10, politique `equipe_lit` de la migration 0057). Jamais un pair. Les notes de l'agent se lisent de même : c'est ce que fait le code depuis le lot 13, et D38, qui les disait « visibles de leur auteur seul », est amendée. Aucune règle de lecture nouvelle dans la base.
 4. **Les textes déjà acceptés sont corrigés, sans redemander l'accord.** Les phrases qui disent la session, le résumé ou la note « private » à leur auteur (`CONSENT_LINES`, `RESUME_LINES`, `NOTER_LINES`) disent qui lit vraiment : l'auteur, et ses managers sur le site. C'est fait dans la PR de la CLI (T52), avec le texte de `coulisses`. Les accords déjà donnés valent pour le nouveau texte, comme le 10/11 et le 11/11.
 5. **Retirer l'accord arrête les envois, sans rien effacer.** `leon retirer-crochets` coupe tous les usages de l'outil, `coulisses` compris. Les coulisses déjà envoyées restent, lisibles et trouvables. Le texte de `coulisses` le dit, comme celui de `resume`.
 6. **Des compteurs avant d'ouvrir `coulisses`.** La PR du serveur compte les blocs et les octets reçus par rôle, sans texte ni identifiant de session (vigilance 1). Le lot 11 les lira.
@@ -272,6 +272,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
   - Ils passent par leur propre route (`POST /api/v1/coulisses`), pas par le contrat d'ingestion (règle du plan mémoire des sessions).
   - Ils sont rangés comme tours de la session, sous son ACL, avec deux nouveaux rôles, `raisonnement` et `sous_agent` (migration du check de `turns.role`), que la recherche peut filtrer. Amendé le 05/11 (relecture) : trois rôles, avec `appel_outil`, dans la même migration.
     - Tranché le 05/11 par Amos (QD9) : ces trois rôles sont exclus du point du matin et, comme tout texte du modèle ou capté, du bloc de démarrage. Ils restent toujours visibles dans la recherche, sans filtre : Amos veut toujours pouvoir les voir quand il cherche. Le filtre `type` (raisonnement, sous-agent, appel d'outil) du MCP permet de les cibler. `leon chercher` les rend aussi, sans ce filtre (C11).
+    > **Amendé le 12/11 (décision 3 d'Amos pour le lot 14) :** qui lit ces tours. Comme la session : l'auteur, partout où il lit ses sessions (le site, `leon search`, le MCP) ; et ses managers en remontant, sur le site seulement (la règle du 28/10, politique `equipe_lit` de la migration 0057, là où la lecture d'équipe est ouverte). Jamais un pair. Aucune règle de lecture nouvelle dans la base : « sous son ACL » veut dire l'ACL de la session.
   - Masquage : `maskSecrets` sur le poste puis sur le serveur. Chaque bloc est coupé à 20 000 caractères, comme les messages.
   - Accord : l'usage `coulisses` (C7 révisé).
   - Ce lot et le niveau 3 (D28) se détaillent quand on y arrive, avec Amos (seul sur ce chantier depuis le 05/11), à partir des constats de la relecture du 03/11 (A10, A11).
@@ -394,6 +395,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - La note reste une source `mcp_remember`, sans kind de plus, libellée « Note ». Elle est visible de son auteur seul, et marquée de l'outil et de la session (`metadata.outil`, `metadata.session`), et du projet pour `leon noter`.
     - `metadata.outil` est un kind de `CODE_SESSION_KINDS` pour `leon noter`, ou `mcp:<libellé>` pour `remember` (le libellé du client, au motif de `read_log.client`).
     - L'outil et la session sont déclarés par le client. La session n'est qu'une indication, que le rêve vérifie (D39).
+    > **Amendé le 12/11 (décision 3 d'Amos pour le lot 14) :** « visible de son auteur seul » ne tient plus. Une note se lit comme une session : l'auteur, partout où il lit ses sessions ; et ses managers en remontant, sur le site seulement (la règle du 28/10, politique `equipe_lit` de la migration 0057). C'est ce que fait le code depuis le lot 13 : aucune règle de lecture nouvelle dans la base.
   - Elle est versionnée (D33). Sa dernière version est aussi son tour indexé : la recherche la trouve, et D22 la relie à un fil par proximité, comme `remember`. Les anciennes sont hors recherche et hors `fetch`.
     - Une nouvelle version n'est acceptée que si la dernière vient du même outil (le même kind, ou le même `mcp:<libellé>`), sinon 409. Un assistant web ne réécrit donc jamais la note d'un outil de code. Après une restauration sur le site (`ecrit_par = humain`), c'est l'outil de la note (`metadata.outil`) qui compte.
     - Une restauration passe par le même chemin (`writeNote`), depuis le site seulement (D33).
@@ -466,6 +468,46 @@ Amendé le 05/11 (relecture, D29) : un bloc peut aussi être un appel d'outil r�
 - Jamais la sortie de l'appel (`tool_result`) ni son entrée brute. `cible` passe par `maskSecrets` sur le poste. Le serveur revérifie `outil` et `cible`, puis repasse `maskSecrets` et la borne. Il repasse `outil` par la même réduction, `mcp__` testé avant `EXECUTABLE` : une CLI qui ne réduit pas ne fait donc jamais passer `mcp__linear__get_issue`, rangé `mcp:linear`. Un `mcp:<serveur>` déjà réduit reste tel quel, et tout autre nom hors de la forme devient `[outil]`. Une cible `Bash` hors de la forme rendue par `reduceCommand` devient `[commande]` (`recheckCommand`). Un chemin absolu, ou qui contient `..`, est retiré : l'appel est rangé sans cible.
 
 Tranché le 05/11 par Amos (QD9, D29) : les tours rangés par cette route, des trois rôles, restent dans la recherche sans filtre `type`. Ils n'entrent ni au point du matin ni au bloc de démarrage.
+
+> **Amendé le 12/11 (choix du rédacteur, d'après l'annexe 08 et le relevé du code) :** c'est le contrat que le serveur code en PR 2 (T51) et que la CLI enverra en PR 3 (T52). Il prime sur le texte ci-dessus quand ils diffèrent.
+>
+> Le corps, en `.strict()`, 256 Kio au plus (`COULISSES_BODY_MAX_BYTES`) :
+>
+> ```
+> { kind, external_id, usages, accord_le?, blocs }
+> ```
+>
+> - `kind` : un kind de `CODE_SESSION_KINDS`. `external_id` : celui de la session, comme pour les faits (C2).
+> - `usages` : comme C2. Sans `coulisses` dedans, le serveur répond **403** `{ error: 'Backstage not allowed' }` et n'écrit rien. Le 404 reste réservé au serveur ancien.
+> - `accord_le`, facultatif : la date de l'accord de l'outil, comme pour les faits. Le serveur la compare au dernier retrait de cet outil sur le jeton, avec la même règle que `recordFacts`. Après un retrait, un envoi sans `accord_le`, ou sous un accord qui ne lui est pas postérieur, reçoit 403 et n'écrit rien.
+> - `blocs` : de 1 à 2 000 blocs (`COULISSES_BLOCS_MAX`), pour rester loin de la limite de 65 535 paramètres d'un `insert`. Trois formes, chacune en `.strict()`, distinguées par `role` :
+>   - `{ role: 'raisonnement', id, ts, texte }` ;
+>   - `{ role: 'sous_agent', id, ts, partie, texte }`, `partie` valant `consigne` ou `rapport` ;
+>   - `{ role: 'appel_outil', id, ts, outil, cible?, statut }`.
+> - `id` : l'identifiant du bloc dans sa session, fourni par la CLI, de 1 à 200 caractères parmi `[A-Za-z0-9_.:-]`. Il est stable d'un envoi à l'autre : l'`uuid` de la ligne pour un raisonnement, l'`id` du bloc `tool_use` pour un appel d'outil, ce même `id` suivi de `:consigne` ou `:rapport` pour un sous-agent (annexe 08 : chaque ligne a son `uuid`, chaque appel son `id`). C'est lui qui rattache la consigne et le rapport d'un sous-agent à leur appel. Jamais l'index dans `blocs`, qui change d'un envoi à l'autre.
+> - `ts` : une date ISO avec décalage, comme `TurnSchema`.
+> - `texte` : de 1 à 20 000 caractères (`TURN_TEXT_MAX`).
+> - `outil` : 60 caractères au plus. `cible`, facultative : 200 au plus (`TEXTE_MAX`).
+> - `statut` : `ok`, `erreur` ou `sans_resultat`. Corrigé d'après l'annexe 08 : un appel refusé a un `tool_result` en erreur, il est donc `erreur`. `sans_resultat` ne dit plus que « aucun `tool_result` » : appel interrompu, ou encore en cours.
+>
+> Les réponses : 202 ; 400 sans aucune valeur reçue (les chemins et les codes des erreurs seulement, comme la route des faits) ; 401 ; 403 (ci-dessus) ; 413 au-delà de 256 Kio.
+>
+> Ce que le serveur écrit :
+> - un tour par bloc, dans la session (`upsertSource` la crée si elle manque, plutôt qu'un 404), sous son ACL, avec `external_id = 'coulisse:' + id` (jamais `leon:resume:`), `capture_mode: 'file'`, `injecte: null`, et le `ts` du bloc ;
+> - le texte du tour, toujours écrit par lui :
+>   - `raisonnement` : le texte, repassé par `stripLeonBlocks` puis `prepareTurnText` (masque, retrait des `system-reminder`, coupe à 20 000) ;
+>   - `sous_agent` : une première ligne fixe, `[consigne]` ou `[rapport]`, puis le texte préparé de la même façon ;
+>   - `appel_outil` : une seule ligne, `<outil> · <cible> · <statut>`, ou `<outil> · <statut>` sans cible ;
+> - un bloc dont le texte est vide après préparation n'est pas écrit ;
+> - l'envoi répété est idempotent (`onConflictDoNothing` sur la session et l'`external_id`) : le premier écrit gagne, statut compris. Deux blocs de même `id` dans un envoi n'en font qu'un ;
+> - il n'appelle PAS `updateSource` : une coulisse ne fait pas avancer `last_turn_at` ;
+> - il met l'indexation en file une fois l'écriture validée, comme l'ingestion (`createIngestRun`, `enqueueIndexing`).
+>
+> Ce que le serveur revérifie, avant le masque et la borne :
+> - `outil` passe par `reduceToolName` (`mcp__` testé avant `EXECUTABLE` ; les quatre règles sont dans T51) ;
+> - `cible` n'est gardée que pour `Bash` et pour `Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Glob`, `Grep` et `LS`. Pour `Bash`, elle passe par `recheckCommand` (hors forme : `[commande]`). Pour un outil de fichier, un chemin absolu ou qui contient un segment `..` est retiré. Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée ne fait jamais ranger une URL, un motif ou une requête. Puis `factText` (masque et borne).
+>
+> Les compteurs (décision 6 d'Amos pour le lot 14) : à chaque envoi accepté, le serveur compte les blocs et les octets reçus par rôle, sans texte, sans identifiant de session ni de fil, sur le modèle des compteurs de T53 (`count` dans `src/server/memory/versions.ts`). Le lot 11 les relève.
 
 **C11. Les routes de lecture** : `POST /api/v1/dossier`, `POST /api/v1/fil` (les corps de C9) et `POST /api/v1/chercher { projet, requete, session?, outil? }`, le dépôt se déduisant de `projet`. Chaque corps porte aussi `usages`.
 - Elles demandent le jeton et `lecture` dans les `usages` envoyés, et sont en `.strict()`, 4 Kio au plus.
@@ -1378,6 +1420,8 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - un appel d'un sous-agent est relevé dans la même forme ;
 > - et dans `capture-session.test.ts` : sans l'usage `coulisses`, aucun appel n'est envoyé.
 
+> **Amendé le 12/11 (décision 1 d'Amos pour le lot 14 ; choix du rédacteur) :** `reduceToolName` et les exports de `reduceCommand` et `repoRelativePath` sont passés dans T51 (PR 2) ; le reste de l'amendement de T52 viendra avec sa PR.
+
 > **Amendé le 05/11 (tranché par Amos, QD9) :** le texte de l'usage `coulisses` (`consent.ts`) dit que le raisonnement, les échanges des sous-agents et les appels d'outils se retrouvent toujours par la recherche de Leon, sans filtre, et jamais dans le point du matin ni le bloc de démarrage (choix du rédacteur). Test de plus, dans `install-hooks.test.ts` : le texte exact de `coulisses`.
 
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
@@ -1404,6 +1448,58 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - `search` filtré par `appel_outil` le trouve ; `search` sans filtre `type` le rend aussi (amendé le 05/11 : tranché par Amos, QD9) ; ni le point du matin ni le bloc de démarrage n'en reprennent rien ;
 > - et dans `thread-state.test.ts` : aucun bloc `appel_outil` n'entre au condensé (D23).
 
+> **Amendé le 12/11 (décisions 3, 5 et 6 d'Amos pour le lot 14 ; choix du rédacteur) :**
+> - **L'ordre.** T51 passe avant T52 : le serveur avant la CLI. C'est la PR 2 du lot 14, après T50 et T63 (PR 1) et avant T52 (PR 3). Tant que la PR 3 n'est pas fusionnée, aucune CLI n'appelle la route.
+> - **Le contrat à coder** est C10, amendé le 12/11.
+> - **`reduceToolName` passe ici**, avec les exports de `reduceCommand` et `repoRelativePath` (T52 et T58 les reprendront), parce que le serveur en a besoin avant la CLI. Elle s'écrit dans `src/capture/session-facts.ts`, exportée et pure. Dans l'ordre :
+>   1. un nom en `mcp__` : `mcp__<serveur>__<outil>` donne `mcp:<serveur>`, le serveur étant ce qui suit `mcp__` jusqu'au premier `__` suivant, en `[A-Za-z0-9._-]`, 56 caractères au plus, et un outil devant suivre ; tout autre nom en `mcp__` donne `[outil]` ;
+>   2. un nom déjà de la forme `mcp:<serveur>` reste tel quel ;
+>   3. sinon le nom, s'il a la forme d'un exécutable (`EXECUTABLE`) ;
+>   4. sinon `[outil]`.
+> - **Qui lit (décision 3).** Les trois rôles se lisent comme la session : l'auteur, partout où il lit ses sessions (le site, `leon search`, le MCP) ; et ses managers en remontant, sur le site seulement (politique `equipe_lit` de la migration 0057). Jamais un pair. Aucune règle de lecture nouvelle dans la base : le tour suit l'ACL de sa session.
+> - **Le retrait (décision 5).** Il arrête les envois sans rien effacer. Côté serveur : après un retrait, un envoi sans `accord_le`, ou sous un accord qui ne lui est pas postérieur, reçoit 403 et n'écrit rien (C10). Les coulisses déjà rangées restent, lisibles et trouvables.
+> - **Les rôles et la migration.**
+>   - `TURN_ROLES` (`src/capture/turn.ts`) gagne `raisonnement`, `sous_agent` et `appel_outil`. `TurnSchema.role` ne bouge pas : `/api/v1/ingest` refuse toujours ces rôles (un test le prouve).
+>   - La migration est `0069-roles-coulisses.sql` (le `NNNN` du texte d'origine). Elle remplace la contrainte `turns_role_check` (posée par 0008) en gardant les quatre rôles actuels. Elle s'écrit d'abord en `.sql.brouillon`, et se renomme juste avant son premier test en base, avec son test `0069-roles-coulisses.db.test.ts`, comme les autres migrations.
+>   - Les trois rôles forment une constante commune (par exemple `BACKSTAGE_ROLES`, à côté de `TURN_ROLES`), que reprennent la route et les filtres SQL.
+>   - `ROLE_SPEAKERS` (`src/components/search/view-model.ts`) est un `Record` sur les rôles : la compilation force les trois libellés français. `ROLE_SPEAKERS_EN` étale `ROLE_SPEAKERS` et ne casse pas : on y surcharge les trois rôles en anglais, avec un test.
+> - **Les exclusions ne se font pas toutes seules (QD9, D23).** Les coulisses restent dans la recherche sans filtre, et se lisent à la demande (`fetch`). Elles sortent de tout ce qui résume ou démarre :
+>   - **le résumé** (`src/server/sessions/resume-worker.ts`) : les requêtes qui lisent la fin des tours, le dernier tour et ce qui est « arrivé » depuis le dernier résumé excluent les trois rôles. Sans cela, une coulisse arrivée déclencherait un résumé ;
+>   - **le point du matin** (`src/server/briefing/gather.ts`) : `lastTurns` et le premier tour de `readSessions` excluent les trois rôles par un `role not in` sur ces trois rôles, et non par `in ('user', 'assistant')` : `lastTurns` sert aussi aux sources de connecteurs, de rôles `document` et `participant` ;
+>   - **l'état du fil** : `readTail` (`thread-state-worker.ts`) filtre déjà `user` et `assistant`. Le test « aucune coulisse au condensé » est un test en base (`thread-state.db.test.ts`), puisque le filtre est en SQL ;
+>   - **le bloc de démarrage** ne lit aucun tour : un test de garde suffit ;
+>   - **la proximité des fils** (`src/server/sessions/threads.ts`) : à vérifier. Si elle lit des passages ou des vecteurs de tours, elle écarte ceux des trois rôles. Si elle ne lit que les résumés, un test de garde le dit ;
+>   - **ce qui change sans être exclu**, et se dit dans la PR : la section Mémoire compte les tours d'une source (`src/server/memory/sources.ts`), coulisses comprises.
+> - **La recherche.**
+>   - Le filtre `type` de l'outil MCP `search` désigne aujourd'hui une nature de source. Il accepte en plus les trois rôles (raisonnement, sous-agent, appel d'outil), nommés dans la forme des valeurs existantes. Un rôle se filtre par une jointure de `passages.turn_id` vers `turns.role`, dans `passageConditions` (`src/server/search/filters-sql.ts`), seulement quand un rôle est demandé. Les passages n'ont pas de colonne de métadonnées : pas de migration ni de réindexation pour cela.
+>   - Le rendu (`src/server/mcp/tools/render.ts`) dit qu'un résultat est une coulisse : une étiquette de rôle sur le passage, pour que l'agent ne la prenne pas pour un message.
+>   - La description de `type` et son test de contrat (`src/test/contracts/mcp-descriptions.test.ts`) suivent.
+>   - `POST /api/v1/chercher` (la commande `leon search`) n'a pas de filtre `type` : les coulisses y apparaissent toujours, comme QD9 le veut.
+>   - Les vecteurs : les trois rôles s'indexent comme les autres tours, `appel_outil` compris. Pas de cas particulier.
+> - **Les compteurs (décision 6).** À chaque envoi accepté, le serveur compte les blocs et les octets reçus par rôle, sans texte et sans identifiant de session ni de fil, sur le modèle de T53 (`count`, `src/server/memory/versions.ts`). Le lot 11 les relève (C10, vigilance 1).
+> - **Les tests.**
+>   - `src/server/api/backstage-routes.db.test.ts` :
+>     - 202 ; 400 (un `appel_outil` avec un `texte`, un champ inconnu, un `id` hors forme, plus de 2 000 blocs) ; 401 ; 403 (sans l'usage, puis après un retrait) ; 413 ;
+>     - la session d'un collègue reste intacte ;
+>     - un faux secret glissé dans un chemin de fichier est masqué en base (pas dans une commande : la réduction l'aurait déjà retiré) ;
+>     - un `<contexte-leon>` envoyé dans un bloc `sous_agent` n'arrive pas en base ;
+>     - `mcp__linear__get_issue` reçu tel quel est rangé `mcp:linear`, et un nom hors forme est rangé `[outil]` ;
+>     - une cible `Bash` hors forme est rangée `[commande]` ;
+>     - un chemin absolu ou avec `..` est rangé sans cible ;
+>     - un `WebFetch` reçu avec une URL en cible est rangé sans cible ;
+>     - l'envoi répété ne double rien, et le premier statut reste ;
+>     - `last_turn_at` ne bouge pas ;
+>     - les compteurs avancent ;
+>     - `search` filtré par chacun des trois rôles le trouve, et `search` sans filtre rend les trois ;
+>     - `chercher` rend un tour `raisonnement` (appeler `indexIngestRun` dans le test : la file est simulée).
+>   - Le point du matin, le résumé, l'état du fil et le bloc de démarrage n'en reprennent rien : un test en base chacun, dans le fichier de test de chaque lecteur (pour le bloc de démarrage, c'est le test de garde ci-dessus).
+>   - `/api/v1/ingest` refuse un tour de rôle `raisonnement`.
+>   - `src/test/contracts/api-contract.db.test.ts` : `API_PATHS.coulisses` entre dans les routes servies.
+>   - `src/test/contracts/schema-contract.db.test.ts` compare déjà `TURN_ROLES` et la contrainte de la base : rien à y ajouter.
+>   - `session-facts.test.ts` : `reduceToolName` rend `mcp:linear` pour `mcp__linear__get_issue`, laisse `mcp:linear` tel quel, rend `[outil]` pour `mcp__x`, pour un nom hors forme et pour un nom en `mcp__` dont le serveur dépasse 56 caractères, et coupe `mcp__a__b__c` au premier `__` (donc `mcp:a`).
+> - **Les fichiers** (la liste ci-dessous est incomplète). En plus : `src/capture/turn.ts`, `src/capture/api-contract.ts`, `src/capture/session-facts.ts` et leurs tests ; `src/server/db/migrations/0069-roles-coulisses.sql` et son test ; `src/server/api/backstage-routes.ts` (nouveau) et son test en base ; un module d'écriture côté serveur à côté de `record-facts.ts` (par exemple `src/server/ingest/record-backstage.ts`) ; `src/server/api/app.ts` ; `src/server/sessions/resume-worker.ts`, `src/server/briefing/gather.ts` et leurs tests ; `src/server/search/tool-filters.ts`, `src/server/search/filters-sql.ts`, `src/server/mcp/tools/search-tool.ts`, `src/server/mcp/tools/render.ts` ; `src/components/search/view-model.ts` et les libellés ; `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts`.
+> - **Hors de cette PR.** La CLI qui envoie (T52), le texte de l'usage `coulisses` et la correction des textes « private » (PR 3) ; les autres outils (PR 4).
+
 **Fichiers :** `src/capture/turn.ts` (`TURN_ROLES`), `src/server/db/migrations/NNNN-roles-coulisses.sql` (nouveau), `src/server/api/backstage-routes.ts` (nouveau), `src/server/api/app.ts`, `src/server/mcp/tools/search-tool.ts` (filtre `type` : raisonnement, sous-agent, appel d'outil, amendé le 05/11), `src/server/mcp/tools/render.ts`.
 
 **Fait quand :**
@@ -1420,6 +1516,8 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 - `search` filtré par `raisonnement` ;
 - amendé le 05/11 (QD9) : `search` sans filtre `type` rend aussi les tours `raisonnement`, `sous_agent` et `appel_outil` ;
 - amendé le 05/11 (QD9, C11) : `chercher` rend un tour `raisonnement` de la session.
+
+> **Amendé le 12/11 (choix du rédacteur) :** le test « aucun bloc `appel_outil` n'entre au condensé », que l'amendement du 05/11 place dans `thread-state.test.ts`, va dans `thread-state.db.test.ts`. `thread-state.test.ts` est le test pur de `condenseFil`, qui ne filtre aucun rôle : le filtre est en SQL, dans `readTail`.
 
 ### T63 · Le sous-agent qui ne lit que le dépôt (après T43 et T50)
 
@@ -1581,10 +1679,16 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    - un appel par fil touché et par session nouvelle au plus ;
    - l'étape `fil` à part, pour compter son coût dans le tableau admin existant ;
    - une mesure du volume par session (compteurs côté serveur) avant d'ouvrir l'usage `coulisses` à d'autres qu'Amos.
+     > **Amendé le 12/11 (décision 6 d'Amos pour le lot 14) :** cette mesure devient les compteurs de T51. À chaque envoi accepté, le serveur compte les blocs et les octets reçus par rôle, sans texte et sans identifiant de session ni de fil (C10). Le lot 11 les relève.
 
    Depuis le 04/11 : le rêve par règles (lot 15) n'appelle aucun modèle. Les versions ajoutent une ligne par écriture (4 000 caractères au plus), toutes gardées, sans limite. Le lot 11 mesure le volume ; couper demanderait une nouvelle décision d'Amos. La version avec modèle du rêve, après QD1, aura sa propre étape, pour compter son coût à part.
 
    Tranché le 05/11 par Amos (QD9) : les coulisses restent dans la recherche, sans filtre. Le volume indexé ne change pas, puisqu'elles étaient déjà indexées. Limite connue : les appels d'outils, nombreux et courts, peuvent prendre la place d'autres passages dans les résultats de `search` et de `leon chercher`. Le filtre `type` au MCP permet de les cibler ; `leon chercher` n'a pas ce filtre.
+
+   > **Amendé le 12/11 (choix du rédacteur) :**
+   > - « Le volume indexé ne change pas, puisqu'elles étaient déjà indexées » se lit par rapport à l'autre choix de QD9, des coulisses filtrées. Il ne se lit pas par rapport à l'absence de coulisses : le volume indexé augmente bien. Chaque bloc devient un passage, plus un vecteur si un fournisseur est réglé.
+   > - Dans la limite connue, lire `leon search` là où le texte écrit `leon chercher` (nom du 10/11). Elle n'a toujours pas de filtre `type`.
+
 2. **L'injection durable.** Parades :
    - seules des clés sont poussées d'office (D25) ;
    - titres réduits (D24) ;

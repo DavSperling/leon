@@ -199,21 +199,19 @@ function reportTurn(line: ConversationLine, calls: ReadonlySet<string>): Turn | 
 }
 
 // La notification d'une tâche de fond arrivée pendant que l'agent travaillait : une ligne `attachment`, la seule lue.
-// L'annexe 08 ne garantit `uuid` que sur les lignes de conversation : sans lui, l'identifiant vient de l'horodatage.
-// shortcut: deux notifications sans uuid à la même milliseconde n'en font qu'une ; à revoir si le script témoin relève
-// des lignes queued_command sans uuid.
+// Elle porte `uuid`, `sessionId` et `timestamp` (annexe 08) : l'identifiant du tour est son `uuid`.
 function queuedNotificationTurn(line: Line): Turn | null {
   const queued = QueuedNotificationSchema.safeParse(line.attachment);
   if (
     line.type !== 'attachment' ||
     !queued.success ||
+    line.uuid === undefined ||
     line.sessionId === undefined ||
     line.timestamp === undefined ||
     isAside(line)
   )
     return null;
-  const id = line.uuid ?? `attachment@${line.timestamp}`;
-  return injectedTurn(id, line.timestamp, queued.data.prompt);
+  return injectedTurn(line.uuid, line.timestamp, queued.data.prompt);
 }
 
 // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.

@@ -426,8 +426,8 @@ describe('parseClaudeCodeSession', () => {
       expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
     });
 
-    // L'annexe 08 ne garantit `uuid` que sur les lignes de conversation : sans lui, l'identifiant vient de l'horodatage.
-    it('capte une notification queued_command sans uuid, sous un identifiant stable', () => {
+    // La ligne porte `uuid` (annexe 08) : sans lui, elle n'a pas la forme connue.
+    it('ne capte pas une notification queued_command sans uuid', () => {
       const content = [
         typed,
         JSON.stringify({
@@ -443,12 +443,19 @@ describe('parseClaudeCodeSession', () => {
       ].join('\n');
 
       expect(parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.injecte])).toEqual(
-        [
-          ['uuid-1', false],
-          ['attachment@2026-10-13T08:07:00.000Z', true],
-        ],
+        [['uuid-1', false]],
       );
     });
+  });
+
+  // Claude Code 2.1.322 recopie des messages déjà écrits dans des lignes api-request-blob (annexe 08). Même avec un uuid,
+  // un sessionId et un horodatage, une copie de rôle user n'est pas un tour : seul son type l'écarte.
+  it('ne fait pas un tour d’une ligne api-request-blob de rôle user', () => {
+    const blob = line('user', 2, [{ type: 'text', text: 'Copie.' }], { type: 'api-request-blob' });
+
+    expect(
+      parseClaudeCodeSession([line('user', 1, 'Question'), blob].join('\n'))?.turns,
+    ).toHaveLength(1);
   });
 
   it('renvoie null pour un fichier vide ou sans conversation exploitable', () => {

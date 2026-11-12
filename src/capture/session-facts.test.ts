@@ -142,6 +142,46 @@ describe('extractClaudeCodeFacts', () => {
     expect(extractClaudeCodeFacts(contenu, RACINE).prs).toEqual([]);
   });
 
+  // Claude Code 2.1.322 recopie des messages déjà écrits dans des lignes api-request-blob (annexe 08) : l'appel dans un
+  // message `assistant`, son résultat dans un message `user`. Ces copies ne sont pas des gestes de plus.
+  describe('les copies d’appels des lignes api-request-blob', () => {
+    const copie = (role: 'assistant' | 'user', content: unknown[]) =>
+      JSON.stringify({
+        type: 'api-request-blob',
+        sessionId: 's1',
+        hash: 'f'.repeat(64),
+        message: { role, content },
+      });
+    const sessionAvecCopies = (commande: string, sortie: string, erreur: boolean) => {
+      const bloc = { type: 'tool_use', id: 'b1', name: 'Bash', input: { command: commande } };
+      const retour = { type: 'tool_result', tool_use_id: 'b1', content: sortie, is_error: erreur };
+      return [
+        appel('b1', 'Bash', { command: commande }),
+        JSON.stringify({ type: 'user', message: { content: [retour] } }),
+        copie('assistant', [{ type: 'thinking', thinking: '' }, bloc]),
+        copie('user', [retour]),
+      ].join('\n');
+    };
+
+    it('une commande en erreur n’est rangée qu’une fois, et l’erreur comptée une fois', () => {
+      const faits = extractClaudeCodeFacts(sessionAvecCopies('pnpm test', 'boom', true), RACINE);
+
+      expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: true }]);
+      expect(faits.erreurs).toBe(1);
+    });
+
+    it('un gh pr create réussi n’est rangé qu’une fois, avec une seule PR', () => {
+      const url = 'https://github.com/o/r/pull/12';
+      const faits = extractClaudeCodeFacts(
+        sessionAvecCopies('gh pr create --fill', url, false),
+        RACINE,
+      );
+
+      expect(faits.commandes).toEqual([{ texte: 'gh pr', erreur: false }]);
+      expect(faits.prs).toEqual([{ repo: 'o/r', numero: 12, par: 'gh-pr-create' }]);
+    });
+  });
+
   // Postgres refuse les deux dans un jsonb : un seul ferait échouer l'écriture des faits (T02).
   it('ne coupe pas un emoji en deux et retire le caractère nul, sans recoller un secret', () => {
     const contenu = [

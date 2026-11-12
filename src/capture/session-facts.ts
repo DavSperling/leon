@@ -472,7 +472,10 @@ export function extractClaudeCodeFacts(
       });
       if (pr.success) links.push(pr.data);
     }
-    const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
+    // Les blocs d'outils ne se lisent que sur les messages `user` et `assistant` : les lignes `api-request-blob` en
+    // recopient (annexe 08), et chaque copie compterait une seconde fois la commande, l'erreur et la PR.
+    const isMessage = line.type === 'user' || line.type === 'assistant';
+    const blocks = isMessage && Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {

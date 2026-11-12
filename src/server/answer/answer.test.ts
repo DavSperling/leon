@@ -40,6 +40,7 @@ function passage(text: string, overrides: Partial<PassageHit> = {}): PassageHit 
     snippet: `… ${HIGHLIGHT_START}fragmentsurligne${HIGHLIGHT_END} …`,
     ts: new Date('2026-10-18T09:30:00Z'),
     authorName: 'Julie Martin',
+    role: 'participant',
     ...overrides,
   };
   TEXTS.set(made.passageId, text);

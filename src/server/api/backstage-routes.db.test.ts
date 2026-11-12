@@ -1,6 +1,11 @@
 import { and, asc, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, COULISSES_BLOCS_MAX, COULISSES_BODY_MAX_BYTES } from '@/capture/api-contract';
+import {
+  API_PATHS,
+  COULISSES_BLOCS_MAX,
+  COULISSES_BODY_MAX_BYTES,
+  ReadResponseSchema,
+} from '@/capture/api-contract';
 import { SECRET_MASK } from '@/capture/mask-secrets';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -171,6 +176,36 @@ describe('POST /api/v1/coulisses', () => {
       .from(passages)
       .where(eq(passages.turnId, turn?.id ?? ''));
     expect(rows).toEqual([{ text: 'Le cache de Redis tombe le lundi.', acl: [paul.userId] }]);
+  });
+
+  // QD9, C11 : `leon search` n'a pas de filtre `type`, les coulisses y apparaissent toujours, étiquetées.
+  it('chercher rend un tour raisonnement de la session, une fois indexé', async () => {
+    const { paul, paulToken } = await setup();
+    const project = 'github.com/acme/leon';
+    const value = body([raisonnement({ texte: 'Le cache de Redis vacille le jeudi.' })]);
+    await adminDb.insert(sources).values({
+      tenantId: paul.tenantId,
+      kind: 'claude_code',
+      externalId: value.external_id,
+      ownerUserId: paul.userId,
+      acl: [paul.userId],
+      metadata: { project },
+    });
+    await post(paulToken, value);
+    const job = vi.mocked(enqueuePipelineStep).mock.calls.at(-1)?.[1] as { ingestRunId: string };
+    await indexIngestRun(
+      { ingestRunId: job.ingestRunId, tenantId: paul.tenantId, userId: paul.userId },
+      { embedder: null },
+    );
+
+    const response = await apiRequest(API_PATHS.chercher, {
+      token: paulToken,
+      body: { projet: project, usages: ['lecture'], requete: 'Redis jeudi' },
+    });
+
+    expect(response.status).toBe(200);
+    const { texte } = ReadResponseSchema.parse(await response.json());
+    expect(texte).toMatch(/<passage [^>]*role="raisonnement">[^<]*Redis vacille le jeudi/);
   });
 
   it.each([

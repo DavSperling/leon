@@ -105,6 +105,8 @@ export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // matin, ni le résumé, ni l'état du fil ne les lisent ; la recherche les rend toujours (QD9).
 export const BACKSTAGE_ROLES = ['raisonnement', 'sous_agent', 'appel_outil'] as const;
 export type BackstageRole = (typeof BACKSTAGE_ROLES)[number];
+export const isBackstageRole = (role: string | null): role is BackstageRole =>
+  (BACKSTAGE_ROLES as readonly (string | null)[]).includes(role);
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.
 export const TURN_ROLES = [
   'user',

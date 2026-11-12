@@ -11,6 +11,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
   epochToDate,
   LAST_TS_SQL,
+  notBackstage,
   RESUME_LIKE,
   sourceInfoFrom,
   textArray,
@@ -150,7 +151,7 @@ const excerptOf = (
 
 // Les `limit` derniers tours de chacune de ces sources, dans l'ordre de la source. Le texte n'est lu qu'au début :
 // une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400. Sans les résumés de Leon
-// (T23) : le point du matin lit ce qui s'est passé, pas ce que le modèle en a dit.
+// (T23) : le point du matin lit ce qui s'est passé, pas ce que le modèle en a dit. Sans les coulisses (QD9).
 export async function lastTurns(
   tx: Tx,
   ctx: TenantContext,
@@ -166,7 +167,7 @@ export async function lastTurns(
              row_number() over (partition by t.source_id order by t.ts desc, t.created_at desc, t.id desc) as n
       from turns t
       where t.tenant_id = ${ctx.tenantId} and t.source_id = any(${uuids(sourceIds)})
-        and t.external_id not like ${RESUME_LIKE}
+        and t.external_id not like ${RESUME_LIKE} and ${notBackstage(sql`t.role`)}
     ) recent
     where n <= ${limit}
     order by source_id, ts, created_at, id`);
@@ -183,7 +184,8 @@ async function readSessions(tx: Tx, ctx: TenantContext, project: string, cutoff:
   const { rows } = await tx.execute<SessionRow>(sql`
     select s.id, s.kind, s.title, s.metadata, extract(epoch from l.last_ts) as last_epoch,
            extract(epoch from (select min(t.ts) from turns t
-                               where t.tenant_id = s.tenant_id and t.source_id = s.id)) as first_epoch
+                               where t.tenant_id = s.tenant_id and t.source_id = s.id
+                                 and ${notBackstage(sql`t.role`)})) as first_epoch
     from sources s
     cross join lateral (select ${LAST_TS_SQL} as last_ts) l
     where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
@@ -234,7 +236,8 @@ export function wholeWord(text: string): string {
 
 // Les passages qui mentionnent le lecteur depuis `since` : son adresse e-mail dans le texte, ou son identifiant
 // d'outil précédé de « @ » dans un élément de cet outil (T19). Ni ce qu'il a écrit lui-même, ni ses propres
-// conversations, ni une source déjà comptée parmi les changements. Sans adresse connue : rien (on ne devine pas).
+// conversations, ni une source déjà comptée parmi les changements, ni une coulisse (QD9). Sans adresse connue : rien
+// (on ne devine pas).
 async function readMentions(
   tx: Tx,
   ctx: TenantContext,
@@ -273,6 +276,8 @@ async function readMentions(
         and not (s.id = any(${uuids(excluded)}))
         and (${sql.join(mentions, sql` or `)})
         and not coalesce(${sql.join(mine, sql` or `)}, false)
+        and exists (select 1 from turns pt
+          where pt.tenant_id = p.tenant_id and pt.id = p.turn_id and ${notBackstage(sql`pt.role`)})
       order by p.ts desc, p.id
       limit ${MENTIONS_MAX}
     ) m

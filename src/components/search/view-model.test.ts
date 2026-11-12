@@ -28,6 +28,7 @@ const hit = (over: Partial<SourceHit> = {}): SourceHit => ({
       snippet: 'le contrat est renouvelé',
       ts: new Date('2026-10-12T10:00:00Z'),
       authorName: 'Julie Martin',
+      role: 'participant',
     },
   ],
   score: 0.5,

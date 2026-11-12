@@ -682,6 +682,57 @@ describe('outil search', () => {
     ]);
   });
 
+  // T51 (QD9) : les coulisses restent dans la recherche sans filtre ; `type` cible chacun de leurs rôles, et le rendu
+  // étiquette un passage des coulisses par son rôle.
+  it('le filtre type cible chaque rôle des coulisses ; sans lui, les trois sont rendus ; une nature filtre comme avant', async () => {
+    const { tenantId, paul } = await setupTeam();
+    const word = 'coulissarium';
+    const minute = (n: number) => new Date(Date.UTC(2026, 10, 12, 9, n));
+    await seedIndexed(paul, {
+      kind: 'claude_code',
+      title: 'Session de code',
+      turns: [
+        { text: 'Le message de Paul.', role: 'user', ts: minute(0) },
+        { text: `${word} raisonnement`, role: 'raisonnement', ts: minute(1) },
+        { text: `[consigne]\n${word} sous-agent`, role: 'sous_agent', ts: minute(2) },
+        // Un outil sans cible : son nom réduit et son statut (C10).
+        { text: `${word} · ok`, role: 'appel_outil', ts: minute(3) },
+      ],
+    });
+    await seedIndexed(paul, {
+      kind: 'github',
+      acl: [tenantId],
+      title: 'Ticket',
+      metadata: { nature: 'ticket' },
+      turns: [{ text: `${word} ticket`, role: 'document' }],
+    });
+    const client = await connect(paul);
+    const search = (args: Record<string, unknown>) => call(client, 'search', args);
+    const snippets = (result: Awaited<ReturnType<typeof search>>) =>
+      found(result).hits.flatMap((hit) => hit.passages.map((passage) => passage.snippet));
+
+    // Un seul passage, celui du rôle demandé (l'extrait ne garde que les mots autour de celui trouvé).
+    const only = (part: string) => [expect.stringContaining(part)];
+    expect(snippets(await search({ query: word, type: 'reasoning' }))).toEqual(
+      only('raisonnement'),
+    );
+    expect(snippets(await search({ query: word, type: 'subagent' }))).toEqual(only('sous-agent'));
+    expect(snippets(await search({ query: word, type: 'tool call' }))).toEqual([word]);
+    // Sans mot à chercher, le filtre seul : le passage le plus récent de ce rôle.
+    expect(snippets(await search({ type: 'reasoning' }))).toEqual(only('raisonnement'));
+
+    const all = await search({ query: word });
+    expect(titlesOf(all).sort()).toEqual(['Session de code', 'Ticket']);
+    expect(all.text).toContain('role="raisonnement"');
+    expect(all.text).toContain('role="sous_agent"');
+    expect(all.text).toContain('role="appel_outil"');
+    expect(all.text).not.toContain('role="document"');
+    expect(titlesOf(await search({ query: word, type: 'ticket' }))).toEqual(['Ticket']);
+    expect(titlesOf(await search({ query: word, type: 'conversation' }))).toEqual([
+      'Session de code',
+    ]);
+  });
+
   it('une requête vide avec un filtre rend les sources les plus récentes', async () => {
     const { tenantId, paul } = await setupTeam();
     await seedIndexed(paul, {

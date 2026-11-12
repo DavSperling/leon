@@ -1,4 +1,4 @@
-import type { ItemNature, SourceKind, TurnRole } from '@/capture/turn';
+import type { BackstageRole, ItemNature, SourceKind, TurnRole } from '@/capture/turn';
 
 // Les types de la recherche (C4 du plan du deuxième jet), partagés par la barre, la réponse en tête, la
 // discussion, le point du matin et le MCP. Types seulement : ni base, ni réseau.
@@ -6,6 +6,8 @@ import type { ItemNature, SourceKind, TurnRole } from '@/capture/turn';
 export type SearchFilters = {
   tools?: SourceKind[]; // outil:
   natures?: ItemNature[]; // type:
+  // Les rôles des coulisses (T51), par le paramètre `type` des outils seulement : la barre n'en a pas.
+  roles?: BackstageRole[];
   authorEmails?: string[]; // de: une fois résolu (people.ts)
   authorNames?: { kind: SourceKind; name: string }[]; // de: sur un identifiant d'outil (T19)
   since?: Date; // depuis: (inclus)
@@ -20,7 +22,7 @@ export type SearchFilters = {
 
 export type ParsedQuery = {
   text: string;
-  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot' | 'fil'>;
+  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot' | 'fil' | 'roles'>;
   people: string[];
 };
 
@@ -31,6 +33,8 @@ export type PassageHit = {
   snippet: string;
   ts: Date;
   authorName: string | null;
+  // Le rôle de son tour, que le rendu dit pour une coulisse (render.ts) ; null si la base ne le rend pas.
+  role: TurnRole | null;
 };
 
 export type SourceHit = {

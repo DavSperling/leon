@@ -17,6 +17,7 @@ import {
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
 import { queryTerms } from '@/server/search/query-terms';
 import {
+  BACKSTAGE_ROLE_NAMES_EN,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
   readToolFilters,
@@ -98,6 +99,18 @@ describe('description de search', () => {
       expect(text).toContain(name);
       expect(readToolFilters({ type: name }, new Date()), name).not.toHaveProperty('error');
     }
+  });
+
+  // T51 (QD9) : les coulisses d'une session de code se ciblent par `type`, nommées comme les natures.
+  it('liste les trois rôles des coulisses, par des noms que la recherche lit comme rôles', () => {
+    const text = description(SearchInputSchema.shape.type);
+
+    for (const [role, name] of Object.entries(BACKSTAGE_ROLE_NAMES_EN)) {
+      expect(text).toContain(name);
+      expect(readToolFilters({ type: name }, new Date())).toEqual({ filters: { roles: [role] } });
+    }
+    const refused = readToolFilters({ type: 'inconnu' }, new Date());
+    expect('error' in refused ? refused.error : '').toContain('tool call');
   });
 
   // T25 : les formes que la description de depot propose sont celles que la recherche lit ; une autre est refusée.

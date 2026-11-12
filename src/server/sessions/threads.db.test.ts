@@ -533,6 +533,41 @@ describe('fileSession, une session sans clé (T41)', () => {
     expect(mocks.enqueueFilMaj).not.toHaveBeenCalled();
   });
 
+  // Garde (D23, T51) : la proximité ne compare que les résumés ; une coulisse indexée, même toute proche, ne rattache rien.
+  it('une coulisse proche, d’un côté comme de l’autre, ne rattache pas : hors fil', async () => {
+    const { paul } = await team();
+    const FAR = 'Une recette de crêpes bretonnes au sarrasin';
+    const backstage = async (sourceId: string, text: string) => {
+      const ingestRunId = await withTenant(paul, async (tx) => {
+        const { ids } = await insertNewTurns(tx, [
+          {
+            tenantId: paul.tenantId,
+            sourceId,
+            externalId: `coulisse:${randomUUID()}`,
+            role: 'raisonnement',
+            text,
+            ts: new Date(),
+            captureMode: 'file',
+            acl: [paul.userId],
+          },
+        ]);
+        return createIngestRun(tx, paul, sourceId, ids, [paul.userId]);
+      });
+      const job = { ingestRunId, tenantId: paul.tenantId, userId: paul.userId };
+      expect(await indexIngestRun(job, { embedder: factice })).toBe('indexe');
+    };
+    const onBranch = await session(paul);
+    await file(paul, onBranch);
+    await summarize(paul, onBranch, NEAR);
+    await backstage(onBranch, `${FAR}, suite`);
+    const onMain = await session(paul, { branche: 'main' });
+    await summarize(paul, onMain, FAR);
+    await backstage(onMain, `${NEAR}, suite`);
+
+    expect(await file(paul, onMain)).toBe('hors-fil');
+    expect(sessionIds((await filsOf(paul))[0])).toEqual([onBranch]);
+  });
+
   it('le résumé d’une session qui a perdu l’usage resume ne rattache plus : hors fil', async () => {
     const { paul } = await team();
     const onBranch = await session(paul);

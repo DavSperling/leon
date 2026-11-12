@@ -239,6 +239,19 @@ describe('la page Documentation', () => {
     },
   );
 
+  // Le texte d'accord de Claude Code gagne le rapport final de chaque sous-agent (décision 7 d'Amos du 12/11) : la page
+  // le dit au même endroit, marqué comme non tapé.
+  it.each(LOCALES)(
+    'dit que le rapport final de chaque sous-agent part (%s)',
+    (locale, messages) => {
+      expect(messages.site.documentation.sent.end).toContain(
+        locale === 'en'
+          ? 'labeled as not typed by you; the final report of each subagent, labeled the same way; a <code>!</code> command you type is sent whole)'
+          : 'marqués comme non tapés par vous ; le rapport final de chaque sous-agent, marqué de même ; une commande <code>!</code> que vous tapez part entière)',
+      );
+    },
+  );
+
   // `leon setup` branche aussi Codex, Cursor et Antigravity (setup.ts) : la page le dit, avec ce que leurs textes d'accord
   // disent des messages que l'outil écrit lui-même (T43, décision d'Amos du 10/11).
   it.each(LOCALES)('dit ce qui part des autres outils de code (%s)', (locale, messages) => {

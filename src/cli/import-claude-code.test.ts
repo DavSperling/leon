@@ -1,5 +1,6 @@
 import {
   copyFile,
+  cp,
   mkdir,
   mkdtemp,
   readdir,
@@ -400,6 +401,24 @@ describe('importClaudeCode : les faits de chaque session', () => {
     expect(acme).not.toHaveProperty('usages');
     expect(acme).not.toHaveProperty('accord_le');
     expect(factsOf(facts).get(ORION_SESSION)?.usages).toEqual(['resume']);
+  });
+
+  // T63 : les sous-agents se lisent à côté du fichier de la session (subagents.ts), sur la fixture de l'annexe 08.
+  it.each([
+    ['avec un sous-agent qui ne lit que le dépôt', false, true],
+    ['sans dossier de sous-agents', true, false],
+  ])('%s, les faits envoyés ont externe %s', async (_cas, externe, avecDossier) => {
+    const SESSION = '55555555-5555-4555-8555-555555555555';
+    const fixture = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+    await copyFile(new URL(`${SESSION}.jsonl`, fixture), join(projectDir, `${SESSION}.jsonl`));
+    if (avecDossier) {
+      await cp(new URL(SESSION, fixture), join(projectDir, SESSION), { recursive: true });
+    }
+    const { deps, facts } = makeFactsDeps();
+
+    await importClaudeCode(importOptions(), { ...deps, readdir: (path) => readdir(path) });
+
+    expect(factsOf(facts).get(SESSION)?.faits.externe).toBe(externe);
   });
 
   it('fin vaut vrai pour un fichier qui n’a pas bougé depuis 30 min, faux sinon', async () => {

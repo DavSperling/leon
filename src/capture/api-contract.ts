@@ -99,7 +99,9 @@ export const SessionFactsSchema = z
       )
       .max(TACHES_MAX),
     erreurs: z.number().int().nonnegative(), // erreurs d'outils
-    externe: z.boolean(), // a lu du web, du MCP, un sous-agent ou une commande réseau
+    // a lu du web, du MCP, une commande réseau, ou un sous-agent qui sort du dépôt (T63 ; hors Claude Code, tout
+    // sous-agent, jusqu'à la quatrième PR du lot 14)
+    externe: z.boolean(),
     echanges: z.number().int().nonnegative(), // messages tapés par l'utilisateur
     debut: z.iso.datetime({ offset: true }).nullable(),
     fin: z.iso.datetime({ offset: true }).nullable(),

@@ -51,6 +51,7 @@ import {
 import { leonMcpRecognized } from './leon-mcp';
 import { ADAPTATEURS, sessionFileFrom } from './outils';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
+import { loadSubagents } from './subagents';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
 // et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
@@ -210,7 +211,8 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
       dirs: root === null ? [start] : [start, root],
       url: deps.mcpUrl,
     });
-    const faits = extractClaudeCodeFacts(content, root, leonMcp);
+    const subagents = await loadSubagents(input.transcript_path, deps);
+    const faits = extractClaudeCodeFacts(content, root, leonMcp, subagents);
     const source = { content, root, fin: true, faits };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
       warn(FACTS_REFUSED_MESSAGE);

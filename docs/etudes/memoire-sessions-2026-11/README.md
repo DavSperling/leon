@@ -2,7 +2,7 @@
 
 2 novembre 2026 · Amos (avec Claude) · à relire par David
 
-Plan d'implémentation : [`docs/plans/2026-11-02-memoire-sessions.md`](../../plans/2026-11-02-memoire-sessions.md), qui fait foi pour le détail. Annexes : [basic-memory, comment ça marche](annexes/01-basic-memory.md) ; [la recherche du 02/11](annexes/02-recherche.md) (crochets des quatre outils, terrain, projets open source) ; les essais réels de [Codex](annexes/03-essai-codex.md), de [Cursor](annexes/04-essai-cursor.md) et d'[Antigravity](annexes/05-essai-antigravity.md). Cette étude fait suite à la revue de #106, #107 et #108 (David, 01/11) et reprend les réponses d'Amos aux cinq points « à trancher » de #108.
+Plan d'implémentation : [`docs/plans/2026-11-02-memoire-sessions.md`](../../plans/2026-11-02-memoire-sessions.md), qui fait foi pour le détail. Annexes : [basic-memory, comment ça marche](annexes/01-basic-memory.md) ; [la recherche du 02/11](annexes/02-recherche.md) (crochets des quatre outils, terrain, projets open source) ; les essais réels de [Codex](annexes/03-essai-codex.md), de [Cursor](annexes/04-essai-cursor.md) et d'[Antigravity](annexes/05-essai-antigravity.md) ; [l'essai de Claude Code pour les coulisses](annexes/08-essai-claude-code-coulisses.md). Cette étude fait suite à la revue de #106, #107 et #108 (David, 01/11) et reprend les réponses d'Amos aux cinq points « à trancher » de #108.
 
 ## La question
 

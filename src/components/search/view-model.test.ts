@@ -171,6 +171,19 @@ describe('toPreviewView', () => {
       ]),
     ).toEqual(['Vous', 'Assistant', 'Document', 'Participant', 'Julie Martin', 'Participant']);
   });
+
+  // Les coulisses (lot 14) : un tour de l'agent qui n'est pas un message, et qui le dit, en français comme en anglais.
+  it('nomme les trois rôles des coulisses, en français et en anglais', () => {
+    const backstage = ['raisonnement', 'sous_agent', 'appel_outil'] as const;
+    const speakers = (locale: string) =>
+      toPreviewView(
+        { source, turns: backstage.map((role) => turn({ role, authorName: null })) },
+        locale,
+      ).turns.map((t) => t.speaker);
+
+    expect(speakers('fr')).toEqual(['Raisonnement', 'Sous-agent', "Appel d'outil"]);
+    expect(speakers('en')).toEqual(['Reasoning', 'Subagent', 'Tool call']);
+  });
 });
 
 describe('queryTerms', () => {

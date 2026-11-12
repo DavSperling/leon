@@ -133,8 +133,17 @@ const ROLE_SPEAKERS: Record<ContextTurn['role'], string> = {
   assistant: 'Assistant',
   document: 'Document',
   participant: 'Participant',
+  raisonnement: 'Raisonnement',
+  sous_agent: 'Sous-agent',
+  appel_outil: "Appel d'outil",
 };
-const ROLE_SPEAKERS_EN: Record<ContextTurn['role'], string> = { ...ROLE_SPEAKERS, user: 'You' };
+const ROLE_SPEAKERS_EN: Record<ContextTurn['role'], string> = {
+  ...ROLE_SPEAKERS,
+  user: 'You',
+  raisonnement: 'Reasoning',
+  sous_agent: 'Subagent',
+  appel_outil: 'Tool call',
+};
 
 export function toPreviewView(
   context: { source: SourceInfo; turns: ContextTurn[] },

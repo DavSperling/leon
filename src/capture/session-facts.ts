@@ -206,7 +206,7 @@ function resultText(content: string | unknown[] | undefined): string {
 // arguments, où passent des mots de passe que maskSecrets ne reconnaît pas (« mysql -pX », « curl -u a:X »).
 // shortcut: seule la première commande d'une suite (« cd x && pnpm test ») est gardée, découper aux opérateurs
 // le jour où le bloc de démarrage en a besoin.
-function reduceCommand(command: string): string {
+export function reduceCommand(command: string): string {
   const text = command.replaceAll('\u0000', '');
   // Les préfixes NOM=valeur se sautent sur la commande brute : masquée, « PGPASSWORD=my\ S3cret » perdrait
   // l'échappement dans le masque, et « S3cret » deviendrait l'exécutable.
@@ -245,6 +245,25 @@ export function recheckCommand(texte: string): string {
   return reduced ? factText(texte, TEXTE_MAX) : HIDDEN_COMMAND;
 }
 
+const HIDDEN_TOOL = '[outil]';
+const MCP_SERVER = /^[A-Za-z0-9._-]{1,56}$/;
+// Le nom d'un outil appelé (C10 amendé le 12/11) : un outil MCP ne garde que son serveur, `mcp:<serveur>`, jamais son
+// nom ; tout autre nom n'est gardé que s'il a la forme d'un exécutable. `mcp__` est testé avant EXECUTABLE, qu'un
+// « mcp__linear » passerait. Rejouée à la réception (record-backstage.ts) : un nom déjà réduit reste tel quel.
+export function reduceToolName(name: string): string {
+  if (name.startsWith('mcp__')) {
+    const rest = name.slice('mcp__'.length);
+    const end = rest.indexOf('__');
+    const server = rest.slice(0, end);
+    return end > 0 && rest.length > end + 2 && MCP_SERVER.test(server)
+      ? `mcp:${server}`
+      : HIDDEN_TOOL;
+  }
+  if (name.startsWith('mcp:'))
+    return MCP_SERVER.test(name.slice('mcp:'.length)) ? name : HIDDEN_TOOL;
+  return EXECUTABLE.test(name) ? name : HIDDEN_TOOL;
+}
+
 // Le texte d'un fait, masqué puis coupé. Un jsonb refuse le caractère nul et la moitié d'emoji qu'une coupe
 // peut laisser : un seul fait qui en porte ferait échouer l'écriture de tous ceux de la session, à chaque
 // rattrapage. Le caractère nul part avant maskSecrets, pour ne pas recoller un secret qu'il coupait. Repassé à la
@@ -257,7 +276,7 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
 const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
 // Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque) ou s'il n'y a pas de dépôt.
-function repoRelativePath(path: string, root: string | null): string | null {
+export function repoRelativePath(path: string, root: string | null): string | null {
   if (root === null) return null;
   const relativePath = relative(root, resolve(root, path));
   const outside =

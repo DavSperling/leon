@@ -21,8 +21,8 @@ type Pr = SessionFacts['prs'][number];
 export type Tache = SessionFacts['taches'][number];
 
 // Schéma minimal d'une ligne du fichier de session, comme dans claude-code.ts : les champs inconnus sont
-// ignorés, une ligne qui ne le respecte pas est écartée.
-const LineSchema = z.object({
+// ignorés, une ligne qui ne le respecte pas est écartée. Repris par les coulisses (session-backstage.ts).
+export const LineSchema = z.object({
   type: z.string(),
   timestamp: z.iso.datetime({ offset: true }).optional(),
   gitBranch: z.string().optional(),
@@ -39,14 +39,14 @@ const LineSchema = z.object({
 type Line = z.infer<typeof LineSchema>;
 const LineTypeSchema = LineSchema.pick({ type: true });
 
-const ToolUseSchema = z.object({
+export const ToolUseSchema = z.object({
   type: z.literal('tool_use'),
   id: z.string(),
   name: z.string(),
   input: z.unknown(),
 });
 type Call = z.infer<typeof ToolUseSchema>;
-const ToolResultSchema = z.object({
+export const ToolResultSchema = z.object({
   type: z.literal('tool_result'),
   tool_use_id: z.string(),
   content: z.union([z.string(), z.array(z.unknown())]).optional(),
@@ -302,6 +302,11 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
 // `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
 export type Subagents = ReadonlyMap<string, string>;
 
+// La règle du rapport final (T63, annexe 08) : un sous-agent a rendu son rapport quand la dernière ligne de
+// conversation de son fichier est un message assistant fini par end_turn. Reprise par les coulisses.
+export const isFinalReport = (line: Line): boolean =>
+  line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
+
 // `visited` : les appels Agent ou Task déjà jugés. Un appel revu (le même bloc sur deux lignes) n'apporte rien de plus :
 // s'il était externe, la session l'est déjà.
 function isExternalAnyCall(
@@ -343,7 +348,7 @@ function isExternalSubagent(
     const parsed = LineSchema.safeParse(json);
     if (!parsed.success) return true;
     const line = parsed.data;
-    finished = line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
+    finished = isFinalReport(line);
     const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {
       const call = ToolUseSchema.safeParse(block);

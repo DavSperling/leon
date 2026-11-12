@@ -76,8 +76,9 @@ function parseLine(raw: string): Line | null {
   return parsed.success ? parsed.data : null;
 }
 
-// Seuls les blocs `text` comptent : ni pensée, ni appel d'outil, ni résultat d'outil, ni image.
-function messageText(content: string | unknown[]): string {
+// Seuls les blocs `text` comptent : ni pensée, ni appel d'outil, ni résultat d'outil, ni image. Repris pour le rapport
+// d'un sous-agent dans les coulisses (session-backstage.ts).
+export function messageText(content: string | unknown[]): string {
   if (typeof content === 'string') return content;
   const texts = content.flatMap((block) => {
     const parsed = TextBlockSchema.safeParse(block);

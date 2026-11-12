@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { homedir, hostname } from 'node:os';
 import { isAbsolute, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
@@ -217,6 +217,7 @@ async function runImport(args: string[]): Promise<number> {
   const deps: ImportDeps = {
     out: console.log,
     git: gitInDirectory,
+    readdir: (path) => readdir(path),
     withdrawn,
     send: env ? createIngestSender(fetch, env) : nothingSent,
     ...(accord === null
@@ -368,6 +369,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
+      readdir: (path) => readdir(path),
       env: process.env,
       home: homedir(),
       mcpUrl: mcpUrlOf(env),

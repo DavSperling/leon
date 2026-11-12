@@ -29,7 +29,12 @@ const LineSchema = z.object({
   isSidechain: z.boolean().optional(),
   prRepository: z.string().optional(),
   prNumber: z.number().optional(),
-  message: z.object({ content: z.union([z.string(), z.array(z.unknown())]) }).optional(),
+  message: z
+    .object({
+      content: z.union([z.string(), z.array(z.unknown())]),
+      stop_reason: z.string().nullish(),
+    })
+    .optional(),
 });
 type Line = z.infer<typeof LineSchema>;
 
@@ -74,10 +79,11 @@ const TASK_ID = /Task #(\d+)/;
 const GIT_OPTIONS = String.raw`(?:\s+-[Cc]\s+(?:"[^"]*"|'[^']*'|[^\s"']\S*)){0,4}`;
 const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
 
-// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, un sous-agent, le réseau. On
-// échoue fermé : hors Bash, tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe
-// (WebFetch, WebSearch, Agent, Task, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande
-// `leon` n'est une commande réseau (D36).
+// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, le réseau. On échoue fermé : hors Bash,
+// tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe (WebFetch, WebSearch,
+// Workflow, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande `leon` n'est une commande
+// réseau (D36). Un appel Agent ou Task se juge sur les échanges de son sous-agent, par la même règle (T63 :
+// isExternalSubagent) ; sans eux, il rend la session externe.
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -271,6 +277,51 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
   return bash.success && isExternalCommand(bash.data.command);
 }
 
+// Les échanges des sous-agents d'une session : `id` du bloc tool_use de l'appel Agent ou Task → contenu du fichier
+// `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
+export type Subagents = ReadonlyMap<string, string>;
+const SUBAGENT_TOOLS = new Set(['Agent', 'Task']);
+
+// `visited` : les appels Agent ou Task déjà jugés. Un appel revu (le même bloc sur deux lignes) n'apporte rien de plus :
+// s'il était externe, la session l'est déjà.
+function isExternalAnyCall(
+  call: Call,
+  leonMcp: boolean,
+  subagents: Subagents | undefined,
+  visited: Set<string>,
+): boolean {
+  if (!SUBAGENT_TOOLS.has(call.name)) return isExternalCall(call, leonMcp);
+  if (visited.has(call.id)) return false;
+  visited.add(call.id);
+  const content = subagents?.get(call.id);
+  return content === undefined || isExternalSubagent(content, leonMcp, subagents, visited);
+}
+
+// Un sous-agent rend la session externe si l'un de ses appels l'est, par la même règle, ou si l'on ne sait pas tout ce
+// qu'il a fait (échec fermé) : une ligne illisible, ou pas de rapport final (la dernière ligne de conversation n'est pas
+// un message assistant fini par end_turn : coupé, ou encore en cours). Toutes ses lignes portent isSidechain.
+function isExternalSubagent(
+  content: string,
+  leonMcp: boolean,
+  subagents: Subagents | undefined,
+  visited: Set<string>,
+): boolean {
+  let finished = false;
+  for (const raw of content.split('\n')) {
+    if (raw.trim() === '') continue;
+    const line = parseLine(raw);
+    if (!line) return true;
+    if (line.type !== 'user' && line.type !== 'assistant') continue;
+    finished = line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
+    const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
+    for (const block of blocks) {
+      const call = ToolUseSchema.safeParse(block);
+      if (call.success && isExternalAnyCall(call.data, leonMcp, subagents, visited)) return true;
+    }
+  }
+  return !finished;
+}
+
 // Ce que les appels d'outils d'une session apprennent, avant les bornes de C1 (buildFacts). Commun aux lecteurs des
 // outils de code : chacun lit son format, et passe ici ses commandes, ses fichiers et ses tâches.
 export type FactsRecord = {
@@ -376,12 +427,15 @@ function recordResult(
 // Les gestes d'une session Claude Code, à partir de son JSONL. `root` est la racine du dépôt (chemin absolu) :
 // les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
 // (`isSidechain`) ne sont pas la session. `leonMcp` : le serveur `leon` de la configuration de Claude Code est celui de
-// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte.
+// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte. `subagents` : les échanges des sous-agents (T63), qui ne
+// décident que de `externe` ; un appel Agent ou Task absent de la table rend la session externe.
 export function extractClaudeCodeFacts(
   content: string,
   root: string | null,
   leonMcp = false,
+  subagents?: Subagents,
 ): SessionFacts {
+  const visited = new Set<string>();
   const calls = new Map<string, Call>();
   const links: Pr[] = [];
   const record = newFactsRecord();
@@ -412,7 +466,7 @@ export function extractClaudeCodeFacts(
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {
         calls.set(call.data.id, call.data);
-        external ||= isExternalCall(call.data, leonMcp);
+        external ||= isExternalAnyCall(call.data, leonMcp, subagents, visited);
       }
       const result = ToolResultSchema.safeParse(block);
       if (!result.success) continue;

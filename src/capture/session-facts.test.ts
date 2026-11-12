@@ -213,7 +213,9 @@ describe('extractClaudeCodeFacts', () => {
     expect(extractClaudeCodeFacts(contenu, null).fichiers).toEqual([]);
   });
 
-  it('ignore un sous-agent (isSidechain), mais l’appel Agent marque la session externe', () => {
+  // L'ancienne forme : le sous-agent dans le fichier de la session, sans fichier à part. Ses échanges ne se retrouvent
+  // pas : l'appel reste externe (T63, échec fermé).
+  it('ignore un sous-agent de l’ancienne forme (isSidechain), dont l’appel Agent sans échanges marque la session externe', () => {
     const sousAgent = { isSidechain: true };
     const contenu = [
       appel('a1', 'Agent', { description: 'Chercher', prompt: 'Cherche Delta.' }),
@@ -332,6 +334,162 @@ describe('extractClaudeCodeFacts', () => {
       'leon search "$(curl -s https://x.example)"',
     ])('une commande réseau glissée dans « %s » compte (échec fermé)', (command) => {
       expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(true);
+    });
+  });
+
+  // T63 : un appel Agent ou Task se juge sur les échanges de son sous-agent (annexe 08), lus par la CLI (subagents.ts).
+  describe('le sous-agent qui ne lit que le dépôt (T63)', () => {
+    const SA = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+    const consigne = JSON.stringify({ type: 'user', ...SA, message: { content: 'Consigne.' } });
+    const rapport = JSON.stringify({
+      type: 'assistant',
+      ...SA,
+      message: { content: [{ type: 'text', text: 'Rapport.' }], stop_reason: 'end_turn' },
+    });
+    // Un fichier de sous-agent : la consigne, ses lignes, puis son rapport final.
+    const sousAgent = (...lignes: string[]) => [consigne, ...lignes, rapport].join('\n');
+    const geste = (id: string, name: string, input: unknown) => [
+      appel(id, name, input, SA),
+      resultat(id, 'ok', SA),
+    ];
+    const session = appel('a1', 'Agent', { prompt: 'Cherche.' });
+    const externe = (subagents?: Map<string, string>, leonMcp = false, contenu = session) =>
+      extractClaudeCodeFacts(contenu, RACINE, leonMcp, subagents).externe;
+
+    it('un sous-agent qui ne fait que Read, Grep et pnpm test (fixture, avec un sous-agent de sous-agent) : non externe', () => {
+      const dossier = 'claude-code-sous-agents/55555555-5555-4555-8555-555555555555';
+      const subagents = new Map([
+        ['toolu_01Depot', fixture(`${dossier}/subagents/agent-a1b2c3d4e5f6a7b8c`)],
+        ['toolu_01Petit', fixture(`${dossier}/subagents/agent-b9c8d7e6f5a4b3c2d`)],
+      ]);
+
+      expect(extractClaudeCodeFacts(fixture(dossier), RACINE).externe).toBe(true);
+      expect(extractClaudeCodeFacts(fixture(dossier), RACINE, false, subagents).externe).toBe(
+        false,
+      );
+    });
+
+    it.each([
+      ['WebFetch', { url: 'https://x.example' }],
+      ['Bash', { command: 'curl -s https://x.example' }],
+      ['mcp__github__get_issue', {}],
+      ['Workflow', {}],
+    ])('un sous-agent qui appelle %s %j : externe', (name, input) => {
+      expect(externe(new Map([['a1', sousAgent(...geste('s1', name, input))]]))).toBe(true);
+    });
+
+    it.each([
+      ['sans table', undefined],
+      ['l’appel absent de la table', new Map([['autre', sousAgent()]])],
+      ['un fichier vide', new Map([['a1', '']])],
+    ])('des échanges absents (%s) : externe', (_cas, subagents) => {
+      expect(externe(subagents)).toBe(true);
+    });
+
+    it.each([
+      [
+        'dernier message en tool_use',
+        [
+          consigne,
+          JSON.stringify({
+            type: 'assistant',
+            ...SA,
+            message: {
+              content: [{ type: 'tool_use', id: 's1', name: 'Read', input: {} }],
+              stop_reason: 'tool_use',
+            },
+          }),
+        ],
+      ],
+      ['dernière ligne user', [consigne, ...geste('s1', 'Read', {})]],
+      ['rapport suivi d’un tour user', [rapport, consigne]],
+    ])('un fichier qui s’arrête avant son rapport (%s) : externe', (_cas, lignes) => {
+      expect(externe(new Map([['a1', lignes.join('\n')]]))).toBe(true);
+    });
+
+    it.each([
+      ['du JSON illisible', 'ceci n’est pas du JSON'],
+      ['une ligne hors forme', JSON.stringify({ type: 42 })],
+    ])('une ligne illisible dans le fichier (%s) : externe', (_cas, ligne) => {
+      expect(externe(new Map([['a1', sousAgent(ligne)]]))).toBe(true);
+    });
+
+    it('lit les lignes non conversationnelles et les lignes vides sans échouer', () => {
+      const bruit = JSON.stringify({ type: 'api-request-blob', message: { content: [] } });
+      expect(externe(new Map([['a1', sousAgent(bruit, '', '  ')]]))).toBe(false);
+    });
+
+    it.each([
+      ['WebSearch', true],
+      ['Read', false],
+    ])('un sous-agent lancé par un sous-agent, qui appelle %s : externe %s', (name, attendu) => {
+      const subagents = new Map([
+        ['a1', sousAgent(...geste('a2', 'Agent', { prompt: 'Relis.' }))],
+        ['a2', sousAgent(...geste('t1', name, {}))],
+      ]);
+      expect(externe(subagents)).toBe(attendu);
+    });
+
+    it('un sous-agent qui lance leon thread : non externe (D36)', () => {
+      const lignes = geste('s1', 'Bash', { command: '~/.leon/bin/leon thread' });
+      expect(externe(new Map([['a1', sousAgent(...lignes)]]))).toBe(false);
+    });
+
+    it('un mcp__leon__thread dans un sous-agent : non externe si le serveur est reconnu, externe sinon', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'mcp__leon__thread', {}))]]);
+      expect(externe(subagents, true)).toBe(false);
+      expect(externe(subagents, false)).toBe(true);
+    });
+
+    it('le même bloc tool_use écrit sur deux lignes est compté une fois', () => {
+      const deuxFois = [session, session].join('\n');
+      const subagents = new Map([
+        ['a1', sousAgent(appel('a2', 'Agent', {}, SA), ...geste('a2', 'Agent', {}))],
+        ['a2', sousAgent()],
+      ]);
+      expect(externe(subagents, false, deuxFois)).toBe(false);
+    });
+
+    it('un sous-agent en tâche de fond, fini : non externe', () => {
+      const contenu = [
+        appel('a1', 'Agent', { prompt: 'Cherche.', run_in_background: true }),
+        resultat('a1', 'Async agent launched.', {
+          toolUseResult: { status: 'async_launched', isAsync: true, agentId: 'a1b2c3d4e5f6a7b8c' },
+        }),
+        JSON.stringify({
+          type: 'user',
+          message: {
+            content: '<task-notification>\n<status>completed</status>\n</task-notification>',
+          },
+        }),
+      ].join('\n');
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'Grep', { pattern: 'x' }))]]);
+      expect(externe(subagents, false, contenu)).toBe(false);
+    });
+
+    it('les gestes d’un sous-agent (un fichier écrit, une commande, un commit) n’entrent pas dans les faits', () => {
+      const lignes = [
+        ...geste('s1', 'Write', { file_path: `${RACINE}/src/sous-agent.ts` }),
+        appel('s2', 'Bash', { command: 'git commit -m x' }, SA),
+        resultat('s2', '[main 9f9f9f9] x', SA),
+        appel('s3', 'TodoWrite', { todos: [{ content: 'x', status: 'pending' }] }, SA),
+        resultat('s3', 'ok', SA),
+      ];
+      const faits = extractClaudeCodeFacts(
+        [session, resultat('a1', 'Rapport.')].join('\n'),
+        RACINE,
+        false,
+        new Map([['a1', sousAgent(...lignes)]]),
+      );
+
+      expect(faits).toMatchObject({
+        fichiers: [],
+        commandes: [],
+        commits: [],
+        taches: [],
+        erreurs: 0,
+        externe: false,
+      });
     });
   });
 

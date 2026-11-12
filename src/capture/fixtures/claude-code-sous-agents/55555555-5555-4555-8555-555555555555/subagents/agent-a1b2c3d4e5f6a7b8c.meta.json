@@ -1,0 +1,10 @@
+{
+  "agentType": "general-purpose",
+  "isBuiltIn": true,
+  "description": "Chercher les tests",
+  "toolUseId": "toolu_01Depot",
+  "requestShape": "foreground",
+  "requestNonInteractive": true,
+  "finished": true,
+  "spawnDepth": 1
+}

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { copyFile, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -617,6 +617,35 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
       ['sans connexion', leonAt(MCP), undefined],
     ])('%s : la session reste externe', async (_label, config, mcpUrl) => {
       expect(await externeWith(config, mcpUrl)).toBe(true);
+    });
+  });
+
+  // T63 : les sous-agents se lisent à côté du fichier de la session (subagents.ts), sur la fixture de l'annexe 08.
+  describe('les sous-agents de la session', () => {
+    const FIXTURE = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+    const session = '/t/55555555-5555-4555-8555-555555555555.jsonl';
+    const fromFixture = (path: string) => new URL(path.replace(/^\/t\//, ''), FIXTURE);
+    const externeWith = async (readdir: CaptureDeps['readdir']) => {
+      const facts = vi.fn<FactsSender>(async () => {});
+      const { deps } = makeDeps({
+        readFile: (path) => readFile(fromFixture(path), 'utf8'),
+        facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
+      });
+      const hook = JSON.stringify({ transcript_path: session, cwd: '/r' });
+      expect(await captureSessionFromHook(hook, { ...deps, readdir })).toBe(0);
+      return facts.mock.calls[0]?.[0].faits.externe;
+    };
+
+    it('un sous-agent qui ne lit que le dépôt : externe faux', async () => {
+      expect(await externeWith((path) => readdir(fromFixture(path)))).toBe(false);
+    });
+
+    it('sans dossier de sous-agents : externe vrai', async () => {
+      expect(
+        await externeWith(async () => {
+          throw Object.assign(new Error('absent'), { code: 'ENOENT' });
+        }),
+      ).toBe(true);
     });
   });
 

@@ -274,8 +274,9 @@ const LOCAL_FUNCTIONS = new Set([
 // ce serveur à l'URL de `config.toml` (leon-mcp.ts) : `server` et `tool` se comparent en entier.
 // shortcut: à l'ancien format (avant l'historique paginé), tout appel MCP compte, même vers Leon : sa forme
 // (`namespace`) n'est relevée que par un test ; la lire si un poste garde un Codex d'avant la 0.16x.
-// shortcut: tout sous-agent rend la session externe : l'essai T15 n'a pas relevé ses échanges, le tri de T63 (un
-// sous-agent qui ne lit que le dépôt) viendra avec la capture complète (lot 14).
+// shortcut: tout sous-agent rend la session externe : l'essai T15 n'a pas relevé ses échanges. Le tri de T63 (un
+// sous-agent qui ne lit que le dépôt) vient dans la quatrième PR du lot 14, après l'essai de Codex (décision 2 d'Amos du
+// 12/11).
 const LOCAL_ITEMS = new Set([
   'UserMessage',
   'AgentMessage',

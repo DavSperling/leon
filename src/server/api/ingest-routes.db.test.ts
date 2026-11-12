@@ -70,6 +70,24 @@ describe('POST /api/v1/ingest', () => {
     });
   });
 
+  // Les coulisses (lot 14) n'ont que leur route, POST /api/v1/coulisses : la base accepte leurs rôles, l'ingestion non.
+  it.each(['raisonnement', 'sous_agent', 'appel_outil'])(
+    'répond 400 à un tour de rôle %s',
+    async (role) => {
+      const { paulToken } = await setup();
+      const body = validBody();
+      const bad = { ...body, turns: [{ ...body.turns[0], role }] };
+
+      const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'turns.0.role', code: 'invalid_value' }],
+      });
+    },
+  );
+
   // Ni un connecteur ni un fil de travail (T39 : seul le serveur crée un fil, D21).
   it.each(['github', 'leon_fil'])(
     "répond 400 au type %s : un jeton d'appareil ne fabrique pas cette source",

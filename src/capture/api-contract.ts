@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CODE_SESSION_KINDS, ProjectSchema } from './turn';
+import { CODE_SESSION_KINDS, ProjectSchema, TURN_TEXT_MAX } from './turn';
 
 // Contrat HTTP partagé avec la CLI et l'extension (décision D1 : aucun import de code serveur ici).
 export const API_PATHS = {
@@ -19,6 +19,7 @@ export const API_PATHS = {
   lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
   noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
+  coulisses: '/api/v1/coulisses', // POST : le raisonnement, les sous-agents et les appels d'outils d'une session (lot 14)
   usages: '/api/v1/usages', // POST : un « non » à `noter` dans le terminal coupe `remember` pour le compte (C16)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
@@ -274,3 +275,43 @@ export type NoterResponse = z.infer<typeof NoterResponseSchema>;
 export const USAGES_BODY_MAX_BYTES = 1024;
 export const UsagesRequestSchema = z.strictObject({ noter: z.literal(false) });
 export type UsagesRequest = z.infer<typeof UsagesRequestSchema>;
+
+// Les coulisses d'une session de code (C10 amendé le 12/11, D29) : le raisonnement, la consigne et le rapport de chaque
+// sous-agent, et les appels d'outils réduits, rangés comme tours de la session. Sans `coulisses` dans `usages`, 403 ; après
+// un retrait, `accord_le` suit la règle des faits. `id` est stable d'un envoi à l'autre (l'`uuid` de la ligne, l'`id` du
+// `tool_use`, suivi de `:consigne` ou `:rapport`) : l'envoi répété ne double rien. Un appel n'a pas de texte : le
+// serveur l'écrit lui-même d'après `outil`, `cible` et `statut`, qu'il revérifie. 2 000 blocs au plus : loin des
+// 65 535 paramètres d'un insert. Un serveur ancien répond 404.
+export const COULISSES_BODY_MAX_BYTES = 256 * 1024;
+export const COULISSES_BLOCS_MAX = 2000;
+export const COULISSE_OUTIL_MAX = 60;
+const Bloc = {
+  id: z.string().regex(/^[A-Za-z0-9_.:-]{1,200}$/),
+  ts: z.iso.datetime({ offset: true }),
+};
+const BlocTexte = z.string().min(1).max(TURN_TEXT_MAX);
+export const CoulisseBlocSchema = z.discriminatedUnion('role', [
+  z.strictObject({ role: z.literal('raisonnement'), ...Bloc, texte: BlocTexte }),
+  z.strictObject({
+    role: z.literal('sous_agent'),
+    ...Bloc,
+    partie: z.enum(['consigne', 'rapport']),
+    texte: BlocTexte,
+  }),
+  z.strictObject({
+    role: z.literal('appel_outil'),
+    ...Bloc,
+    outil: z.string().min(1).max(COULISSE_OUTIL_MAX),
+    cible: z.string().max(TEXTE_MAX).optional(),
+    statut: z.enum(['ok', 'erreur', 'sans_resultat']),
+  }),
+]);
+export type CoulisseBloc = z.infer<typeof CoulisseBlocSchema>;
+export const CoulissesRequestSchema = z.strictObject({
+  kind: z.enum(CODE_SESSION_KINDS),
+  external_id: z.string().min(1).max(200),
+  usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
+  accord_le: DatePosteSchema.optional(),
+  blocs: z.array(CoulisseBlocSchema).min(1).max(COULISSES_BLOCS_MAX),
+});
+export type CoulissesRequest = z.infer<typeof CoulissesRequestSchema>;

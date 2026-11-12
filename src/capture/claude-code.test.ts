@@ -219,6 +219,223 @@ describe('parseClaudeCodeSession', () => {
     expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
   });
 
+  // Le rapport d'un sous-agent, capté sous l'accord de base (décision 7 d'Amos du 12/11). Lignes inventées dans la forme
+  // de l'annexe 08 (Claude Code 2.1.322) : l'appel est un bloc tool_use, son résultat une ligne `user` avec toolUseResult.
+  describe('le rapport d’un sous-agent', () => {
+    const typed = line('user', 1, 'Lance un sous-agent sur a.txt.');
+    const call = (n: number, id: string, name = 'Agent') =>
+      line('assistant', n, [
+        {
+          type: 'tool_use',
+          id,
+          name,
+          input: {
+            description: 'Lire a.txt',
+            subagent_type: 'general-purpose',
+            prompt: 'Lis a.txt.',
+          },
+        },
+      ]);
+    // Le bloc tool_result mêle le rapport au texte du harnais : il n'est jamais capté tel quel.
+    const result = (n: number, id: string, toolUseResult?: unknown, extra = {}) =>
+      line(
+        'user',
+        n,
+        [
+          {
+            type: 'tool_result',
+            tool_use_id: id,
+            content: [
+              { type: 'text', text: 'Texte brut du harnais. agentId: a1b2c3 <usage>1</usage>' },
+            ],
+          },
+        ],
+        { ...(toolUseResult === undefined ? {} : { toolUseResult }), ...extra },
+      );
+    const completed = (texts: string[], extra = {}) => ({
+      status: 'completed',
+      prompt: 'Lis a.txt.',
+      agentId: 'a1b2c3d4e5f6a7b8c',
+      agentType: 'general-purpose',
+      content: texts.map((text) => ({ type: 'text', text })),
+      harnessNoteCount: 1,
+      harnessTailCount: 1,
+      ...extra,
+    });
+    const turnsOf = (content: string) =>
+      parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.role, t.injecte, t.text]);
+
+    it('capte le rapport au premier plan en tour user injecté, sans les notes du harnais', () => {
+      const content = [
+        typed,
+        call(2, 'toolu_1'),
+        result(
+          3,
+          'toolu_1',
+          completed(['Note du harnais.', 'a.txt dit bonjour.', 'Fin du harnais.']),
+          { timestamp: '2026-10-13T08:05:00.000Z' },
+        ),
+        line('assistant', 4, [{ type: 'text', text: 'Le sous-agent a lu a.txt.' }]),
+      ].join('\n');
+
+      const session = parseClaudeCodeSession(content);
+
+      expect(session?.turns.map((t) => [t.external_id, t.role, t.injecte, t.text, t.ts])).toEqual([
+        ['uuid-1', 'user', false, 'Lance un sous-agent sur a.txt.', '2026-10-13T08:00:00.000Z'],
+        ['uuid-3', 'user', true, 'a.txt dit bonjour.', '2026-10-13T08:05:00.000Z'],
+        ['uuid-4', 'assistant', undefined, 'Le sous-agent a lu a.txt.', '2026-10-13T08:00:00.000Z'],
+      ]);
+      expect(content.includes('Texte brut du harnais')).toBe(true);
+      expect(JSON.stringify(session?.turns)).not.toContain('harnais');
+      // Un tour injecté n'est pas un échange (isTypedTurn) : le compte ne bouge pas.
+      expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
+    });
+
+    it('garde tous les blocs quand les comptes du harnais sont absents ou hors bornes', () => {
+      const texts = ['Premier.', 'Second.'];
+      const content = [
+        call(1, 'toolu_1'),
+        result(
+          2,
+          'toolu_1',
+          completed(texts, { harnessNoteCount: undefined, harnessTailCount: undefined }),
+        ),
+        call(3, 'toolu_2'),
+        result(4, 'toolu_2', completed(texts, { harnessNoteCount: 2, harnessTailCount: 1 })),
+        call(5, 'toolu_3'),
+        result(6, 'toolu_3', completed(texts, { harnessNoteCount: -1, harnessTailCount: 0 })),
+        call(7, 'toolu_4'),
+        result(8, 'toolu_4', completed(texts, { harnessNoteCount: 0.5, harnessTailCount: 0 })),
+      ].join('\n');
+
+      expect(turnsOf(content)).toEqual(
+        ['uuid-2', 'uuid-4', 'uuid-6', 'uuid-8'].map((id) => [
+          id,
+          'user',
+          true,
+          'Premier.\n\nSecond.',
+        ]),
+      );
+    });
+
+    it('ne capte rien sans rapport fini : tâche de fond lancée, pas de toolUseResult, une erreur, un autre outil, une ligne isSidechain', () => {
+      const content = [
+        typed,
+        call(2, 'toolu_fond'),
+        result(3, 'toolu_fond', {
+          status: 'async_launched',
+          isAsync: true,
+          agentId: 'a1b2c3d4e5f6a7b8c',
+          outputFile: '/tmp/x',
+          content: [{ type: 'text', text: 'Lancé.' }],
+        }),
+        call(4, 'toolu_sans'),
+        result(5, 'toolu_sans'),
+        call(6, 'toolu_erreur'),
+        result(7, 'toolu_erreur', 'Error: agent failed'),
+        line('assistant', 8, [
+          { type: 'tool_use', id: 'toolu_read', name: 'Read', input: { file_path: 'a.txt' } },
+          { type: 'tool_use', id: 'toolu_bash', name: 'Bash', input: { command: 'echo ok' } },
+        ]),
+        result(9, 'toolu_read', completed(['x', 'Contenu de a.txt.', 'y'])),
+        result(10, 'toolu_bash', completed(['x', 'ok', 'y'])),
+        call(11, 'toolu_cote'),
+        result(12, 'toolu_cote', completed(['x', 'Rapport d’un sous-agent de côté.', 'y']), {
+          isSidechain: true,
+        }),
+        // Un résultat qui ne suit aucun appel vu plus haut.
+        result(13, 'toolu_inconnu', completed(['x', 'Rapport orphelin.', 'y'])),
+      ].join('\n');
+
+      expect(turnsOf(content)).toEqual([
+        ['uuid-1', 'user', false, 'Lance un sous-agent sur a.txt.'],
+      ]);
+    });
+
+    it('retire un bloc de Leon recopié, masque un faux secret et coupe un long rapport', () => {
+      const leon = '<contexte-leon>\n- 01/11 · Claude Code · branche main\n</contexte-leon>';
+      const content = [
+        call(1, 'toolu_1'),
+        result(2, 'toolu_1', completed(['x', `Rapport. ${leon}`, 'y'])),
+        call(3, 'toolu_2'),
+        result(4, 'toolu_2', completed(['x', 'Clé lue : sk-ant-FAKE00000000000000000000000', 'y'])),
+        call(5, 'toolu_3'),
+        result(6, 'toolu_3', completed(['x', 'r'.repeat(25_000), 'y'])),
+      ].join('\n');
+
+      const turns = parseClaudeCodeSession(content)?.turns ?? [];
+
+      expect(turns.map((t) => [t.external_id, t.injecte])).toEqual([
+        ['uuid-2', true],
+        ['uuid-4', true],
+        ['uuid-6', true],
+      ]);
+      expect(turns[0]?.text).toBe('Rapport.');
+      expect(turns[1]?.text).toBe(`Clé lue : ${SECRET_MASK}`);
+      expect(turns[2]?.text.length).toBe(20_000);
+    });
+
+    it('capte le rapport d’un appel Task, l’ancien nom, comme celui d’un appel Agent', () => {
+      const content = [
+        call(1, 'toolu_1', 'Task'),
+        result(2, 'toolu_1', completed(['x', 'Rapport.', 'y'])),
+      ].join('\n');
+
+      expect(turnsOf(content)).toEqual([['uuid-2', 'user', true, 'Rapport.']]);
+    });
+
+    // Une notification de tâche de fond arrivée pendant que l'agent travaille : une ligne attachment queued_command.
+    it('capte la notification rangée en queued_command, et aucune autre ligne attachment', () => {
+      const attachment = (n: number, value: unknown, extra = {}) =>
+        JSON.stringify({
+          type: 'attachment',
+          uuid: `uuid-${n}`,
+          sessionId: 'session-1',
+          timestamp: '2026-10-13T08:06:00.000Z',
+          isSidechain: false,
+          attachment: value,
+          ...extra,
+        });
+      const notification =
+        '<task-notification>\n<status>completed</status>\n<result>b.txt dit au revoir.</result>\n</task-notification>';
+      const content = [
+        typed,
+        attachment(2, {
+          type: 'queued_command',
+          commandMode: 'task-notification',
+          prompt: notification,
+          origin: { kind: 'task-notification' },
+        }),
+        attachment(3, {
+          type: 'queued_command',
+          commandMode: 'prompt',
+          prompt: 'Une commande en file.',
+        }),
+        attachment(4, {
+          type: 'queued_command',
+          commandMode: 'task-notification',
+          prompt: ['pas', 'une chaîne'],
+        }),
+        attachment(5, { type: 'date', date: '2026-10-13', prompt: 'Autre chose.' }),
+        attachment(
+          6,
+          { type: 'queued_command', commandMode: 'task-notification', prompt: 'De côté.' },
+          {
+            isSidechain: true,
+          },
+        ),
+      ].join('\n');
+
+      expect(
+        parseClaudeCodeSession(content)?.turns.map((t) => [t.external_id, t.injecte, t.text, t.ts]),
+      ).toEqual([
+        ['uuid-1', false, 'Lance un sous-agent sur a.txt.', '2026-10-13T08:00:00.000Z'],
+        ['uuid-2', true, notification, '2026-10-13T08:06:00.000Z'],
+      ]);
+      expect(extractClaudeCodeFacts(content, null).echanges).toBe(1);
+    });
+  });
+
   it('renvoie null pour un fichier vide ou sans conversation exploitable', () => {
     expect(parseClaudeCodeSession('')).toBeNull();
     expect(parseClaudeCodeSession('{"type":"mode"}\nn’importe quoi\n')).toBeNull();

@@ -4,8 +4,16 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SessionFactsPayload } from '../capture/api-contract';
+import {
+  COULISSES_BLOCS_MAX,
+  COULISSES_BODY_MAX_BYTES,
+  type CoulissesRequest,
+  CoulissesRequestSchema,
+  type SessionFactsPayload,
+  type Usage,
+} from '../capture/api-contract';
 import { SECRET_MASK } from '../capture/mask-secrets';
+import { extractBackstage } from '../capture/session-backstage';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURNS_PER_BATCH_MAX } from '../capture/turn';
 import {
@@ -16,12 +24,15 @@ import {
   readHookStdin,
 } from './capture-session';
 import {
+  type CoulissesSender,
+  createCoulissesSender,
   createFactsSender,
   createIngestSender,
   type FactsSender,
   IngestResponseError,
   TokenRefusedError,
 } from './import-claude-code';
+import { loadSubagents } from './subagents';
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const SESSION_ID = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -661,6 +672,266 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     expect(await captureSessionFromHook(HOOK, deps)).toBe(0);
 
     expect(facts).not.toHaveBeenCalled();
+  });
+});
+
+// T52 : les coulisses partent après les faits, seulement avec l'usage `coulisses`, sur la fixture de l'annexe 08.
+describe('captureSessionFromHook : les coulisses de la session, avec l’usage coulisses', () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+  const FIXTURE = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+  const SESSION_FILE = '/t/55555555-5555-4555-8555-555555555555.jsonl';
+  const RACINE = '/Users/demo/projets/leon';
+  const fromFixture = (path: string) => new URL(path.replace(/^\/t\//, ''), FIXTURE);
+  const hook = JSON.stringify({ transcript_path: SESSION_FILE, cwd: '/r' });
+
+  // `events` : l'ordre des envois. `session` remplace la fixture.
+  function backstageDeps(
+    options: {
+      usages?: Usage[];
+      session?: string;
+      sendFacts?: FactsSender;
+      sendCoulisses?: CoulissesSender;
+      withdrawn?: () => Promise<boolean>;
+    } = {},
+  ) {
+    const events: string[] = [];
+    const coulisses = vi.fn<CoulissesSender>(
+      options.sendCoulisses ??
+        (async () => {
+          events.push('coulisses');
+        }),
+    );
+    const { session } = options;
+    const { deps } = makeDeps({
+      readFile:
+        session === undefined ? (path) => readFile(fromFixture(path), 'utf8') : async () => session,
+      send: async () => {
+        events.push('tours');
+        return RESULT;
+      },
+      facts: {
+        accord: 2,
+        accordLe: ACCORD_LE,
+        usages: options.usages ?? ['coulisses'],
+        send:
+          options.sendFacts ??
+          (async () => {
+            events.push('faits');
+          }),
+        sendCoulisses: coulisses,
+      },
+    });
+    const readdirFixture = (path: string) => readdir(fromFixture(path));
+    return {
+      deps: {
+        ...deps,
+        readdir: readdirFixture,
+        ...(options.withdrawn ? { withdrawn: options.withdrawn } : {}),
+      },
+      coulisses,
+      events,
+    };
+  }
+
+  // Une session d'un tour, puis un bloc par ligne de l'assistant, une seconde après l'autre : `u-<n>:0` pour un
+  // raisonnement, `b-<n>` pour un appel.
+  const sessionOf = (contents: unknown[]) =>
+    [
+      conversationLine(0, 'user', 'Bonjour'),
+      ...contents.map((content, i) =>
+        line({
+          type: 'assistant',
+          uuid: `u-${i + 1}`,
+          sessionId: SESSION_ID,
+          timestamp: new Date(Date.UTC(2026, 9, 20, 9) + i * 1000).toISOString(),
+          cwd: '/r',
+          message: { role: 'assistant', content: [content] },
+        }),
+      ),
+    ].join('\n');
+  const calls = (count: number) =>
+    sessionOf(
+      Array.from({ length: count }, (_, i) => ({
+        type: 'tool_use',
+        id: `b-${i}`,
+        name: 'Bash',
+        input: { command: 'ls' },
+      })),
+    );
+  const thoughts = (count: number) =>
+    sessionOf(
+      Array.from({ length: count }, (_, i) => ({
+        type: 'thinking',
+        thinking: `Pensée ${i}. ${'Je réfléchis encore. '.repeat(900)}`,
+        signature: 'c2lnbmF0dXJl',
+      })),
+    );
+  const bodies = (coulisses: { mock: { calls: Array<[CoulissesRequest]> } }) =>
+    coulisses.mock.calls.map(([request]) => request);
+
+  it.each([[[]], [['lecture', 'rappel', 'resume']]] as Usage[][][])(
+    'sans l’usage (%j), aucun appel à la route',
+    async (usages) => {
+      const { deps, coulisses, events } = backstageDeps({ usages });
+
+      expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+      expect(coulisses).not.toHaveBeenCalled();
+      expect(events).toEqual(['tours', 'faits']);
+    },
+  );
+
+  it('avec l’usage, envoie les coulisses après les faits, dans le corps de C10', async () => {
+    const { deps, coulisses, events } = backstageDeps();
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    expect(events).toEqual(['tours', 'faits', 'coulisses']);
+    const content = await readFile(fromFixture(SESSION_FILE), 'utf8');
+    const subagents = await loadSubagents(SESSION_FILE, {
+      readFile: (path) => readFile(fromFixture(path), 'utf8'),
+      readdir: (path) => readdir(fromFixture(path)),
+    });
+    const [body] = bodies(coulisses);
+    expect(body).toEqual<CoulissesRequest>({
+      kind: 'claude_code',
+      external_id: '55555555-5555-4555-8555-555555555555',
+      usages: ['coulisses'],
+      accord_le: ACCORD_LE.toISOString(),
+      blocs: extractBackstage(content, RACINE, subagents),
+    });
+    expect(body?.blocs.some((bloc) => bloc.role === 'sous_agent')).toBe(true);
+    expect(CoulissesRequestSchema.safeParse(body).success).toBe(true);
+  });
+
+  it.each([404, 400])(
+    'un %i : code 0, tours et faits restent, un message fixe sans le corps de la réponse',
+    async (status) => {
+      const fetchImpl = vi.fn(
+        async () => new Response(JSON.stringify({ error: 'MOT-DU-SERVEUR' }), { status }),
+      );
+      const { deps, events } = backstageDeps({
+        sendCoulisses: createCoulissesSender(fetchImpl as unknown as typeof fetch, env),
+      });
+
+      expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+      expect(events).toEqual(['tours', 'faits']);
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
+      expect(stderrText()).toMatch(/session captured/);
+      expect(stderrText()).toMatch(/does not accept the full capture/);
+      expect(stderrText()).not.toMatch(/facts/);
+      expect(stderrText()).not.toContain('MOT-DU-SERVEUR');
+    },
+  );
+
+  it('un 403 (usage retiré entre-temps) arrête l’envoi sans bruit', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 403 }));
+    const { deps } = backstageDeps({
+      session: calls(COULISSES_BLOCS_MAX + 10), // deux lots
+      sendCoulisses: createCoulissesSender(fetchImpl as unknown as typeof fetch, env),
+    });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(stderr).toHaveBeenCalledTimes(1);
+    expect(stderrText()).toMatch(/session captured/);
+  });
+
+  it('un retrait relu juste avant l’envoi l’empêche', async () => {
+    const events: string[] = [];
+    const { deps, coulisses } = backstageDeps({
+      sendFacts: async () => {
+        events.push('faits');
+      },
+      withdrawn: async () => events.includes('faits'), // retiré pendant l'envoi des faits
+    });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    expect(events).toEqual(['faits']);
+    expect(coulisses).not.toHaveBeenCalled();
+  });
+
+  it('un échec des faits n’empêche pas les coulisses, et l’inverse', async () => {
+    const factsFail = backstageDeps({
+      sendFacts: async () => {
+        throw new TypeError('fetch failed');
+      },
+    });
+    expect(await captureSessionFromHook(hook, factsFail.deps)).toBe(0);
+    expect(factsFail.events).toEqual(['tours', 'coulisses']);
+    expect(stderrText()).toMatch(/session facts not sent/);
+
+    stderr.mockClear();
+    const backstageFail = backstageDeps({
+      sendCoulisses: async () => {
+        throw new TypeError(`fetch failed : MOT-DE-L-ERREUR ${SECRETS.anthropic}`);
+      },
+    });
+    expect(await captureSessionFromHook(hook, backstageFail.deps)).toBe(0);
+    expect(backstageFail.events).toEqual(['tours', 'faits']);
+    expect(stderrText()).toMatch(/full capture of the session not sent/);
+    expect(stderrText()).not.toMatch(/session facts not sent/);
+    expect(stderrText()).not.toContain('MOT-DE-L-ERREUR');
+  });
+
+  it('découpe en lots de 2 000 blocs au plus, les plus récents d’abord', async () => {
+    const total = COULISSES_BLOCS_MAX + 500;
+    const { deps, coulisses } = backstageDeps({ session: calls(total) });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    const ids = bodies(coulisses).map((body) => body.blocs.map((bloc) => bloc.id));
+    expect(ids.map((batch) => batch.length)).toEqual([500, COULISSES_BLOCS_MAX]);
+    expect(ids[0]?.at(-1)).toBe(`b-${total - 1}`); // le dernier appel part dans le premier envoi
+    expect(ids[0]?.[0]).toBe(`b-${COULISSES_BLOCS_MAX}`);
+    expect(ids[1]?.[0]).toBe('b-0');
+    expect(new Set(ids.flat()).size).toBe(total);
+  });
+
+  it('découpe en lots qui tiennent sous la taille de la route', async () => {
+    const total = 40; // environ 750 Ko de raisonnement
+    const { deps, coulisses } = backstageDeps({ session: thoughts(total) });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    const sent = bodies(coulisses);
+    expect(sent.length).toBeGreaterThan(2);
+    for (const body of sent) {
+      expect(Buffer.byteLength(JSON.stringify(body))).toBeLessThanOrEqual(COULISSES_BODY_MAX_BYTES);
+      expect(CoulissesRequestSchema.safeParse(body).success).toBe(true);
+    }
+    const ids = sent.flatMap((body) => body.blocs.map((bloc) => bloc.id));
+    expect(sent[0]?.blocs.at(-1)?.id).toBe(`u-${total}:0`); // le dernier raisonnement part d'abord
+    expect(new Set(ids).size).toBe(total);
+  });
+
+  it('le délai du crochet tombe après un lot : code 0, le reste attend l’import', async () => {
+    const total = COULISSES_BLOCS_MAX + 500;
+    const controller = new AbortController();
+    const received: string[][] = [];
+    const fetchWithDeadline = vi.fn(async (_url: unknown, init?: RequestInit) => {
+      if (init?.signal?.aborted) throw init.signal.reason;
+      const body = JSON.parse(String(init?.body)) as CoulissesRequest;
+      received.push(body.blocs.map((bloc) => bloc.id));
+      controller.abort(new DOMException('délai', 'TimeoutError')); // le délai du crochet tombe ici
+      return new Response(null, { status: 202 });
+    });
+    const { deps } = backstageDeps({
+      session: calls(total),
+      sendCoulisses: createCoulissesSender(fetchWithDeadline as unknown as typeof fetch, env, {
+        signal: controller.signal,
+      }),
+    });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]).toContain(`b-${total - 1}`);
+    expect(received[0]).not.toContain('b-0');
+    expect(stderrText()).toMatch(/full capture of the session not sent/);
   });
 });
 

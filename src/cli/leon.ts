@@ -22,6 +22,7 @@ import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import { OUTILS, type Outil } from './hook-commands';
 import {
   countOf,
+  createCoulissesSender,
   createFactsSender,
   createIngestSender,
   type ImportDeps,
@@ -230,6 +231,7 @@ async function runImport(args: string[]): Promise<number> {
             depuis: accord.installe_le,
             usagesDepuis: accord.usages_le,
             send: env ? createFactsSender(fetch, env) : nothingSent,
+            sendCoulisses: env ? createCoulissesSender(fetch, env) : nothingSent,
           },
         }),
   };
@@ -348,13 +350,13 @@ async function runCaptureSession(args: string[]): Promise<number> {
     const delay = typeof values['delai-ms'] === 'string' ? values['delai-ms'] : undefined;
     const deadlineMs = parseDeadlineMs(delay);
     const projectDir = process.env.CLAUDE_PROJECT_DIR;
-    // Les faits ne partent que si l'accord local le permet (consent.ts). Un seul délai, lancé une fois l'entrée lue,
-    // borne les tours et les faits ensemble (HOOK_DEADLINE_MS).
+    // Les faits ne partent que si l'accord local le permet (consent.ts), les coulisses avec l'usage `coulisses`. Un seul
+    // délai, lancé une fois l'entrée lue, borne les tours, les faits et les coulisses ensemble (HOOK_DEADLINE_MS).
     const accord = await factsConsent(homedir(), 'claude_code');
     const signal = AbortSignal.timeout(deadlineMs);
     return await captureSessionFromHook(stdin, {
       send: createIngestSender(fetch, env, { signal }),
-      // Relu avant les faits (sendSessionFacts) : un retrait écrit pendant l'envoi des tours les arrête.
+      // Relu avant les faits et les coulisses : un retrait écrit pendant l'envoi des tours les arrête.
       withdrawn,
       ...(accord === null
         ? {}
@@ -364,6 +366,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
               accordLe: accord.installe_le,
               usages: accord.usages,
               send: createFactsSender(fetch, env, { signal }),
+              sendCoulisses: createCoulissesSender(fetch, env, { signal }),
             },
           }),
       out: () => {},

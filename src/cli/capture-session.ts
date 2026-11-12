@@ -29,7 +29,8 @@
 //
 // Après les tours, les faits de la session (ses gestes, C1 du plan mémoire des sessions) partent par leur propre
 // route, seulement si l'accord local le permet (`deps.facts`, posé par leon.ts d'après consent.ts, avec ses usages) :
-// c'est une vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours.
+// c'est une vraie fin de session. Un serveur qui ne les prend pas ne fait perdre que les faits, jamais les tours. Puis,
+// avec l'usage `coulisses`, les coulisses de la session (T52), de même.
 import { createHash, randomBytes } from 'node:crypto';
 import { chmod, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
@@ -39,12 +40,14 @@ import { extractClaudeCodeFacts } from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
 import {
+  COULISSES_REFUSED_MESSAGE,
   countOf,
   FACTS_REFUSED_MESSAGE,
   type ImportDeps,
   type ImportSummary,
   IngestResponseError,
   importSession,
+  sendSessionBackstage,
   sendSessionFacts,
   TokenRefusedError,
 } from './import-claude-code';
@@ -55,9 +58,9 @@ import { loadSubagents } from './subagents';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
 // et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
-// fois pour les tours et les faits, une fois l'entrée lue (5 s au plus, STDIN_TIMEOUT_MS), lecture du fichier et
-// de git comprises (leon.ts) : c'est lui qui borne la durée de la commande, d'où l'envoi des lots les plus récents
-// d'abord.
+// fois pour les tours, les faits et les coulisses, une fois l'entrée lue (5 s au plus, STDIN_TIMEOUT_MS), lecture
+// du fichier et de git comprises (leon.ts) : c'est lui qui borne la durée de la commande, d'où l'envoi des lots les
+// plus récents d'abord.
 export const HOOK_DEADLINE_MS = 15_000;
 const STDIN_MAX_CHARS = 64 * 1024;
 const STDIN_TIMEOUT_MS = 5000;
@@ -203,15 +206,16 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
     `session captured (${countOf(summary.inserted, 'new turn')}, ${summary.skipped} already known).`,
   );
   if (!deps.facts) return; // sans accord, pas même git pour la racine du dépôt
+  // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt). Ni l'un
+  // ni l'autre ne lève : les sous-agents illisibles sont laissés de côté.
+  const root = await repoRootFor(start, deps.git);
+  const subagents = await loadSubagents(input.transcript_path, deps);
   try {
-    // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
-    const root = await repoRootFor(start, deps.git);
     const leonMcp = await leonMcpRecognized('claude_code', {
       ...deps,
       dirs: root === null ? [start] : [start, root],
       url: deps.mcpUrl,
     });
-    const subagents = await loadSubagents(input.transcript_path, deps);
     const faits = extractClaudeCodeFacts(content, root, leonMcp, subagents);
     const source = { content, root, fin: true, faits };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
@@ -219,6 +223,19 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
     }
   } catch {
     warn('session facts not sent (server unreachable, too slow or unexpected response).');
+  }
+  // Dans son propre try : un échec des faits n'empêche pas les coulisses, et l'inverse. Le même délai que les tours
+  // et les faits (leon.ts) : une coupe laisse les lots les plus anciens à `leon import-claude-code`.
+  try {
+    if (
+      !(await sendSessionBackstage(session, { content, root, subagents }, { dryRun: false }, deps))
+    ) {
+      warn(COULISSES_REFUSED_MESSAGE);
+    }
+  } catch {
+    warn(
+      'full capture of the session not sent (server unreachable, too slow or unexpected response).',
+    );
   }
 }
 

@@ -3,14 +3,18 @@ import { isAbsolute, sep } from 'node:path';
 import { z } from 'zod';
 import {
   API_PATHS,
+  COULISSES_BLOCS_MAX,
+  type CoulissesRequest,
   type RetraitRequest,
   type SessionFacts,
   type SessionFactsPayload,
   type Usage,
 } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
+import { extractBackstage } from '../capture/session-backstage';
 import { extractClaudeCodeFacts, type Subagents } from '../capture/session-facts';
 import {
+  BACKSTAGE_ROLES,
   type CodeSessionKind,
   type IngestPayload,
   type IngestResult,
@@ -18,7 +22,7 @@ import {
   TURNS_PER_BATCH_MAX,
   type Turn,
 } from '../capture/turn';
-import { BATCH_MAX_BYTES, batchTurns } from './batch-turns';
+import { BATCH_MAX_BYTES, batchTurns, COULISSES_BATCH_MAX_BYTES } from './batch-turns';
 import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
@@ -43,6 +47,7 @@ export type ImportOptions = {
   dryRun: boolean;
 };
 export type FactsSender = (payload: SessionFactsPayload) => Promise<void>;
+export type CoulissesSender = (request: CoulissesRequest) => Promise<void>;
 export type ImportDeps = {
   send: (payload: IngestPayload) => Promise<IngestResult>;
   out: (line: string) => void;
@@ -67,6 +72,8 @@ export type ImportDeps = {
     accordLe: Date;
     usages?: Usage[];
     send: FactsSender;
+    // Les coulisses (C10 amendé le 12/11, T52), qui ne partent qu'avec l'usage `coulisses` dans `usages`.
+    sendCoulisses?: CoulissesSender;
     depuis?: Date;
     usagesDepuis?: Partial<Record<Usage, Date>>;
   };
@@ -102,6 +109,10 @@ export class IngestResponseError extends Error {
 // reconnaît pas l'envoi. Les tours, eux, sont reçus.
 export const FACTS_REFUSED_MESSAGE =
   'the server does not accept session facts (it may be older than the CLI), only the turns were sent.';
+
+// De même pour les coulisses : les tours et les faits, eux, sont reçus.
+export const COULISSES_REFUSED_MESSAGE =
+  'the server does not accept the full capture of sessions (it may be older than the CLI), the rest of the session was sent.';
 
 type Sending = { signal?: AbortSignal };
 
@@ -144,6 +155,17 @@ export function createFactsSender(
 ): FactsSender {
   return async (payload) => {
     await post(fetchImpl, env, API_PATHS.faits, payload, options);
+  };
+}
+
+// Le serveur répond 202, sans corps.
+export function createCoulissesSender(
+  fetchImpl: typeof fetch,
+  env: ServerEnv,
+  options: Sending = {},
+): CoulissesSender {
+  return async (request) => {
+    await post(fetchImpl, env, API_PATHS.coulisses, request, options);
   };
 }
 
@@ -274,6 +296,56 @@ export async function sendSessionFacts(
   }
 }
 
+// Les coulisses d'une session Claude Code (T52), après ses faits, seulement avec l'usage `coulisses` dans
+// `deps.facts.usages` (à l'import, déjà filtrés par `usagesDepuis`). Par lots sous la taille de la route et sous
+// COULISSES_BLOCS_MAX blocs, les plus récents d'abord : une coupe du délai du crochet laisse les plus anciens à l'import,
+// qui les renvoie sans doublon (identifiants stables). En dryRun, seulement le nombre de blocs par rôle, jamais un
+// texte. Rend false quand le serveur ne les prend pas (404, 400 : COULISSES_REFUSED_MESSAGE) ; un 403 (usage retiré
+// entre-temps) arrête l'envoi sans bruit ; toute autre erreur remonte.
+export async function sendSessionBackstage(
+  session: Pick<CodeSession, 'sessionId'>,
+  source: { content: string; root: string | null; subagents: Subagents },
+  options: Pick<ImportOptions, 'dryRun'>,
+  deps: ImportDeps,
+): Promise<boolean> {
+  const facts = deps.facts;
+  if (!facts?.sendCoulisses || !facts.usages?.includes('coulisses')) return true;
+  const blocs = extractBackstage(source.content, source.root, source.subagents);
+  if (blocs.length === 0) return true;
+  const envelope = { kind: 'claude_code' as const, external_id: session.sessionId };
+  if (options.dryRun) {
+    const counts = BACKSTAGE_ROLES.map((role) => [
+      role,
+      blocs.filter((bloc) => bloc.role === role).length,
+    ]);
+    deps.out(JSON.stringify({ ...envelope, coulisses: Object.fromEntries(counts) }));
+    return true;
+  }
+  const batches = batchTurns(blocs, {
+    maxTurns: COULISSES_BLOCS_MAX,
+    maxBytes: COULISSES_BATCH_MAX_BYTES,
+  }).reverse();
+  for (const lot of batches) {
+    // L'accord relu juste avant chaque lot, comme pour les faits.
+    if (await deps.withdrawn?.()) return true;
+    const request: CoulissesRequest = {
+      ...envelope,
+      usages: facts.usages,
+      accord_le: facts.accordLe.toISOString(),
+      blocs: lot,
+    };
+    try {
+      await facts.sendCoulisses(request);
+    } catch (error) {
+      if (!(error instanceof IngestResponseError)) throw error;
+      if (error.status === 403) return true;
+      if ([400, 404].includes(error.status)) return false;
+      throw error;
+    }
+  }
+  return true;
+}
+
 // Au rattrapage, une session est finie si son fichier n'a pas bougé depuis 30 min (le rattrapage des autres outils
 // aussi, catch-up.ts).
 export const IDLE_MS = 30 * 60_000;
@@ -291,8 +363,10 @@ export async function importClaudeCode(
   };
   // Une session reprise recopie l'historique (mêmes uuid, autre sessionId) : chaque tour n'est envoyé qu'une fois.
   const seen = new Set<string>();
-  // Un serveur qui refuse les faits les refusera pour toutes les sessions : un seul message, plus aucun envoi.
+  // Un serveur qui refuse les faits les refusera pour toutes les sessions : un seul message, plus aucun envoi. De même
+  // pour les coulisses.
   let factsRefused = false;
+  let coulissesRefused = false;
   for (const file of await findSessionFiles(options.baseDir)) {
     if (await deps.withdrawn?.()) throw new Error(CONSENT_WITHDRAWN_MESSAGE);
     try {
@@ -328,7 +402,13 @@ export async function importClaudeCode(
         { ...options, projectKey },
         factsDeps,
       ));
-      if (factsRefused) console.error(FACTS_REFUSED_MESSAGE);
+      if (factsRefused) {
+        console.error(FACTS_REFUSED_MESSAGE);
+        continue;
+      }
+      if (coulissesRefused) continue;
+      coulissesRefused = !(await sendSessionBackstage(session, source, options, factsDeps));
+      if (coulissesRefused) console.error(COULISSES_REFUSED_MESSAGE);
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

@@ -993,7 +993,7 @@
       "aside": "Leon en bref",
       "points": {
         "sources": "Chaque réponse cite sa source, ou dit « je ne sais pas ».",
-        "private": "Vos discussions avec Leon restent privées. Vos conversations d’IA sont lues par vous et, sur le site de Leon, par vos managers en remontant.",
+        "private": "Vos conversations d’IA et vos discussions restent privées.",
         "tools": "{count} outils branchables, relevés toutes les 15 minutes."
       },
       "steps": {
@@ -1060,7 +1060,7 @@
       "semantic": "par le sens",
       "team": "Visible de l’équipe",
       "teamTools": "outils de l’équipe",
-      "you": "Vous et vos managers",
+      "you": "Vous seul",
       "aiConversations": "conversations d’IA"
     },
     "sample": {
@@ -1076,7 +1076,7 @@
       "pill": "La mémoire d’entreprise des PME",
       "title": "Ce qui a été promis à vos clients, ",
       "titleAccent": "retrouvé avec sa source.",
-      "lead": "Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous et à vos managers, et répond en citant la source. Quand rien ne répond, il le dit.",
+      "lead": "Leon se branche sur vos outils et sur les conversations avec vos assistants d’IA. Il garde tout tel quel, laisse vos conversations d’IA à vous seul, et répond en citant la source. Quand rien ne répond, il le dit.",
       "betaNote": "Bêta ouverte · aucune facturation à ce jour",
       "toolsTitle": "{count} outils, ",
       "toolsTitleAccent": "et vos assistants d’IA.",
@@ -1096,7 +1096,7 @@
         },
         "privateAi": {
           "title": "Chacun parle à son IA dans son coin",
-          "text": "Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde avec le reste, lues par vous et, sur le site de Leon, par vos managers en remontant."
+          "text": "Les conversations avec les assistants d’IA contiennent des décisions. Elles se perdent dans l’historique de l’assistant. Leon les garde, pour vous seul, avec le reste."
         }
       },
       "tasks": {
@@ -1113,7 +1113,7 @@
       "step1Text": "Une clé d’API ou un bouton de connexion, parmi {count} outils. L’extension du navigateur et votre assistant de code ajoutent vos conversations d’IA.",
       "step1Extension": "Extension · assistant web",
       "step2Title": "Leon garde le brut",
-      "step2Text": "Tel quel, avec un lien vers l’original. Vos conversations d’IA sont lues par vous et, sur le site de Leon, par vos managers en remontant. Les secrets reconnaissables sont masqués avant d’être gardés.",
+      "step2Text": "Tel quel, avec un lien vers l’original. Vos conversations d’IA restent à vous. Les secrets reconnaissables sont masqués avant d’être gardés.",
       "step2Date": "3 oct.",
       "step2Quote": "« On peut s’engager sur le 15 novembre pour la V2… »",
       "step2Open": "Ouvrir dans Granola ↗",
@@ -1162,9 +1162,9 @@
       "terminal": "assistant de code · serveur MCP de Leon",
       "terminalSearch": "« reprise des données ACME »",
       "terminalRemember": "« reprise reportée au 2 déc. »",
-      "terminalSaved": "note gardée, lue comme vos sessions",
+      "terminalSaved": "note gardée, visible de vous seul",
       "briefingMeta": "08:45 · 250 mots au plus",
-      "securityTitle": "Chaque entreprise dans son espace. Vos conversations, à vous et à vos managers.",
+      "securityTitle": "Chaque entreprise dans son espace. Vos conversations à vous.",
       "securityLink": "Tout sur la sécurité",
       "securityNotYet": "Ce qui n’est pas encore là est écrit aussi : ",
       "securityList": "la liste",
@@ -1176,7 +1176,7 @@
     "product": {
       "heroTitle": "Tout ce qui se dit, gardé tel quel, retrouvé avec sa source.",
       "heroAccent": "retrouvé avec sa source.",
-      "heroLead": "Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous et à vos managers, puis répond en citant ses sources. Personne ne remplit de fiche pour lui.",
+      "heroLead": "Leon se branche sur vos outils et sur vos assistants d’IA, garde chaque élément tel quel, laisse vos conversations d’IA à vous seul, puis répond en citant ses sources. Personne ne remplit de fiche pour lui.",
       "flowCaption": "Les quatre étapes : capter, garder, retrouver, discuter.",
       "captureCaption": "Illustration : des outils branchés relevés toutes les 15 minutes, l’extension du navigateur avec un interrupteur par site, et la session d’un assistant de code envoyée à sa fin.",
       "captureLabel": "ce que Leon capte",
@@ -1295,7 +1295,7 @@
           "text": "Pour deux assistants d’IA sur le web. Un écran de consentement, un interrupteur par site, une pause.",
           "p1": "Jamais en navigation privée",
           "p2": "Jamais de pièce jointe",
-          "p3": "Conversations lues par leur auteur et ses managers"
+          "p3": "Conversations privées à leur auteur"
         },
         "coding": {
           "title": "Assistant de code",
@@ -1339,7 +1339,7 @@
       "connectLead": "Personne ne remplit de fiche ensuite : Leon relit l’outil de lui-même.",
       "aiKicker": "Conversations d’IA",
       "aiTitle": "Les conversations avec vos assistants d’IA.",
-      "aiLead": "Ce qui se dit avec un assistant est souvent ce qu’on ne retrouve nulle part ailleurs. Leon le garde, pour la personne qui l’a écrit et, sur le site de Leon, pour ses managers en remontant.",
+      "aiLead": "Ce qui se dit avec un assistant est souvent ce qu’on ne retrouve nulle part ailleurs. Leon le garde, pour la personne qui l’a écrit.",
       "plannedTitle": "Ce qui n’est pas encore branchable.",
       "plannedLead": "Nous le disons pour que vous ne le découvriez pas après coup.",
       "ctaTitle": "Branchez un premier outil.",
@@ -1393,8 +1393,8 @@
       "whoTitle": "Deux règles, faciles à retenir.",
       "teamTitle": "Visible de toute l’équipe",
       "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf les mails, Google Drive et Slack : ils restent privés à qui les branche.",
-      "youTitle": "Pas partagé avec l’équipe",
-      "youText": "Vous le lisez et, sur le site de Leon, vos managers en remontant aussi, sauf vos discussions avec Leon, qui restent à vous seul. Aucun autre collègue ne le voit, ni dans la recherche, ni dans une réponse.",
+      "youTitle": "Privé, à vous seul",
+      "youText": "Personne d’autre ne le voit, ni dans la recherche, ni dans une réponse.",
       "frankly": "Franchement",
       "notYetTitle": "Ce qui n’est pas encore là.",
       "notYetLead": "Nous préférons l’écrire ici plutôt que de vous le laisser découvrir. Nous tenons cette liste à jour.",
@@ -1492,7 +1492,7 @@
         "lecture": "L’usage <code>lecture</code> (lire Leon) est coché par défaut : <code>leon setup</code> le demande une fois pour tous les outils de code qu’il installe, par une case de la page d’autorisation quand <code>leon setup</code> l’ouvre (pour connecter l’ordinateur, ou de nouveau avec <code>--yes</code>), sinon dans un terminal (<code>[Y/n]</code> : Entrée l’accepte) ; il ne le donne jamais de lui-même. Un refus est gardé : il n’est plus demandé avant <code>retirer-crochets</code>. Avec lui, au début de chaque session ou conversation, Leon place dans le contexte de l’agent le sommaire de vos fils de travail sur ce dépôt (des clés seulement : leur id, leur branche, leurs outils, leurs dates, les numéros et les états de leurs pull requests, le nombre de sources liées) à la place de vos dernières sessions, les leçons que vous avez acceptées, et une consigne de lire le fil de la tâche. Pour cela, la requête de démarrage porte aussi les usages de l’outil et la commande Leon de l’ordinateur, citée dans la consigne. L’agent peut lire vos fils, leurs résumés et leur état, les leçons que vous avez acceptées, et la mémoire de ce dépôt que vous voyez, avec <code>leon threads</code>, <code>leon thread</code>, <code>leon search</code>, <code>leon versions</code> et <code>leon lessons</code>, ou avec les outils MCP <code>threads</code>, <code>thread</code>, <code>versions</code> et <code>lessons</code>. Le fournisseur du modèle de l’outil voit ce qui est placé et ce qui est lu. Cet usage ne permet jamais à un agent d’écrire quoi que ce soit dans Leon. Les commandes utilisent le jeton de l’ordinateur : dès que l’un de vos outils l’accepte, elles marchent pour tout agent de l’ordinateur ; le refuser dans un outil n’y retire que ce qui est placé au démarrage.",
         "rappel": "L’usage <code>rappel</code> (le rappel à chaque message) est coché par défaut, et se demande comme <code>lecture</code> : une fois pour tous les outils de code installés, par une case de la page d’autorisation, sinon dans un terminal (<code>[Y/n]</code> : Entrée l’accepte) ; <code>--yes</code> ne le donne jamais de lui-même. Un refus est gardé : il n’est plus demandé avant <code>retirer-crochets</code>. Il se propose pour Claude Code (un crochet <code>UserPromptSubmit</code> qui lance <code>leon reminder</code>, posé seulement une fois l’usage donné), Codex (le même crochet, à approuver par <code>/hooks</code>), Cursor et Antigravity (leur crochet de message, déjà en place, sans crochet de plus). Pour Antigravity, seulement dans une version dont le crochet reçoit le message (essayé avec l’appli 2.0.6) : avec une plus ancienne, aucun rappel n’arrive. Avec lui, à chaque message que vous envoyez, les 2 000 premiers caractères de votre message (secrets masqués avant l’envoi, puis de nouveau par le serveur) partent au seul serveur de Leon, avec la clé du projet, la branche Git courante, l’id de la session, le nom de l’outil et les usages qu’il a acceptés. Le serveur ne garde ni ne journalise le message : il y cherche seulement ceux de vos fils sur ce dépôt qu’il touche, et renvoie une ligne de clés sur un ou deux fils pas encore cités dans la session, que l’outil ajoute au contexte de l’agent : le fournisseur de son modèle la voit. Le crochet attend 1,5 seconde au plus : sans réponse, votre message part sans elle. La liste des fils déjà cités dans chaque session (jamais le message) est gardée 24 heures, puis effacée dans l’heure qui suit.",
         "noter": "L’usage <code>noter</code> (les notes de l’agent) est coché par défaut, et se demande comme <code>lecture</code> : une fois pour tous les outils de code installés, par une case de la page d’autorisation, sinon dans un terminal (<code>[Y/n]</code> : Entrée l’accepte) ; <code>--yes</code> ne le donne jamais de lui-même. Un refus est gardé : il n’est plus demandé avant <code>retirer-crochets</code>. Il est proposé pour Claude Code, Codex, Cursor et Antigravity, sans crochet de plus. Avec lui, l’agent peut garder des notes avec <code>leon note</code> : chaque note envoie au serveur de Leon le texte de la note (4 000 caractères au plus, secrets masqués avant l’envoi, puis de nouveau par le serveur), avec la clé du projet, le nom de l’outil, l’id de la session et les usages que cet outil a acceptés. La note est gardée comme vos sessions, avec ses versions : la recherche de Leon la trouve, et elle n’est jamais placée telle quelle dans le contexte d’une session. Au début de chaque session ou conversation, la requête de démarrage porte aussi les usages de l’outil, la commande Leon de l’ordinateur et le nom de l’outil, et Leon place dans le contexte de l’agent une phrase qui donne la commande <code>leon note</code> avec l’outil et l’id de la session déjà remplis (l’id de la session seulement s’il est sûr dans un shell) ; le fournisseur du modèle de l’outil la voit. Le refuser dans un outil y retire cette phrase, et <code>leon note</code> n’envoie alors plus rien pour cet outil. Cela coupe aussi <code>remember</code>, l’outil de notes du connecteur MCP de Leon, pour tous vos assistants branchés à cet espace, jusqu’à ce que vous le rouvriez dans la section Mémoire des réglages.",
-        "coulisses": "L’usage <code>coulisses</code> (la capture complète) est facultatif, pour Claude Code seulement : <code>leon setup</code> le demande à part, seulement dans un terminal (<code>[y/N]</code>), jamais avec <code>--yes</code> ni sur la page d’autorisation. Un refus est gardé : il n’est plus demandé avant <code>retirer-crochets</code>. À la fin de chaque session, le serveur de Leon auquel cet ordinateur est connecté reçoit aussi ce qui s’est passé derrière les échanges : le raisonnement de l’agent, quand Claude Code en écrit le texte dans la transcription ; la consigne donnée à chaque sous-agent et son rapport final ; et chaque appel d’outil, ceux des sous-agents compris, réduit au nom de l’outil, à sa cible et à son statut. La cible est, pour une commande, seulement son exécutable, plus la sous-commande pour une liste fermée d’outils de développement ; pour un outil de fichiers, le chemin dans le dépôt ; pour un outil MCP, rien, et seul le nom de son serveur est gardé. Jamais la sortie d’un outil, ni un motif de recherche, une URL, une requête ou un autre argument. Les secrets sont masqués avant l’envoi, puis de nouveau par le serveur. Les blocs que Leon a placés dans la session sont retirés, et chaque texte est coupé à 20 000 caractères. Tout cela est gardé avec la session et se lit comme elle : par vous et, sur le site de Leon, par les managers au-dessus de vous. La recherche de Leon le trouve toujours. Il n’est jamais placé dans le point du matin, dans le contexte d’une nouvelle session, dans le résumé d’une session ni dans l’état de vos fils de travail. Le retrait de votre accord arrête cet envoi. Ce qui est déjà parti reste dans Leon.",
+        "coulisses": "L’usage <code>coulisses</code> (la capture complète) est facultatif, pour Claude Code seulement : <code>leon setup</code> le demande à part, seulement dans un terminal (<code>[y/N]</code>), jamais avec <code>--yes</code> ni sur la page d’autorisation. Un refus est gardé : il n’est plus demandé avant <code>retirer-crochets</code>. À la fin de chaque session, le serveur de Leon auquel cet ordinateur est connecté reçoit aussi ce qui s’est passé derrière les échanges : le raisonnement de l’agent, quand Claude Code en écrit le texte dans la transcription ; la consigne donnée à chaque sous-agent et son rapport final ; et chaque appel d’outil, ceux des sous-agents compris, réduit au nom de l’outil, à sa cible et à son statut. La cible est, pour une commande, seulement son exécutable, plus la sous-commande pour une liste fermée d’outils de développement ; pour un outil de fichiers, le chemin dans le dépôt ; pour un outil MCP, rien, et seul le nom de son serveur est gardé. Jamais la sortie d’un outil, ni un motif de recherche, une URL, une requête ou un autre argument. Les secrets sont masqués avant l’envoi, puis de nouveau par le serveur. Les blocs que Leon a placés dans la session sont retirés, et chaque texte est coupé à 20 000 caractères. Tout cela est gardé avec la session et se lit comme elle : par vous et, sur le site de Leon, par les managers au-dessus de vous. La recherche de Leon le trouve toujours. Il n’est jamais placé dans le point du matin, dans le contexte d’une nouvelle session, dans le résumé d’une session ni dans l’état de vos fils de travail. Le retrait de votre accord arrête cet envoi. Ce qui est déjà parti reste dans Leon. Avec les réglages par défaut de Claude Code, le raisonnement n’a pas de texte dans la transcription, donc rien n’en part ; avec <code>showThinkingSummaries</code> activé dans les réglages de Claude Code, le résumé du raisonnement y est écrit en session interactive, et il part (vu avec Claude Code 2.1.322).",
         "resume": "Le résumé des sessions (l’usage <code>resume</code>) est facultatif : <code>leon setup</code> le demande à part, une fois pour tous les outils de code qu’il installe, seulement dans un terminal, jamais avec <code>--yes</code> ni sur la page d’autorisation. Un refus est gardé : <code>leon setup</code> ne le redemande plus. Pour changer d’avis, lancez <code>~/.leon/bin/leon retirer-crochets</code> (avec <code>--outil codex</code>, <code>--outil cursor</code> ou <code>--outil antigravity</code> pour ces outils ; il retire les crochets et l’accord de l’outil), puis de nouveau <code>leon setup</code>. Une fois terminée une session d’au moins 6 de vos messages, le serveur de Leon envoie ses actions, l’état de ses pull requests et la fin de ses échanges (40 000 caractères au plus, secrets déjà masqués) au fournisseur du modèle de Leon, qui écrit le résumé. La recherche de Leon le trouve ; il n’est jamais ajouté au contexte d’une nouvelle session. Le retrait de votre accord arrête les nouveaux résumés : <code>retirer-crochets</code> prévient le serveur de Leon auquel cet ordinateur est connecté (ce serveur et ce compte seulement : un autre que cet ordinateur a utilisé avant n’en sait rien). Si l’ordinateur est hors ligne à ce moment-là, un résumé déjà prévu peut encore s’écrire dans l’heure, et Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté : au démarrage suivant d’une session d’un outil qui garde ses crochets, ou quand vous relancez <code>retirer-crochets</code>. Le même usage sert aussi à tenir à jour l’état de vos fils de travail : les actions, les échanges et les résumés de ces sessions, l’état de leurs pull requests et les sources liées au fil que vous voyez partent chez le fournisseur du modèle de Leon, qui écrit cet état. Le retrait de votre accord l’arrête aussi, une fois le serveur de Leon prévenu.",
         "server": "Les crochets contactent le serveur de la connexion faite par <code>leon login</code>, sauf si <code>LEON_URL</code> et <code>LEON_TOKEN</code> sont posées toutes les deux (installation de développeur) : elles passent alors avant."
       },

@@ -87,6 +87,9 @@ describe('extractClaudeCodeFacts', () => {
     expect(commandes.length).toBeGreaterThan(5);
     for (const { texte } of commandes) expect(recheckCommand(texte)).toBe(texte);
     expect(recheckCommand('mysql -pS3cret')).toBe('[commande]');
+    // Un second mot n'est gardé que pour un exécutable de la liste fermée, comme dans reduceCommand.
+    expect(recheckCommand('mysql motdepasse')).toBe('[commande]');
+    expect(recheckCommand('pnpm test')).toBe('pnpm test');
   });
 
   it.each([

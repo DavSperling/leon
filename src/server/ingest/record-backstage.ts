@@ -25,8 +25,9 @@ const PATH_TOOLS = new Set([
   'Grep',
   'LS',
 ]);
-// Un chemin absolu (Unix, Windows, ou le dossier personnel) sort du dépôt ; un saut de ligne casserait la ligne du tour.
-const OUTSIDE_REPO = /^(?:[\\/~]|[A-Za-z]:)|[\r\n]/;
+// Un chemin absolu (Unix, le dossier personnel) ou une URL (`schéma:`, qui couvre aussi la lettre de lecteur `C:`)
+// sort du dépôt ; un saut de ligne casserait la ligne du tour.
+const OUTSIDE_REPO = /^(?:[\\/~]|[A-Za-z][A-Za-z0-9+.-]*:)|[\r\n]/;
 
 // La seconde barrière, après la CLI : une cible n'est gardée que pour Bash (la commande réduite, sinon [commande]) et
 // pour un chemin relatif au dépôt. Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée ne fait
@@ -39,12 +40,13 @@ function recheckTarget(outil: string, cible: string | undefined): string | null 
   return factText(cible, TEXTE_MAX) || null;
 }
 
-// Le texte du tour, toujours écrit par le serveur : null quand rien ne reste à garder.
+// Le texte du tour, toujours écrit par le serveur : null quand rien ne reste à garder. La ligne d'un appel est masquée
+// en entier : reduceToolName ne masque rien, et un nom d'outil peut avoir la forme d'une clé (C10).
 function blocText(bloc: CoulisseBloc): string | null {
   if (bloc.role === 'appel_outil') {
     const outil = reduceToolName(bloc.outil);
     const cible = recheckTarget(outil, bloc.cible);
-    return [outil, cible, bloc.statut].filter((part) => part !== null).join(' · ');
+    return factText([outil, cible, bloc.statut].filter((part) => part !== null).join(' · '));
   }
   const text = prepareTurnText(stripLeonBlocks(bloc.texte));
   if (text === null) return null;

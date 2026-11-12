@@ -340,6 +340,31 @@ describe('POST /api/v1/coulisses', () => {
     ],
     ['un chemin Windows', { outil: 'Read', cible: 'C:\\Users\\x.txt' }, 'Read · ok'],
     ['un chemin du dossier personnel', { outil: 'Read', cible: '~/.ssh/id_rsa' }, 'Read · ok'],
+    [
+      'une URL pour un outil de fichier',
+      { outil: 'Read', cible: 'https://exemple.test/a?jeton=x' },
+      'Read · ok',
+    ],
+    [
+      'une URL file:// pour un outil de fichier',
+      { outil: 'Read', cible: 'file:///Users/x/.ssh/id_ed25519' },
+      'Read · ok',
+    ],
+    [
+      'un mot de passe après un exécutable sans sous-commande',
+      { outil: 'Bash', cible: 'mysql hunter2secret' },
+      'Bash · [commande] · ok',
+    ],
+    [
+      'un nom d’outil en forme de clé AWS',
+      { outil: 'AKIAIOSFODNN7EXAMPLE', cible: undefined },
+      `${SECRET_MASK} · ok`,
+    ],
+    [
+      'un serveur MCP en forme de clé',
+      { outil: 'mcp__sk-ant-api03-abcdefghijklmnopqrstuv__x', cible: undefined },
+      `mcp:${SECRET_MASK} · ok`,
+    ],
     ['un chemin de Glob', { outil: 'Glob', cible: 'src/server' }, 'Glob · src/server · ok'],
     [
       'une URL de WebFetch',

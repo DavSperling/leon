@@ -235,13 +235,14 @@ export function reduceCommand(command: string): string {
 }
 
 // À la réception (record-facts.ts), une seconde barrière : une commande qui n'a pas la forme que rend reduceCommand
-// (une CLI plus ancienne, ou qui réduit mal) ne garde que le texte fixe.
+// (une CLI plus ancienne, ou qui réduit mal) ne garde que le texte fixe. Un second mot n'est gardé que pour un
+// exécutable de la liste fermée : « mysql motdepasse » devient [commande].
 export function recheckCommand(texte: string): string {
   const [executable = '', subcommand, ...rest] = texte.split(' ');
   const reduced =
     EXECUTABLE.test(executable) &&
     rest.length === 0 &&
-    (subcommand === undefined || SUBCOMMAND.test(subcommand));
+    (subcommand === undefined || (WITH_SUBCOMMAND.has(executable) && SUBCOMMAND.test(subcommand)));
   return reduced ? factText(texte, TEXTE_MAX) : HIDDEN_COMMAND;
 }
 

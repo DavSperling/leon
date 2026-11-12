@@ -334,6 +334,51 @@ describe('gatherBriefingMaterial : bornes', () => {
     ]);
   });
 
+  // QD9 : les coulisses (lot 14) n'entrent jamais au point du matin : ni dans les tours d'une session, ni pour dater
+  // son début, ni comme mention.
+  it('ne donne au point du matin aucune coulisse d’une session', async () => {
+    const team = await newTeam(['Hugo', 'Inès'], local);
+    const [hugo, ines] = team.members as [TenantContext, TenantContext];
+    const email = await emailOf(hugo);
+    const start = ago(2 * HOUR);
+    await seedRun(hugo, {
+      kind: 'claude_code',
+      title: 'Session avec coulisses',
+      metadata: { project: PROJECT },
+      turns: [
+        { text: 'Raisonnement d’avant.', role: 'raisonnement', ts: ago(5 * DAY) },
+        { text: 'Le message de Hugo.', role: 'user', ts: start },
+        { text: '[consigne]\nLis a.txt.', role: 'sous_agent', ts: ago(HOUR) },
+        { text: 'Read · a.txt · ok', role: 'appel_outil', ts: ago(HOUR) },
+        { text: 'La réponse.', role: 'assistant', ts: ago(HOUR) },
+      ],
+      lastTurnAt: ago(HOUR),
+      status: 'done',
+    });
+    // La session d'Inès, que Hugo voit : une coulisse qui le cite n'est pas une mention.
+    await seedIndexed(
+      ines,
+      {
+        kind: 'claude_code',
+        acl: [team.tenantId],
+        title: 'Session d’Inès',
+        turns: [
+          { text: `Je préviens ${email} plus tard.`, role: 'raisonnement', ts: ago(30 * 60_000) },
+          { text: `Voir avec ${email}.`, role: 'user', ts: ago(20 * 60_000) },
+        ],
+      },
+      null,
+    );
+
+    const material = await gatherBriefingMaterial(hugo, PROJECT, new Date());
+
+    expect(material.sessions.map((entry) => entry.turns.map((turn) => turn.text))).toEqual([
+      ['Le message de Hugo.', 'La réponse.'],
+    ]);
+    expect(material.since).toEqual(start);
+    expect(material.mentions.map((entry) => entry.excerpt.text)).toEqual([`Voir avec ${email}.`]);
+  });
+
   it(`rend ${MENTIONS_MAX} mentions au plus, les plus récentes d’abord`, async () => {
     const team = await newTeam(['Dominique', 'Eva'], local);
     const [dominique, eva] = team.members as [TenantContext, TenantContext];

@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { extractClaudeCodeFacts, recheckCommand, SessionFactsSchema } from './session-facts';
+import {
+  extractClaudeCodeFacts,
+  recheckCommand,
+  reduceToolName,
+  SessionFactsSchema,
+} from './session-facts';
 
 // session-gestes vit à part : les tests de la CLI copient tout fixtures/claude-code/ comme dossier de sessions.
 const fixture = (path: string) =>
@@ -82,6 +87,9 @@ describe('extractClaudeCodeFacts', () => {
     expect(commandes.length).toBeGreaterThan(5);
     for (const { texte } of commandes) expect(recheckCommand(texte)).toBe(texte);
     expect(recheckCommand('mysql -pS3cret')).toBe('[commande]');
+    // Un second mot n'est gardé que pour un exécutable de la liste fermée, comme dans reduceCommand.
+    expect(recheckCommand('mysql motdepasse')).toBe('[commande]');
+    expect(recheckCommand('pnpm test')).toBe('pnpm test');
   });
 
   it.each([
@@ -675,5 +683,28 @@ describe('extractClaudeCodeFacts', () => {
     expect(faits.taches[0]?.texte).toHaveLength(200);
     expect(faits.prs).toHaveLength(10);
     expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+});
+
+// La réduction du nom d'un outil (C10 amendé le 12/11, T51) : le nom d'un outil MCP ne part jamais, seul son serveur.
+describe('reduceToolName', () => {
+  it.each([
+    ['mcp__linear__get_issue', 'mcp:linear'],
+    ['mcp:linear', 'mcp:linear'],
+    ['mcp__x', '[outil]'],
+    ['mcp__x__', '[outil]'],
+    ['mcp____y', '[outil]'],
+    [`mcp__${'s'.repeat(57)}__y`, '[outil]'],
+    [`mcp__${'s'.repeat(56)}__y`, `mcp:${'s'.repeat(56)}`],
+    ['mcp__a__b__c', 'mcp:a'],
+    ['mcp__a b__c', '[outil]'],
+    ['mcp:', '[outil]'],
+    ['Bash', 'Bash'],
+    ['Read', 'Read'],
+    ['outil avec espace', '[outil]'],
+    ['https://exemple.test', '[outil]'],
+    ['', '[outil]'],
+  ])('%s donne %s', (name, expected) => {
+    expect(reduceToolName(name)).toBe(expected);
   });
 });

@@ -376,6 +376,31 @@ describe('readStartContext', () => {
     expect(text).not.toContain('zéphyrin');
   });
 
+  // Garde (QD9, T51) : le bloc ne lit aucun tour ; les coulisses d'une session n'y entrent donc jamais.
+  it('les coulisses d’une session n’entrent jamais dans le bloc', async () => {
+    const { paul } = await setup();
+    const sourceId = await seedSession(paul, {
+      faits: facts({ taches: [{ texte: 'Brancher la file', etat: 'a_faire' }] }),
+    });
+    await adminDb.insert(turns).values(
+      (['raisonnement', 'sous_agent', 'appel_outil'] as const).map((role) => ({
+        tenantId: paul.tenantId,
+        sourceId,
+        externalId: `coulisse:${role}`,
+        role,
+        text: `zéphyrin ${role}`,
+        ts: new Date(),
+        captureMode: 'file' as const,
+        acl: [paul.userId],
+      })),
+    );
+
+    const text = await render(paul);
+
+    expect(text).toContain('Brancher la file');
+    expect(text).not.toContain('zéphyrin');
+  });
+
   it('PR d’un tiers liée à ma session : son état, jamais son titre ; le mien seulement s’il est de moi', async () => {
     const { paul, marie } = await setup();
     await seedGithub(paul, { login: 'Paul-GH' });

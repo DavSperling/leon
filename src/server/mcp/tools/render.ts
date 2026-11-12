@@ -1,3 +1,4 @@
+import { isBackstageRole } from '@/capture/turn';
 import { stripHighlightMarks } from '@/lib/highlight';
 import { GITHUB_FACT_KEYS } from '@/server/connectors/github/map';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
@@ -67,6 +68,8 @@ export function renderHit(hit: SourceHit, n: number): string {
         ['id', passage.passageId],
         ['date', isoDate(passage.ts)],
         ['auteur', passage.authorName],
+        // Une coulisse (T51) se dit telle : l'agent ne la prend pas pour un message de la session.
+        ['role', isBackstageRole(passage.role) ? passage.role : null],
       ])}>${escapeData(stripHighlightMarks(passage.snippet))}</passage>`,
   );
   return [`<source${sourceAttributes(hit, n)}${thread}>`, ...passages, '</source>'].join('\n');

@@ -2,11 +2,12 @@ import { and, eq, sql } from 'drizzle-orm';
 import { type RetraitRequest, type SessionFactsPayload, TEXTE_MAX } from '@/capture/api-contract';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { factText, recheckCommand, type SessionFacts } from '@/capture/session-facts';
+import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { apiTokens } from '@/server/db/schema/api-tokens';
 import { organizations } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { recordProject, upsertSource } from './ingest-turns';
 
 // Comme à la relève sur le poste (factText). Une PR dont le masque changerait le dépôt n'aurait plus une clé que
@@ -24,6 +25,34 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
     })),
     taches: faits.taches.map((task) => ({ ...task, texte: factText(task.texte, TEXTE_MAX) })),
   };
+}
+
+// Le retrait daté, commun aux faits et aux coulisses (record-backstage.ts), pris en premier dans la transaction de
+// l'envoi : vrai si l'outil a été retiré sur ce jeton et que l'envoi n'a pas d'`accord_le` qui lui soit postérieur. Il
+// prend l'organisation puis le jeton, dans l'ordre et pour les raisons dites sur recordFacts.
+export async function isWithdrawn(
+  tx: Tx,
+  ctx: TenantContext,
+  tokenId: string,
+  { kind, accord_le }: { kind: CodeSessionKind; accord_le?: string },
+): Promise<boolean> {
+  await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, ctx.tenantId))
+    .for('key share');
+  // shortcut: la marque vaut pour le jeton qui a dit le retrait ; un même jeton posé sur deux ordinateurs
+  // (--with-token, LEON_TOKEN partagé) coupe aussi les usages de l'autre jusqu'à un nouvel accord sur celui-ci, passer
+  // à un identifiant d'ordinateur si on veut ce cas.
+  const [token] = await tx
+    .select({
+      retire: sql<boolean | null>`(${apiTokens.retraits} ->> ${kind})::timestamptz
+        >= coalesce(${accord_le ?? null}::timestamptz, '-infinity')`,
+    })
+    .from(apiTokens)
+    .where(eq(apiTokens.id, tokenId))
+    .for('share');
+  return token?.retire === true;
 }
 
 // Les faits d'une session vont dans `sources.metadata` de la source du porteur (D4), créée si elle manque :
@@ -51,23 +80,7 @@ export async function recordFacts(
 ): Promise<{ sourceId: string; resume: boolean }> {
   const faits = cleanFacts(payload.faits);
   return withTenant(ctx, async (tx) => {
-    await tx
-      .select({ id: organizations.id })
-      .from(organizations)
-      .where(eq(organizations.id, ctx.tenantId))
-      .for('key share');
-    // shortcut: la marque vaut pour le jeton qui a dit le retrait ; un même jeton posé sur deux ordinateurs
-    // (--with-token, LEON_TOKEN partagé) coupe aussi les usages de l'autre jusqu'à un nouvel accord sur celui-ci, passer
-    // à un identifiant d'ordinateur si on veut ce cas.
-    const [token] = await tx
-      .select({
-        retire: sql<boolean | null>`(${apiTokens.retraits} ->> ${payload.kind})::timestamptz
-          >= coalesce(${payload.accord_le ?? null}::timestamptz, '-infinity')`,
-      })
-      .from(apiTokens)
-      .where(eq(apiTokens.id, tokenId))
-      .for('share');
-    const usages = token?.retire ? [] : (payload.usages ?? []);
+    const usages = (await isWithdrawn(tx, ctx, tokenId, payload)) ? [] : (payload.usages ?? []);
     const sourceId = await upsertSource(
       tx,
       ctx,

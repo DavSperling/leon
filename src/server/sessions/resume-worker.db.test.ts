@@ -1,7 +1,7 @@
 import { and, eq, like, sql } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionFacts } from '@/capture/session-facts';
-import type { CodeSessionKind } from '@/capture/turn';
+import type { CodeSessionKind, TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ingestRuns, sources, turns } from '@/server/db/schema/memory';
 import { passages } from '@/server/db/schema/search';
@@ -158,7 +158,7 @@ async function addTurn(
   owner: TenantContext,
   sourceId: string,
   text: string,
-  role: 'user' | 'assistant' = 'user',
+  role: TurnRole = 'user',
   ago = 0,
   injecte: boolean | null = null,
 ) {
@@ -442,6 +442,31 @@ describe('summarizeSession', () => {
       'leon:resume:1',
       'leon:resume:2',
     ]);
+  });
+
+  // QD9, D23 : les coulisses (lot 14) ne nourrissent pas le résumé, et une coulisse arrivée ne le relance pas.
+  it('les coulisses n’entrent pas au condensé, et ne comptent ni comme dernier tour ni comme tour arrivé', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    for (const role of ['raisonnement', 'sous_agent', 'appel_outil'] as const) {
+      await addTurn(paul, seeded.sourceId, `Coulisse ${role} zéphyrine.`, role, 20 * MINUTE);
+    }
+    const llm = answer(SUMMARY);
+
+    expect(await summarizeSession(seeded.job, { llm })).toBe('ecrit');
+
+    expect(promptOf(llm)).toContain('La file est en place.');
+    expect(promptOf(llm)).not.toContain('Coulisse');
+    expect((await sourceRow(seeded.sourceId))?.metadata.resume).toEqual({
+      dernier_tour: seeded.turnIds.at(-1),
+      tour: 1,
+    });
+
+    // Une coulisse arrivée à l'instant, après le résumé : ni report, ni second appel.
+    await addTurn(paul, seeded.sourceId, 'Coulisse tardive.', 'raisonnement');
+    expect(await summarizeSession(seeded.job, { llm })).toBe('sans-objet');
+    expect(llm.calls).toHaveLength(1);
+    expect(mocks.enqueueResume).not.toHaveBeenCalled();
   });
 
   it('« rien à retenir » : aucun tour, et la fin suivante sans tour nouveau ne rappelle pas le modèle', async () => {

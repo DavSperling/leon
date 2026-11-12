@@ -1,5 +1,11 @@
 import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
-import { CODE_SESSION_KINDS, ITEM_NATURES, type ItemNature, type SourceKind } from '@/capture/turn';
+import {
+  BACKSTAGE_ROLES,
+  CODE_SESSION_KINDS,
+  ITEM_NATURES,
+  type ItemNature,
+  type SourceKind,
+} from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { SearchFilters, SourceInfo } from './types';
 
@@ -23,6 +29,14 @@ export const RESUME_LIKE = `${RESUME_EXTERNAL_PREFIX}%`;
 export function notOldResume(externalId: SQLWrapper, sourceId: SQLWrapper): SQL {
   return sql`(${externalId} not like ${RESUME_LIKE} or ${externalId} = ${RESUME_EXTERNAL_PREFIX}
     || (select r.metadata->'resume'->>'tour' from sources r where r.id = ${sourceId}))`;
+}
+
+// Hors des coulisses (lot 14, QD9, D23) : ce qui résume ou démarre (le résumé, le point du matin) ne lit que les
+// messages et les tours des outils. `not in`, jamais `in ('user', 'assistant')` : les sources des connecteurs ont des
+// tours `document` et `participant`.
+export function notBackstage(role: SQLWrapper): SQL {
+  const roles = BACKSTAGE_ROLES.map((one) => sql`${one}`);
+  return sql`${role} not in (${sql.join(roles, sql`, `)})`;
 }
 
 function allOf(conditions: SQL[]): SQL {
@@ -71,11 +85,18 @@ export function sourceConditions(filters: SearchFilters): SQL {
   return allOf(conditions);
 }
 
-// Les conditions sur le passage (alias `p`) : les dates et l'auteur. `kind` est l'expression SQL de l'outil de
-// sa source, pour les noms d'auteur qui ne valent que dans un outil.
+// Les conditions sur le passage (alias `p`) : les dates, l'auteur et le rôle de son tour. `kind` est l'expression SQL
+// de l'outil de sa source, pour les noms d'auteur qui ne valent que dans un outil.
 // Les auteurs s'additionnent : un passage d'une adresse ou d'un nom listés convient.
 export function passageConditions(filters: SearchFilters, kind: SQL): SQL {
   const conditions: SQL[] = [];
+  // Un rôle des coulisses (T51) : par le tour du passage, seulement quand il est demandé ; les passages n'en gardent rien.
+  // shortcut: aucun index sur turns.role, Postgres joint par hachage après un parcours des tours (5 ms pour 30 000 tours
+  // à l'essai du 12/11) ; ajouter un index (tenant_id, role) quand une recherche filtrée par rôle dépassera 300 ms.
+  if (filters.roles?.length) {
+    conditions.push(sql`exists (select 1 from turns rt
+      where rt.tenant_id = p.tenant_id and rt.id = p.turn_id and rt.role = any(${textArray(filters.roles)}))`);
+  }
   const since = validDate(filters.since);
   const until = validDate(filters.until);
   if (since) conditions.push(sql`p.ts >= ${since.toISOString()}::timestamptz`);

@@ -6,6 +6,7 @@ import type { Embedder } from '@/server/embeddings/embedder';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
 import { searchPassages } from '@/server/search/search';
 import {
+  BACKSTAGE_ROLE_NAMES_EN,
   cleanFilterValue,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
@@ -58,7 +59,9 @@ export const SearchInputSchema = z.object({
     .string()
     .max(FILTER_MAX_CHARS)
     .nullish()
-    .describe(`Limit to one kind of source: ${NATURE_NAMES_EN.join(', ')}.`),
+    .describe(
+      `Limit to one kind of source: ${NATURE_NAMES_EN.join(', ')}. Or to one part of the backstage of coding sessions, which search always returns too: ${Object.values(BACKSTAGE_ROLE_NAMES_EN).join(', ')}.`,
+    ),
   depuis: z
     .string()
     .max(FILTER_MAX_CHARS)

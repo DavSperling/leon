@@ -9,6 +9,7 @@ import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
 import {
   epochToDate,
+  notBackstage,
   RESUME_EXTERNAL_PREFIX,
   RESUME_LIKE,
   textArray,
@@ -124,8 +125,9 @@ async function readSession(
   const parsed = SessionFactsSchema.safeParse(source.faits);
   if (!parsed.success || parsed.data.echanges < RESUME_MIN_ECHANGES) return null;
 
-  // La fin des tours, sans les résumés, en CONDENSE_MAX_CHARS caractères au plus (le condensé n'en garde pas plus) :
-  // une session de 5 000 tours n'est pas lue en entier. `arrived` : le dernier tour capté, sur toute la session.
+  // La fin des tours, sans les résumés ni les coulisses (QD9, D23 : une coulisse arrivée ne relance rien), en
+  // CONDENSE_MAX_CHARS caractères au plus (le condensé n'en garde pas plus) : une session de 5 000 tours n'est pas lue
+  // en entier. `arrived` : le dernier tour capté, sur toute la session.
   const { rows } = await tx.execute<TailRow>(sql`
     select id, external_id, role, injecte, extract(epoch from ts) as epoch, text,
       extract(epoch from arrived) as arrived_epoch
@@ -135,7 +137,7 @@ async function readSession(
         max(t.created_at) over () as arrived
       from turns t
       where t.tenant_id = ${ctx.tenantId} and t.source_id = ${sourceId}
-        and t.external_id not like ${RESUME_LIKE}
+        and t.external_id not like ${RESUME_LIKE} and ${notBackstage(sql`t.role`)}
     ) recent
     where running - char_length(text) <= ${CONDENSE_MAX_CHARS}
     order by ts, created_at, id`);

@@ -1,3 +1,4 @@
+import { isBackstageRole } from '@/capture/turn';
 import { ANSWER_NOT_ENOUGH } from '@/lib/answer-events';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
@@ -22,7 +23,7 @@ export type NumberedPassage = { n: number; sourceId: string; passageId: string }
 
 const SYSTEM = `Tu es Leon, la mémoire de l'entreprise. L'utilisateur vient de lancer une recherche dans Leon ; tu écris la courte réponse affichée au-dessus de ses résultats.
 
-Le message de l'utilisateur contient sa recherche, entre balises <recherche>, puis des passages tirés de ses résultats, chacun entre balises <passage> : l'attribut n est le numéro du résultat d'où vient le passage, suivi de l'outil, du titre de la source et de la date.
+Le message de l'utilisateur contient sa recherche, entre balises <recherche>, puis des passages tirés de ses résultats, chacun entre balises <passage> : l'attribut n est le numéro du résultat d'où vient le passage, suivi de l'outil, du titre de la source et de la date. Un passage qui porte l'attribut role vient des coulisses d'une session de code (le raisonnement de l'agent, un échange avec un sous-agent, un appel d'outil) : c'est ce que l'agent a pensé ou fait, pas un message d'une personne ni un fait vérifié.
 
 Comment répondre :
 - Dans la langue de la recherche ; en anglais quand elle ne se devine pas (des mots-clés, des noms, des filtres). En ${ANSWER_MAX_WORDS} mots au plus : quelques phrases simples, sans titre, sans liste, sans mise en forme.
@@ -45,6 +46,8 @@ function renderPassage(n: number, hit: SourceHit, passage: PassageHit, text: str
     ['outil', toolLabel(hit.kind)],
     ['titre', shortTitle(hit.title)],
     ['date', isoDate(passage.ts)],
+    // Une coulisse (T51) se dit telle, comme dans le MCP (render.ts) : elle ne devient pas une affirmation citée.
+    ['role', isBackstageRole(passage.role) ? passage.role : null],
   ])}>${escapeData(text)}</passage>`;
 }
 

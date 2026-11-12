@@ -115,6 +115,44 @@ describe('buildAnswerPrompt', () => {
     ]);
   });
 
+  // T51 (QD9) : une coulisse trouvée se dit telle, pour que le raisonnement d'un agent ou la ligne d'un appel d'outil
+  // ne devienne pas une affirmation citée. Même attribut que le rendu du MCP (render.ts).
+  it.each(['raisonnement', 'sous_agent', 'appel_outil'] as const)(
+    'porte le rôle d’une coulisse (%s) dans la balise du passage',
+    (role) => {
+      const source = hit({ passages: [passage('le client a refusé', { role })] });
+
+      expect(passageBlocks(userText(promptFor('x', [source])))).toEqual([
+        `<passage n="1" outil="GitHub" titre="Ticket 12 : relance ACME" date="2026-10-18" role="${role}">le client a refusé</passage>`,
+      ]);
+    },
+  );
+
+  it('ne porte aucun rôle pour un passage qui n’est pas une coulisse, ni sans rôle', () => {
+    const source = hit({
+      passages: [
+        passage('a', { role: 'participant' }),
+        passage('b', { role: 'user' }),
+        passage('c', { role: 'assistant' }),
+        passage('d', { role: 'document' }),
+        passage('e', { role: null }),
+      ],
+    });
+
+    const blocks = passageBlocks(userText(promptFor('x', [source])));
+
+    expect(blocks).toHaveLength(5);
+    expect(blocks.join('\n')).not.toContain('role=');
+  });
+
+  it('explique au modèle que l’attribut role marque une coulisse, pas un message ni un fait vérifié', () => {
+    const { system } = promptFor('x', [hit()]);
+
+    expect(system).toContain(
+      "Un passage qui porte l'attribut role vient des coulisses d'une session de code (le raisonnement de l'agent, un échange avec un sous-agent, un appel d'outil) : c'est ce que l'agent a pensé ou fait, pas un message d'une personne ni un fait vérifié.",
+    );
+  });
+
   it('met la ligne de garde juste avant les passages, et la recherche dans sa balise', () => {
     const text = userText(promptFor('contrat OVH', [hit()]));
 

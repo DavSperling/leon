@@ -24,10 +24,12 @@ import {
   readHookStdin,
 } from './capture-session';
 import {
+  COULISSES_REFUSED_MESSAGE,
   type CoulissesSender,
   createCoulissesSender,
   createFactsSender,
   createIngestSender,
+  FACTS_REFUSED_MESSAGE,
   type FactsSender,
   IngestResponseError,
   TokenRefusedError,
@@ -824,6 +826,20 @@ describe('captureSessionFromHook : les coulisses de la session, avec l’usage c
       expect(stderrText()).not.toContain('MOT-DU-SERVEUR');
     },
   );
+
+  // Un serveur d'avant les faits refuse aussi les coulisses : le second message ne dit pas que les faits sont partis.
+  it('les faits et les coulisses refusés : deux messages qui ne se contredisent pas', async () => {
+    const refuse = async () => {
+      throw new IngestResponseError(404);
+    };
+    const { deps } = backstageDeps({ sendFacts: refuse, sendCoulisses: refuse });
+
+    expect(await captureSessionFromHook(hook, deps)).toBe(0);
+
+    expect(stderrText()).toContain(FACTS_REFUSED_MESSAGE);
+    expect(stderrText()).toContain(COULISSES_REFUSED_MESSAGE);
+    expect(COULISSES_REFUSED_MESSAGE).not.toMatch(/rest of the session|facts/);
+  });
 
   it('un 403 (usage retiré entre-temps) arrête l’envoi sans bruit', async () => {
     const fetchImpl = vi.fn(async () => new Response('{}', { status: 403 }));

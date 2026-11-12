@@ -1440,7 +1440,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >     - aucun autre champ de l'appel ne part (`description`, `subagent_type`), ni la `description` du `meta.json`.
 >   - **Un appel d'outil**, pour chaque bloc `tool_use` de la session et des fichiers de ses sous-agents. `id` : l'`id` du bloc. `ts` : la date de sa ligne. `outil` : `reduceToolName`. `statut` : `erreur` si son `tool_result` a `is_error` vrai, `sans_resultat` s'il n'a aucun `tool_result`, `ok` sinon. `cible` :
 >     - `Bash` : `reduceCommand` (rien si elle rend une chaîne vide) ;
->     - `Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit` : `file_path` ou `notebook_path`, par `repoRelativePath` (rien s'il sort du dépôt) ;
+>     - `Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit` : `file_path` ou `notebook_path`, par `repoRelativePath` (rien s'il sort du dépôt, ni s'il commence par `~` ou `$`, ou porte une variable `%…%` : rien ne les développe, ils passeraient pour relatifs ; le serveur les écarte aussi) ;
 >     - `Glob`, `Grep`, `LS` : leur `path` seulement, de même. Jamais le motif ;
 >     - tout autre outil : pas de cible. Jamais une URL, une requête, une consigne ni un autre argument ;
 >     - l'appel `Agent` lui-même est un `appel_outil` sans cible ; sa consigne part à part, en bloc `sous_agent`.
@@ -1455,6 +1455,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - Un serveur ancien répond 404, un champ inconnu 400 : un message fixe sur la sortie d'erreur, sur le modèle de `FACTS_REFUSED_MESSAGE`. Le code de sortie reste 0, et les tours restent captés. Un 403 (usage retiré entre-temps) arrête l'envoi sans bruit.
 >   - Le crochet de fin est le premier à brancher (`src/cli/capture-session.ts`), puis l'import (`src/cli/import-claude-code.ts`).
 >   - À l'import, les coulisses d'une session ne partent que si `coulisses` figure dans les usages déjà filtrés par `usagesDepuis` pour ce fichier, comme les faits : une session modifiée avant l'acceptation n'envoie aucune coulisse. Sinon, accepter l'usage enverrait d'un coup le passé.
+>   - À l'import, les coulisses d'une session non finie (`fin` faux : modifiée il y a moins de 30 min) ne partent pas : ses appels en cours resteraient `sans_resultat` pour toujours (le premier écrit gagne). Son crochet de fin, ou un import d'après 30 min d'inactivité, les envoie. Et un bloc déjà relevé dans une autre session, qu'une session reprise recopie, ne repart pas, comme les tours.
 >   - `--dry-run` de l'import ne montre que le nombre de blocs par rôle, jamais leur texte.
 > - **L'usage `coulisses` dans l'installateur.**
 >   - Le texte est `COULISSES_LINES`, exporté dans `src/cli/install-hooks.ts` (pas dans `consent.ts`, qui ne garde que le fichier d'accord et reconnaît déjà l'usage), figé mot pour mot par un test.
@@ -1504,7 +1505,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >       ```
 >       The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions:
 >       ```
->   - **Les mêmes phrases suivent ailleurs :** la page « Autoriser » (la case `noter` reprend `NOTER_LINES`, un test les lie) ; la documentation du site en anglais et en français (`site.documentation.sent.*`, avec un nouveau `sent.coulisses`) ; le README (« ce qui part ») ; l'aide de la CLI qui liste les usages (`src/cli/leon.ts`) ; et toute phrase du site qui dit une session, un résumé ou une note « privés » ou lisibles de « vous seul ».
+>   - **Les mêmes phrases suivent ailleurs :** la page « Autoriser » (la case `noter` reprend `NOTER_LINES`, un test les lie) ; la documentation du site en anglais et en français (`site.documentation.sent.*`, avec un nouveau `sent.coulisses`) ; le README (« ce qui part ») ; l'aide de la CLI qui liste les usages (`src/cli/leon.ts`), et celle de `capter-session` et de `import-claude-code` qui dit ce qui part ; toute phrase du site qui dit une session, un résumé ou une note « privés » ou lisibles de « vous seul » (les discussions avec Leon, elles, restent privées : elles n'ont pas `equipe_lit`) ; la description de l'outil MCP `remember` et la phrase de `noter` du bloc de démarrage (« Pour garder une note, lue comme tes sessions : … »).
 >   - Le texte de base dit encore que le marqueur signale « a subagent » : on ne change pas cette phrase (T63).
 >   - Les textes de base de Codex, Cursor et Antigravity : la même correction de « private » s'ils portent la même phrase (la règle de lecture vaut pour toute session de code), sans y parler de `coulisses`.
 > - **Les tests.**
@@ -1519,13 +1520,14 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >     - un appel d'un sous-agent, et d'un sous-agent de sous-agent, est relevé dans la même forme ;
 >     - un bloc recopié dans une ligne `api-request-blob` n'est relevé qu'une fois ;
 >     - une chaîne témoin placée dans la sortie d'un outil, dans un argument d'un autre outil et dans un champ de l'appel `Agent` autre que `prompt` n'apparaît nulle part dans les blocs ;
->     - chaque bloc passe le schéma de C10.
+>     - un chemin en `~/…`, `$HOME/…` ou `%USERPROFILE%\…` n'a pas de cible ; un `$` au milieu d'un chemin du dépôt reste ;
+>     - un bloc hors du schéma de C10 (un identifiant hors forme) est écarté, les autres partent.
 >   - `src/cli/capture-session.test.ts` et `src/cli/import-claude-code.test.ts` :
 >     - sans l'usage, aucun appel à la route ; avec lui, l'envoi après les faits ;
 >     - un 404 ou un 400 n'arrête rien (message fixe, code 0) ;
 >     - un retrait relu juste avant l'envoi l'empêche ;
 >     - les lots tiennent sous la taille et sous 2 000 blocs ;
->     - à l'import, une session modifiée avant l'acceptation n'envoie aucune coulisse.
+>     - à l'import, une session modifiée avant l'acceptation n'envoie aucune coulisse ; une session non finie non plus ; un bloc recopié par une session reprise ne part qu'une fois.
 >   - Un test en base du crochet de fin jusqu'aux tours de coulisses rangés (comme celui de la PR 1).
 >   - `src/cli/install-hooks.test.ts` : le texte exact de `COULISSES_LINES` ; la question en `[y/N]` à sa place ; un refus daté ; `--yes` ne la donne pas ; hors terminal elle n'est pas donnée ; les textes corrigés. Les tests de Codex, Cursor et Antigravity : la question n'y est jamais posée ni écrite.
 >   - La documentation du site : `sent.coulisses` en anglais et en français, et les phrases corrigées.
@@ -1539,7 +1541,7 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 > - **Les limites à dire dans la PR.**
 >   - Le raisonnement n'a été vu qu'en `claude -p`, où il est vide : une session interactive reste à essayer avec Amos.
 >   - Les agents de l'outil Workflow ne sont pas relevés (pas vus à l'essai).
->   - Une session reprise recopie son historique sous un autre identifiant : ses coulisses repartiraient sous la nouvelle session (les identifiants de bloc sont les mêmes, mais la session diffère).
+>   - Une session reprise recopie son historique sous un autre identifiant : au crochet de fin, ses coulisses repartent sous la nouvelle session (les identifiants de bloc sont les mêmes, mais la session diffère). L'import, lui, ne renvoie pas un bloc déjà relevé.
 >   - Mesuré à l'essai de la PR 2 : beaucoup d'appels d'outils courts évincent les messages dans une recherche sans filtre. À trancher par Amos avant d'ouvrir l'usage à d'autres.
 
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).

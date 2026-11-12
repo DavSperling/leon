@@ -5,6 +5,7 @@ import { prepareTurnText } from './prepare-turn-text';
 import {
   factText,
   isFinalReport,
+  type Line,
   LineSchema,
   reduceCommand,
   reduceToolName,
@@ -15,8 +16,6 @@ import {
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
 
-const BackstageLineSchema = LineSchema.extend({ uuid: z.string().optional() });
-type BackstageLine = z.infer<typeof BackstageLineSchema>;
 const ThinkingSchema = z.object({ type: z.literal('thinking'), thinking: z.string() });
 const PromptSchema = z.object({ prompt: z.string() });
 // Les seuls arguments lus pour la cible : jamais un motif, une URL, une requête ni une consigne.
@@ -29,14 +28,14 @@ const TargetSchema = z.object({
 const FILE_TOOLS = new Set(['Read', 'Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
 const SEARCH_TOOLS = new Set(['Glob', 'Grep', 'LS']);
 
-function parseLine(raw: string): BackstageLine | null {
+function parseLine(raw: string): Line | null {
   let json: unknown;
   try {
     json = JSON.parse(raw);
   } catch {
     return null;
   }
-  const parsed = BackstageLineSchema.safeParse(json);
+  const parsed = LineSchema.safeParse(json);
   return parsed.success ? parsed.data : null;
 }
 
@@ -80,8 +79,8 @@ export function extractBackstage(
   };
 
   // Rend la dernière ligne de conversation du fichier, pour la règle du rapport final.
-  function read(file: string, session: boolean): BackstageLine | null {
-    let last: BackstageLine | null = null;
+  function read(file: string, session: boolean): Line | null {
+    let last: Line | null = null;
     for (const raw of file.split('\n')) {
       const line = parseLine(raw);
       // Les blocs ne se lisent que sur les messages : les lignes api-request-blob en recopient (annexe 08).

@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CoulisseBlocSchema } from './api-contract';
 import { SECRET_MASK } from './mask-secrets';
 import { extractBackstage } from './session-backstage';
 import { TURN_TEXT_MAX } from './turn';
@@ -267,6 +266,11 @@ describe('extractBackstage', () => {
       ['un Grep sans path', 'Grep', { pattern: 'motif-cherche' }],
       ['un WebFetch', 'WebFetch', { url: 'https://exemple.test/page', prompt: 'Résume.' }],
       ['un outil inconnu', 'Inconnu', { path: `${RACINE}/src` }],
+      // Ni le tilde ni une variable ne sont développés : sans ce refus, ces chemins passeraient pour relatifs.
+      ['un Read de ~/…', 'Read', { file_path: '~/.aws/credentials' }],
+      ['un Grep dans ~/…', 'Grep', { pattern: 'x', path: '~/clients/acme' }],
+      ['un LS de $HOME/…', 'LS', { path: '$HOME/.ssh' }],
+      ['un Read de %USERPROFILE%\\…', 'Read', { file_path: '%USERPROFILE%\\secret.txt' }],
     ])('%s n’a pas de cible', (_cas, name, input) => {
       const [bloc] = appelSeul(name, input);
 
@@ -279,6 +283,12 @@ describe('extractBackstage', () => {
       ]);
       expect(appelSeul('NotebookEdit', { notebook_path: `${RACINE}/n.ipynb` })).toMatchObject([
         { cible: 'n.ipynb' },
+      ]);
+    });
+
+    it('un $ au milieu d’un chemin du dépôt reste (une route app/routes/$id.tsx)', () => {
+      expect(appelSeul('Read', { file_path: `${RACINE}/app/routes/$id.tsx` })).toMatchObject([
+        { cible: 'app/routes/$id.tsx' },
       ]);
     });
 
@@ -349,6 +359,9 @@ describe('extractBackstage', () => {
         appel('t2', 'Grep', { pattern: TEMOIN, path: `${RACINE}/src`, glob: TEMOIN }),
         resultat('t2', [{ type: 'text', text: TEMOIN }]),
         appel('t3', 'Bash', { command: `echo ${TEMOIN}`, description: TEMOIN }),
+        appel('t4', 'Glob', { pattern: '*', path: `~/${TEMOIN}` }),
+        appel('t5', 'Read', { file_path: `~/${TEMOIN}` }),
+        appel('t6', 'Grep', { pattern: 'x', path: `$HOME/${TEMOIN}` }),
         appel('a1', 'Agent', { prompt: 'Cherche.', description: TEMOIN, subagent_type: TEMOIN }),
         resultat('a1', TEMOIN, {
           toolUseResult: {
@@ -361,17 +374,17 @@ describe('extractBackstage', () => {
       new Map([['a1', fini('Fini.')]]),
     );
 
-    expect(blocs.length).toBe(6);
+    expect(blocs.length).toBe(9);
     expect(JSON.stringify(blocs)).not.toContain(TEMOIN);
   });
 
-  it('chaque bloc passe le schéma de C10', () => {
-    const blocs = [
-      ...extractBackstage(SESSION, RACINE, SOUS_AGENTS),
-      ...appelSeul('mcp__linear__get_issue', {}),
-      ...extraire([pensee('p1', 'x'.repeat(30_000))]),
-    ];
+  it('un bloc hors du contrat (un identifiant hors forme) est écarté, les autres partent', () => {
+    const blocs = extraire([
+      appel('a b', 'Read', {}),
+      appel('x'.repeat(201), 'Read', {}),
+      appel('t1', 'Read', {}),
+    ]);
 
-    for (const bloc of blocs) expect(CoulisseBlocSchema.parse(bloc)).toEqual(bloc);
+    expect(blocs.map((bloc) => bloc.id)).toEqual(['t1']);
   });
 });

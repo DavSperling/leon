@@ -100,7 +100,8 @@ Commands:
   import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
-      --dry-run            print what would be sent (one JSON line per request), send nothing
+      --dry-run            print what would be sent (one JSON line per request), send nothing; with the
+                           \`coulisses\` consent, only the number of blocks per role is printed, never their text
   briefing             Send the project key (plus the current Git branch and the session id, if ~/.leon/accord.json
                        allows it) and print the block that comes back: your recent sessions on this repository and
                        the project's morning briefing (for Claude Code's SessionStart hook: the hook JSON is read
@@ -108,8 +109,9 @@ Commands:
                        consent and the Leon command of this computer, and your threads of this repository come back
                        instead of your sessions, with how to read one
   capter-session       Send the session that is ending: the text of the exchanges, with its project, and the actions
-                       of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
-                       JSON is read from standard input)
+                       of the session if ~/.leon/accord.json allows it, and, with the \`coulisses\` consent, what
+                       happened behind the exchanges (reasoning, subagent instructions and reports, reduced tool
+                       calls) (for Claude Code's SessionEnd hook: the hook JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   reminder             Print a one-line reminder of your threads that touch the message you are sending, or nothing
                        (for Claude Code's UserPromptSubmit hook: the hook JSON is read from standard input). Only with

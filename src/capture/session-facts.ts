@@ -24,6 +24,7 @@ export type Tache = SessionFacts['taches'][number];
 // ignorés, une ligne qui ne le respecte pas est écartée. Repris par les coulisses (session-backstage.ts).
 export const LineSchema = z.object({
   type: z.string(),
+  uuid: z.string().optional(), // l'identifiant d'un raisonnement (session-backstage.ts)
   timestamp: z.iso.datetime({ offset: true }).optional(),
   gitBranch: z.string().optional(),
   isSidechain: z.boolean().optional(),
@@ -36,7 +37,7 @@ export const LineSchema = z.object({
     })
     .optional(),
 });
-type Line = z.infer<typeof LineSchema>;
+export type Line = z.infer<typeof LineSchema>;
 const LineTypeSchema = LineSchema.pick({ type: true });
 
 export const ToolUseSchema = z.object({
@@ -276,9 +277,13 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
 // Un worktree rangé dans le clone (`.claude/worktrees/<nom>/`, le flux de CLAUDE.md) : ses fichiers sont ceux du dépôt.
 const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
-// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque) ou s'il n'y a pas de dépôt.
+// Le dossier personnel ou une variable (« ~/x », « $HOME/x », « %USERPROFILE%\x ») : rien ne les développe ici, ils
+// passeraient pour relatifs au dépôt. Un « $ » au milieu reste (une route « app/routes/$id.tsx »).
+const HOME_OR_VARIABLE = /^[~$]|%[A-Za-z_][A-Za-z0-9_]*%/;
+
+// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque, « ~/x ») ou s'il n'y a pas de dépôt.
 export function repoRelativePath(path: string, root: string | null): string | null {
-  if (root === null) return null;
+  if (root === null || HOME_OR_VARIABLE.test(path)) return null;
   const relativePath = relative(root, resolve(root, path));
   const outside =
     relativePath === '' ||

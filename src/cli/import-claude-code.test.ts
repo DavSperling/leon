@@ -574,6 +574,13 @@ describe('importClaudeCode : les faits de chaque session', () => {
     }
     const sentFor = (coulisses: { mock: { calls: Array<[CoulissesRequest]> } }, id: string) =>
       coulisses.mock.calls.map(([request]) => request).filter((r) => r.external_id === id);
+    // Des sessions finies : leur fichier n'a pas bougé depuis plus de 30 min (IDLE_MS).
+    async function vieillirTout() {
+      const old = new Date(Date.now() - 31 * 60_000);
+      for (const name of await readdir(projectDir)) {
+        if (name.endsWith('.jsonl')) await utimes(join(projectDir, name), old, old);
+      }
+    }
 
     it('sans l’usage, aucun appel à la route', async () => {
       const { deps, coulisses, facts } = makeBackstageDeps(['lecture', 'resume']);
@@ -585,6 +592,7 @@ describe('importClaudeCode : les faits de chaque session', () => {
     });
 
     it('avec l’usage, envoie les coulisses de chaque session après ses faits', async () => {
+      await vieillirTout();
       const { deps, coulisses, events } = makeBackstageDeps(['coulisses']);
 
       await importClaudeCode(importOptions(), deps);
@@ -618,6 +626,7 @@ describe('importClaudeCode : les faits de chaque session', () => {
           ),
           join(projectDir, `${SOUS_AGENTS}.jsonl`),
         );
+        await vieillirTout();
         const { deps, coulisses, facts } = makeBackstageDeps(['coulisses'], async () => {
           throw new IngestResponseError(status);
         });
@@ -633,16 +642,71 @@ describe('importClaudeCode : les faits de chaque session', () => {
       },
     );
 
+    // Sur la seule session aux sous-agents, qui a des coulisses : c'est le contrôle d'avant l'envoi qui l'arrête, pas
+    // celui de la boucle, au fichier suivant.
     it('un retrait relu juste avant l’envoi l’empêche', async () => {
+      await rm(projectDir, { recursive: true, force: true });
+      await mkdir(projectDir, { recursive: true });
+      const fixture = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+      await cp(fixture, projectDir, { recursive: true });
+      await vieillirTout();
       const { deps, coulisses, events } = makeBackstageDeps(['coulisses']);
       const withdrawn = async () => events.some((event) => event.startsWith('faits'));
 
-      await expect(importClaudeCode(importOptions(), { ...deps, withdrawn })).rejects.toThrow(
-        CONSENT_WITHDRAWN_MESSAGE,
-      );
+      await importClaudeCode(importOptions(), {
+        ...deps,
+        withdrawn,
+        readdir: (path) => readdir(path),
+      });
 
       expect(events.filter((event) => event.startsWith('faits'))).toHaveLength(1);
       expect(coulisses).not.toHaveBeenCalled();
+    });
+
+    // Une session encore ouverte a des appels sans résultat : envoyés, ils resteraient `sans_resultat` pour toujours
+    // (le premier écrit gagne). Le crochet de fin, ou un import d'après 30 min d'inactivité, les envoie.
+    it('une session pas finie n’envoie pas ses coulisses ; finie, elle les envoie', async () => {
+      const { deps, coulisses, facts } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), deps);
+      expect(factsOf(facts).get(ORION_SESSION)?.fin).toBe(false);
+      expect(coulisses).not.toHaveBeenCalled();
+
+      await vieillirTout();
+      await importClaudeCode(importOptions(), deps);
+      expect(sentFor(coulisses, ORION_SESSION)).toHaveLength(1);
+    });
+
+    // Une session reprise recopie l'historique (mêmes identifiants de blocs, autre sessionId), comme pour les tours.
+    it('n’envoie pas deux fois un bloc recopié par une session reprise', async () => {
+      const orion = await readFile(new URL('session-bruit.jsonl', FIXTURES), 'utf8');
+      const resumed = '55555555-5555-4555-8555-555555555555';
+      const newTurn = JSON.stringify({
+        type: 'user',
+        uuid: 'reprise-1',
+        sessionId: resumed,
+        cwd: parseClaudeCodeSession(orion)?.cwd,
+        timestamp: '2026-10-14T09:00:00.000Z',
+        message: { content: 'On reprend.' },
+      });
+      // La ligne datée de la reprise passe d'abord : l'origine est importée avant elle (find-sessions.ts).
+      const repriseLine = JSON.stringify({
+        type: 'system',
+        sessionId: resumed,
+        timestamp: '2026-10-14T08:59:00.000Z',
+      });
+      await writeFile(
+        join(projectDir, 'reprise.jsonl'),
+        `${repriseLine}\n${orion.replaceAll(ORION_SESSION, resumed).trimEnd()}\n${newTurn}\n`,
+      );
+      await vieillirTout();
+      const { deps, coulisses } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), deps);
+
+      const ids = coulisses.mock.calls.flatMap(([request]) => request.blocs.map((bloc) => bloc.id));
+      expect(sentFor(coulisses, ORION_SESSION)).toHaveLength(1);
+      expect(new Set(ids).size).toBe(ids.length);
     });
 
     // Sinon accepter l'usage enverrait d'un coup les coulisses du passé.
@@ -664,6 +728,7 @@ describe('importClaudeCode : les faits de chaque session', () => {
     it('en dryRun, ne montre que le nombre de blocs par rôle, jamais un texte', async () => {
       const fixture = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
       await cp(fixture, projectDir, { recursive: true });
+      await vieillirTout();
       const { deps, coulisses, out } = makeBackstageDeps(['coulisses']);
 
       await importClaudeCode(

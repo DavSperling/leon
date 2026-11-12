@@ -2,9 +2,10 @@ import { redirect } from 'next/navigation';
 import { createTranslator } from 'next-intl';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { LECTURE_LINES, RAPPEL_LINES } from '@/cli/install-hooks';
+import { LECTURE_LINES, NOTER_LINES, RAPPEL_LINES } from '@/cli/install-hooks';
 import { Button } from '@/components/verre/ui/button';
 import { nb } from '@/lib/verre/nb';
+import { notesRefusedAt } from '@/server/auth/members';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 import en from '../../../../../messages/en.json';
@@ -14,6 +15,7 @@ import AuthorizePage, { generateMetadata } from './page';
 
 vi.mock('@/server/auth/session', () => ({ getSession: vi.fn(), getUserContext: vi.fn() }));
 vi.mock('@/server/auth/viewer', () => ({ getViewerProfile: vi.fn() }));
+vi.mock('@/server/auth/members', () => ({ notesRefusedAt: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -53,6 +55,7 @@ beforeEach(() => {
   vi.mocked(getSession).mockResolvedValue({ user: { id: 'u1' } } as never);
   vi.mocked(getUserContext).mockResolvedValue(CTX);
   vi.mocked(getViewerProfile).mockResolvedValue({ organizationName: 'Acme' } as never);
+  vi.mocked(notesRefusedAt).mockResolvedValue(null);
 });
 
 describe('paramètres invalides (K3)', () => {
@@ -209,6 +212,34 @@ describe('les cases de la page', () => {
     expect(textOf(page)).toContain(nb(fr.computer.authorize.usages.rappel.title));
   });
 
+  // T57 : la case `noter`, cochée quand elle est demandée, après celle de `rappel`.
+  it('montre aussi la case noter, cochée, avec son texte', async () => {
+    const page = await render({ ...PARAMS, usages: 'noter,lecture,rappel' });
+
+    expect(boxes(page).map((el) => [el.props.value, el.props.defaultChecked])).toEqual([
+      ['lecture', true],
+      ['rappel', true],
+      ['noter', true],
+    ]);
+    expect(textOf(page)).toContain(nb(fr.computer.authorize.usages.noter.title));
+    expect(textOf(page)).toContain('leon note');
+  });
+
+  // T65 (C16) : le réglage `noter` du compte daté (un « non » déjà donné), la case `noter` part décochée ; les autres
+  // restent cochées. Le réglage se lit sur la ligne du lecteur.
+  it('réglage noter daté : la case noter est décochée, les autres cochées', async () => {
+    vi.mocked(notesRefusedAt).mockResolvedValue(new Date('2026-11-01T10:00:00Z'));
+
+    const page = await render({ ...PARAMS, usages: 'lecture,rappel,noter' });
+
+    expect(boxes(page).map((el) => [el.props.value, el.props.defaultChecked])).toEqual([
+      ['lecture', true],
+      ['rappel', true],
+      ['noter', false],
+    ]);
+    expect(notesRefusedAt).toHaveBeenCalledWith(CTX);
+  });
+
   it('la case est nommée par son titre et décrite par son texte', async () => {
     const page = await render(ASKED);
 
@@ -221,7 +252,7 @@ describe('les cases de la page', () => {
 
   it.each([
     ['sans paramètre usages', PARAMS],
-    ['avec une valeur que la page ne montre pas encore', { ...PARAMS, usages: 'noter' }],
+    ['avec une valeur que la page ne montre jamais', { ...PARAMS, usages: 'resume' }],
     ['avec une valeur inconnue', { ...PARAMS, usages: 'tout' }],
   ])('%s : ni case ni champ caché', async (_name, params) => {
     const page = await render(params);
@@ -260,10 +291,11 @@ describe('textes', () => {
   });
 
   // Contrat avec les installateurs : chaque case dit, en anglais, mot pour mot, ce que dit le terminal (LECTURE_LINES,
-  // RAPPEL_LINES).
+  // RAPPEL_LINES, NOTER_LINES).
   it.each([
     ['lecture', LECTURE_LINES],
     ['rappel', RAPPEL_LINES],
+    ['noter', NOTER_LINES],
   ] as const)(
     'le texte anglais de la case %s est celui des installateurs, mot pour mot',
     (usage, lines) => {
@@ -281,7 +313,7 @@ describe('textes', () => {
     },
   );
 
-  it.each(['lecture', 'rappel'] as const)(
+  it.each(['lecture', 'rappel', 'noter'] as const)(
     '%s : le français a le même nombre de lignes et les mêmes commandes',
     (usage) => {
       const lines = (messages: typeof fr | typeof en) =>

@@ -4,7 +4,9 @@ import { lecons } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { filTitle } from '@/server/sessions/thread-read';
 import { FIL, type Fil } from '@/server/sessions/threads';
+import { oneLine, SOURCE_KIND_LABELS } from './labels';
 import { listLessons } from './lessons';
+import { restoreNote } from './notes';
 import {
   type Cible,
   type HistoryVersion,
@@ -40,8 +42,23 @@ export type MemoryLesson = {
   accepteeLe: Date;
   versions: MemoryVersion[];
 };
-// Une cible de l'historique : un fil de l'auteur, ou une de ses leçons non retirées.
-export type MemoryTarget = { cible: 'fil' | 'lecon'; id: string };
+// Une note de l'agent, de `leon note` ou de `remember` (T57, D38), avec le même historique qu'un fil.
+export type MemoryNote = {
+  id: string;
+  // Le début de son texte, sur une ligne : le titre de la source.
+  titre: string;
+  // L'outil qui l'a écrite, tel qu'on le lit (« Claude Code », ou le libellé du client MCP) ; null pour une note d'avant
+  // ce lot, dont l'outil n'est pas connu.
+  outil: string | null;
+  // Le dépôt de `leon note` ; `remember` n'en a pas.
+  projet: string | null;
+  creeLe: Date;
+  // Comme pour un fil : le numéro de sa dernière version, que « Remettre » attend (0 sans version, pour une note d'avant).
+  n: number;
+  versions: MemoryVersion[];
+};
+// Une cible de l'historique : un fil de l'auteur, une de ses notes, ou une de ses leçons non retirées.
+export type MemoryTarget = { cible: 'fil' | 'note' | 'lecon'; id: string };
 
 // Les fils de l'auteur, tous dépôts confondus, absorbés compris, du plus récent au plus ancien, avec leur historique
 // lu d'un coup.
@@ -61,6 +78,45 @@ export async function listMemoryThreads(ctx: TenantContext): Promise<MemoryThrea
         titre: filTitle(fil),
         projet: typeof projet === 'string' ? projet : null,
         absorbe: fil.metadata.absorbe_par != null,
+        n: history?.n ?? 0,
+        versions: history?.versions ?? [],
+      };
+    });
+  });
+}
+
+// `metadata.outil` d'une note : un outil de code, ou `mcp:<libellé>` pour remember (notes.ts).
+// La table est élargie, pas la clé : un libellé de client MCP n'est pas un kind.
+const toolLabel = (outil: string | null): string | null =>
+  outil === null
+    ? null
+    : ((SOURCE_KIND_LABELS as Record<string, string>)[outil] ?? outil.replace(/^mcp:/, ''));
+
+// Les notes de l'auteur, du plus récent au plus ancien, avec leur historique lu d'un coup. Le filtre de l'auteur est
+// celui des fils : equipe_lit (0057) montrerait sinon à un manager les notes d'un subordonné.
+// shortcut: toutes les notes, sans pagination ; à paginer si un auteur en a des centaines.
+export async function listMemoryNotes(ctx: TenantContext): Promise<MemoryNote[]> {
+  return withTenant(ctx, async (tx) => {
+    const { rows } = await tx.execute<{
+      id: string;
+      title: string | null;
+      outil: string | null;
+      projet: string | null;
+      created_at: string;
+    }>(sql`
+      select s.id, s.title, s.metadata->>'outil' as outil, s.metadata->>'project' as projet, s.created_at
+      from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = 'mcp_remember'
+      order by s.created_at desc, s.id`);
+    const histories = await historiesIn(tx, ctx, { sourceIds: rows.map((note) => note.id) });
+    return rows.map((note) => {
+      const history = histories.get(note.id);
+      return {
+        id: note.id,
+        titre: oneLine(note.title ?? ''),
+        outil: toolLabel(note.outil),
+        projet: note.projet,
+        creeLe: new Date(note.created_at),
         n: history?.n ?? 0,
         versions: history?.versions ?? [],
       };
@@ -96,8 +152,8 @@ export async function listMemoryRepos(ctx: TenantContext): Promise<string[]> {
   return rows.map((row) => row.projet);
 }
 
-// La cible si elle est à l'auteur : un fil (jamais une note, que T57 restaure par writeNote), ou une leçon non retirée.
-// Sinon null : celle d'un collègue est introuvable.
+// La cible si elle est à l'auteur : un fil, une note (que restoreNote remet par writeNote, T57), ou une leçon non
+// retirée. Le kind compte : un fil ne s'ouvre pas comme une note. Sinon null : celle d'un collègue est introuvable.
 async function targetOf(ctx: TenantContext, target: MemoryTarget): Promise<Cible | null> {
   return withTenant(ctx, async (tx) => {
     if (target.cible === 'lecon') {
@@ -116,8 +172,8 @@ async function targetOf(ctx: TenantContext, target: MemoryTarget): Promise<Cible
     }
     const { rows } = await tx.execute<{ id: string }>(sql`
       select s.id from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-        and s.id = ${target.id}`);
+      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+        and s.kind = ${target.cible === 'note' ? 'mcp_remember' : FIL} and s.id = ${target.id}`);
     return rows[0]?.id ?? null;
   });
 }
@@ -143,11 +199,17 @@ export async function restoreMemoryVersion(
 ): Promise<{ n: number } | 'depassee' | 'introuvable'> {
   const cible = await targetOf(ctx, input);
   if (cible === null) return 'introuvable';
-  const restored = await restoreVersion(ctx, {
-    ...(typeof cible === 'string' ? { sourceId: cible } : cible),
-    n: input.n,
-    depuis: input.depuis,
-  });
+  const { n, depuis } = input;
+  // Une note se remet par le chemin de writeNote, qui réécrit aussi son tour indexé (T57) ; un fil ou une leçon, par
+  // restoreVersion.
+  const restored =
+    input.cible === 'note' && typeof cible === 'string'
+      ? await restoreNote(ctx, { note: cible, n, depuis })
+      : await restoreVersion(ctx, {
+          ...(typeof cible === 'string' ? { sourceId: cible } : cible),
+          n,
+          depuis,
+        });
   if (typeof restored === 'object' || restored === 'depassee') return restored;
   // « gardee » ne vaut que pour la liste du serveur ; « illisible » : la version n'est pas à montrer.
   return 'introuvable';

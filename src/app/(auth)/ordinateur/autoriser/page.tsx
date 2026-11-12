@@ -6,6 +6,7 @@ import { Button } from '@/components/verre/ui/button';
 import { Notice } from '@/components/verre/ui/feedback';
 import { nb } from '@/lib/verre/nb';
 import { authorizeQuery, parseAuthorizeParams } from '@/server/auth/computer-authorize';
+import { notesRefusedAt } from '@/server/auth/members';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { authorizeComputerAction } from './actions';
@@ -29,6 +30,7 @@ const USAGE_LINES = ['p1', 'p2', 'p3'] as const;
 // va à l'onboarding, pas à la connexion.
 // Les cases que `leon setup` demande (`usages`, T64) : natives et cochées par défaut, pour partir avant l'hydratation ou
 // sans JavaScript ; une case qui ne partirait pas deviendrait un refus gardé. Sans le paramètre, aucune case.
+// Seule exception (T65, C16) : `noter` part décochée quand le réglage `noter` du compte est daté (un refus déjà donné).
 export default async function AuthorizeComputerPage({
   searchParams,
 }: {
@@ -49,6 +51,7 @@ export default async function AuthorizeComputerPage({
   const ctx = await getUserContext();
   if (!ctx) redirect('/bienvenue');
   const { organizationName } = await getViewerProfile(ctx);
+  const notesRefused = params.usages?.includes('noter') && (await notesRefusedAt(ctx)) !== null;
   const code = (chunks: ReactNode) => (
     <code className="font-mono text-[0.9em] text-fg">{chunks}</code>
   );
@@ -81,7 +84,7 @@ export default async function AuthorizeComputerPage({
                   type="checkbox"
                   name="usage"
                   value={usage}
-                  defaultChecked
+                  defaultChecked={!(usage === 'noter' && notesRefused)}
                   aria-describedby={`usage-${usage}-texte`}
                   className="mt-1 size-4 shrink-0 accent-accent"
                 />

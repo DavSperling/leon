@@ -80,7 +80,7 @@ describe('authorizePath et authorizeQuery', () => {
 });
 
 // Les cases que `leon setup` demande (T64, C16) : facultatives, et jamais une raison de refuser le lien. La page ne
-// montre que ce qu'elle sait montrer à ce lot (`lecture`).
+// montre que ce qu'elle sait montrer à ce lot (`lecture`, `rappel`, `noter`).
 describe('le paramètre usages (T64)', () => {
   it('rend les cases demandées que la page sait montrer, sans doublon', () => {
     expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture' })).toEqual({
@@ -90,16 +90,15 @@ describe('le paramètre usages (T64)', () => {
     expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture,lecture' })?.usages).toEqual([
       'lecture',
     ]);
-    // Dans l'ordre de la page (AUTHORIZE_USAGES), sans `noter`, qu'elle ne montre pas encore (T57).
-    expect(parseAuthorizeParams({ ...GOOD, usages: 'rappel,lecture,noter' })?.usages).toEqual([
-      'lecture',
-      'rappel',
-    ]);
+    // Dans l'ordre de la page (AUTHORIZE_USAGES), `noter` compris (T57), sans `resume`, qu'elle ne montre jamais.
+    expect(
+      parseAuthorizeParams({ ...GOOD, usages: 'noter,rappel,resume,lecture' })?.usages,
+    ).toEqual(['lecture', 'rappel', 'noter']);
   });
 
   it.each([
     ['une valeur inconnue', 'inconnu'],
-    ['un usage que la page ne montre pas encore', 'noter'],
+    ['un usage que la page ne montre pas encore', 'coulisses'],
     ['un usage qui n’est jamais coché par défaut', 'resume'],
     ['vide', ''],
     ['une chaîne trop longue', `lecture,${'x'.repeat(300)}`],
@@ -116,7 +115,7 @@ describe('le paramètre usages (T64)', () => {
     expect(authorizeQuery({ ...PARAMS, usages: ['lecture'] })).toBe(
       `port=4242&etat=${ETAT}&empreinte=${EMPREINTE}&usages=lecture`,
     );
-    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'noter' });
+    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'coulisses' });
     expect(ignored && authorizeQuery(ignored)).toBe(authorizeQuery(PARAMS));
   });
 

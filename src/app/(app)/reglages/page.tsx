@@ -29,7 +29,7 @@ import { directoryState } from '@/server/auth/annuaire';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { listGroups } from '@/server/auth/groupes';
-import { canInvite, getMembership, listMembers } from '@/server/auth/members';
+import { canInvite, getMembership, listMembers, notesRefusedAt } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
 import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
@@ -41,6 +41,7 @@ import { logError } from '@/server/log';
 import { LESSON_MAX } from '@/server/memory/lessons';
 import {
   listMemoryLessons,
+  listMemoryNotes,
   listMemoryRepos,
   listMemoryThreads,
 } from '@/server/memory/memory-section';
@@ -88,8 +89,20 @@ export default async function SettingsPage({
     managersSeeAll(ctx),
     signedInRecently(),
     // Une lecture qui échoue donne une erreur dans l'onglet, pas une page cassée ni une liste vide.
-    Promise.all([listMemoryThreads(ctx), listMemoryLessons(ctx), listMemoryRepos(ctx)]).then(
-      ([threads, lessons, repos]) => ({ threads, lessons, repos }),
+    Promise.all([
+      listMemoryThreads(ctx),
+      listMemoryLessons(ctx),
+      listMemoryNotes(ctx),
+      listMemoryRepos(ctx),
+      notesRefusedAt(ctx),
+    ]).then(
+      ([threads, lessons, notes, repos, refusedAt]) => ({
+        threads,
+        lessons,
+        notes,
+        repos,
+        notesOpen: refusedAt === null, // le réglage `noter` du compte (T65)
+      }),
       (error) => {
         logError('settings.memory', error);
         return null;

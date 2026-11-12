@@ -10,6 +10,7 @@ import * as registryModule from '@/server/embeddings/registry';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { LESSON_NOT_FOUND, THREAD_NOT_FOUND } from '@/server/mcp/tools/render';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
+import { writeNote } from '@/server/memory/notes';
 import { writeVersion } from '@/server/memory/versions';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
@@ -521,6 +522,45 @@ describe('POST /api/v1/versions d’une leçon', () => {
     expect(await texte(await post(API_PATHS.versions, marie.token, { id: sansDepot }))).toBe(
       THREAD_NOT_FOUND,
     );
+    expect((await readsBy(marie)).length).toBe(0);
+  });
+});
+
+// T57 : une note de leon note porte son projet ; une note de remember n'en a pas, ses versions ne se lisent que sur le site.
+describe('POST /api/v1/versions d’une note', () => {
+  it('liste les versions d’une note du projet ; celle de remember, d’un autre projet ou d’un collègue : introuvable', async () => {
+    const [paul, marie] = await team();
+    const note = async (owner: TenantContext, input: { projet?: string; outil?: string }) => {
+      const written = await writeNote(owner, {
+        texte: 'Le cache tombe le lundi.',
+        outil: input.outil ?? 'claude_code',
+        projet: input.projet,
+      });
+      if (typeof written !== 'object') throw new Error(`note non écrite : ${written}`);
+      return written.id;
+    };
+    const id = await note(paul, { projet: PROJECT });
+
+    const list = await texte(await post(API_PATHS.versions, paul.token, { id }));
+
+    expect(list).toContain(`<note id="${id}"`);
+    expect(list).toContain('>Le cache tombe le lundi.</version>');
+    expect(await texte(await post(API_PATHS.versions, paul.token, { id, n: 2 }))).toBe(
+      'Version 2 of this note is not readable, or does not exist.',
+    );
+    expect((await readsBy(paul)).map((row) => `${row.tool} ${row.sourceId}`)).toEqual([
+      `versions ${id}`,
+      `versions ${id}`,
+    ]);
+    for (const [who, other] of [
+      [paul, await note(paul, { outil: 'mcp:claude-ai' })],
+      [paul, await note(paul, { projet: 'github.com/acme/autre' })],
+      [marie, id],
+    ] as const) {
+      expect(await texte(await post(API_PATHS.versions, who.token, { id: other }))).toBe(
+        THREAD_NOT_FOUND,
+      );
+    }
     expect((await readsBy(marie)).length).toBe(0);
   });
 });

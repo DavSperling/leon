@@ -5,8 +5,9 @@
 // l'accord local en version 2 (C7, consent.ts). Sans lui (crochets installés avant ce chantier), le point seul.
 // Avec l'usage `lecture` de l'outil du crochet (T46 du plan de la mémoire à disposition), le bloc envoie aussi les
 // usages de cet outil, jamais ceux d'un autre, et la commande Leon posée sur le poste (leonCommand) : le serveur rend
-// alors le sommaire des fils et la consigne de lecture. Un serveur plus ancien que ces champs répond 400 : le point du
-// matin seul, comme pour un 404.
+// alors le sommaire des fils et la consigne de lecture. Avec l'usage `noter` (T57), les mêmes, et l'outil du crochet :
+// le serveur rend alors la phrase de `leon note`. Un serveur plus ancien que ces champs répond 400 : le point du matin
+// seul, comme pour un 404.
 //
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
@@ -283,9 +284,13 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
               projet,
               branche,
               session,
-              // Seulement avec `lecture` : le texte de l'accord de base ne dit que le projet, la branche et la session.
-              ...(consent.usages.includes('lecture')
+              // Seulement avec `lecture` ou `noter` : le texte de l'accord de base ne dit que le projet, la branche et
+              // la session. `outil` seulement avec `noter` (T57) : un serveur plus ancien le refuserait (400).
+              ...(consent.usages.includes('lecture') || consent.usages.includes('noter')
                 ? { usages: consent.usages, commande: await leonCommand(deps.home, deps.depot) }
+                : {}),
+              ...(consent.usages.includes('noter')
+                ? { outil: adapter?.kind ?? 'claude_code' }
                 : {}),
             })
           : null,

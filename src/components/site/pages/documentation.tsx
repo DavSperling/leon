@@ -222,6 +222,7 @@ export function DocumentationPage({
                       'start',
                       'lecture',
                       'rappel',
+                      'noter',
                       'resume',
                     ] as const
                   ).map((item) => (

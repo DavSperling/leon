@@ -45,6 +45,8 @@ export const members = pgTable('member', {
   onboardedAt: timestamp('onboardedAt', { withTimezone: true }),
   // Son manager a été choisi ou retiré à la main : l'import de l'annuaire n'y touche plus (0058).
   rattachementManuel: boolean('rattachementManuel').notNull().default(false),
+  // Le réglage `noter` du compte (0068, C16) : daté, `remember` refuse d'écrire ; nul, il écrit (members.ts).
+  noterRefuseLe: timestamp('noterRefuseLe', { withTimezone: true }),
 });
 
 // SSO d'entreprise d'un espace (0053, plugin @better-auth/sso) : lu ici pour l'écran des réglages, écrit par Better Auth.

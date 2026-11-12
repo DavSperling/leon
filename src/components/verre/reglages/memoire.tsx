@@ -1,14 +1,15 @@
 'use client';
 
-import { BookOpen, GitBranch } from 'lucide-react';
+import { BookOpen, GitBranch, StickyNote } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRef, useState, useTransition } from 'react';
+import { useOptimistic, useRef, useState, useTransition } from 'react';
 import {
   correctLessonAction,
   readMemoryVersionAction,
   restoreMemoryVersionAction,
   retireLessonAction,
+  setNotesOpenAction,
   writeLessonAction,
 } from '@/app/(app)/reglages/actions';
 import { repoOf } from '@/capture/turn';
@@ -22,14 +23,22 @@ import {
   Notice,
   Section,
   Select,
+  Switch,
   Textarea,
   toast,
 } from '@/components/verre';
 import { formatDate, formatDateTime } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
-import type { MemoryLesson, MemoryThread, MemoryVersion } from '@/server/memory/memory-section';
+import type {
+  MemoryLesson,
+  MemoryNote,
+  MemoryTarget,
+  MemoryThread,
+  MemoryVersion,
+} from '@/server/memory/memory-section';
 
-// La section Mémoire des réglages (T55 ; D33, D37) : les leçons de l'auteur et ses fils, avec leurs versions lisibles.
+// La section Mémoire des réglages (T55, T57 ; D33, D37, D38) : les leçons de l'auteur, ses fils et les notes de ses agents,
+// avec leurs versions lisibles.
 // Écrire, corriger et remettre exigent une connexion de moins d'une heure : `recent` vient de la page, et une action
 // qui rend « reconnexion » (l'heure a passé page ouverte) fait de même. Retirer reste possible.
 
@@ -112,8 +121,8 @@ function ErrorNotice({ error, max }: { error: ErrorKey | null; max: number }) {
   );
 }
 
-// `threads` : la partie des fils, où le seul geste coupé est « Remettre ».
-function Reconnect({ threads = false }: { threads?: boolean }) {
+// `putBackOnly` : les parties des fils et des notes, où le seul geste coupé est « Remettre ».
+function Reconnect({ putBackOnly = false }: { putBackOnly?: boolean }) {
   const t = useTranslations('memory');
   return (
     <Notice
@@ -125,10 +134,14 @@ function Reconnect({ threads = false }: { threads?: boolean }) {
         </Button>
       }
     >
-      {nb(t(threads ? 'reconnectThreads' : 'reconnect'))}
+      {nb(t(putBackOnly ? 'reconnectThreads' : 'reconnect'))}
     </Notice>
   );
 }
+
+// Une version plus ancienne que la dernière est à remettre : sans elle, la reconnexion n'a rien à débloquer.
+const hasOlderVersion = (items: { n: number; versions: MemoryVersion[] }[]) =>
+  items.some((item) => item.versions.some((version) => version.n !== item.n));
 
 // Une version de l'historique : son numéro, sa date, qui l'a écrite et pourquoi ; son texte à ouvrir si elle est
 // lisible ; « Remettre cette version » pour l'auteur, sauf pour la dernière.
@@ -139,7 +152,7 @@ function VersionRow({
   latest,
   ctl,
 }: {
-  cible: 'fil' | 'lecon';
+  cible: MemoryTarget['cible'];
   id: string;
   version: MemoryVersion;
   latest: number;
@@ -226,7 +239,7 @@ function History({
   ctl,
   describedBy,
 }: {
-  cible: 'fil' | 'lecon';
+  cible: MemoryTarget['cible'];
   id: string;
   versions: MemoryVersion[];
   latest: number;
@@ -521,12 +534,11 @@ function ThreadsSection({
     <Section title={t('threadsTitle')} description={t('threadsDescription')} className="mt-0">
       <ErrorNotice error={ctl.error} max={max} />
       {/* « Remettre » est le seul geste de cette partie : sans lui, rien à dire */}
-      {ctl.stale &&
-        threads.some((thread) => thread.versions.some((version) => version.n !== thread.n)) && (
-          <div className="mb-4">
-            <Reconnect threads />
-          </div>
-        )}
+      {ctl.stale && hasOlderVersion(threads) && (
+        <div className="mb-4">
+          <Reconnect putBackOnly />
+        </div>
+      )}
       {threads.length > 0 ? (
         <GlassCard className="p-1.5">
           <ul aria-label={t('threadsTitle')} className="divide-y divide-line">
@@ -568,7 +580,122 @@ function ThreadsSection({
   );
 }
 
-export type MemoryData = { threads: MemoryThread[]; lessons: MemoryLesson[]; repos: string[] };
+// Le réglage `noter` du compte (T65, C16), comme l'interrupteur des managers : il suit le clic tout de suite, et un refus
+// le remet comme la page le relit. Ni texte poussé ni connexion récente (D37).
+function NotesSwitch({ open }: { open: boolean }) {
+  const t = useTranslations('memory');
+  const [shown, setShown] = useOptimistic(open);
+  const [, startTransition] = useTransition();
+  const toggle = (next: boolean) =>
+    startTransition(async () => {
+      setShown(next);
+      try {
+        const { ok } = await setNotesOpenAction(next);
+        if (!ok) toast.error(t('notesToggleFailed'));
+      } catch {
+        toast.error(t('notesToggleFailed'));
+      }
+    });
+  return (
+    <GlassCard className="mb-4 grid gap-2 p-4">
+      <Switch
+        label={t('notesToggle')}
+        checked={shown}
+        onCheckedChange={toggle}
+        aria-describedby="notes-remember"
+      />
+      <p id="notes-remember" className="text-label text-muted">
+        {nb(t('notesToggleHint'))}
+      </p>
+    </GlassCard>
+  );
+}
+
+// Les notes de l'agent (D38) : le texte se lit dans l'historique, la liste n'en montre que le début. Aucune écriture
+// depuis le site, hors « Remettre cette version ».
+function NotesSection({
+  notes,
+  open,
+  max,
+  ctl,
+}: {
+  notes: MemoryNote[];
+  open: boolean;
+  max: number;
+  ctl: Control;
+}) {
+  const t = useTranslations('memory');
+  const locale = useLocale();
+  return (
+    <Section title={t('notesTitle')} description={t('notesDescription')} className="mt-0">
+      <NotesSwitch open={open} />
+      <ErrorNotice error={ctl.error} max={max} />
+      {ctl.stale && hasOlderVersion(notes) && (
+        <div className="mb-4">
+          <Reconnect putBackOnly />
+        </div>
+      )}
+      {notes.length > 0 ? (
+        <GlassCard className="p-1.5">
+          <ul aria-label={t('notesTitle')} className="divide-y divide-line">
+            {notes.map((note) => (
+              <li key={note.id} className="px-3 py-3.5">
+                <p
+                  id={`note-${note.id}`}
+                  className="text-body [overflow-wrap:anywhere] whitespace-pre-wrap text-fg"
+                >
+                  {note.titre}
+                </p>
+                <p className="mt-1 flex flex-wrap gap-x-1.5 text-label text-muted">
+                  {note.outil && (
+                    <>
+                      <span>{note.outil}</span>
+                      <span aria-hidden="true">·</span>
+                    </>
+                  )}
+                  {note.projet && (
+                    <>
+                      <span>{repoLabel(note.projet)}</span>
+                      <span aria-hidden="true">·</span>
+                    </>
+                  )}
+                  <span>
+                    <time dateTime={note.creeLe.toISOString()}>
+                      {t('writtenOn', { date: formatDate(note.creeLe, locale) })}
+                    </time>
+                  </span>
+                </p>
+                <History
+                  cible="note"
+                  id={note.id}
+                  versions={note.versions}
+                  latest={note.n}
+                  ctl={ctl}
+                  describedBy={`note-${note.id}`}
+                />
+              </li>
+            ))}
+          </ul>
+        </GlassCard>
+      ) : (
+        <EmptyState
+          icon={StickyNote}
+          title={t('noNotes')}
+          description={t('noNotesHint')}
+          className="py-8"
+        />
+      )}
+    </Section>
+  );
+}
+
+export type MemoryData = {
+  threads: MemoryThread[];
+  lessons: MemoryLesson[];
+  notes: MemoryNote[];
+  repos: string[];
+  notesOpen: boolean; // le réglage `noter` du compte est nul : `remember` écrit (T65)
+};
 
 /** L'onglet Mémoire : `data` est null quand la page n'a pas pu lire (une erreur, pas une liste vide). */
 export function MemorySection({
@@ -585,6 +712,7 @@ export function MemorySection({
   const stale = !recent || expired;
   const lessons = useControl(stale, () => setExpired(true));
   const threads = useControl(stale, () => setExpired(true));
+  const notes = useControl(stale, () => setExpired(true));
   if (!data) {
     return (
       <Notice tone="error" live="alert">
@@ -596,6 +724,7 @@ export function MemorySection({
     <div className="grid gap-12">
       <LessonsSection lessons={data.lessons} repos={data.repos} max={max} ctl={lessons} />
       <ThreadsSection threads={data.threads} max={max} ctl={threads} />
+      <NotesSection notes={data.notes} open={data.notesOpen} max={max} ctl={notes} />
     </div>
   );
 }

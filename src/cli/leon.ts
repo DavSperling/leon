@@ -32,7 +32,7 @@ import {
 import { installAntigravityHooks, uninstallAntigravityHooks } from './install-antigravity';
 import { codexHome, installCodexHook, uninstallCodexHook } from './install-codex';
 import { installCursorHooks, uninstallCursorHooks } from './install-cursor';
-import { installHooks } from './install-hooks';
+import { installHooks, notesRefusal } from './install-hooks';
 import {
   type LoginDeps,
   type LoginResult,
@@ -44,6 +44,7 @@ import {
   runLogin,
   runLogout,
 } from './login';
+import { runNoteCommand } from './note-command';
 import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
 import { runReadCommand } from './read-commands';
@@ -84,8 +85,9 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`resume\`) once for all these tools; when it opens the browser, the
-                       authorization page shows \`lecture\` as a box, yours to tick or untick.
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) once for all these tools; when it opens
+                       the browser, the authorization page shows \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to
+                       tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -137,12 +139,24 @@ Commands:
   thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the
                        current branch)
   search <query>       Search Leon, within this repository only
-  versions <id>        List the readable versions of a thread's state, or of a lesson
+  versions <id>        List the readable versions of a thread's state, of a lesson, or of a note saved for this
+                       project
       --read <n>           print version n instead (nothing is restored from your computer)
   lessons [id]         Print the lessons you accepted for this repository, and those that apply to all your
                        repositories (with an id: that lesson only). Lessons are written on the website only
                        These five print to standard output and write nothing on disk. They need a connection and
                        the reading consent (\`lecture\`) of one of your code tools, which leon setup offers in a terminal
+  note <text>          Save a private note of the agent to Leon, or the next version of one. Only with the \`noter\`
+                       consent of that tool in ~/.leon/accord.json: then the text, with secrets masked (4,000
+                       characters at most), the project, the tool, the session and the consents of that tool go to
+                       your Leon server. The note stays private to you; Leon's search finds it, and it is never put as
+                       is in the context of a session. Prints the id and the version number, writes nothing on disk.
+                       The start block of a session gives this command with --tool and --session filled in, and
+                       -- before the text, so that a text starting with a dash is not read as an option
+      --tool <tool>        the code tool that writes it: claude_code, codex, cursor or antigravity (required)
+      --session <id>       the session it is written in
+      --note <id>          with --version: write the next version of this note (only from the tool that wrote it)
+      --version <n>        the number of the last version of that note you read
   login                Connect this computer to Leon: opens your browser to authorize it, then saves the connection
                        in ~/.leon/connexion.json (the commands below use it; LEON_URL and LEON_TOKEN, when both are
                        set, take precedence)
@@ -160,7 +174,7 @@ Commands:
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
                        after confirmation (only the consent when the hooks are already there); in a terminal, then
-                       the usages (\`lecture\`, \`resume\`) that are neither accepted nor refused
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
@@ -502,7 +516,13 @@ async function runInstallHooks(args: string[]): Promise<number> {
   const asker = createAsker();
   try {
     // Les crochets appellent le lanceur (K9) : sous la forme clone, il lance pnpm dans ce dépôt (setup.ts).
-    const io = { home: homedir(), out: console.log, err: console.error, ask: asker.ask };
+    const io = {
+      home: homedir(),
+      out: console.log,
+      err: console.error,
+      ask: asker.ask,
+      refuseNotes: notesRefusal(fetch, homedir()), // un « non » à `noter` coupe aussi `remember` (T65)
+    };
     const assumeYes = values.oui ?? false;
     // Seul un terminal fait demander un usage (D30) : une réponse lue d'un tube peut venir d'un agent.
     const usages = { home: io.home, assumeYes, interactive: process.stdin.isTTY === true };
@@ -675,6 +695,17 @@ async function main(argv: string[]): Promise<number> {
       command === 'lessons'
     ) {
       return await runReadCommand(command, args, {
+        env: process.env,
+        home: homedir(),
+        cwd: process.cwd(),
+        git: gitInDirectory,
+        fetch,
+        out: console.log,
+        err: console.error,
+      });
+    }
+    if (command === 'note') {
+      return await runNoteCommand(args, {
         env: process.env,
         home: homedir(),
         cwd: process.cwd(),

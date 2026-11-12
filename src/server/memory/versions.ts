@@ -81,8 +81,9 @@ export type WriteInput = {
 // 'gardee' : la liste du serveur n'écrase pas une version lisible du modèle (D33).
 export type WriteResult = { n: number } | 'depassee' | 'gardee' | 'introuvable';
 
-// Un compteur, relevé par T38 : une ligne par événement, sans texte ni id.
-const count = (evenement: 'ecrite' | 'depassee' | 'restauree') =>
+// Un compteur, relevé par T38 : une ligne par événement, sans texte ni id. restoreNote (notes.ts) compte aussi ses
+// restaurations.
+export const count = (evenement: 'ecrite' | 'depassee' | 'restauree') =>
   console.info('[leon]', `versions.${evenement}`);
 
 // `o` : la version d'origine d'un texte restauré.
@@ -135,7 +136,8 @@ async function latest(tx: Tx, ctx: TenantContext, cible: Cible) {
   return rows[0];
 }
 
-async function readable(tx: Tx, ctx: TenantContext, cible: Cible, n: number) {
+// La version n si elle est lisible, dans la transaction de l'appelant (la restauration d'une note, notes.ts).
+export async function readable(tx: Tx, ctx: TenantContext, cible: Cible, n: number) {
   const { rows } = await tx.execute<Row>(sql`
     select ${COLUMNS} ${FROM(ctx, cible)} and v.n = ${n} and ${LISIBLE}`);
   return rows[0] ? toVersion(rows[0]) : null;
@@ -323,9 +325,10 @@ export async function latestIn(
 }
 
 // Remet la version n, si elle est lisible et que la dernière est encore `depuis` : v(depuis+1), écrite par l'humain,
-// avec son texte et ses entrées. Seule l'action du site l'appelle (T55) ; une note passera par writeNote (T57).
-// `restaure_de` pointe vers le texte d'origine : une version du modèle restaurée suit ses règles (D33). La cible est
-// un fil ou une note (`sourceId`), ou une leçon (`leconId`).
+// avec son texte et ses entrées. Seule l'action du site l'appelle (T55). Une note n'y passe pas : elle se restaure par
+// le chemin de writeNote (restoreNote, T57), où son tour indexé prend le texte restauré (D33, D38), et l'action du
+// site l'y envoie (restoreMemoryVersion). `restaure_de` pointe vers le texte d'origine : une version du modèle
+// restaurée suit ses règles (D33). La cible est un fil (`sourceId`) ou une leçon (`leconId`).
 export async function restoreVersion(
   ctx: TenantContext,
   input: { sourceId?: string; leconId?: string; n: number; depuis: number },

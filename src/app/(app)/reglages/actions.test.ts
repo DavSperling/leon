@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApiToken, revokeApiToken } from '@/server/auth/api-tokens';
 import { auth } from '@/server/auth/auth';
 import { DeletionRefused, deleteAccount, deleteOrganization } from '@/server/auth/delete-account';
-import { createInvitationLink, setMemberPlacement } from '@/server/auth/members';
+import { createInvitationLink, setMemberPlacement, setNotesRefused } from '@/server/auth/members';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
@@ -37,6 +37,7 @@ import {
   setDepotEquipeAction,
   setLocaleAction,
   setMemberPlacementAction,
+  setNotesOpenAction,
   updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
@@ -69,6 +70,7 @@ vi.mock('@/server/auth/api-tokens', () => ({ createApiToken: vi.fn(), revokeApiT
 vi.mock('@/server/auth/members', () => ({
   createInvitationLink: vi.fn(),
   setMemberPlacement: vi.fn(),
+  setNotesRefused: vi.fn(),
 }));
 vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
 // La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
@@ -846,6 +848,32 @@ describe('les actions de la section Mémoire', () => {
     ]);
   });
 
+  it('remettre une version d’une note : la cible note, dépassée « modifiée entre-temps »', async () => {
+    vi.mocked(restoreMemoryVersion)
+      .mockResolvedValueOnce({ n: 3 })
+      .mockResolvedValueOnce('depassee');
+    const note = { cible: 'note' as const, id: FIL, n: 1, depuis: 2 };
+
+    await expect(restoreMemoryVersionAction(note)).resolves.toEqual({ ok: true, n: 3 });
+    await expect(restoreMemoryVersionAction(note)).resolves.toEqual({ error: 'modifiee' });
+
+    expect(vi.mocked(restoreMemoryVersion).mock.calls).toEqual([
+      [ctx, note],
+      [ctx, note],
+    ]);
+  });
+
+  it('avec une session de plus d’une heure, remettre une note donne « reconnexion », sans rien écrire', async () => {
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+
+    await expect(
+      restoreMemoryVersionAction({ cible: 'note', id: FIL, n: 1, depuis: 2 }),
+    ).resolves.toEqual({ error: 'reconnexion' });
+
+    expect(restoreMemoryVersion).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it('avec une session de plus d’une heure, écrire, corriger ou remettre donne « reconnexion », sans rien écrire', async () => {
     vi.mocked(signedInRecently).mockResolvedValue(false);
 
@@ -888,10 +916,11 @@ describe('les actions de la section Mémoire', () => {
       ok: true,
       version,
     });
-    await expect(readMemoryVersionAction({ cible: 'fil', id: FIL, n: 2 })).resolves.toEqual({
+    await expect(readMemoryVersionAction({ cible: 'note', id: FIL, n: 2 })).resolves.toEqual({
       error: 'introuvable',
     });
     expect(readMemoryVersion).toHaveBeenCalledWith(ctx, { cible: 'fil', id: FIL, n: 1 });
+    expect(readMemoryVersion).toHaveBeenCalledWith(ctx, { cible: 'note', id: FIL, n: 2 });
   });
 
   it.each([
@@ -903,7 +932,7 @@ describe('les actions de la section Mémoire', () => {
     ],
     [
       'remettre, une cible inconnue',
-      () => restoreMemoryVersionAction({ cible: 'note', id: FIL, n: 1, depuis: 2 } as never),
+      () => restoreMemoryVersionAction({ cible: 'session', id: FIL, n: 1, depuis: 2 } as never),
     ],
     [
       'remettre, un id qui n’est pas un uuid',
@@ -950,5 +979,44 @@ describe('les actions de la section Mémoire', () => {
 
     for (const writer of [...writers(), vi.mocked(retireLesson), vi.mocked(readMemoryVersion)])
       expect(writer).not.toHaveBeenCalled();
+  });
+});
+
+// T65 (C16) : l'interrupteur des notes de la section Mémoire, sous la session du navigateur, dans les deux sens. Il
+// n'écrit aucun texte poussé : pas de connexion récente exigée (D37).
+describe('setNotesOpenAction', () => {
+  beforeEach(() => {
+    vi.mocked(setNotesRefused).mockResolvedValue(true);
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+  });
+
+  it('coupe puis rouvre les notes sur la ligne du lecteur, même connecté depuis plus d’une heure', async () => {
+    await expect(setNotesOpenAction(false)).resolves.toEqual({ ok: true });
+    await expect(setNotesOpenAction(true)).resolves.toEqual({ ok: true });
+
+    expect(vi.mocked(setNotesRefused).mock.calls).toEqual([
+      [ctx, true],
+      [ctx, false],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith('/reglages');
+  });
+
+  it('une ligne absente (plus membre) rend ok: false', async () => {
+    vi.mocked(setNotesRefused).mockResolvedValue(false);
+
+    await expect(setNotesOpenAction(false)).resolves.toEqual({ ok: false });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([['oui'], [null], [1]])('%j : ok: false, rien ne change', async (value) => {
+    await expect(setNotesOpenAction(value as never)).resolves.toEqual({ ok: false });
+    expect(setNotesRefused).not.toHaveBeenCalled();
+  });
+
+  it('sans session du navigateur, rien ne change : la connexion', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(setNotesOpenAction(false)).rejects.toThrow('NEXT_REDIRECT /connexion');
+    expect(setNotesRefused).not.toHaveBeenCalled();
   });
 });

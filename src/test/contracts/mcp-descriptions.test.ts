@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { VERSION_N_MAX } from '@/capture/api-contract';
 import { TOOL_KINDS } from '@/capture/turn';
 import { MCP_INSTRUCTIONS } from '@/server/mcp/server';
 import {
@@ -7,6 +8,7 @@ import {
   NEIGHBOUR_TURNS,
 } from '@/server/mcp/tools/fetch-tool';
 import { SearchOutputSchema } from '@/server/mcp/tools/output-schemas';
+import { NOTES_TURNED_OFF, RememberInputSchema } from '@/server/mcp/tools/remember-tool';
 import {
   SEARCH_DESCRIPTION,
   SEARCH_PAGE_MAX,
@@ -20,6 +22,7 @@ import {
   readToolFilters,
 } from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
+import en from '../../../messages/en.json';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
 // citent des noms et des chiffres du code. S'ils ne les reprennent pas, ils mentent sans qu'aucun test ne casse.
@@ -175,5 +178,35 @@ describe('description de fetch', () => {
   it('nomme les trois identifiants, dont id, le nom que ChatGPT impose', () => {
     expect(Object.keys(FetchInputSchema.shape).sort()).toEqual(['id', 'passageId', 'sourceId']);
     for (const name of ['id', 'passageId', 'sourceId']) expect(FETCH_DESCRIPTION).toContain(name);
+  });
+});
+
+// T57 (C14) : remember écrit aussi la version suivante d'une note qu'il a déposée ; ses paramètres le disent, et rien
+// n'y restaure (D33).
+describe('description de remember', () => {
+  it('nomme note, l’id d’une note de remember, et version, le numéro de sa dernière version lue', () => {
+    expect(Object.keys(RememberInputSchema.shape).sort()).toEqual([
+      'about',
+      'note',
+      'text',
+      'version',
+    ]);
+    expect(description(RememberInputSchema.shape.note)).toContain('remember');
+    expect(description(RememberInputSchema.shape.version)).toContain('note');
+    expect(RememberInputSchema.shape.version.safeParse(VERSION_N_MAX + 1).success).toBe(false);
+    expect(
+      Object.values(RememberInputSchema.shape)
+        .map((schema) => description(schema))
+        .join(' '),
+    ).not.toMatch(/restor|restaur/i);
+  });
+});
+
+// T65 (C16) : le refus de remember, réglage `noter` daté, dit où le rouvrir, par les noms anglais du site : la section
+// Mémoire (son onglet) des réglages.
+describe('refus de remember quand les notes sont coupées', () => {
+  it('nomme l’onglet Mémoire et les réglages du site, tels que le site anglais les nomme', () => {
+    expect(NOTES_TURNED_OFF).toContain(`${en.settings.tabMemory} section`);
+    expect(NOTES_TURNED_OFF).toContain(`website ${en.navigation.settings.toLowerCase()}`);
   });
 });

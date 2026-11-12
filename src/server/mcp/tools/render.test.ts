@@ -477,6 +477,7 @@ describe('renderFil', () => {
 
 const versions = (overrides: Partial<VersionsRead> = {}): VersionsRead => ({
   id: FIL_ID,
+  kind: 'fil',
   titre: 'paul/fil',
   n: null,
   versions: [
@@ -706,7 +707,9 @@ describe('renderVersions d’une leçon', () => {
 
   it('la liste est balisée lecon, et les textes fixes parlent d’une leçon', () => {
     expect(
-      renderVersions({ id: FIL_ID, titre: '', n: null, versions: [one], lecon: true }).split('\n'),
+      renderVersions({ id: FIL_ID, titre: '', n: null, versions: [one], kind: 'lecon' }).split(
+        '\n',
+      ),
     ).toEqual([
       DATA_GUARD_LINE,
       `<lecon id="${FIL_ID}">`,
@@ -714,10 +717,10 @@ describe('renderVersions d’une leçon', () => {
       '</lecon>',
       'To read one version, ask for it by its number.',
     ]);
-    expect(renderVersions({ id: FIL_ID, titre: '', n: null, versions: [], lecon: true })).toBe(
+    expect(renderVersions({ id: FIL_ID, titre: '', n: null, versions: [], kind: 'lecon' })).toBe(
       'No readable version of this lesson.',
     );
-    expect(renderVersions({ id: FIL_ID, titre: '', n: 3, versions: [], lecon: true })).toBe(
+    expect(renderVersions({ id: FIL_ID, titre: '', n: 3, versions: [], kind: 'lecon' })).toBe(
       'Version 3 of this lesson is not readable, or does not exist.',
     );
   });

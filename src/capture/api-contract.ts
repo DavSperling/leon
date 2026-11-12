@@ -18,6 +18,8 @@ export const API_PATHS = {
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
   lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
+  noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
+  usages: '/api/v1/usages', // POST : un « non » à `noter` dans le terminal coupe `remember` pour le compte (C16)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -111,10 +113,10 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
 // Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
-// `rappel` (T49, avec son crochet) ; T57 y ajoutera `noter`. À part de USAGES : la page ne montre, et `leon setup` ne
-// demande, que ce qu'un installateur de ce lot sait écrire (`rappel` pour les quatre outils, depuis l'essai
-// d'Antigravity 2.0.6 du 11/11).
-export const AUTHORIZE_USAGES = ['lecture', 'rappel'] as const satisfies readonly Usage[];
+// `rappel` (T49, avec son crochet), puis `noter` (T57, sans crochet), dans l'ordre des questions du terminal. À part de
+// USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de ce lot sait écrire (les trois
+// pour les quatre outils, `rappel` depuis l'essai d'Antigravity 2.0.6 du 11/11).
+export const AUTHORIZE_USAGES = ['lecture', 'rappel', 'noter'] as const satisfies readonly Usage[];
 export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
@@ -159,7 +161,9 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
 // journaux d'URL. `usages` : ceux de l'outil dont le crochet demande le bloc ; avec `lecture`, le sommaire de ses fils
 // et la consigne de lecture, qui cite `commande` (T46 du plan de la mémoire à disposition). Les deux sont facultatifs :
-// une CLI plus ancienne reçoit le bloc d'avant.
+// une CLI plus ancienne reçoit le bloc d'avant. `outil` (C14, T57) : l'outil du crochet, que la CLI n'envoie qu'avec
+// son usage `noter` (un serveur plus ancien refuserait le champ, et le bloc avec lui) ; la phrase de `leon note` le cite
+// avec la session.
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
 // La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
@@ -174,6 +178,7 @@ export const ContextRequestSchema = z
     max: z.number().int().positive().optional(),
     usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
     commande: CommandeSchema.optional(),
+    outil: z.enum(CODE_SESSION_KINDS).optional(),
   })
   .strict();
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;
@@ -236,3 +241,34 @@ export const RappelRequestSchema = z
 export type RappelRequest = z.infer<typeof RappelRequestSchema>;
 export const RappelResponseSchema = z.object({ texte: z.string() });
 export type RappelResponse = z.infer<typeof RappelResponseSchema>;
+
+// Les notes de l'agent (C14, D38) : une note privée, neuve, ou la version suivante d'une note (`note` et `version`,
+// ensemble), en compare-and-set, seulement depuis le même outil. `texte` est masqué sur le poste, puis de nouveau par le
+// serveur. `session` est une indication déclarée. Sans `noter` dans `usages`, le serveur refuse. 201 { id, n }, ou 409
+// (version dépassée, autre outil, note introuvable). Un serveur ancien répond 404 : la commande le dit sur la sortie
+// d'erreur, avec le code 0. 16 Kio : 4 000 caractères peuvent peser 16 Ko en JSON, comme le rappel.
+export const NOTER_BODY_MAX_BYTES = 16 * 1024;
+export const NOTE_TEXTE_MAX = 4000;
+export const NoterRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    outil: z.enum(CODE_SESSION_KINDS),
+    session: z.string().min(1).max(200).optional(),
+    texte: z.string().min(1).max(NOTE_TEXTE_MAX),
+    note: z.uuid().optional(),
+    version: z.number().int().min(1).max(VERSION_N_MAX).optional(),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length),
+  })
+  .strict()
+  .refine((body) => (body.note === undefined) === (body.version === undefined));
+export type NoterRequest = z.infer<typeof NoterRequestSchema>;
+export const NoterResponseSchema = z.object({ id: z.uuid(), n: z.number().int().positive() });
+export type NoterResponse = z.infer<typeof NoterResponseSchema>;
+
+// Le refus de `noter` pour le compte (C16, T65) : l'installateur l'envoie sur un « non » dans le terminal, avec la
+// connexion de l'ordinateur, et le serveur date le réglage du membre ; `remember` refuse alors d'écrire. Un refus
+// seulement : le jeton d'un ordinateur est lisible de tout agent du poste, rouvrir passe par le navigateur (la section
+// Mémoire du site). 204, sans corps ; un serveur ancien répond 404, et l'installation continue.
+export const USAGES_BODY_MAX_BYTES = 1024;
+export const UsagesRequestSchema = z.strictObject({ noter: z.literal(false) });
+export type UsagesRequest = z.infer<typeof UsagesRequestSchema>;

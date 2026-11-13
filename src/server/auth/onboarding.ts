@@ -1,4 +1,5 @@
 import { and, count, eq, isNull, sql } from 'drizzle-orm';
+import { cache } from 'react';
 import { z } from 'zod';
 import {
   type CompanySize,
@@ -56,21 +57,24 @@ export function spaceRole(role: string): 'owner' | 'admin' | 'member' {
   return roles.includes('admin') ? 'admin' : 'member';
 }
 
-export async function readOnboardingMember(ctx: TenantContext): Promise<OnboardingMember | null> {
-  const [row] = await db
-    .select({
-      role: members.role,
-      department: members.department,
-      job: members.job,
-      seniority: members.seniority,
-      goals: members.goals,
-      onboardedAt: members.onboardedAt,
-    })
-    .from(members)
-    .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
-    .limit(1);
-  return row ?? null;
-}
+// cache() : lue par le layout et par des pages, une seule fois par rendu (même contexte, voir session.ts).
+export const readOnboardingMember = cache(
+  async (ctx: TenantContext): Promise<OnboardingMember | null> => {
+    const [row] = await db
+      .select({
+        role: members.role,
+        department: members.department,
+        job: members.job,
+        seniority: members.seniority,
+        goals: members.goals,
+        onboardedAt: members.onboardedAt,
+      })
+      .from(members)
+      .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+      .limit(1);
+    return row ?? null;
+  },
+);
 
 // La condition d'écriture est dans le SQL : « onboardedAt » nul, et pour le propriétaire seul, le rôle owner.
 const pending = (ctx: TenantContext) =>

@@ -118,13 +118,13 @@ async function Home({ ctx }: { ctx: TenantContext }) {
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
     optional('accueil.point', homeBriefing(ctx)),
-    optional('accueil.recentes', listDiscussions(ctx)),
+    optional('accueil.recentes', listDiscussions(ctx, SHELL_RECENTS)),
   ]);
   const questions = modelAvailable ? await askSuggestions(member) : [];
   const name = profile?.userName?.trim().split(/\s+/)[0] || null;
   const now = new Date();
   const sources = briefing?.sources.map(({ sourceId: _id, ...source }) => source);
-  const recents = (discussions ?? []).slice(0, SHELL_RECENTS);
+  const recents = discussions ?? [];
   const aside = recents.length > 0 || Boolean(suggestion);
 
   return (

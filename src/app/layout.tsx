@@ -16,11 +16,13 @@ const schibsted = Schibsted_Grotesk({
   variable: '--font-schibsted',
 });
 // Seulement pour les mots d'un document d'origine (OriginalSheet, src/components/verre/ui/original-sheet.tsx).
+// Pas préchargée : elle n'est téléchargée que par la page qui l'écrit, pas par toutes.
 const stix = STIX_Two_Text({
   subsets: ['latin'],
   weight: '400',
   style: ['normal', 'italic'],
   display: 'swap',
+  preload: false,
   variable: '--font-stix',
 });
 // Seulement pour du vrai code (commande, jeton, adresse). Sans police de repli calquée sur Arial : en attendant
@@ -29,6 +31,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   display: 'swap',
+  preload: false, // comme STIX : téléchargée par la page qui écrit du code
   variable: '--font-geist-mono',
   adjustFontFallback: false,
 });

@@ -4,7 +4,7 @@ import { type BriefingSection, parseBriefing } from '@/lib/briefing-view';
 import type { CitationView, DiscussionCitation, SourceVisibility } from '@/lib/discussion-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { briefings } from '@/server/db/schema/search';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { sourceInfoFrom, textArray } from '@/server/search/filters-sql';
 
@@ -88,11 +88,12 @@ export type BriefingSource = {
 export async function briefingSources(
   ctx: TenantContext,
   sourceIds: readonly string[],
+  within?: Tx,
 ): Promise<BriefingSource[]> {
   const ids = sourceIds.map((id) => id.toLowerCase()).slice(0, DETAILS_MAX);
   const wanted = ids.filter(isUuid);
   if (wanted.length === 0) return [];
-  const { rows } = await withTenant(ctx, (tx) =>
+  const read = (tx: Tx) =>
     tx.execute<{
       id: string;
       kind: string;
@@ -108,8 +109,8 @@ export async function briefingSources(
                order by t.ts, t.created_at, t.id, p.ord
                limit 1) as passage_id
       from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(wanted)}::uuid[])`),
-  );
+      where s.tenant_id = ${ctx.tenantId} and s.id = any(${textArray(wanted)}::uuid[])`);
+  const { rows } = await (within ? read(within) : withTenant(ctx, read));
   const found = new Map(rows.map((row) => [row.id, row]));
   return ids.flatMap((id, index) => {
     const row = found.get(id);
@@ -137,8 +138,9 @@ export async function briefingSources(
 export async function homeBriefing(
   ctx: TenantContext,
 ): Promise<{ sections: BriefingSection[]; sources: BriefingSource[]; preparedAt: Date } | null> {
-  const [row] = await withTenant(ctx, (tx) =>
-    tx
+  // le point et ses sources dans la même transaction : une seule ouverture au lieu de deux
+  return withTenant(ctx, async (tx) => {
+    const [row] = await tx
       .select({
         markdown: briefings.markdown,
         sourceIds: briefings.sourceIds,
@@ -147,11 +149,13 @@ export async function homeBriefing(
       .from(briefings)
       .where(eq(briefings.userId, ctx.userId))
       .orderBy(sql`${briefings.lastReadAt} desc nulls last`, desc(briefings.preparedAt))
-      .limit(1),
-  );
-  const sections = row ? parseBriefing(row.markdown) : null;
-  if (!row || !sections) return null;
-  const wanted = [...new Set(row.sourceIds)];
-  const sources = await briefingSources(ctx, wanted);
-  return sources.length < wanted.length ? null : { sections, sources, preparedAt: row.preparedAt };
+      .limit(1);
+    const sections = row ? parseBriefing(row.markdown) : null;
+    if (!row || !sections) return null;
+    const wanted = [...new Set(row.sourceIds)];
+    const sources = await briefingSources(ctx, wanted, tx);
+    return sources.length < wanted.length
+      ? null
+      : { sections, sources, preparedAt: row.preparedAt };
+  });
 }

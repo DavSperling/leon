@@ -1,4 +1,5 @@
 import { and, count, desc, eq, inArray, max, ne, notLike, or, sql } from 'drizzle-orm';
+import { cache } from 'react';
 import { CAPTURE_KINDS, PROVIDER_IDS, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -109,7 +110,7 @@ export async function listSources(
 }
 
 // La dernière capture de l'utilisateur par canal, quelle que soit la page, dans l'ordre de CAPTURE_KINDS.
-export async function channelHealth(ctx: TenantContext): Promise<ChannelHealth[]> {
+export const channelHealth = cache(async (ctx: TenantContext): Promise<ChannelHealth[]> => {
   const captures = await withTenant(ctx, (tx) =>
     tx
       .select({ kind: sources.kind, lastCaptureAt: max(sources.lastTurnAt) })
@@ -123,4 +124,4 @@ export async function channelHealth(ctx: TenantContext): Promise<ChannelHealth[]
     kindLabel: SOURCE_KIND_LABELS[kind],
     lastCaptureAt: lastByKind.get(kind) ?? null,
   }));
-}
+});

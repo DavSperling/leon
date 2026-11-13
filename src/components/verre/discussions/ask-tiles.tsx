@@ -4,12 +4,11 @@ import { ArrowUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { startTransition, useActionState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
-import { Thing, ThingGrid, toneOf } from '@/components/verre';
 import { cn, nb } from '@/lib/verre';
 
-// « Essayez de demander » : trois questions en tuiles. Un clic ouvre la discussion et Leon y répond tout de suite
-// (comme le champ : une discussion gardée, une réponse du modèle). Toutes les tuiles se figent pendant l'envoi : un
-// double clic ne crée pas deux discussions.
+// « Essayez de demander » : trois questions, en puces sous le champ de l'Accueil, en lignes sous celui d'une nouvelle
+// discussion. Un clic ouvre la discussion et Leon y répond tout de suite (comme le champ : une discussion gardée, une
+// réponse du modèle). Toutes se figent pendant l'envoi : un double clic ne crée pas deux discussions.
 // Le trait qui passe sous la question pointée : rose, vert, bleu, dans l'ordre des trois traits du champ.
 const STROKES = ['before:bg-m1', 'before:bg-m2', 'before:bg-m3'] as const;
 // Devant chaque question, un des trois traits du champ, à sa longueur : la liste est signée comme lui.
@@ -80,20 +79,25 @@ export function AskTiles({
           ))}
         </ul>
       ) : (
-        <ThingGrid cols={3}>
+        // sous le champ de l'Accueil : des puces discrètes ; le surligneur passe sous la question qu'on pointe, dans
+        // les trois couleurs des traits du champ (.hl-pass, kit.css)
+        <ul aria-label={t('examplesLabel')} className="flex flex-wrap gap-2">
           {questions.map((question, i) => (
-            <Thing
-              key={question}
-              onClick={() => ask(question)}
-              disabled={pending}
-              wrap
-              chevron={false}
-              // les trois traits du champ où l'on demande : rose, vert, bleu, sous la question qu'on pointe
-              hl={toneOf((i % 3) + 1)}
-              name={nb(question)}
-            />
+            <li key={question}>
+              <button
+                type="button"
+                onClick={() => ask(question)}
+                disabled={pending}
+                className={cn(
+                  'hl-pass inline-flex min-h-8 items-center rounded-full border border-line bg-sheet px-3.5 py-1 text-left text-ui leading-[1.3] text-fg transition-[border-color,scale,opacity] duration-150 hover:border-line-strong active:scale-[.98] disabled:opacity-60 max-shell:min-h-11',
+                  `hl-${(i % 3) + 1}`,
+                )}
+              >
+                <span className="hl -mx-[0.14em]">{nb(question)}</span>
+              </button>
+            </li>
           ))}
-        </ThingGrid>
+        </ul>
       )}
       {state.error && (
         <p role="alert" className="mt-2 text-ui text-destructive">

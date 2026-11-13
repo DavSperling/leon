@@ -224,8 +224,10 @@ button around it. No ring: the shell adds its own on hover and focus.
 
 `.things` / `.things-3` (the grid) · `.tl` + `.card` | `.tile`, `.tl__pic`, `.tl__id`, `.tl__name`, `.tl__sub`,
 `.tl__dot`, `.tl__chev`, `.tl__pill` (`--ink`), `.is-err`, `.tl--wrap` · `.c1`…`.c4` / `.hl-1`…`.hl-4` (set
-`--flag`, `--hl`, `--hl-deep`) · `.tag`, `.flag.flag--left` · `.strokes` · `.hl` (`.hl--a`, `.hl--b`),
-`.hl-arrive`, `.answer`, `.seg` · `.cite`, `.num`, `.nosrc` · `.mark` (stroke under a name on hover of its `.tl`),
+`--flag`, `--hl`, `--hl-deep`) · `.tag`, `.flag.flag--left` · `.strokes` (`.strokes--draw`: drawn once on
+arrival, the Home field) · `.hl` (`.hl--a`, `.hl--b`), `.hl-arrive`, `.hl-pass` (on a parent: the `.hl` inside is ink
+at rest, its stroke passes under it on hover and keyboard focus; a line of the briefing, a question to try),
+`.answer`, `.seg` · `.cite`, `.num`, `.nosrc` · `.mark` (stroke under a name on hover of its `.tl`),
 `.mark.is-on` (done, green, once), `.mark.is-working` (amber, once), `.reading-line` · `.work` (a 4px stroke along
 the bottom edge of a `relative` sheet; it runs once when the sheet has `.is-working`) · `.pill-sweep` · `.facts`,
 `.statusrow`, `.where`, `.panel-done`, `.panel-foot` · `.well`, `.doc`, `.doc__meta`, `.doc__body` · `.layer-side`

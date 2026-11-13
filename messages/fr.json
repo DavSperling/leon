@@ -373,9 +373,9 @@
       "title": "Point du matin",
       "did": "Ce que vous avez fait",
       "changed": "Ce qui a changé",
-      "open": "Ce qui reste ouvert"
+      "open": "Encore ouvert"
     },
-    "tryAsking": "Essayez de demander",
+    "ask": "Demander ou chercher dans tout ce que Leon a gardé",
     "askRecent": "Qu’est-ce qui a bougé cette semaine qui me concerne ?",
     "askFallback": {
       "one": "Sur quoi ai-je travaillé cette semaine ?",

@@ -373,9 +373,9 @@
       "title": "Morning briefing",
       "did": "What you did",
       "changed": "What changed",
-      "open": "What is still open"
+      "open": "Still open"
     },
-    "tryAsking": "Try asking",
+    "ask": "Ask or search everything Leon has saved",
     "askRecent": "What changed this week that concerns me?",
     "askFallback": {
       "one": "What did I work on this week?",

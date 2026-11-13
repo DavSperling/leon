@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-prompt';
 import type { SourceInfo } from '@/server/search/types';
-import { parseBriefing } from './briefing-view';
+import { briefingFact, parseBriefing } from './briefing-view';
 
 const NOW = new Date('2026-11-12T06:00:00.000Z');
 const source = (id: string): SourceInfo => ({
@@ -71,5 +71,26 @@ describe('parseBriefing : le point gardé, tel que l’Accueil le montre', () =>
     expect(parseBriefing(renderEmptyBriefing('github.com/acme/leon', NOW, 14))).toBeNull();
     expect(parseBriefing(stored('## What you did\n'))).toBeNull();
     expect(parseBriefing('')).toBeNull();
+  });
+});
+
+describe('briefingFact : le fait du jour, sous le bonjour', () => {
+  const did = { title: 'What you did', lines: [{ text: 'Renewed the token.', refs: [1] }] };
+
+  it('est la première ligne sourcée de « What changed »', () => {
+    const moved = { text: 'Sophie moved the migration to Dec 2.', refs: [3] };
+    expect(
+      briefingFact([
+        did,
+        { title: 'What changed', lines: [{ text: 'Nothing certain yet.', refs: [] }, moved] },
+      ]),
+    ).toBe(moved);
+  });
+
+  it('n’existe pas sans cette partie, ou quand elle ne cite rien', () => {
+    expect(briefingFact([did])).toBeNull();
+    expect(
+      briefingFact([{ title: 'What changed', lines: [{ text: 'Nothing to report.', refs: [] }] }]),
+    ).toBeNull();
   });
 });

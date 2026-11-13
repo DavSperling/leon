@@ -1,16 +1,8 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import {
-  type ReactNode,
-  Suspense,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { type ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Kbd, useModKey } from '@/components/verre/ui/kbd';
 import { Strokes } from '@/components/verre/ui/marks';
 import { cn } from '@/lib/verre/cn';
@@ -29,16 +21,15 @@ const layerOpen = () => !!document.querySelector('[role="dialog"], [role="alertd
 export type AppShellProps = Viewer & SidebarData & { children: ReactNode };
 
 /**
- * Un seul endroit où demander par écran : la barre du haut ne se montre pas là où l'écran a son propre champ (une
- * discussion, une nouvelle discussion, les résultats d'une recherche). Lue à part : useSearchParams demande sa frontière.
+ * Un seul endroit où demander par écran : la barre du haut ne se montre pas là où l'écran a son propre champ
+ * (l'Accueil et les résultats d'une recherche, une discussion, une nouvelle discussion).
  */
 function AskBar() {
   const t = useTranslations('shell');
   const { openPalette } = usePalette();
   const modKey = useModKey();
   const pathname = usePathname();
-  const searching = useSearchParams().has('q');
-  if (pathname.startsWith('/discussions') || (pathname === '/' && searching)) return null;
+  if (pathname === '/' || pathname.startsWith('/discussions')) return null;
   return (
     <button
       type="button"
@@ -160,8 +151,10 @@ export function AppShell({ recents, reconnect, stale, children, ...viewer }: App
     if (shownPath.current === pathname) return;
     shownPath.current = pathname;
     window.scrollTo(0, 0);
-    // sous un calque, <main> est aria-hidden : la barre de commande ou le menu mobile y mettent le focus en se fermant
-    if (!layerOpen()) mainRef.current?.focus({ preventScroll: true });
+    // sous un calque, <main> est aria-hidden : la barre de commande ou le menu mobile y mettent le focus en se fermant ;
+    // une page qui a déjà posé le curseur chez elle (le champ de l'Accueil) le garde
+    if (!layerOpen() && !mainRef.current?.contains(document.activeElement))
+      mainRef.current?.focus({ preventScroll: true });
   }, [pathname]);
 
   const palette = useMemo(() => ({ openPalette: () => setPaletteOpen(true) }), []);
@@ -198,9 +191,7 @@ export function AppShell({ recents, reconnect, stale, children, ...viewer }: App
               )}
             >
               <MobileMenu {...viewer} {...side} />
-              <Suspense>
-                <AskBar />
-              </Suspense>
+              <AskBar />
             </div>
             <div
               ref={wrapRef}

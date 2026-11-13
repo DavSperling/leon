@@ -136,10 +136,14 @@ export async function briefingSources(
 // plus montré, comme dans readBriefing).
 export async function homeBriefing(
   ctx: TenantContext,
-): Promise<{ sections: BriefingSection[]; sources: BriefingSource[] } | null> {
+): Promise<{ sections: BriefingSection[]; sources: BriefingSource[]; preparedAt: Date } | null> {
   const [row] = await withTenant(ctx, (tx) =>
     tx
-      .select({ markdown: briefings.markdown, sourceIds: briefings.sourceIds })
+      .select({
+        markdown: briefings.markdown,
+        sourceIds: briefings.sourceIds,
+        preparedAt: briefings.preparedAt,
+      })
       .from(briefings)
       .where(eq(briefings.userId, ctx.userId))
       .orderBy(sql`${briefings.lastReadAt} desc nulls last`, desc(briefings.preparedAt))
@@ -149,5 +153,5 @@ export async function homeBriefing(
   if (!row || !sections) return null;
   const wanted = [...new Set(row.sourceIds)];
   const sources = await briefingSources(ctx, wanted);
-  return sources.length < wanted.length ? null : { sections, sources };
+  return sources.length < wanted.length ? null : { sections, sources, preparedAt: row.preparedAt };
 }

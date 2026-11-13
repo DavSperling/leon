@@ -289,19 +289,26 @@
     transform-origin: 0 50%;
     transition: transform var(--med) var(--ease-out);
   }
+  /* Sur l'Accueil, ils sont tracés une fois à l'arrivée, l'un après l'autre (les délais sont ceux de chaque trait). */
+  .strokes--draw i {
+    animation: sweep 460ms var(--ease-out) backwards;
+  }
   .strokes i:nth-child(1) {
     width: 22px;
     background: var(--stroke-1);
+    animation-delay: 160ms;
   }
   .strokes i:nth-child(2) {
     width: 14px;
     background: var(--stroke-2);
     transition-delay: 50ms;
+    animation-delay: 240ms;
   }
   .strokes i:nth-child(3) {
     width: 18px;
     background: var(--stroke-3);
     transition-delay: 100ms;
+    animation-delay: 320ms;
   }
   /* Tracés de nouveau quand leur champ est pointé : posez « group » (Tailwind) ou .ask sur le champ. */
   :is(.group, .ask):hover .strokes i:nth-child(1) {
@@ -343,6 +350,22 @@
     background-image: linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4)));
     background-repeat: no-repeat;
     background-size: calc(var(--sweep, 1) * 100%) 100%;
+  }
+  /* Une phrase qu'on pointe (une ligne du point du matin, une question à essayer) : au repos elle est d'encre, le
+     trait de sa couleur passe dessous quand on la pointe ou qu'on y vient au clavier. */
+  .hl-pass .hl {
+    --sweep: 0;
+    background-color: transparent;
+    background-image: linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4)));
+    background-repeat: no-repeat;
+    background-size: calc(var(--sweep) * 100%) 100%;
+    transition: --sweep var(--med) var(--ease-out);
+  }
+  .hl-pass .hl--a {
+    margin-left: -0.14em;
+  }
+  .hl-pass:is(:hover, :focus-visible, :has(:focus-visible)) .hl {
+    --sweep: 1;
   }
   :is(.seg:hover, .seg.is-lit) .hl {
     background-color: var(--hl-deep, var(--d4));
@@ -393,7 +416,8 @@
     position: absolute;
     inset: -9px -6px;
   }
-  .cite:hover {
+  .cite:hover,
+  .hl-pass:hover .cite {
     outline-color: color-mix(in srgb, var(--text) 45%, transparent);
   }
   .cite:is([aria-pressed="true"], [data-active]) {

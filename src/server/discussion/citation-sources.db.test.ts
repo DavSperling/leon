@@ -122,6 +122,8 @@ describe('le point du matin de l’Accueil', () => {
       { title: 'What you did', lines: [{ text: 'Renewed the deploy token.', refs: [1] }] },
     ]);
     expect(shown?.sources).toMatchObject([{ n: 1, sourceId: one.sourceId, title: 'Ticket 1' }]);
+    // l'heure où il a été préparé, écrite à côté du titre
+    expect(shown?.preparedAt).toBeInstanceOf(Date);
     const [after] = await adminDb
       .select({ lastReadAt: briefings.lastReadAt })
       .from(briefings)

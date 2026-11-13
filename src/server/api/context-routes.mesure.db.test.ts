@@ -5,14 +5,14 @@ import { API_PATHS } from '@/capture/api-contract';
 import { createApiToken } from '@/server/auth/api-tokens';
 import { pool } from '@/server/db/client';
 import { depotsEquipe } from '@/server/db/schema/connections';
-import { sources } from '@/server/db/schema/memory';
+import { lecons, sources, versionsMemoire } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { apiRequest } from '@/test/api-request';
 import { adminDb } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 
-// La mesure de T46 (plan de la mémoire à disposition), hors CI : `LEON_MESURE=oui pnpm test:db <ce fichier>`. Sur
-// 10 000 sources et 500 fils d'un même auteur, chaque requête que POST /contexte envoie à la base est rejouée sous
+// La mesure de T46 (plan de la mémoire à disposition), refaite par T56 avec 200 leçons, hors CI :
+// `LEON_MESURE=oui pnpm test:db <ce fichier>`. Sur 10 000 sources, 500 fils et 200 leçons d'un même auteur, chaque requête que POST /contexte envoie à la base est rejouée sous
 // EXPLAIN (ANALYZE, BUFFERS), dans le contexte RLS de sa transaction (rôle leon_app, set_config), puis la route est
 // chronométrée de bout en bout, sans le réseau entre le serveur et la base : le nombre d'allers-retours le donne.
 
@@ -23,6 +23,8 @@ const FILS_DU_PROJET = 300;
 const SESSIONS = 5000;
 const PRS = 3000;
 const MESSAGES = 1500;
+// T56 : 200 leçons, dont 120 du dépôt, 50 sans dépôt et 30 d'un autre ; une sur deux cite des preuves.
+const LECONS = 200;
 const RUNS = 30;
 
 // La file des fils n'est pas mesurée : la route ne l'attend pas.
@@ -145,6 +147,32 @@ async function seed() {
       await adminDb.insert(sources).values(part as (typeof sources.$inferInsert)[]);
     }
   }
+  const lessons = Array.from({ length: LECONS }, (_, n) => ({
+    ...own(),
+    id: randomUUID(),
+    projet: n < 120 ? PROJECT : n < 170 ? null : 'github.com/acme/autre-1',
+    origine: 'humain' as const,
+    frequence: n % 7,
+    acceptee: ago(n * 60),
+  }));
+  await adminDb
+    .insert(lecons)
+    .values(lessons.map(({ acceptee, ...one }) => ({ ...one, accepteeLe: acceptee })));
+  await adminDb.insert(versionsMemoire).values(
+    lessons.flatMap((one, n) =>
+      [1, 2].map((v) => ({
+        tenantId: one.tenantId,
+        ownerUserId: one.ownerUserId,
+        acl: one.acl,
+        leconId: one.id,
+        n: v,
+        texte: `Leçon ${n}, version ${v} : relancer les tests en base avant de pousser. ${'é'.repeat(100)}`,
+        entrees: n % 2 === 0 ? [messages[n % MESSAGES]?.id, messages[(n + 1) % MESSAGES]?.id] : [],
+        ecritPar: 'humain' as const,
+        motif: v === 1 ? ('acceptation' as const) : ('correction' as const),
+      })),
+    ) as (typeof versionsMemoire.$inferInsert)[],
+  );
   await adminDb.insert(depotsEquipe).values({
     tenantId: paul.tenantId,
     project: PROJECT,
@@ -166,6 +194,8 @@ async function seed() {
     acl: [paul.userId],
   });
   await adminDb.execute('analyze sources');
+  await adminDb.execute('analyze lecons');
+  await adminDb.execute('analyze versions_memoire');
   const { token } = await createApiToken(paul, 'mesure');
   return token;
 }
@@ -224,7 +254,7 @@ const quantile = (values: number[], q: number) =>
   [...values].sort((a, b) => a - b)[Math.min(values.length - 1, Math.floor(values.length * q))] ??
   0;
 
-describe.skipIf(!MESURE)('mesure de POST /api/v1/contexte (T46)', () => {
+describe.skipIf(!MESURE)('mesure de POST /api/v1/contexte (T46, T56)', () => {
   it('EXPLAIN ANALYZE sous RLS de chaque requête, puis le chronométrage de bout en bout', async () => {
     const token = await seed();
     const call = (lecture: boolean) =>
@@ -238,6 +268,9 @@ describe.skipIf(!MESURE)('mesure de POST /api/v1/contexte (T46)', () => {
       sent = [];
       const response = await call(lecture);
       expect(response.status).toBe(200);
+      const texte = ((await response.json()) as { texte: string }).texte;
+      // Avec `lecture`, les leçons sont dans le bloc ; sans, aucune.
+      expect(texte.includes('acceptée par toi')).toBe(lecture);
       const calls = sent;
       sent = null;
       const plans = await explain(calls);

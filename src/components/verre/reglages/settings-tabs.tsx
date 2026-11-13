@@ -4,15 +4,16 @@ import { useTranslations } from 'next-intl';
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { PageHeader, Pill } from '@/components/verre';
 
-// Les quatre groupes : Profil, Sécurité, Assistants (l'ancien onglet « Intégrations », même id) et Espace de travail
-// (l'ancien onglet « Équipe », même id : Connexions mène à /reglages#equipe pour les dépôts d'équipe).
-const TABS = ['profil', 'securite', 'integrations', 'equipe'] as const;
+// Les cinq groupes : Profil, Sécurité, Assistants (l'ancien onglet « Intégrations », même id), Espace de travail
+// (l'ancien onglet « Équipe », même id : Connexions mène à /reglages#equipe pour les dépôts d'équipe) et Mémoire.
+const TABS = ['profil', 'securite', 'integrations', 'equipe', 'memoire'] as const;
 type Tab = (typeof TABS)[number];
 const LABELS = {
   profil: 'tabProfile',
   securite: 'tabSecurity',
   integrations: 'tabAssistants',
   equipe: 'tabWorkspace',
+  memoire: 'tabMemory',
 } as const;
 
 // Les ancres des sections (liens de Connexions, de l'onboarding) ouvrent le groupe qui les contient.
@@ -43,8 +44,8 @@ const HeadSlot = createContext<HTMLElement | null>(null);
 export const useHeadSlot = () => useContext(HeadSlot);
 
 /**
- * Le titre, les quatre puces et le groupe choisi. Le groupe suit l'ancre de l'URL (/reglages#securite) : un lien ou un
- * rechargement ouvre le bon. Les quatre restent montés (un champ modifié survit à un changement de puce).
+ * Le titre, les cinq puces et le groupe choisi. Le groupe suit l'ancre de l'URL (/reglages#securite) : un lien ou un
+ * rechargement ouvre le bon. Tous restent montés (un champ modifié survit à un changement de puce).
  */
 export function SettingsTabs({ title, panels }: { title: string; panels: Record<Tab, ReactNode> }) {
   const t = useTranslations('settings');
@@ -70,8 +71,8 @@ export function SettingsTabs({ title, panels }: { title: string; panels: Record<
   return (
     <>
       <PageHeader title={title} actions={<span ref={setSlot} className="contents" />} />
-      {/* une seule rangée ; sur un téléphone de 390 px les quatre puces tiennent (écart et marges resserrés), et la
-          rangée défile de côté en dessous ; la marge de 4 px garde l'anneau du focus entier */}
+      {/* une seule rangée (écart et marges resserrés sur un téléphone) ; quand les cinq puces ne tiennent pas, elle
+          défile de côté ; la marge de 4 px garde l'anneau du focus entier */}
       {/* biome-ignore lint/a11y/useSemanticElements: un groupe de boutons bascule, pas un formulaire (fieldset) */}
       <div
         role="group"

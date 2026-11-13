@@ -1,5 +1,5 @@
 import { type SQL, sql } from 'drizzle-orm';
-import { CAPTURE_KINDS } from '@/capture/turn';
+import { CAPTURE_KINDS, type TurnRole } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -168,7 +168,7 @@ function intersect<T>(a: T[] | undefined, b: T[] | undefined): T[] | undefined {
 // Les filtres passés à part et ceux écrits dans la requête s'appliquent tous deux : les outils et les types se
 // croisent, la date la plus étroite l'emporte, les auteurs s'additionnent (comme deux `de:`). Une liste vide
 // ne restreint rien. `impossible` : deux listes sans rien en commun, ou un fil sans source. Le dépôt et le fil ne
-// viennent que des paramètres.
+// viennent que des paramètres, comme les rôles des coulisses.
 function mergeFilters(
   explicit: SearchFilters,
   inline: Omit<SearchFilters, 'authorEmails' | 'authorNames'>,
@@ -200,6 +200,7 @@ function mergeFilters(
       ...(until ? { until } : {}),
       ...(explicit.depot ? { depot: explicit.depot } : {}),
       ...(explicit.fil ? { fil: explicit.fil } : {}),
+      ...(explicit.roles ? { roles: explicit.roles } : {}),
     },
   };
 }
@@ -285,6 +286,7 @@ type SearchRow = {
   turn_id: string | null;
   epoch: string | null;
   author_name: string | null;
+  role: TurnRole | null;
   snippet: string | null;
 };
 
@@ -467,7 +469,8 @@ async function rankedSources(
     )
     select tt.total, pg.source_id, pg.kind, pg.title, pg.metadata,
            extract(epoch from pg.last_ts) as last_epoch, pg.score,
-           pp.passage_id, pp.turn_id, extract(epoch from pp.ts) as epoch, pp.author_name, pp.snippet
+           pp.passage_id, pp.turn_id, extract(epoch from pp.ts) as epoch, pp.author_name, pp.snippet,
+           (select pt.role from turns pt where pt.tenant_id = ${tenant} and pt.id = pp.turn_id) as role
     from (select count(*)::int as total from ranked) tt
     left join lateral (
       select * from ranked order by wide, covered desc, score desc, last_ts desc, source_id
@@ -519,6 +522,7 @@ async function rankedSources(
         snippet: row.snippet ?? '',
         ts: epochToDate(row.epoch),
         authorName: row.author_name,
+        role: row.role,
       };
       hit.passages.push(passage);
     }

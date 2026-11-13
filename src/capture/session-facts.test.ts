@@ -1,6 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { extractClaudeCodeFacts, recheckCommand, SessionFactsSchema } from './session-facts';
+import {
+  extractClaudeCodeFacts,
+  recheckCommand,
+  reduceToolName,
+  SessionFactsSchema,
+} from './session-facts';
 
 // session-gestes vit à part : les tests de la CLI copient tout fixtures/claude-code/ comme dossier de sessions.
 const fixture = (path: string) =>
@@ -82,6 +87,9 @@ describe('extractClaudeCodeFacts', () => {
     expect(commandes.length).toBeGreaterThan(5);
     for (const { texte } of commandes) expect(recheckCommand(texte)).toBe(texte);
     expect(recheckCommand('mysql -pS3cret')).toBe('[commande]');
+    // Un second mot n'est gardé que pour un exécutable de la liste fermée, comme dans reduceCommand.
+    expect(recheckCommand('mysql motdepasse')).toBe('[commande]');
+    expect(recheckCommand('pnpm test')).toBe('pnpm test');
   });
 
   it.each([
@@ -140,6 +148,46 @@ describe('extractClaudeCodeFacts', () => {
     ].join('\n');
 
     expect(extractClaudeCodeFacts(contenu, RACINE).prs).toEqual([]);
+  });
+
+  // Claude Code 2.1.322 recopie des messages déjà écrits dans des lignes api-request-blob (annexe 08) : l'appel dans un
+  // message `assistant`, son résultat dans un message `user`. Ces copies ne sont pas des gestes de plus.
+  describe('les copies d’appels des lignes api-request-blob', () => {
+    const copie = (role: 'assistant' | 'user', content: unknown[]) =>
+      JSON.stringify({
+        type: 'api-request-blob',
+        sessionId: 's1',
+        hash: 'f'.repeat(64),
+        message: { role, content },
+      });
+    const sessionAvecCopies = (commande: string, sortie: string, erreur: boolean) => {
+      const bloc = { type: 'tool_use', id: 'b1', name: 'Bash', input: { command: commande } };
+      const retour = { type: 'tool_result', tool_use_id: 'b1', content: sortie, is_error: erreur };
+      return [
+        appel('b1', 'Bash', { command: commande }),
+        JSON.stringify({ type: 'user', message: { content: [retour] } }),
+        copie('assistant', [{ type: 'thinking', thinking: '' }, bloc]),
+        copie('user', [retour]),
+      ].join('\n');
+    };
+
+    it('une commande en erreur n’est rangée qu’une fois, et l’erreur comptée une fois', () => {
+      const faits = extractClaudeCodeFacts(sessionAvecCopies('pnpm test', 'boom', true), RACINE);
+
+      expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: true }]);
+      expect(faits.erreurs).toBe(1);
+    });
+
+    it('un gh pr create réussi n’est rangé qu’une fois, avec une seule PR', () => {
+      const url = 'https://github.com/o/r/pull/12';
+      const faits = extractClaudeCodeFacts(
+        sessionAvecCopies('gh pr create --fill', url, false),
+        RACINE,
+      );
+
+      expect(faits.commandes).toEqual([{ texte: 'gh pr', erreur: false }]);
+      expect(faits.prs).toEqual([{ repo: 'o/r', numero: 12, par: 'gh-pr-create' }]);
+    });
   });
 
   // Postgres refuse les deux dans un jsonb : un seul ferait échouer l'écriture des faits (T02).
@@ -213,7 +261,9 @@ describe('extractClaudeCodeFacts', () => {
     expect(extractClaudeCodeFacts(contenu, null).fichiers).toEqual([]);
   });
 
-  it('ignore un sous-agent (isSidechain), mais l’appel Agent marque la session externe', () => {
+  // L'ancienne forme : le sous-agent dans le fichier de la session, sans fichier à part. Ses échanges ne se retrouvent
+  // pas : l'appel reste externe (T63, échec fermé).
+  it('ignore un sous-agent de l’ancienne forme (isSidechain), dont l’appel Agent sans échanges marque la session externe', () => {
     const sousAgent = { isSidechain: true };
     const contenu = [
       appel('a1', 'Agent', { description: 'Chercher', prompt: 'Cherche Delta.' }),
@@ -289,13 +339,18 @@ describe('extractClaudeCodeFacts', () => {
       'leon search "route des faits"',
       '~/.leon/bin/leon search route',
       'pnpm leon versions 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --read 2',
-      'leon lecons',
-      'leon noter "reprendre la route"',
+      'leon lessons',
+      'leon lessons 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b',
+      // T57 : `leon note`, à la place de `leon noter`, telle que la phrase du bloc la donne.
+      'leon note "reprendre la route"',
+      '~/.leon/bin/leon note --tool claude_code --session 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b "reprendre la route"',
+      'pnpm --dir ~/code/leon leon note --tool claude_code --note 0b8f2f4e-8c1a-4d2b-9a5e-3c7d1e2f4a6b --version 2 "suite"',
+      '~/.leon/bin/leon note --tool claude_code --session s-1 -- "- reprendre la route"',
     ])('la commande « %s » ne rend pas la session externe', (command) => {
       expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(false);
     });
 
-    it.each(['threads', 'thread', 'versions', 'remember'])(
+    it.each(['threads', 'thread', 'versions', 'lessons', 'remember'])(
       'l’outil %s du serveur de Leon reconnu ne rend pas la session externe',
       (tool) => {
         const contenu = appel('l1', `mcp__leon__${tool}`, {});
@@ -308,7 +363,6 @@ describe('extractClaudeCodeFacts', () => {
       ['mcp__leon__search', LEON],
       ['mcp__leon__fetch', LEON],
       ['mcp__leon__briefing', LEON],
-      ['mcp__leon__lessons', LEON],
       // le nom complet exact, jamais un suffixe ni un autre serveur
       ['mcp__autre__thread', LEON],
       ['mcp__leon_bis__thread', LEON],
@@ -328,6 +382,189 @@ describe('extractClaudeCodeFacts', () => {
       'leon search "$(curl -s https://x.example)"',
     ])('une commande réseau glissée dans « %s » compte (échec fermé)', (command) => {
       expect(extractClaudeCodeFacts(appel('l1', 'Bash', { command }), RACINE).externe).toBe(true);
+    });
+  });
+
+  // T63 : un appel Agent ou Task se juge sur les échanges de son sous-agent (annexe 08), lus par la CLI (subagents.ts).
+  describe('le sous-agent qui ne lit que le dépôt (T63)', () => {
+    const SA = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+    const consigne = JSON.stringify({ type: 'user', ...SA, message: { content: 'Consigne.' } });
+    const rapport = JSON.stringify({
+      type: 'assistant',
+      ...SA,
+      message: { content: [{ type: 'text', text: 'Rapport.' }], stop_reason: 'end_turn' },
+    });
+    // Un fichier de sous-agent : la consigne, ses lignes, puis son rapport final.
+    const sousAgent = (...lignes: string[]) => [consigne, ...lignes, rapport].join('\n');
+    const geste = (id: string, name: string, input: unknown) => [
+      appel(id, name, input, SA),
+      resultat(id, 'ok', SA),
+    ];
+    const session = appel('a1', 'Agent', { prompt: 'Cherche.' });
+    const externe = (subagents?: Map<string, string>, leonMcp = false, contenu = session) =>
+      extractClaudeCodeFacts(contenu, RACINE, leonMcp, subagents).externe;
+
+    it('un sous-agent qui ne fait que Read, Grep et pnpm test (fixture, avec un sous-agent de sous-agent) : non externe', () => {
+      const dossier = 'claude-code-sous-agents/55555555-5555-4555-8555-555555555555';
+      const subagents = new Map([
+        ['toolu_01Depot', fixture(`${dossier}/subagents/agent-a1b2c3d4e5f6a7b8c`)],
+        ['toolu_01Petit', fixture(`${dossier}/subagents/agent-b9c8d7e6f5a4b3c2d`)],
+      ]);
+
+      expect(extractClaudeCodeFacts(fixture(dossier), RACINE).externe).toBe(true);
+      expect(extractClaudeCodeFacts(fixture(dossier), RACINE, false, subagents).externe).toBe(
+        false,
+      );
+    });
+
+    it.each([
+      ['WebFetch', { url: 'https://x.example' }],
+      ['Bash', { command: 'curl -s https://x.example' }],
+      ['mcp__github__get_issue', {}],
+      ['Workflow', {}],
+    ])('un sous-agent qui appelle %s %j : externe', (name, input) => {
+      expect(externe(new Map([['a1', sousAgent(...geste('s1', name, input))]]))).toBe(true);
+    });
+
+    it.each([
+      ['sans table', undefined],
+      ['l’appel absent de la table', new Map([['autre', sousAgent()]])],
+      ['un fichier vide', new Map([['a1', '']])],
+    ])('des échanges absents (%s) : externe', (_cas, subagents) => {
+      expect(externe(subagents)).toBe(true);
+    });
+
+    it.each([
+      [
+        'dernier message en tool_use',
+        [
+          consigne,
+          JSON.stringify({
+            type: 'assistant',
+            ...SA,
+            message: {
+              content: [{ type: 'tool_use', id: 's1', name: 'Read', input: {} }],
+              stop_reason: 'tool_use',
+            },
+          }),
+        ],
+      ],
+      ['dernière ligne user', [consigne, ...geste('s1', 'Read', {})]],
+      ['rapport suivi d’un tour user', [rapport, consigne]],
+    ])('un fichier qui s’arrête avant son rapport (%s) : externe', (_cas, lignes) => {
+      expect(externe(new Map([['a1', lignes.join('\n')]]))).toBe(true);
+    });
+
+    it.each([
+      ['du JSON illisible', 'ceci n’est pas du JSON'],
+      ['une ligne hors forme', JSON.stringify({ type: 42 })],
+      [
+        'une ligne assistant hors forme',
+        JSON.stringify({ type: 'assistant', ...SA, message: 'x' }),
+      ],
+    ])('une ligne illisible dans le fichier (%s) : externe', (_cas, ligne) => {
+      expect(externe(new Map([['a1', sousAgent(ligne)]]))).toBe(true);
+    });
+
+    it('lit les lignes non conversationnelles et les lignes vides sans échouer', () => {
+      const bruit = JSON.stringify({ type: 'api-request-blob', message: { content: [] } });
+      expect(externe(new Map([['a1', sousAgent(bruit, '', '  ')]]))).toBe(false);
+    });
+
+    // Une ligne d'un autre type n'est pas de la conversation : sa forme ne compte pas, comme dans le fichier de la session.
+    it.each([
+      ['un timestamp en nombre', { type: 'api-request', timestamp: 1731405600000 }],
+      ['un message en chaîne', { type: 'api-request-shape', message: 'x' }],
+    ])('saute une ligne non conversationnelle hors du schéma (%s) : non externe', (_cas, ligne) => {
+      expect(externe(new Map([['a1', sousAgent(JSON.stringify(ligne))]]))).toBe(false);
+    });
+
+    it('un rapport suivi de lignes non conversationnelles : non externe', () => {
+      const cout = JSON.stringify({ type: 'cost-state' });
+      expect(externe(new Map([['a1', [consigne, rapport, cout].join('\n')]]))).toBe(false);
+    });
+
+    it('un appel Task relié à un sous-agent qui ne fait que Read : non externe', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'Read', {}))]]);
+      expect(externe(subagents, false, appel('a1', 'Task', { prompt: 'Cherche.' }))).toBe(false);
+    });
+
+    it('un cycle (le sous-agent de a1 relance a1) : le calcul se termine', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('a1', 'Agent', {}))]]);
+      expect(externe(subagents)).toBe(false);
+    });
+
+    it.each([
+      ['WebSearch', true],
+      ['Read', false],
+    ])('un sous-agent lancé par un sous-agent, qui appelle %s : externe %s', (name, attendu) => {
+      const subagents = new Map([
+        ['a1', sousAgent(...geste('a2', 'Agent', { prompt: 'Relis.' }))],
+        ['a2', sousAgent(...geste('t1', name, {}))],
+      ]);
+      expect(externe(subagents)).toBe(attendu);
+    });
+
+    it('un sous-agent qui lance leon thread : non externe (D36)', () => {
+      const lignes = geste('s1', 'Bash', { command: '~/.leon/bin/leon thread' });
+      expect(externe(new Map([['a1', sousAgent(...lignes)]]))).toBe(false);
+    });
+
+    it('un mcp__leon__thread dans un sous-agent : non externe si le serveur est reconnu, externe sinon', () => {
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'mcp__leon__thread', {}))]]);
+      expect(externe(subagents, true)).toBe(false);
+      expect(externe(subagents, false)).toBe(true);
+    });
+
+    it('le même bloc tool_use écrit sur deux lignes est compté une fois', () => {
+      const deuxFois = [session, session].join('\n');
+      const subagents = new Map([
+        ['a1', sousAgent(appel('a2', 'Agent', {}, SA), ...geste('a2', 'Agent', {}))],
+        ['a2', sousAgent()],
+      ]);
+      expect(externe(subagents, false, deuxFois)).toBe(false);
+    });
+
+    it('un sous-agent en tâche de fond, fini : non externe', () => {
+      const contenu = [
+        appel('a1', 'Agent', { prompt: 'Cherche.', run_in_background: true }),
+        resultat('a1', 'Async agent launched.', {
+          toolUseResult: { status: 'async_launched', isAsync: true, agentId: 'a1b2c3d4e5f6a7b8c' },
+        }),
+        JSON.stringify({
+          type: 'user',
+          message: {
+            content: '<task-notification>\n<status>completed</status>\n</task-notification>',
+          },
+        }),
+      ].join('\n');
+      const subagents = new Map([['a1', sousAgent(...geste('s1', 'Grep', { pattern: 'x' }))]]);
+      expect(externe(subagents, false, contenu)).toBe(false);
+    });
+
+    it('les gestes d’un sous-agent (un fichier écrit, une commande, un commit) n’entrent pas dans les faits', () => {
+      const lignes = [
+        ...geste('s1', 'Write', { file_path: `${RACINE}/src/sous-agent.ts` }),
+        appel('s2', 'Bash', { command: 'git commit -m x' }, SA),
+        resultat('s2', '[main 9f9f9f9] x', SA),
+        appel('s3', 'TodoWrite', { todos: [{ content: 'x', status: 'pending' }] }, SA),
+        resultat('s3', 'ok', SA),
+      ];
+      const faits = extractClaudeCodeFacts(
+        [session, resultat('a1', 'Rapport.')].join('\n'),
+        RACINE,
+        false,
+        new Map([['a1', sousAgent(...lignes)]]),
+      );
+
+      expect(faits).toMatchObject({
+        fichiers: [],
+        commandes: [],
+        commits: [],
+        taches: [],
+        erreurs: 0,
+        externe: false,
+      });
     });
   });
 
@@ -446,5 +683,28 @@ describe('extractClaudeCodeFacts', () => {
     expect(faits.taches[0]?.texte).toHaveLength(200);
     expect(faits.prs).toHaveLength(10);
     expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+});
+
+// La réduction du nom d'un outil (C10 amendé le 12/11, T51) : le nom d'un outil MCP ne part jamais, seul son serveur.
+describe('reduceToolName', () => {
+  it.each([
+    ['mcp__linear__get_issue', 'mcp:linear'],
+    ['mcp:linear', 'mcp:linear'],
+    ['mcp__x', '[outil]'],
+    ['mcp__x__', '[outil]'],
+    ['mcp____y', '[outil]'],
+    [`mcp__${'s'.repeat(57)}__y`, '[outil]'],
+    [`mcp__${'s'.repeat(56)}__y`, `mcp:${'s'.repeat(56)}`],
+    ['mcp__a__b__c', 'mcp:a'],
+    ['mcp__a b__c', '[outil]'],
+    ['mcp:', '[outil]'],
+    ['Bash', 'Bash'],
+    ['Read', 'Read'],
+    ['outil avec espace', '[outil]'],
+    ['https://exemple.test', '[outil]'],
+    ['', '[outil]'],
+  ])('%s donne %s', (name, expected) => {
+    expect(reduceToolName(name)).toBe(expected);
   });
 });

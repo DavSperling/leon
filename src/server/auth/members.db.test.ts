@@ -383,7 +383,7 @@ describe('le poste des membres', () => {
   });
 });
 
-// Écran Équipe : le manager porté par un lien (0065), les invitations en attente, leur annulation, leur envoi.
+// Écran Équipe : le manager porté par un lien (0070), les invitations en attente, leur annulation, leur envoi.
 describe("l'invitation sous un manager", () => {
   const tokenOf = async (ctx: TenantContext, managerId: string | null) => {
     const link = await createInvitationLink(ctx, { name: 'Inès', placement: backend, managerId });

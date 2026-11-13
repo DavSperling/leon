@@ -5,14 +5,17 @@ import { createOAuthRoutes } from '@/server/connectors/oauth-routes';
 import { getConnector } from '@/server/connectors/registry';
 import { logError } from '@/server/log';
 import { authRoutes } from './auth-routes';
+import { backstageRoutes } from './backstage-routes';
 import { briefingRoutes } from './briefing-routes';
 import { computerRoutes } from './computer-routes';
 import { contextRoutes } from './context-routes';
 import { faitsRoutes } from './faits-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
+import { notesRoutes } from './notes-routes';
 import { oauthRoutes } from './oauth-routes';
 import { readRoutes } from './read-routes';
+import { reminderRoutes } from './reminder-routes';
 import type { ApiEnv } from './require-api-token';
 import { sessionRoutes } from './session-routes';
 
@@ -33,6 +36,9 @@ app.route('/v1', faitsRoutes);
 app.route('/v1', contextRoutes);
 app.route('/v1', computerRoutes);
 app.route('/v1', readRoutes);
+app.route('/v1', reminderRoutes);
+app.route('/v1', notesRoutes);
+app.route('/v1', backstageRoutes);
 // Routes de l'interface, au cookie de session : chacune pose ses propres contrôles (jamais un `use` global,
 // qui s'appliquerait aussi aux routes à jeton montées sous /v1).
 app.route('/v1', sessionRoutes);

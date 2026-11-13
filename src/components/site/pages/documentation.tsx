@@ -218,7 +218,17 @@ export function DocumentationPage({
                   {p('sent.lead')}
                   <ul className={cn(LIST, 'list-disc')}>
                     {(
-                      ['where', 'end', 'tools', 'secrets', 'start', 'lecture', 'resume'] as const
+                      [
+                        'where',
+                        'end',
+                        'tools',
+                        'secrets',
+                        'start',
+                        'lecture',
+                        'rappel',
+                        'noter',
+                        'resume',
+                      ] as const
                     ).map((item) => (
                       <li key={item}>{rich(`sent.${item}`)}</li>
                     ))}

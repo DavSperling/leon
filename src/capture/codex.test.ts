@@ -340,6 +340,7 @@ describe('extractCodexFacts', () => {
           commande('git fetch origin && git pull --ff-only'),
           commande('~/.leon/bin/leon thread'),
           commande('leon search "route des faits"'),
+          commande('~/.leon/bin/leon note --tool codex --session s-1 "reprendre la route"'),
           element({ type: 'FileChange', id: 'p', changes: {}, status: 'completed' }),
           element({ type: 'FunctionCallOutput', id: 'f', name: 'update_plan' }),
           element({ type: 'Reasoning', id: 'r' }),
@@ -358,11 +359,11 @@ describe('extractCodexFacts', () => {
           null,
           leon,
         ).externe;
-      for (const tool of ['threads', 'thread', 'versions', 'remember']) {
+      for (const tool of ['threads', 'thread', 'versions', 'lessons', 'remember']) {
         expect(mcp('leon', tool, true), tool).toBe(false);
         expect(mcp('leon', tool, false), tool).toBe(true);
       }
-      for (const tool of ['search', 'fetch', 'briefing', 'lessons', 'thread_x']) {
+      for (const tool of ['search', 'fetch', 'briefing', 'thread_x']) {
         expect(mcp('leon', tool, true), tool).toBe(true);
       }
       expect(mcp('leon_bis', 'thread', true)).toBe(true);

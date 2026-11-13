@@ -30,6 +30,11 @@ describe('tabOf', () => {
     expect(tabOf('#workspace')).toBe('equipe');
   });
 
+  // T55 : la section Mémoire est le cinquième groupe ; /connexion?retour=memoire y ramène par #memoire.
+  it('ouvre Mémoire pour #memoire', () => {
+    expect(tabOf('#memoire')).toBe('memoire');
+  });
+
   it('garde les autres ancres : un groupe par son nom, le reste rien', () => {
     expect(tabOf('#profil')).toBe('profil');
     expect(tabOf('#securite')).toBe('securite');

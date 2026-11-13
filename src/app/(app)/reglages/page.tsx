@@ -6,20 +6,29 @@ import {
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
 import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
+import { MemorySection } from '@/components/verre/reglages/memoire';
 import { ProfileSettings } from '@/components/verre/reglages/profile';
 import { SecuritySettings } from '@/components/verre/reglages/security-settings';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
 import { WorkspaceSettings } from '@/components/verre/reglages/workspace';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
-import { canInvite, getMembership, listMembers } from '@/server/auth/members';
+import { canInvite, getMembership, listMembers, notesRefusedAt } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
-import { getSession, requireUserContext } from '@/server/auth/session';
+import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { listDepotsEquipe } from '@/server/connectors/github/depots-equipe';
 import { env } from '@/server/env';
+import { logError } from '@/server/log';
+import { LESSON_MAX } from '@/server/memory/lessons';
+import {
+  listMemoryLessons,
+  listMemoryNotes,
+  listMemoryRepos,
+  listMemoryThreads,
+} from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -55,6 +64,8 @@ export default async function SettingsPage({
     depotsEquipe,
     sso,
     seeAll,
+    recent,
+    memory,
   ] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
@@ -66,6 +77,27 @@ export default async function SettingsPage({
     listDepotsEquipe(ctx),
     readSsoSetup(ctx),
     managersSeeAll(ctx),
+    signedInRecently(),
+    // Une lecture qui échoue donne une erreur dans l'onglet, pas une page cassée ni une liste vide.
+    Promise.all([
+      listMemoryThreads(ctx),
+      listMemoryLessons(ctx),
+      listMemoryNotes(ctx),
+      listMemoryRepos(ctx),
+      notesRefusedAt(ctx),
+    ]).then(
+      ([threads, lessons, notes, repos, refusedAt]) => ({
+        threads,
+        lessons,
+        notes,
+        repos,
+        notesOpen: refusedAt === null, // le réglage `noter` du compte (T65)
+      }),
+      (error) => {
+        logError('settings.memory', error);
+        return null;
+      },
+    ),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
@@ -136,6 +168,8 @@ export default async function SettingsPage({
               )}
             </WorkspaceSettings>
           ),
+          // la section Mémoire du lot 13 (leçons, notes, fils, dépôts), cinquième groupe
+          memoire: <MemorySection recent={recent} max={LESSON_MAX} data={memory} />,
         }}
       />
     </div>

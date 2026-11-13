@@ -239,6 +239,19 @@ describe('la page Documentation', () => {
     },
   );
 
+  // Le texte d'accord de Claude Code gagne le rapport final de chaque sous-agent (décision 7 d'Amos du 12/11) : la page
+  // le dit au même endroit, marqué comme non tapé.
+  it.each(LOCALES)(
+    'dit que le rapport final de chaque sous-agent part (%s)',
+    (locale, messages) => {
+      expect(messages.site.documentation.sent.end).toContain(
+        locale === 'en'
+          ? 'labeled as not typed by you; the final report of each subagent, labeled the same way; a <code>!</code> command you type is sent whole)'
+          : 'marqués comme non tapés par vous ; le rapport final de chaque sous-agent, marqué de même ; une commande <code>!</code> que vous tapez part entière)',
+      );
+    },
+  );
+
   // `leon setup` branche aussi Codex, Cursor et Antigravity (setup.ts) : la page le dit, avec ce que leurs textes d'accord
   // disent des messages que l'outil écrit lui-même (T43, décision d'Amos du 10/11).
   it.each(LOCALES)('dit ce qui part des autres outils de code (%s)', (locale, messages) => {
@@ -344,6 +357,7 @@ describe('la page Documentation', () => {
         '<code>leon thread</code>',
         '<code>leon search</code>',
         '<code>leon versions</code>',
+        '<code>leon lessons</code>',
         '<code>retirer-crochets</code>',
       ])
         expect(lecture, term).toContain(term);
@@ -362,6 +376,106 @@ describe('la page Documentation', () => {
         words(
           'The lecture usage (reading Leon) is checked by default',
           'L’usage lecture (lire Leon) est coché par défaut',
+        ),
+      );
+    },
+  );
+
+  // Les commandes de lecture (T44, T54, T55) : cinq, dont `leon lessons`, et l'outil `lessons` du connecteur MCP, qui ne
+  // rend pas la session externe.
+  it.each(LOCALES)(
+    'la section lire nomme leon lessons et l’outil lessons (%s)',
+    (locale, messages) => {
+      const { output, external } = messages.site.documentation.read;
+      const markdown = documentationMarkdown({ locale, messages, ...GIVEN });
+
+      expect(output).toContain('<code>lessons</code>');
+      expect(external).toContain('<code>lessons</code>');
+      expect(markdown).toContain('~/.leon/bin/leon lessons [id]');
+      expect(textOf(render(locale))).toContain('leon lessons [id]');
+    },
+  );
+
+  // L'usage `rappel` (T49 ; décisions d'Amos du 11/11 pour le lot 13) : coché par défaut comme `lecture`, pour Claude
+  // Code (`leon reminder`), Codex, Cursor et Antigravity ; la page dit ce qui part à chaque message, vers qui, ce
+  // qui revient, et ce qui est gardé.
+  it.each(LOCALES)(
+    'dit ce que l’usage rappel envoie et rend, pour quels outils (%s)',
+    (locale, messages) => {
+      const { rappel, lead, tools } = messages.site.documentation.sent;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>rappel</code>',
+        '<code>leon reminder</code>',
+        '<code>[Y/n]</code>',
+        '<code>--yes</code>',
+        '<code>retirer-crochets</code>',
+        'Claude Code',
+        'Codex',
+        'Cursor',
+        'Antigravity',
+        words('2,000', '2 000'),
+        words('24 hours', '24 heures'),
+        words('1.5 seconds', '1,5 seconde'),
+      ])
+        expect(rappel, term).toContain(term);
+      expect(rappel).toContain(words('checked by default', 'coché par défaut'));
+      expect(rappel).toContain(words('neither stores nor logs', 'ne garde ni ne journalise'));
+      expect(lead).toContain(words('the reminder', 'le rappel'));
+      expect(tools).toContain('<code>rappel</code>');
+      // Le rappel vaut aussi pour Antigravity (appli 2.0.6) : l'ancien « jamais pour Antigravity » ne revient pas.
+      expect(rappel).toContain('2.0.6');
+      expect(rappel).not.toContain(words('never for Antigravity', 'jamais pour Antigravity'));
+      expect(tools).not.toContain(
+        words(
+          'except <code>rappel</code> for Antigravity',
+          'sauf <code>rappel</code> pour Antigravity',
+        ),
+      );
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        rappel.replace(/<\/?code>/g, '`'),
+      );
+    },
+  );
+
+  // L'usage `noter` (T57 ; décisions d'Amos du 11/11 pour le lot 13) : coché par défaut comme `lecture`, pour les quatre
+  // outils, sans crochet de plus ; la page dit ce que `leon note` envoie, ce qui est gardé, ce que la requête de
+  // démarrage envoie en plus, et que le refuser coupe aussi `remember` pour l'espace (T65).
+  it.each(LOCALES)(
+    'dit ce que l’usage noter envoie et garde, et qu’il coupe aussi remember (%s)',
+    (locale, messages) => {
+      const { noter, lead, tools } = messages.site.documentation.sent;
+      const { authorize } = messages.site.documentation;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>noter</code>',
+        '<code>leon note</code>',
+        '<code>remember</code>',
+        '<code>[Y/n]</code>',
+        '<code>--yes</code>',
+        '<code>retirer-crochets</code>',
+        'Claude Code',
+        'Codex',
+        'Cursor',
+        'Antigravity',
+        words('4,000', '4 000'),
+      ])
+        expect(noter, term).toContain(term);
+      expect(noter).toContain(words('checked by default', 'coché par défaut'));
+      expect(noter).toContain(words('the name of the tool', 'le nom de l’outil'));
+      expect(noter).toContain(words('Memory section', 'section Mémoire'));
+      expect(lead).toContain(words('the agent’s notes', 'les notes de l’agent'));
+      expect(tools).toContain('<code>noter</code>');
+      expect(authorize.p1).toContain(words('the agent’s notes', 'les notes de l’agent'));
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        noter.replace(/<\/?code>/g, '`'),
+      );
+      expect(textOf(render(locale))).toContain(
+        words(
+          'The noter usage (the agent’s notes) is checked by default',
+          'L’usage noter (les notes de l’agent) est coché par défaut',
         ),
       );
     },

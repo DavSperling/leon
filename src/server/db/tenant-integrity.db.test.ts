@@ -85,26 +85,29 @@ describe('références vers une autre organisation', () => {
   });
 });
 
-// Toutes les clés vers une table du brut ou de l'index (0011), y compris celles que les tests ci-dessus
-// n'exercent pas.
+// Toutes les clés vers une table du brut, de l'index (0011) ou des leçons (0066), y compris celles que les tests
+// ci-dessus n'exercent pas.
 const COMPOSITE_KEYS = [
   'ingest_runs.source_id → sources',
   'passage_vectors.passage_id → passages',
   'passages.source_id → sources',
   'passages.turn_id → turns',
   'passages_a_vectoriser.passage_id → passages',
+  'rappels_cites.fil_id → sources',
+  'read_log.lecon_id → lecons',
   'read_log.source_id → sources',
   'turns.source_id → sources',
+  'versions_memoire.lecon_id → lecons',
   'versions_memoire.source_id → sources',
 ];
 
 describe('clés étrangères composées', () => {
-  it('chaque référence vers une table du brut ou de l’index porte tenant_id des deux côtés', async () => {
+  it('chaque référence vers une table du brut, de l’index ou des leçons porte tenant_id des deux côtés', async () => {
     const { rows } = await adminPool.query<{ source: string; def: string }>(
       `select c.conrelid::regclass::text as source, pg_get_constraintdef(c.oid) as def
          from pg_constraint c
         where c.contype = 'f'
-          and c.confrelid::regclass::text in ('sources', 'turns', 'ingest_runs', 'passages')`,
+          and c.confrelid::regclass::text in ('sources', 'turns', 'ingest_runs', 'passages', 'lecons')`,
     );
     const keys = rows.map(({ source, def }) => {
       const match = def.match(

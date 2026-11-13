@@ -1,7 +1,11 @@
 import { Hono, type MiddlewareHandler } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { z } from 'zod';
-import { API_TOKEN_PATTERN } from '@/capture/api-contract';
+import {
+  API_TOKEN_PATTERN,
+  USAGES_BODY_MAX_BYTES,
+  UsagesRequestSchema,
+} from '@/capture/api-contract';
 import {
   COMPUTER_TOKEN_PREFIX,
   hashApiToken,
@@ -9,6 +13,7 @@ import {
   revokeApiToken,
 } from '@/server/auth/api-tokens';
 import { verifyComputerCode } from '@/server/auth/computer-code';
+import { setNotesRefused } from '@/server/auth/members';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { logError } from '@/server/log';
@@ -80,6 +85,14 @@ export const computerRoutes = new Hono<ComputerEnv>()
       // Les cases de la page (T64, C16) : cochées (`usages`) et décochées (`refus`), recalculées depuis la charge signée.
       const shown = claims.m ?? [];
       const ticked = claims.g ?? [];
+      // Le réglage `noter` du compte suit la case (T65, C16) : cochée, nul ; décochée, daté ; absente, inchangé. Après
+      // l'enregistrement seulement : un 401 ou un 409 n'y touche pas. Un échec ne défait pas la connexion, déjà faite :
+      // l'accord du poste garde le refus, et la section Mémoire du site montre le réglage.
+      if (shown.includes('noter')) {
+        await setNotesRefused(ctx, !ticked.includes('noter')).catch((error: unknown) =>
+          logError('computer.noter_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId }),
+        );
+      }
       return c.json(
         {
           espace: organizationName,
@@ -97,4 +110,21 @@ export const computerRoutes = new Hono<ComputerEnv>()
   .delete('/jeton', requireApiToken, async (c) => {
     await revokeApiToken(c.var.ctx, c.var.tokenId);
     return c.body(null, 204);
-  });
+  })
+  // Un « non » à `noter` dans le terminal (T65, C16) : le jeton d'un ordinateur ou manuel date le réglage `noter` du
+  // compte, et `remember` refuse d'écrire. Un refus seulement (`{ noter: true }` rend 400) : ce jeton est lisible de
+  // tout agent du poste, rouvrir passe par la section Mémoire du site. Un jeton d'assistant reçoit le 401 commun (F9).
+  .post(
+    '/usages',
+    requireApiToken,
+    bodyLimit({
+      maxSize: USAGES_BODY_MAX_BYTES,
+      onError: (c) => c.json({ error: 'Request too large' }, 413),
+    }),
+    async (c) => {
+      const parsed = UsagesRequestSchema.safeParse(await c.req.json().catch(() => undefined));
+      if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
+      await setNotesRefused(c.var.ctx, true);
+      return c.body(null, 204);
+    },
+  );

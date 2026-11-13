@@ -34,10 +34,36 @@ const LineSchema = z.object({
   aiTitle: z.string().optional(),
   customTitle: z.string().optional(),
   message: z.object({ content: z.union([z.string(), z.array(z.unknown())]) }).optional(),
+  // Lus pour le rapport d'un sous-agent (reportTurn, queuedNotificationTurn).
+  toolUseResult: z.unknown().optional(),
+  attachment: z.unknown().optional(),
 });
 type Line = z.infer<typeof LineSchema>;
 
 const TextBlockSchema = z.object({ type: z.literal('text'), text: z.string() });
+
+// Le rapport d'un sous-agent (décision 7 d'Amos du 12/11), dans la forme de l'annexe 08 (Claude Code 2.1.322). Les noms
+// de l'outil des sous-agents servent aussi au tri de T63 (session-facts.ts).
+export const SUBAGENT_TOOLS: ReadonlySet<string> = new Set(['Agent', 'Task']);
+const ToolUseBlockSchema = z.object({
+  type: z.literal('tool_use'),
+  id: z.string(),
+  name: z.string(),
+});
+const ToolResultBlockSchema = z.object({ type: z.literal('tool_result'), tool_use_id: z.string() });
+// `content` : les `harnessNoteCount` notes du harnais, puis le rapport (annexe 08). Sans ce compte, entier positif ou
+// nul, la ligne n'a pas la forme connue : rien n'est capté. `harnessTailCount` n'est pas lu : la fin du harnais
+// (l'agentId, <usage>) n'est vue que dans le bloc tool_result, pas dans `content`.
+const ReportSchema = z.object({
+  status: z.literal('completed'),
+  content: z.array(TextBlockSchema),
+  harnessNoteCount: z.number().int().nonnegative(),
+});
+const QueuedNotificationSchema = z.object({
+  type: z.literal('queued_command'),
+  commandMode: z.literal('task-notification'),
+  prompt: z.string(),
+});
 
 function parseLine(raw: string): Line | null {
   let json: unknown;
@@ -72,7 +98,10 @@ function messageText(content: string | unknown[]): string {
 //   écartées (isConversationLine). Les autres sorties de crochet sont des lignes `attachment`, jamais lues.
 // - les balises ci-dessous (la notification d'une tâche de fond, la sortie d'une commande locale `/…` ou `!…`, le
 //   message d'un autre agent de l'équipe) et une interruption, seule signature d'un Claude Code d'avant `turnOrigin`.
-// Le rapport d'un sous-agent au premier plan est un résultat d'outil, que messageText écarte.
+// - le rapport d'un sous-agent (décision 7 d'Amos du 12/11 ; forme relevée par l'annexe 08, Claude Code 2.1.322) : au
+//   premier plan, c'est le résultat de son appel `Agent` ou `Task`, que messageText écarte ; reportTurn n'en garde que
+//   le rapport lu dans `toolUseResult`. En tâche de fond, c'est la notification ci-dessous, en ligne `user` ou, si
+//   l'agent travaillait, en ligne `attachment` (queuedNotificationTurn).
 // shortcut: avant `turnOrigin` (Claude Code 2.1.284 environ), le prompt d'un script et le message d'une autre session
 // n'ont pas de signature : ils partent marqués tapés. Les sessions de ces versions ne se rejouent que par `leon
 // import-claude-code`.
@@ -119,6 +148,13 @@ type ConversationLine = Line & {
   message: NonNullable<Line['message']>;
 };
 
+// Ni sous-agent, ni réponse de crochet, ni compaction, ni erreur de l'API.
+const isAside = (line: Line): boolean =>
+  line.isSidechain === true ||
+  line.isMeta === true ||
+  line.isCompactSummary === true ||
+  line.isApiErrorMessage === true;
+
 function isConversationLine(line: Line): line is ConversationLine {
   return (
     (line.type === 'user' || line.type === 'assistant') &&
@@ -126,11 +162,56 @@ function isConversationLine(line: Line): line is ConversationLine {
     line.sessionId !== undefined &&
     line.timestamp !== undefined &&
     line.message !== undefined &&
-    !line.isSidechain &&
-    !line.isMeta &&
-    !line.isCompactSummary &&
-    !line.isApiErrorMessage
+    !isAside(line)
   );
+}
+
+// Un tour que Claude Code a écrit à la place de la personne, préparé comme les autres.
+function injectedTurn(uuid: string, ts: string, raw: string): Turn | null {
+  const text = prepareTurnText(stripLeonBlocks(raw));
+  if (text === null) return null;
+  return { external_id: uuid, role: 'user', text, ts, capture_mode: 'file', injecte: true };
+}
+
+// Les `id` des appels `Agent` ou `Task` : un même bloc peut revenir sur deux lignes, l'ensemble dédoublonne.
+function collectSubagentCalls(line: ConversationLine, calls: Set<string>): void {
+  if (line.type !== 'assistant' || !Array.isArray(line.message.content)) return;
+  for (const block of line.message.content) {
+    const call = ToolUseBlockSchema.safeParse(block);
+    if (call.success && SUBAGENT_TOOLS.has(call.data.name)) calls.add(call.data.id);
+  }
+}
+
+// Le rapport d'un appel `Agent` ou `Task` vu plus haut, s'il est fini : les blocs de `toolUseResult.content`, sans les
+// notes du harnais au début. Plus de notes que de blocs : rien ne reste, rien n'est capté. Jamais le texte brut du
+// tool_result, qui mêle le rapport au harnais.
+function reportTurn(line: ConversationLine, calls: ReadonlySet<string>): Turn | null {
+  if (line.type !== 'user' || !Array.isArray(line.message.content)) return null;
+  const answersCall = line.message.content.some((block) => {
+    const result = ToolResultBlockSchema.safeParse(block);
+    return result.success && calls.has(result.data.tool_use_id);
+  });
+  const report = ReportSchema.safeParse(line.toolUseResult);
+  if (!answersCall || !report.success) return null;
+  const { content, harnessNoteCount } = report.data;
+  const kept = content.slice(harnessNoteCount).map((block) => block.text);
+  return injectedTurn(line.uuid, line.timestamp, kept.join('\n\n'));
+}
+
+// La notification d'une tâche de fond arrivée pendant que l'agent travaillait : une ligne `attachment`, la seule lue.
+// Elle porte `uuid`, `sessionId` et `timestamp` (annexe 08) : l'identifiant du tour est son `uuid`.
+function queuedNotificationTurn(line: Line): Turn | null {
+  const queued = QueuedNotificationSchema.safeParse(line.attachment);
+  if (
+    line.type !== 'attachment' ||
+    !queued.success ||
+    line.uuid === undefined ||
+    line.sessionId === undefined ||
+    line.timestamp === undefined ||
+    isAside(line)
+  )
+    return null;
+  return injectedTurn(line.uuid, line.timestamp, queued.data.prompt);
 }
 
 // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.
@@ -168,17 +249,21 @@ export function parseClaudeCodeSession(content: string): ClaudeCodeSession | nul
   let cwd: string | null = null;
   let aiTitle: string | undefined;
   let customTitle: string | undefined;
+  const subagentCalls = new Set<string>();
 
   for (const raw of content.split('\n')) {
     const line = parseLine(raw);
     if (!line) continue;
     if (line.type === 'ai-title') aiTitle = line.aiTitle ?? aiTitle;
     if (line.type === 'custom-title') customTitle = line.customTitle ?? customTitle;
-    if (!isConversationLine(line)) continue;
-    const turn = toTurn(line);
+    let turn: Turn | null;
+    if (isConversationLine(line)) {
+      collectSubagentCalls(line, subagentCalls);
+      turn = reportTurn(line, subagentCalls) ?? toTurn(line);
+    } else turn = queuedNotificationTurn(line);
     if (!turn) continue;
     turns.push(turn);
-    sessionId ??= line.sessionId;
+    sessionId ??= line.sessionId ?? null;
     cwd ??= line.cwd ?? null;
   }
 

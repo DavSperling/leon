@@ -163,7 +163,8 @@ export function parseCursorSession(content: string, file: CursorFile): CursorSes
 // reconnu ce serveur à l'URL de `mcp.json` (leon-mcp.ts).
 // shortcut: la forme `mcp_<serveur>_<outil>` d'un appel MCP dans le transcript vient des tests du lot 8, pas de l'essai
 // T26 ; la vérifier au prochain essai (le rapport du témoin). Une autre forme laisse la session externe (échec fermé).
-// shortcut: tout sous-agent rend la session externe (T63).
+// shortcut: tout sous-agent rend la session externe. Le tri de T63 (un sous-agent qui ne lit que le dépôt) vient dans la
+// quatrième PR du lot 14, après l'essai de Cursor (décision 2 d'Amos du 12/11).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',

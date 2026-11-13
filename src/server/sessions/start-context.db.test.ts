@@ -1,13 +1,15 @@
 import { eq, sql } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
+import { SECRET_MASK } from '@/capture/mask-secrets';
 import type { SessionFacts } from '@/capture/session-facts';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { BRIEFING_TIME_ZONE } from '@/server/briefing/briefing-prompt';
 import type { ConnectionStatus } from '@/server/connectors/connections';
 import { connections, depotsEquipe } from '@/server/db/schema/connections';
-import { sources, turns } from '@/server/db/schema/memory';
+import { lecons, readLog, sources, turns, versionsMemoire } from '@/server/db/schema/memory';
+import { retireLesson, writeLesson } from '@/server/memory/lessons';
 import { adminDb } from '@/test/db';
-import { createTestTenant, seedConnection } from '@/test/fixtures';
+import { createTestTenant, seedConnection, seedSource } from '@/test/fixtures';
 import { renderContext } from './render-context';
 import { readStartContext } from './start-context';
 
@@ -374,6 +376,31 @@ describe('readStartContext', () => {
     expect(text).not.toContain('zéphyrin');
   });
 
+  // Garde (QD9, T51) : le bloc ne lit aucun tour ; les coulisses d'une session n'y entrent donc jamais.
+  it('les coulisses d’une session n’entrent jamais dans le bloc', async () => {
+    const { paul } = await setup();
+    const sourceId = await seedSession(paul, {
+      faits: facts({ taches: [{ texte: 'Brancher la file', etat: 'a_faire' }] }),
+    });
+    await adminDb.insert(turns).values(
+      (['raisonnement', 'sous_agent', 'appel_outil'] as const).map((role) => ({
+        tenantId: paul.tenantId,
+        sourceId,
+        externalId: `coulisse:${role}`,
+        role,
+        text: `zéphyrin ${role}`,
+        ts: new Date(),
+        captureMode: 'file' as const,
+        acl: [paul.userId],
+      })),
+    );
+
+    const text = await render(paul);
+
+    expect(text).toContain('Brancher la file');
+    expect(text).not.toContain('zéphyrin');
+  });
+
   it('PR d’un tiers liée à ma session : son état, jamais son titre ; le mien seulement s’il est de moi', async () => {
     const { paul, marie } = await setup();
     await seedGithub(paul, { login: 'Paul-GH' });
@@ -706,5 +733,140 @@ describe('readStartContext', () => {
       expect(equipe.map((pr) => pr.numero)).toEqual([120, 127]);
       expect(sessions[0]?.faits?.prs.map((pr) => pr.etat)).toEqual(['open']);
     });
+  });
+});
+
+// Les leçons au démarrage (T56 ; D33, D37 du plan de la mémoire à disposition) : avec l'usage `lecture` seulement, les
+// leçons de l'auteur du dépôt et sans dépôt, non retirées, dont la dernière version est lisible, dans l'ordre de D37.
+describe('readStartContext : les leçons', () => {
+  const lesson = async (owner: TenantContext, texte: string, projet?: string) => {
+    const result = await writeLesson(owner, { texte, projet });
+    if (typeof result !== 'object') throw new Error(`leçon non écrite : ${result}`);
+    return result.id;
+  };
+  const lessons = async (owner: TenantContext, lecture = true) =>
+    (
+      await readStartContext(owner, {
+        projet: PROJECT,
+        branche: 'paul/contexte',
+        session: 'courante',
+        lecture,
+      })
+    ).lecons.map((one) => one.texte);
+
+  it('celles du dépôt d’abord, puis les plus fréquentes, puis les plus récentes, avec leur date', async () => {
+    const { paul } = await setup();
+    const rare = await lesson(paul, 'Sans dépôt, rare.');
+    const frequente = await lesson(paul, 'Sans dépôt, fréquente.');
+    await lesson(paul, 'Du dépôt.', PROJECT);
+    await adminDb.update(lecons).set({ frequence: 5 }).where(eq(lecons.id, frequente));
+    await adminDb
+      .update(lecons)
+      .set({ accepteeLe: new Date('2026-11-04T10:00:00.000Z') })
+      .where(eq(lecons.id, rare));
+
+    const { lecons: read } = await readStartContext(paul, {
+      projet: PROJECT,
+      branche: null,
+      session: 'courante',
+      lecture: true,
+    });
+
+    expect(read.map((one) => one.texte)).toEqual([
+      'Du dépôt.',
+      'Sans dépôt, fréquente.',
+      'Sans dépôt, rare.',
+    ]);
+    expect(read[2]?.accepteeLe).toEqual(new Date('2026-11-04T10:00:00.000Z'));
+  });
+
+  it('sans l’usage `lecture`, aucune leçon n’est lue', async () => {
+    const { paul } = await setup();
+    await lesson(paul, 'Du dépôt.', PROJECT);
+
+    expect(await lessons(paul, false)).toEqual([]);
+    expect(await lessons(paul)).toEqual(['Du dépôt.']);
+  });
+
+  it('la leçon d’un collègue est absente', async () => {
+    const { paul, marie } = await setup();
+    await lesson(marie, 'À Marie.', PROJECT);
+    await lesson(marie, 'À Marie, sans dépôt.');
+
+    expect(await lessons(paul)).toEqual([]);
+  });
+
+  it('une leçon d’un autre dépôt est absente', async () => {
+    const { paul } = await setup();
+    await lesson(paul, 'Ailleurs.', 'github.com/acme/autre');
+
+    expect(await lessons(paul)).toEqual([]);
+  });
+
+  it('une leçon dont une preuve est devenue privée est absente, sans version plus ancienne à sa place', async () => {
+    const { paul, marie } = await setup();
+    const id = await lesson(paul, 'Avant la preuve.', PROJECT);
+    const { sourceId: preuve } = await seedSource(marie, { kind: 'github' });
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.tenantId] })
+      .where(eq(sources.id, preuve));
+    await adminDb.insert(versionsMemoire).values({
+      tenantId: paul.tenantId,
+      ownerUserId: paul.userId,
+      leconId: id,
+      n: 2,
+      texte: 'Tirée de la PR.',
+      entrees: [preuve],
+      ecritPar: 'humain',
+      motif: 'correction',
+      acl: [paul.userId],
+    });
+    expect(await lessons(paul)).toEqual(['Tirée de la PR.']);
+
+    // Rendue privée, comme par aligner_sources_github() (0048).
+    await adminDb
+      .update(sources)
+      .set({ acl: [marie.userId] })
+      .where(eq(sources.id, preuve));
+
+    expect(await lessons(paul)).toEqual([]);
+  });
+
+  it('une leçon retirée est absente', async () => {
+    const { paul } = await setup();
+    const id = await lesson(paul, 'Retirée.', PROJECT);
+    expect(await retireLesson(paul, id)).toBe(true);
+
+    expect(await lessons(paul)).toEqual([]);
+  });
+
+  it('un faux secret dans une leçon est masqué dans le bloc', async () => {
+    const { paul } = await setup();
+    const key = `sk-ant-${'aB3dE5gH7jK9mN1pQ2sT'.repeat(2)}`;
+    await lesson(paul, `La clé : ${key}`, PROJECT);
+
+    const block = renderContext({
+      project: PROJECT,
+      ...(await readStartContext(paul, {
+        projet: PROJECT,
+        branche: null,
+        session: 'courante',
+        lecture: true,
+      })),
+      briefing: '',
+      max: 8000,
+    });
+
+    expect(block).toContain(`La clé : ${SECRET_MASK}`);
+    expect(block).not.toContain('sk-ant-');
+  });
+
+  it('les leçons lues ne sont pas notées au journal des lectures', async () => {
+    const { paul } = await setup();
+    await lesson(paul, 'Du dépôt.', PROJECT);
+
+    expect(await lessons(paul)).toEqual(['Du dépôt.']);
+    expect(await adminDb.select().from(readLog).where(eq(readLog.userId, paul.userId))).toEqual([]);
   });
 });

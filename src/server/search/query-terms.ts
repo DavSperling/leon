@@ -362,11 +362,11 @@ type Token =
 const hasWords = (text: string) => /[\p{L}\p{N}]/u.test(text);
 
 // Sans accents ni casse, l'apostrophe droite valant la typographique : « Où », « ou » et « OU » se confondent.
-function normalize(word: string): string {
+export function normalize(word: string): string {
   return word.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/'/g, '’');
 }
 
-const NORMALIZED = new Set([...FUNCTION_WORDS].map(normalize));
+export const NORMALIZED = new Set([...FUNCTION_WORDS].map(normalize));
 
 // « l’équipe », « qu’est-ce », « d’Acme » : un article ou un pronom élidé, collé au mot qui suit.
 const ELISION = /^(qu|jusqu|lorsqu|puisqu|[cdjlmnst])['’](.*)$/iu;

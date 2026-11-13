@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { VERSION_N_MAX } from '@/capture/api-contract';
 import { TOOL_KINDS } from '@/capture/turn';
 import { MCP_INSTRUCTIONS } from '@/server/mcp/server';
 import {
@@ -7,6 +8,7 @@ import {
   NEIGHBOUR_TURNS,
 } from '@/server/mcp/tools/fetch-tool';
 import { SearchOutputSchema } from '@/server/mcp/tools/output-schemas';
+import { NOTES_TURNED_OFF, RememberInputSchema } from '@/server/mcp/tools/remember-tool';
 import {
   SEARCH_DESCRIPTION,
   SEARCH_PAGE_MAX,
@@ -15,11 +17,13 @@ import {
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
 import { queryTerms } from '@/server/search/query-terms';
 import {
+  BACKSTAGE_ROLE_NAMES_EN,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
   readToolFilters,
 } from '@/server/search/tool-filters';
 import { PAGE_MAX, PAGE_SIZE } from '@/server/search/types';
+import en from '../../../messages/en.json';
 
 // Les textes que lit l'assistant du client (instructions du serveur, descriptions des outils et de leurs paramètres)
 // citent des noms et des chiffres du code. S'ils ne les reprennent pas, ils mentent sans qu'aucun test ne casse.
@@ -36,13 +40,14 @@ describe('instructions du serveur MCP', () => {
     for (const filter of named) expect(searchProperties).toContain(filter);
   });
 
-  it('nomment les sept outils et le rôle de chacun', () => {
+  it('nomment les huit outils et le rôle de chacun', () => {
     for (const tool of [
       'search',
       'fetch',
       'threads',
       'thread',
       'versions',
+      'lessons',
       'briefing',
       'remember',
     ]) {
@@ -94,6 +99,18 @@ describe('description de search', () => {
       expect(text).toContain(name);
       expect(readToolFilters({ type: name }, new Date()), name).not.toHaveProperty('error');
     }
+  });
+
+  // T51 (QD9) : les coulisses d'une session de code se ciblent par `type`, nommées comme les natures.
+  it('liste les trois rôles des coulisses, par des noms que la recherche lit comme rôles', () => {
+    const text = description(SearchInputSchema.shape.type);
+
+    for (const [role, name] of Object.entries(BACKSTAGE_ROLE_NAMES_EN)) {
+      expect(text).toContain(name);
+      expect(readToolFilters({ type: name }, new Date())).toEqual({ filters: { roles: [role] } });
+    }
+    const refused = readToolFilters({ type: 'inconnu' }, new Date());
+    expect('error' in refused ? refused.error : '').toContain('tool call');
   });
 
   // T25 : les formes que la description de depot propose sont celles que la recherche lit ; une autre est refusée.
@@ -174,5 +191,35 @@ describe('description de fetch', () => {
   it('nomme les trois identifiants, dont id, le nom que ChatGPT impose', () => {
     expect(Object.keys(FetchInputSchema.shape).sort()).toEqual(['id', 'passageId', 'sourceId']);
     for (const name of ['id', 'passageId', 'sourceId']) expect(FETCH_DESCRIPTION).toContain(name);
+  });
+});
+
+// T57 (C14) : remember écrit aussi la version suivante d'une note qu'il a déposée ; ses paramètres le disent, et rien
+// n'y restaure (D33).
+describe('description de remember', () => {
+  it('nomme note, l’id d’une note de remember, et version, le numéro de sa dernière version lue', () => {
+    expect(Object.keys(RememberInputSchema.shape).sort()).toEqual([
+      'about',
+      'note',
+      'text',
+      'version',
+    ]);
+    expect(description(RememberInputSchema.shape.note)).toContain('remember');
+    expect(description(RememberInputSchema.shape.version)).toContain('note');
+    expect(RememberInputSchema.shape.version.safeParse(VERSION_N_MAX + 1).success).toBe(false);
+    expect(
+      Object.values(RememberInputSchema.shape)
+        .map((schema) => description(schema))
+        .join(' '),
+    ).not.toMatch(/restor|restaur/i);
+  });
+});
+
+// T65 (C16) : le refus de remember, réglage `noter` daté, dit où le rouvrir, par les noms anglais du site : la section
+// Mémoire (son onglet) des réglages.
+describe('refus de remember quand les notes sont coupées', () => {
+  it('nomme l’onglet Mémoire et les réglages du site, tels que le site anglais les nomme', () => {
+    expect(NOTES_TURNED_OFF).toContain(`${en.settings.tabMemory} section`);
+    expect(NOTES_TURNED_OFF).toContain(`website ${en.navigation.settings.toLowerCase()}`);
   });
 });

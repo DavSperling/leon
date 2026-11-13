@@ -4,6 +4,7 @@ import { CODE_SESSION_KINDS, repoOf, type SourceKind } from '@/capture/turn';
 import { safeUrl } from '@/lib/safe-url';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
+import { type Lesson, lessonsOfProject } from '@/server/memory/lessons';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
 import { SOMMAIRE_FILS_MAX, TEAM_LINES_MAX } from './render-context';
 import { type FilKeys, readFilKeys } from './thread-read';
@@ -19,8 +20,10 @@ import { RANGEMENT_IDLE_SECONDS } from './threads-queue';
 // transaction, sans aucun appel à GitHub, et seulement pour un lecteur dont la propre relève GitHub vient de lire ce
 // dépôt d'équipe (D14).
 // Avec l'usage `lecture` de l'outil (T46, D24 et D30 du plan de la mémoire à disposition), les clés de mes fils sur ce
-// projet, dans la même transaction, à la place de mes sessions ; sans fil, mes sessions. Et toujours, les sessions dont
-// le rangement attend encore (recentSessions), que la route avance.
+// projet, dans la même transaction, à la place de mes sessions ; sans fil, mes sessions. Avec le même usage, mes leçons
+// du dépôt et sans dépôt, non retirées, dont la dernière version est lisible, dans l'ordre de D37 (T56, lessons.ts) ;
+// sans lui, aucune n'est lue. Et toujours, les sessions dont le rangement attend encore (recentSessions), que la route
+// avance.
 
 // Contraintes globales du plan : 4 sessions au plus, sur 7 jours ; 10 lignes d'équipe, fusionnées depuis 72 h ou
 // ouvertes et modifiées depuis 30 jours ; un dépôt confirmé depuis moins de 24 h.
@@ -48,6 +51,8 @@ export type StartFacts = Omit<SessionFacts, 'prs'> & { prs: StartPr[]; perime: b
 // `faits` nul : des faits rangés que le schéma ne lit plus. Une session sans faits (envoyée sans accord de version 2,
 // ou avant ce chantier) n'est pas lue : elle prendrait l'une des 4 places pour n'en montrer que l'outil et la date.
 export type StartSession = { kind: SourceKind; lastTs: Date; faits: StartFacts | null };
+// Une leçon poussée (T56) : son texte, relu et accepté par l'humain, et sa date d'acceptation.
+export type StartLesson = Pick<Lesson, 'texte' | 'accepteeLe'>;
 // Une ligne d'équipe : des clés, jamais un titre. `date` : la fusion, ou la dernière modification d'une PR ouverte.
 export type TeamPr = {
   numero: number;
@@ -282,16 +287,26 @@ async function recentSessions(
 export async function readStartContext(
   ctx: TenantContext,
   input: { projet: string; branche: string | null; session: string; lecture?: boolean },
-): Promise<{ sessions: StartSession[]; equipe: TeamPr[]; fils: FilKeys[]; recentes: string[] }> {
+): Promise<{
+  sessions: StartSession[];
+  equipe: TeamPr[];
+  fils: FilKeys[];
+  lecons: StartLesson[];
+  recentes: string[];
+}> {
   return withTenant(ctx, async (tx) => {
     const fils = input.lecture
       ? (await readFilKeys(tx, ctx, input, SOMMAIRE_FILS_MAX)).fils.map(({ keys }) => keys)
       : [];
+    // shortcut: toutes les leçons du dépôt sont lues, pour compter « N autres leçons » ; une borne et un count(*) si
+    // elles deviennent des milliers (la mesure de T56 en lit 200).
+    const lecons = input.lecture ? await lessonsOfProject(tx, ctx, input.projet) : [];
     const sessions = fils.length > 0 ? [] : await readMine(tx, ctx, input);
     const repo = repoOf(input.projet);
     return {
       sessions,
       fils,
+      lecons,
       equipe: repo ? await readTeamPrs(tx, ctx, input.projet, repo) : [],
       recentes: await recentSessions(tx, ctx, input),
     };

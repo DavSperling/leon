@@ -27,6 +27,7 @@ import {
   removeMember,
   setMemberPlacement,
   setMemberRole,
+  setNotesRefused,
 } from '@/server/auth/members';
 import { PlacementSchema } from '@/server/auth/onboarding';
 import { setManager, setManagersSeeAll } from '@/server/auth/organisation';
@@ -35,6 +36,7 @@ import {
   getSession,
   requestHeaders,
   requireUserContext,
+  signedInRecently,
   signOutCurrentUser,
 } from '@/server/auth/session';
 import { registerSso, removeSso, SsoInputSchema, verifySsoDomain } from '@/server/auth/sso';
@@ -45,6 +47,13 @@ import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
+import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
+import {
+  type MemoryTarget,
+  type MemoryVersion,
+  readMemoryVersion,
+  restoreMemoryVersion,
+} from '@/server/memory/memory-section';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
@@ -565,4 +574,117 @@ export async function removeSsoAction(): Promise<{ ok: boolean }> {
   });
   revalidatePath('/reglages');
   return { ok };
+}
+
+// La section Mémoire (T55, T57 ; D33, D34, D37, C12, C13 du plan de la mémoire à disposition) : les seuls gestes qui
+// écrivent, corrigent, retirent une leçon ou remettent une version, sous la session du navigateur (requireUserContext ;
+// sans le plugin bearer, aucun jeton n'y arrive). Écrire, corriger et remettre exigent une connexion de moins d'une
+// heure (signedInRecently) : sinon « reconnexion », rien n'est écrit, et la section mène à /connexion?retour=memoire.
+// Retirer ne l'exige pas (D37). Chaque erreur est un code, que la section traduit ; aucune ne recopie une valeur reçue.
+export type MemoryError = 'reconnexion' | 'modifiee' | 'introuvable' | 'invalide';
+
+// Le numéro d'une version : un int4, comme versions_memoire.n.
+const VersionNumberSchema = z.int().min(1).max(2_147_483_647);
+const MemoryTargetSchema = z.object({ cible: z.enum(['fil', 'note', 'lecon']), id: z.uuid() });
+const WriteLessonSchema = z.object({ texte: z.string(), projet: z.string().nullable() });
+const CorrectLessonSchema = z.object({
+  id: z.string(),
+  texte: z.string(),
+  depuis: VersionNumberSchema,
+});
+const RestoreSchema = MemoryTargetSchema.extend({
+  n: VersionNumberSchema,
+  depuis: VersionNumberSchema,
+});
+const ReadVersionSchema = MemoryTargetSchema.extend({ n: VersionNumberSchema });
+
+// `projet` : un des dépôts des fils de l'auteur, ou null pour tous ses dépôts. Le texte et le dépôt sont validés par
+// lessons.ts (300 caractères, ProjectSchema), qui passe le texte par maskSecrets.
+export async function writeLessonAction(input: {
+  texte: string;
+  projet: string | null;
+}): Promise<{ ok: true; id: string; n: number } | { error: MemoryError }> {
+  const ctx = await requireUserContext();
+  const parsed = WriteLessonSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await signedInRecently())) return { error: 'reconnexion' };
+  const written = await writeLesson(ctx, {
+    texte: parsed.data.texte,
+    projet: parsed.data.projet ?? undefined,
+  });
+  if (written === 'invalide') return { error: 'invalide' };
+  revalidatePath('/reglages');
+  return { ok: true, ...written };
+}
+
+// `depuis` : le numéro de la version que la section montrait (compare-and-set, D34).
+export async function correctLessonAction(input: {
+  id: string;
+  texte: string;
+  depuis: number;
+}): Promise<{ ok: true; n: number } | { error: MemoryError }> {
+  const ctx = await requireUserContext();
+  const parsed = CorrectLessonSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await signedInRecently())) return { error: 'reconnexion' };
+  const corrected = await correctLesson(ctx, parsed.data);
+  if (typeof corrected !== 'object')
+    return { error: corrected === 'depassee' ? 'modifiee' : corrected };
+  revalidatePath('/reglages');
+  return { ok: true, n: corrected.n };
+}
+
+// Elle sort des listes et du bloc ; ses versions restent (D33).
+export async function retireLessonAction(
+  id: string,
+): Promise<{ ok: true } | { error: 'introuvable' | 'invalide' }> {
+  const ctx = await requireUserContext();
+  const parsed = z.string().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await retireLesson(ctx, parsed.data))) return { error: 'introuvable' };
+  revalidatePath('/reglages');
+  return { ok: true };
+}
+
+// « Remettre cette version » d'un fil, d'une note (par writeNote, T57) ou d'une leçon : v(depuis+1), écrite par l'humain, rien n'est effacé (D33).
+export async function restoreMemoryVersionAction(input: {
+  cible: MemoryTarget['cible'];
+  id: string;
+  n: number;
+  depuis: number;
+}): Promise<{ ok: true; n: number } | { error: MemoryError }> {
+  const ctx = await requireUserContext();
+  const parsed = RestoreSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await signedInRecently())) return { error: 'reconnexion' };
+  const restored = await restoreMemoryVersion(ctx, parsed.data);
+  if (typeof restored !== 'object')
+    return { error: restored === 'depassee' ? 'modifiee' : restored };
+  revalidatePath('/reglages');
+  return { ok: true, n: restored.n };
+}
+
+// L'interrupteur des notes de la section Mémoire (T65, C16) : le réglage `noter` du compte, dans les deux sens, sous la
+// session du navigateur. Coupé, `remember` refuse d'écrire pour les assistants branchés à cet espace. Il n'écrit aucun
+// texte poussé : pas de connexion récente (D37). Le seul chemin qui rouvre : la route à jeton n'accepte qu'un refus.
+export async function setNotesOpenAction(open: boolean): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = z.boolean().safeParse(open).success && (await setNotesRefused(ctx, !open));
+  if (ok) revalidatePath('/reglages');
+  return { ok };
+}
+
+// Le texte d'une version de l'historique, si elle est lisible (D33). Lire n'exige pas de connexion récente.
+export async function readMemoryVersionAction(input: {
+  cible: MemoryTarget['cible'];
+  id: string;
+  n: number;
+}): Promise<
+  { ok: true; version: MemoryVersion & { texte: string } } | { error: 'introuvable' | 'invalide' }
+> {
+  const ctx = await requireUserContext();
+  const parsed = ReadVersionSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const version = await readMemoryVersion(ctx, parsed.data);
+  return version ? { ok: true, version } : { error: 'introuvable' };
 }

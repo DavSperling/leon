@@ -330,6 +330,26 @@ describe('uninstallHooks : les crochets de la forme du lanceur (K9)', () => {
     expect(Object.keys(after.hooks)).toEqual(['PreToolUse', 'SessionStart', 'Stop']);
   });
 
+  // T49 : le crochet de message, posé avec l'usage `rappel`, part avec les deux autres ; un crochet UserPromptSubmit de
+  // l'utilisateur reste.
+  it('retire aussi le crochet de message (UserPromptSubmit, leon reminder)', async () => {
+    const home = '/Users/amos';
+    const reminder = launcherHookCommand(home, 'reminder');
+    const mine = { hooks: [{ type: 'command', command: './relire.sh' }] };
+    await writeSettings({
+      hooks: {
+        SessionStart: [leonStart()],
+        UserPromptSubmit: [mine, { hooks: [{ type: 'command', command: reminder, timeout: 5 }] }],
+      },
+    });
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(`  UserPromptSubmit · ${reminder}`);
+    expect((await readSettings()).hooks).toEqual({ UserPromptSubmit: [mine] });
+  });
+
   it('une commande de l’utilisateur qui cite le lanceur n’est pas retirée', async () => {
     const mine = [
       `echo ${launcherHookCommand('/Users/amos', 'briefing')}`,

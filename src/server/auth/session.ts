@@ -23,6 +23,18 @@ export async function getSession() {
   return auth.api.getSession({ headers: await requestHeaders() });
 }
 
+// Une connexion de moins d'une heure (T55 ; D37 du plan de la mémoire à disposition) : écrire ou corriger une leçon,
+// et remettre une version, l'exigent. L'heure est `createdAt`, celle de la connexion : le rafraîchissement (updateAge)
+// ne touche que `updatedAt` et `expiresAt`. On ne baisse pas `freshAge` de Better Auth, qui changerait ses routes.
+// Toute connexion compte (mot de passe et 2FA, Google, Microsoft, One Tap, SSO) : aucune n'est forcée chez le
+// fournisseur, limite connue (vigilance 2).
+const RECENT_SIGN_IN_MS = 60 * 60 * 1000;
+export async function signedInRecently(): Promise<boolean> {
+  const session = await getSession();
+  if (!session) return false;
+  return Date.now() - new Date(session.session.createdAt).getTime() < RECENT_SIGN_IN_MS;
+}
+
 // Où l'on renvoie une personne connectée qui n'a pas (ou pas fini) son espace.
 export const ONBOARDING_PATH = '/bienvenue';
 

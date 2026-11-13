@@ -1,9 +1,10 @@
 import { removeBlocks } from './prepare-turn-text';
 
 // Un bloc injecté par Leon n'est jamais recapté (T06 du plan mémoire des sessions) : ni le bloc de démarrage
-// (`<contexte-leon>`), ni le point du matin qui le suit, ni le rappel du premier prompt (`<rappel-leon>`, T36).
-// Recapté, il reviendrait dans le bloc suivant et s'y recopierait de session en session. Le serveur échappe tout ce
-// qu'il met dans un bloc : la première balise fermante est donc la vraie fin.
+// (`<contexte-leon>`, sommaire des fils, leçons et consigne compris : T46, T56), ni le point du matin qui le suit, ni
+// le rappel du premier prompt (`<rappel-leon>`, T36). Recapté, il reviendrait dans le bloc suivant et s'y recopierait
+// de session en session. Le serveur échappe tout ce qu'il met dans un bloc : la première balise fermante est donc la
+// vraie fin.
 //
 // Seulement pour les sessions de code, qui reçoivent ces blocs : appelée par les lecteurs de leurs fichiers et à la
 // réception de leurs tours (ingest-turns.ts), jamais dans prepareTurnText, qui sert aussi aux connecteurs (un ticket

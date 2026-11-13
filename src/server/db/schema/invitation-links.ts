@@ -3,7 +3,7 @@ import { members, organizations, users } from './auth';
 
 // Liens d'invitation (0033) : seul le SHA-256 du secret est stocké. Pas de RLS, retrouvés par leur empreinte.
 // 0044 : le nom saisi par l'invitant et le poste de l'invité (identifiants de src/lib/onboarding.ts), recopié sur le
-// membre à l'arrivée ; nuls pour les liens d'avant. 0065 : son manager, appliqué à l'arrivée.
+// membre à l'arrivée ; nuls pour les liens d'avant. 0070 : son manager, appliqué à l'arrivée.
 export const invitationLinks = pgTable('invitation_links', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CODE_SESSION_KINDS, ProjectSchema } from './turn';
+import { CODE_SESSION_KINDS, ProjectSchema, TURN_TEXT_MAX } from './turn';
 
 // Contrat HTTP partagé avec la CLI et l'extension (décision D1 : aucun import de code serveur ici).
 export const API_PATHS = {
@@ -16,6 +16,11 @@ export const API_PATHS = {
   fil: '/api/v1/fil', // POST : un fil, sans id celui de la branche (leon thread)
   chercher: '/api/v1/chercher', // POST : la recherche bornée au dépôt du projet (leon search)
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
+  lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
+  rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
+  noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
+  coulisses: '/api/v1/coulisses', // POST : le raisonnement, les sous-agents et les appels d'outils d'une session (lot 14)
+  usages: '/api/v1/usages', // POST : un « non » à `noter` dans le terminal coupe `remember` pour le compte (C16)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
   oauthJeton: '/api/oauth/jeton', // POST : le code d'autorisation ou le renouvellement contre les jetons (RFC 6749)
 } as const;
@@ -95,7 +100,9 @@ export const SessionFactsSchema = z
       )
       .max(TACHES_MAX),
     erreurs: z.number().int().nonnegative(), // erreurs d'outils
-    externe: z.boolean(), // a lu du web, du MCP, un sous-agent ou une commande réseau
+    // a lu du web, du MCP, une commande réseau, ou un sous-agent qui sort du dépôt (T63 ; hors Claude Code, tout
+    // sous-agent, jusqu'à la quatrième PR du lot 14)
+    externe: z.boolean(),
     echanges: z.number().int().nonnegative(), // messages tapés par l'utilisateur
     debut: z.iso.datetime({ offset: true }).nullable(),
     fin: z.iso.datetime({ offset: true }).nullable(),
@@ -108,10 +115,11 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
 export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
 export type Usage = (typeof USAGES)[number];
-// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : T49 y ajoutera
-// `rappel`, T57 `noter`. À part de USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de
-// ce lot sait écrire.
-export const AUTHORIZE_USAGES = ['lecture'] as const satisfies readonly Usage[];
+// Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
+// `rappel` (T49, avec son crochet), puis `noter` (T57, sans crochet), dans l'ordre des questions du terminal. À part de
+// USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de ce lot sait écrire (les trois
+// pour les quatre outils, `rappel` depuis l'essai d'Antigravity 2.0.6 du 11/11).
+export const AUTHORIZE_USAGES = ['lecture', 'rappel', 'noter'] as const satisfies readonly Usage[];
 export type AuthorizeUsage = (typeof AUTHORIZE_USAGES)[number];
 
 // Les gestes d'une session de code (C2 du plan mémoire des sessions), à part du contrat d'ingestion : un serveur
@@ -156,7 +164,9 @@ export type RetraitRequest = z.infer<typeof RetraitRequestSchema>;
 // en `max` octets UTF-8 au plus, borné à CONTEXT_MAX_BYTES. En POST, pour que la branche n'aille pas dans les
 // journaux d'URL. `usages` : ceux de l'outil dont le crochet demande le bloc ; avec `lecture`, le sommaire de ses fils
 // et la consigne de lecture, qui cite `commande` (T46 du plan de la mémoire à disposition). Les deux sont facultatifs :
-// une CLI plus ancienne reçoit le bloc d'avant.
+// une CLI plus ancienne reçoit le bloc d'avant. `outil` (C14, T57) : l'outil du crochet, que la CLI n'envoie qu'avec
+// son usage `noter` (un serveur plus ancien refuserait le champ, et le bloc avec lui) ; la phrase de `leon note` le cite
+// avec la session.
 export const CONTEXT_MAX_BYTES = 8000;
 export const CONTEXT_BODY_MAX_BYTES = 4 * 1024; // une requête valide tient en moins de 1 Kio
 // La commande Leon posée sur le poste, recopiée dans le bloc (C3 révisé, A16) : des caractères de chemin en ASCII, 200
@@ -171,6 +181,7 @@ export const ContextRequestSchema = z
     max: z.number().int().positive().optional(),
     usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
     commande: CommandeSchema.optional(),
+    outil: z.enum(CODE_SESSION_KINDS).optional(),
   })
   .strict();
 export type ContextRequest = z.infer<typeof ContextRequestSchema>;
@@ -206,6 +217,101 @@ export const VersionsRequestSchema = z
   .object({ ...ReadBase, id: z.uuid(), n: z.number().int().min(1).max(VERSION_N_MAX).optional() })
   .strict();
 export type VersionsRequest = z.infer<typeof VersionsRequestSchema>;
+// Les leçons (C13) : sans `id`, les leçons lisibles et non retirées du dépôt et sans dépôt ; avec `id`, une leçon. Aucun
+// champ n'écrit, ne corrige, ne retire ni ne restaure : cela se fait sur le site seulement (D37).
+export const LeconsRequestSchema = z.object({ ...ReadBase, id: z.uuid().optional() }).strict();
+export type LeconsRequest = z.infer<typeof LeconsRequestSchema>;
 // Le rendu gardé (D25), le même que celui du MCP.
 export const ReadResponseSchema = z.object({ texte: z.string() });
 export type ReadResponse = z.infer<typeof ReadResponseSchema>;
+
+// Le rappel à chaque message (C8, D26) : les 2 000 premiers caractères du message, masqués sur le poste, contre une
+// ligne de clés balisée, ou un texte vide. Sans `rappel` dans `usages`, vide sans aucune recherche. 16 Kio : un message
+// de 2 000 caractères peut peser 8 Kio en JSON. `branche` départage deux fils à égalité ; `outil` ne sert qu'au
+// compteur. Un serveur ancien répond 404 : la CLI ne sort rien, avec le code 0.
+export const RAPPEL_BODY_MAX_BYTES = 16 * 1024;
+export const RAPPEL_MESSAGE_MAX = 2000;
+export const RappelRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    branche: z.string().min(1).max(200).nullable(), // tête détachée : null
+    session: z.string().min(1).max(200),
+    message: z.string().max(RAPPEL_MESSAGE_MAX),
+    outil: z.enum(CODE_SESSION_KINDS),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length),
+  })
+  .strict();
+export type RappelRequest = z.infer<typeof RappelRequestSchema>;
+export const RappelResponseSchema = z.object({ texte: z.string() });
+export type RappelResponse = z.infer<typeof RappelResponseSchema>;
+
+// Les notes de l'agent (C14, D38) : une note privée, neuve, ou la version suivante d'une note (`note` et `version`,
+// ensemble), en compare-and-set, seulement depuis le même outil. `texte` est masqué sur le poste, puis de nouveau par le
+// serveur. `session` est une indication déclarée. Sans `noter` dans `usages`, le serveur refuse. 201 { id, n }, ou 409
+// (version dépassée, autre outil, note introuvable). Un serveur ancien répond 404 : la commande le dit sur la sortie
+// d'erreur, avec le code 0. 16 Kio : 4 000 caractères peuvent peser 16 Ko en JSON, comme le rappel.
+export const NOTER_BODY_MAX_BYTES = 16 * 1024;
+export const NOTE_TEXTE_MAX = 4000;
+export const NoterRequestSchema = z
+  .object({
+    projet: ProjectSchema,
+    outil: z.enum(CODE_SESSION_KINDS),
+    session: z.string().min(1).max(200).optional(),
+    texte: z.string().min(1).max(NOTE_TEXTE_MAX),
+    note: z.uuid().optional(),
+    version: z.number().int().min(1).max(VERSION_N_MAX).optional(),
+    usages: z.array(z.enum(USAGES)).max(USAGES.length),
+  })
+  .strict()
+  .refine((body) => (body.note === undefined) === (body.version === undefined));
+export type NoterRequest = z.infer<typeof NoterRequestSchema>;
+export const NoterResponseSchema = z.object({ id: z.uuid(), n: z.number().int().positive() });
+export type NoterResponse = z.infer<typeof NoterResponseSchema>;
+
+// Le refus de `noter` pour le compte (C16, T65) : l'installateur l'envoie sur un « non » dans le terminal, avec la
+// connexion de l'ordinateur, et le serveur date le réglage du membre ; `remember` refuse alors d'écrire. Un refus
+// seulement : le jeton d'un ordinateur est lisible de tout agent du poste, rouvrir passe par le navigateur (la section
+// Mémoire du site). 204, sans corps ; un serveur ancien répond 404, et l'installation continue.
+export const USAGES_BODY_MAX_BYTES = 1024;
+export const UsagesRequestSchema = z.strictObject({ noter: z.literal(false) });
+export type UsagesRequest = z.infer<typeof UsagesRequestSchema>;
+
+// Les coulisses d'une session de code (C10 amendé le 12/11, D29) : le raisonnement, la consigne et le rapport de chaque
+// sous-agent, et les appels d'outils réduits, rangés comme tours de la session. Sans `coulisses` dans `usages`, 403 ; après
+// un retrait, `accord_le` suit la règle des faits. `id` est stable d'un envoi à l'autre (l'`uuid` de la ligne, l'`id` du
+// `tool_use`, suivi de `:consigne` ou `:rapport`) : l'envoi répété ne double rien. Un appel n'a pas de texte : le
+// serveur l'écrit lui-même d'après `outil`, `cible` et `statut`, qu'il revérifie. 2 000 blocs au plus : loin des
+// 65 535 paramètres d'un insert. Un serveur ancien répond 404.
+export const COULISSES_BODY_MAX_BYTES = 256 * 1024;
+export const COULISSES_BLOCS_MAX = 2000;
+export const COULISSE_OUTIL_MAX = 60;
+const Bloc = {
+  id: z.string().regex(/^[A-Za-z0-9_.:-]{1,200}$/),
+  ts: z.iso.datetime({ offset: true }),
+};
+const BlocTexte = z.string().min(1).max(TURN_TEXT_MAX);
+export const CoulisseBlocSchema = z.discriminatedUnion('role', [
+  z.strictObject({ role: z.literal('raisonnement'), ...Bloc, texte: BlocTexte }),
+  z.strictObject({
+    role: z.literal('sous_agent'),
+    ...Bloc,
+    partie: z.enum(['consigne', 'rapport']),
+    texte: BlocTexte,
+  }),
+  z.strictObject({
+    role: z.literal('appel_outil'),
+    ...Bloc,
+    outil: z.string().min(1).max(COULISSE_OUTIL_MAX),
+    cible: z.string().max(TEXTE_MAX).optional(),
+    statut: z.enum(['ok', 'erreur', 'sans_resultat']),
+  }),
+]);
+export type CoulisseBloc = z.infer<typeof CoulisseBlocSchema>;
+export const CoulissesRequestSchema = z.strictObject({
+  kind: z.enum(CODE_SESSION_KINDS),
+  external_id: z.string().min(1).max(200),
+  usages: z.array(z.enum(USAGES)).max(USAGES.length).optional(),
+  accord_le: DatePosteSchema.optional(),
+  blocs: z.array(CoulisseBlocSchema).min(1).max(COULISSES_BLOCS_MAX),
+});
+export type CoulissesRequest = z.infer<typeof CoulissesRequestSchema>;

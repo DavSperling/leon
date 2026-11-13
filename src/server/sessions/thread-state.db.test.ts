@@ -1,7 +1,7 @@
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import { extractClaudeCodeFacts, type SessionFacts } from '@/capture/session-facts';
-import type { CodeSessionKind } from '@/capture/turn';
+import type { CodeSessionKind, TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { briefingResponse } from '@/server/briefing/briefings';
 import { readLog, sources, turns, versionsMemoire } from '@/server/db/schema/memory';
@@ -57,7 +57,7 @@ const facts = (extra: Partial<SessionFacts> = {}): SessionFacts => ({
   ...extra,
 });
 
-type Tour = { role: 'user' | 'assistant'; text: string; injecte?: boolean | null };
+type Tour = { role: TurnRole; text: string; injecte?: boolean | null };
 const TOURS: Tour[] = [
   { role: 'user', text: 'On écrit l’état du fil en versions.', injecte: false },
   { role: 'assistant', text: 'Je branche le worker zéphyrin.' },
@@ -383,6 +383,26 @@ describe('updateFilState', () => {
     expect(promptOf(llm)).not.toContain(without.id);
     expect(promptOf(llm)).not.toContain('privé de Codex');
     expect((await versions(filId))[0]?.entrees).toEqual([withUsage.id]);
+  });
+
+  // D23, T51 : les coulisses du lot 14 n'entrent jamais au condensé, même d'une session non externe avec l'usage resume.
+  it('aucun tour des coulisses n’entre au condensé', async () => {
+    const { paul } = await team();
+    const one = await codeSession(paul, {
+      tours: [
+        ...TOURS,
+        { role: 'raisonnement', text: 'Coulisse raisonnement.' },
+        { role: 'sous_agent', text: '[rapport]\nCoulisse sous-agent.' },
+        { role: 'appel_outil', text: 'Read · src/coulisse.ts · ok' },
+      ],
+    });
+    const filId = await fil(paul, [one.id]);
+    const llm = answer(etat(one.id));
+
+    expect(await updateFilState(job(paul, filId), { llm })).toBe('modele');
+
+    expect(promptOf(llm)).toContain('Je branche le worker zéphyrin.');
+    expect(promptOf(llm)).not.toContain('oulisse');
   });
 
   it('après un retrait, une session envoyée avant lui, même ancienne, n’entre plus au condensé', async () => {

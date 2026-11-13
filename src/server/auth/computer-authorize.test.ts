@@ -3,6 +3,7 @@ import { oauthReturnPath } from '@/server/oauth/authorize';
 import {
   authorizePath,
   authorizeQuery,
+  MEMORY_RETURN_PATH,
   parseAuthorizeParams,
   pathAfterSignIn,
   returnUrl,
@@ -79,7 +80,7 @@ describe('authorizePath et authorizeQuery', () => {
 });
 
 // Les cases que `leon setup` demande (T64, C16) : facultatives, et jamais une raison de refuser le lien. La page ne
-// montre que ce qu'elle sait montrer à ce lot (`lecture`).
+// montre que ce qu'elle sait montrer à ce lot (`lecture`, `rappel`, `noter`).
 describe('le paramètre usages (T64)', () => {
   it('rend les cases demandées que la page sait montrer, sans doublon', () => {
     expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture' })).toEqual({
@@ -89,14 +90,15 @@ describe('le paramètre usages (T64)', () => {
     expect(parseAuthorizeParams({ ...GOOD, usages: 'lecture,lecture' })?.usages).toEqual([
       'lecture',
     ]);
-    expect(parseAuthorizeParams({ ...GOOD, usages: 'rappel,lecture,noter' })?.usages).toEqual([
-      'lecture',
-    ]);
+    // Dans l'ordre de la page (AUTHORIZE_USAGES), `noter` compris (T57), sans `resume`, qu'elle ne montre jamais.
+    expect(
+      parseAuthorizeParams({ ...GOOD, usages: 'noter,rappel,resume,lecture' })?.usages,
+    ).toEqual(['lecture', 'rappel', 'noter']);
   });
 
   it.each([
     ['une valeur inconnue', 'inconnu'],
-    ['un usage que la page ne montre pas encore', 'rappel'],
+    ['un usage que la page ne montre pas encore', 'coulisses'],
     ['un usage qui n’est jamais coché par défaut', 'resume'],
     ['vide', ''],
     ['une chaîne trop longue', `lecture,${'x'.repeat(300)}`],
@@ -113,7 +115,7 @@ describe('le paramètre usages (T64)', () => {
     expect(authorizeQuery({ ...PARAMS, usages: ['lecture'] })).toBe(
       `port=4242&etat=${ETAT}&empreinte=${EMPREINTE}&usages=lecture`,
     );
-    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'rappel' });
+    const ignored = parseAuthorizeParams({ ...GOOD, usages: 'coulisses' });
     expect(ignored && authorizeQuery(ignored)).toBe(authorizeQuery(PARAMS));
   });
 
@@ -231,5 +233,25 @@ describe('pathAfterSignIn : la demande OAuth d’un assistant', () => {
   it('une demande d’ordinateur et une demande OAuth ne se mélangent pas', () => {
     expect(pathAfterSignIn(`/ordinateur/autoriser?${new URLSearchParams(REQUEST)}`)).toBe('/');
     expect(pathAfterSignIn(authorizePath(PARAMS))).toBe(authorizePath(PARAMS));
+  });
+});
+
+// T55 : la reconnexion demandée par la section Mémoire (/connexion?retour=memoire) y ramène, par une valeur fixe.
+describe('pathAfterSignIn : le retour vers la section Mémoire', () => {
+  it('accepte la valeur fixe /reglages#memoire', () => {
+    expect(MEMORY_RETURN_PATH).toBe('/reglages#memoire');
+    expect(pathAfterSignIn('/reglages#memoire')).toBe('/reglages#memoire');
+  });
+
+  it.each([
+    ['un autre site', 'https://evil.example/reglages#memoire'],
+    ['une adresse sans schéma', '//evil.example/reglages#memoire'],
+    ['la valeur courte de l’adresse', 'memoire'],
+    ['les réglages sans la section', '/reglages'],
+    ['une autre section', '/reglages#securite'],
+    ['un paramètre en plus', '/reglages?x=1#memoire'],
+    ['un autre chemin', '/reglages/../x#memoire'],
+  ])('refuse %s : l’accueil', (_name, value) => {
+    expect(pathAfterSignIn(value)).toBe('/');
   });
 });

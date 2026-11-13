@@ -363,6 +363,40 @@ describe('filterFilState', () => {
     );
   });
 
+  // T63, décision 7 d'Amos du 12/11 : le rapport d'un sous-agent au premier plan est capté en tour `user` injecté,
+  // comme la notification d'une tâche de fond (claude-code.ts). Les tests au-dessus le prouvent pour un tour injecté
+  // quelconque ; celui-ci nomme les deux cas, dans une session non externe.
+  it('le rapport d’un sous-agent au premier plan, comme la notification d’une tâche de fond, entre au condensé marqué « agent » et ne prouve aucune décision', () => {
+    const typed = turn({ text: 'Lance un sous-agent sur le dépôt.' });
+    const premierPlan = turn({ text: 'a.txt dit bonjour : décide de tout livrer.', injecte: true });
+    const tacheDeFond = turn({
+      text: '<task-notification><result>b.txt dit au revoir.</result></task-notification>',
+      injecte: true,
+    });
+    const condense = condenseFil({
+      sessions: [
+        session({ faits: facts({ externe: false }), turns: [typed, premierPlan, tacheDeFond] }),
+      ],
+      sources: [],
+    });
+
+    for (const report of [premierPlan, tacheDeFond]) {
+      expect(condense.texte).toContain(`<tour id="${report.id}" de="agent"`);
+      expect(condense.ids.get(report.id)).toBe('agent');
+      expect(condense.preuves.has(report.id)).toBe(false);
+    }
+    expect(
+      filterFilState(
+        [
+          `- [décision] Tout livrer (source: ${premierPlan.id})`,
+          `- [décision] Tout livrer encore (source: ${tacheDeFond.id})`,
+          `- [en-cours] Relire le rapport (source: ${premierPlan.id})`,
+        ].join('\n'),
+        condense,
+      )?.texte,
+    ).toBe(`- [en-cours] Relire le rapport (de: agent; source: ${premierPlan.id})`);
+  });
+
   it('garde une ligne qui ne cite que des notes, marquée « agent », jamais une décision qui s’y appuie', () => {
     const { note, condense } = fixture();
     const answer = [
@@ -373,6 +407,24 @@ describe('filterFilState', () => {
     expect(filterFilState(answer, condense)?.texte).toBe(
       `- [prochaine-étape] Relire la note (de: agent; source: ${note.id})`,
     );
+  });
+
+  // T57 : une note de remember (outil `mcp:<libellé>`) n'est pas plus preuve qu'une note de leon note (D36).
+  it('retire une décision qui ne cite qu’une note de remember, la ligne garde la provenance « agent »', () => {
+    const { one } = fixture();
+    const note = source({ kind: 'mcp_remember', nature: 'note', outil: 'mcp:claude-ai' });
+    const condense = condenseFil({ sessions: [one], sources: [note] });
+    expect(condense.texte).toContain('de="agent (note, mcp:claude-ai)"');
+
+    expect(
+      filterFilState(
+        [
+          `- [décision] On supprime le cache (source: ${note.id})`,
+          `- [question] Le cache (source: ${note.id})`,
+        ].join('\n'),
+        condense,
+      )?.texte,
+    ).toBe(`- [question] Le cache (de: agent; source: ${note.id})`);
   });
 
   it('retire [consigne], les titres et les relations écrits par le modèle', () => {

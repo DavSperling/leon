@@ -1,7 +1,12 @@
 import { and, eq } from 'drizzle-orm';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, ViewerProfileSchema } from '@/capture/api-contract';
-import { createApiToken, generateApiToken, hashApiToken } from '@/server/auth/api-tokens';
+import { API_PATHS, type Usage, ViewerProfileSchema } from '@/capture/api-contract';
+import {
+  createApiToken,
+  createGrant,
+  generateApiToken,
+  hashApiToken,
+} from '@/server/auth/api-tokens';
 import { signComputerCode } from '@/server/auth/computer-code';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
@@ -330,6 +335,169 @@ describe('POST /api/v1/ordinateurs', () => {
     ]) {
       expect(output).not.toContain(secret); // …sans rien de ce qui identifie l'ordinateur
     }
+  });
+});
+
+// Le réglage `noter` du compte (T65, C16), sur la ligne du membre du porteur.
+const noterRefuseLe = async (who: TenantContext) =>
+  (
+    await adminDb
+      .select({ at: members.noterRefuseLe })
+      .from(members)
+      .where(and(eq(members.userId, who.userId), eq(members.organizationId, who.tenantId)))
+  )[0]?.at;
+const dateNoter = (who: TenantContext) =>
+  adminDb
+    .update(members)
+    .set({ noterRefuseLe: new Date('2026-11-01T10:00:00Z') })
+    .where(and(eq(members.userId, who.userId), eq(members.organizationId, who.tenantId)));
+
+describe('POST /api/v1/ordinateurs : le réglage noter du compte (T65, C16)', () => {
+  const codeWith = (token: string, who: TenantContext, m: Usage[], g: Usage[]) =>
+    signComputerCode({ e: hashApiToken(token), u: who.userId, t: who.tenantId, m, g });
+
+  it('noter montré et coché : la colonne revient à nul', async () => {
+    const { paul } = await setup();
+    await dateNoter(paul);
+    const token = generateApiToken();
+
+    expect((await exchange(token, codeWith(token, paul, ['noter'], ['noter']))).status).toBe(201);
+
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
+
+  it('noter montré et décoché : la colonne est datée, sur la seule ligne du porteur', async () => {
+    const { paul, marie } = await setup();
+    const token = generateApiToken();
+    const before = Date.now();
+
+    expect((await exchange(token, codeWith(token, paul, ['lecture', 'noter'], []))).status).toBe(
+      201,
+    );
+
+    expect((await noterRefuseLe(paul))?.getTime()).toBeGreaterThanOrEqual(before - 1000);
+    expect(await noterRefuseLe(marie)).toBeNull();
+  });
+
+  it('noter non montré : la colonne ne change pas, datée ou nulle', async () => {
+    const { paul, marie } = await setup();
+    await dateNoter(paul);
+    const first = generateApiToken();
+    const second = generateApiToken();
+
+    expect((await exchange(first, codeWith(first, paul, ['lecture'], []))).status).toBe(201);
+    expect((await exchange(second, codeWith(second, marie, ['lecture'], ['lecture']))).status).toBe(
+      201,
+    );
+
+    expect(await noterRefuseLe(paul)).toEqual(new Date('2026-11-01T10:00:00Z'));
+    expect(await noterRefuseLe(marie)).toBeNull();
+  });
+
+  it('un 409 ou un 401 n’y touchent pas', async () => {
+    const { paul, marie } = await setup();
+    const { token: taken } = await createApiToken(marie, 'déjà là');
+    const token = generateApiToken();
+    const other = generateApiToken();
+
+    expect((await exchange(taken, codeWith(taken, paul, ['noter'], []))).status).toBe(409);
+    expect((await exchange(token, codeWith(other, paul, ['noter'], []))).status).toBe(401);
+
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
+
+  // Choix assumé (computer-routes.ts) : la connexion est déjà faite, l'échec est journalisé et l'échange répond 201.
+  it('une erreur à l’écriture du réglage ne défait pas la connexion : 201, l’erreur journalisée', async () => {
+    const { paul } = await setup();
+    const token = generateApiToken();
+    vi.spyOn(db, 'update').mockImplementation(() => {
+      throw new Error('panne de la base');
+    });
+    const logged = spyConsole();
+
+    const response = await exchange(token, codeWith(token, paul, ['noter'], []));
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toMatchObject({ usages: [], refus: ['noter'] });
+    expect(await rowsOf(token)).toHaveLength(1);
+    expect(logged().join('\n')).toContain('computer.noter_failed');
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
+});
+
+describe('POST /api/v1/usages (T65, C16)', () => {
+  const refuse = (token: string | undefined, body: unknown) =>
+    apiRequest(API_PATHS.usages, { token, body });
+
+  it('{ noter: false } rend 204 sans corps et date la colonne du porteur, seule', async () => {
+    const { paul, marie } = await setup();
+    const { token } = await createApiToken(paul, 'Ordinateur : Mac');
+
+    const response = await refuse(token, { noter: false });
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe('');
+    expect(await noterRefuseLe(paul)).toBeInstanceOf(Date);
+    expect(await noterRefuseLe(marie)).toBeNull();
+  });
+
+  it('la colonne d’un autre espace du même compte ne bouge pas', async () => {
+    const { paul } = await setup();
+    const { tenantId: elsewhere } = await createTestTenant([]);
+    await adminDb.insert(members).values({
+      organizationId: elsewhere,
+      userId: paul.userId,
+      role: 'member',
+      createdAt: new Date(),
+    });
+    const { token } = await createApiToken(paul, 'Ordinateur : Mac');
+
+    expect((await refuse(token, { noter: false })).status).toBe(204);
+
+    expect(await noterRefuseLe({ ...paul, tenantId: elsewhere })).toBeNull();
+  });
+
+  it.each([
+    ['{ noter: true } : rouvrir passe par le navigateur', { noter: true }],
+    ['un champ inconnu', { noter: false, lecture: false }],
+    ['un corps vide', {}],
+    ['une chaîne', { noter: 'false' }],
+  ])('répond 400 à %s, sans toucher la colonne', async (_cas, body) => {
+    const { paul } = await setup();
+    const { token } = await createApiToken(paul, 'Ordinateur : Mac');
+
+    const response = await refuse(token, body);
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Invalid request' });
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
+
+  it('répond 413 au-delà de 1 Kio', async () => {
+    const { paul } = await setup();
+    const { token } = await createApiToken(paul, 'Ordinateur : Mac');
+
+    const response = await refuse(token, { noter: false, x: 'a'.repeat(1024) });
+
+    expect(response.status).toBe(413);
+    expect(await noterRefuseLe(paul)).toBeNull();
+  });
+
+  it('répond 401 sans jeton, et avec un jeton d’assistant (F9), sans toucher la colonne', async () => {
+    const { paul } = await setup();
+    const grant = await createGrant(paul, {
+      grantId: `grant-${generateApiToken()}`,
+      clientRef: 'claude-ai',
+      clientName: 'Claude',
+      clientHost: 'claude.ai',
+      name: 'Claude',
+    });
+    if (!grant) throw new Error('jeton d’assistant non créé');
+
+    await expectUnauthorized(await refuse(undefined, { noter: false }));
+    await expectUnauthorized(await refuse(grant.accessToken, { noter: false }));
+
+    expect(await noterRefuseLe(paul)).toBeNull();
   });
 });
 

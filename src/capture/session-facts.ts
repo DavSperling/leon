@@ -10,7 +10,7 @@ import {
   TACHES_MAX,
   TEXTE_MAX,
 } from './api-contract';
-import { parseClaudeCodeSession } from './claude-code';
+import { parseClaudeCodeSession, SUBAGENT_TOOLS } from './claude-code';
 import { maskSecrets } from './mask-secrets';
 import { isTypedTurn } from './turn';
 
@@ -29,9 +29,15 @@ const LineSchema = z.object({
   isSidechain: z.boolean().optional(),
   prRepository: z.string().optional(),
   prNumber: z.number().optional(),
-  message: z.object({ content: z.union([z.string(), z.array(z.unknown())]) }).optional(),
+  message: z
+    .object({
+      content: z.union([z.string(), z.array(z.unknown())]),
+      stop_reason: z.string().nullish(),
+    })
+    .optional(),
 });
 type Line = z.infer<typeof LineSchema>;
+const LineTypeSchema = LineSchema.pick({ type: true });
 
 const ToolUseSchema = z.object({
   type: z.literal('tool_use'),
@@ -74,10 +80,11 @@ const TASK_ID = /Task #(\d+)/;
 const GIT_OPTIONS = String.raw`(?:\s+-[Cc]\s+(?:"[^"]*"|'[^']*'|[^\s"']\S*)){0,4}`;
 const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
 
-// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, un sous-agent, le réseau. On
-// échoue fermé : hors Bash, tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe
-// (WebFetch, WebSearch, Agent, Task, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande
-// `leon` n'est une commande réseau (D36).
+// Ce qui fait entrer du texte d'ailleurs dans la session (D17) : le web, le MCP, le réseau. On échoue fermé : hors Bash,
+// tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe (WebFetch, WebSearch,
+// Workflow, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande `leon` n'est une commande
+// réseau (D36). Un appel Agent ou Task se juge sur les échanges de son sous-agent, par la même règle (T63 :
+// isExternalSubagent) ; sans eux, il rend la session externe.
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -107,7 +114,13 @@ const LOCAL_TOOLS = new Set([
 // quand la CLI a reconnu le serveur à l'URL de sa configuration (leon-mcp.ts). `search`, `fetch` et `briefing` rendent
 // des sources de connecteurs : ils comptent. Chaque outil se compare à son nom complet exact, jamais à un suffixe.
 export const LEON_MCP_SERVER = 'leon';
-export const LEON_LOCAL_TOOLS: readonly string[] = ['threads', 'thread', 'versions', 'remember'];
+export const LEON_LOCAL_TOOLS: readonly string[] = [
+  'threads',
+  'thread',
+  'versions',
+  'lessons',
+  'remember',
+];
 const LEON_CLAUDE_TOOLS = new Set(
   LEON_LOCAL_TOOLS.map((tool) => `mcp__${LEON_MCP_SERVER}__${tool}`),
 );
@@ -193,7 +206,7 @@ function resultText(content: string | unknown[] | undefined): string {
 // arguments, où passent des mots de passe que maskSecrets ne reconnaît pas (« mysql -pX », « curl -u a:X »).
 // shortcut: seule la première commande d'une suite (« cd x && pnpm test ») est gardée, découper aux opérateurs
 // le jour où le bloc de démarrage en a besoin.
-function reduceCommand(command: string): string {
+export function reduceCommand(command: string): string {
   const text = command.replaceAll('\u0000', '');
   // Les préfixes NOM=valeur se sautent sur la commande brute : masquée, « PGPASSWORD=my\ S3cret » perdrait
   // l'échappement dans le masque, et « S3cret » deviendrait l'exécutable.
@@ -222,14 +235,34 @@ function reduceCommand(command: string): string {
 }
 
 // À la réception (record-facts.ts), une seconde barrière : une commande qui n'a pas la forme que rend reduceCommand
-// (une CLI plus ancienne, ou qui réduit mal) ne garde que le texte fixe.
+// (une CLI plus ancienne, ou qui réduit mal) ne garde que le texte fixe. Un second mot n'est gardé que pour un
+// exécutable de la liste fermée : « mysql motdepasse » devient [commande].
 export function recheckCommand(texte: string): string {
   const [executable = '', subcommand, ...rest] = texte.split(' ');
   const reduced =
     EXECUTABLE.test(executable) &&
     rest.length === 0 &&
-    (subcommand === undefined || SUBCOMMAND.test(subcommand));
+    (subcommand === undefined || (WITH_SUBCOMMAND.has(executable) && SUBCOMMAND.test(subcommand)));
   return reduced ? factText(texte, TEXTE_MAX) : HIDDEN_COMMAND;
+}
+
+const HIDDEN_TOOL = '[outil]';
+const MCP_SERVER = /^[A-Za-z0-9._-]{1,56}$/;
+// Le nom d'un outil appelé (C10 amendé le 12/11) : un outil MCP ne garde que son serveur, `mcp:<serveur>`, jamais son
+// nom ; tout autre nom n'est gardé que s'il a la forme d'un exécutable. `mcp__` est testé avant EXECUTABLE, qu'un
+// « mcp__linear » passerait. Rejouée à la réception (record-backstage.ts) : un nom déjà réduit reste tel quel.
+export function reduceToolName(name: string): string {
+  if (name.startsWith('mcp__')) {
+    const rest = name.slice('mcp__'.length);
+    const end = rest.indexOf('__');
+    const server = rest.slice(0, end);
+    return end > 0 && rest.length > end + 2 && MCP_SERVER.test(server)
+      ? `mcp:${server}`
+      : HIDDEN_TOOL;
+  }
+  if (name.startsWith('mcp:'))
+    return MCP_SERVER.test(name.slice('mcp:'.length)) ? name : HIDDEN_TOOL;
+  return EXECUTABLE.test(name) ? name : HIDDEN_TOOL;
 }
 
 // Le texte d'un fait, masqué puis coupé. Un jsonb refuse le caractère nul et la moitié d'emoji qu'une coupe
@@ -244,7 +277,7 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
 const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
 // Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque) ou s'il n'y a pas de dépôt.
-function repoRelativePath(path: string, root: string | null): string | null {
+export function repoRelativePath(path: string, root: string | null): string | null {
   if (root === null) return null;
   const relativePath = relative(root, resolve(root, path));
   const outside =
@@ -263,6 +296,61 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
   if (name !== 'Bash') return !LOCAL_TOOLS.has(name) && !(leonMcp && LEON_CLAUDE_TOOLS.has(name));
   const bash = BashSchema.safeParse(input);
   return bash.success && isExternalCommand(bash.data.command);
+}
+
+// Les échanges des sous-agents d'une session : `id` du bloc tool_use de l'appel Agent ou Task → contenu du fichier
+// `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
+export type Subagents = ReadonlyMap<string, string>;
+
+// `visited` : les appels Agent ou Task déjà jugés. Un appel revu (le même bloc sur deux lignes) n'apporte rien de plus :
+// s'il était externe, la session l'est déjà.
+function isExternalAnyCall(
+  call: Call,
+  leonMcp: boolean,
+  subagents: Subagents | undefined,
+  visited: Set<string>,
+): boolean {
+  if (!SUBAGENT_TOOLS.has(call.name)) return isExternalCall(call, leonMcp);
+  if (visited.has(call.id)) return false;
+  visited.add(call.id);
+  const content = subagents?.get(call.id);
+  return content === undefined || isExternalSubagent(content, leonMcp, subagents, visited);
+}
+
+// Un sous-agent rend la session externe si l'un de ses appels l'est, par la même règle, ou si l'on ne sait pas tout ce
+// qu'il a fait (échec fermé) : une ligne qui n'est pas du JSON, une ligne sans type ou une ligne de conversation hors de
+// la forme connue, ou pas de rapport final (la dernière ligne de conversation n'est pas un message assistant fini par
+// end_turn : coupé, ou encore en cours). Une ligne d'un autre type se saute, quelle que soit sa forme. Toutes ses lignes
+// portent isSidechain.
+function isExternalSubagent(
+  content: string,
+  leonMcp: boolean,
+  subagents: Subagents | undefined,
+  visited: Set<string>,
+): boolean {
+  let finished = false;
+  for (const raw of content.split('\n')) {
+    if (raw.trim() === '') continue;
+    let json: unknown;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      return true;
+    }
+    const kind = LineTypeSchema.safeParse(json);
+    if (!kind.success) return true;
+    if (kind.data.type !== 'user' && kind.data.type !== 'assistant') continue;
+    const parsed = LineSchema.safeParse(json);
+    if (!parsed.success) return true;
+    const line = parsed.data;
+    finished = line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
+    const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
+    for (const block of blocks) {
+      const call = ToolUseSchema.safeParse(block);
+      if (call.success && isExternalAnyCall(call.data, leonMcp, subagents, visited)) return true;
+    }
+  }
+  return !finished;
 }
 
 // Ce que les appels d'outils d'une session apprennent, avant les bornes de C1 (buildFacts). Commun aux lecteurs des
@@ -370,12 +458,15 @@ function recordResult(
 // Les gestes d'une session Claude Code, à partir de son JSONL. `root` est la racine du dépôt (chemin absolu) :
 // les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
 // (`isSidechain`) ne sont pas la session. `leonMcp` : le serveur `leon` de la configuration de Claude Code est celui de
-// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte.
+// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte. `subagents` : les échanges des sous-agents (T63), qui ne
+// décident que de `externe` ; un appel Agent ou Task absent de la table rend la session externe.
 export function extractClaudeCodeFacts(
   content: string,
   root: string | null,
   leonMcp = false,
+  subagents?: Subagents,
 ): SessionFacts {
+  const visited = new Set<string>();
   const calls = new Map<string, Call>();
   const links: Pr[] = [];
   const record = newFactsRecord();
@@ -401,12 +492,15 @@ export function extractClaudeCodeFacts(
       });
       if (pr.success) links.push(pr.data);
     }
-    const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
+    // Les blocs d'outils ne se lisent que sur les messages `user` et `assistant` : les lignes `api-request-blob` en
+    // recopient (annexe 08), et chaque copie compterait une seconde fois la commande, l'erreur et la PR.
+    const isMessage = line.type === 'user' || line.type === 'assistant';
+    const blocks = isMessage && Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {
         calls.set(call.data.id, call.data);
-        external ||= isExternalCall(call.data, leonMcp);
+        external ||= isExternalAnyCall(call.data, leonMcp, subagents, visited);
       }
       const result = ToolResultSchema.safeParse(block);
       if (!result.success) continue;

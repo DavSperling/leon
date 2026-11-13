@@ -1,9 +1,22 @@
 import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
-import { INGEST_BODY_MAX_BYTES, IngestPayloadSchema, type IngestResult } from '@/capture/turn';
+import { z } from 'zod';
+import {
+  CAPTURE_KINDS,
+  INGEST_BODY_MAX_BYTES,
+  IngestPayloadSchema,
+  type IngestResult,
+} from '@/capture/turn';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { ingestTurns } from '@/server/ingest/ingest-turns';
 import { type ApiEnv, requireApiToken } from './require-api-token';
+
+// Les kinds que la route admet : ceux de la capture, sans la note, que seul writeNote crée (C14, D38, T57). Un enum propre
+// à la route : le contrat partagé (IngestPayloadSchema) et SOURCE_KINDS ne changent pas.
+const RouteSourceSchema = IngestPayloadSchema.shape.source.extend({
+  kind: z.enum(CAPTURE_KINDS).exclude(['mcp_remember']),
+});
+const RoutePayloadSchema = IngestPayloadSchema.extend({ source: RouteSourceSchema });
 
 export const ingestRoutes = new Hono<ApiEnv>()
   // Le jeton est vérifié avant de lire le corps.
@@ -16,7 +29,7 @@ export const ingestRoutes = new Hono<ApiEnv>()
     }),
     async (c) => {
       const body = await c.req.json().catch(() => undefined);
-      const parsed = IngestPayloadSchema.safeParse(body);
+      const parsed = RoutePayloadSchema.safeParse(body);
       if (!parsed.success) {
         // 400 sans les valeurs reçues : elles peuvent contenir des secrets.
         const issues = parsed.error.issues.map((issue) => ({

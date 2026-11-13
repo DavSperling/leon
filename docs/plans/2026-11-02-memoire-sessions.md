@@ -43,6 +43,8 @@ Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était
 > **Amendé le 04/11 :** l'ordre est tranché : 1 (fait), 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Le lot 15, le rêve perso par règles (environ 5 j), est décrit dans le [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md). Ce plan décrit aussi ce qui s'ajoute aux lots 12 et 13. Les efforts et le total sont dans le tableau ci-dessus. Voir ses « Décisions d'Amos » du 04/11 et du 05/11.
 >
 > **Amendé le 05/11 :** 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
+>
+> **Amendé le 12/11 :** les coulisses de Codex, Cursor et Antigravity, et leur règle du sous-agent, viennent dans la quatrième PR du lot 14, après un essai par outil ([décisions d'Amos du 12/11 pour le lot 14](2026-11-03-memoire-a-disposition.md), dans le nouveau plan).
 
 **Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Amendé le 05/11 : le lot 6 n'attend plus l'accord de David (QD1 tranchée par Amos). Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
@@ -140,6 +142,8 @@ docker exec leon-postgres-1 psql -U postgres -d leon_test_sessions -c "create ex
 - **Les mentions des replis par fichier et du cache local** (règles du chantier, « Graphe, RAG et Markdown », vigilance 5, T08, T26, T31) sont caduques : aucune mémoire n'est écrite sur le poste (D31 du nouveau plan). Aux trois migrations de l’en-tête s’ajoutent celles du lot 12 (supprimer-fil, lectures-fil, étape fil) et du lot 13 (rappels-cites).
 - **Les renvois au lot 10** (contraintes du bloc, C4, C5, C6, T06) se lisent avec le lot 13 : `leon rappel`, balise `<rappel-leon>`. L'ordre du bloc devient : sommaire des fils, équipe, consigne, point du matin (D24 du nouveau plan).
 
+  > **Amendé le 11/11 (décisions d'Amos du 11/11 pour le lot 13, dans le nouveau plan) :** le crochet de message de Claude Code lance `leon reminder`, pas `leon rappel` ; l'usage, la route et la balise gardent leur nom. Le rappel est posé dès le lot 13 pour Claude Code, Cursor et Codex ; Antigravity, dont le crochet ne reçoit pas le message, attend un essai. Amendé le 11/11 au soir : l'essai est fait dans l'appli 2.0.6, dont le crochet reçoit le message (`lastUserInput`) ; le rappel est donc posé pour Antigravity aussi.
+
   > **Amendé le 04/11 :** s'ajoutent les migrations du lot 12 (versions-memoire), du lot 13 (lecons, supprimer-notes) et du lot 15 (propositions-memoire). Le 05/11, après A16, s'y ajoute celle du lot 13 qui donne à `member` le réglage `noter` (noter-refuse, T65). L'ordre du bloc devient : sommaire des fils, équipe, leçons acceptées, consigne, point du matin (D37 du nouveau plan). Le 05/11, après la relecture : avec l'usage `lecture` de l'outil seulement ; sans lui, mes sessions, équipe, la phrase de `leon noter` avec l'usage `noter`, point du matin.
 - **T14** : la section « L'équipe sur ce dépôt » se place après « mes sessions » ; T46 du nouveau plan la déplace dans le sommaire des fils.
 - **T37** ajoute le scénario « Cursor jamais ouvert, après des sessions Claude Code seulement ».
@@ -205,6 +209,8 @@ Les décisions ci-dessous les mettent en œuvre. Celles qui attendent encore une
 - **D17. Les sessions « externes »** ont lu du web, du MCP, un sous-agent ou une commande réseau. Dès le lot 1, le bloc de démarrage n'en montre que les clés : outil, date, branche, PR. Jamais un texte écrit par l'agent. Leur résumé reste trouvable à la demande.
 
   > **Amendé le 04/11 (D36 du [plan de la mémoire à disposition](2026-11-03-memoire-a-disposition.md)) :** « a lu du MCP » ne compte plus les lectures de Leon retenues par D36 : les commandes `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon. Tranché le 05/11 : aussi `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`. Ça vaut pour les quatre outils de code (T18, T27, T32). Tranché aussi le 05/11 : « un sous-agent » ne compte plus un sous-agent qui ne lit que le dépôt ; un sous-agent qui va sur le web ou appelle un outil réseau compte toujours. C'est pour Claude Code dès le lot 14 (T63 du nouveau plan), et pour Codex, Cursor et Antigravity seulement dans leur lot, après le tri de leur lecteur (T18, T27, T32).
+  >
+  > **Amendé le 12/11 (décisions 2 et 7 d'Amos pour le lot 14, dans le [nouveau plan](2026-11-03-memoire-a-disposition.md)) :** « dans leur lot » devient : dans la quatrième PR du lot 14, après un essai par outil. Le rapport d'un sous-agent est capté sous l'accord de base (décision 7).
 - **D18. Remplacée le 03/11** par le rappel à chaque message (lot 13) et la lecture à la demande par le MCP (lot 12). Texte d'origine : le RAG au premier prompt (proposé, voir A5) est construit dans sa propre PR. Il est éteint tant que l'utilisateur ne l'allume pas pour un outil (accord de version 4), et la mesure T38 décide de la recommandation.
 - **D19. Hors de ce chantier :**
   - les consignes (B et C) ;
@@ -255,6 +261,8 @@ type SessionFacts = {
 ```
 
 > **Amendé le 04/11 :** C1 gagne `outils_en_erreur: { outil: string; nombre: number }[]` (T58 du nouveau plan), relevé par les quatre lecteurs. `externe` ne compte plus les lectures de Leon retenues par D36 du nouveau plan (voir D17), ni un sous-agent qui ne lit que le dépôt : pour Claude Code dès le lot 14 (T63), pour les autres outils dans leur lot, après le tri de leur lecteur.
+>
+> **Amendé le 12/11 (décision 2 d'Amos pour le lot 14, dans le [nouveau plan](2026-11-03-memoire-a-disposition.md)) :** « dans leur lot » devient : dans la quatrième PR du lot 14, après un essai par outil.
 
 L'outil est le `kind` de C2.
 

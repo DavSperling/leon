@@ -45,12 +45,15 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
-// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture` puis `resume` (C7 révisé) qui ne
-//   sont ni acceptés ni refusés, avec leur texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube
+// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture`, `rappel`, `noter` puis `resume` (C7 révisé)
+//   qui ne sont ni acceptés ni refusés, avec leur texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube
 //   peut venir d'un agent, qui ne donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à
 //   disposition). Un refus s'écrit daté (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait. Les installateurs
 //   des autres outils (install-outil.ts, install-codex.ts) font de même par offerUsages, et un usage tranché dans le
-//   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé ;
+//   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé. Un « non » du terminal à `noter` coupe aussi
+//   `remember` pour le compte, par la route à jeton du refus (C16, T65) ; un « oui » ne le rouvre pas, et le dit ;
+// - pose le crochet de message (UserPromptSubmit, `leon reminder`, T49) seulement une fois l'usage `rappel` donné, par une
+//   seconde écriture des réglages après les usages (writeReminderHook), même quand les deux autres sont déjà en place ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -76,7 +79,8 @@ import {
 } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isDeepStrictEqual, parseEnv } from 'node:util';
-import type { Usage } from '../capture/api-contract';
+import { API_PATHS, type Usage, type UsagesRequest } from '../capture/api-contract';
+import { readConnection } from './connection';
 import {
   addRefusal,
   addUsage,
@@ -95,10 +99,12 @@ import { type HookSubcommand, launcherHookCommand } from './hook-commands';
 // de l'envoi (HOOK_DEADLINE_MS) et restent sous le maximum de 60 s de Claude Code.
 export const SESSION_START_TIMEOUT_S = 10;
 export const SESSION_END_TIMEOUT_S = 30;
+// Le crochet de message : au pire 1 s d'entrée, 1,5 s de réseau et le démarrage de Node (reminder.ts).
+export const USER_PROMPT_TIMEOUT_S = 5;
 export const SETTINGS_FILE = 'settings.json';
 export const BACKUP_FILE = 'settings.json.leon-sauvegarde';
 
-type HookEvent = 'SessionStart' | 'SessionEnd';
+type HookEvent = 'SessionStart' | 'SessionEnd' | 'UserPromptSubmit';
 type HookSpec = {
   event: HookEvent;
   subcommand: HookSubcommand;
@@ -121,11 +127,21 @@ export const HOOKS: readonly HookSpec[] = [
   },
 ];
 
+// Le crochet de message (`leon reminder`, T49) : hors de HOOKS, posé seulement avec l'usage `rappel` (addLeonHooks),
+// retiré avec les autres (uninstall-hooks.ts).
+export const REMINDER_HOOK: HookSpec = {
+  event: 'UserPromptSubmit',
+  subcommand: 'reminder',
+  timeout: USER_PROMPT_TIMEOUT_S,
+  role: 'at each message you send, asks Leon for a line on those of your work threads it touches (usage "rappel"): Claude Code adds it to the context.',
+};
+
 // Ce qui est lu, ce qui part et ce qui est donné au modèle de Claude Code : le texte de l'accord en version 2 (C7),
 // testé mot pour mot (install-hooks.test.ts). Le changer, c'est changer ce que l'utilisateur a accepté.
+// Amendé le 12/11, décision 7 d'Amos, sans redemander l'accord : le rapport final de chaque sous-agent.
 const CONSENT_LINES = [
   'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
-  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
+  "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; the final report of each subagent, labeled the same way; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
   '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ];
@@ -152,8 +168,34 @@ export const RESUME_LINES = [
 export const LECTURE_LINES = [
   'Reading Leon (usage "lecture", asked separately):',
   "  - At the start of each session or conversation, Leon places in the agent's context the summary of your work threads on this repository (keys only: their id, branch, tools, dates, pull request numbers and states, number of linked sources), which replaces the list of your recent sessions, the lessons you accepted, and an instruction to read the thread of its task. The model provider of the tool sees them. For this, the start request also sends the Leon server the usages this tool accepted and the Leon command of this computer (such as `~/.leon/bin/leon`), which the instruction cites.",
-  '  - The agent can read your work threads on this repository, their summaries and their state, and the memory of this repository that you can see, with the commands `leon threads`, `leon thread`, `leon search` and `leon versions`, or with the tools `threads`, `thread` and `versions` if the Leon MCP server is connected to the tool. The model provider of the tool sees what it reads. This usage never lets an agent write anything to Leon.',
+  '  - The agent can read your work threads on this repository, their summaries and their state, the lessons you accepted, and the memory of this repository that you can see, with the commands `leon threads`, `leon thread`, `leon search`, `leon versions` and `leon lessons`, or with the tools `threads`, `thread`, `versions` and `lessons` if the Leon MCP server is connected to the tool. The model provider of the tool sees what it reads. This usage never lets an agent write anything to Leon.',
   '  - The `leon` commands use the token of this computer: once one of your code tools accepts this usage, they work for every agent on this computer. Refusing it in a tool only removes, in that tool, the summary, the lessons and the instruction placed at the start.',
+];
+
+// Le texte de l'usage `rappel` (C7 révisé, D26, C8 ; décisions d'Amos du 11/11 pour le lot 13), testé mot pour mot : un
+// seul texte, sans nom d'outil, le même dans les installateurs des quatre outils et sur la page « Autoriser ».
+// Ce qui part à chaque message et vers qui (askReminder, reminder.ts : le corps de C8, un seul signal de 1,5 s), ce que
+// le serveur en fait et rend (src/server/sessions/reminder.ts : ni stocké ni journalisé, une ligne de clés), et ce qu'il
+// garde (rappels_cites, purgé après 24 h par le tic horaire de worker.ts).
+export const RAPPEL_LINES = [
+  'Reminder at each message (usage "rappel", asked separately):',
+  '  - Each time you send a message, the hook sends the first 2,000 characters of your message (secrets masked before sending, and again by the server) only to the Leon server this computer is connected to, with the project key, the current Git branch, the session id, the name of the tool and the usages this tool accepted. The server neither stores nor logs your message: it only looks for those of your work threads on this repository that it touches.',
+  "  - When it touches one or two of your threads not yet cited in this session, the server sends back one line of keys (their id, branch, tools, dates, pull request numbers and states, number of linked sources), which the tool adds to the agent's context: the model provider of the tool sees it. Otherwise nothing is added. The hook waits 1.5 seconds at most: without an answer by then, your message goes on without it.",
+  '  - To cite a thread only once per session, the server keeps the list of the threads already cited in each session (never the message) for 24 hours, then deletes it within the next hour.',
+];
+
+// Le texte de l'usage `noter` (C7 révisé, D30, D38, C14 ; T57 amendée le 11/11, décision 7 d'Amos pour le lot 13), testé
+// mot pour mot : un seul texte, sans nom d'outil, le même dans les quatre installateurs et sur la page « Autoriser ».
+// Ce qui part avec `leon note` (note-command.ts : le texte masqué puis coupé à 4 000 caractères, le projet, l'outil, la
+// session, les usages de cet outil seul), ce qui est gardé (notes.ts : une source privée, versionnée, que la recherche
+// trouve, jamais poussée), ce que la requête de démarrage envoie en plus (briefing.ts : usages, commande et outil) et la
+// phrase qu'elle place (render-context.ts, `--session` seulement sûre pour un shell), et ce que décocher coupe : la
+// phrase et `leon note` pour l'outil, et `remember` pour l'espace par le réglage du compte (C16, T65).
+export const NOTER_LINES = [
+  'Agent notes (usage "noter", asked separately):',
+  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note stays private to you, like your sessions, and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
+  '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all your assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
 ];
 
 export type Json = Record<string, unknown>;
@@ -290,15 +332,17 @@ function applyHook(root: Json, spec: HookSpec, home: string): HookChange {
   return { event: spec.event, action, command: wanted.command, timeout: spec.timeout };
 }
 
-// Les réglages avec les deux crochets de Leon, sans modifier l'objet reçu. Les commandes sont celles du lanceur du
-// dossier personnel `home` (K9). Lance SettingsShapeError si la clé `hooks` ou les évènements SessionStart et
-// SessionEnd n'ont pas la forme de la doc (les autres évènements, eux, ne nous regardent pas).
+// Les réglages avec les deux crochets de Leon, et celui de message avec `reminder` (l'usage `rappel`), sans modifier
+// l'objet reçu. Les commandes sont celles du lanceur du dossier personnel `home` (K9). Lance SettingsShapeError si la
+// clé `hooks` ou les évènements de ces crochets n'ont pas la forme de la doc (les autres, eux, ne nous regardent pas).
 export function addLeonHooks(
   settings: Json,
   home: string,
+  reminder = false,
 ): { settings: Json; changes: HookChange[] } {
   const next = structuredClone(settings);
-  const changes = HOOKS.map((spec) => applyHook(next, spec, home));
+  const specs = reminder ? [...HOOKS, REMINDER_HOOK] : HOOKS;
+  const changes = specs.map((spec) => applyHook(next, spec, home));
   return { settings: next, changes };
 }
 
@@ -393,7 +437,40 @@ export type InstallDeps = {
   err: (text: string) => void;
   // Pose la question et rend la ligne tapée ; null si l'entrée est fermée (Ctrl+D), qui n'est pas une réponse (D30).
   ask: (question: string) => Promise<string | null>;
+  // Le refus de `noter` pour le compte (C16, T65 ; notesRefusal) : vrai si le serveur l'a pris. Absent, il n'a pas pu
+  // partir, comme sans connexion.
+  refuseNotes?: () => Promise<boolean>;
 };
+
+// Un « non » à `noter` dans le terminal (T65, C16) : la route du refus (API_PATHS.usages, `{ noter: false }`), avec la
+// connexion de l'ordinateur (~/.leon/connexion.json), sous un délai court. Vrai sur 204 ; faux sans connexion, sur
+// toute autre réponse (un serveur ancien répond 404) ou si le serveur est absent ou lent : l'installation continue.
+const NOTES_REFUSAL_TIMEOUT_MS = 3_000;
+export const notesRefusal =
+  (fetchImpl: typeof fetch, home: string): (() => Promise<boolean>) =>
+  async () => {
+    const connection = await readConnection(home);
+    if (!connection) return false;
+    try {
+      const response = await fetchImpl(new URL(API_PATHS.usages, connection.url), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${connection.jeton}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ noter: false } satisfies UsagesRequest),
+        signal: AbortSignal.timeout(NOTES_REFUSAL_TIMEOUT_MS),
+      });
+      return response.status === 204;
+    } catch {
+      return false;
+    }
+  };
+// Messages fixes : ni l'adresse du serveur ni le jeton.
+export const NOTES_REOPEN_LINE =
+  'Notes turned off for your Leon account (`remember`, for the assistants connected to this workspace) turn back on in the Memory section of the Leon website settings.';
+export const NOTES_REFUSAL_FAILED =
+  'Leon: the Leon server could not be told of this refusal (no connection, server unreachable or too slow, or older than this CLI): `remember` stays on for the assistants connected to this workspace. Turn it off in the Memory section of the Leon website settings.';
 
 const ACTION_LABELS: Record<HookChange['action'], string> = {
   ajout: 'add',
@@ -476,7 +553,7 @@ function preview(
 ): string[] {
   const lines = [`Leon hooks for ${path}:`, ''];
   for (const change of changes) {
-    const spec = HOOKS.find((hook) => hook.event === change.event);
+    const spec = [...HOOKS, REMINDER_HOOK].find((hook) => hook.event === change.event);
     lines.push(
       `  ${change.event} · timeout ${change.timeout} s · ${ACTION_LABELS[change.action]}`,
       `    ${change.command}`,
@@ -548,10 +625,16 @@ const refusedLine = (tool: ConsentTool, leon: string): string =>
     ? `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`
     : `This answer is kept: you will not be asked again. To change it, run \`~/.leon/bin/leon retirer-crochets --outil ${tool}\` (it also removes the hooks of this tool and withdraws its consent), then \`~/.leon/bin/leon setup\` again.`;
 
-// Les usages proposés à l'installation, dans cet ordre (C7 révisé, A16). `lecture` est coché par défaut, en [Y/n] :
-// Entrée, y, yes, o et oui l'acceptent ; n, no et non le refusent ; une autre réponse ou une entrée fermée ne tranchent
-// rien (décision d'Amos du 11/11 : une faute de frappe ne vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est
-// pas, en [y/N] : seul un oui l'accepte, et seule une entrée fermée ne tranche rien (D30).
+// Les usages proposés à l'installation, dans cet ordre (C7 révisé, A16 ; décisions d'Amos du 11/11 pour le lot 13).
+// `lecture`, `rappel` et `noter` sont cochés par défaut, en [Y/n] : Entrée, y, yes, o et oui les acceptent ; n, no et non les
+// refusent ; une autre réponse ou une entrée fermée ne tranchent rien (décision d'Amos du 11/11 : une faute de frappe ne
+// vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est pas, en [y/N] : seul un oui l'accepte, et seule une entrée
+// fermée ne tranche rien (D30).
+const checkedByDefault = (text: string | null): boolean | null => {
+  if (text === null) return null;
+  if (text.trim() === '' || isYes(text)) return true;
+  return /^(?:n|no|non)$/i.test(text.trim()) ? false : null;
+};
 type Offer = {
   lines: readonly string[];
   question: (path: string) => string;
@@ -559,19 +642,31 @@ type Offer = {
   recorded: string;
   without: string; // ce qui manque sans l'usage
 };
-const OFFERED = ['lecture', 'resume'] as const;
+const OFFERED = ['lecture', 'rappel', 'noter', 'resume'] as const;
 const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   lecture: {
     lines: LECTURE_LINES,
     question: (path) =>
       `\nLet the agents of the code tools set up now read Leon this way (recorded in ${path})? [Y/n] `,
-    answer: (text) => {
-      if (text === null) return null;
-      if (text.trim() === '' || isYes(text)) return true;
-      return /^(?:n|no|non)$/i.test(text.trim()) ? false : null;
-    },
+    answer: checkedByDefault,
     recorded: 'Reading Leon recorded',
     without: 'Leon places no summary of your threads at the start of a session',
+  },
+  rappel: {
+    lines: RAPPEL_LINES,
+    question: (path) =>
+      `\nAt each message, let Leon remind the agent of your work threads it touches (recorded in ${path})? [Y/n] `,
+    answer: checkedByDefault,
+    recorded: 'Reminder recorded',
+    without: 'Leon reminds the agent of no thread at each message',
+  },
+  noter: {
+    lines: NOTER_LINES,
+    question: (path) =>
+      `\nLet the agents of the code tools set up now keep private notes in Leon (recorded in ${path})? [Y/n] `,
+    answer: checkedByDefault,
+    recorded: 'Agent notes recorded',
+    without: 'the agent writes no note to Leon',
   },
   resume: {
     lines: RESUME_LINES,
@@ -585,6 +680,7 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
 
 // Les usages qui restent pour un outil sur son accord de base : manquants et jamais refusés (A16), puis tranchés dans
 // ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
+// Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05).
 export function usagesToOffer(
   consent: FactsConsent | null,
   options: UsageOptions & { assumeYes: boolean },
@@ -611,7 +707,10 @@ export async function offerUsages(
 ): Promise<boolean> {
   const path = consentPath(options.home);
   const decisions: UsageDecisions = options.decisions ?? new Map();
-  const pending = usagesToOffer(await factsConsent(options.home, tool), { ...options, decisions });
+  const pending = usagesToOffer(await factsConsent(options.home, tool), {
+    ...options,
+    decisions,
+  });
   for (const usage of pending) {
     const offer = OFFERS[usage];
     let accepted = decisions.get(usage);
@@ -619,6 +718,11 @@ export async function offerUsages(
       for (const line of ['', ...offer.lines]) deps.out(line);
       accepted = offer.answer(await deps.ask(offer.question(path)));
       decisions.set(usage, accepted);
+      // La réponse du terminal à `noter` vaut aussi pour `remember` (T65) ; une case de la page passe par l'échange du code.
+      if (usage === 'noter' && accepted === true) deps.out(NOTES_REOPEN_LINE);
+      if (usage === 'noter' && accepted === false && !(await deps.refuseNotes?.())) {
+        deps.err(NOTES_REFUSAL_FAILED);
+      }
     }
     if (accepted === true) {
       try {
@@ -650,6 +754,42 @@ export async function offerUsages(
   return true;
 }
 
+// Le crochet de message, une fois `rappel` donné après les crochets de base (dans le terminal ou par la page, T49) : une
+// seconde écriture des réglages, relus à l'instant. `plan` rend les réglages avec lui (les mêmes s'il y est déjà), null
+// pour une forme inconnue. `backup` : la copie d'avant Leon, faite si elle n'existe pas encore (Claude Code). Rend
+// 'inchange', 'ecrit', ou 'echec' (dit sur la sortie d'erreur ; l'usage reste écrit, le passage suivant repose le crochet).
+export async function writeReminderHook(
+  path: string,
+  plan: (settings: Json) => Json | null,
+  deps: Pick<InstallDeps, 'err'>,
+  backup?: string,
+): Promise<'inchange' | 'ecrit' | 'echec'> {
+  const loaded = await load(path);
+  const settings = parseSettings(loaded);
+  const next = settings && plan(settings);
+  if (settings === null || next === null) {
+    deps.err(
+      `Leon: ${path} is unreadable or does not have the expected shape: the reminder hook was not added. Fix the file and run the command again.`,
+    );
+    return 'echec';
+  }
+  if (isDeepStrictEqual(next, settings)) return 'inchange';
+  let backupCreated = false;
+  try {
+    if (backup && loaded.kind === 'present')
+      backupCreated = await saveBackup(loaded.realPath, backup);
+    await writeAtomically(path, loaded, `${JSON.stringify(next, null, 2)}\n`);
+  } catch (error) {
+    if (backupCreated && backup) await unlink(backup).catch(() => {});
+    const code = errorCode(error);
+    deps.err(
+      `Leon: could not write ${path}${code ? ` (${code})` : ''}: the reminder hook was not added. Run the command again.`,
+    );
+    return 'echec';
+  }
+  return 'ecrit';
+}
+
 // Rend le code de sortie : 0 si les crochets et l'accord sont en place ou si l'utilisateur a refusé, 1 si les réglages
 // n'ont pas pu être lus ou ont changé en route, ou si l'accord n'a pas pu s'écrire.
 export async function installHooks(options: InstallOptions, deps: InstallDeps): Promise<number> {
@@ -670,9 +810,12 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     );
   }
 
+  // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
+  const consent = await factsConsent(options.home, 'claude_code');
+  const consented = consent !== null;
   let plan: ReturnType<typeof addLeonHooks>;
   try {
-    plan = addLeonHooks(settings, options.home);
+    plan = addLeonHooks(settings, options.home, consent?.usages.includes('rappel'));
   } catch (error) {
     if (!(error instanceof SettingsShapeError)) throw error;
     return refuse(`does not have the expected shape (${error.message}).`);
@@ -680,18 +823,15 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
 
   const former = formerClones(settings);
   const alerts = await warnings(settings, options.repoDir, options.home);
-  // Absent ou plus ancien : l'accord est à demander. Un accord plus récent n'est jamais rabaissé.
-  const consent = await factsConsent(options.home, 'claude_code');
-  const consented = consent !== null;
   const consentFile = consentPath(options.home);
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
       if (usagesToOffer(consent, options).length === 0) {
-        deps.out(`Both Leon hooks are already in place in ${path}: nothing to do.`);
+        deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }
-      deps.out(`Both Leon hooks are already in place in ${path}.`);
+      deps.out(`The Leon hooks are already in place in ${path}.`);
       return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
     }
     // Des crochets posés avant l'accord, ou restés après son retrait (retrait des réglages raté, crochets remis à la
@@ -699,8 +839,8 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
     const withdrawn = await consentWithdrawn(options.home, 'claude_code');
     deps.out(
       withdrawn
-        ? `Both Leon hooks are already in place in ${path}, but your consent was withdrawn: for now, they send nothing.`
-        : `Both Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
+        ? `The Leon hooks are already in place in ${path}, but your consent was withdrawn: for now, they send nothing.`
+        : `The Leon hooks are already in place in ${path}, but your consent is not recorded: for now, at the end of each session, they send only the text of the exchanges, not its actions.`,
     );
     for (const line of ['', ...CONSENT_LINES]) deps.out(line);
     if (!options.assumeYes) {
@@ -774,6 +914,30 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
 }
 
-function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
-  return offerUsages('claude_code', { ...options, leon: leonCommand(options) }, deps);
+// Les usages, puis le crochet de message si `rappel` est donné (T49).
+async function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
+  if (!(await offerUsages('claude_code', { ...options, leon: leonCommand(options) }, deps))) {
+    return false;
+  }
+  if (!(await factsConsent(options.home, 'claude_code'))?.usages.includes('rappel')) return true;
+  const path = join(options.configDir, SETTINGS_FILE);
+  const outcome = await writeReminderHook(
+    path,
+    (settings) => {
+      try {
+        return addLeonHooks(settings, options.home, true).settings;
+      } catch (error) {
+        if (error instanceof SettingsShapeError) return null;
+        throw error;
+      }
+    },
+    deps,
+    join(options.configDir, BACKUP_FILE),
+  );
+  if (outcome === 'ecrit') {
+    deps.out(
+      `Reminder hook installed in ${path}: UserPromptSubmit · timeout ${USER_PROMPT_TIMEOUT_S} s · ${launcherHookCommand(options.home, 'reminder')}`,
+    );
+  }
+  return outcome !== 'echec';
 }

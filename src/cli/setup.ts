@@ -14,8 +14,8 @@
 // 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
 //    d'une installation d'avant (`pnpm … leon …`) sont remplacés sur place, l'accord déjà donné est gardé (S11) ;
 // 5. finit par une ligne par outil, le chemin du lanceur et, sous la forme installée, les mises à jour automatiques.
-// Dans un terminal, sans --yes, les usages (`lecture`, `resume`) se demandent une fois pour tous les outils du passage :
-// au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
+// Dans un terminal, sans --yes, les usages (`lecture`, `rappel`, `noter`, `resume`) se demandent une fois pour tous les
+// outils du passage : au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
 // l'écrivent chacun après son accord de base. Les cases tranchées sur la page passent par les mêmes décisions : elles ne
 // sont pas redemandées. --yes n'ajoute jamais un usage de lui-même : seules les cases de la page en donnent.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
@@ -52,6 +52,7 @@ import {
   isYes,
   type Json,
   load,
+  notesRefusal,
   parseSettings,
   SETTINGS_FILE,
   type UsageDecisions,
@@ -202,6 +203,7 @@ type InstallContext = {
   repoDir: string | undefined;
   yes: boolean;
   decisions: UsageDecisions; // les usages tranchés dans ce passage, pour tous ses outils
+  refuseNotes: () => Promise<boolean>; // un « non » du terminal à `noter` (T65, C16)
 } & Pick<SetupDeps, 'out' | 'err' | 'ask' | 'interactive'>;
 
 async function installClaudeCode(configDir: string, ctx: InstallContext): Promise<Installed> {
@@ -214,7 +216,7 @@ async function installClaudeCode(configDir: string, ctx: InstallContext): Promis
       interactive: ctx.interactive,
       decisions: ctx.decisions,
     },
-    { out: ctx.out, err: ctx.err, ask: ctx.ask },
+    { out: ctx.out, err: ctx.err, ask: ctx.ask, refuseNotes: ctx.refuseNotes },
   );
   if (code !== 0) return { failed: true, status: 'hooks NOT installed (see above)' };
   const inPlace = await claudeCodeHooksInPlace(configDir, ctx.home);
@@ -519,6 +521,7 @@ export async function runSetup(options: SetupOptions, deps: SetupDeps): Promise<
         ask,
         interactive: deps.interactive,
         decisions,
+        refuseNotes: notesRefusal(deps.fetch, home),
       });
       failed ||= result.failed;
       summary.push(`${tool.label}: ${result.status}`);

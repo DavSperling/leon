@@ -108,8 +108,14 @@ export const VersionsOutputSchema = z.object({
   versions: z.array(z.object({ n: z.number().int(), date: z.string(), par: z.string() })),
 });
 
+// Les leçons (C13, D25) : des clés seulement ; le texte ne va que dans `content`, derrière la ligne de garde.
+export const LessonsOutputSchema = z.object({
+  lessons: z.array(z.object({ id: z.string(), version: z.number().int(), date: z.string() })),
+});
+
 export type SearchOutput = z.infer<typeof SearchOutputSchema>;
 export type FetchOutput = z.infer<typeof FetchOutputSchema>;
 export type ThreadsOutput = z.infer<typeof ThreadsOutputSchema>;
 export type ThreadOutput = z.infer<typeof ThreadOutputSchema>;
+export type LessonsOutput = z.infer<typeof LessonsOutputSchema>;
 export type VersionsOutput = z.infer<typeof VersionsOutputSchema>;

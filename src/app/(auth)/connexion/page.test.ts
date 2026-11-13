@@ -100,3 +100,25 @@ describe('page de connexion : la demande OAuth d’un assistant', () => {
     expect((await formProps(searchParams as never))?.returnTo).toBeUndefined();
   });
 });
+
+// T55 : « Reconnectez-vous » dans la section Mémoire mène à /connexion?retour=memoire. La page bâtit elle-même le retour,
+// une valeur fixe, sans recopier l'adresse ; toute connexion faite d'ici (mot de passe, 2FA, Google, Microsoft, SSO) le
+// renvoie dans le même champ caché.
+describe('page de connexion : la reconnexion de la section Mémoire', () => {
+  it('retour=memoire : le formulaire et les autres connexions reviennent à /reglages#memoire', async () => {
+    const props = await formProps({ retour: 'memoire' });
+
+    expect(props?.returnTo).toBe('/reglages#memoire');
+    expect(
+      (props?.alternatives as ReactElement<{ returnTo?: string }> | undefined)?.props.returnTo,
+    ).toBe('/reglages#memoire');
+  });
+
+  it.each([
+    ['un retour inconnu', 'securite'],
+    ['une adresse', '/reglages#memoire'],
+    ['un autre site', 'https://evil.example'],
+  ])('%s : aucun retour', async (_name, retour) => {
+    expect((await formProps({ retour }))?.returnTo).toBeUndefined();
+  });
+});

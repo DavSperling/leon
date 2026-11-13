@@ -101,8 +101,20 @@ export type ItemNature = (typeof ITEM_NATURES)[number];
 export const OFFERED_NATURES = ITEM_NATURES.filter((nature) => nature !== 'fil_de_travail');
 export const CAPTURE_MODES = ['file', 'network', 'dom', 'manual'] as const;
 export type CaptureMode = (typeof CAPTURE_MODES)[number];
+// Les coulisses d'une session de code (lot 14, C10) : rangées par leur seule route, jamais par l'ingestion. Ni le point du
+// matin, ni le résumé, ni l'état du fil ne les lisent ; la recherche les rend toujours (QD9).
+export const BACKSTAGE_ROLES = ['raisonnement', 'sous_agent', 'appel_outil'] as const;
+export type BackstageRole = (typeof BACKSTAGE_ROLES)[number];
+export const isBackstageRole = (role: string | null): role is BackstageRole =>
+  (BACKSTAGE_ROLES as readonly (string | null)[]).includes(role);
 // Ce que la base accepte : la route publique, elle, ne garde que CAPTURE_MODES et les rôles user / assistant.
-export const TURN_ROLES = ['user', 'assistant', 'document', 'participant'] as const;
+export const TURN_ROLES = [
+  'user',
+  'assistant',
+  'document',
+  'participant',
+  ...BACKSTAGE_ROLES,
+] as const;
 export type TurnRole = (typeof TURN_ROLES)[number];
 // Du côté de qui parle l'auteur d'un tour d'outil, d'après un champ de l'outil (jamais d'après un nom, que
 // chacun choisit) : l'équipe qui a branché l'outil, ou une personne extérieure (client, visiteur, inconnu).

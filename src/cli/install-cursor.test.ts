@@ -10,7 +10,13 @@ import {
   installCursorHooks,
   uninstallCursorHooks,
 } from './install-cursor';
-import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
+import {
+  LECTURE_LINES,
+  NOTER_LINES,
+  RAPPEL_LINES,
+  RESUME_LINES,
+  type UsageOptions,
+} from './install-hooks';
 import { protectedCloneWarning } from './install-outil';
 import { writeLauncher } from './launcher';
 import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
@@ -152,11 +158,21 @@ describe('installCursorHooks', () => {
 describe('installCursorHooks : les usages', () => {
   const terminal = { interactive: true };
 
-  it('dans un terminal, après l’accord : lecture puis resume, avec les mêmes textes, écrits pour Cursor seul', async () => {
-    const { code, out, asked } = await install(['oui', 'non', 'oui'], false, terminal);
+  it('dans un terminal, après l’accord : lecture, rappel, noter puis resume, avec les mêmes textes, écrits pour Cursor seul', async () => {
+    const { code, out, asked } = await install(
+      ['oui', 'non', 'plus tard', 'plus tard', 'oui'],
+      false,
+      terminal,
+    );
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(3);
+    expect(asked).toHaveLength(5);
+    expect(out.indexOf(NOTER_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(RAPPEL_LINES.join('\n')),
+    );
+    expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(NOTER_LINES.join('\n')),
+    );
     expect(out.indexOf(LECTURE_LINES.join('\n'))).toBeGreaterThan(out.indexOf('Consent recorded'));
     expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
       out.indexOf(LECTURE_LINES.join('\n')),
@@ -173,9 +189,9 @@ describe('installCursorHooks : les usages', () => {
     await install();
     const before = await readFile(hooksPath, 'utf8');
 
-    const { out, asked } = await install(['', null], false, terminal);
+    const { out, asked } = await install(['', null, null, null], false, terminal);
 
-    expect(asked).toHaveLength(2);
+    expect(asked).toHaveLength(4);
     expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
     expect(out).not.toContain('nothing to do');
     expect((await factsConsent(home, 'cursor'))?.usages).toEqual(['lecture']);
@@ -203,7 +219,20 @@ describe('installCursorHooks : les usages', () => {
     expect(
       JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils.cursor,
     ).toEqual({ version: 0, installe_le: expect.any(String) });
-    expect((await install(['oui', null, null], false, terminal)).asked).toHaveLength(3);
+    expect((await install(['oui', null, null, null, null], false, terminal)).asked).toHaveLength(5);
+  });
+
+  // T49 : beforeSubmitPrompt est déjà posé, le rappel n'ajoute aucun crochet (briefing.ts le demande avec l'usage).
+  it('rappel : proposé avec son texte, en [Y/n], accepté par Entrée, et aucun crochet de plus', async () => {
+    await install();
+    const before = await readFile(hooksPath, 'utf8');
+
+    const { out, asked } = await install(['non', '', 'non'], false, terminal);
+
+    expect(asked[1]).toContain('[Y/n]');
+    expect(out).toContain(RAPPEL_LINES.join('\n'));
+    expect(await factsConsent(home, 'cursor')).toMatchObject({ usages: ['rappel'] });
+    expect(await readFile(hooksPath, 'utf8')).toBe(before);
   });
 });
 

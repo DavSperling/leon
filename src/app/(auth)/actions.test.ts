@@ -584,3 +584,67 @@ describe('Google, Microsoft et SSO', () => {
     expect(joinWithInvitation).toHaveBeenCalledWith(TOKEN, 'u1');
   });
 });
+
+// T55 : la reconnexion de la section Mémoire (/connexion?retour=memoire) y revient, par toute connexion faite depuis
+// cette page. Le champ `retour` revient d'un navigateur : seule la valeur fixe compte.
+describe('retour vers la section Mémoire', () => {
+  const MEMOIRE = '/reglages#memoire';
+  const redirectsTo = (path: string) => new Error(`NEXT_REDIRECT ${path}`);
+  const signedIn = { email: 'paul@example.com', password: 'motdepasse-solide' };
+  // Un test plus haut laisse verifyTOTP refuser tout code (mockRejectedValue survit à clearAllMocks).
+  beforeEach(() => {
+    vi.mocked(auth.api.verifyTOTP).mockResolvedValue(undefined as never);
+  });
+
+  it('le mot de passe y revient', async () => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour: MEMOIRE }))).rejects.toThrow(
+      redirectsTo(MEMOIRE),
+    );
+  });
+
+  it('la 2FA aussi, avec un code ou un code de secours', async () => {
+    for (const code of ['123456', 'V5qHD-kSFGw']) {
+      await expect(verifyTwoFactorAction({}, form({ code, retour: MEMOIRE }))).rejects.toThrow(
+        redirectsTo(MEMOIRE),
+      );
+    }
+  });
+
+  it('Google, Microsoft et le SSO y reviennent ; un compte neuf passe par l’onboarding', async () => {
+    vi.mocked(auth.api.signInSocial).mockResolvedValue({
+      url: 'https://accounts.google.com/x',
+    } as never);
+    vi.mocked(auth.api.signInSSO).mockResolvedValue({ url: 'https://idp.example/x' } as never);
+
+    await expect(socialSignInAction(form({ provider: 'google', retour: MEMOIRE }))).rejects.toThrow(
+      'NEXT_REDIRECT https://accounts.google.com/x',
+    );
+    await expect(
+      ssoSignInAction({}, form({ email: 'jeanne@acme.com', retour: MEMOIRE })),
+    ).rejects.toThrow('NEXT_REDIRECT https://idp.example/x');
+
+    for (const call of [
+      vi.mocked(auth.api.signInSocial).mock.calls[0],
+      vi.mocked(auth.api.signInSSO).mock.calls[0],
+    ])
+      expect(call?.[0]?.body).toMatchObject({
+        callbackURL: MEMOIRE,
+        newUserCallbackURL: '/bienvenue',
+      });
+  });
+
+  it.each([
+    ['un retour inconnu', '/reglages#securite'],
+    ['un autre site', 'https://evil.example/reglages#memoire'],
+    ['la valeur courte', 'memoire'],
+  ])('%s : retour à l’accueil', async (_name, retour) => {
+    vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
+
+    await expect(signInAction({}, form({ ...signedIn, retour }))).rejects.toThrow(redirectsTo('/'));
+    await expect(verifyTwoFactorAction({}, form({ code: '123456', retour }))).rejects.toThrow(
+      redirectsTo('/'),
+    );
+  });
+});

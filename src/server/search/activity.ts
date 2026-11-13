@@ -1,4 +1,5 @@
 import { type SQL, sql } from 'drizzle-orm';
+import type { TurnRole } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import {
@@ -30,6 +31,7 @@ type ActivityRow = {
   turn_id: string | null;
   epoch: string | null;
   author_name: string | null;
+  role: TurnRole | null;
 };
 
 // Les sources qui passent les filtres (une source dont au moins un passage passe les filtres de date et
@@ -59,7 +61,8 @@ export async function recentSources(
     )
     select tt.total, pg.source_id, pg.kind, pg.title, pg.metadata,
            extract(epoch from pg.last_ts) as last_epoch,
-           pp.passage_id, pp.turn_id, extract(epoch from pp.ts) as epoch, pp.author_name, pp.snippet
+           pp.passage_id, pp.turn_id, extract(epoch from pp.ts) as epoch, pp.author_name, pp.snippet,
+           (select pt.role from turns pt where pt.tenant_id = ${ctx.tenantId} and pt.id = pp.turn_id) as role
     from (select count(*)::int as total from matching) tt
     left join lateral (
       select * from matching order by last_ts desc, source_id
@@ -87,6 +90,7 @@ export async function recentSources(
               snippet: row.snippet ?? '',
               ts: epochToDate(row.epoch),
               authorName: row.author_name,
+              role: row.role,
             },
           ];
     hits.push({

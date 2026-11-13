@@ -9,7 +9,7 @@ import {
   type Usage,
 } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
-import { extractClaudeCodeFacts } from '../capture/session-facts';
+import { extractClaudeCodeFacts, type Subagents } from '../capture/session-facts';
 import {
   type CodeSessionKind,
   type IngestPayload,
@@ -23,6 +23,7 @@ import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
 import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
+import { loadSubagents } from './subagents';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
 export function parseSince(value: string | undefined): Date | undefined {
@@ -52,6 +53,9 @@ export type ImportDeps = {
   // retirer-crochets` lancé pendant un long import l'arrête, sans autre envoi. La borne d'une heure du résumé
   // (resume-worker.ts) en dépend. Les crochets de fin et le rattrapage le donnent aussi, pour les faits.
   withdrawn?: () => Promise<boolean>;
+  // Le listage d'un dossier, pour lire les sous-agents d'une session Claude Code (subagents.ts, T63). Absent, aucun n'est
+  // lu : leurs appels rendent la session externe.
+  readdir?: (path: string) => Promise<string[]>;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est la
   // version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé), `accordLe` la date de l'accord
   // (`installe_le`), qui part avec eux (`accord_le`, T43 : le serveur la compare au dernier retrait). `depuis`, la date
@@ -229,7 +233,13 @@ export async function importSession(
 // externe (échec fermé), le crochet de fin la relit. La lire ici si l'import doit rattraper ces sessions.
 export async function sendSessionFacts(
   session: Pick<CodeSession, 'sessionId'>,
-  source: { content: string; root: string | null; fin: boolean; faits?: SessionFacts },
+  source: {
+    content: string;
+    root: string | null;
+    fin: boolean;
+    faits?: SessionFacts;
+    subagents?: Subagents;
+  },
   options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { kind?: CodeSessionKind },
   deps: ImportDeps,
 ): Promise<boolean> {
@@ -243,7 +253,8 @@ export async function sendSessionFacts(
     ...(deps.facts.usages?.length
       ? { usages: deps.facts.usages, accord_le: deps.facts.accordLe.toISOString() }
       : {}),
-    faits: source.faits ?? extractClaudeCodeFacts(source.content, source.root),
+    faits:
+      source.faits ?? extractClaudeCodeFacts(source.content, source.root, false, source.subagents),
     fin: source.fin,
   };
   if (options.dryRun) {
@@ -305,7 +316,11 @@ export async function importClaudeCode(
       const fin = Date.now() - mtimeMs >= IDLE_MS;
       // Sans git (essais), la racine reste le dossier de départ.
       const root = deps.git ? await repoRootFor(start, deps.git) : start;
-      const source = { content, root, fin };
+      const subagents = await loadSubagents(file, {
+        readFile: (path) => readFile(path, 'utf8'),
+        readdir: deps.readdir,
+      });
+      const source = { content, root, fin, subagents };
       const factsDeps = { ...deps, facts: { ...deps.facts, usages } };
       factsRefused = !(await sendSessionFacts(
         session,

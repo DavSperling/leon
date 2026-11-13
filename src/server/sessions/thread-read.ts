@@ -3,8 +3,16 @@ import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { oneLine } from '@/server/memory/labels';
+import { lessonIdInScope } from '@/server/memory/lessons';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
-import { latestIn, listVersions, readVersion, type Version } from '@/server/memory/versions';
+import {
+  CIBLES,
+  type Cible,
+  latestIn,
+  listVersions,
+  readVersion,
+  type Version,
+} from '@/server/memory/versions';
 import { textArray } from '@/server/search/filters-sql';
 import { HEADING } from './resume-prompt';
 import { DEFAULT_BRANCHES, type PrState, prStates } from './start-context';
@@ -77,7 +85,14 @@ export type VersionLine = Pick<Version, 'n' | 'creeLe' | 'ecritPar' | 'motif'> &
   texte: string;
   entrees: string[];
 };
-export type VersionsRead = { id: string; titre: string; n: number | null; versions: VersionLine[] };
+// `kind` : l'historique d'un fil, d'une note ou d'une leçon ; une note et une leçon n'ont pas de titre (`titre` vide).
+export type VersionsRead = {
+  id: string;
+  kind: 'fil' | 'note' | 'lecon';
+  titre: string;
+  n: number | null;
+  versions: VersionLine[];
+};
 
 // Un compteur, relevé par T38 : une ligne par état masqué par la règle de lecture, sans texte ni id.
 const countMasked = () => console.info('[leon]', 'fil.etat_masque');
@@ -209,11 +224,12 @@ export async function readThread(
 
 // Les fils de l'auteur sur ce projet, hors absorbés, et leurs clés : celui de la branche d'abord (hors main et master),
 // puis par date de mise à jour, `max` au plus, dans la transaction de l'appelant. Ni version ni journal : le sommaire du
-// démarrage s'en tient là (start-context.ts, T46), le dossier y ajoute l'état et note ce qu'il rend.
+// démarrage s'en tient là (start-context.ts, T46), le dossier y ajoute l'état et note ce qu'il rend. `ids` : parmi
+// ceux-là seulement (les fils que cite le rappel, reminder.ts).
 export async function readFilKeys(
   tx: Tx,
   ctx: TenantContext,
-  input: { projet: string; branche?: string | null },
+  input: { projet: string; branche?: string | null; ids?: string[] },
   max: number,
 ): Promise<{ total: number; fils: Array<{ keys: FilKeys; read: Read }> }> {
   const branche = input.branche && !DEFAULT_BRANCHES.has(input.branche) ? input.branche : null;
@@ -221,6 +237,7 @@ export async function readFilKeys(
     select s.id, (count(*) over ())::int as total from sources s
     where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
       and s.metadata->>'project' = ${input.projet} and s.metadata->>'absorbe_par' is null
+      ${input.ids === undefined ? sql`` : sql`and s.id = any(${textArray(input.ids)}::uuid[])`}
     order by ${branche === null ? sql`` : sql`${has('branches', branche)} desc nulls last,`}
       coalesce((s.metadata->>'maj_le')::timestamptz, s.created_at) desc, s.id
     limit ${max}`);
@@ -280,26 +297,33 @@ export async function readDossier(
   };
 }
 
-// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris : sans `n`, ses versions lisibles ; avec
-// `n`, le texte de celle-ci, si elle est lisible. Une note n'a pas de projet (remember-tool.ts) : elle est
-// introuvable ici. Rien ne restaure (D33) : seule l'action du site le fait (T55).
+// L'historique d'un fil de l'auteur sur ce projet (C12, T54), absorbé compris, d'une de ses notes de ce projet (T57),
+// ou d'une de ses leçons du projet ou sans dépôt (T55) : sans `n`, ses versions lisibles ; avec `n`, le texte de
+// celle-ci, si elle est lisible. Une note de remember n'a pas de projet : elle est introuvable ici, ses versions ne se
+// lisent que sur le site. Une leçon retirée garde son historique (D33). Rien ne restaure (D33) : seule l'action du site
+// le fait (T55).
 export async function readVersions(
   ctx: TenantContext,
   input: { projet: string; id: string; n?: number },
   journal: Journal,
 ): Promise<VersionsRead | null> {
   if (!UUID.test(input.id)) return null;
-  const fil = await withTenant(ctx, async (tx) => {
-    const { rows } = await tx.execute<Fil>(sql`
-      select s.id, s.metadata from sources s
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId} and s.kind = ${FIL}
-        and s.id = ${input.id} and s.metadata->>'project' = ${input.projet}`);
+  const source = await withTenant(ctx, async (tx) => {
+    const { rows } = await tx.execute<Fil & { kind: string }>(sql`
+      select s.id, s.kind, s.metadata from sources s
+      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+        and s.kind = any(${textArray(CIBLES)}) and s.id = ${input.id}
+        and s.metadata->>'project' = ${input.projet}`);
     return rows[0];
   });
-  if (!fil) return null;
+  const fil = source?.kind === FIL ? source : undefined;
+  const leconId = source ? null : await lessonIdInScope(ctx, input.id, input.projet);
+  if (!source && leconId === null) return null;
+  const targetId = source?.id ?? leconId ?? '';
+  const cible: Cible = source ? source.id : { leconId: targetId };
   let versions: VersionLine[];
   if (input.n === undefined) {
-    versions = (await listVersions(ctx, fil.id)).map((one) => ({
+    versions = (await listVersions(ctx, cible)).map((one) => ({
       n: one.n,
       creeLe: one.creeLe,
       ecritPar: one.ecritPar,
@@ -308,7 +332,7 @@ export async function readVersions(
       entrees: sourcesOf(one),
     }));
   } else {
-    const one = await readVersion(ctx, fil.id, input.n);
+    const one = await readVersion(ctx, cible, input.n);
     versions = one
       ? [
           {
@@ -324,12 +348,16 @@ export async function readVersions(
   }
   const logged = await recordReads(ctx, {
     ...journal,
-    reads: [fil.id, ...versions.flatMap((one) => one.entrees)].map((sourceId) => ({ sourceId })),
+    reads: [
+      source ? { sourceId: targetId } : { leconId: targetId },
+      ...versions.flatMap((one) => one.entrees).map((sourceId) => ({ sourceId })),
+    ],
   });
-  if (!logged.has(fil.id)) return null;
+  if (!logged.has(targetId)) return null;
   return {
-    id: fil.id,
-    titre: filTitle(fil),
+    id: targetId,
+    kind: fil ? 'fil' : source ? 'note' : 'lecon',
+    titre: fil ? filTitle(fil) : '',
     n: input.n ?? null,
     versions: versions.filter((one) => allLogged(one.entrees, logged)),
   };

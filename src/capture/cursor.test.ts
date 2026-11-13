@@ -144,7 +144,7 @@ describe('extractCursorFacts', () => {
     it('un outil local du serveur MCP de Leon reconnu : non ; search, un autre serveur, ou non reconnu : oui', () => {
       const mcp = (name: string, leon: boolean) =>
         extractCursorFacts(line('assistant', tool(name, {})), FILE, RACINE, null, leon).externe;
-      for (const name of ['threads', 'thread', 'versions', 'remember']) {
+      for (const name of ['threads', 'thread', 'versions', 'lessons', 'remember']) {
         expect(mcp(`mcp_leon_${name}`, true), name).toBe(false);
         expect(mcp(`mcp_leon_${name}`, false), name).toBe(true);
       }
@@ -170,6 +170,9 @@ describe('extractCursorFacts', () => {
           tool('Shell', { command: 'pnpm test' }),
           tool('Shell', { command: '~/.leon/bin/leon thread' }),
           tool('Shell', { command: 'leon search "route des faits"' }),
+          tool('Shell', {
+            command: '~/.leon/bin/leon note --tool cursor --session s-1 "reprendre"',
+          }),
           tool('run_terminal_cmd', { command: 'git status' }),
           tool('edit_file', { target_file: 'b.ts' }),
         ),

@@ -13,7 +13,7 @@ describe('labels', () => {
       antigravity: 'Antigravity',
       claude_ai: 'claude.ai',
       chatgpt: 'ChatGPT',
-      mcp_remember: 'Note (MCP)',
+      mcp_remember: 'Note',
       document: 'Document',
       ...PROVIDER_LABELS,
       leon_fil: 'Leon',

@@ -70,6 +70,24 @@ describe('POST /api/v1/ingest', () => {
     });
   });
 
+  // Les coulisses (lot 14) n'ont que leur route, POST /api/v1/coulisses : la base accepte leurs rôles, l'ingestion non.
+  it.each(['raisonnement', 'sous_agent', 'appel_outil'])(
+    'répond 400 à un tour de rôle %s',
+    async (role) => {
+      const { paulToken } = await setup();
+      const body = validBody();
+      const bad = { ...body, turns: [{ ...body.turns[0], role }] };
+
+      const response = await apiRequest(API_PATHS.ingest, { token: paulToken, body: bad });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'turns.0.role', code: 'invalid_value' }],
+      });
+    },
+  );
+
   // Ni un connecteur ni un fil de travail (T39 : seul le serveur crée un fil, D21).
   it.each(['github', 'leon_fil'])(
     "répond 400 au type %s : un jeton d'appareil ne fabrique pas cette source",
@@ -169,6 +187,32 @@ describe('POST /api/v1/ingest', () => {
 
     expect(response.status).toBe(400);
     expect(await response.text()).not.toContain('jeton');
+  });
+
+  // T57 (C14, D38) : writeNote est le seul chemin qui crée une note ; la route d'ingestion ne l'accepte plus.
+  it('répond 400 au kind mcp_remember, sans rien écrire, et accepte encore les autres kinds de la capture', async () => {
+    const { paul, paulToken } = await setup();
+    const body = validBody();
+
+    const note = await apiRequest(API_PATHS.ingest, {
+      token: paulToken,
+      body: { ...body, source: { ...body.source, kind: 'mcp_remember' } },
+    });
+    const unknownKey = await apiRequest(API_PATHS.ingest, {
+      token: paulToken,
+      body: { ...body, source: { ...body.source, inconnu: 'x' } },
+    });
+
+    expect(note.status).toBe(400);
+    expect(unknownKey.status).toBe(400);
+    expect(await withTenant(paul, (tx) => tx.select({ id: sources.id }).from(sources))).toEqual([]);
+    for (const kind of ['claude_code', 'codex', 'cursor', 'antigravity', 'chatgpt']) {
+      const response = await apiRequest(API_PATHS.ingest, {
+        token: paulToken,
+        body: { ...validBody(), source: { ...validBody().source, kind } },
+      });
+      expect(response.status, kind).toBe(202);
+    }
   });
 
   it('répond 400 à un corps vide', async () => {

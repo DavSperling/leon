@@ -20,7 +20,7 @@ import { join } from 'node:path';
 
 export const HOOK_PNPM_OPTIONS = ['-s', '--config.verify-deps-before-run=false'] as const;
 
-export type HookSubcommand = 'briefing' | 'capter-session';
+export type HookSubcommand = 'briefing' | 'capter-session' | 'reminder';
 
 // Toujours entre apostrophes, une apostrophe de la valeur devenant '\'' (les chemins du lanceur, K8).
 export const singleQuote = (value: string): string => `'${value.replaceAll("'", `'\\''`)}'`;

@@ -10,7 +10,13 @@ import {
   installCodexHook,
   uninstallCodexHook,
 } from './install-codex';
-import { LECTURE_LINES, RESUME_LINES, type UsageOptions } from './install-hooks';
+import {
+  LECTURE_LINES,
+  NOTER_LINES,
+  RAPPEL_LINES,
+  RESUME_LINES,
+  type UsageOptions,
+} from './install-hooks';
 import { writeLauncher } from './launcher';
 import { type UninstallDeps, WITHDRAWAL_NOT_TOLD_LAST_MESSAGE } from './uninstall-hooks';
 
@@ -47,6 +53,12 @@ const finHandler = () => ({
   type: 'command',
   command: launcherCommand(home, 'codex', 'fin'),
   timeout: 3,
+});
+// T49 : le crochet de message (5 s), posé seulement avec l'usage `rappel`.
+const promptHandler = () => ({
+  type: 'command',
+  command: launcherCommand(home, 'codex', 'prompt'),
+  timeout: 5,
 });
 const allLeonHooks = () => ({
   SessionStart: [{ hooks: [leonHandler()] }],
@@ -273,15 +285,27 @@ describe('installCodexHook : les usages', () => {
   const rawEntry = async (tool = 'codex') =>
     JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils[tool];
 
-  it('dans un terminal, après l’accord : lecture puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
+  it('dans un terminal, après l’accord : lecture, rappel, noter puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
     await writeConsent(home, 'claude_code', 2);
 
-    const { code, out, asked } = await install(['oui', '', 'oui'], false, terminal);
+    const { code, out, asked } = await install(
+      ['oui', '', 'plus tard', 'plus tard', 'oui'],
+      false,
+      terminal,
+    );
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(3);
+    expect(asked).toHaveLength(5);
     expect(asked[1]).toContain('[Y/n]');
-    expect(asked[2]).toContain('[y/N]');
+    expect(asked[2]).toContain('[Y/n]');
+    expect(asked[3]).toContain('[Y/n]');
+    expect(asked[4]).toContain('[y/N]');
+    expect(out.indexOf(NOTER_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(RAPPEL_LINES.join('\n')),
+    );
+    expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
+      out.indexOf(NOTER_LINES.join('\n')),
+    );
     expect(out.indexOf(LECTURE_LINES.join('\n'))).toBeGreaterThan(out.indexOf('Consent recorded'));
     expect(out.indexOf(RESUME_LINES.join('\n'))).toBeGreaterThan(
       out.indexOf(LECTURE_LINES.join('\n')),
@@ -294,7 +318,7 @@ describe('installCodexHook : les usages', () => {
     await install();
     const hooks = await readFile(hooksPath, 'utf8');
 
-    const { code, out } = await install(['non', 'non'], false, terminal);
+    const { code, out } = await install(['non', 'non', 'non', 'non'], false, terminal);
 
     expect(code).toBe(0);
     expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
@@ -304,7 +328,7 @@ describe('installCodexHook : les usages', () => {
     );
     expect(await factsConsent(home, 'codex')).toMatchObject({
       usages: [],
-      refus: ['lecture', 'resume'],
+      refus: ['lecture', 'rappel', 'resume', 'noter'],
     });
     expect(await readFile(hooksPath, 'utf8')).toBe(hooks);
 
@@ -348,13 +372,72 @@ describe('installCodexHook : les usages', () => {
   });
 
   it('le retrait efface usages, refus et capture ; une réinstallation dans un terminal les repropose', async () => {
-    await install(['oui', 'oui', 'non'], false, terminal);
+    await install(['oui', 'oui', 'oui', 'non'], false, terminal);
 
     await uninstall();
 
     expect(await rawEntry()).toEqual({ version: 0, installe_le: expect.any(String) });
-    const again = await install(['oui', null, null], false, terminal);
-    expect(again.asked).toHaveLength(3);
+    expect((await readHooks()).hooks).toBeUndefined();
+    const again = await install(['oui', null, null, null, null], false, terminal);
+    expect(again.asked).toHaveLength(5);
+  });
+});
+
+// T49 (décisions d'Amos du 11/11 pour le lot 13) : le rappel de Codex passe par un crochet UserPromptSubmit
+// (`leon crochet codex prompt`, 5 s), posé seulement avec l'usage `rappel`, en fin de liste, à approuver par /hooks.
+describe('installCodexHook : l’usage rappel et son crochet', () => {
+  const terminal = { interactive: true };
+
+  it('accepté dans un terminal, avec le texte de Claude Code : le crochet est posé, et il faut l’approuver', async () => {
+    const { code, out } = await install(['oui', 'non', '', 'non'], false, terminal);
+
+    expect(code).toBe(0);
+    expect(out).toContain(RAPPEL_LINES.join('\n'));
+    expect(await factsConsent(home, 'codex')).toMatchObject({ usages: ['rappel'] });
+    expect((await readHooks()).hooks).toEqual({
+      ...allLeonHooks(),
+      UserPromptSubmit: [{ hooks: [promptHandler()] }],
+    });
+    expect(out.lastIndexOf('type /hooks and approve the Leon hooks')).toBeGreaterThan(
+      out.indexOf('Reminder recorded'),
+    );
+  });
+
+  it.each([
+    ['refusé', ['oui', 'non', 'non', 'non'], false, terminal],
+    ['l’entrée fermée', ['oui', null, null, null], false, terminal],
+    ['avec --oui', [], true, terminal],
+  ])('%s : pas de crochet de message', async (_name, answers, assumeYes, usages) => {
+    await install(answers, assumeYes, usages);
+
+    expect((await readHooks()).hooks.UserPromptSubmit).toBeUndefined();
+  });
+
+  it('donné par la page, crochets déjà approuvés : ajouté en fin de liste, sans déplacer les autres', async () => {
+    const userPrompt = { hooks: [{ type: 'command', command: './relire.sh' }] };
+    await install();
+    const before = await readHooks();
+    await writeHooks({ ...before, hooks: { ...before.hooks, UserPromptSubmit: [userPrompt] } });
+
+    const { code, out } = await install([], true, { decisions: new Map([['rappel', true]]) });
+
+    expect(code).toBe(0);
+    expect(out).toContain('type /hooks and approve the Leon hooks');
+    expect((await readHooks()).hooks).toEqual({
+      ...before.hooks,
+      UserPromptSubmit: [userPrompt, { hooks: [promptHandler()] }],
+    });
+
+    const again = await install([], true);
+    expect(again.out).toContain('nothing to do');
+  });
+
+  it('le retrait l’enlève avec les autres', async () => {
+    await install(['oui', 'non', '', 'non'], false, terminal);
+
+    await uninstall();
+
+    expect((await readHooks()).hooks).toBeUndefined();
   });
 });
 

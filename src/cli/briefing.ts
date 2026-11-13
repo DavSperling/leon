@@ -5,8 +5,9 @@
 // l'accord local en version 2 (C7, consent.ts). Sans lui (crochets installés avant ce chantier), le point seul.
 // Avec l'usage `lecture` de l'outil du crochet (T46 du plan de la mémoire à disposition), le bloc envoie aussi les
 // usages de cet outil, jamais ceux d'un autre, et la commande Leon posée sur le poste (leonCommand) : le serveur rend
-// alors le sommaire des fils et la consigne de lecture. Un serveur plus ancien que ces champs répond 400 : le point du
-// matin seul, comme pour un 404.
+// alors le sommaire des fils et la consigne de lecture. Avec l'usage `noter` (T57), les mêmes, et l'outil du crochet :
+// le serveur rend alors la phrase de `leon note`. Un serveur plus ancien que ces champs répond 400 : le point du matin
+// seul, comme pour un 404.
 //
 // Doc officielle des crochets : https://code.claude.com/docs/en/hooks (lue le 2026-10-20).
 // - L'évènement s'appelle `SessionStart` (`source` : startup, resume, clear, compact ou fork). Claude Code écrit sur
@@ -48,6 +49,7 @@ import { resolveServerEnv, type ServerEnv } from './env';
 import { launcherPath, type Outil } from './hook-commands';
 import { ADAPTATEURS } from './outils';
 import { type GitRunner, projectKeyFor } from './project-key';
+import { askReminder } from './reminder';
 import { startOutput } from './start-output';
 import { hasTemoin, writeTemoin } from './temoins';
 
@@ -230,8 +232,6 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
   try {
     const stdin = await readHookStdin(deps.stdin, { timeoutMs: BRIEFING_STDIN_TIMEOUT_MS });
     const entree = adapter && outil ? adapter.entree(parseInput(stdin), deps.home, deps.env) : null;
-    // Le premier message d'un outil qui reçoit le bloc au démarrage : rien (le rappel du lot 13 viendra ici).
-    if (adapter && evenement === 'prompt' && !adapter.uneFois) return 0;
     if (outil === undefined) {
       if (isOtherToolHook(stdin, deps.env, deps.home)) return 0;
       // Après la garde : sous un autre outil, même ce message ne s'écrit pas.
@@ -242,18 +242,31 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
     }
     // L'accord de l'outil du crochet, le seul dont les usages partent (T46).
     const consent = await factsConsent(deps.home, outil ?? 'claude_code');
+    // Le rappel (T49) : à chaque message d'un outil qui le donne à son crochet, avec l'usage `rappel` de cet outil.
+    const message = adapter && evenement === 'prompt' ? adapter.message(parseInput(stdin)) : null;
+    // Sans dossier de travail dans l'entrée, pas de rappel : le crochet de Cursor et celui d'Antigravity ne tournent pas
+    // depuis lui, et il n'y aurait aucun projet où chercher.
+    const reminder = consent?.usages.includes('rappel') && entree?.dossier ? message : null;
+    // Codex reçoit son bloc au démarrage : à ses messages, le rappel seul, sans un mot d'erreur quand il manque.
+    if (adapter && evenement === 'prompt' && !adapter.uneFois && reminder === null) return 0;
     if (outil !== undefined && consent === null) {
       // Un autre outil n'a pas d'« avant ce chantier » : sans son accord (retiré, ou jamais donné), rien ne part.
       deps.err(`Leon: no consent recorded for ${ADAPTATEURS[outil].label}: nothing is sent.`);
       return 0;
     }
     const conversation = entree?.session ?? null;
-    if (outil && adapter?.uneFois && conversation !== null) {
-      if (await hasTemoin(deps.home, outil, conversation)) return 0;
-    }
+    // Le bloc : jamais aux messages de Codex ; pour un outil qui le reçoit au premier message, une seule fois (témoin).
+    const seen =
+      outil !== undefined &&
+      adapter?.uneFois === true &&
+      conversation !== null &&
+      (await hasTemoin(deps.home, outil, conversation));
+    const needsBlock = !seen && !(evenement === 'prompt' && adapter?.uneFois === false);
+    if (!needsBlock && reminder === null) return 0;
     const server = await resolveServerEnv(deps.env, deps.home);
     const directory = entree?.dossier ?? briefingDirectory(stdin, deps.env, deps.cwd);
-    let text: string | null;
+    let text: string | null = null;
+    let line = '';
     if (consent === null) {
       // Sans l'accord du bloc : ni branche ni session ne partent, le point du matin seul, comme avant.
       text = await fetchBriefingText(deps.fetch, server, await projectKeyFor(directory, deps.git));
@@ -263,27 +276,54 @@ export async function runBriefing(deps: BriefingCommandDeps): Promise<0> {
         projectKeyFor(directory, deps.git),
         currentBranch(directory, deps.git),
       ]);
-      text = await fetchStartText(deps.fetch, server, {
-        projet,
-        branche,
-        session: conversation ?? startingSession(stdin),
-        // Seulement avec `lecture` : le texte de l'accord de base ne dit que le projet, la branche et la session.
-        ...(consent.usages.includes('lecture')
-          ? { usages: consent.usages, commande: await leonCommand(deps.home, deps.depot) }
-          : {}),
-      });
+      const session = conversation ?? startingSession(stdin);
+      // Le bloc et le rappel se demandent ensemble : le premier message d'une conversation n'attend pas deux fois.
+      [text, line] = await Promise.all([
+        needsBlock
+          ? fetchStartText(deps.fetch, server, {
+              projet,
+              branche,
+              session,
+              // Seulement avec `lecture` ou `noter` : le texte de l'accord de base ne dit que le projet, la branche et
+              // la session. `outil` seulement avec `noter` (T57) : un serveur plus ancien le refuserait (400).
+              ...(consent.usages.includes('lecture') || consent.usages.includes('noter')
+                ? { usages: consent.usages, commande: await leonCommand(deps.home, deps.depot) }
+                : {}),
+              ...(consent.usages.includes('noter')
+                ? { outil: adapter?.kind ?? 'claude_code' }
+                : {}),
+            })
+          : null,
+        adapter && reminder !== null
+          ? askReminder({
+              fetch: deps.fetch,
+              server,
+              consent,
+              outil: adapter.kind,
+              projet,
+              branche,
+              session,
+              message: reminder,
+            })
+          : '',
+      ]);
     }
-    if (text === null) {
+    if (needsBlock && text === null) {
       deps.err('Leon: briefing unavailable (server unreachable or token refused).');
-    } else {
-      answer(adapter ? adapter.injection(text, evenement) : startOutput('claude_code', text));
-      if (outil && adapter?.uneFois && conversation !== null) {
-        await writeTemoin(deps.home, outil, conversation);
-      }
+    }
+    if (text !== null || line !== '') {
+      const injected = [text ?? '', line].filter((part) => part !== '').join('\n');
+      answer(
+        adapter ? adapter.injection(injected, evenement) : startOutput('claude_code', injected),
+      );
+    }
+    if (text !== null && outil && adapter?.uneFois && conversation !== null) {
+      await writeTemoin(deps.home, outil, conversation);
     }
     // Une fois la sortie écrite, le rattrapage (T19) et la mise à jour automatique (S12) : détachés, ils ne sont jamais
-    // attendus, et ni leur échec ni leur lenteur ne changent la sortie du crochet.
-    for (const schedule of [deps.scheduleCatchUp, deps.scheduleUpdate]) {
+    // attendus, et ni leur échec ni leur lenteur ne changent la sortie du crochet. Pas à chaque message : seulement avec
+    // le bloc.
+    for (const schedule of needsBlock ? [deps.scheduleCatchUp, deps.scheduleUpdate] : []) {
       try {
         await schedule?.();
       } catch {

@@ -614,7 +614,7 @@ describe('runBriefing', () => {
     // Un poste dont les outils ont ces usages, avec ou sans le lanceur ~/.leon/bin/leon.
     async function poste(
       name: string,
-      usages: Partial<Record<'claude_code' | 'codex', Array<'lecture' | 'resume'>>>,
+      usages: Partial<Record<'claude_code' | 'codex', Array<'lecture' | 'resume' | 'noter'>>>,
       lanceur = true,
     ): Promise<string> {
       const home = join(lecteurs, name);
@@ -682,6 +682,61 @@ describe('runBriefing', () => {
         branche: null,
         session: '01a1b090-6f1c-70c0-bb75-9116938d76c4',
       });
+    });
+
+    // T57 (amendée le 11/11) : `outil` ne part qu'avec l'usage `noter` de l'outil du crochet, et avec lui ses usages et
+    // la commande, que cite la phrase de `leon note`, même sans `lecture`.
+    it('avec `noter` : l’outil du crochet, ses usages et la commande, même sans `lecture`', async () => {
+      const home = await poste('noter', { claude_code: ['noter'], codex: ['lecture', 'noter'] });
+      const claudeRun = setup({ stdin: Readable.from([hookJson('/projets/leon')]), home, ...git });
+      const codexRun = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+
+      expect(await claudeRun.run()).toBe(0);
+      expect(await codexRun.run()).toBe(0);
+
+      expect(claudeRun.asked()).toEqual({
+        projet: PROJECT,
+        branche: null,
+        session: SESSION,
+        usages: ['noter'],
+        commande: '~/.leon/bin/leon',
+        outil: 'claude_code',
+      });
+      expect(codexRun.asked()).toMatchObject({
+        usages: ['lecture', 'noter'],
+        commande: '~/.leon/bin/leon',
+        outil: 'codex',
+      });
+    });
+
+    it('avec `lecture` sans `noter` : pas d’outil', async () => {
+      const home = await poste('lecture-seule', { codex: ['lecture'] });
+      const { run, asked } = setup({ stdin: codexJson(home), home, outil: 'codex', ...git });
+
+      expect(await run()).toBe(0);
+
+      expect(asked()).not.toHaveProperty('outil');
+      expect(asked()).toMatchObject({ usages: ['lecture'] });
+    });
+
+    it('avec `noter`, un serveur plus ancien que `outil` (400) : le point du matin seul, comme aujourd’hui', async () => {
+      const home = await poste('noter-ancien', { claude_code: ['noter'] });
+      const fetchImpl = vi.fn(async (url: URL) =>
+        url.pathname === API_PATHS.contexte
+          ? new Response('{}', { status: 400 })
+          : Response.json(briefing),
+      );
+      const { run, out, err } = setup({
+        stdin: Readable.from([hookJson('/projets/leon')]),
+        home,
+        fetch: fetchImpl,
+        ...git,
+      });
+
+      expect(await run()).toBe(0);
+
+      expect(out).toEqual([briefing.markdown]);
+      expect(err).toEqual([]);
     });
 
     it('sans lanceur, depuis un clone : pnpm dans le clone, avec le tilde sous le dossier personnel', async () => {
@@ -893,6 +948,485 @@ describe('runBriefing', () => {
         expect(next.out).toEqual(['{}']);
         expect(next.fetchImpl).not.toHaveBeenCalled();
       }
+    });
+  });
+
+  // T49 : le rappel à chaque message de Cursor, de Codex et d'Antigravity, par `leon crochet <outil> prompt`, avec l'usage `rappel`.
+  describe('le rappel à chaque message (Cursor, Codex, Antigravity)', () => {
+    const REMINDER = '<rappel-leon>Le fil amos/etude (id 3f2a) touche à ce message.</rappel-leon>';
+    // Le serveur : le bloc sur `/contexte`, la ligne de rappel (ou ce que `reminder` fait de la requête) sur `/rappel`.
+    const server = (reminder: (url: URL, init: RequestInit) => Response | Promise<Response>) =>
+      vi.fn(async (url: URL, init: RequestInit) =>
+        url.pathname === API_PATHS.rappel
+          ? reminder(url, init)
+          : url.pathname === API_PATHS.contexte
+            ? Response.json({ texte: BLOCK })
+            : new Response('{}', { status: 404 }),
+      );
+    const answers = () => server(() => Response.json({ texte: REMINDER }));
+    const neverAnswers = (_url: URL, init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(init.signal?.reason));
+      });
+    // Les requêtes de rappel, dans l'ordre : leur corps.
+    const reminders = (fetchImpl: ReturnType<typeof vi.fn>) =>
+      (fetchImpl.mock.calls as unknown as [URL, RequestInit][])
+        .filter(([url]) => url.pathname === API_PATHS.rappel)
+        .map(([, init]) => JSON.parse(String(init.body)) as Record<string, unknown>);
+    const blockRequests = (fetchImpl: ReturnType<typeof vi.fn>) =>
+      (fetchImpl.mock.calls as unknown as [URL][]).filter(
+        ([url]) => url.pathname === API_PATHS.contexte,
+      );
+
+    describe('Cursor', () => {
+      const promptJson = (conversation: string, prompt = 'où en est la branche etude ?') =>
+        Readable.from([
+          JSON.stringify({
+            conversation_id: conversation,
+            hook_event_name: 'beforeSubmitPrompt',
+            prompt,
+            workspace_roots: ['/projets/leon'],
+            cursor_version: '3.29.9',
+          }),
+        ]);
+      const remotes = { '/projets/leon': 'git@github.com:Acme/Leon.git' };
+      let withRappel: string;
+      let withoutRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'cursor-rappel-'));
+        await writeConsent(withRappel, 'cursor', 2);
+        await addUsage(withRappel, 'cursor', 'rappel');
+        withoutRappel = await mkdtemp(join(homes, 'cursor-sans-'));
+        await writeConsent(withoutRappel, 'cursor', 2);
+        await addUsage(withoutRappel, 'cursor', 'lecture');
+      });
+      const cursor = (input: {
+        conversation: string;
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        prompt?: string;
+      }) =>
+        setup({
+          stdin: promptJson(input.conversation, input.prompt),
+          home: input.home,
+          outil: 'cursor',
+          evenement: 'prompt',
+          remotes,
+          fetch: input.fetch,
+        });
+
+      it('un message suivant, avec rappel : la ligne dans additional_context, le message de l’entrée envoyé', async () => {
+        const fetchImpl = answers();
+        await cursor({ conversation: 'c-1', home: withRappel, fetch: fetchImpl }).run();
+
+        const next = cursor({ conversation: 'c-1', home: withRappel, fetch: fetchImpl });
+        expect(await next.run()).toBe(0);
+
+        expect(next.out.map((line) => JSON.parse(line))).toEqual([
+          { continue: true, additional_context: REMINDER },
+        ]);
+        expect(blockRequests(fetchImpl)).toHaveLength(1); // le bloc n'est venu qu'une fois
+        expect(reminders(fetchImpl).at(-1)).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'c-1',
+          message: 'où en est la branche etude ?',
+          outil: 'cursor',
+          usages: ['rappel'],
+        });
+      });
+
+      it('le premier message : le bloc et le rappel demandés ensemble, rendus en une seule sortie', async () => {
+        const fetchImpl = answers();
+        const first = cursor({ conversation: 'c-2', home: withRappel, fetch: fetchImpl });
+
+        expect(await first.run()).toBe(0);
+
+        expect(first.out).toHaveLength(1);
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: `${BLOCK}\n${REMINDER}`,
+        });
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toHaveLength(1);
+        // Le bloc est parti avant le rappel, et le témoin est écrit : le message suivant ne le redemande pas.
+        const second = cursor({ conversation: 'c-2', home: withRappel, fetch: fetchImpl });
+        await second.run();
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+      });
+
+      it('sans l’usage rappel : rien ne change, aucune requête après le premier message', async () => {
+        const fetchImpl = answers();
+        const first = cursor({ conversation: 'c-3', home: withoutRappel, fetch: fetchImpl });
+        await first.run();
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: BLOCK,
+        });
+
+        const calls = fetchImpl.mock.calls.length;
+        const next = cursor({ conversation: 'c-3', home: withoutRappel, fetch: fetchImpl });
+        await next.run();
+
+        expect(next.out).toEqual(['{"continue":true}']);
+        expect(fetchImpl.mock.calls).toHaveLength(calls);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('un serveur de rappel lent, ou ancien : le message passe, le bloc du premier message arrive quand même', async () => {
+        const slow = server(neverAnswers);
+        const first = cursor({ conversation: 'c-4', home: withRappel, fetch: slow });
+        const started = Date.now();
+        await first.run();
+        expect(Date.now() - started).toBeLessThan(3000);
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: BLOCK,
+        });
+
+        const next = cursor({ conversation: 'c-4', home: withRappel, fetch: slow });
+        const nextStarted = Date.now();
+        expect(await next.run()).toBe(0);
+        expect(Date.now() - nextStarted).toBeLessThan(2000);
+        expect(next.out).toEqual(['{"continue":true}']);
+
+        const old = server(() => new Response('{}', { status: 404 }));
+        const oldNext = cursor({ conversation: 'c-4', home: withRappel, fetch: old });
+        await oldNext.run();
+        expect(oldNext.out).toEqual(['{"continue":true}']);
+      });
+
+      it('le bloc en panne mais le rappel qui répond : la ligne passe, et le bloc sera redemandé', async () => {
+        const fetchImpl = vi.fn(async (url: URL) =>
+          url.pathname === API_PATHS.rappel
+            ? Response.json({ texte: REMINDER })
+            : new Response('{}', { status: 500 }),
+        );
+        const first = cursor({ conversation: 'c-5', home: withRappel, fetch: fetchImpl });
+
+        await first.run();
+
+        expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+          continue: true,
+          additional_context: REMINDER,
+        });
+        const retry = cursor({ conversation: 'c-5', home: withRappel, fetch: answers() });
+        await retry.run();
+        expect(JSON.parse(retry.out[0] ?? '{}')).toHaveProperty(
+          'additional_context',
+          `${BLOCK}\n${REMINDER}`,
+        );
+      });
+
+      it('rien dans la ligne du serveur ni message : {"continue":true}, et un message vide ne part pas', async () => {
+        const fetchImpl = server(() => Response.json({ texte: '' }));
+        await cursor({ conversation: 'c-6', home: withRappel, fetch: fetchImpl }).run();
+
+        const empty = cursor({ conversation: 'c-6', home: withRappel, fetch: fetchImpl });
+        await empty.run();
+        expect(empty.out).toEqual(['{"continue":true}']);
+
+        const before = reminders(fetchImpl).length;
+        const noMessage = cursor({
+          conversation: 'c-6',
+          home: withRappel,
+          fetch: fetchImpl,
+          prompt: '',
+        });
+        await noMessage.run();
+        expect(noMessage.out).toEqual(['{"continue":true}']);
+        expect(reminders(fetchImpl)).toHaveLength(before);
+      });
+    });
+
+    describe('Codex', () => {
+      const promptJson = (prompt = 'où en est la branche etude ?') =>
+        Readable.from([
+          JSON.stringify({
+            session_id: 'codex-1',
+            hook_event_name: 'UserPromptSubmit',
+            cwd: '/projets/leon',
+            prompt,
+          }),
+        ]);
+      let withRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'codex-rappel-'));
+        await writeConsent(withRappel, 'codex', 2);
+        await addUsage(withRappel, 'codex', 'rappel');
+      });
+      const codexPrompt = (input: {
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        prompt?: string;
+        scheduleUpdate?: () => Promise<unknown>;
+        scheduleCatchUp?: () => Promise<unknown>;
+      }) =>
+        setup({
+          stdin: promptJson(input.prompt),
+          home: input.home,
+          outil: 'codex',
+          evenement: 'prompt',
+          remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+          fetch: input.fetch,
+          ...(input.scheduleUpdate ? { scheduleUpdate: input.scheduleUpdate } : {}),
+          ...(input.scheduleCatchUp ? { scheduleCatchUp: input.scheduleCatchUp } : {}),
+        });
+
+      it('avec rappel : la ligne dans la forme de Codex, à chaque message, sans bloc ni rattrapage', async () => {
+        const fetchImpl = answers();
+        const scheduleUpdate = vi.fn(async () => undefined);
+        const scheduleCatchUp = vi.fn(async () => undefined);
+
+        const harness = codexPrompt({
+          home: withRappel,
+          fetch: fetchImpl,
+          scheduleUpdate,
+          scheduleCatchUp,
+        });
+        expect(await harness.run()).toBe(0);
+        await codexPrompt({ home: withRappel, fetch: fetchImpl }).run();
+
+        expect(harness.out.map((line) => JSON.parse(line))).toEqual([
+          {
+            hookSpecificOutput: { hookEventName: 'UserPromptSubmit', additionalContext: REMINDER },
+          },
+        ]);
+        expect(blockRequests(fetchImpl)).toEqual([]);
+        expect(reminders(fetchImpl)).toHaveLength(2);
+        expect(reminders(fetchImpl)[0]).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'codex-1',
+          message: 'où en est la branche etude ?',
+          outil: 'codex',
+          usages: ['rappel'],
+        });
+        expect(scheduleUpdate).not.toHaveBeenCalled();
+        expect(scheduleCatchUp).not.toHaveBeenCalled();
+      });
+
+      it('sans l’usage rappel, ou sans accord : rien sur la sortie, aucune requête', async () => {
+        for (const home of [codex, notAgreed]) {
+          const fetchImpl = answers();
+          const harness = codexPrompt({ home, fetch: fetchImpl });
+
+          expect(await harness.run()).toBe(0);
+
+          expect(harness.out).toEqual([]);
+          expect(harness.err).toEqual([]);
+          expect(fetchImpl).not.toHaveBeenCalled();
+        }
+      });
+
+      it.each([
+        ['un serveur lent', server(neverAnswers)],
+        ['un serveur ancien (404)', server(() => new Response('{}', { status: 404 }))],
+        ['un serveur ancien (400)', server(() => new Response('{}', { status: 400 }))],
+        ['un texte vide', server(() => Response.json({ texte: '' }))],
+      ])('%s : rien sur la sortie standard, code 0', async (_name, fetchImpl) => {
+        const harness = codexPrompt({ home: withRappel, fetch: fetchImpl });
+        const started = Date.now();
+
+        expect(await harness.run()).toBe(0);
+
+        expect(Date.now() - started).toBeLessThan(2000);
+        expect(harness.out).toEqual([]);
+      });
+
+      it('un message vide ne part pas', async () => {
+        const fetchImpl = answers();
+        const harness = codexPrompt({ home: withRappel, fetch: fetchImpl, prompt: '' });
+        await harness.run();
+        expect(harness.out).toEqual([]);
+        expect(fetchImpl).not.toHaveBeenCalled();
+      });
+    });
+
+    it('Cursor sans dossier de travail : aucune requête de rappel, le bloc ne change pas', async () => {
+      const home = await mkdtemp(join(homes, 'cursor-sans-dossier-'));
+      await writeConsent(home, 'cursor', 2);
+      await addUsage(home, 'cursor', 'rappel');
+      const fetchImpl = answers();
+      const noWorkspace = () =>
+        setup({
+          stdin: Readable.from([
+            JSON.stringify({
+              conversation_id: 'c-7',
+              hook_event_name: 'beforeSubmitPrompt',
+              prompt: 'où en est la branche etude ?',
+              workspace_roots: [],
+              cursor_version: '3.29.9',
+            }),
+          ]),
+          home,
+          outil: 'cursor',
+          evenement: 'prompt',
+          fetch: fetchImpl,
+        });
+
+      const first = noWorkspace();
+      await first.run();
+      expect(JSON.parse(first.out[0] ?? '{}')).toEqual({
+        continue: true,
+        additional_context: BLOCK,
+      });
+      const next = noWorkspace();
+      await next.run();
+      expect(next.out).toEqual(['{"continue":true}']);
+
+      expect(blockRequests(fetchImpl)).toHaveLength(1);
+      expect(reminders(fetchImpl)).toEqual([]);
+    });
+
+    // Recalé sur l'essai du 11/11 (appli 2.0.6) : PreInvocation porte `lastUserInput`, et `invocationNum` vaut 0 au premier
+    // appel du modèle de chaque message.
+    describe('Antigravity', () => {
+      const agyJson = (conversation: string, fields: Record<string, unknown> = {}) =>
+        Readable.from([
+          JSON.stringify({
+            artifactDirectoryPath: `/Users/demo/.gemini/antigravity/brain/${conversation}`,
+            conversationId: conversation,
+            initialNumSteps: 1,
+            invocationNum: 0,
+            lastUserInput: 'où en est la branche etude ?',
+            modelName: 'demo',
+            transcriptPath: `/Users/demo/.gemini/antigravity/brain/${conversation}/.system_generated/logs/transcript_full.jsonl`,
+            workspacePaths: ['/projets/leon'],
+            ...fields,
+          }),
+        ]);
+      let withRappel: string;
+      let withoutRappel: string;
+      beforeEach(async () => {
+        withRappel = await mkdtemp(join(homes, 'agy-rappel-'));
+        await writeConsent(withRappel, 'antigravity', 2);
+        await addUsage(withRappel, 'antigravity', 'rappel');
+        withoutRappel = await mkdtemp(join(homes, 'agy-sans-'));
+        await writeConsent(withoutRappel, 'antigravity', 2);
+        await addUsage(withoutRappel, 'antigravity', 'lecture');
+      });
+      const agy = (input: {
+        conversation: string;
+        home: string;
+        fetch: ReturnType<typeof vi.fn>;
+        fields?: Record<string, unknown>;
+      }) =>
+        setup({
+          stdin: agyJson(input.conversation, input.fields),
+          home: input.home,
+          outil: 'antigravity',
+          evenement: 'prompt',
+          remotes: { '/projets/leon': 'git@github.com:Acme/Leon.git' },
+          fetch: input.fetch,
+        });
+      const injected = (out: string[]) => out.map((line) => JSON.parse(line));
+
+      it('le premier message : le bloc et le rappel ensemble ; le suivant, à invocationNum 0 : la ligne dans ephemeralMessage', async () => {
+        const fetchImpl = answers();
+        const first = agy({ conversation: 'agy-2', home: withRappel, fetch: fetchImpl });
+        expect(await first.run()).toBe(0);
+        expect(injected(first.out)).toEqual([
+          { injectSteps: [{ ephemeralMessage: `${BLOCK}\n${REMINDER}` }] },
+        ]);
+
+        const next = agy({
+          conversation: 'agy-2',
+          home: withRappel,
+          fetch: fetchImpl,
+          fields: { lastUserInput: 'et la PR 167 ?' },
+        });
+        expect(await next.run()).toBe(0);
+        expect(injected(next.out)).toEqual([{ injectSteps: [{ ephemeralMessage: REMINDER }] }]);
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toHaveLength(2);
+        expect(reminders(fetchImpl).at(-1)).toMatchObject({
+          projet: 'github.com/acme/leon',
+          session: 'agy-2',
+          message: 'et la PR 167 ?',
+          outil: 'antigravity',
+          usages: ['rappel'],
+        });
+      });
+
+      it('à invocationNum 1, ou sans lastUserInput : aucune requête de rappel, et la sortie d’avant', async () => {
+        const fetchImpl = answers();
+        // Une version sans `lastUserInput` (comme la 2.0.1) : le bloc seul au premier message.
+        const old = agy({
+          conversation: 'agy-3',
+          home: withRappel,
+          fetch: fetchImpl,
+          fields: { lastUserInput: undefined },
+        });
+        await old.run();
+        expect(injected(old.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        for (const fields of [
+          { invocationNum: 1 },
+          { lastUserInput: undefined },
+          { lastUserInput: '' },
+        ]) {
+          const next = agy({ conversation: 'agy-3', home: withRappel, fetch: fetchImpl, fields });
+          await next.run();
+          expect(next.out).toEqual(['{}']);
+        }
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('sans l’usage rappel : rien ne change, aucune requête après le premier message', async () => {
+        const fetchImpl = answers();
+        const first = agy({ conversation: 'agy-4', home: withoutRappel, fetch: fetchImpl });
+        await first.run();
+        expect(injected(first.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        const calls = fetchImpl.mock.calls.length;
+        const next = agy({ conversation: 'agy-4', home: withoutRappel, fetch: fetchImpl });
+        await next.run();
+
+        expect(next.out).toEqual(['{}']);
+        expect(fetchImpl.mock.calls).toHaveLength(calls);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('sans dossier de travail : aucune requête de rappel, le bloc ne change pas', async () => {
+        const fetchImpl = answers();
+        for (let call = 0; call < 2; call++) {
+          const harness = agy({
+            conversation: 'agy-5',
+            home: withRappel,
+            fetch: fetchImpl,
+            fields: { workspacePaths: [] },
+          });
+          await harness.run();
+          expect(injected(harness.out)).toEqual([
+            call === 0 ? { injectSteps: [{ ephemeralMessage: BLOCK }] } : {},
+          ]);
+        }
+
+        expect(blockRequests(fetchImpl)).toHaveLength(1);
+        expect(reminders(fetchImpl)).toEqual([]);
+      });
+
+      it('un serveur de rappel lent, ou ancien : le message passe', async () => {
+        const slow = server(neverAnswers);
+        const first = agy({ conversation: 'agy-6', home: withRappel, fetch: slow });
+        const started = Date.now();
+        await first.run();
+        expect(Date.now() - started).toBeLessThan(3000);
+        expect(injected(first.out)).toEqual([{ injectSteps: [{ ephemeralMessage: BLOCK }] }]);
+
+        const next = agy({ conversation: 'agy-6', home: withRappel, fetch: slow });
+        const nextStarted = Date.now();
+        expect(await next.run()).toBe(0);
+        expect(Date.now() - nextStarted).toBeLessThan(2000);
+        expect(next.out).toEqual(['{}']);
+
+        const old = server(() => new Response('{}', { status: 404 }));
+        const oldNext = agy({ conversation: 'agy-6', home: withRappel, fetch: old });
+        await oldNext.run();
+        expect(oldNext.out).toEqual(['{}']);
+      });
     });
   });
 

@@ -14,7 +14,8 @@
             "email": "david@acme.test"
           },
           "team": {
-            "name": "Produit"
+            "name": "Produit",
+            "visibility": "public"
           },
           "project": {
             "name": "Site vitrine"

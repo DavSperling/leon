@@ -22,6 +22,7 @@ import { claudeConfigDir, resolveServerEnv, type ServerEnv } from './env';
 import { OUTILS, type Outil } from './hook-commands';
 import {
   countOf,
+  createCoulissesSender,
   createFactsSender,
   createIngestSender,
   type ImportDeps,
@@ -85,9 +86,9 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) once for all these tools; when it opens
-                       the browser, the authorization page shows \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to
-                       tick or untick.
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` for Claude Code only, \`resume\`)
+                       once for all these tools; when it opens the browser, the authorization page shows \`lecture\`,
+                       \`rappel\` and \`noter\` as boxes, yours to tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -99,7 +100,8 @@ Commands:
   import-claude-code   Import Claude Code sessions (~/.claude/projects, or CLAUDE_CONFIG_DIR)
       --project <path>     keep only the sessions started under this folder
       --since YYYY-MM-DD   keep only the turns from this date on
-      --dry-run            print what would be sent (one JSON line per request), send nothing
+      --dry-run            print what would be sent (one JSON line per request), send nothing; with the
+                           \`coulisses\` consent, only the number of blocks per role is printed, never their text
   briefing             Send the project key (plus the current Git branch and the session id, if ~/.leon/accord.json
                        allows it) and print the block that comes back: your recent sessions on this repository and
                        the project's morning briefing (for Claude Code's SessionStart hook: the hook JSON is read
@@ -107,8 +109,9 @@ Commands:
                        consent and the Leon command of this computer, and your threads of this repository come back
                        instead of your sessions, with how to read one
   capter-session       Send the session that is ending: the text of the exchanges, with its project, and the actions
-                       of the session if ~/.leon/accord.json allows it (for Claude Code's SessionEnd hook: the hook
-                       JSON is read from standard input)
+                       of the session if ~/.leon/accord.json allows it, and, with the \`coulisses\` consent, what
+                       happened behind the exchanges (reasoning, subagent instructions and reports, reduced tool
+                       calls) (for Claude Code's SessionEnd hook: the hook JSON is read from standard input)
       --delai-ms <n>       shorten the network timeout of the upload, 15000 ms at most (for testing)
   reminder             Print a one-line reminder of your threads that touch the message you are sending, or nothing
                        (for Claude Code's UserPromptSubmit hook: the hook JSON is read from standard input). Only with
@@ -149,8 +152,9 @@ Commands:
   note <text>          Save a private note of the agent to Leon, or the next version of one. Only with the \`noter\`
                        consent of that tool in ~/.leon/accord.json: then the text, with secrets masked (4,000
                        characters at most), the project, the tool, the session and the consents of that tool go to
-                       your Leon server. The note stays private to you; Leon's search finds it, and it is never put as
-                       is in the context of a session. Prints the id and the version number, writes nothing on disk.
+                       your Leon server. The note is read like your sessions (by you and, on the Leon website, by the
+                       managers above you); Leon's search finds it, and it is never put as is in the context of a
+                       session. Prints the id and the version number, writes nothing on disk.
                        The start block of a session gives this command with --tool and --session filled in, and
                        -- before the text, so that a text starting with a dash is not read as an option
       --tool <tool>        the code tool that writes it: claude_code, codex, cursor or antigravity (required)
@@ -174,7 +178,8 @@ Commands:
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
                        after confirmation (only the consent when the hooks are already there); in a terminal, then
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`resume\`) that are neither accepted nor refused
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` for Claude Code only, \`resume\`)
+                       that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
@@ -230,6 +235,7 @@ async function runImport(args: string[]): Promise<number> {
             depuis: accord.installe_le,
             usagesDepuis: accord.usages_le,
             send: env ? createFactsSender(fetch, env) : nothingSent,
+            sendCoulisses: env ? createCoulissesSender(fetch, env) : nothingSent,
           },
         }),
   };
@@ -348,13 +354,13 @@ async function runCaptureSession(args: string[]): Promise<number> {
     const delay = typeof values['delai-ms'] === 'string' ? values['delai-ms'] : undefined;
     const deadlineMs = parseDeadlineMs(delay);
     const projectDir = process.env.CLAUDE_PROJECT_DIR;
-    // Les faits ne partent que si l'accord local le permet (consent.ts). Un seul délai, lancé une fois l'entrée lue,
-    // borne les tours et les faits ensemble (HOOK_DEADLINE_MS).
+    // Les faits ne partent que si l'accord local le permet (consent.ts), les coulisses avec l'usage `coulisses`. Un seul
+    // délai, lancé une fois l'entrée lue, borne les tours, les faits et les coulisses ensemble (HOOK_DEADLINE_MS).
     const accord = await factsConsent(homedir(), 'claude_code');
     const signal = AbortSignal.timeout(deadlineMs);
     return await captureSessionFromHook(stdin, {
       send: createIngestSender(fetch, env, { signal }),
-      // Relu avant les faits (sendSessionFacts) : un retrait écrit pendant l'envoi des tours les arrête.
+      // Relu avant les faits et les coulisses : un retrait écrit pendant l'envoi des tours les arrête.
       withdrawn,
       ...(accord === null
         ? {}
@@ -364,6 +370,7 @@ async function runCaptureSession(args: string[]): Promise<number> {
               accordLe: accord.installe_le,
               usages: accord.usages,
               send: createFactsSender(fetch, env, { signal }),
+              sendCoulisses: createCoulissesSender(fetch, env, { signal }),
             },
           }),
       out: () => {},

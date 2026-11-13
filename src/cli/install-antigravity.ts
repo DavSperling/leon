@@ -35,11 +35,13 @@ export const antigravityHooksPath = (home: string): string =>
 
 // Le texte de l'accord d'Antigravity, testé mot pour mot (install-antigravity.test.ts). Le changer, c'est changer ce
 // que l'utilisateur a accepté.
+// Amendé le 12/11, décision 4 d'Amos pour le lot 14, sans redemander l'accord : qui lit la conversation (l'auteur, et
+// ses managers sur le site, 0057).
 export const ANTIGRAVITY_CONSENT_LINES = [
   'What will be sent: these hooks are in your personal Antigravity settings, so they run in ALL your Antigravity conversations (the app, the IDE and the `agy` command line), in ALL your folders (personal ones included).',
   "  - When a conversation is idle again (Stop), the Leon server receives its new exchanges (your requests and the agent's answers; the messages Antigravity writes itself in your place, labeled as written by Antigravity, not by you; not the context Antigravity adds itself) and its actions, read from its transcript file: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), the current Git branch, and a few markers (start and end times, number of messages and failed commands, whether the conversation searched the web, used an MCP server, a subagent or a network command).",
   `  - What a hook missed ${CATCH_UP_WHEN}. It covers only Antigravity conversations changed after you accept, from now on. The conversation files of Antigravity (.pb) and its databases are never read.`,
-  '  - Secrets are masked before sending, and again by the server. Each conversation stays private to its author.',
+  '  - Secrets are masked before sending, and again by the server. Each conversation is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
   "  - Before the first model call of each conversation (PreInvocation), the server receives the project key, the current Git branch and the conversation id. It sends back your recent sessions on this repository, from all your tools (their branch, pull requests, commits, files and remaining tasks), and the project's morning briefing: Antigravity adds this block to the conversation, so it is given to Antigravity's model. It is sent once per conversation.",
 ];
 

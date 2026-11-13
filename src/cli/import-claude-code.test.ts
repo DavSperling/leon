@@ -12,12 +12,21 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { API_PATHS, type SessionFactsPayload } from '../capture/api-contract';
+import {
+  API_PATHS,
+  type CoulissesRequest,
+  type SessionFactsPayload,
+  type Usage,
+} from '../capture/api-contract';
+import { parseClaudeCodeSession } from '../capture/claude-code';
+import { extractBackstage } from '../capture/session-backstage';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import { type IngestPayload, type IngestResult, TURN_TEXT_MAX } from '../capture/turn';
 import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import {
+  type CoulissesSender,
   countOf,
+  createCoulissesSender,
   createFactsSender,
   createIngestSender,
   createWithdrawalSender,
@@ -28,6 +37,7 @@ import {
   parseSince,
   TokenRefusedError,
 } from './import-claude-code';
+import { loadSubagents } from './subagents';
 
 const FIXTURES = new URL('../capture/fixtures/claude-code/', import.meta.url);
 const ACME_SESSION = '11111111-1111-4111-8111-111111111111';
@@ -540,6 +550,258 @@ describe('importClaudeCode : les faits de chaque session', () => {
       '33333333-3333-4333-8333-333333333333',
     ]);
     expect(factLines.every((line) => line.accord === 2)).toBe(true);
+  });
+
+  // T52 : les coulisses suivent les faits de chaque session, seulement avec l'usage `coulisses`.
+  describe('les coulisses, avec l’usage coulisses', () => {
+    const SOUS_AGENTS = '55555555-5555-4555-8555-555555555555';
+
+    function makeBackstageDeps(usages: Usage[], sendCoulisses?: CoulissesSender) {
+      const { deps, events, out, facts } = makeFactsDeps();
+      const coulisses = vi.fn<CoulissesSender>(
+        sendCoulisses ??
+          (async (request) => {
+            events.push(`coulisses ${request.external_id}`);
+          }),
+      );
+      return {
+        deps: { ...deps, facts: { ...deps.facts, usages, sendCoulisses: coulisses } },
+        coulisses,
+        events,
+        out,
+        facts,
+      };
+    }
+    const sentFor = (coulisses: { mock: { calls: Array<[CoulissesRequest]> } }, id: string) =>
+      coulisses.mock.calls.map(([request]) => request).filter((r) => r.external_id === id);
+    // Des sessions finies : leur fichier n'a pas bougé depuis plus de 30 min (IDLE_MS).
+    async function vieillirTout() {
+      const old = new Date(Date.now() - 31 * 60_000);
+      for (const name of await readdir(projectDir)) {
+        if (name.endsWith('.jsonl')) await utimes(join(projectDir, name), old, old);
+      }
+    }
+
+    it('sans l’usage, aucun appel à la route', async () => {
+      const { deps, coulisses, facts } = makeBackstageDeps(['lecture', 'resume']);
+
+      await importClaudeCode(importOptions(), deps);
+
+      expect(facts).toHaveBeenCalledTimes(3);
+      expect(coulisses).not.toHaveBeenCalled();
+    });
+
+    it('avec l’usage, envoie les coulisses de chaque session après ses faits', async () => {
+      await vieillirTout();
+      const { deps, coulisses, events } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), deps);
+
+      expect(events.indexOf(`coulisses ${ORION_SESSION}`)).toBeGreaterThan(
+        events.indexOf(`faits ${ORION_SESSION}`),
+      );
+      const content = await readFile(new URL('session-bruit.jsonl', FIXTURES), 'utf8');
+      // Sans git ni readdir (essais) : la racine est le dossier de départ, aucun sous-agent n'est lu.
+      const root = parseClaudeCodeSession(content)?.cwd ?? null;
+      expect(sentFor(coulisses, ORION_SESSION)).toEqual<CoulissesRequest[]>([
+        {
+          kind: 'claude_code',
+          external_id: ORION_SESSION,
+          usages: ['coulisses'],
+          accord_le: ACCORD_LE.toISOString(),
+          blocs: extractBackstage(content, root, new Map()),
+        },
+      ]);
+      expect(sentFor(coulisses, ORION_SESSION)[0]?.blocs.length).toBeGreaterThan(0);
+    });
+
+    it.each([404, 400])(
+      'un %i : un message fixe, une seule fois, plus aucune coulisse, et ce n’est pas un échec',
+      async (status) => {
+        const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+        await cp(
+          new URL(
+            `../capture/fixtures/claude-code-sous-agents/${SOUS_AGENTS}.jsonl`,
+            import.meta.url,
+          ),
+          join(projectDir, `${SOUS_AGENTS}.jsonl`),
+        );
+        await vieillirTout();
+        const { deps, coulisses, facts } = makeBackstageDeps(['coulisses'], async () => {
+          throw new IngestResponseError(status);
+        });
+
+        const summary = await importClaudeCode(importOptions(), deps);
+
+        expect(coulisses).toHaveBeenCalledTimes(1);
+        expect(facts).toHaveBeenCalledTimes(4);
+        expect(summary).toMatchObject({ sessions: 4, failures: 0 });
+        expect(stderr).toHaveBeenCalledTimes(1);
+        expect(stderr.mock.calls.flat().join('\n')).toMatch(/does not accept the full capture/);
+        expect(stderr.mock.calls.flat().join('\n')).not.toContain(String(status));
+      },
+    );
+
+    // Sur la seule session aux sous-agents, qui a des coulisses : c'est le contrôle d'avant l'envoi qui l'arrête, pas
+    // celui de la boucle, au fichier suivant.
+    it('un retrait relu juste avant l’envoi l’empêche', async () => {
+      await rm(projectDir, { recursive: true, force: true });
+      await mkdir(projectDir, { recursive: true });
+      const fixture = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+      await cp(fixture, projectDir, { recursive: true });
+      await vieillirTout();
+      const { deps, coulisses, events } = makeBackstageDeps(['coulisses']);
+      const withdrawn = async () => events.some((event) => event.startsWith('faits'));
+
+      await importClaudeCode(importOptions(), {
+        ...deps,
+        withdrawn,
+        readdir: (path) => readdir(path),
+      });
+
+      expect(events.filter((event) => event.startsWith('faits'))).toHaveLength(1);
+      expect(coulisses).not.toHaveBeenCalled();
+    });
+
+    // Une session encore ouverte a des appels sans résultat : envoyés, ils resteraient `sans_resultat` pour toujours
+    // (le premier écrit gagne). Le crochet de fin, ou un import d'après 30 min d'inactivité, les envoie.
+    it('une session pas finie n’envoie pas ses coulisses ; finie, elle les envoie', async () => {
+      const { deps, coulisses, facts } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), deps);
+      expect(factsOf(facts).get(ORION_SESSION)?.fin).toBe(false);
+      expect(coulisses).not.toHaveBeenCalled();
+
+      await vieillirTout();
+      await importClaudeCode(importOptions(), deps);
+      expect(sentFor(coulisses, ORION_SESSION)).toHaveLength(1);
+    });
+
+    // Une session reprise recopie l'historique (mêmes identifiants de blocs, autre sessionId), comme pour les tours.
+    it('n’envoie pas deux fois un bloc recopié par une session reprise', async () => {
+      const orion = await readFile(new URL('session-bruit.jsonl', FIXTURES), 'utf8');
+      const resumed = '55555555-5555-4555-8555-555555555555';
+      const newTurn = JSON.stringify({
+        type: 'user',
+        uuid: 'reprise-1',
+        sessionId: resumed,
+        cwd: parseClaudeCodeSession(orion)?.cwd,
+        timestamp: '2026-10-14T09:00:00.000Z',
+        message: { content: 'On reprend.' },
+      });
+      // La ligne datée de la reprise passe d'abord : l'origine est importée avant elle (find-sessions.ts).
+      const repriseLine = JSON.stringify({
+        type: 'system',
+        sessionId: resumed,
+        timestamp: '2026-10-14T08:59:00.000Z',
+      });
+      await writeFile(
+        join(projectDir, 'reprise.jsonl'),
+        `${repriseLine}\n${orion.replaceAll(ORION_SESSION, resumed).trimEnd()}\n${newTurn}\n`,
+      );
+      await vieillirTout();
+      const { deps, coulisses } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), deps);
+
+      const ids = coulisses.mock.calls.flatMap(([request]) => request.blocs.map((bloc) => bloc.id));
+      expect(sentFor(coulisses, ORION_SESSION)).toHaveLength(1);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    // Sinon accepter l'usage enverrait d'un coup les coulisses du passé.
+    it('une session modifiée avant l’acceptation de l’usage n’envoie aucune coulisse', async () => {
+      const usageDate = new Date(Date.now() - 60 * 60_000);
+      const before = new Date(usageDate.getTime() - 60_000);
+      await utimes(join(projectDir, 'session-bruit.jsonl'), before, before);
+      const { deps, coulisses, facts } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(importOptions(), {
+        ...deps,
+        facts: { ...deps.facts, usagesDepuis: { coulisses: usageDate } },
+      });
+
+      expect(factsOf(facts).has(ORION_SESSION)).toBe(true);
+      expect(sentFor(coulisses, ORION_SESSION)).toEqual([]);
+    });
+
+    it('en dryRun, ne montre que le nombre de blocs par rôle, jamais un texte', async () => {
+      const fixture = new URL('../capture/fixtures/claude-code-sous-agents/', import.meta.url);
+      await cp(fixture, projectDir, { recursive: true });
+      await vieillirTout();
+      const { deps, coulisses, out } = makeBackstageDeps(['coulisses']);
+
+      await importClaudeCode(
+        { baseDir, dryRun: true },
+        { ...deps, readdir: (path) => readdir(path) },
+      );
+
+      expect(coulisses).not.toHaveBeenCalled();
+      const content = await readFile(new URL(`${SOUS_AGENTS}.jsonl`, fixture), 'utf8');
+      const subagents = await loadSubagents(join(projectDir, `${SOUS_AGENTS}.jsonl`), {
+        readFile: (path) => readFile(path, 'utf8'),
+        readdir: (path) => readdir(path),
+      });
+      const blocs = extractBackstage(content, '/Users/demo/projets/leon', subagents);
+      const count = (role: string) => blocs.filter((bloc) => bloc.role === role).length;
+      const lines = out.mock.calls.map(([line]) => JSON.parse(line) as Record<string, unknown>);
+      expect(
+        lines.filter((line) => line.external_id === SOUS_AGENTS && 'coulisses' in line),
+      ).toEqual([
+        {
+          kind: 'claude_code',
+          external_id: SOUS_AGENTS,
+          coulisses: {
+            raisonnement: count('raisonnement'),
+            sous_agent: count('sous_agent'),
+            appel_outil: count('appel_outil'),
+          },
+        },
+      ]);
+      expect(count('sous_agent')).toBeGreaterThan(0);
+      const printed = out.mock.calls.flat().join('\n');
+      expect(printed).not.toContain('Il faut trouver la route des faits');
+      expect(printed).not.toContain('Trouve les tests');
+    });
+  });
+});
+
+describe('createCoulissesSender', () => {
+  const env = { url: 'http://localhost:3000', token: `leon_${'a'.repeat(43)}` };
+  const request: CoulissesRequest = {
+    kind: 'claude_code',
+    external_id: 's1',
+    usages: ['coulisses'],
+    accord_le: ACCORD_LE.toISOString(),
+    blocs: [
+      { role: 'appel_outil', id: 't1', ts: ACCORD_LE.toISOString(), outil: 'Read', statut: 'ok' },
+    ],
+  };
+
+  it('poste les coulisses sur leur route, avec le jeton et le signal, et accepte le 202 sans corps', async () => {
+    const fetchImpl = vi.fn(async () => new Response(null, { status: 202 }));
+    const controller = new AbortController();
+
+    await createCoulissesSender(fetchImpl as typeof fetch, env, { signal: controller.signal })(
+      request,
+    );
+
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(url.href).toBe(new URL(API_PATHS.coulisses, env.url).href);
+    expect(init).toMatchObject({
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it('lève TokenRefusedError sur 401, une erreur qui porte le code sur les autres refus', async () => {
+    const reply = (status: number) =>
+      createCoulissesSender((async () => new Response('{}', { status })) as typeof fetch, env);
+
+    await expect(reply(401)(request)).rejects.toBeInstanceOf(TokenRefusedError);
+    await expect(reply(403)(request)).rejects.toMatchObject({ status: 403 });
   });
 });
 

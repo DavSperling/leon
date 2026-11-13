@@ -340,6 +340,13 @@ describe('POST /api/v1/coulisses', () => {
     ],
     ['un chemin Windows', { outil: 'Read', cible: 'C:\\Users\\x.txt' }, 'Read · ok'],
     ['un chemin du dossier personnel', { outil: 'Read', cible: '~/.ssh/id_rsa' }, 'Read · ok'],
+    ['un chemin par $HOME', { outil: 'LS', cible: '$HOME/.ssh' }, 'LS · ok'],
+    ['un chemin par %USERPROFILE%', { outil: 'Read', cible: '%USERPROFILE%\\x' }, 'Read · ok'],
+    [
+      'un $ au milieu d’un chemin du dépôt',
+      { outil: 'Read', cible: 'app/routes/$id.tsx' },
+      'Read · app/routes/$id.tsx · ok',
+    ],
     [
       'une URL pour un outil de fichier',
       { outil: 'Read', cible: 'https://exemple.test/a?jeton=x' },

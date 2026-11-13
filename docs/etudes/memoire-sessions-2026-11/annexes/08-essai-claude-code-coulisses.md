@@ -6,7 +6,7 @@
 >
 > **Isolement.** `--safe-mode` coupe les crochets, les serveurs MCP, les extensions, les agents personnalisés, le `CLAUDE.md` et l'outil Workflow. C'est vérifié sur le premier passage, par le seul décompte des types de ligne : aucune ligne `attachment` de crochet (les `attachment` vus sont `sandbox_instructions`, `environment`, `model`, `deferred_tools_delta`, `agent_listing_delta`, `skill_listing`, `session_context`, `date`, `credential_org`, `remote_session_change` et `prompt_snapshot`), et zéro occurrence de `contexte-leon`. Rien n'est donc parti au serveur de Leon. Aucune vraie conversation n'a été lue : Amos a donné son accord dans la session (questionnaire du 12/11) pour le dossier de ces sessions de test, et lui seul. Un écart à dire : pendant le dépouillement, une commande de relevé a affiché par erreur le texte d'une ligne de la session de test (la notification de fin du sous-agent en tâche de fond, un texte inventé pour l'essai). Rien d'une vraie session. Le script témoin, lui, n'affiche jamais de texte.
 >
-> **Limites.** Seul le mode `claude -p` a été essayé, sous `--safe-mode`, et une seule version de Claude Code, la 2.1.322 (voir « Ce qui reste à essayer »).
+> **Limites.** Les huit sessions sont en `claude -p`, sous `--safe-mode`, avec une seule version de Claude Code, la 2.1.322 ; seul le raisonnement a aussi été vu en session interactive (voir « Le raisonnement en session interactive (essais du 12/11) » et « Ce qui reste à essayer »).
 >
 > **Pourquoi le numéro 08.** Les numéros 06 et 07 sont réservés par le [plan mère](../../../plans/2026-11-02-memoire-sessions.md) : 06 par T37 (`06-essai-bout-en-bout.md`), 07 par T38 (`07-mesure-ancrage.md`), que T62 du plan de la mémoire à disposition reprend.
 
@@ -14,7 +14,7 @@
 
 **Positif pour les sous-agents et les appels d'outils.** Leurs échanges sont dans des fichiers à part, se relient à leur appel par un identifiant, ont la forme `tool_use` et `tool_result` de la session, et portent une marque de fin. T63 et la partie « sous-agents et appels d'outils » de T52 peuvent se coder.
 
-**Négatif pour le raisonnement, dans ce mode.** Avec `claude -p`, les blocs `thinking` existent, mais leur texte est vide : seule une signature reste, pour les trois modèles essayés. Le plan le prévoit (D29 : le raisonnement part « quand le transcript en porte le texte ») : un raisonnement sans texte ne s'envoie pas. Reste à voir une session interactive (voir « Ce qui reste à essayer »).
+**Négatif pour le raisonnement, dans ce mode.** Avec `claude -p`, les blocs `thinking` existent, mais leur texte est vide : seule une signature reste, pour les trois modèles essayés. Le plan le prévoit (D29 : le raisonnement part « quand le transcript en porte le texte ») : un raisonnement sans texte ne s'envoie pas. En session interactive, le texte n'est écrit que pour qui a activé `showThinkingSummaries`, et c'est alors le résumé (voir « Le raisonnement en session interactive (essais du 12/11) »).
 
 ## Ce que l'essai établit
 
@@ -55,6 +55,18 @@ Autres faits utiles au code :
 - Chaque ligne de conversation porte `uuid`, `timestamp`, `sessionId`, `version` et `entrypoint` (`sdk-cli` en `-p`).
 - Les lignes `api-request-blob` (`type`, `sessionId`, `hash`, `message`) recopient des messages déjà écrits : leur `message` a un `role` (`assistant`, `system` ou `user`) et un `content` de blocs `text`, `thinking`, `tool_use` et `tool_result`. Au passage principal, l'appel `Bash`, l'appel `ToolSearch` et leurs résultats y figurent une seconde fois. Un lecteur ne lit donc les blocs d'outils que sur les lignes `user` et `assistant`, sinon il les compte deux fois.
 
+## Le raisonnement en session interactive (essais du 12/11)
+
+Deux essais en session interactive, faits le 12/11 avec Claude Code 2.1.322 et Sonnet 5.5 (sessions de test au contenu inventé, supprimées après un relevé de forme), et un passage en `claude -p`. La documentation de Claude Code dit que `showThinkingSummaries` est faux par défaut depuis la version 2.1.89 (1er avril 2026).
+
+| Cas | Constat |
+|---|---|
+| Réglages par défaut, session interactive | Un bloc `thinking` dont le texte est vide (longueur 0), avec sa signature seule. `thinkingDisplay` et `params.thinking.display` valent `omitted` (7 caractères). Même constat qu'en `claude -p`. |
+| `--settings '{"showThinkingSummaries":true}'`, session interactive | Le bloc `thinking` porte son texte (268 caractères ; clés `type`, `thinking`, `signature`). `thinkingDisplay` et `params.thinking.display` valent `summarized` (10 caractères) : c'est le résumé de la réflexion, pas la réflexion brute. `extractBackstage`, lancé sur cette session d'essai en n'affichant que des comptes et des longueurs, rend un bloc `raisonnement` (266 caractères après préparation, identifiant `uuid:rang`) et l'appel `Read` en `ok`. |
+| `claude -p --safe-mode --settings '{"showThinkingSummaries":true}'` | Sans effet : `thinkingDisplay` reste `omitted`. |
+
+Avec les réglages par défaut, aucun texte de raisonnement n'est écrit, donc rien n'en part ; il ne part que pour qui a activé `showThinkingSummaries` et travaille en session interactive, et c'est alors le résumé que Claude Code affiche.
+
 ## La recette ajustée
 
 Choix du rédacteur (la session principale). Les points 1 à 5 et 6 à 7 sont repris dans l'amendement de T63 du plan, le point 8 dans celui de T52.
@@ -77,9 +89,9 @@ Choix du rédacteur (la session principale). Les points 1 à 5 et 6 à 7 sont re
 
 ## Ce qui reste à essayer
 
-L'essai a trois limites : seul le mode `claude -p` a tourné ; il a tourné sous `--safe-mode`, qui coupe les crochets, les serveurs MCP, les extensions, les agents personnalisés, le `CLAUDE.md` et l'outil Workflow ; et une seule version a été vue, la 2.1.322. D'où ces points :
+L'essai a trois limites : seul le mode `claude -p` a tourné (sauf pour le raisonnement, vu en session interactive plus haut) ; il a tourné sous `--safe-mode`, qui coupe les crochets, les serveurs MCP, les extensions, les agents personnalisés, le `CLAUDE.md` et l'outil Workflow ; et une seule version a été vue, la 2.1.322. D'où ces points :
 
-- **Le raisonnement en session interactive.** En `-p`, il est omis (`thinkingDisplay: 'omitted'`). Une session ouverte dans le terminal ou dans l'appli peut l'afficher, donc peut-être l'écrire. À faire avec Amos, par `claude --safe-mode` dans un dépôt jetable (une tentative de pilotage par pseudo-terminal a échoué). Tant que ce n'est pas vu, T52 n'envoie un bloc `raisonnement` que si le texte est là.
+- **Le raisonnement en session interactive** : essayé le 12/11 (voir « Le raisonnement en session interactive (essais du 12/11) » plus haut). Texte vide avec les réglages par défaut, résumé avec `showThinkingSummaries`. T52 n'envoie un bloc `raisonnement` que si le texte est là.
 - **Les agents de l'outil Workflow** (`subagents/workflows/wf_<id>/`, avec `prefix.json`) : pas vus. Un appel `Workflow` reste externe.
 - **Une session reprise** (`--resume`, `--continue`) : où vont les fichiers de ses anciens sous-agents ?
 - **Un sous-agent continué** par un message après son rapport, et un sous-agent d'une équipe (`teammate`).

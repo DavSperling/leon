@@ -21,9 +21,10 @@ type Pr = SessionFacts['prs'][number];
 export type Tache = SessionFacts['taches'][number];
 
 // Schéma minimal d'une ligne du fichier de session, comme dans claude-code.ts : les champs inconnus sont
-// ignorés, une ligne qui ne le respecte pas est écartée.
-const LineSchema = z.object({
+// ignorés, une ligne qui ne le respecte pas est écartée. Repris par les coulisses (session-backstage.ts).
+export const LineSchema = z.object({
   type: z.string(),
+  uuid: z.string().optional(), // l'identifiant d'un raisonnement (session-backstage.ts)
   timestamp: z.iso.datetime({ offset: true }).optional(),
   gitBranch: z.string().optional(),
   isSidechain: z.boolean().optional(),
@@ -36,17 +37,17 @@ const LineSchema = z.object({
     })
     .optional(),
 });
-type Line = z.infer<typeof LineSchema>;
+export type Line = z.infer<typeof LineSchema>;
 const LineTypeSchema = LineSchema.pick({ type: true });
 
-const ToolUseSchema = z.object({
+export const ToolUseSchema = z.object({
   type: z.literal('tool_use'),
   id: z.string(),
   name: z.string(),
   input: z.unknown(),
 });
 type Call = z.infer<typeof ToolUseSchema>;
-const ToolResultSchema = z.object({
+export const ToolResultSchema = z.object({
   type: z.literal('tool_result'),
   tool_use_id: z.string(),
   content: z.union([z.string(), z.array(z.unknown())]).optional(),
@@ -276,9 +277,13 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
 // Un worktree rangé dans le clone (`.claude/worktrees/<nom>/`, le flux de CLAUDE.md) : ses fichiers sont ceux du dépôt.
 const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
-// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque) ou s'il n'y a pas de dépôt.
+// Le dossier personnel ou une variable (« ~/x », « $HOME/x », « %USERPROFILE%\x ») : rien ne les développe ici, ils
+// passeraient pour relatifs au dépôt. Un « $ » au milieu reste (une route « app/routes/$id.tsx »).
+const HOME_OR_VARIABLE = /^[~$]|%[A-Za-z_][A-Za-z0-9_]*%/;
+
+// Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque, « ~/x ») ou s'il n'y a pas de dépôt.
 export function repoRelativePath(path: string, root: string | null): string | null {
-  if (root === null) return null;
+  if (root === null || HOME_OR_VARIABLE.test(path)) return null;
   const relativePath = relative(root, resolve(root, path));
   const outside =
     relativePath === '' ||
@@ -301,6 +306,11 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
 // Les échanges des sous-agents d'une session : `id` du bloc tool_use de l'appel Agent ou Task → contenu du fichier
 // `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
 export type Subagents = ReadonlyMap<string, string>;
+
+// La règle du rapport final (T63, annexe 08) : un sous-agent a rendu son rapport quand la dernière ligne de
+// conversation de son fichier est un message assistant fini par end_turn. Reprise par les coulisses.
+export const isFinalReport = (line: Line): boolean =>
+  line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
 
 // `visited` : les appels Agent ou Task déjà jugés. Un appel revu (le même bloc sur deux lignes) n'apporte rien de plus :
 // s'il était externe, la session l'est déjà.
@@ -343,7 +353,7 @@ function isExternalSubagent(
     const parsed = LineSchema.safeParse(json);
     if (!parsed.success) return true;
     const line = parsed.data;
-    finished = line.type === 'assistant' && line.message?.stop_reason === 'end_turn';
+    finished = isFinalReport(line);
     const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {
       const call = ToolUseSchema.safeParse(block);

@@ -2,6 +2,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { COULISSES_LINES } from '@/cli/install-hooks';
 import { pathExists, readText } from '@/test/contracts/files';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -337,6 +338,55 @@ describe('la page Documentation', () => {
           : 'Leon prévient plus tard le serveur auquel l’ordinateur est alors connecté',
       );
       expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain('`resume`');
+    },
+  );
+
+  // L'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14) : pour Claude Code seul, demandé
+  // à part dans un terminal, jamais avec --yes ni sur la page ; la page dit, en anglais mot pour mot, ce que dit
+  // COULISSES_LINES : ce qui part, qui le lit, et que le retrait arrête l'envoi sans rien effacer.
+  it.each(LOCALES)(
+    'dit ce que l’usage coulisses envoie, qui le lit, et qu’il est pour Claude Code seul (%s)',
+    (locale, messages) => {
+      const { coulisses, tools } = messages.site.documentation.sent;
+      const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
+
+      for (const term of [
+        '<code>coulisses</code>',
+        '<code>[y/N]</code>',
+        '<code>--yes</code>',
+        '<code>retirer-crochets</code>',
+        'Claude Code',
+        words('20,000', '20 000'),
+      ])
+        expect(coulisses, term).toContain(term);
+      if (locale === 'en') {
+        for (const line of COULISSES_LINES.slice(1))
+          expect(coulisses.replace(/’/g, "'")).toContain(line.replace(/^ {2}- /, ''));
+      }
+      expect(coulisses).toContain(
+        words(
+          'by you and, on the Leon website, by the managers above you',
+          'par vous et, sur le site de Leon, par les managers au-dessus de vous',
+        ),
+      );
+      expect(coulisses).toContain(
+        words('What was already sent stays in Leon.', 'Ce qui est déjà parti reste dans Leon.'),
+      );
+      expect(tools).toContain(
+        words(
+          '<code>coulisses</code> is not offered to them',
+          '<code>coulisses</code> ne leur est pas proposé',
+        ),
+      );
+      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
+        coulisses.replace(/<\/?code>/g, '`'),
+      );
+      expect(textOf(render(locale))).toContain(
+        words(
+          'The coulisses usage (full capture) is optional',
+          'L’usage coulisses (la capture complète) est facultatif',
+        ),
+      );
     },
   );
 

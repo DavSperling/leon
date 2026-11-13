@@ -467,3 +467,19 @@ describe('catalogue et connecteur', () => {
     );
   });
 });
+
+// Depuis 0057, le texte d'une boîte mail, de Drive ou de Slack est lu par qui le branche et, sur le site, par ses
+// managers en remontant : aucun avertissement ne le redit visible de son auteur seul.
+describe('catalogue : qui lit le texte privé', () => {
+  it.each(PROVIDER_IDS)(
+    '%s ne dit pas « vous seul le voyez », ni en français ni en anglais',
+    (id) => {
+      const entry = CATALOG_ENTRIES[id];
+      for (const text of [entry.warning, entry.en.warning]) {
+        expect(text ?? '').not.toMatch(
+          /vous seul le voyez|reste privé|only you can see it|stays private/i,
+        );
+      }
+    },
+  );
+});

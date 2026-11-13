@@ -216,7 +216,7 @@ function cutEscaped(text: string, max: number): string {
 
 // Une ligne de la liste des sources. Le point entre tout seul dans le contexte de l'outil de code : le titre d'une
 // source écrite par un tiers (une demande de fusion, un mail) n'y est jamais recopié ; l'outil, la date et le lien
-// suffisent à la retrouver. Seul reste le titre d'une session de code (CODE_SESSION_KINDS) : elles sont privées à leur auteur, donc à la personne
+// suffisent à la retrouver. Seul reste le titre d'une session de code (CODE_SESSION_KINDS) : le point ne lit que les siennes (gather.ts), celles de la personne
 // qui lit le point. Il est coupé, mis sur une ligne et cité entre guillemets, pour se lire comme un titre.
 function sourceLine(reference: BriefingReference): string {
   const { source } = reference;

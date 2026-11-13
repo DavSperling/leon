@@ -436,8 +436,8 @@ export const TEAMS: Team[] = [
         text: 'Qui suit quel client, ce qui a été dit, ce qui est en cours : avant le premier rendez-vous.',
       },
       {
-        title: 'Ce qui est privé le reste',
-        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte Outlook ; les discussions de chacun avec Leon restent à lui, ses conversations d’IA et ses notes sont lues par lui et, sur le site de Leon, par ses managers en remontant.',
+        title: 'Des règles de confidentialité claires',
+        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive et Slack ; les discussions de chacun avec Leon restent à lui, ses conversations d’IA et ses notes sont lues par lui et, sur le site de Leon, par ses managers en remontant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -649,7 +649,7 @@ export const SECURITY_FACTS = [
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
+  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
@@ -706,7 +706,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche. Les conversations captées avec vos assistants d’IA et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul.',
+    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -1260,7 +1260,7 @@ const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
 ];
 
 const NOT_YET_EN: Twin<typeof NOT_YET> = [
-  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
+  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them.',
   'A secret written in plain prose (“the password is…”) can slip past redaction.',
   'No data export yet, and no full account deletion from the interface.',
   'No ISO 27001 or SOC 2 certification yet.',
@@ -1315,7 +1315,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them. AI assistant conversations and notes are read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only.',
+    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations and notes are read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only.',
   },
   {
     q: 'What happens when Leon doesn’t know?',

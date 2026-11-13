@@ -133,7 +133,7 @@
     },
     "shareWith": "Visible par",
     "shareTeam": "Toute l’équipe",
-    "shareMe": "Moi seul",
+    "shareMe": "Moi et mes managers",
     "shareGroup": "Un groupe",
     "shareLabel": "Qui voit {title}",
     "shareFolderLabel": "Qui voit le dossier {name}",
@@ -151,7 +151,7 @@
     "following": "Ce que vous suivez",
     "followingHelp": "Ce que vous cochez ne change rien pour les autres.",
     "seeAll": "Voir aussi son privé",
-    "seeAllHelp": "Vous lisez aussi ce que {name} ne partage pas : mails, conversations avec les IA, documents privés, ici et dans la recherche. Ses discussions avec Leon restent privées.",
+    "seeAllHelp": "Vous lisez aussi ce que {name} ne partage pas : mails, Slack, conversations avec les IA, sessions de code, notes, documents privés, ici et dans la recherche. Ses discussions avec Leon restent privées.",
     "documents": "Documents",
     "followFailed": "Le choix n’a pas été enregistré. Réessayez.",
     "activity": "Activité récente",
@@ -476,7 +476,7 @@
   },
   "connections": {
     "title": "Connexions",
-    "subtitle": "Par défaut, ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, de Google Drive et de Slack, qui reste privé comme une conversation. Qui branche un outil peut changer qui le voit.",
+    "subtitle": "Par défaut, ce que Leon lit dans vos outils est visible de toute l’équipe, sauf le texte des boîtes mail, de Google Drive et de Slack, qui est lu par vous et, sur le site de Leon, par vos managers en remontant. Qui branche un outil peut changer qui le voit.",
     "adminConsent": "Lien d’accord pour l’administrateur",
     "newTab": " (s’ouvre dans un nouvel onglet)",
     "serverSetup": "Les connecteurs ne sont pas configurés sur ce serveur : il manque la variable LEON_CONNECTORS_KEY, qui chiffre les clés des outils. Générez-la avec",
@@ -614,9 +614,9 @@
     "step1": "Construisez l’extension avec",
     "extensionPrompt": "Installe l'extension navigateur de Leon depuis ce dépôt :\n1. Construis-la avec WXT_PUBLIC_LEON_URL={serverUrl} pnpm ext:build.\n2. Dans Chrome, ouvre chrome://extensions, active le mode développeur, clique sur « Charger l'extension non empaquetée » et choisis le dossier extension/.output/chrome-mv3.\n3. Ouvre ensuite les options de l'extension et laisse-moi y coller mon jeton Leon moi-même.",
     "membersTitle": "Membres",
-    "membersDescription": "Par défaut, chacun voit ce que Leon lit dans les outils de l’équipe. Les conversations avec les assistants, les boîtes mail, Google Drive et Slack restent à leur propriétaire.",
+    "membersDescription": "Par défaut, chacun voit ce que Leon lit dans les outils de l’équipe. Les conversations avec les assistants, les boîtes mail, Google Drive et Slack restent à leur propriétaire et à ses managers en remontant.",
     "managersTitle": "Managers",
-    "managersDescription": "Un manager lit aussi ce que les personnes sous lui ne partagent pas : mails, conversations avec les IA, documents privés. Pas leurs discussions avec Leon. Chaque manager peut le couper personne par personne.",
+    "managersDescription": "Un manager lit aussi ce que les personnes sous lui ne partagent pas : mails, Slack, conversations avec les IA, sessions de code, notes, documents privés. Pas leurs discussions avec Leon. Chaque manager peut le couper personne par personne.",
     "managersToggle": "Les managers lisent le privé des personnes sous eux",
     "managersLaw": "Dans la plupart des pays, la loi vous demande d’en informer vos salariés. Leon ne le fait pas à votre place.",
     "managersFailed": "Impossible d’enregistrer. Réessayez.",
@@ -694,7 +694,7 @@
     "tabMemory": "Mémoire",
     "depotsTitle": "Dépôts d’équipe",
     "depotsDescription": "Leon ne relève sur GitHub que les dépôts cochés, et seuls ceux-là sont visibles de toute l’équipe. La liste reprend les dépôts déjà cochés et ceux que voient vos propres connexions GitHub, lus ou non.",
-    "depotsNone": "Aucun dépôt d’équipe : GitHub n’est plus relevé, et ce qui l’a été est privé à qui l’a branché.",
+    "depotsNone": "Aucun dépôt d’équipe : GitHub n’est plus relevé, et ce qui l’a été n’est plus lu que par qui l’a branché et, sur le site de Leon, par ses managers en remontant.",
     "depotsList": "Dépôts proposés",
     "depotsEmpty": "Aucune de vos connexions GitHub ne propose de dépôt : saisissez-en un ci-dessous.",
     "depotAdd": "Ajouter un dépôt",
@@ -751,7 +751,7 @@
     "groupDelete": "Supprimer",
     "groupDeleteNamed": "Supprimer {name}",
     "groupDeleteTitle": "Supprimer {name} ?",
-    "groupDeleteDescription": "Les documents partagés à ce groupe ne seront plus visibles que de leur auteur, ou des autres groupes avec qui il les a partagés.",
+    "groupDeleteDescription": "Les documents partagés à ce groupe ne seront plus visibles que de leur auteur et de ses managers, ou des autres groupes avec qui il les a partagés.",
     "groupDeleted": "Groupe {name} supprimé.",
     "groupService": "Service",
     "groupCount": "{count, plural, one {# personne} other {# personnes}}",
@@ -932,7 +932,7 @@
       "productTitle": "Comment ça marche",
       "productDescription": "Leon se branche sur vos outils et vos assistants d’IA, garde chaque élément tel quel, et répond en citant ses sources.",
       "securityTitle": "Sécurité",
-      "securityDescription": "Leon voit ce que vous voyez : isolation par entreprise, droits appliqués avant le classement, conversations privées, clés chiffrées. Et ce qui n’est pas encore là.",
+      "securityDescription": "Leon voit ce que vous voyez : isolation par entreprise, droits appliqués avant le classement, conversations lues par vous et vos managers, clés chiffrées. Et ce qui n’est pas encore là.",
       "documentationTitle": "Documentation",
       "documentationDescription": "Brancher Leon à vos outils de code, en demandant à Claude Code ou avec une commande dans un terminal. Ce qu’il faut, ce qui part, comment se déconnecter.",
       "pricingTitle": "Tarifs",
@@ -1051,7 +1051,7 @@
       },
       "rights": {
         "title": "Les droits, d’abord",
-        "text": "Le filtre des droits passe avant le classement : ce qui est privé à son auteur ne remonte jamais chez un autre."
+        "text": "Le filtre des droits passe avant le classement : ce que son auteur ne partage pas ne remonte que chez lui et, sur le site de Leon, chez les managers au-dessus de lui."
       },
       "line1": "on peut **s’engager** sur le **15 novembre**",
       "line2": "hors **reprise** de l’historique",
@@ -1106,7 +1106,7 @@
       },
       "chatQuestion": "On garde Postgres pour la file, pas Redis ?",
       "chatAnswer": "Oui : une seule base, moins de pièces à surveiller…",
-      "chatNote": "conversation d’une seule personne",
+      "chatNote": "conversation lue par son auteur et ses managers",
       "stepsTitle": "Vous branchez. Leon garde. Vous demandez.",
       "stepsLead": "Aucune fiche à remplir, aucun résumé à relire : Leon relève vos outils toutes les 15 minutes et garde chaque élément tel qu’il a été écrit.",
       "step1Title": "Vous branchez vos outils",
@@ -1142,8 +1142,8 @@
           "text": "Quand aucune source ne répond, la réponse le dit. Rien n’est inventé pour combler."
         },
         "private": {
-          "title": "Ce qui est à vous reste à vous",
-          "text": "La recherche, la discussion et l’assistant appliquent les mêmes droits : ce qui est privé à son auteur ne remonte chez personne d’autre."
+          "title": "Chacun lit ce qu’il a le droit de lire",
+          "text": "La recherche, la discussion et l’assistant appliquent les mêmes droits : ce que son auteur ne partage pas ne remonte que chez lui et, sur le site de Leon, chez les managers au-dessus de lui."
         },
         "raw": {
           "title": "Le brut, jamais réécrit",
@@ -1193,7 +1193,7 @@
       "sessionEnd": "$ fin de session",
       "sent": "conversation envoyée",
       "textOnly": "texte seul, sans sorties d’outils",
-      "keepCaption": "Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous seul.",
+      "keepCaption": "Illustration : trois couches de verre empilées en 3D. Au fond, le brut gardé tel quel ; au milieu, l’index des passages ; au-dessus, les droits : visible de l’équipe, ou de vous et de vos managers.",
       "keepLabel": "ce que Leon garde",
       "typedInBar": "Écrit dans la barre",
       "findChip": "une source par phrase · [1] [2] [3]",
@@ -1205,7 +1205,7 @@
         "versions": "les états passés d’un fil",
         "lessons": "vos leçons acceptées",
         "briefing": "le point du matin",
-        "remember": "garder une note, privée"
+        "remember": "garder une note"
       },
       "discussCaption": "Illustration : une discussion où Leon répond en citant ses sources, le point du matin en trois parties, et les huit outils que le serveur MCP donne à un assistant.",
       "discussLabel": "discussion et point du matin",
@@ -1235,7 +1235,7 @@
         },
         "permissions": {
           "title": "Droits de l’outil d’origine",
-          "text": "Une page privée chez l’éditeur reste privée dans Leon."
+          "text": "Une page privée chez l’éditeur n’est pas partagée avec l’équipe dans Leon."
         }
       },
       "ctaText": "Branchez un premier outil et posez votre première question."
@@ -1392,14 +1392,14 @@
       "whoKicker": "Qui voit quoi",
       "whoTitle": "Deux règles, faciles à retenir.",
       "teamTitle": "Visible de toute l’équipe",
-      "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf les mails, Google Drive et Slack : ils restent privés à qui les branche.",
+      "teamText": "Ce que lit une connexion, comme dans un outil partagé. Sauf les mails, Google Drive et Slack : ils sont lus par qui les branche et, sur le site de Leon, par ses managers en remontant.",
       "youTitle": "Pas partagé avec l’équipe",
       "youText": "Vous le lisez et, sur le site de Leon, vos managers en remontant aussi, sauf vos discussions avec Leon, qui restent à vous seul. Aucun autre collègue ne le voit, ni dans la recherche, ni dans une réponse.",
       "frankly": "Franchement",
       "notYetTitle": "Ce qui n’est pas encore là.",
       "notYetLead": "Nous préférons l’écrire ici plutôt que de vous le laisser découvrir. Nous tenons cette liste à jour.",
       "ctaTitle": "Ce qui a été dit reste dit, pour ceux qui ont le droit de le lire.",
-      "ctaText": "Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui reste à vous."
+      "ctaText": "Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui ne l’est pas."
     },
     "pricing": {
       "everywhere": {
@@ -1767,7 +1767,7 @@
       "title": "Branchez vos outils",
       "lead": "Choisissez ceux que vous utilisez : vous les brancherez juste après, en un clic chacun. Ceux conseillés pour votre poste sont déjà cochés.",
       "readyTitle": "Prêts à brancher",
-      "private": "Privé : pas partagé avec l’équipe",
+      "private": "Pas partagé avec l’équipe",
       "shared": "Visible de toute l’équipe",
       "soonTitle": "Bientôt disponibles",
       "soonMore": "et {count} autres",

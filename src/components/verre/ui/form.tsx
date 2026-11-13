@@ -115,6 +115,8 @@ export function Textarea({
     if (!el || !autoGrow) return;
     const line = parseFloat(getComputedStyle(el).lineHeight) || 22;
     el.style.height = 'auto';
+    // monté caché (un groupe des Réglages pas encore ouvert) : rien à mesurer, `rows` garde sa hauteur
+    if (el.scrollHeight === 0) return;
     el.style.height = `${Math.min(el.scrollHeight + 2, line * maxRows + 22)}px`;
   };
   // biome-ignore lint/correctness/useExhaustiveDependencies: remesurer quand le texte ou le mode changent

@@ -1,6 +1,5 @@
 'use client';
 
-import { BookOpen, GitBranch, StickyNote } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useOptimistic, useRef, useState, useTransition } from 'react';
@@ -220,7 +219,7 @@ function VersionRow({
           <p className="text-label text-muted">{t('versionGone')}</p>
         ) : (
           text !== null && (
-            <pre className="whitespace-pre-wrap rounded-field border border-line bg-glass-3 p-3 font-mono text-[12.5px] leading-[1.6] tracking-normal [overflow-wrap:anywhere] text-fg">
+            <pre className="whitespace-pre-wrap rounded-field border border-line bg-glass-3 p-3 font-sans text-label leading-[1.6] [overflow-wrap:anywhere] text-fg">
               {text}
             </pre>
           )
@@ -510,7 +509,6 @@ function LessonsSection({
         </GlassCard>
       ) : (
         <EmptyState
-          icon={BookOpen}
           title={t('noLessons')}
           description={ctl.stale ? undefined : t('noLessonsHint')}
           className="py-8"
@@ -569,12 +567,7 @@ function ThreadsSection({
           </ul>
         </GlassCard>
       ) : (
-        <EmptyState
-          icon={GitBranch}
-          title={t('noThreads')}
-          description={t('noThreadsHint')}
-          className="py-8"
-        />
+        <EmptyState title={t('noThreads')} description={t('noThreadsHint')} className="py-8" />
       )}
     </Section>
   );
@@ -678,12 +671,7 @@ function NotesSection({
           </ul>
         </GlassCard>
       ) : (
-        <EmptyState
-          icon={StickyNote}
-          title={t('noNotes')}
-          description={t('noNotesHint')}
-          className="py-8"
-        />
+        <EmptyState title={t('noNotes')} description={t('noNotesHint')} className="py-8" />
       )}
     </Section>
   );

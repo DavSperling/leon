@@ -1,120 +1,29 @@
 'use client';
 
-import { KeyRound, Plus } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { KeyRound, Laptop, MessageSquare } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { revokeTokenAction } from '@/app/(app)/reglages/actions';
+import { useActionState, useId, useState, useTransition } from 'react';
+import { createTokenAction, revokeTokenAction } from '@/app/(app)/reglages/actions';
 import {
-  AlertDialog,
   Button,
-  Dialog,
-  DialogTrigger,
-  EmptyState,
-  GlassCard,
-  Section,
+  CopyButton,
+  Fact,
+  Facts,
+  Field,
+  Input,
+  PanelClose,
+  PanelNote,
+  SidePanel,
   toast,
 } from '@/components/verre';
-import {
-  cn,
-  duration,
-  ease,
-  formatDate,
-  formatDateTime,
-  formatRelative,
-  springSoft,
-  useInstant,
-} from '@/lib/verre';
+import { formatDate, formatDateTime, formatRelative, nb } from '@/lib/verre';
 import type { ApiTokenRow } from '@/server/auth/api-tokens';
-import { CreateTokenContent } from './create-token';
-import { SECTION } from './reglages';
+import { Glyph } from './reglages';
 
-// Ce que les sections dessinent : ni la révocation ni l'échéance du renouvellement, que la page a déjà jugées.
+// Ce que l'écran dessine : ni la révocation ni l'échéance du renouvellement, que la page a déjà jugées.
 export type Token = Omit<ApiTokenRow, 'revokedAt' | 'refreshExpiresAt'>;
 
-/** Section « Jetons personnels » : la liste (jetons non révoqués, lus par la page), la création et la révocation. */
-export function TokensSection({ tokens }: { tokens: Token[] }) {
-  const t = useTranslations('settings');
-  const createRef = useRef<HTMLButtonElement>(null);
-  const [createOpen, setCreateOpen] = useState(false);
-  const [session, setSession] = useState(0);
-  // le jeton créé est déjà dans la liste (revalidatePath) : on le cache tant que la fenêtre est ouverte, puis on le voit arriver
-  const [created, setCreated] = useState<string | null>(null);
-  const [fresh, setFresh] = useState<string | null>(null);
-
-  useEffect(() => {
-    // arrivée avec une ancre (/reglages#extension) : l'ossature remet le panneau en haut, on redescend à la section
-    const target = window.location.hash && document.getElementById(window.location.hash.slice(1));
-    if (target) requestAnimationFrame(() => target.scrollIntoView());
-  }, []);
-
-  useEffect(() => {
-    if (!fresh) return;
-    // le fond du nouveau jeton s'éteint
-    const t = setTimeout(() => setFresh(null), 3000);
-    return () => clearTimeout(t);
-  }, [fresh]);
-
-  const onCreateChange = (open: boolean) => {
-    if (open) setSession((s) => s + 1);
-    else if (created) {
-      setFresh(created);
-      setCreated(null);
-    }
-    setCreateOpen(open);
-  };
-
-  // le bouton disparaît avec la ligne : le focus passe à la ligne voisine, ou à « Créer un jeton »
-  const focusAfter = (id: string) => {
-    const i = tokens.findIndex((x) => x.id === id);
-    const neighbour = tokens[i + 1] ?? tokens[i - 1];
-    requestAnimationFrame(() =>
-      (
-        document.querySelector<HTMLElement>(`[data-revoke="${neighbour?.id}"]`) ?? createRef.current
-      )?.focus({ preventScroll: true }),
-    );
-  };
-
-  const shown = tokens.filter((t) => t.hint !== created);
-
-  return (
-    <Section
-      id="jetons"
-      title={t('tokensTitle')}
-      description={t('tokenDescription')}
-      className={SECTION}
-      actions={
-        <Dialog open={createOpen} onOpenChange={onCreateChange}>
-          <DialogTrigger asChild>
-            <Button ref={createRef} variant="primary" icon={Plus}>
-              {t('createToken')}
-            </Button>
-          </DialogTrigger>
-          <CreateTokenContent key={session} onCreated={setCreated} />
-        </Dialog>
-      }
-    >
-      {shown.length > 0 ? (
-        <GlassCard className="p-1.5">
-          <ul aria-label={t('yourTokens')} className="grid grid-cols-[minmax(0,1fr)]">
-            <AnimatePresence initial={false}>
-              {shown.map((t) => (
-                <TokenRow
-                  key={t.id}
-                  token={t}
-                  fresh={fresh === t.hint}
-                  onGone={() => focusAfter(t.id)}
-                />
-              ))}
-            </AnimatePresence>
-          </ul>
-        </GlassCard>
-      ) : (
-        <EmptyState icon={KeyRound} title={t('noTokens')} className="py-8" />
-      )}
-    </Section>
-  );
-}
+export const GLYPHS = { ordinateur: Laptop, assistant: MessageSquare, manuel: KeyRound } as const;
 
 // Les mots de la révocation selon la sorte du jeton : le message de succès, et ce que la confirmation annonce.
 const REVOKE_WORDS = {
@@ -122,26 +31,72 @@ const REVOKE_WORDS = {
   ordinateur: ['computerRevoked', 'computerRevokeDescription'],
   assistant: ['assistantRevoked', 'assistantRevokeDescription'],
 } as const;
+// Ce que chaque sorte reçoit de Leon : la phrase du panneau.
+const NOTES = {
+  manuel: 'tokenDescription',
+  ordinateur: 'computersDescription',
+  assistant: 'assistantsDescription',
+} as const;
 
-/**
- * Une ligne de jeton, avec sa révocation. Les mots changent avec la sorte (`kind`) du jeton : ordinateur connecté
- * (computers.tsx), assistant connecté (assistants.tsx), dont la ligne montre l'hôte de retour à la place de l'indice
- * du jeton d'accès, qui change à chaque renouvellement.
- */
-export function TokenRow({
-  token: t,
-  fresh = false,
-  onGone,
-}: {
-  token: Token;
-  fresh?: boolean;
-  onGone: () => void;
-}) {
-  const instant = useInstant();
+/** La légende d'une carte : l'hôte d'un assistant (l'indice de son jeton change à chaque renouvellement), l'indice d'un jeton. */
+export function captionOf(token: Token, computerLabel: string): string {
+  if (token.kind === 'assistant') return token.clientHost ?? '';
+  if (token.kind === 'ordinateur') return computerLabel;
+  return `leon_…${token.hint}`;
+}
+
+/** Ce qu'est une chose connectée : sa création et sa dernière utilisation, et, selon sa sorte, son client ou son indice. */
+export function TokenFacts({ token: t }: { token: Token }) {
   const tr = useTranslations('settings');
   const locale = useLocale();
-  const [revoking, startTransition] = useTransition();
+  return (
+    <Facts>
+      {/* le client, seulement s'il ne redit pas le titre du panneau */}
+      {t.kind === 'assistant' && t.clientName && t.clientName !== t.name && (
+        <Fact label={tr('kindAssistant')}>{t.clientName}</Fact>
+      )}
+      {t.kind === 'assistant' && t.clientHost && (
+        <Fact label={tr('addressLabel')}>{t.clientHost}</Fact>
+      )}
+      {t.kind === 'manuel' && (
+        <Fact label={tr('kindToken')}>
+          <code className="font-mono text-ui">leon_…{t.hint}</code>
+        </Fact>
+      )}
+      <Fact label={t.kind === 'manuel' ? tr('createdLabel') : tr('connectedLabel')}>
+        <time dateTime={t.createdAt.toISOString()}>{formatDate(t.createdAt, locale)}</time>
+      </Fact>
+      <Fact label={tr('lastUsed')}>
+        {t.lastUsedAt ? (
+          <time dateTime={t.lastUsedAt.toISOString()} title={formatDateTime(t.lastUsedAt, locale)}>
+            {formatRelative(t.lastUsedAt, new Date(), locale)}
+          </time>
+        ) : (
+          tr('neverUsedFact')
+        )}
+      </Fact>
+    </Facts>
+  );
+}
+
+/**
+ * Le panneau d'une chose connectée (un ordinateur, un assistant, un jeton) : ce qu'elle est, ce qu'elle reçoit, et
+ * « Déconnecter » ou « Révoquer », confirmé sur place. La carte s'en va quand la page se relit.
+ */
+export function TokenPanel({
+  token: t,
+  open,
+  onOpenChange,
+}: {
+  token: Token;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const tr = useTranslations('settings');
+  const [asking, setAsking] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [revokedKey, descriptionKey] = REVOKE_WORDS[t.kind];
+  const computer = t.kind !== 'manuel';
 
   const revoke = () =>
     startTransition(async () => {
@@ -149,91 +104,138 @@ export function TokenRow({
         const { ok } = await revokeTokenAction(t.id);
         if (ok) toast.success(tr(revokedKey));
         else toast.error(tr('tokenAlreadyRevoked'));
-        onGone();
+        onOpenChange(false);
       } catch {
         toast.error(tr('revokeFailed'));
       }
+      setAsking(false);
     });
 
   return (
-    <motion.li
-      layout
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, transition: { duration: duration.exit, ease: ease.in } }}
-      transition={{ duration: duration.enter, ease: ease.out, layout: springSoft }}
-      // filet entre les lignes, en retrait des bords de la carte
-      className="relative [&:not(:first-child)]:before:absolute [&:not(:first-child)]:before:inset-x-3 [&:not(:first-child)]:before:top-0 [&:not(:first-child)]:before:h-px [&:not(:first-child)]:before:bg-line"
+    <SidePanel
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setAsking(false);
+        onOpenChange(next);
+      }}
+      picture={<Glyph icon={GLYPHS[t.kind]} size={44} />}
+      title={t.name}
+      confirm={
+        asking
+          ? {
+              title: tr(computer ? 'disconnectNamed' : 'revokeNamed', { name: t.name }),
+              text: tr(descriptionKey),
+              yes: tr(computer ? 'disconnect' : 'revoke'),
+              no: tr('keep'),
+              busy: pending,
+              busyLabel: tr(computer ? 'disconnecting' : 'revoking'),
+              onYes: revoke,
+              onNo: () => setAsking(false),
+            }
+          : null
+      }
+      foot={
+        <>
+          <Button variant="quiet" className="-ml-4" onClick={() => setAsking(true)}>
+            {tr(computer ? 'disconnect' : 'revoke')}
+          </Button>
+          <PanelClose asChild>
+            <Button className="ml-auto">{tr('done')}</Button>
+          </PanelClose>
+        </>
+      }
     >
-      <div
-        className={cn(
-          'relative flex min-h-[60px] items-center gap-4 rounded-field px-3 py-2.5 transition-opacity duration-300',
-          revoking && 'opacity-60',
-        )}
-      >
-        {fresh && (
-          // nouveau jeton : un fond d'accent qui s'éteint
-          <motion.span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-field bg-accent-soft"
-            initial={{ opacity: 1 }}
-            animate={instant ? undefined : { opacity: 0 }}
-            transition={{ delay: 1.6, duration: 1.2, ease: ease.inOut }}
-          />
-        )}
-        <div className="relative min-w-0 flex-1">
-          <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-            <span className="min-w-0 text-body font-medium [overflow-wrap:anywhere] text-fg">
-              {t.name}
-            </span>
-            <code className="font-mono text-[12px] tracking-normal text-muted">
-              {t.kind === 'assistant' ? t.clientHost : `leon_…${t.hint}`}
-            </code>
-          </p>
-          {/* les morceaux ne se coupent pas en leur milieu (« 12 oct. / 2026 ») : la ligne passe à la ligne entre eux */}
-          <p className="mt-0.5 flex flex-wrap gap-x-1.5 text-label text-muted [&>span]:whitespace-nowrap">
-            <span>
-              {tr('createdOn')}{' '}
-              <time dateTime={t.createdAt.toISOString()}>{formatDate(t.createdAt, locale)}</time>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>
-              {t.lastUsedAt ? (
-                <>
-                  {tr('used')}{' '}
-                  {/* relatif à l'heure du rendu : serveur et navigateur peuvent différer d'une minute */}
-                  <time
-                    dateTime={t.lastUsedAt.toISOString()}
-                    title={formatDateTime(t.lastUsedAt, locale)}
-                    suppressHydrationWarning
-                  >
-                    {formatRelative(t.lastUsedAt, new Date(), locale)}
-                  </time>
-                </>
-              ) : (
-                tr('neverUsed')
-              )}
-            </span>
+      <TokenFacts token={t} />
+      <PanelNote className="mt-4">{nb(tr(NOTES[t.kind]))}</PanelNote>
+    </SidePanel>
+  );
+}
+
+type CreateState = { name: string; error?: string; token?: string };
+
+/**
+ * Créer un jeton, en deux étapes dans le panneau : son nom, puis le jeton, montré une fois. L'étape 2 est verrouillée
+ * (ni Échap, ni un clic dehors) : seul « Terminé » ferme, le jeton ne se perd pas par accident. Montez-le avec une
+ * `key` neuve à chaque ouverture : le jeton en clair disparaît avec lui.
+ */
+export function CreateTokenPanel({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (hint: string) => void;
+}) {
+  const t = useTranslations('settings');
+  const id = useId();
+  const [state, formAction, pending] = useActionState(
+    async (_: CreateState, data: FormData): Promise<CreateState> => {
+      const name = String(data.get('name') ?? '');
+      const result = await createTokenAction(name);
+      if ('error' in result) return { name, error: result.error };
+      onCreated(result.hint);
+      return { name, token: result.token };
+    },
+    { name: '' },
+  );
+  const secret = state.token;
+
+  return (
+    <SidePanel
+      open={open}
+      onOpenChange={onOpenChange}
+      picture={<Glyph icon={KeyRound} size={44} />}
+      title={secret ? t('tokenCreated') : t('createToken')}
+      sub={secret ? t('pasteToken') : undefined}
+      // verrouillé aussi pendant la création : le secret ne se montre qu'une fois
+      locked={Boolean(secret) || pending}
+      busy={pending}
+      foot={
+        secret ? (
+          <>
+            <CopyButton value={secret} size="md" />
+            <PanelClose asChild>
+              <Button variant="primary" className="ml-auto">
+                {t('done')}
+              </Button>
+            </PanelClose>
+          </>
+        ) : (
+          <>
+            <Button
+              type="submit"
+              form={`${id}-form`}
+              variant="primary"
+              loading={pending}
+              loadingLabel={t('creating')}
+            >
+              {t('createTokenSubmit')}
+            </Button>
+            <PanelClose asChild>
+              <Button variant="quiet">{t('cancel')}</Button>
+            </PanelClose>
+          </>
+        )
+      }
+    >
+      {secret ? (
+        <div className="grid gap-2">
+          <code className="block rounded-field border border-line-strong bg-glass-3 px-3.5 py-3 font-mono text-ui leading-[1.6] break-all text-fg select-all">
+            {secret}
+          </code>
+          <p role="status" className="text-label font-medium text-warning">
+            {t('copyToken')}
           </p>
         </div>
-        <AlertDialog
-          trigger={
-            <Button
-              size="sm"
-              variant="secondary"
-              data-revoke={t.id}
-              loading={revoking}
-              className="relative"
-            >
-              {revoking ? tr('sending') : tr('revoke')}
-            </Button>
-          }
-          title={tr('revokeNamed', { name: t.name })}
-          description={tr(descriptionKey)}
-          confirmLabel={tr('revoke')}
-          onConfirm={revoke}
-        />
-      </div>
-    </motion.li>
+      ) : (
+        <form id={`${id}-form`} noValidate action={formAction} className="grid gap-4">
+          <Field label={t('deviceName')} error={state.error}>
+            <Input name="name" autoComplete="off" defaultValue={state.name} maxLength={80} />
+          </Field>
+          <PanelNote>{nb(t('tokenDescription'))}</PanelNote>
+        </form>
+      )}
+    </SidePanel>
   );
 }

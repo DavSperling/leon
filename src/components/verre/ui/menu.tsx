@@ -6,13 +6,13 @@ import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { CheckboxBox } from './form';
 
+// Une feuille tenue au-dessus : son trait (plus marqué en sombre, où l'ombre ne porte pas) et l'ombre la plus haute.
 const LAYER =
-  'layer-pop z-[60] rounded-card border border-line-strong bg-menu shadow-float outline-none';
+  'layer-pop z-[60] rounded-card border border-float-line bg-menu text-fg shadow-float outline-none';
 
-// ---------- Menu déroulant (Radix) : lignes nettes de 34 px, surbrillance au survol et au clavier ----------
+// ---------- Menu déroulant (Radix) : lignes de 34 px (44 au doigt), surbrillance au survol et au clavier ----------
 export const DropdownMenu = RMenu.Root;
 export const DropdownMenuTrigger = RMenu.Trigger;
-export const DropdownMenuGroup = RMenu.Group;
 
 export function DropdownMenuContent({
   className,
@@ -41,14 +41,14 @@ export function DropdownMenuContent({
   );
 }
 
-// Comme les .mi de la planche : survol en bg-hover, et au clavier un anneau intérieur de 2 px (Radix focalise la ligne).
+// Survol en bg-hover, et au clavier un anneau intérieur de 2 px (Radix focalise la ligne). Les icônes restent discrètes.
 const ITEM =
-  'relative flex h-[34px] w-full cursor-pointer items-center gap-2.5 rounded-item px-2.5 text-ui text-fg-2 outline-none select-none ' +
-  'data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[highlighted]:text-fg focus-visible:shadow-[inset_0_0_0_2px_var(--ring)] ' +
-  '[&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted';
+  'relative flex h-[34px] w-full cursor-pointer items-center gap-2.5 rounded-item px-2 text-ui font-medium text-fg outline-none select-none max-shell:h-11 ' +
+  'data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover focus-visible:shadow-[inset_0_0_0_2px_var(--ring)] ' +
+  '[&>svg]:size-[18px] [&>svg]:shrink-0 [&>svg]:text-icon';
 
 export type MenuItemProps = ComponentProps<typeof RMenu.Item> & {
-  icon?: LucideIcon /** méta à droite, en mono (compteur, raccourci) */;
+  icon?: LucideIcon /** méta à droite, discrète (un état, un raccourci) */;
   meta?: ReactNode;
   destructive?: boolean;
 };
@@ -73,9 +73,7 @@ export function DropdownMenuItem({
     >
       {Icon && <Icon aria-hidden="true" strokeWidth={1.7} />}
       <span className="min-w-0 flex-1 truncate">{children}</span>
-      {meta != null && (
-        <span className="font-mono text-[11px] tracking-normal text-muted">{meta}</span>
-      )}
+      {meta != null && <span className="text-label font-normal text-muted">{meta}</span>}
     </RMenu.Item>
   );
 }
@@ -103,15 +101,13 @@ export function DropdownMenuCheckboxItem({
         e.preventDefault();
         onSelect?.(e);
       }}
-      className={cn(ITEM, 'pl-2 data-[state=checked]:text-fg', className)}
+      className={cn(ITEM, className)}
       {...props}
     >
       <CheckboxBox checked={checked} />
       {Icon && <Icon aria-hidden="true" strokeWidth={1.7} />}
       <span className="min-w-0 flex-1 truncate">{children}</span>
-      {meta != null && (
-        <span className="font-mono text-[11px] tracking-normal text-muted">{meta}</span>
-      )}
+      {meta != null && <span className="text-label font-normal text-muted">{meta}</span>}
     </RMenu.CheckboxItem>
   );
 }
@@ -126,15 +122,13 @@ export function DropdownMenuLabel({
   return (
     <RMenu.Label
       className={cn(
-        'flex items-baseline justify-between gap-3 px-2.5 pt-1.5 pb-1.5 text-meta font-semibold text-muted',
+        'flex items-baseline justify-between gap-3 px-2 pt-1.5 pb-1.5 text-label font-medium text-muted',
         className,
       )}
       {...props}
     >
       {children}
-      {meta != null && (
-        <span className="font-mono text-[11px] font-normal tracking-normal">{meta}</span>
-      )}
+      {meta != null && <span className="font-normal">{meta}</span>}
     </RMenu.Label>
   );
 }
@@ -149,8 +143,6 @@ export function DropdownMenuSeparator({
 // ---------- Fenêtre ancrée (Radix) ----------
 export const Popover = RPopover.Root;
 export const PopoverTrigger = RPopover.Trigger;
-export const PopoverAnchor = RPopover.Anchor;
-export const PopoverClose = RPopover.Close;
 
 export function PopoverContent({
   className,
@@ -194,7 +186,7 @@ export function Tooltip({
           sideOffset={6}
           collisionPadding={8}
           className={cn(
-            'layer-pop z-[80] max-w-[260px] rounded-[9px] border border-line-strong bg-menu px-2.5 py-1.5 text-[12px] leading-snug font-medium text-fg shadow-float',
+            'layer-pop z-[80] max-w-[260px] rounded-chip bg-ink px-[9px] py-1.5 text-label leading-[1.2] font-medium text-on-ink',
             className,
           )}
         >

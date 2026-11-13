@@ -1,15 +1,14 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { type MouseEvent, type ReactNode, useState } from 'react';
-import { initialOf } from '@/components/verre/shell/brand';
-import { Badge } from '@/components/verre/ui/badge';
+import { type MouseEvent, useState } from 'react';
+import { SendByEmail } from '@/components/verre/equipe/send-by-email';
+import { Avatar } from '@/components/verre/ui/avatar';
 import { Button } from '@/components/verre/ui/button';
 import { CopyButton } from '@/components/verre/ui/copy';
 import { Dialog, DialogClose, DialogContent, DialogFooter } from '@/components/verre/ui/dialog';
-import { GlassCard } from '@/components/verre/ui/surfaces';
 import {
   departmentLabelKey,
   jobLabelKey,
@@ -20,7 +19,8 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { Placement } from '@/server/auth/onboarding';
 import { type CreatedInvitation, InviteForm } from './invite-form';
-import { OnboardingSteps } from './steps';
+import { StaticThing } from './preview';
+import { OnboardingSteps, SHEET } from './steps';
 
 export type TeammatesStepProps = {
   steps: OnboardingStepId[];
@@ -31,7 +31,13 @@ export type TeammatesStepProps = {
 
 // Une carte par collaborateur ; `created` n'existe que dans l'état du composant (le lien en clair n'est affiché qu'une fois),
 // `copied` : son lien a été copié au moins une fois.
-type Teammate = { id: number; created: CreatedInvitation | null; copied: boolean };
+type Teammate = {
+  id: number;
+  created: CreatedInvitation | null;
+  copied: boolean;
+  /** Ce qui est saisi avant « Créer le lien » : l'équipe dessinée à droite le montre déjà. */
+  draft?: { name: string; placement: Placement };
+};
 
 // Une carte sans nom : le tiret est muet, un lecteur d'écran lit « Sans nom ».
 function NoName() {
@@ -44,50 +50,9 @@ function NoName() {
   );
 }
 
-function Node({
-  initial,
-  name,
-  detail,
-  badge,
-  sub,
-  dim,
-}: {
-  initial: string;
-  name: string;
-  detail: string;
-  badge: ReactNode;
-  sub?: boolean;
-  dim?: boolean;
-}) {
-  return (
-    <li className={cn('min-w-0', sub && 'ml-3 border-l border-line pl-3 sm:ml-5 sm:pl-4')}>
-      <div className="flex min-w-0 items-center gap-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            'grid size-9 shrink-0 place-items-center rounded-field border border-accent-line bg-accent-soft font-bold text-accent',
-            dim && 'opacity-45',
-          )}
-        >
-          {initial}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p title={name || undefined} className="truncate text-ui font-semibold text-fg">
-            {name || <NoName />}
-          </p>
-          {detail && (
-            <p className="line-clamp-2 text-label text-muted [overflow-wrap:anywhere]">{detail}</p>
-          )}
-        </div>
-        {badge}
-      </div>
-    </li>
-  );
-}
-
 /**
  * L'étape Collaborateurs de l'onboarding : un lien d'invitation par personne, chacun avec son service, son poste et son
- * niveau. À droite (dessous en dessous de 1024 px), l'organigramme qui se remplit à mesure.
+ * niveau, à copier ou à envoyer par e-mail. À droite (dessous sous 1024 px), l'équipe qui se remplit à mesure.
  */
 export function TeammatesStep({ steps, organizationName, you }: TeammatesStepProps) {
   const t = useTranslations('onboarding');
@@ -119,46 +84,73 @@ export function TeammatesStep({ steps, organizationName, you }: TeammatesStepPro
   });
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
-      <div className="grid min-w-0 content-start gap-5">
-        <OnboardingSteps steps={steps} current="teammates" />
-        <div>
-          <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{tm('title')}</h1>
-          <p className="mt-2 text-body text-muted">{nb(tm('lead'))}</p>
-        </div>
+    <div className="grid min-w-0 gap-6">
+      <OnboardingSteps steps={steps} current="teammates" back={{ tools: '/bienvenue/outils' }} />
+      <div className="grid gap-x-20 gap-y-10 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
+        {/* gap-4 : à 1512 × 771, toute l'étape tient dans la fenêtre, « Entrer dans Leon » compris. */}
+        <div className="grid min-w-0 content-start gap-4">
+          <div>
+            <h1 className="text-h1 font-semibold tracking-[-0.02em] text-fg">{tm('title')}</h1>
+            <p className="mt-2 text-ui text-pretty text-muted">{nb(tm('lead'))}</p>
+          </div>
 
-        <ul className="grid gap-4">
-          {teammates.map(({ id, created }) => (
-            <li key={id}>
-              <GlassCard className="p-4 sm:p-5">
+          <ul className="grid gap-4">
+            {teammates.map(({ id, created }) => (
+              <li key={id} className={SHEET}>
                 {created ? (
-                  <div className="grid gap-3">
+                  <div className="grid gap-4">
                     <div className="min-w-0">
-                      <p className="text-body font-semibold text-fg [overflow-wrap:anywhere]">
+                      <p className="text-title font-semibold text-fg [overflow-wrap:anywhere]">
                         {created.name || <NoName />}
                       </p>
                       <p className="text-label text-muted">
                         {describe(placementOf(created), true)}
                       </p>
                     </div>
-                    <div className="flex min-w-0 flex-wrap items-start gap-2">
-                      <code className="min-w-0 flex-1 basis-56 rounded-field border border-line-strong bg-glass-3 px-3 py-2 text-[12.5px] leading-relaxed break-all text-fg-2 select-all">
-                        {created.url}
-                      </code>
-                      <CopyButton
-                        value={created.url}
-                        autoFocus
-                        onCopied={() =>
-                          setTeammates((list) =>
-                            list.map((card) => (card.id === id ? { ...card, copied: true } : card)),
-                          )
-                        }
-                      />
+                    <div className="grid gap-1.5">
+                      <div className="flex min-w-0 flex-wrap items-start gap-2">
+                        <code className="min-w-0 flex-1 basis-56 rounded-item border border-line-strong bg-n-50 px-3 py-2 font-mono text-label leading-relaxed break-all text-fg select-all">
+                          {created.url}
+                        </code>
+                        <CopyButton
+                          value={created.url}
+                          autoFocus
+                          onCopied={() =>
+                            setTeammates((list) =>
+                              list.map((card) =>
+                                card.id === id ? { ...card, copied: true } : card,
+                              ),
+                            )
+                          }
+                        />
+                      </div>
+                      <p className="text-label text-muted">{tm('linkNote')}</p>
                     </div>
-                    <p className="text-label text-muted">{tm('linkNote')}</p>
+                    <SendByEmail url={created.url} />
                   </div>
                 ) : (
                   <InviteForm
+                    onDraft={({ name, placement }) =>
+                      setTeammates((list) =>
+                        list.map((card) =>
+                          card.id === id
+                            ? {
+                                ...card,
+                                draft: {
+                                  name,
+                                  placement: {
+                                    department: placement.department || null,
+                                    job: placement.job || null,
+                                    seniority: placement.seniority
+                                      ? Number(placement.seniority)
+                                      : null,
+                                  },
+                                },
+                              }
+                            : card,
+                        ),
+                      )
+                    }
                     onCreated={(invitation) =>
                       setTeammates((list) =>
                         list.map((card) =>
@@ -168,85 +160,104 @@ export function TeammatesStep({ steps, organizationName, you }: TeammatesStepPro
                     }
                   />
                 )}
-              </GlassCard>
-            </li>
-          ))}
-        </ul>
-
-        <div>
-          <Button
-            variant="quiet"
-            icon={Plus}
-            onClick={() =>
-              setTeammates((list) => [...list, { id: list.length, created: null, copied: false }])
-            }
-          >
-            {tm('addTeammate')}
-          </Button>
-        </div>
-
-        <div className="grid justify-items-center gap-3">
-          <Button asChild variant="primary" size="lg" className="w-full" onClick={confirmLeave}>
-            <Link href="/bienvenue/pret">{tm('enter')}</Link>
-          </Button>
-          <Button asChild variant="link" size="sm" onClick={confirmLeave}>
-            <Link href="/bienvenue/pret">{tm('skip')}</Link>
-          </Button>
-        </div>
-
-        <Dialog open={leaving} onOpenChange={setLeaving}>
-          <DialogContent
-            size="sm"
-            title={tm('leaveTitle', { count: uncopied })}
-            description={tm('leaveDescription')}
-          >
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="primary">{tm('stay')}</Button>
-              </DialogClose>
-              <Button asChild variant="ghost">
-                <Link href="/bienvenue/pret">{tm('leave')}</Link>
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <section
-        aria-label={tm('previewLabel')}
-        className="grid min-w-0 content-center gap-4 rounded-box border border-line bg-glass p-4 sm:p-6"
-      >
-        <GlassCard className="p-4">
-          <h2 className="mb-3 text-meta font-medium tracking-[0.05em] text-muted uppercase [overflow-wrap:anywhere]">
-            {organizationName}
-          </h2>
-          <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
-            <Node
-              initial={initialOf(you.name)}
-              name={you.name}
-              detail={describe(you.placement)}
-              badge={<Badge>{tm('you')}</Badge>}
-            />
-            {teammates.map(({ id, created }) => (
-              <Node
-                key={id}
-                sub
-                dim={!created}
-                initial={(created && initialOf(created.name)) || '?'}
-                name={created?.name ?? ''}
-                detail={created ? describe(placementOf(created)) : ''}
-                badge={
-                  created ? (
-                    <Badge tone="accent">{tm('linkCreated')}</Badge>
-                  ) : (
-                    <Badge>{tm('draft')}</Badge>
-                  )
-                }
-              />
+              </li>
             ))}
           </ul>
-        </GlassCard>
-      </section>
+
+          <div>
+            <Button
+              variant="quiet"
+              icon={Plus}
+              className="-ml-3"
+              onClick={() =>
+                setTeammates((list) => [...list, { id: list.length, created: null, copied: false }])
+              }
+            >
+              {tm('addTeammate')}
+            </Button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
+            <Button asChild variant="primary" className="h-10" onClick={confirmLeave}>
+              <Link href="/bienvenue/pret">{tm('enter')}</Link>
+            </Button>
+            <Button asChild variant="quiet" onClick={confirmLeave}>
+              <Link href="/bienvenue/pret">{tm('skip')}</Link>
+            </Button>
+          </div>
+
+          <Dialog open={leaving} onOpenChange={setLeaving}>
+            <DialogContent
+              size="sm"
+              title={tm('leaveTitle', { count: uncopied })}
+              description={tm('leaveDescription')}
+            >
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="primary">{tm('stay')}</Button>
+                </DialogClose>
+                <Button asChild variant="ghost">
+                  <Link href="/bienvenue/pret">{tm('leave')}</Link>
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <section aria-label={tm('previewLabel')} className="grid min-w-0 content-start gap-3">
+          <h2 className="text-title font-semibold [overflow-wrap:anywhere] text-fg">
+            {organizationName}
+          </h2>
+          <StaticThing
+            size="card"
+            picture={<Avatar name={you.name} size={36} />}
+            name={you.name}
+            caption={[tm('you'), describe(you.placement)].filter(Boolean).join(' · ')}
+          />
+          <ul className="ob-tree">
+            {teammates.map(({ id, created, draft }) => {
+              const drafted = draft ? describe(draft.placement) : '';
+              // Rien de saisi encore : une place vide, qui ne porte que son état (ni tiret ni point d'interrogation).
+              const blank = !created && !draft?.name && drafted === '';
+              return (
+                <li key={id}>
+                  <StaticThing
+                    picture={
+                      created || draft?.name ? (
+                        <Avatar name={created?.name || draft?.name || ''} size={28} />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="grid size-7 place-items-center rounded-full border border-dashed border-line-strong text-icon"
+                        >
+                          <UserRound className="size-3.5" strokeWidth={1.8} />
+                        </span>
+                      )
+                    }
+                    name={
+                      blank ? (
+                        <span className="font-normal text-muted">{tm('draft')}</span>
+                      ) : (
+                        created?.name || draft?.name || <NoName />
+                      )
+                    }
+                    caption={
+                      created
+                        ? [describe(placementOf(created)), tm('linkCreated')]
+                            .filter(Boolean)
+                            .join(' · ')
+                        : blank
+                          ? undefined
+                          : drafted || tm('draft')
+                    }
+                    className={cn(!created && 'border-dashed bg-transparent shadow-none')}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      </div>
     </div>
   );
 }

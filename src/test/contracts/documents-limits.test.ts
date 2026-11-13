@@ -21,9 +21,8 @@ describe('plafonds des documents', () => {
       ]) {
         expect(text).toMatch(number(mega));
       }
-      for (const text of [documents.formats, documents.errors.folder_full]) {
-        expect(text).toMatch(number(FOLDER_MAX_FILES));
-      }
+      // la ligne des formats ne dit que la taille ; le plafond d'un dossier se dit dans son refus
+      expect(documents.errors.folder_full).toMatch(number(FOLDER_MAX_FILES));
     }
   });
 

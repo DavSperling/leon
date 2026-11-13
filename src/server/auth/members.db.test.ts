@@ -1,18 +1,22 @@
 import { createHash } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
+import { reportingLines } from '@/server/db/schema/organisation';
 import { dropPoints, pointIsStale, queuedRefreshes, seedPoint } from '@/test/briefing-points';
 import { adminDb } from '@/test/db';
 import { createTestTenant, createTestUser } from '@/test/fixtures';
 import { deleteAccount } from './delete-account';
 import {
+  cancelInvitation,
   canInvite,
   createInvitationLink,
   findInvitation,
   getMembership,
+  invitationToSend,
   joinWithInvitation,
+  listInvitations,
   listMembers,
   setMemberPlacement,
 } from './members';
@@ -376,5 +380,139 @@ describe('le poste des membres', () => {
 
     expect(await setMemberPlacement(zoe, await memberIdOf(bob), backend)).toBe(false);
     expect(await placementOf(bob)).toMatchObject(noPlacement);
+  });
+});
+
+// Écran Équipe : le manager porté par un lien (0070), les invitations en attente, leur annulation, leur envoi.
+describe("l'invitation sous un manager", () => {
+  const tokenOf = async (ctx: TenantContext, managerId: string | null) => {
+    const link = await createInvitationLink(ctx, { name: 'Inès', placement: backend, managerId });
+    if (!link) throw new Error('lien non créé');
+    return link.token;
+  };
+  const lineOf = (memberId: string) =>
+    adminDb
+      .select({ managerId: reportingLines.managerId })
+      .from(reportingLines)
+      .where(eq(reportingLines.memberId, memberId));
+
+  it('rattache le nouveau membre au manager du lien, à la main (l’annuaire n’y touche pas)', async () => {
+    const { tenantId, owner, member } = await tenantWithLink();
+    const davidId = await memberIdOf(member);
+    const token = await tokenOf(owner, davidId);
+    const userId = await lonelyUser();
+
+    expect(await joinWithInvitation(token, userId)).toBe(tenantId);
+    const [joined] = await adminDb
+      .select({ id: members.id, manuel: members.rattachementManuel })
+      .from(members)
+      .where(eq(members.userId, userId));
+    if (!joined) throw new Error('membre absent');
+    expect(joined.manuel).toBe(true);
+    expect(await lineOf(joined.id)).toEqual([{ managerId: davidId }]);
+  });
+
+  it('fait entrer sans rattachement quand le manager est parti depuis', async () => {
+    const { tenantId, owner, member } = await tenantWithLink();
+    const davidId = await memberIdOf(member);
+    const token = await tokenOf(owner, davidId);
+    await adminDb.delete(members).where(eq(members.id, davidId));
+    const userId = await lonelyUser();
+
+    expect(await joinWithInvitation(token, userId)).toBe(tenantId);
+    const [joined] = await adminDb
+      .select({ id: members.id })
+      .from(members)
+      .where(eq(members.userId, userId));
+    expect(await lineOf(joined?.id ?? '')).toEqual([]);
+  });
+
+  // Un compte supprimé garde sa ligne d'ancien membre : l'invité n'est pas rattaché sous lui, et l'annuaire pourra
+  // encore le placer (il n'est pas marqué « à la main »).
+  it('fait entrer sans rattachement quand le manager a supprimé son compte depuis', async () => {
+    const { tenantId, owner, member } = await tenantWithLink();
+    const token = await tokenOf(owner, await memberIdOf(member));
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, member.userId));
+    const userId = await lonelyUser();
+
+    expect(await joinWithInvitation(token, userId)).toBe(tenantId);
+    const [joined] = await adminDb
+      .select({ id: members.id, manuel: members.rattachementManuel })
+      .from(members)
+      .where(eq(members.userId, userId));
+    expect(joined?.manuel).toBe(false);
+    expect(await lineOf(joined?.id ?? '')).toEqual([]);
+  });
+
+  it("refuse un manager d'une autre organisation", async () => {
+    const { owner } = await tenantWithLink();
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    const zoeId = await memberIdOf(zoe);
+
+    expect(
+      await createInvitationLink(owner, { name: '', placement: backend, managerId: zoeId }),
+    ).toBeNull();
+    expect(
+      await createInvitationLink(owner, { name: '', placement: backend, managerId: 'pas-un-id' }),
+    ).toBeNull();
+  });
+
+  it('liste les liens en attente aux seuls administrateurs, sans les servis ni les expirés', async () => {
+    const { tenantId, owner, member } = await tenantWithLink();
+    const davidId = await memberIdOf(member);
+    await tokenOf(owner, davidId);
+    const used = await tokenOf(owner, null);
+    await joinWithInvitation(used, await lonelyUser());
+    const expired = await tokenOf(owner, null);
+    await adminDb
+      .update(invitationLinks)
+      .set({ createdAt: new Date(Date.now() - 2000), expiresAt: new Date(Date.now() - 1000) })
+      .where(eq(invitationLinks.tokenHash, createHash('sha256').update(expired).digest('hex')));
+
+    const pending = await listInvitations(owner);
+    // le lien de tenantWithLink (sans nom) et celui sous David
+    expect(pending).toHaveLength(2);
+    expect(pending).toContainEqual(
+      expect.objectContaining({ name: 'Inès', managerId: davidId, job: 'backend' }),
+    );
+    expect(await listInvitations(member)).toEqual([]);
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'owner');
+    expect(await listInvitations(zoe)).toEqual([]);
+    expect(tenantId).toBeTruthy();
+  });
+
+  it("annule un lien : il ne fait plus entrer personne ; ni un membre ni un autre espace ne l'annulent", async () => {
+    const { owner, member, token } = await tenantWithLink();
+    const [link] = await listInvitations(owner);
+    if (!link) throw new Error('lien absent');
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'owner');
+
+    expect(await cancelInvitation(member, link.id)).toBe(false);
+    expect(await cancelInvitation(zoe, link.id)).toBe(false);
+    expect(await cancelInvitation(owner, 'pas-un-id')).toBe(false);
+    expect(await cancelInvitation(owner, link.id)).toBe(true);
+    expect(await findInvitation(token)).toBeNull();
+    expect(await listInvitations(owner)).toEqual([]);
+  });
+
+  it("ne laisse envoyer qu'un lien utilisable de son organisation, par qui peut inviter", async () => {
+    const { owner, member, token } = await tenantWithLink();
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'owner');
+
+    expect(await invitationToSend(owner, token)).toMatchObject({
+      organizationName: 'Organisation de test',
+    });
+    expect(await invitationToSend(member, token)).toBeNull();
+    expect(await invitationToSend(zoe, token)).toBeNull();
+    expect(await invitationToSend(owner, 'x'.repeat(43))).toBeNull();
+    await joinWithInvitation(token, await lonelyUser());
+    expect(await invitationToSend(owner, token)).toBeNull();
   });
 });

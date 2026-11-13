@@ -43,6 +43,9 @@ export const TAGLINES = {
 
 // ---------- Outils ----------
 
+/** La documentation (une constante : les liens écrits en dur vers /documentation sont comptés par un test). */
+export const DOCS_HREF = '/documentation';
+
 export const TOOL_COUNT = Object.keys(PROVIDER_LABELS).length;
 
 export type ToolGroup = { family: ProviderFamily; label: string; tools: ProviderId[] };
@@ -73,6 +76,8 @@ export type DemoSource = {
   date: string;
   /** Passage cité : les mots entre ** sont surlignés, comme les passages de la recherche. */
   excerpt: string;
+  /** Privé à la personne qui l'a branché (une boîte mail) : le tampon « Privé, pour vous ». */
+  private?: boolean;
 };
 
 export type Demo = {
@@ -81,7 +86,7 @@ export type Demo = {
   tab: string;
   /** Ce qu'on tape dans la barre. */
   query: string;
-  /** Réponse de Leon ; « [n] » renvoie à la n-ième source. */
+  /** Réponse de Leon ; « [n] » renvoie à la n-ième source ; les mots entre ** viennent de la source (surlignés). */
   answer: string;
   sources: DemoSource[];
   /** Aucune source ne répond : Leon le dit. */
@@ -94,7 +99,7 @@ export const DEMOS: Demo[] = [
     tab: 'Une promesse client',
     query: 'qu’a-t-on promis à ACME sur la V2 ?',
     answer:
-      'Au point mensuel du 3 oct., Julie s’est engagée sur une livraison de la V2 le 15 nov. [1]. Le devis signé reprend cette date, mais exclut la reprise des données [2]. Le ticket de reprise est toujours ouvert [3].',
+      'Au point mensuel du 3 oct., Julie s’est engagée sur une livraison de la V2 le **15 nov.** [1]. Le devis signé reprend cette date, mais exclut la **reprise des données** [2]. Le ticket de reprise est toujours ouvert [3].',
     sources: [
       {
         tool: 'granola',
@@ -129,7 +134,7 @@ export const DEMOS: Demo[] = [
     tab: 'Un bug connu',
     query: 'ce bug d’export PDF est-il connu ?',
     answer:
-      'Oui. Trois clients l’ont signalé depuis lundi [1]. L’équipe l’a reproduit sur les factures de plus de 50 lignes [2], et le correctif est en revue [3].',
+      'Oui. Trois clients l’ont signalé depuis lundi [1]. L’équipe l’a reproduit sur les factures de **plus de 50 lignes** [2], et le correctif est en revue [3].',
     sources: [
       {
         tool: 'intercom',
@@ -162,7 +167,7 @@ export const DEMOS: Demo[] = [
     tab: 'Un départ',
     query: 'que suivait Thomas avant son départ ?',
     answer:
-      'Thomas suivait deux sujets ouverts : la refonte du tableau de bord de Nordia, à livrer fin novembre [1], et la relance du devis de Verlant, promise pour la semaine dernière [2]. Ses notes de passation sont dans Notion [3].',
+      'Thomas suivait deux sujets ouverts : la **refonte du tableau de bord** de Nordia, à livrer fin novembre [1], et le **devis ajusté** de Verlant, promis pour la semaine dernière [2]. Ses notes de passation et ses **sujets en cours** sont dans Notion [3].',
     sources: [
       {
         tool: 'asana',
@@ -195,7 +200,7 @@ export const DEMOS: Demo[] = [
     tab: 'Sans source',
     query: 'quel tarif a-t-on accordé à Verlant en 2024 ?',
     answer:
-      'Je ne sais pas. Aucune source gardée ne parle d’un tarif accordé à Verlant en 2024. Le premier devis retrouvé date de mars 2025 [1].',
+      'Je ne sais pas. Aucune source gardée ne parle d’un tarif accordé à Verlant en 2024. Le **premier devis** retrouvé date de mars 2025 [1].',
     unknown: true,
     sources: [
       {
@@ -593,20 +598,20 @@ export const BRIEFING = [
   {
     title: 'Ce que vous avez fait',
     items: [
-      'Relu et fusionné la PR de pagination de l’export PDF.',
-      'Répondu à ACME sur le calendrier de la V2.',
+      { text: 'Relu et fusionné la PR de pagination de l’export PDF.', n: 1 },
+      { text: 'Répondu à ACME sur le calendrier de la V2.', n: 2 },
     ],
   },
   {
     title: 'Ce qui a bougé',
     items: [
-      'Sophie a ouvert le ticket de reprise des données ACME.',
-      'Deux nouvelles conversations de support citent l’export.',
+      { text: 'Sophie a ouvert le ticket de reprise des données ACME.', n: 3 },
+      { text: 'Deux nouvelles conversations de support citent l’export.', n: 4 },
     ],
   },
   {
     title: 'Ce qui reste ouvert',
-    items: ['Le devis ajusté pour Verlant, promis la semaine dernière.'],
+    items: [{ text: 'Le devis ajusté pour Verlant, promis la semaine dernière.', n: 1 }],
   },
 ] as const;
 
@@ -614,45 +619,35 @@ export const BRIEFING = [
 
 export const SECURITY_FACTS = [
   {
-    title: 'Chaque entreprise dans son espace',
-    text: 'Les données d’une organisation sont isolées des autres dans la base, par la sécurité par ligne de Postgres. Des tests le vérifient.',
+    title: 'Les données de chaque entreprise isolées par ligne',
+    text: 'Par la sécurité par ligne de Postgres, dans une seule base, et vérifiée par des tests automatiques.',
   },
   {
-    title: 'Leon voit ce que vous voyez',
-    text: 'La recherche, la discussion et le serveur MCP passent par les mêmes droits que la personne qui demande. Le filtre des droits passe avant le classement.',
+    title: 'Des clés chiffrées en AES-256-GCM',
+    text: 'Les clés d’API et les jetons de connexion des outils, chacun lié à sa ligne de la base.',
   },
   {
-    title: 'Les conversations restent privées',
-    text: 'Les conversations captées avec vos assistants d’IA, vos discussions avec Leon et vos notes ne sont visibles que de vous.',
+    title: 'Les droits vérifiés avant tout classement',
+    text: 'Dans la recherche, dans la discussion et pour votre propre assistant. Chaque source qu’un assistant ouvre en entier est notée.',
   },
   {
-    title: 'Clés chiffrées',
-    text: 'Les clés d’API collées et les jetons de connexion des outils sont chiffrés (AES-256-GCM), liés à leur ligne.',
+    title: 'Des secrets masqués avant stockage',
+    text: 'Préfixes de clés connus, clés privées, en-têtes d’autorisation, lignes de .env. Un secret écrit en toutes lettres peut encore passer.',
   },
   {
-    title: 'Secrets masqués avant stockage',
-    text: 'Clés à préfixe connu, clés privées, en-têtes d’autorisation, lignes de .env : masqués avant d’être gardés.',
-  },
-  {
-    title: 'Une extension qui demande',
-    text: 'Écran de consentement, un interrupteur par site, une pause. Rien en navigation privée, jamais de pièce jointe.',
-  },
-  {
-    title: 'Ce que lisent les assistants est noté',
-    text: 'Un journal garde ce que chaque assistant a lu par MCP. Les jetons personnels se révoquent à tout moment.',
-  },
-  {
-    title: 'Une seule base',
-    text: 'Le texte, l’index et les droits tiennent dans Postgres, sans service de recherche à part.',
+    title: 'Une extension qui demande d’abord',
+    text: 'Un consentement, un interrupteur par site, une pause. Jamais de pièce jointe, rien en navigation privée.',
   },
 ] as const;
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
-  'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
-  'Pas encore d’export, ni d’effacement complet depuis l’interface.',
-  'Pas de certification (ISO 27001, SOC 2) à ce jour.',
+  { title: 'SOC 2 et ISO 27001', text: 'Leon n’a aucune des deux certifications à ce jour.' },
+  {
+    title: 'Les droits de chaque outil, repris tels quels',
+    text: 'Pour l’instant, ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
+  },
+  { title: 'L’export des données', text: 'Pas encore d’export des données d’un espace.' },
 ] as const;
 
 // ---------- Tarifs (proposition de docs/etudes/founder-pme-2026-10/pricing.md, pas encore arrêtée) ----------
@@ -663,39 +658,24 @@ export const PLANS = [
     name: 'Pilote',
     price: 'Gratuit',
     unit: 'pour une équipe',
-    text: 'Pour essayer avec vos vrais outils.',
-    features: [
-      `Les ${TOOL_COUNT} connecteurs`,
-      'Recherche, réponse citée et discussions',
-      'Point du matin et serveur MCP',
-      'Extension du navigateur et assistant de code',
-    ],
-    cta: 'Commencer le pilote',
-    featured: false,
+    text: 'Une équipe qui essaie Leon sur ses vrais outils.',
+    billing: 'Aucune : le pilote est gratuit.',
   },
   {
     id: 'equipe',
     name: 'Équipe',
     price: '25 €',
     unit: 'HT par utilisateur actif et par mois',
-    text: 'Pour toute l’entreprise, sans engagement.',
-    features: ['Tout le pilote, sans limite d’équipe', 'Facturation à venir, sans engagement'],
-    cta: 'Commencer par le pilote',
-    featured: true,
+    text: 'Toute l’entreprise, sans limite de taille.',
+    billing: 'Pas encore en place : le prix est une proposition. Sans engagement.',
   },
   {
     id: 'dediee',
     name: 'Dédiée',
     price: 'Sur devis',
     unit: 'selon vos besoins',
-    text: 'Pour les entreprises qui veulent leur propre instance.',
-    features: [
-      'Tout le plan Équipe',
-      'Une instance et une base pour vous seuls',
-      'Le modèle d’IA de chaque étape, à votre choix',
-    ],
-    cta: 'Commencer par le pilote',
-    featured: false,
+    text: 'Les entreprises qui veulent leur propre instance.',
+    billing: 'Sur devis.',
   },
 ] as const;
 
@@ -731,6 +711,111 @@ export const FAQ = [
 // alias anglais que la recherche lit (from:, tool:, type:meeting, since:7d, before:). Exemples tout aussi fictifs.
 
 /** Le type d'une table française `as const`, chaînes élargies : même forme, même nombre d'entrées. */
+// ---------- Les droits (accueil, règle 3) : la même question, deux personnes ----------
+
+/** Julie a branché sa boîte mail (privée) ; Sophie non : sa réponse ne contient jamais le mail. */
+export const RIGHTS: Demo[] = [
+  {
+    id: 'julie',
+    tab: 'Julie',
+    query: 'ACME a-t-il accepté la nouvelle date de reprise ?',
+    answer:
+      'Oui. Dana a confirmé le **2 déc.** par mail ce matin [1]. Le ticket de reprise a été déplacé au **2 déc.** [2].',
+    sources: [
+      {
+        tool: 'gmail',
+        kind: 'Mail',
+        title: 'Re: calendrier de la V2',
+        author: 'Dana Whitfield',
+        date: '27 oct.',
+        excerpt:
+          'Bonjour Julie, c’est bon pour nous : on part sur le **2 décembre** pour la reprise.',
+        private: true,
+      },
+      {
+        tool: 'linear',
+        kind: 'Ticket',
+        title: 'ACME : reprise des données',
+        author: 'Sophie Laurent',
+        date: '27 oct.',
+        excerpt: 'Échéance déplacée au **2 déc.**, en attente du fichier d’export du client.',
+      },
+    ],
+  },
+  {
+    id: 'sophie',
+    tab: 'Sophie',
+    query: 'ACME a-t-il accepté la nouvelle date de reprise ?',
+    answer:
+      'Le ticket de reprise a été déplacé au **2 déc.** [1]. Aucune source ne dit qu’ACME a accepté cette date.',
+    sources: [
+      {
+        tool: 'linear',
+        kind: 'Ticket',
+        title: 'ACME : reprise des données',
+        author: 'Sophie Laurent',
+        date: '27 oct.',
+        excerpt: 'Échéance déplacée au **2 déc.**, en attente du fichier d’export du client.',
+      },
+    ],
+  },
+];
+
+/** Ce que Leon lit de chaque outil (d'après l'aide de chaque catalogue de connecteur, côté serveur). */
+export const READS: Record<ProviderId, string> = {
+  gmail: 'Les fils de mails. Promotions, Réseaux sociaux, brouillons et spam sont laissés de côté.',
+  outlook:
+    'La boîte de réception, les éléments envoyés et l’agenda. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
+  slack:
+    'Les messages des canaux que votre compte Slack peut voir. Jamais les messages privés ni les conversations de groupe.',
+  drive:
+    'Documents, présentations et feuilles Google, fichiers PDF, Word, Excel, PowerPoint et texte.',
+  granola: 'Les réunions : la transcription, ou le résumé quand il n’y en a pas.',
+  fathom:
+    'Les réunions que le titulaire de la clé a enregistrées ou reçues en partage : la transcription, ou le résumé à défaut.',
+  fireflies: 'Les réunions transcrites auxquelles le titulaire de la clé a accès.',
+  tldv: 'Les réunions auxquelles le titulaire de la clé a assisté, avec leur transcription.',
+  circleback: 'Les réunions du titulaire de la clé, pas celles qu’on lui a seulement partagées.',
+  claap: 'Les enregistrements, réunions et captures que la clé peut voir, avec leur transcription.',
+  leexi: 'Les appels, avec ce qu’a dit chaque interlocuteur.',
+  gong: 'Les appels, avec leurs participants et leur transcription.',
+  notion: 'Les pages, bloc par bloc, et leurs commentaires non résolus.',
+  jira: 'Les tickets et leurs commentaires.',
+  confluence: 'Les pages et leurs commentaires de bas de page.',
+  asana: 'Les tâches, avec leur description et leurs commentaires.',
+  clickup: 'Les tâches, fermées comprises, et leurs commentaires.',
+  trello: 'Les cartes de vos tableaux ouverts, avec leurs commentaires.',
+  monday: 'Les éléments et leurs mises à jour, sur les tableaux que vous voyez.',
+  shortcut: 'Les stories et leurs commentaires.',
+  plane: 'Les éléments de travail et leurs commentaires. Archivés et brouillons sont ignorés.',
+  airtable: 'Les enregistrements, avec leur texte et leurs commentaires.',
+  basecamp: 'Les messages, documents et commentaires.',
+  miro: 'Le texte de vos tableaux : notes, formes, cartes, cadres et documents. Jamais les images.',
+  productboard: 'Les notes. Les notes archivées sont ignorées.',
+  github:
+    'Issues et pull requests, avec commentaires et revues, dans les dépôts d’équipe choisis par un admin.',
+  gitlab:
+    'Issues et merge requests de 20 projets au plus : vos plus actifs (un clic) ou ceux que vous indiquez (clé d’API).',
+  linear: 'Les tickets et leurs commentaires.',
+  sentry: 'Les issues. Ni les traces d’appel ni les données d’événement.',
+  hubspot:
+    'Notes, appels, réunions et mails, avec l’entreprise, la transaction ou le contact liés.',
+  attio: 'Les notes et les fils de commentaires.',
+  folk: 'Les notes publiques sur les contacts et les entreprises. Les notes privées ne sont pas lues.',
+  pipedrive: 'Les notes et activités que voit votre compte.',
+  close: 'Notes, appels avec leur transcription, mails, SMS et messages WhatsApp de vos prospects.',
+  intercom: 'Les conversations, avec leurs messages et leurs notes internes.',
+  zendesk: 'Les tickets et leurs commentaires, notes internes comprises.',
+  freshdesk: 'Les tickets, avec leurs réponses et leurs notes internes.',
+  helpscout: 'Les conversations.',
+  front:
+    'Les conversations, avec leurs messages et commentaires. Les boîtes personnelles seulement si le jeton les couvre et si leur titulaire l’accepte.',
+  plain: 'Les fils et leurs messages.',
+  crisp: 'Les conversations du site, avec leurs messages et leurs notes internes.',
+  missive:
+    'Les conversations d’équipe, avec leurs messages et commentaires. Pas vos mails personnels.',
+};
+
 type Twin<T> = T extends string ? string : { readonly [K in keyof T]: Twin<T[K]> };
 
 const NAV_LINKS_EN: Twin<typeof NAV_LINKS> = [
@@ -756,7 +841,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'A client commitment',
     query: 'what did we promise ACME for V2?',
     answer:
-      'At the Oct 3 monthly check-in, Julie committed to delivering V2 on Nov 15 [1]. The signed quote confirms the date but excludes the data migration [2], and the migration ticket is still open [3].',
+      'At the Oct 3 monthly check-in, Julie committed to delivering V2 on **Nov 15** [1]. The signed quote confirms the date but excludes the **data migration** [2], and the migration ticket is still open [3].',
     sources: [
       {
         tool: 'granola',
@@ -789,7 +874,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'A known bug',
     query: 'is this PDF export bug already known?',
     answer:
-      'Yes. Three customers have reported it since Monday [1]. Engineering reproduced it on invoices longer than 50 lines [2], and the fix is in review [3].',
+      'Yes. Three customers have reported it since Monday [1]. Engineering reproduced it **past 50 lines** [2], and the fix is in review [3].',
     sources: [
       {
         tool: 'intercom',
@@ -822,7 +907,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'A departure',
     query: 'what was Thomas working on before he left?',
     answer:
-      'Thomas left two open items: the Nordia dashboard redesign, due at the end of November [1], and a revised quote for Verlant, promised for last week [2]. His handover notes are in Notion [3].',
+      'Thomas left two open items: the **Nordia dashboard redesign**, due at the end of November [1], and the **revised quote** for Verlant, promised for last week [2]. His handover notes and **open items** are in Notion [3].',
     sources: [
       {
         tool: 'asana',
@@ -855,7 +940,7 @@ const DEMOS_EN: Demo[] = [
     tab: 'No source',
     query: 'what price did we give Verlant in 2024?',
     answer:
-      'I don’t know. No source on record mentions a price agreed with Verlant in 2024. The earliest quote on record dates from March 2025 [1].',
+      'I don’t know. No source on record mentions a price agreed with Verlant in 2024. The **first quote** on record dates from March 2025 [1].',
     unknown: true,
     sources: [
       {
@@ -1207,63 +1292,53 @@ const BRIEFING_EN: Twin<typeof BRIEFING> = [
   {
     title: 'What you did',
     items: [
-      'Reviewed and merged the PDF export pagination PR.',
-      'Replied to ACME about the V2 timeline.',
+      { text: 'Reviewed and merged the PDF export pagination PR.', n: 1 },
+      { text: 'Replied to ACME about the V2 timeline.', n: 2 },
     ],
   },
   {
     title: 'What changed',
     items: [
-      'Sophie opened the ACME data migration ticket.',
-      'Two new support conversations mention the export bug.',
+      { text: 'Sophie opened the ACME data migration ticket.', n: 3 },
+      { text: 'Two new support conversations mention the export bug.', n: 4 },
     ],
   },
   {
     title: 'Still open',
-    items: ['The revised Verlant quote, promised last week.'],
+    items: [{ text: 'The revised Verlant quote, promised last week.', n: 1 }],
   },
 ];
 
 const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
   {
-    title: 'Tenant isolation',
-    text: 'Each organization’s data is isolated at the database level with Postgres row-level security, and covered by automated tests.',
+    title: 'Each company’s data isolated with row-level security',
+    text: 'Enforced by Postgres itself, in a single database, and covered by automated tests.',
   },
   {
-    title: 'Permission-aware retrieval',
-    text: 'Search, chat and the MCP server run with the permissions of the person asking. Access is filtered before ranking, so hidden content never shapes a result.',
+    title: 'Credentials encrypted with AES-256-GCM',
+    text: 'API keys and OAuth tokens, each bound to its database row.',
   },
   {
-    title: 'Private conversations',
-    text: 'AI assistant conversations, chats with Leon and saved notes are visible only to their author.',
+    title: 'Permissions checked before anything is ranked',
+    text: 'In search, in chat and for your own assistant. Every source an assistant opens in full is logged.',
   },
   {
-    title: 'Encrypted credentials',
-    text: 'API keys and OAuth tokens are encrypted with AES-256-GCM and bound to their database row.',
+    title: 'Secrets masked before storage',
+    text: 'Known key prefixes, private keys, authorization headers, .env lines. A secret written in plain prose can still slip through.',
   },
   {
-    title: 'Secret redaction',
-    text: 'Known key prefixes, private keys, authorization headers and .env lines are redacted before storage.',
-  },
-  {
-    title: 'Consent-first extension',
-    text: 'Explicit consent, a per-site toggle and a pause button. Inactive in private windows, never captures attachments.',
-  },
-  {
-    title: 'Audited MCP access',
-    text: 'Each source an assistant opens in full over MCP (fetch) is logged. Personal tokens can be revoked at any time.',
-  },
-  {
-    title: 'A single datastore',
-    text: 'Text, search index, vectors and permissions all live in Postgres. No separate search cluster holds a copy of your data.',
+    title: 'A browser extension that asks first',
+    text: 'Consent, a switch per site, a pause button. No attachments, nothing in private windows.',
   },
 ];
 
 const NOT_YET_EN: Twin<typeof NOT_YET> = [
-  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
-  'A secret written in plain prose (“the password is…”) can slip past redaction.',
-  'No data export yet, and no full account deletion from the interface.',
-  'No ISO 27001 or SOC 2 certification yet.',
+  { title: 'SOC 2 and ISO 27001', text: 'Leon holds neither certification today.' },
+  {
+    title: 'Mirroring each tool’s own permissions',
+    text: 'For now a connection’s content is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
+  },
+  { title: 'Data export', text: 'No export of a workspace’s data yet.' },
 ];
 
 const PLANS_EN: Twin<typeof PLANS> = [
@@ -1272,39 +1347,24 @@ const PLANS_EN: Twin<typeof PLANS> = [
     name: 'Pilot',
     price: 'Free',
     unit: 'for one team',
-    text: 'Try Leon on your real tools.',
-    features: [
-      `All ${TOOL_COUNT} connectors`,
-      'Search, cited answers and chat',
-      'Morning briefing and MCP server',
-      'Browser extension and coding-assistant capture',
-    ],
-    cta: 'Start the free pilot',
-    featured: false,
+    text: 'One team, trying Leon on its real tools.',
+    billing: 'None. The pilot is free.',
   },
   {
     id: 'equipe',
     name: 'Team',
     price: '€25',
     unit: 'per active user per month, excl. VAT',
-    text: 'For the whole company. No commitment.',
-    features: ['Everything in Pilot, with no team size limit', 'Billing to come, no commitment'],
-    cta: 'Start with the pilot',
-    featured: true,
+    text: 'The whole company. No team size limit.',
+    billing: 'Not in place yet: the price is a proposal. No commitment.',
   },
   {
     id: 'dediee',
     name: 'Dedicated',
     price: 'Custom',
     unit: 'quoted to your requirements',
-    text: 'For companies that need their own instance.',
-    features: [
-      'Everything in Team',
-      'Single-tenant instance and database',
-      'Your choice of AI model at each step',
-    ],
-    cta: 'Start with the pilot',
-    featured: false,
+    text: 'Companies that need their own instance.',
+    billing: 'By quote.',
   },
 ];
 
@@ -1337,6 +1397,105 @@ const FAQ_EN: Twin<typeof FAQ> = [
 
 // ---------- Choix de la langue ----------
 
+const RIGHTS_EN: Demo[] = [
+  {
+    id: 'julie',
+    tab: 'Julie',
+    query: 'Did ACME accept the new migration date?',
+    answer:
+      'Yes. Dana confirmed **Dec 2** by email this morning [1]. The migration ticket was moved to **Dec 2** [2].',
+    sources: [
+      {
+        tool: 'gmail',
+        kind: 'Email',
+        title: 'Re: V2 timeline',
+        author: 'Dana Whitfield',
+        date: 'Oct 27',
+        excerpt: 'Hi Julie, that works for us: let’s go with **December 2** for the migration.',
+        private: true,
+      },
+      {
+        tool: 'linear',
+        kind: 'Ticket',
+        title: 'ACME: data migration',
+        author: 'Sophie Laurent',
+        date: 'Oct 27',
+        excerpt: 'Due date moved to **Dec 2**, waiting on the client’s export file.',
+      },
+    ],
+  },
+  {
+    id: 'sophie',
+    tab: 'Sophie',
+    query: 'Did ACME accept the new migration date?',
+    answer:
+      'The migration ticket was moved to **Dec 2** [1]. Nothing on record says ACME accepted it.',
+    sources: [
+      {
+        tool: 'linear',
+        kind: 'Ticket',
+        title: 'ACME: data migration',
+        author: 'Sophie Laurent',
+        date: 'Oct 27',
+        excerpt: 'Due date moved to **Dec 2**, waiting on the client’s export file.',
+      },
+    ],
+  },
+];
+
+const READS_EN: Record<ProviderId, string> = {
+  gmail: 'Email threads. Promotions, Social, drafts and spam are left out.',
+  outlook:
+    'Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.',
+  slack:
+    'Messages from the channels your Slack account can see. Never direct messages or group chats.',
+  drive:
+    'Google documents, presentations and spreadsheets, PDF, Word, Excel, PowerPoint and text files.',
+  granola: 'Meetings: the transcript, or the summary when there is none.',
+  fathom:
+    'Meetings the key’s owner recorded or was shared: the transcript, or the summary when there is none.',
+  fireflies: 'Transcribed meetings the key’s owner has access to.',
+  tldv: 'Meetings the key’s owner attended, with their transcript.',
+  circleback: 'Meetings of the key’s owner, not those only shared with them.',
+  claap: 'The recordings, meetings and captures the key can see, with their transcript.',
+  leexi: 'Calls, with what each speaker said.',
+  gong: 'Calls, with their participants and transcript.',
+  notion: 'Pages, block by block, and their unresolved comments.',
+  jira: 'Issues and their comments.',
+  confluence: 'Pages and their footer comments.',
+  asana: 'Tasks, with their description and comments.',
+  clickup: 'Tasks, closed ones included, and their comments.',
+  trello: 'Cards on your open boards, with their comments.',
+  monday: 'Items and their updates, on the boards you see.',
+  shortcut: 'Stories and their comments.',
+  plane: 'Work items and their comments. Archived items and drafts are skipped.',
+  airtable: 'Records, with their text and comments.',
+  basecamp: 'Messages, documents and comments.',
+  miro: 'The text on your boards: sticky notes, shapes, cards, frames and documents. Never images.',
+  productboard: 'Notes. Archived notes are skipped.',
+  github:
+    'Issues and pull requests, with comments and reviews, in the team repositories an admin chose.',
+  gitlab:
+    'Issues and merge requests of up to 20 projects: your most active ones (one click) or the ones you list (API key).',
+  linear: 'Issues and their comments.',
+  sentry: 'Issues. Neither stack traces nor event data.',
+  hubspot:
+    'Notes, calls, meetings and emails, with the company, deal or contact they are linked to.',
+  attio: 'Notes and comment threads.',
+  folk: 'Public notes on contacts and companies. Private notes are not read.',
+  pipedrive: 'The notes and activities your account sees.',
+  close: 'Notes, calls with their transcripts, emails, SMS and WhatsApp messages of your leads.',
+  intercom: 'Conversations, with their messages and internal notes.',
+  zendesk: 'Tickets and their comments, internal notes included.',
+  freshdesk: 'Tickets, with their replies and internal notes.',
+  helpscout: 'Conversations.',
+  front:
+    'Conversations, with their messages and comments. Personal inboxes only if the token covers them and their owner allows it.',
+  plain: 'Threads and their messages.',
+  crisp: 'The website’s conversations, with their messages and internal notes.',
+  missive: 'Team conversations, with their messages and comments. Not your personal email.',
+};
+
 export type SiteContent = {
   navLinks: Twin<typeof NAV_LINKS>;
   taglines: Twin<typeof TAGLINES>;
@@ -1352,6 +1511,8 @@ export type SiteContent = {
   notYet: Twin<typeof NOT_YET>;
   plans: Twin<typeof PLANS>;
   faq: Twin<typeof FAQ>;
+  rights: Demo[];
+  reads: Record<ProviderId, string>;
 };
 
 export const CONTENT_FR: SiteContent = {
@@ -1369,6 +1530,8 @@ export const CONTENT_FR: SiteContent = {
   notYet: NOT_YET,
   plans: PLANS,
   faq: FAQ,
+  rights: RIGHTS,
+  reads: READS,
 };
 
 export const CONTENT_EN: SiteContent = {
@@ -1386,6 +1549,8 @@ export const CONTENT_EN: SiteContent = {
   notYet: NOT_YET_EN,
   plans: PLANS_EN,
   faq: FAQ_EN,
+  rights: RIGHTS_EN,
+  reads: READS_EN,
 };
 
 /** Les textes du site dans une langue : le français pour « fr », l'anglais sinon (la langue par défaut). */

@@ -1,0 +1,50 @@
+/* Leon « Papier » v2 : motion, module "ambient" (js/motion/ambient.js): connectors, briefing, security, close, footer,
+   and the control feedback of the whole page. Timeline: NOTES-motion-ambient.md.
+   Pre-hide only under html.js-motion, always with animation: var(--failsafe) (see css/motion.css). */
+
+/* ---------- Pre-hidden: only what the module's entrances animate ----------
+   Everything else this module moves (memo lines, chips, ticks, the sign-up sheet, the count) lives inside one of
+   these, so it needs no rule of its own: the script sets its first state before the wrapper shows. */
+html.js-motion #connectors [data-rv],
+html.js-motion #briefing [data-rv],
+html.js-motion #security [data-rv],
+html.js-motion #close [data-rv],
+html.js-motion .foot .foot__grid > * { opacity: 0; animation: var(--failsafe); }
+
+/* ---------- The carousel (the script adds .is-rolling; without it the two rows stay one wrapped block) ---------- */
+.marquee.is-rolling .marquee__row { will-change: transform; } /* the one thing that moves all the time */
+.marquee.is-rolling:focus-visible { outline-offset: -2px; }   /* edge to edge: the ring stays on screen */
+
+/* The stroke under the pointed tool is swept like a highlighter (it was a fade): "found here" */
+.tool > span { position: relative; isolation: isolate; }
+.tool > span::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: var(--m1);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--t-base) var(--ease-out);
+}
+.tool:nth-child(3n + 2) > span::before { background: var(--m2); }
+.tool:nth-child(3n) > span::before { background: var(--m3); }
+.marquee .tool:hover > span { background: none; } /* the swept stroke replaces the flat one of site.css */
+.tool:hover > span::before { transform: scaleX(1); }
+
+/* The sheet arrives from the right and turns as it lands: nothing may widen the page meanwhile */
+#close { overflow-x: clip; }
+
+/* ---------- Control feedback (point 9), the whole page ----------
+   Already in ui.css and site.css, checked and left as they are: the pill's arrow (3px on hover) and its press (.97),
+   the navigation underline growing from the left, the bar's edge after 24px (.nav.is-scrolled), the switch's
+   sliding thumb, the field's focus, the 2px ink ring at 2px on every :focus-visible (white on ink bands).
+   Added here: what a keyboard and the footer were missing. */
+
+/* A keyboard gets the arrow's move too, not only a pointer */
+.btn:focus-visible .arr, .more:focus-visible .arr { transform: translateX(3px); }
+.more:focus-visible { text-decoration-color: currentColor; }
+
+/* Footer links: the same underline as the navigation, growing from the left (it was a colour fade) */
+.foot__col a, .foot__base a { position: relative; text-decoration: none; }
+.foot__col a::after, .foot__base a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: calc(50% - .85em); height: 1px; background: currentColor;
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--t-base) var(--ease-out);
+}
+.foot__col a:hover::after, .foot__col a:focus-visible::after,
+.foot__base a:hover::after, .foot__base a:focus-visible::after { transform: scaleX(1); }
+.foot__col a:active, .foot__base a:active { opacity: .7; }

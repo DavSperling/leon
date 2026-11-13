@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { joinWithSessionAction } from '@/app/(auth)/actions';
 import { AuthForm } from '@/components/verre/auth/auth-form';
+import { AuthSheet, AuthTitle } from '@/components/verre/auth/frame';
 import { OtherSignIn, type SocialProvider } from '@/components/verre/auth/other-sign-in';
 import { Button } from '@/components/verre/ui/button';
+import { nb } from '@/lib/verre/nb';
 import { socialProviders } from '@/server/auth/auth';
 import { findInvitation } from '@/server/auth/members';
 import { getSession, getUserContext } from '@/server/auth/session';
@@ -32,20 +34,18 @@ export default async function InvitationPage({ params }: { params: Params }) {
     const session = await getSession();
     if (session && !(await getUserContext())) {
       return (
-        <div className="fade-in">
-          <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">
-            {t('joinWorkspace')}
-          </h1>
-          <p className="mt-2 text-ui [overflow-wrap:anywhere] text-muted">
-            {t('joinAs', { name: invitation.organizationName, email: session.user.email })}
+        <AuthSheet>
+          <AuthTitle>{t('joinWorkspace')}</AuthTitle>
+          <p className="mt-3 text-title leading-[1.5] [overflow-wrap:anywhere] text-fg">
+            {nb(t('joinAs', { name: invitation.organizationName, email: session.user.email }))}
           </p>
           <form action={joinWithSessionAction} className="mt-6">
             <input type="hidden" name="token" value={token} />
-            <Button type="submit" variant="primary" size="lg" className="w-full">
+            <Button type="submit" variant="primary" className="h-10 w-full max-shell:h-11">
               {t('joinWorkspace')}
             </Button>
           </form>
-        </div>
+        </AuthSheet>
       );
     }
     return (
@@ -64,12 +64,12 @@ export default async function InvitationPage({ params }: { params: Params }) {
   }
 
   return (
-    <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('expiredTitle')}</h1>
-      <p className="mt-3 text-ui text-muted">{t('expiredText')}</p>
-      <Button asChild variant="secondary" size="lg" className="mt-6 w-full">
+    <AuthSheet>
+      <AuthTitle>{t('expiredTitle')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">{nb(t('expiredText'))}</p>
+      <Button asChild variant="primary" className="mt-6 h-10 w-full max-shell:h-11">
         <Link href="/connexion">{t('signIn')}</Link>
       </Button>
-    </div>
+    </AuthSheet>
   );
 }

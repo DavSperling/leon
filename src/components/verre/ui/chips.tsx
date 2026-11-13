@@ -1,12 +1,4 @@
-import {
-  ExternalLink,
-  Globe,
-  type LucideIcon,
-  Monitor,
-  PenLine,
-  Plug,
-  Terminal,
-} from 'lucide-react';
+import { Globe, type LucideIcon, Monitor, PenLine, Plug, Terminal } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import type { CaptureKind, ProviderId, SourceKind } from '@/capture/turn';
@@ -14,6 +6,7 @@ import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { PROVIDER_LABELS } from '@/lib/providers';
 import { cn } from '@/lib/verre/cn';
 import { formatDate, formatDateTime } from '@/lib/verre/format';
+import { toneOf } from './marks';
 
 // Icône d'un canal de capture, ou des clients du journal de lecture (l'interface, un autre assistant).
 const CHANNEL_ICONS: Record<CaptureKind | 'interface' | 'other', LucideIcon> = {
@@ -29,6 +22,15 @@ const CHANNEL_ICONS: Record<CaptureKind | 'interface' | 'other', LucideIcon> = {
 };
 
 const isProvider = (kind: string): kind is ProviderId => Object.hasOwn(PROVIDER_LABELS, kind);
+// Les fichiers ont leur logo aussi (public/logos) : ToolLogo kind="pdf" pour un document ajouté.
+const FILE_LOGOS: ReadonlySet<string> = new Set([
+  'pdf',
+  'word',
+  'excel',
+  'powerpoint',
+  'calc',
+  'writer',
+]);
 // `sources.kind` n'a plus de contrainte en base : un type inconnu (outil retiré) prend la prise et son propre nom.
 const kindIcon = (kind: string): LucideIcon =>
   Object.hasOwn(CHANNEL_ICONS, kind) ? CHANNEL_ICONS[kind as keyof typeof CHANNEL_ICONS] : Plug;
@@ -37,26 +39,15 @@ const kindLabel = (kind: string): string =>
 
 type ChipProps = {
   n: number /** « Source 2 : Relance — contrat ACME v3 » */;
-  label: string /** renvoi survolé ou lié au résultat sélectionné */;
-  active?: boolean /** éclosion à l'arrivée (flux) */;
-  animate?: boolean;
+  label: string /** renvoi pointé, ou lié à la source ouverte : son contour se marque */;
+  active?: boolean;
 };
 
-const CHIP =
-  'relative mx-[1px] ml-1 inline-grid h-[19px] min-w-[19px] place-items-center rounded-full bg-accent-soft px-[5px] align-[2px] font-mono text-[11px] leading-none font-medium tracking-normal text-accent no-underline ' +
-  // translate-* de Tailwind 4 = propriété `translate` ; ressort de la planche (.cite) pour la petite montée
-  'shadow-[inset_0_0_0_1px_var(--accent-line)] transition-[background-color,color,translate] duration-200 ease-[var(--ease-spring)] ' +
-  // zone de clic de 33 px autour d'une puce de 19 px
-  'after:absolute after:-inset-[7px] after:content-[""] ' +
-  'hover:-translate-y-px hover:bg-accent hover:text-accent-ink focus-visible:-translate-y-px focus-visible:bg-accent focus-visible:text-accent-ink ' +
-  'data-[active]:-translate-y-px data-[active]:bg-accent data-[active]:text-accent-ink';
-
-/** Renvoi [n] : un lien (href, recherche) ou un bouton (onClick, discussion). */
+/** Renvoi [n], dans la couleur de la source n : un lien (href, recherche) ou un bouton (onClick, discussion). */
 export function CitationChip({
   n,
   label,
   active,
-  animate,
   className,
   ...props
 }: ChipProps &
@@ -68,7 +59,7 @@ export function CitationChip({
     'aria-label': label,
     title: label,
     'data-active': active || undefined,
-    className: cn(CHIP, animate && 'pop-in', className),
+    className: cn('cite', `c${toneOf(n)}`, className),
   };
   if ('href' in props && props.href !== undefined)
     return (
@@ -83,7 +74,55 @@ export function CitationChip({
   );
 }
 
-/** Icône d'une origine : le logo de l'outil (public/logos), ou l'icône du canal de capture ; `boxed` : pastille carrée de 22 px de la planche. */
+/** Le numéro d'une source en étiquette, dans sa couleur (une ligne du point du matin) : le même que CitationChip, sans être un bouton. */
+export function SourceNumber({ n, className }: { n: number; className?: string }) {
+  return <span className={cn('num', `c${toneOf(n)}`, className)}>{n}</span>;
+}
+
+/** « sans source », après une phrase que rien n'appuie. */
+export function NoSource({ className }: { className?: string }) {
+  const t = useTranslations('common');
+  return <span className={cn('nosrc', className)}>{t('noSource')}</span>;
+}
+
+/**
+ * Le logo d'un outil, à la taille d'une image de chose : 36 dans une carte, 28 dans une tuile, 44 en tête du panneau,
+ * 18 dans la barre de commande. Nu sur la feuille (sur un carré blanc en sombre) ; sans logo connu, l'icône du canal
+ * sur un carré discret.
+ */
+export function ToolLogo({
+  kind,
+  size = 36,
+  className,
+}: {
+  kind: SourceKind | 'interface' | 'other' | (string & {});
+  size?: number;
+  className?: string;
+}) {
+  const box = { width: size, height: size };
+  if (isProvider(kind) || FILE_LOGOS.has(kind))
+    return (
+      <span aria-hidden="true" className={cn('logo-box', className)} style={box}>
+        {/* biome-ignore lint/performance/noImgElement: petit SVG statique, rien à optimiser */}
+        <img src={`/logos/${kind}.svg`} alt="" width={size} height={size} />
+      </span>
+    );
+  const Icon = kindIcon(kind);
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid shrink-0 place-items-center rounded-item bg-selected text-fg-2',
+        className,
+      )}
+      style={box}
+    >
+      <Icon strokeWidth={1.6} style={{ width: size / 2, height: size / 2 }} />
+    </span>
+  );
+}
+
+/** Petite icône d'une origine dans une ligne de texte : le logo de l'outil (public/logos), ou l'icône du canal de capture ; `boxed` : carré de 22 px. */
 export function ToolIcon({
   kind,
   boxed,
@@ -94,13 +133,12 @@ export function ToolIcon({
   className?: string;
 }) {
   // Le logo est posé sur du blanc : les logos sombres (GitHub, Notion, Attio) restent lisibles en thème sombre.
-  // #fff écrit en dur : tokens.css retire les couleurs de Tailwind (--color-*: initial), bg-white n'existe pas.
   if (isProvider(kind))
     return (
       <span
         aria-hidden="true"
         className={cn(
-          'grid shrink-0 place-items-center bg-[#fff]',
+          'grid shrink-0 place-items-center bg-white',
           boxed ? 'size-[22px] rounded-chip border border-line' : 'size-4 rounded-[4px]',
           className,
         )}
@@ -115,7 +153,7 @@ export function ToolIcon({
       <Icon
         aria-hidden="true"
         strokeWidth={1.6}
-        className={cn('size-3.5 shrink-0 text-muted', className)}
+        className={cn('size-3.5 shrink-0 text-icon', className)}
       />
     );
   return (
@@ -171,7 +209,7 @@ export function SourceChip({
     <span className={cn('inline-flex min-w-0 items-center gap-2 text-label text-muted', className)}>
       <ToolIcon kind={kind} boxed={boxed} />
       <span className="min-w-0 truncate">
-        <span className="font-semibold text-fg-2">{label ?? kindLabel(kind)}</span>
+        <span className="font-medium text-fg">{label ?? kindLabel(kind)}</span>
         {parts.map((p) => (
           <span key={p}>
             <span aria-hidden="true" className="mx-1.5 opacity-70">
@@ -190,36 +228,5 @@ export function SourceChip({
         )}
       </span>
     </span>
-  );
-}
-
-/** « Ouvrir dans GitHub » : l'original, dans un nouvel onglet (SourceLink du vrai Leon). Rien sans adresse. */
-export function SourceLink({
-  href,
-  kind,
-  label,
-  className,
-}: {
-  href: string | null | undefined;
-  kind: SourceKind | (string & {}) /** Par défaut, le libellé de l'outil */;
-  label?: string;
-  className?: string;
-}) {
-  const t = useTranslations('common');
-  if (!href) return null;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-sm text-label font-medium text-muted transition-colors duration-200 hover:text-accent',
-        className,
-      )}
-    >
-      <ExternalLink aria-hidden="true" strokeWidth={1.7} className="size-[13px] shrink-0" />
-      {t('openIn', { tool: label ?? kindLabel(kind) })}
-      <span className="sr-only">{t('newTab')}</span>
-    </a>
   );
 }

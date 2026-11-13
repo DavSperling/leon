@@ -8,14 +8,44 @@ import { getSession, getUserContext } from '@/server/auth/session';
 import DonePage, { generateMetadata } from './page';
 
 vi.mock('@/server/auth/session', () => ({ getSession: vi.fn(), getUserContext: vi.fn() }));
-vi.mock('@/server/auth/onboarding', () => ({
-  readOnboardingMember: vi.fn(),
-  // La vraie fonction lit une base ; la règle des rôles séparés par des virgules suffit ici.
-  spaceRole: (role: string) =>
-    role.includes('owner') ? 'owner' : role.includes('admin') ? 'admin' : 'member',
-}));
+vi.mock('@/server/auth/onboarding', () => ({ readOnboardingMember: vi.fn() }));
 vi.mock('@/components/verre/onboarding/done-step', () => ({ DoneStep: vi.fn() }));
+vi.mock('@/server/connectors/catalog', () => ({
+  listCatalog: vi.fn(() => [
+    { id: 'github', label: 'GitHub', privateRaw: false },
+    { id: 'gmail', label: 'Gmail', privateRaw: true },
+    { id: 'linear', label: 'Linear', privateRaw: false },
+    { id: 'notion', label: 'Notion', privateRaw: false },
+  ]),
+}));
+// La mienne qui marche, le Gmail privé d'un collègue, la mienne en erreur ; Notion n'est pas branché.
+vi.mock('@/server/connectors/connections', () => ({
+  listConnections: vi.fn(async () => [
+    {
+      provider: 'github',
+      isCreator: true,
+      creatorLeft: false,
+      status: 'active',
+      createdBy: { name: 'Moi' },
+    },
+    {
+      provider: 'gmail',
+      isCreator: false,
+      creatorLeft: false,
+      status: 'active',
+      createdBy: { name: 'Hugo' },
+    },
+    {
+      provider: 'linear',
+      isCreator: true,
+      creatorLeft: false,
+      status: 'error',
+      createdBy: { name: 'Moi' },
+    },
+  ]),
+}));
 vi.mock('next-intl/server', () => ({
+  getLocale: vi.fn(async () => 'en'),
   getTranslations: vi.fn(async () => (key: string) => key),
 }));
 vi.mock('next/navigation', () => ({
@@ -76,20 +106,16 @@ describe('page de fin de l’onboarding', () => {
     await redirectsTo('/bienvenue');
   });
 
-  it('un propriétaire voit l’écran de fin « propriétaire »', async () => {
-    const element = (await DonePage()) as ReactElement;
+  it('propriétaire, administrateur ou membre : le même écran de fin', async () => {
+    for (const role of ['owner', 'admin', 'member']) {
+      vi.mocked(readOnboardingMember).mockResolvedValue(member({ role }));
+      const element = (await DonePage()) as ReactElement;
 
-    expect(redirect).not.toHaveBeenCalled();
-    expect(element.type).toBe(DoneStep);
-    expect(element.props).toEqual({ owner: true });
-  });
-
-  it('un administrateur ou un membre voit l’écran de fin « invité »', async () => {
-    vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'admin' }));
-    expect(((await DonePage()) as ReactElement).props).toEqual({ owner: false });
-
-    vi.mocked(readOnboardingMember).mockResolvedValue(member({ role: 'member' }));
-    expect(((await DonePage()) as ReactElement).props).toEqual({ owner: false });
+      expect(redirect).not.toHaveBeenCalled();
+      expect(element.type).toBe(DoneStep);
+      // Ce que Leon lit pour cette personne : ni l'outil privé d'un collègue, ni sa connexion en erreur, ni le non branché.
+      expect(element.props).toEqual({ reading: [{ id: 'github', label: 'GitHub' }] });
+    }
   });
 
   it('le titre de l’onglet vient de onboarding.done', async () => {

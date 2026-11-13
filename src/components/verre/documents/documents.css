@@ -1,0 +1,303 @@
+/* Écran Documents : le bureau. Un document est une feuille (sa miniature porte un trait de surligneur, comme la source
+   que Leon marque) ; un dossier est une pile (deux feuilles dépassent sous sa carte) ; la dernière case du bureau est la
+   place où se pose la prochaine feuille, et c'est elle qui répond quand on tient un fichier au-dessus de la page.
+   Hors couche, comme connexions.css : ces règles l'emportent sur le kit sans le changer pour les autres écrans. */
+
+/* ---------- La miniature d'une feuille (36 px dans une carte, 44 en tête du panneau) ---------- */
+.dc-sheet {
+  position: relative;
+  display: block;
+  flex: none;
+}
+.dc-sheet > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.dc-sheet__paper {
+  fill: var(--glass);
+  stroke: var(--line-strong);
+}
+.dc-sheet__line {
+  fill: var(--line-strong);
+}
+.dc-sheet__head {
+  fill: var(--text);
+}
+.dc-sheet__hl {
+  fill: var(--hl, var(--m3));
+}
+/* Le logo du format, posé sur le coin de la feuille (un carré blanc le détache du papier). */
+.dc-sheet > .logo-box {
+  position: absolute;
+  right: -5px;
+  bottom: -3px;
+  border-radius: 4px;
+  background: var(--glass);
+  box-shadow: 0 0 0 1.5px var(--glass);
+}
+[data-theme="dark"] .dc-sheet > .logo-box {
+  background: #ffffff;
+  box-shadow: 0 0 0 1.5px var(--glass);
+}
+/* Pointée, la feuille se soulève d'un rien du bureau ; la pile s'ouvre. */
+.dc-sheet__back {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform var(--med) var(--ease-out);
+}
+.dc-sheet__back--l {
+  transform: rotate(-7deg);
+}
+.dc-sheet__back--r {
+  transform: rotate(8deg);
+}
+.tl:is(:hover, :focus-visible) .dc-sheet__back--l {
+  transform: rotate(-11deg) translateX(-1px);
+}
+.tl:is(:hover, :focus-visible) .dc-sheet__back--r {
+  transform: rotate(13deg) translateX(1px);
+}
+
+/* ---------- Un dossier : la pile dépasse sous la carte ---------- */
+.things > li:has(> .dc-pile) {
+  position: relative;
+  isolation: isolate;
+}
+.things > li:has(> .dc-pile)::before,
+.things > li:has(> .dc-pile)::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 0 0 12px 12px;
+  background: var(--glass);
+  box-shadow: var(--sh-1);
+  transition:
+    bottom var(--fast) var(--ease-out),
+    border-color var(--fast);
+}
+.things > li:has(> .dc-pile)::before {
+  right: 16px;
+  bottom: -8px;
+  left: 16px;
+}
+.things > li:has(> .dc-pile)::after {
+  right: 7px;
+  bottom: -4px;
+  left: 7px;
+}
+.things > li:has(> .dc-pile:is(:hover, :focus-visible))::before {
+  bottom: -10px;
+  border-color: var(--line-strong);
+}
+.things > li:has(> .dc-pile:is(:hover, :focus-visible))::after {
+  bottom: -5px;
+  border-color: var(--line-strong);
+}
+.things > li:has(> .dc-pile:active)::before {
+  bottom: -7px;
+}
+.things > li:has(> .dc-pile:active)::after {
+  bottom: -3px;
+}
+
+/* ---------- La place de la prochaine feuille : imprimée sur le bureau, elle ne devient feuille que pointée ----------
+   Large (trois colonnes) : elle tient la troisième colonne sur trois rangs, et porte l'image de l'écran, ce que Leon
+   lit, en éventail. Étroite : une case de 88 px comme les autres, sans l'éventail. */
+.dc-desk {
+  container-type: inline-size;
+}
+.dc-place {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 88px;
+  padding: 0 16px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: left;
+  transition:
+    transform var(--fast) var(--ease-out),
+    background var(--med),
+    border-color var(--fast),
+    box-shadow var(--med) var(--ease-out),
+    color var(--fast);
+}
+.dc-place__name {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+.dc-place .dc-sheet__paper {
+  transition: stroke var(--fast);
+}
+.dc-place > .dc-sheet .dc-sheet__paper {
+  fill: transparent;
+  stroke-dasharray: 3 2.5;
+}
+.dc-slot__plus {
+  stroke: var(--muted);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transition: stroke var(--fast);
+}
+.dc-place > .dc-fan {
+  display: none;
+}
+.dc-place:is(:hover, :focus-visible),
+.dc-desk.is-holding .dc-place {
+  border-style: solid;
+  background: var(--glass);
+  border-color: var(--text);
+  color: var(--text);
+  box-shadow: var(--sh-1);
+}
+.dc-place:is(:hover, :focus-visible) > .dc-sheet .dc-sheet__paper,
+.dc-place:is(:hover, :focus-visible) .dc-slot__plus,
+.dc-desk.is-holding .dc-place > .dc-sheet .dc-sheet__paper,
+.dc-desk.is-holding .dc-slot__plus {
+  stroke: var(--text);
+}
+.dc-place:active {
+  background: var(--n-150);
+}
+
+/* L'éventail : six feuilles autour d'un même pivot, loin sous elles (une main de cartes). */
+.dc-fan {
+  --spread: 9deg;
+  position: relative;
+  display: block;
+  flex: none;
+  width: 74px;
+  height: 88px;
+}
+.dc-fan > span {
+  position: absolute;
+  inset: 0;
+  /* la première dessus : chaque feuille montre son bord droit, où est posé le logo de son format */
+  z-index: calc(6 - var(--i));
+  transform-origin: 50% 330%;
+  transform: rotate(calc((var(--i) - 2.5) * var(--spread)));
+  transition: transform var(--med) var(--ease-out);
+}
+.dc-fan .dc-sheet {
+  filter: drop-shadow(0 1px 1.5px rgba(15, 15, 13, 0.1));
+}
+/* agrandie, la feuille garde un filet d'un pixel */
+.dc-fan .dc-sheet__paper {
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+.dc-empty > .dc-fan {
+  margin: 14px 0 0 96px;
+}
+.dc-place:is(:hover, :focus-visible) .dc-fan {
+  --spread: 10.5deg;
+}
+.dc-desk.is-holding .dc-fan,
+.dc-empty.is-holding .dc-fan {
+  --spread: 12deg;
+}
+
+@container (min-width: 924px) {
+  .things > li:has(> .dc-place) {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+  }
+  .dc-place {
+    flex-direction: column;
+    justify-content: center;
+    gap: 48px;
+    height: 100%;
+    min-height: 288px;
+    padding: 28px 24px 24px;
+    text-align: center;
+  }
+  .dc-place > .dc-fan {
+    display: block;
+  }
+  .dc-place > .dc-sheet {
+    display: none;
+  }
+}
+
+/* Le geste n'existe pas au doigt : la place ne se montre qu'avec un pointeur (la pastille d'encre reste). */
+@media (max-width: 599px), (hover: none) {
+  .things > li:has(> .dc-place) {
+    display: none;
+  }
+}
+
+/* ---------- On tient un fichier au-dessus de la page : le bureau s'efface, la place attend ---------- */
+.dc-desk.is-holding .things > li:not(:has(> .dc-place)) {
+  opacity: 0.4;
+}
+.dc-desk .things > li {
+  transition: opacity var(--med);
+}
+.dc-desk.is-holding .dc-place,
+.dc-empty.is-holding {
+  background: var(--glass);
+  border-color: var(--text);
+  color: var(--text);
+  box-shadow: var(--sh-2);
+}
+.dc-desk.is-holding .dc-place {
+  transform: translateY(-2px);
+}
+/* Le cadre du bureau : toute la page reçoit le fichier. */
+.dc-frame {
+  position: fixed;
+  inset: 8px;
+  z-index: 70;
+  border: 2px dashed var(--text);
+  border-radius: 12px;
+  pointer-events: none;
+  animation: dc-frame var(--fast) var(--ease-out) both;
+}
+@keyframes dc-frame {
+  from {
+    opacity: 0;
+    inset: 2px;
+  }
+}
+
+/* ---------- Aucun document : le bureau vide montre ce qu'on peut y poser ---------- */
+.dc-empty {
+  display: grid;
+  gap: 28px;
+  justify-items: start;
+  padding: 36px 40px 40px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  transition:
+    background var(--med),
+    border-color var(--med),
+    box-shadow var(--med);
+}
+@media (max-width: 599px) {
+  .dc-empty {
+    padding: 24px 20px 28px;
+  }
+  .dc-empty > .dc-fan {
+    --spread: 5deg;
+    margin-left: 64px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-frame {
+    animation: none;
+  }
+  .dc-sheet__back,
+  .dc-fan > span,
+  .dc-place,
+  .things > li:has(> .dc-pile)::before,
+  .things > li:has(> .dc-pile)::after {
+    transition: none;
+  }
+}

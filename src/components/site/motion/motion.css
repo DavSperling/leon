@@ -1,0 +1,406 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: les règles suivent l'ordre de la page ; chacune vise ses propres crochets. */
+/* Le mouvement de l'accueil « Papier » (porté du prototype papier/, ses notes NOTES-motion-*.md font foi).
+   Chargé seulement par l'accueil (home-motion.tsx), hors couche : il l'emporte sur site.css sans surenchère.
+   Ce qui doit être juste à la première image est ici, en CSS : le titre, ses trois traits, la réponse qui s'écrit.
+   Le reste (les règles épinglées, les arrivées au défilement, le compte, le terminal) est joué par motion/*.ts.
+
+   Deux classes sur <html> :
+   - js-motion : posée par le script de tête de src/app/layout.tsx (mouvement permis, adresse de l'accueil). Elle cache
+     d'avance ce que le script fera arriver, avec un filet : tout s'affiche après 1,5 s si le script n'a pas démarré.
+     Le script l'enlève quand il prend la main.
+   - motion-on : posée par home-motion.tsx tant que l'accueil est monté et que le mouvement est permis.
+   Sans JavaScript, sous mouvement réduit ou « Arrêter les animations » : ni l'une ni l'autre, la page est finale. */
+
+:root {
+  --m-out: cubic-bezier(0.16, 1, 0.3, 1); /* expo.out : ce qui arrive */
+  --m-inout: cubic-bezier(0.45, 0, 0.55, 1); /* power2.inOut : ce qui passe d'un état à l'autre */
+  --m-pop: cubic-bezier(0.175, 0.885, 0.32, 1.3); /* back.out : les drapeaux et les numéros */
+  /* Le trait de surligneur tracé à la main : une bande aux bouts biais et aux bords qui ondulent */
+  --m-rough: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M1.6 3.2C22 1.6 48 2.6 70 1.9S93 1.5 99.2 2.4L98.6 17.4C80 18.6 52 17.6 30 18.3S8 18.9 0.4 18.6Z'/%3E%3C/svg%3E");
+}
+
+@keyframes m-failsafe {
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: none;
+  }
+}
+@keyframes m-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--y, 20px));
+  }
+}
+@keyframes m-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes m-draw {
+  from {
+    clip-path: inset(-20% 100% -20% 0);
+  }
+  to {
+    clip-path: inset(-20% 0 -20% 0);
+  }
+}
+@keyframes m-sweep {
+  from {
+    --sweep: 0;
+  }
+  to {
+    --sweep: 1;
+  }
+}
+@keyframes m-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes m-doc {
+  from {
+    opacity: 0;
+    transform: translate(140px, -28px) rotate(4deg);
+  }
+}
+
+/* ---------- Ce que le script fera arriver : caché d'avance, avec le filet (1,5 s) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-motion:not([data-motion="off"])
+    :is(
+      [data-rules-list],
+      [data-rule] .s-h2,
+      [data-rule] .s-lead,
+      [data-rule-frag],
+      [data-home]:not([data-home="developers"]) [data-rv],
+      [data-home="developers"] [data-rv] > *,
+      .s-close__text > *,
+      .s-close__cta,
+      .s-foot__grid > :not(nav),
+      .s-foot__grid > nav > *
+    ) {
+    opacity: 0;
+    animation: m-failsafe 1ms linear 1.5s forwards;
+  }
+}
+/* Les arrivées liées au défilement de site.css (.s-rv) : le script les remplace sur l'accueil, jamais les deux */
+html:is(.js-motion, .motion-on) main .s-rv {
+  animation: none;
+}
+
+/* ---------- 1. Le haut : le titre, ses trois traits, la phrase, la pastille, les onglets et la scène ---------- */
+.s-hero .s-h1 .s-line > span {
+  animation-delay: 50ms;
+}
+.s-hero .s-h1 .s-line + .s-line > span {
+  animation-delay: 130ms;
+}
+.s-hero .s-top__lead.s-arrive {
+  --y: 16px;
+  animation: m-rise 420ms var(--m-out) 400ms backwards;
+}
+.s-hero .s-top__cta.s-arrive {
+  --y: 16px;
+  animation: m-rise 420ms var(--m-out) 470ms backwards;
+}
+.s-hero > .s-arrive {
+  --y: 24px;
+  animation: m-rise 600ms var(--m-out) 500ms backwards;
+}
+/* « Source incluse. » : trois traits tracés à la main, rose, vert, bleu, 160 ms d'écart */
+.s-hero .s-swp > i {
+  mask: var(--m-rough) 0 0 / 100% 100% no-repeat;
+  animation: m-draw 200ms ease-out 500ms backwards;
+}
+.s-hero .s-swp > i:nth-of-type(2) {
+  animation-delay: 660ms;
+}
+.s-hero .s-swp > i:nth-of-type(3) {
+  animation-delay: 820ms;
+}
+/* Au téléphone, le titre tient sur trois lignes dans une seule boîte : il arrive d'un bloc, sans glisser ligne à ligne */
+@media (max-width: 699px) {
+  .s-hero .s-h1 .s-line > span {
+    animation: m-fade 420ms var(--m-inout) 50ms backwards;
+  }
+}
+/* La fin reprend les trois traits du haut, tracés à la main (motion/ambient.ts les fait passer) */
+[data-home="closing"] .s-swp > i {
+  mask: var(--m-rough) 0 0 / 100% 100% no-repeat;
+  animation: none;
+}
+/* Un clic ou une touche pendant l'arrivée : tout est à sa place d'un coup (motion/hero.ts pose data-end) */
+.s-hero[data-end] :is(.s-line > span, .s-swp > i, .s-arrive) {
+  animation: none;
+}
+
+/* Les onglets : la couleur de l'onglet choisi glisse d'un onglet à l'autre (hero-demo.tsx pose has-ind) */
+.s-tabs {
+  position: relative;
+  isolation: isolate;
+}
+.s-tabs__ind {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--ind-l, 0);
+  z-index: -1;
+  width: var(--ind-w, 0);
+  border-radius: var(--s-r) var(--s-r) 0 0;
+  background: var(--s-desk);
+  pointer-events: none;
+  transition:
+    left 420ms var(--m-out),
+    width 420ms var(--m-out);
+}
+.s-tabs.has-ind .s-tabs__ind {
+  display: block;
+}
+.s-tabs.has-ind .s-tab,
+.s-tabs.has-ind .s-tab:hover,
+.s-tabs.has-ind .s-tab[aria-selected="true"] {
+  position: relative;
+  background: none;
+}
+.s-tabs.has-ind .s-tab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border-radius: inherit;
+  background: var(--s-desk-2);
+  transition: background-color var(--fast);
+}
+.s-tabs.has-ind .s-tab:hover::before {
+  background: var(--s-desk-3);
+}
+
+/* La scène du haut (data-stage) : la question, puis phrase par phrase, 450 ms d'écart (700 à une autre question) :
+   les mots, le trait balayé, le numéro qui sort, la ligne de la source, l'original posé sur la pile. */
+[data-stage="load"] {
+  --t0: 850ms;
+  --beat: 450ms;
+}
+[data-stage="calm"] {
+  --t0: 200ms;
+  --beat: 700ms;
+}
+/* Le trait est une image qui se remplit de la gauche ; en place, le même trait que d'habitude */
+[data-stage] .s-answer__text > .hl {
+  background:
+    linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / calc(var(--sweep, 1) * 100%)
+    100% no-repeat;
+}
+[data-stage] .s-pile > .doc {
+  transform: translateX(calc(var(--pull, 0) * 1%));
+  animation: none;
+}
+:is(.js-motion, .motion-on) :is([data-stage="load"], [data-stage="calm"]):not([data-end]) {
+  & .s-answer__q {
+    --y: 8px;
+    animation: m-rise 420ms var(--m-out) calc(var(--t0) - 200ms) backwards;
+  }
+  & .s-answer__text > *,
+  & .s-sheet ol > li,
+  & .s-pile > .doc {
+    --at: calc(var(--t0) + var(--k, 0) * var(--beat));
+  }
+  & .s-answer__text > * {
+    animation: m-fade 200ms var(--m-inout) var(--at) backwards;
+  }
+  & .s-answer__text > .hl {
+    animation:
+      m-fade 200ms var(--m-inout) var(--at) backwards,
+      m-sweep 420ms var(--m-inout) calc(var(--at) + 60ms) backwards;
+  }
+  & .s-answer__text .cite {
+    transform-origin: 0 50%;
+    animation: m-pop 420ms var(--m-pop) calc(var(--at) + 280ms) backwards;
+  }
+  /* le point qui suit un numéro arrive avec lui, pas avant (il flottait seul au bout de la phrase) */
+  & .s-answer__text > span:has(> .cite) {
+    animation-delay: calc(var(--at) + 280ms);
+  }
+  & .s-pile > .doc {
+    animation: m-doc 600ms var(--m-out) calc(var(--at) + 250ms) backwards;
+  }
+  & .s-sheet ol > li {
+    --y: 8px;
+    animation: m-rise 200ms var(--m-out) calc(var(--at) + 300ms) backwards;
+  }
+}
+/* Choisir une source : l'original sort de la pile vers la droite, passe par-dessus et se pose (motion/hero.ts) */
+[data-stage] .s-pile[data-moving] > .doc {
+  transition:
+    translate 600ms var(--m-inout),
+    rotate 600ms var(--m-inout),
+    opacity 220ms;
+}
+[data-stage] .s-pile > .doc[data-was="0"] {
+  z-index: 3;
+}
+[data-stage] .s-pile > .doc[data-was="1"] {
+  z-index: 2;
+}
+[data-stage] .s-pile > .doc[data-was="2"] {
+  z-index: 1;
+}
+[data-stage] .s-pile > .doc[data-was="0"] > :not(.flag) {
+  visibility: visible;
+}
+
+/* ---------- Les traits des titres, tracés à la main (ils se tracent de la gauche : motion/*.ts mène --sweep) ---------- */
+:is([data-rules], [data-home]) .s-mark {
+  background:
+    linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / calc(var(--sweep, 1) * 100%)
+    100% no-repeat;
+  mask: var(--m-rough) 0 0 / 100% 100% no-repeat;
+}
+
+/* ---------- 2. Les trois règles épinglées (motion/rules.ts pose is-pinned, sur grand écran, quand une règle tient) ---------- */
+.s-rules__list {
+  position: relative;
+  display: none;
+  flex-direction: column;
+  margin-bottom: 44px;
+  padding-left: 16px;
+}
+.s-rules__list a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  font: 500 16px / 1.2 var(--font);
+  color: var(--muted);
+  transition: color var(--fast);
+}
+.s-rules__list a:hover,
+.s-rules__list a[aria-current="true"] {
+  color: var(--text);
+}
+.s-rules__list a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 5px;
+}
+.s-rules__marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 32px;
+  border-radius: 2px;
+  background: var(--text);
+}
+[data-rules].is-pinned {
+  overflow-x: clip;
+}
+[data-rules].is-pinned > .s-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+[data-rules].is-pinned .s-rules__list {
+  display: flex;
+  z-index: 1;
+  grid-area: 1 / 1;
+  align-self: start;
+  justify-self: start;
+  margin: var(--rules-top, 0px) 0 0;
+}
+[data-rules].is-pinned .s-rule3 {
+  grid-area: 1 / 1;
+  align-items: start;
+  margin-top: 0;
+}
+/* 140 px : la liste (3 × 32) et les 44 px dessous */
+[data-rules].is-pinned .s-rule3__text {
+  grid-column: 1 / 6;
+  max-width: none;
+  padding: calc(var(--rules-top, 0px) + 140px) 24px 0 0;
+}
+/* Un seul panneau de bureau : les trois fragments ont la même boîte, seul le premier le peint, « Exemple fictif » à son pied */
+[data-rules].is-pinned .s-rule3__frag {
+  display: flex;
+  flex-direction: column;
+  grid-column: 6 / 13;
+  align-self: stretch;
+  margin-top: 0;
+  background: none;
+}
+[data-rules].is-pinned [data-rule="1"] .s-rule3__frag {
+  background: var(--s-desk);
+}
+[data-rules].is-pinned .s-rule3__frag .s-switch {
+  align-self: flex-start;
+}
+[data-rules].is-pinned .s-rule3__frag > figcaption {
+  margin-top: auto;
+  padding-top: 28px;
+}
+[data-rules].is-pinned [data-rule]:not([data-rule="1"]) figcaption {
+  visibility: hidden;
+}
+@media (max-width: 1099px) {
+  [data-rules].is-pinned .s-rule3__frag {
+    padding: 28px 28px 18px;
+  }
+}
+/* Seule la règle à l'écran prend le pointeur ; les autres sont inertes (motion/rules.ts) */
+[data-rules].is-pinned[data-current="1"] [data-rule]:not([data-rule="1"]),
+[data-rules].is-pinned[data-current="2"] [data-rule]:not([data-rule="2"]),
+[data-rules].is-pinned[data-current="3"] [data-rule]:not([data-rule="3"]) {
+  pointer-events: none;
+}
+/* Les gestes menés par le défilement, en variables : --sweep (le trait), --pop (le numéro), --land (la ligne de la source
+   qui arrive comme une feuille), --stamp (« Privé »). Les propriétés scale / rotate du kit restent intactes. */
+[data-rules].is-pinned .s-answer__text .hl {
+  background:
+    linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / calc(var(--sweep, 1) * 100%)
+    100% no-repeat;
+  transition: none;
+}
+[data-rules].is-pinned .s-answer__text .cite {
+  scale: calc(0.6 + 0.4 * var(--pop, 1));
+  transform-origin: 0 50%;
+}
+/* le numéro et le point qui le suit : un seul bloc, qui arrive d'un coup */
+[data-rules].is-pinned .s-answer__text > span:has(> .cite) {
+  opacity: calc(var(--pop, 1) * 3);
+}
+[data-rules].is-pinned .s-sheet ol > li {
+  transform: translate(calc((1 - var(--land, 1)) * 64px), calc((1 - var(--land, 1)) * -20px))
+    rotate(calc((1 - var(--land, 1)) * 3deg));
+  opacity: var(--land, 1);
+}
+[data-rules].is-pinned .s-stamp {
+  scale: calc(1.5 - 0.5 * var(--stamp, 1));
+  opacity: var(--stamp, 1);
+}
+
+/* ---------- 3. Les connecteurs : le nom de l'outil pointé, balayé d'un trait ---------- */
+[data-marquee] .s-tool > span:last-child {
+  position: relative;
+  isolation: isolate;
+}
+[data-marquee] .s-tool > span:last-child::before {
+  content: "";
+  position: absolute;
+  inset: -0.1em -0.14em;
+  z-index: -1;
+  border-radius: 3px;
+  background: var(--m1);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 240ms var(--m-out);
+}
+[data-marquee] .s-tool:nth-child(3n + 2) > span:last-child::before {
+  background: var(--m2);
+}
+[data-marquee] .s-tool:nth-child(3n) > span:last-child::before {
+  background: var(--m3);
+}
+[data-marquee] .s-tool:hover > span:last-child::before {
+  transform: scaleX(1);
+}

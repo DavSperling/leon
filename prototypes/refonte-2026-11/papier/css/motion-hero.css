@@ -1,0 +1,23 @@
+/* Leon « Papier » v2 : motion, module "hero". Pre-hide only under html.js-motion, always with animation: var(--failsafe) (see css/motion.css). */
+
+/* What the load sequence brings in (js/motion/hero.js). core.js removes .js-motion just before the module sets its own
+   first states, in the same task. If the module never runs, the failsafe shows all of this after 3 seconds. */
+html.js-motion .nav__in,
+html.js-motion [data-h1-line],
+html.js-motion [data-hero-lead],
+html.js-motion [data-hero-cta],
+html.js-motion [data-tabs],
+html.js-motion [data-stage] { opacity: 0; animation: var(--failsafe); }
+
+/* While the answer writes itself, a swept stroke becomes the plain stroke in one frame: without this the stroke's own
+   160ms colour transition makes it blink when the sweep hands over. */
+#stage.is-playing .hl { transition: none; }
+
+/* Selecting a source (hero.js). For the first 200ms of the move each sheet carries data-was = the slot it is leaving:
+   the pile keeps its order, so the chosen sheet comes out from behind instead of jumping in front, and the sheet that
+   was on top stays written until the chosen one has come over it (otherwise it shows as a blank sheet). */
+#pile > .doc[data-was="top"] { z-index: 3; }
+#pile > .doc[data-was="b1"] { z-index: 2; }
+#pile > .doc[data-was="b2"] { z-index: 1; }
+#pile > .doc[data-was="top"] .doc__meta,
+#pile > .doc[data-was="top"] .doc__rest { opacity: 1; visibility: visible; transition: none; }

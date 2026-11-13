@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kit · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app" data-screen="kit">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <!-- The kit sheet: every class of css/app.css once, with the markup to copy. Not a product screen. See NOTES-app.md. -->
+  <header class="top">
+    <div class="top__text">
+      <h1 class="top__title">Kit</h1>
+      <p class="top__sub">Every part an app screen is built from, in its states. Every control here answers. Copy the markup from this page.</p>
+    </div>
+    <form class="ask" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <nav class="subnav" aria-label="Kit sections">
+    <a href="#k-actions" data-t="Sub-navigation" aria-current="page">Sub-navigation</a>
+    <a href="#k-fields" data-t="Fields">Fields</a>
+    <a href="#k-table" data-t="Table">Table</a>
+    <a href="#k-states" data-t="States">States</a>
+    <a href="#k-open" data-t="What a click opens">What a click opens</a>
+  </nav>
+
+  <section class="sec" id="k-actions" aria-labelledby="k-actions-h">
+    <div class="sec__head"><h2 class="h-sec" id="k-actions-h">Buttons, links, chips, tags, status</h2><p class="sec__meta">.sec__head · .h-sec · .sec__meta</p></div>
+    <dl class="kv">
+      <div><dt>Buttons</dt><dd class="chips">
+        <button type="button" class="btn" data-demo="busy:Saving…">Primary action, 40px</button>
+        <button type="button" class="btn btn--line" data-demo="done:Done">Beside a field, 40px</button>
+        <button type="button" class="btn btn--line btn--sm" data-demo="busy:Syncing…" data-then="Synced">Every other action, 32px</button>
+        <button type="button" class="btn btn--line btn--sm btn--danger" data-demo="say:Token revoked.">Delete, once asked</button>
+        <button type="button" class="btn" disabled>Disabled</button>
+        <button type="button" class="btn btn--line btn--sm" disabled>Disabled</button>
+      </dd></div>
+      <div><dt>Text actions</dt><dd class="chips">
+        <a class="link" href="#k-actions">A link</a>
+        <a class="link" href="#" data-ext="Gmail">Open in Gmail (data-ext: it leaves Leon)</a>
+      </dd></div>
+      <div><dt>Chips</dt><dd class="chips">
+        <a class="chip" href="#k-actions">A suggested question</a>
+        <button type="button" class="chip" aria-pressed="true" data-demo="press">Chosen</button>
+        <button type="button" class="chip" aria-pressed="false" data-demo="press">Not chosen</button>
+      </dd></div>
+      <div><dt>Tags</dt><dd class="chips">
+        <span class="tag">Owner</span><span class="tag">Admin</span><span class="tag">Member</span><span class="tag">You</span>
+      </dd></div>
+      <div><dt>Status</dt><dd class="chips">
+        <span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 4 min ago</span>
+        <span class="status"><span class="dot" aria-hidden="true"></span>Invited Nov&nbsp;6</span>
+        <span class="status status--danger"><span class="dot dot--danger" aria-hidden="true"></span>Key revoked</span>
+        <span class="busy">Reading the file…</span>
+      </dd></div>
+      <div><dt>Sidebar foot</dt><dd class="chips">
+        <span class="status"><span class="dot dot--ok" aria-hidden="true"></span>All tools synced</span>
+        <span class="status status--danger"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</span>
+      </dd></div>
+      <div><dt>Who can see it</dt><dd class="chips">
+        <span class="vis">Shared with the team</span>
+        <span class="vis vis--only">Only you</span>
+      </dd></div>
+    </dl>
+  </section>
+
+  <section class="sec" id="k-fields" aria-labelledby="k-fields-h">
+    <div class="sec__head"><h2 class="h-sec" id="k-fields-h">Fields, in a settings section</h2><p class="sec__meta">.split · .fields · .label · .field · .select · .hint</p></div>
+    <div class="split">
+      <div>
+        <h3 class="split__label">Profile</h3>
+        <p class="split__help">A label and its explanation on the left, the fields on the right. One primary action per screen.</p>
+      </div>
+      <div class="split__body">
+        <div class="fields fields--row">
+          <div><label class="label" for="k-name">Name</label><input class="field" id="k-name" type="text" value="Julie Martin"></div>
+          <div><label class="label" for="k-lang">Language</label><select class="field select" id="k-lang"><option>English</option><option>Français</option></select></div>
+        </div>
+        <div><label class="label" for="k-mail">Work email</label><input class="field" id="k-mail" type="email" value="julie@kestrel.example" readonly><p class="hint">Set by your workspace. Ask an admin to change it.</p></div>
+        <div><label class="label" for="k-time">Briefing time</label><input class="field" id="k-time" type="text" value="25:00" aria-invalid="true" aria-describedby="k-time-err"><p class="field-error" id="k-time-err">Enter a time between 00:00 and 23:59.</p></div>
+        <div><button type="button" class="btn" data-demo="busy:Saving…">Save changes</button></div>
+      </div>
+    </div>
+    <div class="split">
+      <div>
+        <h3 class="split__label">Install command</h3>
+        <p class="split__help">A real command, so monospace. Nowhere else.</p>
+      </div>
+      <div class="split__body">
+        <div class="code"><pre><code id="k-cmd">curl -fsSL https://leonmemory.com/install | sh</code></pre><button type="button" class="btn btn--line btn--sm" data-copy="#k-cmd">Copy</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="k-table" aria-labelledby="k-table-h">
+    <div class="sec__head"><h2 class="h-sec" id="k-table-h">Table</h2><p class="sec__meta">.table · .cell · .t-act · data-open · .detail</p></div>
+    <div class="filter-row">
+      <label class="vh" for="k-filter">Filter the list</label>
+      <input class="field" id="k-filter" type="text" placeholder="Filter by name" autocomplete="off">
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Tool</th><th scope="col">Account</th><th scope="col">Visible to</th><th scope="col">State</th><th scope="col" class="t-num">Items</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+        <tbody data-one-open>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20">Gmail</span></td><td>julie@kestrel.example</td><td><span class="vis vis--only">Only you</span></td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 4 min ago</span></td><td class="t-num">1,842</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" data-open="k-gmail" data-close-label="Close" aria-expanded="false" aria-controls="k-gmail">Manage</button></td></tr>
+          <tr class="detail" id="k-gmail" hidden><td colspan="6"><div class="detail__body">
+            <dl class="detail__list">
+              <div><dt>Account</dt><dd>julie@kestrel.example</dd></div>
+              <div><dt><label for="k-gmail-vis">Visible to</label></dt><dd><select class="field select" id="k-gmail-vis" data-demo-vis="Gmail"><option selected>Only you</option><option>Team</option></select><p class="hint">Only you can search what Leon reads in Gmail.</p></dd></div>
+              <div><dt>Last sync</dt><dd data-demo-synced>4 min ago</dd></div>
+            </dl>
+            <p class="detail__actions"><button type="button" class="btn btn--line btn--sm" data-demo="sync">Sync now</button><button type="button" class="btn btn--line btn--sm" data-open="k-gmail-ask" aria-expanded="false" aria-controls="k-gmail-ask">Delete connection</button></p>
+            <div class="confirm" id="k-gmail-ask" hidden>
+              <p class="confirm__text"><b>Delete the Gmail connection?</b> Leon stops reading Gmail with julie@kestrel.example. What it already saved stays.</p>
+              <p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger" data-confirm="delete-connection">Delete connection</button><button type="button" class="btn btn--line btn--sm" data-close>Cancel</button></p>
+            </div>
+          </div></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/notion.svg" alt="" width="20" height="20">Notion</span></td><td>Team wiki</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 11 min ago</span></td><td class="t-num">624</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" data-open="k-notion" data-close-label="Close" aria-expanded="false" aria-controls="k-notion">Manage</button></td></tr>
+          <tr class="detail" id="k-notion" hidden><td colspan="6"><div class="detail__body">
+            <dl class="detail__list">
+              <div><dt>Account</dt><dd>Team wiki</dd></div>
+              <div><dt><label for="k-notion-vis">Visible to</label></dt><dd><select class="field select" id="k-notion-vis" data-demo-vis="Notion"><option>Only you</option><option selected>Team</option></select><p class="hint">Everyone in the workspace can search what Leon reads in Notion.</p></dd></div>
+              <div><dt>Last sync</dt><dd data-demo-synced>11 min ago</dd></div>
+            </dl>
+            <p class="detail__actions"><button type="button" class="btn btn--line btn--sm" data-demo="sync">Sync now</button><button type="button" class="btn btn--line btn--sm" data-open="k-notion-ask" aria-expanded="false" aria-controls="k-notion-ask">Delete connection</button></p>
+            <div class="confirm" id="k-notion-ask" hidden>
+              <p class="confirm__text"><b>Delete the Notion connection?</b> Leon stops reading Notion with this account. What it already saved stays.</p>
+              <p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger" data-confirm="delete-connection">Delete connection</button><button type="button" class="btn btn--line btn--sm" data-close>Cancel</button></p>
+            </div>
+          </div></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/intercom.svg" alt="" width="20" height="20">Intercom</span></td><td>Support inbox</td><td>Team</td><td><span class="status status--danger"><span class="dot dot--danger" aria-hidden="true"></span>Key revoked 2 days ago</span></td><td class="t-num">1,470</td><td class="t-act"><button type="button" class="btn btn--sm" data-demo="busy:Reconnecting…" data-then="Reconnected">Reconnect</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec" id="k-states" aria-labelledby="k-states-h">
+    <div class="sec__head"><h2 class="h-sec" id="k-states-h">Rows, panel, empty, error, menu</h2><p class="sec__meta">.rows · .panel · .empty · .alert · .menu</p></div>
+    <div class="duo" style="--aside: 420px; margin-top: 20px;">
+      <div class="fields">
+        <ul class="rows">
+          <li><a class="row" href="#k-states"><span class="row__title">A row is one link, with its title</span><span class="row__meta">Today</span></a></li>
+          <li><a class="row" href="#k-states" aria-current="true"><span class="row__title">The current row</span><span class="row__meta">Yesterday</span></a></li>
+          <li><a class="row" href="#k-states"><span class="row__title">A long title is cut with an ellipsis rather than wrapped onto a second line</span><span class="row__meta">Nov&nbsp;6</span></a></li>
+        </ul>
+        <div class="alert" role="alert">
+          <div><p class="alert__title"><span class="dot dot--danger" aria-hidden="true"></span>Intercom stopped syncing</p><p class="alert__text">The key was revoked. Reconnect to resume.</p></div>
+          <button type="button" class="btn btn--line btn--sm" data-demo="busy:Reconnecting…" data-then="Reconnected">Reconnect</button>
+        </div>
+        <div class="panel"><p><b>A panel</b> groups a few related things with a fine edge. No shadow, never nested.</p></div>
+        <div class="panel panel--desk"><p><b>A desk panel</b> holds a note or a rule, such as who sees what.</p></div>
+      </div>
+      <div class="fields">
+        <div class="empty">
+          <h3 class="empty__title">No documents yet</h3>
+          <p class="empty__text">Add a PDF, a Word file or a spreadsheet. Leon reads it and cites it like any other source.</p>
+          <p class="empty__act"><a class="btn" href="app-documents.html">Add a document</a><span class="muted">or drop files here</span></p>
+        </div>
+        <div style="position: relative; height: 172px;">
+          <div class="menu" style="left: 0; top: 0; width: 220px; animation: none;">
+            <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+            <a class="menu__item" href="#k-states">Profile and settings</a>
+            <a class="menu__item" href="#k-states">Invite people</a>
+            <a class="menu__item" href="#k-states">Sign out</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="k-open" aria-labelledby="k-open-h">
+    <div class="sec__head"><h2 class="h-sec" id="k-open-h" tabindex="-1">What a click opens</h2><p class="sec__meta">data-open · .detail · .confirm · LeonApp</p></div>
+    <div class="duo" style="--aside: 420px; margin-top: 8px;">
+      <ul class="rows" data-one-open>
+        <li>
+          <div class="row"><span class="row__title">Julie’s MacBook Air</span><span class="row__meta">Last session yesterday, 17:40</span><button type="button" class="btn btn--line btn--sm" data-open="k-mac" data-close-label="Close" aria-expanded="false" aria-controls="k-mac">Manage</button></div>
+          <div class="detail" id="k-mac" hidden><div class="detail__body">
+            <dl class="detail__list">
+              <div><dt>Tools</dt><dd>Claude Code</dd></div>
+              <div><dt>Connected</dt><dd>Oct&nbsp;12 · 9 sessions</dd></div>
+            </dl>
+            <p class="detail__actions"><button type="button" class="btn btn--line btn--sm" data-open="k-mac-ask" aria-expanded="false" aria-controls="k-mac-ask">Disconnect</button></p>
+            <div class="confirm" id="k-mac-ask" hidden>
+              <p class="confirm__text"><b>Disconnect “Julie’s MacBook Air”?</b> It stops sending your sessions to Leon. To connect it again, paste the install command.</p>
+              <p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger" data-confirm="disconnect">Disconnect</button><button type="button" class="btn btn--line btn--sm" data-close>Cancel</button></p>
+            </div>
+          </div></div>
+        </li>
+        <li>
+          <div class="row"><span class="row__title">Assistant on my laptop</span><span class="row__meta">Token · created Oct&nbsp;12</span><button type="button" class="btn btn--line btn--sm" data-open="k-token" aria-expanded="false" aria-controls="k-token">Revoke</button></div>
+          <div class="detail" id="k-token" hidden>
+            <div class="confirm">
+              <p class="confirm__text"><b>Revoke “Assistant on my laptop”?</b> Tools using it lose access to Leon right away.</p>
+              <p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger" data-confirm="revoke">Revoke</button><button type="button" class="btn btn--line btn--sm" data-close>Cancel</button></p>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <dl class="kv" style="--kv: 132px;">
+        <div><dt>LeonApp.say</dt><dd><button type="button" class="btn btn--line btn--sm" data-demo="say:Connection deleted.">Say “Connection deleted.”</button><p class="hint">It happened elsewhere on the page, or cannot be seen in place.</p></dd></div>
+        <div><dt>LeonApp.done</dt><dd><button type="button" class="btn btn--line btn--sm" data-demo="done:Saved">Save</button><p class="hint">The button that was pressed says the result.</p></dd></div>
+        <div><dt>LeonApp.busy</dt><dd><span class="status" data-demo-state><span class="dot dot--ok" aria-hidden="true"></span>Synced 4 min ago</span> <button type="button" class="btn btn--line btn--sm" data-demo="state">Sync now</button><p class="hint">The thing that is working shows it, then shows its new state.</p></dd></div>
+        <div><dt>The confirmation, open</dt><dd>
+          <div class="confirm">
+            <p class="confirm__text"><b>Revoke “Assistant on my laptop”?</b> Tools using it lose access to Leon right away.</p>
+            <p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger" data-demo="say:Token revoked.">Revoke</button><button type="button" class="btn btn--line btn--sm" data-demo="say:Nothing changed.">Cancel</button></p>
+          </div>
+        </dd></div>
+      </dl>
+    </div>
+  </section>
+
+</div>
+</main>
+</div>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+<!-- The sheet's own demos. What a screen writes is of this size: a few lines per action, on top of js/app.js. -->
+<script>
+addEventListener('DOMContentLoaded', () => {
+  const { say, done, busy } = LeonApp;
+  document.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-demo]');
+    if (!b) return;
+    const [how, text] = b.dataset.demo.split(':');
+    if (how === 'say') say(text);
+    if (how === 'done') done(b, text);
+    if (how === 'busy') { await busy(b, text, 800); done(b, b.dataset.then || 'Saved'); }
+    if (how === 'press') b.setAttribute('aria-pressed', String(b.getAttribute('aria-pressed') !== 'true'));
+    if (how === 'sync') { const cell = b.closest('.detail').querySelector('[data-demo-synced]'); await busy(cell, 'Syncing…', 800); cell.textContent = 'Just now'; }
+    if (how === 'state') { const s = document.querySelector('[data-demo-state]'); await busy(s, 'Syncing…', 800); s.lastChild.textContent = 'Synced just now'; }
+  });
+  // "Visible to": the sentence under the select says what the choice means
+  document.addEventListener('change', (e) => {
+    const tool = e.target.dataset.demoVis;
+    if (tool) e.target.nextElementSibling.textContent = e.target.value === 'Team' ? `Everyone in the workspace can search what Leon reads in ${tool}.` : `Only you can search what Leon reads in ${tool}.`;
+  });
+  // A confirmation was accepted: work, remove the row and what is under it, say it once, give focus to what is next
+  document.addEventListener('leon:confirm', async (e) => {
+    const said = { 'delete-connection': 'Connection deleted.', disconnect: 'Computer disconnected.', revoke: 'Token revoked.' }[e.detail.action];
+    await busy(e.target, e.detail.action === 'delete-connection' ? 'Deleting…' : 'Removing…', 700);
+    const under = e.target.closest('tr.detail');           // in a table: the detail's row and the row above it
+    const item = under ? [under.previousElementSibling, under] : [e.target.closest('li')]; // in a list: the whole item
+    const list = item[0].parentNode;
+    item.forEach((x) => x.remove());
+    say(said);
+    (list.querySelector('[data-open]') || document.getElementById('k-open-h')).focus();
+  });
+});
+</script>
+</body>
+</html>

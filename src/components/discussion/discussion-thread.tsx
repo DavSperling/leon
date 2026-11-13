@@ -1,25 +1,34 @@
 'use client';
 
-import { ChevronLeft, ExternalLink, Lock, LogIn, RotateCcw } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Ellipsis, ExternalLink, LogIn, RotateCcw, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import {
+  citationDetailsAction,
   type DiscussionMessageView,
+  deleteDiscussionAction,
   readDiscussionMessagesAction,
 } from '@/app/(app)/discussions/actions';
-import { Button, Notice, type NoticeProps, PageHeader, useThinking } from '@/components/verre';
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  Fact,
+  Facts,
+  Notice,
+  type NoticeProps,
+  SidePanel,
+  toast,
+} from '@/components/verre';
 import { Composer } from '@/components/verre/discussions/composer';
 import { LeonCard, UserBubble } from '@/components/verre/discussions/messages';
-import {
-  PreviewPane,
-  PreviewSheet,
-  useCitationPreview,
-} from '@/components/verre/discussions/preview';
+import { useSourcePanel } from '@/components/verre/discussions/preview';
 import { DISCUSSION_TIMEOUT_MS, replyParts } from '@/lib/discussion-events';
-import { rise, useAppear, useMinWidth } from '@/lib/verre';
+import { cn, formatDateTime, nb } from '@/lib/verre';
 import { ActionCard } from './action-card';
 import type { ToolActivity } from './message-segments';
 import { questionNotWritten, type ReplyProgress, readReply, retryQuestion } from './read-reply';
@@ -51,6 +60,11 @@ type Reply =
 const WAIT_POLL_MS = 2000;
 const WAIT_MAX_MS = DISCUSSION_TIMEOUT_MS + 10_000;
 
+// La colonne du fil (736 px : une réponse à 18 px s'y lit sur 70 caractères environ). 24 px : la marge haute de la page ;
+// 76 px : ses marges basses, reprises pour que le champ touche le pied de la fenêtre.
+const THREAD_COLUMN =
+  'mx-auto -mb-[76px] flex min-h-[calc(100dvh-24px)] w-full max-w-[736px] min-w-0 flex-col max-shell:min-h-[calc(100dvh-var(--top-h)-28px)]';
+
 // Avant le premier évènement : pas de libellé inventé, seulement l'indicateur d'attente.
 const THINKING: Reply = { status: 'flux', text: '', citations: [], activity: null };
 
@@ -60,12 +74,14 @@ const spoken = (text: string) => text.replace(/\s?\[\d+\]|\*\*|`|^#+\s+/gm, '');
 export function DiscussionThread({
   discussionId,
   title,
+  createdAt,
   initialMessages,
   modelAvailable,
   appOrigin,
 }: {
   discussionId: string;
   title: string;
+  createdAt: Date;
   initialMessages: ThreadMessage[];
   modelAvailable: boolean;
   // L'adresse réglée pour Leon (BETTER_AUTH_URL) : la seule d'où la route accepte une question.
@@ -94,16 +110,12 @@ export function DiscussionThread({
   );
   const [draft, setDraft] = useState('');
   const [fresh, setFresh] = useState<string | null>(null);
-  const [hovered, setHovered] = useState<string | null>(null);
-  const preview = useCitationPreview();
+  const sources = useSourcePanel();
   const router = useRouter();
-  const { setThinking } = useThinking();
-  const appear = useAppear();
-  const root = useRef<HTMLDivElement>(null);
-  const pane = useRef<HTMLElement>(null);
-  const wide = useMinWidth(root, 920);
+  const locale = useLocale();
   const bottom = useRef<HTMLDivElement>(null);
   const started = useRef(false);
+  const arrived = useRef(false);
   // La réponse en cours a l'identifiant du message qui la remplacera : la réponse reste le même nœud.
   const replyId = useRef('');
   const busy = reply.status === 'flux' || reply.status === 'attente';
@@ -163,6 +175,25 @@ export function DiscussionThread({
         setReply({ status: 'repos' });
         // La page gardée par le navigateur (retour arrière) montrera aussi cette réponse.
         router.refresh();
+        // L'outil, qui voit la source et le passage cité (le surligneur) : relus sous les droits du lecteur.
+        if (citations.length > 0)
+          citationDetailsAction(citations.map((c) => c.passageId))
+            .then((details) =>
+              setMessages((current) =>
+                current.map((item) =>
+                  item.id !== answerId
+                    ? item
+                    : {
+                        ...item,
+                        citations: item.citations.map((c) => ({
+                          ...c,
+                          ...details[c.passageId.toLowerCase()],
+                        })),
+                      },
+                ),
+              ),
+            )
+            .catch(() => {}); // sans détails, les numéros restent
       })
       .catch(() => setReply({ status: 'indisponible', questionGardee: false, retry: message }));
   }
@@ -214,14 +245,14 @@ export function DiscussionThread({
     };
   }, [reply, discussionId, router]);
 
-  // Leon travaille : l'aurore s'intensifie tant qu'une réponse court.
-  useEffect(() => setThinking(busy), [busy, setThinking]);
-
   // Une question envoyée, une réponse finie : la fin de la discussion vient en vue.
   // biome-ignore lint/correctness/useExhaustiveDependencies: suit le nombre de messages et l'état de la réponse
   useEffect(() => {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    bottom.current?.scrollIntoView({ block: 'end', behavior: reduced ? 'auto' : 'smooth' });
+    // à l'arrivée sur la page, la fin est là d'emblée : rien ne défile sous les yeux
+    const smooth = arrived.current && !reduced;
+    arrived.current = true;
+    bottom.current?.scrollIntoView({ block: 'end', behavior: smooth ? 'smooth' : 'auto' });
   }, [messages.length, reply.status]);
 
   // Une seule fois, même quand React monte la page deux fois (mode développement). La page affichée peut être
@@ -248,26 +279,9 @@ export function DiscussionThread({
       );
   }, []);
 
-  // Aperçu ouvert en panneau : il prend le focus, Échap le ferme (la feuille gère les siens).
-  const opened = preview.state.status !== 'vide';
-  useEffect(() => {
-    if (opened && wide) pane.current?.focus({ preventScroll: true });
-  }, [opened, wide]);
-  useEffect(() => {
-    if (!opened || !wide) return;
-    const onKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) preview.close();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  });
-
   const firstUserId = messages.find((message) => message.role === 'user')?.id;
-  const openKey = preview.state.status === 'vide' ? null : preview.state.key;
-  const active = hovered ?? openKey;
   const streaming = reply.status === 'flux' || reply.status === 'attente';
   const liveKey = replyId.current || 'reponse-en-cours';
-  const latest = streaming ? liveKey : messages.findLast((m) => m.role === 'assistant')?.id;
   const freshMessage = fresh ? messages.find((m) => m.id === fresh) : undefined;
   const announce =
     reply.status === 'attente'
@@ -298,7 +312,7 @@ export function DiscussionThread({
     notice = {
       text: t('sessionExpired'),
       action: (
-        <Button asChild size="sm" icon={LogIn}>
+        <Button asChild size="xs" icon={LogIn}>
           <Link href="/connexion">{t('signInAgain')}</Link>
         </Button>
       ),
@@ -307,7 +321,7 @@ export function DiscussionThread({
     notice = {
       text: t('wrongOrigin', { origin: appOrigin }),
       action: (
-        <Button asChild size="sm" icon={ExternalLink}>
+        <Button asChild size="xs" icon={ExternalLink}>
           <a href={`${appOrigin}/discussions/${encodeURIComponent(discussionId)}`}>
             {t('openAtAddress')}
           </a>
@@ -327,95 +341,103 @@ export function DiscussionThread({
     };
 
   return (
-    <div ref={root}>
-      {/* le volet ne prend sa colonne qu'une fois une source ouverte : sinon le fil a toute la largeur */}
-      <div
-        className={
-          wide && opened ? 'grid grid-cols-[minmax(0,1fr)_400px] items-start gap-x-8' : undefined
-        }
-      >
-        {/* une colonne de lecture centrée, comme dans une conversation : le fil, puis la saisie à la même largeur */}
-        <div className="mx-auto w-full max-w-[46rem] min-w-0">
-          <nav aria-label={t('breadcrumb')} className="mb-3">
-            <Link
-              href="/discussions"
-              className="-ml-2 inline-flex h-8 items-center gap-1 rounded-full pr-3 pl-1.5 text-ui text-muted transition-colors hover:bg-hover hover:text-fg"
-            >
-              <ChevronLeft aria-hidden="true" className="size-4" strokeWidth={1.8} />
-              {discussionsT('title')}
-            </Link>
-          </nav>
-          <PageHeader
+    // Une colonne de lecture au milieu du bureau : le titre, les questions, les feuilles de Leon et le champ tiennent
+    // entre les deux mêmes bords. Elle remplit la fenêtre (les marges basses de l'ossature sont reprises) : le champ
+    // reste au pied, que le fil soit court ou long. Autour d'elle, `fil` mesure la marge du bureau : quand il y en a, les
+    // sources d'une réponse y sortent en drapeaux (fil.css).
+    <div className="fil">
+      <div className={THREAD_COLUMN}>
+        {/* Le titre de la discussion est un vrai titre de page, comme sur les autres écrans (deux lignes au plus). */}
+        <header className="flex items-start gap-4">
+          <h1
+            className="line-clamp-2 min-w-0 flex-1 text-h1 font-semibold tracking-[-0.022em] text-balance text-fg [overflow-wrap:anywhere] max-sm:text-[26px]"
             title={title}
-            // la question est aussi la première bulle : titre plus petit, la conversation reste le point focal
-            className="mb-7 [&_h1]:text-h2 [&_h1]:leading-[1.3] [&_h1]:break-words"
-            meta={
-              <span className="inline-flex items-center gap-1.5">
-                <Lock aria-hidden="true" />
-                {t('visibleOnlyToYou')} · {t('privacyHint')}
-              </span>
-            }
-          />
-
-          <ol
-            aria-label={t('messages')}
-            aria-busy={busy}
-            className="grid grid-cols-[minmax(0,1fr)] gap-8"
           >
-            {messages.map((message) => (
-              // à l'arrivée, sans entrée ; une question ou une réponse ajoutée ensuite monte
-              <motion.li key={message.id} variants={rise} initial={appear} animate="animate">
-                {message.role === 'user' ? (
-                  <UserBubble
-                    id={message.id}
-                    content={message.content}
-                    seeds={message.id === firstUserId ? message.citations : []}
-                    active={active}
-                    onOpen={preview.open}
-                  />
-                ) : (
-                  <LeonCard
-                    id={message.id}
-                    content={message.content}
-                    citations={message.citations}
-                    fresh={message.id === fresh}
-                    latest={message.id === latest}
-                    active={active}
-                    onOpen={preview.open}
-                    onHover={setHovered}
-                  />
-                )}
-                {message.actions.map((action) => (
-                  <ActionCard key={action.id} action={action} />
-                ))}
-              </motion.li>
-            ))}
-            {streaming && (
-              <motion.li key={liveKey} variants={rise} initial={appear} animate="animate">
-                <LeonCard
-                  id={liveKey}
-                  content=""
-                  citations={[]}
-                  live={
-                    reply.status === 'attente'
-                      ? { activity: RESUMING, text: '' }
-                      : { activity: activityLabel(reply.activity), text: reply.text }
-                  }
-                  latest
-                  active={active}
-                  onOpen={preview.open}
-                  onHover={setHovered}
+            {title}
+          </h1>
+          <DeleteDiscussion
+            discussionId={discussionId}
+            title={title}
+            createdAt={createdAt}
+            questions={messages.filter((m) => m.role === 'user').length}
+            sourcesCited={
+              new Set(
+                messages.flatMap((m) =>
+                  m.role === 'assistant' ? m.citations.map((c) => c.sourceId) : [],
+                ),
+              ).size
+            }
+            locale={locale}
+          />
+        </header>
+
+        {/* Une question et sa réponse se tiennent (16 px) ; la question suivante prend ses distances (40 px). */}
+        <ol
+          aria-label={t('messages')}
+          aria-busy={busy}
+          className="mt-7 grid grid-cols-[minmax(0,1fr)]"
+        >
+          {messages.map((message, index) => (
+            <li
+              key={message.id}
+              className={cn(
+                index > 0 && (message.role === 'user' ? 'mt-10' : 'mt-4'),
+                message.id === fresh && 'rise-in',
+              )}
+            >
+              {message.role === 'user' ? (
+                <UserBubble
+                  content={message.content}
+                  seeds={message.id === firstUserId ? message.citations : []}
+                  onOpen={sources.open}
                 />
-              </motion.li>
-            )}
-          </ol>
+              ) : (
+                <LeonCard
+                  content={message.content}
+                  citations={message.citations}
+                  fresh={message.id === fresh}
+                  onOpen={sources.open}
+                />
+              )}
+              {message.actions.length > 0 && (
+                <div className="mt-3 grid gap-3">
+                  {message.actions.map((action) => (
+                    <ActionCard key={action.id} action={action} />
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+          {streaming && (
+            <li key={liveKey} className="mt-4">
+              <LeonCard
+                content=""
+                citations={[]}
+                live={
+                  reply.status === 'attente'
+                    ? { activity: RESUMING, text: '' }
+                    : { activity: activityLabel(reply.activity), text: reply.text }
+                }
+                onOpen={sources.open}
+              />
+            </li>
+          )}
+        </ol>
 
-          <p className="sr-only" role="status" aria-live="polite">
-            {announce}
-          </p>
+        <p className="sr-only" role="status" aria-live="polite">
+          {announce}
+        </p>
+        {/* Sous le dernier message : la fin de la discussion vient en vue au-dessus du champ. */}
+        <div ref={bottom} className="scroll-mb-40" />
 
-          {notice && (
-            <motion.div variants={rise} initial={appear} animate="animate" className="mt-5">
+        <Composer
+          value={draft}
+          setValue={setDraft}
+          disabled={reply.status === 'sans-modele'}
+          busy={busy}
+          onSend={(message) => ask(message)}
+          below={
+            notice && (
               <Notice
                 tone={notice.warning ? 'warning' : 'neutral'}
                 // présente dès l'arrivée : pas annoncée ; une issue de réponse l'est
@@ -424,24 +446,125 @@ export function DiscussionThread({
               >
                 {notice.text}
               </Notice>
-            </motion.div>
-          )}
-
-          <Composer
-            value={draft}
-            setValue={setDraft}
-            disabled={reply.status === 'sans-modele'}
-            busy={busy}
-            onSend={(message) => ask(message)}
-          />
-          {/* Sous la saisie : faire défiler jusqu'ici montre le dernier message au-dessus d'elle. */}
-          <div ref={bottom} />
-        </div>
-        {wide && preview.state.status !== 'vide' && (
-          <PreviewPane ref={pane} state={preview.state} onClose={preview.close} />
-        )}
+            )
+          }
+        />
+        {sources.panel}
       </div>
-      {!wide && <PreviewSheet state={preview.state} onClose={preview.close} />}
     </div>
+  );
+}
+
+/**
+ * Le menu de la discussion (trois points, en tête) : « Supprimer » y est rangé, le mot n'est plus écrit dans le fil. Le
+ * panneau dit ce qu'elle est, puis demande confirmation.
+ */
+function DeleteDiscussion({
+  discussionId,
+  title,
+  createdAt,
+  questions,
+  sourcesCited,
+  locale,
+}: {
+  discussionId: string;
+  title: string;
+  createdAt: Date;
+  questions: number;
+  sourcesCited: number;
+  locale: string;
+}) {
+  const t = useTranslations('discussions');
+  const tt = useTranslations('thread');
+  const shell = useTranslations('shell');
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [pending, setPending] = useState(false);
+  // la confirmation s'ouvre une fois le menu refermé : en se fermant à son tour, elle rend le focus aux trois points
+  const toAsk = useRef(false);
+
+  const remove = () => {
+    setPending(true);
+    deleteDiscussionAction(discussionId)
+      .then(({ ok }) => {
+        if (!ok) throw new Error('refusée');
+        toast.success(t('deleteSuccess'));
+        router.push('/discussions');
+      })
+      .catch(() => {
+        setPending(false);
+        toast.error(t('deleteFailed'));
+      });
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label={nb(shell('discussionMenu', { title }))}
+          className="mt-0.5 -mr-1.5 grid size-8 shrink-0 place-items-center rounded-item text-fg-2 transition-[background-color,color] duration-150 hover:bg-hover hover:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg max-shell:size-11"
+        >
+          <Ellipsis aria-hidden="true" strokeWidth={1.8} className="size-[18px]" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="min-w-[180px]"
+          onCloseAutoFocus={() => {
+            if (toAsk.current) {
+              setAsking(true);
+              setOpen(true);
+            }
+            toAsk.current = false;
+          }}
+        >
+          <DropdownMenuItem
+            icon={Trash2}
+            destructive
+            onSelect={() => {
+              toAsk.current = true;
+            }}
+          >
+            {t('delete')}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <SidePanel
+        open={open}
+        onOpenChange={(next) => {
+          if (pending) return;
+          setOpen(next);
+          if (!next) setAsking(false);
+        }}
+        title={title}
+        confirm={
+          asking
+            ? {
+                title: t('deleteTitle'),
+                text: t('deleteDescription'),
+                yes: t('delete'),
+                no: t('keep'),
+                busy: pending,
+                busyLabel: t('deleting'),
+                onYes: remove,
+                onNo: () => {
+                  setAsking(false);
+                  setOpen(false);
+                },
+              }
+            : null
+        }
+      >
+        <Facts>
+          <Fact label={t('visibleTo')}>
+            {t('onlyYou')}
+            <small>{nb(tt('privacyHint'))}</small>
+          </Fact>
+          <Fact label={t('started')}>{formatDateTime(createdAt, locale)}</Fact>
+          <Fact label={t('questions')}>{questions}</Fact>
+          <Fact label={t('sourcesCited')}>{sourcesCited}</Fact>
+        </Facts>
+      </SidePanel>
+    </>
   );
 }

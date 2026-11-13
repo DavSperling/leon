@@ -13,31 +13,14 @@ import { nb } from '@/lib/verre/nb';
 import { useTheme } from '@/lib/verre/theme';
 import { useSiteContent } from './content';
 
-// En-tête du site public : la marque, la navigation (Cas d'usage ouvre un méga-menu des équipes), le thème, puis
-// « Se connecter » et « Créer un espace ». Verre transparent en haut de page, qui se densifie dès qu'on défile.
-// Sous 960 px : la marque, « Créer un espace » et un bouton Menu qui ouvre la feuille du bas.
+// En-tête du site public : la marque (ses trois traits se tracent une fois au chargement), la navigation (« Cas
+// d'usage » ouvre les six équipes), le thème ; puis, à part après un filet, « Créer un espace » et « Se connecter ».
+// Une barre blanche fixe ; un filet dessous dès qu'on défile. Sous 1200 px, les liens passent dans le menu ; sous 960,
+// le thème et « Se connecter » aussi : la marque, « Créer un espace », le menu.
 
 /** « page » sur la page même, « true » sur la section qui la contient (« Cas d’usage » sur /cas-usage/ventes). */
 const currentOf = (pathname: string, href: string): 'page' | 'true' | undefined =>
   pathname === href ? 'page' : pathname.startsWith(`${href}/`) ? 'true' : undefined;
-
-const isActive = (pathname: string, href: string) =>
-  pathname === href || pathname.startsWith(`${href}/`);
-
-const LINK =
-  'relative inline-flex h-9 items-center gap-1 rounded-full px-3.5 text-ui font-medium whitespace-nowrap text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg aria-[current=true]:text-fg data-[state=open]:bg-hover data-[state=open]:text-fg';
-
-function ActiveDot({ on }: { on: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'absolute bottom-[3px] left-1/2 size-1 -translate-x-1/2 rounded-full bg-accent transition-opacity duration-300',
-        on ? 'opacity-100' : 'opacity-0',
-      )}
-    />
-  );
-}
 
 function ThemeButton({ className }: { className?: string }) {
   const t = useTranslations('site.header');
@@ -50,12 +33,9 @@ function ThemeButton({ className }: { className?: string }) {
       onClick={toggle}
       aria-label={label}
       title={label}
-      className={cn(
-        'inline-grid size-9 shrink-0 place-items-center rounded-full text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg',
-        className,
-      )}
+      className={cn('s-icon-btn', className)}
     >
-      <Icon aria-hidden="true" strokeWidth={1.7} className="size-[17px]" />
+      <Icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
     </button>
   );
 }
@@ -64,39 +44,29 @@ function TeamsMenu({ pathname }: { pathname: string }) {
   const t = useTranslations('site.header');
   const { teams } = useSiteContent();
   return (
-    <NavigationMenu.Content className="site-menu-content absolute top-[calc(100%+10px)] left-1/2 w-[min(640px,calc(100vw-32px))] -translate-x-1/2 rounded-box border border-line-strong bg-menu p-2.5 shadow-float">
-      <div className="grid grid-cols-2 gap-1">
+    <NavigationMenu.Content className="s-menu">
+      <ul className="grid grid-cols-2 gap-0.5">
         {teams.map((team) => (
-          <NavigationMenu.Link key={team.slug} asChild>
-            <Link
-              href={`/cas-usage/${team.slug}`}
-              aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
-              className="group flex gap-3 rounded-field p-3 transition-colors duration-200 hover:bg-hover focus-visible:bg-hover"
-            >
-              <span className="grid size-9 shrink-0 place-items-center rounded-item border border-line bg-glass-3 text-accent transition-colors duration-200 group-hover:border-accent-line group-hover:bg-accent-soft">
-                <team.icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-ui font-semibold text-fg">{team.label}</span>
-                <span className="mt-0.5 block text-label leading-[1.45] text-muted">
-                  {nb(team.pitch)}
-                </span>
-              </span>
-            </Link>
-          </NavigationMenu.Link>
+          <li key={team.slug}>
+            <NavigationMenu.Link asChild>
+              <Link
+                href={`/cas-usage/${team.slug}`}
+                aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
+              >
+                <span className="block text-ui font-medium text-fg">{team.label}</span>
+                <span className="mt-0.5 block text-label text-muted">{nb(team.pitch)}</span>
+              </Link>
+            </NavigationMenu.Link>
+          </li>
         ))}
-      </div>
+      </ul>
       <NavigationMenu.Link asChild>
         <Link
           href="/cas-usage"
-          className="group mt-1.5 flex items-center justify-between rounded-field border border-line bg-glass-3 px-3.5 py-2.5 text-label font-semibold text-fg-2 transition-colors duration-200 hover:border-accent-line hover:text-fg"
+          className="mt-1 flex items-center justify-between border-t border-line text-ui font-medium"
         >
           {t('allUseCases')}
-          <ArrowRight
-            aria-hidden="true"
-            strokeWidth={2}
-            className="size-3.5 text-accent transition-transform duration-300 group-hover:translate-x-0.5"
-          />
+          <ArrowRight aria-hidden="true" strokeWidth={1.8} className="size-4" />
         </Link>
       </NavigationMenu.Link>
     </NavigationMenu.Content>
@@ -111,12 +81,8 @@ function MobileMenu({ pathname }: { pathname: string }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <button
-          type="button"
-          aria-label={t('menu')}
-          className="inline-grid size-10 place-items-center rounded-full border border-line bg-glass-3 text-fg-2 transition-colors hover:text-fg"
-        >
-          <Menu aria-hidden="true" strokeWidth={1.8} className="size-[18px]" />
+        <button type="button" aria-label={t('menu')} className="s-icon-btn size-11 text-fg">
+          <Menu aria-hidden="true" strokeWidth={1.8} className="size-[22px]" />
         </button>
       </SheetTrigger>
       <SheetContent
@@ -128,61 +94,50 @@ function MobileMenu({ pathname }: { pathname: string }) {
           first.current?.focus();
         }}
       >
-        <SheetClose
-          aria-label={t('close')}
-          className="absolute top-2 right-2 grid size-11 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg"
-        >
-          <X aria-hidden="true" strokeWidth={1.8} className="size-[18px]" />
+        <SheetClose aria-label={t('close')} className="s-icon-btn absolute top-2 right-2 size-11">
+          <X aria-hidden="true" strokeWidth={1.8} className="size-[20px]" />
         </SheetClose>
-        <nav aria-label={t('nav')} className="mt-5 grid gap-1">
+        <nav aria-label={t('nav')} className="mt-6 grid">
           {navLinks.map((l, i) => (
             <SheetClose key={l.href} asChild>
               <Link
                 ref={i === 0 ? first : undefined}
                 href={l.href}
                 aria-current={currentOf(pathname, l.href)}
-                className="flex h-12 items-center justify-between rounded-field px-3 text-[16px] font-semibold text-fg-2 hover:bg-hover aria-[current=page]:bg-accent-soft aria-[current=page]:text-accent aria-[current=true]:bg-accent-soft aria-[current=true]:text-accent"
+                className="flex min-h-12 items-center border-b border-line text-[17px] font-medium text-fg aria-[current]:underline aria-[current]:underline-offset-4"
               >
                 {l.label}
-                <ArrowRight aria-hidden="true" strokeWidth={1.8} className="size-4 text-muted" />
               </Link>
             </SheetClose>
           ))}
         </nav>
-        <div className="grid grid-cols-2 gap-1.5 border-t border-line pt-3">
+        <ul className="grid grid-cols-2 gap-x-4">
           {teams.map((team) => (
-            <SheetClose key={team.slug} asChild>
-              <Link
-                href={`/cas-usage/${team.slug}`}
-                aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
-                className="flex min-h-11 items-center gap-2.5 rounded-field border border-line bg-glass-3 px-3 text-label font-semibold text-fg-2"
-              >
-                <team.icon aria-hidden="true" strokeWidth={1.7} className="size-4 text-accent" />
-                {team.label}
-              </Link>
-            </SheetClose>
+            <li key={team.slug}>
+              <SheetClose asChild>
+                <Link
+                  href={`/cas-usage/${team.slug}`}
+                  aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
+                  className="flex min-h-11 items-center text-ui text-muted aria-[current]:text-fg"
+                >
+                  {team.label}
+                </Link>
+              </SheetClose>
+            </li>
           ))}
-        </div>
-        <div className="grid gap-2 border-t border-line pt-3">
+        </ul>
+        <div className="flex items-center gap-2 border-t border-line pt-4">
           <SheetClose asChild>
-            <Link
-              href="/inscription"
-              className="site-cta inline-flex h-12 items-center justify-center rounded-full bg-accent text-[15px] font-semibold text-accent-ink"
-            >
+            <Link href="/inscription" className="s-btn s-btn--ink flex-1">
               {cta('create')}
             </Link>
           </SheetClose>
-          <div className="flex items-center gap-2">
-            <SheetClose asChild>
-              <Link
-                href="/connexion"
-                className="inline-flex h-12 flex-1 items-center justify-center rounded-full border border-line-strong bg-glass-3 text-[15px] font-semibold text-fg"
-              >
-                {cta('signIn')}
-              </Link>
-            </SheetClose>
-            <ThemeButton className="size-12 border border-line-strong bg-glass-3" />
-          </div>
+          <SheetClose asChild>
+            <Link href="/connexion" className="s-btn s-btn--line flex-1">
+              {cta('signIn')}
+            </Link>
+          </SheetClose>
+          <ThemeButton className="size-12" />
         </div>
       </SheetContent>
     </Sheet>
@@ -194,90 +149,80 @@ export function SiteHeader() {
   const cta = useTranslations('site.cta');
   const { navLinks } = useSiteContent();
   const pathname = usePathname();
-  const onSignUp = pathname === '/inscription';
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   return (
-    <header
-      data-scrolled={scrolled || undefined}
-      className="site-header fixed inset-x-0 top-0 z-40 px-3 pt-3 sm:px-5"
-    >
-      {/* progression de la lecture, en CSS (animation-timeline: scroll()) */}
-      <span aria-hidden="true" className="site-progress" />
-      <div className="site-header-bar mx-auto flex h-[58px] max-w-[1200px] items-center gap-2 rounded-full border border-transparent pr-2 pl-3 sm:pl-4">
+    <header data-scrolled={scrolled || undefined} className="s-nav">
+      <div className="s-wrap s-nav__in">
         <Link
           href="/accueil"
           aria-label={t('home')}
-          className="flex h-10 shrink-0 items-center rounded-full pr-2"
+          className="s-brand flex h-11 shrink-0 items-center"
         >
-          <Brand className="h-6" />
+          <Brand className="h-[22px]" />
         </Link>
 
-        <NavigationMenu.Root
-          aria-label={t('nav')}
-          delayDuration={80}
-          className="relative mx-auto max-[960px]:hidden"
-        >
-          <NavigationMenu.List className="flex items-center gap-0.5">
-            {navLinks.map((l) =>
-              l.href === '/cas-usage' ? (
-                <NavigationMenu.Item key={l.href}>
-                  <NavigationMenu.Trigger
-                    className={LINK}
-                    aria-current={currentOf(pathname, l.href)}
-                  >
-                    {l.label}
-                    <ChevronDown
-                      aria-hidden="true"
-                      strokeWidth={1.8}
-                      className="size-3.5 text-muted transition-transform duration-200 [[data-state=open]>&]:rotate-180"
-                    />
-                    <ActiveDot on={isActive(pathname, l.href)} />
-                  </NavigationMenu.Trigger>
-                  <TeamsMenu pathname={pathname} />
-                </NavigationMenu.Item>
-              ) : (
-                <NavigationMenu.Item key={l.href}>
-                  <NavigationMenu.Link asChild active={isActive(pathname, l.href)}>
-                    <Link href={l.href} className={LINK} aria-current={currentOf(pathname, l.href)}>
+        <NavigationMenu.Root aria-label={t('nav')} delayDuration={80} className="s-nav__links">
+          <NavigationMenu.List>
+            {navLinks.map((l) => (
+              <NavigationMenu.Item key={l.href} className="relative">
+                {l.href === '/cas-usage' ? (
+                  <>
+                    <NavigationMenu.Trigger
+                      className="s-nav__link"
+                      aria-current={currentOf(pathname, l.href)}
+                    >
                       {l.label}
-                      <ActiveDot on={isActive(pathname, l.href)} />
+                      <ChevronDown
+                        aria-hidden="true"
+                        strokeWidth={1.8}
+                        className="size-3.5 text-icon transition-transform duration-200 [[data-state=open]>&]:rotate-180"
+                      />
+                    </NavigationMenu.Trigger>
+                    <TeamsMenu pathname={pathname} />
+                  </>
+                ) : (
+                  <NavigationMenu.Link asChild active={currentOf(pathname, l.href) !== undefined}>
+                    <Link
+                      href={l.href}
+                      className="s-nav__link"
+                      aria-current={currentOf(pathname, l.href)}
+                    >
+                      {l.label}
                     </Link>
                   </NavigationMenu.Link>
-                </NavigationMenu.Item>
-              ),
-            )}
+                )}
+              </NavigationMenu.Item>
+            ))}
           </NavigationMenu.List>
         </NavigationMenu.Root>
 
-        <div className="flex items-center gap-1.5 max-[960px]:ml-auto">
-          <ThemeButton className="max-[960px]:hidden" />
-          {/* sur /inscription, les deux boutons s'échangent : le principal ne mène jamais à la page courante */}
-          <Link
-            href={onSignUp ? '/inscription' : '/connexion'}
-            aria-current={onSignUp || pathname === '/connexion' ? 'page' : undefined}
-            className="inline-flex h-10 items-center rounded-full px-4 text-ui font-semibold whitespace-nowrap text-fg-2 transition-colors duration-200 hover:bg-hover hover:text-fg aria-[current=page]:text-fg max-[960px]:hidden"
-          >
-            {onSignUp ? cta('create') : cta('signIn')}
+        <div className="s-nav__account">
+          <ThemeButton className="s-nav__wide" />
+          <Link href="/inscription" className="s-btn s-btn--ink s-btn--sm">
+            {cta('create')}
           </Link>
-          <Link
-            href={onSignUp ? '/connexion' : '/inscription'}
-            className="site-cta inline-flex h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-ui font-semibold whitespace-nowrap text-accent-ink transition-[filter,scale] duration-200 hover:brightness-[1.06] active:scale-[.97] max-[420px]:px-3.5"
-          >
-            {onSignUp ? cta('signIn') : cta('create')}
+          <Link href="/connexion" className="s-btn s-btn--line s-btn--sm s-nav__wide">
+            {cta('signIn')}
           </Link>
-          <div className="min-[960px]:hidden">
+          <div className="min-[1200px]:hidden">
             <MobileMenu pathname={pathname} />
           </div>
         </div>
       </div>
+      {/* le fil de lecture : les trois traits de la marque s'allongent avec la page (CSS seul, site.css) */}
+      <span aria-hidden="true" className="s-nav__read">
+        <i />
+        <i />
+        <i />
+      </span>
     </header>
   );
 }

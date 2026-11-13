@@ -6,7 +6,7 @@ import type { ComponentProps } from 'react';
 import { cn } from '@/lib/verre/cn';
 
 export type PillProps = ComponentProps<'button'> & {
-  /** default : contour ; active : filtre en place (accent) ; warning : filtre non reconnu. */
+  /** default : contour ; active : la puce choisie (encre pleine ; aria-pressed="true" fait de même) ; warning : filtre non reconnu. */
   variant?: 'default' | 'active' | 'warning';
   icon?: LucideIcon;
   /** Chevron de menu : tourne quand le menu est ouvert (data-state="open" ou aria-expanded). */
@@ -18,13 +18,13 @@ export type PillProps = ComponentProps<'button'> & {
 
 const VARIANTS = {
   default:
-    'border-line bg-glass-3 text-fg-2 hover:border-line-strong hover:text-fg data-[state=open]:border-line-strong data-[state=open]:bg-hover data-[state=open]:text-fg aria-expanded:border-line-strong aria-expanded:bg-hover aria-expanded:text-fg [&_svg]:text-muted',
-  active: 'border-accent-line bg-accent-soft text-accent hover:border-accent [&_svg]:text-accent',
+    'border-line bg-sheet text-fg hover:border-fg data-[state=open]:border-fg aria-expanded:border-fg aria-pressed:border-ink aria-pressed:bg-ink aria-pressed:text-on-ink [&_svg]:text-icon aria-pressed:[&_svg]:text-on-ink',
+  active: 'border-ink bg-ink text-on-ink [&_svg]:text-on-ink',
   warning:
     'border-warning-line bg-warning-soft text-warning hover:border-warning [&_svg]:text-warning',
 } as const;
 
-/** Pastille de filtre (h 32 px, entièrement ronde), comme la rangée de filtres de la planche. */
+/** Puce (h 32 px, 44 au doigt, entièrement ronde) : un filtre, un onglet, le déclencheur d'un menu. Une seule est choisie à la fois. */
 export function Pill({
   variant = 'default',
   icon: Icon,
@@ -36,7 +36,7 @@ export function Pill({
   ...props
 }: PillProps) {
   const cls = cn(
-    'group inline-flex h-8 shrink-0 items-center gap-[7px] rounded-full border px-[13px] text-label font-medium whitespace-nowrap transition-[border-color,background-color,color] duration-200 [&_svg]:size-3.5',
+    'group inline-flex h-8 shrink-0 items-center gap-[7px] rounded-full border px-3.5 text-label font-medium whitespace-nowrap transition-[border-color,background-color,color,scale] duration-150 active:scale-[.97] max-shell:h-11 [&_svg]:size-3.5',
     VARIANTS[variant],
     className,
   );
@@ -48,7 +48,7 @@ export function Pill({
       {chevron && (
         <ChevronDown
           aria-hidden="true"
-          className="-mr-[3px] transition-transform duration-[250ms] ease-out group-data-[state=open]:rotate-180 group-aria-expanded:rotate-180"
+          className="-mr-[3px] transition-transform duration-150 ease-out group-data-[state=open]:rotate-180 group-aria-expanded:rotate-180"
         />
       )}
       {removable && <X aria-hidden="true" className="-mr-1" />}

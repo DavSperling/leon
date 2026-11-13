@@ -1,0 +1,425 @@
+/* Leon « Papier » v2 : the app after login. The shell and the kit every app screen is built from.
+   Load after css/tokens.css and css/ui.css (base, .btn, .field, .label, .avatar, .hl, .cite, .num, .doc, .sheet, .vis, .notice).
+   Rules: white ground, --desk sidebar, ink for actions, colour only on citation numbers, an answer's sentences and the
+   passage inside an original. 14px interface text, 13px minimum. One control radius (--r), every button a pill.
+   Sizes: one control height (--ctl, 40px: fields, the compact ask field, the primary button), one small button (32px:
+   every action in a row, a sheet or beside a title), one table row (--row, 56px).
+   Everything is in its final, visible state without script; js/app.js only adds behaviour. See NOTES-app.md. */
+
+@property --sweep { syntax: "<number>"; inherits: true; initial-value: 1; }
+
+.app {
+  --t-answer: 1.125rem;  /* 18: what Leon writes, inside the app */
+  --side-w: 240px;
+  --pad: 32px;
+  --content: 1120px;
+  --ctl: 40px;           /* fields, selects, the compact ask field, the primary button */
+  --row: 56px;           /* a table row */
+  font: 400 var(--t-ui)/1.45 var(--sans);
+}
+
+.app b { font-weight: 600; } /* the face's bold is 600 here: three weights in the app (400, 500, 600) */
+
+.skip { position: absolute; left: 16px; top: -64px; z-index: 70; padding: 12px 16px; border-radius: var(--r-pill); background: var(--ink); color: #fff; font-weight: 500; }
+.skip:focus { top: 12px; }
+
+/* ================= Shell ================= */
+.shell { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+
+.side {
+  position: sticky; top: 0; align-self: start; z-index: 30;
+  display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding: 16px 12px 12px;
+  background: var(--desk); overflow-y: auto;
+}
+.side__top { display: flex; align-items: center; justify-content: space-between; min-height: 32px; padding: 0 8px; }
+.side__brand { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--r-mark); font: 600 var(--t-body)/1 var(--sans); letter-spacing: -.02em; text-decoration: none; }
+.side__brand svg { width: 22px; height: 22px; }
+.side__menu { display: none; }
+.side__body { display: flex; flex: 1; flex-direction: column; min-height: 0; margin-top: 14px; }
+
+/* The workspace row: opens the account menu */
+.acct { position: relative; }
+.acct__btn {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr) 16px; column-gap: 10px; align-items: center;
+  width: 100%; padding: 8px; border: 0; border-radius: var(--r); background: none; text-align: left; cursor: pointer;
+  transition: background-color var(--t-fast);
+}
+.acct__btn:hover, .acct__btn[aria-expanded="true"] { background: var(--desk-2); }
+.acct__btn:active { background: var(--desk-3); }
+.acct__btn .avatar { grid-row: 1 / 3; }
+/* whole-pixel line heights: the entries under it sit at the same place on every screen */
+.acct__ws { font: 600 var(--t-ui)/18px var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct__who { grid-column: 2; font: 400 var(--t-ui-s)/18px var(--sans); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acct__chev { grid-column: 3; grid-row: 1 / 3; width: 16px; height: 16px; color: var(--ink-2); }
+.acct__menu { left: 0; right: 0; top: calc(100% + 4px); }
+
+/* The six entries */
+.ico { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.side__nav { display: grid; gap: 2px; margin-top: 14px; }
+.side__link {
+  display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px;
+  border-radius: var(--r-pill); font: 400 var(--t-ui)/1 var(--sans); color: var(--ink); text-decoration: none;
+  transition: background-color var(--t-fast);
+}
+.side__link .ico { color: var(--ink-2); }
+.side__link:hover { background: rgba(15, 15, 13, .05); }
+.side__link:active { background: var(--desk-3); }
+.side__link[aria-current] { background: var(--desk-2); font-weight: 600; }
+.side__link[aria-current] .ico { color: var(--ink); }
+
+/* One line of state at the foot */
+.side__state {
+  display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 8px 10px;
+  border-radius: var(--r); font: 500 var(--t-chip)/1.3 var(--sans); color: var(--ink-2); text-decoration: none; white-space: nowrap;
+}
+a.side__state:hover { text-decoration: underline; text-underline-offset: 3px; }
+.side__state--danger { color: var(--danger); }
+
+/* 10px of the side padding belong to .page: the ground of a row (.row, .src) is 10px wider than its words and stays inside it */
+.main { min-width: 0; padding: var(--pad) calc(var(--pad) - 10px); background: var(--ground); }
+.page { max-width: calc(var(--content) + 20px); margin-inline: auto; padding-inline: 10px; }
+
+/* The page's top row: title on the left, the compact ask field on the right (not on Home, the answer screen or Chat,
+   which have their own field). The sub-line is one short sentence in interface text; on Home it is the day's fact. */
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px 24px; margin-bottom: 28px; }
+.top__text { min-width: 0; }
+.top__title { font: 600 1.5rem/40px var(--sans); letter-spacing: -.02em; white-space: nowrap; }
+.top__sub { max-width: 76ch; font: 400 var(--t-ui)/1.5 var(--sans); color: var(--ink-2); text-wrap: pretty; }
+[data-screen="home"] .top__sub { font-size: var(--t-body); }
+
+/* ================= Kit ================= */
+
+/* ---------- The ask field: Leon's one input. Compact in the top row, --fill on the answer screen, --lg on Home and at the foot of Chat ---------- */
+.ask {
+  display: flex; flex: 0 1 360px; align-items: center; gap: 8px; height: var(--ctl); padding: 0 4px 0 12px;
+  border: 1px solid var(--line-strong); border-radius: var(--r); background: var(--sheet);
+  transition: border-color var(--t-fast);
+}
+.ask:hover { border-color: var(--ink-2); }
+.ask:focus-within { border-color: var(--ink); }
+.ask:has(.ask__input:focus-visible) { outline: 2px solid var(--ink); outline-offset: -1px; } /* reads as a 2px ink edge */
+.ask__input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: none; font: 400 var(--t-ui)/1.2 var(--sans); text-overflow: ellipsis; }
+.ask__input::placeholder { color: var(--ink-2); opacity: 1; }
+.ask--fill { flex: 1 1 auto; }
+.ask--fill .ask__input { font-size: var(--t-body); font-weight: 500; }
+.ask--lg { flex: none; width: 100%; height: 56px; padding: 0 8px 0 18px; }
+.ask--lg .ask__input { font-size: var(--t-body); }
+
+/* ---------- Buttons at interface size (the shape and states come from ui.css). Two heights: 40 and 32 ---------- */
+.app .btn { height: var(--ctl); padding: 0 18px; gap: 8px; font-size: var(--t-ui); }
+.app .btn--sm, .app .ask .btn { height: 32px; padding: 0 14px; font-size: var(--t-ui-s); }
+.app .ask--lg .btn { height: var(--ctl); padding: 0 18px; font-size: var(--t-ui); }
+.btn .ico { width: 14px; height: 14px; }
+/* The button that removes for good: only once asked, inside a confirmation, or for an account or workspace deletion */
+.app .btn--danger, .app .btn--danger:hover { border-color: var(--danger); color: var(--danger); }
+
+/* A text action */
+.link {
+  padding: 0; border: 0; background: none; cursor: pointer; font-weight: 500;
+  text-decoration: underline; text-decoration-color: var(--line-strong); text-decoration-thickness: 1.5px; text-underline-offset: 4px;
+  transition: text-decoration-color var(--t-fast);
+}
+.link:hover { text-decoration-color: currentColor; }
+.link:active { opacity: .7; }
+.link--danger { color: var(--danger); }
+.link[aria-disabled="true"], .link:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---------- Fields ---------- */
+.app .field { height: var(--ctl); padding: 0 12px; font-size: var(--t-ui); }
+.app textarea.field { height: auto; min-height: 88px; padding: 8px 12px; line-height: 1.45; resize: vertical; }
+.app .field:disabled, .app .field[readonly] { border-color: var(--line); background: var(--desk); color: var(--ink-2); }
+.app .field:disabled { cursor: not-allowed; }
+.select {
+  appearance: none; padding-right: 32px !important; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230F0F0D' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; background-size: 12px;
+}
+.hint { margin-top: 6px; font: 400 var(--t-ui-s)/1.45 var(--sans); color: var(--ink-2); }
+.fields { display: grid; gap: 16px; }
+.fields > *, .split__body > * { min-width: 0; }
+.fields--row { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+/* A list's filter: one plain field under the section head (the catalogue of Connections, the members of Team) */
+.filter-row { position: relative; display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+.filter-row .field { max-width: 320px; }
+
+/* ---------- Sections ---------- */
+.sec + .sec, .sec--gap { margin-top: 40px; }
+.sec__head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line-strong); }
+.h-sec { font: 600 var(--t-body)/1.3 var(--sans); letter-spacing: -.01em; }
+.sec__meta, .muted { font: 400 var(--t-ui-s)/1.45 var(--sans); color: var(--ink-2); }
+.sec__meta { white-space: nowrap; }
+
+/* Two columns: the work on the left, a narrower column on the right (set --aside) */
+.duo { display: grid; grid-template-columns: minmax(0, 1fr) var(--aside, 340px); gap: 40px 48px; align-items: start; }
+
+/* ---------- Quiet chips (a choice you can click) and tags (a fact you read) ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 4px 13px; border: 0; border-radius: var(--r-pill);
+  background: var(--desk); color: var(--ink); font: 400 var(--t-ui)/1.3 var(--sans); text-decoration: none; cursor: pointer;
+  transition: background-color var(--t-fast), transform var(--t-fast) var(--ease-out);
+}
+.chip:hover { background: var(--desk-2); }
+.chip:active { background: var(--desk-3); transform: scale(.98); }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.tag { display: inline-flex; align-items: center; height: 22px; padding: 0 7px; border-radius: var(--r-mark); background: var(--desk); color: var(--ink-2); font: 500 var(--t-chip)/1 var(--sans); white-space: nowrap; }
+
+/* ---------- Status: a dot and words ---------- */
+.status { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
+.dot--ok { background: var(--ok); }
+.dot--danger { background: var(--danger); }
+.status--danger { color: var(--danger); font-weight: 500; }
+/* Who can see it: words only */
+.vis--only { color: var(--ink); font-weight: 500; }
+.app .stamp { rotate: none; }
+
+/* ---------- Table ---------- */
+.table-wrap { position: relative; overflow-x: auto; } /* relative: a .vh label inside a wide table must not widen the page */
+.table { width: 100%; border-collapse: collapse; font-size: var(--t-ui); }
+.table th { padding: 12px 20px 9px 0; border-bottom: 1px solid var(--line-strong); text-align: left; font: 500 var(--t-ui-s)/1.3 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.table td { height: var(--row); padding: 8px 20px 8px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.table tr > :last-child { padding-right: 0; }
+.table tbody tr:last-child td { border-bottom: 0; }
+.table .t-num { text-align: right; } /* no tabular-nums: this face widens the comma of 1,842 with it */
+.table .t-act { width: 1%; text-align: right; white-space: nowrap; }
+.table .t-act > * + * { margin-left: 8px; }
+.cell { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 600; }
+.cell .logo { flex: none; width: 20px; height: 20px; }
+.cell .tag { margin: -2px 0 -2px 8px; } /* the tag does not make its row taller */
+.cell__sub .busy { display: flex; gap: 8px; }
+.status:has(+ .cell__sub) { display: flex; }
+.cell__sub { display: block; font: 400 var(--t-ui-s)/1.4 var(--sans); color: var(--ink-2); }
+.avatar--quiet { background: var(--desk-2); color: var(--ink); } /* a person in a list: the ink tile is the workspace's */
+
+/* ---------- Row list: one link per row ---------- */
+.rows li + li { border-top: 1px solid var(--line); }
+.row {
+  display: flex; align-items: center; gap: 12px; min-height: 44px; margin-inline: -10px; padding: 8px 10px;
+  border-radius: var(--r); text-decoration: none; transition: background-color var(--t-fast);
+}
+a.row:hover, button.row:hover { background: rgba(15, 15, 13, .04); }
+a.row:active, button.row:active { background: rgba(15, 15, 13, .08); }
+.row[aria-current] { background: var(--desk); }
+.row:focus-visible { outline-offset: -2px; }
+.row__title { flex: 1; min-width: 0; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row__meta { flex: none; font: 400 var(--t-ui-s)/1.3 var(--sans); color: var(--ink-2); white-space: nowrap; }
+
+/* ---------- Labelled groups: a name on the left, its lines on the right ---------- */
+.kv > div { display: grid; grid-template-columns: var(--kv, 140px) minmax(0, 1fr); gap: 4px 24px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.kv > div:last-child { border-bottom: 0; }
+.kv dt { font-weight: 600; }
+
+/* ---------- Settings: label and explanation on the left, fields on the right ---------- */
+.split { display: grid; grid-template-columns: minmax(0, 280px) minmax(0, 1fr); gap: 16px 48px; padding: 28px 0; border-top: 1px solid var(--line); }
+.split:first-child, .sec__head + .split { border-top: 0; }
+.split:first-child { padding-top: 0; }
+.split__label { font: 600 var(--t-ui)/1.4 var(--sans); }
+.split__help { margin-top: 4px; font: 400 var(--t-ui-s)/1.5 var(--sans); color: var(--ink-2); text-wrap: pretty; }
+.split__body { display: grid; gap: 16px; align-content: start; min-width: 0; max-width: 560px; }
+.split__body--wide { max-width: none; }
+
+/* ---------- Sub-navigation (the app's only tabs): links, the current one underlined in ink ---------- */
+.subnav { display: flex; gap: 24px; margin-bottom: 28px; border-bottom: 1px solid var(--line-strong); overflow-x: auto; }
+.subnav a { position: relative; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; height: 40px; color: var(--ink-2); font-weight: 500; text-decoration: none; white-space: nowrap; transition: color var(--t-fast); }
+/* data-t repeats the label: the tab keeps the width of its 600 weight, so the others do not move when it is chosen */
+.subnav a::before { content: attr(data-t); height: 0; overflow: hidden; visibility: hidden; font-weight: 600; }
+.subnav a:hover { color: var(--ink); }
+.subnav a:active { opacity: .7; }
+.subnav a[aria-current] { color: var(--ink); font-weight: 600; }
+.subnav a[aria-current]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--ink); }
+.subnav a:focus-visible { outline-offset: -2px; }
+
+/* ---------- Panel, empty state, error, loading ---------- */
+.panel { padding: 20px 24px; border: 1px solid var(--line); border-radius: var(--r); background: var(--sheet); }
+.panel--desk { border-color: transparent; background: var(--desk); }
+.panel > * + * { margin-top: 6px; }
+.panel p { text-wrap: pretty; }
+.empty { padding: 28px 24px; border: 1px dashed var(--line-strong); border-radius: var(--r); }
+.empty__title { font: 600 var(--t-body)/1.3 var(--sans); }
+.empty__text { max-width: 56ch; margin-top: 4px; color: var(--ink-2); text-wrap: pretty; }
+.empty__act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 16px; }
+.alert { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding: 12px 16px; border: 1px solid var(--danger); border-radius: var(--r); }
+.alert__title { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--danger); }
+.alert__text { margin-top: 2px; }
+.busy { display: inline-flex; align-items: center; gap: 10px; color: var(--ink-2); }
+.busy::before { content: ""; flex: none; width: 14px; height: 14px; border: 1.5px solid var(--line-strong); border-top-color: var(--ink); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(1turn); } }
+/* Inside a button (LeonApp.busy on the button itself): the button's own colour */
+.btn .busy { gap: 8px; color: inherit; }
+.btn:not(.btn--line) .busy::before { border-color: rgba(255, 255, 255, .35); border-top-color: #fff; }
+[aria-busy="true"] { cursor: progress; }
+
+/* ================= The finishing round: what a click opens, in place (js/app.js; markup in NOTES-app.md) ================= */
+
+/* ---------- Disclosure: a button with data-open, while what it opened is showing ---------- */
+.btn--line[data-open][aria-expanded="true"] { background: var(--desk); }
+
+/* ---------- Row detail: what "Manage" opens under its row. It belongs to the row: the desk's ground, no edge, no
+   shadow, nothing boxed inside. Two to four labelled lines (.detail__list), then one line of actions. ---------- */
+.table tr:has(+ .detail:not([hidden])) > td { border-bottom-color: transparent; } /* the row and its detail read as one */
+.table .detail > td { grid-column: 1 / -1; height: auto; padding: 0 0 16px; white-space: normal; }
+li > .detail { padding-bottom: 12px; }
+.detail__body { padding: 16px 20px 18px; border-radius: var(--r); background: var(--desk); animation: menu-in 200ms var(--ease-out); }
+.detail:focus-visible, .confirm:focus-visible { outline: 0; } /* with no control inside, it takes focus only to be read */
+.detail__list { display: grid; gap: 10px; max-width: 720px; }
+.detail__list > div { display: grid; grid-template-columns: var(--kv, 132px) minmax(0, 1fr); column-gap: 24px; align-items: baseline; }
+.detail__list dt { font: 500 var(--t-ui-s)/1.45 var(--sans); color: var(--ink-2); }
+.detail__list .field { max-width: 240px; }
+.detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 16px; }
+/* On the desk an outline pill keeps a white ground, as in .code */
+.detail .btn--line, .confirm .btn--line { background: var(--sheet); }
+.detail .btn--line:hover, .confirm .btn--line:hover { background: var(--desk-2); }
+
+/* ---------- Confirmation in place: the question in bold, what happens next, the red pill that repeats the verb, and
+   "Cancel", which takes focus. On its own it is a line on the desk, the pills at the right, under the button that asked;
+   inside a row detail it takes the place of the action line, with no ground of its own. (tr.confirm is the older markup of Settings: left alone.) ---------- */
+.confirm:not(tr) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding: 12px 16px; border-radius: var(--r); background: var(--desk); animation: menu-in 200ms var(--ease-out); }
+.confirm__text { flex: 1 1 320px; max-width: 76ch; text-wrap: pretty; }
+.confirm__act { display: flex; flex-wrap: wrap; gap: 8px; }
+.detail__body .confirm { display: grid; justify-content: start; gap: 12px; margin-top: 16px; padding: 0; border-radius: 0; background: none; animation: none; } /* the pills come where the action line was */
+.detail__actions:has(+ .confirm:not([hidden])) { display: none; }
+
+/* ---------- Code block: a real command, so monospace ---------- */
+.code { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 8px 8px 8px 16px; border-radius: var(--r); background: var(--desk); }
+.code pre { flex: 1; min-width: 0; margin: 0; overflow-x: auto; font: 400 var(--t-ui-s)/1.6 var(--mono); font-variant-ligatures: none; }
+.code code { font: inherit; white-space: pre; }
+.code .btn { flex: none; background: var(--sheet); }
+.code .btn:hover { background: var(--desk-2); }
+
+/* ---------- Menu: a short list that opens under its button ---------- */
+.menu { position: absolute; z-index: 40; min-width: 200px; padding: 6px; border: 1px solid var(--line); border-radius: var(--r); background: var(--sheet); box-shadow: var(--sheet-shadow); animation: menu-in 160ms var(--ease-out); }
+@keyframes menu-in { from { opacity: 0; transform: translateY(-4px); } }
+.menu__head { margin-bottom: 6px; padding: 6px 10px 9px; border-bottom: 1px solid var(--line); font: 400 var(--t-ui-s)/1.4 var(--sans); color: var(--ink-2); overflow-wrap: anywhere; }
+.menu__head b { display: block; font-weight: 500; color: var(--ink); }
+.menu__item { display: flex; align-items: center; width: 100%; min-height: 34px; padding: 0 10px; border: 0; border-radius: var(--r-mark); background: none; text-align: left; text-decoration: none; cursor: pointer; transition: background-color var(--t-fast); }
+.menu__item:hover { background: var(--desk); }
+.menu__item:active { background: var(--desk-2); }
+.menu__item:focus-visible { outline-offset: -2px; }
+
+/* ---------- Disclosure: a small pill that opens what is under it (the filters) ---------- */
+.more-less > summary { list-style: none; width: max-content; }
+.more-less > summary::-webkit-details-marker { display: none; }
+.more-less > summary .ico { transition: transform var(--t-fast) var(--ease-out); }
+.more-less[open] > summary .ico { transform: rotate(180deg); }
+.more-less[open] > summary { background: var(--desk); }
+
+/* ================= What Leon writes: the answer, its sources, the original ================= */
+
+/* ---------- The answer block: h2, the paragraph (.answer, from ui.css), a note, two actions ---------- */
+.ans .answer { max-width: 64ch; margin-top: 12px; line-height: 1.6; }
+.ans + .sec { margin-top: 36px; }
+.cite { text-decoration: none; }
+/* One number, one size: after a sentence (.cite, a button) and at the head of a source row (.num, a label) */
+.app .num { min-width: 20px; min-height: 0; height: 19px; padding: 0 5px; }
+@media (min-width: 700px) {
+  .app .cite::after { inset: -9px -1px -9px -6px; } /* the larger target stops at the chip's own margin: nothing hangs past the column */
+}
+.nosrc {
+  position: relative; top: -.12em; display: inline-flex; align-items: center; height: 20px; margin-left: 3px; padding: 0 7px;
+  border: 1.5px dashed var(--ink-2); border-radius: var(--r-mark); font: 500 var(--t-chip)/1 var(--sans); letter-spacing: 0; color: var(--ink-2); white-space: nowrap;
+}
+.ans__note { margin-top: 14px; font: 400 var(--t-ui-s)/1.45 var(--sans); color: var(--ink-2); }
+.ans__hint { max-width: 64ch; margin-top: 6px; text-wrap: pretty; }
+.ans__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+/* Once, when an answer arrives: each stroke sweeps, then its number pops (js/app.js adds and removes the classes) */
+.answer.is-arriving .seg { animation: ans-sweep 380ms var(--ease-out) both; animation-delay: calc(var(--k, 0) * 240ms); }
+.answer.is-arriving .seg .hl { background-color: transparent; }
+.answer.is-arriving :is(.cite, .nosrc) { animation: ans-pop 260ms var(--ease-flag) both; animation-delay: calc(var(--k, 0) * 240ms + 300ms); }
+@keyframes ans-sweep { from { --sweep: 0; } to { --sweep: 1; } }
+@keyframes ans-pop { from { opacity: 0; transform: scale(.4); } }
+
+/* ---------- Source rows: number, logo, title, who can see it; tool, kind, author, date; the passage ---------- */
+.srcs > li { padding: 3px 0; }
+.srcs > li + li { border-top: 1px solid var(--line); }
+.src {
+  display: grid; grid-template-columns: 20px 20px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 2px; align-items: center;
+  width: calc(100% + 20px); margin-inline: -10px; padding: 10px;
+  border: 0; border-radius: var(--r); background: none; color: inherit; text-align: left; text-decoration: none; cursor: pointer;
+  transition: background-color var(--t-fast);
+}
+.src:hover { background: rgba(15, 15, 13, .04); }
+.src:active { background: rgba(15, 15, 13, .08); }
+.src[aria-pressed="true"], .src:target { background: var(--desk); }
+.src[aria-pressed="true"] .num, .src:target .num { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+.src:focus-visible { outline-offset: -2px; }
+.src .num { justify-self: start; }
+.src .logo { width: 20px; height: 20px; }
+.src__title { font: 600 var(--t-ui)/1.4 var(--sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src__vis { font: 400 var(--t-ui-s)/1.4 var(--sans); color: var(--ink-2); white-space: nowrap; }
+.src__meta { grid-column: 3 / 5; font: 400 var(--t-ui-s)/1.4 var(--sans); color: var(--ink-2); }
+.src__passage { grid-column: 3 / 5; margin-top: 4px; font: 400 var(--t-orig)/1.45 var(--serif); } /* the record's words: the same size as in the original */
+/* Compact: one line, no passage (the sources of the briefing) */
+.src--compact { padding-block: 7px; }
+.src--compact .src__meta { grid-column: 4; grid-row: 1; white-space: nowrap; }
+
+/* ---------- The original: the app's one sheet of paper (markup from LeonApp.originalHTML) ---------- */
+.orig { position: sticky; top: 24px; min-width: 0; }
+.orig .doc { margin-top: 12px; padding: 16px 24px 16px 28px; }
+.orig .doc > .flag--left { top: 14px; }
+.app span.flag { pointer-events: none; } /* in the app the flag on an original is a mark, not a control (LeonApp.originalHTML) */
+.orig .doc.is-in { animation: orig-in 220ms var(--ease-out); }
+@keyframes orig-in { from { opacity: 0; transform: translateY(6px); } }
+/* No source chosen yet (the "I don't know" answer): where the sheet will open */
+.orig__none { margin-top: 12px; padding: 28px 24px; border: 1px dashed var(--line-strong); border-radius: var(--r); color: var(--ink-2); text-wrap: pretty; }
+
+/* ================= The two reference screens ================= */
+
+/* Home */
+.home-ask { display: grid; gap: 12px; }
+.home { --aside: 380px; margin-top: 40px; }
+.brief { --kv: 124px; }
+.brief__lines { display: grid; gap: 8px; font: 400 var(--t-body)/1.45 var(--sans); }
+.brief .srcs > li:first-child { padding-top: 0; }
+.brief .srcs { margin-top: -5px; }
+
+/* The answer */
+.result { --aside: clamp(360px, 38%, 440px); }
+.filters { margin: -12px 0 24px; }
+.filters__row { display: grid; grid-template-columns: repeat(4, minmax(0, 200px)); gap: 16px; margin-top: 14px; }
+/* A question came in the address: the default answer stays out of sight until js/app.js has put the right one in */
+.is-swapping [data-result] { visibility: hidden; animation: reveal 0s 1.2s forwards; }
+@keyframes reveal { to { visibility: visible; } }
+
+/* ================= Under 900px: the sidebar becomes a top bar, the content stacks, every target is 44px ================= */
+@media (max-width: 899px) {
+  .app { --pad: 16px; --ctl: 44px; }
+  .shell { display: block; }
+  .side { height: auto; padding: 6px 16px; overflow: visible; }
+  .side__top { min-height: 44px; padding: 0; }
+  .side__brand { min-height: 44px; }
+  .side__state { min-height: 44px; margin-top: 10px; }
+  .side__menu { display: inline-flex; }
+  .side__body { margin-top: 6px; padding-bottom: 10px; }
+  .js .side:not(.is-open) .side__body { display: none; }
+  .side__link, .menu__item, .subnav a { height: 44px; }
+  .main { padding-top: 20px; }
+  .top { flex-wrap: wrap; margin-bottom: 20px; }
+  .top__title { white-space: normal; line-height: 1.25; }
+  .top__sub { margin-top: 4px; }
+  .ask, .ask--lg { flex: 1 1 100%; height: 56px; padding-right: 6px; }
+  .app .btn--sm, .app .ask .btn { height: 44px; padding: 0 16px; }
+  .chip { min-height: 44px; }
+  .sec__head { align-items: center; }
+  .sec__head .link, .filter-row .link { display: inline-flex; align-items: center; min-height: 44px; }
+  .filter-row .field { max-width: none; }
+  .duo { grid-template-columns: minmax(0, 1fr); }
+  .orig { position: static; }
+  .orig .flag::after { inset: -10px -12px; }
+  .kv > div { grid-template-columns: minmax(0, 1fr); }
+  .split { grid-template-columns: minmax(0, 1fr); }
+  .src--compact .src__meta { grid-column: 3 / 5; grid-row: auto; white-space: normal; }
+  .src__title { grid-column: 3 / 5; white-space: normal; }
+  .src__vis { grid-column: 3 / 5; grid-row: 4; }
+  .filters__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .code code { white-space: pre-wrap; overflow-wrap: anywhere; } /* the whole command stays readable on a phone */
+  .detail__body { padding: 14px 16px 16px; }
+  .detail__list > div { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+  .detail__list .field { max-width: none; }
+  /* inside a table that scrolls sideways, the detail stays in view, as wide as the screen */
+  .table-wrap .detail__body, .table-wrap .detail > td > .confirm { position: sticky; left: 0; max-width: calc(100vw - 2 * var(--pad)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busy::before { animation: none; }
+}

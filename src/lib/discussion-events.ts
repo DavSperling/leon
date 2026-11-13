@@ -36,6 +36,18 @@ export type DiscussionCitation = {
   url: string | null;
 };
 
+// Qui voit une source : la personne seule (« Vous seul »), toute l'organisation, ou une partie (un groupe, des gens).
+export type SourceVisibility = 'moi' | 'equipe' | 'restreint';
+
+// Une citation telle que l'écran la montre : ce que la source dit d'elle, relu sous les droits du lecteur à chaque
+// affichage (server/discussion/citation-sources.ts), jamais stocké. Absent : inconnu, la tuile garde le numéro seul.
+export type CitationView = DiscussionCitation & {
+  kind?: string;
+  visibility?: SourceVisibility;
+  // le texte du passage cité : le surligneur y retrouve les mots de la réponse
+  passage?: string;
+};
+
 // 'fini' : le modèle a répondu ; 'limite' : le nombre d'étapes ou la longueur est atteint ; 'refus' : il a refusé.
 export type DiscussionEndReason = 'fini' | 'limite' | 'refus';
 

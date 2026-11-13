@@ -2,26 +2,23 @@
 
 import { FolderGit2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useActionState, useOptimistic, useState, useTransition } from 'react';
+import { useActionState, useId, useOptimistic, useState, useTransition } from 'react';
 import { setDepotEquipeAction } from '@/app/(app)/reglages/actions';
 import {
   Button,
   Checkbox,
   EmptyState,
   Field,
-  GlassCard,
   Input,
   Notice,
-  Section,
+  PanelNote,
+  SidePanel,
   toast,
 } from '@/components/verre';
 import { cn } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
 import type { DepotEquipe } from '@/server/connectors/github/depots-equipe';
-import { SECTION } from './reglages';
-
-const ROW =
-  'relative flex min-h-[52px] items-center rounded-field px-3 py-2 [&:not(:first-child)]:before:absolute [&:not(:first-child)]:before:inset-x-3 [&:not(:first-child)]:before:top-0 [&:not(:first-child)]:before:h-px [&:not(:first-child)]:before:bg-line';
+import { Glyph } from './reglages';
 
 type AddState = { depot: string; error?: string };
 
@@ -35,19 +32,24 @@ export const withUnchecked = (depots: DepotEquipe[], unchecked: string[]): Depot
       .map((depot) => ({ depot, coche: false })),
   ].sort((a, b) => (a.depot < b.depot ? -1 : 1));
 
+/** Aucun dépôt d'équipe alors qu'un membre a branché GitHub : ce qui a été relevé est privé à qui l'a branché. */
+export const depotsMissing = ({ depots, githubBranche }: DepotsProps) =>
+  githubBranche && !depots.some((d) => d.coche);
+
+type DepotsProps = { depots: DepotEquipe[]; githubBranche: boolean };
+
 /**
- * Section « Dépôts d'équipe », pour un propriétaire ou un administrateur : les dépôts lus par ses propres connexions
- * GitHub et ceux déjà cochés (lus par la page), à cocher ou décocher, et la saisie d'un autre dépôt. Le bandeau
- * « aucun dépôt » ne paraît que si un membre de l'équipe a branché GitHub (`githubBranche`).
+ * Le panneau « Dépôts d'équipe », pour un propriétaire ou un administrateur : les dépôts lus par ses propres
+ * connexions GitHub et ceux déjà cochés (lus par la page), à cocher ou décocher, et la saisie d'un autre dépôt.
  */
-export function DepotsEquipeSection({
+export function RepositoriesPanel({
   depots,
   githubBranche,
-}: {
-  depots: DepotEquipe[];
-  githubBranche: boolean;
-}) {
+  open,
+  onOpenChange,
+}: DepotsProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations('settings');
+  const id = useId();
   const [unchecked, setUnchecked] = useState<string[]>([]);
   // la case suit le clic tout de suite ; un refus la remet comme la page la relit
   const [shown, setShown] = useOptimistic(
@@ -76,7 +78,7 @@ export function DepotsEquipeSection({
       try {
         const result = await setDepotEquipeAction(depot, true);
         if ('error' in result) return { depot, error: result.error };
-        // le dépôt arrive à sa place dans la liste, parfois hors de l'écran : on le dit
+        // le dépôt arrive à sa place dans la liste, parfois hors de la vue : on le dit
         toast.success(t('depotAdded'));
         return { depot: '' };
       } catch {
@@ -87,42 +89,50 @@ export function DepotsEquipeSection({
   );
 
   return (
-    <Section
-      id="depots-equipe"
+    <SidePanel
+      open={open}
+      onOpenChange={onOpenChange}
+      picture={<Glyph icon={FolderGit2} size={44} />}
       title={t('depotsTitle')}
-      description={nb(t('depotsDescription'))}
-      className={SECTION}
+      foot={
+        <>
+          <Button type="submit" form={`${id}-add`} loading={adding} loadingLabel={t('sending')}>
+            {t('depotAddSubmit')}
+          </Button>
+          <Button variant="secondary" className="ml-auto" onClick={() => onOpenChange(false)}>
+            {t('done')}
+          </Button>
+        </>
+      }
     >
       <div className="grid gap-4">
-        {githubBranche && !depots.some((d) => d.coche) && (
+        {depotsMissing({ depots, githubBranche }) && (
           <Notice tone="warning">{t('depotsNone')}</Notice>
         )}
         {shown.length > 0 ? (
-          <GlassCard className="p-1.5">
-            <ul
-              aria-label={t('depotsList')}
-              aria-busy={pending || undefined}
-              className={cn(
-                'grid grid-cols-[minmax(0,1fr)] transition-opacity duration-300',
-                pending && 'opacity-60',
-              )}
-            >
-              {shown.map((d) => (
-                <li key={d.depot} className={ROW}>
-                  <Checkbox
-                    checked={d.coche}
-                    onCheckedChange={(coche) => toggle(d.depot, coche)}
-                    label={<span className="[overflow-wrap:anywhere] text-fg">{d.depot}</span>}
-                    className="min-w-0 flex-1"
-                  />
-                </li>
-              ))}
-            </ul>
-          </GlassCard>
+          <ul
+            aria-label={t('depotsList')}
+            aria-busy={pending || undefined}
+            className={cn(
+              'grid divide-y divide-line rounded-item border border-line px-3 transition-opacity duration-300',
+              pending && 'opacity-60',
+            )}
+          >
+            {shown.map((d) => (
+              <li key={d.depot} className="flex min-h-[48px] items-center py-1.5">
+                <Checkbox
+                  checked={d.coche}
+                  onCheckedChange={(coche) => toggle(d.depot, coche)}
+                  label={<span className="[overflow-wrap:anywhere] text-fg">{d.depot}</span>}
+                  className="min-w-0 flex-1"
+                />
+              </li>
+            ))}
+          </ul>
         ) : (
-          <EmptyState icon={FolderGit2} title={t('depotsEmpty')} className="py-8" />
+          <EmptyState title={t('depotsEmpty')} />
         )}
-        <form noValidate action={addAction} className="mt-2 grid max-w-md gap-4">
+        <form id={`${id}-add`} noValidate action={addAction}>
           <Field label={t('depotAdd')} help={t('depotHelp')} error={added.error}>
             <Input
               name="depot"
@@ -132,11 +142,9 @@ export function DepotsEquipeSection({
               defaultValue={added.depot}
             />
           </Field>
-          <Button type="submit" variant="secondary" loading={adding} className="w-fit">
-            {adding ? t('sending') : t('depotAddSubmit')}
-          </Button>
         </form>
+        <PanelNote>{nb(t('depotsDescription'))}</PanelNote>
       </div>
-    </Section>
+    </SidePanel>
   );
 }

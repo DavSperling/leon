@@ -743,7 +743,9 @@ describe('la page Documentation', () => {
         expect(human).toContain(`aria-label="${messages.site.documentation.toc}"`);
         expect(html).not.toContain(`aria-label="${messages.site.documentation.toc}"`);
         expect(html).not.toContain('<section id=');
-        expect(html).not.toContain('href="#claude-code"');
+        // les boutons des sections restent, invisibles, à leur place : l'interrupteur ne bouge pas
+        expect(html).toMatch(/class="contents invisible"><a [^>]*href="#claude-code"/);
+        expect(human).not.toContain('invisible');
         expect(html.match(/<h1/g)).toHaveLength(1);
       },
     );

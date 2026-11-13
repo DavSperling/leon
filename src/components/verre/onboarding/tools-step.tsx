@@ -1,28 +1,25 @@
 'use client';
 
-import { ArrowLeft, Check, TriangleAlert } from 'lucide-react';
-import { AnimatePresence, motion } from 'motion/react';
+import { ArrowLeft, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type ReactNode, useEffect, useId, useRef, useState, useTransition } from 'react';
+import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import { chooseToolsAction } from '@/app/(onboarding)/bienvenue/actions';
 import type { ProviderId } from '@/capture/turn';
 import { ReturnNotice } from '@/components/verre/connexions/return-notice';
-import { AddConnection, ToolDialog } from '@/components/verre/connexions/tool-dialog';
-import { Badge } from '@/components/verre/ui/badge';
+import { ToolDialog } from '@/components/verre/connexions/tool-dialog';
 import { Button } from '@/components/verre/ui/button';
-import { ToolIcon } from '@/components/verre/ui/chips';
-import { Notice } from '@/components/verre/ui/feedback';
-import { toast } from '@/components/verre/ui/toast';
+import { ToolLogo } from '@/components/verre/ui/chips';
+import { Thing } from '@/components/verre/ui/thing';
 import type { OAuthNotice } from '@/lib/connection-form';
 import type { OnboardingStepId } from '@/lib/onboarding';
-import { rise } from '@/lib/verre';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { CodeToolsCard } from './code-tools-card';
-import { PreviewCard } from './preview';
+import { CONVERGE, Converge } from './converge';
+import { StaticThing } from './preview';
 import { OnboardingSteps } from './steps';
 import { codeToolsFirst, connectQueue, defaultChecked, type ToolState } from './tools-model';
 
@@ -46,13 +43,26 @@ export type ToolsStepProps = {
   codeInstructions: string | null;
 };
 
-/** Le logo en grand, sur son fond blanc (voir ToolIcon). */
-const BigIcon = ({ id }: { id: ProviderId }) => (
-  <ToolIcon kind={id} boxed className="size-9 rounded-field [&>img]:size-[18px]" />
+const H1 = 'text-h1 font-semibold tracking-[-0.02em] text-fg';
+const H2 = 'text-h2 font-semibold tracking-[-0.012em] text-fg';
+
+/** Ce qu'un outil déjà là dit en légende : branché par moi, par l'équipe, ou à reconnecter. */
+function useStatusCaption() {
+  const tt = useTranslations('onboarding.tools');
+  return ({ status, connectedBy, broken }: ToolState) =>
+    broken
+      ? tt('reconnectNeeded')
+      : status === 'mine'
+        ? tt('connected')
+        : tt('connectedBy', { name: connectedBy ?? '' });
+}
+
+const tick = (
+  <Check aria-hidden="true" strokeWidth={2.2} className="size-4 shrink-0 text-success" />
 );
 
-// Une carte à cocher pour un outil proposé et libre ; un outil déjà branché (par moi ou l'équipe) se lit seulement.
-// La vraie case reste dans le formulaire (lue au clavier et par les lecteurs d'écran), la pastille la dessine.
+// Une tuile à cocher pour un outil proposé et libre : toute la tuile est le libellé de la vraie case (lue au clavier et
+// par les lecteurs d'écran) ; choisie, un trait d'encre et sa coche. Un outil déjà branché se lit seulement.
 function ChoiceTile({
   state,
   on,
@@ -63,53 +73,24 @@ function ChoiceTile({
   onToggle: () => void;
 }) {
   const tt = useTranslations('onboarding.tools');
-  const { item, status, recommended, connectedBy, broken } = state;
-  const note = broken
-    ? tt('reconnectNeeded')
-    : status === 'mine'
-      ? tt('connected')
-      : status === 'team'
-        ? tt('connectedBy', { name: connectedBy ?? '' })
-        : item.privateRaw
-          ? tt('private')
-          : tt('shared');
-  const body = (
-    <>
-      <BigIcon id={item.id} />
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-ui font-medium text-fg [overflow-wrap:anywhere]">{item.label}</span>
-          {recommended && status === 'free' && <Badge tone="accent">{tt('recommended')}</Badge>}
-        </span>
-        <span
-          className={cn(
-            'mt-0.5 block text-meta [overflow-wrap:anywhere]',
-            broken ? 'text-warning' : 'text-muted',
-          )}
-        >
-          {note}
-        </span>
-      </span>
-    </>
-  );
-  const shape = 'flex min-h-16 min-w-0 items-center gap-3 rounded-card border p-3';
+  const caption = useStatusCaption();
+  const { item, status, broken } = state;
+  const picture = <ToolLogo kind={item.id} size={28} />;
   if (status !== 'free')
     return (
-      <div className={cn(shape, 'border-line bg-glass-2')}>
-        {body}
-        {!broken && (
-          <Check aria-hidden="true" strokeWidth={2} className="size-4 shrink-0 text-success" />
-        )}
-      </div>
+      <StaticThing
+        picture={picture}
+        name={item.label}
+        caption={caption(state)}
+        error={Boolean(broken)}
+        end={!broken && tick}
+      />
     );
   return (
     <label
       className={cn(
-        shape,
-        'cursor-pointer transition-[border-color,background-color] duration-200 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ring',
-        on
-          ? 'border-accent-line bg-accent-soft'
-          : 'border-line bg-glass-3 hover:border-line-strong',
+        'tl tile cursor-pointer has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-fg',
+        on && 'border-fg hover:border-fg',
       )}
     >
       <input
@@ -120,12 +101,16 @@ function ChoiceTile({
         onChange={onToggle}
         className="sr-only"
       />
-      {body}
+      <span className="tl__pic">{picture}</span>
+      <span className="tl__id">
+        <span className="tl__name">{item.label}</span>
+        <span className="tl__sub">{item.privateRaw ? tt('private') : tt('shared')}</span>
+      </span>
       <span
         aria-hidden="true"
         className={cn(
-          'grid size-5 shrink-0 place-items-center rounded-full border transition-colors duration-200',
-          on ? 'border-accent bg-accent text-accent-ink' : 'border-line-strong',
+          'grid size-5 shrink-0 place-items-center rounded-full border transition-colors duration-150',
+          on ? 'border-ink bg-ink text-on-ink' : 'border-line-strong',
         )}
       >
         {on && <Check strokeWidth={2.6} className="size-3" />}
@@ -134,200 +119,41 @@ function ChoiceTile({
   );
 }
 
-// Les outils qu'on ne propose pas encore : les conseillés d'abord, huit au plus, puis le nombre des autres.
-function SoonList({ states }: { states: ToolState[] }) {
-  const tt = useTranslations('onboarding.tools');
-  const id = useId();
-  const sorted = [...states].sort((a, b) => Number(b.recommended) - Number(a.recommended));
-  const shown = sorted.slice(0, 8);
-  return (
-    <section aria-labelledby={id} className="min-w-0">
-      <h2 id={id} className="mb-2 text-label font-semibold text-fg-2">
-        {tt('soonTitle')}
-      </h2>
-      <ul className="flex flex-wrap items-center gap-1.5">
-        {shown.map(({ item }) => (
-          <li
-            key={item.id}
-            className="inline-flex items-center gap-1.5 rounded-chip border border-line bg-glass-2 py-1 pr-2 pl-1 text-label text-muted"
-          >
-            <ToolIcon kind={item.id} className="opacity-60 grayscale" />
-            {item.label}
-          </li>
-        ))}
-        {sorted.length > shown.length && (
-          <li className="px-1 text-label text-muted">
-            {tt('soonMore', { count: sorted.length - shown.length })}
-          </li>
-        )}
-      </ul>
-      <p className="mt-2 text-label text-muted">{nb(tt('soonText'))}</p>
-    </section>
-  );
-}
-
 function ChooseSubmit({ count }: { count: number }) {
   const tt = useTranslations('onboarding.tools');
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="primary" size="lg" className="w-full" loading={pending}>
+    <Button type="submit" variant="primary" loading={pending}>
       {tt('connectCount', { count })}
     </Button>
   );
 }
 
-// Une ligne de l'aperçu : le logo, le nom (et ce qui s'y ajoute), puis l'action ou l'état. `stacked` : l'action passe sous le
-// nom (« GitHub · Connected by Inès » ne tient pas à côté d'un bouton dans 233 px) ; sinon elle suit le nom, et descend
-// seulement si elle ne tient pas.
-function Row({
-  id,
-  label,
-  extra,
-  stacked,
-  children,
-}: {
-  id: ProviderId;
-  label: string;
-  extra?: string;
-  stacked?: boolean;
-  children: ReactNode;
-}) {
-  const name = (
-    <span className="min-w-0 text-ui text-fg [overflow-wrap:anywhere]">
-      {label}
-      {extra && <span className="text-muted"> · {extra}</span>}
-    </span>
-  );
-  if (stacked)
-    return (
-      <li className="flex min-w-0 items-start gap-3">
-        <ToolIcon kind={id} boxed className="mt-px" />
-        <div className="grid min-w-0 flex-1 justify-items-start gap-2">
-          {name}
-          {children}
-        </div>
-      </li>
-    );
+/** Le titre de la vue à gauche, ses actions à droite (la seule pastille d'encre de la vue en dernier). */
+function Head({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <li className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-      <div className="flex min-w-0 flex-1 basis-28 items-center gap-3">
-        <ToolIcon kind={id} boxed />
-        {name}
-      </div>
-      {children}
-    </li>
+    <div className="flex min-h-10 flex-wrap items-center justify-between gap-x-6 gap-y-3">
+      <h1 className={H1}>{title}</h1>
+      {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
+    </div>
   );
 }
 
-/** Une ligne de la file : faite, à reconnecter (la fenêtre de l'outil), ou à brancher (le formulaire s'ouvre dessous). */
-function QueueItem({
-  state,
-  index,
-  active,
-  canConnect,
-  onOpen,
-  onReconnect,
-  onAdded,
-}: {
-  state: ToolState;
-  index: number;
-  active: boolean;
-  canConnect: boolean;
-  onOpen: () => void;
-  onReconnect: () => void;
-  onAdded: () => void;
-}) {
-  const tt = useTranslations('onboarding.tools');
-  const tc = useTranslations('connections');
-  const { item, status, broken } = state;
-  const done = status === 'mine' && !broken;
+/** Une section de tuiles : son titre, puis la grille du kit (mêmes colonnes que partout). */
+function Tiles({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <li
-      data-queue={item.id}
-      className={cn(
-        'min-w-0 rounded-card border transition-[border-color,background-color] duration-200',
-        active ? 'border-accent-line bg-glass-3' : 'border-line bg-glass-2',
-      )}
-    >
-      <div className="flex min-w-0 flex-wrap items-center gap-3 p-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            'grid size-6 shrink-0 place-items-center rounded-full border text-meta',
-            done
-              ? 'border-success-line bg-success-soft text-success'
-              : active
-                ? 'border-accent bg-accent text-accent-ink'
-                : 'border-line-strong text-muted',
-          )}
-        >
-          {done ? <Check strokeWidth={2.4} className="size-3.5" /> : index + 1}
-        </span>
-        <BigIcon id={item.id} />
-        <div className="min-w-0 flex-1 basis-24">
-          <p className="text-ui font-medium text-fg [overflow-wrap:anywhere]">{item.label}</p>
-          <p className={cn('text-meta', broken ? 'text-warning' : 'text-muted')}>
-            {done ? tt('connected') : broken ? tt('reconnectNeeded') : tt('toConnect')}
-          </p>
-        </div>
-        {broken ? (
-          <Button size="sm" variant="secondary" onClick={onReconnect}>
-            {tt('reconnect')}
-            <span className="sr-only"> {item.label}</span>
-          </Button>
-        ) : (
-          !done &&
-          !active && (
-            <Button size="sm" variant="quiet" onClick={onOpen}>
-              {tt('connect')}
-              <span className="sr-only"> {item.label}</span>
-            </Button>
-          )
-        )}
-      </div>
-      <AnimatePresence initial={false}>
-        {active && (
-          <motion.div
-            key={item.id}
-            variants={rise}
-            initial="initial"
-            animate="animate"
-            className="grid gap-4 border-t border-line px-3 pt-4 pb-4 sm:px-4"
-          >
-            <p className="text-ui text-fg-2">
-              {nb(
-                item.privateRaw
-                  ? tc('privateTool', { provider: item.label })
-                  : tc('sharedTool', { provider: item.label }),
-              )}
-            </p>
-            {canConnect ? (
-              <AddConnection entry={item} onAdded={onAdded} returnTo="/bienvenue/outils" />
-            ) : (
-              <p className="text-ui text-fg-2">{nb(tc('connectorsUnavailable'))}</p>
-            )}
-            {item.warning && (
-              <p className="flex gap-2 text-label text-fg-2">
-                <TriangleAlert
-                  aria-hidden="true"
-                  strokeWidth={1.8}
-                  className="mt-[2px] size-3.5 shrink-0 text-warning"
-                />
-                {nb(item.warning)}
-              </p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </li>
+    <fieldset className="min-w-0">
+      <legend className={cn(H2, 'mb-3')}>{title}</legend>
+      <ul className="things">{children}</ul>
+    </fieldset>
   );
 }
 
 /**
  * L'étape Vos outils de l'onboarding, en deux temps. D'abord le choix : seuls les outils qu'on sait brancher en un clic
  * sont proposés (les conseillés pour le poste déjà cochés), les autres sont annoncés « Bientôt ». Puis « Branchez-les
- * un par un » : chaque outil choisi, son bouton de connexion dans la page, et la progression. Le choix vit dans un
- * cookie (le départ chez l'éditeur recharge la page), rien n'est gardé en base.
+ * un par un » : chaque outil choisi est une carte ; un clic ouvre son panneau de Connexions (le même qu'ailleurs). Le
+ * choix vit dans un cookie (le départ chez l'éditeur recharge la page), rien n'est gardé en base.
  */
 export function ToolsStep({
   states,
@@ -346,73 +172,86 @@ export function ToolsStep({
   const t = useTranslations('onboarding');
   const tt = useTranslations('onboarding.tools');
   const tm = useTranslations('onboarding.teammates');
-  const tc = useTranslations('connections');
   const router = useRouter();
   const [checked, setChecked] = useState<ReadonlySet<ProviderId>>(() =>
     chosen ? new Set(chosen) : defaultChecked(states),
   );
-  // Au retour d'un échec chez l'éditeur, l'outil concerné reste ouvert, prêt à réessayer.
-  const [openId, setOpenId] = useState<ProviderId | null>(
-    notice?.tone === 'error' ? notice.tool : null,
-  );
-  const [shownId, setShownId] = useState<ProviderId | null>(null);
-  const [open, setOpen] = useState(false);
+  // Au retour d'un échec chez l'éditeur, le panneau de l'outil concerné s'ouvre, prêt à réessayer, avec le retour.
+  const failed = connecting && notice?.tone === 'error' ? notice.tool : null;
+  const [shownId, setShownId] = useState<ProviderId | null>(failed);
+  const [open, setOpen] = useState(failed !== null);
   const [session, setSession] = useState(0);
   // Une clé branchée ne change que la base : on recharge pour que la file la voie.
   const [refreshing, startRefresh] = useTransition();
-  // Le bouton qui a ouvert la fenêtre, et la colonne principale pour lui succéder quand il disparaît avec le rechargement.
-  const opener = useRef<HTMLElement | null>(null);
   const mainBox = useRef<HTMLDivElement>(null);
   const focusPending = useRef(false);
-  const userOpened = useRef(false);
 
   const toggle = (id: ProviderId) => {
     const next = new Set(checked);
     if (!next.delete(id)) next.add(id);
     setChecked(next);
   };
-  // La fenêtre de l'outil : reconnecter ma connexion en erreur, ou brancher mon compte d'un outil de l'équipe.
+  // Le panneau de l'outil : le brancher, reconnecter ma connexion en erreur, ou brancher mon compte d'un outil de
+  // l'équipe. Le panneau rend lui-même le focus à ce qui l'a ouvert.
   const connect = (id: ProviderId) => {
-    const active = document.activeElement;
-    opener.current = active instanceof HTMLElement && active !== document.body ? active : null;
     setSession((n) => n + 1);
     setShownId(id);
     setOpen(true);
   };
-  // Pas de signal de réussite côté fenêtre : on recharge à chaque fermeture.
+  // Pas de signal de réussite côté panneau : on recharge à chaque fermeture.
   const onOpenChange = (o: boolean) => {
     setOpen(o);
     if (!o) startRefresh(() => router.refresh());
   };
-  // Le focus attend la fin du rechargement : le bouton d'un outil qui vient d'être branché n'existe plus ensuite.
-  const restoreFocus = () => {
-    focusPending.current = false;
-    (opener.current?.isConnected ? opener.current : mainBox.current)?.focus();
-  };
+  // Ce qui l'a ouvert a disparu (la carte d'un outil branché) : le focus attend la fin du rechargement, puis la vue.
   const onCloseAutoFocus = (e: Event) => {
     e.preventDefault();
     if (refreshing) focusPending.current = true;
-    else restoreFocus();
+    else mainBox.current?.focus();
   };
-  // biome-ignore lint/correctness/useExhaustiveDependencies: restoreFocus ne lit que des refs
   useEffect(() => {
-    if (!refreshing && focusPending.current) restoreFocus();
+    if (!refreshing && focusPending.current) {
+      focusPending.current = false;
+      mainBox.current?.focus();
+    }
   }, [refreshing]);
 
   const offered = states.filter((s) => s.ready);
-  const soon = states.filter((s) => !s.ready);
+  const recommended = offered.filter((s) => s.recommended);
+  const others = offered.filter((s) => !s.recommended);
+  const soon = [...states.filter((s) => !s.ready)].sort(
+    (a, b) => Number(b.recommended) - Number(a.recommended),
+  );
   const queue = connectQueue(states, checked);
   // Sans rien à brancher (un choix perdu, un autre navigateur), on revient au choix.
   const inQueue = connecting && queue.length > 0;
   const toConnect = queue.filter((s) => s.status === 'free' || s.broken).length;
   const done = queue.length - toConnect;
-  // L'outil ouvert : celui qu'on a demandé s'il reste à brancher, sinon le premier qui reste.
-  const current =
-    queue.find((s) => s.item.id === openId && s.status === 'free') ??
-    queue.find((s) => s.status === 'free') ??
-    null;
+  // La prochaine à brancher porte la pastille d'encre.
+  const next = queue.find((s) => s.status === 'free' || s.broken) ?? null;
   const already = states.filter((s) => s.recommended && s.connectedBy !== null);
   const shown = states.find((s) => s.item.id === shownId);
+  // Le dessin, à droite : chaque outil proposé et son trait vers le point de Leon. Coché ou branché, le trait passe à
+  // l'encre ; dans la file, c'est le branchement qui le trace. Au-delà de ce que le dessin tient, les traits à l'encre d'abord.
+  const reads = (s: ToolState) => s.status !== 'free' && !s.broken;
+  // Un serveur qui ne branche encore rien : les outils à venir, en pointillé, plutôt qu'une colonne vide.
+  const lines = (inQueue ? queue : offered.length > 0 ? offered : soon.slice(0, 6)).map((s) => ({
+    id: s.item.id,
+    on: reads(s) || (!inQueue && s.status === 'free' && checked.has(s.item.id)),
+  }));
+  const drawing = lines.length > 0 && (
+    <aside aria-hidden="true" className="sticky top-8 pt-1 max-lg:hidden">
+      <Converge
+        items={
+          lines.length > CONVERGE.max
+            ? [...lines.filter((l) => l.on), ...lines.filter((l) => !l.on)]
+            : lines
+        }
+      />
+    </aside>
+  );
+  const COLUMNS =
+    'grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-x-14 lg:grid-cols-[minmax(0,1fr)_360px]';
   // En tête pour un service qui travaille dans un dépôt (GitHub ou GitLab conseillé), à la fin sinon.
   const codeTools =
     codeCommand !== null ? (
@@ -420,249 +259,202 @@ export function ToolsStep({
     ) : null;
   const codeToolsAtTop = codeToolsFirst(states);
   const nextLabel = nextHref === '/bienvenue/pret' ? tm('enter') : t('continue');
+  // Un échec qui nomme un outil se dit dans son panneau ; le reste (une réussite, un échec sans outil) ici.
+  const pageNotice = notice && !(inQueue && failed) ? notice : null;
 
-  // « Brancher » sur une autre ligne : le focus suit, sur son bouton de connexion.
-  useEffect(() => {
-    if (!userOpened.current) return;
-    userOpened.current = false;
-    mainBox.current
-      ?.querySelector<HTMLElement>(`[data-queue="${current?.item.id}"] [data-autofocus]`)
-      ?.focus();
-  }, [current?.item.id]);
-  const onAdded = () => {
-    if (current) toast.success(tc('connectedToast', { provider: current.item.label }));
-    startRefresh(() => router.refresh());
-  };
+  // « Déjà branché pour votre espace » : chaque outil de l'équipe, et « Brancher mon compte » dans son panneau.
+  const alreadySection = already.length > 0 && (
+    <section className="min-w-0">
+      <h2 className={cn(H2, 'mb-3')}>{tt('alreadyTitle')}</h2>
+      <ul className="things">
+        {already.map((state) => (
+          <li key={state.item.id}>
+            {state.status === 'mine' ? (
+              <StaticThing
+                picture={<ToolLogo kind={state.item.id} size={28} />}
+                name={state.item.label}
+                caption={tt('ownConnected')}
+                end={tick}
+              />
+            ) : (
+              <Thing
+                picture={<ToolLogo kind={state.item.id} size={28} />}
+                name={state.item.label}
+                caption={tt('connectedBy', { name: state.connectedBy ?? '' })}
+                pill={tt('connectOwn')}
+                label={`${tt('connectOwn')} ${state.item.label}`}
+                onClick={() => connect(state.item.id)}
+              />
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)] lg:gap-10">
-      <div ref={mainBox} tabIndex={-1} className="grid min-w-0 content-start gap-5 rounded-box">
-        <OnboardingSteps steps={steps} current="tools" />
+    <div ref={mainBox} tabIndex={-1} className="grid min-w-0 gap-6 outline-none">
+      <OnboardingSteps steps={steps} current="tools" />
 
-        {inQueue ? (
-          <>
-            <div>
-              <Link
-                href="/bienvenue/outils"
-                className="mb-3 inline-flex items-center gap-1 rounded-sm text-label text-fg-2 underline-offset-4 hover:text-fg hover:underline"
-              >
-                <ArrowLeft aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
-                {tt('edit')}
-              </Link>
-              <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">
-                {tt('connectTitle')}
-              </h1>
-              <p className="mt-2 text-body text-muted">{nb(tt('connectLead'))}</p>
-            </div>
-
-            <ReturnNotice notice={notice} consentUrl={consentUrl} />
-
-            <div>
-              <p className="mb-1.5 text-label text-fg-2">
+      {inQueue ? (
+        <div className="grid min-w-0 gap-10">
+          <div className="grid gap-3">
+            <Link
+              href="/bienvenue/outils"
+              className="inline-flex w-fit items-center gap-1.5 rounded-sm text-label text-muted underline-offset-4 hover:text-fg hover:underline max-shell:min-h-11"
+            >
+              <ArrowLeft aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
+              {tt('edit')}
+            </Link>
+            <Head title={tt('connectTitle')}>
+              <p role="status" className="text-ui text-muted">
                 {tt('progress', { done, total: queue.length })}
               </p>
-              <div
-                role="progressbar"
-                aria-label={tt('progressLabel')}
-                aria-valuemin={0}
-                aria-valuemax={queue.length}
-                aria-valuenow={done}
-                className="h-1.5 overflow-hidden rounded-full bg-glass-3 shadow-[inset_0_0_0_1px_var(--line)]"
-              >
-                <motion.div
-                  className="h-full origin-left rounded-full bg-accent"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: done / queue.length }}
-                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                />
-              </div>
-            </div>
+            </Head>
+            <ReturnNotice notice={pageNotice} consentUrl={consentUrl} className="mt-3 mb-0" />
+          </div>
 
-            <ol className="grid gap-2.5">
-              {queue.map((state, i) => (
-                <QueueItem
-                  key={state.item.id}
-                  state={state}
-                  index={i}
-                  active={current?.item.id === state.item.id}
-                  canConnect={canConnect}
-                  onOpen={() => {
-                    userOpened.current = true;
-                    setOpenId(state.item.id);
-                  }}
-                  onReconnect={() => connect(state.item.id)}
-                  onAdded={onAdded}
-                />
-              ))}
-            </ol>
+          <div className={COLUMNS}>
+            <div className="grid min-w-0 gap-10">
+              <ul className="things">
+                {queue.map((state) => {
+                  const { item, status, broken } = state;
+                  const ready = status === 'mine' && !broken;
+                  const picture = <ToolLogo kind={item.id} size={36} />;
+                  return (
+                    <li key={item.id} data-queue={item.id}>
+                      {ready ? (
+                        <StaticThing
+                          size="card"
+                          picture={picture}
+                          name={item.label}
+                          caption={tt('connected')}
+                          end={tick}
+                        />
+                      ) : (
+                        <Thing
+                          size="card"
+                          picture={picture}
+                          name={item.label}
+                          caption={broken ? tt('reconnectNeeded') : tt('toConnect')}
+                          error={Boolean(broken)}
+                          pill={broken ? tt('reconnect') : tt('connect')}
+                          pillInk={next?.item.id === item.id}
+                          label={`${broken ? tt('reconnect') : tt('connect')} ${item.label}`}
+                          onClick={() => connect(item.id)}
+                        />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
-            {toConnect === 0 ? (
-              <div className="grid gap-3">
-                <Notice tone="success" live="status">
-                  {tt('allDone')}
-                </Notice>
-                <Button asChild variant="primary" size="lg" className="w-full">
-                  <Link href={nextHref}>{nextLabel}</Link>
-                </Button>
-              </div>
-            ) : (
-              <div className="grid justify-items-center">
-                <Button asChild variant="link" size="sm">
+              {toConnect === 0 ? (
+                <div className="grid justify-items-start gap-4">
+                  <p role="status" className={H2}>
+                    <span className="mark is-on">{nb(tt('allDone'))}</span>
+                  </p>
+                  <Button asChild variant="primary">
+                    <Link href={nextHref}>{nextLabel}</Link>
+                  </Button>
+                </div>
+              ) : (
+                <Button asChild variant="quiet" className="-ml-4 w-fit">
                   <Link href={nextHref}>{tt('later')}</Link>
                 </Button>
-              </div>
-            )}
-          </>
-        ) : (
-          <form action={chooseToolsAction} className="grid min-w-0 gap-5">
-            <div>
-              <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{tt('title')}</h1>
-              <p className="mt-2 text-body text-muted">{nb(tt('lead'))}</p>
+              )}
+
+              {alreadySection}
             </div>
-
-            <ReturnNotice notice={notice} consentUrl={consentUrl} />
-
-            {codeToolsAtTop && codeTools}
-
-            {offered.length > 0 ? (
-              <fieldset className="min-w-0">
-                <legend className="mb-2 text-label font-semibold text-fg-2">
-                  {tt('readyTitle')}
-                </legend>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {offered.map((state) => (
-                    <li key={state.item.id} className="min-w-0">
-                      <ChoiceTile
-                        state={state}
-                        on={checked.has(state.item.id)}
-                        onToggle={() => toggle(state.item.id)}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </fieldset>
-            ) : (
-              <p className="text-ui text-fg-2">{nb(tt('noneReady'))}</p>
-            )}
-
-            {soon.length > 0 && <SoonList states={soon} />}
-
-            {!codeToolsAtTop && codeTools}
-
-            <div className="grid justify-items-center gap-3">
+            {drawing}
+          </div>
+        </div>
+      ) : (
+        <form action={chooseToolsAction} className="grid min-w-0 gap-10">
+          <div className="grid gap-3">
+            <Head title={tt('title')}>
               {toConnect > 0 ? (
                 <>
-                  <ChooseSubmit count={toConnect} />
-                  <Button asChild variant="link" size="sm">
+                  <Button asChild variant="quiet">
                     <Link href={nextHref}>{tt('skip')}</Link>
                   </Button>
+                  <ChooseSubmit count={toConnect} />
                 </>
               ) : (
-                <Button asChild variant="primary" size="lg" className="w-full">
+                <Button asChild variant="primary">
                   <Link href={nextHref}>{nextLabel}</Link>
                 </Button>
               )}
-            </div>
-          </form>
-        )}
-      </div>
+            </Head>
+            <ReturnNotice notice={pageNotice} consentUrl={consentUrl} className="mt-3 mb-0" />
+          </div>
 
-      <div className="grid min-w-0 content-center gap-4 rounded-box border border-line bg-glass p-4 sm:p-6">
-        {!inQueue && (
-          <PreviewCard title={tt('selectionTitle')}>
-            {queue.length === 0 ? (
-              <p className="text-ui text-muted">{tt('none')}</p>
-            ) : (
-              <ul className="grid gap-2.5">
-                <AnimatePresence initial={false}>
-                  {queue.map(({ item, status, broken }) => (
-                    <motion.li
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, transition: { duration: 0.12 } }}
-                      className="flex min-w-0 items-center gap-3"
-                    >
-                      <ToolIcon kind={item.id} boxed />
-                      <span className="min-w-0 flex-1 text-ui text-fg [overflow-wrap:anywhere]">
-                        {item.label}
-                      </span>
-                      {status === 'mine' && !broken ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 text-label text-fg-2">
-                          <Check
-                            aria-hidden="true"
-                            strokeWidth={2}
-                            className="size-3.5 text-success"
+          <div className={COLUMNS}>
+            <div className="grid min-w-0 gap-10">
+              {codeToolsAtTop && codeTools}
+
+              {offered.length > 0 ? (
+                <>
+                  {recommended.length > 0 && (
+                    <Tiles title={tt('recommended')}>
+                      {recommended.map((state) => (
+                        <li key={state.item.id} className="min-w-0">
+                          <ChoiceTile
+                            state={state}
+                            on={checked.has(state.item.id)}
+                            onToggle={() => toggle(state.item.id)}
                           />
-                          {tt('connected')}
-                        </span>
-                      ) : (
-                        <span className="shrink-0 text-label text-muted">
-                          {broken ? tt('reconnectNeeded') : tt('toConnect')}
-                        </span>
-                      )}
-                    </motion.li>
-                  ))}
-                </AnimatePresence>
-              </ul>
-            )}
-          </PreviewCard>
-        )}
-
-        {inQueue && (
-          <PreviewCard title={tt('howTitle')}>
-            <ol className="grid gap-2.5">
-              {(['one', 'two', 'three'] as const).map((key, i) => (
-                <li key={key} className="flex gap-2.5 text-ui text-fg-2">
-                  <span
-                    aria-hidden="true"
-                    className="grid size-5 shrink-0 place-items-center rounded-full border border-accent-line bg-accent-soft text-meta text-accent"
-                  >
-                    {i + 1}
-                  </span>
-                  <span className="min-w-0">{nb(tt(`how.${key}`))}</span>
-                </li>
-              ))}
-            </ol>
-          </PreviewCard>
-        )}
-
-        {already.length > 0 && (
-          <PreviewCard title={tt('alreadyTitle')}>
-            <ul className="grid gap-2.5">
-              {already.map(({ item, status, connectedBy }) => (
-                <Row
-                  key={item.id}
-                  id={item.id}
-                  label={item.label}
-                  stacked
-                  extra={tt('connectedBy', { name: connectedBy ?? '' })}
-                >
-                  {status === 'mine' ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 text-label text-fg-2">
-                      <Check aria-hidden="true" strokeWidth={2} className="size-3.5 text-success" />
-                      {tt('ownConnected')}
-                    </span>
-                  ) : (
-                    <Button size="sm" variant="quiet" onClick={() => connect(item.id)}>
-                      {tt('connectOwn')}
-                      <span className="sr-only"> {item.label}</span>
-                    </Button>
+                        </li>
+                      ))}
+                    </Tiles>
                   )}
-                </Row>
-              ))}
-            </ul>
-            {already.some((s) => s.status !== 'mine') && (
-              <p className="mt-3 text-label text-muted">{nb(tt('ownHint'))}</p>
-            )}
-          </PreviewCard>
-        )}
+                  {others.length > 0 && (
+                    <Tiles title={tt('readyTitle')}>
+                      {others.map((state) => (
+                        <li key={state.item.id} className="min-w-0">
+                          <ChoiceTile
+                            state={state}
+                            on={checked.has(state.item.id)}
+                            onToggle={() => toggle(state.item.id)}
+                          />
+                        </li>
+                      ))}
+                    </Tiles>
+                  )}
+                </>
+              ) : (
+                <p className="rounded-card border border-dashed border-line-strong px-5 py-4 text-ui text-muted">
+                  {nb(tt('noneReady'))}
+                </p>
+              )}
 
-        <PreviewCard title={tt('nextTitle')}>
-          <p className="text-ui text-muted">{nb(tt('nextText'))}</p>
-        </PreviewCard>
-      </div>
+              {soon.length > 0 && (
+                // Ce qui n'est pas encore là se lit en une ligne discrète : des rectangles éteints ressemblaient à une panne.
+                <section className="min-w-0">
+                  <h2 className="mb-2.5 text-label font-medium text-muted">{tt('soonTitle')}</h2>
+                  <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
+                    {soon.slice(0, 8).map(({ item }) => (
+                      <li
+                        key={item.id}
+                        className="inline-flex items-center gap-2 text-ui text-muted"
+                      >
+                        <ToolLogo kind={item.id} size={18} className="opacity-60 grayscale" />
+                        {item.label}
+                      </li>
+                    ))}
+                    {soon.length > 8 && <li className="text-ui text-muted">{tt('soonMore')}</li>}
+                  </ul>
+                </section>
+              )}
+
+              {!codeToolsAtTop && codeTools}
+
+              {alreadySection}
+            </div>
+            {drawing}
+          </div>
+        </form>
+      )}
 
       <ToolDialog
         entry={shown?.item ?? null}
@@ -676,6 +468,8 @@ export function ToolsStep({
         canConnect={canConnect}
         session={session}
         returnTo="/bienvenue/outils"
+        notice={notice}
+        consentUrl={consentUrl}
       />
     </div>
   );

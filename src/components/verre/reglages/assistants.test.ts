@@ -4,11 +4,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
-import { AssistantsSection } from './assistants';
-import type { Token } from './tokens';
+import { AssistantSetup } from './assistants';
+import { captionOf, type Token, TokenFacts } from './tokens';
 
 // Les actions importent Better Auth : seul le dessin de la section se teste ici.
-vi.mock('@/app/(app)/reglages/actions', () => ({ revokeTokenAction: vi.fn() }));
+vi.mock('@/app/(app)/reglages/actions', () => ({
+  revokeTokenAction: vi.fn(),
+  createTokenAction: vi.fn(),
+}));
 
 const ADDRESS = 'https://leon.example/api/mcp';
 const CLAUDE: Token = {
@@ -30,32 +33,32 @@ const CODEX: Token = {
   clientHost: '127.0.0.1',
 };
 
-const render = (assistants: Token[], locale: 'en' | 'fr' = 'en') =>
+const wrap = (child: ReturnType<typeof createElement>, locale: 'en' | 'fr' = 'en') =>
   renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
       locale,
       messages: locale === 'en' ? en : fr,
       // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
-      children: createElement(AssistantsSection, { address: ADDRESS, assistants }),
+      children: child,
     }),
   );
+const render = (locale: 'en' | 'fr' = 'en') =>
+  wrap(createElement(AssistantSetup, { address: ADDRESS }), locale);
 
 // Le texte seul : une commande longue est coupée en <span> aux options (--transport), pour passer à la ligne.
 const text = (html: string) => html.replace(/<[^>]+>/g, '');
 
-// M08 : la section « Assistants connectés » de Réglages, ancre #assistants, qui remplace « Brancher Claude Code ».
-describe('AssistantsSection', () => {
-  it('porte l’ancre #assistants et montre l’adresse du MCP, telle quelle, avec son bouton Copier', () => {
-    const html = render([]);
+// M08 : « Connecter un assistant », le panneau de la tuile #assistants, qui remplace « Brancher Claude Code ».
+describe('AssistantSetup', () => {
+  it('montre l’adresse du MCP, telle quelle, avec son bouton Copier', () => {
+    const html = render();
 
-    expect(html).toMatch(/<section id="assistants"/);
-    expect(html).toContain('Connected assistants');
     expect(html).toContain(`>${ADDRESS}</code>`);
     expect(html).toContain('>Copy<');
   });
 
   it('donne une ligne par client, avec le chemin pour l’ajouter', () => {
-    const shown = text(render([]));
+    const shown = text(render());
 
     for (const line of [
       'claude.ai and Claude Desktop',
@@ -72,7 +75,7 @@ describe('AssistantsSection', () => {
   });
 
   it('donne les commandes de Claude Code et de Codex, sans jeton ni en-tête', () => {
-    const html = render([]);
+    const html = render();
     const shown = text(html);
 
     expect(shown).toContain(`claude mcp add --transport http leon ${ADDRESS}`);
@@ -84,44 +87,13 @@ describe('AssistantsSection', () => {
     expect(html.match(/>Copy</g)).toHaveLength(4);
   });
 
-  it('liste chaque assistant avec son nom, son hôte, sa création, sa dernière utilisation et Revoke', () => {
-    const html = render([CLAUDE, CODEX]);
-
-    expect(html).toContain('>Claude</span>');
-    expect(html).toContain('>claude.ai</code>');
-    expect(html).toContain('>Codex</span>');
-    expect(html).toContain('>127.0.0.1</code>');
-    expect(html).toContain('created');
-    expect(html).toContain('never used');
-    expect(html.match(/data-revoke="/g)).toHaveLength(2);
-    expect(html).toContain('>Revoke<');
-    expect(html).not.toContain('No assistant connected yet');
-  });
-
-  // Le jeton d’accès d’un assistant change à chaque renouvellement : son indice ne dirait rien.
-  it('ne montre pas l’indice du jeton d’accès', () => {
-    expect(render([CLAUDE])).not.toContain('leon_…');
-  });
-
-  it('sans assistant, le dit et garde l’adresse et les clients', () => {
-    const html = render([]);
-
-    expect(html).toContain('No assistant connected yet.');
-    expect(html).not.toContain('data-revoke');
-    expect(html).toContain(ADDRESS);
-  });
-
   it('se lit en français', () => {
-    const html = render([CLAUDE], 'fr');
-    const shown = text(html);
+    const shown = text(render('fr'));
 
-    expect(html).toContain('Assistants connectés');
-    expect(html).toContain('Révoquer');
     expect(shown).toContain('claude.ai et Claude Desktop');
     expect(shown).toContain('Personnaliser › Connecteurs › Ajouter un connecteur personnalisé');
     expect(shown).toContain('Cursor et VS Code');
     expect(shown).toContain(`claude mcp add --transport http leon ${ADDRESS}`);
-    expect(render([], 'fr')).toContain('Aucun assistant connecté pour l’instant.');
   });
 
   it('révoque un assistant avec ses propres mots, dans les deux langues', () => {
@@ -138,5 +110,26 @@ describe('AssistantsSection', () => {
       expect(settings).not.toHaveProperty('claudeDescription');
       expect(settings).not.toHaveProperty('tokenPlaceholder');
     }
+  });
+});
+
+// Un assistant connecté : sa carte dit son hôte ; son panneau, son client, son hôte et ses dates.
+describe('TokenFacts et captionOf, pour un assistant', () => {
+  it('légende la carte par l’hôte, jamais par l’indice du jeton d’accès (il change à chaque renouvellement)', () => {
+    expect(captionOf(CLAUDE, 'Computer')).toBe('claude.ai');
+    expect(captionOf(CODEX, 'Computer')).toBe('127.0.0.1');
+  });
+
+  it('montre l’hôte, la connexion et la dernière utilisation, sans l’indice ; le client seulement s’il ne redit pas le titre', () => {
+    const html = wrap(createElement(TokenFacts, { token: CLAUDE }));
+
+    expect(html).not.toContain('>Assistant<');
+    expect(wrap(createElement(TokenFacts, { token: { ...CLAUDE, name: 'Mon Claude' } }))).toContain(
+      '>Claude<',
+    );
+    expect(html).toContain('>claude.ai<');
+    expect(html).toContain('>Connected<');
+    expect(html).not.toContain('leon_…');
+    expect(wrap(createElement(TokenFacts, { token: CODEX }))).toContain('Never used');
   });
 });

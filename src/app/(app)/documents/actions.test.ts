@@ -7,14 +7,21 @@ import {
   DocumentError,
   deleteDocument,
   deleteFolder,
+  documentText,
 } from '@/server/documents/documents';
-import { addFileAction, deleteDocumentAction, deleteFolderAction } from './actions';
+import {
+  addFileAction,
+  deleteDocumentAction,
+  deleteFolderAction,
+  readDocumentAction,
+} from './actions';
 
 vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
 vi.mock('@/server/documents/documents', () => ({
   addDocument: vi.fn(),
   deleteDocument: vi.fn(),
   deleteFolder: vi.fn(),
+  documentText: vi.fn(),
   DocumentError: class DocumentError extends Error {
     constructor(
       readonly code: string,
@@ -118,14 +125,20 @@ describe('addFileAction', () => {
 
 describe('deleteFolderAction', () => {
   it('supprime le dossier de l’auteur puis rafraîchit la liste', async () => {
-    await deleteFolderAction(form({ id: folderId }));
+    vi.mocked(deleteFolder).mockResolvedValueOnce(3);
+    await expect(deleteFolderAction(form({ id: folderId }))).resolves.toEqual({ ok: true });
 
     expect(deleteFolder).toHaveBeenCalledWith(ctx, folderId);
     expect(revalidatePath).toHaveBeenCalledWith('/documents');
   });
 
+  it('dit non quand aucun fichier n’est parti (le dossier d’un autre)', async () => {
+    vi.mocked(deleteFolder).mockResolvedValueOnce(0);
+    await expect(deleteFolderAction(form({ id: folderId }))).resolves.toEqual({ ok: false });
+  });
+
   it('ignore un identifiant qui n’est pas un uuid', async () => {
-    await deleteFolderAction(form({ id: 'pas-un-uuid' }));
+    await expect(deleteFolderAction(form({ id: 'pas-un-uuid' }))).resolves.toEqual({ ok: false });
 
     expect(deleteFolder).not.toHaveBeenCalled();
     expect(revalidatePath).not.toHaveBeenCalled();
@@ -134,9 +147,28 @@ describe('deleteFolderAction', () => {
 
 describe('deleteDocumentAction', () => {
   it('supprime le document puis rafraîchit la liste', async () => {
-    await deleteDocumentAction(form({ id: folderId }));
+    vi.mocked(deleteDocument).mockResolvedValueOnce(true);
+    await expect(deleteDocumentAction(form({ id: folderId }))).resolves.toEqual({ ok: true });
 
     expect(deleteDocument).toHaveBeenCalledWith(ctx, folderId);
     expect(revalidatePath).toHaveBeenCalledWith('/documents');
+  });
+
+  it('rend le refus de la base au lieu de le taire', async () => {
+    vi.mocked(deleteDocument).mockResolvedValueOnce(false);
+    await expect(deleteDocumentAction(form({ id: folderId }))).resolves.toEqual({ ok: false });
+  });
+});
+
+describe('readDocumentAction', () => {
+  it('rend le texte lu sous les droits du lecteur', async () => {
+    vi.mocked(documentText).mockResolvedValueOnce({ text: 'Devis', cut: false });
+    await expect(readDocumentAction(folderId)).resolves.toEqual({ text: 'Devis', cut: false });
+    expect(documentText).toHaveBeenCalledWith(ctx, folderId);
+  });
+
+  it('ne lit rien pour un identifiant qui n’est pas un uuid', async () => {
+    await expect(readDocumentAction('pas-un-uuid')).resolves.toBeNull();
+    expect(documentText).not.toHaveBeenCalled();
   });
 });

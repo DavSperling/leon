@@ -27,6 +27,9 @@ export const AUTH_LIMITS = {
   connexion: { email: 10, ip: 50, inconnue: 500 },
   inscription: { email: 5, ip: 10, inconnue: 100 },
   recuperation: { email: 5, ip: 10, inconnue: 100 },
+  // Un lien d'invitation envoyé par e-mail (écran Équipe) : par adresse invitée, par adresse IP de qui envoie, et par
+  // personne qui envoie (`author`, au plafond de l'adresse IP).
+  invitation: { email: 3, ip: 20, inconnue: 200 },
 } as const;
 
 export type AuthAttempt = keyof typeof AUTH_LIMITS;
@@ -43,11 +46,16 @@ function clientIp(headers: Headers): string | null {
   return getIP(headers, auth.options);
 }
 
-// Compte la tentative ; false si l'e-mail ou l'adresse IP a dépassé son plafond dans la fenêtre.
+// Compte la tentative ; false si l'e-mail ou l'adresse IP a dépassé son plafond dans la fenêtre. `author` : la
+// personne connectée qui fait la tentative (l'envoi d'une invitation), comptée au plafond d'une adresse IP : un compte
+// qui change d'adresse IP n'envoie pas plus.
+// shortcut: fenêtre de 15 minutes pour tous (consommer_limites purge les clés plus vieilles que sa fenêtre) ; un
+// plafond par jour pour les envois demande une table ou une purge à part, à faire si l'inscription s'ouvre en grand.
 export async function authAttemptAllowed(
   kind: AuthAttempt,
   email: string,
   headers: Headers,
+  author?: string,
 ): Promise<boolean> {
   const ip = clientIp(headers);
   const limits = new Map<string, number>([
@@ -56,6 +64,7 @@ export async function authAttemptAllowed(
       ? [`${kind}:ip:${fingerprint(ip)}`, AUTH_LIMITS[kind].ip]
       : [`${kind}:ip:inconnue`, AUTH_LIMITS[kind].inconnue],
   ]);
+  if (author) limits.set(`${kind}:auteur:${fingerprint(author)}`, AUTH_LIMITS[kind].ip);
   const { rows } = await pool.query<{ cle: string; compte: number }>(
     'select cle, compte from consommer_limites($1, $2::interval)',
     [[...limits.keys()], WINDOW],

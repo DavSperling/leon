@@ -1,203 +1,174 @@
-import { Check, Plus } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { CSSProperties } from 'react';
-import { cn } from '@/lib/verre/cn';
+import type { ReactNode } from 'react';
 import { nb } from '@/lib/verre/nb';
-import { type SiteContent, TOOL_COUNT, useSiteContent } from '../content';
-import { Tilt } from '../fx';
-import { CtaBand, SectionHeading } from '../parts';
-import { PageHero, PageSection } from './page-hero';
-import './pages.css';
+import { TOOL_COUNT, useSiteContent } from '../content';
+import { CtaBand, CtaLink } from '../parts';
+import { CheckMark, PageHero } from './page-hero';
 
-// Page « Tarifs » : la proposition de docs/etudes/founder-pme-2026-10/pricing.md (pas encore arrêtée, aucune
-// facturation codée) : chaque bouton mène à la création d'un espace. Pas de « le plus choisi » : rien ne le mesure.
+// Page « Tarifs » : le prix tel qu'il est aujourd'hui (un pilote gratuit, un prix proposé), une seule table posée comme
+// une feuille sur le bureau (les trois offres, puis ce que toutes ont en commun), les questions, ouvertes. La colonne du
+// pilote est une feuille posée sur la grille (pages.css, .pg-plans) : c'est par elle qu'on commence.
 
-// Ce que chaque plan contient (site.pricing.everywhere).
-const EVERYWHERE = [
-  'connectors',
-  'search',
-  'answer',
-  'discussions',
-  'briefing',
-  'capture',
-  'secrets',
-  'keys',
+const EVERY_PLAN = [
+  {
+    row: 'rowConnectors',
+    key: 'connectors',
+    link: { href: '/connecteurs', label: 'seeConnectors' },
+  },
+  { row: 'rowSearch', key: 'search' },
+  { row: 'rowChat', key: 'chat' },
+  { row: 'rowBriefing', key: 'briefing' },
+  { row: 'rowCapture', key: 'capture' },
+  { row: 'rowProtection', key: 'protection', link: { href: '/securite', label: 'readSecurity' } },
 ] as const;
 
-// Les formules sont dans le premier écran : elles entrent avec le haut de page (site-rise, à la suite de PageHero),
-// pas au défilement, qui les laisserait à moitié transparentes tant qu'on ne défile pas.
-function PlanCard({ plan, i }: { plan: SiteContent['plans'][number]; i: number }) {
-  const t = useTranslations('site.pricing');
+/** Le prix du pilote, entouré à la plume : c'est par lui qu'on commence. */
+function Ringed({ children }: { children: ReactNode }) {
   return (
-    <li
-      className={cn('site-rise relative', plan.featured && 'z-[1]')}
-      style={{ '--i': 5 + i } as CSSProperties}
-    >
-      <div className={cn('h-full', plan.featured && 'pg-featured')}>
-        <Tilt
-          max={plan.featured ? 6 : 8}
-          className={cn(
-            'flex h-full flex-col rounded-panel border p-6 shadow-hi sm:p-7',
-            plan.featured
-              ? 'signal-glow fx-ring border-accent-line bg-glass-2 shadow-panel lg:py-10'
-              : 'border-line bg-panel',
-          )}
-        >
-          {/* le filet Signal sur un calque rogné à part : un overflow sur la carte aplatirait sa 3D (le prix) */}
-          {plan.featured && (
-            <span
-              aria-hidden="true"
-              className="signal-line pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
-            />
-          )}
-          <div className="relative flex items-center justify-between gap-3">
-            <h3 className="text-title font-bold tracking-[-0.02em] text-fg">{plan.name}</h3>
-            {plan.featured && (
-              <span className="inline-flex h-[22px] items-center rounded-full bg-accent-soft px-2.5 font-mono text-[11px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                {t('recommended')}
-              </span>
-            )}
-          </div>
-          <p className="relative mt-2 text-body text-pretty text-fg-2 lg:min-h-[3lh]">
-            {nb(plan.text)}
-          </p>
-          <p className="fx-pop relative mt-7 flex items-baseline gap-2 [--pop:46px]">
-            <span
-              className={cn(
-                'text-[44px] leading-none font-extrabold tracking-[-0.045em]',
-                plan.featured ? 'site-gradient' : 'text-fg',
-              )}
-            >
-              {nb(plan.price)}
-            </span>
-          </p>
-          <p className="relative mt-2 font-mono text-meta tracking-normal text-muted">
-            {nb(plan.unit)}
-          </p>
-          <Link
-            href="/inscription"
-            className={cn(
-              'relative mt-7 inline-flex h-11 items-center justify-center rounded-full text-ui font-semibold transition-[background-color,border-color,filter,scale] duration-200 active:scale-[.97]',
-              plan.featured
-                ? 'site-cta bg-accent text-accent-ink hover:brightness-[1.06]'
-                : 'border border-line-strong bg-glass-3 text-fg hover:border-accent-line hover:bg-hover',
-            )}
-          >
-            {plan.cta}
-          </Link>
-          <ul className="relative mt-7 grid gap-3 border-t border-line pt-6">
-            {plan.features.map((f) => (
-              <li key={f} className="flex items-start gap-2.5 text-ui text-fg-2">
-                <Check
-                  aria-hidden="true"
-                  strokeWidth={2.2}
-                  className={cn(
-                    'mt-0.5 size-4 shrink-0',
-                    plan.featured ? 'text-accent' : 'text-success',
-                  )}
-                />
-                {nb(f)}
-              </li>
-            ))}
-          </ul>
-        </Tilt>
-      </div>
-    </li>
+    <span className="pg-ring">
+      {children}
+      <svg viewBox="0 0 120 56" preserveAspectRatio="none" aria-hidden="true">
+        <path
+          pathLength={1}
+          d="M22 12C44 3 84 3 104 14c16 9 12 27-8 34-24 8-62 6-80-6C2 32 6 17 26 10c14-5 34-6 50-3"
+        />
+      </svg>
+    </span>
   );
 }
 
 export function TarifsPage() {
   const t = useTranslations('site.pricing');
   const cta = useTranslations('site.cta');
-  const meta = useTranslations('site.meta');
   const { plans, faq } = useSiteContent();
+  const names = plans.map((p) => p.name);
   return (
-    <>
+    <div className="s-page">
       <PageHero
-        kicker={meta('pricingTitle')}
         title={t('heroTitle')}
         accent={t('heroAccent')}
+        tone={1}
         lead={t('heroLead')}
-        align="center"
-        className="pb-10 sm:pb-12"
+        actions={<CtaLink href="/inscription">{cta('create')}</CtaLink>}
+        note={t('note')}
       />
 
-      <PageSection labelledBy="plans-titre" className="pt-2 sm:pt-4">
-        <h2 id="plans-titre" className="sr-only">
-          {t('plans')}
-        </h2>
-        <ul className="mx-auto grid max-w-[520px] items-stretch gap-4 lg:max-w-[1080px] lg:grid-cols-3">
-          {plans.map((p, i) => (
-            <PlanCard key={p.id} plan={p} i={i} />
-          ))}
-        </ul>
-        <p className="mt-8 text-center font-mono text-meta tracking-normal text-muted">
-          {nb(t('taxNote'))}
-        </p>
-      </PageSection>
-
-      <PageSection labelledBy="partout-titre">
-        <div className="site-reveal relative overflow-hidden rounded-panel border border-line bg-panel p-6 shadow-hi sm:p-10">
-          <div
-            aria-hidden="true"
-            className="site-dots pointer-events-none absolute inset-0 opacity-60"
-          />
-          <div className="relative grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
-            <SectionHeading
-              id="partout-titre"
-              kicker={t('everywhereKicker')}
-              title={t('everywhereTitle')}
-              lead={t('everywhereLead')}
-            />
-            <ul className="grid content-center gap-x-6 gap-y-3 sm:grid-cols-2">
-              {EVERYWHERE.map((e) => (
-                <li key={e} className="flex items-start gap-2.5 text-ui text-fg-2">
-                  <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-                    <Check aria-hidden="true" strokeWidth={2.4} className="size-3" />
-                  </span>
-                  {nb(t(`everywhere.${e}`, { count: TOOL_COUNT }))}
-                </li>
-              ))}
-            </ul>
+      <section aria-labelledby="offres" className="s-stage">
+        <div className="s-wrap">
+          <h2 id="offres" className="sr-only">
+            {t('plans')}
+          </h2>
+          <div className="s-table s-sheet pg-land pg-plans">
+            <table aria-labelledby="offres">
+              <thead>
+                <tr>
+                  <td />
+                  {plans.map((p) => (
+                    <th key={p.id} scope="col">
+                      {p.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">{t('rowPrice')}</th>
+                  {plans.map((p, i) => (
+                    <td key={p.id} data-plan={p.name}>
+                      <span className="s-table__price">
+                        {i === 0 ? <Ringed>{nb(p.price)}</Ringed> : nb(p.price)}
+                      </span>
+                      <span className="s-small">{nb(p.unit)}</span>
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <th scope="row">{t('rowFor')}</th>
+                  {plans.map((p) => (
+                    <td key={p.id} data-plan={p.name}>
+                      {nb(p.text)}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <th scope="row">{t('rowBilling')}</th>
+                  {plans.map((p) => (
+                    <td key={p.id} data-plan={p.name}>
+                      {nb(p.billing)}
+                    </td>
+                  ))}
+                </tr>
+                <tr>
+                  <th scope="row">{t('rowHosting')}</th>
+                  <td colSpan={2} data-plan={`${names[0]}, ${names[1]}`}>
+                    {nb(t('hostingShared'))}
+                  </td>
+                  <td data-plan={names[2]}>{nb(t('hostingDedicated'))}</td>
+                </tr>
+              </tbody>
+              <tbody data-pm="included">
+                <tr className="s-table__group">
+                  <th scope="colgroup" colSpan={4}>
+                    <span className="block text-[1.125rem] font-semibold text-fg">
+                      {t('everyPlan')}
+                    </span>
+                    <span className="s-small mt-1 block font-normal">{nb(t('everyPlanNote'))}</span>
+                  </th>
+                </tr>
+                {EVERY_PLAN.map((r) => (
+                  <tr key={r.key}>
+                    <th scope="row">
+                      <span className="pg-inc">
+                        <CheckMark />
+                        {t(r.row)}
+                      </span>
+                    </th>
+                    <td colSpan={3}>
+                      {nb(t(`every.${r.key}`, { count: TOOL_COUNT }))}
+                      {'link' in r && (
+                        <>
+                          {' '}
+                          <Link href={r.link.href} className="s-tlink">
+                            {nb(t(r.link.label))}
+                          </Link>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+          <p className="s-small mt-5">{nb(t('taxNote'))}</p>
         </div>
-      </PageSection>
+      </section>
 
-      <PageSection labelledBy="faq-titre">
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] lg:gap-16">
-          <SectionHeading
-            id="faq-titre"
-            kicker={t('faqKicker')}
-            title={t('faqTitle')}
-            lead={t('faqLead')}
-          />
-          <div className="grid content-start gap-2.5">
+      <section aria-labelledby="questions" className="s-sec">
+        <div className="s-wrap">
+          <div className="s-grid s-head s-rv">
+            <h2 id="questions" className="s-h2">
+              {t('faqTitle')}
+            </h2>
+            <p className="s-lead">{nb(t('faqLead'))}</p>
+          </div>
+          <dl className="s-qa">
             {faq.map((f) => (
-              <details
-                key={f.q}
-                className="pg-faq site-reveal group rounded-box border border-line bg-panel shadow-hi transition-[border-color,background-color,box-shadow] duration-300 open:border-accent-line open:bg-glass-2 open:shadow-panel"
-              >
-                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-4 rounded-box px-5 py-3 text-ui font-semibold text-fg marker:content-none [&::-webkit-details-marker]:hidden">
-                  <span className="flex-1">{nb(f.q)}</span>
-                  <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line bg-glass-3 text-accent transition-[rotate,background-color,color] duration-300 ease-[var(--ease-spring)] group-open:rotate-45 group-open:bg-accent group-open:text-accent-ink">
-                    <Plus aria-hidden="true" strokeWidth={2} className="size-3.5" />
-                  </span>
-                </summary>
-                <p className="pg-faq-answer px-5 pb-5 text-body leading-[1.65] text-fg-2">
-                  {nb(f.a)}
-                </p>
-              </details>
+              <div key={f.q} className="s-rv">
+                <dt className="s-h3">{nb(f.q)}</dt>
+                <dd className="s-body text-muted">{nb(f.a)}</dd>
+              </div>
             ))}
-          </div>
+          </dl>
         </div>
-      </PageSection>
+      </section>
 
       <CtaBand
         title={t('ctaTitle')}
         text={t('ctaText', { count: TOOL_COUNT })}
-        primary={{ href: '/inscription', label: cta('startPilot') }}
+        tone={1}
+        mark={t('ctaAccent')}
       />
-    </>
+    </div>
   );
 }

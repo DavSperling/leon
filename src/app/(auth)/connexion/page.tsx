@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { connection } from 'next/server';
 import { getTranslations } from 'next-intl/server';
 import { AuthForm } from '@/components/verre/auth/auth-form';
+import { AuthNote } from '@/components/verre/auth/frame';
 import { OtherSignIn, type SocialProvider } from '@/components/verre/auth/other-sign-in';
-import { Notice } from '@/components/verre/ui/feedback';
 import { emailEnabled, socialProviders } from '@/server/auth/auth';
 import {
   authorizePath,
@@ -40,31 +40,29 @@ export default async function SignInPage({
     : (oauthReturnPath(query) ?? (query.retour === 'memoire' ? MEMORY_RETURN_PATH : undefined));
   const t = await getTranslations('deleteAccount');
   const a = await getTranslations('auth');
+  // `?supprime=` : un compte ou une organisation vient d'être supprimé. `?error=` : Better Auth revient ici quand
+  // Google, Microsoft ou le SSO n'a pas abouti.
+  const notice =
+    supprime === 'compte' || supprime === 'organisation' ? (
+      <AuthNote tone="ok">{t(supprime === 'compte' ? 'doneAccount' : 'doneOrganization')}</AuthNote>
+    ) : typeof error === 'string' ? (
+      <AuthNote tone="error">
+        {a(/not[_ ]linked/.test(error) ? 'socialNotLinked' : 'socialFailed')}
+      </AuthNote>
+    ) : undefined;
   return (
-    <>
-      {(supprime === 'compte' || supprime === 'organisation') && (
-        <Notice tone="success" live="status" className="mb-6">
-          {t(supprime === 'compte' ? 'doneAccount' : 'doneOrganization')}
-        </Notice>
-      )}
-      {/* `?error=` : Better Auth revient ici quand Google, Microsoft ou le SSO n'a pas abouti. */}
-      {typeof error === 'string' && (
-        <Notice tone="error" live="alert" className="mb-6">
-          {a(/not[_ ]linked/.test(error) ? 'socialNotLinked' : 'socialFailed')}
-        </Notice>
-      )}
-      <AuthForm
-        page="connexion"
-        canResetPassword={emailEnabled}
-        returnTo={returnTo}
-        alternatives={
-          <OtherSignIn
-            providers={Object.keys(socialProviders) as SocialProvider[]}
-            sso={await anyVerifiedSso()}
-            returnTo={returnTo}
-          />
-        }
-      />
-    </>
+    <AuthForm
+      page="connexion"
+      canResetPassword={emailEnabled}
+      returnTo={returnTo}
+      notice={notice}
+      alternatives={
+        <OtherSignIn
+          providers={Object.keys(socialProviders) as SocialProvider[]}
+          sso={await anyVerifiedSso()}
+          returnTo={returnTo}
+        />
+      }
+    />
   );
 }

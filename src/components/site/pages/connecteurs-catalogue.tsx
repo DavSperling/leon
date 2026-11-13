@@ -1,18 +1,18 @@
 'use client';
 
-import { KeyRound, ListFilter, MousePointerClick, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useId, useMemo, useState } from 'react';
+import { useId, useState } from 'react';
 import type { ProviderId } from '@/capture/turn';
-import { Pill } from '@/components/verre/ui/pill';
 import type { ProviderFamily } from '@/lib/providers';
+import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { fold } from '@/lib/verre/text';
-import { ALL_TOOLS, TOOL_GROUPS, toolLabel, useSiteContent } from '../content';
-import { Tilt } from '../fx';
-import { ToolLogo } from '../parts';
+import { TOOL_GROUPS, toolLabel, useSiteContent } from '../content';
+import { ToolLogo, tone } from '../parts';
 
-// Catalogue des outils branchables : filtre par famille (pastilles) et par nom (champ), sans recharger la page.
+// Catalogue des outils branchables : à gauche, le champ et l'index des familles (il reste en vue) ; à droite, une ligne
+// par outil (ce que Leon en lit, et comment on le branche). Le filtre cherche dans le nom, la famille et ce qui est lu.
 // Les outils qui ont un bouton « Se connecter avec… » : ceux qui ont une appli OAuth (src/server/connectors/*/catalog.ts).
 
 const OAUTH = new Set<ProviderId>([
@@ -44,177 +44,163 @@ const FAMILY_OF = new Map<ProviderId, ProviderFamily>(
 
 type Filter = 'tous' | ProviderFamily;
 
-/** Cible tactile d'au moins 40 px (la pastille fait 32 px à la souris). */
-const PILL = 'max-sm:h-10 pointer-coarse:h-10';
-
 export function ConnecteursCatalogue() {
   const t = useTranslations('site.catalogue');
-  const { toolGroups, familyLabels } = useSiteContent();
+  const { toolGroups, familyLabels, reads } = useSiteContent();
   const [family, setFamily] = useState<Filter>('tous');
   const [query, setQuery] = useState('');
   const inputId = useId();
 
-  const shown = useMemo(() => {
-    const q = fold(query.trim());
-    return ALL_TOOLS.filter(
-      (id) =>
-        (family === 'tous' || FAMILY_OF.get(id) === family) &&
-        (q === '' || fold(toolLabel(id)).includes(q)),
-    );
-  }, [family, query]);
+  const q = fold(query.trim());
+  const matches = (id: ProviderId) => {
+    if (q === '') return true;
+    const f = FAMILY_OF.get(id);
+    return fold(`${toolLabel(id)} ${f ? familyLabels[f] : ''} ${reads[id]}`).includes(q);
+  };
+  const groups = toolGroups
+    .filter((g) => family === 'tous' || g.family === family)
+    .map((g) => ({ ...g, tools: g.tools.filter(matches) }))
+    .filter((g) => g.tools.length > 0);
+  const shown = groups.reduce((n, g) => n + g.tools.length, 0);
   // Les outils au bon nom, toutes familles : l'état vide dit si c'est la famille choisie qui les cache.
-  const byName = useMemo(() => {
-    const q = fold(query.trim());
-    return q === '' ? [] : ALL_TOOLS.filter((id) => fold(toolLabel(id)).includes(q));
-  }, [query]);
-  const hiddenByFamily = family !== 'tous' && byName.length > 0;
+  const elsewhere =
+    family !== 'tous' && q !== '' ? toolGroups.flatMap((g) => g.tools.filter(matches)) : [];
+  const hiddenByFamily = shown === 0 && elsewhere.length > 0;
 
   return (
-    <div className="mt-10">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <fieldset className="min-w-0">
-          <legend className="sr-only">{t('family')}</legend>
-          <div className="-mx-5 -mt-1 flex gap-2 overflow-x-auto px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-            <Pill
-              variant={family === 'tous' ? 'active' : 'default'}
-              aria-pressed={family === 'tous'}
-              onClick={() => setFamily('tous')}
-              className={PILL}
-            >
-              {t('all')}
-              <span className="font-mono text-label">{ALL_TOOLS.length}</span>
-            </Pill>
-            {toolGroups.map((g) => (
-              <Pill
-                key={g.family}
-                variant={family === g.family ? 'active' : 'default'}
-                aria-pressed={family === g.family}
-                onClick={() => setFamily(g.family)}
-                className={PILL}
-              >
-                {g.label}
-                <span className="font-mono text-label">{g.tools.length}</span>
-              </Pill>
-            ))}
-          </div>
-        </fieldset>
-        <div className="relative w-full lg:w-[280px]">
-          <label htmlFor={inputId} className="sr-only">
-            {t('filterLabel')}
-          </label>
-          <ListFilter
-            aria-hidden="true"
-            strokeWidth={1.7}
-            className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted"
-          />
+    <div className="s-grid s-cat">
+      <div className="s-cat__aside">
+        <label htmlFor={inputId} className="sr-only">
+          {t('filterLabel')}
+        </label>
+        <div className="relative">
           <input
             id={inputId}
-            type="text"
+            type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setQuery('');
+            }}
             placeholder={t('filterPlaceholder')}
             autoComplete="off"
             spellCheck={false}
-            className="h-11 w-full rounded-full border border-line-strong bg-glass-2 pr-11 pl-10 text-ui text-fg shadow-hi transition-[border-color] duration-200 pointer-coarse:text-title focus-visible:border-accent"
+            className="s-field [&::-webkit-search-cancel-button]:hidden"
           />
           {query !== '' && (
             <button
               type="button"
               aria-label={t('clear')}
               onClick={() => setQuery('')}
-              className="absolute top-1/2 right-1.5 inline-grid size-8 -translate-y-1/2 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg max-sm:right-0.5 max-sm:size-10 pointer-coarse:right-0.5 pointer-coarse:size-10"
+              className="s-icon-btn absolute top-1/2 right-1 size-9 -translate-y-1/2"
             >
               <X aria-hidden="true" strokeWidth={1.8} className="size-4" />
             </button>
           )}
         </div>
+        <p role="status" className="s-small mt-3 min-h-5">
+          {shown === 0
+            ? t('none')
+            : `${t('count', { count: shown })}${family === 'tous' ? '' : ` · ${familyLabels[family]}`}`}
+        </p>
+        <fieldset className="s-index mt-6">
+          <legend className="sr-only">{t('family')}</legend>
+          <ul>
+            <li>
+              <button
+                type="button"
+                aria-pressed={family === 'tous'}
+                onClick={() => setFamily('tous')}
+              >
+                <span>{t('all')}</span>
+              </button>
+            </li>
+            {toolGroups.map((g) => (
+              <li key={g.family}>
+                <button
+                  type="button"
+                  aria-pressed={family === g.family}
+                  onClick={() => setFamily(g.family)}
+                >
+                  <span>{g.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </fieldset>
+        <p className="s-small mt-6 max-[1099px]:hidden">{nb(t('legend'))}</p>
       </div>
 
-      <p role="status" className="mt-5 font-mono text-meta tracking-normal text-muted">
-        {shown.length === 0
-          ? t('none')
-          : `${t('count', { count: shown.length })}${family === 'tous' ? '' : ` · ${familyLabels[family]}`}`}
-      </p>
-
-      {shown.length > 0 ? (
-        <ul className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5">
-          {shown.map((id) => {
-            const fam = FAMILY_OF.get(id);
-            const oauth = OAUTH.has(id);
-            return (
-              <li key={id} className="fade-in min-w-0">
-                {/* pas de bordure ni de zoom au survol : la carte ne se clique pas */}
-                <Tilt className="flex h-full min-w-0 items-center gap-3 rounded-box border border-line bg-panel p-3 shadow-hi sm:flex-col sm:items-start sm:gap-4 sm:p-4">
-                  <ToolLogo id={id} size={44} className="fx-pop max-sm:size-9!" />
-                  {/* sur mobile, l'icône du branchement est en haut à droite : le nom s'arrête avant */}
-                  <div className="min-w-0 flex-1 max-sm:pr-5 sm:flex-none">
-                    <p className="text-ui font-semibold text-fg">{toolLabel(id)}</p>
-                    <p className="mt-0.5 font-mono text-label tracking-normal text-muted">
-                      {fam ? familyLabels[fam] : ''}
-                    </p>
-                  </div>
-                  <p className="inline-flex items-center gap-1.5 text-label text-fg-2 max-sm:absolute max-sm:top-2 max-sm:right-2 sm:mt-auto">
-                    {oauth ? (
-                      <MousePointerClick
-                        aria-hidden="true"
-                        strokeWidth={1.7}
-                        className="size-3.5 text-accent"
-                      />
-                    ) : (
-                      <KeyRound
-                        aria-hidden="true"
-                        strokeWidth={1.7}
-                        className="size-3.5 text-accent"
-                      />
-                    )}
-                    <span className="max-sm:sr-only">{oauth ? t('oauth') : t('apiKey')}</span>
-                  </p>
-                </Tilt>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <div className="mt-4 rounded-box border border-line bg-panel px-6 py-12 text-center shadow-hi">
-          {hiddenByFamily ? (
-            <>
-              <p className="text-ui font-semibold text-fg">
-                {nb(t('hiddenTitle', { query: query.trim(), family: familyLabels[family] }))}
-              </p>
-              <p className="mt-1.5 text-body text-muted">
-                {nb(
-                  t('hiddenElsewhere', {
-                    tools: byName
-                      .map((id) => {
-                        const f = FAMILY_OF.get(id);
-                        return f ? `${toolLabel(id)} (${familyLabels[f]})` : toolLabel(id);
-                      })
-                      .join(', '),
-                  }),
-                )}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-ui font-semibold text-fg">
-                {nb(t('noneTitle', { query: query.trim() }))}
-              </p>
-              <p className="mt-1.5 text-body text-muted">{nb(t('noneHint'))}</p>
-            </>
-          )}
-          <button
-            type="button"
-            onClick={() => {
-              // la famille cache les bons outils : on la lève, la recherche reste
-              if (!hiddenByFamily) setQuery('');
-              setFamily('tous');
-            }}
-            className="mt-5 inline-flex h-10 items-center rounded-full border border-line-strong bg-glass-3 px-4 text-ui font-semibold text-fg transition-colors hover:bg-hover"
-          >
-            {hiddenByFamily ? t('searchAll') : t('showAll')}
-          </button>
-        </div>
-      )}
+      <div className="s-cat__list">
+        {groups.length > 0 ? (
+          groups.map((g) => (
+            <section
+              key={g.family}
+              aria-labelledby={`fam-${g.family}`}
+              // la couleur de la famille : celle de son drapeau et du surligneur qui passe sur ses lignes
+              className={cn('s-fam', tone(toolGroups.findIndex((x) => x.family === g.family) + 1))}
+            >
+              <h3 id={`fam-${g.family}`} className="s-h3 mb-3 flex items-center gap-3">
+                {g.label}
+                <span aria-hidden="true" data-pm="pop" className="flag">
+                  {g.tools.length}
+                </span>
+              </h3>
+              <ul className="s-rows">
+                {g.tools.map((id) => (
+                  <li key={id} className="s-row">
+                    <ToolLogo id={id} size={24} />
+                    <span className="font-medium">{toolLabel(id)}</span>
+                    <span className="text-muted">
+                      <span className="pg-read">{nb(reads[id])}</span>
+                    </span>
+                    <span className="s-row__how">{OAUTH.has(id) ? t('oauth') : t('apiKey')}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))
+        ) : (
+          <div className="border-y border-line py-12">
+            {hiddenByFamily && family !== 'tous' ? (
+              <>
+                <p className="s-h3">
+                  {nb(t('hiddenTitle', { query: query.trim(), family: familyLabels[family] }))}
+                </p>
+                <p className="s-body mt-1.5 text-muted">
+                  {nb(
+                    t('hiddenElsewhere', {
+                      tools: elsewhere
+                        .map((id) => {
+                          const f = FAMILY_OF.get(id);
+                          return f ? `${toolLabel(id)} (${familyLabels[f]})` : toolLabel(id);
+                        })
+                        .join(', '),
+                    }),
+                  )}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="s-h3">{nb(t('noneTitle', { query: query.trim() }))}</p>
+                <p className="s-body mt-1.5 text-muted">{nb(t('noneHint'))}</p>
+              </>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                // la famille cache les bons outils : on la lève, la recherche reste
+                if (!hiddenByFamily) setQuery('');
+                setFamily('tous');
+              }}
+              className="s-btn s-btn--line s-btn--sm mt-6"
+            >
+              {hiddenByFamily ? t('searchAll') : t('showAll')}
+            </button>
+          </div>
+        )}
+        <p className="s-small mt-6 min-[1100px]:hidden">{nb(t('legend'))}</p>
+      </div>
     </div>
   );
 }

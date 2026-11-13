@@ -1,465 +1,35 @@
 'use client';
 
-import { ChevronRight, FileText, Folder, FolderOpen, Trash2, Upload } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import {
-  type ChangeEvent,
-  type DragEvent,
-  type FormEvent,
-  useActionState,
-  useRef,
-  useState,
-} from 'react';
-import {
-  addFileAction,
-  deleteDocumentAction,
-  deleteFolderAction,
-  shareDocumentAction,
-  uploadDocumentAction,
-} from '@/app/(app)/documents/actions';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   EmptyState,
-  Field,
-  GlassCard,
-  Notice,
   PageHeader,
-  Section,
-  Select,
+  SearchField,
+  Thing,
+  ThingGrid,
+  toast,
 } from '@/components/verre';
+import { cn, nb } from '@/lib/verre';
+import { AddPanel, NOTHING_STAGED, type Staged, stage } from './add-panel';
+import { readDropped } from './dropped-files';
 import {
-  DOCUMENT_ACCEPT,
-  DOCUMENT_MAX_BYTES,
-  FOLDER_MAX_FILES,
-  selectFolderFiles,
-} from '@/lib/documents';
-import { formatRelative } from '@/lib/format';
-import { nb } from '@/lib/verre';
-import { cn } from '@/lib/verre/cn';
-import { type PickedFile, type PickedFolder, readDropped, readPicked } from './dropped-files';
-import { type GroupOption, ShareSelect, usePartageLabel, usePartageOptions } from './partage';
+  DocumentPanel,
+  type DocumentRow,
+  type FolderGroup,
+  FolderPanel,
+  PileMark,
+  SheetMark,
+  toneOfFile,
+} from './item-panel';
+import './documents.css';
+import { type GroupOption, usePartageWords } from './partage';
 
-type DocumentRow = {
-  id: string;
-  title: string | null;
-  createdAt: Date;
-  ownerUserId: string;
-  ownerName: string;
-  folderId: string | null;
-  folderName: string | null;
-  ownerFormer: boolean;
-  partage: string; // 'equipe', 'moi' ou l'id d'un groupe (listDocuments)
-};
-
-// Les fichiers d'un même dossier (et d'un même auteur), regroupés sur une ligne de la liste.
-type FolderGroup = { key: string; id: string; name: string; documents: DocumentRow[] };
-
-// Le logo du format, d'après l'extension du titre (le nom du fichier envoyé) ; les autres formats gardent l'icône.
-const LOGOS: Record<string, string> = {
-  pdf: 'pdf',
-  docx: 'word',
-  rtf: 'word',
-  xlsx: 'excel',
-  csv: 'excel',
-  pptx: 'powerpoint',
-  odt: 'writer',
-  ods: 'calc',
-};
-
-function FormatIcon({ title }: { title: string | null }) {
-  const logo = LOGOS[title?.split('.').pop()?.toLowerCase() ?? ''];
-  if (!logo)
-    return (
-      <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center">
-        <FileText className="size-4 text-accent" strokeWidth={1.7} />
-      </span>
-    );
-  return (
-    <span
-      aria-hidden="true"
-      className="grid size-8 shrink-0 place-items-center rounded-chip border border-line bg-[#fff]"
-    >
-      {/* biome-ignore lint/performance/noImgElement: petit SVG statique, rien à optimiser */}
-      <img src={`/logos/${logo}.svg`} alt="" className="size-5" />
-    </span>
-  );
-}
-
-type Report = { tone: 'success' | 'warning' | 'error'; text: string };
-
-function UploadForm({ groups }: { groups: GroupOption[] }) {
-  const t = useTranslations('documents');
-  const partageOptions = usePartageOptions(groups);
-  // Le partage vaut pour tout l'envoi : le formulaire le poste, les fichiers d'un dossier le portent un par un.
-  const [partage, setPartage] = useState('equipe');
-  const router = useRouter();
-  const [state, action, pending] = useActionState(uploadDocumentAction, {
-    error: null,
-    partial: false,
-  });
-  // Au-delà de la limite de Next, la requête est refusée avant l'action et la page d'erreur s'affiche :
-  // la taille se vérifie avant l'envoi (le serveur la vérifie aussi).
-  const [tooBig, setTooBig] = useState(false);
-  // Un dossier ou des fichiers glissés partent un par un (une requête est limitée à 12 Mo) : `progress` en dit l'avancée.
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
-  const [report, setReport] = useState<Report | null>(null);
-  const [dragging, setDragging] = useState(false);
-  const folderInput = useRef<HTMLInputElement>(null);
-  const sending = progress !== null;
-  const checkSize = (event: FormEvent<HTMLFormElement>) => {
-    const file = new FormData(event.currentTarget).get('file');
-    const refused = file instanceof File && file.size > DOCUMENT_MAX_BYTES;
-    setReport(null);
-    setTooBig(refused);
-    if (refused) event.preventDefault();
-  };
-
-  async function send(picking: Promise<{ folders: PickedFolder[]; singles: PickedFile[] }>) {
-    setReport(null);
-    setProgress({ done: 0, total: 0 });
-    try {
-      const { folders, singles } = await picking;
-      const chosen = folders.map(({ name, files }) => ({
-        id: crypto.randomUUID(),
-        name,
-        ...selectFolderFiles(files),
-      }));
-      const alone = selectFolderFiles(singles);
-      // Le chemin part sans sa racine : le serveur ajoute le nom du dossier au titre.
-      const uploads = [
-        ...chosen.flatMap(({ id, name, kept }) =>
-          kept.map(({ file, path }) => ({ file, folder: { id, name, path } })),
-        ),
-        ...alone.kept.map(({ file }) => ({ file, folder: null })),
-      ];
-      // Le plafond vaut pour tout l'envoi : dossiers et fichiers seuls ensemble.
-      const refusal =
-        uploads.length > FOLDER_MAX_FILES
-          ? t('tooManyFiles', { count: uploads.length, max: FOLDER_MAX_FILES })
-          : uploads.length === 0 && t('noReadableFiles');
-      if (refusal) {
-        setReport({ tone: 'error', text: refusal });
-        return;
-      }
-
-      const total = uploads.length;
-      const counts = {
-        added: 0,
-        partial: 0,
-        skipped: alone.skipped + chosen.reduce((sum, { skipped }) => sum + skipped, 0),
-        failed: 0,
-      };
-      setProgress({ done: 0, total });
-      for (const [index, { file, folder }] of uploads.entries()) {
-        const body = new FormData();
-        body.set('file', file);
-        body.set('partage', partage);
-        if (folder) {
-          body.set('folderId', folder.id);
-          body.set('folderName', folder.name);
-          body.set('path', folder.path);
-        }
-        // Une erreur réseau n'arrête pas les fichiers suivants.
-        const result = await addFileAction(body).catch(() => null);
-        if (!result || result.error) counts.failed += 1;
-        else if (result.partial) counts.partial += 1;
-        else counts.added += 1;
-        setProgress({ done: index + 1, total });
-      }
-      const text = (['added', 'partial', 'skipped', 'failed'] as const)
-        .filter((key) => counts[key] > 0)
-        .map((key) => t(`report.${key}`, { count: counts[key] }))
-        .join(' · ');
-      setReport({ tone: counts.failed > 0 ? 'warning' : 'success', text });
-      router.refresh();
-    } catch {
-      setReport({ tone: 'error', text: t('errors.failed') });
-    } finally {
-      setProgress(null);
-    }
-  }
-
-  const pickFolder = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = [...(event.target.files ?? [])];
-    event.target.value = ''; // pour pouvoir choisir deux fois le même dossier
-    void send(Promise.resolve(readPicked(files)));
-  };
-
-  const drop = (event: DragEvent<HTMLElement>) => {
-    event.preventDefault();
-    setDragging(false);
-    if (sending) return;
-    // Les éléments déposés ne sont valides que pendant l'événement : leurs entrées se prennent tout de suite. Sans
-    // entrée, le fichier lui-même.
-    const entries = [...event.dataTransfer.items].flatMap((item) =>
-      item.kind === 'file' ? (item.webkitGetAsEntry() ?? item.getAsFile() ?? []) : [],
-    );
-    void send(readDropped(entries));
-  };
-
-  const error = tooBig ? 'unreadable' : state.error;
-  const idle = !sending && !report && !pending;
-  return (
-    <GlassCard
-      variant="raised"
-      className={cn('p-5 transition-colors', dragging && 'border-accent bg-accent-soft')}
-      onDragOver={(event) => {
-        if (!event.dataTransfer.types.includes('Files')) return;
-        event.preventDefault(); // sinon le navigateur ouvre le fichier déposé
-        setDragging(!sending);
-      }}
-      onDragLeave={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragging(false);
-      }}
-      onDrop={drop}
-    >
-      <form action={action} onSubmit={checkSize} className="flex flex-wrap items-end gap-4">
-        <label className="grid min-w-0 flex-1 gap-2 text-label font-medium text-fg-2">
-          {t('chooseFile')}
-          <input
-            type="file"
-            name="file"
-            required
-            accept={DOCUMENT_ACCEPT}
-            aria-describedby="formats-documents"
-            className="block w-full rounded-field border border-line bg-glass-2 px-3 py-2 text-ui text-fg file:mr-3 file:rounded-full file:border-0 file:bg-glass-3 file:px-3 file:py-1.5 file:text-label file:font-medium file:text-fg"
-          />
-        </label>
-        <Field label={t('shareWith')} className="w-44">
-          <Select
-            name="partage"
-            value={partage}
-            onValueChange={setPartage}
-            disabled={sending || pending}
-            options={partageOptions}
-          />
-        </Field>
-        <Button type="submit" icon={Upload} variant="primary" loading={pending} disabled={sending}>
-          {t('add')}
-        </Button>
-        <Button
-          icon={FolderOpen}
-          disabled={sending || pending}
-          aria-describedby="formats-documents"
-          onClick={() => folderInput.current?.click()}
-        >
-          {t('chooseFolder')}
-        </Button>
-        {/* `webkitdirectory` n'existe pas dans les types de React : posé par un objet d'attributs. */}
-        <input
-          ref={folderInput}
-          type="file"
-          multiple
-          hidden
-          onChange={pickFolder}
-          {...{ webkitdirectory: '' }}
-        />
-      </form>
-      <p id="formats-documents" className="mt-3 text-label text-muted">
-        {t('formats')}
-      </p>
-      <p className="mt-1 text-label text-muted">{t('dropHint')}</p>
-      {progress && progress.total > 0 && (
-        <Notice tone="info" className="mt-4" live="status">
-          {t('sending', progress)}
-        </Notice>
-      )}
-      {report && (
-        <Notice
-          tone={report.tone}
-          className="mt-4"
-          live={report.tone === 'error' ? 'alert' : 'status'}
-        >
-          {nb(report.text)}
-        </Notice>
-      )}
-      {idle && error && (
-        <Notice tone="error" className="mt-4" live="alert">
-          {nb(t(`errors.${error}`))}
-        </Notice>
-      )}
-      {idle && !error && state.partial && (
-        <Notice tone="warning" className="mt-4" live="status">
-          {nb(t('partial'))}
-        </Notice>
-      )}
-    </GlassCard>
-  );
-}
-
-// `path` : le chemin du fichier dans son dossier ; l'auteur est alors celui du dossier.
-function DocumentItem({
-  document,
-  viewerId,
-  admin,
-  groups,
-  path,
-}: {
-  document: DocumentRow;
-  viewerId: string;
-  admin: boolean;
-  groups: GroupOption[];
-  path?: string;
-}) {
-  const t = useTranslations('documents');
-  const tSettings = useTranslations('settings');
-  const locale = useLocale();
-  const partageLabel = usePartageLabel(groups);
-  const owner = document.ownerUserId === viewerId;
-  const full = document.title || t('untitled');
-  const title = path ?? full;
-  return (
-    <li className="flex items-center gap-3 border-b border-line py-3 last:border-0">
-      <FormatIcon title={document.title} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-ui font-medium text-fg" title={title}>
-          {nb(title)}
-        </p>
-        {!path && (
-          <p className="mt-0.5 text-label text-muted">
-            {nb(
-              t('addedBy', {
-                name: document.ownerFormer
-                  ? tSettings('formerMember', { name: document.ownerName })
-                  : document.ownerName,
-                when: formatRelative(document.createdAt, new Date(), locale),
-              }),
-            )}
-            {!owner && ` · ${partageLabel(document.partage)}`}
-          </p>
-        )}
-      </div>
-      {owner && !path && (
-        <ShareSelect
-          share={(partage) => shareDocumentAction({ id: document.id }, partage)}
-          value={document.partage}
-          groups={groups}
-          label={t('shareLabel', { title: full })}
-        />
-      )}
-      {(owner || (admin && document.ownerFormer)) && (
-        <form action={deleteDocumentAction}>
-          <input type="hidden" name="id" value={document.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            icon={Trash2}
-            aria-label={t('deleteLabel', { title: full })}
-          >
-            {t('delete')}
-          </Button>
-        </form>
-      )}
-    </li>
-  );
-}
-
-// Le dossier d'un ancien membre ne se supprime pas d'un coup : un administrateur retire ses fichiers un par un.
-function FolderItem({
-  folder,
-  viewerId,
-  admin,
-  groups,
-}: {
-  folder: FolderGroup;
-  viewerId: string;
-  admin: boolean;
-  groups: GroupOption[];
-}) {
-  const t = useTranslations('documents');
-  const locale = useLocale();
-  const partageLabel = usePartageLabel(groups);
-  // La liste va du plus récent au plus ancien : le premier fichier dit l'auteur et la date du dossier.
-  const [latest] = folder.documents;
-  const prefix = `${folder.name}/`;
-  const files = folder.documents
-    .map((document) => {
-      const title = document.title || t('untitled');
-      return { document, path: title.startsWith(prefix) ? title.slice(prefix.length) : title };
-    })
-    .sort((a, b) => a.path.localeCompare(b.path, locale));
-  const owner = latest?.ownerUserId === viewerId;
-  // « Supprimer le dossier » est posé sur la ligne, hors du `<summary>` : la liste dépliée garde toute la largeur
-  // (sur un téléphone, à côté du bouton, les chemins n'auraient plus de place).
-  return (
-    <li className="relative border-b border-line py-3 last:border-0">
-      <details className="group min-w-0">
-        <summary
-          className={cn(
-            'flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden',
-            owner && 'pr-12 sm:pr-48',
-          )}
-        >
-          <span aria-hidden="true" className="grid size-8 shrink-0 place-items-center">
-            <Folder className="size-4 text-accent" strokeWidth={1.7} />
-          </span>
-          <span className="block min-w-0 flex-1">
-            <span className="block truncate text-ui font-medium text-fg" title={folder.name}>
-              {nb(folder.name)}
-            </span>
-            <span className="mt-0.5 block text-label text-muted">
-              {nb(
-                `${t('folderFiles', { count: files.length })} · ${t('addedBy', {
-                  name: latest?.ownerName ?? '',
-                  when: latest ? formatRelative(latest.createdAt, new Date(), locale) : '',
-                })} · ${partageLabel(latest?.partage ?? 'equipe')}`,
-              )}
-            </span>
-          </span>
-          <ChevronRight
-            aria-hidden="true"
-            className="size-4 shrink-0 text-muted transition-transform group-open:rotate-90"
-          />
-        </summary>
-        {/* Le dossier se partage d'un bloc : ses fichiers suivent tous le même choix. */}
-        {owner && latest && (
-          <div className="mt-3 ml-4 flex flex-wrap items-center gap-3 sm:ml-11">
-            <span className="text-label font-medium text-fg-2">{t('shareWith')}</span>
-            <ShareSelect
-              share={(partage) => shareDocumentAction({ folderId: folder.id }, partage)}
-              value={latest.partage}
-              groups={groups}
-              label={t('shareFolderLabel', { name: folder.name })}
-            />
-          </div>
-        )}
-        <ul className="mt-1 ml-4 sm:ml-11">
-          {files.map(({ document, path }) => (
-            <DocumentItem
-              key={document.id}
-              document={document}
-              viewerId={viewerId}
-              admin={admin}
-              groups={groups}
-              path={path}
-            />
-          ))}
-        </ul>
-      </details>
-      {owner && (
-        <form action={deleteFolderAction} className="absolute top-4 right-0">
-          <input type="hidden" name="id" value={folder.id} />
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            icon={Trash2}
-            aria-label={t('deleteFolderLabel', { name: folder.name })}
-          >
-            {/* Sur un téléphone, l'icône seule : le libellé reste dans aria-label. */}
-            <span className="max-sm:sr-only">{t('deleteFolder')}</span>
-          </Button>
-        </form>
-      )}
-    </li>
-  );
-}
-
-// Les lignes de la liste : un dossier à la place de son premier fichier, les documents seuls tels quels. Le dossier
-// se reconnaît à son identifiant ET à son auteur : un identifiant repris par un autre membre reste à part.
-function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[] {
+// Les rectangles de la page : un dossier à la place de ses fichiers, les documents seuls tels quels. Le dossier se
+// reconnaît à son identifiant ET à son auteur : un identifiant repris par un autre membre reste à part.
+export function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[] {
   const rows: (DocumentRow | FolderGroup)[] = [];
   const folders = new Map<string, FolderGroup>();
   for (const document of documents) {
@@ -479,6 +49,32 @@ function groupDocuments(documents: DocumentRow[]): (DocumentRow | FolderGroup)[]
   return rows;
 }
 
+// Ce que Leon lit, montré sur le bureau vide : une feuille par sorte de fichier (PDF, Office, texte, code).
+const READS = ['a.pdf', 'a.docx', 'a.xlsx', 'a.pptx', 'a.md', 'a.ts'];
+/** Ce que Leon lit, en éventail : six feuilles tenues comme une main de cartes. Pointé (ou un fichier tenu au-dessus
+ *  de la page), l'éventail s'ouvre (documents.css). Un décor : les mots à côté disent le geste. */
+function ReadsFan() {
+  return (
+    <span aria-hidden="true" className="dc-fan">
+      {READS.map((name, i) => (
+        <span key={name} style={{ ['--i' as string]: i }}>
+          <SheetMark title={name} size={88} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+// Le nom d'un document sur sa carte : sans l'extension (l'image dit déjà la sorte de fichier).
+const baseName = (title: string) => title.replace(/\.[a-z0-9]+$/i, '') || title;
+// Au-delà, une recherche s'ajoute à côté du titre.
+const SEARCH_FROM = 12;
+// Tant qu'un document est en lecture, la liste se relit ; pas plus de trois minutes d'affilée.
+const READING_POLL_MS = 4000;
+const READING_POLL_MAX_MS = 180_000;
+
+type Open = { doc: string } | { folder: string } | null;
+
 export function Documents({
   documents,
   viewerId,
@@ -491,41 +87,232 @@ export function Documents({
   groups: GroupOption[];
 }) {
   const t = useTranslations('documents');
+  const router = useRouter();
+  const params = useSearchParams();
+  const words = usePartageWords(groups);
+  const rows = groupDocuments(documents);
+  const folders = rows.filter((row): row is FolderGroup => 'documents' in row);
+  const [open, setOpen] = useState<Open>(null);
+  const [adding, setAdding] = useState(false);
+  const [staged, setStaged] = useState<Staged>(NOTHING_STAGED);
+  const [sending, setSending] = useState(false);
+  const [holding, setHolding] = useState(false);
+  const [q, setQ] = useState('');
+  const pill = useRef<HTMLButtonElement>(null);
+
+  // ?document=<id> (la palette, une source) ouvre son panneau : un document, ou un dossier par son identifiant. Une
+  // fois par lien : la liste qui se relit ne le rouvre pas.
+  const wanted = params.get('document');
+  const handled = useRef<string | null>(null);
+  useEffect(() => {
+    if (!wanted || handled.current === wanted) return;
+    handled.current = wanted;
+    const doc = documents.find((d) => d.id === wanted);
+    const folder = doc
+      ? undefined
+      : documents.find((d) => d.folderId === wanted && d.folderId !== null);
+    if (doc) setOpen({ doc: doc.id });
+    else if (folder) setOpen({ folder: `${folder.ownerUserId}:${folder.folderId}` });
+  }, [wanted, documents]);
+
+  const close = () => {
+    setOpen(null);
+    if (wanted) {
+      handled.current = null;
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  };
+
+  // Un document en lecture : la page se relit jusqu'à ce que Leon l'ait lu (borné).
+  const anyReading = documents.some((d) => d.reading);
+  useEffect(() => {
+    if (!anyReading) return;
+    const start = Date.now();
+    const timer = setInterval(() => {
+      if (Date.now() - start > READING_POLL_MAX_MS) clearInterval(timer);
+      else router.refresh();
+    }, READING_POLL_MS);
+    return () => clearInterval(timer);
+  }, [anyReading, router]);
+
+  // Un fichier ou un dossier déposé n'importe où sur la page : il attend dans « Ajouter un document », où l'on choisit
+  // qui le verra avant de l'envoyer. Ses entrées se prennent pendant l'événement (elles ne valent qu'alors).
+  useEffect(() => {
+    const held = (e: DragEvent) => Boolean(e.dataTransfer?.types.includes('Files'));
+    const over = (e: DragEvent) => {
+      if (!held(e)) return;
+      e.preventDefault(); // sinon le navigateur ouvre le fichier déposé
+      if (e.dataTransfer) e.dataTransfer.dropEffect = sending ? 'none' : 'copy';
+      if (!sending) setHolding(true);
+    };
+    const leave = (e: DragEvent) => {
+      if (!e.relatedTarget) setHolding(false);
+    };
+    const drop = (e: DragEvent) => {
+      if (!held(e) || !e.dataTransfer) return;
+      e.preventDefault();
+      setHolding(false);
+      if (sending) return;
+      const entries = [...e.dataTransfer.items].flatMap((item) =>
+        item.kind === 'file' ? (item.webkitGetAsEntry() ?? item.getAsFile() ?? []) : [],
+      );
+      void readDropped(entries).then((dropped) => {
+        setStaged((current) => stage(current, dropped));
+        setOpen(null);
+        setAdding(true);
+      });
+    };
+    window.addEventListener('dragover', over);
+    window.addEventListener('dragleave', leave);
+    window.addEventListener('drop', drop);
+    return () => {
+      window.removeEventListener('dragover', over);
+      window.removeEventListener('dragleave', leave);
+      window.removeEventListener('drop', drop);
+    };
+  }, [sending]);
+
+  const needle = q.trim().toLocaleLowerCase();
+  const shown = needle
+    ? rows.filter((row) =>
+        'documents' in row
+          ? row.name.toLocaleLowerCase().includes(needle) ||
+            row.documents.some((d) => d.title?.toLocaleLowerCase().includes(needle))
+          : (row.title ?? '').toLocaleLowerCase().includes(needle),
+      )
+    : rows;
+
+  // Ce qui est ouvert se relit dans la liste du moment : parti (supprimé ailleurs), son panneau se ferme.
+  const openDoc = open && 'doc' in open ? documents.find((d) => d.id === open.doc) : undefined;
+  const openFolder =
+    open && 'folder' in open ? folders.find((f) => f.key === open.folder) : undefined;
+  const folderOfDoc = openDoc?.folderId
+    ? (folders.find((f) => f.key === `${openDoc.ownerUserId}:${openDoc.folderId}`) ?? null)
+    : null;
+  const search = (phone: boolean) => (
+    <SearchField
+      label={t('search')}
+      value={q}
+      slash={!phone}
+      onChange={(e) => setQ(e.target.value)}
+      className={phone ? 'mb-4 sm:hidden' : 'max-sm:hidden'}
+    />
+  );
+
+  const deleted = (name: string) => {
+    close();
+    toast(t('deleted', { title: name }));
+    pill.current?.focus({ preventScroll: true });
+  };
+
   return (
-    <div className="mx-auto max-w-[760px]">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
-      <Section title={t('addSection')} className="mt-0">
-        <UploadForm groups={groups} />
-      </Section>
-      <Section title={t('teamSection')} description={t('teamDescription')}>
-        {documents.length === 0 ? (
-          <EmptyState icon={FileText} title={t('emptyTitle')} description={t('emptyDescription')} />
-        ) : (
-          <GlassCard className="px-4">
-            <ul>
-              {groupDocuments(documents).map((row) =>
-                'documents' in row ? (
-                  <FolderItem
-                    key={row.key}
-                    folder={row}
-                    viewerId={viewerId}
-                    admin={admin}
-                    groups={groups}
-                  />
-                ) : (
-                  <DocumentItem
-                    key={row.id}
-                    document={row}
-                    viewerId={viewerId}
-                    admin={admin}
-                    groups={groups}
-                  />
-                ),
-              )}
-            </ul>
-          </GlassCard>
-        )}
-      </Section>
-    </div>
+    <>
+      <PageHeader
+        title={t('title')}
+        actions={
+          <>
+            {rows.length > SEARCH_FROM && search(false)}
+            <Button ref={pill} variant="primary" onClick={() => setAdding(true)}>
+              {t('add')}
+            </Button>
+          </>
+        }
+      />
+
+      {rows.length > SEARCH_FROM && search(true)}
+      {rows.length === 0 ? (
+        <div className={cn('dc-empty', holding && 'is-holding')}>
+          <ReadsFan />
+          <div className="grid gap-1">
+            <h2 className="text-title font-semibold text-fg">{nb(t('emptyTitle'))}</h2>
+            <p className="text-body text-muted">
+              {nb(holding ? t('dropHere') : t('emptyDescription'))}
+            </p>
+          </div>
+        </div>
+      ) : shown.length === 0 ? (
+        <EmptyState title={t('noMatch', { q: q.trim() })} />
+      ) : (
+        <div className={cn('dc-desk', holding && 'is-holding')}>
+          <ThingGrid cols={3}>
+            {shown.map((row) =>
+              'documents' in row ? (
+                <Thing
+                  key={row.key}
+                  size="card"
+                  className="dc-pile"
+                  picture={<PileMark size={36} />}
+                  name={nb(row.name)}
+                  caption={
+                    row.documents.some((d) => d.reading)
+                      ? t('reading')
+                      : words.caption(row.documents[0]?.partage ?? 'equipe')
+                  }
+                  working={row.documents.some((d) => d.reading)}
+                  hl={4}
+                  onClick={() => setOpen({ folder: row.key })}
+                />
+              ) : (
+                <Thing
+                  key={row.id}
+                  size="card"
+                  picture={<SheetMark title={row.title} size={36} />}
+                  name={nb(baseName(row.title || t('untitled')))}
+                  caption={row.reading ? t('reading') : words.caption(row.partage)}
+                  working={row.reading}
+                  hl={toneOfFile(row.title)}
+                  onClick={() => setOpen({ doc: row.id })}
+                />
+              ),
+            )}
+            {/* la place de la prochaine feuille : l'image de l'écran (ce que Leon lit, en éventail), elle apprend le
+                geste et répond quand on tient un fichier ; étroite, elle redevient une case du bureau */}
+            {!needle && (
+              <button key="slot" type="button" className="dc-place" onClick={() => setAdding(true)}>
+                <ReadsFan />
+                <SheetMark title={null} size={36} slot />
+                <span className="dc-place__name">{holding ? t('dropHere') : t('dropZone')}</span>
+              </button>
+            )}
+          </ThingGrid>
+        </div>
+      )}
+
+      {openDoc && (
+        <DocumentPanel
+          key={openDoc.id}
+          document={openDoc}
+          folder={folderOfDoc}
+          viewerId={viewerId}
+          admin={admin}
+          groups={groups}
+          onClose={close}
+          onOpenFolder={(key) => setOpen({ folder: key })}
+          onDeleted={deleted}
+        />
+      )}
+      {openFolder && (
+        <FolderPanel
+          key={openFolder.key}
+          folder={openFolder}
+          viewerId={viewerId}
+          groups={groups}
+          onClose={close}
+          onOpenDocument={(id) => setOpen({ doc: id })}
+          onDeleted={deleted}
+        />
+      )}
+      <AddPanel
+        open={adding}
+        onOpenChange={setAdding}
+        groups={groups}
+        staged={staged}
+        onStage={setStaged}
+        sending={sending}
+        onSending={setSending}
+      />
+
+      {holding && <div aria-hidden="true" className="dc-frame" />}
+    </>
   );
 }

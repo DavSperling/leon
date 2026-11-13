@@ -1,0 +1,5 @@
+/* Connections: the only rules of its own. Letters that only find a tool already connected. */
+.known p { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 20px 0 14px; border: 1px dashed var(--line-strong); border-radius: var(--r-l); }
+.known p + p { margin-top: 12px; }
+.known b { font-weight: 600; }
+.known .linkbtn { margin-left: auto; }

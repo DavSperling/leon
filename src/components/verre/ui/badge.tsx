@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 import { cn } from '@/lib/verre/cn';
 
@@ -16,24 +15,12 @@ const TONES: Record<Tone, { cls: string; dot?: string }> = {
 
 export type BadgeProps = ComponentProps<'span'> & {
   tone?: Tone;
-  /** Plus dessinée : un état se dit par son point. La prop reste pour ses appelants. */
-  icon?: LucideIcon;
-  /** Sans effet : le mono est réservé au vrai code. */
-  mono?: boolean;
   /** tone="warning" : le fond ambre arrive une fois (une action en cours). */
   sweeping?: boolean;
 };
 
 /** Pastille d'état (24 px) : « Synchronisé », « Déconnecté », « Première synchronisation en cours ». Dans un panneau, jamais sur une carte. */
-export function Badge({
-  tone = 'neutral',
-  icon: _icon,
-  mono: _mono,
-  sweeping,
-  className,
-  children,
-  ...props
-}: BadgeProps) {
+export function Badge({ tone = 'neutral', sweeping, className, children, ...props }: BadgeProps) {
   const t = TONES[tone];
   const sweep = sweeping && tone === 'warning';
   return (

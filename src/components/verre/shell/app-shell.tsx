@@ -10,9 +10,7 @@ import { ASK_ID, CommandPalette } from './command-palette';
 import { MobileMenu } from './mobile-bar';
 import { PaletteContext, usePalette } from './palette-context';
 import { EASE, EASE_FOLD, isDesktop, toggleRail, useRailCollapsed } from './rail';
-import { ShellContext } from './shell-kind';
 import { Sidebar, type SidebarData } from './sidebar';
-import { ThinkingProvider } from './thinking';
 import type { Viewer } from './workspace-menu';
 
 /** Calque ouvert (barre de commande, feuille, panneau, fenêtre) : il garde le focus et rend lui-même le focus en se fermant. */
@@ -160,54 +158,50 @@ export function AppShell({ recents, reconnect, stale, children, ...viewer }: App
   const palette = useMemo(() => ({ openPalette: () => setPaletteOpen(true) }), []);
 
   return (
-    <ThinkingProvider>
-      <ShellContext.Provider value="app">
-        <PaletteContext.Provider value={palette}>
-          <a
-            href="#contenu"
-            className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-full bg-ink px-4 py-2 text-ui font-semibold text-on-ink transition-transform focus:translate-y-0"
-          >
-            {t('skipToContent')}
-          </a>
-          <Sidebar {...viewer} {...side} className="max-shell:hidden" />
-          <main
-            ref={mainRef}
-            id="contenu"
-            tabIndex={-1}
-            className={cn(
-              'min-h-dvh overflow-x-clip px-[var(--gut)] pb-6 outline-none transition-[margin-left]',
-              EASE,
-              collapsed
-                ? cn('shell:ml-[calc(var(--inset)+var(--rail-w))]', EASE_FOLD)
-                : 'shell:ml-[calc(var(--inset)+var(--side-w))]',
-            )}
-          >
-            {/* La bande du haut : le bouton du menu (sous 861 px) et la barre où l'on demande. Sur un écran qui a son
-                propre champ, il ne reste d'elle que sa marge, et le bouton du menu au doigt. */}
-            <div
-              className={cn(
-                'sticky top-0 z-20 -mx-[var(--gut)] flex justify-center gap-2 bg-desk px-[var(--gut)] pt-[var(--inset)] pb-3 transition-shadow duration-150 max-shell:justify-start max-shell:pb-2 shell:[&:not(:has(#demander))]:hidden',
-                stuck && 'shadow-[0_1px_0_var(--line)]',
-              )}
-            >
-              <MobileMenu {...viewer} {...side} />
-              <AskBar />
-            </div>
-            <div
-              ref={wrapRef}
-              className="mx-auto max-w-[var(--page-max)] pt-6 pb-[52px] max-shell:pt-4"
-            >
-              {children}
-            </div>
-          </main>
-          <CommandPalette
-            open={paletteOpen}
-            onOpenChange={setPaletteOpen}
-            recents={recents}
-            reconnect={reconnect}
-          />
-        </PaletteContext.Provider>
-      </ShellContext.Provider>
-    </ThinkingProvider>
+    <PaletteContext.Provider value={palette}>
+      <a
+        href="#contenu"
+        className="fixed top-3 left-3 z-[100] -translate-y-20 rounded-full bg-ink px-4 py-2 text-ui font-semibold text-on-ink transition-transform focus:translate-y-0"
+      >
+        {t('skipToContent')}
+      </a>
+      <Sidebar {...viewer} {...side} className="max-shell:hidden" />
+      <main
+        ref={mainRef}
+        id="contenu"
+        tabIndex={-1}
+        className={cn(
+          'min-h-dvh overflow-x-clip px-[var(--gut)] pb-6 outline-none transition-[margin-left]',
+          EASE,
+          collapsed
+            ? cn('shell:ml-[calc(var(--inset)+var(--rail-w))]', EASE_FOLD)
+            : 'shell:ml-[calc(var(--inset)+var(--side-w))]',
+        )}
+      >
+        {/* La bande du haut : le bouton du menu (sous 861 px) et la barre où l'on demande. Sur un écran qui a son
+            propre champ, il ne reste d'elle que sa marge, et le bouton du menu au doigt. */}
+        <div
+          className={cn(
+            'sticky top-0 z-20 -mx-[var(--gut)] flex justify-center gap-2 bg-desk px-[var(--gut)] pt-[var(--inset)] pb-3 transition-shadow duration-150 max-shell:justify-start max-shell:pb-2 shell:[&:not(:has(#demander))]:hidden',
+            stuck && 'shadow-[0_1px_0_var(--line)]',
+          )}
+        >
+          <MobileMenu {...viewer} {...side} />
+          <AskBar />
+        </div>
+        <div
+          ref={wrapRef}
+          className="mx-auto max-w-[var(--page-max)] pt-6 pb-[52px] max-shell:pt-4"
+        >
+          {children}
+        </div>
+      </main>
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        recents={recents}
+        reconnect={reconnect}
+      />
+    </PaletteContext.Provider>
   );
 }

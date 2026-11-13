@@ -287,3 +287,20 @@ the bottom edge of a `relative` sheet; it runs once when the sheet has `.is-work
   `--mono`: they are still declared in `globals.css` (a test checks it), with the new values.
 - Tests I changed: `onboarding/code-tools-card.test.ts` (3 icons instead of 5: "Copy" has no icon). New:
   `src/components/verre/ui/kit.test.ts` (server-render tests of the new pieces: follow it for yours).
+
+## 7. Removed on 2026-11-13: nothing called them any more
+
+Sections 1 to 6 are the port's guide and still name these: they no longer exist, do not look for them.
+
+- Pieces: `Beam`, `Spotlight` / `trackSpot`, `SkeletonText`, `SourceLink`, `DialogTrigger`, `DropdownMenuGroup`,
+  `PopoverAnchor`, `PopoverClose`, `ThinkingProvider` / `useThinking`, the shell-kind context (`useShell`).
+- Props: `PageHeader subtitle / meta`, `Badge icon / mono`, `EmptyState icon`, `Notice icon`, `CitationChip animate`,
+  `Button size="lg"`, `IconButton size="lg" / variant="primary" / loading`. `GlassCard` is a plain sheet (a `div`).
+- `src/lib/verre`: `motion.ts` keeps `pageVariants` only; `formatTime` and the unused text helpers are gone.
+- Classes: `.pulse`, `.caret-block`, `.fade-in`, `glass-float`, `shadow-hi`.
+- Old names of tokens: `bg-bg`, `bg-glass`, `bg-glass-2`, `bg-panel`, `bg-surface`, `text-accent-ink`,
+  `text-destructive-ink`, the `info` colours, `text-meta` (write `text-label`), `rounded-panel` / `rounded-box` (write
+  `rounded-card`), `shadow-panel` (write `shadow-lift`), `ease-spring` (write `ease-out`), and the variables `--hi`,
+  `--spot`, `--sk-hi`, `--shadow`, `--glass-2`, `--logo-2`.
+- Tailwind reads `src/` only (`source("..")` in `globals.css`): a class written only in `prototypes/` or `docs/` is no
+  longer in the served stylesheet.

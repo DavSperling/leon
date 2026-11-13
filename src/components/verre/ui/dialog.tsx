@@ -56,7 +56,6 @@ export function useReturnFocus({
 }
 
 export const Dialog = RDialog.Root;
-export const DialogTrigger = RDialog.Trigger;
 export const DialogClose = RDialog.Close;
 
 export type DialogContentProps = Omit<ComponentProps<typeof RDialog.Content>, 'title'> & {

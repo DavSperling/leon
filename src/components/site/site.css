@@ -1035,12 +1035,6 @@ html:has(.s-nav) {
     border-radius: var(--s-r);
     background: var(--s-desk);
   }
-  .s-flagcol {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 18px;
-    align-items: start;
-  }
   .s-empty-flag {
     flex: none;
     fill: none;

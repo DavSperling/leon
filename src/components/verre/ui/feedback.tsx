@@ -9,24 +9,6 @@ export function Skeleton({ className, ...props }: ComponentProps<'span'>) {
   return <span aria-hidden="true" className={cn('sk block h-2.5', className)} {...props} />;
 }
 
-/** Trois lignes de texte en attente (réponse de Leon, aperçu). */
-export function SkeletonText({
-  widths = ['94%', '81%', '58%'],
-  className,
-}: {
-  widths?: string[];
-  className?: string;
-}) {
-  return (
-    <span className={cn('grid gap-[9px]', className)} aria-hidden="true">
-      {widths.map((w, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: traits fixes
-        <Skeleton key={i} style={{ width: w }} />
-      ))}
-    </span>
-  );
-}
-
 /** Page en chargement : la place du titre, puis quatre cartes vides ; `label` pour les lecteurs d'écran. */
 export function PageSkeleton({ label }: { label: string }) {
   return (
@@ -43,8 +25,6 @@ export function PageSkeleton({ label }: { label: string }) {
 }
 
 export type EmptyStateProps = {
-  /** Plus dessinée (pas d'icône dans un rond teinté). La prop reste pour ses appelants. */
-  icon?: LucideIcon;
   /** La raison, en gras : « Aucun document pour l'instant » */
   title: string;
   /** Une ligne courte, atténuée : « Ajoutez un fichier, Leon le lit. » */
@@ -89,8 +69,6 @@ const NOTICE: Record<NoticeTone, { cls: string; dot: string }> = {
 
 export type NoticeProps = {
   tone?: NoticeTone;
-  /** Plus dessinée : le ton se dit par un point. La prop reste pour ses appelants. */
-  icon?: LucideIcon;
   children: ReactNode;
   /** Bouton d'action : { label, onClick, icon } ou un élément. */
   action?: ReactNode | { label: string; onClick: () => void; icon?: LucideIcon };

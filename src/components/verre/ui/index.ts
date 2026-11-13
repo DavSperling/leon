@@ -15,7 +15,6 @@ export {
   NoSource,
   SourceChip,
   type SourceChipProps,
-  SourceLink,
   SourceNumber,
   ToolIcon,
   ToolLogo,
@@ -32,7 +31,6 @@ export {
   DialogContent,
   type DialogContentProps,
   DialogFooter,
-  DialogTrigger,
   Sheet,
   SheetClose,
   SheetContent,
@@ -47,7 +45,6 @@ export {
   type NoticeTone,
   PageSkeleton,
   Skeleton,
-  SkeletonText,
 } from './feedback';
 export {
   Checkbox,
@@ -79,14 +76,11 @@ export {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   Popover,
-  PopoverAnchor,
-  PopoverClose,
   PopoverContent,
   PopoverTrigger,
   Tooltip,
@@ -107,14 +101,7 @@ export {
   type SidePanelProps,
   StatusRow,
 } from './side-panel';
-export {
-  Beam,
-  type BeamProps,
-  GlassCard,
-  type GlassCardProps,
-  Spotlight,
-  trackSpot,
-} from './surfaces';
+export { GlassCard, type GlassCardProps } from './surfaces';
 export { CitedMarkdown, CitedText, Highlighted } from './text';
 export { Thing, ThingGrid, type ThingGridProps, type ThingProps } from './thing';
 export { Toaster, toast } from './toast';

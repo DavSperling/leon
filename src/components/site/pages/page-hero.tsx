@@ -97,25 +97,6 @@ export function PageHero({
   );
 }
 
-/** Section de page : le rythme commun (148 px), une ancre facultative. */
-export function PageSection({
-  id,
-  className,
-  children,
-  labelledBy,
-}: {
-  id?: string;
-  className?: string;
-  children: ReactNode;
-  labelledBy?: string;
-}) {
-  return (
-    <section id={id} aria-labelledby={labelledBy} className={cn('s-sec', className)}>
-      <Container>{children}</Container>
-    </section>
-  );
-}
-
 /** Le demi-anneau de « en cours » : un anneau pâle et, dessus, sa moitié tracée à l'encre. */
 export function ProgressMark() {
   return (

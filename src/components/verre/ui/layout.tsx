@@ -5,12 +5,8 @@ import { Flag, type FlagTone } from './marks';
 
 export type PageHeaderProps = {
   title: string;
-  /** Plus dessiné : rien sous le titre (un écran est un titre et des choses). La prop reste pour ses appelants. */
-  subtitle?: ReactNode;
   /** À droite du titre : la pastille d'encre de la vue, quand elle en a une. */
   actions?: ReactNode;
-  /** Plus dessinée, comme `subtitle`. Une promesse du produit (qui voit quoi) vit dans le panneau. */
-  meta?: ReactNode;
   className?: string;
 };
 

@@ -1,12 +1,4 @@
-import {
-  ExternalLink,
-  Globe,
-  type LucideIcon,
-  Monitor,
-  PenLine,
-  Plug,
-  Terminal,
-} from 'lucide-react';
+import { Globe, type LucideIcon, Monitor, PenLine, Plug, Terminal } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ComponentProps } from 'react';
 import type { CaptureKind, ProviderId, SourceKind } from '@/capture/turn';
@@ -48,8 +40,7 @@ const kindLabel = (kind: string): string =>
 type ChipProps = {
   n: number /** « Source 2 : Relance — contrat ACME v3 » */;
   label: string /** renvoi pointé, ou lié à la source ouverte : son contour se marque */;
-  active?: boolean /** sans effet : rien n'éclot plus à l'arrivée. La prop reste pour ses appelants. */;
-  animate?: boolean;
+  active?: boolean;
 };
 
 /** Renvoi [n], dans la couleur de la source n : un lien (href, recherche) ou un bouton (onClick, discussion). */
@@ -57,7 +48,6 @@ export function CitationChip({
   n,
   label,
   active,
-  animate: _animate,
   className,
   ...props
 }: ChipProps &
@@ -238,36 +228,5 @@ export function SourceChip({
         )}
       </span>
     </span>
-  );
-}
-
-/** « Ouvrir dans GitHub » : l'original, dans un nouvel onglet (SourceLink du vrai Leon). Rien sans adresse. */
-export function SourceLink({
-  href,
-  kind,
-  label,
-  className,
-}: {
-  href: string | null | undefined;
-  kind: SourceKind | (string & {}) /** Par défaut, le libellé de l'outil */;
-  label?: string;
-  className?: string;
-}) {
-  const t = useTranslations('common');
-  if (!href) return null;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className={cn(
-        'inline-flex items-center gap-1.5 rounded-sm text-label font-medium text-fg underline decoration-line-strong underline-offset-4 transition-colors duration-150 hover:decoration-fg',
-        className,
-      )}
-    >
-      <ExternalLink aria-hidden="true" strokeWidth={1.7} className="size-[13px] shrink-0" />
-      {t('openIn', { tool: label ?? kindLabel(kind) })}
-      <span className="sr-only">{t('newTab')}</span>
-    </a>
   );
 }

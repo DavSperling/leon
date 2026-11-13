@@ -1,7 +1,9 @@
 /* Jetons « Papier » : le bureau, ses feuilles, l'encre et quatre surligneurs. Deux thèmes, clair par défaut.
-   Les noms d'avant (« glass », « accent »…) restent, avec les valeurs du nouveau look : aucune classe à récrire.
+   Les noms d'avant encore appelés (« glass-3 », « accent »…) restent, avec les valeurs du nouveau look.
    Les formes qu'une classe Tailwind ne sait pas dire sont dans kit.css (guide : KIT.md du portage). */
-@import "tailwindcss";
+/* source("..") : Tailwind ne lit que src/. Sans cela il lit tout le dépôt, et les maquettes de prototypes/ et de docs/
+   ajoutaient un quart de classes en trop à la feuille servie. */
+@import "tailwindcss" source("..");
 @import "./kit.css";
 
 /* La palette par défaut de Tailwind est retirée : on n'écrit qu'avec les jetons ci-dessous. */
@@ -19,10 +21,8 @@
     var(--font-stix), "Iowan Old Style", Georgia, serif; /* les mots d'un document d'origine, rien d'autre */
   --mono:
     var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace; /* du vrai code, rien d'autre */
-  /* Rien ne rebondit : « spring » garde son nom pour ses appelants, avec la courbe de tout le reste. */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
-  --ease-spring: cubic-bezier(0.2, 0.7, 0.2, 1);
   --dur-enter: 220ms;
   --dur-exit: 150ms;
   --fast: 150ms;
@@ -58,7 +58,6 @@
   color-scheme: light;
   --bg: #f1f1ee; /* le bureau */
   --glass: #ffffff; /* une feuille */
-  --glass-2: #ffffff;
   --glass-3: #f8f8f6; /* fond discret : ligne de code, touche */
   --float: #ffffff;
   --menu: #ffffff;
@@ -70,7 +69,6 @@
   --selected: #f1f1ee; /* la ligne choisie, la pastille d'état */
   --line: #e2e2dc;
   --line-strong: #c6c6be;
-  --hi: transparent;
   --ink: #0f0f0d; /* l'encre de la marque : la pastille pleine */
   --on-ink: #ffffff;
   --on-ink-danger: #ff8a7a;
@@ -78,18 +76,14 @@
   --text-2: #5b5b55;
   --muted: #5b5b55;
   --accent: #0f0f0d;
-  --accent-ink: #ffffff;
   --accent-hover: #2b2b27;
   --accent-soft: #e9e9e5;
   --accent-line: #c6c6be;
   --ring: #0f0f0d;
-  --spot: transparent;
   --mark-bg: #ffd48f;
   --mark-ink: #0f0f0d;
   --ok: #1f7a4d;
-  --logo-2: #2b8f84;
   --thumb: #ffffff;
-  --sk-hi: transparent;
   --box-line: #8b8b84;
   --success: #1c7147; /* un cran sous --ok : 4,5:1 sur sa teinte, bureau compris */
   --success-soft: rgba(28, 113, 71, 0.1);
@@ -98,12 +92,8 @@
   --warning-soft: #fff0dc;
   --warning-line: #ffce8a;
   --destructive: #b42318;
-  --destructive-ink: #ffffff;
   --destructive-soft: rgba(180, 35, 24, 0.07);
   --destructive-line: rgba(180, 35, 24, 0.32);
-  --info: #5b5b55;
-  --info-soft: #f8f8f6;
-  --info-line: #c6c6be;
   /* Surligneurs (source 1 à 4), leur trait plus appuyé quand on le pointe, les trois traits de la question. */
   --m1: #ffb0d4;
   --m2: #a4f2be;
@@ -124,7 +114,6 @@
     0 1px 0 rgba(15, 15, 13, 0.05), 0 8px 16px -8px rgba(15, 15, 13, 0.12),
     0 28px 56px -20px rgba(15, 15, 13, 0.32);
   --float-line: #e2e2dc; /* le bord d'un calque tenu au-dessus */
-  --shadow: var(--sh-2);
   --float-shadow: var(--sh-3);
 }
 
@@ -133,7 +122,6 @@
   color-scheme: dark;
   --bg: #121210;
   --glass: #1c1c19;
-  --glass-2: #1c1c19;
   --glass-3: #232320;
   --float: #1c1c19;
   --menu: #1c1c19;
@@ -145,7 +133,6 @@
   --selected: #2a2a26;
   --line: #2e2e2a;
   --line-strong: #45453f;
-  --hi: transparent;
   --ink: #f1f1ee; /* la pastille s'inverse : papier, texte d'encre */
   --on-ink: #121210;
   --on-ink-danger: #b42318;
@@ -153,18 +140,14 @@
   --text-2: #a9a9a1;
   --muted: #a9a9a1;
   --accent: #f1f1ee;
-  --accent-ink: #121210;
   --accent-hover: #dcdcd6;
   --accent-soft: #2e2e2a;
   --accent-line: #45453f;
   --ring: #f1f1ee;
-  --spot: transparent;
   --mark-bg: rgba(255, 173, 61, 0.3);
   --mark-ink: #f1f1ee;
   --ok: #5bcb93;
-  --logo-2: #6db4a9;
   --thumb: #f1f1ee;
-  --sk-hi: transparent;
   --box-line: #7d7d76;
   --success: #5bcb93;
   --success-soft: rgba(91, 203, 147, 0.12);
@@ -173,12 +156,8 @@
   --warning-soft: rgba(255, 173, 61, 0.12);
   --warning-line: rgba(255, 173, 61, 0.34);
   --destructive: #f2867a;
-  --destructive-ink: #121210;
   --destructive-soft: rgba(242, 134, 122, 0.1);
   --destructive-line: rgba(242, 134, 122, 0.36);
-  --info: #a9a9a1;
-  --info-soft: #232320;
-  --info-line: #45453f;
   /* Un trait de surligneur : la couleur du drapeau à 30 % derrière un texte clair (46 % quand on le pointe). */
   --m1: rgba(255, 111, 176, 0.3);
   --m2: rgba(68, 217, 138, 0.3);
@@ -198,21 +177,15 @@
     0 1px 0 rgba(0, 0, 0, 0.3), 0 8px 16px -8px rgba(0, 0, 0, 0.5),
     0 28px 56px -20px rgba(0, 0, 0, 0.85);
   --float-line: #45453f;
-  --shadow: var(--sh-2);
   --float-shadow: var(--sh-3);
 }
 
 /* Les classes Tailwind lisent les jetons. Noms du nouveau look : bg-desk, bg-sheet, bg-selected, bg-ink text-on-ink,
-   text-icon, bg-n-50, bg-m1…, bg-f1…, border-float-line. Les anciens (bg-glass, text-accent…) valent la même chose. */
+   text-icon, bg-n-50, bg-m1…, bg-f1…, border-float-line. Les anciens (bg-glass-3, text-accent…) valent la même chose. */
 @theme inline {
-  --color-bg: var(--bg);
   --color-desk: var(--bg);
-  --color-glass: var(--glass);
-  --color-glass-2: var(--glass-2);
   --color-glass-3: var(--glass-3);
   --color-sheet: var(--glass);
-  --color-surface: var(--glass);
-  --color-panel: var(--glass); /* = GlassCard variant="panel" */
   --color-float: var(--float);
   --color-menu: var(--menu);
   --color-scrim: var(--scrim);
@@ -227,20 +200,16 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-float-line: var(--float-line);
-  --color-hi: var(--hi);
   --color-fg: var(--text);
   --color-fg-2: var(--text-2);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
-  --color-accent-ink: var(--accent-ink);
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
   --color-ring: var(--ring);
   --color-mark-bg: var(--mark-bg);
   --color-mark-ink: var(--mark-ink);
-  --color-spot: var(--spot);
-  --color-logo-2: var(--logo-2);
   --color-ok: var(--ok);
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
@@ -249,12 +218,8 @@
   --color-warning-soft: var(--warning-soft);
   --color-warning-line: var(--warning-line);
   --color-destructive: var(--destructive);
-  --color-destructive-ink: var(--destructive-ink);
   --color-destructive-soft: var(--destructive-soft);
   --color-destructive-line: var(--destructive-line);
-  --color-info: var(--info);
-  --color-info-soft: var(--info-soft);
-  --color-info-line: var(--info-line);
   --color-m1: var(--m1);
   --color-m2: var(--m2);
   --color-m3: var(--m3);
@@ -277,22 +242,17 @@
   --font-mono: var(--mono);
 
   /* 12 : feuilles, cartes, panneau, menus. 8 : lignes. 6 : champs, touches. 3 : traits et numéros. */
-  --radius-panel: 12px;
-  --radius-box: 12px;
   --radius-card: 12px;
   --radius-item: 8px;
   --radius-field: 6px;
   --radius-chip: 6px;
   --radius-mark: 3px;
 
-  --shadow-hi: 0 0 #0000; /* le reflet du verre n'existe plus : la classe reste, sans effet */
   --shadow-sheet: var(--sh-1);
   --shadow-lift: var(--sh-2);
-  --shadow-panel: var(--sh-2);
   --shadow-float: var(--sh-3);
 
   --ease-out: var(--ease-out);
-  --ease-spring: var(--ease-spring);
 }
 
 /* Sous 861 px, la barre latérale laisse place à la barre mobile : « shell: » et « max-shell: ». */
@@ -303,8 +263,6 @@
 /* Les tailles : 13 (légendes, pastilles, libellés), 14 (interface), 15 (nom d'une carte, texte du panneau),
    18 (titre de section, réponse de Leon), 20 (titre du panneau), 28 (titre de la page). Rien sous 13 px. */
 @theme {
-  --text-meta: 13px;
-  --text-meta--line-height: 1.4;
   --text-label: 13px;
   --text-label--line-height: 1.45;
   --text-ui: 14px;
@@ -319,7 +277,7 @@
   --text-h2--line-height: 1.2;
   --text-answer: 18px;
   --text-answer--line-height: 1.6;
-  --text-head: 20px; /* « text-panel » serait pris pour la couleur bg-panel */
+  --text-head: 20px;
   --text-head--line-height: 1.25;
   --text-h1: 28px;
   --text-h1--line-height: 32px;
@@ -430,21 +388,13 @@
 }
 
 /* Ce qui reste des classes d'avant, sans boucle ni flou, le temps que leurs appelants passent au kit (kit.css) :
-   un bloc en attente, un point d'état, le repère d'un texte qui arrive, les entrées de page, les calques Radix. */
+   un bloc en attente, le repère d'un texte qui arrive, les entrées de page, les calques Radix. */
 @layer components {
   .sk {
     border-radius: 6px;
     background: var(--hover);
   }
-  .pulse {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--ok);
-    flex: none;
-  }
-  .caret,
-  .caret-block {
+  .caret {
     display: inline-block;
     width: 2px;
     height: 1.05em;
@@ -462,9 +412,6 @@
       opacity: 0;
       transform: translateY(8px);
     }
-  }
-  .fade-in {
-    animation: fade-enter var(--dur-enter) var(--ease-out) backwards;
   }
 
   /* ---------- Calques Radix : entrée 220 ms, sortie 150 ms (Radix attend la fin de l'animation) ---------- */
@@ -614,9 +561,4 @@
   .org-tree ul > li:last-child:not(:only-child)::after {
     border-left: 0;
   }
-}
-
-/* L'ancien nom du fond des calques flottants : un fond plein, sans flou. À remplacer par « bg-menu ». */
-@utility glass-float {
-  background: var(--float);
 }

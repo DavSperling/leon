@@ -13,7 +13,6 @@ const LAYER =
 // ---------- Menu déroulant (Radix) : lignes de 34 px (44 au doigt), surbrillance au survol et au clavier ----------
 export const DropdownMenu = RMenu.Root;
 export const DropdownMenuTrigger = RMenu.Trigger;
-export const DropdownMenuGroup = RMenu.Group;
 
 export function DropdownMenuContent({
   className,
@@ -144,8 +143,6 @@ export function DropdownMenuSeparator({
 // ---------- Fenêtre ancrée (Radix) ----------
 export const Popover = RPopover.Root;
 export const PopoverTrigger = RPopover.Trigger;
-export const PopoverAnchor = RPopover.Anchor;
-export const PopoverClose = RPopover.Close;
 
 export function PopoverContent({
   className,

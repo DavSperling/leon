@@ -12,8 +12,8 @@ import { Tooltip } from './menu';
  * (contour rouge). `link` : souligné.
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'quiet' | 'ghost' | 'destructive' | 'link';
-/** xs 28 px (dans une ligne), sm 32, md 36. `lg` reste accepté et vaut `md` : le kit n'a pas de bouton de 40 px. */
-export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg';
+/** xs 28 px (dans une ligne), sm 32, md 36. */
+export type ButtonSize = 'xs' | 'sm' | 'md';
 
 // Tailwind 4 écrit active:scale-* dans la propriété `scale` : c'est elle qu'on fait transiter.
 // En chargement, le bouton reste focalisable (aria-disabled, clic avalé) : le focus clavier ne tombe pas sur <body>.
@@ -35,12 +35,10 @@ const VARIANTS: Record<ButtonVariant, string> = {
   link: 'h-auto! rounded-sm border-0 px-0! text-fg underline decoration-line-strong underline-offset-4 hover:decoration-fg active:scale-100',
 };
 // Au doigt (sous la coque de bureau), un bouton fait 44 px ; xs vit dans une ligne ou une tuile, qui est la cible.
-const MD = 'h-9 gap-2 px-4 text-ui max-shell:h-11 [&_svg]:size-4';
 const SIZES: Record<ButtonSize, string> = {
   xs: 'h-7 gap-1.5 px-3 text-label [&_svg]:size-3.5',
   sm: 'h-8 gap-1.5 px-3.5 text-label max-shell:h-11 [&_svg]:size-3.5',
-  md: MD,
-  lg: MD,
+  md: 'h-9 gap-2 px-4 text-ui max-shell:h-11 [&_svg]:size-4',
 };
 
 export type ButtonProps = ComponentProps<'button'> & {
@@ -107,13 +105,11 @@ export function Button({
 const ICON_SIZES = {
   sm: 'size-7 [&_svg]:size-4',
   md: 'size-8 max-shell:size-11 [&_svg]:size-[18px]',
-  lg: 'size-10 max-shell:size-11 [&_svg]:size-[18px]',
 } as const;
 const ICON_VARIANTS = {
   ghost: 'text-fg-2 hover:bg-hover hover:text-fg active:bg-n-150',
   secondary:
     'border border-line-strong bg-sheet text-fg-2 hover:border-fg hover:bg-n-50 hover:text-fg',
-  primary: 'bg-ink text-on-ink hover:bg-accent-hover',
 } as const;
 
 export type IconButtonProps = Omit<ComponentProps<'button'>, 'children' | 'aria-label'> & {
@@ -124,7 +120,6 @@ export type IconButtonProps = Omit<ComponentProps<'button'>, 'children' | 'aria-
   size?: keyof typeof ICON_SIZES;
   /** Infobulle avec le libellé (oui par défaut). */
   tooltip?: boolean;
-  loading?: boolean;
 };
 
 export function IconButton({
@@ -133,22 +128,15 @@ export function IconButton({
   variant = 'ghost',
   size = 'md',
   tooltip = true,
-  loading,
   className,
-  disabled,
-  onClick,
   ...props
 }: IconButtonProps) {
   const btn = (
     <button
       type="button"
       aria-label={label}
-      aria-busy={loading || undefined}
-      aria-disabled={loading || undefined}
-      disabled={disabled}
-      onClick={loading ? busyClick : onClick}
       className={cn(
-        'inline-grid shrink-0 place-items-center rounded-item transition-[background-color,border-color,color] duration-150 disabled:pointer-events-none disabled:opacity-60 aria-busy:cursor-progress aria-busy:opacity-60',
+        'inline-grid shrink-0 place-items-center rounded-item transition-[background-color,border-color,color] duration-150 disabled:pointer-events-none disabled:opacity-60',
         ICON_SIZES[size],
         ICON_VARIANTS[variant],
         className,

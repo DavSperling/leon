@@ -1,0 +1,12 @@
+/* Leon « Papier » v2 : motion, module "dev" (section 5, for developers). Script: js/motion/dev.js.
+   Everything else the module moves is set inline by GSAP while it plays and removed when it rests. */
+
+/* The section's entrance: the only thing pre-hidden, with the failsafe of css/motion.css */
+html.js-motion #developers [data-rv] { opacity: 0; animation: var(--failsafe); }
+
+/* The terminal's source marks pop like flags: a mark needs a box of its own to scale. Same width, same line. */
+html.motion-on #developers [data-term-mark] { display: inline-block; text-indent: 0; }
+
+/* Morning: the tool that takes over is named in white while its part plays, then settles back */
+#developers [data-term-title] { transition: color var(--t-move) var(--ease-out); }
+#developers [data-term-title].is-fresh { color: #fff; }

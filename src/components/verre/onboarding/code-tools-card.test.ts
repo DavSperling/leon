@@ -75,8 +75,14 @@ describe('CodeToolsCard', () => {
     expect(html).toContain('src="/logos/cursor.svg"');
     // Pas de logo inventé pour Codex ni Antigravity : une icône de terminal neutre.
     expect(html.match(/<img /g)).toHaveLength(2);
-    // deux icônes de terminal, la copie de la commande et de la consigne, la flèche du lien vers la documentation
-    expect(html.match(/<svg /g)).toHaveLength(2 + 1 + 1 + 1);
+    // deux icônes de terminal, la flèche du lien vers la documentation ; « Copier » n'a plus d'icône (il dit « Copié » sur place)
+    expect(html.match(/<svg /g)).toHaveLength(2 + 1);
+  });
+
+  it('garde la commande sur une ligne qui défile : jamais coupée au milieu d’un mot', () => {
+    expect(render('en', en)).toMatch(
+      /<code class="[^"]*overflow-x-auto whitespace-nowrap[^"]*">curl -fsSL https:\/\/leon\.example\/install \| sh<\/code>/,
+    );
   });
 
   it('donne un bouton Copier à la commande', () => {

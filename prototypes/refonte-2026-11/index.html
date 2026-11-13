@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leon : refonte de l'interface</title>
+<style>
+  :root { --ink: #16150f; --ink-2: #5c5a52; --line: #dddad2; --surface: #f5f4f0; --ground: #fff; --amber: #ffb800; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  main { max-width: 920px; margin: 0 auto; padding: 56px 20px 96px; }
+  h1 { font-size: 34px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 12px; text-wrap: balance; }
+  h2 { font-size: 25px; line-height: 1.2; letter-spacing: -0.01em; margin: 64px 0 12px; text-wrap: balance; }
+  h3 { font-size: 18px; line-height: 1.3; margin: 32px 0 6px; }
+  p { margin: 0 0 14px; max-width: 70ch; }
+  ul { margin: 0 0 14px; padding-left: 20px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  .lead { font-size: 19px; }
+  .note { color: var(--ink-2); font-size: 15px; }
+  a { color: inherit; text-underline-offset: 3px; }
+  a:focus-visible, .btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px; font-size: 15.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; }
+  td.n, th.n { text-align: right; }
+  tr.leon td { font-weight: 600; background: #fff3cc; }
+  .scroll { overflow-x: auto; }
+  figure { margin: 18px 0 26px; }
+  figure img { display: block; width: 100%; height: auto; border: 1px solid var(--line); }
+  figcaption { font-size: 14.5px; color: var(--ink-2); margin-top: 6px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .versions { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 20px; }
+  .version h3 { margin-top: 0; font-size: 21px; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .btn { display: inline-block; padding: 9px 14px; border-radius: 6px; background: var(--ink); color: #fff; text-decoration: none; font-size: 15px; font-weight: 600; }
+  .btn.alt { background: none; color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .box { background: var(--surface); padding: 18px 20px; margin: 18px 0; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  @media (max-width: 720px) { .two, .versions { grid-template-columns: 1fr; } h1 { font-size: 28px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Leon : refonte de l'interface</h1>
+  <p class="lead">Le point complet sur l'interface d'aujourd'hui, puis la nouvelle version retenue, « Papier ». Tout est mesuré sur le site et l'appli tels qu'ils sont en ligne le 10 novembre 2026.</p>
+  <ul class="links">
+    <li><a class="btn" href="papier/index.html">Ouvrir l'accueil « Papier »</a></li>
+    <li><a class="btn alt" href="papier/app/signin.html">Ouvrir la nouvelle appli</a></li>
+  </ul>
+
+  <h2>1. Le point sur l'existant</h2>
+  <p>Ton ressenti est juste sur les six points, et il se mesure. Ce qui est bon, et qu'on garde dans la nouvelle version : le message (« Know exactly what you promised. Source included. »), la franchise (« I don't know », la liste de ce qui manque en sécurité, la mention « Fictional example »), l'idée de montrer une réponse citée, et le logo.</p>
+
+  <div class="two">
+    <figure><img src="captures/avant-accueil.jpg" alt="L'accueil actuel, thème clair" loading="lazy"><figcaption>L'accueil aujourd'hui (thème clair).</figcaption></figure>
+    <figure><img src="captures/avant-accueil-sombre.jpg" alt="L'accueil actuel, thème sombre" loading="lazy"><figcaption>Le même en sombre : c'est ce que voit un visiteur dont l'ordinateur est en mode sombre.</figcaption></figure>
+  </div>
+
+  <h3>« Ça ressemble à de l'IA »</h3>
+  <p>Oui. Sur la seule page d'accueil, on compte : 4 titres en dégradé de couleur, 16 panneaux en verre dépoli, 12 petites étiquettes en majuscules posées au-dessus des titres, 37 formes en pilule, 42 boîtes arrondies avec un filet, 118 textes en police « machine à écrire », 13 cartes qui s'inclinent sous la souris, 119 animations (dont 17 qui ne s'arrêtent jamais), un fond de particules, des halos colorés, une sphère de logos en 3D et des étapes numérotées 01, 02, 03.</p>
+  <p>Chacun de ces éléments est correct pris seul. Ensemble, c'est exactement la liste de ce que produisent les générateurs de sites. Les deux outils d'inspection (Taste et Impeccable) le signalent sans hésiter : 15 règles en échec sur l'accueil. L'appli après connexion a le même habillage : panneaux de verre et halos derrière chaque écran.</p>
+
+  <h3>« Il n'y a pas d'image de marque »</h3>
+  <p>Le test est simple : remplace le logo par celui de n'importe quelle startup d'IA, et rien d'autre ne dit « Leon ». La police (Manrope) habille des milliers de sites. Aucune couleur, aucune forme, aucun geste n'appartient à Leon. Pourtant le produit a de quoi faire une marque : le numéro de source après chaque phrase, le passage surligné dans le document d'origine, le « je ne sais pas ». Les deux versions partent de là.</p>
+
+  <h3>« Les couleurs ne sont pas adaptées »</h3>
+  <p>Aujourd'hui : un indigo et un bleu-vert sur fond gris-bleu, sombre par défaut. C'est la famille de couleurs la plus répandue chez les produits d'IA. J'ai regardé douze concurrents (Glean, Dust, Guru, Slite, Dropbox Dash, Onyx, Sana, Hebbia, Mem, Rovo, Tana, Read AI) : presque tous sont en blanc avec un bouton bleu, ou en crème avec une police à empattements. Aucun n'a une couleur forte à lui. La place est libre.</p>
+
+  <h3>« Les titres sont trop gros »</h3>
+  <p>Le titre de l'accueil fait 86 pixels, en très gras, sur trois lignes, centré, avec un dégradé. Plus bas, un autre fait 96 pixels sur quatre lignes. Les pages intérieures ouvrent sur des titres de 60 à 64 pixels sur trois ou quatre lignes. Ce n'est pas seulement la taille : c'est la taille, plus la graisse, plus le nombre de lignes, plus le dégradé. Les meilleurs sites ont des titres plus calmes (tableau plus bas).</p>
+
+  <h3>« Des démos plus précises »</h3>
+  <p>L'accueil porte huit zones de démonstration. La grande, en haut, est bonne. Les sept autres sont de petits dessins d'interface, écrits en 11 ou 12 pixels, qui ne ressemblent pas à la vraie appli. Et surtout, on ne peut cliquer sur aucun numéro de source pour voir le document d'origine, alors que c'est la promesse du produit.</p>
+  <p>« Plus précis » veut donc dire : moins de démos, plus grandes, faites avec les mêmes éléments que la vraie appli, et qui vont jusqu'au bout. Une question, la réponse, un clic sur le numéro, et le compte-rendu de réunion s'ouvre à la bonne phrase, surlignée.</p>
+
+  <h3>« Il y a trop d'informations »</h3>
+  <p>L'accueil fait 11 écrans de haut, 1 560 mots, 11 sections, 10 jeux d'onglets, et affiche 74 logos (les 42 connecteurs y sont montrés deux fois). En nombre de mots, Leon est dans la moyenne des bons sites. Le vrai problème est le nombre de choses qui se disputent l'œil : 20 tailles de texte différentes, 14 arrondis différents, et la même idée (« chaque phrase a sa source ») répétée quatre fois. Le site entier compte 14 pages et environ 9 000 mots, avec un menu de 6 entrées.</p>
+
+  <figure><img src="captures/avant-accueil-milieu.jpg" alt="Une section du milieu de l'accueil actuel" loading="lazy"><figcaption>Une section parmi onze : étiquette en majuscules, numéros 01 02 03, cartes de verre, mini-interfaces en petits caractères.</figcaption></figure>
+
+  <h3>L'appli après connexion</h3>
+  <div class="two">
+    <figure><img src="captures/avant-appli-recherche.jpg" alt="La recherche dans l'appli actuelle" loading="lazy"><figcaption>La recherche aujourd'hui.</figcaption></figure>
+    <figure><img src="captures/avant-appli-discussion.jpg" alt="Une discussion dans l'appli actuelle" loading="lazy"><figcaption>Une réponse citée aujourd'hui.</figcaption></figure>
+  </div>
+  <ul>
+    <li><strong>Ce qui est bien :</strong> six entrées de menu claires, une réponse lisible avec ses numéros, des sources avec le passage trouvé et un lien vers l'outil d'origine.</li>
+    <li><strong>Même habillage que le site :</strong> verre, halos, aucune personnalité. Le passage trouvé est surligné en bleu pâle sur fond bleu pâle : on le voit à peine, alors que c'est le cœur du produit.</li>
+    <li><strong>L'accueil est une page de recherche vide</strong> avec quatre exemples de syntaxe technique (« tool:github type:ticket »). Pour « tous les employés », c'est du jargon.</li>
+    <li><strong>Recherche et Chat font presque la même chose</strong> à deux endroits du menu. Un nouveau venu ne sait pas lequel ouvrir.</li>
+    <li><strong>Le point du matin n'a pas d'écran à lui.</strong> Le site le présente comme une fonction phare, mais dans l'appli on ne le voit pas : il est servi à l'assistant.</li>
+    <li><strong>La page Connexions</strong> empile l'état des outils branchés et un catalogue de 42 outils, sans ordre de lecture.</li>
+  </ul>
+
+  <h2>2. Ce que font les meilleurs sites aujourd'hui</h2>
+  <p>Mesuré le 10 novembre 2026 sur une quarantaine de sites. Taille du titre principal, graisse (400 = normal, 800 = très gras) et nombre de mots sur l'accueil.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Site</th><th class="n">Titre</th><th class="n">Graisse</th><th class="n">Mots</th><th>Couleurs</th></tr></thead>
+    <tbody>
+      <tr class="leon"><td>Leon aujourd'hui</td><td class="n">86 px</td><td class="n">800</td><td class="n">1 560</td><td>indigo sur gris-bleu</td></tr>
+      <tr><td>Cursor</td><td class="n">26 px</td><td class="n">400</td><td class="n">1 990</td><td>beige, noir</td></tr>
+      <tr><td>Dia</td><td class="n">39 px</td><td class="n">500</td><td class="n">590</td><td>jaune</td></tr>
+      <tr><td>Stripe</td><td class="n">48 px</td><td class="n">300</td><td class="n">2 330</td><td>blanc, violet</td></tr>
+      <tr><td>Mercury</td><td class="n">49 px</td><td class="n">480</td><td class="n">1 650</td><td>photo, bleu nuit</td></tr>
+      <tr><td>Perplexity (entreprise)</td><td class="n">50 px</td><td class="n">400</td><td class="n">620</td><td>crème, bleu-vert</td></tr>
+      <tr><td>Claude</td><td class="n">56 px</td><td class="n">400</td><td class="n">770</td><td>crème, terre cuite</td></tr>
+      <tr><td>Glean (concurrent)</td><td class="n">56 px</td><td class="n">400</td><td class="n">2 040</td><td>blanc, bouton bleu</td></tr>
+      <tr><td>Slite (concurrent)</td><td class="n">56 px</td><td class="n">500</td><td class="n">1 080</td><td>blanc, bouton orange</td></tr>
+      <tr><td>Linear</td><td class="n">64 px</td><td class="n">510</td><td class="n">1 340</td><td>noir</td></tr>
+      <tr><td>Attio</td><td class="n">64 px</td><td class="n">600</td><td class="n">1 920</td><td>blanc, noir</td></tr>
+      <tr><td>Ramp</td><td class="n">64 px</td><td class="n">400</td><td class="n">1 470</td><td>blanc, jaune citron</td></tr>
+      <tr><td>Dust (concurrent)</td><td class="n">69 px</td><td class="n">550</td><td class="n">1 040</td><td>blanc, bouton bleu</td></tr>
+      <tr><td>Granola</td><td class="n">86 px</td><td class="n">400</td><td class="n">930</td><td>blanc, vert citron</td></tr>
+      <tr><td>Notion</td><td class="n">96 px</td><td class="n">600</td><td class="n">350</td><td>blanc, noir</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <ul>
+    <li><strong>Le produit, en vrai, dès le premier écran.</strong> Linear, Attio, Cursor et Clerk montrent leur interface à taille réelle sous le titre. Pas de dessin, pas d'illustration abstraite.</li>
+    <li><strong>Un titre calme.</strong> La plupart sont entre 48 et 64 pixels, en graisse normale. C'est le produit qui impressionne, pas le titre. Aucun n'est en graisse 800.</li>
+    <li><strong>Une seule couleur forte par marque.</strong> Le jaune de Ramp et de Dia, le vert de Supabase, le rouge de Raycast.</li>
+    <li><strong>Crème et police à empattements : le nouvel uniforme des assistants d'IA</strong> (Claude, Perplexity, Tana, Wispr, Mem). À éviter si on ne veut pas « faire IA » d'une autre façon.</li>
+    <li><strong>Presque plus de dégradés, de verre ni de halos</strong> chez les meilleurs. C'est devenu la marque des sites générés.</li>
+  </ul>
+
+  <h2>3. La version retenue : « Papier »</h2>
+  <p><strong>L'idée :</strong> un surligneur par document d'origine. Chaque phrase de la réponse porte la couleur du document d'où elle vient : la phrase surlignée en rose vient du document rose. Une phrase sans couleur, c'est une phrase que Leon n'écrit pas.</p>
+  <p><strong>Les marque-pages :</strong> dans la marge, chaque phrase a son petit drapeau numéroté, de la même couleur que son document. La phrase, le drapeau et le document sont liés : on pointe l'un, les deux autres s'allument ; on clique, le document s'ouvre au bon passage.</p>
+  <p><strong>La police :</strong> moderne, nette, sans empattements, la même pour les titres et les textes (Schibsted Grotesk).</p>
+  <p><strong>Les animations :</strong> à l'ouverture, la démo se joue toute seule (la réponse se surligne phrase par phrase, les documents arrivent un à un). Plus bas, les trois règles restent fixes à l'écran pendant qu'on défile, et seul leur contenu change. Les 42 connecteurs défilent en boucle, sans fin. Si l'ordinateur du visiteur est réglé pour réduire les animations, tout est affiché d'emblée, immobile.</p>
+  <p><strong>La section développeurs :</strong> une mémoire partagée par l'équipe, et le « dreaming ». Le soir, la session se termine et Leon la garde. La nuit, Leon relit et classe. Le matin, la session suivante démarre à jour, dans n'importe quel outil. Elle tient maintenant sur un seul écran, avec moitié moins de texte.</p>
+  <figure><img src="captures/papier-accueil.jpg" alt="Le nouvel accueil « Papier »" loading="lazy"><figcaption>Le nouvel accueil : la réponse surlignée, ses drapeaux, et la pile des documents d'origine.</figcaption></figure>
+  <ul class="links">
+    <li><a class="btn" href="papier/index.html">Ouvrir l'accueil « Papier »</a></li>
+  </ul>
+
+  <h2>4. L'appli, dans le style que tu as choisi</h2>
+  <p>Tu as retenu la proposition B, « Bureau », puis validé son écran Connexions après tes remarques : des rectangles plus petits, plus de compteur ni de date, plus de phrase qui explique l'écran. À « on déploie ce style sur les autres écrans ? », tu as répondu oui. C'est fait : toute l'appli est dans ce style, connexion comprise.</p>
+  <ul>
+    <li><strong>Neuf pages :</strong> l'accueil avec le point du matin, le chat, les documents, l'équipe, les connexions, les réglages, et les trois pages d'entrée (se connecter, créer un espace, mot de passe oublié).</li>
+    <li><strong>La même règle partout :</strong> un écran, c'est un titre et des rectangles. Un rectangle dit un nom et, au plus, une légende. Tout le reste est dans le panneau qui s'ouvre à droite quand on clique dessus.</li>
+    <li><strong>Tout répond :</strong> chaque bouton fait ce qu'il annonce, avec ses refus et ses confirmations. Exemple : tu poses une question, Leon répond phrase par phrase, tu cliques sur un numéro et le document d'origine s'ouvre au bon passage.</li>
+  </ul>
+  <figure><img src="captures/papier-appli.jpg" alt="La nouvelle appli : une réponse surlignée et ses trois sources" loading="lazy"><figcaption>Une réponse dans la nouvelle appli : chaque phrase sous le surligneur de sa source, les sources en dessous.</figcaption></figure>
+  <ul class="links">
+    <li><a class="btn" href="papier/app/signin.html">Ouvrir la nouvelle appli</a></li>
+  </ul>
+  <p class="note">La page de connexion est déjà remplie : clique sur « Sign in ». Pour voir un refus, tape un mot de passe qui contient « wrong ».</p>
+
+  <h2>5. Ce qui est décidé</h2>
+  <ul>
+    <li><strong>Une seule version : « Papier ».</strong> Les premiers jets ne sont plus proposés.</li>
+    <li><strong>Pour l'appli : la proposition B, « Bureau ».</strong> L'écran Connexions validé sert de modèle à tous les autres.</li>
+  </ul>
+
+  <h2>6. Ce qui n'est pas fait</h2>
+  <ul>
+    <li>C'est une maquette : des pages à part. Rien n'est changé sur le site ni dans l'appli en ligne.</li>
+    <li>Dans l'appli, rien n'est gardé d'un écran à l'autre : un outil réparé ou un document ajouté revient à son état de départ quand on change de page.</li>
+    <li>Les anciens écrans de l'appli (ceux que tu as refusés) sont encore dans le dossier, mais plus aucun lien de cette page ni du site n'y mène.</li>
+    <li>Pas de thème sombre, pas de version française : thème clair et anglais seulement.</li>
+    <li>Rien n'est enregistré dans le dépôt : tout est encore à l'état de brouillon sur cet ordinateur.</li>
+    <li>Vérifié dans Chrome seulement. Pas essayé dans Safari ni Firefox, ni sur un vrai téléphone.</li>
+    <li>Les données des démos sont fictives (la société « Kestrel Studio » et ses clients n'existent pas).</li>
+  </ul>
+  <p class="note">Méthode : captures et mesures faites sur le site et l'appli du 10 novembre 2026, 12 sites concurrents et une trentaine de sites de référence mesurés le même jour, directions tirées avec Impeccable et Taste, vérifications avec UI/UX Pro Max.</p>
+</main>
+</body>
+</html>

@@ -146,13 +146,16 @@ export async function getMembership(
   return row ?? null;
 }
 
-// Le lien en clair n'est renvoyé qu'ici, une seule fois ; null si le lecteur n'est ni propriétaire ni administrateur.
-// Il porte le poste de l'invité (recopié sur le membre à son arrivée) et le nom saisi pour s'y retrouver (vide = nul).
+// Le lien en clair n'est renvoyé qu'ici, une seule fois ; null si le lecteur n'est ni propriétaire ni administrateur,
+// ou si le manager choisi n'est pas un membre de son organisation. Il porte le poste de l'invité et son manager
+// (appliqués à son arrivée), et le nom saisi pour s'y retrouver (vide = nul).
 export async function createInvitationLink(
   ctx: TenantContext,
-  invite: { name: string; placement: ValidPlacement },
+  invite: { name: string; placement: ValidPlacement; managerId?: string | null },
 ): Promise<{ token: string; expiresAt: Date } | null> {
   if (!(await canInvite(ctx))) return null;
+  const managerId = invite.managerId ?? null;
+  if (managerId !== null && !(await isMemberOf(ctx, managerId))) return null;
   const token = randomBytes(32).toString('base64url');
   const expiresAt = new Date(Date.now() + INVITATION_DAYS * DAY_MS);
   await db.insert(invitationLinks).values({
@@ -164,8 +167,27 @@ export async function createInvitationLink(
     department: invite.placement.department,
     job: invite.placement.job,
     seniority: invite.placement.seniority,
+    managerId,
   });
   return { token, expiresAt };
+}
+
+// Un membre présent (pas un ancien) de l'organisation du lecteur.
+async function isMemberOf(ctx: TenantContext, memberId: string): Promise<boolean> {
+  if (!z.uuid().safeParse(memberId).success) return false;
+  const rows = await db
+    .select({ id: members.id })
+    .from(members)
+    .innerJoin(users, eq(users.id, members.userId))
+    .where(
+      and(
+        eq(members.id, memberId),
+        eq(members.organizationId, ctx.tenantId),
+        isNull(users.deletedAt),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
 }
 
 // Pas encore servi, pas expiré, et son auteur est toujours propriétaire ou administrateur de l'organisation : le
@@ -195,7 +217,7 @@ export async function findInvitation(token: string): Promise<{ organizationName:
 // de lien à servir.
 export async function joinWithInvitation(token: string, userId: string): Promise<string | null> {
   if (!INVITATION_TOKEN_PATTERN.test(token)) return null;
-  return db.transaction(async (tx) => {
+  const joined = await db.transaction(async (tx) => {
     const [link] = await tx
       .update(invitationLinks)
       // Le nom saisi pour s'y retrouver ne sert plus une fois le lien utilisé : on ne le garde pas.
@@ -206,20 +228,46 @@ export async function joinWithInvitation(token: string, userId: string): Promise
         department: invitationLinks.department,
         job: invitationLinks.job,
         seniority: invitationLinks.seniority,
+        managerId: invitationLinks.managerId,
+        createdBy: invitationLinks.createdBy,
       });
     if (!link) return null;
     // Le poste du lien suit l'invité ; un lien d'avant 0044 n'en a pas, et fait entrer quand même.
-    await tx.insert(members).values({
-      organizationId: link.tenantId,
-      userId,
-      role: 'member',
-      createdAt: new Date(),
-      department: link.department,
-      job: link.job,
-      seniority: link.seniority,
-    });
-    return link.tenantId;
+    const [member] = await tx
+      .insert(members)
+      .values({
+        organizationId: link.tenantId,
+        userId,
+        role: 'member',
+        createdAt: new Date(),
+        department: link.department,
+        job: link.job,
+        seniority: link.seniority,
+        // Placé à la main par qui l'a invité : l'import de l'annuaire n'y touchera pas, comme setManager.
+        rattachementManuel: link.managerId !== null,
+      })
+      .returning({ id: members.id });
+    return member ? { ...link, memberId: member.id } : null;
   });
+  if (!joined) return null;
+  // Son manager (0065) ; parti depuis, la clé est revenue à null. Personne n'est encore sous l'invité : pas de boucle.
+  // Écrit au nom de qui a créé le lien, administrateur (`usable` l'a vérifié) : la RLS de l'organigramme (0057) l'exige.
+  // Après l'entrée : un échec laisse l'invité dans l'organisation, pas encore placé.
+  if (joined.managerId) {
+    try {
+      const creator = await resolveTenantContext(joined.createdBy, joined.tenantId);
+      const managerId = joined.managerId;
+      if (creator)
+        await withTenant(creator, (tx) =>
+          tx
+            .insert(reportingLines)
+            .values({ tenantId: joined.tenantId, memberId: joined.memberId, managerId }),
+        );
+    } catch (error) {
+      logError('team.invitation_manager_failed', error, { tenantId: joined.tenantId });
+    }
+  }
+  return joined.tenantId;
 }
 
 // Un administrateur (ou propriétaire) fixe le poste d'un membre de son organisation, le sien compris. La condition est
@@ -259,4 +307,75 @@ export async function setMemberPlacement(
     });
   }
   return true;
+}
+
+export type PendingInvitation = {
+  id: string;
+  name: string | null;
+  department: string | null;
+  job: string | null;
+  seniority: number | null;
+  managerId: string | null;
+  expiresAt: Date;
+};
+
+// Les liens encore utilisables de l'organisation (écran Équipe : « Invité ») ; pour un propriétaire ou un
+// administrateur seulement, sinon aucun. Le lien lui-même ne se relit jamais : seule son empreinte est gardée.
+export async function listInvitations(ctx: TenantContext): Promise<PendingInvitation[]> {
+  if (!(await canInvite(ctx))) return [];
+  return db
+    .select({
+      id: invitationLinks.id,
+      name: invitationLinks.inviteeName,
+      department: invitationLinks.department,
+      job: invitationLinks.job,
+      seniority: invitationLinks.seniority,
+      managerId: invitationLinks.managerId,
+      expiresAt: invitationLinks.expiresAt,
+    })
+    .from(invitationLinks)
+    .where(
+      and(
+        eq(invitationLinks.tenantId, ctx.tenantId),
+        isNull(invitationLinks.usedAt),
+        sql`${invitationLinks.expiresAt} > now()`,
+        isAdminOf(invitationLinks.createdBy, invitationLinks.tenantId),
+      ),
+    )
+    .orderBy(asc(invitationLinks.createdAt), asc(invitationLinks.id));
+}
+
+// Annule un lien pas encore servi : il expire maintenant, plus personne n'entre avec (l'application ne supprime pas
+// de lien : la table le lui interdit). Réservé aux propriétaires et administrateurs.
+export async function cancelInvitation(ctx: TenantContext, id: string): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success || !(await canInvite(ctx))) return false;
+  const rows = await db
+    .update(invitationLinks)
+    .set({ expiresAt: sql`now()`, inviteeName: null })
+    .where(
+      and(
+        eq(invitationLinks.id, id),
+        eq(invitationLinks.tenantId, ctx.tenantId),
+        isNull(invitationLinks.usedAt),
+        sql`${invitationLinks.expiresAt} > now()`,
+      ),
+    )
+    .returning({ id: invitationLinks.id });
+  return rows.length > 0;
+}
+
+// Un lien encore utilisable de l'organisation du lecteur, qui peut inviter : ce que l'e-mail d'invitation dit (le nom
+// de l'organisation, l'expiration). null sinon : un lien d'ailleurs, servi ou expiré ne part pas par Leon.
+export async function invitationToSend(
+  ctx: TenantContext,
+  token: string,
+): Promise<{ organizationName: string; expiresAt: Date } | null> {
+  if (!INVITATION_TOKEN_PATTERN.test(token) || !(await canInvite(ctx))) return null;
+  const [row] = await db
+    .select({ organizationName: organizations.name, expiresAt: invitationLinks.expiresAt })
+    .from(invitationLinks)
+    .innerJoin(organizations, eq(organizations.id, invitationLinks.tenantId))
+    .where(and(usable(token), eq(invitationLinks.tenantId, ctx.tenantId)))
+    .limit(1);
+  return row ?? null;
 }

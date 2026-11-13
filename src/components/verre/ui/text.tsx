@@ -1,9 +1,14 @@
 import { Fragment, type ReactNode } from 'react';
 import { type MdBlock, type MdInline, markdownBlocks, markdownInline } from '@/lib/markdown';
+import { splitMarks, stripMarks } from '@/lib/source-marks';
 import { cn } from '@/lib/verre/cn';
 import { referenceSegments, splitHighlights } from '@/lib/verre/text';
+import { toneOf } from './marks';
 
-/** Rend un extrait marqué (U+E000 … U+E001) avec <mark> ; le texte n'est jamais lu comme du HTML. */
+/**
+ * Rend un extrait marqué (U+E000 … U+E001) avec <mark>, un trait de surligneur (ambre ; dans un `OriginalSheet`, la
+ * couleur de la source) ; le texte n'est jamais lu comme du HTML.
+ */
 export function Highlighted({ text }: { text: string }) {
   return (
     <>
@@ -24,9 +29,16 @@ type Run = string | { word: string; refs: number[]; punct: string };
  */
 function citedRuns(text: string, keep?: (n: number) => boolean): Run[] {
   const out: Run[] = [];
-  for (const seg of referenceSegments(text, keep ?? (() => true))) {
+  // un renvoi écarté (numéro sans source) vient d'être sauté : l'espace qui le précédait part avec lui
+  let dropped = false;
+  for (const seg of referenceSegments(text, () => true)) {
     const last = out.at(-1);
     if ('ref' in seg) {
+      if (keep && !keep(seg.ref)) {
+        dropped = true;
+        continue;
+      }
+      dropped = false;
       if (typeof last === 'object' && !last.punct) last.refs.push(seg.ref);
       else {
         // le mot d'avant vient avec (comme une espace insécable devant un appel de note)
@@ -38,9 +50,24 @@ function citedRuns(text: string, keep?: (n: number) => boolean): Run[] {
     }
     let rest = seg.text;
     if (typeof last === 'object') {
-      last.punct = /^[  ]?[.,;:!?…)»]+/.exec(rest)?.[0] ?? '';
+      if (dropped) rest = rest.replace(/^[ \u00a0]+(?=[.,)])/, '');
+      last.punct = /^[\u00a0\u202f]?[.,;:!?…)»]+/.exec(rest)?.[0] ?? '';
       rest = rest.slice(last.punct.length);
+    } else if (typeof last === 'string') {
+      // « (GitHub #389) [9]. » sans la source 9 : « (GitHub #389). », jamais « (GitHub #389) . »
+      const glued = /^[.,)\s]/.test(rest) ? last.replace(/[ \u00a0]+$/, '') : last;
+      const prev = out.at(-2);
+      if (dropped && glued === '' && typeof prev === 'object' && !prev.punct) {
+        // \u00ab Vu [1] [9]. \u00bb sans la source 9 : le point revient \u00e0 la puce d'avant, \u00ab Vu [1]. \u00bb
+        out.pop();
+        prev.punct = /^[\u00a0\u202f]?[.,;:!?\u2026)\u00bb]+/.exec(rest)?.[0] ?? '';
+        rest = rest.slice(prev.punct.length);
+      } else {
+        out[out.length - 1] = glued + rest;
+        rest = '';
+      }
     }
+    dropped = false;
     if (rest) out.push(rest);
   }
   return out.filter((r) => r !== '');
@@ -54,38 +81,75 @@ console.assert(
         { word: 'Oui ', refs: [1], punct: '' },
         ' ',
         { word: 'et ', refs: [3], punct: '\u202f?' },
-      ]),
+      ]) &&
+    JSON.stringify(citedRuns('(GitHub #389) [9]. Vu [1] [9].', (n) => n !== 9)) ===
+      '["(GitHub #389). ",{"word":"Vu ","refs":[1],"punct":"."}]',
   'text.tsx : puces mal collées au texte',
 );
+
+const MARKED = /[\uE100-\uE1FF\uE0FF]/;
 
 /**
  * Rend un texte avec renvois « [n] » : chaque renvoi passe par `renderCite` (une CitationChip, en général), collé au
  * mot d'avant et à la ponctuation d'après. `keep` écarte un numéro sans source. Un crochet collé à du code (`argv[0]`) reste du texte.
+ * Les mots marqués par markCited (lib/source-marks.ts) passent sous le surligneur de leur source.
  */
 export function CitedText({
   text,
   renderCite,
   keep,
+  lit,
 }: {
   text: string;
   renderCite: (n: number, index: number) => ReactNode;
   keep?: (n: number) => boolean;
+  /** La source pointée (son numéro, sa ligne) : ses mots s'appuient dans le texte. */
+  lit?: number | null;
 }) {
   let index = 0;
+  // une marque peut commencer dans le texte et finir dans le mot collé au renvoi : elle suit l'ordre du texte
+  let open: number | null = null;
+  const paint = (piece: string): ReactNode => {
+    if (open === null && !MARKED.test(piece)) return piece;
+    const before = open;
+    const split = splitMarks(piece, open);
+    open = split.open;
+    const last = split.parts.length - 1;
+    return split.parts.map((part, i) =>
+      part.n === null ? (
+        // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte figé, dans l'ordre
+        <Fragment key={i}>{part.text}</Fragment>
+      ) : (
+        // une marque coupée par le mot collé au renvoi se lit d'un seul trait : pas de couture entre ses deux moitiés
+        <mark
+          // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte figé, dans l'ordre
+          key={i}
+          className={cn(
+            `hl hl-${toneOf(part.n)}`,
+            part.n === lit && 'is-lit',
+            i === 0 && before !== null && 'hl--b',
+            i === last && split.open !== null && 'hl--a',
+          )}
+        >
+          {part.text}
+        </mark>
+      ),
+    );
+  };
   return (
     <>
       {citedRuns(text, keep).map((r, i) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte figé, dans l'ordre
         <Fragment key={i}>
           {typeof r === 'string' ? (
-            r
+            paint(r)
           ) : (
             <span className="whitespace-nowrap">
-              {r.word}
+              {paint(r.word)}
               {r.refs.map((n) => (
                 <Fragment key={n}>{renderCite(n, index++)}</Fragment>
               ))}
-              {r.punct}
+              {paint(r.punct)}
             </span>
           )}
         </Fragment>
@@ -97,28 +161,35 @@ export function CitedText({
 /**
  * Rend une réponse écrite en Markdown (markdownBlocks) : paragraphes, titres, listes, gras, code. Les renvois [n] y
  * passent par `renderCite`, comme dans CitedText, sauf dans le code. `tail` (le curseur d'une réponse en cours) suit
- * le dernier mot.
+ * le dernier mot. `mark` : le texte d'un paragraphe ou d'un titre passe d'abord par lui (markCited : les mots venus de
+ * la source, sous le surligneur) ; jamais le code.
  */
 export function CitedMarkdown({
   text,
   renderCite,
   keep,
   tail,
+  mark,
+  lit,
 }: {
   text: string;
   renderCite: (n: number) => ReactNode;
   keep?: (n: number) => boolean;
   tail?: ReactNode;
+  mark?: (text: string) => string;
+  /** La source pointée : ses mots s'appuient (CitedText). */
+  lit?: number | null;
 }) {
+  const marked = (blockText: string) => (mark ? mark(blockText) : blockText);
   const inline = (parts: MdInline[]): ReactNode =>
     parts.map((p, i) => (
       // biome-ignore lint/suspicious/noArrayIndexKey: morceaux d'un texte figé, dans l'ordre
       <Fragment key={i}>
         {typeof p === 'string' ? (
-          <CitedText text={p} renderCite={renderCite} keep={keep} />
+          <CitedText text={p} renderCite={renderCite} keep={keep} lit={lit} />
         ) : 'code' in p ? (
-          <code className="rounded-[5px] bg-glass-3 px-[5px] py-px font-mono text-[0.86em] shadow-[inset_0_0_0_1px_var(--line)]">
-            {p.code}
+          <code className="rounded-[4px] border border-line bg-glass-3 px-[5px] py-px font-mono text-[0.86em]">
+            {stripMarks(p.code)}
           </code>
         ) : 'strong' in p ? (
           <strong className="font-semibold">{inline(p.strong)}</strong>
@@ -131,20 +202,29 @@ export function CitedMarkdown({
   const render = (blocks: MdBlock[], end: ReactNode, gap: string): ReactNode =>
     blocks.map((b, i) => {
       const last = i === blocks.length - 1 ? end : null;
-      const space = i > 0 && gap;
+      // sous un titre, le texte le suit de près
+      const space = i > 0 && (blocks[i - 1]?.type === 'h' ? 'mt-2' : gap);
       const key = `${i}${b.type}`;
       if (b.type === 'p')
         return (
           <p key={key} className={cn('whitespace-pre-line', space)}>
-            {inline(markdownInline(b.text))}
+            {inline(markdownInline(marked(b.text)))}
             {last}
           </p>
         );
       if (b.type === 'h') {
         const H = b.level <= 2 ? 'h3' : 'h4';
         return (
-          <H key={key} className={cn('text-title font-semibold', i > 0 && 'mt-5')}>
-            {inline(markdownInline(b.text))}
+          <H
+            key={key}
+            // jamais plus petit que le texte qu'il coiffe (une réponse se lit à 18 px)
+            className={cn(
+              'font-semibold text-balance',
+              b.level <= 2 ? 'text-[1.12em] leading-[1.35]' : 'text-[1em]',
+              i > 0 && 'mt-7',
+            )}
+          >
+            {inline(markdownInline(marked(b.text)))}
             {last}
           </H>
         );
@@ -156,7 +236,7 @@ export function CitedMarkdown({
             key={key}
             start={b.ordered && b.start !== 1 ? b.start : undefined}
             className={cn(
-              'grid gap-1.5 pl-5 marker:text-muted',
+              'grid gap-2 pl-5 marker:text-muted marker:[font-variant-numeric:normal]',
               b.ordered ? 'list-decimal' : 'list-disc',
               space,
             )}
@@ -175,7 +255,7 @@ export function CitedMarkdown({
           <pre
             key={key}
             className={cn(
-              'overflow-x-auto rounded-field bg-glass-3 px-3.5 py-3 font-mono text-[13px] leading-[1.6] whitespace-pre shadow-[inset_0_0_0_1px_var(--line)]',
+              'overflow-x-auto rounded-item border border-line bg-glass-3 px-3.5 py-3 font-mono text-[13px] leading-[1.6] whitespace-pre',
               space,
             )}
           >
@@ -190,5 +270,5 @@ export function CitedMarkdown({
         </Fragment>
       );
     });
-  return render(markdownBlocks(text), tail, 'mt-3');
+  return render(markdownBlocks(text), tail, 'mt-4');
 }

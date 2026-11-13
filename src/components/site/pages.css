@@ -1,0 +1,789 @@
+/* biome-ignore-all lint/style/noDescendingSpecificity: les règles suivent l'ordre des pages ; chacune vise ses propres crochets. */
+/* Les pages intérieures du site « Papier » (produit, cas d'usage, connecteurs, sécurité, tarifs, documentation) : leur
+   mise en scène et leurs retours au survol. Chargé par motion/pages-motion.tsx (monté par page-hero.tsx), hors couche :
+   il l'emporte sur site.css sans surenchère. Trois étages :
+   - ici, en CSS, ce qui doit être juste à la première image et sans script : le trait du titre qui se trace, les
+     feuilles du haut qui se posent, le tampon, l'entourage du prix, les lignes du catalogue ;
+   - motion/pages.ts (GSAP, chargé à la demande) : ce qui arrive plus bas, au défilement (data-pm) ;
+   - mouvement réduit ou « Arrêter les animations » : globals.css coupe toute animation, l'état final est celui du
+     balisage. Sans JavaScript, la page est entière. */
+
+.s-page {
+  --pg-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pg-inout: cubic-bezier(0.45, 0, 0.55, 1);
+  /* Le trait de surligneur tracé à la main : une bande aux bouts biais et aux bords qui ondulent (celui de l'accueil) */
+  --pg-rough: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M1.6 3.2C22 1.6 48 2.6 70 1.9S93 1.5 99.2 2.4L98.6 17.4C80 18.6 52 17.6 30 18.3S8 18.9 0.4 18.6Z'/%3E%3C/svg%3E");
+}
+
+@keyframes pg-sweep {
+  from {
+    background-size: 0% 100%;
+  }
+}
+@keyframes pg-land {
+  from {
+    opacity: 0;
+    transform: translate(calc(var(--from, 1) * 52px), -16px) rotate(calc(var(--from, 1) * 3.2deg));
+  }
+}
+@keyframes pg-stamp {
+  from {
+    opacity: 0;
+    scale: 1.7;
+  }
+}
+@keyframes pg-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes pg-row {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+@keyframes pg-logo {
+  from {
+    opacity: 0;
+    scale: 0.5;
+    rotate: -14deg;
+  }
+}
+@keyframes pg-stroke {
+  from {
+    transform: scaleX(0.15);
+  }
+}
+
+/* ---------- Le haut de page : le titre monte, puis le surligneur passe sur ses mots, tracé à la main ---------- */
+.s-page .s-mark {
+  background:
+    linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / calc(var(--sweep, 1) * 100%)
+    100% no-repeat;
+  mask: var(--pg-rough) 0 0 / 100% 100% no-repeat;
+}
+.s-page .s-top .s-mark {
+  animation: pg-sweep 460ms var(--pg-inout) 600ms backwards;
+}
+
+/* ---------- Une feuille qui se pose sur le bureau au chargement (--i : son rang, --from : son côté) ---------- */
+.pg-land {
+  animation: pg-land 640ms var(--pg-out) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms + 340ms);
+}
+.pg-land--left {
+  --from: -1;
+}
+/* Le tampon « Privé, pour vous » tombe quand sa feuille est posée */
+.pg-stamp {
+  animation: pg-stamp 240ms cubic-bezier(0.55, 0, 1, 0.45) 1250ms backwards;
+}
+
+/* ---------- Une feuille qu'on peut ouvrir : elle se soulève du bureau sous le pointeur, se repose sous le doigt ---------- */
+.pg-lift {
+  transition:
+    transform 320ms var(--pg-out),
+    box-shadow 320ms var(--pg-out);
+}
+@media (hover: hover) {
+  .pg-lift:hover {
+    transform: translateY(-4px) rotate(-0.6deg);
+    box-shadow:
+      0 1px 0 rgba(15, 15, 13, 0.05),
+      0 26px 36px -20px rgba(15, 15, 13, 0.34);
+  }
+  li:nth-child(even) > .pg-lift:hover {
+    transform: translateY(-4px) rotate(0.6deg);
+  }
+  [data-theme="dark"] .pg-lift:hover {
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      0 26px 36px -20px rgba(0, 0, 0, 0.8);
+  }
+}
+.pg-lift:active {
+  transform: translateY(0) scale(0.985);
+  transition-duration: 90ms;
+}
+
+/* ---------- Tarifs : le prix du pilote entouré à la plume, comme sur une grille de prix qu'on vous tend ---------- */
+.pg-ring {
+  position: relative;
+  display: inline-block;
+}
+.pg-ring > svg {
+  position: absolute;
+  top: -11px;
+  left: -20px;
+  width: calc(100% + 42px);
+  height: calc(100% + 22px);
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.pg-ring path {
+  stroke-dasharray: 1;
+  vector-effect: non-scaling-stroke;
+  animation: pg-draw 760ms var(--pg-inout) 1050ms backwards;
+}
+
+/* ---------- Connecteurs : les lignes arrivent avec le défilement, chaque logo se pose comme un tampon ---------- */
+@supports (animation-timeline: view()) {
+  .s-cat .s-row {
+    animation: pg-row linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 100%;
+  }
+  .s-cat .s-row > .s-logo {
+    animation: pg-logo linear both;
+    animation-timeline: view();
+    animation-range: entry 40% cover 16%;
+  }
+}
+.s-cat .s-row > .s-logo > img {
+  transition: transform 320ms var(--pg-out);
+}
+.s-cat .s-row__how {
+  transition: color 200ms;
+}
+@media (hover: hover) {
+  .s-cat .s-row:hover > .s-logo > img {
+    transform: scale(1.22) rotate(-6deg);
+  }
+  .s-cat .s-row:hover > .s-row__how {
+    color: var(--text);
+  }
+  .s-index button > span {
+    transition: transform 320ms var(--pg-out);
+  }
+  .s-index button:hover > span {
+    transform: translateX(4px);
+  }
+}
+.s-index button:active > span {
+  transform: translateX(1px);
+}
+/* Sous le pointeur, le surligneur passe sur ce que Leon lit de l'outil, dans la couleur de la famille (.c1 à .c4, posée
+   par le catalogue : celle du drapeau qui compte ses outils) */
+.pg-read {
+  margin: -1px -4px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / 0% 100% no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition:
+    background-size 380ms var(--pg-inout),
+    color 200ms;
+}
+@media (hover: hover) {
+  .s-row:hover .pg-read {
+    background-size: 100% 100%;
+    color: var(--s-mark-ink);
+  }
+}
+
+/* ---------- Tarifs : la colonne du pilote est une feuille posée sur la grille, celle par laquelle on commence ----------
+   La table devient une seule grille (les rangées s'effacent) pour qu'une feuille couvre une colonne entière, de son nom à
+   sa facturation ; l'hébergement, commun au pilote et à l'équipe, reste sur la grande feuille. */
+@keyframes pg-raise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+@media (min-width: 700px) {
+  .s-page .pg-plans {
+    overflow: visible;
+  }
+  .pg-plans table {
+    position: relative;
+    display: grid;
+    grid-template-columns:
+      calc(25% + 6px - var(--cell)) calc(25% + 6px) calc(25% + 6px)
+      minmax(0, 1fr);
+  }
+  .pg-plans :is(thead, tbody, tr) {
+    display: contents;
+  }
+  .pg-plans :is(th, td) {
+    position: relative;
+    z-index: 1;
+  }
+  .pg-plans tbody :is(th, td) {
+    border-top: 1px solid var(--line);
+  }
+  .pg-plans tbody .s-table__group > th {
+    border-top-color: var(--line-strong);
+  }
+  .pg-plans tbody .s-table__group + tr > * {
+    border-top: 0;
+  }
+  .pg-plans table::before {
+    content: "";
+    position: absolute;
+    grid-column: 2 / 3;
+    grid-row: 1 / 5;
+    inset: -16px 0 -1px;
+    border-radius: var(--s-r);
+    background: var(--s-sheet);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      0 1px 0 rgba(15, 15, 13, 0.05),
+      0 28px 36px -22px rgba(15, 15, 13, 0.42);
+    animation: pg-raise 520ms var(--pg-out) 820ms backwards;
+  }
+  [data-theme="dark"] .pg-plans table::before {
+    background: color-mix(in oklab, var(--s-sheet), var(--text) 5%);
+    box-shadow:
+      0 0 0 1px var(--line-strong),
+      0 28px 36px -22px rgba(0, 0, 0, 0.9);
+  }
+}
+/* « Dans chaque offre » : une coche par ligne, tracée au défilement (motion/pages.ts, included) */
+.pg-inc {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.pg-inc > .s-check {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text);
+}
+
+/* ---------- Sécurité : chaque règle est une pile ; la feuille du dessus se pose, puis les autres s'écartent dessous ---------- */
+@keyframes pg-fan {
+  from {
+    transform: none;
+  }
+}
+.pg-desk {
+  isolation: isolate;
+}
+/* Blanc sur blanc, une pile ne se lit que par ses bords : chaque feuille a son filet, et porte une ombre courte,
+   décalée vers le bas, sur celle du dessous. Les deux feuilles du dessous, un peu plus étroites, sont de travers,
+   l'une d'un côté, l'autre de l'autre : un coin de chacune dépasse en haut, l'autre en bas (la pile se lit où que la
+   page soit arrêtée). Elle reste dans sa colonne, et rien ne se mêle dans la gouttière entre les deux. */
+.pg-pile {
+  position: relative;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 3px 6px -1px rgba(15, 15, 13, 0.09),
+    var(--s-shadow);
+}
+.pg-pile::before,
+.pg-pile::after {
+  content: "";
+  position: absolute;
+  inset: 0 14px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--s-sheet);
+  box-shadow:
+    0 0 0 1px var(--line-strong),
+    0 3px 6px -1px rgba(15, 15, 13, 0.09),
+    0 14px 22px -14px rgba(15, 15, 13, 0.2);
+  transform: translate(-3px, 2px) rotate(-1.8deg);
+  transition: transform 420ms var(--pg-out);
+  animation: pg-fan 620ms var(--pg-out) 1080ms backwards;
+}
+.pg-pile::after {
+  transform: translate(3px, 3px) rotate(1.4deg);
+  animation-delay: 1160ms;
+}
+/* En sombre l'ombre ne porte pas : les feuilles du dessous se lisent par leur papier, deux tons au-dessus du bureau. */
+[data-theme="dark"] .pg-pile::before,
+[data-theme="dark"] .pg-pile::after {
+  background: var(--s-desk-3);
+}
+.pg-pile:nth-of-type(even)::before {
+  transform: translate(3px, 2px) rotate(1.8deg);
+}
+.pg-pile:nth-of-type(even)::after {
+  transform: translate(-3px, 3px) rotate(-1.4deg);
+}
+/* Sous le pointeur, la pile s'ouvre : les feuilles du dessous tournent un peu plus (les plans qui s'écartaient, sur
+   l'ancien site) */
+@media (hover: hover) and (min-width: 700px) {
+  .pg-pile:hover::before {
+    transform: translate(-3px, 4px) rotate(-2.8deg);
+  }
+  .pg-pile:hover::after {
+    transform: translate(3px, 5px) rotate(2.2deg);
+  }
+  .pg-pile:nth-of-type(even):hover::before {
+    transform: translate(3px, 4px) rotate(2.8deg);
+  }
+  .pg-pile:nth-of-type(even):hover::after {
+    transform: translate(-3px, 5px) rotate(-2.2deg);
+  }
+}
+@media (max-width: 699px) {
+  .pg-pile::before,
+  .pg-pile:nth-of-type(even)::before {
+    transform: translate(0, 7px) rotate(-0.8deg);
+  }
+  .pg-pile::after,
+  .pg-pile:nth-of-type(even)::after {
+    transform: translate(0, 4px) rotate(0.6deg);
+  }
+}
+
+/* Ce qui est en place : une feuille écrite à l'encre. Ce qui est en cours : la même, encore au crayon (en tirets, sans
+   ombre), comme sur l'accueil. */
+.s-facts.pg-inked {
+  padding: 8px 28px 10px;
+  border-bottom: 0;
+}
+.s-facts.pg-inked > li:first-child {
+  border-top: 0;
+}
+.s-facts.pg-inked--draft {
+  border-radius: var(--s-r);
+  outline: 1.5px dashed color-mix(in srgb, var(--s-on-band) 38%, transparent);
+  outline-offset: -1.5px;
+}
+@media (max-width: 699px) {
+  .s-facts.pg-inked {
+    padding-inline: 18px;
+  }
+}
+
+/* ---------- Produit : les quatre étapes sur une ligne, reliées d'un trait de plume qui se trace de la 1 à la 4 ---------- */
+@keyframes pg-line {
+  from {
+    transform: scaleX(0);
+  }
+}
+@media (min-width: 1100px) {
+  .pg-flow {
+    position: relative;
+    isolation: isolate;
+  }
+  .pg-flow > li {
+    grid-column: span 3;
+  }
+  .pg-flow::before {
+    content: "";
+    position: absolute;
+    inset: 50% 0 auto;
+    z-index: -1;
+    height: 1.5px;
+    background: var(--text);
+    transform-origin: 0 50%;
+    animation: pg-line 900ms var(--pg-inout) 760ms backwards;
+  }
+}
+
+/* ---------- Documentation : le mode d'emploi est une feuille sur le bureau, son plan à côté ; « pour un agent », la
+   même feuille en Markdown, dans un terminal. La feuille se pose au chargement et à chaque bascule. ---------- */
+@keyframes pg-manual {
+  from {
+    opacity: 0;
+    transform: translateY(26px) rotate(0.5deg);
+  }
+}
+.s-page .pg-doc {
+  margin-top: 40px;
+  padding: 56px 0 104px;
+}
+.pg-doc__side {
+  grid-column: 1 / 13;
+}
+.pg-manual {
+  grid-column: 1 / 13;
+  min-width: 0;
+  transform-origin: 0 0;
+  animation: pg-manual 620ms var(--pg-out) 300ms backwards;
+}
+.s-sheet.pg-manual {
+  display: grid;
+  gap: 48px;
+  padding: 28px 20px 36px;
+}
+.s-term.pg-manual > pre {
+  max-height: none;
+  /* « pour un agent » : le terminal imprime la page, ligne après ligne, le temps de la première fenêtre */
+  animation: pg-print 1100ms steps(24, end) 620ms backwards;
+}
+@keyframes pg-print {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  99% {
+    clip-path: inset(0 0 calc(100% - 760px) 0);
+  }
+}
+@media (min-width: 700px) {
+  .s-sheet.pg-manual {
+    padding: 48px 56px 56px;
+  }
+}
+@media (min-width: 1100px) {
+  .pg-doc__side {
+    grid-column: 1 / 4;
+    position: sticky;
+    top: calc(var(--s-nav-h) + 40px);
+    align-self: start;
+  }
+  .pg-manual {
+    grid-column: 4 / 12;
+  }
+}
+.pg-doc__side--actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+/* Le mode d'emploi est annoté : un marque-page par section dépasse du bord gauche de la feuille, dans la couleur de son
+   entrée du plan. Celui du haut sort quand la feuille est posée ; les autres, au moment où le plan marque leur section
+   (data-ahead, posé par documentation-toc.tsx sur les sections pas encore lues) : le drapeau et le trait du plan
+   changent ensemble. Sans script, tous les marque-pages sont sortis. */
+@keyframes pg-tab {
+  from {
+    transform: scaleX(0);
+  }
+}
+.pg-manual {
+  --pg-pad: 20px;
+  --pg-tab-out: 10px;
+  --pg-tab-in: 8px;
+}
+.pg-tab {
+  position: absolute;
+  top: 0.32em;
+  left: calc(-1 * (var(--pg-pad) + var(--pg-tab-out)));
+  width: calc(var(--pg-tab-out) + var(--pg-tab-in));
+  min-width: 0;
+  height: 18px;
+  padding: 0;
+  transform-origin: 100% 50%;
+  transition: transform 420ms var(--s-ease-flag);
+}
+/* pas encore lue : le marque-page est rentré dans la feuille (il rentre plus vite qu'il ne sort) */
+.pg-manual > section[data-ahead] .pg-tab {
+  transform: scaleX(0);
+  transition: transform 160ms var(--pg-inout);
+}
+.pg-manual > section:first-child .pg-tab {
+  /* la courbe des drapeaux du site (--s-ease-flag) : le petit dépassement de ce qui sort de son bord */
+  animation: pg-tab 420ms var(--s-ease-flag) 980ms backwards;
+}
+@media (min-width: 700px) {
+  .pg-manual {
+    --pg-pad: 56px;
+    --pg-tab-out: 18px;
+    --pg-tab-in: 16px;
+  }
+}
+/* Le plan : l'entrée de la section qu'on lit est passée au surligneur, le trait suit la lecture */
+.pg-toc ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+}
+@media (min-width: 1100px) {
+  .pg-toc ol {
+    display: grid;
+    gap: 2px;
+  }
+}
+.pg-toc a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font: 400 15px / 1.3 var(--font);
+  color: var(--muted);
+  transition: color 200ms;
+}
+@media (pointer: coarse) {
+  .pg-toc a {
+    min-height: 44px;
+  }
+}
+.pg-toc a > span {
+  margin: 0 -6px;
+  padding: 3px 6px;
+  background: linear-gradient(var(--hl, var(--m1)), var(--hl, var(--m1))) 0 0 / 0% 100% no-repeat;
+  mask: var(--pg-rough) 0 0 / 100% 100% no-repeat;
+  transition: background-size 420ms var(--pg-inout);
+}
+.pg-toc a:hover {
+  color: var(--text);
+}
+.pg-toc a[aria-current] {
+  color: var(--s-mark-ink);
+  font-weight: 500;
+}
+.pg-toc a[aria-current] > span {
+  background-size: 100% 100%;
+}
+.pg-toc a:active > span {
+  translate: 1px 0;
+}
+
+/* ---------- Connecteurs, en haut : quatre lignes du catalogue et la pile des originaux. La ligne qu'on pointe fait
+   sortir son original : il glisse de la feuille des lignes vers le dessus de la pile. ---------- */
+@keyframes pg-slide {
+  from {
+    opacity: 0;
+    transform: translate(-88px, 6px) rotate(-1.6deg);
+  }
+}
+.pg-peek .s-note {
+  padding-block: 13px;
+}
+/* La ligne choisie garde un fond de feuille (sur le bureau, le gris du bureau la ferait disparaître) */
+.pg-peek .s-note:is(:hover, [aria-pressed="true"]) {
+  background: color-mix(in srgb, var(--s-desk) 45%, var(--s-sheet));
+}
+.pg-peek li:first-child > .s-note {
+  border-top: 0;
+  border-radius: var(--s-r) var(--s-r) 0 0;
+}
+.pg-peek li:last-child > .s-note {
+  border-radius: 0 0 var(--s-r) var(--s-r);
+}
+.pg-peek .s-pile {
+  animation: pg-land 640ms var(--pg-out) 520ms backwards;
+}
+.pg-peek .s-pile > .doc[data-slot="0"] {
+  animation: pg-slide 520ms var(--pg-out);
+}
+@media (max-width: 1099px) {
+  .pg-peek .s-pile > .doc:not([data-slot="0"]) {
+    display: none;
+  }
+}
+
+/* ---------- Cas d'usage : les six équipes sur trois colonnes ; chaque situation sur toute la largeur, ce qu'on demande
+   à gauche (dans le champ où l'on demande), ce qui revient à droite, avec ses sources numérotées ---------- */
+.pg-teams > li {
+  grid-column: 1 / 13;
+}
+@media (min-width: 700px) {
+  .pg-teams > li {
+    grid-column: span 6;
+  }
+}
+@media (min-width: 1100px) {
+  .pg-teams > li {
+    grid-column: span 4;
+  }
+}
+@media (min-width: 700px) {
+  .pg-others {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1100px) {
+  .pg-others {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+.pg-sits {
+  border-bottom: 1px solid var(--line);
+}
+.pg-sit {
+  padding: 36px 0 40px;
+  border-top: 1px solid var(--line);
+}
+.pg-sit:first-child {
+  border-top-color: var(--line-strong);
+}
+.pg-sit__ask,
+.pg-sit__back {
+  grid-column: 1 / 13;
+  min-width: 0;
+}
+@media (min-width: 1100px) {
+  .pg-sit__ask {
+    grid-column: 1 / 7;
+  }
+  .pg-sit__back {
+    grid-column: 8 / 13;
+  }
+}
+/* Le champ où l'on demande : une feuille, les trois traits, la question */
+.pg-ask {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  margin-top: 20px;
+  padding: 12px 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--s-sheet);
+  box-shadow: var(--s-shadow);
+  font: 500 16px / 1.4 var(--font);
+  transition:
+    border-color 200ms,
+    translate 320ms var(--pg-out);
+}
+@media (hover: hover) {
+  .pg-sit:hover .pg-ask {
+    border-color: var(--text);
+    translate: 0 -2px;
+  }
+}
+/* Les sources de la réponse : le numéro dans sa couleur, le logo de l'outil */
+.pg-srcs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin-top: 20px;
+}
+.pg-srcs > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- Page d'une équipe : en haut, la question reçoit sa réponse citée. La question arrive, puis phrase par
+   phrase (--k, posé par demo-card.tsx) : les mots, le trait qui passe sur les mots repris, le numéro qui sort, la ligne
+   de la source ; la pile des originaux se pose à côté. En CSS : juste à la première image, entier sans script. ---------- */
+@keyframes pg-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pg-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+.pg-cited {
+  --t0: 900ms;
+  --beat: 480ms;
+}
+.pg-cited .s-answer__q {
+  animation: pg-row 420ms var(--pg-out) 620ms backwards;
+}
+.pg-cited .s-answer__text > *,
+.pg-cited .s-sheet ol > li {
+  --at: calc(var(--t0) + var(--k, 0) * var(--beat));
+}
+.pg-cited .s-answer__text > * {
+  animation: pg-fade 240ms var(--pg-inout) var(--at) backwards;
+}
+.pg-cited .s-answer__text > .hl {
+  background: linear-gradient(var(--hl, var(--m4)), var(--hl, var(--m4))) 0 0 / 100% 100% no-repeat;
+  animation:
+    pg-fade 240ms var(--pg-inout) var(--at) backwards,
+    pg-sweep 420ms var(--pg-inout) calc(var(--at) + 140ms) backwards;
+}
+.pg-cited .s-answer__text .cite {
+  animation: pg-pop 320ms cubic-bezier(0.175, 0.885, 0.32, 1.3) calc(var(--at) + 320ms) backwards;
+}
+.pg-cited .s-sheet ol > li {
+  animation: pg-row 420ms var(--pg-out) calc(var(--at) + 380ms) backwards;
+}
+.pg-cited .s-pile {
+  animation: pg-land 700ms var(--pg-out) calc(var(--t0) + 300ms) backwards;
+}
+
+/* ---------- Cas d'usage : toutes les questions dans un seul champ. Les questions s'y écrivent l'une après l'autre
+   (question-reel.tsx) ; dans la liste dessous, celle qui s'écrit est passée au surligneur. Le champ garde sa hauteur :
+   rien ne bouge autour. ---------- */
+@keyframes pg-write {
+  from {
+    clip-path: inset(-0.3em 100% -0.3em 0);
+  }
+}
+.pg-reel {
+  display: grid;
+  /* minmax(0, …) : une longue question passe à la ligne au lieu d'élargir la colonne (téléphone) */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+}
+.pg-ask.pg-reel__field {
+  min-height: 68px;
+  margin-top: 0;
+  padding: 14px 22px;
+  font-size: 1.1875rem;
+}
+.pg-reel--wide > .pg-reel__field {
+  max-width: 780px;
+}
+.pg-reel__q {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  clip-path: inset(-0.3em 0 -0.3em 0);
+  animation: pg-write 620ms var(--pg-inout) 120ms backwards;
+}
+.pg-reel__field > .strokes i {
+  animation: pg-stroke 320ms var(--pg-out) backwards;
+}
+.pg-reel__field > .strokes i:nth-child(2) {
+  animation-delay: 60ms;
+}
+.pg-reel__field > .strokes i:nth-child(3) {
+  animation-delay: 120ms;
+}
+.pg-reel__who {
+  flex: none;
+}
+.pg-reel__list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--s-gutter);
+  border-bottom: 1px solid var(--line);
+}
+.pg-reel__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.pg-reel__mark {
+  margin: 0 -6px;
+  padding: 3px 6px;
+  background: linear-gradient(var(--hl), var(--hl)) 0 0 / 0% 100% no-repeat;
+  mask: var(--pg-rough) 0 0 / 100% 100% no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size 420ms var(--pg-inout);
+}
+.pg-reel__row[data-on] .pg-reel__mark {
+  background-size: 100% 100%;
+  color: var(--s-mark-ink);
+}
+.pg-reel__row code {
+  transition: border-color 200ms;
+}
+.pg-reel__row[data-on] code {
+  border-color: var(--text);
+}
+a.pg-reel__row:active .pg-reel__mark {
+  translate: 1px 0;
+}
+@media (min-width: 768px) {
+  .pg-reel--wide > .pg-reel__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 699px) {
+  .pg-ask.pg-reel__field {
+    min-height: 60px;
+    padding-inline: 16px;
+    font-size: 1rem;
+  }
+  .pg-reel__who {
+    display: none;
+  }
+}

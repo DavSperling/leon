@@ -255,6 +255,17 @@ describe('updateProfileAction', () => {
     expect(await updateProfileAction('   ')).toEqual({ error: expect.any(String) });
     expect(auth.api.updateUser).toHaveBeenCalledTimes(1);
   });
+
+  // Le nom paraît dans la barre latérale et le menu de la personne : la mise en page entière se relit.
+  it('enregistre le nom nettoyé et relit toute la mise en page', async () => {
+    vi.mocked(auth.api.updateUser).mockResolvedValue({ status: true } as never);
+
+    expect(await updateProfileAction('  Amos  ')).toEqual({ ok: true });
+    expect(auth.api.updateUser).toHaveBeenCalledWith(
+      expect.objectContaining({ body: { name: 'Amos' } }),
+    );
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+  });
 });
 
 describe('createTokenAction', () => {
@@ -357,6 +368,21 @@ describe('createInvitationAction', () => {
     expect(result).toEqual({
       url: `http://localhost:3000/invitation/${'t'.repeat(43)}`,
       expiresAt,
+    });
+  });
+
+  it("porte le manager choisi sur l'écran Équipe, et refuse un identifiant forgé", async () => {
+    vi.mocked(createInvitationLink).mockResolvedValue({ token: 't'.repeat(43), expiresAt });
+    const managerId = '11111111-1111-4111-8111-111111111111';
+
+    await createInvitationAction({ name: '', ...backend, managerId });
+    expect(createInvitationLink).toHaveBeenCalledWith(ctx, {
+      name: '',
+      placement: { department: 'engineering', job: 'backend', seniority: 3 },
+      managerId,
+    });
+    expect(await createInvitationAction({ name: '', ...backend, managerId: 'x' })).toEqual({
+      errors: { form: 'form' },
     });
   });
 

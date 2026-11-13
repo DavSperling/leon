@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connections · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="../../css/tokens.css">
+<link rel="stylesheet" href="../../css/ui.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<!-- Written by build.mjs from shared/demo-data.js and js/app-data.js. Edit build.mjs, not this file. -->
+<a class="skip" href="#main">Skip to content</a>
+
+<aside class="side" id="side" aria-label="Leon">
+  <div class="side__top">
+    <a class="brand" href="#" data-undrawn="Home" aria-label="Leon, home"><svg class="mark" viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg><span class="lbl">Leon</span></a>
+    <button type="button" class="ib" data-side aria-expanded="true" aria-controls="side" aria-label="Sidebar" title="Collapse or open the sidebar"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4A1.5 1.5 0 0 1 4 2.5h8A1.5 1.5 0 0 1 13.5 4v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 12zM6 2.5v11"/></svg></button>
+  </div>
+  <button type="button" class="ask" data-cmd aria-haspopup="dialog" aria-label="Ask or search" title="Ask or search"><svg class="strokes" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11"/><path d="M2.5 8h8"/><path d="M2.5 12h5"/></svg><span class="lbl">Ask or search</span><span class="keys lbl" aria-hidden="true"><kbd data-mod>⌘</kbd><kbd>K</kbd></span></button>
+  <nav class="nav" aria-label="Main">
+    <ul>
+      <li><a href="#" data-undrawn="Home" title="Home"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7.2 8 2.7l5.5 4.5v5.3a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1zM6.5 13.5v-4h3v4"/></svg><span class="lbl">Home</span></a></li>
+      <li><a href="#" data-undrawn="Chat" title="Chat"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4A1.5 1.5 0 0 1 4 2.5h8A1.5 1.5 0 0 1 13.5 4v5.5A1.5 1.5 0 0 1 12 11H7.2L4 13.5V11a1.5 1.5 0 0 1-1.5-1.5z"/></svg><span class="lbl">Chat</span></a></li>
+      <li><a href="#" data-undrawn="Documents" title="Documents"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h5l3 3v7a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zM9 2.5v3h3M5.5 8.5h5M5.5 11h3.5"/></svg><span class="lbl">Documents</span></a></li>
+      <li><a href="#" data-undrawn="Team" title="Team"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg><span class="lbl">Team</span></a></li>
+      <li><a href="connections.html" aria-current="page" title="Connections"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 2v3M10.5 2v3M3.5 5h9v2.5a4.5 4.5 0 0 1-9 0zM8 12v2"/></svg><span class="lbl">Connections</span><span class="fl" data-if-bad><span data-n="bad">1</span><span class="vh"> needs attention</span></span></a></li>
+      <li><a href="#" data-undrawn="Settings" title="Settings"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h5M10.5 4.5h3M9 3v3M2.5 11.5h3M8.5 11.5h5M7 10v3"/></svg><span class="lbl">Settings</span></a></li>
+    </ul>
+  </nav>
+  <section class="recent lbl" aria-labelledby="recent-t">
+    <h2 id="recent-t">Recent</h2>
+    <ul>
+      <li><a href="#" data-undrawn="Chat" title="Did ACME accept the new migration date? · Today">Did ACME accept the new migration date?</a></li>
+      <li><a href="#" data-undrawn="Chat" title="What did we promise ACME for V2? · Yesterday">What did we promise ACME for V2?</a></li>
+      <li><a href="#" data-undrawn="Chat" title="Who owns the Verlant account now? · Nov 6">Who owns the Verlant account now?</a></li>
+      <li><a href="#" data-undrawn="Chat" title="Summary of the Nordia redesign feedback · Nov 4">Summary of the Nordia redesign feedback</a></li>
+      <li><a href="#" data-undrawn="Chat" title="What did we decide about the Q1 pricing? · Oct 30">What did we decide about the Q1 pricing?</a></li>
+    </ul>
+  </section>
+  <div class="side__foot">
+    <a class="health is-bad" href="#connected" title="Tools">
+      <span class="health__top lbl"><span>Tools</span><span class="strip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="bad"></i></span></span>
+      <span class="health__dot" aria-hidden="true"><span data-n="bad">1</span></span>
+      <span class="health__t lbl">Intercom needs reconnecting</span>
+    </a>
+    <button type="button" class="acct" popovertarget="acct-menu" aria-expanded="false" title="Julie Martin">
+      <span class="av" aria-hidden="true">JM</span>
+      <span class="acct__id lbl"><b>Julie Martin</b><span>Kestrel Studio</span></span>
+      <span class="lbl acct__chev"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg></span>
+    </button>
+    <div class="menu" id="acct-menu" popover>
+      <p class="menu__head">julie@kestrel.example</p>
+      <a href="#" data-undrawn="Settings">Profile and settings</a>
+      <a href="#" data-undrawn="Team">Invite people</a>
+      <a href="#" data-undrawn="Sign-in">Sign out</a>
+    </div>
+  </div>
+</aside>
+<div class="veil"></div>
+
+<main class="sheet" id="main">
+<div class="scroll">
+  <header class="head">
+    <button type="button" class="ib head__menu" data-side aria-expanded="false" aria-controls="side" aria-label="Menu"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4A1.5 1.5 0 0 1 4 2.5h8A1.5 1.5 0 0 1 13.5 4v8a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 12zM6 2.5v11"/></svg></button>
+    <span class="head__mark"><svg class="mark" viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg></span>
+    <h1>Connections</h1>
+    <p class="head__meta"><span data-n="on">8</span> connected<span data-if-bad> · <span data-n="bad">1</span> needs attention</span></p>
+    <a class="btn btn--line" href="#add"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>Add a tool</a>
+  </header>
+
+  <div class="body">
+    <p class="lead">Leon reads the connected tools every 15 minutes. An item is shown only to <span class="hl hl-3">the people who can already open it</span>.</p>
+
+    <section id="connected" aria-labelledby="connected-t">
+      <h2 class="vh" id="connected-t">Connected tools</h2>
+      <div class="group" data-if-bad>
+        <h3 class="group__head group__head--bad"><span class="fl fl--left fl--out" aria-hidden="true"><span data-n="bad">1</span></span>Needs attention</h3>
+        <ul class="rows" data-rows="bad">
+          <li class="row row--bad" data-tool="intercom"><span class="logo"><img src="../../../shared/logos/intercom.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="intercom">Intercom<span class="vh">: reconnect</span></button><span class="row__acct">Support inbox</span></div><p class="row__reads">The key was revoked. Reconnect to resume.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill pill--bad">Last synced 2 days ago</span><span class="row__items"><b>1,470</b> items</span><button type="button" class="btn row__fix" data-open="intercom">Reconnect</button></li>
+        </ul>
+      </div>
+      <div class="group">
+        <h3 class="group__head">In sync <span class="n" data-n="ok">7</span></h3>
+        <ul class="rows" data-rows="ok">
+          <li class="row" data-tool="gmail"><span class="logo"><img src="../../../shared/logos/gmail.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="gmail">Gmail<span class="vh">: manage</span></button><span class="row__acct">julie@kestrel.example</span></div><p class="row__reads">Email threads. Promotions, Social, drafts and spam are left out.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM3 13.5c.4-2.4 2.4-3.75 5-3.75s4.6 1.35 5 3.75"/></svg>Only you</span><span class="pill">Synced 4 min ago</span><span class="row__items"><b>1,842</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="slack"><span class="logo"><img src="../../../shared/logos/slack.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="slack">Slack<span class="vh">: manage</span></button><span class="row__acct">Kestrel Studio</span></div><p class="row__reads">The channels you are a member of. Never your direct messages.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 7.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM3 13.5c.4-2.4 2.4-3.75 5-3.75s4.6 1.35 5 3.75"/></svg>Only you</span><span class="pill">Synced 4 min ago</span><span class="row__items"><b>9,310</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="notion"><span class="logo"><img src="../../../shared/logos/notion.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="notion">Notion<span class="vh">: manage</span></button><span class="row__acct">Team wiki</span></div><p class="row__reads">Pages, block by block, and their comments.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill">Synced 11 min ago</span><span class="row__items"><b>624</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="linear"><span class="logo"><img src="../../../shared/logos/linear.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="linear">Linear<span class="vh">: manage</span></button><span class="row__acct">Kestrel</span></div><p class="row__reads">Issues and their comments.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill">Synced 11 min ago</span><span class="row__items"><b>2,207</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="github"><span class="logo"><img src="../../../shared/logos/github.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="github">GitHub<span class="vh">: manage</span></button><span class="row__acct">kestrel/app, kestrel/site</span></div><p class="row__reads">Issues and pull requests, with comments and reviews, in the team repositories an admin chose.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill">Synced 2 min ago</span><span class="row__items"><b>3,981</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="hubspot"><span class="logo"><img src="../../../shared/logos/hubspot.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="hubspot">HubSpot<span class="vh">: manage</span></button><span class="row__acct">Sales pipeline</span></div><p class="row__reads">Notes, calls, meetings and emails, with the company, deal or contact they are linked to.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill">Synced 9 min ago</span><span class="row__items"><b>512</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+          <li class="row" data-tool="granola"><span class="logo"><img src="../../../shared/logos/granola.svg" alt="" width="18" height="18"></span><div class="row__id"><button type="button" class="row__name" data-open="granola">Granola<span class="vh">: manage</span></button><span class="row__acct">Julie Martin</span></div><p class="row__reads">Meeting notes, with their transcript and summary.</p><span class="scope"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 7.5A2.25 2.25 0 1 0 6 3a2.25 2.25 0 0 0 0 4.5zM1.75 13c.3-2.1 2-3.25 4.25-3.25s3.95 1.15 4.25 3.25M10.5 3.2a2.25 2.25 0 0 1 0 4.1M11.75 9.9c1.4.4 2.3 1.5 2.5 3.1"/></svg>Team</span><span class="pill">Synced 14 min ago</span><span class="row__items"><b>96</b> items</span><span class="row__act" aria-hidden="true">Manage<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="add" id="add" aria-labelledby="add-t">
+      <div class="add__head">
+        <h2 id="add-t">Add a tool</h2>
+        <p class="add__n">42 tools · <span data-n="on">8</span> connected</p>
+        <label class="find"><span class="vh">Search the 42 tools</span><input class="inp" id="tool-search" type="search" placeholder="Search 42 tools" autocomplete="off" spellcheck="false"><kbd aria-hidden="true">/</kbd></label>
+      </div>
+      <div class="fams" role="group" aria-label="Families">
+        <button type="button" class="fam" data-fam-pick="all" aria-pressed="true">All<span class="n">42</span></button>
+        <button type="button" class="fam" data-fam-pick="0" aria-pressed="false">Email, chat and files<span class="n">4</span></button>
+        <button type="button" class="fam" data-fam-pick="1" aria-pressed="false">Meetings<span class="n">8</span></button>
+        <button type="button" class="fam" data-fam-pick="2" aria-pressed="false">Projects and docs<span class="n">13</span></button>
+        <button type="button" class="fam" data-fam-pick="3" aria-pressed="false">Engineering<span class="n">4</span></button>
+        <button type="button" class="fam" data-fam-pick="4" aria-pressed="false">CRM<span class="n">5</span></button>
+        <button type="button" class="fam" data-fam-pick="5" aria-pressed="false">Support<span class="n">8</span></button>
+      </div>
+      <ul class="tiles">
+        <li class="tile" data-tool="gmail" data-fam="0"><span class="logo"><img src="../../../shared/logos/gmail.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Gmail</h3><button type="button" class="tile__go is-on" data-open="gmail"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage Gmail</span></button><p class="tile__reads">Email threads. Promotions, Social, drafts and spam are left out.</p></li>
+        <li class="tile" data-tool="outlook" data-fam="0"><span class="logo"><img src="../../../shared/logos/outlook.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Outlook</h3><button type="button" class="tile__go" data-open="outlook">Connect<span class="vh"> Outlook</span></button><p class="tile__reads">Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.</p></li>
+        <li class="tile" data-tool="slack" data-fam="0"><span class="logo"><img src="../../../shared/logos/slack.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Slack</h3><button type="button" class="tile__go is-on" data-open="slack"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage Slack</span></button><p class="tile__reads">The channels you are a member of. Never your direct messages.</p></li>
+        <li class="tile" data-tool="drive" data-fam="0"><span class="logo"><img src="../../../shared/logos/drive.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Google Drive</h3><button type="button" class="tile__go" data-open="drive">Connect<span class="vh"> Google Drive</span></button><p class="tile__reads">Google documents, presentations and spreadsheets, PDF, Word, Excel, PowerPoint and text files.</p></li>
+        <li class="tile" data-tool="granola" data-fam="1"><span class="logo"><img src="../../../shared/logos/granola.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Granola</h3><button type="button" class="tile__go is-on" data-open="granola"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage Granola</span></button><p class="tile__reads">Meeting notes, with their transcript and summary.</p></li>
+        <li class="tile" data-tool="fathom" data-fam="1"><span class="logo"><img src="../../../shared/logos/fathom.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Fathom</h3><button type="button" class="tile__go" data-open="fathom">Connect<span class="vh"> Fathom</span></button><p class="tile__reads">Meetings the key’s owner recorded or was shared: transcript and summary.</p></li>
+        <li class="tile" data-tool="fireflies" data-fam="1"><span class="logo"><img src="../../../shared/logos/fireflies.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Fireflies</h3><button type="button" class="tile__go" data-open="fireflies">Connect<span class="vh"> Fireflies</span></button><p class="tile__reads">Transcribed meetings the key’s owner has access to.</p></li>
+        <li class="tile" data-tool="tldv" data-fam="1"><span class="logo"><img src="../../../shared/logos/tldv.svg" alt="" width="18" height="18"></span><h3 class="tile__name">tl;dv</h3><button type="button" class="tile__go" data-open="tldv">Connect<span class="vh"> tl;dv</span></button><p class="tile__reads">Meetings the key’s owner attended, with their transcript.</p></li>
+        <li class="tile" data-tool="circleback" data-fam="1"><span class="logo"><img src="../../../shared/logos/circleback.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Circleback</h3><button type="button" class="tile__go" data-open="circleback">Connect<span class="vh"> Circleback</span></button><p class="tile__reads">Meetings of the key’s owner, not those only shared with them.</p></li>
+        <li class="tile" data-tool="claap" data-fam="1"><span class="logo"><img src="../../../shared/logos/claap.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Claap</h3><button type="button" class="tile__go" data-open="claap">Connect<span class="vh"> Claap</span></button><p class="tile__reads">The workspace’s recordings, meetings and captures, with their transcript.</p></li>
+        <li class="tile" data-tool="leexi" data-fam="1"><span class="logo"><img src="../../../shared/logos/leexi.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Leexi</h3><button type="button" class="tile__go" data-open="leexi">Connect<span class="vh"> Leexi</span></button><p class="tile__reads">Calls, with what each speaker said.</p></li>
+        <li class="tile" data-tool="gong" data-fam="1"><span class="logo"><img src="../../../shared/logos/gong.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Gong</h3><button type="button" class="tile__go" data-open="gong">Connect<span class="vh"> Gong</span></button><p class="tile__reads">Calls, with their participants and transcript.</p></li>
+        <li class="tile" data-tool="notion" data-fam="2"><span class="logo"><img src="../../../shared/logos/notion.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Notion</h3><button type="button" class="tile__go is-on" data-open="notion"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage Notion</span></button><p class="tile__reads">Pages, block by block, and their comments.</p></li>
+        <li class="tile" data-tool="jira" data-fam="2"><span class="logo"><img src="../../../shared/logos/jira.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Jira</h3><button type="button" class="tile__go" data-open="jira">Connect<span class="vh"> Jira</span></button><p class="tile__reads">Issues and their comments.</p></li>
+        <li class="tile" data-tool="confluence" data-fam="2"><span class="logo"><img src="../../../shared/logos/confluence.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Confluence</h3><button type="button" class="tile__go" data-open="confluence">Connect<span class="vh"> Confluence</span></button><p class="tile__reads">Pages and their footer comments.</p></li>
+        <li class="tile" data-tool="asana" data-fam="2"><span class="logo"><img src="../../../shared/logos/asana.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Asana</h3><button type="button" class="tile__go" data-open="asana">Connect<span class="vh"> Asana</span></button><p class="tile__reads">Tasks, with their description and comments.</p></li>
+        <li class="tile" data-tool="clickup" data-fam="2"><span class="logo"><img src="../../../shared/logos/clickup.svg" alt="" width="18" height="18"></span><h3 class="tile__name">ClickUp</h3><button type="button" class="tile__go" data-open="clickup">Connect<span class="vh"> ClickUp</span></button><p class="tile__reads">Tasks, closed ones included, and their comments.</p></li>
+        <li class="tile" data-tool="trello" data-fam="2"><span class="logo"><img src="../../../shared/logos/trello.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Trello</h3><button type="button" class="tile__go" data-open="trello">Connect<span class="vh"> Trello</span></button><p class="tile__reads">Cards on your open boards, with their comments.</p></li>
+        <li class="tile" data-tool="monday" data-fam="2"><span class="logo"><img src="../../../shared/logos/monday.svg" alt="" width="18" height="18"></span><h3 class="tile__name">monday.com</h3><button type="button" class="tile__go" data-open="monday">Connect<span class="vh"> monday.com</span></button><p class="tile__reads">Boards, items and updates, limited to the boards you see.</p></li>
+        <li class="tile" data-tool="shortcut" data-fam="2"><span class="logo"><img src="../../../shared/logos/shortcut.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Shortcut</h3><button type="button" class="tile__go" data-open="shortcut">Connect<span class="vh"> Shortcut</span></button><p class="tile__reads">Stories and their comments.</p></li>
+        <li class="tile" data-tool="plane" data-fam="2"><span class="logo"><img src="../../../shared/logos/plane.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Plane</h3><button type="button" class="tile__go" data-open="plane">Connect<span class="vh"> Plane</span></button><p class="tile__reads">Work items and their comments. Archived items and drafts are skipped.</p></li>
+        <li class="tile" data-tool="airtable" data-fam="2"><span class="logo"><img src="../../../shared/logos/airtable.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Airtable</h3><button type="button" class="tile__go" data-open="airtable">Connect<span class="vh"> Airtable</span></button><p class="tile__reads">Records, with their text and comments.</p></li>
+        <li class="tile" data-tool="basecamp" data-fam="2"><span class="logo"><img src="../../../shared/logos/basecamp.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Basecamp</h3><button type="button" class="tile__go" data-open="basecamp">Connect<span class="vh"> Basecamp</span></button><p class="tile__reads">Messages, documents and comments.</p></li>
+        <li class="tile" data-tool="miro" data-fam="2"><span class="logo"><img src="../../../shared/logos/miro.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Miro</h3><button type="button" class="tile__go" data-open="miro">Connect<span class="vh"> Miro</span></button><p class="tile__reads">The text on your boards: sticky notes, shapes, cards, frames and documents. Never images.</p></li>
+        <li class="tile" data-tool="productboard" data-fam="2"><span class="logo"><img src="../../../shared/logos/productboard.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Productboard</h3><button type="button" class="tile__go" data-open="productboard">Connect<span class="vh"> Productboard</span></button><p class="tile__reads">Notes. Archived notes are skipped.</p></li>
+        <li class="tile" data-tool="github" data-fam="3"><span class="logo"><img src="../../../shared/logos/github.svg" alt="" width="18" height="18"></span><h3 class="tile__name">GitHub</h3><button type="button" class="tile__go is-on" data-open="github"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage GitHub</span></button><p class="tile__reads">Issues and pull requests, with comments and reviews, in the team repositories an admin chose.</p></li>
+        <li class="tile" data-tool="gitlab" data-fam="3"><span class="logo"><img src="../../../shared/logos/gitlab.svg" alt="" width="18" height="18"></span><h3 class="tile__name">GitLab</h3><button type="button" class="tile__go" data-open="gitlab">Connect<span class="vh"> GitLab</span></button><p class="tile__reads">Issues and merge requests of the 20 most active projects you are a member of.</p></li>
+        <li class="tile" data-tool="linear" data-fam="3"><span class="logo"><img src="../../../shared/logos/linear.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Linear</h3><button type="button" class="tile__go is-on" data-open="linear"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage Linear</span></button><p class="tile__reads">Issues and their comments.</p></li>
+        <li class="tile" data-tool="sentry" data-fam="3"><span class="logo"><img src="../../../shared/logos/sentry.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Sentry</h3><button type="button" class="tile__go" data-open="sentry">Connect<span class="vh"> Sentry</span></button><p class="tile__reads">Issues. Neither stack traces nor event data.</p></li>
+        <li class="tile" data-tool="hubspot" data-fam="4"><span class="logo"><img src="../../../shared/logos/hubspot.svg" alt="" width="18" height="18"></span><h3 class="tile__name">HubSpot</h3><button type="button" class="tile__go is-on" data-open="hubspot"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>Connected<span class="vh">: manage HubSpot</span></button><p class="tile__reads">Notes, calls, meetings and emails, with the company, deal or contact they are linked to.</p></li>
+        <li class="tile" data-tool="attio" data-fam="4"><span class="logo"><img src="../../../shared/logos/attio.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Attio</h3><button type="button" class="tile__go" data-open="attio">Connect<span class="vh"> Attio</span></button><p class="tile__reads">Notes and comment threads.</p></li>
+        <li class="tile" data-tool="folk" data-fam="4"><span class="logo"><img src="../../../shared/logos/folk.svg" alt="" width="18" height="18"></span><h3 class="tile__name">folk</h3><button type="button" class="tile__go" data-open="folk">Connect<span class="vh"> folk</span></button><p class="tile__reads">Public notes on contacts and companies. Private notes are not read.</p></li>
+        <li class="tile" data-tool="pipedrive" data-fam="4"><span class="logo"><img src="../../../shared/logos/pipedrive.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Pipedrive</h3><button type="button" class="tile__go" data-open="pipedrive">Connect<span class="vh"> Pipedrive</span></button><p class="tile__reads">The notes and activities your account sees.</p></li>
+        <li class="tile" data-tool="close" data-fam="4"><span class="logo"><img src="../../../shared/logos/close.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Close</h3><button type="button" class="tile__go" data-open="close">Connect<span class="vh"> Close</span></button><p class="tile__reads">Notes, calls with their transcripts, emails, SMS and WhatsApp messages of your leads.</p></li>
+        <li class="tile" data-tool="intercom" data-fam="5"><span class="logo"><img src="../../../shared/logos/intercom.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Intercom</h3><button type="button" class="tile__go is-bad" data-open="intercom">Reconnect<span class="vh"> Intercom</span></button><p class="tile__reads">Conversations, with their messages and internal notes.</p></li>
+        <li class="tile" data-tool="zendesk" data-fam="5"><span class="logo"><img src="../../../shared/logos/zendesk.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Zendesk</h3><button type="button" class="tile__go" data-open="zendesk">Connect<span class="vh"> Zendesk</span></button><p class="tile__reads">Tickets and their comments, internal notes included.</p></li>
+        <li class="tile" data-tool="freshdesk" data-fam="5"><span class="logo"><img src="../../../shared/logos/freshdesk.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Freshdesk</h3><button type="button" class="tile__go" data-open="freshdesk">Connect<span class="vh"> Freshdesk</span></button><p class="tile__reads">Tickets, with their replies and internal notes.</p></li>
+        <li class="tile" data-tool="helpscout" data-fam="5"><span class="logo"><img src="../../../shared/logos/helpscout.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Help Scout</h3><button type="button" class="tile__go" data-open="helpscout">Connect<span class="vh"> Help Scout</span></button><p class="tile__reads">Conversations.</p></li>
+        <li class="tile" data-tool="front" data-fam="5"><span class="logo"><img src="../../../shared/logos/front.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Front</h3><button type="button" class="tile__go" data-open="front">Connect<span class="vh"> Front</span></button><p class="tile__reads">Conversations, with their messages and comments. Personal inboxes only if their owner allows it.</p></li>
+        <li class="tile" data-tool="plain" data-fam="5"><span class="logo"><img src="../../../shared/logos/plain.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Plain</h3><button type="button" class="tile__go" data-open="plain">Connect<span class="vh"> Plain</span></button><p class="tile__reads">Threads and their messages.</p></li>
+        <li class="tile" data-tool="crisp" data-fam="5"><span class="logo"><img src="../../../shared/logos/crisp.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Crisp</h3><button type="button" class="tile__go" data-open="crisp">Connect<span class="vh"> Crisp</span></button><p class="tile__reads">The website’s conversations, with their messages and internal notes.</p></li>
+        <li class="tile" data-tool="missive" data-fam="5"><span class="logo"><img src="../../../shared/logos/missive.svg" alt="" width="18" height="18"></span><h3 class="tile__name">Missive</h3><button type="button" class="tile__go" data-open="missive">Connect<span class="vh"> Missive</span></button><p class="tile__reads">Team conversations, with their messages and comments. Not your personal email.</p></li>
+      </ul>
+      <div class="none" hidden>
+        <svg class="none__flag" viewBox="0 0 34 24" aria-hidden="true"><polygon points="1,1 33,1 26,12 33,23 1,23"/></svg>
+        <p><b>No tool matches “<span data-none-q></span>”.</b> Leon reads 42 tools today. Try another name.</p>
+        <button type="button" class="btn btn--line btn--xs" data-clear>Clear the search</button>
+      </div>
+    </section>
+  </div>
+</div>
+<div class="toasts" role="status" aria-live="polite"></div>
+</main>
+
+<dialog class="panel" id="panel" aria-labelledby="panel-t"></dialog>
+
+<dialog class="cmd" id="cmd" aria-label="Ask or search">
+  <div class="cmd__top"><svg class="strokes" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11"/><path d="M2.5 8h8"/><path d="M2.5 12h5"/></svg><input id="cmd-in" type="text" role="combobox" aria-expanded="true" aria-controls="cmd-list" aria-autocomplete="list" aria-label="Ask or search everything Leon has saved" placeholder="Ask or search everything Leon has saved…" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+  <ul class="cmd__list" id="cmd-list" role="listbox" aria-label="Results"></ul>
+  <p class="cmd__foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> Move</span><span><kbd>↵</kbd> Open</span><span><kbd>Esc</kbd> Close</span></p>
+</dialog>
+
+<script src="../../../shared/demo-data.js" defer></script>
+<script src="../../js/app-data.js" defer></script>
+<script src="app.js" defer></script>
+<a data-proposal-switch href="../b/connections.html" style="position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147483000;padding:9px 16px;border-radius:999px;background:#0F0F0D;color:#fff;font:500 13px/1 'Schibsted Grotesk',system-ui,sans-serif;text-decoration:none;box-shadow:0 6px 20px -8px rgba(15,15,13,.45)">Proposition A « Feuille » · voir la B →</a>
+</body>
+</html>

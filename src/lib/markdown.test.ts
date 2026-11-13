@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { markdownBlocks, markdownInline } from './markdown';
+import { markdownBlocks, markdownInline, markdownPlain } from './markdown';
 
 describe('markdownBlocks', () => {
   it('lit une réponse de Leon : paragraphe, ligne en gras, liste imbriquée', () => {
@@ -80,5 +80,27 @@ describe('markdownInline', () => {
 
   it('une étoile seule, ou entourée d’espaces, reste du texte', () => {
     expect(markdownInline('2 * 3 * 4 et **pas fermé')).toEqual(['2 * 3 * 4 et **pas fermé']);
+  });
+});
+
+describe('markdownPlain', () => {
+  it('retire les marques (titre, gras, italique, code) et garde leur contenu', () => {
+    expect(
+      markdownPlain(
+        '## Point\n**Refonte devis** : point du **16/10**, *urgent*, `CHA-207`.\n- Avancement',
+      ),
+    ).toBe('Point\nRefonte devis : point du 16/10, urgent, CHA-207.\n- Avancement');
+  });
+
+  it('plusieurs lignes vides n’en font qu’une', () => {
+    expect(markdownPlain('Santé : À risque\n\n \n\n## Refonte devis')).toBe(
+      'Santé : À risque\n\nRefonte devis',
+    );
+  });
+
+  it('une étoile seule et un dièse hors d’une tête de ligne restent du texte', () => {
+    expect(markdownPlain('2 * 3 * 4, ticket #12 et **pas fermé')).toBe(
+      '2 * 3 * 4, ticket #12 et **pas fermé',
+    );
   });
 });

@@ -1,0 +1,5 @@
+/* The kit page's own layout: rows of samples. Nothing here is part of the kit. */
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.kit-row + .kit-row { margin-top: 16px; }
+.kit-cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 420px)); gap: 12px; align-items: start; }
+.kit-cols .paper + .paper { margin-top: 0; }

@@ -216,7 +216,7 @@ describe('connectAction', () => {
       secretFields: ['apiKey'],
       since: new Date(NOW.getTime() - 30 * DAY),
     });
-    expect(revalidatePath).toHaveBeenCalledWith('/connexions');
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 
   it.each(['7', '90', '365'] as const)(
@@ -346,7 +346,7 @@ describe('replaceKeyAction', () => {
     expect(verify.mock.invocationCallOrder[0]).toBeLessThan(
       vi.mocked(replaceConnectionSecret).mock.invocationCallOrder[0] ?? 0,
     );
-    expect(revalidatePath).toHaveBeenCalledWith('/connexions');
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 
   it('ne change que les champs secrets', async () => {
@@ -517,7 +517,7 @@ describe.each([
     await expect(run(ID)).resolves.toEqual({ ok: true });
 
     expect(write).toHaveBeenCalledWith(...(args as unknown as Parameters<typeof write>));
-    expect(revalidatePath).toHaveBeenCalledWith('/connexions');
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 
   it('rend { ok: false } quand la connexion a disparu', async () => {

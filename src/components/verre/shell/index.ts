@@ -4,6 +4,7 @@ export { Brand, Logo } from './brand';
 export { NAV, type NavItem, sectionOf } from './nav';
 export { usePalette } from './palette-context';
 export { useShell } from './shell-kind';
+export type { SidebarData } from './sidebar';
 export { StandaloneShell } from './standalone';
 export { Aurora, ThinkingProvider, useThinking } from './thinking';
 export type { Viewer } from './workspace-menu';

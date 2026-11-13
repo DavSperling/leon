@@ -1,33 +1,17 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { CodeLine, CopyButton, PageHeader, Section } from '@/components/verre';
-import { AboutSettings } from '@/components/verre/reglages/about';
-import { DirectorySection } from '@/components/verre/reglages/annuaire';
-import { AssistantsSection } from '@/components/verre/reglages/assistants';
-import { ComputersSection } from '@/components/verre/reglages/computers';
 import {
   DeleteAccountSection,
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
-import { DepotsEquipeSection } from '@/components/verre/reglages/depots-equipe';
-import { GroupsSection } from '@/components/verre/reglages/groups';
-import { ManagersSection } from '@/components/verre/reglages/managers';
-import { MembersSection } from '@/components/verre/reglages/members';
-import { PreferencesSettings } from '@/components/verre/reglages/preferences';
-import { INLINE, SECTION, Step } from '@/components/verre/reglages/reglages';
-import {
-  PasswordSettings,
-  ProfileSettings,
-  SecuritySettings,
-} from '@/components/verre/reglages/security-settings';
+import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
+import { ProfileSettings } from '@/components/verre/reglages/profile';
+import { SecuritySettings } from '@/components/verre/reglages/security-settings';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
-import { SsoSection } from '@/components/verre/reglages/sso';
-import { TokensSection } from '@/components/verre/reglages/tokens';
-import { nb } from '@/lib/verre/nb';
-import { directoryState } from '@/server/auth/annuaire';
+import { WorkspaceSettings } from '@/components/verre/reglages/workspace';
 import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
-import { listGroups } from '@/server/auth/groupes';
 import { canInvite, getMembership, listMembers } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
 import { getSession, requireUserContext } from '@/server/auth/session';
@@ -42,14 +26,22 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('settings'))('title') };
 }
 
-// ?annuaire=… et ?error=… : le retour de Google ou de Microsoft après « Importer l'organigramme » (annuaire.ts).
+const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ annuaire?: string | string[]; error?: string | string[] }>;
 }) {
+  // ?annuaire=… et ?error=… : le retour de Google ou de Microsoft après « Importer l'organigramme », qui vit
+  // maintenant dans l'écran Équipe : le retour y est remis tel quel.
+  const { annuaire, error } = await searchParams;
+  if (one(annuaire)) {
+    const query = new URLSearchParams({ annuaire: one(annuaire) as string });
+    if (one(error)) query.set('error', one(error) as string);
+    redirect(`/equipe?${query}`);
+  }
   const t = await getTranslations('settings');
-  const s = await getTranslations('security');
   const claude = await getTranslations('claudeCode');
   const ctx = await requireUserContext();
   const [
@@ -62,7 +54,6 @@ export default async function SettingsPage({
     deletion,
     depotsEquipe,
     sso,
-    groups,
     seeAll,
   ] = await Promise.all([
     listApiTokens(ctx),
@@ -74,12 +65,8 @@ export default async function SettingsPage({
     deletionInfo(ctx),
     listDepotsEquipe(ctx),
     readSsoSetup(ctx),
-    listGroups(ctx),
     managersSeeAll(ctx),
   ]);
-  const { annuaire, error } = await searchParams;
-  const one = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-  const directory = mayInvite ? await directoryState(ctx, one(annuaire), one(error)) : null;
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const live = allTokens
     .filter((token) => !token.revokedAt)
@@ -96,110 +83,58 @@ export default async function SettingsPage({
     (token) => token.kind === 'assistant' && token.refreshExpiresAt && token.refreshExpiresAt > now,
   );
   const serverUrl = env.BETTER_AUTH_URL;
-  // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton reste à
-  // l'utilisateur, qui le colle lui-même.
-  const extensionPrompt = t('extensionPrompt', { serverUrl });
+  const owners = members
+    .filter((m) => !m.former && m.role.split(',').includes('owner'))
+    .map(({ name }) => ({ name }));
 
   return (
-    // 1008 px : la colonne des onglets (200), son écart (48) et le contenu (760, comme les autres pages)
-    <div className="mx-auto max-w-[1008px]">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} className="mb-10" />
-
+    // Trois des quatre colonnes de l'application : une feuille de champs reste lisible, les cartes ont la taille de
+    // celles de Connexions ; jamais moins que la largeur de trois cartes.
+    <div className="max-w-[max(calc(75%-3px),876px)]">
       <SettingsTabs
+        title={t('title')}
         panels={{
           profil: (
             <>
-              <Section
-                title={s('profileTitle')}
-                description={s('profileDescription')}
-                className={SECTION}
-              >
-                <ProfileSettings
-                  name={session?.user.name ?? ''}
-                  email={session?.user.email ?? ''}
-                  membership={membership}
-                />
-              </Section>
-              <AboutSettings about={about ?? ''} max={ABOUT_MAX_CHARS} />
-              <PreferencesSettings />
+              <ProfileSettings
+                name={session?.user.name ?? ''}
+                email={session?.user.email ?? ''}
+                image={session?.user.image}
+                membership={membership}
+                about={about ?? ''}
+                aboutMax={ABOUT_MAX_CHARS}
+              />
               <DeleteAccountSection info={deletion} twoFactor={twoFactor} />
             </>
           ),
-          securite: (
-            <Section title={s('title')} description={s('description')} className={SECTION}>
-              <div className="grid gap-12">
-                <PasswordSettings />
-                <SecuritySettings enabled={twoFactor} />
-              </div>
-            </Section>
+          securite: <SecuritySettings enabled={twoFactor} />,
+          integrations: (
+            <IntegrationsSettings
+              computers={computers}
+              assistants={assistants}
+              tokens={tokens}
+              command={installCommand()}
+              instructions={claudeCodeInstructions(claude)}
+              address={RESOURCE}
+              serverUrl={serverUrl}
+              // La demande à coller dans Claude Code : il construit l'extension et la charge dans Chrome ; le jeton
+              // reste à l'utilisateur, qui le colle lui-même.
+              extensionPrompt={t('extensionPrompt', { serverUrl })}
+            />
           ),
           equipe: (
-            <>
-              <MembersSection members={members} canInvite={mayInvite} />
-              {directory && directory.providers.length > 0 && (
-                <DirectorySection state={directory} />
-              )}
-              {mayInvite && <ManagersSection on={seeAll} />}
-              {mayInvite && (
-                <GroupsSection
-                  groups={groups}
-                  members={members.filter((m) => !m.former).map(({ id, name }) => ({ id, name }))}
-                />
-              )}
-              {mayInvite && <DepotsEquipeSection {...depotsEquipe} />}
-              {mayInvite && <SsoSection setup={sso} />}
+            <WorkspaceSettings
+              organizationName={deletion.organizationName}
+              owners={owners}
+              admin={mayInvite}
+              sso={sso}
+              managersSeeAll={seeAll}
+              depots={depotsEquipe}
+            >
               {deletion.isOwner && (
                 <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
               )}
-            </>
-          ),
-          integrations: (
-            <>
-              <ComputersSection
-                computers={computers}
-                command={installCommand()}
-                instructions={claudeCodeInstructions(claude)}
-              />
-
-              <TokensSection tokens={tokens} />
-
-              <AssistantsSection address={RESOURCE} assistants={assistants} />
-
-              <Section
-                id="extension"
-                title={t('extensionTitle')}
-                description={t('extensionDescription')}
-                actions={<CopyButton value={extensionPrompt} label={t('askClaude')} />}
-                className={SECTION}
-              >
-                <ol className="grid gap-3.5">
-                  <Step n={1}>
-                    {t('step1')} <code className={INLINE}>pnpm ext:build</code>.
-                  </Step>
-                  <Step n={2}>
-                    {t('step2')} <code className={INLINE}>chrome://extensions</code>,{' '}
-                    {t('developerMode')} {nb(t('loadUnpacked'))} {t('chooseFolder')}{' '}
-                    <code className={INLINE}>extension/.output/chrome-mv3</code>.
-                  </Step>
-                  <Step n={3}>
-                    {t('step3')}{' '}
-                    <a
-                      href="#jetons"
-                      className="text-accent underline decoration-accent-line underline-offset-4 hover:decoration-accent"
-                    >
-                      {t('tokenCreatedAbove')}
-                    </a>
-                    .
-                  </Step>
-                </ol>
-                <p className="mt-6 mb-2.5 text-body text-fg-2">
-                  {t('serverAddress')}
-                  <code className={INLINE}>WXT_PUBLIC_LEON_URL</code>
-                  {nb(t('serverAddressEnd'))}
-                </p>
-                <CodeLine code={serverUrl} />
-              </Section>
-            </>
+            </WorkspaceSettings>
           ),
         }}
       />

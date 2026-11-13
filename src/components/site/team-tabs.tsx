@@ -1,31 +1,30 @@
 'use client';
 
-import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Tabs } from 'radix-ui';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { type Team, toolLabel, useSiteContent } from './content';
-import { DemoAnswerCard, DemoSourceRow } from './demo-card';
+import { AnswerSheet } from './demo-card';
+import { CheckMark } from './pages/page-hero';
 import { ArrowLink, isFilterQuery, QueryCode, ToolLogo } from './parts';
 
-// Les cas d'usage par équipe, en onglets (Radix Tabs : flèches du clavier, rôles ARIA). Chaque panneau : la promesse,
-// puis les questions que l'équipe tape (accueil) ou ce qui change pour elle (page Cas d'usage), une réponse d'exemple
-// et les outils de l'équipe.
+// Les cas d'usage par équipe, en onglets d'index joints au bureau (Radix Tabs : flèches du clavier, rôles ARIA).
+// Chaque panneau : la promesse, puis les questions que l'équipe tape ou ce qui change pour elle, les outils de
+// l'équipe, et à côté une réponse d'exemple.
 
 function Questions({ team }: { team: Team }) {
   const t = useTranslations('site.teamTabs');
   return (
     <>
-      <p className="mt-6 font-mono text-meta tracking-normal text-muted">{t('typed')}</p>
-      <ul className="mt-2.5 grid gap-2">
+      <p className="s-small mt-6 font-medium">{t('typed')}</p>
+      <ul className="mt-2 border-b border-line">
         {team.questions.map((q) => (
-          <li
-            key={q}
-            className="flex min-h-11 items-center gap-3 rounded-field border border-line bg-glass-3 px-3.5 py-2 text-ui text-fg"
-          >
-            <span aria-hidden="true" className="font-mono text-[11px] text-muted">
-              /
+          <li key={q} className="flex min-h-12 items-center gap-3 border-t border-line py-2">
+            <span aria-hidden="true" className="strokes">
+              <i />
+              <i />
+              <i />
             </span>
             {isFilterQuery(q) ? <QueryCode q={q} /> : <span>{nb(q)}</span>}
           </li>
@@ -37,16 +36,12 @@ function Questions({ team }: { team: Team }) {
 
 function Gains({ team }: { team: Team }) {
   return (
-    <ul className="mt-6 grid gap-4">
+    <ul className="s-facts mt-6">
       {team.gains.map((g) => (
-        <li key={g.title} className="flex gap-3">
-          <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft text-accent shadow-[inset_0_0_0_1px_var(--accent-line)]">
-            <Check aria-hidden="true" strokeWidth={2.4} className="size-3" />
-          </span>
-          <span>
-            <span className="block text-ui font-semibold text-fg">{nb(g.title)}</span>
-            <span className="mt-0.5 block text-label leading-[1.55] text-muted">{nb(g.text)}</span>
-          </span>
+        <li key={g.title}>
+          <CheckMark />
+          <h4 className="font-semibold">{nb(g.title)}</h4>
+          <p className="s-body text-muted">{nb(g.text)}</p>
         </li>
       ))}
     </ul>
@@ -65,60 +60,44 @@ export function TeamTabs({
   const common = useTranslations('site.common');
   const { teams } = useSiteContent();
   return (
-    <Tabs.Root defaultValue={teams[0]?.slug} className={cn('site-reveal', className)}>
-      <Tabs.List aria-label={t('list')} className="flex flex-wrap justify-center gap-2">
+    <Tabs.Root defaultValue={teams[0]?.slug} className={className}>
+      <Tabs.List aria-label={t('list')} className="s-tabs mt-0 max-sm:overflow-x-auto">
         {teams.map((team) => (
-          <Tabs.Trigger
-            key={team.slug}
-            value={team.slug}
-            className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-glass-3 px-4 text-ui font-semibold text-fg-2 transition-[border-color,background-color,color] duration-200 hover:border-line-strong hover:text-fg data-[state=active]:border-accent-line data-[state=active]:bg-accent-soft data-[state=active]:text-accent"
-          >
-            <team.icon
-              aria-hidden="true"
-              strokeWidth={1.7}
-              className="size-4 text-muted transition-colors group-data-[state=active]:text-accent"
-            />
+          <Tabs.Trigger key={team.slug} value={team.slug} className="s-tab">
             {team.label}
           </Tabs.Trigger>
         ))}
       </Tabs.List>
 
       {teams.map((team) => (
-        <Tabs.Content key={team.slug} value={team.slug} className="mt-6 rounded-panel">
-          <div className="fade-in grid gap-6 rounded-panel border border-line bg-[linear-gradient(180deg,var(--glass-2),var(--glass))] p-5 shadow-panel sm:p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
-            <div className="flex flex-col">
-              <h3 className="text-[clamp(24px,2.8vw,32px)] leading-[1.15] font-bold tracking-[-0.03em] text-balance text-fg">
-                {nb(team.headline)}
-              </h3>
-              <p className="mt-3 text-body leading-[1.65] text-fg-2">{nb(team.lead)}</p>
+        <Tabs.Content
+          key={team.slug}
+          value={team.slug}
+          className={cn(
+            'rounded-[0_var(--s-r)_var(--s-r)_var(--s-r)] bg-[var(--s-desk)] p-10 max-sm:-mx-4 max-sm:rounded-none max-sm:px-4 max-sm:py-6',
+          )}
+        >
+          <div className="s-grid items-start gap-y-10">
+            <div className="col-[1/13] min-[1100px]:col-[1/6]">
+              <h3 className="s-h2">{nb(team.headline)}</h3>
+              <p className="s-lead mt-4">{nb(team.lead)}</p>
               {detail === 'questions' ? <Questions team={team} /> : <Gains team={team} />}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 lg:mt-auto lg:pt-6">
-                <div className="flex flex-wrap gap-1.5">
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap gap-3">
                   <p className="sr-only">
                     {nb(t('tools', { tools: team.tools.slice(0, 6).map(toolLabel).join(', ') }))}
                   </p>
                   {team.tools.slice(0, 6).map((id) => (
-                    <ToolLogo key={id} id={id} size={30} title />
+                    <ToolLogo key={id} id={id} size={24} title />
                   ))}
                 </div>
                 <ArrowLink href={`/cas-usage/${team.slug}`}>{t('more')}</ArrowLink>
               </div>
             </div>
-            <div className="grid content-start gap-2.5">
-              <div className="flex items-center gap-2 px-1 font-mono text-meta tracking-normal text-muted">
-                <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-ok" />
-                <span className="truncate">{nb(team.demo.query)}</span>
-              </div>
-              <DemoAnswerCard demo={team.demo} />
-              <ol className="grid gap-2">
-                {team.demo.sources.slice(0, 2).map((s, i) => (
-                  <DemoSourceRow key={s.title} source={s} n={i + 1} />
-                ))}
-              </ol>
-              <p className="px-1 font-mono text-meta tracking-normal text-muted">
-                {common('fictional')}
-              </p>
-            </div>
+            <figure className="col-[1/13] min-[1100px]:col-[7/13]">
+              <AnswerSheet demo={team.demo} />
+              <figcaption className="s-fict mt-4">{common('fictional')}</figcaption>
+            </figure>
           </div>
         </Tabs.Content>
       ))}

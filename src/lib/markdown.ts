@@ -133,3 +133,17 @@ export function markdownInline(text: string): MdInline[] {
   if (from < text.length) out.push(text.slice(from));
   return out;
 }
+
+/**
+ * Le texte tel qu'il se lit, sans les marques du Markdown : les dièses d'un titre en tête de ligne, **gras**,
+ * *italique* et `code` (leur contenu reste) ; plusieurs lignes vides n'en font qu'une. Pour un texte stocké montré
+ * tel quel (l'original d'une source).
+ */
+export function markdownPlain(text: string): string {
+  return text
+    .replace(/^ {0,3}#{1,6}[ \t]+/gm, '')
+    .replace(/\n(?:[ \t]*\n){2,}/g, '\n\n')
+    .replace(INLINE, (_, code?: string, strong?: string, em?: string) =>
+      code !== undefined ? code : markdownPlain(strong ?? em ?? ''),
+    );
+}

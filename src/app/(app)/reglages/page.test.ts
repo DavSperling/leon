@@ -1,16 +1,15 @@
+import { redirect } from 'next/navigation';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AssistantsSection } from '@/components/verre/reglages/assistants';
-import { ComputersSection } from '@/components/verre/reglages/computers';
+import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
-import { TokensSection } from '@/components/verre/reglages/tokens';
 import { type ApiTokenRow, listApiTokens } from '@/server/auth/api-tokens';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
 import { RESOURCE } from '@/server/oauth/metadata';
 import SettingsPage from './page';
 
-// La page lit beaucoup de choses ; seul le partage des jetons entre « Jetons personnels », « Ordinateurs connectés » et
-// « Assistants connectés » se teste ici (S14, M08), par la sorte (`kind`) de chaque jeton. Les actions importent Better Auth : les sections ne sont jamais dessinées, seulement bâties.
+// La page lit beaucoup de choses ; seul le partage des jetons entre jetons personnels, ordinateurs connectés et
+// assistants connectés (le groupe Assistants) se teste ici (S14, M08), par la sorte (`kind`) de chaque jeton. Les actions importent Better Auth : les sections ne sont jamais dessinées, seulement bâties.
 vi.mock('@/app/(app)/reglages/actions', () => ({}));
 vi.mock('@/server/auth/api-tokens', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/server/auth/api-tokens')>()),
@@ -43,9 +42,13 @@ vi.mock('@/server/cli/install-command', () => ({
 vi.mock('@/server/connectors/github/depots-equipe', () => ({
   listDepotsEquipe: vi.fn(async () => ({ depots: [], githubBranche: false })),
 }));
-vi.mock('@/server/auth/groupes', () => ({ listGroups: vi.fn(async () => []) }));
 vi.mock('@/server/auth/organisation', () => ({ managersSeeAll: vi.fn(async () => true) }));
-vi.mock('@/server/auth/annuaire', () => ({ directoryState: vi.fn() }));
+vi.mock('@/server/auth/sso', () => ({ readSsoSetup: vi.fn(async () => null) }));
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn((to: string) => {
+    throw new Error(`redirect ${to}`);
+  }),
+}));
 vi.mock('@/server/env', () => ({ env: { BETTER_AUTH_URL: 'https://leon.example' } }));
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -87,16 +90,14 @@ async function integrations(tokens: ApiTokenRow[]) {
   const page = (await SettingsPage(PROPS)) as ReactElement;
   const [tabs] = findAll(page, SettingsTabs);
   const panels = tabs?.props.panels as Record<string, ReactNode>;
-  const tokenProps = findAll(panels.integrations, TokensSection)[0]?.props;
-  const computerProps = findAll(panels.integrations, ComputersSection)[0]?.props;
-  const assistantProps = findAll(panels.integrations, AssistantsSection)[0]?.props;
+  const props = findAll(panels.integrations, IntegrationsSettings)[0]?.props;
   return {
-    tokens: tokenProps?.tokens as { name: string }[] | undefined,
-    computers: computerProps?.computers as { name: string }[] | undefined,
-    assistants: assistantProps?.assistants as { name: string }[] | undefined,
-    address: assistantProps?.address,
-    command: computerProps?.command,
-    instructions: computerProps?.instructions,
+    tokens: props?.tokens as { name: string }[] | undefined,
+    computers: props?.computers as { name: string }[] | undefined,
+    assistants: props?.assistants as { name: string }[] | undefined,
+    address: props?.address,
+    command: props?.command,
+    instructions: props?.instructions,
   };
 }
 
@@ -195,5 +196,17 @@ describe('page de Réglages : jetons, ordinateurs et assistants connectés', () 
     expect(shown.computers).toEqual([]);
     expect(shown.assistants).toEqual([]);
     expect(shown.tokens?.map((t) => t.name)).toEqual(['Ordinateur : x', 'Claude']);
+  });
+});
+
+// L'import de l'organigramme vit dans l'écran Équipe : le retour de Google ou de Microsoft y est remis tel quel.
+describe('page de Réglages : retour de l’import de l’organigramme', () => {
+  it('renvoie ?annuaire=… et ?error=… vers l’écran Équipe', async () => {
+    await expect(
+      SettingsPage({
+        searchParams: Promise.resolve({ annuaire: 'google', error: 'access_denied' }),
+      }),
+    ).rejects.toThrow('redirect /equipe?annuaire=google&error=access_denied');
+    expect(redirect).toHaveBeenCalledWith('/equipe?annuaire=google&error=access_denied');
   });
 });

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Did ACME accept the new migration date? · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app-chat.css">
+<script>(function (h) { h.classList.add('js'); if (/[?&]d=/.test(location.search)) h.classList.add('is-swapping'); })(document.documentElement);</script>
+</head>
+<body class="app" data-screen="chat">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <h1 class="top__title">Chat</h1>
+  </header>
+
+  <div class="chat">
+
+    <!-- The discussions, the latest first. Two can be opened in this prototype: the page itself, and ?d=commitment.
+         ?d=new is an empty discussion. The top row has no ask field here: the one at the foot is this screen's. -->
+    <nav class="chat__list" aria-labelledby="list-h">
+      <div class="sec__head">
+        <h2 class="h-sec" id="list-h">Discussions</h2>
+        <a class="link" href="app-chat.html?d=new">New discussion</a>
+      </div>
+      <ul class="rows" data-list>
+        <li><a class="row" data-d="date" href="app-chat.html" aria-current="true"><span class="row__title">Did ACME accept the new migration date?</span><span class="row__meta">Today</span></a></li>
+        <li><a class="row" data-d="commitment" href="app-chat.html?d=commitment"><span class="row__title">What did we promise ACME for V2?</span><span class="row__meta">Yesterday</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">Who owns the Verlant account now?</span><span class="row__meta">Nov&nbsp;6</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">Summary of the Nordia redesign feedback</span><span class="row__meta">Nov&nbsp;4</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">What did we decide about the Q1 pricing?</span><span class="row__meta">Oct&nbsp;30</span></a></li>
+      </ul>
+    </nav>
+
+    <div class="chat__main">
+
+      <!-- The thread. A turn = the question as a section head, Leon's answer, its sources as rows. A sentence, a number or
+           a row opens that original under the rows (closed at rest: one sheet at most on the screen). The answer, the rows
+           and the originals come from the builders of js/app.js, pasted here by tools/build-app.mjs, so the page is whole
+           without script. js/app-chat.js uses this turn as the mould of the next ones. -->
+      <div class="thread" data-thread aria-live="polite">
+        <section class="sec turn" data-turn>
+          <div class="sec__head">
+            <h2 class="h-sec"><span class="vh">You asked: </span><span data-q>Did ACME accept the new migration date?</span></h2>
+            <p class="sec__meta" data-when>You · Today</p>
+          </div>
+          <div class="ans">
+            <h3 class="vh">Leon’s answer</h3>
+            <!--gen:LeonApp.answerHTML(LEON_DEMO.permissions.views[0])--><div class="answer" data-answer><p class="answer__p"><span class="seg" data-sentence="1" data-n="1"><mark class="hl hl-1 hl--a">Yes. Dana Whitfield accepted December&nbsp;2 by email on </mark><span class="nw"><mark class="hl hl-1 hl--b">Oct&nbsp;27.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="false" aria-label="Source 1: Gmail, Re: V2 timeline">1</button></span></span> <span class="seg" data-sentence="2" data-n="2"><mark class="hl hl-2 hl--a">The ticket was updated the same </mark><span class="nw"><mark class="hl hl-2 hl--b">day.</mark><button type="button" class="cite c2" data-cite="2" data-n="2" aria-pressed="false" aria-label="Source 2: Linear, ACME: data migration">2</button></span></span></p></div><!--/gen-->
+            <p class="ans__note">Written from the sources below. Check them.</p>
+          </div>
+          <!--gen:LeonApp.sourcesHTML(LEON_DEMO.permissions.views[0].sources)--><ol class="srcs" data-srcs aria-label="Sources"><li><button type="button" class="src c1" data-src="1" data-n="1" aria-pressed="false"><span class="num"><span class="vh">Source </span>1</span><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20"><span class="src__title">Re: V2 timeline</span><span class="src__vis vis--only">Only you</span><span class="src__meta">Gmail · Email · Dana Whitfield · Oct&nbsp;27</span><span class="src__passage">“<mark class="hl hl-1">December&nbsp;2 works for us</mark>, as long as V2 itself ships on the 15th.”</span></button></li><li><button type="button" class="src c2" data-src="2" data-n="2" aria-pressed="false"><span class="num"><span class="vh">Source </span>2</span><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><span class="src__title">ACME: data migration</span><span class="src__vis">Shared with the team</span><span class="src__meta">Linear · Ticket · Sophie Laurent · Oct&nbsp;27</span><span class="src__passage">Migration <mark class="hl hl-2">moved to Dec&nbsp;2</mark>.</span></button></li></ol><!--/gen-->
+          <div class="orig" data-orig>
+<!--gen:LEON_DEMO.permissions.views[0].sources.map((s) => LeonApp.originalHTML(s, { hidden: true })).join('\n')--><article hidden class="doc sheet c1" data-source="1" data-n="1" data-slot="top" aria-label="Original: Re: V2 timeline">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20"><h3 class="doc__title">Re: V2 timeline</h3></header>
+      <p class="doc__meta">Gmail · Email · Dana Whitfield · Oct&nbsp;27</p>
+      <div class="doc__rest"><dl class="props props--rows"><div><dt>From</dt><dd>Dana Whitfield (ACME)</dd></div><div><dt>To</dt><dd>Julie Martin</dd></div><div><dt>Date</dt><dd>Oct&nbsp;27, 2026, 16:48</dd></div></dl><div class="doc__body"><p>Hi Julie,</p><p><mark class="hl hl-1">December&nbsp;2 works for us</mark>, as long as V2 itself ships on the 15th.</p><p>Dana</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" data-ext="Gmail">Open in Gmail</a><span class="vis vis--only">Only you</span></footer></div>
+    </article>
+<article hidden class="doc sheet c2" data-source="2" data-n="2" data-slot="top" aria-label="Original: ACME: data migration">
+      <span class="flag flag--left" aria-hidden="true">2</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME: data migration</h3></header>
+      <p class="doc__meta">Linear · Ticket · Sophie Laurent · Oct&nbsp;27</p>
+      <div class="doc__rest"><p class="doc__id">ACM-214</p><dl class="props"><div><dt>Status</dt><dd><span class="state">Todo</span></dd></div><div><dt>Priority</dt><dd>High</dd></div><div><dt>Assignee</dt><dd>Sophie Laurent</dd></div></dl><div class="doc__body"><p>Migration <mark class="hl hl-2">moved to Dec&nbsp;2</mark>.</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" data-ext="Linear">Open in Linear</a><span class="vis">Shared with the team</span></footer></div>
+    </article><!--/gen-->
+          </div>
+          <p class="ans__actions"><button type="button" class="btn btn--line btn--sm" data-copy="#copy-1">Copy with sources</button></p>
+          <pre hidden id="copy-1" data-copy-text><!--gen:LeonApp.copyText(LEON_DEMO.permissions.views[0]).replace(/&/g, '&amp;').replace(/</g, '&lt;')-->Yes. Dana Whitfield accepted December 2 by email on Oct 27. [1] The ticket was updated the same day. [2]
+
+[1] Gmail · Re: V2 timeline · Dana Whitfield, Oct 27
+[2] Linear · ACME: data migration · Sophie Laurent, Oct 27<!--/gen--></pre>
+        </section>
+      </div>
+
+      <div class="chat__foot">
+        <form class="ask ask--lg" action="app-search.html" aria-label="Ask Leon" data-composer>
+          <label class="vh" for="next">Your question</label>
+          <input class="ask__input" id="next" name="q" type="text" placeholder="Ask another question…" autocomplete="off" required>
+          <button class="btn" type="submit">Ask</button>
+        </form>
+        <p class="muted">Only you can see this discussion. Leon only reads what you can open.</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</main>
+</div>
+
+<!-- States that only appear through use: js/app-chat.js clones them. -->
+<template id="t-busy"><p class="busy">Reading what you can open…</p></template>
+<template id="t-error">
+  <div class="alert" role="alert">
+    <div><p class="alert__title"><span class="dot dot--danger" aria-hidden="true"></span>Leon could not answer</p><p class="alert__text">The connection dropped before the answer arrived. Your question is kept.</p></div>
+    <button type="button" class="btn btn--line btn--sm" data-retry>Try again</button>
+  </div>
+</template>
+<template id="t-new">
+  <section class="sec" data-empty>
+    <div class="sec__head"><h2 class="h-sec">New discussion</h2></div>
+    <p class="thread__lead">Ask about anything your team wrote down. Leon answers from what you can open and gives the source of every sentence.</p>
+    <ul class="chips" aria-label="Suggested questions">
+      <li><a class="chip" href="app-search.html?s=commitment" data-ask>What did we promise ACME for V2?</a></li>
+      <li><a class="chip" href="app-search.html?s=bug" data-ask>Is this PDF export bug already known?</a></li>
+      <li><a class="chip" href="app-search.html?s=unknown" data-ask>What price did we give Verlant in 2024?</a></li>
+    </ul>
+  </section>
+</template>
+<template id="t-nolist"><p class="chat__none">No discussions yet. Your questions and Leon’s answers are kept here, for you only.</p></template>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="js/app-chat.js" defer></script>
+</body>
+</html>

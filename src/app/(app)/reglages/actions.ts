@@ -83,7 +83,11 @@ export type InviteErrors = Partial<
   Record<'name' | 'department' | 'job' | 'seniority' | 'form', InviteErrorCode>
 >;
 
-const InvitationInputSchema = PlacementSchema.safeExtend({ name: z.string().trim().max(100) });
+const InvitationInputSchema = PlacementSchema.safeExtend({
+  name: z.string().trim().max(100),
+  // Écran Équipe : « Ajouter quelqu'un sous … » ; l'onboarding n'en donne pas.
+  managerId: z.uuid().nullish(),
+});
 const INVITE_FIELDS = ['name', 'department', 'job', 'seniority'] as const;
 const isInviteField = (field: string): field is (typeof INVITE_FIELDS)[number] =>
   (INVITE_FIELDS as readonly string[]).includes(field);
@@ -102,14 +106,20 @@ function inviteErrors(error: z.ZodError): InviteErrors {
 
 // Comme le jeton : le lien en clair n'existe que dans cette réponse. Tout l'argument est analysé avant d'être lu.
 export async function createInvitationAction(
-  input: PlacementInput & { name: string },
+  input: PlacementInput & { name: string; managerId?: string | null },
 ): Promise<{ url: string; expiresAt: Date } | { errors: InviteErrors }> {
   const ctx = await requireUserContext();
   const parsed = InvitationInputSchema.safeParse(input);
   if (!parsed.success) return { errors: inviteErrors(parsed.error) };
-  const { name, ...placement } = parsed.data;
-  const link = await createInvitationLink(ctx, { name, placement });
+  const { name, managerId, ...placement } = parsed.data;
+  const link = await createInvitationLink(ctx, {
+    name,
+    placement,
+    ...(managerId ? { managerId } : {}),
+  });
   if (!link) return { errors: { form: 'permission' } };
+  // L'invité paraît tout de suite dans l'organigramme (« Invité »).
+  revalidatePath('/equipe');
   const url = new URL(`/invitation/${link.token}`, env.BETTER_AUTH_URL).toString();
   return { url, expiresAt: link.expiresAt };
 }
@@ -126,6 +136,7 @@ export async function setMemberPlacementAction(
     return { errors: { form: 'permission' } };
   }
   revalidatePath('/reglages');
+  revalidatePath('/', 'layout');
   return { ok: true };
 }
 
@@ -179,6 +190,7 @@ export async function saveGroupAction(
   const ok = await setGroupMembers(ctx, saved.id, parsed.data.membres);
   revalidatePath('/reglages');
   revalidatePath('/documents');
+  revalidatePath('/equipe');
   return ok ? { ok: true } : { error: t('groupRefused') };
 }
 
@@ -187,6 +199,7 @@ export async function deleteGroupAction(id: string): Promise<{ ok: boolean }> {
   const ok = await deleteGroup(ctx, id);
   revalidatePath('/reglages');
   revalidatePath('/documents');
+  revalidatePath('/equipe');
   return { ok };
 }
 
@@ -208,20 +221,20 @@ export async function setManagerAction(
   const result = await setManager(ctx, memberId, managerId);
   if (result === 'ok') {
     revalidatePath('/reglages');
-    revalidatePath('/equipe');
+    revalidatePath('/', 'layout');
   }
   return { result };
 }
 
 // « Importer l'organigramme » (annuaire.ts) : la personne part chez Google ou Microsoft ouvrir l'annuaire à Leon, et
-// revient sur /reglages?annuaire=…, où la page montre l'aperçu. Un refus revient sur /reglages?annuaire=refus.
+// revient sur /equipe?annuaire=…, où la page montre l'aperçu. Un refus revient sur /equipe?annuaire=refus.
 export async function startDirectoryImportAction(formData: FormData): Promise<void> {
   const ctx = await requireUserContext();
   const url = await directoryLinkUrl(ctx, String(formData.get('provider') ?? '')).catch((error) => {
     logError('settings.directory_start', error);
     return null;
   });
-  redirect(url ?? '/reglages?annuaire=refus#equipe');
+  redirect(url ?? '/equipe?annuaire=refus');
 }
 
 // « Appliquer » : l'annuaire relu, l'aperçu refait et écrit (réservé aux propriétaires et administrateurs).
@@ -236,7 +249,7 @@ export async function applyDirectoryImportAction(
   const count = await applyImport(ctx, people);
   if (count === null) return { error: 'refus' };
   revalidatePath('/reglages');
-  revalidatePath('/equipe');
+  revalidatePath('/', 'layout');
   return { count };
 }
 
@@ -258,7 +271,10 @@ export async function setMemberRoleAction(
   const ctx = await requireUserContext();
   const parsed = z.enum(['admin', 'member']).safeParse(role);
   const ok = parsed.success && (await setMemberRole(ctx, memberId, parsed.data));
-  if (ok) revalidatePath('/reglages');
+  if (ok) {
+    revalidatePath('/reglages');
+    revalidatePath('/', 'layout');
+  }
   return { ok };
 }
 
@@ -267,7 +283,8 @@ export async function removeMemberAction(memberId: string): Promise<{ ok: boolea
   const ok = await removeMember(ctx, memberId);
   if (ok) {
     revalidatePath('/reglages');
-    revalidatePath('/equipe');
+    // la barre latérale compte et nomme les gens de l'espace
+    revalidatePath('/', 'layout');
   }
   return { ok };
 }
@@ -282,7 +299,8 @@ export async function updateProfileAction(name: string): Promise<{ ok: true } | 
   } catch {
     return { error: t('profileFailed') };
   }
-  revalidatePath('/reglages');
+  // le nom paraît aussi dans la barre latérale et le menu de la personne : toute la mise en page se relit
+  revalidatePath('/', 'layout');
   return { ok: true };
 }
 

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leon · Connectors</title>
+<meta name="description" content="The 42 tools Leon connects to, by category, and what it reads from each one. Plus your conversations with AI assistants.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/connectors.css">
+</head>
+<body class="site">
+<!-- Header and footer: the home's markup, with links to the home's sections as index.html#… and real links between
+     the three inner pages. The page is whole without script: js/pages.js (shared) adds the menu, the notice and the
+     entrances; js/connectors.js adds the filter. -->
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" data-nav>
+  <div class="wrap nav__in">
+    <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <nav class="nav__links" id="nav-panel" aria-label="Site" data-nav-panel>
+      <a class="nav__link" href="index.html#product">Product</a>
+      <a class="nav__link" href="connectors.html" aria-current="page">Connectors</a>
+      <a class="nav__link" href="index.html#developers">Developers</a>
+      <a class="nav__link" href="security.html">Security</a>
+      <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="app/signin.html">Sign in</a>
+    </nav>
+    <a class="btn btn--nav" href="app/signup.html">Create a workspace</a>
+    <button class="nav__menu" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-menu><span class="vh">Menu</span><svg viewBox="0 0 22 22" aria-hidden="true"><line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1. Head: what the page is, in the home's hero composition -->
+  <section class="hero" id="top" aria-labelledby="h1">
+    <div class="wrap grid hero__head">
+      <h1 class="h1" id="h1"><span class="h1__line">42 connectors,</span> <span class="h1__line">plus <span class="hmark" data-hmark="2">your AI conversations.</span></span></h1>
+      <p class="lead hero__lead">Leon picks up changes every 15 minutes and keeps each item word for word, with a link to the original. Below: what it reads from each tool.</p>
+      <div class="cta">
+        <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <p class="small">Open beta · no billing yet</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. The catalogue: 42 rows in six categories. Each row: the tool, what Leon reads from it, how it connects. -->
+  <section class="cx-cat" id="catalogue" aria-labelledby="cat-h">
+    <h2 class="vh" id="cat-h">Every connector, by category</h2>
+    <div class="wrap grid cx-cat__grid">
+      <aside class="cx-aside" aria-label="Find a connector">
+        <div class="cx-filter" data-filter data-total="42" hidden>
+          <label class="cx-filter__label" for="cx-q">Filter the 42 connectors</label>
+          <input class="field" id="cx-q" type="search" placeholder="Name or keyword" autocomplete="off" spellcheck="false" data-filter-input>
+          <p class="small cx-filter__status" role="status" data-filter-status>42 connectors</p>
+        </div>
+        <nav class="cx-index" aria-label="Categories">
+          <ul>
+            <li><a href="#cat-email"><span>Email, chat and files</span><span class="cx-index__n">4</span></a></li>
+            <li><a href="#cat-meetings"><span>Meetings</span><span class="cx-index__n">8</span></a></li>
+            <li><a href="#cat-projects"><span>Projects and docs</span><span class="cx-index__n">13</span></a></li>
+            <li><a href="#cat-engineering"><span>Engineering</span><span class="cx-index__n">4</span></a></li>
+            <li><a href="#cat-crm"><span>CRM</span><span class="cx-index__n">5</span></a></li>
+            <li><a href="#cat-support"><span>Support</span><span class="cx-index__n">8</span></a></li>
+          </ul>
+        </nav>
+        <p class="small cx-legend">One click: you authorize Leon in the tool itself. API key: you paste a key, and inline help shows where to find it.</p>
+      </aside>
+
+      <div class="cx-list">
+        <section class="cx-fam" id="cat-email" data-family aria-labelledby="cat-email-h">
+          <h3 class="cx-fam__h" id="cat-email-h">Email, chat and files <span class="cx-fam__n">4</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/gmail.svg" alt="" width="24" height="24"><span class="cx-row__name">Gmail</span><span class="cx-row__reads">Email threads. Promotions, Social, drafts and spam are left out.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/outlook.svg" alt="" width="24" height="24"><span class="cx-row__name">Outlook</span><span class="cx-row__reads">Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/slack.svg" alt="" width="24" height="24"><span class="cx-row__name">Slack</span><span class="cx-row__reads">The channels you are a member of. Never your direct messages.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/drive.svg" alt="" width="24" height="24"><span class="cx-row__name">Google Drive</span><span class="cx-row__reads">Google documents, presentations and spreadsheets, PDF, Word, Excel, PowerPoint and text files.</span><span class="cx-row__how">One click</span></li>
+          </ul>
+        </section>
+
+        <section class="cx-fam" id="cat-meetings" data-family aria-labelledby="cat-meetings-h">
+          <h3 class="cx-fam__h" id="cat-meetings-h">Meetings <span class="cx-fam__n">8</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/granola.svg" alt="" width="24" height="24"><span class="cx-row__name">Granola</span><span class="cx-row__reads">Meeting notes, with their transcript and summary.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/fathom.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Fathom</span><span class="cx-row__reads">Meetings the key’s owner recorded or was shared: transcript and summary.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/fireflies.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Fireflies</span><span class="cx-row__reads">Transcribed meetings the key’s owner has access to.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/tldv.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">tl;dv</span><span class="cx-row__reads">Meetings the key’s owner attended, with their transcript.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/circleback.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Circleback</span><span class="cx-row__reads">Meetings of the key’s owner, not those only shared with them.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/claap.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Claap</span><span class="cx-row__reads">The workspace’s recordings, meetings and captures, with their transcript.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/leexi.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Leexi</span><span class="cx-row__reads">Calls, with what each speaker said.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/gong.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Gong</span><span class="cx-row__reads">Calls, with their participants and transcript.</span><span class="cx-row__how">API key</span></li>
+          </ul>
+        </section>
+
+        <section class="cx-fam" id="cat-projects" data-family aria-labelledby="cat-projects-h">
+          <h3 class="cx-fam__h" id="cat-projects-h">Projects and docs <span class="cx-fam__n">13</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/notion.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Notion</span><span class="cx-row__reads">Pages, block by block, and their comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/jira.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Jira</span><span class="cx-row__reads">Issues and their comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/confluence.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Confluence</span><span class="cx-row__reads">Pages and their footer comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/asana.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Asana</span><span class="cx-row__reads">Tasks, with their description and comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/clickup.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">ClickUp</span><span class="cx-row__reads">Tasks, closed ones included, and their comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/trello.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Trello</span><span class="cx-row__reads">Cards on your open boards, with their comments.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/monday.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">monday.com</span><span class="cx-row__reads">Boards, items and updates, limited to the boards you see.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/shortcut.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Shortcut</span><span class="cx-row__reads">Stories and their comments.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/plane.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Plane</span><span class="cx-row__reads">Work items and their comments. Archived items and drafts are skipped.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/airtable.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Airtable</span><span class="cx-row__reads">Records, with their text and comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/basecamp.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Basecamp</span><span class="cx-row__reads">Messages, documents and comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/miro.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Miro</span><span class="cx-row__reads">The text on your boards: sticky notes, shapes, cards, frames and documents. Never images.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/productboard.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Productboard</span><span class="cx-row__reads">Notes. Archived notes are skipped.</span><span class="cx-row__how">One click</span></li>
+          </ul>
+        </section>
+
+        <section class="cx-fam" id="cat-engineering" data-family aria-labelledby="cat-engineering-h">
+          <h3 class="cx-fam__h" id="cat-engineering-h">Engineering <span class="cx-fam__n">4</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/github.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">GitHub</span><span class="cx-row__reads">Issues and pull requests, with comments and reviews, in the team repositories an admin chose.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/gitlab.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">GitLab</span><span class="cx-row__reads">Issues and merge requests of the 20 most active projects you are a member of.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/linear.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Linear</span><span class="cx-row__reads">Issues and their comments.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/sentry.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Sentry</span><span class="cx-row__reads">Issues. Neither stack traces nor event data.</span><span class="cx-row__how">API key</span></li>
+          </ul>
+        </section>
+
+        <section class="cx-fam" id="cat-crm" data-family aria-labelledby="cat-crm-h">
+          <h3 class="cx-fam__h" id="cat-crm-h">CRM <span class="cx-fam__n">5</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">HubSpot</span><span class="cx-row__reads">Notes, calls, meetings and emails, with the company, deal or contact they are linked to.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/attio.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Attio</span><span class="cx-row__reads">Notes and comment threads.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/folk.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">folk</span><span class="cx-row__reads">Public notes on contacts and companies. Private notes are not read.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/pipedrive.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Pipedrive</span><span class="cx-row__reads">The notes and activities your account sees.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/close.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Close</span><span class="cx-row__reads">Notes, calls with their transcripts, emails, SMS and WhatsApp messages of your leads.</span><span class="cx-row__how">API key</span></li>
+          </ul>
+        </section>
+
+        <section class="cx-fam" id="cat-support" data-family aria-labelledby="cat-support-h">
+          <h3 class="cx-fam__h" id="cat-support-h">Support <span class="cx-fam__n">8</span></h3>
+          <ul class="cx-rows">
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/intercom.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Intercom</span><span class="cx-row__reads">Conversations, with their messages and internal notes.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/zendesk.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Zendesk</span><span class="cx-row__reads">Tickets and their comments, internal notes included.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/freshdesk.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Freshdesk</span><span class="cx-row__reads">Tickets, with their replies and internal notes.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/helpscout.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Help Scout</span><span class="cx-row__reads">Conversations.</span><span class="cx-row__how">One click</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/front.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Front</span><span class="cx-row__reads">Conversations, with their messages and comments. Personal inboxes only if their owner allows it.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/plain.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Plain</span><span class="cx-row__reads">Threads and their messages.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/crisp.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Crisp</span><span class="cx-row__reads">The website’s conversations, with their messages and internal notes.</span><span class="cx-row__how">API key</span></li>
+            <li class="cx-row" data-row><img class="logo" src="../shared/logos/missive.svg" alt="" width="24" height="24" loading="lazy"><span class="cx-row__name">Missive</span><span class="cx-row__reads">Team conversations, with their messages and comments. Not your personal email.</span><span class="cx-row__how">API key</span></li>
+          </ul>
+        </section>
+
+        <div class="cx-none" data-none hidden>
+          <p class="cx-none__t">No connector matches “<span data-none-q></span>”.</p>
+          <p>Check the spelling, or see what is in progress below.</p>
+          <button class="btn btn--line" type="button" data-filter-clear>Show all connectors</button>
+        </div>
+
+        <div class="cx-foot">
+          <p>You choose how far back Leon reads: 7, 30, 90 or 365 days, 30 by default. A connection is saved only if its test call succeeds.</p>
+          <p class="small">Connectors are in beta. Each one is tested against the sample payloads in its vendor’s API documentation. Self-hosted instances (GitLab Self-Managed, Jira Data Center) are not supported.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Conversations with AI assistants (ink band): the browser extension, the coding tools, your own assistant -->
+  <section class="band on-ink cx-ai" id="ai" aria-labelledby="ai-h">
+    <div class="wrap grid cx-ai__grid">
+      <div class="cx-ai__text">
+        <h2 class="h2" id="ai-h" data-rv="1">Your conversations with <span class="hmark" data-hmark="3">AI assistants.</span></h2>
+        <p class="lead" data-rv="2">What gets worked out with an AI assistant often exists nowhere else. Leon keeps it, visible only to its author.</p>
+        <div class="cx-ai__links" data-rv="2">
+          <a class="more" href="index.html#developers">How it works for coding agents<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="more" href="#" title="Not in this prototype">Read the documentation<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </div>
+      <dl class="facts" data-rv="3">
+        <div class="fact"><dt>Browser extension</dt><dd>Brings in your conversations from two web-based AI assistants, with your explicit consent. A switch per site and a pause button. Off in private windows; attachments are skipped.</dd></div>
+        <div class="fact"><dt>Coding tools</dt><dd>Claude Code, Codex, Cursor and Antigravity. One command installs it, and you approve what is sent. Secrets are masked before sending and again on the server.</dd></div>
+        <div class="fact"><dt>Your own assistant</dt><dd>Your AI assistant can ask Leon too, over MCP, with your permissions. You authorize it in Leon and can revoke it at any time. Each source it opens in full is logged.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- 4. In progress (white) -->
+  <section class="sec" id="in-progress" aria-labelledby="wip-h">
+    <div class="wrap grid sec__grid">
+      <div class="cx-wip__text">
+        <h2 class="h2" id="wip-h" data-rv="1">In progress.</h2>
+        <p class="lead" data-rv="2">Listed here so you know before you sign up.</p>
+      </div>
+      <div class="sec__list cx-wip__list" data-rv="3">
+        <ul>
+          <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><span class="cx-wip__t">Google Calendar</span><span class="cx-wip__d">Events and attendees.</span></span></li>
+          <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><span class="cx-wip__t">Microsoft 365</span><span class="cx-wip__d">Teams, OneDrive and SharePoint.</span></span></li>
+          <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span><span class="cx-wip__t">Images and scanned PDFs</span><span class="cx-wip__d">Scanned pages need OCR, which is not built yet.</span></span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Close (desk band) -->
+  <section class="band band--desk" id="close" aria-labelledby="close-h">
+    <div class="wrap grid pclose">
+      <div class="pclose__text">
+        <h2 class="h2" id="close-h" data-rv="1">Connect your <span class="hmark" data-hmark="1">first tool.</span></h2>
+        <p class="lead" data-rv="2">Authorize or paste a key, choose how far back to read, and the first sync starts.</p>
+      </div>
+      <div class="pclose__cta" data-rv="3">
+        <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="btn btn--line" href="app/signin.html">Sign in</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot on-ink">
+  <div class="wrap grid foot__grid">
+    <div class="foot__brand">
+      <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    </div>
+    <nav class="foot__col foot__col--product" aria-labelledby="f-product">
+      <h3 id="f-product">Product</h3>
+      <ul>
+        <li><a href="index.html#product">Search and cited answers</a></li>
+        <li><a href="index.html#briefing">Chat and morning briefing</a></li>
+        <li><a href="connectors.html" aria-current="page">Connectors</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="#" title="Not in this prototype">Documentation</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--trust" aria-labelledby="f-trust">
+      <h3 id="f-trust">Trust</h3>
+      <ul>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="#" title="Not in this prototype">What’s missing</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--account" aria-labelledby="f-account">
+      <h3 id="f-account">Account</h3>
+      <ul>
+        <li><a href="app/signin.html">Sign in</a></li>
+        <li><a href="app/signup.html">Create a workspace</a></li>
+      </ul>
+    </nav>
+    <div class="foot__base">
+      <p class="foot__lang">Language: <a href="#top" aria-current="true">English</a> · <a href="#" title="Not in this prototype" lang="fr">Français</a></p>
+      <p>© 2026 Leon</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/pages.js"></script>
+<script src="js/connectors.js"></script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app" data-screen="home">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <div class="top__text">
+      <h1 class="top__title">Good morning, Julie.</h1>
+      <p class="top__sub">Sophie moved the ACME data migration to Dec&nbsp;2.</p>
+    </div>
+  </header>
+
+  <div class="home-ask">
+    <form class="ask ask--lg" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search everything Leon has saved</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search everything Leon has saved…" autocomplete="off" required autofocus>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+    <ul class="chips" aria-label="Suggested questions">
+      <li><a class="chip" href="app-search.html?s=commitment">What did we promise ACME for V2?</a></li>
+      <li><a class="chip" href="app-search.html?s=bug">Is this PDF export bug already known?</a></li>
+      <li><a class="chip" href="app-search.html?s=unknown">What price did we give Verlant in 2024?</a></li>
+    </ul>
+  </div>
+
+  <div class="duo home">
+    <section aria-labelledby="brief-h">
+      <div class="sec__head">
+        <h2 class="h-sec" id="brief-h">Morning briefing</h2>
+        <p class="sec__meta">Tuesday, November&nbsp;10 · 08:45</p>
+      </div>
+      <dl class="kv brief">
+        <div>
+          <dt>What you did</dt>
+          <dd><ul class="brief__lines">
+            <li>Replied to ACME about the V2 <span class="nw">timeline.<a class="cite c1" href="#brief-1" aria-label="Source 1: Gmail, Re: V2 timeline">1</a></span></li>
+            <li>Reviewed the Nordia redesign <span class="nw">mockups.<a class="cite c2" href="#brief-2" aria-label="Source 2: Notion, Nordia: redesign mockups">2</a></span></li>
+          </ul></dd>
+        </div>
+        <div>
+          <dt>What changed</dt>
+          <dd><ul class="brief__lines">
+            <li>Sophie moved the ACME data migration to <span class="nw">Dec&nbsp;2.<a class="cite c3" href="#brief-3" aria-label="Source 3: Linear, ACME: data migration">3</a></span></li>
+            <li>Two new support conversations mention the PDF export <span class="nw">bug.<a class="cite c4" href="#brief-4" aria-label="Source 4: Intercom, Empty PDF export">4</a></span></li>
+          </ul></dd>
+        </div>
+        <div>
+          <dt>Still open</dt>
+          <dd><ul class="brief__lines">
+            <li>The revised Verlant quote, promised on <span class="nw">Oct&nbsp;10.<a class="cite c1" href="#brief-5" aria-label="Source 5: Granola, Verlant: quote review">5</a></span></li>
+          </ul></dd>
+        </div>
+        <div>
+          <dt>Sources</dt>
+          <dd><ol class="srcs" aria-label="Sources of the briefing">
+            <li><a class="src src--compact c1" id="brief-1" href="#" title="Not in this prototype"><span class="num"><span class="vh">Source </span>1</span><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20"><span class="src__title"><span class="vh">Open in Gmail: </span>Re: V2 timeline</span><span class="src__meta">Gmail · Email · Nov&nbsp;9 · <span class="vis--only">Only you</span></span></a></li>
+            <li><a class="src src--compact c2" id="brief-2" href="#" title="Not in this prototype"><span class="num"><span class="vh">Source </span>2</span><img class="logo" src="../shared/logos/notion.svg" alt="" width="20" height="20"><span class="src__title"><span class="vh">Open in Notion: </span>Nordia: redesign mockups</span><span class="src__meta">Notion · Page · Nov&nbsp;9</span></a></li>
+            <li><a class="src src--compact c3" id="brief-3" href="#" title="Not in this prototype"><span class="num"><span class="vh">Source </span>3</span><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><span class="src__title"><span class="vh">Open in Linear: </span>ACME: data migration</span><span class="src__meta">Linear · Ticket · Oct&nbsp;27</span></a></li>
+            <li><a class="src src--compact c4" id="brief-4" href="#" title="Not in this prototype"><span class="num"><span class="vh">Source </span>4</span><img class="logo" src="../shared/logos/intercom.svg" alt="" width="20" height="20"><span class="src__title"><span class="vh">Open in Intercom: </span>Empty PDF export</span><span class="src__meta">Intercom · Conversation · Nov&nbsp;8</span></a></li>
+            <li><a class="src src--compact c1" id="brief-5" href="#" title="Not in this prototype"><span class="num"><span class="vh">Source </span>5</span><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><span class="src__title"><span class="vh">Open in Granola: </span>Verlant: quote review</span><span class="src__meta">Granola · Meeting · Oct&nbsp;10</span></a></li>
+          </ol></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="recent-h">
+      <div class="sec__head">
+        <h2 class="h-sec" id="recent-h">Recent</h2>
+        <a class="link" href="app-chat.html?d=new">New discussion</a>
+      </div>
+      <ul class="rows">
+        <li><a class="row" href="app-chat.html"><span class="row__title">Did ACME accept the new migration date?</span><span class="row__meta">Today</span></a></li>
+        <li><a class="row" href="app-chat.html?d=commitment"><span class="row__title">What did we promise ACME for V2?</span><span class="row__meta">Yesterday</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">Who owns the Verlant account now?</span><span class="row__meta">Nov&nbsp;6</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">Summary of the Nordia redesign feedback</span><span class="row__meta">Nov&nbsp;4</span></a></li>
+        <li><a class="row" href="#" title="Not in this prototype"><span class="row__title">What did we decide about the Q1 pricing?</span><span class="row__meta">Oct&nbsp;30</span></a></li>
+      </ul>
+    </section>
+  </div>
+
+</div>
+</main>
+</div>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

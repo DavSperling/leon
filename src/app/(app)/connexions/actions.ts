@@ -36,6 +36,7 @@ import { getConnector } from '@/server/connectors/registry';
 import type { AnyConnector } from '@/server/connectors/types';
 import { logError } from '@/server/log';
 
+// Chaque écriture revalide la mise en page (`/`, 'layout') : l'écran, et le drapeau et l'alerte de la barre latérale.
 // Toutes les actions passent par requireUserContext et valident leurs entrées avec zod. Aucune ne
 // laisse remonter d'exception à l'interface (sauf la redirection vers la connexion), et aucune ne
 // répète une clé saisie dans un message ou dans un journal. Seuls les messages écrits par les
@@ -134,7 +135,7 @@ export async function connectAction(input: {
     logError('connector.create_failed', error, { provider: provider.data });
     return { error: t('saveFailed') };
   }
-  revalidatePath('/connexions');
+  revalidatePath('/', 'layout');
   return { ok: true, account: checked.account };
 }
 
@@ -175,7 +176,7 @@ export async function replaceKeyAction(input: {
     logError('connector.replace_failed', error, { connectionId: stored.id });
     return { error: t('replaceFailed') };
   }
-  revalidatePath('/connexions');
+  revalidatePath('/', 'layout');
   return { ok: true, account: checked.account };
 }
 
@@ -187,7 +188,7 @@ async function manage(
   if (!z.uuid().safeParse(id).success) return { ok: false };
   try {
     const ok = await write(ctx, id);
-    revalidatePath('/connexions');
+    revalidatePath('/', 'layout');
     return { ok };
   } catch (error) {
     logError('connector.manage_failed', error, { connectionId: id });

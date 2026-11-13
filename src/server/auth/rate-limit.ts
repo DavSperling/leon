@@ -27,6 +27,8 @@ export const AUTH_LIMITS = {
   connexion: { email: 10, ip: 50, inconnue: 500 },
   inscription: { email: 5, ip: 10, inconnue: 100 },
   recuperation: { email: 5, ip: 10, inconnue: 100 },
+  // Un lien d'invitation envoyé par e-mail (écran Équipe) : par adresse invitée, et par adresse IP de qui envoie.
+  invitation: { email: 3, ip: 20, inconnue: 200 },
 } as const;
 
 export type AuthAttempt = keyof typeof AUTH_LIMITS;

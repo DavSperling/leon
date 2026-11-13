@@ -22,11 +22,10 @@ export const exit: Transition = { duration: duration.exit, ease: ease.in };
 // et la racine des `backdrop-filter` : on le retire à la fin de chaque entrée (transitionEnd: unfilter).
 export const unfilter = { filter: 'none' } as const;
 
-/** Transition de page : fondu, légère montée et flou à l'entrée ; sortie plus courte. */
+/** Transition de page : un fondu court (150 ms), sans montée ni flou. */
 export const pageVariants: Variants = {
-  initial: { opacity: 0, y: 8, filter: 'blur(6px)' },
-  animate: { opacity: 1, y: 0, filter: 'blur(0px)', transition: enter, transitionEnd: unfilter },
-  exit: { opacity: 0, y: -4, filter: 'blur(2px)', transition: exit },
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.15, ease: [0.2, 0.7, 0.2, 1] } },
 };
 
 // `inherit: true` : la transition d'une variante se fond dans la prop `transition` de l'élément au lieu de la remplacer,

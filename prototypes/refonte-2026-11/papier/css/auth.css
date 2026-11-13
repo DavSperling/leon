@@ -1,0 +1,87 @@
+/* Leon « Papier » v2 : sign-in and create-a-workspace. Outside the app shell: the home page's bar reduced to the
+   wordmark, one form on white, and one --desk panel holding one sheet. Load after tokens.css, ui.css and app.css
+   (the kit: .skip, .link, .hint, .fields, .alert, .dot). Controls keep the public site's sizes (44px fields, 48px
+   pills, 16px text), as on the home page: this screen is the door between the site and the app, and the body has no
+   .app class. Everything is visible and usable without js/auth.js. */
+
+.auth__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); min-height: 100vh; min-height: 100dvh; }
+
+/* ---------- Left: the bar, then the form ---------- */
+.auth__main { display: flex; flex-direction: column; min-width: 0; }
+.auth__bar { display: flex; flex: none; align-items: center; height: var(--nav-h); padding-inline: var(--margin); }
+/* The home page's wordmark (css/site.css is not loaded here) */
+.wordmark { display: inline-flex; align-items: center; gap: 9px; min-height: 44px; border-radius: var(--r-mark); font: 600 var(--t-lead)/1 var(--sans); letter-spacing: -.02em; text-decoration: none; }
+.wordmark svg { width: 24px; height: 24px; }
+.auth__body { display: flex; flex: 1; align-items: center; justify-content: center; padding: 0 var(--margin) min(64px, 6vh); } /* 6vh: create-a-workspace still fits one screen at 1024 x 768 */
+.auth__col { width: 100%; max-width: 384px; }
+
+/* One view at a time, without script: #forgot and #sent show when they are the address's target */
+.auth__view--alt:not(:target) { display: none; }
+.auth__col:has(.auth__view--alt:target) > .auth__view:not(.auth__view--alt) { display: none; }
+
+.auth__title { font: 600 1.5rem/1.25 var(--sans); letter-spacing: -.02em; }
+.auth__sub { margin-top: 6px; color: var(--ink-2); text-wrap: pretty; }
+.auth__sso { display: grid; gap: 10px; margin-top: 28px; }
+.auth__sso .btn { gap: 12px; }
+.auth__sso svg { flex: none; width: 18px; height: 18px; }
+/* "Or with your email", then a rule to the edge: left-aligned, not a centred divider */
+.auth__or { display: flex; align-items: center; gap: 12px; margin: 24px 0 18px; font: 400 var(--t-small)/1.4 var(--sans); color: var(--ink-2); }
+.auth__or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth__form { margin-top: 24px; }
+.auth__or + .auth__form { margin-top: 0; }
+.auth__form .alert { margin-bottom: 4px; } /* 20px with the stack's own gap */
+.auth__form .alert__text { font-size: var(--t-ui); }
+.auth__forgot { margin-top: 10px; font-size: var(--t-ui); }
+.auth__form .btn--wide { margin-top: 8px; } /* 24px with the stack's own gap */
+.auth__alt { margin-top: 20px; color: var(--ink-2); }
+.auth__alt .link { color: var(--ink); }
+.auth__back { margin-top: 24px; }
+.hint:has(+ .field-error:not([hidden])) { display: none; } /* the error replaces the hint: both say the same rule */
+
+/* The password field and its text button (no icon). Without script the button is not shown. */
+.pw { position: relative; }
+.pw .field { padding-right: 68px; }
+.pw__show { position: absolute; top: 6px; right: 6px; height: 32px; padding: 0 10px; border-radius: var(--r-pill); font-size: var(--t-ui-s); text-decoration: none; transition: background-color var(--t-fast); } /* the app's 32px small control, as text */
+.pw__show:hover { background: var(--desk); }
+.pw__show:focus-visible { outline-offset: 0; }
+html:not(.js) .pw__show { display: none; }
+html:not(.js) .pw .field { padding-right: 14px; }
+
+/* While the form is sent: the pill keeps its ink, names what is happening and turns a small wheel */
+.btn.is-busy[disabled] { opacity: 1; cursor: progress; }
+.btn.is-busy::before { content: ""; flex: none; width: 14px; height: 14px; border: 1.5px solid rgba(255, 255, 255, .35); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+
+/* ---------- Right: one sheet on the desk, and the line ---------- */
+.auth__side { position: sticky; top: 0; display: flex; align-items: center; justify-content: center; height: 100vh; height: 100dvh; padding: var(--margin); background: var(--desk); }
+.auth__show { width: 100%; max-width: 520px; }
+.auth__line { font: 600 var(--t-lead)/1.3 var(--sans); letter-spacing: -.01em; text-wrap: balance; } /* a step under the title: the form is the first thing read */
+.auth__sheet { max-width: 460px; margin: 20px 0 0 var(--flag-out); }
+.auth__sheet.doc { padding-block: 16px; }
+.auth__sheet.doc > .flag { top: 14px; cursor: default; }
+.auth__sheet .flag:hover { transform: none; } /* a mark here, not a control */
+.auth__note { margin: 14px 0 0 var(--flag-out); font: 400 var(--t-small)/1.5 var(--sans); color: var(--ink-2); }
+
+/* ---------- Under 900px: the form first, the desk as a band under it ---------- */
+@media (max-width: 899px) {
+  .auth__grid { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .auth__body { align-items: flex-start; padding: 24px var(--margin) 56px; }
+  .auth__side { position: static; height: auto; padding: 56px var(--margin) 64px; }
+  .auth__show { max-width: 384px; }
+  .auth__sheet { margin-top: 24px; }
+}
+@media (max-width: 699px) {
+  .auth__bar { height: 64px; }
+  .wordmark svg { width: 22px; height: 22px; }
+  .auth__body { padding-top: 12px; }
+  .auth__col, .auth__show { max-width: none; }
+  .auth__side { justify-content: flex-start; padding-block: 48px 56px; }
+  .pw__show { top: 0; right: 0; height: 44px; padding: 0 14px; }
+  /* 44px touch targets for the text links */
+  .auth__forgot { margin-top: 0; }
+  .auth__forgot .link, .auth__alt .link { display: inline-flex; align-items: center; min-height: 44px; }
+  .auth__alt { margin-top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-busy::before { animation: none; }
+}

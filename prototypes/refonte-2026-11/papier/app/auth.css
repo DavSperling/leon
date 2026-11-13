@@ -1,0 +1,102 @@
+/* Sign in, create a workspace, join by invitation, reset a password: outside the shell, in the same family.
+   The window is the desk; the form is one sheet lying on it; beside it, the home page's pile of originals, the top
+   one open at its passage under the highlighter. Loaded after app.css: its tokens, fields, buttons, .brand, .mark.
+   Every view is whole without auth.js: #sso and #sent are shown by :target. */
+
+body.auth { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; }
+body.auth main { margin: 0; } /* the app's main makes room for the sidebar: there is none here */
+
+.auth__bar { display: flex; flex: none; align-items: center; height: 64px; padding: 0 24px; }
+.auth__bar .brand { min-height: 40px; padding-right: 4px; border-radius: var(--r-m); color: var(--ink); text-decoration: none; }
+
+/* The form and the pile, side by side and centred as a pair; a little above the middle of the window */
+.auth__desk {
+  flex: 1; display: grid; grid-template-columns: 440px minmax(0, 480px); align-items: center; justify-content: center;
+  column-gap: clamp(56px, 9vw, 144px); padding: 0 32px 64px;
+}
+
+/* ---------- The sheet: one form ---------- */
+.auth__sheet { padding: 32px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--sh-2); }
+.auth__sheet h1 { margin-bottom: 24px; }
+.auth .btn { height: 40px; } /* the height of the fields beside them: the door is a step larger than the app's rows */
+.auth .btn--xs { height: 28px; }
+.wide { width: 100%; }
+.alts { display: grid; gap: 8px; }
+.alts .btn { gap: 10px; }
+.alts svg { flex: none; width: 18px; height: 18px; }
+.alts .i { width: 18px; height: 18px; color: var(--ink-2); }
+/* "or with your email", then a hairline to the edge: left-aligned, not a centred divider */
+.or { display: flex; align-items: center; gap: 12px; margin: 20px 0 16px; font: 400 var(--fs-1)/1 var(--sans); color: var(--ink-2); }
+.or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.auth__form { display: grid; gap: 16px; }
+.auth__form > .btn { margin-top: 8px; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 12px; }
+.labelrow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.labelrow .label { margin-bottom: 0; }
+.labelrow .linkbtn { font-size: var(--fs-1); color: var(--ink-2); }
+.labelrow .linkbtn:hover { color: var(--ink); }
+
+/* The password and its text button (no icon). Shown by auth.js: without script there is nothing to toggle. */
+.pw { position: relative; }
+.pw .field { padding-right: 64px; }
+.pw .btn { position: absolute; top: 6px; right: 6px; }
+
+/* What the product checks while a new password is typed: two marks that fill when they are true */
+.rules { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: -6px; font: 400 var(--fs-1)/20px var(--sans); color: var(--ink-2); }
+.rules li { display: inline-flex; align-items: center; gap: 6px; transition: color var(--fast); }
+.rules .i { width: 16px; height: 16px; }
+.rules .tick { opacity: 0; transition: opacity var(--fast); }
+.rules .is-ok { color: var(--ok); }
+.rules .is-ok .tick { opacity: 1; }
+.auth__form:has(#password[aria-invalid="true"], #confirm[aria-invalid="true"]) .rules { display: none; } /* a refusal says it once */
+
+/* Company SSO: the third way in unfolds in its place (the real product does the same) */
+.sso { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-m); background: var(--n-50); }
+.sso:not(:target) { display: none; }
+.alts:has(.sso:target) .sso-open { display: none; }
+.sso .hint { margin-top: -2px; }
+.sso .field-error:not(:empty) ~ .hint { display: none; } /* the refusal says more than the hint */
+
+/* The view that says it is done, in the same sheet */
+.view--alt:not(:target) { display: none; }
+.auth__sheet:has(.view--alt:target) > .view:not(.view--alt) { display: none; }
+.view--alt h1 { margin-bottom: 12px; }
+.view--alt p { margin-bottom: 24px; font-size: var(--fs-3); line-height: 1.5; text-wrap: pretty; }
+
+/* signup.html?invite=1: the same page, joining a workspace that exists (auth.js sets .is-invite) */
+body:not(.is-invite) [data-only="invite"], .is-invite [data-only="create"] { display: none; }
+
+/* Under the sheet, on the desk: the other door */
+.auth__alt { margin-top: 16px; padding-left: 32px; color: var(--ink-2); }
+.auth__alt .linkbtn { margin-left: 4px; }
+body:has(.view--alt:target) .auth__alt { display: none; }
+
+/* ---------- Beside it: the pile of originals (the home page's, in the app's sheets) ---------- */
+.auth__pile .pile { padding: 80px 40px 0 18px; }
+.auth__pile .doc { padding: 14px 24px 18px 28px; border-radius: var(--r-l); box-shadow: var(--sh-2); }
+.auth__pile .pile > .doc[data-slot] { rotate: none; } /* the app is precise: the sheets lie straight */
+.auth__pile .doc > .flag--left { top: 14px; cursor: default; }
+.auth__pile .flag:hover { transform: none; } /* a mark here, not a control */
+.auth__pile .doc[data-slot="top"] { box-shadow: var(--sh-3); animation: arrive 900ms 300ms cubic-bezier(.3, 0, .3, 1) both; } /* the passage is marked once */
+.auth__pile .doc__title { font-size: var(--fs-3); }
+.auth__pile .fict { margin: 20px 0 0 18px; }
+
+/* ---------- Narrower windows ---------- */
+@media (max-width: 1099px) {
+  .auth__desk { grid-template-columns: 420px minmax(0, 440px); column-gap: 56px; }
+}
+@media (max-width: 899px) {
+  .auth__bar { height: 60px; padding: 0 16px; }
+  .auth__desk { grid-template-columns: minmax(0, 440px); align-content: start; row-gap: 48px; padding: 4px 16px 56px; }
+  .auth .btn { height: 44px; }
+  .auth .pw .btn { top: 4px; right: 4px; height: 36px; }
+  .auth__alt { padding-left: 0; }
+  .auth__alt .linkbtn { display: inline-flex; align-items: center; min-height: 44px; }
+  .labelrow .linkbtn { display: inline-flex; align-items: center; min-height: 44px; margin-block: -12px; }
+}
+@media (max-width: 599px) {
+  .auth__sheet { padding: 24px 20px; }
+  .pair { grid-template-columns: minmax(0, 1fr); }
+  .auth__pile .pile { --strip: 36px; padding-top: 72px; }
+  .auth__pile .doc { padding: 12px 16px 16px 24px; }
+}

@@ -13,7 +13,8 @@ import {
 } from 'react';
 import { useInstant } from '@/lib/verre/instant';
 
-// « Leon travaille » : chaque composant qui cherche ou répond s'inscrit ; l'aurore s'intensifie tant qu'il en reste un.
+// « Leon travaille » : chaque composant qui cherche ou répond s'inscrit. Plus rien ne le dessine (l'aurore est partie) :
+// le contexte reste pour ses appelants, le temps qu'ils disent « en cours » par leur libellé et aria-busy.
 type Ctx = { thinking: boolean; set: (id: string, on: boolean) => void };
 const ThinkingContext = createContext<Ctx>({ thinking: false, set: () => {} });
 
@@ -49,15 +50,7 @@ export function useThinking() {
   return { thinking, setThinking };
 }
 
-/** Fond d'aurore : trois nappes qui dérivent (transform seul, 26 à 34 s), une quatrième s'allume quand Leon travaille. */
+/** L'aurore n'existe plus : le fond est le bureau. Le composant reste, sans rien dessiner, pour ses trois appelants. */
 export function Aurora() {
-  const { thinking } = useContext(ThinkingContext);
-  return (
-    <div className="aurora" data-thinking={thinking || undefined} aria-hidden="true">
-      <i className="blob blob-1" />
-      <i className="blob blob-2" />
-      <i className="blob blob-3" />
-      <i className="blob blob-4" />
-    </div>
-  );
+  return null;
 }

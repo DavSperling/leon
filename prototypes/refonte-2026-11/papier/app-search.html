@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What did we promise ACME for V2? · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<script>(function (h) { h.classList.add('js'); if (/[?&](s|q)=/.test(location.search)) h.classList.add('is-swapping'); })(document.documentElement);</script>
+</head>
+<body class="app" data-screen="answer">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html" aria-current="true"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <h1 class="top__title">Answer</h1>
+    <form class="ask ask--fill" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" value="What did we promise ACME for V2?" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <details class="more-less filters">
+    <summary class="btn btn--line btn--sm">Filters<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.25 8 10l4-3.75"/></svg></summary>
+    <div class="filters__row">
+      <div><label class="label" for="f-tool">Tool</label><select class="field select" id="f-tool" title="Not in this prototype"><option>Any tool</option><option>Granola</option><option>HubSpot</option><option>Linear</option></select></div>
+      <div><label class="label" for="f-type">Type</label><select class="field select" id="f-type" title="Not in this prototype"><option>Any type</option><option>Meeting</option><option>Note</option><option>Ticket</option></select></div>
+      <div><label class="label" for="f-date">Date</label><select class="field select" id="f-date" title="Not in this prototype"><option>Any time</option><option>Past week</option><option>Past month</option><option>Past year</option></select></div>
+      <div><label class="label" for="f-person">Person</label><select class="field select" id="f-person" title="Not in this prototype"><option>Anyone</option><option>Julie Martin</option><option>Karim Benali</option><option>Sophie Laurent</option></select></div>
+    </div>
+  </details>
+
+  <!-- The answer, its sources and their originals: built by LeonApp.resultHTML (js/app.js) and pasted here by
+       tools/build-app.mjs, so the page is whole without script. ?s=bug | departure | unknown shows another question. -->
+  <div data-result data-scenario="commitment"><!--gen:LeonApp.resultHTML('commitment')--><div class="duo result">
+<div>
+<section class="ans" aria-labelledby="ans-h">
+<h2 class="h-sec" id="ans-h">Leon’s answer</h2>
+<div class="answer" data-answer><p class="answer__p"><span class="seg is-selected" data-sentence="1" data-n="1"><mark class="hl hl-1 hl--a">At the Oct&nbsp;3 monthly check-in, you committed to delivering V2 on </mark><span class="nw"><mark class="hl hl-1 hl--b">Nov&nbsp;15.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="true" aria-label="Source 1: Granola, ACME monthly check-in">1</button></span></span> <span class="seg" data-sentence="2" data-n="2"><mark class="hl hl-2 hl--a">The signed quote confirms the date but excludes the data </mark><span class="nw"><mark class="hl hl-2 hl--b">migration.</mark><button type="button" class="cite c2" data-cite="2" data-n="2" aria-pressed="false" aria-label="Source 2: HubSpot, Signed V2 quote">2</button></span></span> <span class="seg" data-sentence="3" data-n="3"><mark class="hl hl-3 hl--a">The migration ticket is still </mark><span class="nw"><mark class="hl hl-3 hl--b">open.</mark><button type="button" class="cite c3" data-cite="3" data-n="3" aria-pressed="false" aria-label="Source 3: Linear, ACME: data migration">3</button></span></span></p></div>
+<p class="ans__note">Written from the sources below. Check them.</p>
+<p class="ans__actions"><a class="btn btn--line btn--sm" href="app-chat.html?d=commitment">Continue in chat</a><button type="button" class="btn btn--line btn--sm" data-copy="answer">Copy with sources</button></p>
+</section>
+<section class="sec" aria-labelledby="src-h">
+<div class="sec__head"><h2 class="h-sec" id="src-h">Sources</h2><p class="sec__meta">3 sources</p></div>
+<ol class="srcs" data-srcs aria-label="Sources"><li><button type="button" class="src c1" data-src="1" data-n="1" aria-pressed="true"><span class="num"><span class="vh">Source </span>1</span><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><span class="src__title">ACME monthly check-in</span><span class="src__vis">Shared with the team</span><span class="src__meta">Granola · Meeting · Julie Martin · Oct&nbsp;3</span><span class="src__passage">“We can <mark class="hl hl-1">commit to November&nbsp;15</mark> for V2, history migration excluded.”</span></button></li><li><button type="button" class="src c2" data-src="2" data-n="2" aria-pressed="false"><span class="num"><span class="vh">Source </span>2</span><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20"><span class="src__title">Signed V2 quote</span><span class="src__vis">Shared with the team</span><span class="src__meta">HubSpot · Note · Karim Benali · Oct&nbsp;7</span><span class="src__passage">Delivery on <mark class="hl hl-2">11/15/2026</mark>. The <mark class="hl hl-2">data migration</mark> is quoted separately.</span></button></li><li><button type="button" class="src c3" data-src="3" data-n="3" aria-pressed="false"><span class="num"><span class="vh">Source </span>3</span><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><span class="src__title">ACME: data migration</span><span class="src__vis">Shared with the team</span><span class="src__meta">Linear · Ticket · Sophie Laurent · Oct&nbsp;27</span><span class="src__passage">Blocked on the client’s <mark class="hl hl-3">export file</mark>. Status: Todo.</span></button></li></ol>
+</section>
+</div>
+<aside class="orig" aria-labelledby="orig-h" data-orig>
+<h2 class="h-sec" id="orig-h">Original</h2>
+<p class="orig__none" data-orig-none hidden>Choose a source to read its original, opened at the passage.</p>
+<article class="doc sheet c1" data-source="1" data-n="1" data-slot="top" aria-label="Original: ACME monthly check-in">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME monthly check-in</h3></header>
+      <p class="doc__meta">Granola · Meeting · Oct&nbsp;3, 2026 · 42 min · Julie Martin, Karim Benali, Dana Whitfield (ACME)</p>
+      <div class="doc__rest"><ol class="tx" aria-label="Transcript, at the passage"><li class="tx__line"><time class="tx__at">14:02</time><div><span class="tx__who">Dana Whitfield (ACME)</span><p class="tx__text">Our board meets on the 20th. We need V2 live before that.</p></div></li><li class="tx__line is-hit"><time class="tx__at">14:31</time><div><span class="tx__who">Julie Martin</span><p class="tx__text">We can <mark class="hl hl-1">commit to November&nbsp;15</mark> for V2, history migration excluded.</p></div></li></ol><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" data-ext="Granola">Open in Granola</a><span class="vis">Shared with the team</span></footer></div>
+    </article>
+<article hidden class="doc sheet c2" data-source="2" data-n="2" data-slot="top" aria-label="Original: Signed V2 quote">
+      <span class="flag flag--left" aria-hidden="true">2</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20"><h3 class="doc__title">Signed V2 quote</h3></header>
+      <p class="doc__meta">HubSpot · Note · Deal: ACME · V2 build · Note by Karim Benali · Oct&nbsp;7, 2026</p>
+      <div class="doc__rest"><div class="doc__body"><p>Quote Q-2291 signed by Dana Whitfield this morning.</p><p>Delivery on <mark class="hl hl-2">11/15/2026</mark>. The <mark class="hl hl-2">data migration</mark> is quoted separately (Q-2294, not signed yet).</p><p>Next step: kickoff with Sophie on Oct&nbsp;9.</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" data-ext="HubSpot">Open in HubSpot</a><span class="vis">Shared with the team</span></footer></div>
+    </article>
+<article hidden class="doc sheet c3" data-source="3" data-n="3" data-slot="top" aria-label="Original: ACME: data migration">
+      <span class="flag flag--left" aria-hidden="true">3</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME: data migration</h3></header>
+      <p class="doc__meta">Linear · Ticket · Sophie Laurent · Oct&nbsp;27</p>
+      <div class="doc__rest"><p class="doc__id">ACM-214</p><dl class="props"><div><dt>Status</dt><dd><span class="state">Todo</span></dd></div><div><dt>Priority</dt><dd>High</dd></div><div><dt>Assignee</dt><dd>Sophie Laurent</dd></div></dl><div class="doc__body"><p>Import the 2019–2025 order history into V2.</p><p>Blocked on the client’s <mark class="hl hl-3">export file</mark>. Dana to send it by Oct&nbsp;28.</p><p>Oct&nbsp;27: migration moved to Dec&nbsp;2.</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" data-ext="Linear">Open in Linear</a><span class="vis">Shared with the team</span></footer></div>
+    </article>
+</aside>
+</div><!--/gen--></div>
+
+</div>
+</main>
+</div>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app-settings.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app" data-screen="settings">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <h1 class="top__title">Settings</h1>
+    <form class="ask" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <!-- Four sections. Without script they are stacked and these links jump to them; with script one shows at a time. -->
+  <nav class="subnav" aria-label="Settings sections">
+    <a href="#profile" data-t="Profile" aria-current="page">Profile</a>
+    <a href="#security" data-t="Security">Security</a>
+    <a href="#assistants" data-t="Assistants and coding tools">Assistants and coding tools</a>
+    <a href="#workspace" data-t="Workspace">Workspace</a>
+  </nav>
+  <p class="vh" role="status" id="set-live"></p>
+
+  <!-- ================= Profile ================= -->
+  <section class="set" id="profile" aria-labelledby="profile-h">
+    <div class="sec__head set__head"><h2 class="h-sec" id="profile-h">Profile</h2></div>
+    <form id="profile-form" action="#profile">
+      <div class="split">
+        <div>
+          <h3 class="split__label">Your details</h3>
+          <p class="split__help">Your name and job title, as your team sees them in Leon.</p>
+        </div>
+        <div class="split__body">
+          <div class="fields fields--row">
+            <div>
+              <label class="label" for="p-name">Name</label>
+              <input class="field" id="p-name" name="name" type="text" value="Julie Martin" autocomplete="name" required maxlength="100" data-msg="Enter your name." aria-describedby="p-name-err">
+              <p class="field-error" id="p-name-err"></p>
+            </div>
+            <div>
+              <label class="label" for="p-title">Job title</label>
+              <input class="field" id="p-title" name="title" type="text" value="Account lead" autocomplete="organization-title" maxlength="100">
+            </div>
+          </div>
+          <div class="fields fields--row">
+            <div>
+              <label class="label" for="p-mail">Work email</label>
+              <input class="field" id="p-mail" type="email" value="julie@kestrel.example" readonly aria-describedby="p-mail-hint">
+              <p class="hint" id="p-mail-hint">The address you sign in with.</p>
+            </div>
+            <div>
+              <label class="label" for="p-role">Role in Kestrel Studio</label>
+              <input class="field" id="p-role" type="text" value="Admin" readonly aria-describedby="p-role-hint">
+              <p class="hint" id="p-role-hint">Roles are set on the <a class="link" href="app-team.html">Team</a> page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Language and time zone</h3>
+          <p class="split__help">The language of the interface, and the time zone dates and times are shown in.</p>
+        </div>
+        <div class="split__body">
+          <div class="fields fields--row">
+            <div>
+              <label class="label" for="p-lang">Language</label>
+              <select class="field select" id="p-lang" name="language"><option selected>English</option><option>Français</option></select>
+            </div>
+            <div>
+              <label class="label" for="p-tz">Time zone</label>
+              <select class="field select" id="p-tz" name="timezone">
+                <option>Los Angeles (GMT-8)</option><option>Chicago (GMT-6)</option><option selected>New York (GMT-5)</option><option>London (GMT+0)</option><option>Paris (GMT+1)</option><option>Tel Aviv (GMT+2)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Morning briefing</h3>
+          <p class="split__help">What you did, what changed, what is still open. Ready on Home at this time, every morning.</p>
+        </div>
+        <div class="split__body">
+          <div>
+            <label class="label" for="p-time">Briefing time</label>
+            <input class="field field--short" id="p-time" name="briefing" type="text" value="08:45" inputmode="numeric" autocomplete="off" required pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="A time such as 08:45" data-msg="Enter a time between 00:00 and 23:59." aria-describedby="p-time-hint p-time-err">
+            <p class="hint" id="p-time-hint">24-hour time, in your time zone.</p>
+            <p class="field-error" id="p-time-err"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="set__foot">
+        <button type="submit" class="btn" id="p-save">Save changes</button>
+        <p class="muted" role="status" id="p-state"></p>
+      </div>
+    </form>
+  </section>
+
+  <!-- ================= Security ================= -->
+  <section class="set" id="security" aria-labelledby="security-h">
+    <div class="sec__head set__head"><h2 class="h-sec" id="security-h">Security</h2></div>
+    <div>
+      <div class="split">
+        <div>
+          <h3 class="split__label">Password</h3>
+          <p class="split__help">Changing it signs you out everywhere else.</p>
+        </div>
+        <div class="split__body">
+          <div>
+            <label class="label" for="s-cur">Current password</label>
+            <input class="field" id="s-cur" type="password" autocomplete="current-password">
+          </div>
+          <div class="fields fields--row">
+            <div>
+              <label class="label" for="s-new">New password</label>
+              <input class="field" id="s-new" type="password" autocomplete="new-password" aria-describedby="s-new-hint">
+              <p class="hint" id="s-new-hint">At least 8 characters.</p>
+            </div>
+            <div>
+              <label class="label" for="s-again">Confirm new password</label>
+              <input class="field" id="s-again" type="password" autocomplete="new-password">
+            </div>
+          </div>
+          <div><button type="button" class="btn btn--line btn--sm" title="Not in this prototype">Change password</button></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Two-step sign-in</h3>
+          <p class="split__help">After your password, Leon asks for a 6-digit code from an authenticator app on your phone.</p>
+        </div>
+        <div class="split__body">
+          <p class="status"><span class="dot" aria-hidden="true"></span>Not set up</p>
+          <div><button type="button" class="btn btn--line btn--sm" title="Not in this prototype">Set up two-step sign-in</button></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Delete my account</h3>
+          <p class="split__help">You can no longer sign in, and Leon stops reading the tools you connected. This cannot be undone.</p>
+        </div>
+        <div class="split__body">
+          <p>What you brought in stays with Kestrel Studio, under your name followed by “former member”.</p>
+          <div><button type="button" class="btn btn--line btn--sm btn--danger" title="Not in this prototype">Delete my account</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Assistants and coding tools ================= -->
+  <section class="set" id="assistants" aria-labelledby="assistants-h">
+    <div class="sec__head set__head"><h2 class="h-sec" id="assistants-h">Assistants and coding tools</h2></div>
+    <div>
+      <div class="split">
+        <div>
+          <h3 class="split__label">Connect a computer</h3>
+          <p class="split__help">For people who write code with an AI tool. Open a terminal on the computer and paste this command. Your browser opens so you can approve it.</p>
+        </div>
+        <div class="split__body">
+          <div class="code"><pre><code id="cmd">curl -fsSL https://leonmemory.com/install | sh</code></pre><button type="button" class="btn btn--line btn--sm" data-copy="#cmd">Copy</button></div>
+          <p class="hint">One command. It asks which tools to connect and shows what is sent before anything leaves your computer. Works with Claude Code, Codex, Cursor and Antigravity.</p>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label" id="computers-h">Connected computers</h3>
+          <p class="split__help">Each computer sends Leon the coding sessions you accepted: what was said and what was done, with secrets masked.</p>
+        </div>
+        <div class="split__body split__body--wide">
+          <div class="table-wrap">
+            <table class="table" aria-labelledby="computers-h">
+              <thead><tr><th scope="col">Computer</th><th scope="col">Tools</th><th scope="col">Last session</th><th scope="col" class="t-num">Sessions</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="cell"><span>Julie’s MacBook Air<span class="cell__sub">macOS · connected Oct 12</span></span></span></td>
+                  <td>Claude Code</td>
+                  <td>Yesterday, 17:40</td>
+                  <td class="t-num">9</td>
+                  <td class="t-act"><button type="button" class="btn btn--line btn--sm" data-remove="Disconnect" data-ask="Disconnect “Julie’s MacBook Air”?" data-effect="It stops sending your sessions to Leon. To connect it again, paste the command above." data-done="Computer disconnected.">Disconnect<span class="vh"> Julie’s MacBook Air</span></button></td>
+                </tr>
+                <tr>
+                  <td><span class="cell"><span>Mac mini, home office<span class="cell__sub">macOS · connected Oct 20</span></span></span></td>
+                  <td>Codex, Cursor</td>
+                  <td>Nov 4</td>
+                  <td class="t-num">3</td>
+                  <td class="t-act"><button type="button" class="btn btn--line btn--sm" data-remove="Disconnect" data-ask="Disconnect “Mac mini, home office”?" data-effect="It stops sending your sessions to Leon. To connect it again, paste the command above." data-done="Computer disconnected.">Disconnect<span class="vh"> Mac mini, home office</span></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="empty" tabindex="-1" hidden>
+            <h4 class="empty__title">No computer connected yet</h4>
+            <p class="empty__text">Paste the command above in a terminal on the computer you work on. It appears here once you approve it.</p>
+            <p class="empty__act"><button type="button" class="btn btn--line btn--sm" data-copy="#cmd">Copy the command</button></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label" id="tokens-h">Personal tokens</h3>
+          <p class="split__help">Lets your own AI assistant ask Leon, with your permissions. Create a token when the assistant asks for one. It is shown only once.</p>
+        </div>
+        <div class="split__body split__body--wide">
+          <div class="table-wrap">
+            <table class="table" aria-labelledby="tokens-h">
+              <thead><tr><th scope="col">Name</th><th scope="col">Token</th><th scope="col">Created</th><th scope="col">Last used</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="cell">Assistant on my laptop</span></td>
+                  <td>leon_…7Kc2</td>
+                  <td>Oct 12</td>
+                  <td>Today, 08:12</td>
+                  <td class="t-act"><button type="button" class="btn btn--line btn--sm" data-remove="Revoke" data-ask="Revoke “Assistant on my laptop”?" data-effect="Tools using it lose access to Leon right away." data-done="Token revoked.">Revoke<span class="vh"> Assistant on my laptop</span></button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="empty" tabindex="-1" hidden>
+            <h4 class="empty__title">No tokens yet</h4>
+            <p class="empty__text">Create one when an assistant asks for a Leon token. Name it after the place you use it.</p>
+          </div>
+          <div><button type="button" class="btn btn--line btn--sm" title="Not in this prototype">Create a token</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= Workspace ================= -->
+  <section class="set" id="workspace" aria-labelledby="workspace-h">
+    <div class="sec__head set__head"><h2 class="h-sec" id="workspace-h">Workspace</h2></div>
+    <div>
+      <div class="split">
+        <div>
+          <h3 class="split__label">Name</h3>
+          <p class="split__help">The name your team sees in Leon.</p>
+        </div>
+        <div class="split__body">
+          <div>
+            <label class="label" for="w-name">Workspace name</label>
+            <input class="field" id="w-name" type="text" value="Kestrel Studio" autocomplete="organization" maxlength="100">
+          </div>
+          <div><button type="button" class="btn btn--line btn--sm" title="Not in this prototype">Save name</button></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Plan</h3>
+          <p class="split__help">Leon is in open beta. Nothing is billed yet.</p>
+        </div>
+        <div class="split__body">
+          <dl class="kv">
+            <div><dt>Current plan</dt><dd>Pilot · open beta, no billing yet</dd></div>
+            <div><dt>People</dt><dd>38 · <a class="link" href="app-team.html">Manage the team</a></dd></div>
+            <div><dt>Email domain</dt><dd>kestrel.example</dd></div>
+          </dl>
+          <div><a class="link" href="pricing.html">See pricing</a></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Company single sign-on</h3>
+          <p class="split__help">Your team signs in with the company account. Anyone who signs in this way joins this workspace directly.</p>
+        </div>
+        <div class="split__body">
+          <p class="status"><span class="dot" aria-hidden="true"></span>Not set up</p>
+          <div><button type="button" class="btn btn--line btn--sm" title="Not in this prototype">Set up single sign-on</button></div>
+        </div>
+      </div>
+
+      <div class="split">
+        <div>
+          <h3 class="split__label">Delete the workspace</h3>
+          <p class="split__help">Everything it contains is erased, for everyone: sources, documents, discussions and briefings.</p>
+        </div>
+        <div class="split__body">
+          <p id="w-del-why">Only the owner, Rachel Stein, can delete this workspace. You are an admin.</p>
+          <div><button type="button" class="btn btn--line btn--sm" disabled aria-describedby="w-del-why">Delete the workspace</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+</div>
+
+<!-- Settings behaviour (kept in the page: this screen owns no script file). The page is whole without it. -->
+<script>
+(function () {
+  'use strict';
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const live = document.getElementById('set-live');
+
+  /* The sub-navigation shows one section; the address keeps which one (#security), so Back and links work */
+  const sets = $$('.set');
+  let cur = 'profile';
+  const show = () => {
+    const id = location.hash.slice(1);
+    if (!id) cur = 'profile'; // Back to the bare address
+    else if (sets.some((s) => s.id === id)) cur = id; // any other anchor (#main) keeps the section
+    sets.forEach((s) => { s.hidden = s.id !== cur; });
+    $$('.subnav a').forEach((a) => (a.hash === '#' + cur ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+    document.querySelector('.subnav a[aria-current]').scrollIntoView({ block: 'nearest', inline: 'nearest' }); // on a phone the tabs scroll sideways
+  };
+  addEventListener('hashchange', show);
+  show();
+
+  /* Profile: check the two fields that can be wrong, then say "Saving…" and "Saved" */
+  const form = document.getElementById('profile-form');
+  const save = document.getElementById('p-save');
+  const state = document.getElementById('p-state');
+  const check = (f) => {
+    const bad = !f.checkValidity();
+    f.setAttribute('aria-invalid', String(bad));
+    document.getElementById(f.id + '-err').textContent = bad ? f.dataset.msg : '';
+    return bad;
+  };
+  form.noValidate = true; // the messages under the fields replace the browser's bubbles
+  form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid') === 'true') check(e.target); state.textContent = ''; });
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const wrong = $$('[data-msg]', form).filter(check);
+    if (wrong.length) { state.textContent = ''; wrong[0].focus(); return; }
+    save.disabled = true; state.className = 'busy'; state.textContent = 'Saving…';
+    setTimeout(() => { save.disabled = false; state.className = 'muted'; state.textContent = 'Saved.'; }, 700);
+  });
+
+  /* Disconnect, Revoke: ask in a line under the row, then remove the row; an empty list says what will appear */
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-remove]');
+    if (!btn) return;
+    const row = btn.closest('tr');
+    const wrap = btn.closest('.table-wrap');
+    const ask = document.createElement('tr');
+    ask.className = 'confirm';
+    ask.innerHTML = `<td colspan="${row.cells.length}"><div class="confirm__in"><p><b></b> <span></span></p><p class="confirm__act"><button type="button" class="btn btn--line btn--sm btn--danger"></button><button type="button" class="btn btn--line btn--sm">Cancel</button></p></div></td>`;
+    const [yes, no] = $$('button', ask);
+    ask.querySelector('b').textContent = btn.dataset.ask;
+    ask.querySelector('span').textContent = btn.dataset.effect;
+    yes.textContent = btn.dataset.remove;
+    const close = () => { ask.remove(); btn.disabled = false; btn.focus(); };
+    no.addEventListener('click', close);
+    ask.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') close(); });
+    yes.addEventListener('click', () => {
+      ask.remove(); row.remove();
+      live.textContent = btn.dataset.done;
+      const next = wrap.querySelector('[data-remove]');
+      if (next) { next.focus(); return; }
+      wrap.hidden = true;
+      wrap.nextElementSibling.hidden = false;
+      wrap.nextElementSibling.focus();
+    });
+    btn.disabled = true;
+    row.after(ask);
+    no.focus();
+  });
+})();
+</script>
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+</body>
+</html>

@@ -284,8 +284,8 @@ export async function directoryLinkUrl(
     body: {
       provider: chosen,
       scopes: [DIRECTORY_SCOPES[chosen]],
-      callbackURL: `/reglages?annuaire=${chosen}#equipe`,
-      errorCallbackURL: '/reglages?annuaire=refus#equipe',
+      callbackURL: `/equipe?annuaire=${chosen}`,
+      errorCallbackURL: '/equipe?annuaire=refus',
       disableRedirect: true,
     },
     headers: await requestHeaders(),
@@ -293,7 +293,7 @@ export async function directoryLinkUrl(
   return url ?? null;
 }
 
-// L'import tel que l'écran des réglages le montre, d'après l'adresse de retour : ?annuaire=google|microsoft (l'aperçu),
+// L'import tel que l'écran Équipe le montre, d'après l'adresse de retour : ?annuaire=google|microsoft (l'aperçu),
 // ou ?annuaire=refus et le code d'erreur de Better Auth.
 export type DirectoryState = {
   providers: DirectoryProvider[];

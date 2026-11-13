@@ -1,16 +1,18 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { DoneStep } from '@/components/verre/onboarding/done-step';
-import { readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
+import { toolStates } from '@/components/verre/onboarding/tools-model';
+import { readOnboardingMember } from '@/server/auth/onboarding';
 import { getSession, getUserContext } from '@/server/auth/session';
+import { listCatalog } from '@/server/connectors/catalog';
+import { listConnections } from '@/server/connectors/connections';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations('onboarding.done'))('title') };
 }
 
-// Jamais requireUserContext() (voir l'étape Vos outils). Seul l'aperçu change : le propriétaire prépare son espace,
-// qui l'a invité le trouve prêt.
+// Jamais requireUserContext() (voir l'étape Vos outils). Le même écran pour le propriétaire et pour l'invité.
 export default async function DonePage() {
   const session = await getSession();
   if (!session) redirect('/connexion');
@@ -22,5 +24,15 @@ export default async function DonePage() {
   if (!member) redirect('/');
   if (member.onboardedAt === null) redirect('/bienvenue');
 
-  return <DoneStep owner={spaceRole(member.role) === 'owner'} />;
+  // Ce que Leon lit déjà pour cette personne : la même règle que l'étape Vos outils (le mien ou celui de l'espace,
+  // jamais l'outil privé d'un collègue, jamais ma connexion en erreur).
+  const reading = toolStates(
+    listCatalog(await getLocale(), '/bienvenue/outils'),
+    await listConnections(ctx),
+    [],
+  )
+    .filter((state) => state.status !== 'free' && state.broken === null)
+    .map((state) => ({ id: state.item.id, label: state.item.label }));
+
+  return <DoneStep reading={reading} />;
 }

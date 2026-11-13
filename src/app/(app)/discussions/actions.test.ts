@@ -4,9 +4,11 @@ import { requireUserContext } from '@/server/auth/session';
 import { saveAbout } from '@/server/briefing/about';
 import { closeAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { isReplying } from '@/server/discussion/agent';
+import { citationDetails } from '@/server/discussion/citation-sources';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { logError } from '@/server/log';
 import {
+  citationDetailsAction,
   continueInDiscussionAction,
   deleteDiscussionAction,
   dismissAboutSuggestionAction,
@@ -24,6 +26,10 @@ vi.mock('@/server/discussion/discussions', () => ({
 vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
 vi.mock('@/server/briefing/about-suggestion', () => ({ closeAboutSuggestion: vi.fn() }));
 vi.mock('@/server/discussion/agent', () => ({ isReplying: vi.fn(() => false) }));
+vi.mock('@/server/discussion/citation-sources', () => ({
+  citationDetails: vi.fn(async () => new Map()),
+  withCitationDetails: vi.fn(async (_ctx: unknown, messages: unknown) => messages),
+}));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({
@@ -55,6 +61,8 @@ describe('newDiscussionAction', () => {
     ).rejects.toThrow(`NEXT_REDIRECT /discussions/${ID}`);
 
     expect(createDiscussion).toHaveBeenCalledWith(CTX, { question: 'Où en est ACME ?' });
+    // les « Récentes » de la barre latérale
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 
   it('refuse une question vide ou trop longue, sans rien créer', async () => {
@@ -201,11 +209,32 @@ describe('readDiscussionMessagesAction', () => {
   });
 });
 
+describe('citationDetailsAction', () => {
+  it('rend ce que le lecteur voit des sources citées, sous ses droits', async () => {
+    vi.mocked(citationDetails).mockResolvedValueOnce(
+      new Map([[ID, { kind: 'notion', visibility: 'moi', passage: 'p' }]]),
+    );
+    expect(await citationDetailsAction([ID])).toEqual({
+      [ID]: { kind: 'notion', visibility: 'moi', passage: 'p' },
+    });
+    expect(citationDetails).toHaveBeenCalledWith(CTX, [ID]);
+  });
+
+  it('refuse ce qui n’est pas une liste de chaînes, et une panne ne rend rien', async () => {
+    expect(await citationDetailsAction('x' as never)).toEqual({});
+    expect(citationDetails).not.toHaveBeenCalled();
+    vi.mocked(citationDetails).mockRejectedValueOnce(new Error('base'));
+    expect(await citationDetailsAction([ID])).toEqual({});
+    expect(logError).toHaveBeenCalledWith('discussion.details_citations', expect.any(Error));
+  });
+});
+
 describe('deleteDiscussionAction', () => {
   it('supprime la discussion de l’utilisateur', async () => {
     vi.mocked(deleteDiscussion).mockResolvedValue(true);
     expect(await deleteDiscussionAction(ID)).toEqual({ ok: true });
     expect(deleteDiscussion).toHaveBeenCalledWith(CTX, ID);
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 
   it('refuse un identifiant qui n’est pas une chaîne, sans toucher la base', async () => {
@@ -277,12 +306,12 @@ describe('saveAboutSuggestionAction', () => {
 });
 
 describe('dismissAboutSuggestionAction', () => {
-  it('ferme la proposition sans rien enregistrer, puis revalide le Chat', async () => {
+  it('ferme la proposition sans rien enregistrer, puis revalide l’Accueil', async () => {
     await dismissAboutSuggestionAction();
 
     expect(closeAboutSuggestion).toHaveBeenCalledWith(CTX);
     expect(saveAbout).not.toHaveBeenCalled();
-    expect(revalidatePath).toHaveBeenCalledWith('/discussions');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
   });
 
   it('ne plante pas quand la base refuse : la carte revient au prochain chargement', async () => {

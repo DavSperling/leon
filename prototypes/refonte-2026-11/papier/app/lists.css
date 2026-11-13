@@ -1,0 +1,33 @@
+/* Documents and Team: the only rules of their own, with the kit's tokens. Candidates for the kit are marked (kit?). */
+
+/* A new file, while Leon reads it: the highlighter passes under "Reading…", once (kit?) */
+.rd { position: relative; z-index: 0; }
+.rd::before { content: ""; position: absolute; inset: 1px -4px; z-index: -1; border-radius: var(--r-mark); background: var(--m4); transform-origin: 0 50%; animation: sweep calc(2 * var(--work)) cubic-bezier(.3, 0, .3, 1) both; }
+
+/* A text or code file: the document icon in place of a brand's logo */
+svg.logo--text { fill: none; stroke: var(--ink-2); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* A file Leon does not read: said once, above the files, in plain words (kit?: the refusal of a whole action) */
+.refused p { display: flex; align-items: center; gap: 12px; min-height: 52px; margin-bottom: 12px; padding: 8px 8px 8px 16px; border: 1px solid var(--danger-line); border-radius: var(--r-l); background: var(--danger-tint); color: var(--ink); line-height: 1.45; }
+.refused .dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); }
+.refused span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.refused b { font-weight: 600; }
+
+/* A file held above the page: it will be taken wherever it is dropped */
+.drop { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 24px; background: var(--scrim); pointer-events: none; }
+.drop[hidden] { display: none; }
+.drop__sheet { padding: 40px 56px; border: 2px dashed var(--ink); border-radius: var(--r-l); background: var(--sheet); box-shadow: var(--sh-3); font: 600 var(--fs-4)/1.3 var(--sans); }
+
+/* A value that can be changed in the panel: a field in the row of facts, its quiet line under it (kit?) */
+.facts dt label { font: inherit; color: inherit; }
+.facts dd .field { display: block; width: 100%; max-width: 280px; height: 36px; font-size: var(--fs-2); }
+.facts dd .field + small, .facts dd .field-error { max-width: 280px; }
+.facts dd .field + small { margin-top: 6px; }
+.form .hint { margin-top: 6px; }
+.done + div { margin: 8px 0 8px; }
+.done + div .field { color: var(--ink); background: var(--n-50); }
+
+@media (max-width: 899px) {
+  .facts dd .field { height: 44px; max-width: none; }
+  .drop__sheet { padding: 28px 32px; }
+}

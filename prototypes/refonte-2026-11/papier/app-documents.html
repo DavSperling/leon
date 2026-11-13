@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Documents · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app-lists.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app lists" data-screen="documents">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <div class="top__text">
+      <h1 class="top__title">Documents</h1>
+      <p class="top__sub">Files added by hand, for what lives in no connected tool.</p>
+    </div>
+    <form class="ask" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <!-- The one action of the screen. The file input is real: the button is its label, and files can be dropped anywhere on the page. -->
+  <section class="drop" data-drop aria-label="Add documents">
+    <div class="drop__say drop__say--list">
+      <h2 class="drop__title">Drop files here</h2>
+      <p class="drop__text" id="vis-hint">PDF, Word, Excel or PowerPoint. Leon reads each file, then cites it like any other source. A file stays yours unless you choose “Team”.</p>
+    </div>
+    <!-- state: no documents yet (app-documents.html#empty). The strip is the empty state; the list below is not drawn. -->
+    <div class="drop__say case" id="empty">
+      <h2 class="drop__title">No documents yet</h2>
+      <p class="drop__text">Add a PDF, a Word file or a spreadsheet, or drop files here. Leon reads each one and cites it like any other source. Files are listed below with who added them and who can see them.</p>
+    </div>
+    <div class="drop__act">
+      <div>
+        <label class="label" for="vis">Visible to</label>
+        <select class="field select" id="vis" aria-describedby="vis-hint"><option>Only you</option><option>Team</option></select>
+      </div>
+      <input class="vh" id="file" type="file" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" aria-label="Add a document">
+      <label class="btn" for="file">Add a document</label>
+    </div>
+  </section>
+
+  <!-- state: a file Leon cannot read (app-documents.html#rejected, or drop one) -->
+  <div class="alert case" id="rejected" role="alert">
+    <div>
+      <p class="alert__title"><span class="dot dot--danger" aria-hidden="true"></span><span data-bad>“Q1 2027 pricing grid.numbers” was not added</span></p>
+      <p class="alert__text">Leon reads PDF, Word, Excel and PowerPoint files. Export it to one of these, then add it again.</p>
+    </div>
+    <a class="btn btn--line btn--sm" href="app-documents.html" data-dismiss>Dismiss</a>
+  </div>
+
+  <section class="sec sec--gap" id="docs" aria-labelledby="docs-h">
+    <div class="sec__head"><h2 class="h-sec" id="docs-h">All documents</h2><p class="sec__meta" data-count>7 documents</p></div>
+    <div class="table-wrap">
+      <table class="table" data-docs>
+        <thead><tr><th scope="col">Name</th><th scope="col">Added by</th><th scope="col">Added</th><th scope="col">Visible to</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/pdf.svg" alt="" width="20" height="20"><span>Verlant phase 2 proposal.pdf<span class="cell__sub"><span class="busy">Reading the file…</span></span></span></span></td><td>Julie Martin</td><td>Today, 08:31</td><td><span class="vis vis--only">Only you</span></td><td class="t-act"><button type="button" class="btn btn--line btn--sm" disabled>Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/pdf.svg" alt="" width="20" height="20"><span>My notes: ACME renewal.pdf<span class="cell__sub">212 KB</span></span></span></td><td>Julie Martin</td><td>Nov&nbsp;5</td><td><span class="vis vis--only">Only you</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/excel.svg" alt="" width="20" height="20"><span>Q1 2027 pricing grid.xlsx<span class="cell__sub">88 KB</span></span></span></td><td>Karim Benali</td><td>Oct&nbsp;29</td><td>Team</td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/word.svg" alt="" width="20" height="20"><span>V2 statement of work.docx<span class="cell__sub">156 KB</span></span></span></td><td>Sophie Laurent</td><td>Oct&nbsp;8</td><td>Team</td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/pdf.svg" alt="" width="20" height="20"><span>ACME master services agreement.pdf<span class="cell__sub">1.2 MB</span></span></span></td><td>Julie Martin</td><td>Oct&nbsp;2</td><td>Team</td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/powerpoint.svg" alt="" width="20" height="20"><span>Nordia redesign kickoff.pptx<span class="cell__sub">4.8 MB</span></span></span></td><td>Thomas Girard</td><td>Sep&nbsp;24</td><td>Team</td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/pdf.svg" alt="" width="20" height="20"><span>Support handbook.pdf<span class="cell__sub">930 KB</span></span></span></td><td>Maya Chen</td><td>Aug&nbsp;31</td><td>Team</td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- States that cannot be reached by using the page: app-documents.html#empty (no documents yet) and #rejected (a file Leon cannot read). -->
+
+</div>
+</main>
+</div>
+
+<!-- A file just added: the row script puts at the top of the list -->
+<template id="doc-row"><tr><td><span class="cell"><img class="logo" src="../shared/logos/pdf.svg" alt="" width="20" height="20"><span><span data-name></span><span class="cell__sub"><span class="busy">Reading the file…</span></span></span></span></td><td>Julie Martin</td><td data-date></td><td data-vis><span class="vis vis--only">Only you</span></td><td class="t-act"><button type="button" class="btn btn--line btn--sm" disabled>Manage</button></td></tr></template>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="js/app-documents.js" defer></script>
+</body>
+</html>

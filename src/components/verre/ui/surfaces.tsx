@@ -1,117 +1,56 @@
 'use client';
 
-import { type ComponentProps, type PointerEvent, useLayoutEffect, useRef } from 'react';
+import type { ComponentProps, PointerEvent } from 'react';
 import { cn } from '@/lib/verre/cn';
-import { mergeRefs } from '@/lib/verre/refs';
 
-/**
- * Lueur qui suit le pointeur : posez `onPointerMove` sur un hôte `.spot-host` dont un enfant direct est `<span className="spot" />`.
- * Seule la lueur bouge (transform), l'hôte et son contenu ne sont pas recalculés.
- */
-export function trackSpot(e: PointerEvent<HTMLElement>): void {
-  const host = e.currentTarget;
-  const spot = host.querySelector<HTMLElement>(':scope > .spot');
-  if (!spot) return;
-  const r = host.getBoundingClientRect();
-  spot.style.transform = `translate(${e.clientX - r.left}px, ${e.clientY - r.top}px)`;
-}
+/** La lueur du pointeur n'existe plus. La fonction reste, sans effet, pour ses appelants. */
+export function trackSpot(_e: PointerEvent<HTMLElement>): void {}
 
 export type GlassCardProps = ComponentProps<'div'> & {
-  /** panel : verre léger (bg-panel = --glass), rayon 16 (résultats, lignes) ; raised : verre plus dense (bg-glass-2), rayon 18 (réponse, aperçu, formulaires). */
+  /** Les deux valent la même feuille : la prop reste pour ses appelants. */
   variant?: 'panel' | 'raised';
-  /** Touche Signal : filet dégradé sur l'arête haute et halo d'accent dessous (cartes importantes). */
+  /** Sans effet (le filet de signal n'existe plus). */
   signal?: boolean;
-  /** Lueur qui suit le pointeur. */
+  /** Sans effet (la lueur du pointeur n'existe plus). */
   spotlight?: boolean;
-  /** Trait de lumière qui parcourt l'arête haute (Leon lit cette source). */
+  /** Sans effet : « Leon lit » se dit par ses mots sous le surligneur (`<Reading>`), pas sur l'arête d'une carte. */
   reading?: boolean;
 };
 
-/** Carte de verre de la planche. */
+/**
+ * Une feuille posée sur le bureau : blanche, un trait fin, rayon 12, l'ombre du repos. Jamais une feuille dans une
+ * autre. Le nom date du verre ; le remplissage intérieur (p-6…) reste à l'appelant.
+ */
 export function GlassCard({
-  variant = 'panel',
-  signal,
-  spotlight,
-  reading,
+  variant: _variant,
+  signal: _signal,
+  spotlight: _spotlight,
+  reading: _reading,
   className,
-  children,
-  onPointerMove,
   ...props
 }: GlassCardProps) {
   return (
     <div
       className={cn(
-        'relative overflow-hidden border border-line shadow-hi',
-        variant === 'panel' ? 'rounded-card bg-panel' : 'rounded-box bg-glass-2',
-        signal && 'signal-line signal-glow',
-        spotlight &&
-          'spot-host transition-[border-color,background-color] duration-300 hover:border-line-strong',
-        reading && 'reading',
+        'relative overflow-hidden rounded-card border border-line bg-sheet shadow-sheet',
         className,
       )}
-      onPointerMove={(e) => {
-        if (spotlight) trackSpot(e);
-        onPointerMove?.(e);
-      }}
       {...props}
-    >
-      {spotlight && <span className="spot" aria-hidden="true" />}
-      {children}
-    </div>
+    />
   );
 }
 
-/** Enveloppe qui ajoute la lueur du pointeur à n'importe quel bloc (donnez-lui son rayon). */
-export function Spotlight({ className, children, onPointerMove, ...props }: ComponentProps<'div'>) {
-  return (
-    <div
-      className={cn('spot-host', className)}
-      onPointerMove={(e) => {
-        trackSpot(e);
-        onPointerMove?.(e);
-      }}
-      {...props}
-    >
-      <span className="spot" aria-hidden="true" />
-      {children}
-    </div>
-  );
+/** La lueur du pointeur n'existe plus : un simple bloc, pour ses appelants. */
+export function Spotlight({ className, ...props }: ComponentProps<'div'>) {
+  return <div className={cn('relative', className)} {...props} />;
 }
 
 export type BeamProps = ComponentProps<'div'> & {
-  /** Le faisceau tourne et le halo s'allume (Leon travaille). */
+  /** Sans effet : « en cours » se dit par le libellé, aria-busy et le surligneur qui passe une fois. */
   active?: boolean;
 };
 
-/**
- * Faisceau conique qui fait le tour de son enfant pendant que Leon travaille, plus un halo d'accent.
- * Donnez à Beam le même rayon que l'enfant (className="rounded-box") : l'anneau en hérite.
- */
-export function Beam({ active, className, children, ref: outerRef, ...props }: BeamProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    // écrasement vertical proportionnel au rapport hauteur / largeur : la course reste régulière sur la longueur
-    const ro = new ResizeObserver(() =>
-      el.style.setProperty('--k', ((3 * el.offsetHeight) / Math.max(1, el.offsetWidth)).toFixed(4)),
-    );
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  return (
-    <div
-      ref={mergeRefs(ref, outerRef)}
-      className={cn('beam-host min-w-0', className)}
-      data-active={active || undefined}
-      {...props}
-    >
-      {children}
-      <div className="beam" aria-hidden="true">
-        <b>
-          <i />
-        </b>
-      </div>
-    </div>
-  );
+/** Le faisceau n'existe plus : un simple bloc autour de son enfant, pour ses appelants. */
+export function Beam({ active: _active, className, ...props }: BeamProps) {
+  return <div className={cn('relative min-w-0', className)} {...props} />;
 }

@@ -1,26 +1,37 @@
+import { getTranslations } from 'next-intl/server';
 import type { ReactNode } from 'react';
-import { AuthAside } from '@/components/site/auth-aside';
-import { SiteShell } from '@/components/site/site-shell';
-import { GlassCard } from '@/components/verre/ui/surfaces';
+import { GoogleOneTap } from '@/components/site/google-one-tap';
+import { AuthBar, LanguageChoice, ThemeChoice } from '@/components/verre/auth/bar';
+import { AuthPile } from '@/components/verre/auth/frame';
+import { socialProviders } from '@/server/auth/auth';
 
-// Commune à la connexion et à l'inscription : l'en-tête du site, la carte du formulaire à gauche (elle reste en place
-// quand on passe de l'une à l'autre), le panneau de Leon à droite. Ancré en haut, pas centré : une erreur ou le passage
-// à l'inscription allonge la carte vers le bas, rien au-dessus ne bouge.
-export default function AuthLayout({ children }: { children: ReactNode }) {
+// Commune à la connexion, l'inscription, l'invitation, le mot de passe et aux deux autorisations : le bureau, la
+// barre (le logo, la langue, le thème), la feuille du formulaire à gauche et, sur les pages de porte, la pile
+// d'originaux à droite (AuthPile choisit). Une autorisation se lit seule, centrée. Google One Tap et la langue
+// vivaient dans le cadre du site public : ils sont montés ici.
+export default async function AuthLayout({ children }: { children: ReactNode }) {
+  const t = await getTranslations('auth');
   return (
-    <SiteShell footer="bar">
-      <div className="mx-auto grid min-h-dvh w-full max-w-[1200px] grid-cols-[minmax(0,1fr)] content-start gap-10 px-4 pt-28 pb-16 sm:px-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-20 lg:pt-[max(132px,calc(50dvh-300px))]">
-        <div className="rise-in mx-auto w-full max-w-[420px]">
-          <GlassCard
-            variant="raised"
-            signal
-            className="p-6 shadow-panel backdrop-blur-[16px] sm:p-8"
-          >
-            <div className="relative z-[1]">{children}</div>
-          </GlassCard>
-        </div>
-        <AuthAside />
-      </div>
-    </SiteShell>
+    <div className="flex min-h-dvh flex-col bg-desk">
+      <a
+        href="#contenu"
+        className="fixed top-3 left-3 z-50 inline-flex min-h-10 -translate-y-20 items-center rounded-full bg-ink px-4 text-ui font-medium text-on-ink transition-transform focus-visible:translate-y-0"
+      >
+        {t('skip')}
+      </a>
+      <AuthBar home="/accueil">
+        <LanguageChoice />
+        <ThemeChoice />
+      </AuthBar>
+      {socialProviders.google && <GoogleOneTap clientId={socialProviders.google.clientId} />}
+      <main
+        id="contenu"
+        tabIndex={-1}
+        className="grid flex-1 grid-cols-[minmax(0,560px)] content-center justify-center gap-x-[clamp(56px,9vw,144px)] gap-y-12 px-8 pt-2 pb-16 outline-none has-[.auth-pile]:grid-cols-[440px_minmax(0,480px)] has-[.auth-pile]:items-center max-[1099px]:has-[.auth-pile]:grid-cols-[420px_minmax(0,440px)] max-[1099px]:gap-x-14 max-[899px]:content-start max-[899px]:px-4 max-[899px]:pt-1 max-[899px]:pb-14 max-[899px]:has-[.auth-pile]:grid-cols-[minmax(0,440px)]"
+      >
+        {children}
+        <AuthPile />
+      </main>
+    </div>
   );
 }

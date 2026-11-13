@@ -1,0 +1,50 @@
+/* Leon « Papier » v2 : Chat. Only what the kit (css/app.css) lacks: two columns with the list on the left, a list row
+   on two lines, a turn of the thread, the original opening under its sources, the ask field held at the foot.
+   Everything is visible without script; js/app-chat.js adds the behaviour. */
+.app[data-screen="chat"] .main { padding-bottom: 0; } /* the foot of the thread reaches the edge of the window */
+
+html:has([data-screen="chat"]) { scroll-padding-bottom: 148px; } /* what takes focus never hides under the held ask field */
+
+.chat { display: grid; grid-template-columns: 280px minmax(0, 720px); column-gap: 48px; align-items: start; } /* the list, then a 720px reading column */
+
+/* The discussions: they stay in place while the thread scrolls. Each row: the question on two lines at most, then its date */
+.chat__list {
+  position: sticky; top: var(--pad); max-height: calc(100vh - 2 * var(--pad)); max-height: calc(100dvh - 2 * var(--pad));
+  margin-inline: -10px; padding-inline: 10px; overflow-y: auto; /* room for the rows' rounded ground, which is 10px wider */
+}
+.chat__list .rows li { padding: 3px 0; }
+.chat__list .row { flex-direction: column; align-items: flex-start; gap: 2px; padding-block: 9px; }
+.chat__list .row__title { flex: none; max-width: 100%; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; text-wrap: pretty; }
+.chat__none { max-width: 30ch; margin-top: 14px; color: var(--ink-2); text-wrap: pretty; }
+
+/* The thread: as tall as the window, so that its foot sits at the bottom even when the discussion is short */
+.chat__main { display: flex; flex-direction: column; min-width: 0; min-height: calc(100vh - 100px); min-height: calc(100dvh - 100px); } /* 100px: the padding and the top row above */
+.thread { padding-bottom: 40px; }
+
+/* A turn: the question as a section head, Leon's answer, its sources as rows, the chosen original under them */
+.turn { scroll-margin-top: var(--pad); }
+.turn + .turn:last-child { min-height: calc(100vh - 177px); min-height: calc(100dvh - 177px); } /* a new question can always scroll up to the top of the window (177px: the foot, the thread's end, the margin above) */
+.turn .answer { margin-top: 16px; }
+.turn .srcs { margin-top: 12px; border-top: 1px solid var(--line); }
+.turn .orig { position: static; max-width: 636px; padding-left: 32px; } /* the sheet's words line up with the rows' words */
+.turn .doc { scroll-margin-bottom: 148px; } /* clear of the foot when it scrolls into view */
+.turn .ans__actions { margin-top: 20px; }
+.turn > .busy, .turn > .alert { margin-top: 16px; }
+.turn.is-pending > :not(.sec__head, .busy, .alert) { display: none; } /* asked, not answered yet */
+.thread__lead { max-width: 56ch; margin-top: 16px; font: 400 var(--t-body)/1.5 var(--sans); color: var(--ink-2); text-wrap: pretty; }
+.thread__lead + .chips { margin-top: 16px; }
+
+/* The ask field, held at the foot of the window; the thread passes under it */
+.chat__foot { position: sticky; bottom: 0; z-index: 5; margin: auto -10px 0; padding: 12px 10px 20px; background: var(--ground); }
+.chat__foot .muted { margin-top: 8px; }
+
+/* Another discussion came in the address: the default one stays out of sight until js/app-chat.js has put the right one in */
+.is-swapping .chat { visibility: hidden; animation: reveal 0s 1.2s forwards; }
+
+@media (max-width: 899px) {
+  .chat { grid-template-columns: minmax(0, 1fr); }
+  .chat__main { min-height: 0; }
+  .chat__list { position: static; order: 2; max-height: none; margin-top: 32px; padding-bottom: 24px; } /* the thread first, the list after it */
+  .turn .orig { padding-left: 18px; }
+  .chat__foot { padding-bottom: 12px; }
+}

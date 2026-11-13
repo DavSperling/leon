@@ -62,7 +62,7 @@ export async function sendInvitationEmailAction(
   const token = typeof url === 'string' ? URL_TOKEN.exec(url)?.[1] : undefined;
   const invitation = token ? await invitationToSend(ctx, token) : null;
   if (!token || !invitation) return { error: 'refused' };
-  if (!(await authAttemptAllowed('invitation', address.data, await requestHeaders()))) {
+  if (!(await authAttemptAllowed('invitation', address.data, await requestHeaders(), ctx.userId))) {
     return { error: 'limit' };
   }
   try {

@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
-import { members } from '@/server/db/schema/auth';
+import { members, users } from '@/server/db/schema/auth';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { reportingLines } from '@/server/db/schema/organisation';
 import { dropPoints, pointIsStale, queuedRefreshes, seedPoint } from '@/test/briefing-points';
@@ -424,6 +424,23 @@ describe("l'invitation sous un manager", () => {
       .select({ id: members.id })
       .from(members)
       .where(eq(members.userId, userId));
+    expect(await lineOf(joined?.id ?? '')).toEqual([]);
+  });
+
+  // Un compte supprimé garde sa ligne d'ancien membre : l'invité n'est pas rattaché sous lui, et l'annuaire pourra
+  // encore le placer (il n'est pas marqué « à la main »).
+  it('fait entrer sans rattachement quand le manager a supprimé son compte depuis', async () => {
+    const { tenantId, owner, member } = await tenantWithLink();
+    const token = await tokenOf(owner, await memberIdOf(member));
+    await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, member.userId));
+    const userId = await lonelyUser();
+
+    expect(await joinWithInvitation(token, userId)).toBe(tenantId);
+    const [joined] = await adminDb
+      .select({ id: members.id, manuel: members.rattachementManuel })
+      .from(members)
+      .where(eq(members.userId, userId));
+    expect(joined?.manuel).toBe(false);
     expect(await lineOf(joined?.id ?? '')).toEqual([]);
   });
 

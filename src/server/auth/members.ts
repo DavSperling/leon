@@ -266,8 +266,6 @@ export async function joinWithInvitation(token: string, userId: string): Promise
         department: link.department,
         job: link.job,
         seniority: link.seniority,
-        // Placé à la main par qui l'a invité : l'import de l'annuaire n'y touchera pas, comme setManager.
-        rattachementManuel: link.managerId !== null,
       })
       .returning({ id: members.id });
     return member ? { ...link, memberId: member.id } : null;
@@ -275,17 +273,24 @@ export async function joinWithInvitation(token: string, userId: string): Promise
   if (!joined) return null;
   // Son manager (0070) ; parti depuis, la clé est revenue à null. Personne n'est encore sous l'invité : pas de boucle.
   // Écrit au nom de qui a créé le lien, administrateur (`usable` l'a vérifié) : la RLS de l'organigramme (0057) l'exige.
-  // Après l'entrée : un échec laisse l'invité dans l'organisation, pas encore placé.
+  // Après l'entrée : un échec laisse l'invité dans l'organisation, pas encore placé (l'annuaire pourra le placer). Un
+  // manager qui a supprimé son compte depuis la création du lien garde sa ligne d'ancien membre : on ne rattache
+  // personne sous lui.
   if (joined.managerId) {
     try {
       const creator = await resolveTenantContext(joined.createdBy, joined.tenantId);
       const managerId = joined.managerId;
-      if (creator)
-        await withTenant(creator, (tx) =>
-          tx
+      if (creator && (await isMemberOf(creator, managerId)))
+        await withTenant(creator, async (tx) => {
+          await tx
             .insert(reportingLines)
-            .values({ tenantId: joined.tenantId, memberId: joined.memberId, managerId }),
-        );
+            .values({ tenantId: joined.tenantId, memberId: joined.memberId, managerId });
+          // Placé à la main par qui l'a invité : l'import de l'annuaire n'y touchera pas, comme setManager.
+          await tx
+            .update(members)
+            .set({ rattachementManuel: true })
+            .where(eq(members.id, joined.memberId));
+        });
     } catch (error) {
       logError('team.invitation_manager_failed', error, { tenantId: joined.tenantId });
     }
@@ -343,7 +348,8 @@ export type PendingInvitation = {
 };
 
 // Les liens encore utilisables de l'organisation (écran Équipe : « Invité ») ; pour un propriétaire ou un
-// administrateur seulement, sinon aucun. Le lien lui-même ne se relit jamais : seule son empreinte est gardée.
+// administrateur seulement, sinon aucun. Le lien lui-même ne se relit jamais : seule son empreinte est gardée. 200 au
+// plus : l'écran les dessine tous, et une organisation de 200 personnes n'en a pas plus en attente.
 export async function listInvitations(ctx: TenantContext): Promise<PendingInvitation[]> {
   if (!(await canInvite(ctx))) return [];
   return db
@@ -365,7 +371,8 @@ export async function listInvitations(ctx: TenantContext): Promise<PendingInvita
         isAdminOf(invitationLinks.createdBy, invitationLinks.tenantId),
       ),
     )
-    .orderBy(asc(invitationLinks.createdAt), asc(invitationLinks.id));
+    .orderBy(asc(invitationLinks.createdAt), asc(invitationLinks.id))
+    .limit(200);
 }
 
 // Annule un lien pas encore servi : il expire maintenant, plus personne n'entre avec (l'application ne supprime pas

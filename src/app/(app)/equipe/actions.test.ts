@@ -40,10 +40,12 @@ describe('sendInvitationEmailAction', () => {
   it('envoie le lien reconstruit par le serveur, au nom de qui invite', async () => {
     expect(await sendInvitationEmailAction(URL, '  ines@example.com ')).toEqual({ ok: true });
     expect(invitationToSend).toHaveBeenCalledWith(ctx, TOKEN);
+    // compté par adresse invitée, par adresse IP et par personne qui envoie
     expect(authAttemptAllowed).toHaveBeenCalledWith(
       'invitation',
       'ines@example.com',
       expect.any(Headers),
+      'u',
     );
     expect(sendInvitationEmail).toHaveBeenCalledWith({
       to: 'ines@example.com',
@@ -86,6 +88,8 @@ describe('sendInvitationEmailAction', () => {
     expect(await sendInvitationEmailAction(URL, 'ines@example.com')).toEqual({
       error: 'refused',
     });
+    // le droit d'inviter passe avant tout : ni compteur entamé, ni e-mail
+    expect(authAttemptAllowed).not.toHaveBeenCalled();
     expect(sendInvitationEmail).not.toHaveBeenCalled();
   });
 

@@ -8,7 +8,11 @@ import {
   NEIGHBOUR_TURNS,
 } from '@/server/mcp/tools/fetch-tool';
 import { SearchOutputSchema } from '@/server/mcp/tools/output-schemas';
-import { NOTES_TURNED_OFF, RememberInputSchema } from '@/server/mcp/tools/remember-tool';
+import {
+  NOTES_TURNED_OFF,
+  REMEMBER_DESCRIPTION,
+  RememberInputSchema,
+} from '@/server/mcp/tools/remember-tool';
 import {
   SEARCH_DESCRIPTION,
   SEARCH_PAGE_MAX,
@@ -212,6 +216,14 @@ describe('description de remember', () => {
         .map((schema) => description(schema))
         .join(' '),
     ).not.toMatch(/restor|restaur/i);
+  });
+
+  // Décision 3 d'Amos du 12/11 : une note se lit comme les sessions, par l'auteur et ses managers sur le site (0057).
+  it('dit qui lit la note : l’utilisateur et, sur le site, ses managers, pas « private »', () => {
+    expect(REMEMBER_DESCRIPTION).toContain(
+      "It is read like the user's sessions: by the user and, on the Leon website, by the managers above them.",
+    );
+    expect(REMEMBER_DESCRIPTION).not.toMatch(/private/i);
   });
 });
 

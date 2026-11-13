@@ -71,11 +71,13 @@ export { codexHome } from './outils';
 
 // Le texte de l'accord de Codex, testé mot pour mot (install-codex.test.ts). Le changer, c'est changer ce que
 // l'utilisateur a accepté. Celui du lot 4 disait que rien n'était capté : la capture a son propre accord (`capture_le`).
+// Amendé le 12/11, décision 4 d'Amos pour le lot 14, sans redemander l'accord : qui lit la session (l'auteur, et ses
+// managers sur le site, 0057).
 export const CODEX_CONSENT_LINES = [
   'What will be sent: these hooks are in your personal Codex settings, so they run in ALL your Codex sessions, in ALL your folders (personal ones included), in the terminal as with `codex exec`.',
   "  - After each turn (Stop, in the background) and at the end of a session when Codex runs that hook (`codex exec`; not after /quit in the terminal), the Leon server receives the new exchanges of the session (your messages and Codex's answers; the messages Codex writes itself in your place, such as a subagent's report, a notification or a `!` command with its output, labeled as written by Codex, not by you; not the context Codex adds itself) and the actions of the session, read from its rollout file: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the plan, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
   `  - What a hook missed (a session left with /quit, a failed upload) ${CATCH_UP_WHEN}. It covers only Codex sessions changed after you accept, from now on.`,
-  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  '  - Secrets are masked before sending, and again by the server. Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository, from all your tools (their branch, pull requests, commits, files and remaining tasks), and the project's morning briefing: Codex adds this block to the session context, so it is given to Codex's model.",
 ];
 
@@ -244,7 +246,7 @@ export async function installCodexHook(
   const unchanged = plan.changes.every((change) => change.action === 'inchange');
   for (const line of await codexWarnings(options.codexDir, settings)) deps.out(line);
   if (unchanged && consent?.capture_le) {
-    if (usagesToOffer(consent, options).length === 0) {
+    if (usagesToOffer('codex', consent, options).length === 0) {
       deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
       return 0;
     }

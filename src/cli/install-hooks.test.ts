@@ -23,6 +23,7 @@ import { hookCommand, launcherHookCommand } from './hook-commands';
 import {
   addLeonHooks,
   BACKUP_FILE,
+  COULISSES_LINES,
   installHooks,
   isLeonHandler,
   isYes,
@@ -865,6 +866,16 @@ describe('installHooks : le texte du consentement', () => {
 
     expect(run.output).toContain('ALL your folders');
   });
+
+  // Décision 4 d'Amos pour le lot 14 : le rôle du crochet de fin dit qui lit la session, comme le texte de base.
+  it('dit, au crochet de fin, qui lit la session', async () => {
+    const run = await install({ assumeYes: true });
+
+    expect(run.output).toContain(
+      'the actions of the session to Leon (secrets masked); the session is read by you and, on the Leon website, by the managers above you.',
+    );
+    expect(run.output).not.toContain('private to its author');
+  });
 });
 
 // Le texte de l'accord, mot pour mot (plan mémoire des sessions, règle « Consentement ») : ce qui est lu, ce qui
@@ -872,7 +883,7 @@ describe('installHooks : le texte du consentement', () => {
 const CONSENT_TEXT = [
   'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
   "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; the final report of each subagent, labeled the same way; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
-  '  - Secrets are masked before sending, and again by the server. Each session stays private to its author.',
+  '  - Secrets are masked before sending, and again by the server. Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ].join('\n');
 
@@ -1001,8 +1012,8 @@ describe('installHooks : l’accord (~/.leon/accord.json)', () => {
 const RESUME_TEXT = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
-  "  - The summary stays private to you, like the session. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
-  "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you, like the summary. Withdrawing your consent stops this too, once the Leon server is told.",
+  "  - The summary is read like the session: by you and, on the Leon website, by the managers above you. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
+  "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you. Withdrawing your consent stops this too, once the Leon server is told.",
 ].join('\n');
 
 // Après un refus, la ligne fixe qui dit comment revenir dessus (C7 révisé, A16), avec la commande de la forme de Leon :
@@ -1012,6 +1023,18 @@ const refusedLine = (leon = 'pnpm leon') =>
 const REFUSED_LINE = refusedLine();
 const resumeQuestion = () =>
   `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${consentPath(home)})? [y/N] `;
+
+// L'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14), mot pour mot : pour Claude Code
+// seul, demandé à part après `noter` et avant `resume`, jamais coché d'avance : [y/N] dans un terminal.
+const COULISSES_TEXT = [
+  'Full capture (usage "coulisses", optional, asked separately):',
+  "  - At the end of each session, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, when Claude Code writes its text in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument.",
+  "  - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and read like it: by you and, on the Leon website, by the managers above you. Leon's search always finds it. It is never placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.",
+  '  - Withdrawing your consent stops this sending. What was already sent stays in Leon.',
+].join('\n');
+const coulissesQuestion = () =>
+  `\nAlso send Leon what happens behind the exchanges of each session: the reasoning, the subagents and the reduced tool calls (recorded in ${consentPath(home)})? [y/N] `;
+const COULISSES_NONE = 'Nothing was added: nothing behind the exchanges is sent.';
 
 // L'usage `lecture` (C7 révisé, D24, D30, A16 ; décisions d'Amos du 11/11), mot pour mot : un seul texte, sans nom
 // d'outil, le même pour les quatre installateurs et pour la page « Autoriser » (T64). Demandé à part, après l'accord de
@@ -1036,7 +1059,7 @@ describe('installHooks : l’usage lecture', () => {
   it('montre son texte mot pour mot après l’accord de base et avant resume, en [Y/n] ; Entrée l’accepte, daté', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', '', SANS_REPONSE, SANS_REPONSE, 'non'],
+      answers: ['oui', '', SANS_REPONSE, SANS_REPONSE, null, 'non'],
     });
 
     expect(run.code).toBe(0);
@@ -1045,6 +1068,7 @@ describe('installHooks : l’usage lecture', () => {
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(run.output.indexOf(LECTURE_TEXT)).toBeGreaterThan(run.output.indexOf(CONSENT_TEXT));
@@ -1059,7 +1083,7 @@ describe('installHooks : l’usage lecture', () => {
   });
 
   it.each(['', 'y', 'yes', 'o', 'oui', ' Oui '])('la réponse %j l’accepte', async (answer) => {
-    await install({ interactive: true, answers: ['oui', answer, null, null, null] });
+    await install({ interactive: true, answers: ['oui', answer, null, null, null, null] });
 
     expect(await rawEntry()).toEqual({
       version: 2,
@@ -1071,7 +1095,10 @@ describe('installHooks : l’usage lecture', () => {
   it.each(['n', 'no', 'non', 'NON'])(
     'la réponse %j est un refus, daté, suivi de la ligne qui dit comment revenir dessus',
     async (answer) => {
-      const run = await install({ interactive: true, answers: ['oui', answer, null, null, null] });
+      const run = await install({
+        interactive: true,
+        answers: ['oui', answer, null, null, null, null],
+      });
 
       expect(run.output).toContain(LECTURE_NONE);
       expect(run.output).toContain(REFUSED_LINE);
@@ -1087,14 +1114,17 @@ describe('installHooks : l’usage lecture', () => {
   it.each([SANS_REPONSE, 'peut-être', null])(
     'la réponse %j n’écrit rien, et la question revient au passage suivant',
     async (answer) => {
-      const run = await install({ interactive: true, answers: ['oui', answer, null, null, null] });
+      const run = await install({
+        interactive: true,
+        answers: ['oui', answer, null, null, null, null],
+      });
 
       expect(run.code).toBe(0);
       expect(run.output).toContain(LECTURE_NONE);
       expect(run.output).not.toContain('This answer is kept');
       expect(await rawEntry()).toEqual({ version: 2, installe_le: expect.any(String) });
 
-      const again = await install({ interactive: true, answers: ['', null, null, null] });
+      const again = await install({ interactive: true, answers: ['', null, null, null, null] });
 
       expect(again.questions[0]).toBe(lectureQuestion());
       expect((await factsConsent(home, 'claude_code'))?.usages).toEqual(['lecture']);
@@ -1112,7 +1142,7 @@ describe('installHooks : l’usage lecture', () => {
   it('refusé, puis resume accepté : chacun est gardé à part', async () => {
     await install({
       interactive: true,
-      answers: ['oui', 'non', SANS_REPONSE, SANS_REPONSE, 'oui'],
+      answers: ['oui', 'non', SANS_REPONSE, SANS_REPONSE, null, 'oui'],
     });
 
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1124,7 +1154,7 @@ describe('installHooks : l’usage lecture', () => {
   it('accepté, puis resume refusé : chacun est gardé à part', async () => {
     await install({
       interactive: true,
-      answers: ['oui', 'oui', SANS_REPONSE, SANS_REPONSE, 'non'],
+      answers: ['oui', 'oui', SANS_REPONSE, SANS_REPONSE, null, 'non'],
     });
 
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1173,7 +1203,10 @@ const reminderHook = () => ({
 
 describe('installHooks : l’usage rappel et son crochet', () => {
   it('montre son texte mot pour mot après lecture et avant resume, en [Y/n] ; Entrée l’accepte et pose le crochet', async () => {
-    const run = await install({ interactive: true, answers: ['oui', 'non', '', 'non', 'non'] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', 'non', '', 'non', null, 'non'],
+    });
 
     expect(run.code).toBe(0);
     expect(run.questions).toEqual([
@@ -1181,6 +1214,7 @@ describe('installHooks : l’usage rappel et son crochet', () => {
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(run.output.indexOf(RAPPEL_TEXT)).toBeGreaterThan(run.output.indexOf(LECTURE_TEXT));
@@ -1198,7 +1232,10 @@ describe('installHooks : l’usage rappel et son crochet', () => {
   });
 
   it('refusé : un refus daté, et pas de crochet de message', async () => {
-    const run = await install({ interactive: true, answers: ['oui', 'non', 'non', 'non', 'non'] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', 'non', 'non', 'non', null, 'non'],
+    });
 
     expect(run.output).toContain(RAPPEL_NONE);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1209,7 +1246,7 @@ describe('installHooks : l’usage rappel et son crochet', () => {
   });
 
   it('l’entrée fermée : ni usage, ni refus, ni crochet', async () => {
-    await install({ interactive: true, answers: ['oui', null, null, null, null] });
+    await install({ interactive: true, answers: ['oui', null, null, null, null, null] });
 
     expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
     expect((await readSettings()).hooks.UserPromptSubmit).toBeUndefined();
@@ -1254,10 +1291,10 @@ describe('installHooks : l’usage rappel et son crochet', () => {
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'resume');
 
-    const run = await install({ interactive: true, answers: ['', null] });
+    const run = await install({ interactive: true, answers: ['', null, null] });
 
     expect(run.code).toBe(0);
-    expect(run.questions).toEqual([rappelQuestion(), noterQuestion()]);
+    expect(run.questions).toEqual([rappelQuestion(), noterQuestion(), coulissesQuestion()]);
     expect(await readSettings()).toEqual({
       theme: 'dark',
       hooks: {
@@ -1294,6 +1331,7 @@ describe('installHooks : l’usage rappel et son crochet', () => {
     await addRefusal(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'noter');
     await addRefusal(home, 'claude_code', 'resume');
+    await addRefusal(home, 'claude_code', 'coulisses');
     const before = await readFile(settingsPath, 'utf8');
 
     const run = await install({ interactive: true, answers: [] });
@@ -1308,7 +1346,7 @@ describe('installHooks : l’usage rappel et son crochet', () => {
 // `resume`, coché par défaut : [Y/n] dans un terminal. Aucun crochet de plus.
 const NOTER_TEXT = [
   'Agent notes (usage "noter", asked separately):',
-  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note stays private to you, like your sessions, and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
   "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
   '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all your assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
 ].join('\n');
@@ -1318,7 +1356,10 @@ const NOTER_NONE = 'Nothing was added: the agent writes no note to Leon.';
 
 describe('installHooks : l’usage noter', () => {
   it('montre son texte mot pour mot après rappel et avant resume, en [Y/n] ; Entrée l’accepte, daté', async () => {
-    const run = await install({ interactive: true, answers: ['oui', 'non', 'non', '', 'non'] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', 'non', 'non', '', null, 'non'],
+    });
 
     expect(run.code).toBe(0);
     expect(run.questions).toEqual([
@@ -1326,6 +1367,7 @@ describe('installHooks : l’usage noter', () => {
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(run.output.indexOf(NOTER_TEXT)).toBeGreaterThan(run.output.indexOf(RAPPEL_TEXT));
@@ -1343,7 +1385,10 @@ describe('installHooks : l’usage noter', () => {
   });
 
   it.each(['n', 'no', 'non'])('la réponse %j est un refus, daté', async (answer) => {
-    const run = await install({ interactive: true, answers: ['oui', null, null, answer, null] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', null, null, answer, null, null],
+    });
 
     expect(run.output).toContain(NOTER_NONE);
     expect(run.output).toContain(REFUSED_LINE);
@@ -1354,7 +1399,10 @@ describe('installHooks : l’usage noter', () => {
   });
 
   it.each([SANS_REPONSE, null])('la réponse %j n’écrit rien', async (answer) => {
-    const run = await install({ interactive: true, answers: ['oui', null, null, answer, null] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', null, null, answer, null, null],
+    });
 
     expect(run.output).toContain(NOTER_NONE);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
@@ -1390,7 +1438,7 @@ describe('installHooks : l’usage noter', () => {
 
     const run = await install({
       interactive: true,
-      answers: ['oui', null, null, 'non', null],
+      answers: ['oui', null, null, 'non', null, null],
       refuseNotes,
     });
 
@@ -1406,7 +1454,7 @@ describe('installHooks : l’usage noter', () => {
 
     const run = await install({
       interactive: true,
-      answers: ['oui', null, null, '', null],
+      answers: ['oui', null, null, '', null, null],
       refuseNotes,
     });
 
@@ -1419,7 +1467,7 @@ describe('installHooks : l’usage noter', () => {
 
   it.each([
     ['tranché par la page (--yes)', { assumeYes: true, decisions: new Map([['noter', false]]) }],
-    ['sans réponse', { interactive: true, answers: ['oui', null, null, null, null] }],
+    ['sans réponse', { interactive: true, answers: ['oui', null, null, null, null, null] }],
   ] as const)('%s : ni appel ni ligne', async (_cas, options) => {
     const refuseNotes = vi.fn(async () => true);
 
@@ -1432,7 +1480,7 @@ describe('installHooks : l’usage noter', () => {
   it('un refus que le serveur n’a pas pris (404, absent, lent) : un message fixe, et l’installation continue', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', null, null, 'non', null],
+      answers: ['oui', null, null, 'non', null, null],
       refuseNotes: async () => false,
     });
 
@@ -1525,12 +1573,13 @@ describe('installHooks : les usages tranchés dans le passage', () => {
   it('une réponse du terminal va dans les décisions, pour les outils suivants du passage', async () => {
     const decisions: UsageDecisions = new Map();
 
-    await install({ interactive: true, decisions, answers: ['oui', '', null, null, null] });
+    await install({ interactive: true, decisions, answers: ['oui', '', null, null, null, null] });
 
     expect([...decisions]).toEqual([
       ['lecture', true],
       ['rappel', null],
       ['noter', null],
+      ['coulisses', null],
       ['resume', null],
     ]);
   });
@@ -1539,13 +1588,14 @@ describe('installHooks : les usages tranchés dans le passage', () => {
     const run = await install({
       interactive: true,
       decisions: new Map([['lecture', null]]),
-      answers: ['oui', null, null, null],
+      answers: ['oui', null, null, null, null],
     });
 
     expect(run.questions).toEqual([
       expect.any(String),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(await rawEntry()).toEqual({ version: 2, installe_le: expect.any(String) });
@@ -1581,6 +1631,67 @@ describe('installHooks : les usages tranchés dans le passage', () => {
   });
 });
 
+describe('installHooks : l’usage coulisses', () => {
+  it('son texte exporté est celui de l’accord, mot pour mot', () => {
+    expect(COULISSES_LINES.join('\n')).toBe(COULISSES_TEXT);
+  });
+
+  it('montre son texte après noter et avant resume, en [y/N] ; un oui l’écrit, daté', async () => {
+    const run = await install({
+      interactive: true,
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'oui', null],
+    });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([
+      expect.any(String),
+      lectureQuestion(),
+      rappelQuestion(),
+      noterQuestion(),
+      coulissesQuestion(),
+      resumeQuestion(),
+    ]);
+    expect(run.output.indexOf(COULISSES_TEXT)).toBeGreaterThan(run.output.indexOf(NOTER_TEXT));
+    expect(run.output.indexOf(RESUME_TEXT)).toBeGreaterThan(run.output.indexOf(COULISSES_TEXT));
+    expect(run.output).toContain(`Full capture recorded in ${consentPath(home)}.`);
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
+      version: 2,
+      installe_le: expect.any(String),
+      usages: { coulisses: expect.any(String) },
+    });
+  });
+
+  it.each(['', 'n', 'peut-être'])('la réponse %j est un refus, daté', async (answer) => {
+    const run = await install({
+      interactive: true,
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, answer, null],
+    });
+
+    expect(run.output).toContain(COULISSES_NONE);
+    expect(run.output).toContain(REFUSED_LINE);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: [],
+      refus: ['coulisses'],
+    });
+  });
+
+  it('avec --oui, ni texte ni question ni usage, même dans un terminal', async () => {
+    const run = await install({ interactive: true, assumeYes: true });
+
+    expect(run.questions).toEqual([]);
+    expect(run.output).not.toContain(COULISSES_TEXT);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
+  });
+
+  it('hors terminal, il n’est pas donné : un oui lu d’un tube n’en donne aucun', async () => {
+    const run = await install({ answers: ['oui', 'oui', 'oui'] });
+
+    expect(run.questions).toHaveLength(1);
+    expect(run.output).not.toContain(COULISSES_TEXT);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
+  });
+});
+
 describe('installHooks : l’usage resume', () => {
   const usages = async () => (await factsConsent(home, 'claude_code'))?.usages;
   const refus = async () => (await factsConsent(home, 'claude_code'))?.refus;
@@ -1590,12 +1701,12 @@ describe('installHooks : l’usage resume', () => {
   it('montre son texte mot pour mot après l’accord de base, puis le demande à part, en [y/N]', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'non'],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'non'],
     });
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(5);
-    expect(run.questions[4]).toBe(resumeQuestion());
+    expect(run.questions).toHaveLength(6);
+    expect(run.questions[5]).toBe(resumeQuestion());
     expect(run.output.indexOf(RESUME_TEXT)).toBeGreaterThan(run.output.indexOf(CONSENT_TEXT));
     expect(run.output).toContain('Nothing was added: no session is summarized.');
     expect(run.output).toContain(REFUSED_LINE);
@@ -1606,7 +1717,7 @@ describe('installHooks : l’usage resume', () => {
   it('accepté : l’usage s’ajoute, daté, à l’accord en version 2', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'oui'],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'oui'],
     });
 
     expect(run.code).toBe(0);
@@ -1627,7 +1738,7 @@ describe('installHooks : l’usage resume', () => {
     const run = await install({
       repoDir: null,
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'non'],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'non'],
     });
 
     expect(run.output).toContain(refusedLine('~/.leon/bin/leon'));
@@ -1638,7 +1749,7 @@ describe('installHooks : l’usage resume', () => {
     async (answer) => {
       await install({
         interactive: true,
-        answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, answer],
+        answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, answer],
       });
 
       expect(await usages()).toEqual([]);
@@ -1650,7 +1761,7 @@ describe('installHooks : l’usage resume', () => {
   it('l’entrée fermée : ni usage ni refus, et la question revient au passage suivant', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, null],
     });
 
     expect(run.code).toBe(0);
@@ -1661,13 +1772,14 @@ describe('installHooks : l’usage resume', () => {
     // `lecture`, laissé sans réponse lui aussi, revient avec elle.
     const again = await install({
       interactive: true,
-      answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'non'],
+      answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'non'],
     });
 
     expect(again.questions).toEqual([
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(await refus()).toEqual(['resume']);
@@ -1675,7 +1787,7 @@ describe('installHooks : l’usage resume', () => {
 
   // `lecture` refusé lui aussi : plus rien n'est à proposer, « nothing to do » revient.
   it('refusé : plus jamais proposé, ni par installer-crochets ni par un nouveau passage', async () => {
-    await install({ interactive: true, answers: ['oui', 'non', 'non', 'non', 'non'] });
+    await install({ interactive: true, answers: ['oui', 'non', 'non', 'non', 'non', 'non'] });
     const consentBefore = await readFile(consentPath(home), 'utf8');
 
     const run = await install({ interactive: true, answers: [] });
@@ -1718,10 +1830,13 @@ describe('installHooks : l’usage resume', () => {
     await addRefusal(home, 'claude_code', 'resume');
     const consentBefore = await readFile(consentPath(home), 'utf8');
 
-    const run = await install({ interactive: true, answers: ['oui', SANS_REPONSE, SANS_REPONSE] });
+    const run = await install({
+      interactive: true,
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, null],
+    });
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(3);
+    expect(run.questions).toHaveLength(4);
     expect(await readFile(settingsPath, 'utf8')).not.toContain('/ancien/leon');
     expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
   });
@@ -1739,7 +1854,7 @@ describe('installHooks : l’usage resume', () => {
 
     const run = await install({
       interactive: true,
-      answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'oui'],
+      answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'oui'],
     });
 
     expect(run.code).toBe(0);
@@ -1747,6 +1862,7 @@ describe('installHooks : l’usage resume', () => {
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      coulissesQuestion(),
       resumeQuestion(),
     ]);
     expect(run.output).toContain(`The Leon hooks are already in place in ${settingsPath}.`);
@@ -1770,10 +1886,10 @@ describe('installHooks : l’usage resume', () => {
 
     const run = await install({
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'oui'],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'oui'],
     });
 
-    expect(run.questions).toHaveLength(5);
+    expect(run.questions).toHaveLength(6);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
       version: 2,
       usages: ['resume'],
@@ -1783,7 +1899,7 @@ describe('installHooks : l’usage resume', () => {
   it('tout en place, les usages compris : rien n’est demandé', async () => {
     await leonHooksInPlace();
     await writeConsent(home, 'claude_code', 2);
-    await install({ interactive: true, answers: ['oui', 'oui', 'oui', 'oui'] });
+    await install({ interactive: true, answers: ['oui', 'oui', 'oui', 'oui', 'oui'] });
 
     const run = await install({ interactive: true, answers: [] });
 
@@ -1803,7 +1919,7 @@ describe('installHooks : l’usage resume', () => {
 
       const run = await install({
         interactive: true,
-        answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'oui'],
+        answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'oui'],
       });
 
       expect(run.code).toBe(1);
@@ -1824,7 +1940,7 @@ describe('installHooks : l’usage resume', () => {
 
       const run = await install({
         interactive: true,
-        answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, 'non'],
+        answers: [SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, 'non'],
       });
 
       expect(run.code).toBe(0);

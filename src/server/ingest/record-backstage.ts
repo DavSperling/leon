@@ -25,9 +25,9 @@ const PATH_TOOLS = new Set([
   'Grep',
   'LS',
 ]);
-// Un chemin absolu (Unix, le dossier personnel) ou une URL (`schéma:`, qui couvre aussi la lettre de lecteur `C:`)
-// sort du dépôt ; un saut de ligne casserait la ligne du tour.
-const OUTSIDE_REPO = /^(?:[\\/~]|[A-Za-z][A-Za-z0-9+.-]*:)|[\r\n]/;
+// Un chemin absolu (Unix, le dossier personnel, une variable `$HOME/…` ou `%USERPROFILE%\…`) ou une URL (`schéma:`,
+// qui couvre aussi la lettre de lecteur `C:`) sort du dépôt ; un saut de ligne casserait la ligne du tour.
+const OUTSIDE_REPO = /^(?:[\\/~$]|[A-Za-z][A-Za-z0-9+.-]*:)|%[A-Za-z_][A-Za-z0-9_]*%|[\r\n]/;
 
 // La seconde barrière, après la CLI : une cible n'est gardée que pour Bash (la commande réduite, sinon [commande]) et
 // pour un chemin relatif au dépôt. Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée ne fait

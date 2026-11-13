@@ -103,6 +103,7 @@ Ses réponses au questionnaire d'ouverture du lot 13. Elles priment sur le texte
 3. **Le rappel arrive dès ce lot dans tout outil qui donne le message à son crochet** : Claude Code, Cursor et Codex, sans essai réel dans ces deux derniers (limite connue). Antigravity reste de côté : son crochet PreInvocation ne reçoit pas le message (annexe 05 de l'étude). L'usage `rappel` ne lui est donc ni proposé ni écrit (T64 : jamais de `rappel` sans crochet).
    - **Amendé le 11/11 au soir, après un essai réel fait avec Amos dans l'appli Antigravity 2.0.6** (annexe 05, « L'essai du 11/11 ») : son crochet PreInvocation reçoit maintenant le message (`lastUserInput`). Le rappel arrive donc aussi dans Antigravity, et l'usage `rappel` lui est proposé comme aux autres. Une version plus ancienne, dont le crochet ne reçoit pas le message, ne reçoit simplement aucun rappel.
 4. **L'ordre des questions du terminal** : `lecture`, `rappel`, `noter`, puis `resume`. Les trois usages cochés par défaut d'abord ; celui qui envoie les sessions au fournisseur du modèle de Leon en dernier.
+   > **Amendé le 12/11 (décision 2 d'Amos pour le lot 14 ; choix du rédacteur) :** `coulisses` s'insère juste avant `resume`, pour Claude Code seulement.
 5. **La connexion récente (T55)** : toute connexion de moins d'une heure compte, y compris par la fenêtre Google « Continuer en tant que… » (One Tap) et par le SSO d'entreprise. L'écran de reconnexion ne montre pas One Tap, qui ramène toujours à l'accueil. Limite connue : One Tap et le SSO peuvent repasser sans rien retaper.
 6. **Le texte de `lecture`** gagne `leon lessons` et l'outil `lessons`. Les accords déjà donnés valent pour le nouveau texte, sans être redemandés, comme le 10/11.
 7. **Le texte de `noter`** dit ce que la requête de démarrage envoie en plus avec lui : les usages de l'outil, la commande Leon du poste et le nom de l'outil.
@@ -279,6 +280,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
 - **D30. L'accord, par usage.** Les versions cumulatives liaient des permissions sans rapport : pour avoir le rappel, il aurait fallu accepter le résumé par le fournisseur du modèle. On les remplace par des usages (C7 révisé).
   - La version 2 (les gestes) reste la base, et la version 0 le retrait.
   - Chaque usage s'ajoute avec son propre texte, confirmé à part, et sa date : `lecture`, `rappel`, `resume`, `coulisses`. `--oui` et `--yes` n'ajoutent jamais un usage. Tranché le 05/11 (A16) : `lecture`, `rappel` et `noter` sont cochés par défaut, `resume` et `coulisses` non (ci-dessous).
+    > **Amendé le 12/11 (décisions 2 et 4 d'Amos pour le lot 14) :** `coulisses` se propose dans le terminal, en `[y/N]`, juste avant `resume`, pour Claude Code seulement jusqu'à la PR 4 du lot 14. Les textes déjà acceptés qui disaient la session, le résumé ou la note « private » sont corrigés sans redemander l'accord (voir T52).
   - Le serveur vérifie l'usage à chaque emploi : `lecture` pour les routes de lecture et la consigne, `resume` pour le résumé et l'état des fils, `rappel` pour le rappel, `coulisses` pour le lot 14. La CLI envoie ses usages (C2, C3, C8, C11). `lecture` vaut pour les commandes du poste dès qu'un outil l'a accepté ; la consigne n'apparaît que dans un outil qui l'a accepté.
     - Amendé le 05/11 (relecture) : dans le bloc de démarrage, `lecture` porte tout le niveau 1, pas seulement la consigne. Le sommaire des fils, les leçons et la consigne n'apparaissent que dans un outil qui l'a accepté, d'après les `usages` que la CLI envoie pour l'outil dont le crochet demande le bloc (C3). Sans lui, la route ne lit ni les fils ni les leçons, et rend le bloc de main (D24). La phrase de `leon noter` suit `noter`, pas `lecture` (D24). La mise à jour des fils au démarrage reste en file : elle n'envoie rien au modèle de l'outil.
   - Amendé le 04/11 par D38, tranché le 05/11 : un cinquième usage, `noter`, à part, avec son propre texte. Il est proposé à l'installation et déjà coché par défaut, comme les niveaux 1 et 2 ; l'utilisateur peut le décocher. La restauration ne passe plus par le jeton (D33) : il ne sert plus qu'à `POST /api/v1/noter` (et à `remember`, qui prend le même chemin), et à la phrase de la consigne qui cite `leon noter`. Un accord `lecture` ne permet jamais d'écrire, et son texte ne change pas. Amendé le 05/11 (relecture) : « ne change pas » vaut pour l'ajout de `noter`. Le texte de `lecture` dit déjà ce qu'il pousse au démarrage, le sommaire et les leçons (T47), et un accord `lecture` ne permet toujours jamais d'écrire. La phrase qui cite `leon noter` passe aussi sans `lecture` (D24).
@@ -1423,6 +1425,124 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 > **Amendé le 12/11 (décision 1 d'Amos pour le lot 14 ; choix du rédacteur) :** `reduceToolName` et les exports de `reduceCommand` et `repoRelativePath` sont passés dans T51 (PR 2) ; le reste de l'amendement de T52 viendra avec sa PR.
 
 > **Amendé le 05/11 (tranché par Amos, QD9) :** le texte de l'usage `coulisses` (`consent.ts`) dit que le raisonnement, les échanges des sous-agents et les appels d'outils se retrouvent toujours par la recherche de Leon, sans filtre, et jamais dans le point du matin ni le bloc de démarrage (choix du rédacteur). Test de plus, dans `install-hooks.test.ts` : le texte exact de `coulisses`.
+
+> **Amendé le 12/11 (choix du rédacteur) :** le texte de l'usage `coulisses` vit dans `src/cli/install-hooks.ts` (`COULISSES_LINES`), pas dans `consent.ts`, qui ne garde que le fichier d'accord et reconnaît déjà l'usage. Son contenu est celui de l'amendement du 12/11 ci-dessous.
+
+> **Amendé le 12/11 (décisions 2, 3, 4 et 5 d'Amos pour le lot 14 ; annexe 08 ; choix du rédacteur) :** c'est ce que la PR 3 code, avec le contrat C10 amendé le 12/11 que le serveur sert depuis la PR 2.
+> - **Le périmètre.** Claude Code seul (décision 2 d'Amos). C'est la PR 3 du lot 14. Codex, Cursor et Antigravity viennent dans la PR 4, après leur essai : d'ici là, aucune coulisse n'en part.
+> - **Ce que la CLI relève : `extractBackstage`.**
+>   - Un nouveau fichier, `src/capture/session-backstage.ts`, pur, sans accès au disque. `extractBackstage(content, root, subagents)` reçoit le fichier de la session, la racine du dépôt (pour les chemins relatifs, comme les faits) et la table des sous-agents de la PR 1 (`loadSubagents` : l'`id` de l'appel donne le contenu du fichier du sous-agent). Elle rend les blocs de C10 amendé, dans l'ordre du temps.
+>   - Comme les autres lecteurs, elle ne lit les blocs que sur les lignes `user` et `assistant` (les lignes `api-request-blob` recopient des blocs : annexe 08), et dédoublonne par identifiant.
+>   - **Le raisonnement.** Un bloc `thinking` d'une ligne `assistant` de la session, seulement si son texte n'est pas vide après préparation. À l'essai, ce texte est vide en `claude -p` (`thinkingDisplay: 'omitted'`) : rien ne part alors. Essais du 12/11 en session interactive (annexe 08) : vide aussi avec les réglages par défaut ; écrit, en résumé, avec le réglage `showThinkingSummaries` de Claude Code, et `extractBackstage` le relève alors. `id` : l'`uuid` de la ligne, suivi de `:` et du rang du bloc dans la ligne (C10 dit « l'`uuid` de la ligne » : le rang le précise, pour une ligne qui porterait plusieurs blocs). Le raisonnement d'un sous-agent ne part pas : D29 ne cite que sa consigne, son rapport et ses appels.
+>   - **Un sous-agent**, pour chaque appel `Agent` ou `Task`, de la session ou d'un sous-agent :
+>     - la consigne : le `prompt` de l'appel, daté de la ligne de l'appel. `id` : l'`id` de l'appel suivi de `:consigne` ;
+>     - le rapport : le dernier texte `assistant` du fichier du sous-agent, seulement s'il a fini (la règle du rapport final de T63), daté de sa ligne. `id` : l'`id` de l'appel suivi de `:rapport`. Sans fichier, ou coupé avant la fin : pas de rapport, la consigne part seule ;
+>     - aucun autre champ de l'appel ne part (`description`, `subagent_type`), ni la `description` du `meta.json`.
+>   - **Un appel d'outil**, pour chaque bloc `tool_use` de la session et des fichiers de ses sous-agents. `id` : l'`id` du bloc. `ts` : la date de sa ligne. `outil` : `reduceToolName`. `statut` : `erreur` si son `tool_result` a `is_error` vrai, `sans_resultat` s'il n'a aucun `tool_result`, `ok` sinon. `cible` :
+>     - `Bash` : `reduceCommand` (rien si elle rend une chaîne vide) ;
+>     - `Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit` : `file_path` ou `notebook_path`, par `repoRelativePath` (rien s'il sort du dépôt, ni s'il commence par `~` ou `$`, ou porte une variable `%…%` : rien ne les développe, ils passeraient pour relatifs ; le serveur les écarte aussi) ;
+>     - `Glob`, `Grep`, `LS` : leur `path` seulement, de même. Jamais le motif ;
+>     - tout autre outil : pas de cible. Jamais une URL, une requête, une consigne ni un autre argument ;
+>     - l'appel `Agent` lui-même est un `appel_outil` sans cible ; sa consigne part à part, en bloc `sous_agent`.
+>   - **La préparation.** Tout texte passe par `stripLeonBlocks` puis `prepareTurnText` (masque, retrait des `system-reminder`, coupe à 20 000). Toute cible passe par `factText` (masque, 200 caractères). Le serveur refait tout.
+>   - **La sortie d'un outil ne part jamais.** Le `tool_result` ne sert qu'à lire `is_error` et sa présence.
+> - **L'envoi.**
+>   - Seulement avec l'usage `coulisses` dans l'accord de l'outil. Sans lui, rien ne change : aucun appel de plus.
+>   - Après les tours et les faits, dans son propre `try` : un échec des coulisses n'efface pas le message des faits, et l'inverse. Le retrait (`deps.withdrawn`) est relu juste avant l'envoi, comme pour les faits (décision 5).
+>   - Le corps : C10 amendé, avec `kind`, `external_id`, `usages` et `accord_le` comme les faits.
+>   - Par lots : chaque lot tient sous 256 Kio (avec une marge, comme `batchTurns` pour les tours) et sous 2 000 blocs. C'est la taille qui borne en premier (mesuré à l'essai de la PR 2 : 1 750 appels au plus dans 256 Kio).
+>   - Les plus récents d'abord, comme les tours : le crochet de fin a 15 s en tout (`HOOK_DEADLINE_MS`), et une coupe laisse le reste à `leon import-claude-code`, qui renvoie sans doublon (les identifiants sont stables).
+>   - Un serveur ancien répond 404, un champ inconnu 400 : un message fixe sur la sortie d'erreur, sur le modèle de `FACTS_REFUSED_MESSAGE`. Le code de sortie reste 0, et les tours restent captés. Un 403 (usage retiré entre-temps) arrête l'envoi sans bruit.
+>   - Le crochet de fin est le premier à brancher (`src/cli/capture-session.ts`), puis l'import (`src/cli/import-claude-code.ts`).
+>   - À l'import, les coulisses d'une session ne partent que si `coulisses` figure dans les usages déjà filtrés par `usagesDepuis` pour ce fichier, comme les faits : une session modifiée avant l'acceptation n'envoie aucune coulisse. Sinon, accepter l'usage enverrait d'un coup le passé.
+>   - À l'import, les coulisses d'une session non finie (`fin` faux : modifiée il y a moins de 30 min) ne partent pas : ses appels en cours resteraient `sans_resultat` pour toujours (le premier écrit gagne). Son crochet de fin, ou un import d'après 30 min d'inactivité, les envoie. Et un bloc déjà relevé dans une autre session, qu'une session reprise recopie, ne repart pas, comme les tours.
+>   - `--dry-run` de l'import ne montre que le nombre de blocs par rôle, jamais leur texte.
+> - **L'usage `coulisses` dans l'installateur.**
+>   - Le texte est `COULISSES_LINES`, exporté dans `src/cli/install-hooks.ts` (pas dans `consent.ts`, qui ne garde que le fichier d'accord et reconnaît déjà l'usage), figé mot pour mot par un test.
+>   - `'coulisses'` entre dans `OFFERED` et `OFFERS`, juste avant `resume` : les trois usages cochés par défaut d'abord, puis `coulisses`, puis `resume`, qui envoie au fournisseur du modèle. Question en `[y/N]`.
+>   - **Pour Claude Code seulement.** `usagesToOffer` reçoit l'outil, et `coulisses` n'est ni proposé ni écrit pour Codex, Cursor et Antigravity (un test). Sinon un « oui » donné dans `leon setup` s'écrirait dans leur accord pour une capture qui n'existe pas, et le lot qui l'ajoutera enverrait leur raisonnement sans rien redemander. Quatre appelants à mettre à jour (`install-hooks.ts` deux fois, `install-codex.ts`, `install-outil.ts`).
+>   - Jamais sur la page « Autoriser » : elle ne montre que les usages cochés par défaut (`AUTHORIZE_USAGES`). `--yes` et `--oui` ne le donnent jamais. Hors terminal, il n'est pas donné.
+>   - Les comptes de questions écrits en dur dans les tests changent pour Claude Code et pour `setup` seulement.
+> - **Les textes (anglais), mot pour mot.** Ce sont des textes d'accord : les agents les codent tels quels.
+>   - `COULISSES_LINES` (il dit qui lit, décision 3, et que retirer l'accord arrête les envois sans rien effacer, décision 5) :
+>     ```
+>     Full capture (usage "coulisses", optional, asked separately):
+>       - At the end of each session, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, when Claude Code writes its text in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument.
+>       - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and read like it: by you and, on the Leon website, by the managers above you. Leon's search always finds it. It is never placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.
+>       - Withdrawing your consent stops this sending. What was already sent stays in Leon.
+>     ```
+>   - **Les textes déjà acceptés sont corrigés, sans redemander l'accord** (décision 4 d'Amos). Une session, son résumé et une note se lisent par l'auteur et, sur le site, par ses managers en remontant (0057), sauf si l'organisation ou le manager l'a coupé. L'état d'un fil, lui, reste à l'auteur seul (`versions_memoire` n'a pas la lecture d'équipe). Quatre phrases changent :
+>     - `CONSENT_LINES`, troisième ligne. Avant :
+>       ```
+>       Each session stays private to its author.
+>       ```
+>       Après :
+>       ```
+>       Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.
+>       ```
+>     - `RESUME_LINES`, deuxième puce. Avant :
+>       ```
+>       The summary stays private to you, like the session.
+>       ```
+>       Après :
+>       ```
+>       The summary is read like the session: by you and, on the Leon website, by the managers above you.
+>       ```
+>     - `RESUME_LINES`, troisième puce. Avant :
+>       ```
+>       It stays private to you, like the summary.
+>       ```
+>       Après :
+>       ```
+>       It stays private to you.
+>       ```
+>       L'état d'un fil n'est lu que par son auteur ; le résumé, lui, ne l'est plus.
+>     - `NOTER_LINES`, première puce. Avant :
+>       ```
+>       The note stays private to you, like your sessions, and keeps its versions:
+>       ```
+>       Après :
+>       ```
+>       The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions:
+>       ```
+>   - **Les mêmes phrases suivent ailleurs :** la page « Autoriser » (la case `noter` reprend `NOTER_LINES`, un test les lie) ; la documentation du site en anglais et en français (`site.documentation.sent.*`, avec un nouveau `sent.coulisses`) ; le README (« ce qui part ») ; l'aide de la CLI qui liste les usages (`src/cli/leon.ts`), et celle de `capter-session` et de `import-claude-code` qui dit ce qui part ; la description de l'outil MCP `remember` et la phrase de `noter` du bloc de démarrage (« Pour garder une note, lue comme tes sessions : … »). Les pages publiques du site hors Documentation (accueil, produit, sécurité, connecteurs, FAQ) disent encore les conversations d'IA et les notes « privées à leur auteur » : elles ne changent pas dans cette PR, leurs phrases sont un choix éditorial d'Amos, proposées dans une PR à part.
+>   - Le texte de base dit encore que le marqueur signale « a subagent » : on ne change pas cette phrase (T63).
+>   - Les textes de base de Codex, Cursor et Antigravity : la même correction de « private » s'ils portent la même phrase (la règle de lecture vaut pour toute session de code), sans y parler de `coulisses`.
+> - **Les tests.**
+>   - `src/capture/session-backstage.test.ts`, sur une fixture inventée dans la forme de l'annexe 08 (celle de la PR 1, complétée d'un bloc `thinking` avec son texte) :
+>     - un faux secret masqué ; la coupe à 20 000 ; un bloc de Leon retiré ;
+>     - un raisonnement vide non relevé ;
+>     - la consigne et le rapport d'un sous-agent rattachés à leur appel par l'`id` ; un sous-agent coupé : la consigne sans rapport ;
+>     - `Bash` avec `curl -u a:X https://exemple.test` donne `curl`, et `PGPASSWORD=X psql -h base` donne `psql` ;
+>     - un `Edit` hors du dépôt n'a pas de cible ; un `Grep` ne porte pas son motif ; un `WebFetch` ne porte pas son URL ;
+>     - `mcp__x__y` donne `mcp:x`, et `mcp__x` donne `[outil]` ;
+>     - un appel sans `tool_result` est `sans_resultat`, un `is_error` est `erreur`, un refus est `erreur` ;
+>     - un appel d'un sous-agent, et d'un sous-agent de sous-agent, est relevé dans la même forme ;
+>     - un bloc recopié dans une ligne `api-request-blob` n'est relevé qu'une fois ;
+>     - une chaîne témoin placée dans la sortie d'un outil, dans un argument d'un autre outil et dans un champ de l'appel `Agent` autre que `prompt` n'apparaît nulle part dans les blocs ;
+>     - un chemin en `~/…`, `$HOME/…` ou `%USERPROFILE%\…` n'a pas de cible ; un `$` au milieu d'un chemin du dépôt reste ;
+>     - un bloc hors du schéma de C10 (un identifiant hors forme) est écarté, les autres partent.
+>   - `src/cli/capture-session.test.ts` et `src/cli/import-claude-code.test.ts` :
+>     - sans l'usage, aucun appel à la route ; avec lui, l'envoi après les faits ;
+>     - un 404 ou un 400 n'arrête rien (message fixe, code 0) ;
+>     - un retrait relu juste avant l'envoi l'empêche ;
+>     - les lots tiennent sous la taille et sous 2 000 blocs ;
+>     - à l'import, une session modifiée avant l'acceptation n'envoie aucune coulisse ; une session non finie non plus ; un bloc recopié par une session reprise ne part qu'une fois.
+>   - Un test en base du crochet de fin jusqu'aux tours de coulisses rangés (comme celui de la PR 1).
+>   - `src/cli/install-hooks.test.ts` : le texte exact de `COULISSES_LINES` ; la question en `[y/N]` à sa place ; un refus daté ; `--yes` ne la donne pas ; hors terminal elle n'est pas donnée ; les textes corrigés. Les tests de Codex, Cursor et Antigravity : la question n'y est jamais posée ni écrite.
+>   - La documentation du site : `sent.coulisses` en anglais et en français, et les phrases corrigées.
+> - **Les fichiers** (la liste ci-dessous est incomplète). En plus :
+>   - `src/capture/session-backstage.ts` (nouveau) et son test, la fixture ;
+>   - `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts` et `src/cli/leon.ts` (le branchement et l'aide), le découpage en lots ;
+>   - `src/cli/install-hooks.ts`, `src/cli/install-codex.ts`, `src/cli/install-outil.ts`, `src/cli/setup.ts` et leurs tests ;
+>   - `messages/en.json`, `messages/fr.json`, la page Documentation et son rendu Markdown, la page « Autoriser » ;
+>   - le `README.md`.
+>   - `src/cli/consent.ts`, que la ligne d'origine citait, n'est pas touché : il reconnaît déjà l'usage.
+> - **Les limites à dire dans la PR.**
+>   - Le raisonnement est vide en `claude -p` et, en session interactive, avec les réglages par défaut ; avec `showThinkingSummaries`, c'est son résumé qui est écrit et qui part (essais du 12/11, annexe 08).
+>   - Les agents de l'outil Workflow ne sont pas relevés (pas vus à l'essai).
+>   - Une session reprise recopie son historique sous un autre identifiant : au crochet de fin, ses coulisses repartent sous la nouvelle session (les identifiants de bloc sont les mêmes, mais la session diffère). L'import, lui, ne renvoie pas un bloc déjà relevé.
+>   - Mesuré à l'essai de la PR 2 : beaucoup d'appels d'outils courts évincent les messages dans une recherche sans filtre. À trancher par Amos avant d'ouvrir l'usage à d'autres.
 
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
 

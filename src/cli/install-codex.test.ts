@@ -11,6 +11,7 @@ import {
   uninstallCodexHook,
 } from './install-codex';
 import {
+  COULISSES_LINES,
   LECTURE_LINES,
   NOTER_LINES,
   RAPPEL_LINES,
@@ -157,6 +158,11 @@ describe('installCodexHook', () => {
     expect(text).toContain('only Codex sessions changed after you accept');
     expect(text).toContain(CATCH_UP_WHEN);
     expect(text).not.toContain('Nothing is captured');
+    // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la session (0057).
+    expect(text).toContain(
+      'Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+    );
+    expect(text).not.toContain('private');
     expect(asked).toHaveLength(1);
   });
 
@@ -369,6 +375,18 @@ describe('installCodexHook : les usages', () => {
       usages: ['lecture'],
       refus: ['resume'],
     });
+  });
+
+  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul, tant que la CLI ne relève pas celles de Codex.
+  it('coulisses n’est ni demandé ni écrit pour Codex, même tranché oui dans le passage par Claude Code', async () => {
+    const { out, asked } = await install(['oui', null, null, null, null], false, {
+      ...terminal,
+      decisions: new Map([['coulisses', true]]),
+    });
+
+    expect(asked).toHaveLength(5);
+    expect(out).not.toContain(COULISSES_LINES[0]);
+    expect(await factsConsent(home, 'codex')).toMatchObject({ usages: [], refus: [] });
   });
 
   it('le retrait efface usages, refus et capture ; une réinstallation dans un terminal les repropose', async () => {

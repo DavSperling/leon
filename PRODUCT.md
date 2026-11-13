@@ -28,7 +28,7 @@ Succès : la personne retrouve ce qui a été dit ou décidé, avec le lien vers
 
 « La source, ou rien. » Chaque réponse cite l'original ou dit « je ne sais pas ». Les concurrents (Glean, Dust, Dash, Qontext, Guru…) sont attaqués sur « ne trouve rien » et « réponses fausses » ; Leon se tient à ce que les données du client prouvent.
 
-« Leon voit ce que vous voyez. Rien de plus. » La recherche, la discussion et l'assistant passent par les mêmes droits que l'utilisateur (RLS en base). Les conversations d'IA captées restent privées à leur auteur.
+« Leon voit ce que vous voyez. Rien de plus. » La recherche, la discussion et l'assistant passent par les mêmes droits que l'utilisateur (RLS en base). Les conversations d'IA captées sont lues par leur auteur et, sur le site de Leon, par ses managers en remontant.
 
 Rien n'est transformé : le brut est gardé tel quel, pas de fiche, pas de résumé figé. Et le site ne promet que ce que le code tient (la page Sécurité liste aussi « ce qui n'est pas encore là »).
 
@@ -67,7 +67,7 @@ Rien n'est transformé : le brut est gardé tel quel, pas de fiche, pas de résu
 ## Product Principles
 
 1. La source, ou rien : citer l'original ou dire « je ne sais pas ».
-2. Les droits de la personne, jamais plus : chaque réponse passe par ses accès, ses conversations d'IA restent à elle.
+2. Les droits de la personne, jamais plus : chaque réponse passe par ses accès, ses conversations d'IA sont lues par elle et, sur le site de Leon, par ses managers en remontant.
 3. Le brut tel quel : on garde, on ne résume pas, on ne fait remplir aucune fiche.
 4. Dire seulement ce que le code tient : promesses, sécurité et tarifs suivent l'état réel, y compris « pas encore ».
 5. Le même écran pour tous les métiers : un dev et une personne des ventes lisent la même réponse, sans vocabulaire technique imposé.

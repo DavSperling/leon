@@ -436,8 +436,8 @@ export const TEAMS: Team[] = [
         text: 'Qui suit quel client, ce qui a été dit, ce qui est en cours : avant le premier rendez-vous.',
       },
       {
-        title: 'Ce qui est privé le reste',
-        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte Outlook ; les conversations d’IA, discussions et notes de chacun ne sont visibles que de lui.',
+        title: 'Des règles de confidentialité claires',
+        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive et Slack ; les discussions de chacun avec Leon restent à lui, ses conversations d’IA et ses notes sont lues par lui et, sur le site de Leon, par ses managers en remontant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -498,7 +498,7 @@ export const SITUATIONS: Situation[] = [
     moment: 'Refaire une analyse d’il y a un mois',
     title: 'Retrouver ce qu’on a trouvé avec son assistant d’IA',
     question: 'la requête de rétention par cohorte sans les comptes de test',
-    does: 'En septembre, il a mis au point la requête avec son assistant d’IA, pièges compris. La conversation, captée par l’extension, se retrouve en une recherche, à côté du ticket qui demandait la courbe. Elle n’est visible que de lui.',
+    does: 'En septembre, il a mis au point la requête avec son assistant d’IA, pièges compris. La conversation, captée par l’extension, se retrouve en une recherche, à côté du ticket qui demandait la courbe. Seuls lui et, sur le site de Leon, ses managers la lisent.',
     gain: 'La version finale, pas le premier essai qui était faux, avec le raisonnement autour.',
     tools: ['linear'],
     alsoReads: 'Ses conversations d’IA',
@@ -550,7 +550,7 @@ export const PILLARS: Pillar[] = [
     text: 'Leon ne résume pas et ne tient pas de fiches. Il garde chaque élément tel qu’il a été écrit, avec un lien vers l’original, et masque les secrets reconnaissables avant de les stocker.',
     points: [
       'Chaque résultat s’ouvre dans son outil d’origine',
-      'Conversations d’IA, discussions et notes privées à leur auteur',
+      'Discussions privées ; conversations d’IA et notes lues par leur auteur et ses managers',
       'Clés d’API, jetons et mots de passe de .env masqués avant stockage',
     ],
   },
@@ -622,8 +622,8 @@ export const SECURITY_FACTS = [
     text: 'La recherche, la discussion et le serveur MCP passent par les mêmes droits que la personne qui demande. Le filtre des droits passe avant le classement.',
   },
   {
-    title: 'Les conversations restent privées',
-    text: 'Les conversations captées avec vos assistants d’IA, vos discussions avec Leon et vos notes ne sont visibles que de vous.',
+    title: 'Les conversations ne sont pas partagées avec l’équipe',
+    text: 'Vos discussions avec Leon ne sont lues que par vous. Les conversations captées avec vos assistants d’IA et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant, jamais par vos autres collègues.',
   },
   {
     title: 'Clés chiffrées',
@@ -649,7 +649,7 @@ export const SECURITY_FACTS = [
 
 /** Ce que Leon ne fait pas encore : on le dit (voix « franc »). */
 export const NOT_YET = [
-  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche.',
+  'Les droits de l’outil d’origine ne sont pas encore repris : ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
   'Un mot de passe écrit en langage courant (« le mot de passe c’est… ») peut échapper au masquage.',
   'Pas encore d’export, ni d’effacement complet depuis l’interface.',
   'Pas de certification (ISO 27001, SOC 2) à ce jour.',
@@ -706,7 +706,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, privés à qui les branche. Les conversations captées avec vos assistants d’IA, vos discussions et vos notes ne sont visibles que de vous.',
+    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -1079,7 +1079,7 @@ const TEAMS_EN: Team[] = [
       },
       {
         title: 'Clear privacy rules',
-        text: 'Content from shared connections is visible to the team, except email, Google Drive and Slack. Each person’s AI conversations, chats and notes are visible only to them.',
+        text: 'Content from shared connections is visible to the team, except email, Google Drive and Slack. Each person’s chats with Leon stay theirs; their AI conversations and notes are read by them and, on the Leon website, by the managers above them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1118,7 +1118,7 @@ const SITUATIONS_EN: Situation[] = [
     moment: 'Rerunning an analysis from last month',
     title: 'Retrieve what you worked out with your AI assistant',
     question: 'the cohort retention query without the test accounts',
-    does: 'In September he built the query with his AI assistant, edge cases included. The conversation, captured by the extension, comes back in one search next to the ticket that requested the chart. Only he can see it.',
+    does: 'In September he built the query with his AI assistant, edge cases included. The conversation, captured by the extension, comes back in one search next to the ticket that requested the chart. Only he and, on the Leon website, his managers can read it.',
     gain: 'The final, corrected query, with the reasoning that led to it.',
     tools: ['linear'],
     alsoReads: 'His AI conversations',
@@ -1166,7 +1166,7 @@ const PILLARS_EN: Pillar[] = [
     text: 'Leon stores each item verbatim, with a link to the original. Recognizable secrets are redacted before anything is stored.',
     points: [
       'Every result opens in its source tool',
-      'AI conversations, chats and notes private to their author',
+      'Private chats; AI conversations and notes read by their author and their managers',
       'API keys, tokens and .env secrets redacted before storage',
     ],
   },
@@ -1234,8 +1234,8 @@ const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
     text: 'Search, chat and the MCP server run with the permissions of the person asking. Access is filtered before ranking, so hidden content never shapes a result.',
   },
   {
-    title: 'Private conversations',
-    text: 'AI assistant conversations, chats with Leon and saved notes are visible only to their author.',
+    title: 'Conversations not shared with the team',
+    text: 'Chats with Leon are read only by their author. AI assistant conversations and saved notes are read by their author and, on the Leon website, by the managers above them, never by other colleagues.',
   },
   {
     title: 'Encrypted credentials',
@@ -1260,7 +1260,7 @@ const SECURITY_FACTS_EN: Twin<typeof SECURITY_FACTS> = [
 ];
 
 const NOT_YET_EN: Twin<typeof NOT_YET> = [
-  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them.',
+  'Source-tool permissions are not mirrored yet. Content from a connection is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them.',
   'A secret written in plain prose (“the password is…”) can slip past redaction.',
   'No data export yet, and no full account deletion from the interface.',
   'No ISO 27001 or SOC 2 certification yet.',
@@ -1315,7 +1315,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which stay private to whoever connects them. AI assistant conversations, chats and notes are visible only to their author.',
+    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations and notes are read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only.',
   },
   {
     q: 'What happens when Leon doesn’t know?',

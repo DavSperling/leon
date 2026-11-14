@@ -112,7 +112,7 @@ export function ActionCard({ action }: { action: ActionView }) {
       {params.diff && (
         <>
           <p className="mt-2 text-label text-muted">{t('details.diff')}</p>
-          <pre className="mt-1 max-h-72 overflow-auto rounded-field bg-ink px-3 py-2 font-mono text-[12px] leading-5 text-fg-2">
+          <pre className="mt-1 max-h-72 overflow-auto rounded-field bg-selected px-3 py-2 font-mono text-[12px] leading-5 text-fg-2">
             {diffLines.map(({ key, line }) => (
               <span
                 key={key}

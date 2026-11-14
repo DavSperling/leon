@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
-import { previewPassageAction, signOutAction } from './actions';
+import { searchShell } from '@/server/shell/shell';
+import { previewPassageAction, searchShellAction, signOutAction } from './actions';
 
 vi.mock('@/server/auth/session', () => ({
   getSession: vi.fn(),
@@ -10,6 +11,10 @@ vi.mock('@/server/auth/session', () => ({
   signOutCurrentUser: vi.fn(),
 }));
 vi.mock('@/server/search/context', () => ({ fetchPassageContext: vi.fn() }));
+vi.mock('@/server/shell/shell', () => ({
+  NOTHING_FOUND: { tools: [], people: [], documents: [], discussions: [] },
+  searchShell: vi.fn(),
+}));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
@@ -123,5 +128,43 @@ describe('previewPassageAction', () => {
     await expect(previewPassageAction(PASSAGE)).rejects.toThrow('NEXT_REDIRECT /connexion');
 
     expect(fetchPassageContext).not.toHaveBeenCalled();
+  });
+});
+
+describe('searchShellAction', () => {
+  const NOTHING = { tools: [], people: [], documents: [], discussions: [] };
+  const found = { ...NOTHING, people: [{ id: 'm1', name: 'Karim Benali', image: null }] };
+
+  it('cherche sous les droits de la personne connectée', async () => {
+    vi.mocked(searchShell).mockResolvedValue(found);
+
+    expect(await searchShellAction('karim')).toEqual(found);
+
+    expect(searchShell).toHaveBeenCalledWith(CTX, 'karim');
+  });
+
+  it('ne lit rien quand la requête n’est pas un texte', async () => {
+    for (const bad of [undefined, null, 42, {}, ['karim']]) {
+      expect(await searchShellAction(bad as never)).toEqual(NOTHING);
+    }
+
+    expect(searchShell).not.toHaveBeenCalled();
+  });
+
+  it('ne trouve rien pendant une panne, la journalise, et ne la laisse pas sortir', async () => {
+    vi.mocked(searchShell).mockRejectedValue(new Error('secret : titre d’un document'));
+
+    const result = await searchShellAction('karim');
+
+    expect(result).toEqual(NOTHING);
+    expect(logError).toHaveBeenCalledWith('shell.search_failed', expect.any(Error));
+  });
+
+  it('ne lit rien sans session valide', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+
+    await expect(searchShellAction('karim')).rejects.toThrow('NEXT_REDIRECT /connexion');
+
+    expect(searchShell).not.toHaveBeenCalled();
   });
 });

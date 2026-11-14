@@ -1,0 +1,112 @@
+{
+ "files": [
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/index.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/org-chart.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/org-chart.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/person-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/invite-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/reports-to.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/group-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/equipe/directory-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/equipe/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/equipe/actions.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/equipe/actions.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/reglages/actions.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/reglages/actions.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/auth/members.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/auth/members.db.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/auth/rate-limit.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/auth/annuaire.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/email/invitation.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/email/invitation.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/db/migrations/0065-invitations-manager.sql",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/db/schema/invitation-links.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/en.json",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/fr.json",
+  "(supprimés) /Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/reglages/members.tsx, groups.tsx, annuaire.tsx"
+ ],
+ "summary": "L'écran Équipe est refait dans le nouveau style « Papier » et branché sur le vrai serveur. En haut : le titre et la pastille noire « Inviter ». Ensuite l'organigramme : chaque personne est une tuile (rond avec initiales, nom, poste), reliée aux autres par des traits fins. Sur le côté, « Pas encore placés » regroupe ceux qui ne sont rattachés à personne. En dessous, « Tout le monde » est replié au départ ; on l'ouvre pour voir toutes les tuiles avec une recherche. Puis viennent les groupes, visibles des administrateurs seulement. Un clic sur une personne ouvre sa fiche à droite, et l'adresse change en ?personne=… : on peut donc partager le lien ou recharger la page. La fiche montre l'e-mail, le rôle (modifiable si on en a le droit), « Rattaché à » (un choix avec recherche, et les refus du serveur s'affichent sous le champ), le poste (« Modifier ») et son équipe. Pour une personne qui est sous vous, on retrouve dans la fiche ce qu'affichait « Mon équipe » : les sujets suivis, l'interrupteur « voir aussi son privé » avec sa phrase légale, et l'activité récente. En bas de la fiche, « Retirer de l'espace » demande une confirmation sur place. Sous chaque personne, un petit « + » discret (au survol, au clavier, et toujours visible sur téléphone) ouvre l'invitation avec « Rattaché à » déjà rempli. L'invitation demande le nom, le service, le poste, le niveau et le rattachement. Ensuite le lien s'affiche dans une étape verrouillée : « Copier », ou « Envoyer par e-mail » (adresse, « Envoyer », puis « Envoyé à … »). L'invité apparaît tout de suite dans l'arbre avec la mention « Invitation en attente », et on peut annuler l'invitation depuis sa fiche. Glisser une personne sur une autre la déplace aussi, mais la fiche permet toujours de le faire sans glisser. Côté serveur : l'invitation garde le manager choisi et le rattachement se fait à l'arrivée ; les invitations en attente sont listées et peuvent être annulées. L'envoi par e-mail passe par le même service que la réinitialisation du mot de passe, en français et en anglais, avec une limite (3 envois par adresse et par quart d'heure). Il refuse clairement une adresse mal écrite, ou un serveur qui n'a pas de service d'e-mail. L'import de l'annuaire, les groupes et les membres ont quitté les Réglages pour cet écran, et le retour de l'annuaire revient sur /equipe. La phrase « Leon n'envoie aucun e-mail » est supprimée.",
+ "kept": [
+  "Liste des membres avec nom, poste et « Vous » : tuiles de l'organigramme et de « Tout le monde » (index.tsx, org-chart.tsx)",
+  "Anciens membres : dans « Tout le monde », à la fin, avec la mention « Ancien membre » (index.tsx)",
+  "Organigramme (fonction orgView et ses tests gardés) : arbre complet + « Pas encore placés » (org-chart.tsx, chartLayout testé)",
+  "Inviter (lien à usage unique, 7 jours, poste requis) : panneau d'invitation (invite-panel.tsx) via la pastille ou le « + »",
+  "Lien montré une seule fois + Copier : étape verrouillée du panneau d'invitation",
+  "Changer le rôle d'un membre : fiche, champ Rôle (person-panel.tsx), refusé pour le propriétaire et pour soi",
+  "Changer le rattachement + refus boucle / propriétaire : fiche, « Rattaché à » (reports-to.tsx + person-panel.tsx), et glisser-déposer dans l'arbre",
+  "Poste d'un membre (service, poste, niveau) : fiche, « Poste » > Modifier (PlacementFields réutilisé)",
+  "Retirer un membre : fiche, « Retirer de l'espace » avec confirmation sur place",
+  "Mon équipe : interrupteur « voir aussi son privé » + phrase légale, sujets suivis, activité récente, lien « Tout ce qu'a écrit X » : dans la fiche de la personne sous le lecteur",
+  "Groupes (créer, renommer, composer, supprimer ; groupes de service en lecture) : section Groupes + group-panel.tsx",
+  "Import de l'annuaire Google/Microsoft (aperçu, Appliquer, rattachements faits à la main gardés) : bouton dans l'en-tête de l'organigramme + directory-panel.tsx, retour sur /equipe?annuaire=…",
+  "Clés de messages settings lues telles quelles (pas déplacées) ; la clé settings.inviteCreatedDescription, plus lue nulle part, est supprimée en EN et FR"
+ ],
+ "checks": [
+  {
+   "name": "pnpm typecheck",
+   "result": "aucune erreur dans mes fichiers ; les erreurs qui restent viennent d'autres chantiers (src/components/site/*, mot-de-passe-oublie/page.tsx)"
+  },
+  {
+   "name": "biome check (mes 20 fichiers)",
+   "result": "propre, 0 avertissement"
+  },
+  {
+   "name": "vitest unit (components, app, i18n, contracts, lib, server/email)",
+   "result": "1243 passés, 1 en échec qui ne vient pas de moi : translation-keys attend la lecture de « settings.assistantsTitle », que le chantier Réglages ne lit plus"
+  },
+  {
+   "name": "contrat privileges (set_config seulement dans withTenant)",
+   "result": "j'avais cassé ce contrat ; corrigé : le rattachement à l'arrivée passe maintenant par withTenant, au nom de la personne qui a créé le lien, après l'entrée de l'invité"
+  },
+  {
+   "name": "tests base de données (members, sign-up, annuaire, rate-limit, organisation) sur leon_test_refonte_equipe",
+   "result": "77/77 passés"
+  },
+  {
+   "name": "tests e-mail d'invitation + actions equipe + actions reglages",
+   "result": "tous passés (129 sur la tranche ciblée)"
+  },
+  {
+   "name": "regard 1512x771 clair, 3 passages et plus (au repos, Tout le monde ouvert, fiche ouverte) à côté du prototype",
+   "result": "fait ; même structure que le prototype : titre + pastille, sections sans compteur, tuiles"
+  },
+  {
+   "name": "parcours de bout en bout (compte claire, propriétaire)",
+   "result": "inviter par le « + » sous Karim : lien créé, l'invité apparaît sous Karim. Inviter par la pastille : il apparaît dans « Pas encore placés ». Adresse mal écrite : refusée. Adresse correcte : « aucun service d'e-mail sur ce serveur » (c'est le cas en local). Échap sans effet sur l'étape du lien. Annulation des deux invitations : confirmée, elles disparaissent"
+  },
+  {
+   "name": "sombre, français, mode rail, 1280x800, 390x844",
+   "result": "OK. Correction faite : à 1280, « Pas encore placés » passe sous l'arbre. Correction faite : sur téléphone, le « + » se place sous la tuile au lieu de couvrir le poste"
+  },
+  {
+   "name": "compte karim (membre)",
+   "result": "ni Inviter, ni « + », ni glisser, ni groupes ; la fiche est en lecture seule"
+  },
+  {
+   "name": "dead.mjs /equipe",
+   "result": "45 contrôles, 0 mort"
+  },
+  {
+   "name": "erreurs console",
+   "result": "aucune sur /equipe (des erreurs de build passagères venaient de fichiers du site supprimés par un autre chantier)"
+  }
+ ],
+ "notDone": [
+  "Migration 0065 (colonne manager_id sur invitation_links) appliquée à la base leon_refonte avec pnpm db:migrate : elle est additive, et la tâche l'exigeait côté serveur. Le fichier schema/invitation-links.ts, hors de ma liste, a été modifié pour la suivre.",
+  "Glisser-déposer pas essayé à la souris : le navigateur sans écran ne sait pas glisser. Le déplacement par la fiche passe par la même action serveur, couverte par les tests.",
+  "Le refus « boucle » dans la fiche n'a pas été vu à l'écran : le serveur de dev, très chargé (plus de 30 s par action) et rechargé sans cesse par les autres chantiers, a fermé le panneau avant la réponse. Le refus lui-même est couvert par les tests serveur.",
+  "Changement de rôle et « Retirer de l'espace » pas déclenchés pour de vrai : ce sont des comptes partagés et je n'y touche pas. Seule l'interface a été vue.",
+  "Envoi réel d'un e-mail jamais fait : pas de service d'e-mail en local. Le contenu FR/EN et le refus de Resend sont testés avec un faux service.",
+  "Hors de mes fichiers, à reprendre par le chantier Onboarding : onboarding.teammates.linkNote dit encore « Envoyez-le vous-même », leaveDescription renvoie vers « Réglages › Équipe », et un commentaire de invite-form.tsx parle aussi de Réglages › Équipe.",
+  "Hors de mes fichiers : le test translation-keys échoue sur « settings.assistantsTitle » (chantier Réglages).",
+  "Rien n'est commité (consigne)."
+ ],
+ "leastSure": [
+  "Tuiles déplaçables : dans le navigateur de test, un vrai clic sur une tuile qu'on peut glisser n'ouvrait pas la fiche, alors qu'un clic par script l'ouvre. Je pense que c'est une limite du navigateur sans écran, mais il faut vérifier à la main dans Chrome et Safari qu'un clic sur une tuile ouvre bien la fiche quand on est administrateur.",
+  "L'arbre complet à 200 personnes : il devient très large et défile dans sa feuille. C'est lisible pour une petite équipe, pas sûr au-delà de 50.",
+  "Le « + » discret n'apparaît qu'au survol sur ordinateur : on risque de ne pas le trouver (la pastille Inviter reste là).",
+  "Le libellé français « Invitation en attente » sur la tuile est long à côté de « Invited ».",
+  "La phrase en bas du panneau d'invitation (« Par défaut, chacun voit ce que Leon lit… ») reprise des Réglages : utile ou de trop à cet endroit ?",
+  "Les initiales « D( » pour « David (démo) » viennent du composant Avatar commun, pas de cet écran."
+ ]
+}

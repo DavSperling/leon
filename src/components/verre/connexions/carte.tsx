@@ -321,7 +321,7 @@ function Bulle({ n }: { n: Noeud }) {
 // La pastille est centrée sur son point : son enveloppe (sans taille) est placée en %, elle se décale de moitié.
 const PASTILLE =
   'absolute inline-flex h-8 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-line bg-menu px-3 ' +
-  'text-[13px] font-medium whitespace-nowrap text-fg-2 shadow-hi outline-none hover:border-line-strong hover:text-fg ' +
+  'text-[13px] font-medium whitespace-nowrap text-fg-2 outline-none hover:border-line-strong hover:text-fg ' +
   'focus-visible:shadow-[0_0_0_2px_var(--accent-line)] data-[hot]:border-line-strong data-[hot]:text-fg';
 
 function Pastille({

@@ -4,6 +4,9 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: '12mb' } },
+  // En développement, pas de badge Next : dans chaque coin il recouvre un contrôle (la ligne d'identité en bas à
+  // gauche, le bouton du panneau en bas à droite, sa croix en haut). Une erreur de compilation s'affiche toujours.
+  devIndicators: false,
   // Chargés depuis node_modules, pas empaquetés : officeparser trouve alors le worker de pdf.js sur le disque et
   // lit chaque PDF dans un processus à part, sous plafond de mémoire (server/documents/documents.ts).
   serverExternalPackages: ['officeparser', 'pdfjs-dist'],

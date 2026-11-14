@@ -3,15 +3,15 @@
 import { useTranslations } from 'next-intl';
 import { useOptimistic, useTransition } from 'react';
 import { setManagersSeeAllAction } from '@/app/(app)/reglages/actions';
-import { GlassCard, Section, Switch, toast } from '@/components/verre';
+import { Switch, toast } from '@/components/verre';
 import { nb } from '@/lib/verre';
-import { SECTION } from './reglages';
 
 /**
- * Section « Managers », pour un propriétaire ou un administrateur : les managers lisent-ils le privé des gens sous eux
- * (0057). Oui par défaut ; chaque manager peut encore le couper personne par personne dans « Mon équipe ».
+ * L'interrupteur « Managers », pour un propriétaire ou un administrateur : les managers lisent-ils le privé des gens
+ * sous eux (0057). Oui par défaut ; il s'applique tout de suite. La phrase de la loi reste dessous : Leon ne prévient
+ * pas les employés à la place de l'entreprise.
  */
-export function ManagersSection({ on }: { on: boolean }) {
+export function ManagersSwitch({ on }: { on: boolean }) {
   const t = useTranslations('settings');
   // l'interrupteur suit le clic tout de suite ; un refus le remet comme la page le relit
   const [shown, setShown] = useOptimistic(on);
@@ -28,23 +28,16 @@ export function ManagersSection({ on }: { on: boolean }) {
     });
 
   return (
-    <Section
-      id="managers"
-      title={t('managersTitle')}
-      description={t('managersDescription')}
-      className={SECTION}
-    >
-      <GlassCard className="grid gap-2 p-4">
-        <Switch
-          label={t('managersToggle')}
-          checked={shown}
-          onCheckedChange={toggle}
-          aria-describedby="managers-loi"
-        />
-        <p id="managers-loi" className="text-label text-muted">
-          {nb(t('managersLaw'))}
-        </p>
-      </GlassCard>
-    </Section>
+    <div className="grid gap-1.5">
+      <Switch
+        label={t('managersToggle')}
+        checked={shown}
+        onCheckedChange={toggle}
+        aria-describedby="managers-loi"
+      />
+      <p id="managers-loi" className="text-label text-muted">
+        {nb(t('managersLaw'))}
+      </p>
+    </div>
   );
 }

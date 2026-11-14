@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
+import { AuthSheet, AuthTitle } from '@/components/verre/auth/frame';
 
 type Props = { searchParams: Promise<{ refus?: string | string[] }> };
 
@@ -16,11 +17,12 @@ export default async function ComputerConnectedPage(props: Props) {
   const t = await getTranslations('computer.connected');
   const no = await refused(props);
   return (
-    <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">
-        {t(no ? 'refusedTitle' : 'title')}
-      </h1>
-      <p className="mt-3 text-ui text-muted">{t(no ? 'refused' : 'done')}</p>
-    </div>
+    // Rien à faire ici (l'onglet se ferme) : le titre, sous le trait vert quand c'est fait, et la phrase.
+    <AuthSheet wide>
+      <AuthTitle done={!no}>{t(no ? 'refusedTitle' : 'title')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">
+        {t(no ? 'refused' : 'done')}
+      </p>
+    </AuthSheet>
   );
 }

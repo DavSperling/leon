@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connections · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="../../css/tokens.css">
+<link rel="stylesheet" href="../../css/ui.css">
+<link rel="stylesheet" href="app.css">
+<script>try { if (localStorage.getItem('leon-rail') === '1') document.documentElement.classList.add('is-rail'); } catch (e) { /* not remembered */ }</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Icons: one stroke, one weight -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-team" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-plug" viewBox="0 0 24 24"><path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+  <symbol id="i-updown" viewBox="0 0 24 24"><path d="m8 15 4 4 4-4M8 9l4-4 4 4"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+</svg>
+
+<aside class="side" id="side" aria-label="Leon">
+  <div class="side__brand">
+    <span class="brand"><svg viewBox="131 126 200 200" role="img" aria-label="Leon"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg><span class="lbl" aria-hidden="true">Leon</span></span>
+    <button type="button" class="iconbtn" id="rail-btn" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-panel"/></svg></button>
+  </div>
+  <div class="ws" data-tip="Kestrel Studio"><span class="ws__tile" aria-hidden="true">K</span><span class="lbl ws__text"><b>Kestrel Studio</b><span>38 people</span></span></div>
+
+  <nav class="nav" aria-label="Main">
+    <ul>
+      <li><button type="button" class="nav__item" data-undrawn="Home" data-tip="Home"><svg class="i" aria-hidden="true"><use href="#i-home"/></svg><span class="lbl">Home</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Chat" data-tip="Chat"><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg><span class="lbl">Chat</span></button></li>
+    </ul>
+    <ul>
+      <li><button type="button" class="nav__item" data-undrawn="Documents" data-tip="Documents"><svg class="i" aria-hidden="true"><use href="#i-doc"/></svg><span class="lbl">Documents</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Team" data-tip="Team"><svg class="i" aria-hidden="true"><use href="#i-team"/></svg><span class="lbl">Team</span></button></li>
+      <li><a class="nav__item" href="connections.html" aria-current="page" data-tip="Connections"><svg class="i" aria-hidden="true"><use href="#i-plug"/></svg><span class="lbl">Connections</span><span class="tag c4 nav__tag" id="nav-flag"><span class="vh">Tools that need reconnecting: </span>1</span><i class="nav__dot" id="nav-dot" aria-hidden="true"></i></a></li>
+      <li><button type="button" class="nav__item" data-undrawn="Settings" data-tip="Settings"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="lbl">Settings</span></button></li>
+    </ul>
+  </nav>
+
+  <div class="recents">
+    <p class="nav__label" id="rec-h">Recent</p>
+    <ul aria-labelledby="rec-h">
+      <li><button type="button" class="nav__item" data-undrawn="Chat"><span>Did ACME accept the new migration date?</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Chat"><span>What did we promise ACME for V2?</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Chat"><span>Who owns the Verlant account now?</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Chat"><span>Summary of the Nordia redesign feedback</span></button></li>
+      <li><button type="button" class="nav__item" data-undrawn="Chat"><span>What did we decide about the Q1 pricing?</span></button></li>
+    </ul>
+  </div>
+
+  <div class="side__end">
+    <div class="health" id="health">
+<!--b:health-->
+<button type="button" class="alert" data-open="intercom"><i class="dot"></i><span>Intercom needs reconnecting</span></button>
+<!--/b:health-->
+    </div>
+    <button type="button" class="me" popovertarget="user-menu" aria-expanded="false" data-tip="Julie Martin"><span class="av" aria-hidden="true">JM</span><span class="lbl me__text"><b>Julie Martin</b><span>julie@kestrel.example</span></span><span class="vh">Account menu</span><svg class="i" aria-hidden="true"><use href="#i-updown"/></svg></button>
+  </div>
+</aside>
+<div class="scrim" id="scrim" hidden></div>
+
+<div class="menu" id="user-menu" popover>
+  <div class="menu__who"><span class="av" aria-hidden="true">JM</span><span class="me__text"><b>Julie Martin</b><span>julie@kestrel.example</span></span></div>
+  <button type="button" class="menu__item" data-undrawn="Settings"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg>Settings<span>Admin</span></button>
+  <a class="menu__item" href="../../signin.html"><svg class="i" aria-hidden="true"><use href="#i-exit"/></svg>Sign out</a>
+</div>
+
+<main id="main">
+  <div class="top">
+    <button type="button" class="iconbtn top__menu" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="side"><svg class="i" aria-hidden="true"><use href="#i-menu"/></svg></button>
+    <button type="button" class="ask" id="ask" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K">
+      <span class="strokes" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="ask__label">Ask Leon…</span>
+      <span class="ask__keys" aria-hidden="true"><kbd class="mod">⌘</kbd><kbd>K</kbd></span>
+    </button>
+  </div>
+
+  <div class="page">
+    <h1>Connections</h1>
+
+    <section class="sec" id="connected" aria-labelledby="conn-h">
+      <div class="sec__head"><h2 id="conn-h">Connected</h2><span class="tag c2" id="conn-count">8</span></div>
+      <ul class="tls" id="conn-grid">
+<!--b:conns-->
+<li data-f="5"><button type="button" class="tl is-err" data-manage="c8" data-tool="intercom" aria-label="Reconnect Intercom" aria-describedby="s-c8">
+  <img class="logo" src="../../../shared/logos/intercom.svg" alt="" width="36" height="36"><i class="tl__dot"></i><span class="tl__id"><span class="tl__name"><span class="mark">Intercom</span></span><span class="tl__sub" id="s-c8">Disconnected</span></span>
+  <span class="btn btn--xs">Reconnect</span>
+</button></li>
+<li data-f="0"><button type="button" class="tl" data-manage="c1" data-tool="gmail" aria-label="Manage Gmail" aria-describedby="s-c1">
+  <img class="logo" src="../../../shared/logos/gmail.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">Gmail</span></span><span class="tl__sub" id="s-c1">Only you</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="0"><button type="button" class="tl" data-manage="c2" data-tool="slack" aria-label="Manage Slack" aria-describedby="s-c2">
+  <img class="logo" src="../../../shared/logos/slack.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">Slack</span></span><span class="tl__sub" id="s-c2">Only you</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="2"><button type="button" class="tl" data-manage="c3" data-tool="notion" aria-label="Manage Notion" aria-describedby="s-c3">
+  <img class="logo" src="../../../shared/logos/notion.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">Notion</span></span><span class="tl__sub" id="s-c3">Team</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="3"><button type="button" class="tl" data-manage="c4" data-tool="linear" aria-label="Manage Linear" aria-describedby="s-c4">
+  <img class="logo" src="../../../shared/logos/linear.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">Linear</span></span><span class="tl__sub" id="s-c4">Team</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="3"><button type="button" class="tl" data-manage="c5" data-tool="github" aria-label="Manage GitHub" aria-describedby="s-c5">
+  <img class="logo" src="../../../shared/logos/github.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">GitHub</span></span><span class="tl__sub" id="s-c5">Team</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="4"><button type="button" class="tl" data-manage="c6" data-tool="hubspot" aria-label="Manage HubSpot" aria-describedby="s-c6">
+  <img class="logo" src="../../../shared/logos/hubspot.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">HubSpot</span></span><span class="tl__sub" id="s-c6">Team</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<li data-f="1"><button type="button" class="tl" data-manage="c7" data-tool="granola" aria-label="Manage Granola" aria-describedby="s-c7">
+  <img class="logo" src="../../../shared/logos/granola.svg" alt="" width="36" height="36"><span class="tl__id"><span class="tl__name"><span class="mark">Granola</span></span><span class="tl__sub" id="s-c7">Team</span></span>
+  <svg class="i" aria-hidden="true"><use href="#i-chev"/></svg>
+</button></li>
+<!--/b:conns-->
+      </ul>
+    </section>
+
+    <section class="sec" id="add" aria-labelledby="add-h">
+      <div class="sec__head">
+        <h2 id="add-h">Add a tool</h2><span class="tag c3" id="add-count">34</span>
+        <div class="sec__tools">
+          <div class="search"><label class="vh" for="tool-q">Search tools</label><input class="field" id="tool-q" type="search" placeholder="Search tools" autocomplete="off" spellcheck="false"><kbd aria-hidden="true">/</kbd></div>
+        </div>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Families">
+<!--b:chips-->
+<button type="button" class="chip" data-fam="-1" aria-pressed="true">All</button>
+<button type="button" class="chip" data-fam="0" aria-pressed="false">Email, chat and files</button>
+<button type="button" class="chip" data-fam="1" aria-pressed="false">Meetings</button>
+<button type="button" class="chip" data-fam="2" aria-pressed="false">Projects and docs</button>
+<button type="button" class="chip" data-fam="3" aria-pressed="false">Engineering</button>
+<button type="button" class="chip" data-fam="4" aria-pressed="false">CRM</button>
+<button type="button" class="chip" data-fam="5" aria-pressed="false">Support</button>
+<!--/b:chips-->
+      </div>
+      <p class="vh" id="tool-live" role="status"></p>
+      <ul class="tls" id="tiles">
+<!--b:tiles-->
+<li data-f="0" data-s="outlook outlook email, chat and files"><button type="button" class="tl" data-open="outlook" data-tool="outlook" aria-label="Connect Outlook">
+  <img class="logo" src="../../../shared/logos/outlook.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Outlook</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="0" data-s="google drive drive email, chat and files"><button type="button" class="tl" data-open="drive" data-tool="drive" aria-label="Connect Google Drive">
+  <img class="logo" src="../../../shared/logos/drive.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Google Drive</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="fathom fathom meetings"><button type="button" class="tl" data-open="fathom" data-tool="fathom" aria-label="Connect Fathom">
+  <img class="logo" src="../../../shared/logos/fathom.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Fathom</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="fireflies fireflies meetings"><button type="button" class="tl" data-open="fireflies" data-tool="fireflies" aria-label="Connect Fireflies">
+  <img class="logo" src="../../../shared/logos/fireflies.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Fireflies</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="tl;dv tldv meetings"><button type="button" class="tl" data-open="tldv" data-tool="tldv" aria-label="Connect tl;dv">
+  <img class="logo" src="../../../shared/logos/tldv.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">tl;dv</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="circleback circleback meetings"><button type="button" class="tl" data-open="circleback" data-tool="circleback" aria-label="Connect Circleback">
+  <img class="logo" src="../../../shared/logos/circleback.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Circleback</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="claap claap meetings"><button type="button" class="tl" data-open="claap" data-tool="claap" aria-label="Connect Claap">
+  <img class="logo" src="../../../shared/logos/claap.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Claap</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="leexi leexi meetings"><button type="button" class="tl" data-open="leexi" data-tool="leexi" aria-label="Connect Leexi">
+  <img class="logo" src="../../../shared/logos/leexi.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Leexi</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="1" data-s="gong gong meetings"><button type="button" class="tl" data-open="gong" data-tool="gong" aria-label="Connect Gong">
+  <img class="logo" src="../../../shared/logos/gong.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Gong</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="jira jira projects and docs"><button type="button" class="tl" data-open="jira" data-tool="jira" aria-label="Connect Jira">
+  <img class="logo" src="../../../shared/logos/jira.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Jira</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="confluence confluence projects and docs"><button type="button" class="tl" data-open="confluence" data-tool="confluence" aria-label="Connect Confluence">
+  <img class="logo" src="../../../shared/logos/confluence.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Confluence</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="asana asana projects and docs"><button type="button" class="tl" data-open="asana" data-tool="asana" aria-label="Connect Asana">
+  <img class="logo" src="../../../shared/logos/asana.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Asana</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="clickup clickup projects and docs"><button type="button" class="tl" data-open="clickup" data-tool="clickup" aria-label="Connect ClickUp">
+  <img class="logo" src="../../../shared/logos/clickup.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">ClickUp</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="trello trello projects and docs"><button type="button" class="tl" data-open="trello" data-tool="trello" aria-label="Connect Trello">
+  <img class="logo" src="../../../shared/logos/trello.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Trello</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="monday.com monday projects and docs"><button type="button" class="tl" data-open="monday" data-tool="monday" aria-label="Connect monday.com">
+  <img class="logo" src="../../../shared/logos/monday.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">monday.com</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="shortcut shortcut projects and docs"><button type="button" class="tl" data-open="shortcut" data-tool="shortcut" aria-label="Connect Shortcut">
+  <img class="logo" src="../../../shared/logos/shortcut.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Shortcut</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="plane plane projects and docs"><button type="button" class="tl" data-open="plane" data-tool="plane" aria-label="Connect Plane">
+  <img class="logo" src="../../../shared/logos/plane.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Plane</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="airtable airtable projects and docs"><button type="button" class="tl" data-open="airtable" data-tool="airtable" aria-label="Connect Airtable">
+  <img class="logo" src="../../../shared/logos/airtable.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Airtable</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="basecamp basecamp projects and docs"><button type="button" class="tl" data-open="basecamp" data-tool="basecamp" aria-label="Connect Basecamp">
+  <img class="logo" src="../../../shared/logos/basecamp.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Basecamp</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="miro miro projects and docs"><button type="button" class="tl" data-open="miro" data-tool="miro" aria-label="Connect Miro">
+  <img class="logo" src="../../../shared/logos/miro.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Miro</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="2" data-s="productboard productboard projects and docs"><button type="button" class="tl" data-open="productboard" data-tool="productboard" aria-label="Connect Productboard">
+  <img class="logo" src="../../../shared/logos/productboard.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Productboard</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="3" data-s="gitlab gitlab engineering"><button type="button" class="tl" data-open="gitlab" data-tool="gitlab" aria-label="Connect GitLab">
+  <img class="logo" src="../../../shared/logos/gitlab.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">GitLab</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="3" data-s="sentry sentry engineering"><button type="button" class="tl" data-open="sentry" data-tool="sentry" aria-label="Connect Sentry">
+  <img class="logo" src="../../../shared/logos/sentry.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Sentry</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="4" data-s="attio attio crm"><button type="button" class="tl" data-open="attio" data-tool="attio" aria-label="Connect Attio">
+  <img class="logo" src="../../../shared/logos/attio.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Attio</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="4" data-s="folk folk crm"><button type="button" class="tl" data-open="folk" data-tool="folk" aria-label="Connect folk">
+  <img class="logo" src="../../../shared/logos/folk.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">folk</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="4" data-s="pipedrive pipedrive crm"><button type="button" class="tl" data-open="pipedrive" data-tool="pipedrive" aria-label="Connect Pipedrive">
+  <img class="logo" src="../../../shared/logos/pipedrive.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Pipedrive</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="4" data-s="close close crm"><button type="button" class="tl" data-open="close" data-tool="close" aria-label="Connect Close">
+  <img class="logo" src="../../../shared/logos/close.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Close</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="zendesk zendesk support"><button type="button" class="tl" data-open="zendesk" data-tool="zendesk" aria-label="Connect Zendesk">
+  <img class="logo" src="../../../shared/logos/zendesk.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Zendesk</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="freshdesk freshdesk support"><button type="button" class="tl" data-open="freshdesk" data-tool="freshdesk" aria-label="Connect Freshdesk">
+  <img class="logo" src="../../../shared/logos/freshdesk.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Freshdesk</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="help scout helpscout support"><button type="button" class="tl" data-open="helpscout" data-tool="helpscout" aria-label="Connect Help Scout">
+  <img class="logo" src="../../../shared/logos/helpscout.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Help Scout</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="front front support"><button type="button" class="tl" data-open="front" data-tool="front" aria-label="Connect Front">
+  <img class="logo" src="../../../shared/logos/front.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Front</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="plain plain support"><button type="button" class="tl" data-open="plain" data-tool="plain" aria-label="Connect Plain">
+  <img class="logo" src="../../../shared/logos/plain.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Plain</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="crisp crisp support"><button type="button" class="tl" data-open="crisp" data-tool="crisp" aria-label="Connect Crisp">
+  <img class="logo" src="../../../shared/logos/crisp.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Crisp</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<li data-f="5" data-s="missive missive support"><button type="button" class="tl" data-open="missive" data-tool="missive" aria-label="Connect Missive">
+  <img class="logo" src="../../../shared/logos/missive.svg" alt="" width="28" height="28"><span class="tl__id"><span class="tl__name"><span class="mark">Missive</span></span></span><span class="btn btn--line btn--xs">Connect</span>
+</button></li>
+<!--/b:tiles-->
+      </ul>
+      <div class="known" id="known" hidden></div>
+      <div class="empty" id="empty" hidden>
+        <h3 id="empty-h">No tool matches</h3>
+        <p>Check the spelling, or look in another family.</p>
+        <button type="button" class="btn btn--line btn--sm" id="clear">Clear search</button>
+      </div>
+    </section>
+
+    <p class="fict">Fictional example: Kestrel Studio, seen by Julie Martin.</p>
+  </div>
+</main>
+
+<dialog class="cmd" id="cmd" aria-label="Ask Leon or search">
+  <div class="cmd__field">
+    <span class="strokes" aria-hidden="true"><i></i><i></i><i></i></span>
+    <input id="cmd-input" type="text" placeholder="Ask Leon, or find a tool, a discussion, a screen" aria-label="Ask Leon or search" role="combobox" aria-expanded="true" aria-controls="cmd-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" autofocus>
+    <kbd aria-hidden="true">Esc</kbd>
+  </div>
+  <div class="cmd__list" id="cmd-list" role="listbox" aria-label="Results"></div>
+  <div class="cmd__foot" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> to move</span><span><kbd>Enter</kbd> to open</span><span><kbd>Esc</kbd> to close</span></div>
+</dialog>
+
+<dialog class="panel" id="panel" aria-labelledby="panel-title"></dialog>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+<script src="../../../shared/demo-data.js"></script>
+<script src="../../js/app-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

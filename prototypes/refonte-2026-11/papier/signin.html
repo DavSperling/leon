@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in · Leon</title>
+<meta name="description" content="Sign in to your Leon workspace.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/auth.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="auth">
+<!-- Outside the app shell: the home page's bar reduced to the wordmark, the form, and one sheet on the desk.
+     States to look at directly: signin.html?state=error (wrong password), ?state=loading, #forgot, #sent. Nothing is sent: the fields have no name. -->
+<a class="skip" href="#main">Skip to content</a>
+<div class="auth__grid">
+
+<div class="auth__main">
+  <header class="auth__bar">
+    <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+  </header>
+
+  <main class="auth__body" id="main">
+    <div class="auth__col">
+
+      <!-- Sign in -->
+      <section class="auth__view" id="signin" aria-labelledby="signin-h">
+        <h1 class="auth__title" id="signin-h">Sign in</h1>
+        <div class="auth__sso">
+          <a class="btn btn--line btn--wide" href="app.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.71H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.71A5.41 5.41 0 0 1 3.68 9c0-.6.1-1.17.28-1.71V4.96H.96A9 9 0 0 0 0 9c0 1.45.35 2.83.96 4.04l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.96l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Continue with Google</a>
+          <a class="btn btn--line btn--wide" href="app.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path fill="#F25022" d="M0 0h8.5v8.5H0z"/><path fill="#7FBA00" d="M9.5 0H18v8.5H9.5z"/><path fill="#00A4EF" d="M0 9.5h8.5V18H0z"/><path fill="#FFB900" d="M9.5 9.5H18V18H9.5z"/></svg>Continue with Microsoft</a>
+        </div>
+        <p class="auth__or">Or with your email</p>
+        <form class="auth__form fields" data-auth action="app.html">
+          <div class="alert" role="alert" data-state="error" hidden>
+            <div>
+              <p class="alert__title"><span class="dot dot--danger" aria-hidden="true"></span>Incorrect email or password</p>
+              <p class="alert__text">Check both and try again, or <a class="link" href="#forgot">reset your password</a>.</p>
+            </div>
+          </div>
+          <div>
+            <label class="label" for="email">Email</label>
+            <input class="field" id="email" type="email" autocomplete="username" value="julie@kestrel.example" required spellcheck="false" aria-describedby="email-err" data-empty="Enter your email address." data-invalid="Enter a valid email address, like you@company.com.">
+            <p class="field-error" id="email-err" hidden></p>
+          </div>
+          <div>
+            <label class="label" for="password">Password</label>
+            <div class="pw"><input class="field" id="password" type="password" autocomplete="current-password" value="kestrel-demo" required aria-describedby="password-err" data-empty="Enter your password."><button type="button" class="link pw__show" data-show="password" aria-label="Show password">Show</button></div>
+            <p class="field-error" id="password-err" hidden></p>
+            <p class="auth__forgot"><a class="link" href="#forgot">Forgot password?</a></p>
+          </div>
+          <button class="btn btn--wide" type="submit" data-busy="Signing in…">Sign in<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+        <p class="auth__alt">No account yet? <a class="link" href="signup.html">Create a workspace</a></p>
+      </section>
+
+      <!-- Forgot password: shown when the address ends with #forgot -->
+      <section class="auth__view auth__view--alt" id="forgot" aria-labelledby="forgot-h">
+        <h1 class="auth__title" id="forgot-h">Reset your password</h1>
+        <p class="auth__sub">Enter your email. We’ll send you a link to choose a new password.</p>
+        <form class="auth__form fields" data-auth action="signin.html#sent">
+          <div>
+            <label class="label" for="forgot-email">Email</label>
+            <input class="field" id="forgot-email" type="email" autocomplete="username" value="julie@kestrel.example" required spellcheck="false" aria-describedby="forgot-email-err" data-empty="Enter your email address." data-invalid="Enter a valid email address, like you@company.com.">
+            <p class="field-error" id="forgot-email-err" hidden></p>
+          </div>
+          <button class="btn btn--wide" type="submit" data-busy="Sending…">Send reset link<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+        <p class="auth__alt"><a class="link" href="signin.html">Back to sign in</a></p>
+      </section>
+
+      <!-- The link was sent: shown when the address ends with #sent -->
+      <section class="auth__view auth__view--alt" id="sent" aria-labelledby="sent-h">
+        <h1 class="auth__title" id="sent-h">Check your email</h1>
+        <p class="auth__sub" role="status">If this address matches an account, we’ve just sent a reset link. It can take a minute to arrive.</p>
+        <p class="auth__back"><a class="btn btn--line" href="signin.html">Back to sign in</a></p>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<!-- The desk: one sheet, the meeting line with its highlighter and its flag -->
+<aside class="auth__side" aria-label="What Leon keeps">
+  <div class="auth__show">
+    <p class="auth__line">Everything your team said, on record.</p>
+    <article class="doc sheet c1 auth__sheet" data-ui aria-label="Original: ACME monthly check-in">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><p class="doc__title">ACME monthly check-in</p></header>
+      <p class="doc__meta">Granola · Meeting · Oct&nbsp;3, 2026 · 42 min</p>
+      <div class="doc__rest"><ol class="tx" aria-label="Transcript, at the passage"><li class="tx__line"><time class="tx__at">14:02</time><div><span class="tx__who">Dana Whitfield (ACME)</span><p class="tx__text">Our board meets on the 20th. We need V2 live before that.</p></div></li><li class="tx__line"><time class="tx__at">14:31</time><div><span class="tx__who">Julie Martin</span><p class="tx__text">We can <mark class="hl hl-1">commit to November&nbsp;15</mark> for V2, history migration excluded.</p></div></li></ol><footer class="doc__foot"><span class="vis">Shared with the team</span></footer></div>
+    </article>
+    <p class="auth__note">Fictional example</p>
+  </div>
+</aside>
+
+</div>
+<script src="js/auth.js" defer></script>
+</body>
+</html>

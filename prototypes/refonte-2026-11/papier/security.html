@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leon · Security</title>
+<meta name="description" content="Who sees what in Leon, what is in place today, and what is in progress.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/pages.css">
+<link rel="stylesheet" href="css/security.css">
+</head>
+<body class="site page">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Header: the home page's, with its section links pointing back to index.html -->
+<header class="nav" data-nav>
+  <div class="wrap nav__in">
+    <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <nav class="nav__links" id="nav-panel" aria-label="Site" data-nav-panel>
+      <a class="nav__link" href="index.html#product">Product</a>
+      <a class="nav__link" href="index.html#connectors">Connectors</a>
+      <a class="nav__link" href="index.html#developers">Developers</a>
+      <a class="nav__link" href="security.html" aria-current="page">Security</a>
+      <a class="nav__link" href="pricing.html">Pricing</a>
+      <a class="nav__link" href="app/signin.html">Sign in</a>
+    </nav>
+    <a class="btn btn--nav" href="app/signup.html">Create a workspace</a>
+    <button class="nav__menu" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-menu><span class="vh">Menu</span><svg viewBox="0 0 22 22" aria-hidden="true"><line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Page top: the promise of the page -->
+  <section class="ptop sx-top" id="top" aria-labelledby="h1">
+    <div class="wrap grid ptop__grid">
+      <h1 class="ptop__h1" id="h1" data-rv="1"><span class="ptop__line">Leon sees exactly what</span> <span class="ptop__line">you are <span class="swp swp--one">allowed to see.<i class="swp__seg"></i></span></span></h1>
+      <p class="lead ptop__lead" data-rv="2">Search, chat and your own AI assistant all run with the permissions of the person asking.</p>
+    </div>
+  </section>
+
+  <!-- 1. Who sees what (the desk band joined to the page top): the two rules, one sheet each -->
+  <section class="pstage sx-who" id="who-sees-what" aria-labelledby="who-h">
+    <div class="wrap grid sx-who__head">
+      <h2 class="h2" id="who-h" data-rv="1">Two rules cover <span class="hmark" data-hmark="1">everything Leon stores.</span></h2>
+      <p class="lead" data-rv="2">Every item is one or the other. Email, Google Drive and Slack stay private to whoever connects them.</p>
+    </div>
+    <div class="wrap grid sx-who__sheets">
+      <article class="sheet sx-rule" aria-labelledby="rule-team" data-rv="2">
+        <h3 class="sx-rule__title" id="rule-team">Shared with the team</h3>
+        <p class="sx-rule__text">Everything a shared connection brings in.</p>
+        <ul class="sx-rule__rows">
+          <li><span>Tickets and docs</span><span class="sx-logos"><img src="../shared/logos/linear.svg" alt="Linear" width="20" height="20"><img src="../shared/logos/jira.svg" alt="Jira" width="20" height="20"><img src="../shared/logos/notion.svg" alt="Notion" width="20" height="20"><img src="../shared/logos/confluence.svg" alt="Confluence" width="20" height="20"></span></li>
+          <li><span>Meeting transcripts and CRM notes</span><span class="sx-logos"><img src="../shared/logos/granola.svg" alt="Granola" width="20" height="20"><img src="../shared/logos/fathom.svg" alt="Fathom" width="20" height="20"><img src="../shared/logos/hubspot.svg" alt="HubSpot" width="20" height="20"><img src="../shared/logos/pipedrive.svg" alt="Pipedrive" width="20" height="20"></span></li>
+          <li><span>Support conversations and shared inboxes</span><span class="sx-logos"><img src="../shared/logos/intercom.svg" alt="Intercom" width="20" height="20"><img src="../shared/logos/zendesk.svg" alt="Zendesk" width="20" height="20"><img src="../shared/logos/front.svg" alt="Front" width="20" height="20"><img src="../shared/logos/missive.svg" alt="Missive" width="20" height="20"></span></li>
+        </ul>
+        <p class="sx-rule__foot">On each source: <span class="vis">Shared with the team</span></p>
+      </article>
+      <article class="sheet sx-rule" aria-labelledby="rule-you" data-rv="3">
+        <h3 class="sx-rule__title" id="rule-you">Private to you</h3>
+        <p class="sx-rule__text">No one else sees it, in search results or in answers.</p>
+        <ul class="sx-rule__rows">
+          <li><span>Your email, Google Drive and Slack</span><span class="sx-logos"><img src="../shared/logos/outlook.svg" alt="Outlook" width="20" height="20"><img src="../shared/logos/gmail.svg" alt="Gmail" width="20" height="20"><img src="../shared/logos/drive.svg" alt="Google Drive" width="20" height="20"><img src="../shared/logos/slack.svg" alt="Slack" width="20" height="20"></span></li>
+          <li><span>Your AI conversations and coding sessions</span></li>
+          <li><span>Your chats with Leon and the notes you save</span></li>
+        </ul>
+        <p class="sx-rule__foot">On each source: <span class="stamp">Private to you</span></p>
+      </article>
+    </div>
+  </section>
+
+  <!-- 2. In place (white): the home's three items first, each with one plain sentence -->
+  <section class="psec" id="in-place" aria-labelledby="place-h">
+    <div class="wrap grid sx-split">
+      <div class="sx-split__head">
+        <h2 class="h2" id="place-h" data-rv="1">What is <span class="hmark" data-hmark="2">in place</span> today.</h2>
+        <p class="lead" data-rv="2">Each point describes code that is live in the product.</p>
+      </div>
+      <ul class="sx-facts">
+        <li data-rv="1"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Each company’s data isolated with row-level security</h3><p>Enforced by Postgres itself, in a single database, and covered by automated tests.</p></li>
+        <li data-rv="2"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Credentials encrypted with AES-256-GCM</h3><p>API keys and OAuth tokens, each bound to its database row.</p></li>
+        <li data-rv="3"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Permissions checked before anything is ranked</h3><p>In search, in chat and for your own assistant. Every source an assistant opens in full is logged.</p></li>
+        <li data-rv="1"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>Secrets masked before storage</h3><p>Key prefixes, private keys, authorization headers, .env lines. A secret in plain prose can still slip through.</p></li>
+        <li data-rv="2"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><h3>A browser extension that asks first</h3><p>Consent, a switch per site, a pause button. No attachments, nothing in private windows.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 3. In progress (ink band): the home's three items, said frankly -->
+  <section class="band on-ink" id="in-progress" aria-labelledby="progress-h">
+    <div class="wrap grid sx-split">
+      <div class="sx-split__head">
+        <h2 class="h2" id="progress-h" data-rv="1">What is <span class="hmark" data-hmark="1">in progress.</span></h2>
+        <p class="lead" data-rv="2">We would rather you read it here than discover it later.</p>
+      </div>
+      <ul class="sx-facts">
+        <li data-rv="1"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><h3>SOC 2 and ISO 27001</h3><p>Leon holds neither certification today.</p></li>
+        <li data-rv="2"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><h3>Mirroring each tool’s own permissions</h3><p>For now a connection’s content is shared with the whole team, except email, Google Drive and Slack.</p></li>
+        <li data-rv="3"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><h3>Data export</h3><p>No export of a workspace’s data yet.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 4. Ask (desk band): the home's closing band, with a question instead of a workspace name -->
+  <section class="close sx-ask band band--desk" id="ask" aria-labelledby="ask-h">
+    <div class="wrap grid close__grid">
+      <div class="close__text">
+        <h2 class="h2" id="ask-h" data-rv="1">Ask us a <span class="hmark" data-hmark="3">security question.</span></h2>
+        <p class="lead" data-rv="2">A questionnaire, or a point this page does not cover: send it here. If the answer is “not yet”, we will say so.</p>
+        <p class="sx-ask__or" data-rv="3">Or check for yourself: create a workspace, connect one tool, and see what is shared and what stays yours.</p>
+        <div class="close__cta" data-rv="3">
+          <a class="btn btn--line" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        </div>
+      </div>
+      <div class="close__form" data-ui data-rv="3">
+        <!-- Inert in the prototype: the button only shows the notice, and Enter in a field does nothing -->
+        <form class="signup sheet" novalidate onsubmit="return false" aria-labelledby="ask-t">
+          <h3 class="signup__title" id="ask-t">Your question</h3>
+          <div class="row"><label class="label" for="ask-email">Work email</label><input class="field" id="ask-email" type="email" placeholder="you@company.com" autocomplete="off"></div>
+          <div class="row"><label class="label" for="ask-text">Question</label><textarea class="field sx-area" id="ask-text" rows="4"></textarea></div>
+          <button class="btn btn--wide" type="button" title="Not in this prototype">Send the question<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer: the home page's. "What’s missing" is this page's own list. -->
+<footer class="foot on-ink">
+  <div class="wrap grid foot__grid">
+    <div class="foot__brand">
+      <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    </div>
+    <nav class="foot__col foot__col--product" aria-labelledby="f-product">
+      <h3 id="f-product">Product</h3>
+      <ul>
+        <li><a href="index.html#product">Search and cited answers</a></li>
+        <li><a href="index.html#briefing">Chat and morning briefing</a></li>
+        <li><a href="index.html#connectors">Connectors</a></li>
+        <li><a href="pricing.html">Pricing</a></li>
+        <li><a href="#" title="Not in this prototype">Documentation</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--trust" aria-labelledby="f-trust">
+      <h3 id="f-trust">Trust</h3>
+      <ul>
+        <li><a href="security.html" aria-current="page">Security</a></li>
+        <li><a href="#in-progress">What’s missing</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--account" aria-labelledby="f-account">
+      <h3 id="f-account">Account</h3>
+      <ul>
+        <li><a href="app/signin.html">Sign in</a></li>
+        <li><a href="app/signup.html">Create a workspace</a></li>
+      </ul>
+    </nav>
+    <div class="foot__base">
+      <p class="foot__lang">Language: <a href="security.html" aria-current="true">English</a> · <a href="#" title="Not in this prototype" lang="fr">Français</a></p>
+      <p>© 2026 Leon</p>
+    </div>
+  </div>
+</footer>
+
+<!-- The inner pages' script: the bar, the phone's menu, the "not in this prototype" notice, the entrances -->
+<script src="js/pages.js"></script>
+</body>
+</html>

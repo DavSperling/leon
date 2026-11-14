@@ -1,114 +1,73 @@
-import { Lock, MessagesSquare } from 'lucide-react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
+import { askSuggestions } from '@/components/discussion/ask-suggestions';
 import { NewDiscussionForm } from '@/components/discussion/new-discussion-form';
-import { EmptyState, Notice, PageHeader, Section } from '@/components/verre';
-import { AboutSuggestionCard } from '@/components/verre/discussions/about-suggestion-card';
-import { DiscussionRows } from '@/components/verre/discussions/list';
-import { formatRelative } from '@/lib/format';
-import { isDepartment } from '@/lib/onboarding';
+import { readableProviders } from '@/components/discussion/reads';
+import { Notice, PageHeader, Section } from '@/components/verre';
+import { AskTiles } from '@/components/verre/discussions/ask-tiles';
+import { DiscussionTiles } from '@/components/verre/discussions/list';
+import { nb } from '@/lib/verre/nb';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
-import { ABOUT_MAX_CHARS } from '@/server/briefing/about';
-import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
+import { listCatalog } from '@/server/connectors/catalog';
+import { listConnections } from '@/server/connectors/connections';
 import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
-import { logError } from '@/server/log';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: await (await getTranslations('discussions'))('title') };
+  return { title: await (await getTranslations('discussions'))('newTitle') };
 }
 
-// Les discussions de l'utilisateur, la plus récente d'abord, et une nouvelle question. Elles ne sont visibles que
-// de lui (la base le garantit).
+// Une nouvelle discussion : la question « Comment Leon peut-il vous aider ? » en titre, le grand champ dessous, trois questions à essayer, puis toutes les discussions de
+// la personne, la plus récente d'abord (elles ne sont visibles que d'elle : la base le garantit).
 export default async function DiscussionsPage() {
   const t = await getTranslations('discussions');
-  const locale = await getLocale();
   const ctx = await requireUserContext();
-  const [discussions, member, suggestion] = await Promise.all([
+  const [discussions, member, connections] = await Promise.all([
     listDiscussions(ctx),
     readOnboardingMember(ctx),
-    // La carte est facultative : sa panne (par exemple un code déployé avant la migration) ne prive pas du Chat.
-    readAboutSuggestion(ctx).catch((error) => {
-      logError('apropos.lecture', error);
-      return null;
-    }),
+    listConnections(ctx),
   ]);
-  // Deux questions du service de la personne, tant qu'elle n'a encore rien demandé.
-  const department = member?.department;
-  let examples: string[] | undefined;
-  if (discussions.length === 0 && department && isDepartment(department)) {
-    const asks = await getTranslations('onboarding');
-    examples = [asks(`asks.${department}.one`), asks(`asks.${department}.two`)];
-  }
+  // Ce que Leon lit pour cette personne, montré dans le champ (reads.ts) : six logos au plus.
+  const privateByDefault = new Set(
+    listCatalog()
+      .filter((item) => item.privateRaw)
+      .map((item) => item.id),
+  );
+  const reads = readableProviders(connections, privateByDefault).slice(0, 6);
   const modelAvailable = getLlm(env) !== null;
-  const now = new Date();
+  const questions = modelAvailable ? await askSuggestions(member) : [];
 
   return (
-    <div className="mx-auto max-w-[760px]">
-      {/* La proposition « About you », une seule fois : « Save » ou « Not now » la ferme pour de bon. */}
-      {suggestion && (
-        <AboutSuggestionCard
-          text={suggestion.text}
-          kinds={suggestion.kinds}
-          max={ABOUT_MAX_CHARS}
-        />
-      )}
-      {/* La question au centre, comme l'accueil d'un assistant, assez haut pour que les discussions passées
-          commencent dans le premier écran. */}
-      <div className="pt-[clamp(24px,14dvh,160px)]">
-        <PageHeader
-          title={t('title')}
-          subtitle={t('subtitle')}
-          meta={
-            <span className="inline-flex items-center gap-1.5">
-              <Lock aria-hidden="true" />
-              {t('private')}
-            </span>
-          }
-          className="justify-center text-center [&>div]:mx-auto [&>div>div]:justify-center"
-        />
-        <div className="grid gap-5">
-          {!modelAvailable && (
-            <Notice tone="warning" live="status">
-              {t('modelUnavailable')}
-            </Notice>
-          )}
-          <NewDiscussionForm disabled={!modelAvailable} examples={examples} />
-        </div>
+    // La même colonne que le fil d'une discussion : la question part d'ici et sa réponse arrive au même endroit. Le champ
+    // est le centre calme de la page, un peu au-dessus du milieu de la fenêtre.
+    <div className="mx-auto w-full max-w-[736px] pt-[clamp(8px,11vh,96px)] max-shell:pt-2">
+      <PageHeader title={nb(t('newQuestion'))} />
+      <div className="mt-6 grid gap-3">
+        <NewDiscussionForm disabled={!modelAvailable} reads={reads} />
+        {!modelAvailable && (
+          <Notice tone="warning" live="status">
+            {t('modelUnavailable')}
+          </Notice>
+        )}
       </div>
 
-      <Section id="vos-discussions" title={t('yourDiscussions')} className="mt-14">
-        {discussions.length === 0 ? (
-          <EmptyState
-            icon={MessagesSquare}
-            title={t('emptyTitle')}
-            description={
-              <>
-                {t('emptyBefore')}{' '}
-                <Link
-                  href="/"
-                  className="font-medium text-accent underline-offset-[3px] decoration-accent-line hover:underline"
-                >
-                  {t('search')}
-                </Link>
-                {t('emptyAfter')}
-              </>
-            }
-          />
-        ) : (
-          <DiscussionRows
-            rows={discussions.map((d) => ({
-              id: d.id,
-              title: d.title,
-              updatedAt: d.updatedAt.toISOString(),
-              when: formatRelative(d.updatedAt, now, locale),
-            }))}
-          />
-        )}
-      </Section>
+      {questions.length > 0 && (
+        // des questions à essayer, au service du champ : une étiquette discrète, pas un titre de section
+        <section aria-labelledby="essayer" className="mt-7">
+          <h2 id="essayer" className="mb-2.5 text-label font-medium text-muted">
+            {t('examplesLabel')}
+          </h2>
+          <AskTiles questions={questions} stacked />
+        </section>
+      )}
+
+      {discussions.length > 0 && (
+        <Section id="vos-discussions" title={t('yourDiscussions')} className="mt-12">
+          <DiscussionTiles rows={discussions.map((d) => ({ id: d.id, title: d.title }))} />
+        </Section>
+      )}
     </div>
   );
 }

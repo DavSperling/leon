@@ -1,288 +1,117 @@
-import {
-  Building2,
-  Database,
-  FileKey,
-  Globe,
-  KeyRound,
-  type LucideIcon,
-  NotebookPen,
-  ScrollText,
-  ShieldCheck,
-  UserRound,
-  Users,
-} from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { CSSProperties } from 'react';
-import { cn } from '@/lib/verre/cn';
+import type { ProviderId } from '@/capture/turn';
 import { nb } from '@/lib/verre/nb';
 import { useSiteContent } from '../content';
-import { Tilt } from '../fx';
-import { CtaBand, CtaLink, Kicker, SectionHeading } from '../parts';
-import { PageHero, PageSection } from './page-hero';
-import './pages.css';
+import { CtaBand, order, ToolLogo } from '../parts';
+import { FactList, PageHero } from './page-hero';
 
-// Page « Sécurité » : ce qui est vrai dans le code (SECURITY_FACTS), qui voit quoi, et ce qui n'est pas encore là
-// (NOT_YET). Aucune certification, région d'hébergement ni conformité n'est affirmée : rien de tout ça n'est établi.
+// Page « Sécurité » : la promesse (Leon voit ce que vous avez le droit de voir), les deux règles de visibilité en deux
+// feuilles sur le bureau, ce qui est en place (du code en production : une feuille à l'encre), ce qui est en cours (dit
+// franchement, sur la bande d'encre, ancre #pas-encore : la même feuille, encore au crayon), puis « vérifiez par vous-même ». Aucun formulaire : rien ne le recevrait.
 
-// Une icône par fait, dans l'ordre de SECURITY_FACTS (pas de cadenas ni d'œil : brand.md).
-const FACT_ICONS: LucideIcon[] = [
-  Building2,
-  ShieldCheck,
-  NotebookPen,
-  KeyRound,
-  FileKey,
-  Globe,
-  ScrollText,
-  Database,
-];
-
-// Les deux listes de « Qui voit quoi » (site.security.teamSees et onlyYou).
-const TEAM_SEES = ['read', 'support', 'link'] as const;
-const ONLY_YOU = ['ai', 'discussions', 'notes', 'outlook'] as const;
-
-/**
- * Le chemin d'une question, en trois plans de verre empilés en perspective (pages.css, .pg-iso) : la question en haut,
- * le filtre des droits au milieu, le classement en bas. Les plans s'écartent au survol et en entrant dans l'écran.
- */
-function RightsVisual() {
-  const t = useTranslations('site.security');
-  const sample = useTranslations('site.sample');
-  const common = useTranslations('site.common');
-  const plane =
-    'absolute inset-0 rounded-[22px] border p-5 shadow-[var(--shadow),inset_0_1px_0_var(--hi)]';
-  return (
-    <figure className="relative overflow-x-clip">
-      <div
-        aria-hidden="true"
-        // en colonne (sous lg) la pile peut déborder sur les boutons du héros : elle ne capte pas le tap
-        className="pg-iso relative grid min-h-[400px] place-items-center max-lg:pointer-events-none sm:min-h-[500px]"
-      >
-        <div className="site-halo pointer-events-none absolute inset-0 opacity-80 [mask:radial-gradient(closest-side,#000,transparent)]" />
-        <div className="pg-iso-stage relative h-[200px] w-[270px] sm:h-[250px] sm:w-[370px]">
-          <div className="pg-iso-plane" style={{ '--z': 0 } as CSSProperties}>
-            <div
-              className={cn(
-                plane,
-                // plans du bas : le contenu sur la bande que le plan du dessus laisse voir
-                'flex flex-col justify-end',
-                'border-line-strong bg-[color-mix(in_srgb,var(--menu)_62%,transparent)]',
-              )}
-            >
-              <p className="font-mono text-[11px] tracking-normal text-muted">{t('ranking')}</p>
-              <div className="mt-3 grid gap-2">
-                {(['meeting', 'quote', 'migration'] as const).map((key, k) => (
-                  <p
-                    key={key}
-                    className="flex items-center gap-2 rounded-[10px] border border-line bg-glass-3 px-2.5 py-1.5 text-label text-fg-2"
-                  >
-                    <span className="font-mono text-[10.5px] text-accent">[{k + 1}]</span>
-                    {nb(sample(key))}
-                  </p>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="pg-iso-plane" style={{ '--z': 1 } as CSSProperties}>
-            <div
-              className={cn(
-                plane,
-                // plans du bas : le contenu sur la bande que le plan du dessus laisse voir
-                'flex flex-col justify-end',
-                'signal-line border-accent-line bg-[color-mix(in_srgb,var(--menu)_58%,var(--accent-soft))]',
-              )}
-            >
-              <p className="flex items-center gap-2 font-mono text-[11px] tracking-normal text-accent">
-                <ShieldCheck strokeWidth={1.8} className="size-3.5" />
-                {t('filter')}
-              </p>
-              <div className="mt-3 grid gap-1.5 text-label">
-                <p className="flex items-center gap-2 text-fg-2">
-                  <span className="size-2 rounded-full bg-success" />
-                  {t('teamPages')}
-                </p>
-                <p className="flex items-center gap-2 text-fg-2">
-                  <span className="size-2 rounded-full bg-success" />
-                  {t('ownConversations')}
-                </p>
-                <p className="flex items-center gap-2 text-muted line-through decoration-line-strong">
-                  <span className="size-2 rounded-full bg-line-strong" />
-                  {t('colleague')}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="pg-iso-plane" style={{ '--z': 2 } as CSSProperties}>
-            <div
-              className={cn(
-                plane,
-                'border-line-strong bg-[color-mix(in_srgb,var(--menu)_70%,transparent)]',
-              )}
-            >
-              <p className="font-mono text-[11px] tracking-normal text-muted">{t('question')}</p>
-              <div className="mt-3 flex h-11 items-center gap-2.5 rounded-[12px] border border-line-strong bg-glass-2 px-3">
-                <span className="font-mono text-[11px] text-muted">/</span>
-                <span className="text-ui font-medium text-fg">{nb(t('query'))}</span>
-                <span className="caret" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <figcaption className="-mt-14 text-center font-mono text-meta tracking-normal text-muted sm:-mt-2">
-        <span className="sr-only">{nb(t('visualCaption'))}</span>
-        {common('fictional')}
-      </figcaption>
-    </figure>
-  );
-}
+const RULES = [
+  {
+    id: 'team',
+    rows: [
+      { key: 'teamRows.docs', tools: ['linear', 'notion', 'jira'] },
+      { key: 'teamRows.meetings', tools: ['granola', 'hubspot'] },
+      { key: 'teamRows.support', tools: ['intercom', 'front'] },
+    ],
+  },
+  {
+    id: 'you',
+    rows: [
+      { key: 'youRows.mail', tools: ['gmail', 'drive', 'slack'] },
+      { key: 'youRows.ai', tools: [] },
+      { key: 'youRows.chats', tools: [] },
+    ],
+  },
+] as const satisfies readonly {
+  id: string;
+  rows: readonly { key: string; tools: readonly ProviderId[] }[];
+}[];
 
 export function SecuritePage() {
   const t = useTranslations('site.security');
-  const cta = useTranslations('site.cta');
-  const common = useTranslations('site.common');
+  const demo = useTranslations('site.demo');
   const { securityFacts, notYet } = useSiteContent();
   return (
-    <>
-      <PageHero
-        kicker={common('security')}
-        title={t('heroTitle')}
-        accent={t('heroAccent')}
-        lead={t('heroLead')}
-        actions={
-          <>
-            <CtaLink href="/inscription">{cta('create')}</CtaLink>
-            <CtaLink href="#pas-encore" variant="secondary">
-              {t('notYet')}
-            </CtaLink>
-          </>
-        }
-        aside={<RightsVisual />}
-      />
+    <div className="s-page">
+      <PageHero title={t('heroTitle')} accent={t('heroAccent')} tone={3} lead={t('heroLead')} />
 
-      <PageSection labelledBy="faits-titre" className="pt-6 sm:pt-10">
-        <SectionHeading
-          id="faits-titre"
-          kicker={t('factsKicker')}
-          title={t('factsTitle')}
-          lead={t('factsLead')}
-        />
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {securityFacts.map((f, i) => {
-            const Icon = FACT_ICONS[i] ?? ShieldCheck;
-            return (
-              <li key={f.title} className="site-reveal">
-                <Tilt
-                  max={9}
-                  className="h-full rounded-box border border-line bg-panel p-5 shadow-hi transition-[border-color] duration-300 hover:border-accent-line"
-                >
-                  <span className="fx-pop grid size-10 place-items-center rounded-item border border-accent-line bg-accent-soft text-accent [--pop:40px]">
-                    <Icon aria-hidden="true" strokeWidth={1.7} className="size-[18px]" />
-                  </span>
-                  <h3 className="mt-5 text-ui font-bold tracking-[-0.01em] text-fg">
-                    {nb(f.title)}
-                  </h3>
-                  <p className="mt-2 text-body leading-[1.6] text-fg-2">{nb(f.text)}</p>
-                </Tilt>
-              </li>
-            );
-          })}
-        </ul>
-      </PageSection>
-
-      <PageSection labelledBy="qui-titre">
-        <SectionHeading
-          id="qui-titre"
-          kicker={t('whoKicker')}
-          title={t('whoTitle')}
-          align="center"
-        />
-        <div className="mx-auto mt-10 grid max-w-[980px] gap-4 md:grid-cols-2">
-          <section
-            aria-labelledby="equipe-voit"
-            className="site-reveal rounded-panel border border-line bg-panel p-6 shadow-hi sm:p-8"
-          >
-            <span className="grid size-11 place-items-center rounded-full border border-success-line bg-success-soft text-success shadow-[0_0_0_8px_var(--success-soft)]">
-              <Users aria-hidden="true" strokeWidth={1.7} className="size-5" />
-            </span>
-            <h3 id="equipe-voit" className="mt-5 text-h2 font-bold tracking-[-0.02em] text-fg">
-              {t('teamTitle')}
-            </h3>
-            <p className="mt-2 text-body text-fg-2">{nb(t('teamText'))}</p>
-            <ul className="mt-5 grid gap-2.5">
-              {TEAM_SEES.map((k) => (
-                <li key={k} className="flex items-start gap-2.5 text-ui text-fg-2">
-                  <span
-                    aria-hidden="true"
-                    className="mt-[7px] size-1.5 shrink-0 rounded-full bg-success"
-                  />
-                  {nb(t(`teamSees.${k}`))}
-                </li>
-              ))}
-            </ul>
-          </section>
-          <section
-            aria-labelledby="vous-voyez"
-            className="site-reveal signal-line signal-glow relative overflow-hidden rounded-panel border border-accent-line bg-panel p-6 shadow-hi sm:p-8"
-          >
-            <span className="fx-breathe relative grid size-11 place-items-center rounded-full border border-accent-line bg-accent-soft text-accent shadow-[0_0_0_8px_var(--accent-soft)]">
-              <UserRound aria-hidden="true" strokeWidth={1.7} className="size-5" />
-            </span>
-            <h3
-              id="vous-voyez"
-              className="relative mt-5 text-h2 font-bold tracking-[-0.02em] text-fg"
-            >
-              {t('youTitle')}
-            </h3>
-            <p className="relative mt-2 text-body text-fg-2">{nb(t('youText'))}</p>
-            <ul className="relative mt-5 grid gap-2.5">
-              {ONLY_YOU.map((k) => (
-                <li key={k} className="flex items-start gap-2.5 text-ui text-fg-2">
-                  <span
-                    aria-hidden="true"
-                    className="mt-[7px] size-1.5 shrink-0 rounded-full bg-accent"
-                  />
-                  {nb(t(`onlyYou.${k}`))}
-                </li>
-              ))}
-            </ul>
-          </section>
-        </div>
-      </PageSection>
-
-      <PageSection id="pas-encore" labelledBy="pas-encore-titre">
-        <div className="site-reveal relative overflow-hidden rounded-panel border border-warning-line bg-warning-soft p-6 sm:p-10">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-14">
-            <div>
-              <Kicker className="text-warning [&>span]:bg-warning">{t('frankly')}</Kicker>
-              <h2
-                id="pas-encore-titre"
-                className="mt-3 text-[clamp(26px,3.2vw,40px)] leading-[1.08] font-bold tracking-[-0.035em] text-balance text-fg"
+      <section aria-labelledby="regles" className="s-stage pg-desk">
+        <div className="s-wrap">
+          <div className="s-grid s-head s-rv">
+            <h2 id="regles" className="s-h2">
+              {t('whoTitle')}
+            </h2>
+            <p className="s-lead">{nb(t('whoLead'))}</p>
+          </div>
+          <div className="s-grid mt-12 gap-y-6">
+            {RULES.map((rule, i) => (
+              <article
+                key={rule.id}
+                aria-labelledby={`regle-${rule.id}`}
+                className={`s-rule s-sheet pg-pile pg-land${i === 0 ? ' pg-land--left' : ''}`}
+                style={order(i)}
               >
-                {nb(t('notYetTitle'))}
-              </h2>
-              <p className="mt-4 text-body leading-[1.6] text-fg-2">{nb(t('notYetLead'))}</p>
-            </div>
-            <ol className="grid content-start gap-3">
-              {notYet.map((n, i) => (
-                <li
-                  key={n}
-                  className="site-reveal flex items-start gap-4 rounded-box border border-line bg-panel px-4 py-3.5 shadow-hi transition-[translate,border-color] duration-300 ease-out hover:translate-x-1 hover:border-warning-line"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="mt-0.5 font-mono text-meta tracking-normal text-warning"
-                  >
-                    0{i + 1}
-                  </span>
-                  <span className="text-ui leading-[1.55] text-fg">{nb(n)}</span>
-                </li>
-              ))}
-            </ol>
+                <h3 id={`regle-${rule.id}`} className="s-h3">
+                  {t(`${rule.id}Title`)}
+                </h3>
+                <p className="s-body mt-1.5 text-muted">{nb(t(`${rule.id}Text`))}</p>
+                <ul className="s-rule__rows">
+                  {rule.rows.map((r) => (
+                    <li key={r.key}>
+                      <span>{nb(t(r.key))}</span>
+                      {r.tools.length > 0 && (
+                        <span className="s-logos">
+                          {r.tools.map((id) => (
+                            <ToolLogo key={id} id={id} size={22} title />
+                          ))}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <p className="s-rule__foot s-small">
+                  {t('onSource')}
+                  {rule.id === 'you' ? (
+                    <span className="s-stamp pg-stamp text-fg">{demo('private')}</span>
+                  ) : (
+                    <span className="font-medium text-fg">{demo('shared')}</span>
+                  )}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
-      </PageSection>
+      </section>
 
-      <CtaBand title={t('ctaTitle')} text={t('ctaText')} />
-    </>
+      <section aria-labelledby="en-place" className="s-sec">
+        <div className="s-wrap s-grid s-split">
+          <div className="s-split__head s-rv">
+            <h2 id="en-place" className="s-h2">
+              {t('factsTitle')}
+            </h2>
+            <p className="s-lead mt-5">{nb(t('factsLead'))}</p>
+          </div>
+          <FactList items={securityFacts} className="s-split__body s-sheet pg-inked" />
+        </div>
+      </section>
+
+      <section id="pas-encore" aria-labelledby="en-cours" className="s-band s-ink">
+        <div className="s-wrap s-grid s-split">
+          <div className="s-split__head s-rv">
+            <h2 id="en-cours" className="s-h2">
+              {t('notYetTitle')}
+            </h2>
+            <p className="s-lead mt-5 text-[var(--s-on-band-2)]">{nb(t('notYetLead'))}</p>
+          </div>
+          <FactList items={notYet} progress className="s-split__body pg-inked pg-inked--draft" />
+        </div>
+      </section>
+
+      <CtaBand title={t('ctaTitle')} mark={t('ctaAccent')} tone={3} text={t('ctaText')} />
+    </div>
   );
 }

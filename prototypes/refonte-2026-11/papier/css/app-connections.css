@@ -1,0 +1,55 @@
+/* Leon « Papier » v2 : Connections. Only what css/app.css lacks, in the kit's style. Load after css/app.css.
+   Two things: the failing tool (its reason under the state, the form that opens under its row) and the catalogue
+   (one .kv group per family; inside it one row per tool: logo, name, what Leon reads, the action in a fixed column). */
+
+/* ---------- The table: fixed columns, so nothing moves when a row changes state or the form opens ---------- */
+.cx-table { table-layout: fixed; min-width: 900px; }
+.cx-table col:nth-child(1) { width: 140px; }
+.cx-table col:nth-child(2) { width: 196px; }
+.cx-table col:nth-child(3) { width: 104px; }
+.cx-table col:nth-child(5) { width: 76px; }
+.cx-table col:nth-child(6) { width: 112px; }
+
+/* ---------- The failing tool ---------- */
+.cx-why { padding-left: 16px; }                                                    /* starts under the words, past the dot */
+.cx-table .busy { display: flex; line-height: 21px; }                             /* a block: the spinner must not set the line's baseline */
+.busy + .cx-why { padding-left: 24px; }                                            /* past the spinner while it reconnects */
+.table tr:has(+ .cx-fix:not([hidden])) td { border-bottom-color: transparent; }  /* the open form belongs to its row */
+.table .cx-fix td { height: auto; padding: 4px 0 20px 30px; }                      /* 30px: under the tool's name, past its logo */
+.cx-fix__form { max-width: 560px; animation: menu-in 160ms var(--ease-out); }
+.cx-fix__line { display: flex; align-items: center; gap: 8px; }
+.cx-fix__line .field { flex: 1; min-width: 0; }
+
+/* ---------- Add a tool: one row per tool, the action always in the same column ---------- */
+.cx-fams { --kv: 200px; margin-top: 6px; }
+.cx-fams > div { padding-block: 10px; }
+.cx-fams dt { padding-top: 10px; }  /* on the line of the first tool */
+.cx-tool { display: grid; grid-template-columns: 20px 148px minmax(0, 1fr) 96px; column-gap: 12px; align-items: center; min-height: 40px; padding-block: 4px; }
+.cx-tool .logo { width: 20px; height: 20px; }
+.cx-tool__name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cx-tool__reads { font: 400 var(--t-ui-s)/1.4 var(--sans); color: var(--ink-2); text-wrap: pretty; }
+.cx-tool__act { justify-self: end; }
+.cx-none { margin-top: 20px; }
+
+/* ---------- Under 900px: each connected tool becomes a block (name and action, then its facts) ---------- */
+@media (max-width: 899px) {
+  .cx-table, .cx-table tbody, .cx-table td { display: block; }
+  .cx-table { min-width: 0; }
+  .cx-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .cx-table tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .cx-table tbody tr:last-child, .cx-table tr:has(+ .cx-fix:not([hidden])) { border-bottom: 0; }
+  .cx-table td { grid-column: 1; height: auto; padding: 0; border: 0; }
+  .cx-table td:nth-child(n+2):not(.t-act) { padding-left: 30px; }
+  .cx-table td:nth-child(3)::before { content: "Visible to: "; color: var(--ink-2); }
+  .cx-table td.t-num { text-align: left; color: var(--ink-2); }
+  .cx-table td.t-num::after { content: " items"; }
+  .cx-table td.t-act { grid-area: 1 / 2; width: auto; }
+  .cx-table .cx-fix { padding-top: 0; }
+  .cx-table .cx-fix td { grid-column: 1 / -1; padding: 0 0 4px; }
+  .cx-fix__line { flex-wrap: wrap; }
+  .cx-fix__line .field { flex-basis: 100%; }
+  .cx-fams dt { padding-top: 0; }
+  .cx-tool { grid-template-columns: 20px minmax(0, 1fr) auto; padding-block: 8px; }
+  .cx-tool__reads { grid-area: 2 / 2 / 3 / 4; }
+  .cx-tool__act { grid-area: 1 / 3; }
+}

@@ -69,7 +69,7 @@ describe('clés de traduction lues par le code', () => {
     expect(keys).toEqual(
       expect.arrayContaining([
         'oauth.authorize.title',
-        'settings.assistantsTitle',
+        'settings.connectedTitle',
         `settings.client\${id}Name`,
       ]),
     );

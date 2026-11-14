@@ -1,267 +1,367 @@
 'use client';
 
-import { Check, Search, Users } from 'lucide-react';
-import Link from 'next/link';
+import { ChevronDown } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useOptimistic, useTransition } from 'react';
-import { setFollowedAction, setSeeAllAction } from '@/app/(app)/equipe/actions';
-import { NATURE_LABELS } from '@/components/search/view-model';
+import { useRef, useState, useTransition } from 'react';
+import { flushSync } from 'react-dom';
+import { setManagerAction } from '@/app/(app)/reglages/actions';
 import {
+  Avatar,
   Button,
   EmptyState,
-  GlassCard,
   PageHeader,
-  SourceChip,
-  SourceLink,
-  Switch,
+  SearchField,
+  Section,
+  Thing,
+  ThingGrid,
   toast,
 } from '@/components/verre';
-import { NATURE_LABELS_EN } from '@/lib/labels';
-import { FOLLOW_FAMILIES, type FollowFamily } from '@/lib/providers';
-import { cn, nb } from '@/lib/verre';
+import { departmentLabelKey, jobLabelKey } from '@/lib/onboarding';
+import { nb } from '@/lib/verre';
+import type { DirectoryState } from '@/server/auth/annuaire';
+import type { Groupe } from '@/server/auth/groupes';
+import type { MemberRow, PendingInvitation } from '@/server/auth/members';
 import type { Report } from '@/server/auth/organisation';
-import type { SourceHit } from '@/server/search/types';
+import { DirectoryPanel } from './directory-panel';
+import { GroupPanel, GroupPicture } from './group-panel';
+import { InvitePanel } from './invite-panel';
 import { type ChartMember, OrgChart } from './org-chart';
+import { type Activity, InvitationPanel, type Person, PersonPanel } from './person-panel';
 
-type Activity = { hits: SourceHit[]; total: number };
+const MANAGER_REFUSAL = {
+  boucle: 'managerLoop',
+  proprietaire: 'managerOwner',
+  refuse: 'memberFailed',
+} as const;
 
 /**
- * « Mon équipe » : l'organigramme centré sur le lecteur, puis les gens sous le lecteur (directs, puis indirects en retrait), et pour la personne choisie
- * (?personne=…) ce qu'il suit d'elle et son activité récente, privé compris s'il le lit (0057). L'interrupteur de ce
- * privé ne paraît que si l'organisation le permet (`seeAllAllowed`).
+ * L'équipe : l'organigramme (chacun une tuile, des traits fins ; à part ceux qui ne sont pas encore placés), puis tout le
+ * monde, replié, puis les groupes. Une personne ouvre sa fiche (?personne=…). Qui peut inviter le fait d'ici : la
+ * pastille « Inviter », ou le « + » sous une personne ; un invité paraît tout de suite dans l'arbre.
  */
 export function Team({
+  members,
+  invitations,
   reports,
-  selected,
   activity,
-  chart,
   seeAllAllowed,
+  admin,
+  groups,
+  directory,
+  workspace,
+  personne,
 }: {
+  members: MemberRow[];
+  invitations: PendingInvitation[];
   reports: Report[];
-  selected: Report | null;
   activity: Activity | null;
-  chart: ChartMember[];
   seeAllAllowed: boolean;
+  admin: boolean;
+  groups: Groupe[];
+  directory: DirectoryState | null;
+  workspace: string;
+  personne: string | null;
 }) {
   const t = useTranslations('team');
+  const s = useTranslations('settings');
+  const o = useTranslations('onboarding');
+  const router = useRouter();
+  const jobOf = (p: Pick<Person, 'department' | 'job'>) =>
+    p.job ? o(jobLabelKey(p.department, p.job)) : null;
+
+  const invited: Person[] = invitations.map((inv) => ({
+    id: inv.id,
+    name: inv.name ?? jobOf(inv) ?? t('invitedSomeone'),
+    email: '',
+    role: 'member',
+    former: false,
+    department: inv.department,
+    job: inv.job,
+    seniority: inv.seniority,
+    self: false,
+    managerId: inv.managerId,
+    invited: true,
+    expiresAt: inv.expiresAt,
+  }));
+  const people: Person[] = [...members.map(({ userId: _, ...m }) => m), ...invited];
+  const active = members.filter((m) => !m.former).map(({ id, name }) => ({ id, name }));
+  const caption = (p: ChartMember | Person) =>
+    p.self
+      ? t('you')
+      : p.invited
+        ? t('invited')
+        : 'former' in p && p.former
+          ? t('former')
+          : jobOf(p);
+
+  // La fiche ouverte se lit dans l'adresse : un lien, un rechargement, la palette y mènent. Pour une personne sous le
+  // lecteur, la page recharge aussi son activité (le serveur la lit) ; sinon l'adresse change sans aller-retour.
+  const [openId, setOpenId] = useState<string | null>(personne);
+  const openPerson = (id: string) => {
+    setOpenId(id);
+    const url = `/equipe?personne=${id}`;
+    if (reports.some((r) => r.memberId === id)) router.replace(url, { scroll: false });
+    else window.history.replaceState(null, '', url);
+  };
+  const closePerson = () => {
+    setOpenId(null);
+    window.history.replaceState(null, '', '/equipe');
+  };
+  const opened = people.find((p) => p.id === openId) ?? null;
+
+  const [inviting, setInviting] = useState<{ managerId: string | null; session: number } | null>(
+    null,
+  );
+  const invite = (managerId: string | null) =>
+    setInviting((current) => ({ managerId, session: (current?.session ?? 0) + 1 }));
+
+  const [movingId, setMovingId] = useState<string | null>(null);
+  const [, startMove] = useTransition();
+  const move = (memberId: string, managerId: string | null) =>
+    startMove(async () => {
+      setMovingId(memberId);
+      try {
+        const { result } = await setManagerAction(memberId, managerId);
+        if (result !== 'ok') toast.error(nb(s(MANAGER_REFUSAL[result])));
+      } catch {
+        toast.error(s('memberFailed'));
+      }
+      setMovingId(null);
+    });
+
+  const [directoryOpen, setDirectoryOpen] = useState(
+    Boolean(directory && (directory.plan || directory.error)),
+  );
+  const closeDirectory = (open: boolean) => {
+    setDirectoryOpen(open);
+    // l'aperçu ne se rouvre pas au rechargement
+    if (!open && (directory?.plan || directory?.error))
+      router.replace('/equipe', { scroll: false });
+  };
+
+  const [group, setGroup] = useState<{ group: Groupe | null; session: number } | null>(null);
+
   return (
-    <div className="mx-auto max-w-[1040px]">
-      <PageHeader title={t('title')} subtitle={t('subtitle')} />
-      <OrgChart members={chart} under={reports.map((r) => r.memberId)} />
-      {selected === null ? (
-        <EmptyState
-          icon={Users}
-          title={t('emptyTitle')}
-          description={t('emptyDescription')}
-          action={
-            <Button asChild variant="secondary">
-              <Link href="/reglages#membres">{t('emptyAction')}</Link>
+    <div className="mx-auto max-w-[var(--page-max)]">
+      <PageHeader
+        title={t('title')}
+        actions={
+          admin ? (
+            <Button variant="primary" onClick={() => invite(null)}>
+              {t('invite')}
+            </Button>
+          ) : undefined
+        }
+      />
+
+      <Section
+        id="organigramme"
+        title={t('chartTitle')}
+        actions={
+          admin && directory && directory.providers.length > 0 ? (
+            <Button size="sm" onClick={() => setDirectoryOpen(true)}>
+              {s('directoryTitle')}
+            </Button>
+          ) : undefined
+        }
+      >
+        <OrgChart
+          people={people.filter((p) => !p.former)}
+          caption={caption}
+          admin={admin}
+          movingId={movingId}
+          onOpen={openPerson}
+          onAdd={invite}
+          onMove={move}
+        />
+      </Section>
+
+      <Everyone people={people} caption={caption} onOpen={openPerson} />
+
+      {admin && (
+        <Section
+          id="groupes"
+          title={t('groupsTitle')}
+          actions={
+            <Button
+              size="sm"
+              onClick={() => setGroup((g) => ({ group: null, session: (g?.session ?? 0) + 1 }))}
+            >
+              {s('groupNew')}
             </Button>
           }
-        />
-      ) : (
-        <div className="grid gap-6 md:grid-cols-[minmax(0,250px)_minmax(0,1fr)] md:items-start">
-          <People reports={reports} selectedId={selected.memberId} />
-          {/* clé : une autre personne repart de ses propres familles, sans l'état optimiste de la précédente */}
-          <Person
-            key={selected.memberId}
-            report={selected}
-            activity={activity}
-            seeAllAllowed={seeAllAllowed}
+        >
+          {groups.length === 0 ? (
+            <EmptyState title={s('groupsEmpty')} description={s('groupsEmptyHelp')} />
+          ) : (
+            <ThingGrid>
+              {groups.map((g) => (
+                <Thing
+                  key={g.id}
+                  picture={<GroupPicture />}
+                  name={g.nom ?? o(departmentLabelKey(g.service))}
+                  caption={g.service ? t('groupDepartment') : undefined}
+                  onClick={() => setGroup((c) => ({ group: g, session: (c?.session ?? 0) + 1 }))}
+                />
+              ))}
+            </ThingGrid>
+          )}
+        </Section>
+      )}
+
+      {opened &&
+        (opened.invited ? (
+          <InvitationPanel
+            key={opened.id}
+            person={opened}
+            open
+            onOpenChange={(open) => !open && closePerson()}
+            people={people}
           />
-        </div>
+        ) : (
+          <PersonPanel
+            key={opened.id}
+            person={opened}
+            open
+            onOpenChange={(open) => !open && closePerson()}
+            people={people}
+            admin={admin}
+            report={reports.find((r) => r.memberId === opened.id)}
+            seeAllAllowed={seeAllAllowed}
+            activity={activity}
+          />
+        ))}
+      {inviting && (
+        <InvitePanel
+          key={inviting.session}
+          open
+          onOpenChange={(open) => !open && setInviting(null)}
+          managerId={inviting.managerId}
+          people={active}
+          workspace={workspace}
+        />
+      )}
+      {group && (
+        <GroupPanel
+          key={group.session}
+          group={group.group}
+          open
+          onOpenChange={(open) => !open && setGroup(null)}
+          members={active}
+        />
+      )}
+      {directory && (
+        <DirectoryPanel state={directory} open={directoryOpen} onOpenChange={closeDirectory} />
       )}
     </div>
   );
 }
 
-function People({ reports, selectedId }: { reports: Report[]; selectedId: string }) {
-  const t = useTranslations('team');
-  return (
-    <nav aria-label={t('people')}>
-      <GlassCard className="p-1.5">
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-0.5">
-          {reports.map((report) => {
-            const current = report.memberId === selectedId;
-            return (
-              <li key={report.memberId}>
-                <Link
-                  href={`/equipe?personne=${report.memberId}`}
-                  scroll={false}
-                  aria-current={current ? 'page' : undefined}
-                  // retrait de 14 px par niveau sous le premier : l'arbre se lit sans traits
-                  style={{ paddingLeft: `${12 + (report.depth - 1) * 14}px` }}
-                  className={cn(
-                    'flex min-h-11 flex-col justify-center rounded-field py-2 pr-3 transition-colors duration-200 hover:bg-hover',
-                    current && 'bg-ink shadow-hi',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'truncate text-ui font-medium text-fg-2',
-                      current && 'font-semibold text-fg',
-                    )}
-                  >
-                    {report.name}
-                  </span>
-                  {report.depth > 1 && (
-                    <span className="truncate text-label text-muted">
-                      {t('reportsTo', { name: report.managerName })}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </GlassCard>
-    </nav>
-  );
-}
+// Les visages montrés tant que « Tout le monde » est replié.
+const FACES = 8;
 
-function Person({
-  report,
-  activity,
-  seeAllAllowed,
+// Tout le monde, replié d'abord : des tuiles et une recherche. Les anciens membres à la fin.
+function Everyone({
+  people,
+  caption,
+  onOpen,
 }: {
-  report: Report;
-  activity: Activity | null;
-  seeAllAllowed: boolean;
+  people: Person[];
+  caption: (p: Person) => string | null;
+  onOpen: (id: string) => void;
 }) {
   const t = useTranslations('team');
-  const family = useTranslations('connections.family');
-  const [families, setFamilies] = useOptimistic(report.families);
-  const [seeAll, setSeeAll] = useOptimistic(report.voitTout);
-  const [saving, startTransition] = useTransition();
-
-  const toggleSeeAll = (on: boolean) =>
-    startTransition(async () => {
-      setSeeAll(on);
-      try {
-        const { ok } = await setSeeAllAction(report.memberId, on);
-        if (!ok) toast.error(t('followFailed'));
-      } catch {
-        toast.error(t('followFailed'));
-      }
-    });
-
-  const toggle = (picked: FollowFamily) =>
-    startTransition(async () => {
-      const next = families.includes(picked)
-        ? families.filter((f) => f !== picked)
-        : FOLLOW_FAMILIES.filter((f) => f === picked || families.includes(f));
-      setFamilies(next);
-      try {
-        const { ok } = await setFollowedAction(report.memberId, next);
-        if (!ok) toast.error(t('followFailed'));
-      } catch {
-        toast.error(t('followFailed'));
-      }
-    });
-
-  return (
-    <section aria-labelledby="personne-nom" className="grid gap-5">
-      <GlassCard variant="raised" className="grid gap-4 p-5">
-        <div className="min-w-0">
-          <h2 id="personne-nom" className="text-h2 font-semibold [overflow-wrap:anywhere] text-fg">
-            {report.name}
-          </h2>
-          <p className="mt-0.5 text-label [overflow-wrap:anywhere] text-muted">
-            {report.email}
-            {report.depth > 1 && ` · ${t('reportsTo', { name: report.managerName })}`}
-          </p>
-        </div>
-        {seeAllAllowed && (
-          <div className="grid gap-1.5">
-            <Switch
-              label={t('seeAll')}
-              checked={seeAll}
-              onCheckedChange={toggleSeeAll}
-              aria-describedby="voir-tout-aide"
-            />
-            <p id="voir-tout-aide" className="text-label text-muted">
-              {nb(t('seeAllHelp', { name: report.name }))}
-            </p>
-          </div>
-        )}
-        <fieldset className="grid min-w-0 gap-2.5" aria-describedby="suivi-aide">
-          <legend className="mb-2.5 text-label font-semibold text-fg-2">{t('following')}</legend>
-          <div className="flex flex-wrap gap-2">
-            {FOLLOW_FAMILIES.map((f) => {
-              const on = families.includes(f);
-              return (
-                <button
-                  key={f}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggle(f)}
-                  className={cn(
-                    'inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-label font-medium transition-colors duration-200',
-                    on
-                      ? 'border-accent-line bg-accent-soft text-fg'
-                      : 'border-line text-muted hover:border-line-strong hover:text-fg-2',
-                  )}
-                >
-                  {/* la coche dit l'état sans la couleur seule */}
-                  <Check
-                    aria-hidden="true"
-                    strokeWidth={2}
-                    className={cn('size-3.5 text-accent', !on && 'hidden')}
-                  />
-                  {f === 'documents' ? t('documents') : family(f)}
-                </button>
-              );
-            })}
-          </div>
-          <p id="suivi-aide" className="text-label text-muted">
-            {nb(t('followingHelp'))}
-          </p>
-        </fieldset>
-      </GlassCard>
-
-      <div aria-busy={saving} className={cn('transition-opacity', saving && 'opacity-60')}>
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h3 className="text-ui font-semibold text-fg">{t('activity')}</h3>
-          <Link
-            href={`/?q=${encodeURIComponent(`de:${report.email}`)}`}
-            className="inline-flex items-center gap-1.5 rounded-sm text-label font-medium text-accent underline-offset-4 hover:underline"
-          >
-            <Search aria-hidden="true" strokeWidth={1.7} className="size-[13px]" />
-            {t('searchAll', { name: report.name })}
-          </Link>
-        </div>
-        {families.length === 0 ? (
-          <EmptyState title={t('nothingFollowed')} description={t('nothingFollowedHelp')} />
-        ) : !activity || activity.hits.length === 0 ? (
-          <EmptyState title={t('nothingRecent')} description={t('nothingRecentHelp')} />
-        ) : (
-          <GlassCard className="px-4">
-            <ul>
-              {activity.hits.map((hit) => (
-                <ActivityItem key={hit.sourceId} hit={hit} />
-              ))}
-            </ul>
-          </GlassCard>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function ActivityItem({ hit }: { hit: SourceHit }) {
-  const t = useTranslations('team');
+  const o = useTranslations('onboarding');
   const locale = useLocale();
-  const title = hit.title?.trim() || t('untitled');
-  const snippet = hit.passages[0]?.snippet;
-  const nature = locale === 'en' ? NATURE_LABELS_EN[hit.nature] : NATURE_LABELS[hit.nature];
+  const [shown, setShown] = useState(false);
+  const [q, setQ] = useState('');
+  // Le bouton qui ouvre disparaît avec le repli : le focus va à la recherche, puis revient au bouton.
+  const showRef = useRef<HTMLButtonElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const toggle = (next: boolean) => {
+    flushSync(() => setShown(next));
+    (next ? searchRef : showRef).current?.focus();
+  };
+  const words = q.trim().toLocaleLowerCase();
+  const ordered = [...people].sort(
+    // la langue de l'interface, pas celle de la machine : les visages sont rendus par le serveur puis par le navigateur
+    (a, b) => Number(a.former) - Number(b.former) || a.name.localeCompare(b.name, locale),
+  );
+  const found = ordered.filter(
+    (p) =>
+      !words ||
+      [p.name, p.email, p.job ? o(jobLabelKey(p.department, p.job)) : '']
+        .join(' ')
+        .toLocaleLowerCase()
+        .includes(words),
+  );
   return (
-    <li className="grid gap-1 border-b border-line py-3.5 last:border-0">
-      <SourceChip kind={hit.kind} extra={[nature]} date={hit.lastTs} />
-      <p className="truncate text-ui font-medium text-fg" title={title}>
-        {title}
-      </p>
-      {snippet && <p className="line-clamp-2 text-label text-fg-2">{snippet}</p>}
-      <SourceLink href={hit.url} kind={hit.kind} className="mt-0.5 justify-self-start" />
-    </li>
+    <Section
+      id="tout-le-monde"
+      title={t('everyone')}
+      actions={
+        shown && (
+          <>
+            <SearchField
+              ref={searchRef}
+              label={t('searchPeople')}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+            <Button size="sm" variant="quiet" onClick={() => toggle(false)}>
+              {t('hide')}
+            </Button>
+          </>
+        )
+      }
+    >
+      {/* repliée : les visages et « Voir tout le monde », sous le titre, là où l'œil est déjà */}
+      {!shown && (
+        <button
+          ref={showRef}
+          type="button"
+          aria-expanded={false}
+          onClick={() => toggle(true)}
+          className="group flex items-center gap-3 rounded-full py-1 pr-3 text-ui font-medium whitespace-nowrap text-fg-2 hover:text-fg"
+        >
+          {/* sur un téléphone, cinq visages : la ligne tient avec ses mots */}
+          <span className="flex gap-1 max-sm:[&>:nth-child(n+6)]:hidden">
+            {ordered.slice(0, FACES).map((p) => (
+              <Avatar key={p.id} name={p.name} size={28} />
+            ))}
+          </span>
+          {t('showEveryone')}
+          <ChevronDown aria-hidden="true" className="size-4 text-muted group-hover:text-fg" />
+        </button>
+      )}
+      {shown && (
+        <div id="tout-le-monde-liste">
+          {found.length === 0 ? (
+            <EmptyState
+              title={t('nobodyMatches', { q: q.trim() })}
+              action={
+                <Button size="sm" onClick={() => setQ('')}>
+                  {t('clearSearch')}
+                </Button>
+              }
+            />
+          ) : (
+            <ThingGrid>
+              {found.map((p) => (
+                <Thing
+                  key={p.id}
+                  picture={<Avatar name={p.name} size={28} />}
+                  name={p.name}
+                  caption={caption(p)}
+                  title={[p.name, caption(p)].filter(Boolean).join(' · ')}
+                  onClick={() => onOpen(p.id)}
+                />
+              ))}
+            </ThingGrid>
+          )}
+        </div>
+      )}
+    </Section>
   );
 }

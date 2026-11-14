@@ -1,0 +1,355 @@
+/* Leon « Papier » v2 : the marketing home.
+   One 12-column grid (48px margins, 24px gutters, 1344px at most). White page, --desk bands edge to edge, two ink bands.
+   Five type sizes outside fragments: 56 (headline, closing line), 40 (headings), 18 (text), 16 (interface), 13.5 (notes).
+   Everything is in its final state here: the motion pass only adds movement.
+   Breakpoints: 1100 and up = the full composition; 700 to 1099 = stacked; under 700 = the phone's own composition. */
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 16px); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body.site { overflow-x: clip; }
+
+.wrap { width: min(100% - 2 * var(--margin), var(--maxw)); margin-inline: auto; }
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: var(--gutter); }
+
+/* ---------- Type ---------- */
+.h1, .statement { font: 600 var(--t-h1)/1.04 var(--sans); letter-spacing: -.03em; }
+.h1__line { display: block; white-space: nowrap; }
+.h2 { font: 600 var(--t-h2)/1.08 var(--sans); letter-spacing: -.025em; }
+.lead { font: 400 var(--t-lead)/1.5 var(--sans); text-wrap: pretty; }
+.small { font: 400 var(--t-small)/1.5 var(--sans); color: var(--ink-2); }
+.fict { font: 400 var(--t-small)/1.4 var(--sans); color: var(--ink-2); }
+.on-ink { background: var(--ink); color: #fff; }
+.on-ink ::selection { background: var(--m3); color: var(--ink); }
+.on-ink .small { color: var(--on-ink-2); }
+
+/* The highlighter under a few words of a headline: adjacent strokes, one per source */
+.swp { position: relative; display: inline-block; white-space: nowrap; isolation: isolate; padding-inline: .1em; margin-inline: -.1em; }
+.swp__seg { position: absolute; z-index: -1; top: .1em; bottom: .02em; left: 0; width: 34%; background: var(--m1); transform-origin: 0 50%; }
+.swp__seg:nth-of-type(1) { border-radius: var(--r-mark) 0 0 var(--r-mark); }
+.swp__seg:nth-of-type(2) { left: 33.33%; background: var(--m2); }
+.swp__seg:nth-of-type(3) { left: 66.66%; width: 33.34%; background: var(--m3); border-radius: 0 var(--r-mark) var(--r-mark) 0; }
+.swp--one .swp__seg { width: 100%; background: var(--m4); border-radius: var(--r-mark); }
+/* One phrase of a section heading, marked. This flat stroke is the fallback: when the motion pass has drawn the
+   hand-made stroke over it, it adds .is-drawn (on .swp or .hmark) and the flat one steps aside. */
+.hmark { padding: 0 .12em; margin: 0 -.12em; border-radius: var(--r-mark); background: var(--hl, var(--m1)); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.hmark[data-hmark="1"] { --hl: var(--m1); }
+.hmark[data-hmark="2"] { --hl: var(--m2); }
+.hmark[data-hmark="3"] { --hl: var(--m3); }
+.on-ink .hmark { color: var(--ink); } /* a highlighter on ink: the words under it turn to ink */
+.hmark.is-drawn { background: none; }
+.swp.is-drawn .swp__seg { visibility: hidden; }
+
+.skip { position: absolute; left: 16px; top: -64px; z-index: 70; padding: 10px 16px; border-radius: var(--r-pill); background: var(--ink); color: #fff; font-weight: 500; }
+.skip:focus { top: 12px; }
+
+/* ---------- Navigation: a plain white bar ---------- */
+.nav { position: sticky; top: 0; z-index: 40; background: var(--ground); border-bottom: 1px solid transparent; transition: border-color var(--t-base); }
+.nav.is-scrolled { border-bottom-color: var(--line); }
+.nav__in { display: flex; align-items: center; gap: 32px; height: var(--nav-h); }
+.wordmark { display: inline-flex; align-items: center; gap: 9px; margin-right: auto; font: 600 var(--t-lead)/1 var(--sans); letter-spacing: -.02em; text-decoration: none; }
+.wordmark svg { width: 24px; height: 24px; }
+.nav__links { display: flex; align-items: center; gap: 30px; }
+.nav__link { position: relative; display: inline-flex; align-items: center; height: 44px; font: 500 var(--t-body)/1 var(--sans); text-decoration: none; }
+.nav__link::after { content: ""; position: absolute; left: 0; right: 0; bottom: 9px; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--t-base) var(--ease-out); }
+.nav__link:hover::after, .nav__link:focus-visible::after { transform: scaleX(1); }
+.nav__link:active { opacity: .7; }
+.nav__menu { display: none; }
+
+/* ---------- 1. Hero ---------- */
+.hero { padding-top: 64px; } /* the headline's top sits 136px from the top of the page */
+.hero__head { align-items: end; align-items: last baseline; }
+.h1 { grid-column: 1 / 9; grid-row: 1; }
+.hero__lead { grid-column: 9 / 13; grid-row: 1; }
+.cta { grid-column: 9 / 13; grid-row: 2; display: flex; align-items: center; gap: 14px; margin-top: 20px; }
+.cta .btn { flex: none; }
+.cta .small { min-width: 0; line-height: 1.3; text-wrap: balance; } /* beside the pill; on a narrow column it takes two lines, never a row of its own */
+
+/* The three questions: index tabs joined to the stage */
+.tabs { margin-top: 20px; }
+.tabs__in { position: relative; display: flex; gap: 4px; width: max-content; isolation: isolate; }
+.tab {
+  position: relative; height: 44px; padding: 0 20px; border: 0; background: none; border-radius: var(--r) var(--r) 0 0;
+  font: 500 var(--t-body)/1 var(--sans); color: var(--ink-2); white-space: nowrap; cursor: pointer;
+  transition: color var(--t-fast);
+}
+.tab::before { content: ""; position: absolute; inset: 0; z-index: -2; border-radius: inherit; background: var(--desk-2); transition: background-color var(--t-fast); }
+.tab:hover { color: var(--ink); }
+.tab:hover::before { background: var(--desk-3); }
+.tab:active { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); }
+.tab[aria-selected="true"]::before { background: var(--desk); }
+.tab:focus-visible { outline-offset: -2px; }
+/* With script the selected colour is one shape that slides from tab to tab (--ind-l, --ind-r set by site.js) */
+.tabs__ind {
+  display: none; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: var(--desk);
+  clip-path: inset(0 calc(100% - var(--ind-r, 0px)) 0 var(--ind-l, 0px) round var(--r) var(--r) 0 0);
+  transition: clip-path var(--t-move) var(--ease-out);
+}
+.tabs.has-ind .tabs__ind { display: block; }
+.tabs.has-ind .tab[aria-selected="true"]::before { background: var(--desk-2); }
+
+/* The stage: a desk band, edge to edge; the answer sheet and the pile of its sources */
+.stage { padding: 40px 0 28px; background: var(--desk); overflow-x: clip; }
+.stage__grid { align-items: start; }
+.stage__answer { grid-column: 1 / 8; }
+.stage .pile { grid-column: 8 / 13; }
+.stage .fict { grid-column: 1 / 13; margin-top: 28px; }
+.is-swapping > * { animation: swap-in var(--t-base) var(--ease-out); }
+@keyframes swap-in { from { opacity: 0; } }
+
+/* Shorter screens (1280 x 800): the answer, its flags and the top source still sit above the fold */
+@media (min-width: 1100px) and (max-height: 860px) {
+  .hero { padding-top: 24px; }
+  .cta { margin-top: 16px; }
+  .tabs { margin-top: 14px; }
+  .stage { padding-top: 24px; }
+}
+
+/* ---------- 2. Three rules (stacked here; the motion pass pins them on wide screens) ---------- */
+.rules { padding-top: var(--sec-gap); }
+/* The list of the three names belongs to the pinned version: hidden while the rules are stacked.
+   The motion pass adds .is-pinned on .rules and moves the marker (translateY, 32px per row). */
+.rules__list { position: relative; display: none; flex-direction: column; margin-bottom: 44px; padding-left: 16px; }
+.rules.is-pinned .rules__list { display: flex; }
+.rules__list a { display: inline-flex; align-items: center; min-height: 32px; font: 500 var(--t-body)/1.2 var(--sans); color: var(--ink-2); text-decoration: none; transition: color var(--t-fast); }
+.rules__list a:hover, .rules__list a[aria-current="true"] { color: var(--ink); }
+.rules__list a:hover { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1.5px; }
+.rules__marker { position: absolute; left: 0; top: 0; width: 3px; height: 32px; border-radius: var(--r-mark); background: var(--ink); }
+.rule { align-items: center; }
+.rule + .rule { margin-top: 96px; }
+.rule__text { grid-column: 1 / 6; padding-right: 24px; }
+.rule__text .lead { margin-top: 20px; }
+.rule__frag { grid-column: 6 / 13; padding: 40px 40px 22px; border-radius: var(--r); background: var(--desk); --flag-gutter: 112px; }
+.rule__frag .fict { margin-top: 28px; }
+.rule__frag .switch { margin-bottom: 20px; }
+
+/* ---------- 3. Connectors ---------- */
+.conn { padding-top: var(--sec-gap); }
+.conn__head { align-items: end; }
+.conn__head .h2 { grid-column: 1 / 7; }
+.conn__head .lead { grid-column: 8 / 13; }
+[data-count] { font-variant-numeric: tabular-nums; }
+/* Static version: two wrapped rows inside the margins. The motion pass sets them moving, edge to edge. */
+.marquee { margin-top: 56px; padding-inline: max(var(--margin), (100% - var(--maxw)) / 2); display: flex; flex-wrap: wrap; gap: 16px 44px; }
+.marquee__row { display: contents; } /* static: the two rows flow as one block of names */
+.tool { display: flex; flex: none; align-items: center; gap: 12px; height: 32px; font: 500 var(--t-body)/1 var(--sans); white-space: nowrap; }
+.tool .logo { width: 24px; height: 24px; }
+/* The name under the pointer takes one highlighter stroke (it hugs the word, as a marker does) */
+.tool > span { padding: .14em .3em; margin: -.14em -.3em; border-radius: var(--r-mark); transition: background-color var(--t-fast); }
+.tool:hover > span { background: var(--m1); }
+.tool:nth-child(3n + 2):hover > span { background: var(--m2); }
+.tool:nth-child(3n):hover > span { background: var(--m3); }
+/* The endless carousel. The motion pass appends a copy of each row's items (li[data-clone], aria-hidden), adds
+   .is-rolling on .marquee and slides each row by half its own width: the copy follows the last tool, no gap, no jump. */
+.tool[data-clone] { display: none; }
+.marquee.is-rolling { display: grid; row-gap: 20px; padding-inline: 0; overflow-x: clip; }
+.marquee.is-rolling .marquee__row { display: flex; flex-wrap: nowrap; gap: 44px; width: max-content; padding: 4px 44px 4px 0; overflow: visible; }
+.marquee.is-rolling .tool[data-clone] { display: flex; }
+.conn__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 40px; margin-top: 44px; }
+
+/* ---------- Bands ---------- */
+.band { padding-block: var(--band-pad); }
+.band--desk { background: var(--desk); }
+
+/* ---------- 4. Morning briefing ---------- */
+.brief { margin-top: var(--sec-gap); }
+.brief__grid { align-items: center; }
+.brief__memo { grid-column: 1 / 7; }
+.brief__memo .fict { margin-top: 20px; }
+.brief__text { grid-column: 8 / 13; }
+.brief__text .lead { margin-top: 20px; }
+.brief__text .small { margin-top: 28px; max-width: 34em; }
+.brief__text .more { margin-top: 10px; }
+
+/* ---------- 5. For developers: an ink band. Shared memory and dreaming ---------- */
+.dev__grid { align-items: start; }
+.dev__text { grid-column: 1 / 6; }
+/* The story beside it is taller than the text: on a screen tall enough to hold it, the text stays in view while the terminal passes */
+/* One screen (the founder's request): from 1100px wide the band is as tall as the room under the bar, and its padding
+   takes what the content leaves. --dev-h is the content's height: the story in Morning, its tallest step (657px measured at
+   1440 and 1600). Top-aligned on purpose: nothing shifts while the terminal prints. */
+@media (min-width: 1100px) {
+  .dev { --dev-h: 660px; min-height: min(100svh - var(--nav-h), var(--dev-h) + 2 * var(--band-pad)); padding-block: clamp(24px, (100svh - var(--nav-h) - var(--dev-h)) / 2, var(--band-pad)); scroll-margin-top: -16px; /* a plain jump lands its top on the bar */ }
+}
+/* A short screen (1280 x 720 has 648px under the bar): the facts, the desk and the terminal close up */
+@media (min-width: 1100px) and (max-height: 779px) {
+  .dev { --dev-h: 594px; } /* measured at 1280 */
+  .dev .facts { margin-top: 20px; }
+  .dev .fact { padding: 10px 0 11px; }
+  .dev .dev__line { padding-top: 10px; }
+  .dev .dream__desk { margin-top: 10px; }
+  .dev__frag .term { margin-top: 14px; line-height: 1.4; }
+  .dev .term__bar { padding-block: 6px; }
+  .dev .term__body { padding-block: 10px 12px; }
+  .dev .term__gap { margin-top: .4em; }
+  .dev__frag .fict { margin-top: 10px; }
+}
+
+.dev__text .h2 { width: calc(120% + .2 * var(--gutter)); } /* the heading runs over six columns, its text over five */
+.dev__text .lead { margin-top: 20px; }
+.facts { margin-top: 28px; }
+.fact { padding: 14px 0 15px; border-top: 1px solid var(--on-ink-line); }
+.fact dt { font: 600 var(--t-body)/1.4 var(--sans); }
+.fact dd { margin-top: 4px; font: 400 var(--t-body)/1.55 var(--sans); text-wrap: pretty; }
+.dev__line { padding-top: 14px; border-top: 1px solid var(--on-ink-line); text-wrap: pretty; }
+.dev__text .more { margin-top: 16px; }
+.dev__frag { grid-column: 7 / 13; }
+.dev__frag .term { margin-top: 20px; font-size: clamp(.8125rem, 1.02vw, .875rem); line-height: 1.5; } /* 13px at 1280, where the longest line (68 characters) just fits; 14px from 1373 */
+.dev__frag .fict { margin-top: 12px; color: var(--on-ink-2); }
+
+/* ---------- 6. Security: white, what is in place and what is not ---------- */
+.sec { padding-block: var(--sec-gap); }
+.sec__grid { align-items: start; }
+.sec .h2 { grid-column: 1 / 6; }
+.sec__lists { grid-column: 7 / 13; display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--gutter); }
+.sec__list h3 { padding-bottom: 14px; font: 500 var(--t-body)/1.3 var(--sans); color: var(--ink-2); }
+.sec__list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); column-gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); font: 400 var(--t-lead)/1.4 var(--sans); }
+.sec__list svg { width: 22px; height: 22px; margin-top: 2px; }
+/* In progress: a faint full ring and, over it, half of it drawn in ink (path[data-draw]) */
+.sec .more { grid-column: 7 / 13; justify-self: start; margin-top: 28px; }
+
+/* ---------- 7. Close: a desk band ---------- */
+.close__grid { align-items: center; }
+.close__text { grid-column: 1 / 8; }
+.close__text .lead { margin-top: 24px; }
+.close__cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.close__form { grid-column: 9 / 13; padding: 24px; border-radius: var(--r); background: var(--desk-2); }
+.signup { padding: 24px 24px 26px; }
+.signup__title { font: 600 var(--t-answer)/1.25 var(--sans); letter-spacing: -.015em; }
+.signup .row { margin-top: 16px; }
+.signup .btn { margin-top: 20px; }
+
+/* ---------- Footer: an ink band ---------- */
+.foot { padding-block: 80px 36px; }
+.foot__grid { row-gap: 56px; }
+.foot__brand { grid-column: 1 / 5; }
+.foot__brand .wordmark { gap: 14px; font-size: var(--t-h2); }
+.foot__brand .wordmark svg { width: 44px; height: 44px; }
+.foot__col h3 { font: 500 var(--t-body)/1.3 var(--sans); color: var(--on-ink-2); }
+.foot__col ul { margin-top: 10px; }
+.foot__col a, .foot__base a { display: inline-flex; align-items: center; min-height: 36px; font: 400 var(--t-body)/1.3 var(--sans); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color var(--t-fast); }
+.foot__col a:hover, .foot__base a:hover { text-decoration-color: #fff; }
+.foot__col--product { grid-column: 6 / 9; }
+.foot__col--trust { grid-column: 9 / 11; }
+.foot__col--account { grid-column: 11 / 13; }
+.foot__base { grid-column: 1 / 13; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 24px; padding-top: 20px; border-top: 1px solid var(--on-ink-line); font: 400 var(--t-small)/1.4 var(--sans); color: var(--on-ink-2); }
+.foot__base a { min-height: 32px; font-size: var(--t-small); color: #fff; }
+.foot__base [aria-current] { color: #fff; }
+.foot__lang { display: flex; align-items: center; gap: 8px; }
+
+/* ---------- 700 to 1099: stacked ---------- */
+@media (max-width: 1099px) {
+  .hero { padding-top: 48px; }
+  .h1, .hero__lead, .cta { grid-column: 1 / 13; grid-row: auto; }
+  .hero__lead { margin-top: 20px; max-width: 34em; }
+  .tabs { margin-top: 40px; }
+  .stage__answer, .stage .pile { grid-column: 1 / 13; }
+  .stage .pile { margin-top: 28px; max-width: 640px; }
+  .rule__text, .rule__frag { grid-column: 1 / 13; }
+  .rule__text { padding-right: 0; max-width: 36em; }
+  .rule__frag { margin-top: 32px; }
+  .rule + .rule { margin-top: 88px; }
+  .conn__head .h2, .conn__head .lead { grid-column: 1 / 13; }
+  .conn__head .lead { margin-top: 20px; max-width: 34em; }
+  .brief__memo, .brief__text { grid-column: 1 / 13; }
+  .brief__text { order: -1; margin-bottom: 40px; max-width: 36em; }
+  .dev__text, .dev__frag { grid-column: 1 / 13; }
+  .dev__text { max-width: 40em; }
+  .dev__text .h2 { width: auto; }
+  .dev__frag { margin-top: 56px; }
+  .sec .h2, .sec__lists, .sec .more { grid-column: 1 / 13; }
+  .sec__lists { margin-top: 40px; }
+  .nav__in { gap: 24px; }
+  .nav__links { gap: 22px; }
+  .close__text, .close__form { grid-column: 1 / 13; }
+  .close__form { margin-top: 48px; max-width: 480px; }
+  .foot__brand { grid-column: 1 / 13; }
+  .foot__col--product { grid-column: 1 / 6; }
+  .foot__col--trust { grid-column: 6 / 10; }
+  .foot__col--account { grid-column: 10 / 13; }
+}
+
+/* ---------- Under 960: the six links no longer fit beside the pill; they move to a panel under the bar ---------- */
+@media (max-width: 959px) {
+  .nav__in { gap: 8px; }
+  .nav__menu {
+    display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-right: -10px;
+    border: 0; border-radius: var(--r-pill); background: none; cursor: pointer;
+  }
+  .nav__menu:active { transform: scale(.94); }
+  .nav__menu svg { width: 22px; height: 22px; overflow: visible; }
+  .nav__menu line { transition: transform var(--t-base) var(--ease-out); transform-origin: 11px 11px; }
+  .nav__menu[aria-expanded="true"] line:first-child { transform: translateY(4px) rotate(45deg); }
+  .nav__menu[aria-expanded="true"] line:last-child { transform: translateY(-4px) rotate(-45deg); }
+  /* The links: a full-width panel under the bar. Without script it is simply open. */
+  .nav__links {
+    position: absolute; left: 0; right: 0; top: 100%; flex-direction: column; align-items: stretch; gap: 0;
+    padding: 4px var(--margin) 16px; background: var(--ground); border-bottom: 1px solid var(--line);
+  }
+  .js .nav__links:not(.is-open) { display: none; }
+  html:not(.js) .nav__links { position: static; flex-direction: row; flex-wrap: wrap; gap: 0 20px; padding: 0 var(--margin) 8px; border: 0; }
+  html:not(.js) .nav__in { flex-wrap: wrap; height: auto; min-height: var(--nav-h); }
+  .nav__link { height: 48px; }
+  .nav__link::after { display: none; }
+}
+
+/* ---------- Under 700: the phone ---------- */
+@media (max-width: 699px) {
+  .wordmark svg { width: 22px; height: 22px; }
+  .nav .btn--nav { padding: 0 14px; min-height: 44px; }
+  .wordmark { min-height: 44px; }
+
+  .hero { padding-top: 28px; }
+  .h1__line { display: inline; white-space: normal; }
+  .h1, .statement { letter-spacing: -.035em; }
+  .hero__lead { margin-top: 16px; }
+  .tabs { margin-top: 36px; width: 100%; overflow-x: auto; scrollbar-width: none; padding-inline: var(--margin); }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs__in::after { content: ""; flex: none; width: 12px; } /* room after the last tab when scrolled to the end */
+  .tab { padding: 0 16px; }
+  .stage { padding: 20px 0 20px; }
+  .stage .fict { margin-top: 18px; }
+  .asheet { padding-top: 18px; }
+  .asheet > .q, .asheet > .answer { margin-left: 18px; }
+  .note { padding: 9px 14px 9px 18px; }
+  /* With script a source opens as a bottom sheet; without, the documents simply follow the answer */
+  .js .stage .pile { display: none; }
+  .stage .pile { display: block; padding: 0 0 0 var(--flag-out); max-width: none; }
+  .stage .pile > .doc { translate: none; rotate: none; margin-top: 14px; }
+  .stage .pile > .doc .doc__meta, .stage .pile > .doc .doc__rest { opacity: 1; visibility: visible; }
+
+  .rule + .rule { margin-top: 80px; }
+  .rule__frag { margin-top: 24px; margin-inline: calc(-1 * var(--margin)); padding: 20px var(--margin) 18px; border-radius: 0; --flag-gutter: 46px; overflow-x: clip; }
+  .rule__frag .fict { margin-top: 20px; }
+
+  .marquee { display: grid; gap: 0; margin-top: 36px; padding-inline: 0; }
+  /* Two strips that scroll sideways: 42 names stacked would be a screen and a half */
+  .marquee__row { display: flex; flex-wrap: nowrap; gap: 28px; overflow-x: auto; padding: 4px var(--margin); scrollbar-width: none; }
+  .marquee__row::-webkit-scrollbar { display: none; }
+  .tool { height: 44px; }
+  .conn__foot { margin-top: 28px; }
+
+  .memo { padding: 22px 20px 16px; }
+  .dev__text .h2 { font-size: min(var(--t-h2), 6.4vw); } /* 25px at 390: at 28 this heading alone takes three lines */
+  .facts { margin-top: 28px; }
+  .dev__frag { margin-top: 44px; }
+  .dev__frag .term { margin-top: 32px; }
+  .sec__lists { grid-template-columns: 1fr; row-gap: 36px; }
+  .close__form { padding: 16px; }
+  .signup { padding: 20px 18px 22px; }
+  .close__cta .btn { flex: 1 1 auto; }
+  .foot { padding-block: 64px 28px; }
+  .foot__grid { row-gap: 40px; }
+  .foot__brand .wordmark svg { width: 32px; height: 32px; }
+  .foot__col--product { grid-column: 1 / 13; }
+  .foot__col--trust { grid-column: 1 / 7; }
+  .foot__col--account { grid-column: 7 / 13; }
+  .foot__col a { min-height: 44px; }
+  .foot__base a { min-height: 44px; }
+}
+
+/* 1024 to 1179px: five columns are too narrow for the longest rule heading at full size (it took three lines) */
+@media (min-width: 1024px) and (max-width: 1179px) { .rule__text .h2 { font-size: 2rem; } }
+@media (min-width: 1180px) and (max-width: 1279px) { .rule__text .h2 { font-size: 2.25rem; } }
+/* 1280 x 800: "Fictional example" stays above the fold with the answer and the top source */
+@media (min-width: 1100px) and (max-height: 860px) { .stage .fict { margin-top: 18px; } }

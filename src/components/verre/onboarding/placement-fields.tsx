@@ -39,7 +39,8 @@ export function PlacementFields({
 
   return (
     <>
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 sm:grid-cols-2">
+      {/* items-start : l'erreur sous un champ n'abaisse pas la liste voisine */}
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4 sm:grid-cols-2">
         <Field label={t('department')} error={errors.department}>
           <Select
             className="[&>span:first-child]:min-w-0 [&>span:first-child]:truncate"
@@ -63,7 +64,7 @@ export function PlacementFields({
         </Field>
       </div>
 
-      <Field label={t('seniorityLabel')} help={t('seniorityHint')} error={errors.seniority}>
+      <Field label={t('seniorityLabel')} error={errors.seniority}>
         <Select
           placeholder={t('choose')}
           value={seniority}

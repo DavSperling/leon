@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Team · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app-lists.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app lists" data-screen="team">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <div class="top__text">
+      <h1 class="top__title">Team</h1>
+      <p class="top__sub">The people of Kestrel Studio, their role and who they report to.</p>
+    </div>
+    <form class="ask" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <div class="duo" style="--aside: 400px">
+    <!-- The one action of the screen. Without script the form goes to #invited, which shows the link. -->
+    <section class="sec" aria-labelledby="invite-h">
+      <div class="sec__head"><h2 class="h-sec" id="invite-h">Invite someone</h2></div>
+      <form class="invite" action="#invited" data-invite>
+        <label class="label" for="invite-email">Work email</label>
+        <div class="invite__row">
+          <input class="field" id="invite-email" type="email" autocomplete="off" required aria-describedby="invite-err invite-hint">
+          <button class="btn" type="submit">Invite by link</button>
+        </div>
+        <p class="field-error" id="invite-err" hidden></p>
+        <p class="hint" id="invite-hint">Leon creates a link that works once and expires in 7 days. Send it yourself: Leon does not send emails.</p>
+      </form>
+      <!-- state: the link, once created (app-team.html#invited, or submit the form) -->
+      <div class="invite__out case" id="invited">
+        <p role="status"><b data-invited>Link created.</b> Copy it now: it is not shown again.</p>
+        <div class="code"><pre><code id="invite-link">https://leonmemory.com/join/kestrel-studio/4f9c2e</code></pre><button type="button" class="btn btn--line btn--sm" data-copy="#invite-link">Copy</button></div>
+      </div>
+    </section>
+
+    <aside class="panel panel--desk" aria-labelledby="rule-h">
+      <h2 class="h-sec" id="rule-h">Who sees what</h2>
+      <p>Everyone here can search what a connection’s owner shares with the team. Private connections, uploads marked “Only you” and conversations with AI assistants stay with their owner.</p>
+    </aside>
+  </div>
+
+  <section class="sec sec--gap" aria-labelledby="members-h">
+    <div class="sec__head"><h2 class="h-sec" id="members-h">Members</h2><p class="sec__meta">38 people</p></div>
+    <div class="filter-row needs-js">
+      <label class="vh" for="people-filter">Filter members by name, role, manager or status</label>
+      <input class="field" id="people-filter" type="text" placeholder="Filter by name or role" autocomplete="off">
+    </div>
+    <div class="table-wrap">
+      <table class="table" data-members>
+        <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Manager</th><th scope="col">Status</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+        <tbody>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">RS</span><span>Rachel Stein <span class="cell__sub">CEO · rachel@kestrel.example</span></span></span></td><td>Owner</td><td><span class="muted" aria-hidden="true">—</span><span class="vh">No manager</span></td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><button type="button" class="btn btn--line btn--sm" disabled title="The owner’s role is changed by the owner">Manage</button></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">JM</span><span>Julie Martin<span class="tag">You</span> <span class="cell__sub">Account lead · julie@kestrel.example</span></span></span></td><td>Admin</td><td>Rachel Stein</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="app-settings.html">Your profile</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">DO</span><span>Daniel Okafor <span class="cell__sub">Head of engineering · daniel@kestrel.example</span></span></span></td><td>Admin</td><td>Rachel Stein</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">SL</span><span>Sophie Laurent <span class="cell__sub">Project manager · sophie@kestrel.example</span></span></span></td><td>Member</td><td>Rachel Stein</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">KB</span><span>Karim Benali <span class="cell__sub">Sales · karim@kestrel.example</span></span></span></td><td>Member</td><td>Julie Martin</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">MC</span><span>Maya Chen <span class="cell__sub">Support · maya@kestrel.example</span></span></span></td><td>Member</td><td>Sophie Laurent</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">NL</span><span>Noa Levi <span class="cell__sub">Engineer · noa@kestrel.example</span></span></span></td><td>Member</td><td>Daniel Okafor</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Active</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">PN</span><span>Priya Nair <span class="cell__sub">Designer · priya@kestrel.example</span></span></span></td><td>Member</td><td>Sophie Laurent</td><td><span class="status"><span class="dot" aria-hidden="true"></span>Invited Nov&nbsp;6</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">TG</span><span>Thomas Girard <span class="cell__sub">Engineer · thomas@kestrel.example</span></span></span></td><td>Member</td><td>Daniel Okafor</td><td><span class="status"><span class="dot" aria-hidden="true"></span>Left Oct&nbsp;17</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr>
+          <!-- state: the filter matches no one -->
+          <tr data-none hidden><td class="t-none" colspan="5">No one matches <b data-term></b>. <button type="button" class="link" data-clear>Clear the filter</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted list-foot"><span data-shown>9</span> of 38 people shown. <a class="link" href="#" title="Not in this prototype">Show all</a></p>
+  </section>
+
+</div>
+</main>
+</div>
+
+<!-- Someone just invited: the row script adds at the end of the list -->
+<template id="member-row"><tr><td><span class="cell"><span class="avatar avatar--quiet" aria-hidden="true">@</span><span><span data-name></span> <span class="cell__sub">Invited by you</span></span></span></td><td>Member</td><td><span class="muted" aria-hidden="true">—</span><span class="vh">No manager</span></td><td><span class="status"><span class="dot" aria-hidden="true"></span>Invited today</span></td><td class="t-act"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Manage</a></td></tr></template>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="js/app-team.js" defer></script>
+</body>
+</html>

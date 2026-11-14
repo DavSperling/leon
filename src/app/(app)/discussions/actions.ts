@@ -5,13 +5,18 @@ import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import type { ActionView } from '@/lib/actions';
-import { DISCUSSION_MESSAGE_MAX_CHARS, type DiscussionCitation } from '@/lib/discussion-events';
+import { type CitationView, DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
 import { PAGE_SIZE } from '@/lib/search-limits';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
 import { closeAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { isReplying } from '@/server/discussion/agent';
+import {
+  type CitationDetails,
+  citationDetails,
+  withCitationDetails,
+} from '@/server/discussion/citation-sources';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
 import { decideAction } from '@/server/discussion/github-actions';
 import { logError } from '@/server/log';
@@ -25,7 +30,8 @@ export type DiscussionMessageView = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  citations: DiscussionCitation[];
+  // Avec, quand le lecteur voit la source, son outil, qui la voit et le passage cité (le surligneur).
+  citations: CitationView[];
   // Les actions proposées pendant cette réponse, chacune avec son bouton.
   actions: ActionView[];
 };
@@ -62,6 +68,8 @@ export async function newDiscussionAction(
   if (!question.success) return { error: t('questionTooLong') };
   const id = await create(ctx, { question: question.data });
   if (id === null) return { error: t('createFailed') };
+  // les « Récentes » de la barre latérale
+  revalidatePath('/', 'layout');
   redirect(`/discussions/${id}`);
 }
 
@@ -78,6 +86,8 @@ export async function continueInDiscussionAction(
   }
   const id = await create(ctx, { question: question.data, seedSourceIds: seeds.data });
   if (id === null) return { error: t('createFailed') };
+  // les « Récentes » de la barre latérale
+  revalidatePath('/', 'layout');
   redirect(`/discussions/${id}`);
 }
 
@@ -94,13 +104,16 @@ export async function readDiscussionMessagesAction(
     const replying = isReplying(ctx, discussionId);
     const found = await getDiscussion(ctx, discussionId);
     if (!found) return null;
-    const messages = found.messages.map(({ id, role, content, citations, actions }) => ({
-      id,
-      role,
-      content,
-      citations,
-      actions,
-    }));
+    const messages = await withCitationDetails(
+      ctx,
+      found.messages.map(({ id, role, content, citations, actions }) => ({
+        id,
+        role,
+        content,
+        citations,
+        actions,
+      })),
+    );
     return { messages, replying };
   } catch (error) {
     logError('discussion.lecture', error);
@@ -108,17 +121,34 @@ export async function readDiscussionMessagesAction(
   }
 }
 
-// Supprimer une de ses discussions, depuis la liste. Faux pour une discussion inconnue ou d'un autre, ou une panne.
+// Supprimer une de ses discussions, depuis son en-tête ou la barre latérale. Faux pour une discussion inconnue ou d'un autre, ou une panne.
 export async function deleteDiscussionAction(discussionId: string): Promise<{ ok: boolean }> {
   const ctx = await requireUserContext();
   if (typeof discussionId !== 'string') return { ok: false };
   try {
     const ok = await deleteDiscussion(ctx, discussionId);
-    revalidatePath('/discussions');
+    revalidatePath('/', 'layout');
     return { ok };
   } catch (error) {
     logError('discussion.suppression', error);
     return { ok: false };
+  }
+}
+
+// Ce qu'une réponse qui vient de finir sait de ses sources (outil, qui la voit, passage cité), relu sous les droits du
+// lecteur. Une liste vide pour ce qui n'est pas une liste de chaînes, ou une panne : l'écran garde les numéros seuls.
+const PassageIdsSchema = z.array(z.string().max(64)).max(200);
+export async function citationDetailsAction(
+  passageIds: string[],
+): Promise<Record<string, CitationDetails>> {
+  const ctx = await requireUserContext();
+  const ids = PassageIdsSchema.safeParse(passageIds);
+  if (!ids.success) return {};
+  try {
+    return Object.fromEntries(await citationDetails(ctx, ids.data));
+  } catch (error) {
+    logError('discussion.details_citations', error);
+    return {};
   }
 }
 
@@ -143,7 +173,7 @@ export async function decideActionAction(
   }
 }
 
-// La carte « About you » en haut du Chat (onboarding, lot 5). Les erreurs sont des codes : le composant les traduit à
+// La carte « About you » de l'Accueil (onboarding, lot 5). Les erreurs sont des codes : le composant les traduit à
 // l'affichage, un changement de langue les suit.
 export type AboutSuggestionResult = { ok: true } | { error: 'tooLong' | 'empty' | 'failed' };
 
@@ -180,5 +210,5 @@ export async function dismissAboutSuggestionAction(): Promise<void> {
     logError('apropos.fermeture', error);
     return;
   }
-  revalidatePath('/discussions');
+  revalidatePath('/');
 }

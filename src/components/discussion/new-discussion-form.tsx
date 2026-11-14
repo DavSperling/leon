@@ -1,21 +1,25 @@
 'use client';
 
-import { ArrowUp } from 'lucide-react';
+import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { useActionState, useEffect, useId, useRef, useState } from 'react';
+import { useActionState, useRef, useState } from 'react';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
-import { GlassCard, IconButton, Pill, Textarea, useThinking } from '@/components/verre';
+import type { ProviderId } from '@/capture/turn';
+import { ToolLogo } from '@/components/verre';
+import { ComposerBox, sendsOnEnter } from '@/components/verre/discussions/composer';
 import { DISCUSSION_MESSAGE_MAX_CHARS } from '@/lib/discussion-events';
+import { PROVIDER_LABELS } from '@/lib/providers';
 import { cn, formatNumber, nb } from '@/lib/verre';
 
-// Une nouvelle discussion : une question, puis la page de la discussion, où Leon y répond tout de suite.
-// `examples` : des questions toutes prêtes sous le champ ; un clic en remplit le champ, sans rien envoyer.
+// Une nouvelle discussion : une question dans le grand champ, puis la page de la discussion, où Leon y répond tout de
+// suite. Ce qui refuse la question se dit sous le champ.
 export function NewDiscussionForm({
   disabled,
-  examples,
+  reads = [],
 }: {
   disabled: boolean;
-  examples?: string[];
+  /** Les outils que Leon lit pour cette personne : leurs logos signent le champ, à côté des trois traits. */
+  reads?: ProviderId[];
 }) {
   const locale = useLocale();
   const t = useTranslations('discussions');
@@ -25,114 +29,83 @@ export function NewDiscussionForm({
   );
   const [question, setQuestion] = useState('');
   const form = useRef<HTMLFormElement>(null);
-  const field = useRef<HTMLTextAreaElement>(null);
-  const examplesLabel = useId();
-  const { setThinking } = useThinking();
-  useEffect(() => setThinking(pending), [pending, setThinking]);
   const count = question.length;
 
   return (
-    <>
-      <GlassCard
-        variant="raised"
-        signal
-        className="p-2 transition-[border-color,box-shadow] duration-200 focus-within:border-accent-line"
-      >
-        <form ref={form} action={action}>
-          <label htmlFor="nouvelle-question" className="sr-only">
-            {t('newQuestionLabel')}
-          </label>
-          <Textarea
-            ref={field}
-            id="nouvelle-question"
-            name="question"
-            rows={2}
-            autoGrow
-            maxRows={10}
-            maxLength={DISCUSSION_MESSAGE_MAX_CHARS}
-            required
-            value={question}
-            onChange={(event) => setQuestion(event.target.value)}
-            onKeyDown={(event) => {
-              // Entrée envoie, Maj + Entrée passe à la ligne, comme dans le fil d'une discussion.
-              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-                event.preventDefault();
-                form.current?.requestSubmit();
-              }
-            }}
-            disabled={disabled}
-            // et non disabled : le focus reste dans le champ pendant l'envoi
-            readOnly={pending}
-            aria-invalid={state.error ? true : undefined}
-            aria-describedby="nouvelle-question-note"
-            placeholder={nb(t('newQuestion'))}
-            className="border-0 bg-transparent px-2.5 py-2 text-lead shadow-none hover:border-0 focus-visible:shadow-none disabled:opacity-70"
-          />
-          <div className="flex items-center justify-end gap-3 px-1">
-            {state.error ? (
-              <p
-                id="nouvelle-question-note"
-                role="alert"
-                className="mr-auto px-1.5 text-ui text-destructive"
-              >
-                {nb(state.error)}
-              </p>
-            ) : (
-              // le sous-titre de la page le dit déjà : lu, pas affiché
-              <p id="nouvelle-question-note" className="sr-only">
-                {t('srDescription')}
-              </p>
-            )}
-            {count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
-              <span
-                className={cn(
-                  'font-mono text-meta tracking-normal',
-                  count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
-                )}
-              >
-                {formatNumber(count, locale)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS, locale)}
-              </span>
-            )}
-            <IconButton
-              type="submit"
-              icon={ArrowUp}
-              label={pending ? t('busy') : t('sendQuestion')}
-              variant="primary"
-              size="lg"
-              aria-disabled={pending || undefined}
-              disabled={disabled || (!pending && question.trim() === '')}
-              tooltip={false}
-              className="size-10 rounded-field aria-disabled:opacity-50 [&_svg]:size-[18px]"
-            />
-          </div>
-        </form>
-      </GlassCard>
-      {!disabled && examples && examples.length > 0 && (
-        // biome-ignore lint/a11y/useSemanticElements: un groupe nommé de pastilles, pas un formulaire (fieldset)
-        <div
-          role="group"
-          aria-labelledby={examplesLabel}
-          className="flex flex-wrap items-center justify-center gap-2"
-        >
-          <span id={examplesLabel} className="text-label text-muted">
-            {t('examplesLabel')}
-          </span>
-          {examples.map((example) => (
-            <Pill
-              key={example}
-              // pendant l'envoi, un clic ne doit pas remplacer la question si l'envoi échoue
-              disabled={pending}
-              onClick={() => {
-                setQuestion(example);
-                field.current?.focus();
-              }}
-              className="h-auto min-h-8 max-w-full shrink whitespace-normal py-1 text-left"
+    <form ref={form} action={action}>
+      <ComposerBox
+        big
+        id="nouvelle-question"
+        name="question"
+        label={t('newQuestionLabel')}
+        required
+        value={question}
+        onChange={(event) => setQuestion(event.target.value)}
+        onKeyDown={(event) => {
+          // Entrée envoie, Maj + Entrée passe à la ligne, comme dans le fil d'une discussion.
+          if (sendsOnEnter(event)) {
+            event.preventDefault();
+            form.current?.requestSubmit();
+          }
+        }}
+        disabled={disabled}
+        // et non disabled : le focus reste dans le champ pendant l'envoi
+        readOnly={pending}
+        busy={pending}
+        empty={question.trim() === ''}
+        aria-invalid={state.error ? true : undefined}
+        aria-describedby="nouvelle-question-note"
+        // le titre de la page pose déjà la question : le champ dit ce qu'on y écrit
+        placeholder={nb(disabled ? t('disabledPlaceholder') : t('composerLabel'))}
+        tools={
+          !disabled &&
+          reads.length > 0 && (
+            // d'où viendra la réponse : les outils branchés, en image ; un clic mène à Connexions
+            <Link
+              href="/connexions"
+              aria-label={nb(
+                t('reads', {
+                  tools: new Intl.ListFormat(locale, { type: 'conjunction' }).format(
+                    reads.map((kind) => PROVIDER_LABELS[kind]),
+                  ),
+                }),
+              )}
+              className="group/reads -my-1 flex items-center gap-2 rounded-item border-l border-line py-1 pr-1.5 pl-3.5 transition-colors duration-150 hover:bg-hover"
             >
-              {nb(example)}
-            </Pill>
-          ))}
-        </div>
+              {reads.map((kind) => (
+                <span key={kind} title={PROVIDER_LABELS[kind]} className="flex">
+                  <ToolLogo kind={kind} size={18} />
+                </span>
+              ))}
+            </Link>
+          )
+        }
+        aside={
+          count >= DISCUSSION_MESSAGE_MAX_CHARS * 0.9 && (
+            <span
+              className={cn(
+                'mb-2 shrink-0 text-label tabular-nums',
+                count >= DISCUSSION_MESSAGE_MAX_CHARS ? 'text-destructive' : 'text-muted',
+              )}
+            >
+              {formatNumber(count, locale)} / {formatNumber(DISCUSSION_MESSAGE_MAX_CHARS, locale)}
+            </span>
+          )
+        }
+      />
+      {state.error ? (
+        <p
+          id="nouvelle-question-note"
+          role="alert"
+          className="mt-2 ml-[18px] text-ui text-destructive"
+        >
+          {nb(state.error)}
+        </p>
+      ) : (
+        <p id="nouvelle-question-note" className="sr-only">
+          {t('srDescription')}
+        </p>
       )}
-    </>
+    </form>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { type ChartMember, orgView } from './org-chart';
+import { type ChartMember, chartLayout, orgView } from './org-chart';
 
 const m = (id: string, managerId: string | null = null, self = false): ChartMember => ({
   id,
@@ -44,5 +44,28 @@ describe('orgView', () => {
     expect(focus?.id).toBe('Inès');
     expect(chain).toEqual([]);
     expect(ids(row)).toEqual(['Inès', 'Zoé']);
+  });
+});
+
+describe('chartLayout', () => {
+  it('met en haut les racines qui ont une équipe ; ceux qui ne sont rattachés à personne vont à part', () => {
+    const { top, unplaced, children } = chartLayout(ORG);
+    expect(ids(top)).toEqual(['Claire']);
+    expect(ids(unplaced)).toEqual(['Léa']);
+    expect(ids(children.get('Marc') ?? [])).toEqual(['Bob', 'Inès']);
+  });
+
+  it("sans aucun rattachement, le lecteur seul est en haut ; un invité n'y est jamais pris d'office", () => {
+    const flat = [m('Zoé'), { ...m('Ana'), invited: true }, m('Inès', null, true)];
+    expect(ids(chartLayout(flat).top)).toEqual(['Inès']);
+    expect(ids(chartLayout(flat).unplaced)).toEqual(['Ana', 'Zoé']);
+    const noSelf = [{ ...m('Ana'), invited: true }, m('Zoé')];
+    expect(ids(chartLayout(noSelf).top)).toEqual(['Zoé']);
+  });
+
+  it('un manager absent de la liste ne cache personne : la personne devient une racine', () => {
+    const { top, unplaced } = chartLayout([m('Bob', 'parti'), m('Hugo', 'Bob')]);
+    expect(ids(top)).toEqual(['Bob']);
+    expect(unplaced).toEqual([]);
   });
 });

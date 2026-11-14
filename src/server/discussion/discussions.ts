@@ -142,14 +142,17 @@ export async function createDiscussion(
   });
 }
 
-export async function listDiscussions(ctx: TenantContext): Promise<DiscussionSummary[]> {
+export async function listDiscussions(
+  ctx: TenantContext,
+  limit = DISCUSSIONS_LIST_MAX,
+): Promise<DiscussionSummary[]> {
   return withTenant(ctx, (tx) =>
     tx
       .select(summaryColumns)
       .from(discussions)
       .where(eq(discussions.userId, ctx.userId))
       .orderBy(desc(discussions.updatedAt), desc(discussions.id))
-      .limit(DISCUSSIONS_LIST_MAX),
+      .limit(limit),
   );
 }
 

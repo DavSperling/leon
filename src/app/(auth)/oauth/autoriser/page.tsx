@@ -1,8 +1,10 @@
+import { Check } from 'lucide-react';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
+import { AuthSheet, AuthTitle } from '@/components/verre/auth/frame';
+import { Avatar } from '@/components/verre/ui/avatar';
 import { Button } from '@/components/verre/ui/button';
-import { Notice } from '@/components/verre/ui/feedback';
 import { nb } from '@/lib/verre/nb';
 import { getSession, getUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
@@ -41,12 +43,12 @@ export default async function AuthorizeOAuthPage({ searchParams }: { searchParam
   let signedIn: boolean | undefined;
   const hasSession = async () => (signedIn ??= Boolean(await getSession()));
   const invalid = (reason: 'client' | 'retour') => (
-    <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('invalidTitle')}</h1>
-      <p className="mt-3 text-ui text-muted">
+    <AuthSheet wide>
+      <AuthTitle>{t('invalidTitle')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">
         {nb(t(reason === 'client' ? 'invalidClient' : 'invalidReturn'))}
       </p>
-    </div>
+    </AuthSheet>
   );
 
   if (
@@ -69,30 +71,42 @@ export default async function AuthorizeOAuthPage({ searchParams }: { searchParam
   if (!ctx) redirect('/bienvenue');
   const { organizationName } = await getViewerProfile(ctx);
 
+  // Une décision de sécurité : tout se lit ici, au moment de choisir (pas de panneau). L'assistant est « une chose » :
+  // son nom et, en légende, l'hôte où part le code, la seule chose que Leon a vérifiée du client, en évidence.
   return (
-    <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('title')}</h1>
-      <p className="mt-3 text-ui [overflow-wrap:anywhere] text-muted">
+    <AuthSheet wide>
+      <AuthTitle>{t('title')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty [overflow-wrap:anywhere] text-fg">
         {nb(t('question', { client: request.client.name, space: organizationName }))}
       </p>
+      <div className="mt-6 flex min-h-[88px] items-center gap-3.5 rounded-card border border-line bg-sheet px-4 py-3 shadow-sheet">
+        <Avatar name={request.client.name} size={36} />
+        <div className="min-w-0">
+          <p className="truncate text-title font-semibold text-fg">{request.client.name}</p>
+          <p className="mt-0.5 text-ui font-semibold [overflow-wrap:anywhere] text-fg">
+            {request.loopback ? t('returnToLocal') : t('returnTo', { host: request.host })}
+          </p>
+        </div>
+      </div>
       {/* Le nom d'une inscription (DCR) est déclaré, pas vérifié ; celui d'un document CIMD vient de l'hôte du client. */}
       {!isDocumentClientId(request.clientId) && (
-        <p className="mt-1.5 text-ui text-muted">{nb(t('declaredName'))}</p>
+        <p className="mt-2 text-label text-muted">{nb(t('declaredName'))}</p>
       )}
-      {/* L'hôte où part le code, la seule chose que Leon a vérifiée du client : en évidence. */}
-      <p className="mt-5 text-body font-semibold [overflow-wrap:anywhere] text-fg">
-        {request.loopback ? t('returnToLocal') : t('returnTo', { host: request.host })}
-      </p>
-      <p className="mt-5 text-ui text-muted">{nb(t('can'))}</p>
-      <ul className="mt-2 list-disc space-y-1 pl-5 text-ui text-muted">
+      <p className="mt-6 text-label text-muted">{nb(t('can'))}</p>
+      <ul className="mt-2 grid gap-1.5 text-ui text-fg">
         {CAPABILITIES.map((key) => (
-          <li key={key}>{t(key)}</li>
+          <li key={key} className="flex items-start gap-2.5">
+            <Check
+              aria-hidden="true"
+              strokeWidth={2}
+              className="mt-[3px] size-3.5 shrink-0 text-icon"
+            />
+            {t(key)}
+          </li>
         ))}
       </ul>
-      <Notice tone="warning" className="mt-6">
-        {t('warning')}
-      </Notice>
-      <form action={authorizeOAuthAction} className="mt-6 grid gap-3">
+      <p className="mt-6 text-ui font-medium text-pretty text-fg">{nb(t('warning'))}</p>
+      <form action={authorizeOAuthAction} className="mt-4 grid gap-2">
         {Object.entries(fields).map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
@@ -103,22 +117,14 @@ export default async function AuthorizeOAuthPage({ searchParams }: { searchParam
           name="decision"
           value="allow"
           variant="primary"
-          size="lg"
-          className="w-full"
+          className="h-10 w-full max-shell:h-11"
         >
           {t('allow')}
         </Button>
-        <Button
-          type="submit"
-          name="decision"
-          value="deny"
-          variant="secondary"
-          size="lg"
-          className="w-full"
-        >
+        <Button type="submit" name="decision" value="deny" className="h-10 w-full max-shell:h-11">
           {t('deny')}
         </Button>
       </form>
-    </div>
+    </AuthSheet>
   );
 }

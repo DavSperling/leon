@@ -1,27 +1,28 @@
 import {
   FileText,
+  House,
   type LucideIcon,
-  MessagesSquare,
+  MessageSquare,
   Plug,
   Settings2,
-  TextSearch,
   Users,
 } from 'lucide-react';
 
-// Les six sections, partagées par la barre latérale, la feuille mobile et la palette. Recherche a sa loupe sur des
-// lignes ; le bouton « Rechercher ⌘K » juste au-dessus a le glyphe ⌘ (dans le rail, deux loupes empilées se confondaient).
-// `label` : le libellé français, que les guides citent ; `labelKey` : sa clé dans les messages (navigation).
+// Les six sections, partagées par la barre latérale, la feuille mobile et la barre de commande. La barre les montre en
+// deux groupes : les deux premières (où l'on demande), puis les quatre autres.
+// `label` : le libellé français que les guides citent (docs/guides, guides-docs.test.ts) ; ce que l'écran écrit vient de
+// `labelKey`, sa clé dans les messages (navigation) : « / » s'y appelle Accueil.
 export type NavItem = {
   href: string;
   label: string;
-  labelKey: 'search' | 'discussions' | 'documents' | 'team' | 'connections' | 'settings';
+  labelKey: 'home' | 'discussions' | 'documents' | 'team' | 'connections' | 'settings';
   icon: LucideIcon;
   end?: boolean;
 };
 
 export const NAV: NavItem[] = [
-  { href: '/', label: 'Recherche', labelKey: 'search', icon: TextSearch, end: true },
-  { href: '/discussions', label: 'Discussions', labelKey: 'discussions', icon: MessagesSquare },
+  { href: '/', label: 'Recherche', labelKey: 'home', icon: House, end: true },
+  { href: '/discussions', label: 'Discussions', labelKey: 'discussions', icon: MessageSquare },
   { href: '/documents', label: 'Documents', labelKey: 'documents', icon: FileText },
   { href: '/equipe', label: 'Équipe', labelKey: 'team', icon: Users },
   { href: '/connexions', label: 'Connexions', labelKey: 'connections', icon: Plug },

@@ -35,74 +35,98 @@ const STEPS: Record<string, string> = {
   fil: 'États des fils',
 };
 
-function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {
-  return (
-    <GlassCard className="p-4">
-      <p className="text-label text-muted">{label}</p>
-      <p className="mt-1 text-h2 font-semibold tabular-nums tracking-[-0.02em] text-fg">{value}</p>
-      {detail && <p className="mt-1 text-label text-fg-2">{detail}</p>}
-    </GlassCard>
-  );
-}
-
 type Day = AdminStats['parJour'][number];
+type Series = { title: string; pick: (day: Day) => number; format: (value: number) => string };
 
 // Une série sur 30 jours : barres fines, survol natif par jour (zone de survol de toute la hauteur).
-function DailyBars({
-  title,
-  days,
-  pick,
-  format,
-}: {
-  title: string;
-  days: Day[];
-  pick: (day: Day) => number;
-  format: (value: number) => string;
-}) {
+function DailyBars({ title, days, pick, format }: Series & { days: Day[] }) {
   const values = days.map(pick);
   const max = Math.max(...values, 0);
   const total = values.reduce((sum, value) => sum + value, 0);
   const width = 300;
-  const height = 80;
+  const height = 56;
   const slot = width / Math.max(days.length, 1);
   return (
-    <GlassCard className="p-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="text-ui font-medium text-fg">{title}</p>
-        <p className="text-label tabular-nums text-muted">{format(total)} sur 30 jours</p>
-      </div>
+    <div className="min-w-0">
+      <p className="text-label text-muted">{title}</p>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
-        className="mt-3 h-20 w-full"
+        className="mt-2 h-14 w-full"
         role="img"
         aria-label={`${title} : ${format(total)} sur 30 jours, au plus ${format(max)} en un jour`}
       >
-        <line x1="0" x2={width} y1={height - 0.5} y2={height - 0.5} className="stroke-line" />
         {days.map((day, i) => {
           const value = values[i] ?? 0;
           const h = max > 0 ? Math.max((value / max) * (height - 4), value > 0 ? 2 : 0) : 0;
           return (
-            <g key={day.jour}>
+            <g key={day.jour} className="group">
               <title>{`${dayLabel(day.jour)} : ${format(value)}`}</title>
-              <rect x={i * slot} y="0" width={slot} height={height} fill="transparent" />
+              <rect
+                x={i * slot}
+                y="0"
+                width={slot}
+                height={height}
+                className="fill-transparent transition-colors duration-150 group-hover:fill-n-150"
+              />
               <rect
                 x={i * slot + 1}
                 y={height - h}
                 width={Math.max(slot - 2, 1)}
                 height={h}
                 rx="1.5"
-                className="fill-accent"
+                className="fill-fg"
               />
             </g>
           );
         })}
+        <line
+          x1="0"
+          x2={width}
+          y1={height - 0.5}
+          y2={height - 0.5}
+          className="stroke-line-strong"
+        />
       </svg>
-      <div className="mt-1 flex justify-between text-meta text-muted">
-        <span>{days[0] && dayLabel(days[0].jour)}</span>
-        <span>{days.at(-1) && dayLabel(days.at(-1)?.jour as string)}</span>
+    </div>
+  );
+}
+
+// Une ligne du relevé : le chiffre (ici la valeur EST l'information), son détail, et sa série jour par jour à côté :
+// les quatre séries partagent le même axe, écrit une fois sous la dernière.
+function Line({
+  label,
+  value,
+  detail,
+  days,
+  series,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  days: Day[];
+  series: Series;
+}) {
+  return (
+    <div className="grid gap-x-10 gap-y-4 border-line border-t py-5 first:border-t-0 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:items-end">
+      <div className="min-w-0">
+        <p className="text-label text-muted">{label}</p>
+        <p className="mt-1 text-h1 font-semibold tracking-[-0.022em] text-fg">{value}</p>
+        <p className="mt-1 max-w-[46ch] text-label leading-[1.45] text-muted">{detail}</p>
       </div>
-    </GlassCard>
+      <DailyBars days={days} {...series} />
+    </div>
+  );
+}
+
+// Un chiffre du pied du relevé : plus petit, sans série.
+function Figure({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <div className="min-w-0 py-4 md:px-6 md:first:pl-0 md:last:pr-0">
+      <p className="text-label text-muted">{label}</p>
+      <p className="mt-1 text-head font-semibold tracking-[-0.018em] text-fg">{value}</p>
+      <p className="mt-1 text-label leading-[1.45] text-muted">{detail}</p>
+    </div>
   );
 }
 
@@ -122,11 +146,11 @@ function Breakdown({
         <li key={row.nom} className="grid gap-1">
           <div className="flex justify-between gap-3 text-ui">
             <span className="truncate text-fg">{row.nom}</span>
-            <span className="shrink-0 tabular-nums text-fg-2">{row.label}</span>
+            <span className="shrink-0 text-fg-2">{row.label}</span>
           </div>
-          <div className="h-1.5 rounded-full bg-glass-2">
+          <div className="h-1.5 rounded-full bg-n-150">
             <div
-              className="h-full rounded-full bg-accent"
+              className="h-full rounded-full bg-fg"
               style={{ width: `${max > 0 ? (row.value / max) * 100 : 0}%` }}
             />
           </div>
@@ -139,11 +163,11 @@ function Breakdown({
 function Table({ head, rows }: { head: string[]; rows: (string | number)[][] }) {
   return (
     <GlassCard className="overflow-x-auto">
-      <table className="w-full min-w-[560px] text-left text-ui">
+      <table className="w-full min-w-[560px] text-left text-ui whitespace-nowrap">
         <thead className="text-label text-muted">
           <tr>
             {head.map((cell, i) => (
-              <th key={cell} className={`px-4 py-3 font-medium ${i > 0 ? 'text-right' : ''}`}>
+              <th key={cell} className={`px-5 py-3 font-medium ${i > 0 ? 'text-right' : ''}`}>
                 {cell}
               </th>
             ))}
@@ -157,7 +181,8 @@ function Table({ head, rows }: { head: string[]; rows: (string | number)[][] }) 
                 <td
                   // biome-ignore lint/suspicious/noArrayIndexKey: colonnes figées
                   key={i}
-                  className={`px-4 py-2.5 ${i > 0 ? 'text-right tabular-nums text-fg-2' : 'text-fg'}`}
+                  // les chiffres de la police en tabulaire élargissent aussi « . » et « , » : les nombres seuls
+                  className={`px-5 py-2.5 ${i > 0 ? 'text-right text-fg-2' : 'text-fg'} ${typeof cell === 'number' ? 'tabular-nums' : ''}`}
                 >
                   {cell}
                 </td>
@@ -178,91 +203,81 @@ export function AdminDashboard({ stats, now }: { stats: AdminStats; now: Date })
       ? couts.mois / (questions.mois + questions.recherches30)
       : 0;
   return (
-    <div className="mx-auto max-w-[1100px]">
-      <PageHeader
-        title="Admin"
-        subtitle="Ce qui se passe sur Leon, toutes organisations confondues."
-        meta="Visible des seuls e-mails de LEON_ADMINS. Coûts et temps passé comptés depuis la mise en ligne de ce tableau."
-      />
+    <>
+      <PageHeader title="Admin" />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile
+      {/* Le relevé : une seule feuille. Quatre lignes (un chiffre et ses 30 jours), puis quatre chiffres au pied. */}
+      <GlassCard className="px-6 pt-1 pb-2">
+        <Line
           label="Utilisateurs"
           value={int.format(utilisateurs.total)}
           detail={`+${int.format(utilisateurs.nouveaux7)} en 7 jours · +${int.format(utilisateurs.nouveaux30)} en 30`}
+          days={stats.parJour}
+          series={{ title: 'Inscriptions', pick: (d) => d.inscriptions, format: int.format }}
         />
-        <Tile
-          label="Actifs"
-          value={int.format(actifs.semaine)}
-          detail={`sur 7 jours · ${int.format(actifs.jour)} aujourd’hui · ${int.format(actifs.mois)} sur 30`}
-        />
-        <Tile
-          label="Organisations"
-          value={int.format(organisations.total)}
-          detail={`${int.format(organisations.actives30)} actives sur 30 jours · ${organisations.membresMoyen} membres en moyenne`}
-        />
-        <Tile
-          label="Dépensé en API (30 jours)"
-          value={usd(couts.mois)}
-          detail={`${usd(couts.semaine)} en 7 jours · ${usd(couts.total)} au total`}
-        />
-        <Tile
+        <Line
           label="Connexions (30 jours)"
           value={int.format(connexions.mois)}
           detail={`${int.format(connexions.semaine)} en 7 jours · ${int.format(connexions.total)} au total`}
+          days={stats.parJour}
+          series={{ title: 'Connexions', pick: (d) => d.connexions, format: int.format }}
         />
-        <Tile
-          label="Temps passé par connexion"
-          value={duration(connexions.tempsMedian)}
-          detail={`médiane · moyenne ${duration(connexions.tempsMoyen)} · ${duration(connexions.tempsTotal30)} en tout sur 30 jours`}
-        />
-        <Tile
+        <Line
           label="Questions (30 jours)"
           value={int.format(questions.mois)}
           detail={`en discussion · + ${int.format(questions.recherches30)} réponses de la recherche · ${int.format(questions.total)} au total`}
+          days={stats.parJour}
+          series={{
+            title: 'Questions en discussion',
+            pick: (d) => d.questions,
+            format: int.format,
+          }}
         />
-        <Tile
-          label="Coût par question"
-          value={usd(perQuestion, 3)}
-          detail={`sur 30 jours · ${int.format(utilisateurs.deuxFacteurs)} comptes avec la 2FA`}
+        <Line
+          label="Dépensé en API (30 jours)"
+          value={usd(couts.mois)}
+          detail={`${usd(couts.semaine)} en 7 jours · ${usd(couts.total)} au total, compté depuis la mise en ligne de ce tableau`}
+          days={stats.parJour}
+          series={{ title: 'Coût des API', pick: (d) => d.cout, format: (v) => usd(v) }}
         />
-      </div>
-
-      <Section title="Les 30 derniers jours">
-        <div className="grid gap-3 md:grid-cols-2">
-          <DailyBars
-            title="Inscriptions"
-            days={stats.parJour}
-            pick={(d) => d.inscriptions}
-            format={int.format}
+        {/* l'axe des quatre séries, une fois */}
+        <div className="-mt-3 grid gap-x-10 pb-4 max-md:hidden md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+          <span />
+          <div className="flex justify-between text-label text-muted">
+            <span>{stats.parJour[0] && dayLabel(stats.parJour[0].jour)}</span>
+            <span>{stats.parJour.at(-1) && dayLabel(stats.parJour.at(-1)?.jour as string)}</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-x-6 border-line border-t md:grid-cols-4 md:gap-x-0 md:divide-x md:divide-line">
+          <Figure
+            label="Actifs"
+            value={int.format(actifs.semaine)}
+            detail={`sur 7 jours · ${int.format(actifs.jour)} aujourd’hui · ${int.format(actifs.mois)} sur 30`}
           />
-          <DailyBars
-            title="Connexions"
-            days={stats.parJour}
-            pick={(d) => d.connexions}
-            format={int.format}
+          <Figure
+            label="Organisations"
+            value={int.format(organisations.total)}
+            detail={`${int.format(organisations.actives30)} actives sur 30 jours · ${int.format(organisations.membresMoyen)} membres en moyenne`}
           />
-          <DailyBars
-            title="Questions en discussion"
-            days={stats.parJour}
-            pick={(d) => d.questions}
-            format={int.format}
+          <Figure
+            label="Temps passé par connexion"
+            value={duration(connexions.tempsMedian)}
+            detail={`médiane · moyenne ${duration(connexions.tempsMoyen)} · ${duration(connexions.tempsTotal30)} en tout sur 30 jours, compté depuis la mise en ligne`}
           />
-          <DailyBars
-            title="Coût des API"
-            days={stats.parJour}
-            pick={(d) => d.cout}
-            format={(v) => usd(v)}
+          <Figure
+            label="Coût par question"
+            value={usd(perQuestion, 3)}
+            detail={`sur 30 jours · ${int.format(utilisateurs.deuxFacteurs)} comptes avec la 2FA`}
           />
         </div>
-      </Section>
+      </GlassCard>
 
       <Section
         title="Où va l’argent"
         description={`Sur 30 jours : ${int.format(couts.appels30)} appels au modèle, ${compact.format(couts.tokensEntree30)} tokens lus, ${compact.format(couts.tokensSortie30)} écrits.${couts.nonChiffres30 > 0 ? ` ${int.format(couts.nonChiffres30)} appels à un modèle sans tarif connu ne sont pas chiffrés.` : ''}`}
       >
         <div className="grid gap-3 md:grid-cols-2">
-          <GlassCard className="p-4">
+          <GlassCard className="px-5 py-4">
             <p className="mb-4 text-ui font-medium text-fg">Par modèle</p>
             <Breakdown
               empty="Aucun appel sur 30 jours."
@@ -273,7 +288,7 @@ export function AdminDashboard({ stats, now }: { stats: AdminStats; now: Date })
               }))}
             />
           </GlassCard>
-          <GlassCard className="p-4">
+          <GlassCard className="px-5 py-4">
             <p className="mb-4 text-ui font-medium text-fg">Par usage</p>
             <Breakdown
               empty="Aucun appel sur 30 jours."
@@ -288,7 +303,7 @@ export function AdminDashboard({ stats, now }: { stats: AdminStats; now: Date })
       </Section>
 
       <Section title="Connecteurs branchés">
-        <GlassCard className="p-4">
+        <GlassCard className="px-5 py-4">
           <Breakdown
             empty="Aucun connecteur branché."
             rows={stats.connecteurs.map((c) => ({
@@ -300,7 +315,7 @@ export function AdminDashboard({ stats, now }: { stats: AdminStats; now: Date })
         </GlassCard>
       </Section>
 
-      <Section title="Organisations" description="Les 50 plus récemment actives.">
+      <Section title="Organisations, les 50 plus récemment actives">
         <Table
           head={[
             'Organisation',
@@ -333,6 +348,6 @@ export function AdminDashboard({ stats, now }: { stats: AdminStats; now: Date })
           ])}
         />
       </Section>
-    </div>
+    </>
   );
 }

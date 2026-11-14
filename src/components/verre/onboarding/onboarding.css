@@ -1,0 +1,195 @@
+/* Les écrans d'accueil (onboarding) : ce que les classes Tailwind ne savent pas dire. Les couleurs viennent des jetons
+   de globals.css, dans les deux thèmes ; le mouvement s'arrête de lui-même sous « réduire les animations ». */
+
+@layer components {
+  /* ---------- Le fil d'étapes : un trait par étape, à l'encre quand elle est faite ou en cours ---------- */
+  .ob-step {
+    position: relative;
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    max-width: 176px;
+    padding-bottom: 11px;
+    font: 400 13px / 20px var(--font);
+    color: var(--muted);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .ob-step::before,
+  .ob-step::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--line-strong);
+  }
+  .ob-step::after {
+    background: var(--text);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+  }
+  .ob-step.is-done::after {
+    transform: none;
+  }
+  /* L'étape où l'on arrive : son trait est tracé une fois. */
+  .ob-step[aria-current="step"] {
+    font-weight: 600;
+    color: var(--text);
+  }
+  .ob-step[aria-current="step"]::after {
+    transform: none;
+    animation: sweep 420ms var(--ease-out) both;
+  }
+  a.ob-step:hover {
+    color: var(--text);
+  }
+
+  /* ---------- Les outils et le point de Leon ---------- */
+  .ob-conv {
+    position: relative;
+    width: min(100%, 360px);
+  }
+  .ob-conv > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .ob-conv path {
+    fill: none;
+    stroke: var(--line-strong);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 0.006 0.026;
+  }
+  .ob-conv path.is-on {
+    stroke: var(--text);
+    stroke-width: 4.5;
+    stroke-dasharray: 1;
+    animation: ob-draw 520ms var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+  }
+  .ob-conv__dot {
+    fill: var(--bg);
+    stroke: var(--line-strong);
+    stroke-width: 2;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .ob-conv__dot.is-on {
+    fill: var(--text);
+    stroke: none;
+    animation: ob-pop 260ms var(--ease-out) both;
+    animation-delay: calc(var(--n, 0) * 60ms + 340ms);
+  }
+  .ob-conv__chip {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 50%;
+    background: #ffffff;
+    translate: -50% -50%;
+    animation: ob-in var(--med) var(--ease-out) backwards;
+    transition:
+      border-color var(--fast),
+      box-shadow var(--med) var(--ease-out);
+  }
+  .ob-conv__chip > * {
+    opacity: 0.45;
+    filter: grayscale(1);
+    transition:
+      opacity var(--fast),
+      filter var(--fast);
+  }
+  /* En sombre, une pastille blanche pas encore choisie éblouirait : elle se retire. */
+  [data-theme="dark"] .ob-conv__chip:not(.is-on) {
+    opacity: 0.55;
+  }
+  /* L'aperçu de la première étape : rien n'est encore choisi ni branché, tout serait gris. Les outils y gardent
+     leurs couleurs ; le pointillé du trait et du cercle suffit à dire « proposé ». */
+  .ob-conv--offer .ob-conv__chip > * {
+    opacity: 1;
+    filter: none;
+  }
+  [data-theme="dark"] .ob-conv--offer .ob-conv__chip:not(.is-on) {
+    opacity: 0.9;
+  }
+  .ob-conv__chip.is-on {
+    border-style: solid;
+    border-color: var(--line);
+    box-shadow: var(--sh-1);
+  }
+  .ob-conv__chip.is-on > * {
+    opacity: 1;
+    filter: none;
+  }
+  .ob-conv__chip .logo-box,
+  [data-theme="dark"] .ob-conv__chip .logo-box {
+    border-radius: 0;
+    background: none;
+  }
+  .ob-conv__chip .logo-box > img,
+  [data-theme="dark"] .ob-conv__chip .logo-box > img {
+    width: 100%;
+    height: 100%;
+  }
+  /* ---------- L'équipe qui se remplit : chaque personne invitée, reliée à celle qui invite ---------- */
+  .ob-tree {
+    display: grid;
+    gap: 12px;
+    margin: 0 0 0 20px;
+    padding: 0 0 0 20px;
+    list-style: none;
+  }
+  .ob-tree > li {
+    position: relative;
+  }
+  .ob-tree > li::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: -20px;
+    width: 20px;
+    height: calc(50% + 12px);
+    border-bottom: 1px solid var(--line-strong);
+    border-left: 1px solid var(--line-strong);
+    border-bottom-left-radius: 8px;
+  }
+  .ob-tree > li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    bottom: 0;
+    left: -20px;
+    border-left: 1px solid var(--line-strong);
+  }
+
+  @keyframes ob-draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes ob-in {
+    from {
+      opacity: 0;
+      scale: 0.8;
+    }
+  }
+  @keyframes ob-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+}

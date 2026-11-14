@@ -55,7 +55,7 @@ export function Field({ label, help, error, aside, id: ownId, className, childre
     >
       <div className={cn('grid gap-1.5', className)}>
         <div className="flex items-baseline justify-between gap-3">
-          <label htmlFor={id} className="text-label font-semibold text-fg-2">
+          <label htmlFor={id} className="text-label font-medium text-fg">
             {label}
           </label>
           {aside && <span className="text-label">{aside}</span>}
@@ -67,7 +67,7 @@ export function Field({ label, help, error, aside, id: ownId, className, childre
             key={error ? 'erreur' : 'aide'}
             id={noteId}
             role={error ? 'alert' : undefined}
-            className={cn('text-label', error ? 'text-destructive' : 'text-muted')}
+            className={cn('text-label', error ? 'font-medium text-destructive' : 'text-muted')}
           >
             {typeof note === 'string' ? nb(note) : note}
           </p>
@@ -77,16 +77,20 @@ export function Field({ label, help, error, aside, id: ownId, className, childre
   );
 }
 
-// 16 px au doigt : sous 16 px, Safari iOS zoome sur le champ au focus. Un champ en erreur garde son trait rouge et
-// reprend l'anneau de focus global (outline) : le halo rouge pâle seul ne se voyait pas (~1,1:1).
+// 16 px au doigt : sous 16 px, Safari iOS zoome sur le champ au focus. Pas d'« outline-none » : au focus, le champ
+// prend l'anneau d'encre de la règle globale (:focus-visible) en plus de son trait ; en erreur, le trait reste rouge.
 const CONTROL =
-  'w-full rounded-field border border-line-strong bg-glass-2 text-body text-fg shadow-hi outline-none transition-[border-color,box-shadow] duration-200 pointer-coarse:text-[16px] ' +
-  'placeholder:text-muted hover:border-[color-mix(in_srgb,var(--line-strong),var(--text)_10%)] focus-visible:border-accent focus-visible:shadow-[0_0_0_3px_var(--accent-soft)] ' +
-  'aria-invalid:border-destructive aria-invalid:focus-visible:shadow-none aria-invalid:focus-visible:outline-solid disabled:cursor-not-allowed disabled:opacity-60';
+  'w-full rounded-field border border-line-strong bg-sheet text-body text-fg transition-[border-color] duration-150 pointer-coarse:text-[16px] ' +
+  'placeholder:text-muted hover:border-fg-2 focus-visible:border-fg ' +
+  'aria-invalid:border-destructive disabled:cursor-not-allowed disabled:opacity-60';
 
 export function Input({ className, id, ...props }: ComponentProps<'input'>) {
   return (
-    <input className={cn(CONTROL, 'h-10 px-3.5', className)} {...useFieldProps(id)} {...props} />
+    <input
+      className={cn(CONTROL, 'h-10 px-3 max-shell:h-11', className)}
+      {...useFieldProps(id)}
+      {...props}
+    />
   );
 }
 
@@ -111,6 +115,8 @@ export function Textarea({
     if (!el || !autoGrow) return;
     const line = parseFloat(getComputedStyle(el).lineHeight) || 22;
     el.style.height = 'auto';
+    // monté caché (un groupe des Réglages pas encore ouvert) : rien à mesurer, `rows` garde sa hauteur
+    if (el.scrollHeight === 0) return;
     el.style.height = `${Math.min(el.scrollHeight + 2, line * maxRows + 22)}px`;
   };
   // biome-ignore lint/correctness/useExhaustiveDependencies: remesurer quand le texte ou le mode changent
@@ -121,7 +127,7 @@ export function Textarea({
       rows={rows}
       className={cn(
         CONTROL,
-        'block resize-none px-3.5 py-2.5 leading-[1.55]',
+        'block resize-none px-3 py-2.5 leading-[1.5]',
         !autoGrow && 'resize-y',
         className,
       )}
@@ -149,25 +155,34 @@ export type SelectProps = {
   'aria-label'?: string;
 };
 
-/** Liste déroulante Radix, au style des champs ; le menu est une carte de verre. */
+/** Liste déroulante Radix, au style des champs ; le menu est une feuille tenue au-dessus. */
 export function Select({ options, placeholder, className, id, ...props }: SelectProps) {
   const field = useFieldProps(id);
+  // Radix n'écrit le choix dans le champ qu'après l'hydratation : sans cela, le champ arrive vide du serveur.
+  const [inner, setInner] = useState(props.defaultValue);
+  const chosen = options.find((o) => o.value === (props.value ?? inner))?.label;
   return (
-    <RSelect.Root {...props}>
+    <RSelect.Root
+      {...props}
+      onValueChange={(value) => {
+        setInner(value);
+        props.onValueChange?.(value);
+      }}
+    >
       <RSelect.Trigger
         {...field}
         aria-label={props['aria-label']}
         className={cn(
           CONTROL,
-          'group flex h-10 items-center justify-between gap-2 px-3.5 text-left data-[placeholder]:text-muted',
+          'group flex h-10 items-center justify-between gap-2 px-3 text-left max-shell:h-11 data-[placeholder]:text-muted',
           className,
         )}
       >
-        <RSelect.Value placeholder={placeholder} />
+        <RSelect.Value placeholder={placeholder}>{chosen}</RSelect.Value>
         <RSelect.Icon>
           <ChevronDown
             aria-hidden="true"
-            className="size-4 text-muted transition-transform duration-200 group-data-[state=open]:rotate-180"
+            className="size-4 text-fg-2 transition-transform duration-150 group-data-[state=open]:rotate-180"
           />
         </RSelect.Icon>
       </RSelect.Trigger>
@@ -175,7 +190,7 @@ export function Select({ options, placeholder, className, id, ...props }: Select
         <RSelect.Content
           position="popper"
           sideOffset={6}
-          className="layer-pop z-[70] max-h-[min(320px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-card border border-line-strong bg-menu p-1.5 shadow-float"
+          className="layer-pop z-[70] max-h-[min(320px,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-card border border-float-line bg-menu p-1.5 shadow-float"
         >
           <RSelect.Viewport>
             {options.map((o) => (
@@ -183,10 +198,10 @@ export function Select({ options, placeholder, className, id, ...props }: Select
                 key={o.value}
                 value={o.value}
                 disabled={o.disabled}
-                className="flex h-[34px] cursor-pointer items-center gap-2.5 rounded-item px-2.5 text-ui text-fg-2 outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[highlighted]:text-fg data-[state=checked]:text-fg focus-visible:shadow-[inset_0_0_0_2px_var(--ring)]"
+                className="flex h-[34px] cursor-pointer items-center gap-2.5 rounded-item px-2 text-ui text-fg outline-none select-none max-shell:h-11 data-[disabled]:opacity-50 data-[highlighted]:bg-hover data-[state=checked]:font-medium focus-visible:shadow-[inset_0_0_0_2px_var(--ring)]"
               >
                 <RSelect.ItemText>{o.label}</RSelect.ItemText>
-                <RSelect.ItemIndicator className="ml-auto text-accent">
+                <RSelect.ItemIndicator className="ml-auto text-fg">
                   <Check aria-hidden="true" className="size-4" strokeWidth={2} />
                 </RSelect.ItemIndicator>
               </RSelect.Item>
@@ -198,21 +213,21 @@ export function Select({ options, placeholder, className, id, ...props }: Select
   );
 }
 
-/** Case carrée de 16 px de la planche : se remplit d'accent, la coche éclot avec un ressort. */
+/** Case carrée de 16 px : cochée, elle se remplit d'encre. */
 export function CheckboxBox({ checked }: { checked: boolean }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        'grid size-4 shrink-0 place-items-center rounded-[5px] border transition-[background-color,border-color] duration-150',
-        checked ? 'border-accent bg-accent' : 'border-[var(--box-line)]',
+        'grid size-4 shrink-0 place-items-center rounded-[4px] border transition-[background-color,border-color] duration-150',
+        checked ? 'border-ink bg-ink' : 'border-[var(--box-line)] bg-sheet',
       )}
     >
       <Check
         strokeWidth={2.6}
         className={cn(
-          'size-[11px] text-accent-ink transition-[opacity,transform] duration-[250ms] ease-[var(--ease-spring)]',
-          checked ? 'scale-100 opacity-100' : 'scale-50 opacity-0',
+          'size-[11px] text-on-ink transition-opacity duration-150',
+          checked ? 'opacity-100' : 'opacity-0',
         )}
       />
     </span>
@@ -252,7 +267,7 @@ export function Checkbox({
         onCheckedChange?.(v === true);
       }}
       // anneau : la règle globale :focus-visible (un `outline-none` ici l'effacerait aussi au focus, Tailwind 4)
-      className={cn('rounded-[5px]', !label && className)}
+      className={cn('rounded-[4px]', !label && className)}
       {...props}
     >
       <CheckboxBox checked={on} />
@@ -262,7 +277,7 @@ export function Checkbox({
   return (
     <label
       htmlFor={id ?? auto}
-      className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg-2', className)}
+      className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg', className)}
     >
       {box}
       {label}
@@ -280,19 +295,19 @@ export function Switch({ label, className, id, ...props }: SwitchProps) {
     <RSwitch.Root
       id={id ?? auto}
       className={cn(
-        'group relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-line-strong shadow-[inset_0_0_0_1px_var(--line)] transition-colors duration-200 data-[state=checked]:bg-accent',
+        'group relative inline-flex h-5 w-9 shrink-0 items-center rounded-full bg-line-strong transition-colors duration-150 data-[state=checked]:bg-ink',
         !label && className,
       )}
       {...props}
     >
-      <RSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-[var(--thumb)] shadow-[0_1px_3px_rgba(0,0,0,.3)] transition-transform duration-[250ms] ease-[var(--ease-spring)] group-data-[state=checked]:translate-x-[18px]" />
+      <RSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-[var(--thumb)] transition-[translate,background-color] duration-150 ease-out group-data-[state=checked]:translate-x-[18px] group-data-[state=checked]:bg-on-ink" />
     </RSwitch.Root>
   );
   if (!label) return sw;
   return (
     <label
       htmlFor={id ?? auto}
-      className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg-2', className)}
+      className={cn('inline-flex cursor-pointer items-center gap-2.5 text-ui text-fg', className)}
     >
       {sw}
       {label}

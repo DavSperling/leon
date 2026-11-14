@@ -1,0 +1,63 @@
+/* Chat: the question as the title, each answer a sheet with its sources as tiles under it, the field at the foot.
+   With the kit's tokens only. Kit candidates (not in app.css yet): the composer (.composer, .dock), the error sheet
+   (.ans--fail), the answer's own quiet action (.ans__copy). */
+
+/* The page is the height of the window (app.css): the field sits at its foot, under the last answer */
+.chat { display: flex; flex-direction: column; padding-bottom: 0; }
+.chat .head { height: auto; min-height: 32px; align-items: flex-start; }
+.chat .head h1 { text-wrap: balance; overflow-wrap: anywhere; }
+.chat .head .btn { margin-top: -2px; }
+
+/* The exchanges */
+.thread { margin-top: 24px; }
+.ex { scroll-margin: calc(var(--top-h) + 16px) 0 132px; } /* brought into view between the ask bar and the docked field */
+.thread:empty { display: none; }
+.ex + .ex { margin-top: 40px; }
+.ex__q { max-width: 76ch; margin-bottom: 12px; font: 600 var(--fs-4)/1.35 var(--sans); letter-spacing: -.012em; text-wrap: pretty; overflow-wrap: anywhere; }
+.ans { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 24px; align-items: start; min-height: 78px; }
+.ans__copy { grid-area: 1 / 2; margin-right: -8px; }
+.ans__copy .i { width: 16px; height: 16px; }
+.ans__more { grid-column: 1; }
+.ex [data-sources].is-in { animation: rise var(--med) var(--ease) 600ms both; } /* after the answer's strokes */
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+/* It could not arrive */
+.ans--fail { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.fail { display: flex; align-items: baseline; gap: 12px; font-size: var(--fs-3); line-height: 1.5; }
+.fail .dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--danger); translate: 0 -2px; }
+
+/* The field: a sheet of its own, the view's one ink pill at its right. Docked at the foot of a discussion. */
+.dock { position: sticky; bottom: 0; z-index: 5; margin-top: auto; padding: 24px 0 16px; background: var(--desk); }
+.composer {
+  display: flex; align-items: flex-end; gap: 12px; padding: 8px 8px 8px 18px;
+  background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--sh-2);
+  cursor: text; transition: border-color var(--fast), box-shadow var(--med) var(--ease);
+}
+.composer:hover { border-color: var(--line-strong); }
+.composer:focus-within { border-color: var(--ink-2); }
+.composer textarea {
+  flex: 1; min-width: 0; height: 36px; max-height: 196px; padding: 6px 0; border: 0; outline: 0; background: none; resize: none;
+  font: 400 var(--fs-3)/24px var(--sans); color: var(--ink); scrollbar-width: thin;
+}
+.composer textarea::placeholder { color: var(--ink-2); opacity: 1; }
+.composer .btn { flex: none; }
+.dock .field-error { margin: 8px 0 0 18px; }
+
+/* A new discussion: the field comes first, under the title, and the suggestions under it */
+.is-new .dock { position: static; margin-top: 24px; padding: 0; background: none; }
+.is-new .composer { align-items: flex-end; min-height: 120px; padding-top: 12px; box-shadow: var(--sh-1); }
+.is-new .composer textarea { align-self: stretch; min-height: 96px; }
+.try { display: none; }
+.is-new .try { display: block; }
+.chat .fict { position: static; } /* under the field, at the page's foot as everywhere */
+.is-new .fict { margin-top: auto; padding-top: 32px; }
+
+@media (max-width: 899px) {
+  .composer textarea { font-size: 1rem; }
+  .composer .btn { height: 44px; }
+  .dock { padding: 16px 0 12px; }
+}
+@media (max-width: 599px) {
+  .ans { grid-template-columns: minmax(0, 1fr); }
+  .ans__copy { grid-area: auto; justify-self: start; margin: 0 0 0 -12px; }
+  .chat .head .btn { margin: 0 0 0 -16px; } /* under the title, its word lines up with it */
+}

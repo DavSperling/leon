@@ -1,177 +1,242 @@
 'use client';
 
-import { ChevronDown, CircleAlert, ExternalLink } from 'lucide-react';
-import { motion } from 'motion/react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { type RefObject, useLayoutEffect, useRef, useState } from 'react';
 import {
+  Button,
   CitationChip,
   CitedMarkdown,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
+  CopyButton,
+  Flag,
+  GlassCard,
+  Reading,
+  SourceNumber,
+  Thing,
+  ThingGrid,
+  ToolLogo,
+  toneOf,
 } from '@/components/verre';
-import { type DiscussionCitation, replyParts } from '@/lib/discussion-events';
-import { cn, duration, ease, nb } from '@/lib/verre';
+import { type CitationView, replyParts } from '@/lib/discussion-events';
+import { SOURCE_KIND_LABELS } from '@/lib/labels';
+import { citingSentences, markCited, stripMarks } from '@/lib/source-marks';
+import { cn, nb } from '@/lib/verre';
+import { stackNotes } from './note-places';
+import type { PanelSource } from './preview';
+import './fil.css';
 
-// Un message du fil : la question (bulle à droite) ou la réponse de Leon, en texte libre : activité, texte en flux,
-// renvois, sources citées. Un renvoi et une source ouvrent l'aperçu du passage cité, sans quitter la page. Le texte vient
-// du modèle : jamais lu comme du HTML.
+// Un message du fil : ce que la personne a écrit, à droite ; la réponse de Leon, à gauche, sur sa feuille, avec ses
+// sources au pied de la feuille, comme les notes d'une page. Seuls les mots qui viennent d'une source sont sous le surligneur, dans sa couleur
+// (lib/source-marks.ts). Un numéro ou une tuile ouvre l'original dans le panneau. Le texte vient du modèle : jamais lu
+// comme du HTML.
 
-/** Ouvre l'aperçu d'une citation : la clé (message:n) éclaire la puce et la ligne liées. */
-export type OpenCitation = (
-  key: string,
-  citation: DiscussionCitation,
-  trigger: HTMLElement,
-) => void;
+export type OpenSource = (source: PanelSource) => void;
 
-const TEXT = 'text-lead leading-[1.72] break-words';
-
-const titleOf = (citation: DiscussionCitation, fallback: string): string =>
+const titleOf = (citation: CitationView, fallback: string): string =>
   citation.title?.trim() || fallback;
 
-/** Lignes de sources (citées, ou résultats d'origine d'une question) : numéro, titre qui ouvre l'aperçu, original. */
-function SourceRows({
+const toolOf = (kind: string | undefined): string | null =>
+  kind && Object.hasOwn(SOURCE_KIND_LABELS, kind)
+    ? SOURCE_KIND_LABELS[kind as keyof typeof SOURCE_KIND_LABELS]
+    : null;
+
+export const panelSource = (citation: CitationView): PanelSource => ({
+  n: citation.n,
+  passageId: citation.passageId,
+  title: citation.title,
+  url: citation.url,
+  kind: citation.kind,
+  visibility: citation.visibility,
+  passage: citation.passage,
+});
+
+/** Les résultats d'où part une discussion : une tuile par source, sur le bureau, aux deux colonnes du fil. */
+function SourceTiles({
   citations,
-  msgId,
-  active,
   onOpen,
-  fresh,
+  className,
 }: {
-  citations: DiscussionCitation[];
-  msgId: string;
-  active: string | null;
-  onOpen: OpenCitation;
-  fresh?: boolean;
+  citations: CitationView[];
+  onOpen: OpenSource;
+  className?: string;
 }) {
   const t = useTranslations('discussionView');
   return (
-    <ol className="mt-1.5 grid grid-cols-[minmax(0,1fr)] gap-px">
-      {citations.map((c, i) => {
-        const key = `${msgId}:${c.n}`;
-        return (
-          <motion.li
-            key={c.n}
-            initial={fresh ? { opacity: 0, y: 4 } : false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: duration.enter, ease: ease.out, delay: 0.15 + i * 0.05 }}
-            data-active={active === key || undefined}
-            className="group/src -mx-2 flex min-h-9 items-center gap-2.5 rounded-field px-2 transition-colors duration-200 hover:bg-hover data-[active]:bg-accent-soft"
+    <ThingGrid cols={3} className={cn('grid-cols-2 max-sm:grid-cols-1', className)}>
+      {citations.map((c) => (
+        <Thing
+          key={c.n}
+          num={c.n}
+          // l'outil et « Vous seul » seulement quand le serveur les connaît (citationDetails, sous les droits du lecteur)
+          picture={c.kind ? <ToolLogo kind={c.kind} size={28} /> : undefined}
+          name={titleOf(c, t('untitled'))}
+          caption={c.visibility === 'moi' ? t('visibility.moi') : undefined}
+          label={nb(t('sourceLabel', { number: c.n, title: titleOf(c, t('untitled')) }))}
+          onClick={() => onOpen(panelSource(c))}
+        />
+      ))}
+    </ThingGrid>
+  );
+}
+
+/**
+ * Les sources d'une réponse : ses notes. Dans une fenêtre large, chacune sort du bord droit de la feuille sous son
+ * drapeau, à la hauteur de la phrase qu'elle appuie (fil.css, `usePlacedNotes`) ; sinon elles restent au pied de la
+ * feuille, comme les notes d'une page. Une note ouvre l'original ; pointée, elle appuie ses mots dans le texte (`onLit`).
+ */
+function SourceNotes({
+  citations,
+  lit,
+  fresh,
+  onLit,
+  onOpen,
+}: {
+  citations: CitationView[];
+  lit: number | null;
+  fresh?: boolean;
+  onLit: (n: number | null) => void;
+  onOpen: OpenSource;
+}) {
+  const t = useTranslations('discussionView');
+  return (
+    <ol className="fil-notes" data-fresh={fresh || undefined}>
+      {citations.map((c) => (
+        <li key={c.n} data-n={c.n}>
+          <button
+            type="button"
+            aria-label={nb(t('sourceLabel', { number: c.n, title: titleOf(c, t('untitled')) }))}
+            title={titleOf(c, t('untitled'))}
+            data-lit={lit === c.n || undefined}
+            onClick={() => onOpen(panelSource(c))}
+            onPointerEnter={() => onLit(c.n)}
+            onPointerLeave={() => onLit(null)}
+            onFocus={() => onLit(c.n)}
+            onBlur={() => onLit(null)}
+            // sa couleur (cN) : celle de son drapeau, et de la toile qui le suit quand on le tire
+            className={`fil-note group/src c${toneOf(c.n)}`}
           >
-            <span
-              aria-hidden="true"
-              className="grid h-5 min-w-5 shrink-0 place-items-center rounded-full px-1 font-mono text-[11px] font-medium tracking-normal text-accent shadow-[inset_0_0_0_1px_var(--accent-line)] transition-colors group-data-[active]/src:bg-accent group-data-[active]/src:text-accent-ink"
-            >
+            <Flag tone={toneOf(c.n)} className="fil-note__flag" aria-hidden="true">
               {c.n}
-            </span>
-            <button
-              type="button"
-              onClick={(e) => onOpen(key, c, e.currentTarget)}
-              className={cn(
-                'min-w-0 truncate rounded-sm py-1.5 text-left text-ui font-medium text-accent underline-offset-[3px] decoration-accent-line hover:underline',
-                !c.title?.trim() && 'text-muted',
-              )}
-            >
-              <span className="sr-only">{t('readSource', { number: c.n })}</span>
-              {titleOf(c, t('untitled'))}
-            </button>
-            {c.url && (
-              <a
-                href={c.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={nb(t('openOriginal', { title: titleOf(c, t('untitled')) }))}
-                className="ml-auto grid size-8 shrink-0 place-items-center rounded-full text-muted transition-colors hover:bg-hover hover:text-fg"
-              >
-                <ExternalLink aria-hidden="true" className="size-[15px]" strokeWidth={1.7} />
-              </a>
-            )}
-          </motion.li>
-        );
-      })}
+            </Flag>
+            <SourceNumber n={c.n} className="fil-note__num" />
+            {/* l'outil et « Vous seul » seulement quand le serveur les connaît (citationDetails) */}
+            {c.kind && <ToolLogo kind={c.kind} size={20} className="fil-note__logo" />}
+            <span className="fil-note__title">{titleOf(c, t('untitled'))}</span>
+            {c.visibility === 'moi' && <span className="fil-note__cap">{t('visibility.moi')}</span>}
+            <ChevronRight
+              aria-hidden="true"
+              strokeWidth={1.8}
+              className="fil-note__go size-4 shrink-0 text-fg opacity-0 transition-[translate,opacity] duration-150 group-hover/src:translate-x-0.5 group-hover/src:opacity-100 group-focus-visible/src:opacity-100 max-shell:hidden"
+            />
+          </button>
+        </li>
+      ))}
     </ol>
   );
 }
 
-/** « 4 sources citées » : ouvert sur la dernière réponse, replié sur les précédentes. */
-function CitedSources({
-  citations,
-  msgId,
-  open,
-  active,
-  onOpen,
-  fresh,
-}: {
-  citations: DiscussionCitation[];
-  msgId: string;
-  open: boolean;
-  active: string | null;
-  onOpen: OpenCitation;
-  fresh?: boolean;
-}) {
-  // suit la dernière réponse (se replie quand une autre arrive) tant qu'on n'y a pas touché
-  const t = useTranslations('discussionView');
-  const [chosen, setChosen] = useState<boolean | null>(null);
-  const n = citations.length;
-  return (
-    <Collapsible
-      open={chosen ?? open}
-      onOpenChange={setChosen}
-      className="mt-4 border-t border-line pt-2"
-    >
-      <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1 rounded-field px-1.5 text-label font-semibold text-muted transition-colors hover:text-fg">
-        {t('citedSources', { count: n })}
-        <ChevronDown
-          aria-hidden="true"
-          className="size-3.5 transition-[rotate] duration-200 group-data-[state=open]:rotate-180"
-          strokeWidth={2}
-        />
-      </CollapsibleTrigger>
-      <CollapsibleContent className={cn(chosen === null && 'animate-none')}>
-        <SourceRows
-          citations={citations}
-          msgId={msgId}
-          active={active}
-          onOpen={onOpen}
-          fresh={fresh}
-        />
-      </CollapsibleContent>
-    </Collapsible>
-  );
+/**
+ * Dans la marge, chaque note se place à la hauteur du premier renvoi à sa source ; deux notes qui se toucheraient
+ * se suivent. Une source sans renvoi dans le texte vient après les autres. Au pied de la feuille, rien à placer.
+ */
+function usePlacedNotes(sheet: RefObject<HTMLDivElement | null>, key: string) {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `key` dit quand le texte ou ses sources ont changé
+  useLayoutEffect(() => {
+    const el = sheet.current;
+    const list = el?.querySelector<HTMLElement>('.fil-notes');
+    if (!el || !list) return;
+    const place = () => {
+      if (getComputedStyle(list).position !== 'absolute') {
+        delete list.dataset.placed;
+        el.style.removeProperty('--notes-min');
+        return;
+      }
+      // la page est arrivée avec ses notes l'une sous l'autre : à leur première mise en place, elles glissent jusqu'à
+      // leur phrase (rien ne saute) ; une réponse qui vient d'arriver pose les siennes elle-même (fil.css)
+      const glide =
+        list.dataset.placed === undefined &&
+        list.dataset.fresh === undefined &&
+        document.documentElement.dataset.motion !== 'off' &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const was = new Map(
+        glide ? ([...list.children] as HTMLElement[]).map((note) => [note, note.offsetTop]) : [],
+      );
+      const top = el.getBoundingClientRect().top + el.clientTop;
+      const notes = ([...list.children] as HTMLElement[])
+        .map((note) => {
+          const chip = el.querySelector(`[data-cite="${note.dataset.n}"]`)?.getBoundingClientRect();
+          // le drapeau (22 px) à mi-hauteur du numéro (19 px)
+          return { note, y: chip ? chip.top - top - 2 : Infinity, x: chip?.left ?? 0 };
+        })
+        // dans l'ordre du texte : de haut en bas, et sur une même ligne de gauche à droite
+        .sort((a, b) => a.y - b.y || a.x - b.x);
+      const tops = stackNotes(
+        notes.map(({ note, y }) => ({ y, height: note.offsetHeight })),
+        24,
+        10,
+      );
+      let end = 0;
+      notes.forEach(({ note }, i) => {
+        const at = tops[i] as number;
+        note.style.setProperty('--y', `${at}px`);
+        note.style.setProperty('--i', String(i));
+        end = at + note.offsetHeight;
+        const from = was.get(note);
+        if (from !== undefined && from !== at)
+          note.animate([{ translate: `0 ${from - at}px` }, { translate: '0 0' }], {
+            duration: 220,
+            easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)',
+          });
+      });
+      list.dataset.placed = '';
+      // la feuille descend au moins jusqu'au pied de la dernière note (ses deux traits compris)
+      el.style.setProperty('--notes-min', `${end + 8}px`);
+    };
+    place();
+    const watch = new ResizeObserver(place);
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, [sheet, key]);
 }
 
 export function UserBubble({
-  id,
   content,
   seeds,
-  active,
   onOpen,
 }: {
-  id: string;
   content: string;
-  // Les résultats de la barre d'où part la discussion (sur sa première question seulement).
-  seeds: DiscussionCitation[];
-  active: string | null;
-  onOpen: OpenCitation;
+  // Les résultats de la recherche d'où part la discussion (sur sa première question seulement).
+  seeds: CitationView[];
+  onOpen: OpenSource;
 }) {
   const t = useTranslations('discussionView');
   return (
-    <div className="ml-auto w-fit max-w-[min(88%,640px)] rounded-box rounded-br-[6px] border border-accent-line bg-accent-soft px-4 py-3 shadow-hi">
-      <p className="sr-only">{t('you')}</p>
-      <p className="text-lead leading-[1.6] break-words whitespace-pre-wrap text-fg">{content}</p>
+    <div className="grid justify-items-end gap-2">
+      {/* un mot posé à droite du fil : son coin bas à droite reste vif, du côté de qui parle */}
+      <div className="w-fit max-w-[min(86%,560px)] rounded-card rounded-br-[4px] bg-n-150 px-5 py-3">
+        <p className="sr-only">{t('you')}</p>
+        {/* la question se lit à la taille de la réponse : c'est la moitié de la conversation, pas une étiquette */}
+        <p className="text-answer break-words whitespace-pre-wrap text-fg">{content}</p>
+      </div>
       {seeds.length > 0 && (
         // les résultats d'origine sont secondaires : repliés, ouverts à la demande
-        <Collapsible className="mt-2.5 border-t border-accent-line pt-1.5">
-          <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1 rounded-field px-1.5 text-label font-semibold text-fg-2 transition-colors hover:text-fg">
-            {t('searchSeeds', { count: seeds.length })}
-            <ChevronDown
-              aria-hidden="true"
-              className="size-3.5 transition-[rotate] duration-200 group-data-[state=open]:rotate-180"
-              strokeWidth={2}
-            />
-          </CollapsibleTrigger>
+        <Collapsible className="w-full">
+          <div className="flex justify-end">
+            <CollapsibleTrigger className="group -mr-2 inline-flex min-h-8 items-center gap-1 rounded-item px-2 text-label font-medium text-muted transition-colors hover:bg-hover hover:text-fg max-shell:min-h-11">
+              {t('searchSeeds')}
+              <ChevronDown
+                aria-hidden="true"
+                className="size-3.5 transition-[rotate] duration-150 group-data-[state=open]:rotate-180"
+                strokeWidth={1.8}
+              />
+            </CollapsibleTrigger>
+          </div>
           <CollapsibleContent>
-            <SourceRows citations={seeds} msgId={id} active={active} onOpen={onOpen} />
+            <SourceTiles citations={seeds} onOpen={onOpen} className="mt-2" />
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -183,106 +248,141 @@ export function UserBubble({
 export type Live = { activity: string | null; text: string };
 
 type LeonCardProps = {
-  id: string;
   content: string;
-  citations: DiscussionCitation[];
+  citations: CitationView[];
   /** Réponse en cours. */
   live?: Live;
-  /** Réponse qui vient d'arriver : les renvois éclosent, les sources montent. */
+  /** Réponse qui vient d'arriver : ses traits sont tracés une fois. */
   fresh?: boolean;
-  /** La dernière réponse de Leon du fil : ses sources ouvertes. */
-  latest?: boolean;
-  active: string | null;
-  onOpen: OpenCitation;
-  onHover: (key: string | null) => void;
+  onOpen: OpenSource;
 };
 
-export function LeonCard({
-  id,
-  content,
-  citations,
-  live,
-  fresh,
-  latest,
-  active,
-  onOpen,
-  onHover,
-}: LeonCardProps) {
+/** Le texte copié : la réponse avec ses renvois, puis la liste des sources (« [1] Notion · Titre · adresse »). */
+function copyText(main: string, citations: CitationView[], untitled: string): string {
+  const sources = citations.map((c) =>
+    [`[${c.n}]`, [toolOf(c.kind), titleOf(c, untitled), c.url].filter(Boolean).join(' · ')].join(
+      ' ',
+    ),
+  );
+  return [main.trim(), sources.join('\n')].filter(Boolean).join('\n\n');
+}
+
+// La feuille d'une réponse : une page au format du fil, ses marges, son texte.
+const SHEET = 'px-8 pt-7 pb-6 max-shell:px-5 max-shell:py-5';
+
+export function LeonCard({ content, citations, live, fresh, onOpen }: LeonCardProps) {
   const t = useTranslations('discussionView');
+  // la source pointée (son numéro dans le texte, sa ligne au pied de la feuille) : ses mots s'appuient
+  const [lit, setLit] = useState<number | null>(null);
+  const sheet = useRef<HTMLDivElement>(null);
+  usePlacedNotes(
+    sheet,
+    `${content}|${citations.map((c) => `${c.n}${c.kind ?? ''}${c.title ?? ''}`).join()}`,
+  );
   const byN = new Map(citations.map((c) => [c.n, c]));
   // Une phrase fixe (refus, rien trouvé) s'affiche traduite ; une limite atteinte, à part, en note.
   const reply = replyParts(content);
-  const fixed = reply.fixed !== null;
   const main = reply.fixed ? t(reply.fixed) : reply.main;
-  const limit = reply.limit ? t('limitNote') : null;
+
+  if (live)
+    return (
+      <GlassCard aria-busy="true" className={SHEET}>
+        <p className="sr-only">Leon</p>
+        {live.text === '' ? (
+          // avant le premier évènement, rien d'inventé : seulement « Leon travaille »
+          <Reading>{live.activity ?? t('activity.autre')}</Reading>
+        ) : (
+          <div className="answer break-words text-fg">
+            {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
+            <CitedMarkdown
+              text={live.text}
+              renderCite={(n) => `[${n}]`}
+              tail={<span className="caret" aria-hidden="true" />}
+            />
+          </div>
+        )}
+      </GlassCard>
+    );
+
+  // le panneau marque les mots que la réponse a pris à la source, comme la réponse elle-même
+  const open = (c: CitationView) =>
+    onOpen({ ...panelSource(c), used: main ? citingSentences(main, c.n) : undefined });
   return (
-    // du texte qui coule, sans carte autour (comme une conversation, pas un formulaire)
     <div>
-      <p className="sr-only">Leon</p>
-      {live && live.text === '' ? (
-        <p className="flex min-h-[1.7em] items-center gap-2.5 text-body text-fg-2">
-          <span className="spin" aria-hidden="true" />
-          {live.activity}
-        </p>
-      ) : live ? (
-        <div className={cn(TEXT, 'text-fg')}>
-          {/* Les renvois [n] restent du texte jusqu'à la fin : leurs sources arrivent avec elle. */}
-          <CitedMarkdown
-            text={live.text}
-            renderCite={(n) => `[${n}]`}
-            tail={<span className="caret-block" aria-hidden="true" />}
-          />
-        </div>
-      ) : (
-        main && (
-          <div className={cn(TEXT, fixed ? 'text-fg-2' : 'text-fg')}>
+      {/* une feuille, mais pas découpée à son bord : ses drapeaux en sortent */}
+      <div
+        ref={sheet}
+        className={cn(
+          'fil-sheet relative rounded-card border border-line bg-sheet shadow-sheet',
+          SHEET,
+        )}
+      >
+        <div
+          className={cn(
+            'answer break-words',
+            reply.fixed ? 'text-muted' : 'text-fg',
+            fresh && 'hl-arrive',
+          )}
+        >
+          <p className="sr-only">Leon</p>
+          {main && (
             <CitedMarkdown
               text={main}
               keep={(n) => byN.has(n)}
+              lit={lit}
+              // seuls les mots qui viennent de la source, dans sa couleur ; rien de partagé : le numéro seul
+              mark={
+                reply.fixed
+                  ? undefined
+                  : (text) =>
+                      markCited(
+                        text,
+                        (n) => byN.get(n)?.passage,
+                        (n) => byN.has(n),
+                      )
+              }
               renderCite={(n) => {
-                const c = byN.get(n) as DiscussionCitation;
-                const key = `${id}:${n}`;
+                const c = byN.get(n) as CitationView;
                 return (
                   <CitationChip
                     n={n}
+                    active={lit === n}
+                    data-cite={n}
                     label={nb(t('sourceLabel', { number: n, title: titleOf(c, t('untitled')) }))}
-                    active={active === key}
-                    animate={fresh}
-                    onClick={(e) => onOpen(key, c, e.currentTarget)}
-                    onMouseEnter={() => onHover(key)}
-                    onMouseLeave={() => onHover(null)}
-                    onFocus={() => onHover(key)}
-                    onBlur={() => onHover(null)}
+                    onClick={() => open(c)}
+                    onPointerEnter={() => setLit(n)}
+                    onPointerLeave={() => setLit(null)}
+                    onFocus={() => setLit(n)}
+                    onBlur={() => setLit(null)}
                   />
                 );
               }}
             />
-          </div>
-        )
-      )}
-      {!live && limit && (
-        <motion.p
-          initial={fresh ? { opacity: 0, y: 6 } : false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: duration.slow, ease: ease.out, delay: 0.2 }}
-          className="mt-3 flex gap-2.5 rounded-field bg-glass-3 px-3.5 py-2.5 text-ui text-fg-2 shadow-[inset_0_0_0_1px_var(--line)]"
-        >
-          <CircleAlert
-            aria-hidden="true"
-            className="mt-[2px] size-4 shrink-0 text-muted"
-            strokeWidth={1.8}
+          )}
+          {reply.fixed === 'empty' && citations.length === 0 && (
+            <Button asChild variant="link" className="mt-2 text-ui">
+              <Link href="/connexions">{t('connectTool')}</Link>
+            </Button>
+          )}
+          {reply.limit && <p className="mt-4 text-ui text-muted">{nb(t('limitNote'))}</p>}
+        </div>
+        {citations.length > 0 && (
+          <SourceNotes
+            citations={citations}
+            lit={lit}
+            fresh={fresh}
+            onLit={setLit}
+            onOpen={(source) => open(byN.get(source.n) as CitationView)}
           />
-          {nb(limit)}
-        </motion.p>
-      )}
-      {!live && citations.length > 0 && (
-        <CitedSources
-          citations={citations}
-          msgId={id}
-          open={Boolean(latest)}
-          active={active}
-          onOpen={onOpen}
-          fresh={fresh}
+        )}
+      </div>
+      {main && !reply.fixed && (
+        // sous la feuille, pas dessus : le texte garde toute sa largeur
+        <CopyButton
+          value={copyText(stripMarks(main), citations, t('untitled'))}
+          variant="quiet"
+          size="xs"
+          className="mt-1.5 ml-4 text-muted hover:text-fg max-shell:ml-1"
         />
       )}
     </div>

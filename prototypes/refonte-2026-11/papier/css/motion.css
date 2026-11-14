@@ -1,0 +1,26 @@
+/* Leon « Papier » v2 : motion, the shared rules. See NOTES.md, "Motion core", and js/motion/core.js.
+   The page is in its final state without any of this. Each module has its own sheet (css/motion-<module>.css).
+
+   Pre-hiding. An inline script in <head> puts .js-motion on <html>, never under reduced motion. A module may pre-hide
+   only what its own load or entrance animates, in its own sheet, and every such rule carries the failsafe:
+
+     html.js-motion [data-h1-line] { opacity: 0; animation: var(--failsafe); }
+
+   Pre-hide with opacity, visibility, clip-path or transform only (the sheets' resting places use translate and
+   rotate: leave those alone). If the module never runs, the failsafe shows the element after 3 seconds. When the
+   modules do run, core.js removes .js-motion first, so these rules let go and the module's inline states take over. */
+@keyframes leon-failsafe { to { opacity: 1; visibility: visible; clip-path: none; transform: none; } }
+:root { --failsafe: leon-failsafe 1ms linear 3s forwards; }
+
+/* Hand-drawn highlights (Rough Notation). The drawing is an absolutely placed svg put just before the marked words:
+   a heading is its own positioned, isolated layer, so the stroke follows the heading wherever the layout moves it.
+   On white the stroke multiplies with the page, so the ink of the words stays ink. On an ink band there is nothing
+   to multiply with: the stroke goes behind the words, which turn to ink (site.css, .on-ink .hmark). */
+.h1, .h2, .statement { position: relative; isolation: isolate; }
+.rough-annotation { mix-blend-mode: multiply; }
+.on-ink .rough-annotation { mix-blend-mode: normal; z-index: -1; }
+
+/* Lenis drives the scroll itself: the browser's own smooth scrolling must stand down while it runs */
+html.lenis { scroll-behavior: auto !important; }
+/* A section reached from an in-page link takes the focus so that Tab continues from there: no ring around a whole section */
+main section[tabindex="-1"]:focus { outline: none; }

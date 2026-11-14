@@ -1,26 +1,303 @@
-/* Outil tout juste branché : un trait d'accent autour de sa ligne de « Vos outils branchés » quand la fenêtre se ferme
-   (retour visuel, pas d'animation continue), sans changer de taille. Le mouvement réduit coupe les animations CSS. */
-.cx-fresh-row::after {
+/* Écran Connexions. Ce qu'on a est une feuille (blanche, posée sur le bureau) ; ce qu'on peut ajouter est imprimé sur le
+   bureau et ne devient feuille que pointé. Les logos sont l'image de l'écran ; l'état se dessine (un point, un logo
+   éteint, un trait). Hors couche : ces règles l'emportent sur le kit (kit.css), sans le changer pour les autres écrans. */
+
+/* ---------- Une carte : ce qu'on a. Le logo sur sa pastille de bureau, l'état en un point ---------- */
+/* Le logo sur du papier blanc bordé d'un filet (blanc dans les deux thèmes : les logos sont dessinés pour le clair). */
+.cx-well {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  transition: border-color var(--fast);
+}
+.cx-card:is(:hover, :focus-visible) .cx-well {
+  border-color: var(--line-strong);
+}
+[data-theme="dark"] .cx-well {
+  border-color: transparent;
+}
+[data-theme="dark"] .cx-well .logo-box {
+  border-radius: 0;
+  background: none;
+}
+[data-theme="dark"] .cx-well .logo-box > img {
+  width: 100%;
+  height: 100%;
+}
+.cx-card .tl__dot,
+.cx-dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2.5px var(--glass);
+}
+.cx-dot {
+  background: var(--ok);
+}
+/* en pause : un anneau vide, et le logo s'éteint */
+.cx-card.is-paused .cx-dot {
+  border: 1.5px solid var(--muted);
+  background: var(--glass);
+}
+.cx-card.is-paused .cx-well > :first-child {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.cx-card.is-paused .tl__name {
+  color: var(--muted);
+}
+/* en panne : la feuille est bordée de rouge, la pastille d'encre dit quoi faire */
+.cx-card.is-err {
+  border-color: var(--destructive-line);
+}
+.cx-card.is-err .cx-dot {
+  display: none;
+}
+.cx-card .tl__chev {
+  opacity: 0;
+  transform: translateX(-4px);
+  transition:
+    opacity var(--fast),
+    transform var(--fast) var(--ease-out),
+    color var(--fast);
+}
+.cx-card:is(:hover, :focus-visible) > .tl__chev {
+  opacity: 1;
+  transform: none;
+}
+.tl:is(.cx-card, .cx-add):active {
+  transform: scale(0.985);
+  transition-duration: 60ms;
+}
+/* tout juste branché : le trait vert de « fait » passe une fois sous le nom, et reste jusqu'au prochain chargement */
+.cx-fresh .mark::before {
+  background: var(--m2);
+  transform: none;
+  animation: sweep 520ms var(--ease-out) 200ms both;
+}
+
+/* ---------- Une place libre (aucun outil branché) : le contour d'une carte, à remplir ---------- */
+.cx-slot {
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: transparent;
+  box-shadow: none;
+}
+.cx-slot:is(:hover, :focus-visible) {
+  border-style: solid;
+  background: var(--glass);
+}
+
+/* ---------- Une tuile à ajouter : imprimée sur le bureau ; pointée, elle devient feuille et dit « Brancher » ---------- */
+.cx-add {
+  border-color: var(--line);
+  background: transparent;
+  box-shadow: none;
+}
+.cx-add:is(:hover, :focus-visible) {
+  border-color: var(--line-strong);
+  background: var(--glass);
+  box-shadow: var(--sh-2);
+}
+.cx-add .tl__id {
+  margin-right: 28px;
+}
+.cx-add .tl__pill {
+  position: absolute;
+  top: 50%;
+  right: 11px;
+  gap: 0;
+  margin: 0;
+  padding: 0 6px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--n-500);
+  translate: 0 -50%;
+  transition:
+    border-color var(--fast),
+    background-color var(--fast),
+    color var(--fast),
+    padding var(--fast) var(--ease-out);
+}
+.cx-add .tl__pill svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.cx-add__word {
+  display: grid;
+  grid-template-columns: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-columns var(--fast) var(--ease-out),
+    opacity var(--fast);
+}
+.cx-add__word > span {
+  min-width: 0;
+  overflow: hidden;
+}
+.cx-add:is(:hover, :focus-visible) .tl__pill {
+  padding: 0 10px 0 7px;
+  border-color: var(--text);
+  background: var(--glass);
+  color: var(--text);
+}
+.cx-add:is(:hover, :focus-visible) .cx-add__word {
+  grid-template-columns: 1fr;
+  padding-left: 4px;
+  opacity: 1;
+}
+/* « Bientôt » : pas un contrôle, et cela se voit */
+.cx-soon {
+  border-style: dashed;
+}
+.cx-soon .tl__pic {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+.cx-soon .tl__name {
+  color: var(--muted);
+}
+
+/* ---------- La tête du panneau : le nom de l'outil, puis son trait jusqu'au point de Leon (le dessin de l'écran) ---------- */
+.cx-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+/* Un trait court, tenu près du nom : il ne court pas jusqu'à la croix (au moins 24 px d'air, puis l'écart de la tête). */
+.cx-link {
+  position: relative;
+  display: flex;
+  flex: 0 1 112px;
+  align-items: center;
+  min-width: 40px;
+  height: 14px;
+  margin-right: 24px;
+  color: var(--text);
+}
+/* le trait (tracé une fois à l'ouverture), puis le point */
+.cx-link > i {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: 0 50%;
+  animation: sweep 420ms var(--ease-out) 160ms both;
+}
+.cx-link::after {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--text);
+}
+/* pas encore branché : des points, et le point de Leon vide */
+.cx-link[data-state="none"] > i {
+  height: 0;
+  border-top: 3px dotted var(--line-strong);
+  border-radius: 0;
+  background: none;
+  animation: none;
+}
+.cx-link[data-state="none"]::after {
+  margin-left: 6px;
+  border: 2px solid var(--line-strong);
+  background: none;
+}
+/* en pause, en panne : le trait s'arrête avant le point */
+.cx-link:is([data-state="paused"], [data-state="error"]) > i {
+  flex: 0 0 45%;
+  margin-right: auto;
+  color: var(--line-strong);
+}
+.cx-link[data-state="error"] > i {
+  height: 0;
+  border-top: 3px dotted var(--destructive);
+  border-radius: 0;
+  background: none;
+  animation: none;
+}
+/* tout juste branché : le surligneur vert passe sous le trait */
+.cx-link[data-state="fresh"]::before {
   content: "";
   position: absolute;
-  inset: 4px;
-  border-radius: 12px;
-  pointer-events: none;
-  box-shadow: inset 0 0 0 1.5px var(--accent);
-  opacity: 0;
-  animation: cx-fresh-row 1.5s ease-in 1;
+  inset: 1px 10px 1px -3px;
+  border-radius: 3px;
+  background: var(--m2);
+  transform-origin: 0 50%;
+  animation: sweep 700ms var(--ease-out) 300ms both;
 }
-/* tenu le temps que la page glisse jusqu'à la ligne, puis effacé */
-@keyframes cx-fresh-row {
-  0%,
-  45% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
+.cx-link[data-state="fresh"] > i,
+.cx-link[data-state="fresh"]::after {
+  position: relative;
+}
+
+/* ---------- Le panneau d'un outil : ce qu'on peut y faire, en lignes ---------- */
+.cx-acts {
+  display: grid;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.cx-acts > form {
+  display: grid;
+}
+.cx-act.cx-act {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  width: calc(100% + 20px);
+  height: 40px;
+  margin-inline: -10px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: 500 14px / 1 var(--font);
+  text-align: left;
+  text-decoration: none;
+  transition: background-color var(--fast);
+}
+.cx-act.cx-act:hover {
+  background: var(--hover);
+}
+.cx-act.cx-act:active {
+  background: var(--n-150);
+  scale: 1;
+}
+.cx-act.cx-act > svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--n-500);
+  transition: color var(--fast);
+}
+.cx-act.cx-act:hover > svg {
+  color: var(--text);
+}
+.cx-act__go {
+  margin-left: auto;
+}
+@media (max-width: 860px) {
+  .cx-act.cx-act {
+    height: 44px;
   }
 }
 
+/* ---------- L'ancien schéma (carte.tsx, plus monté) : ses classes restent pour lui ---------- */
 /* Schéma des connexions : deux halos battent autour du rond de Leon, le point vert du résumé respire, les traits et les
    croix s'allument ou s'effacent en douceur au survol. Le mouvement réduit coupe ces animations. */
 .cx-halo {

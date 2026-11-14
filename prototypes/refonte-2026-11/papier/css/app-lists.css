@@ -1,0 +1,42 @@
+/* Leon « Papier » v2 : Documents and Team. Only what the kit (css/app.css) does not have yet, in the kit's style.
+   Load after css/app.css. Same rules: 14px text, --line hairlines, one radius, colour only as a status dot. */
+
+/* A state shown only when it applies (.case; ui.css already has a .state): the address names it (#empty, #rejected, #invited: no script needed) or script
+   turns it on (.is-on). A control that only works with script stays out of the page without it. */
+.case:not(:target):not(.is-on) { display: none; }
+html:not(.js) .needs-js { display: none; }
+
+/* ---------- Documents: the drop zone. One strip: what to do on the left, the choice and the action on the right ---------- */
+.drop {
+  position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px;
+  padding: 20px 24px; border: 1px dashed var(--line-strong); border-radius: var(--r);
+  transition: background-color var(--t-fast), border-color var(--t-fast);
+}
+.drop.is-over { border-style: solid; border-color: var(--ink); background: var(--desk); } /* a file is held over the page */
+.drop__title { font: 600 var(--t-body)/1.3 var(--sans); }
+.drop__text { max-width: 60ch; margin-top: 4px; color: var(--ink-2); text-wrap: pretty; }
+.drop__act { display: flex; align-items: flex-end; gap: 12px; }
+.drop__act .field { width: 148px; }
+.drop:has(#file:focus-visible) label.btn { outline: 2px solid var(--ink); outline-offset: 2px; } /* the real control is the hidden file input */
+.drop + .alert { margin-top: 16px; }
+/* No documents yet (#empty): the strip is the empty state, and the list is not drawn */
+.drop:has(#empty:target) { padding-block: 28px; }
+.drop:has(#empty:target) .drop__say--list, .page:has(#empty:target) #docs { display: none; }
+
+/* ---------- Tables of files and people ---------- */
+.t-none { color: var(--ink-2); }
+.list-foot { margin-top: 0; padding-top: 12px; border-top: 1px solid var(--line); }
+
+/* ---------- Team: the invitation and the rule ---------- */
+.invite { max-width: 520px; margin-top: 16px; }
+.invite__row { display: flex; gap: 8px; }
+.invite__row .field { flex: 1; min-width: 0; }
+.invite__out { max-width: 520px; margin-top: 16px; }
+.invite__out .code { margin-top: 8px; }
+
+@media (max-width: 899px) {
+  .drop { padding: 16px; }
+  .drop__act, .invite__row { flex-wrap: wrap; }
+  .lists .table { min-width: 620px; } /* the table scrolls inside its wrap rather than breaking every cell */
+  .lists .table td + td, .lists .cell__sub { white-space: nowrap; }
+}

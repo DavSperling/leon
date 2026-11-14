@@ -1,18 +1,20 @@
-import { ArrowRight, ChevronDown } from 'lucide-react';
+'use client';
+
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { EXAMPLES, EXAMPLES_EN, SYNTAX, SYNTAX_EN } from '@/components/search/examples';
 import { searchHref } from '@/components/search/url-state';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger, GlassCard } from '@/components/verre';
+import { Button, Fact, Facts, PanelClose, SidePanel } from '@/components/verre';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 
 /** Requête en code : la clé des filtres atténuée (`outil:`), la valeur et les phrases exactes en clair. */
-function QueryCode({ q, className }: { q: string; className?: string }) {
+export function QueryCode({ q, className }: { q: string; className?: string }) {
   return (
     <code
       className={cn(
-        'inline-block max-w-full rounded-chip border border-line bg-glass-3 px-2 py-[3px] font-mono text-[12.5px] leading-[18px] tracking-normal whitespace-pre text-fg',
+        'inline-block max-w-full rounded-chip border border-line bg-glass-3 px-2 py-[3px] font-mono text-label whitespace-pre text-fg',
         className,
       )}
     >
@@ -32,78 +34,74 @@ function QueryCode({ q, className }: { q: string; className?: string }) {
   );
 }
 
-/** Accueil sans requête : quatre recherches d'exemple, puis la syntaxe des filtres, repliée. */
-export function Welcome() {
+/**
+ * « Filtres » à côté des puces de la recherche : un bouton discret qui ouvre, dans le panneau, la syntaxe des filtres
+ * (`outil:`, `de:`, `depuis:`…) et quatre recherches d'exemple. Un exemple lance sa recherche.
+ */
+export function SearchSyntax() {
   const en = useLocale() === 'en';
   const t = useTranslations('welcome');
+  const [open, setOpen] = useState(false);
   return (
-    <div className="mt-11 grid gap-7 max-sm:mt-8">
-      <section aria-labelledby="exemples">
-        <h2 id="exemples" className="mb-4 text-h2 font-semibold tracking-[-0.02em] text-fg">
-          {t('examplesTitle')}
-        </h2>
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2">
+    <>
+      <Button variant="quiet" size="sm" onClick={() => setOpen(true)}>
+        {t('syntax')}
+      </Button>
+      <SidePanel open={open} onOpenChange={setOpen} title={t('filtersTitle')}>
+        {/* le code le plus long (« before:2026-10-01 ») ne tient pas dans la colonne de 128px */}
+        <Facts className="[&>div]:grid-cols-[168px_minmax(0,1fr)]">
+          {(en ? SYNTAX_EN : SYNTAX).map((s) => (
+            <Fact key={s.code} label={<QueryCode q={s.code} />}>
+              {nb(s.text)}
+            </Fact>
+          ))}
+        </Facts>
+        <h3 className="mt-7 text-ui font-semibold text-fg">{t('examplesTitle')}</h3>
+        <ul className="mt-2 grid gap-1">
           {(en ? EXAMPLES_EN : EXAMPLES).map((ex) => (
             <li key={ex.q}>
-              <GlassCard
-                spotlight
-                className="group h-full has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring"
-              >
+              <PanelClose asChild>
                 <Link
                   href={searchHref({ q: ex.q })}
-                  className="grid gap-2 px-4 py-3.5 outline-none"
+                  className="-mx-2 grid gap-1.5 rounded-item px-2 py-2.5 transition-colors duration-150 hover:bg-hover"
                 >
                   <span className="min-w-0">
                     <QueryCode q={ex.q} />
                   </span>
-                  <span className="flex items-center gap-3">
-                    <span className="text-body text-muted transition-colors duration-200 group-hover:text-fg-2">
-                      {ex.hint}
-                    </span>
-                    <ArrowRight
-                      aria-hidden="true"
-                      strokeWidth={1.7}
-                      className="ml-auto size-4 shrink-0 -translate-x-1.5 text-accent opacity-0 transition-[translate,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 group-has-[a:focus-visible]:translate-x-0 group-has-[a:focus-visible]:opacity-100"
-                    />
-                  </span>
+                  <span className="text-ui text-muted">{ex.hint}</span>
                 </Link>
-              </GlassCard>
+              </PanelClose>
             </li>
           ))}
         </ul>
-      </section>
+      </SidePanel>
+    </>
+  );
+}
 
-      <section aria-labelledby="filtres">
-        <Collapsible>
-          <h2 id="filtres">
-            <CollapsibleTrigger className="group -mx-1.5 inline-flex min-h-8 items-center gap-1.5 rounded-field px-1.5 text-ui font-medium text-fg-2 transition-colors duration-200 hover:text-fg">
-              {t('filtersTitle')}
-              <ChevronDown
-                aria-hidden="true"
-                strokeWidth={1.8}
-                className="size-3.5 transition-[rotate] duration-200 group-data-[state=open]:rotate-180"
-              />
-            </CollapsibleTrigger>
-          </h2>
-          <CollapsibleContent>
-            <GlassCard className="mt-2.5 px-2 py-1.5">
-              <dl className="grid grid-cols-[minmax(0,1fr)] sm:grid-cols-2 sm:gap-x-2">
-                {(en ? SYNTAX_EN : SYNTAX).map((s) => (
-                  <div
-                    key={s.code}
-                    className="grid grid-cols-[148px_minmax(0,1fr)] items-baseline gap-3 rounded-field px-2.5 py-2.5 max-sm:grid-cols-[minmax(0,1fr)] max-sm:gap-1.5"
-                  >
-                    <dt>
-                      <QueryCode q={s.code} />
-                    </dt>
-                    <dd className="text-body text-fg-2">{nb(s.text)}</dd>
-                  </div>
-                ))}
-              </dl>
-            </GlassCard>
-          </CollapsibleContent>
-        </Collapsible>
-      </section>
-    </div>
+/**
+ * Une recherche sans résultat ne laisse pas dans une impasse : quatre recherches d'exemple, en code, qui montrent la
+ * syntaxe des filtres. Un clic lance la recherche ; ce qu'elle cherche se lit au survol et au lecteur d'écran.
+ */
+export function SearchExamples() {
+  const en = useLocale() === 'en';
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {(en ? EXAMPLES_EN : EXAMPLES).map((ex) => (
+        <li key={ex.q}>
+          <Link
+            href={searchHref({ q: ex.q })}
+            title={ex.hint}
+            className="group/ex block rounded-chip transition-transform duration-150 active:translate-y-px"
+          >
+            <QueryCode
+              q={ex.q}
+              className="bg-sheet px-2.5 py-1.5 shadow-sheet transition-[border-color,box-shadow] duration-150 group-hover/ex:border-line-strong group-hover/ex:shadow-lift"
+            />
+            <span className="sr-only">{ex.hint}</span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }

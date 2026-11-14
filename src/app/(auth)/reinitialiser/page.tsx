@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
+import { AuthSheet, AuthTitle } from '@/components/verre/auth/frame';
 import { ResetPasswordForm } from '@/components/verre/auth/password-reset-form';
+import { Button } from '@/components/verre/ui/button';
+import { nb } from '@/lib/verre/nb';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('auth');
@@ -15,21 +18,17 @@ export default async function ResetPasswordPage({
   searchParams: Promise<{ token?: string }>;
 }) {
   const { token } = await searchParams;
+  if (token) return <ResetPasswordForm token={token} />;
   const t = await getTranslations('auth');
   return (
-    <>
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('newPassword')}</h1>
-      {token ? (
-        <ResetPasswordForm token={token} />
-      ) : (
-        <p className="mt-3 text-ui text-muted">
-          {t('resetLinkExpired')}{' '}
-          <Link href="/mot-de-passe-oublie" className="text-accent underline underline-offset-4">
-            {t('requestNewLink')}
-          </Link>
-          .
-        </p>
-      )}
-    </>
+    <AuthSheet>
+      <AuthTitle>{t('newPassword')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">
+        {nb(t('resetLinkExpired'))}
+      </p>
+      <Button asChild variant="primary" className="mt-6 h-10 w-full max-shell:h-11">
+        <Link href="/mot-de-passe-oublie">{t('requestNewLink')}</Link>
+      </Button>
+    </AuthSheet>
   );
 }

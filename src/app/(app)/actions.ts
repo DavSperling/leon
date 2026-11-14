@@ -7,6 +7,7 @@ import { type PreviewView, toPreviewView } from '@/components/search/view-model'
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
+import { NOTHING_FOUND, type ShellFound, searchShell } from '@/server/shell/shell';
 
 // Seule la session compte : une personne sans organisation (mauvais compte Google, par exemple) doit pouvoir
 // se déconnecter, pas être renvoyée sur /bienvenue.
@@ -35,5 +36,19 @@ export async function previewPassageAction(passageId: string): Promise<PreviewRe
   } catch (error) {
     logError('search.preview_failed', error);
     return { ok: false, reason: 'erreur' };
+  }
+}
+
+// Ce que la barre de commande trouve pour quelques lettres : outils, personnes, documents et discussions, sous les
+// droits de la personne connectée (searchShell). Une panne ne sort pas : la barre garde ses autres lignes (demander,
+// chercher, les écrans).
+export async function searchShellAction(query: string): Promise<ShellFound> {
+  const ctx = await requireUserContext();
+  if (typeof query !== 'string') return NOTHING_FOUND;
+  try {
+    return await searchShell(ctx, query);
+  } catch (error) {
+    logError('shell.search_failed', error);
+    return NOTHING_FOUND;
   }
 }

@@ -20,7 +20,7 @@ export type PaginationProps = {
 };
 
 const LINK =
-  'inline-flex h-9 items-center gap-2 rounded-full px-3.5 text-ui font-medium text-fg-2 transition-colors hover:bg-hover hover:text-fg';
+  'inline-flex h-8 items-center gap-2 rounded-full border border-line-strong bg-sheet px-3.5 text-label font-medium text-fg transition-colors duration-150 hover:border-fg hover:bg-n-50 max-shell:h-11';
 
 /** « ← Précédent | Page 2 sur 7 | Suivant → », en liens ; le côté qui manque reste vide ; un clic remonte en haut du panneau. */
 export function Pagination({ page, pages, hasNext, href, focusId, className }: PaginationProps) {

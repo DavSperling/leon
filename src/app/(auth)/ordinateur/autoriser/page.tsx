@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Children, type ReactNode } from 'react';
+import { AuthSheet, AuthTitle } from '@/components/verre/auth/frame';
 import { Button } from '@/components/verre/ui/button';
-import { Notice } from '@/components/verre/ui/feedback';
 import { nb } from '@/lib/verre/nb';
 import { authorizeQuery, parseAuthorizeParams } from '@/server/auth/computer-authorize';
 import { notesRefusedAt } from '@/server/auth/members';
@@ -40,10 +40,10 @@ export default async function AuthorizeComputerPage({
   const params = parseAuthorizeParams(await searchParams);
   if (!params) {
     return (
-      <div className="fade-in">
-        <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('invalidTitle')}</h1>
-        <p className="mt-3 text-ui text-muted">{nb(t('invalidText'))}</p>
-      </div>
+      <AuthSheet wide>
+        <AuthTitle>{t('invalidTitle')}</AuthTitle>
+        <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">{nb(t('invalidText'))}</p>
+      </AuthSheet>
     );
   }
 
@@ -53,31 +53,29 @@ export default async function AuthorizeComputerPage({
   const { organizationName } = await getViewerProfile(ctx);
   const notesRefused = params.usages?.includes('noter') && (await notesRefusedAt(ctx)) !== null;
   const code = (chunks: ReactNode) => (
-    <code className="font-mono text-[0.9em] text-fg">{chunks}</code>
+    <code className="font-mono text-label text-fg">{chunks}</code>
   );
 
   return (
-    <div className="fade-in">
-      <h1 className="text-h1 font-semibold tracking-[-0.025em] text-fg">{t('title')}</h1>
-      <p className="mt-3 text-ui [overflow-wrap:anywhere] text-muted">
+    // Une décision de sécurité : la question, les cases et leur texte se lisent ici, au moment de choisir.
+    <AuthSheet wide>
+      <AuthTitle>{t('title')}</AuthTitle>
+      <p className="mt-3 text-title leading-[1.5] text-pretty [overflow-wrap:anywhere] text-fg">
         {nb(t('question', { space: organizationName }))}
       </p>
-      <Notice tone="warning" className="mt-6">
-        {t('warning')}
-      </Notice>
-      <form action={authorizeComputerAction} className="mt-6 grid gap-3">
+      <form action={authorizeComputerAction} className="mt-6 grid gap-2">
         <input type="hidden" name="port" value={params.port} />
         <input type="hidden" name="etat" value={params.etat} />
         <input type="hidden" name="empreinte" value={params.empreinte} />
         {params.usages && (
-          <fieldset className="grid gap-3">
-            <legend className="text-ui font-semibold text-fg">{nb(t('usages.title'))}</legend>
-            <p className="text-meta text-muted">{nb(t('usages.hint'))}</p>
+          <fieldset className="mb-4 grid gap-2">
+            <legend className="mb-1 text-ui font-semibold text-fg">{nb(t('usages.title'))}</legend>
+            <p className="text-label text-pretty text-muted">{nb(t('usages.hint'))}</p>
             <input type="hidden" name="usages" value={params.usages.join(',')} />
             {params.usages.map((usage) => (
               <div
                 key={usage}
-                className="flex items-start gap-3 rounded-card border border-line bg-glass-2 p-3"
+                className="mt-1 flex items-start gap-3 rounded-item border border-line p-4"
               >
                 <input
                   id={`usage-${usage}`}
@@ -86,15 +84,18 @@ export default async function AuthorizeComputerPage({
                   value={usage}
                   defaultChecked={!(usage === 'noter' && notesRefused)}
                   aria-describedby={`usage-${usage}-texte`}
-                  className="mt-1 size-4 shrink-0 accent-accent"
+                  className="mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]"
                 />
                 <div className="min-w-0">
-                  <label htmlFor={`usage-${usage}`} className="text-ui font-medium text-fg">
+                  <label
+                    htmlFor={`usage-${usage}`}
+                    className="cursor-pointer text-ui font-medium text-fg"
+                  >
                     {nb(t(`usages.${usage}.title`))}
                   </label>
                   <ul
                     id={`usage-${usage}-texte`}
-                    className="mt-1 grid list-disc gap-1 pl-4 text-meta [overflow-wrap:anywhere] text-muted"
+                    className="mt-2 grid list-disc gap-1.5 pl-4 text-label leading-[1.5] [overflow-wrap:anywhere] text-muted"
                   >
                     {USAGE_LINES.map((line) => (
                       <li key={line}>
@@ -109,27 +110,20 @@ export default async function AuthorizeComputerPage({
             ))}
           </fieldset>
         )}
+        <p className="mb-2 text-ui font-medium text-pretty text-fg">{nb(t('warning'))}</p>
         <Button
           type="submit"
           name="decision"
           value="allow"
           variant="primary"
-          size="lg"
-          className="w-full"
+          className="h-10 w-full max-shell:h-11"
         >
           {t('allow')}
         </Button>
-        <Button
-          type="submit"
-          name="decision"
-          value="cancel"
-          variant="secondary"
-          size="lg"
-          className="w-full"
-        >
+        <Button type="submit" name="decision" value="cancel" className="h-10 w-full max-shell:h-11">
           {t('cancel')}
         </Button>
       </form>
-    </div>
+    </AuthSheet>
   );
 }

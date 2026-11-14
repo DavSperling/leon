@@ -1,7 +1,6 @@
 export { cn } from './cn';
 export * from './format';
 export { isInstant, useInstant } from './instant';
-export * from './motion';
 export { nb } from './nb';
 export { mergeRefs } from './refs';
 export { scrollToTop } from './scroll';

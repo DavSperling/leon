@@ -54,6 +54,3 @@ export function Brand({ className }: { className?: string }) {
     </svg>
   );
 }
-
-/** Initiale de l'organisation, dans la pastille du menu du compte. */
-export const initialOf = (name: string): string => name.trim().charAt(0).toUpperCase();

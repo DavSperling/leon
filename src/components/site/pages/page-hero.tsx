@@ -1,200 +1,153 @@
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
-import { ParticleField, SplitWords, type WordsPart } from '../fx';
-import { Container, Kicker } from '../parts';
+import { PagesMotion } from '../motion/pages-motion';
+import { Container, Marked, order } from '../parts';
 
-// Haut des pages secondaires du site (produit, cas d'usage, connecteurs, sécurité, tarifs) : un seul style partagé.
-// Fil d'Ariane, libellé, h1 (le seul de la page), chapeau, boutons ; à droite, un visuel facultatif.
-// Entrée échelonnée en CSS (.site-rise, mots du titre qui basculent en 3D) : visible sans JavaScript. Derrière, une
-// nappe de particules en 3D, plus légère que celle de l'accueil.
-
-const rise = (i: number) => ({ '--i': i }) as CSSProperties;
+// Haut des pages intérieures du site (produit, cas d'usage, connecteurs, sécurité, tarifs, documentation) : un seul
+// style. Le titre (le seul h1 de la page) sur huit colonnes, ses mots marqués d'un trait ; le chapeau et le bouton sur
+// les quatre dernières. Un visuel (`aside`) passe dessous, sur une bande de bureau collée au haut de page.
 
 export type Crumb = { href: string; label: string };
 
 export function PageHero({
-  kicker,
   title,
   accent,
+  tone = 1,
   lead,
   actions,
+  note,
   aside,
   crumbs,
   current,
-  align = 'left',
   children,
   className,
 }: {
-  kicker?: ReactNode;
   title: string;
-  /** Morceau du titre en dégradé accent → sarcelle (« avec sa source. »). */
+  /** Les mots du titre sous le trait de surligneur. */
   accent?: string;
+  /** Couleur du trait : 1 rose, 2 vert, 3 bleu, 4 ambre. */
+  tone?: number;
   lead?: string;
   actions?: ReactNode;
-  /** Visuel à droite (sous le texte sur mobile). */
+  /** La petite ligne à côté du bouton (« Bêta ouverte · pas encore de facturation »). */
+  note?: string;
+  /** Un visuel, sur une bande de bureau sous le haut de page. */
   aside?: ReactNode;
   /** Fil d'Ariane, sans la page courante. */
   crumbs?: Crumb[];
-  /** Libellé de la page courante dans le fil d'Ariane (par défaut, `title` s'il est une chaîne). */
+  /** Libellé de la page courante dans le fil d'Ariane (par défaut, le titre). */
   current?: string;
-  align?: 'left' | 'center';
-  /** Contenu sous les boutons (pastilles, compteurs). */
+  /** Contenu sous le titre (une bascule, des pastilles). */
   children?: ReactNode;
   className?: string;
 }) {
   const t = useTranslations('site.common');
-  const centered = align === 'center' && !aside;
-  const at = accent ? title.indexOf(accent) : -1;
-  const parts: WordsPart[] =
-    accent && at >= 0
-      ? [
-          { text: title.slice(0, at) },
-          { text: accent, className: 'site-gradient' },
-          { text: title.slice(at + accent.length) },
-        ].filter((p) => p.text !== '')
-      : [{ text: title }];
+  const side = Boolean(lead || actions);
   return (
-    <section className={cn('relative overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-20', className)}>
-      <div
-        aria-hidden="true"
-        className="site-halo pointer-events-none absolute inset-x-0 top-0 h-[560px]"
-      />
-      <div
-        className={cn(
-          // entrée fondue par le haut, et un creux derrière la colonne de texte (centrée, ou à gauche avec un visuel) :
-          // les points ne passent jamais sur le chapeau ni sur les boutons
-          'pointer-events-none absolute inset-x-0 bottom-0 opacity-75 [-webkit-mask-composite:source-in] [mask-composite:intersect] [[data-theme=light]_&]:opacity-45',
-          aside
-            ? 'top-[40%] [mask-image:linear-gradient(180deg,transparent,#000_42%),radial-gradient(ellipse_44%_70%_at_24%_18%,transparent_62%,#000_100%)]'
-            : 'top-[52%] [mask-image:linear-gradient(180deg,transparent,#000_42%),radial-gradient(ellipse_560px_190px_at_50%_22%,transparent_62%,#000_100%)]',
-        )}
-      >
-        <ParticleField density={0.62} height={0.9} />
-      </div>
-      <Container
-        className={cn(
-          'relative grid items-center gap-12',
-          aside && 'lg:grid-cols-[minmax(0,1.02fr)_minmax(0,1fr)] lg:gap-14',
-        )}
-      >
-        <div className={cn('min-w-0', centered && 'mx-auto max-w-[820px] text-center')}>
-          {crumbs && crumbs.length > 0 && (
-            <nav aria-label={t('breadcrumb')} className="site-rise mb-6" style={rise(0)}>
-              <ol
-                className={cn(
-                  'flex flex-wrap items-center gap-1.5 text-label text-muted',
-                  centered && 'justify-center',
-                )}
-              >
-                {crumbs.map((c) => (
-                  <li key={c.href} className="flex items-center gap-1.5">
-                    {/* cible de 40 px de haut, sans changer la hauteur du fil (marges négatives) */}
-                    <Link
-                      href={c.href}
-                      className="-my-2.5 inline-flex min-h-10 items-center rounded-sm font-medium transition-colors duration-200 hover:text-fg"
-                    >
-                      {nb(c.label)}
-                    </Link>
-                    <ChevronRight aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
-                  </li>
-                ))}
-                <li aria-current="page" className="font-medium text-fg-2">
-                  {nb(current ?? title)}
+    <section className={cn('s-top', className)}>
+      <PagesMotion />
+      <Container>
+        {crumbs && crumbs.length > 0 && (
+          <nav aria-label={t('breadcrumb')} className="s-arrive" style={order(0)}>
+            <ol className="s-crumbs">
+              {crumbs.map((c) => (
+                <li key={c.href} className="flex items-center gap-1.5">
+                  <Link href={c.href}>{nb(c.label)}</Link>
+                  <ChevronRight aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
                 </li>
-              </ol>
-            </nav>
-          )}
-          {kicker && (
-            <div className={cn('site-rise', centered && 'flex justify-center')} style={rise(1)}>
-              {typeof kicker === 'string' ? <Kicker>{nb(kicker)}</Kicker> : kicker}
-            </div>
-          )}
-          <h1
-            className={cn(
-              'mt-4 font-extrabold tracking-[-0.048em] text-balance text-fg',
-              aside ? 'text-[clamp(36px,4.6vw,60px)]' : 'text-[clamp(38px,5.4vw,64px)]',
-              // après la taille : tailwind-merge retirerait sinon l'interligne (text-* le règle aussi)
-              'leading-[1.02]',
-            )}
-          >
-            <SplitWords parts={parts} delay={140} />
+              ))}
+              <li aria-current="page" className="text-fg">
+                {nb(current ?? title)}
+              </li>
+            </ol>
+          </nav>
+        )}
+        <div className={cn('s-grid s-top__grid', !side && 's-top--solo')}>
+          <h1 className="s-h1 s-top__h1 s-arrive" style={order(1)}>
+            <Marked text={title} mark={accent} tone={tone} />
           </h1>
           {lead && (
-            <p
-              className={cn(
-                'site-rise mt-6 max-w-[620px] text-[18px] leading-[1.6] text-pretty text-fg-2 max-sm:text-[16px]',
-                centered && 'mx-auto',
-              )}
-              style={rise(3)}
-            >
+            <p className="s-lead s-top__lead s-arrive" style={order(2)}>
               {nb(lead)}
             </p>
           )}
-          {actions && (
-            <div
-              className={cn(
-                'site-rise mt-9 flex flex-wrap items-center gap-3',
-                centered && 'justify-center',
-              )}
-              style={rise(4)}
-            >
+          {(actions || note) && (
+            <div className="s-top__cta s-arrive" style={order(3)}>
               {actions}
-            </div>
-          )}
-          {children && (
-            <div className="site-rise mt-10" style={rise(5)}>
-              {children}
+              {note && <p className="s-small">{nb(note)}</p>}
             </div>
           )}
         </div>
-        {aside && (
-          <div className="site-rise min-w-0" style={rise(4)}>
-            {aside}
+        {children && (
+          <div className="s-arrive mt-8" style={order(4)}>
+            {children}
           </div>
         )}
       </Container>
+      {aside && (
+        <div className="s-stage">
+          <Container>{aside}</Container>
+        </div>
+      )}
     </section>
   );
 }
 
-/** Section de page : espacement vertical commun, ancre facultative (décalée sous l'en-tête fixe). */
-export function PageSection({
-  id,
+/** Le demi-anneau de « en cours » : un anneau pâle et, dessus, sa moitié tracée à l'encre. */
+export function ProgressMark() {
+  return (
+    <svg viewBox="0 0 22 22" aria-hidden="true" className="s-check" fill="none">
+      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeOpacity=".25" strokeWidth="1.8" />
+      <path
+        d="M11 4a7 7 0 0 1 0 14"
+        pathLength={1}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+/** La coche de « en place ». */
+export function CheckMark() {
+  return (
+    <svg viewBox="0 0 22 22" aria-hidden="true" className="s-check" fill="none">
+      <path
+        d="M5 11.5l4 4L17 7"
+        pathLength={1}
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Une liste de faits : la marque (coche ou demi-anneau), le fait, sa phrase. */
+export function FactList({
+  items,
+  progress,
   className,
-  children,
-  labelledBy,
 }: {
-  id?: string;
+  items: readonly { title: string; text: string }[];
+  progress?: boolean;
   className?: string;
-  children: ReactNode;
-  labelledBy?: string;
 }) {
   return (
-    <section
-      id={id}
-      aria-labelledby={labelledBy}
-      className={cn('relative scroll-mt-24 py-16 sm:py-24', className)}
-    >
-      <Container>{children}</Container>
-    </section>
-  );
-}
-
-/** Étiquette « Prévu » : ce qui n'est pas encore construit. */
-export function PlannedBadge({ className }: { className?: string }) {
-  const t = useTranslations('site.common');
-  return (
-    <span
-      className={cn(
-        'inline-flex h-[22px] items-center rounded-full bg-warning-soft px-2.5 font-mono text-[11px] font-medium tracking-normal text-warning shadow-[inset_0_0_0_1px_var(--warning-line)]',
-        className,
-      )}
-    >
-      {t('planned')}
-    </span>
+    <ul data-pm="ticks" className={cn('s-facts', className)}>
+      {items.map((f) => (
+        <li key={f.title}>
+          {progress ? <ProgressMark /> : <CheckMark />}
+          <h3 className="s-h3">{nb(f.title)}</h3>
+          {f.text && <p className="s-body">{nb(f.text)}</p>}
+        </li>
+      ))}
+    </ul>
   );
 }

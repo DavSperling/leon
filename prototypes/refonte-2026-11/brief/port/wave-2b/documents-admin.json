@@ -1,0 +1,91 @@
+{
+ "files": [
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/documents/index.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/documents/add-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/documents/item-panel.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/documents/partage.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/documents/actions.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(app)/documents/actions.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/documents/documents.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/server/documents/documents.db.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/admin/index.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/admin/index.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/en.json (namespace documents seulement)",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/fr.json (namespace documents seulement)"
+ ],
+ "summary": "Documents a le nouveau look Papier. En haut, le titre et un seul bouton noir, « Ajouter un document ». Dessous, les fichiers et les dossiers en petits rectangles sur 3 colonnes. Chaque rectangle porte une icône (PDF, Word, Excel…), un nom et une seule légende : « Équipe », « Vous seul » ou le nom du groupe. « Lecture… » s'affiche seulement tant que Leon lit vraiment le fichier, et la page se met à jour toute seule.\n\nLe bouton ouvre un panneau. On y choisit d'abord qui verra le fichier, et ensuite seulement on l'envoie : un fichier privé n'est donc jamais lu pour l'équipe, même un instant. On peut ajouter des fichiers ou un dossier entier, en les choisissant ou en les déposant n'importe où sur la page. Les fichiers refusés sont dits en clair (« Laissé de côté : film.mov. Illisible… 10 Mo max »). Les fichiers à secrets d'un dossier, comme .env, sont écartés.\n\nUn clic sur un rectangle ouvre le détail : qui l'a ajouté, quand, et qui le voit. L'auteur peut changer ce dernier sur place ; « Enregistré » s'affiche et le panneau reste ouvert. « Ouvrir » montre le texte que Leon a lu. « Supprimer » demande confirmation dans le panneau et dit ce qui sera vraiment perdu. Un lien du type /documents?document=… ouvre directement le bon panneau. La recherche n'apparaît qu'au-delà de 12 éléments.\n\nL'admin garde les mêmes chiffres, en français, avec le même accès (404 pour les non-admins). Il a seulement pris le nouveau style : des cartes blanches et des barres noires.\n\nEssais réels faits au nom de Claire : 3 fichiers pour l'équipe, 1 fichier « Vous seul » (primes-confidentiel, que Karim ne voit pas, vérifié), puis le dossier chantier-dupuis (2 fichiers, le .env écarté). memo-court.txt a été ajouté, puis supprimé par le panneau.",
+ "kept": [
+  "Envoi fichier par fichier, avec la progression « Envoi : 2 / 3 ». Une erreur n'arrête pas les fichiers suivants. Où : add-panel.tsx, via addFileAction (inchangée).",
+  "Les mêmes règles que le serveur : 10 Mo par fichier, 200 fichiers par dossier, et le tri des fichiers vides, illisibles ou à secrets. Elles passent par selectFolderFiles et isIgnoredPath. Où : add-panel.tsx.",
+  "Le compte rendu « N fichiers ajoutés · N ignorés · N échoués », les avertissements de lecture partielle et chaque code d'erreur. Où : l'écran « terminé » du panneau d'ajout.",
+  "Dossiers déposés ou choisis (avec leurs chemins relatifs). Où : readDropped/readPicked de dropped-files.ts (inchangé), appelés par index.tsx et add-panel.tsx.",
+  "Le regroupement des fichiers d'un dossier par identifiant de dossier et par auteur. Où : groupDocuments, toujours exporté depuis index.tsx.",
+  "Le partage : équipe, moi seul ou un groupe (services et groupes libres). Où : ShareSelect et usePartageOptions dans partage.tsx ; Connexions importe toujours usePartageOptions/usePartageLabel.",
+  "Le partage d'un dossier s'applique à tous ses fichiers. Où : FolderPanel dans item-panel.tsx.",
+  "Les droits de suppression : l'auteur, ou un admin pour le fichier d'un ancien membre. La suppression d'un dossier est réservée à son auteur. Où : item-panel.tsx ; deleteDocumentAction et deleteFolderAction renvoient maintenant {ok}.",
+  "« Ancien membre » s'affiche quand l'auteur est parti. Où : la ligne « Ajouté par » du panneau.",
+  "Le lien ?document=<id>, qui ouvre un document ou un dossier puis se retire de l'adresse à la fermeture. Où : index.tsx.",
+  "Le panneau d'admin : les 8 tuiles, les 4 graphiques sur 30 jours, « Où va l'argent », les connecteurs, les organisations et les derniers inscrits. Même accès qu'avant, tout en français. Où : verre/admin/index.tsx, la page est inchangée."
+ ],
+ "checks": [
+  {
+   "name": "typecheck (npx tsc --noEmit, tout le dépôt)",
+   "result": "exit 0, aucune erreur"
+  },
+  {
+   "name": "biome check sur mes 12 fichiers",
+   "result": "Checked 12 files. No fixes applied."
+  },
+  {
+   "name": "tranche unit (vitest --project unit)",
+   "result": "270/275 fichiers et 6450/6458 tests passent. 6 échecs hors de ma zone : 5 dépassements de délai sous la charge (instrumentation-node, outbox, briefing, installer-script) et translation-keys, qui attend la clé settings.assistantsTitle (zone Réglages). Le test qui vérifie que chaque clé lue existe en fr et en en passe : toutes mes clés documents existent."
+  },
+  {
+   "name": "tests DB documents + groupes (LEON_TEST_DATABASE=leon_test_refonte)",
+   "result": "2 fichiers, 25/25 passent, dont les nouveaux tests sur « en lecture » et sur la lecture du texte selon les droits (coéquipier, privé, autre organisation)."
+  },
+  {
+   "name": "tests unit des actions documents + admin",
+   "result": "16/16 passent : actions.test 12, admin/index.test 2 et les autres."
+  },
+  {
+   "name": "en vrai sur :3040, Claire, 1512x771",
+   "result": "Ajout de 3 fichiers et d'un fichier « Vous seul », puis du dossier chantier-dupuis (« 2 files added · 1 skipped »). Testés aussi : le panneau du dossier, le panneau d'un fichier du dossier, « Ouvrir » qui montre le texte et le retour au détail. La suppression confirmée dans le panneau est suivie d'une notification. Aucune erreur dans la console."
+  },
+  {
+   "name": "dépôt sur la page (événements de glisser-déposer simulés)",
+   "result": "Le voile « Déposez pour l'ajouter à Leon » apparaît. Le fichier attend ensuite dans le panneau, avec le choix « Visible par » sélectionné en premier. Rien n'a été envoyé."
+  },
+  {
+   "name": "Karim (membre), français, thème sombre",
+   "result": "Ni le sélecteur de partage ni la suppression ne s'affichent. « Ajouté par Claire Lebrun ». Le fichier privé de Claire est invisible pour lui."
+  },
+  {
+   "name": "lien direct et tailles",
+   "result": "?document=<id> ouvre le bon panneau à 390x844 et à 1280x800 ; Échap le ferme et retire le paramètre. Pas de défilement horizontal (overflow 0)."
+  },
+  {
+   "name": "dead-slow.mjs sur /documents (Karim, 1280x800)",
+   "result": "Chaque rectangle, « Ajouter un document » et la recherche changent bien la page, sans erreur console. Les liens Accueil et Connexions de la barre latérale marquent « NOTHING » : c'est la barre partagée et un serveur très lent, pas ma zone."
+  },
+  {
+   "name": "admin, rendu statique avec le CSS de l'appli, en clair et en sombre",
+   "result": "Page de 1722 px, titre 28 px : tuiles, graphiques, barres et tableau lisibles dans les deux thèmes."
+  }
+ ],
+ "notDone": [
+  "L'admin n'a pas été vu dans l'appli en marche : il répond 404 en local parce que LEON_ADMINS n'est pas réglé, et je n'ai pas touché .env.local. Je l'ai vérifié par un rendu statique et un test.",
+  "La recherche n'a pas été essayée en vrai : elle n'apparaît qu'au-delà de 12 éléments, et nous n'en avons que 5. Elle est couverte par le code seulement.",
+  "Un vrai glisser-déposer d'un dossier depuis le Finder n'a pas été essayé : seulement des événements simulés et le sélecteur de dossier.",
+  "Le partage vers un groupe n'a pas été essayé en vrai, faute de groupe dans la base de démo : seulement en code et dans les tests DB.",
+  "Les fichiers d'essai restent dans la base leon_refonte (organisation de Claire) : notes-chantier, process-devis, planning-2027, primes-confidentiel (Vous seul) et le dossier chantier-dupuis.",
+  "Le serveur de dev était très lent (de 20 à 90 s par requête, 9 Go de mémoire). Un premier envoi de dossier est resté bloqué et a été refait."
+ ],
+ "leastSure": [
+  "Ajouter passe maintenant par un panneau. Même après un dépôt sur la page, il faut cliquer sur « Ajouter N fichiers » : c'est le prix de « choisir qui voit avant d'envoyer », et David peut trouver qu'il y a un clic de trop.",
+  "« Ouvrir » montre le texte que Leon a lu, pas le fichier d'origine (PDF, Word), parce que l'original n'est pas conservé. Il peut s'attendre au vrai fichier.",
+  "Le panneau d'un document n'a pas de bouton « Terminé » en bas : seulement la croix, et « Ouvrir » à droite. Celui d'un dossier en a un.",
+  "La phrase après un envoi de plusieurs fichiers est au singulier : « Everyone… can find it », « it » pour 2 fichiers.",
+  "Le panneau dit « Ancien membre » et ne montre aucune taille, comme demandé. On ne voit plus le poids d'un fichier nulle part."
+ ]
+}

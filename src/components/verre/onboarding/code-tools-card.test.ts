@@ -65,18 +65,17 @@ describe('CodeToolsCard', () => {
     expect(html).toMatch(DOCS_LINK);
   });
 
-  it('nomme les quatre outils, avec un logo quand Simple Icons en a un', () => {
+  it('nomme les quatre outils et affiche leurs logos', () => {
     const html = render('en', en);
 
     for (const name of ['Claude Code', 'Codex', 'Cursor', 'Antigravity']) {
       expect(html, name).toContain(name);
     }
     expect(html).toContain('src="/logos/claude-code.svg"');
+    expect(html).toContain('src="/logos/codex.png"');
     expect(html).toContain('src="/logos/cursor.svg"');
-    // Pas de logo inventé pour Codex ni Antigravity : une icône de terminal neutre.
-    expect(html.match(/<img /g)).toHaveLength(2);
-    // deux icônes de terminal, la flèche du lien vers la documentation ; « Copier » n'a plus d'icône (il dit « Copié » sur place)
-    expect(html.match(/<svg /g)).toHaveLength(2 + 1);
+    expect(html).toContain('src="/logos/antigravity.svg"');
+    expect(html.match(/<img /g)).toHaveLength(4);
   });
 
   it('garde la commande sur une ligne qui défile : jamais coupée au milieu d’un mot', () => {

@@ -376,7 +376,12 @@
       "title": "Morning briefing",
       "did": "What you did",
       "changed": "What changed",
-      "open": "Still open"
+      "open": "Still open",
+      "dismiss": "Settled: remove this line",
+      "dismissed": "Line removed.",
+      "undo": "Undo",
+      "dismissFailed": "Couldn’t remove the line. Try again.",
+      "undoFailed": "Couldn’t put the line back."
     },
     "ask": "Ask or search everything Leon has saved",
     "askRecent": "What changed this week that concerns me?",

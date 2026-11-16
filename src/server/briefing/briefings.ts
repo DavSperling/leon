@@ -1,6 +1,7 @@
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import type { BriefingResponse } from '@/capture/api-contract';
 import { CODE_SESSION_KINDS, type SourceKind } from '@/capture/turn';
+import { withoutDismissed } from '@/lib/briefing-view';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
@@ -114,6 +115,7 @@ export async function refreshBriefing(
       now,
       await readAbout(ctx.userId),
       await readOnboardingMember(ctx),
+      await readDismissed(ctx, project),
     );
     const body = await writeBody(deps.llm, prompt);
     markdown = renderBriefing({ project, preparedAt: now, body, references: prompt.references });
@@ -183,6 +185,57 @@ export async function refreshShownBriefing(
   });
 }
 
+// Les lignes que l'utilisateur a retirées de son point sur ce projet (0074) : le recalcul les donne au modèle.
+async function readDismissed(ctx: TenantContext, project: string): Promise<string[]> {
+  const [row] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ dismissed: briefings.dismissed })
+      .from(briefings)
+      .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project))),
+  );
+  return row?.dismissed ?? [];
+}
+
+// Les lignes retirées gardées par point (0074) : les plus récentes. Une ligne en fait moins de 1000 caractères.
+export const BRIEFING_DISMISSED_MAX = 20;
+export const BRIEFING_LINE_MAX_CHARS = 1000;
+
+// « C'est réglé » : la ligne (son texte affiché, parseBriefing) n'est plus montrée, ni sur l'Accueil ni au crochet,
+// et le prochain recalcul la reçoit pour ne pas la redire. Aucun appel au modèle. Sous la sécurité par ligne : seul
+// le point de l'utilisateur change ; sans point sur ce projet, rien ne se passe.
+export async function dismissBriefingLine(
+  ctx: TenantContext,
+  project: string,
+  text: string,
+): Promise<void> {
+  await withTenant(ctx, async (tx) => {
+    const [row] = await tx
+      .select({ id: briefings.id, dismissed: briefings.dismissed })
+      .from(briefings)
+      .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project)))
+      .for('update');
+    if (!row) return;
+    const dismissed = [...row.dismissed.filter((line) => line !== text), text].slice(
+      -BRIEFING_DISMISSED_MAX,
+    );
+    await tx.update(briefings).set({ dismissed }).where(eq(briefings.id, row.id));
+  });
+}
+
+// « Annuler », juste après : la ligne revient.
+export async function restoreBriefingLine(
+  ctx: TenantContext,
+  project: string,
+  text: string,
+): Promise<void> {
+  await withTenant(ctx, (tx) =>
+    tx
+      .update(briefings)
+      .set({ dismissed: sql`array_remove(${briefings.dismissed}, ${text}::text)` })
+      .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project))),
+  );
+}
+
 const GITHUB = 'github' satisfies SourceKind;
 
 // Le projet a de quoi faire un point pour ce lecteur : une de ses sessions de code, ou un élément GitHub du dépôt
@@ -219,6 +272,7 @@ export async function readBriefing(
         sourceIds: briefings.sourceIds,
         stale: briefings.stale,
         lastReadAt: briefings.lastReadAt,
+        dismissed: briefings.dismissed,
       })
       .from(briefings)
       .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project)));
@@ -246,7 +300,11 @@ export async function readBriefing(
     // et des signaux en rafale (une session lancée en boucle) ne paient pas plus d'un point par demi-heure.
     const nextAt = row.preparedAt.getTime() + BRIEFING_DELAY_SECONDS * 1000;
     return {
-      read: { markdown: row.markdown, preparedAt: row.preparedAt, sourceIds: wanted },
+      read: {
+        markdown: withoutDismissed(row.markdown, row.dismissed),
+        preparedAt: row.preparedAt,
+        sourceIds: wanted,
+      },
       refresh:
         row.stale && !refreshOnSignal(row)
           ? { delaySeconds: Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)) }

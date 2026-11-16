@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-prompt';
 import type { SourceInfo } from '@/server/search/types';
-import { briefingFact, parseBriefing } from './briefing-view';
+import { briefingFact, parseBriefing, withoutDismissed } from './briefing-view';
 
 const NOW = new Date('2026-11-12T06:00:00.000Z');
 const source = (id: string): SourceInfo => ({
@@ -92,5 +92,56 @@ describe('briefingFact : le fait du jour, sous le bonjour', () => {
     expect(
       briefingFact([{ title: 'What changed', lines: [{ text: 'Nothing to report.', refs: [] }] }]),
     ).toBeNull();
+  });
+});
+
+describe('les lignes retirées par l’utilisateur (0074)', () => {
+  const markdown = stored(
+    [
+      '## What you did',
+      '- Renewed the deploy token [1].',
+      '- Reviewed the billing PR,',
+      '  then merged it [2].',
+      '## What is still open',
+      '- The quote for R&D <draft> [3]',
+    ].join('\n'),
+  );
+
+  it('l’Accueil ne les montre plus, et une partie vidée disparaît', () => {
+    expect(
+      parseBriefing(markdown, [
+        'Reviewed the billing PR, then merged it.',
+        'The quote for R&D <draft>',
+      ]),
+    ).toEqual([
+      { title: 'What you did', lines: [{ text: 'Renewed the deploy token.', refs: [1] }] },
+    ]);
+    expect(
+      parseBriefing(markdown, [
+        'Renewed the deploy token.',
+        'Reviewed the billing PR, then merged it.',
+        'The quote for R&D <draft>',
+      ]),
+    ).toBeNull();
+  });
+
+  it('le texte du crochet les perd, puce et lignes de suite, sans toucher au reste', () => {
+    const kept = withoutDismissed(markdown, [
+      'Reviewed the billing PR, then merged it.',
+      'The quote for R&D <draft>',
+    ]);
+    expect(kept).not.toContain('billing');
+    expect(kept).not.toContain('merged');
+    expect(kept).not.toContain('R&amp;D');
+    expect(kept).toContain('- Renewed the deploy token [1].\n## What is still open\n');
+    expect(kept).toContain('Sources:');
+    expect(parseBriefing(kept)).toEqual(
+      parseBriefing(markdown, [
+        'Reviewed the billing PR, then merged it.',
+        'The quote for R&D <draft>',
+      ]),
+    );
+    expect(withoutDismissed(markdown, [])).toBe(markdown);
+    expect(withoutDismissed(markdown, ['Not in this briefing.'])).toBe(markdown);
   });
 });

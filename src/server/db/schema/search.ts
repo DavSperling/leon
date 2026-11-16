@@ -117,6 +117,8 @@ export const briefings = pgTable('briefings', {
   preparedAt: timestamp('prepared_at', { withTimezone: true }).notNull(),
   lastReadAt: timestamp('last_read_at', { withTimezone: true }),
   stale: boolean('stale').notNull().default(false),
+  // Les lignes retirées par l'utilisateur (0074) : ôtées à la lecture, données au modèle au recalcul.
+  dismissed: text('dismissed').array().notNull().default(sql`'{}'::text[]`),
   acl: acl(),
 });
 

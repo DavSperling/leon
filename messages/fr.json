@@ -376,7 +376,12 @@
       "title": "Point du matin",
       "did": "Ce que vous avez fait",
       "changed": "Ce qui a changé",
-      "open": "Encore ouvert"
+      "open": "Encore ouvert",
+      "dismiss": "C’est réglé : retirer cette ligne",
+      "dismissed": "Ligne retirée.",
+      "undo": "Annuler",
+      "dismissFailed": "Impossible de retirer la ligne. Réessayez.",
+      "undoFailed": "Impossible de remettre la ligne."
     },
     "ask": "Demander ou chercher dans tout ce que Leon a gardé",
     "askRecent": "Qu’est-ce qui a bougé cette semaine qui me concerne ?",

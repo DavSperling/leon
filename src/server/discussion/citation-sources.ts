@@ -130,17 +130,22 @@ export async function briefingSources(
   });
 }
 
-// Le point du matin tel que l'Accueil le montre : le dernier de la personne (le projet lu en dernier, sinon préparé en
-// dernier, comme latestBriefingProject), ses trois parties, et ses sources à leur numéro. Une vue de page n'est pas une
-// lecture : ni `lastReadAt`, ni journal, ni recalcul mis en file (readBriefing le fait pour l'assistant de code). Null
-// sans point, pour un point vide (« rien de nouveau »), ou quand une de ses sources n'est plus visible (le point n'est
-// plus montré, comme dans readBriefing).
+// Les derniers points regardés pour en trouver un qui ne soit pas vide (« rien de nouveau », refait chaque matin sur
+// un projet en sommeil).
+const HOME_BRIEFING_CANDIDATES = 10;
+
+// Le point du matin tel que l'Accueil le montre : le plus récemment préparé de la personne, tous projets confondus, qui
+// ne soit pas vide, ses trois parties, et ses sources à leur numéro. Pas celui du projet lu en dernier
+// (latestBriefingProject) : une session de code ouverte sur un autre projet ferait sinon afficher son point, même vieux
+// de plusieurs jours. Une vue de page n'est pas une lecture : ni `lastReadAt`, ni journal, ni recalcul mis en file
+// (readBriefing le fait pour l'assistant de code). Null sans point non vide, ou quand une des sources du point choisi
+// n'est plus visible (le point n'est plus montré, comme dans readBriefing).
 export async function homeBriefing(
   ctx: TenantContext,
 ): Promise<{ sections: BriefingSection[]; sources: BriefingSource[]; preparedAt: Date } | null> {
   // le point et ses sources dans la même transaction : une seule ouverture au lieu de deux
   return withTenant(ctx, async (tx) => {
-    const [row] = await tx
+    const rows = await tx
       .select({
         markdown: briefings.markdown,
         sourceIds: briefings.sourceIds,
@@ -148,10 +153,13 @@ export async function homeBriefing(
       })
       .from(briefings)
       .where(eq(briefings.userId, ctx.userId))
-      .orderBy(sql`${briefings.lastReadAt} desc nulls last`, desc(briefings.preparedAt))
-      .limit(1);
-    const sections = row ? parseBriefing(row.markdown) : null;
-    if (!row || !sections) return null;
+      .orderBy(desc(briefings.preparedAt))
+      .limit(HOME_BRIEFING_CANDIDATES);
+    const found = rows
+      .map((candidate) => ({ row: candidate, sections: parseBriefing(candidate.markdown) }))
+      .find((candidate) => candidate.sections !== null);
+    if (!found?.sections) return null;
+    const { row, sections } = found;
     const wanted = [...new Set(row.sourceIds)];
     const sources = await briefingSources(ctx, wanted, tx);
     return sources.length < wanted.length

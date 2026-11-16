@@ -81,15 +81,7 @@ export function SiteFooter() {
           <Link href="/accueil" className="s-brand inline-flex min-h-11 items-center">
             <Brand className="h-9" />
           </Link>
-          {/* la promesse, sous la marque, signée des trois traits (elle était perdue dans la ligne du bas) */}
-          <p className="s-foot__line">
-            <span aria-hidden="true" className="strokes">
-              <i />
-              <i />
-              <i />
-            </span>
-            {nb(taglines.source)}
-          </p>
+          <p className="s-foot__line">{nb(taglines.source)}</p>
         </div>
         <nav
           aria-label={t('nav')}

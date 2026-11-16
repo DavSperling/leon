@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-prompt';
@@ -178,5 +178,15 @@ describe('le point du matin de l’Accueil', () => {
     const shown = await homeBriefing(alice);
     expect(shown?.sections[0]?.lines[0]?.text).toBe('Point du jour.');
     expect(shown?.preparedAt.toISOString()).toBe('2026-11-16T07:24:00.000Z');
+    expect(shown).toMatchObject({ project: 'dossier:0123456789abcdef', stale: false });
+
+    // son projet a bougé depuis : l'Accueil le sait, pour en demander le recalcul
+    await adminDb
+      .update(briefings)
+      .set({ stale: true })
+      .where(
+        and(eq(briefings.userId, alice.userId), eq(briefings.project, 'dossier:0123456789abcdef')),
+      );
+    expect((await homeBriefing(alice))?.stale).toBe(true);
   });
 });

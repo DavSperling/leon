@@ -29,6 +29,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { getViewerProfile } from '@/server/auth/viewer';
 import { ABOUT_MAX_CHARS } from '@/server/briefing/about';
 import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
+import { refreshShownBriefing } from '@/server/briefing/briefings';
 import { homeBriefing } from '@/server/discussion/citation-sources';
 import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
@@ -120,7 +121,13 @@ async function Home({ ctx }: { ctx: TenantContext }) {
     optional('accueil.point', homeBriefing(ctx)),
     optional('accueil.recentes', listDiscussions(ctx, SHELL_RECENTS)),
   ]);
-  const questions = modelAvailable ? await askSuggestions(member) : [];
+  const [questions] = await Promise.all([
+    modelAvailable ? askSuggestions(member) : [],
+    // le point montré a vieilli : il sera à jour à la prochaine visite
+    briefing?.stale && modelAvailable
+      ? refreshShownBriefing(ctx, briefing.project, briefing.preparedAt)
+      : null,
+  ]);
   const name = profile?.userName?.trim().split(/\s+/)[0] || null;
   const now = new Date();
   const sources = briefing?.sources.map(({ sourceId: _id, ...source }) => source);

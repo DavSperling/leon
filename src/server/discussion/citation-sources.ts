@@ -137,12 +137,16 @@ const HOME_BRIEFING_CANDIDATES = 10;
 // Le point du matin tel que l'Accueil le montre : le plus récemment préparé de la personne, tous projets confondus, qui
 // ne soit pas vide, ses trois parties, et ses sources à leur numéro. Pas celui du projet lu en dernier
 // (latestBriefingProject) : une session de code ouverte sur un autre projet ferait sinon afficher son point, même vieux
-// de plusieurs jours. Une vue de page n'est pas une lecture : ni `lastReadAt`, ni journal, ni recalcul mis en file
-// (readBriefing le fait pour l'assistant de code). Null sans point non vide, ou quand une des sources du point choisi
-// n'est plus visible (le point n'est plus montré, comme dans readBriefing).
-export async function homeBriefing(
-  ctx: TenantContext,
-): Promise<{ sections: BriefingSection[]; sources: BriefingSource[]; preparedAt: Date } | null> {
+// de plusieurs jours. Une vue de page n'est pas une lecture : ni `lastReadAt`, ni journal ; `stale` dit à l'Accueil
+// que son projet a bougé depuis, pour qu'il en demande le recalcul (refreshShownBriefing). Null sans point non vide, ou
+// quand une des sources du point choisi n'est plus visible (le point n'est plus montré, comme dans readBriefing).
+export async function homeBriefing(ctx: TenantContext): Promise<{
+  sections: BriefingSection[];
+  sources: BriefingSource[];
+  preparedAt: Date;
+  project: string;
+  stale: boolean;
+} | null> {
   // le point et ses sources dans la même transaction : une seule ouverture au lieu de deux
   return withTenant(ctx, async (tx) => {
     const rows = await tx
@@ -150,6 +154,8 @@ export async function homeBriefing(
         markdown: briefings.markdown,
         sourceIds: briefings.sourceIds,
         preparedAt: briefings.preparedAt,
+        project: briefings.project,
+        stale: briefings.stale,
       })
       .from(briefings)
       .where(eq(briefings.userId, ctx.userId))
@@ -164,6 +170,6 @@ export async function homeBriefing(
     const sources = await briefingSources(ctx, wanted, tx);
     return sources.length < wanted.length
       ? null
-      : { sections, sources, preparedAt: row.preparedAt };
+      : { sections, sources, preparedAt: row.preparedAt, project: row.project, stale: row.stale };
   });
 }

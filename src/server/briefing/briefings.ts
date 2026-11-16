@@ -168,6 +168,21 @@ async function requestRefresh(
   }
 }
 
+// Le point que l'Accueil montre est périmé (son projet a bougé depuis) : son recalcul est mis en file, 30 minutes au
+// plus tôt après sa préparation, comme pour une lecture (readBriefing). La page devient la façon courante de lire le
+// point : sans cela, il restait celui de la dernière session de code, parfois vieux de plusieurs jours. Le plafond du
+// jour (BRIEFING_DAILY_CAP) borne toujours la dépense, et une mise en file qui échoue ne casse pas la page.
+export async function refreshShownBriefing(
+  ctx: TenantContext,
+  project: string,
+  preparedAt: Date,
+): Promise<void> {
+  const nextAt = preparedAt.getTime() + BRIEFING_DELAY_SECONDS * 1000;
+  await requestRefresh(ctx, project, {
+    delaySeconds: Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)),
+  });
+}
+
 const GITHUB = 'github' satisfies SourceKind;
 
 // Le projet a de quoi faire un point pour ce lecteur : une de ses sessions de code, ou un élément GitHub du dépôt

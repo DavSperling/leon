@@ -1,7 +1,7 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { renderBriefing } from '@/server/briefing/briefing-prompt';
+import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-prompt';
 import { briefings, passages } from '@/server/db/schema/search';
 import { adminDb } from '@/test/db';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
@@ -139,5 +139,54 @@ describe('le point du matin de l’Accueil', () => {
       .set({ sourceIds: [one.sourceId, hidden.sourceId] })
       .where(eq(briefings.id, row?.id ?? ''));
     expect(await homeBriefing(alice)).toBeNull();
+  });
+
+  it('montre le point préparé le plus récemment, pas celui du projet lu en dernier, ni un point vide', async () => {
+    const { tenantId, members } = await newTeam(['Alice'], tenantIds);
+    const [alice] = members as [TenantContext];
+    const source = await seedIndexed(alice, { kind: 'claude_code', acl: [alice.userId] });
+    const point = (project: string, text: string, preparedAt: Date, lastReadAt: Date | null) => ({
+      tenantId,
+      userId: alice.userId,
+      project,
+      markdown: renderBriefing({
+        project,
+        preparedAt,
+        body: `## What you did\n- ${text} [1].`,
+        references: [],
+      }),
+      sourceIds: [source.sourceId],
+      preparedAt,
+      lastReadAt,
+      acl: [alice.userId],
+    });
+    await adminDb.insert(briefings).values([
+      // lu à l'instant par une session de code, mais préparé il y a trois jours
+      point('github.com/acme/leon', 'Vieux point', new Date('2026-11-13T13:57:00Z'), new Date()),
+      point('dossier:0123456789abcdef', 'Point du jour', new Date('2026-11-16T07:24:00Z'), null),
+      {
+        ...point('dossier:fedcba9876543210', 'vide', new Date('2026-11-16T08:00:00Z'), null),
+        markdown: renderEmptyBriefing(
+          'dossier:fedcba9876543210',
+          new Date('2026-11-16T08:00:00Z'),
+          14,
+        ),
+        sourceIds: [],
+      },
+    ]);
+
+    const shown = await homeBriefing(alice);
+    expect(shown?.sections[0]?.lines[0]?.text).toBe('Point du jour.');
+    expect(shown?.preparedAt.toISOString()).toBe('2026-11-16T07:24:00.000Z');
+    expect(shown).toMatchObject({ project: 'dossier:0123456789abcdef', stale: false });
+
+    // son projet a bougé depuis : l'Accueil le sait, pour en demander le recalcul
+    await adminDb
+      .update(briefings)
+      .set({ stale: true })
+      .where(
+        and(eq(briefings.userId, alice.userId), eq(briefings.project, 'dossier:0123456789abcdef')),
+      );
+    expect((await homeBriefing(alice))?.stale).toBe(true);
   });
 });

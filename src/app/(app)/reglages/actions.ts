@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 import { LOCALE_COOKIE, localeOf, locales } from '@/i18n/request';
+import { isProfileAvatar } from '@/lib/profile-avatars';
 import {
   applyImport,
   type DirectoryError,
@@ -309,6 +310,32 @@ export async function updateProfileAction(name: string): Promise<{ ok: true } | 
     return { error: t('profileFailed') };
   }
   // le nom paraît aussi dans la barre latérale et le menu de la personne : toute la mise en page se relit
+  revalidatePath('/', 'layout');
+  return { ok: true };
+}
+
+export async function updateProfileImageAction(
+  image: string | null,
+): Promise<{ ok: true } | { error: string }> {
+  await requireUserContext();
+  const t = await getTranslations('security');
+  const photo = image?.match(/^data:image\/webp;base64,([A-Za-z0-9+/]+={0,2})$/);
+  const encoded = photo?.[1];
+  const bytes = encoded ? Buffer.from(encoded, 'base64') : null;
+  const isPhoto = Boolean(
+    encoded &&
+      encoded.length <= 32_000 &&
+      bytes &&
+      bytes.toString('ascii', 0, 4) === 'RIFF' &&
+      bytes.toString('ascii', 8, 12) === 'WEBP',
+  );
+  if (image !== null && !isProfileAvatar(image) && !isPhoto) return { error: t('photoInvalid') };
+  try {
+    await auth.api.updateUser({ body: { image }, headers: await requestHeaders() });
+  } catch {
+    return { error: t('photoFailed') };
+  }
+  revalidatePath('/reglages');
   revalidatePath('/', 'layout');
   return { ok: true };
 }

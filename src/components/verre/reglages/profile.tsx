@@ -1,14 +1,25 @@
 'use client';
 
+import { ImagePlus } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { type FormEvent, useEffect, useId, useRef, useState, useTransition } from 'react';
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 import { createPortal } from 'react-dom';
 import {
   setLocaleAction,
   updateAboutAction,
   updateProfileAction,
+  updateProfileImageAction,
 } from '@/app/(app)/reglages/actions';
 import { Avatar, Button, Input, Select, Switch, Textarea } from '@/components/verre';
+import { PROFILE_AVATARS } from '@/lib/profile-avatars';
 import { cn, nb, useTheme } from '@/lib/verre';
 import { Row, RowError, Rows, RowsHead } from './reglages';
 import { useHeadSlot } from './settings-tabs';
@@ -31,11 +42,58 @@ const localeForm = (locale: string) => {
 
 // L'approche de la limite : le compteur ne se montre qu'à 50 caractères d'elle.
 const NEAR = 50;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+
+async function compactPhoto(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  if (bitmap.width > 12_000 || bitmap.height > 12_000) {
+    bitmap.close();
+    throw new Error('image dimensions');
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    bitmap.close();
+    throw new Error('image canvas');
+  }
+  const crop = Math.min(bitmap.width, bitmap.height);
+  context.drawImage(
+    bitmap,
+    (bitmap.width - crop) / 2,
+    (bitmap.height - crop) / 2,
+    crop,
+    crop,
+    0,
+    0,
+    128,
+    128,
+  );
+  bitmap.close();
+  for (const quality of [0.78, 0.66, 0.54]) {
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', quality),
+    );
+    if (!blob) throw new Error('image encoding');
+    if (blob.size <= 24_000) {
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === 'string') resolve(reader.result);
+          else reject(new Error('image read'));
+        };
+        reader.onerror = () => reject(new Error('image read'));
+        reader.readAsDataURL(blob);
+      });
+    }
+  }
+  throw new Error('image too large');
+}
 
 /**
- * Le groupe Profil : une feuille (la personne, son nom, son adresse, « À propos de vous », la langue, le thème). Le nom
- * et « À propos » s'enregistrent ensemble par la pastille « Enregistrer » du titre, qui ne paraît que si l'un a changé ;
- * la langue et le thème s'appliquent dès qu'on les choisit.
+ * Le groupe Profil : photo, nom, adresse, « À propos de vous », langue et thème. Le nom et « À propos » s'enregistrent
+ * ensemble par la pastille « Enregistrer » du titre ; la photo, la langue et le thème s'appliquent dès qu'on les choisit.
  */
 export function ProfileSettings({
   name,
@@ -61,12 +119,17 @@ export function ProfileSettings({
   const slot = useHeadSlot();
   const ids = useId();
   const aboutRef = useRef<HTMLTextAreaElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
   // ce que le serveur tient, et ce qui est tapé
   const [saved, setSaved] = useState({ name, about });
   const [draft, setDraft] = useState({ name, about });
   const [errors, setErrors] = useState<{ name?: string; about?: string }>({});
   const [done, setDone] = useState(false);
+  const [profileImage, setProfileImage] = useState(image ?? null);
+  const [photoError, setPhotoError] = useState<string>();
+  const [photoDone, setPhotoDone] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [photoPending, startPhotoTransition] = useTransition();
   const [, startLocale] = useTransition();
   const dirty = draft.name !== saved.name || draft.about !== saved.about;
 
@@ -85,6 +148,53 @@ export function ProfileSettings({
   const edit = (patch: Partial<typeof draft>) => {
     setDone(false);
     setDraft((d) => ({ ...d, ...patch }));
+  };
+
+  const savePhoto = (next: string | null) => {
+    if (photoPending) return;
+    setPhotoError(undefined);
+    setPhotoDone(false);
+    startPhotoTransition(async () => {
+      const result = await updateProfileImageAction(next).catch(() => ({
+        error: t('photoFailed'),
+      }));
+      if ('error' in result) {
+        setPhotoError(result.error);
+        return;
+      }
+      setProfileImage(next);
+      setPhotoDone(true);
+    });
+  };
+
+  const uploadPhoto = (event: ChangeEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    setPhotoError(undefined);
+    setPhotoDone(false);
+    if (
+      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) ||
+      file.size > MAX_PHOTO_BYTES
+    ) {
+      setPhotoError(t('photoInvalid'));
+      return;
+    }
+    startPhotoTransition(async () => {
+      try {
+        const next = await compactPhoto(file);
+        const result = await updateProfileImageAction(next);
+        if ('error' in result) {
+          setPhotoError(result.error);
+          return;
+        }
+        setProfileImage(next);
+        setPhotoDone(true);
+      } catch {
+        setPhotoError(t('photoInvalid'));
+      }
+    });
   };
 
   const save = (event: FormEvent) => {
@@ -140,10 +250,75 @@ export function ProfileSettings({
       <form id="profile-form" noValidate onSubmit={save}>
         <Rows>
           <RowsHead
-            picture={<Avatar name={saved.name} src={image ?? undefined} size={44} />}
+            picture={<Avatar name={saved.name} src={profileImage ?? undefined} size={44} />}
             name={<span className={cn('mark', done && 'is-on')}>{saved.name}</span>}
             caption={membership && `${role} · ${membership.organizationName}`}
           />
+          <Row label={t('photo')} top>
+            <div className="grid max-w-[440px] gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  ref={photoRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={uploadPhoto}
+                  aria-label={t('uploadPhoto')}
+                />
+                <Button
+                  size="sm"
+                  icon={ImagePlus}
+                  loading={photoPending}
+                  loadingLabel={t('photoSaving')}
+                  onClick={() => photoRef.current?.click()}
+                >
+                  {t('uploadPhoto')}
+                </Button>
+                {profileImage && (
+                  <Button
+                    size="sm"
+                    variant="quiet"
+                    disabled={photoPending}
+                    onClick={() => savePhoto(null)}
+                  >
+                    {t('useInitials')}
+                  </Button>
+                )}
+              </div>
+              <fieldset className="m-0 grid gap-2 border-0 p-0">
+                <legend className="text-label text-muted">{t('chooseAvatar')}</legend>
+                <div className="flex flex-wrap gap-2">
+                  {PROFILE_AVATARS.map((avatar, index) => (
+                    <button
+                      key={avatar}
+                      type="button"
+                      aria-label={t('pixelAvatar', { number: index + 1 })}
+                      aria-pressed={profileImage === avatar}
+                      disabled={photoPending}
+                      onClick={() => savePhoto(avatar)}
+                      className={cn(
+                        'rounded-full border-2 p-0.5 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fg disabled:opacity-60',
+                        profileImage === avatar
+                          ? 'border-ink'
+                          : 'border-line hover:border-line-strong',
+                      )}
+                    >
+                      <Avatar name={saved.name} src={avatar} size={32} />
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              {photoError ? (
+                <RowError id={`${ids}-photo-e`}>{nb(photoError)}</RowError>
+              ) : photoDone ? (
+                <p role="status" className="text-label text-muted">
+                  {t('photoSaved')}
+                </p>
+              ) : (
+                <p className="text-label text-muted">{t('photoDescription')}</p>
+              )}
+            </div>
+          </Row>
           <Row label={t('name')} htmlFor={`${ids}-name`}>
             <Input
               id={`${ids}-name`}

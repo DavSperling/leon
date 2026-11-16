@@ -49,7 +49,7 @@ const BRIEFING_MAX_TOKENS = 8000;
 const BRIEFING_TIMEOUT_MS = 120_000;
 // Le plafond de dépense : au plus 4 points écrits par le modèle par personne et par jour (UTC, reserver_point,
 // 0060), toutes organisations et tous projets confondus : celui du matin et quelques mises à jour dans la journée.
-// Avec Haiku (models.ts), un point coûte environ 0,4 centime (mesuré le 16/11/2026) : au plus 2 centimes par
+// Avec Sonnet (models.ts), un point coûte de 2 à 5 centimes (mesuré le 16/11/2026) : au plus 20 centimes par
 // personne et par jour. Au-delà, le point reste tel quel jusqu'au lendemain.
 export const BRIEFING_DAILY_CAP = 4;
 

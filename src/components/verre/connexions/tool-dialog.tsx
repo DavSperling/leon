@@ -28,7 +28,7 @@ import {
   setPausedAction,
   shareConnectionAction,
   syncNowAction,
-} from '@/app/(app)/connexions/actions';
+} from '@/app/(app)/connections/actions';
 import {
   Badge,
   Button,
@@ -697,7 +697,7 @@ function ConnectionBlock({
         </Button>
       )),
     github && mayChooseRepos && (
-      <Link key="repos" href="/reglages#equipe" className="cx-act">
+      <Link key="repos" href="/settings#equipe" className="cx-act">
         <ListChecks aria-hidden="true" strokeWidth={1.8} />
         {t('chooseRepos')}
         <ChevronRight aria-hidden="true" strokeWidth={1.6} className="cx-act__go" />

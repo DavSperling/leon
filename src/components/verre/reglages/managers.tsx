@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useOptimistic, useTransition } from 'react';
-import { setManagersSeeAllAction } from '@/app/(app)/reglages/actions';
+import { setManagersSeeAllAction } from '@/app/(app)/settings/actions';
 import { Switch, toast } from '@/components/verre';
 import { nb } from '@/lib/verre';
 

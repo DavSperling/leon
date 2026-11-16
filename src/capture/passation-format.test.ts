@@ -10,7 +10,7 @@ reste la page de connexion.
 - remplace [[D12]]
 - concerne [[PR #91]]
 - [essai-raté] Pools 10+5 → EMAXCONNSESSION
-- [prochaine-étape] Brancher /connexion
+- [prochaine-étape] Brancher /sign-in
 - [en-cours] Migration 0043 écrite
 - [question] Faut-il garder les anciens jetons ?
 - [idée] Une ligne au type inconnu
@@ -28,7 +28,7 @@ describe('parseNote', () => {
     expect(parseNote(NOTE).items.map((item) => [item.type, item.texte])).toEqual([
       ['decision', 'On passe à Better Auth #auth'],
       ['essai_rate', 'Pools 10+5 → EMAXCONNSESSION'],
-      ['prochaine_etape', 'Brancher /connexion'],
+      ['prochaine_etape', 'Brancher /sign-in'],
       ['en_cours', 'Migration 0043 écrite'],
       ['question', 'Faut-il garder les anciens jetons ?'],
     ]);

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { type ReactNode, useEffect, useRef, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
-import { chooseToolsAction } from '@/app/(onboarding)/bienvenue/actions';
+import { chooseToolsAction } from '@/app/(onboarding)/welcome/actions';
 import type { ProviderId } from '@/capture/turn';
 import { ReturnNotice } from '@/components/verre/connexions/return-notice';
 import { ToolDialog } from '@/components/verre/connexions/tool-dialog';
@@ -30,7 +30,7 @@ export type ToolsStepProps = {
   canConnect: boolean;
   /** Lien d'accord de l'administrateur de l'outil du retour : il vient du catalogue, jamais de l'adresse. */
   consentUrl: string | null;
-  nextHref: '/bienvenue/collaborateurs' | '/bienvenue/pret';
+  nextHref: '/welcome/teammates' | '/welcome/ready';
   steps: OnboardingStepId[];
   notice: OAuthNotice | null;
   /** La file « Branchez-les un par un » plutôt que le choix : après « Brancher », et au retour de l'éditeur. */
@@ -258,7 +258,7 @@ export function ToolsStep({
       <CodeToolsCard command={codeCommand} instructions={codeInstructions} />
     ) : null;
   const codeToolsAtTop = codeToolsFirst(states);
-  const nextLabel = nextHref === '/bienvenue/pret' ? tm('enter') : t('continue');
+  const nextLabel = nextHref === '/welcome/ready' ? tm('enter') : t('continue');
   // Un échec qui nomme un outil se dit dans son panneau ; le reste (une réussite, un échec sans outil) ici.
   const pageNotice = notice && !(inQueue && failed) ? notice : null;
 
@@ -300,7 +300,7 @@ export function ToolsStep({
         <div className="grid min-w-0 gap-10">
           <div className="grid gap-3">
             <Link
-              href="/bienvenue/outils"
+              href="/welcome/tools"
               className="inline-flex w-fit items-center gap-1.5 rounded-sm text-label text-muted underline-offset-4 hover:text-fg hover:underline max-shell:min-h-11"
             >
               <ArrowLeft aria-hidden="true" strokeWidth={1.8} className="size-3.5" />
@@ -467,7 +467,7 @@ export function ToolsStep({
         now={now}
         canConnect={canConnect}
         session={session}
-        returnTo="/bienvenue/outils"
+        returnTo="/welcome/tools"
         notice={notice}
         consentUrl={consentUrl}
       />

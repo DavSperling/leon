@@ -243,8 +243,8 @@ export function CtaButtons({
   const t = useTranslations('site.cta');
   return (
     <div className={className}>
-      <CtaLink href={primary?.href ?? '/inscription'}>{primary?.label ?? t('create')}</CtaLink>
-      <CtaLink href={secondary?.href ?? '/connexion'} variant="secondary">
+      <CtaLink href={primary?.href ?? '/sign-up'}>{primary?.label ?? t('create')}</CtaLink>
+      <CtaLink href={secondary?.href ?? '/sign-in'} variant="secondary">
         {secondary?.label ?? t('signIn')}
       </CtaLink>
     </div>

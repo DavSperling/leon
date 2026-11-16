@@ -49,7 +49,7 @@ describe('CodeToolsCard', () => {
       'Open a terminal on your computer and paste this command. Your browser will open so you can authorize this computer.',
     );
     expect(html).toContain(`>${COMMAND}</code>`);
-    expect(html).toMatch(/<a [^>]*href="\/reglages#ordinateurs"[^>]*>What gets sent<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/settings#ordinateurs"[^>]*>What gets sent<\/a>/);
     expect(html).toMatch(DOCS_LINK);
   });
 
@@ -61,7 +61,7 @@ describe('CodeToolsCard', () => {
       'Ouvrez un terminal sur votre ordinateur et collez cette commande. Votre navigateur s’ouvrira pour autoriser cet ordinateur.',
     );
     expect(html).toContain(`>${COMMAND}</code>`);
-    expect(html).toMatch(/<a [^>]*href="\/reglages#ordinateurs"[^>]*>Ce qui part<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/settings#ordinateurs"[^>]*>Ce qui part<\/a>/);
     expect(html).toMatch(DOCS_LINK);
   });
 

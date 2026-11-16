@@ -10,7 +10,7 @@ import {
   retireLessonAction,
   setNotesOpenAction,
   writeLessonAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/settings/actions';
 import { repoOf } from '@/capture/turn';
 import {
   AlertDialog,
@@ -129,7 +129,7 @@ function Reconnect({ putBackOnly = false }: { putBackOnly?: boolean }) {
       live="status"
       action={
         <Button asChild size="sm" variant="secondary">
-          <a href="/connexion?retour=memoire">{t('reconnectLink')}</a>
+          <a href="/sign-in?retour=memoire">{t('reconnectLink')}</a>
         </Button>
       }
     >

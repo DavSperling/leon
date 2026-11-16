@@ -33,15 +33,15 @@ beforeEach(() => {
 
 describe('signOutAction', () => {
   it('ferme la session puis renvoie à la connexion', async () => {
-    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(signOutCurrentUser).toHaveBeenCalledOnce();
   });
 
-  it('déconnecte une session sans organisation, sans passer par /bienvenue', async () => {
-    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /bienvenue'));
+  it('déconnecte une session sans organisation, sans passer par /welcome', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /welcome'));
 
-    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(requireUserContext).not.toHaveBeenCalled();
     expect(signOutCurrentUser).toHaveBeenCalledOnce();
@@ -50,7 +50,7 @@ describe('signOutAction', () => {
   it('ne ferme rien sans session valide', async () => {
     vi.mocked(getSession).mockResolvedValue(null);
 
-    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(signOutAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(signOutCurrentUser).not.toHaveBeenCalled();
   });
@@ -123,9 +123,9 @@ describe('previewPassageAction', () => {
   });
 
   it('ne lit rien sans session valide', async () => {
-    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
-    await expect(previewPassageAction(PASSAGE)).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(previewPassageAction(PASSAGE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(fetchPassageContext).not.toHaveBeenCalled();
   });
@@ -161,9 +161,9 @@ describe('searchShellAction', () => {
   });
 
   it('ne lit rien sans session valide', async () => {
-    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
-    await expect(searchShellAction('karim')).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(searchShellAction('karim')).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(searchShell).not.toHaveBeenCalled();
   });

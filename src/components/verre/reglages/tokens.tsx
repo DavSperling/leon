@@ -3,7 +3,7 @@
 import { KeyRound, Laptop, MessageSquare } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useActionState, useId, useState, useTransition } from 'react';
-import { createTokenAction, revokeTokenAction } from '@/app/(app)/reglages/actions';
+import { createTokenAction, revokeTokenAction } from '@/app/(app)/settings/actions';
 import {
   Button,
   CopyButton,

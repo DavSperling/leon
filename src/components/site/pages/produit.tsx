@@ -254,8 +254,8 @@ export function ProduitPage() {
         lead={t('heroLead')}
         actions={
           <>
-            <CtaLink href="/inscription">{cta('create')}</CtaLink>
-            <CtaLink href="/connecteurs" variant="secondary">
+            <CtaLink href="/sign-up">{cta('create')}</CtaLink>
+            <CtaLink href="/connectors" variant="secondary">
               {cta('seeConnectors')}
             </CtaLink>
           </>

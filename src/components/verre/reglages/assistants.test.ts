@@ -8,7 +8,7 @@ import { AssistantSetup } from './assistants';
 import { captionOf, type Token, TokenFacts } from './tokens';
 
 // Les actions importent Better Auth : seul le dessin de la section se teste ici.
-vi.mock('@/app/(app)/reglages/actions', () => ({
+vi.mock('@/app/(app)/settings/actions', () => ({
   revokeTokenAction: vi.fn(),
   createTokenAction: vi.fn(),
 }));

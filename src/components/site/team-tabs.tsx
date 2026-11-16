@@ -91,7 +91,7 @@ export function TeamTabs({
                     <ToolLogo key={id} id={id} size={24} title />
                   ))}
                 </div>
-                <ArrowLink href={`/cas-usage/${team.slug}`}>{t('more')}</ArrowLink>
+                <ArrowLink href={`/use-cases/${team.slug}`}>{t('more')}</ArrowLink>
               </div>
             </div>
             <figure className="col-[1/13] min-[1100px]:col-[7/13]">

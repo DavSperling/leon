@@ -22,7 +22,7 @@ declare global {
 
 const SCRIPT = 'https://accounts.google.com/gsi/client';
 
-// Pas sur la reconnexion de la section Mémoire (/connexion?retour=memoire, T55) : One Tap ramène toujours à l'accueil.
+// Pas sur la reconnexion de la section Mémoire (/sign-in?retour=memoire, T55) : One Tap ramène toujours à l'accueil.
 export const offersOneTap = (search: string) =>
   new URLSearchParams(search).get('retour') !== 'memoire';
 

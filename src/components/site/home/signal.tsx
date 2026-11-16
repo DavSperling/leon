@@ -42,7 +42,7 @@ function Hero() {
           {nb(t('lead'))}
         </p>
         <div className="s-top__cta s-arrive" style={order(3)}>
-          <CtaLink href="/inscription">{cta('create')}</CtaLink>
+          <CtaLink href="/sign-up">{cta('create')}</CtaLink>
           <p className="s-small">{t('betaNote')}</p>
         </div>
       </div>
@@ -220,7 +220,7 @@ function Connectors() {
         </div>
       </div>
       <div className="s-wrap mt-10 flex flex-wrap items-center gap-x-8 gap-y-2">
-        <ArrowLink href="/connecteurs">{t('seeConnectors', { count: TOOL_COUNT })}</ArrowLink>
+        <ArrowLink href="/connectors">{t('seeConnectors', { count: TOOL_COUNT })}</ArrowLink>
         <p className="s-small">{nb(t('connExtension'))}</p>
       </div>
     </section>
@@ -299,7 +299,7 @@ function Developers() {
               </li>
             ))}
           </ul>
-          <ArrowLink href="/produit#discute" className="mt-6">
+          <ArrowLink href="/product#discute" className="mt-6">
             {t('assistantLink')}
           </ArrowLink>
         </div>
@@ -364,7 +364,7 @@ function Security() {
           <h2 id="securite" className="s-h2">
             {t('secTitle')}
           </h2>
-          <ArrowLink href="/securite" className="mt-6">
+          <ArrowLink href="/security" className="mt-6">
             {t('securityLink')}
           </ArrowLink>
         </div>

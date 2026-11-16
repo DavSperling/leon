@@ -13,13 +13,13 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { type PlacementInput, setLocaleAction } from '@/app/(app)/reglages/actions';
+import { type PlacementInput, setLocaleAction } from '@/app/(app)/settings/actions';
 import {
   type AboutStepErrors,
   type AboutStepField,
   type AboutStepState,
   completeAboutStepAction,
-} from '@/app/(onboarding)/bienvenue/actions';
+} from '@/app/(onboarding)/welcome/actions';
 import type { ProviderId } from '@/capture/turn';
 import { AuthNote } from '@/components/verre/auth/frame';
 import { Button } from '@/components/verre/ui/button';

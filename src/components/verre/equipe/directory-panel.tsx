@@ -5,7 +5,7 @@ import { useTransition } from 'react';
 import {
   applyDirectoryImportAction,
   startDirectoryImportAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/settings/actions';
 import { Button, Notice, PanelClose, PanelNote, SidePanel, toast } from '@/components/verre';
 import { nb } from '@/lib/verre';
 import type { DirectoryProvider, DirectoryState } from '@/server/auth/annuaire';
@@ -20,7 +20,7 @@ const ERRORS = {
 
 /**
  * « Importer l'organigramme », pour un propriétaire ou un administrateur : un bouton par annuaire réglé sur le serveur
- * part chez Google ou Microsoft ; au retour (/equipe?annuaire=…), le même panneau montre les rattachements à changer,
+ * part chez Google ou Microsoft ; au retour (/team?annuaire=…), le même panneau montre les rattachements à changer,
  * puis « Appliquer ». Un rattachement fait à la main dans Leon n'est jamais changé.
  */
 export function DirectoryPanel({

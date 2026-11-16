@@ -24,11 +24,11 @@ import {
 // Les exemples (ACME, Julie, Thomas…) sont fictifs et montrés comme tels.
 
 export const NAV_LINKS = [
-  { href: '/produit', label: 'Produit' },
-  { href: '/cas-usage', label: 'Cas d’usage' },
-  { href: '/connecteurs', label: 'Connecteurs' },
-  { href: '/securite', label: 'Sécurité' },
-  { href: '/tarifs', label: 'Tarifs' },
+  { href: '/product', label: 'Produit' },
+  { href: '/use-cases', label: 'Cas d’usage' },
+  { href: '/connectors', label: 'Connecteurs' },
+  { href: '/security', label: 'Sécurité' },
+  { href: '/pricing', label: 'Tarifs' },
   { href: '/documentation', label: 'Documentation' },
 ] as const;
 
@@ -235,7 +235,7 @@ export type Team = {
 
 export const TEAMS: Team[] = [
   {
-    slug: 'direction',
+    slug: 'leadership',
     label: 'Direction',
     icon: Compass,
     pitch: 'Savoir ce qui a été dit et promis, sans refaire l’enquête.',
@@ -265,7 +265,7 @@ export const TEAMS: Team[] = [
     tools: ['hubspot', 'outlook', 'granola', 'notion', 'asana', 'fathom'],
   },
   {
-    slug: 'ventes',
+    slug: 'sales',
     label: 'Ventes',
     icon: Handshake,
     pitch: 'Arriver au rendez-vous en sachant tout ce qui a été dit.',
@@ -336,7 +336,7 @@ export const TEAMS: Team[] = [
     ],
   },
   {
-    slug: 'produit-tech',
+    slug: 'product-engineering',
     label: 'Produit et tech',
     icon: GitPullRequest,
     pitch: 'La PR, ses revues, le ticket et la discussion autour.',
@@ -376,7 +376,7 @@ export const TEAMS: Team[] = [
     ],
   },
   {
-    slug: 'projets',
+    slug: 'projects',
     label: 'Chefs de projet',
     icon: KanbanSquare,
     pitch: 'Des passations qui ne dépendent plus de la mémoire d’une personne.',
@@ -419,7 +419,7 @@ export const TEAMS: Team[] = [
     ],
   },
   {
-    slug: 'arrivees',
+    slug: 'onboarding',
     label: 'Arrivées',
     icon: DoorOpen,
     pitch: 'Les nouveaux trouvent seuls ce que l’équipe sait déjà.',
@@ -475,7 +475,7 @@ export type Situation = {
 export const SITUATIONS: Situation[] = [
   {
     id: 'reprendre',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Développeuse, éditeur SaaS de 25 personnes',
     moment: 'Lundi, 9 h',
     title: 'Reprendre là où on s’était arrêté',
@@ -487,7 +487,7 @@ export const SITUATIONS: Situation[] = [
   },
   {
     id: 'deja-essaye',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Développeur, startup de 12 personnes',
     moment: 'Avant de réécrire un module',
     title: 'Vérifier ce que l’équipe a déjà tranché',
@@ -498,7 +498,7 @@ export const SITUATIONS: Situation[] = [
   },
   {
     id: 'conversation-ia',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Chef de produit, PME de 40 personnes',
     moment: 'Refaire une analyse d’il y a un mois',
     title: 'Retrouver ce qu’on a trouvé avec son assistant d’IA',
@@ -510,7 +510,7 @@ export const SITUATIONS: Situation[] = [
   },
   {
     id: 'astreinte',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Développeuse d’astreinte, SaaS de 30 personnes',
     moment: '22 h, une erreur sur un module inconnu',
     title: 'Savoir si l’incident est déjà arrivé',
@@ -521,7 +521,7 @@ export const SITUATIONS: Situation[] = [
   },
   {
     id: 'renouvellement',
-    team: 'ventes',
+    team: 'sales',
     who: 'Responsable succès client, SaaS de 70 personnes',
     moment: '30 jours avant un renouvellement',
     title: 'Tout ce qui a coincé chez ce client',
@@ -819,11 +819,11 @@ export const READS: Record<ProviderId, string> = {
 type Twin<T> = T extends string ? string : { readonly [K in keyof T]: Twin<T[K]> };
 
 const NAV_LINKS_EN: Twin<typeof NAV_LINKS> = [
-  { href: '/produit', label: 'Product' },
-  { href: '/cas-usage', label: 'Use cases' },
-  { href: '/connecteurs', label: 'Connectors' },
-  { href: '/securite', label: 'Security' },
-  { href: '/tarifs', label: 'Pricing' },
+  { href: '/product', label: 'Product' },
+  { href: '/use-cases', label: 'Use cases' },
+  { href: '/connectors', label: 'Connectors' },
+  { href: '/security', label: 'Security' },
+  { href: '/pricing', label: 'Pricing' },
   { href: '/documentation', label: 'Documentation' },
 ];
 
@@ -957,7 +957,7 @@ const DEMOS_EN: Demo[] = [
 
 const TEAMS_EN: Team[] = [
   {
-    slug: 'direction',
+    slug: 'leadership',
     label: 'Leadership',
     icon: Compass,
     pitch: 'Every commitment made to a client, with the source to back it.',
@@ -987,7 +987,7 @@ const TEAMS_EN: Team[] = [
     tools: ['hubspot', 'outlook', 'granola', 'notion', 'asana', 'fathom'],
   },
   {
-    slug: 'ventes',
+    slug: 'sales',
     label: 'Sales',
     icon: Handshake,
     pitch: 'Walk into every meeting with the full account history.',
@@ -1058,7 +1058,7 @@ const TEAMS_EN: Team[] = [
     ],
   },
   {
-    slug: 'produit-tech',
+    slug: 'product-engineering',
     label: 'Product and engineering',
     icon: GitPullRequest,
     pitch: 'The PR, its reviews, the ticket and the discussion behind it.',
@@ -1098,7 +1098,7 @@ const TEAMS_EN: Team[] = [
     ],
   },
   {
-    slug: 'projets',
+    slug: 'projects',
     label: 'Project managers',
     icon: KanbanSquare,
     pitch: 'Handovers that don’t depend on one person’s memory.',
@@ -1141,7 +1141,7 @@ const TEAMS_EN: Team[] = [
     ],
   },
   {
-    slug: 'arrivees',
+    slug: 'onboarding',
     label: 'New hires',
     icon: DoorOpen,
     pitch: 'New hires get up to speed without interrupting the team.',
@@ -1175,7 +1175,7 @@ const TEAMS_EN: Team[] = [
 const SITUATIONS_EN: Situation[] = [
   {
     id: 'reprendre',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Developer, 25-person SaaS company',
     moment: 'Monday, 9 a.m.',
     title: 'Resume where you left off',
@@ -1187,7 +1187,7 @@ const SITUATIONS_EN: Situation[] = [
   },
   {
     id: 'deja-essaye',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Developer, 12-person startup',
     moment: 'Before rewriting a module',
     title: 'Check what the team already decided',
@@ -1198,7 +1198,7 @@ const SITUATIONS_EN: Situation[] = [
   },
   {
     id: 'conversation-ia',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'Product manager, 40-person company',
     moment: 'Rerunning an analysis from last month',
     title: 'Retrieve what you worked out with your AI assistant',
@@ -1210,7 +1210,7 @@ const SITUATIONS_EN: Situation[] = [
   },
   {
     id: 'astreinte',
-    team: 'produit-tech',
+    team: 'product-engineering',
     who: 'On-call developer, 30-person SaaS company',
     moment: '10 p.m., an error in an unfamiliar module',
     title: 'Find out whether the incident has happened before',
@@ -1221,7 +1221,7 @@ const SITUATIONS_EN: Situation[] = [
   },
   {
     id: 'renouvellement',
-    team: 'ventes',
+    team: 'sales',
     who: 'Customer success manager, 70-person SaaS company',
     moment: '30 days before a renewal',
     title: 'Everything that went wrong with this account',

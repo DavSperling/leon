@@ -99,10 +99,10 @@ describe('newDiscussionAction', () => {
   });
 
   it('ne crée rien sans session valide', async () => {
-    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /connexion'));
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
     await expect(newDiscussionAction({ error: null }, form('Question'))).rejects.toThrow(
-      'NEXT_REDIRECT /connexion',
+      'NEXT_REDIRECT /sign-in',
     );
     expect(createDiscussion).not.toHaveBeenCalled();
   });

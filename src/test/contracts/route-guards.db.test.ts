@@ -9,7 +9,7 @@ import { app } from '@/server/api/app';
 //
 // Seules exceptions, publiques par nature : la santé du serveur ; Better Auth (inscription, connexion) ; le
 // déroulé OAuth des connecteurs, qui garde ses propres contrôles (formulaire posté de la même origine, puis la
-// session, sinon renvoi vers /connexion ; retour lié à un cookie signé et à la même session), vérifiés par
+// session, sinon renvoi vers /sign-in ; retour lié à un cookie signé et à la même session), vérifiés par
 // oauth-routes.db.test.ts.
 //
 // Une exception à la règle « requireApiToken ou requireSession », qui reste pourtant sous ce test : POST /api/v1/ordinateurs

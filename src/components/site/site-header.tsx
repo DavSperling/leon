@@ -18,7 +18,7 @@ import { useSiteContent } from './content';
 // Une barre blanche fixe ; un filet dessous dès qu'on défile. Sous 1200 px, les liens passent dans le menu ; sous 960,
 // le thème et « Se connecter » aussi : la marque, « Créer un espace », le menu.
 
-/** « page » sur la page même, « true » sur la section qui la contient (« Cas d’usage » sur /cas-usage/ventes). */
+/** « page » sur la page même, « true » sur la section qui la contient (« Cas d’usage » sur /use-cases/sales). */
 const currentOf = (pathname: string, href: string): 'page' | 'true' | undefined =>
   pathname === href ? 'page' : pathname.startsWith(`${href}/`) ? 'true' : undefined;
 
@@ -50,8 +50,8 @@ function TeamsMenu({ pathname }: { pathname: string }) {
           <li key={team.slug}>
             <NavigationMenu.Link asChild>
               <Link
-                href={`/cas-usage/${team.slug}`}
-                aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
+                href={`/use-cases/${team.slug}`}
+                aria-current={pathname === `/use-cases/${team.slug}` ? 'page' : undefined}
               >
                 <span className="block text-ui font-medium text-fg">{team.label}</span>
                 <span className="mt-0.5 block text-label text-muted">{nb(team.pitch)}</span>
@@ -62,7 +62,7 @@ function TeamsMenu({ pathname }: { pathname: string }) {
       </ul>
       <NavigationMenu.Link asChild>
         <Link
-          href="/cas-usage"
+          href="/use-cases"
           className="mt-1 flex items-center justify-between border-t border-line text-ui font-medium"
         >
           {t('allUseCases')}
@@ -116,8 +116,8 @@ function MobileMenu({ pathname }: { pathname: string }) {
             <li key={team.slug}>
               <SheetClose asChild>
                 <Link
-                  href={`/cas-usage/${team.slug}`}
-                  aria-current={pathname === `/cas-usage/${team.slug}` ? 'page' : undefined}
+                  href={`/use-cases/${team.slug}`}
+                  aria-current={pathname === `/use-cases/${team.slug}` ? 'page' : undefined}
                   className="flex min-h-11 items-center text-ui text-muted aria-[current]:text-fg"
                 >
                   {team.label}
@@ -128,12 +128,12 @@ function MobileMenu({ pathname }: { pathname: string }) {
         </ul>
         <div className="flex items-center gap-2 border-t border-line pt-4">
           <SheetClose asChild>
-            <Link href="/inscription" className="s-btn s-btn--ink flex-1">
+            <Link href="/sign-up" className="s-btn s-btn--ink flex-1">
               {cta('create')}
             </Link>
           </SheetClose>
           <SheetClose asChild>
-            <Link href="/connexion" className="s-btn s-btn--line flex-1">
+            <Link href="/sign-in" className="s-btn s-btn--line flex-1">
               {cta('signIn')}
             </Link>
           </SheetClose>
@@ -162,7 +162,7 @@ export function SiteHeader() {
     <header data-scrolled={scrolled || undefined} className="s-nav">
       <div className="s-wrap s-nav__in">
         <Link
-          href="/accueil"
+          href="/home"
           aria-label={t('home')}
           className="s-brand flex h-11 shrink-0 items-center"
         >
@@ -173,7 +173,7 @@ export function SiteHeader() {
           <NavigationMenu.List>
             {navLinks.map((l) => (
               <NavigationMenu.Item key={l.href} className="relative">
-                {l.href === '/cas-usage' ? (
+                {l.href === '/use-cases' ? (
                   <>
                     <NavigationMenu.Trigger
                       className="s-nav__link"
@@ -206,10 +206,10 @@ export function SiteHeader() {
 
         <div className="s-nav__account">
           <ThemeButton className="s-nav__wide" />
-          <Link href="/inscription" className="s-btn s-btn--ink s-btn--sm">
+          <Link href="/sign-up" className="s-btn s-btn--ink s-btn--sm">
             {cta('create')}
           </Link>
-          <Link href="/connexion" className="s-btn s-btn--line s-btn--sm s-nav__wide">
+          <Link href="/sign-in" className="s-btn s-btn--line s-btn--sm s-nav__wide">
             {cta('signIn')}
           </Link>
           <div className="min-[1200px]:hidden">

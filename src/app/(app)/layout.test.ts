@@ -8,7 +8,7 @@ import { readSidebar } from '@/server/shell/shell';
 import AppLayout from './layout';
 
 vi.mock('@/server/auth/session', () => ({
-  ONBOARDING_PATH: '/bienvenue',
+  ONBOARDING_PATH: '/welcome',
   requireUserContext: vi.fn(),
 }));
 vi.mock('@/server/auth/onboarding', () => ({ readOnboardingMember: vi.fn() }));
@@ -49,12 +49,12 @@ beforeEach(() => {
 });
 
 describe('layout de l’application', () => {
-  it('renvoie vers /bienvenue tant que l’étape 1 n’est pas validée', async () => {
+  it('renvoie vers /welcome tant que l’étape 1 n’est pas validée', async () => {
     vi.mocked(readOnboardingMember).mockResolvedValue(member(null));
 
-    await expect(AppLayout({ children: null })).rejects.toThrow('NEXT_REDIRECT /bienvenue');
+    await expect(AppLayout({ children: null })).rejects.toThrow('NEXT_REDIRECT /welcome');
 
-    expect(redirect).toHaveBeenCalledWith('/bienvenue');
+    expect(redirect).toHaveBeenCalledWith('/welcome');
     expect(getViewerProfile).not.toHaveBeenCalled();
   });
 
@@ -88,7 +88,7 @@ describe('layout de l’application', () => {
   it('ne lit rien pour la barre latérale avant la redirection', async () => {
     vi.mocked(readOnboardingMember).mockResolvedValue(member(null));
 
-    await expect(AppLayout({ children: null })).rejects.toThrow('NEXT_REDIRECT /bienvenue');
+    await expect(AppLayout({ children: null })).rejects.toThrow('NEXT_REDIRECT /welcome');
 
     expect(readSidebar).not.toHaveBeenCalled();
   });

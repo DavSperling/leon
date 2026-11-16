@@ -17,10 +17,10 @@ import { ReturnNotice } from './return-notice';
 import { ToolDialog } from './tool-dialog';
 
 /*
- * Écran Connexions (/connexions) : le titre, les outils branchés en cartes, ce qu'on peut ajouter en tuiles (les
+ * Écran Connexions (/connections) : le titre, les outils branchés en cartes, ce qu'on peut ajouter en tuiles (les
  * conseillés en tête), puis les captures, en dernier. Un outil s'ouvre dans son panneau : au clic, par `?outil=<id>` (la barre de commande,
  * l'alerte de la barre latérale), ou au retour de l'éditeur (`?branche=` : « branché » ; `?erreur=…&outil=` : le refus
- * dans le panneau). L'adresse est ensuite remise à /connexions : un rechargement ne rejoue rien. Un retour qui ne
+ * dans le panneau). L'adresse est ensuite remise à /connections : un rechargement ne rejoue rien. Un retour qui ne
  * nomme aucun outil reste sous le titre. Le schéma et le jeu (carte.tsx, jeu.tsx) ne sont plus montrés ici, et l'en-tête
  * ne porte aucun dessin (retiré à la demande de David, le 13/11/2026).
  */
@@ -96,7 +96,7 @@ export function Connexions({
   // biome-ignore lint/correctness/useExhaustiveDependencies: rejoué quand l'adresse change (?outil=, retour de l'éditeur), pas à chaque rendu
   useEffect(() => {
     if (known) show(known, { notice: notice?.tool === known ? notice : null, done: justConnected });
-    if (notice || openTool) window.history.replaceState(null, '', '/connexions');
+    if (notice || openTool) window.history.replaceState(null, '', '/connections');
   }, [known, notice?.text, openTool]);
 
   // Le panneau fermé sans pouvoir rendre le focus (la tuile est devenue une carte) : la carte de l'outil, sinon la recherche.

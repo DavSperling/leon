@@ -126,7 +126,7 @@ export function AboutSuggestionCard({
             : t.rich('whereNext', {
                 link: (chunks) => (
                   <PanelClose asChild>
-                    <Link href="/reglages#profil" className="text-fg underline underline-offset-4">
+                    <Link href="/settings#profil" className="text-fg underline underline-offset-4">
                       {chunks}
                     </Link>
                   </PanelClose>

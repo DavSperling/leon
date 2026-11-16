@@ -311,7 +311,7 @@ describe('leon setup', () => {
       expect(outcome.stdout).toContain(
         'This computer was disconnected from Leon (its token was revoked): connecting it again.',
       );
-      expect(outcome.stdout).toContain(`${address}/ordinateur/autoriser?`);
+      expect(outcome.stdout).toContain(`${address}/computer/authorize?`);
       expect(outcome.stderr).toContain('Authorization cancelled in the browser');
       expect(outcome.stderr).toContain('setup stopped');
       expect(outcome.code).toBe(1);

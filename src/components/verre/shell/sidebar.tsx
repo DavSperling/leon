@@ -63,7 +63,7 @@ export function NavList({
     const { href, labelKey, icon: Icon } = item;
     const label = t(labelKey);
     const isActive = item === current;
-    const flag = href === '/connexions' && reconnect > 0 ? reconnect : 0;
+    const flag = href === '/connections' && reconnect > 0 ? reconnect : 0;
     const toReconnect = flag ? shellT('toReconnect', { count: flag }) : '';
     return (
       <li key={href}>
@@ -274,7 +274,7 @@ export function Alerts({
     <div className="grid grid-cols-[minmax(0,1fr)] gap-0.5 pb-1">
       {tool && (
         <Link
-          href={reconnect.length > 1 ? '/connexions' : `/connexions?outil=${tool}`}
+          href={reconnect.length > 1 ? '/connections' : `/connections?outil=${tool}`}
           onClick={onNavigate}
           className={cn(
             ALERT,
@@ -293,7 +293,7 @@ export function Alerts({
       {late && (
         <Tooltip content={late} side="right">
           <Link
-            href="/reglages"
+            href="/settings"
             onClick={onNavigate}
             onPointerMove={railOnly}
             onFocus={railOnly}

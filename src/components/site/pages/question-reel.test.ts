@@ -7,8 +7,8 @@ import { QuestionReel } from './question-reel';
 // liste), et la liste porte toutes les questions, la première sous le trait.
 describe('QuestionReel', () => {
   const items = [
-    { q: 'has the fix shipped?', aside: 'Customer support', href: '/cas-usage/support' },
-    { q: 'type:meeting since:7d', aside: 'Leadership', href: '/cas-usage/direction' },
+    { q: 'has the fix shipped?', aside: 'Customer support', href: '/use-cases/support' },
+    { q: 'type:meeting since:7d', aside: 'Leadership', href: '/use-cases/leadership' },
   ];
   const html = renderToStaticMarkup(createElement(QuestionReel, { items }));
 
@@ -20,7 +20,7 @@ describe('QuestionReel', () => {
 
   it('garde toutes les questions dans la liste, chacune avec son lien, la première marquée', () => {
     expect(html.match(/class="pg-reel__row"/g)).toHaveLength(2);
-    expect(html).toContain('href="/cas-usage/direction"');
+    expect(html).toContain('href="/use-cases/leadership"');
     expect(html.match(/data-on=""/g)).toHaveLength(1);
   });
 

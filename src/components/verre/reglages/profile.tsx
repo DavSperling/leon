@@ -17,7 +17,7 @@ import {
   updateAboutAction,
   updateProfileAction,
   updateProfileImageAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/settings/actions';
 import { Avatar, Button, Input, Select, Switch, Textarea } from '@/components/verre';
 import { PROFILE_AVATARS } from '@/lib/profile-avatars';
 import { cn, nb, useTheme } from '@/lib/verre';
@@ -140,7 +140,7 @@ export function ProfileSettings({
     return () => clearTimeout(timer);
   }, [done]);
 
-  // arrivée par /reglages#profil (la suggestion « Dites à Leon qui vous êtes ») : le curseur va à « À propos »
+  // arrivée par /settings#profil (la suggestion « Dites à Leon qui vous êtes ») : le curseur va à « À propos »
   useEffect(() => {
     if (window.location.hash === '#profil') aboutRef.current?.focus({ preventScroll: true });
   }, []);

@@ -170,14 +170,14 @@ export function CommandPalette({
         group: t('actions'),
         label: t('connectTool'),
         picture: <Plug {...ICON} />,
-        run: go('/connexions'),
+        run: go('/connections'),
       },
       {
         id: 'a2',
         group: t('actions'),
         label: t('createToken'),
         picture: <KeyRound {...ICON} />,
-        run: go('/reglages'),
+        run: go('/settings'),
       },
       {
         id: 'a3',
@@ -219,7 +219,7 @@ export function CommandPalette({
           group: t('needsAttention'),
           label: t('reconnectTool', { tool: PROVIDER_LABELS[tool] }),
           picture: <ToolLogo kind={tool} size={18} />,
-          run: go(`/connexions?outil=${tool}`),
+          run: go(`/connections?outil=${tool}`),
         })),
         ...recents.map(discussion(t('recentDiscussions'))),
         ...screens,
@@ -284,7 +284,7 @@ export function CommandPalette({
                   ? t('connected')
                   : undefined,
           alert: state === 'broken',
-          run: go(`/connexions?outil=${tool.id}`),
+          run: go(`/connections?outil=${tool.id}`),
         };
       });
     // Les résultats d'avant restent le temps que les nouveaux arrivent, filtrés par les lettres d'à présent.
@@ -299,7 +299,7 @@ export function CommandPalette({
                 group: t('people'),
                 label: p.name,
                 picture: <Avatar name={p.name} src={p.image} size={24} />,
-                run: go(`/equipe?personne=${p.id}`),
+                run: go(`/team?personne=${p.id}`),
               })),
             ...found.documents
               .filter((d) => within(d.title, f))

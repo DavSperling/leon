@@ -43,7 +43,7 @@ vi.mock('@/server/auth/session', () => ({
   signInWithPassword: vi.fn(),
   getSession: vi.fn(),
   getUserContext: vi.fn(),
-  ONBOARDING_PATH: '/bienvenue',
+  ONBOARDING_PATH: '/welcome',
 }));
 vi.mock('@/server/auth/members', () => ({ joinWithInvitation: vi.fn() }));
 vi.mock('@/server/auth/rate-limit', () => ({ authAttemptAllowed: vi.fn() }));
@@ -241,7 +241,7 @@ describe('signInAction', () => {
   });
 });
 
-// `leon login` : la page /ordinateur/autoriser envoie vers /connexion, et la connexion revient à l'autorisation en
+// `leon login` : la page /computer/authorize envoie vers /sign-in, et la connexion revient à l'autorisation en
 // cours. Le champ `retour` revient d'un navigateur : seul un chemin d'autorisation aux paramètres valides compte.
 describe('retour à l’autorisation d’un ordinateur', () => {
   const AUTHORIZE = authorizePath({
@@ -249,7 +249,7 @@ describe('retour à l’autorisation d’un ordinateur', () => {
     etat: 'AbCdEfGhIjKlMnOpQrStUv',
     empreinte: 'a1'.repeat(32),
   });
-  // toThrow(Error) compare le message en entier : "NEXT_REDIRECT /" ne vaut pas "NEXT_REDIRECT /reglages".
+  // toThrow(Error) compare le message en entier : "NEXT_REDIRECT /" ne vaut pas "NEXT_REDIRECT /settings".
   const redirectsTo = (path: string) => new Error(`NEXT_REDIRECT ${path}`);
   const signedIn = { email: 'paul@example.com', password: 'motdepasse-solide' };
 
@@ -272,7 +272,7 @@ describe('retour à l’autorisation d’un ordinateur', () => {
   it.each([
     ['une adresse absolue', `https://evil.example${AUTHORIZE}`],
     ['une adresse sans schéma', `//evil.example${AUTHORIZE}`],
-    ['une autre page', '/reglages'],
+    ['une autre page', '/settings'],
     ['une autorisation au port invalide', AUTHORIZE.replace('port=4242', 'port=80')],
   ])('%s : retour à l’accueil', async (_name, retour) => {
     vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });
@@ -292,11 +292,11 @@ describe('retour à l’autorisation d’un ordinateur', () => {
   });
 });
 
-// Un assistant (claude.ai, ChatGPT, Claude Code…) : /oauth/autoriser envoie vers /connexion, qui revient à la demande en
+// Un assistant (claude.ai, ChatGPT, Claude Code…) : /oauth/authorize envoie vers /sign-in, qui revient à la demande en
 // cours. Le champ `retour` revient d'un navigateur : seul le chemin fixe, aux huit paramètres connus et bornés, compte.
 // Le client et l'adresse de retour, eux, sont jugés par la page à chaque affichage (oauth/autoriser/page.test.ts).
 describe('retour à l’autorisation d’un assistant', () => {
-  const OAUTH = `/oauth/autoriser?${new URLSearchParams({
+  const OAUTH = `/oauth/authorize?${new URLSearchParams({
     response_type: 'code',
     client_id: 'un-client-id',
     redirect_uri: 'https://claude.ai/api/mcp/auth_callback',
@@ -336,8 +336,8 @@ describe('retour à l’autorisation d’un assistant', () => {
   it.each([
     ['une adresse absolue', `https://evil.example${OAUTH}`],
     ['une adresse sans schéma', `//evil.example${OAUTH}`],
-    ['une autre page', OAUTH.replace('/oauth/autoriser', '/reglages')],
-    ['un autre chemin de la page', OAUTH.replace('/oauth/autoriser', '/oauth/autoriser/../x')],
+    ['une autre page', OAUTH.replace('/oauth/authorize', '/settings')],
+    ['un autre chemin de la page', OAUTH.replace('/oauth/authorize', '/oauth/authorize/../x')],
     ['une demande sans client_id', OAUTH.replace('client_id=un-client-id&', '')],
     ['un client_id de plus de 4 Ko', OAUTH.replace('un-client-id', 'a'.repeat(4097))],
   ])('%s : retour à l’accueil', async (_name, retour) => {
@@ -510,19 +510,19 @@ describe('Google, Microsoft et SSO', () => {
 
   it('One Tap : un jeton refusé ou un compte non lié renvoie à la connexion avec son message', async () => {
     vi.mocked(auth.api.oneTapCallback).mockRejectedValueOnce(new Error('invalid id token'));
-    await expect(oneTapAction('x')).rejects.toThrow('NEXT_REDIRECT /connexion?error=one_tap');
+    await expect(oneTapAction('x')).rejects.toThrow('NEXT_REDIRECT /sign-in?error=one_tap');
     vi.mocked(auth.api.oneTapCallback).mockRejectedValueOnce(new Error('account not linked'));
     await expect(oneTapAction('x')).rejects.toThrow(
-      'NEXT_REDIRECT /connexion?error=account_not_linked',
+      'NEXT_REDIRECT /sign-in?error=account_not_linked',
     );
   });
 
   it('refuse un fournisseur non réglé, sans appeler Better Auth', async () => {
     await expect(socialSignInAction(form({ provider: 'microsoft' }))).rejects.toThrow(
-      'NEXT_REDIRECT /connexion',
+      'NEXT_REDIRECT /sign-in',
     );
     await expect(socialSignInAction(form({ provider: 'constructor' }))).rejects.toThrow(
-      'NEXT_REDIRECT /connexion',
+      'NEXT_REDIRECT /sign-in',
     );
     expect(auth.api.signInSocial).not.toHaveBeenCalled();
   });
@@ -538,7 +538,7 @@ describe('Google, Microsoft et SSO', () => {
       provider: 'google',
       callbackURL: `/invitation/${TOKEN}`,
       newUserCallbackURL: `/invitation/${TOKEN}`,
-      errorCallbackURL: '/connexion',
+      errorCallbackURL: '/sign-in',
     });
   });
 
@@ -553,7 +553,7 @@ describe('Google, Microsoft et SSO', () => {
     ).rejects.toThrow('NEXT_REDIRECT');
     expect(vi.mocked(auth.api.signInSocial).mock.calls[0]?.[0]?.body).toMatchObject({
       callbackURL: '/',
-      newUserCallbackURL: '/bienvenue',
+      newUserCallbackURL: '/welcome',
     });
   });
 
@@ -579,16 +579,16 @@ describe('Google, Microsoft et SSO', () => {
     vi.mocked(getUserContext).mockResolvedValue(null);
     vi.mocked(joinWithInvitation).mockResolvedValue('t1');
     await expect(joinWithSessionAction(form({ token: TOKEN }))).rejects.toThrow(
-      'NEXT_REDIRECT /bienvenue',
+      'NEXT_REDIRECT /welcome',
     );
     expect(joinWithInvitation).toHaveBeenCalledWith(TOKEN, 'u1');
   });
 });
 
-// T55 : la reconnexion de la section Mémoire (/connexion?retour=memoire) y revient, par toute connexion faite depuis
+// T55 : la reconnexion de la section Mémoire (/sign-in?retour=memoire) y revient, par toute connexion faite depuis
 // cette page. Le champ `retour` revient d'un navigateur : seule la valeur fixe compte.
 describe('retour vers la section Mémoire', () => {
-  const MEMOIRE = '/reglages#memoire';
+  const MEMOIRE = '/settings#memoire';
   const redirectsTo = (path: string) => new Error(`NEXT_REDIRECT ${path}`);
   const signedIn = { email: 'paul@example.com', password: 'motdepasse-solide' };
   // Un test plus haut laisse verifyTOTP refuser tout code (mockRejectedValue survit à clearAllMocks).
@@ -631,13 +631,13 @@ describe('retour vers la section Mémoire', () => {
     ])
       expect(call?.[0]?.body).toMatchObject({
         callbackURL: MEMOIRE,
-        newUserCallbackURL: '/bienvenue',
+        newUserCallbackURL: '/welcome',
       });
   });
 
   it.each([
-    ['un retour inconnu', '/reglages#securite'],
-    ['un autre site', 'https://evil.example/reglages#memoire'],
+    ['un retour inconnu', '/settings#securite'],
+    ['un autre site', 'https://evil.example/settings#memoire'],
     ['la valeur courte', 'memoire'],
   ])('%s : retour à l’accueil', async (_name, retour) => {
     vi.mocked(signInWithPassword).mockResolvedValue({ ok: true });

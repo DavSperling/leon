@@ -26,7 +26,7 @@ function TeamCard({ team, index }: { team: Team; index: number }) {
   return (
     <li style={order(index)} className="pg-land">
       <Link
-        href={`/cas-usage/${team.slug}`}
+        href={`/use-cases/${team.slug}`}
         className="group s-sheet pg-lift flex h-full flex-col px-6 py-5"
       >
         <span className="flex items-center justify-between gap-4">
@@ -132,8 +132,8 @@ export function CasUsagePage() {
         lead={t('heroLead')}
         actions={
           <>
-            <CtaLink href="/inscription">{cta('create')}</CtaLink>
-            <CtaLink href="/produit" variant="secondary">
+            <CtaLink href="/sign-up">{cta('create')}</CtaLink>
+            <CtaLink href="/product" variant="secondary">
               {cta('howItWorks')}
             </CtaLink>
           </>
@@ -174,7 +174,7 @@ export function CasUsagePage() {
             items={allQuestions(teams).map(({ q, team }) => ({
               q,
               aside: team.label,
-              href: `/cas-usage/${team.slug}`,
+              href: `/use-cases/${team.slug}`,
             }))}
           />
         </div>
@@ -197,14 +197,14 @@ export function EquipePage({ team }: { team: Team }) {
   return (
     <div className="s-page">
       <PageHero
-        crumbs={[{ href: '/cas-usage', label: common('useCases') }]}
+        crumbs={[{ href: '/use-cases', label: common('useCases') }]}
         current={team.label}
         title={team.headline}
         lead={team.lead}
         actions={
           <>
-            <CtaLink href="/inscription">{cta('create')}</CtaLink>
-            <CtaLink href="/connexion" variant="secondary">
+            <CtaLink href="/sign-up">{cta('create')}</CtaLink>
+            <CtaLink href="/sign-in" variant="secondary">
               {cta('signIn')}
             </CtaLink>
           </>
@@ -251,7 +251,7 @@ export function EquipePage({ team }: { team: Team }) {
               {nb(t('toolsTitle'))}
             </h2>
             <p className="s-lead mt-5">{nb(t('toolsLead'))}</p>
-            <ArrowLink href="/connecteurs" className="mt-6">
+            <ArrowLink href="/connectors" className="mt-6">
               {nb(t('allConnectors', { count: TOOL_COUNT }))}
             </ArrowLink>
           </div>
@@ -281,7 +281,7 @@ export function EquipePage({ team }: { team: Team }) {
             {others.map((o) => (
               <li key={o.slug}>
                 <Link
-                  href={`/cas-usage/${o.slug}`}
+                  href={`/use-cases/${o.slug}`}
                   className={cn(
                     'group flex min-h-12 items-center justify-between gap-3 border-t border-line font-medium',
                   )}

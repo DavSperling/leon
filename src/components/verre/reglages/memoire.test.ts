@@ -8,7 +8,7 @@ import fr from '../../../../messages/fr.json';
 import { ALL_REPOS, MemorySection, outcomeOf, projectOf } from './memoire';
 
 // Les actions importent Better Auth : seul le dessin de la section se teste ici, et les décisions pures qu'elle prend.
-vi.mock('@/app/(app)/reglages/actions', () => ({
+vi.mock('@/app/(app)/settings/actions', () => ({
   writeLessonAction: vi.fn(),
   correctLessonAction: vi.fn(),
   retireLessonAction: vi.fn(),
@@ -170,7 +170,7 @@ describe('MemorySection', () => {
   it('sans connexion récente : « Reconnectez-vous » et le lien de retour, ni champ d’écriture, ni « Corriger »', () => {
     const html = render({ recent: false });
     expect(text(html)).toContain('Sign in again to write');
-    expect(html).toContain('href="/connexion?retour=memoire"');
+    expect(html).toContain('href="/sign-in?retour=memoire"');
     expect(html).not.toContain('New lesson');
     expect(text(html)).not.toContain('Edit');
     // retirer reste possible (D37)
@@ -223,7 +223,7 @@ describe('MemorySection', () => {
     });
     expect(text(html)).not.toContain('Put this version back');
     // « Reconnectez-vous » : une fois pour les leçons, une fois pour le fil, qui a une version à remettre.
-    expect(html.split('href="/connexion?retour=memoire"').length - 1).toBe(2);
+    expect(html.split('href="/sign-in?retour=memoire"').length - 1).toBe(2);
     // Celui des fils ne parle que de remettre une version, pas de retirer une leçon.
     expect(text(html)).toContain('Sign in again to put back a version.');
     expect(text(html).split('You can still remove a lesson.').length - 1).toBe(1);
@@ -273,7 +273,7 @@ describe('MemorySection', () => {
     const notes = text(html.slice(html.indexOf('Agent notes')));
     expect(notes).toContain('Sign in again to put back a version.');
     expect(notes).not.toContain('remove a lesson');
-    expect(html).toContain('href="/connexion?retour=memoire"');
+    expect(html).toContain('href="/sign-in?retour=memoire"');
   });
 
   it('sans connexion récente, une note sans version à remettre ne demande pas de reconnexion', () => {

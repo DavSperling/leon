@@ -24,9 +24,9 @@ export const NAV: NavItem[] = [
   { href: '/', label: 'Recherche', labelKey: 'home', icon: House, end: true },
   { href: '/discussions', label: 'Discussions', labelKey: 'discussions', icon: MessageSquare },
   { href: '/documents', label: 'Documents', labelKey: 'documents', icon: FileText },
-  { href: '/equipe', label: 'Équipe', labelKey: 'team', icon: Users },
-  { href: '/connexions', label: 'Connexions', labelKey: 'connections', icon: Plug },
-  { href: '/reglages', label: 'Réglages', labelKey: 'settings', icon: Settings2 },
+  { href: '/team', label: 'Équipe', labelKey: 'team', icon: Users },
+  { href: '/connections', label: 'Connexions', labelKey: 'connections', icon: Plug },
+  { href: '/settings', label: 'Réglages', labelKey: 'settings', icon: Settings2 },
 ];
 
 /** La section d'une adresse : « /discussions/acme » → Discussions. */

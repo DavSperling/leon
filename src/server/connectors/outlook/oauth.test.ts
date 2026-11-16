@@ -218,10 +218,10 @@ describe('outlookOAuth : accord de l’administrateur', () => {
 
   it('met la page de départ dans `state`, que Microsoft rend au retour', () => {
     const link = new URL(
-      consent?.url(CLIENT.id, redirectUri(outlookOAuth), '/bienvenue/outils') ?? '',
+      consent?.url(CLIENT.id, redirectUri(outlookOAuth), '/welcome/tools') ?? '',
     );
 
-    expect(link.searchParams.get('state')).toBe('/bienvenue/outils');
+    expect(link.searchParams.get('state')).toBe('/welcome/tools');
   });
 
   it('signale à l’échange que l’administrateur doit donner son accord', async () => {

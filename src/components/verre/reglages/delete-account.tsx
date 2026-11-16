@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { type FormEvent, useId, useState, useTransition } from 'react';
-import { deleteAccountAction, deleteOrganizationAction } from '@/app/(app)/reglages/actions';
+import { deleteAccountAction, deleteOrganizationAction } from '@/app/(app)/settings/actions';
 import { Button, Field, Input, Notice, PanelClose, Select, SidePanel } from '@/components/verre';
 import { nb } from '@/lib/verre/nb';
 import type { DeletionInfo } from '@/server/auth/delete-account';
@@ -22,7 +22,7 @@ type DeletionProps = {
 };
 
 // Le bouton de suppression et son panneau. La suppression de compte ressort dans une zone dédiée ; les mêmes champs
-// servent aux deux suppressions. En cas de succès, l'action redirige vers la connexion (/connexion?supprime=…).
+// servent aux deux suppressions. En cas de succès, l'action redirige vers la connexion (/sign-in?supprime=…).
 function Deletion(props: DeletionProps) {
   const [open, setOpen] = useState(false);
   // une clé neuve à chaque ouverture : le mot de passe, le mot tapé et l'erreur ne survivent pas à la fermeture

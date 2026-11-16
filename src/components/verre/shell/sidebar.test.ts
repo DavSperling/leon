@@ -9,7 +9,7 @@ import { Sidebar, type SidebarProps } from './sidebar';
 
 // La barre latérale rendue côté serveur (pas de DOM ici) : ce qu'elle doit toujours porter, et ce qu'elle ne montre plus.
 
-const path = vi.hoisted(() => ({ current: '/connexions' }));
+const path = vi.hoisted(() => ({ current: '/connections' }));
 vi.mock('next/navigation', () => ({
   usePathname: () => path.current,
   useRouter: () => ({ push: vi.fn() }),
@@ -44,7 +44,7 @@ const html = (props: Partial<SidebarProps> = {}) =>
   );
 
 beforeEach(() => {
-  path.current = '/connexions';
+  path.current = '/connections';
 });
 
 describe('NAV', () => {
@@ -63,7 +63,7 @@ describe('Sidebar', () => {
     expect(out).toContain('aria-controls="barre-laterale"');
     expect(out).toContain('aria-keyshortcuts="["');
     for (const { href } of NAV) expect(out).toContain(`href="${href}"`);
-    expect(out).toMatch(/<a href="\/connexions" aria-current="page"/);
+    expect(out).toMatch(/<a href="\/connections" aria-current="page"/);
     expect(out.match(/aria-current=/g)).toHaveLength(1);
   });
 
@@ -94,7 +94,7 @@ describe('Sidebar', () => {
   it('nomme l’outil à reconnecter et ouvre son écran', () => {
     const out = html({ reconnect: ['gmail'] });
     expect(out).toMatch(/class="tag c4[^"]*"><span aria-hidden="true">1<\/span>/);
-    expect(out).toContain('href="/connexions?outil=gmail"');
+    expect(out).toContain('href="/connections?outil=gmail"');
     expect(out).toContain('Gmail needs reconnecting');
   });
 
@@ -103,7 +103,7 @@ describe('Sidebar', () => {
     expect(out).toMatch(/class="tag c4[^"]*"><span aria-hidden="true">2<\/span>/);
     expect(out).toContain('2 tools to reconnect');
     expect(out).toContain('2 tools need reconnecting');
-    expect(out).toMatch(/<a href="\/connexions" class="[^"]*text-destructive/);
+    expect(out).toMatch(/<a href="\/connections" class="[^"]*text-destructive/);
     expect(out).not.toContain('Gmail needs reconnecting');
   });
 
@@ -115,7 +115,7 @@ describe('Sidebar', () => {
       ],
     });
     expect(out).toContain('Memory out of date · Claude Code, Codex');
-    expect(out).toMatch(/<a href="\/reglages"[^>]*>(?:(?!<\/a>).)*Memory out of date/);
+    expect(out).toMatch(/<a href="\/settings"[^>]*>(?:(?!<\/a>).)*Memory out of date/);
   });
 
   it('liste les discussions récentes, marque celle qui est ouverte, et donne à chacune ses trois points', () => {

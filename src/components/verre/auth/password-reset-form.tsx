@@ -53,12 +53,12 @@ export function RequestPasswordResetForm() {
         <Done
           title={t('checkEmailTitle')}
           text={state.message}
-          action={{ href: '/connexion', label: t('backToSignIn') }}
+          action={{ href: '/sign-in', label: t('backToSignIn') }}
         />
       </AuthSheet>
     );
   return (
-    <AuthSheet alt={<AuthLink href="/connexion">{t('backToSignIn')}</AuthLink>}>
+    <AuthSheet alt={<AuthLink href="/sign-in">{t('backToSignIn')}</AuthLink>}>
       <AuthTitle>{t('forgotTitle')}</AuthTitle>
       <form action={action} noValidate className="mt-6 grid gap-4">
         <Field label={t('email')} error={state.errors?.email}>
@@ -98,12 +98,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
         <Done
           title={t('resetDoneTitle')}
           text={state.message}
-          action={{ href: '/connexion', label: t('signIn'), ink: true }}
+          action={{ href: '/sign-in', label: t('signIn'), ink: true }}
         />
       </AuthSheet>
     );
   return (
-    <AuthSheet alt={<AuthLink href="/connexion">{t('backToSignIn')}</AuthLink>}>
+    <AuthSheet alt={<AuthLink href="/sign-in">{t('backToSignIn')}</AuthLink>}>
       <AuthTitle>{t('newPassword')}</AuthTitle>
       <form action={action} noValidate className="mt-6 grid gap-4">
         <input type="hidden" name="token" value={token} />
@@ -117,7 +117,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <div className="grid justify-items-start gap-2">
             <AuthNote tone="error">{state.errors.form}</AuthNote>
             <Button asChild size="xs" className="ml-4">
-              <Link href="/mot-de-passe-oublie">{t('requestNewLink')}</Link>
+              <Link href="/forgot-password">{t('requestNewLink')}</Link>
             </Button>
           </div>
         )}

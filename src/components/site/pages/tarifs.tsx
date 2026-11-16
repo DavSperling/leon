@@ -14,13 +14,13 @@ const EVERY_PLAN = [
   {
     row: 'rowConnectors',
     key: 'connectors',
-    link: { href: '/connecteurs', label: 'seeConnectors' },
+    link: { href: '/connectors', label: 'seeConnectors' },
   },
   { row: 'rowSearch', key: 'search' },
   { row: 'rowChat', key: 'chat' },
   { row: 'rowBriefing', key: 'briefing' },
   { row: 'rowCapture', key: 'capture' },
-  { row: 'rowProtection', key: 'protection', link: { href: '/securite', label: 'readSecurity' } },
+  { row: 'rowProtection', key: 'protection', link: { href: '/security', label: 'readSecurity' } },
 ] as const;
 
 /** Le prix du pilote, entouré à la plume : c'est par lui qu'on commence. */
@@ -50,7 +50,7 @@ export function TarifsPage() {
         accent={t('heroAccent')}
         tone={1}
         lead={t('heroLead')}
-        actions={<CtaLink href="/inscription">{cta('create')}</CtaLink>}
+        actions={<CtaLink href="/sign-up">{cta('create')}</CtaLink>}
         note={t('note')}
       />
 

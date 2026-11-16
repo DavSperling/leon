@@ -215,14 +215,14 @@ describe('leon login : le parcours par le navigateur', () => {
     // K3 : l'adresse ouverte, avec le port, l'etat et l'empreinte, et rien d'autre.
     expect(run.opened).toHaveLength(1);
     expect(seen?.origin).toBe(leon.url);
-    expect(seen?.path).toBe('/ordinateur/autoriser');
+    expect(seen?.path).toBe('/computer/authorize');
     expect(seen?.keys).toEqual(['empreinte', 'etat', 'port']);
     expect(seen?.port).toBeGreaterThanOrEqual(1024);
     expect(seen?.etat).toMatch(/^[A-Za-z0-9_-]{22,64}$/);
     expect(seen?.empreinte).toMatch(/^[0-9a-f]{64}$/);
     // Le navigateur est renvoyé vers la page « connecté » de Leon, et l'écoute est fermée.
     expect(back?.status).toBe(302);
-    expect(back?.headers.get('Location')).toBe(`${leon.url}/ordinateur/connecte`);
+    expect(back?.headers.get('Location')).toBe(`${leon.url}/computer/connected`);
     await expect(approve(seen as Params)).rejects.toThrow();
     // K5 : le jeton de la CLI dans l'en-tête, le code et le nom de la machine dans le corps.
     const register = registerCall(leon);
@@ -329,7 +329,7 @@ describe('leon login : le parcours par le navigateur', () => {
 
     expect(code).toBe(1);
     expect(back?.status).toBe(302);
-    expect(back?.headers.get('Location')).toBe(`${leon.url}/ordinateur/connecte?refus=1`);
+    expect(back?.headers.get('Location')).toBe(`${leon.url}/computer/connected?refus=1`);
     expect(await readConnection(home)).toBeNull();
     expect(leon.calls).toEqual([]);
     expect(run.err.join('\n')).toMatch(/cancelled|refused|declined/i);
@@ -457,7 +457,7 @@ describe('leon login : le contrat avec la page d’autorisation', () => {
     await run.browsed();
 
     expect(code).toBe(0);
-    expect(back?.headers.get('Location')).toBe(`${leon.url}/ordinateur/connecte`);
+    expect(back?.headers.get('Location')).toBe(`${leon.url}/computer/connected`);
     expect(registerCall(leon)?.body).toMatchObject({ code: 'le.code' });
   });
 

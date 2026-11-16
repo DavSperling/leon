@@ -92,7 +92,5 @@ export function chosenTools(raw: string | undefined, userId: string): ProviderId
 }
 
 /** Un propriétaire seul invite ses collaborateurs ensuite ; les autres arrivent à la fin. */
-export const nextAfterTools = (
-  isSoleOwner: boolean,
-): '/bienvenue/collaborateurs' | '/bienvenue/pret' =>
-  isSoleOwner ? '/bienvenue/collaborateurs' : '/bienvenue/pret';
+export const nextAfterTools = (isSoleOwner: boolean): '/welcome/teammates' | '/welcome/ready' =>
+  isSoleOwner ? '/welcome/teammates' : '/welcome/ready';

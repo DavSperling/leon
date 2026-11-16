@@ -99,7 +99,7 @@ export function AuthLink({ href, children }: { href: string; children: ReactNode
 }
 
 // La pile ne décore que les pages de porte ; une autorisation se lit seule, sur la feuille.
-const WITH_PILE = ['/connexion', '/inscription', '/mot-de-passe-oublie', '/reinitialiser'];
+const WITH_PILE = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password'];
 
 /**
  * À côté du formulaire : le produit en une image. Une question, la réponse de Leon (les seuls mots de la source sous le

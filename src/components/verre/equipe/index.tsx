@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState, useTransition } from 'react';
 import { flushSync } from 'react-dom';
-import { setInvitationManagerAction } from '@/app/(app)/equipe/actions';
-import { setManagerAction } from '@/app/(app)/reglages/actions';
+import { setManagerAction } from '@/app/(app)/settings/actions';
+import { setInvitationManagerAction } from '@/app/(app)/team/actions';
 import {
   Avatar,
   Button,
@@ -101,13 +101,13 @@ export function Team({
   const [openId, setOpenId] = useState<string | null>(personne);
   const openPerson = (id: string) => {
     setOpenId(id);
-    const url = `/equipe?personne=${id}`;
+    const url = `/team?personne=${id}`;
     if (reports.some((r) => r.memberId === id)) router.replace(url, { scroll: false });
     else window.history.replaceState(null, '', url);
   };
   const closePerson = () => {
     setOpenId(null);
-    window.history.replaceState(null, '', '/equipe');
+    window.history.replaceState(null, '', '/team');
   };
   const opened = people.find((p) => p.id === openId) ?? null;
 
@@ -142,8 +142,7 @@ export function Team({
   const closeDirectory = (open: boolean) => {
     setDirectoryOpen(open);
     // l'aperçu ne se rouvre pas au rechargement
-    if (!open && (directory?.plan || directory?.error))
-      router.replace('/equipe', { scroll: false });
+    if (!open && (directory?.plan || directory?.error)) router.replace('/team', { scroll: false });
   };
 
   const [group, setGroup] = useState<{ group: Groupe | null; session: number } | null>(null);

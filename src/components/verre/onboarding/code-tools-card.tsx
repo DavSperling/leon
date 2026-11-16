@@ -73,7 +73,7 @@ export function CodeToolsCard({
       </div>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
         <Button asChild variant="link" size="sm">
-          <Link href="/reglages#ordinateurs">{t('whatLeaves')}</Link>
+          <Link href="/settings#ordinateurs">{t('whatLeaves')}</Link>
         </Button>
         <Button asChild variant="link" size="sm">
           <Link href="/documentation" target="_blank">

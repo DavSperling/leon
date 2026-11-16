@@ -361,7 +361,7 @@ export function LeonCard({ content, citations, live, fresh, onOpen }: LeonCardPr
           )}
           {reply.fixed === 'empty' && citations.length === 0 && (
             <Button asChild variant="link" className="mt-2 text-ui">
-              <Link href="/connexions">{t('connectTool')}</Link>
+              <Link href="/connections">{t('connectTool')}</Link>
             </Button>
           )}
           {reply.limit && <p className="mt-4 text-ui text-muted">{nb(t('limitNote'))}</p>}

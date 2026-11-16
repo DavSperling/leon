@@ -8,7 +8,7 @@ import {
   removeSsoAction,
   type SsoFormState,
   verifySsoDomainAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/settings/actions';
 import {
   Badge,
   Button,

@@ -4,7 +4,7 @@ import { Moon, Sun } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
-import { setLocaleAction } from '@/app/(app)/reglages/actions';
+import { setLocaleAction } from '@/app/(app)/settings/actions';
 import { Brand } from '@/components/verre/shell/brand';
 import { IconButton } from '@/components/verre/ui/button';
 import { useTheme } from '@/lib/verre/theme';

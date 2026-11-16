@@ -10,11 +10,11 @@ import { fetchPassageContext } from '@/server/search/context';
 import { NOTHING_FOUND, type ShellFound, searchShell } from '@/server/shell/shell';
 
 // Seule la session compte : une personne sans organisation (mauvais compte Google, par exemple) doit pouvoir
-// se déconnecter, pas être renvoyée sur /bienvenue.
+// se déconnecter, pas être renvoyée sur /welcome.
 export async function signOutAction(): Promise<void> {
-  if (!(await getSession())) redirect('/connexion');
+  if (!(await getSession())) redirect('/sign-in');
   await signOutCurrentUser();
-  redirect('/connexion');
+  redirect('/sign-in');
 }
 
 export type PreviewResult =

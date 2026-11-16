@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { withUnchecked } from './depots-equipe';
 
-vi.mock('@/app/(app)/reglages/actions', () => ({ setDepotEquipeAction: vi.fn() }));
+vi.mock('@/app/(app)/settings/actions', () => ({ setDepotEquipeAction: vi.fn() }));
 
 // C07 : un dépôt décoché que la page ne relit plus (saisi à la main, ou coché par un autre administrateur) garde sa
 // ligne, décochée, à sa place : sa case garde le focus, et on peut le recocher sans le ressaisir.

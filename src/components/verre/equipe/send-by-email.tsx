@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { type FormEvent, useId, useState, useTransition } from 'react';
-import { type SendInvitationError, sendInvitationEmailAction } from '@/app/(app)/equipe/actions';
+import { type SendInvitationError, sendInvitationEmailAction } from '@/app/(app)/team/actions';
 import { Button } from '@/components/verre/ui/button';
 import { Input } from '@/components/verre/ui/form';
 import { DoneMark } from '@/components/verre/ui/marks';

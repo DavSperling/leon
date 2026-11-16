@@ -47,11 +47,11 @@ export const BRIEFING_NO_MODEL_MARKDOWN =
 const BRIEFING_MAX_TOKENS = 8000;
 // Le recalcul tourne dans un job, pas devant l'utilisateur : il a le temps, mais pas indéfiniment.
 const BRIEFING_TIMEOUT_MS = 120_000;
-// Le plafond de dépense : au plus 20 points écrits par le modèle par personne et par jour (UTC, reserver_point,
-// 0060), toutes organisations et tous projets confondus. Du 3 au 10/11/2026, la production en a payé 1 à 6 par
-// jour pour deux personnes, 3,6 centimes au plus chacun : 20 points coûtent au plus 0,72 $ par personne et par jour.
-// Au-delà, le point reste tel quel jusqu'au lendemain.
-export const BRIEFING_DAILY_CAP = 20;
+// Le plafond de dépense : au plus 4 points écrits par le modèle par personne et par jour (UTC, reserver_point,
+// 0060), toutes organisations et tous projets confondus : celui du matin et quelques mises à jour dans la journée.
+// Avec Haiku (models.ts), un point coûte environ 0,4 centime (mesuré le 16/11/2026) : au plus 2 centimes par
+// personne et par jour. Au-delà, le point reste tel quel jusqu'au lendemain.
+export const BRIEFING_DAILY_CAP = 4;
 
 // Le texte du modèle, renvois filtrés : seuls les numéros fournis restent.
 async function writeBody(

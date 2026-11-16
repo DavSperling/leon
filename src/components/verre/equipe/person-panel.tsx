@@ -3,10 +3,12 @@
 import { Check, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { type FormEvent, useOptimistic, useState, useTransition } from 'react';
+import { type FormEvent, useEffect, useOptimistic, useState, useTransition } from 'react';
 import {
   cancelInvitationAction,
+  renewInvitationAction,
   setFollowedAction,
+  setInvitationManagerAction,
   setSeeAllAction,
 } from '@/app/(app)/equipe/actions';
 import {
@@ -19,9 +21,11 @@ import { NATURE_LABELS } from '@/components/search/view-model';
 import {
   Avatar,
   Button,
+  CopyButton,
   EmptyState,
   Fact,
   Facts,
+  Input,
   Notice,
   PanelClose,
   Pill,
@@ -43,6 +47,7 @@ import type { MemberRow } from '@/server/auth/members';
 import type { Report } from '@/server/auth/organisation';
 import type { SourceHit } from '@/server/search/types';
 import { ReportsTo } from './reports-to';
+import { SendByEmail } from './send-by-email';
 
 /** Une personne de l'écran : un membre, ou un lien d'invitation pas encore servi (`invited`). */
 export type Person = Omit<MemberRow, 'userId'> & { invited?: boolean; expiresAt?: Date };
@@ -439,7 +444,11 @@ function ActivityItem({ hit }: { hit: SourceHit }) {
   );
 }
 
-/** La fiche d'une invitation pas encore servie : ce que le lien porte, et de quoi l'annuler. */
+/**
+ * La fiche d'une invitation pas encore servie : ce que le lien porte, à qui elle sera rattachée (modifiable), de quoi
+ * renvoyer un lien et de quoi l'annuler. Le lien en clair ne se relit pas : « Renvoyer le lien » en crée un nouveau,
+ * montré une seule fois, et l'ancien ne marche plus.
+ */
 export function InvitationPanel({
   person,
   open,
@@ -457,8 +466,38 @@ export function InvitationPanel({
   const locale = useLocale();
   const [asking, setAsking] = useState(false);
   const [pending, startTransition] = useTransition();
+  const [renewed, setRenewed] = useState<{ url: string; expiresAt: Date } | null>(null);
+  const [renewing, startRenew] = useTransition();
+  const [manager, setManager] = useOptimistic(person.managerId);
+  const [savingManager, startManager] = useTransition();
+  const [managerFailed, setManagerFailed] = useState(false);
   const level = seniorityId(person.seniority);
-  const managerName = people.find((p) => p.id === person.managerId)?.name;
+  const expiresAt = renewed?.expiresAt ?? person.expiresAt;
+  // le nouveau lien paraît : le focus va à son champ (le bouton a disparu), sans faire défiler
+  useEffect(() => {
+    if (renewed) document.getElementById('nouveau-lien')?.focus({ preventScroll: true });
+  }, [renewed]);
+  const changeManager = (next: string | null) =>
+    startManager(async () => {
+      setManagerFailed(false);
+      setManager(next);
+      try {
+        const { ok } = await setInvitationManagerAction(person.id, next);
+        if (!ok) setManagerFailed(true);
+      } catch {
+        setManagerFailed(true);
+      }
+    });
+  const renew = () =>
+    startRenew(async () => {
+      try {
+        const link = await renewInvitationAction(person.id);
+        if (link) setRenewed(link);
+        else toast.error(t('renewFailed'));
+      } catch {
+        toast.error(t('renewFailed'));
+      }
+    });
   const cancel = () =>
     startTransition(async () => {
       try {
@@ -480,6 +519,8 @@ export function InvitationPanel({
       picture={<Avatar name={person.name} size={44} />}
       title={person.name}
       sub={t('invited')}
+      // le nouveau lien n'est montré qu'une fois : le panneau ne se ferme plus que par « Terminé »
+      locked={renewed !== null || renewing}
       confirm={
         asking
           ? {
@@ -513,11 +554,54 @@ export function InvitationPanel({
           <Fact label={o('job')}>{o(jobLabelKey(person.department, person.job))}</Fact>
         )}
         {level && <Fact label={o('seniorityLabel')}>{o(`seniority.${level}`)}</Fact>}
-        <Fact label={t('reportsToLabel')}>{managerName ?? t('nobody')}</Fact>
-        {person.expiresAt && (
-          <Fact label={t('expires')}>{formatDate(person.expiresAt, locale)}</Fact>
-        )}
+        <Fact label={t('reportsToLabel')}>
+          <ReportsTo
+            label={t('reportsToLabel')}
+            value={manager}
+            people={people.filter((p) => !p.former && !p.invited)}
+            onChange={changeManager}
+            busy={savingManager}
+            invalid={managerFailed}
+            describedBy={managerFailed ? 'invite-rattache-erreur' : undefined}
+          />
+          {managerFailed && (
+            <small
+              id="invite-rattache-erreur"
+              role="alert"
+              className="!text-destructive font-medium"
+            >
+              {nb(s('memberFailed'))}
+            </small>
+          )}
+        </Fact>
+        {expiresAt && <Fact label={t('expires')}>{formatDate(expiresAt, locale)}</Fact>}
       </Facts>
+      {renewed ? (
+        <div className="mt-6 grid gap-1.5 border-t border-line pt-5">
+          <label htmlFor="nouveau-lien" className="text-label font-medium text-fg">
+            {t('newLink')}
+          </label>
+          <div className="flex gap-2">
+            <Input
+              id="nouveau-lien"
+              readOnly
+              value={renewed.url}
+              onFocus={(e) => e.currentTarget.select()}
+              className="h-10 min-w-0 flex-1 px-3"
+            />
+            <CopyButton value={renewed.url} size="md" />
+          </div>
+          <p className="text-label text-muted">{nb(t('oldLinkDead'))}</p>
+          <SendByEmail url={renewed.url} className="mt-4" />
+        </div>
+      ) : (
+        <div className="mt-6 grid justify-items-start gap-3 border-t border-line pt-5">
+          <p className="text-label text-muted">{nb(t('renewHelp'))}</p>
+          <Button onClick={renew} loading={renewing} loadingLabel={t('creating')}>
+            {t('renewLink')}
+          </Button>
+        </div>
+      )}
     </SidePanel>
   );
 }

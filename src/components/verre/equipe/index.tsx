@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRef, useState, useTransition } from 'react';
 import { flushSync } from 'react-dom';
+import { setInvitationManagerAction } from '@/app/(app)/equipe/actions';
 import { setManagerAction } from '@/app/(app)/reglages/actions';
 import {
   Avatar,
@@ -122,8 +123,13 @@ export function Team({
     startMove(async () => {
       setMovingId(memberId);
       try {
-        const { result } = await setManagerAction(memberId, managerId);
-        if (result !== 'ok') toast.error(nb(s(MANAGER_REFUSAL[result])));
+        if (people.find((p) => p.id === memberId)?.invited) {
+          const { ok } = await setInvitationManagerAction(memberId, managerId);
+          if (!ok) toast.error(s('memberFailed'));
+        } else {
+          const { result } = await setManagerAction(memberId, managerId);
+          if (result !== 'ok') toast.error(nb(s(MANAGER_REFUSAL[result])));
+        }
       } catch {
         toast.error(s('memberFailed'));
       }

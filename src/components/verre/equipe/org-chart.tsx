@@ -72,7 +72,7 @@ const keepInView = (el: HTMLElement | null) =>
  * L'organigramme de l'équipe (.org-tree, globals.css) : chaque personne une tuile, des traits fins entre elles. Un
  * clic ouvre sa fiche. Pour qui peut inviter : un « + » sous chaque personne invite quelqu'un sous elle (ils paraissent
  * tous dès que le pointeur entre dans l'arbre : rien à chercher, et l'arbre reste net au repos), et une
- * personne glissée sur une autre passe sous elle (la fiche le fait aussi : jamais le seul moyen). Une personne déposée
+ * personne glissée sur une autre passe sous elle, un invité aussi (la fiche le fait aussi : jamais le seul moyen). Une personne déposée
  * sur « Pas encore placés » n'est plus rattachée à personne.
  */
 export function OrgChart({
@@ -123,7 +123,8 @@ export function OrgChart({
   });
 
   const tile = (p: ChartMember, wide = false) => {
-    const movable = admin && !p.invited;
+    // un invité se glisse aussi : son manager s'applique à son arrivée ; il ne reçoit personne sous lui
+    const movable = admin;
     return (
       <Thing
         ref={p.self ? keepInView : undefined}

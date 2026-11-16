@@ -4,7 +4,12 @@ import { revalidatePath } from 'next/cache';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 import { localeOf } from '@/i18n/request';
-import { cancelInvitation, invitationToSend } from '@/server/auth/members';
+import {
+  cancelInvitation,
+  invitationToSend,
+  renewInvitationLink,
+  setInvitationManager,
+} from '@/server/auth/members';
 import { setFollowed, setSeeAll } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import { getSession, requestHeaders, requireUserContext } from '@/server/auth/session';
@@ -39,6 +44,31 @@ export async function cancelInvitationAction(id: string): Promise<{ ok: boolean 
   const ctx = await requireUserContext();
   const ok = await cancelInvitation(ctx, id);
   if (ok) revalidatePath('/', 'layout');
+  return { ok };
+}
+
+// « Renvoyer le lien » d'une invitation en attente : un nouveau lien, l'ancien ne marche plus. null si refusé.
+export async function renewInvitationAction(
+  id: string,
+): Promise<{ url: string; expiresAt: Date } | null> {
+  const ctx = await requireUserContext();
+  const link = await renewInvitationLink(ctx, id);
+  if (!link) return null;
+  revalidatePath('/equipe');
+  return {
+    url: new URL(`/invitation/${link.token}`, env.BETTER_AUTH_URL).toString(),
+    expiresAt: link.expiresAt,
+  };
+}
+
+// Le manager d'un invité, appliqué à son arrivée (propriétaire ou administrateur).
+export async function setInvitationManagerAction(
+  id: string,
+  managerId: string | null,
+): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await setInvitationManager(ctx, id, managerId);
+  if (ok) revalidatePath('/equipe');
   return { ok };
 }
 

@@ -18,6 +18,8 @@ import {
   joinWithInvitation,
   listInvitations,
   listMembers,
+  renewInvitationLink,
+  setInvitationManager,
   setMemberPlacement,
 } from './members';
 import type { TenantContext } from './tenant-context';
@@ -498,6 +500,47 @@ describe("l'invitation sous un manager", () => {
     expect(await cancelInvitation(owner, link.id)).toBe(true);
     expect(await findInvitation(token)).toBeNull();
     expect(await listInvitations(owner)).toEqual([]);
+  });
+
+  it("renvoie un lien : le nouveau fait entrer, l'ancien plus ; ni un membre ni un autre espace ne le font", async () => {
+    const { owner, member, token } = await tenantWithLink();
+    const [link] = await listInvitations(owner);
+    if (!link) throw new Error('lien absent');
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'owner');
+
+    expect(await renewInvitationLink(member, link.id)).toBeNull();
+    expect(await renewInvitationLink(zoe, link.id)).toBeNull();
+    expect(await renewInvitationLink(owner, 'pas-un-id')).toBeNull();
+    const renewed = await renewInvitationLink(owner, link.id);
+    if (!renewed) throw new Error('lien non renvoyé');
+    expect(renewed.token).not.toBe(token);
+    expect(await findInvitation(token)).toBeNull();
+    expect(await findInvitation(renewed.token)).not.toBeNull();
+    expect(await listInvitations(owner)).toEqual([
+      expect.objectContaining({ id: link.id, expiresAt: renewed.expiresAt }),
+    ]);
+    expect(await cancelInvitation(owner, link.id)).toBe(true);
+    expect(await renewInvitationLink(owner, link.id)).toBeNull();
+  });
+
+  it("rattache un invité à un membre de l'organisation, ou à personne, par qui peut inviter", async () => {
+    const { owner, member } = await tenantWithLink();
+    const [link] = await listInvitations(owner);
+    if (!link) throw new Error('lien absent');
+    const davidId = await memberIdOf(member);
+    const other = await createTestTenant(['Zoé']);
+    const [zoe] = other.members as [TenantContext];
+    await setRole(zoe, 'owner');
+
+    expect(await setInvitationManager(member, link.id, davidId)).toBe(false);
+    expect(await setInvitationManager(zoe, link.id, null)).toBe(false);
+    expect(await setInvitationManager(owner, link.id, await memberIdOf(zoe))).toBe(false);
+    expect(await setInvitationManager(owner, link.id, davidId)).toBe(true);
+    expect((await listInvitations(owner))[0]?.managerId).toBe(davidId);
+    expect(await setInvitationManager(owner, link.id, null)).toBe(true);
+    expect((await listInvitations(owner))[0]?.managerId).toBeNull();
   });
 
   it("ne laisse envoyer qu'un lien utilisable de son organisation, par qui peut inviter", async () => {

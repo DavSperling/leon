@@ -394,6 +394,50 @@ export async function cancelInvitation(ctx: TenantContext, id: string): Promise<
   return rows.length > 0;
 }
 
+// Un lien en attente de l'organisation du lecteur, s'il peut inviter : pas encore servi, pas expiré.
+const pendingLink = (ctx: TenantContext, id: string) =>
+  and(
+    eq(invitationLinks.id, id),
+    eq(invitationLinks.tenantId, ctx.tenantId),
+    isNull(invitationLinks.usedAt),
+    sql`${invitationLinks.expiresAt} > now()`,
+  );
+
+// « Renvoyer le lien » : le lien en clair ne se relit jamais, alors l'invitation en reçoit un nouveau, valable
+// INVITATION_DAYS de plus. L'ancien ne marche plus. Même nom, même poste, même manager. Rend le lien en clair une seule
+// fois ; null si le lecteur ne peut pas inviter ou si le lien a servi, expiré ou été annulé.
+export async function renewInvitationLink(
+  ctx: TenantContext,
+  id: string,
+): Promise<{ token: string; expiresAt: Date } | null> {
+  if (!z.uuid().safeParse(id).success || !(await canInvite(ctx))) return null;
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + INVITATION_DAYS * DAY_MS);
+  const rows = await db
+    .update(invitationLinks)
+    .set({ tokenHash: hashInvitationToken(token), expiresAt })
+    .where(pendingLink(ctx, id))
+    .returning({ id: invitationLinks.id });
+  return rows.length > 0 ? { token, expiresAt } : null;
+}
+
+// Rattache un invité (null : à personne), appliqué à son arrivée : glissé dans l'organigramme, ou choisi sur sa fiche.
+// Le manager est un membre présent de l'organisation ; un invité n'en a pas encore sous lui, donc pas de boucle.
+export async function setInvitationManager(
+  ctx: TenantContext,
+  id: string,
+  managerId: string | null,
+): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success || !(await canInvite(ctx))) return false;
+  if (managerId !== null && !(await isMemberOf(ctx, managerId))) return false;
+  const rows = await db
+    .update(invitationLinks)
+    .set({ managerId })
+    .where(pendingLink(ctx, id))
+    .returning({ id: invitationLinks.id });
+  return rows.length > 0;
+}
+
 // Un lien encore utilisable de l'organisation du lecteur, qui peut inviter : ce que l'e-mail d'invitation dit (le nom
 // de l'organisation, l'expiration). null sinon : un lien d'ailleurs, servi ou expiré ne part pas par Leon.
 export async function invitationToSend(

@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import type { InviteErrors, PlacementInput } from '@/app/(app)/reglages/actions';
+import type { InviteErrors, PlacementInput } from '@/app/(app)/settings/actions';
 import { Field, Select } from '@/components/verre/ui/form';
 import {
   DEPARTMENT_IDS,

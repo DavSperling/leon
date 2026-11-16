@@ -31,18 +31,18 @@ describe('requireUserContext', () => {
   it('sans session, renvoie vers la connexion', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(null);
 
-    await expect(requireUserContext()).rejects.toThrow('NEXT_REDIRECT /connexion');
+    await expect(requireUserContext()).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
-    expect(redirect).toHaveBeenCalledWith('/connexion');
+    expect(redirect).toHaveBeenCalledWith('/sign-in');
   });
 
-  it('une session sans organisation est renvoyée vers /bienvenue', async () => {
+  it('une session sans organisation est renvoyée vers /welcome', async () => {
     vi.mocked(auth.api.getSession).mockResolvedValue(sessionOf(null));
     vi.mocked(resolveSessionContext).mockResolvedValue(null);
 
-    await expect(requireUserContext()).rejects.toThrow('NEXT_REDIRECT /bienvenue');
+    await expect(requireUserContext()).rejects.toThrow('NEXT_REDIRECT /welcome');
 
-    expect(redirect).toHaveBeenCalledWith('/bienvenue');
+    expect(redirect).toHaveBeenCalledWith('/welcome');
   });
 
   it('avec une organisation, rend le contexte sans rediriger', async () => {

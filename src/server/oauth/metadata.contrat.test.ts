@@ -30,7 +30,7 @@ const L1 = {
 const L2 = `Bearer resource_metadata="${BASE}/.well-known/oauth-protected-resource/api/mcp", scope="leon"`;
 const L3 = {
   issuer: BASE,
-  authorization_endpoint: `${BASE}/oauth/autoriser`,
+  authorization_endpoint: `${BASE}/oauth/authorize`,
   token_endpoint: `${BASE}/api/oauth/jeton`,
   registration_endpoint: `${BASE}/api/oauth/clients`,
   response_types_supported: ['code'],

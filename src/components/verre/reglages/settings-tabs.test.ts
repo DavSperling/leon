@@ -15,7 +15,7 @@ describe('tabOf', () => {
     expect(tabOf('#claude-code')).toBeUndefined();
   });
 
-  // Connexions mène à /reglages#equipe pour les dépôts d'équipe : le groupe Espace de travail garde l'id « equipe ».
+  // Connexions mène à /settings#equipe pour les dépôts d'équipe : le groupe Espace de travail garde l'id « equipe ».
   it('ouvre Espace de travail pour #equipe, #sso, #managers et #depots-equipe', () => {
     for (const anchor of ['equipe', 'sso', 'managers', 'depots-equipe']) {
       expect(tabOf(`#${anchor}`), anchor).toBe('equipe');
@@ -30,7 +30,7 @@ describe('tabOf', () => {
     expect(tabOf('#workspace')).toBe('equipe');
   });
 
-  // T55 : la section Mémoire est le cinquième groupe ; /connexion?retour=memoire y ramène par #memoire.
+  // T55 : la section Mémoire est le cinquième groupe ; /sign-in?retour=memoire y ramène par #memoire.
   it('ouvre Mémoire pour #memoire', () => {
     expect(tabOf('#memoire')).toBe('memoire');
   });

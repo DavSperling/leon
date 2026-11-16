@@ -52,7 +52,7 @@ export const authorizeQuery = ({ port, etat, empreinte, usages }: AuthorizeParam
   }).toString();
 
 export const authorizePath = (params: AuthorizeParams) =>
-  `/ordinateur/autoriser?${authorizeQuery(params)}`;
+  `/computer/authorize?${authorizeQuery(params)}`;
 
 // « Autoriser » : le code signé ; « Annuler » : refus=1. Toujours http://127.0.0.1:<port>/retour (la CLI n'écoute que là).
 // Les cases n'y sont jamais : elles ne partent que dans la charge signée du code.
@@ -63,12 +63,12 @@ export function returnUrl({ port, etat }: AuthorizeParams, outcome: { code: stri
   return `http://127.0.0.1:${port}/retour?${query}`;
 }
 
-// La section Mémoire des réglages (T55) : sa reconnexion (/connexion?retour=memoire) y ramène, par cette seule valeur.
-export const MEMORY_RETURN_PATH = '/reglages#memoire';
+// La section Mémoire des réglages (T55) : sa reconnexion (/sign-in?retour=memoire) y ramène, par cette seule valeur.
+export const MEMORY_RETURN_PATH = '/settings#memoire';
 
 // Où va la connexion qui suit une page d'autorisation sans session : le champ `retour` du formulaire revient d'un
 // navigateur, donc il ne vaut rien tel quel. Pour un ordinateur, on n'en garde que ses paramètres, revalidés ;
-// pour un assistant (/oauth/autoriser), la forme de la demande (oauthReturnPath, qui ne lit pas le client : la page le
+// pour un assistant (/oauth/authorize), la forme de la demande (oauthReturnPath, qui ne lit pas le client : la page le
 // fait à chaque affichage). Dans les deux cas le chemin est rebâti. Ou la section Mémoire, valeur fixe. Tout autre
 // contenu : l'accueil.
 export function pathAfterSignIn(value: unknown): string {
@@ -79,7 +79,7 @@ export function pathAfterSignIn(value: unknown): string {
     return (
       oauthReturnPath(Object.fromEntries(new URLSearchParams(value.slice(oauth.length)))) ?? '/'
     );
-  const prefix = '/ordinateur/autoriser?';
+  const prefix = '/computer/authorize?';
   if (!value.startsWith(prefix)) return '/';
   const params = parseAuthorizeParams(
     Object.fromEntries(new URLSearchParams(value.slice(prefix.length))),

@@ -5,18 +5,18 @@ import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useEffect, useOptimistic, useState, useTransition } from 'react';
 import {
+  removeMemberAction,
+  setManagerAction,
+  setMemberPlacementAction,
+  setMemberRoleAction,
+} from '@/app/(app)/settings/actions';
+import {
   cancelInvitationAction,
   renewInvitationAction,
   setFollowedAction,
   setInvitationManagerAction,
   setSeeAllAction,
-} from '@/app/(app)/equipe/actions';
-import {
-  removeMemberAction,
-  setManagerAction,
-  setMemberPlacementAction,
-  setMemberRoleAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/team/actions';
 import { NATURE_LABELS } from '@/components/search/view-model';
 import {
   Avatar,

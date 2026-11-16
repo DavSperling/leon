@@ -3,7 +3,7 @@
 import { FolderGit2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useActionState, useId, useOptimistic, useState, useTransition } from 'react';
-import { setDepotEquipeAction } from '@/app/(app)/reglages/actions';
+import { setDepotEquipeAction } from '@/app/(app)/settings/actions';
 import {
   Button,
   Checkbox,

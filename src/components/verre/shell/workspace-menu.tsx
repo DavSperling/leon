@@ -105,7 +105,7 @@ export function AccountMenu({ organizationName, userName, userEmail, userImage, 
             </span>
           </span>
         </div>
-        <DropdownMenuItem icon={Settings2} onSelect={() => router.push('/reglages')}>
+        <DropdownMenuItem icon={Settings2} onSelect={() => router.push('/settings')}>
           {navT('settings')}
         </DropdownMenuItem>
         <DropdownMenuItem icon={theme === 'dark' ? Sun : Moon} onSelect={toggle}>

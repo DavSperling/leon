@@ -154,7 +154,7 @@ export async function requestPasswordResetAction(
   }
   try {
     await auth.api.requestPasswordReset({
-      body: { email, redirectTo: new URL('/reinitialiser', env.BETTER_AUTH_URL).toString() },
+      body: { email, redirectTo: new URL('/reset-password', env.BETTER_AUTH_URL).toString() },
       headers: await headers(),
     });
   } catch (error) {
@@ -282,14 +282,14 @@ const INVITATION_TOKEN = /^[A-Za-z0-9_-]{43}$/; // le secret d'un lien d'invitat
 
 // Où revenir après Google, Microsoft ou le SSO : la page du lien d'invitation, qui fait rejoindre son espace ; sinon
 // le retour revalidé (un ordinateur, un assistant) ou l'accueil, et l'onboarding pour un compte tout neuf. Une erreur
-// revient sur /connexion?error=…, que la page traduit.
+// revient sur /sign-in?error=…, que la page traduit.
 function returnPaths(formData: FormData) {
   const token = String(formData.get('token') ?? '');
   const invitation = INVITATION_TOKEN.test(token) ? `/invitation/${token}` : null;
   return {
     callbackURL: invitation ?? pathAfterSignIn(formData.get('retour')),
     newUserCallbackURL: invitation ?? ONBOARDING_PATH,
-    errorCallbackURL: '/connexion',
+    errorCallbackURL: '/sign-in',
   };
 }
 
@@ -297,28 +297,26 @@ function returnPaths(formData: FormData) {
 // nextCookies), le navigateur y part.
 export async function socialSignInAction(formData: FormData): Promise<void> {
   const provider = String(formData.get('provider') ?? '');
-  if (!Object.hasOwn(socialProviders, provider)) redirect('/connexion');
+  if (!Object.hasOwn(socialProviders, provider)) redirect('/sign-in');
   const { url } = await auth.api.signInSocial({
     body: { provider: provider as SocialProviderId, ...returnPaths(formData) },
     headers: await headers(),
   });
-  redirect(url ?? '/connexion');
+  redirect(url ?? '/sign-in');
 }
 
 // Google One Tap : le jeton signé par Google arrive du navigateur ; Better Auth le vérifie, ouvre la session (cookie
 // posé par nextCookies), et l'accueil mène un nouveau compte à l'onboarding (requireUserContext).
 export async function oneTapAction(idToken: string): Promise<void> {
   if (!socialProviders.google || typeof idToken !== 'string' || idToken.length > 4096) {
-    redirect('/connexion');
+    redirect('/sign-in');
   }
   try {
     await auth.api.oneTapCallback({ body: { idToken }, headers: await headers() });
   } catch (error) {
     const message = error instanceof Error ? error.message : '';
     // Même message que le bouton : « account not linked » quand un compte par mot de passe non vérifié existe.
-    redirect(
-      `/connexion?error=${/not[_ ]linked/i.test(message) ? 'account_not_linked' : 'one_tap'}`,
-    );
+    redirect(`/sign-in?error=${/not[_ ]linked/i.test(message) ? 'account_not_linked' : 'one_tap'}`);
   }
   redirect('/');
 }
@@ -352,7 +350,7 @@ export async function ssoSignInAction(
 export async function joinWithSessionAction(formData: FormData): Promise<void> {
   const token = String(formData.get('token') ?? '');
   const session = await getSession();
-  if (!session) redirect('/connexion');
+  if (!session) redirect('/sign-in');
   // Déjà dans un espace : un compte n'en rejoint pas un second par un lien (comme l'inscription par invitation).
   if (await getUserContext()) redirect('/');
   const tenantId = await joinWithInvitation(token, session.user.id);

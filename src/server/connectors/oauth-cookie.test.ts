@@ -21,12 +21,12 @@ describe('cookie de l’aller-retour OAuth', () => {
   });
 
   it('garde la page de retour demandée, tirée de la liste fermée', () => {
-    const withReturn: OAuthPending = { ...pending, returnTo: '/bienvenue/outils' };
+    const withReturn: OAuthPending = { ...pending, returnTo: '/welcome/tools' };
     expect(openPending(sealPending(withReturn), NOW + 1000)).toEqual(withReturn);
   });
 
   it('refuse un cookie bien signé dont la page de retour est hors de la liste', () => {
-    for (const returnTo of ['https://ailleurs', '//ailleurs', '/bienvenue/outils/', '/autre']) {
+    for (const returnTo of ['https://ailleurs', '//ailleurs', '/welcome/tools/', '/autre']) {
       const cookie = sealPending({ ...pending, returnTo: returnTo as never });
       expect(openPending(cookie, NOW)).toBeNull();
     }

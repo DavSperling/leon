@@ -40,7 +40,7 @@ export async function signedInRecently(): Promise<boolean> {
 }
 
 // Où l'on renvoie une personne connectée qui n'a pas (ou pas fini) son espace.
-export const ONBOARDING_PATH = '/bienvenue';
+export const ONBOARDING_PATH = '/welcome';
 
 // La session et le contexte de l'utilisateur connecté (organisation active, ou à défaut la première : voir
 // resolveSessionContext). Une fois par rendu, comme getSession : le layout et la page reçoivent le même objet, ce
@@ -65,7 +65,7 @@ export async function getUserContext(): Promise<TenantContext | null> {
 export async function requireUserContext(): Promise<TenantContext> {
   const { session, ctx } = await sessionWithContext();
   if (ctx) return ctx;
-  redirect(session ? ONBOARDING_PATH : '/connexion');
+  redirect(session ? ONBOARDING_PATH : '/sign-in');
 }
 
 // Le cookie de session est posé par le plugin nextCookies.

@@ -40,13 +40,13 @@ export const recommendedToConnect = (
 /** L'endroit des Réglages où chaque canal de capture se règle : les sessions des outils de code par la commande
  *  d'installation des ordinateurs, claude.ai et ChatGPT par l'extension, `remember` (MCP) par un assistant branché. */
 export const CAPTURE_SETTINGS: Record<CaptureKind, string> = {
-  claude_code: '/reglages#ordinateurs',
-  codex: '/reglages#ordinateurs',
-  cursor: '/reglages#ordinateurs',
-  antigravity: '/reglages#ordinateurs',
-  claude_ai: '/reglages#extension',
-  chatgpt: '/reglages#extension',
-  mcp_remember: '/reglages#assistants',
+  claude_code: '/settings#ordinateurs',
+  codex: '/settings#ordinateurs',
+  cursor: '/settings#ordinateurs',
+  antigravity: '/settings#ordinateurs',
+  claude_ai: '/settings#extension',
+  chatgpt: '/settings#extension',
+  mcp_remember: '/settings#assistants',
 };
 
 type CardConn = Pick<

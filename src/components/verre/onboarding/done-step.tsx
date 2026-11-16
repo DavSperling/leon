@@ -38,7 +38,7 @@ export function DoneStep({ reading = [] }: { reading?: { id: string; label: stri
           </Button>
           {empty && (
             <Button asChild variant="quiet">
-              <Link href="/connexions">{t('connect')}</Link>
+              <Link href="/connections">{t('connect')}</Link>
             </Button>
           )}
         </div>

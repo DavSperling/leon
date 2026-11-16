@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { setLocaleAction } from '@/app/(app)/reglages/actions';
+import { setLocaleAction } from '@/app/(app)/settings/actions';
 import { Brand } from '@/components/verre/shell/brand';
 import { nb } from '@/lib/verre/nb';
 import { useSiteContent } from './content';
@@ -47,30 +47,30 @@ export function SiteFooter() {
     {
       title: t('product'),
       links: [
-        { href: '/produit', label: cta('howItWorks') },
-        { href: '/produit#retrouve', label: t('search') },
-        { href: '/produit#discute', label: t('discussions') },
-        { href: '/connecteurs', label: common('connectors') },
-        { href: '/tarifs', label: t('pricing') },
+        { href: '/product', label: cta('howItWorks') },
+        { href: '/product#retrouve', label: t('search') },
+        { href: '/product#discute', label: t('discussions') },
+        { href: '/connectors', label: common('connectors') },
+        { href: '/pricing', label: t('pricing') },
         { href: '/documentation', label: t('documentation') },
       ],
     },
     {
       title: common('useCases'),
-      links: teams.map((team) => ({ href: `/cas-usage/${team.slug}`, label: team.label })),
+      links: teams.map((team) => ({ href: `/use-cases/${team.slug}`, label: team.label })),
     },
     {
       title: t('trust'),
       links: [
-        { href: '/securite', label: common('security') },
-        { href: '/securite#pas-encore', label: security('notYet') },
+        { href: '/security', label: common('security') },
+        { href: '/security#pas-encore', label: security('notYet') },
       ],
     },
     {
       title: t('account'),
       links: [
-        { href: '/connexion', label: cta('signIn') },
-        { href: '/inscription', label: cta('create') },
+        { href: '/sign-in', label: cta('signIn') },
+        { href: '/sign-up', label: cta('create') },
       ],
     },
   ];
@@ -78,7 +78,7 @@ export function SiteFooter() {
     <footer className="s-ink s-foot">
       <Container className="s-grid s-foot__grid">
         <div className="col-[1/13] lg:col-[1/5]">
-          <Link href="/accueil" className="s-brand inline-flex min-h-11 items-center">
+          <Link href="/home" className="s-brand inline-flex min-h-11 items-center">
             <Brand className="h-9" />
           </Link>
           <p className="s-foot__line">{nb(taglines.source)}</p>

@@ -62,7 +62,7 @@ export function NewDiscussionForm({
           reads.length > 0 && (
             // d'où viendra la réponse : les outils branchés, en image ; un clic mène à Connexions
             <Link
-              href="/connexions"
+              href="/connections"
               aria-label={nb(
                 t('reads', {
                   tools: new Intl.ListFormat(locale, { type: 'conjunction' }).format(

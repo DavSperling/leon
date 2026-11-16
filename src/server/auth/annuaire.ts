@@ -284,8 +284,8 @@ export async function directoryLinkUrl(
     body: {
       provider: chosen,
       scopes: [DIRECTORY_SCOPES[chosen]],
-      callbackURL: `/equipe?annuaire=${chosen}`,
-      errorCallbackURL: '/equipe?annuaire=refus',
+      callbackURL: `/team?annuaire=${chosen}`,
+      errorCallbackURL: '/team?annuaire=refus',
       disableRedirect: true,
     },
     headers: await requestHeaders(),

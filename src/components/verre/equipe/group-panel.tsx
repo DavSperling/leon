@@ -3,7 +3,7 @@
 import { Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type FormEvent, useState, useTransition } from 'react';
-import { deleteGroupAction, saveGroupAction } from '@/app/(app)/reglages/actions';
+import { deleteGroupAction, saveGroupAction } from '@/app/(app)/settings/actions';
 import {
   Button,
   Checkbox,

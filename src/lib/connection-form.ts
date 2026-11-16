@@ -133,7 +133,7 @@ export const canSyncNow = (view: Pick<ConnectionView, 'status' | 'creatorLeft'>)
 
 // Les pages où le retour de l'éditeur peut revenir : une liste fermée, comparée à l'égalité exacte.
 // Une adresse du formulaire n'est jamais suivie telle quelle.
-export const OAUTH_RETURN_PATHS = ['/connexions', '/bienvenue/outils'] as const;
+export const OAUTH_RETURN_PATHS = ['/connections', '/welcome/tools'] as const;
 export type OAuthReturnPath = (typeof OAUTH_RETURN_PATHS)[number];
 export const isOAuthReturnPath = (value: unknown): value is OAuthReturnPath =>
   OAUTH_RETURN_PATHS.some((path) => path === value);
@@ -142,7 +142,7 @@ export const isOAuthReturnPath = (value: unknown): value is OAuthReturnPath =>
 // elle a été lancée, à rejoindre avec son `?branche=`. null : rester sur Connexions.
 export function setupReturn(params: Record<string, string | string[] | undefined>): string | null {
   const { state, branche } = params;
-  if (!isOAuthReturnPath(state) || state === '/connexions') return null;
+  if (!isOAuthReturnPath(state) || state === '/connections') return null;
   return typeof branche === 'string' ? `${state}?${new URLSearchParams({ branche })}` : state;
 }
 

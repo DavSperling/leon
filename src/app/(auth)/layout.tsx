@@ -19,7 +19,7 @@ export default async function AuthLayout({ children }: { children: ReactNode }) 
       >
         {t('skip')}
       </a>
-      <AuthBar home="/accueil">
+      <AuthBar home="/home">
         <LanguageChoice />
         <ThemeChoice />
       </AuthBar>

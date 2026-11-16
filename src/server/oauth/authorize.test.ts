@@ -286,7 +286,7 @@ describe('oauthAuthorizePath : le chemin rebâti depuis la demande validée', ()
     const request = await validated();
 
     expect(oauthAuthorizePath(request)).toBe(
-      `/oauth/autoriser?${new URLSearchParams([
+      `/oauth/authorize?${new URLSearchParams([
         ['response_type', 'code'],
         ['client_id', CLIENT_ID],
         ['redirect_uri', CLAUDE],
@@ -337,7 +337,7 @@ describe('oauthReturnPath : la forme seulement, pour le retour après la connexi
     const request = await validated();
 
     expect(
-      oauthReturnPath(query({ retour: 'https://evil.example', suite: '/reglages', port: '4242' })),
+      oauthReturnPath(query({ retour: 'https://evil.example', suite: '/settings', port: '4242' })),
     ).toBe(oauthAuthorizePath(request));
   });
 

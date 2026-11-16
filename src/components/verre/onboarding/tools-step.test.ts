@@ -17,7 +17,7 @@ vi.mock('@/components/verre/connexions/tool-dialog', async () => {
       createElement('div', { 'data-dialog': entry?.id ?? '', 'data-open': String(open) }),
   };
 });
-vi.mock('@/app/(onboarding)/bienvenue/actions', () => ({ chooseToolsAction: vi.fn() }));
+vi.mock('@/app/(onboarding)/welcome/actions', () => ({ chooseToolsAction: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
@@ -58,7 +58,7 @@ const step = (over: Partial<ToolsStepProps> & { recommended?: string[]; conns?: 
     now: new Date('2026-11-03T10:00:00Z'),
     canConnect: true,
     consentUrl: null,
-    nextHref: '/bienvenue/collaborateurs',
+    nextHref: '/welcome/teammates',
     steps: ['about', 'tools', 'teammates'],
     notice: null,
     connecting: false,
@@ -130,7 +130,7 @@ describe('ToolsStep : le choix', () => {
 
     expect(checkbox(html, 'github')).toBeNull();
     expect(html).not.toContain('type="submit"');
-    expect(html).toContain('href="/bienvenue/collaborateurs"');
+    expect(html).toContain('href="/welcome/teammates"');
     expect(html).toContain('>Continue<');
   });
 });
@@ -144,7 +144,7 @@ describe('ToolsStep : la file « Branchez-les un par un »', () => {
     expect(inked(html)).toBe('github');
     expect(html).toContain('aria-label="Connect gmail"');
     expect(html).toContain('data-open="false"');
-    expect(html).toContain('href="/bienvenue/outils"');
+    expect(html).toContain('href="/welcome/tools"');
     expect(html).toContain('I’ll connect the rest later');
   });
 
@@ -177,7 +177,7 @@ describe('ToolsStep : la file « Branchez-les un par un »', () => {
     );
 
     expect(html).toContain('Everything is connected');
-    expect(html).toContain('href="/bienvenue/collaborateurs"');
+    expect(html).toContain('href="/welcome/teammates"');
     expect(html).not.toContain('tl__pill');
   });
 
@@ -220,7 +220,7 @@ describe('ToolsStep : Vos outils de code', () => {
     const html = render(withCode(['github'], null));
 
     expect(html).not.toContain(CARD);
-    expect(html).not.toContain('/reglages#ordinateurs');
+    expect(html).not.toContain('/settings#ordinateurs');
   });
 
   it('se lit en français', () => {

@@ -85,7 +85,7 @@ export function TeammatesStep({ steps, organizationName, you }: TeammatesStepPro
 
   return (
     <div className="grid min-w-0 gap-6">
-      <OnboardingSteps steps={steps} current="teammates" back={{ tools: '/bienvenue/outils' }} />
+      <OnboardingSteps steps={steps} current="teammates" back={{ tools: '/welcome/tools' }} />
       <div className="grid gap-x-20 gap-y-10 lg:grid-cols-[minmax(0,520px)_minmax(0,1fr)]">
         {/* gap-4 : à 1512 × 771, toute l'étape tient dans la fenêtre, « Entrer dans Leon » compris. */}
         <div className="grid min-w-0 content-start gap-4">
@@ -179,10 +179,10 @@ export function TeammatesStep({ steps, organizationName, you }: TeammatesStepPro
 
           <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
             <Button asChild variant="primary" className="h-10" onClick={confirmLeave}>
-              <Link href="/bienvenue/pret">{tm('enter')}</Link>
+              <Link href="/welcome/ready">{tm('enter')}</Link>
             </Button>
             <Button asChild variant="quiet" onClick={confirmLeave}>
-              <Link href="/bienvenue/pret">{tm('skip')}</Link>
+              <Link href="/welcome/ready">{tm('skip')}</Link>
             </Button>
           </div>
 
@@ -197,7 +197,7 @@ export function TeammatesStep({ steps, organizationName, you }: TeammatesStepPro
                   <Button variant="primary">{tm('stay')}</Button>
                 </DialogClose>
                 <Button asChild variant="ghost">
-                  <Link href="/bienvenue/pret">{tm('leave')}</Link>
+                  <Link href="/welcome/ready">{tm('leave')}</Link>
                 </Button>
               </DialogFooter>
             </DialogContent>

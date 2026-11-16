@@ -17,7 +17,7 @@ describe('proxy de « / »', () => {
   });
 
   it('sans session, sert la page d’accueil publique à la même adresse', () => {
-    expect(rewrittenTo(proxy(request()))).toBe('http://localhost:3000/accueil');
+    expect(rewrittenTo(proxy(request()))).toBe('http://localhost:3000/home');
   });
 
   it('avec un cookie de session, laisse passer vers la recherche', () => {
@@ -28,7 +28,7 @@ describe('proxy de « / »', () => {
   });
 
   it('sert aussi l’accueil aux requêtes HEAD (sondes, aperçus de liens)', () => {
-    expect(rewrittenTo(proxy(request({ method: 'HEAD' })))).toBe('http://localhost:3000/accueil');
+    expect(rewrittenTo(proxy(request({ method: 'HEAD' })))).toBe('http://localhost:3000/home');
   });
 
   it('laisse les server actions (POST) et les autres méthodes à l’appli', () => {

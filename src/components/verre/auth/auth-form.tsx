@@ -84,7 +84,7 @@ const COPY = {
     submit: 'signIn',
     footer: 'noAccount',
     other: 'createWorkspace',
-    href: '/inscription',
+    href: '/sign-up',
     action: signInAction,
   },
   inscription: {
@@ -92,7 +92,7 @@ const COPY = {
     submit: 'createWorkspaceSubmit',
     footer: 'haveAccount',
     other: 'signIn',
-    href: '/connexion',
+    href: '/sign-in',
     action: signUpAction,
   },
   // Pas de lien « Se connecter » : se connecter à un compte existant ne fait pas rejoindre l'espace.
@@ -192,7 +192,7 @@ export function AuthForm({
         </p>
         {copy.href && (
           <Button asChild className={cn(DOOR, 'mt-6')}>
-            <Link href="/connexion">{t('signIn')}</Link>
+            <Link href="/sign-in">{t('signIn')}</Link>
           </Button>
         )}
       </AuthSheet>
@@ -213,7 +213,7 @@ export function AuthForm({
           aside={
             page === 'connexion' && isPw && canResetPassword ? (
               <Link
-                href="/mot-de-passe-oublie"
+                href="/forgot-password"
                 className="rounded-sm text-muted underline decoration-line-strong underline-offset-4 transition-colors hover:text-fg hover:decoration-fg max-[899px]:-my-3 max-[899px]:inline-flex max-[899px]:min-h-11 max-[899px]:items-center"
               >
                 {t('forgotLink')}
@@ -396,7 +396,7 @@ export function AuthForm({
                 <AuthNote tone="error">{formError}</AuthNote>
                 {formError === signedUpNotIn && (
                   <Button asChild size="xs" className="ml-4">
-                    <Link href="/connexion">{t('signIn')}</Link>
+                    <Link href="/sign-in">{t('signIn')}</Link>
                   </Button>
                 )}
               </div>

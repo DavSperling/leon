@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { nextAfterTools } from '@/components/verre/onboarding/tools-model';
 import { tabOf } from '@/components/verre/reglages/settings-tabs';
 import { OAUTH_RETURN_PATHS } from '@/lib/connection-form';
+import { OLD_PATHS } from '@/lib/old-paths';
 import { AUTHORIZE_PATH } from '@/server/oauth/metadata';
 import { listFiles, productionSources, readText } from './files';
 
@@ -63,7 +64,7 @@ function writtenPaths(): Array<{ file: string; path: string }> {
 describe('liens entre pages', () => {
   it('connaît les routes de l’application', () => {
     expect(ROUTES).toEqual(
-      expect.arrayContaining(['/', '/discussions', '/connexions', '/reglages']),
+      expect.arrayContaining(['/', '/discussions', '/connections', '/settings']),
     );
   });
 
@@ -88,15 +89,15 @@ describe('liens entre pages', () => {
   });
 
   // Une ancre ne casse aucun test quand sa section disparaît : #claude-code a survécu ainsi à « Brancher Claude Code ».
-  it('mène chaque ancre /reglages#… à un onglet de Réglages et à une section qui existe', () => {
+  it('mène chaque ancre /settings#… à un onglet de Réglages et à une section qui existe', () => {
     const anchors = new Set(
       productionSources('src/**/*.{ts,tsx}').flatMap(({ text }) =>
-        [...text.matchAll(/\/reglages#([a-z-]+)/g)].map((match) => match[1] as string),
+        [...text.matchAll(/\/settings#([a-z-]+)/g)].map((match) => match[1] as string),
       ),
     );
     const sections = productionSources(
       'src/components/verre/reglages/*.tsx',
-      'src/app/(app)/reglages/page.tsx',
+      'src/app/(app)/settings/page.tsx',
     )
       .map(({ text }) => text)
       .join('\n');
@@ -123,11 +124,11 @@ describe('liens entre pages', () => {
   // renverrait la personne sans le message qui lui dit que sa suppression est faite.
   it('lit sur la page de connexion chaque ?supprime= écrit par les actions de suppression', () => {
     const written = new Set(
-      [...readText('src/app/(app)/reglages/actions.ts').matchAll(/\?supprime=([a-z]+)/g)].map(
+      [...readText('src/app/(app)/settings/actions.ts').matchAll(/\?supprime=([a-z]+)/g)].map(
         (match) => match[1],
       ),
     );
-    const page = readText('src/app/(auth)/connexion/page.tsx');
+    const page = readText('src/app/(auth)/sign-in/page.tsx');
 
     expect([...written].toSorted()).toEqual(['compte', 'organisation']);
     for (const value of written) expect(page).toContain(`'${value}'`);
@@ -152,13 +153,29 @@ describe('liens entre pages', () => {
       })),
     );
     expect(paths.map(({ path }) => path).toSorted()).toEqual(
-      expect.arrayContaining(['/ordinateur/autoriser', '/ordinateur/connecte']),
+      expect.arrayContaining(['/computer/authorize', '/computer/connected']),
     );
     expect(paths.filter(({ path }) => !matchesRoute(path as string))).toEqual([]);
   });
 
   // L'adresse d'autorisation que les métadonnées OAuth annoncent aux assistants (authorization_endpoint) passe par
   // une constante : le balayage des liens ci-dessus ne la voit pas.
+  // Une redirection passe avant la page : une ancienne adresse qui serait aussi une route la cacherait.
+  it('renvoie chaque ancienne adresse française vers une page, sans en cacher aucune', () => {
+    for (const [source, destination] of OLD_PATHS) {
+      expect(matchesRoute(destination.replace(':slug', 'x')), destination).toBe(true);
+      expect(matchesRoute(source.replace(':slug', 'x')), source).toBe(false);
+    }
+    expect(OLD_PATHS.map(([source]) => source)).toEqual(
+      expect.arrayContaining([
+        '/connexion',
+        '/reglages',
+        '/ordinateur/autoriser',
+        '/oauth/autoriser',
+      ]),
+    );
+  });
+
   it('mène AUTHORIZE_PATH, l’adresse annoncée aux assistants, à une page', () => {
     expect(matchesRoute(AUTHORIZE_PATH)).toBe(true);
   });

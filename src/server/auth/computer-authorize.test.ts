@@ -74,7 +74,7 @@ describe('authorizePath et authorizeQuery', () => {
   it('rebâtissent l’adresse de la page à partir des valeurs validées', () => {
     expect(authorizeQuery(PARAMS)).toBe(`port=4242&etat=${ETAT}&empreinte=${EMPREINTE}`);
     expect(authorizePath(PARAMS)).toBe(
-      `/ordinateur/autoriser?port=4242&etat=${ETAT}&empreinte=${EMPREINTE}`,
+      `/computer/authorize?port=4242&etat=${ETAT}&empreinte=${EMPREINTE}`,
     );
   });
 });
@@ -178,15 +178,12 @@ describe('pathAfterSignIn', () => {
     ['autre chose qu’une chaîne', 42],
     ['un fichier', new File([], 'x')],
     ['vide', ''],
-    ['une adresse absolue', `https://evil.example/ordinateur/autoriser?${authorizeQuery(PARAMS)}`],
-    ['une adresse sans schéma', `//evil.example/ordinateur/autoriser?${authorizeQuery(PARAMS)}`],
-    ['une autre page de Leon', `/reglages?${authorizeQuery(PARAMS)}`],
-    ['la page, sans paramètres', '/ordinateur/autoriser'],
-    [
-      'la page, un port invalide',
-      `/ordinateur/autoriser?${authorizeQuery({ ...PARAMS, port: 80 })}`,
-    ],
-    ['un chemin qui remonte', `/ordinateur/autoriser/../reglages?${authorizeQuery(PARAMS)}`],
+    ['une adresse absolue', `https://evil.example/computer/authorize?${authorizeQuery(PARAMS)}`],
+    ['une adresse sans schéma', `//evil.example/computer/authorize?${authorizeQuery(PARAMS)}`],
+    ['une autre page de Leon', `/settings?${authorizeQuery(PARAMS)}`],
+    ['la page, sans paramètres', '/computer/authorize'],
+    ['la page, un port invalide', `/computer/authorize?${authorizeQuery({ ...PARAMS, port: 80 })}`],
+    ['un chemin qui remonte', `/computer/authorize/../reglages?${authorizeQuery(PARAMS)}`],
   ])('va à l’accueil pour %s', (_name, value) => {
     expect(pathAfterSignIn(value)).toBe('/');
   });
@@ -205,7 +202,7 @@ describe('pathAfterSignIn : la demande OAuth d’un assistant', () => {
     scope: 'leon',
     resource: 'http://localhost:3000/api/mcp',
   };
-  const OAUTH = `/oauth/autoriser?${new URLSearchParams(REQUEST)}`;
+  const OAUTH = `/oauth/authorize?${new URLSearchParams(REQUEST)}`;
 
   it('renvoie à la demande en cours, rebâtie', () => {
     expect(pathAfterSignIn(OAUTH)).toBe(OAUTH);
@@ -219,38 +216,38 @@ describe('pathAfterSignIn : la demande OAuth d’un assistant', () => {
   it.each([
     ['une adresse absolue', `https://evil.example${OAUTH}`],
     ['une adresse sans schéma', `//evil.example${OAUTH}`],
-    ['une autre page de Leon', OAUTH.replace('/oauth/autoriser', '/reglages')],
-    ['un chemin qui remonte', OAUTH.replace('/oauth/autoriser', '/oauth/autoriser/../../reglages')],
-    ['la page, sans paramètres', '/oauth/autoriser'],
+    ['une autre page de Leon', OAUTH.replace('/oauth/authorize', '/settings')],
+    ['un chemin qui remonte', OAUTH.replace('/oauth/authorize', '/oauth/authorize/../../reglages')],
+    ['la page, sans paramètres', '/oauth/authorize'],
     ['la page, sans client_id', OAUTH.replace(/client_id=[^&]*&/, '')],
     ['un client_id de plus de 4 Ko', OAUTH.replace('un-client-id', 'a'.repeat(4097))],
     ['un état de plus de 512 caractères', OAUTH.replace('etat+du+client', 'a'.repeat(513))],
-    ['la page sans le « ? »', `/oauth/autoriser&client_id=x`],
+    ['la page sans le « ? »', `/oauth/authorize&client_id=x`],
   ])('va à l’accueil pour %s', (_name, value) => {
     expect(pathAfterSignIn(value)).toBe('/');
   });
 
   it('une demande d’ordinateur et une demande OAuth ne se mélangent pas', () => {
-    expect(pathAfterSignIn(`/ordinateur/autoriser?${new URLSearchParams(REQUEST)}`)).toBe('/');
+    expect(pathAfterSignIn(`/computer/authorize?${new URLSearchParams(REQUEST)}`)).toBe('/');
     expect(pathAfterSignIn(authorizePath(PARAMS))).toBe(authorizePath(PARAMS));
   });
 });
 
-// T55 : la reconnexion demandée par la section Mémoire (/connexion?retour=memoire) y ramène, par une valeur fixe.
+// T55 : la reconnexion demandée par la section Mémoire (/sign-in?retour=memoire) y ramène, par une valeur fixe.
 describe('pathAfterSignIn : le retour vers la section Mémoire', () => {
-  it('accepte la valeur fixe /reglages#memoire', () => {
-    expect(MEMORY_RETURN_PATH).toBe('/reglages#memoire');
-    expect(pathAfterSignIn('/reglages#memoire')).toBe('/reglages#memoire');
+  it('accepte la valeur fixe /settings#memoire', () => {
+    expect(MEMORY_RETURN_PATH).toBe('/settings#memoire');
+    expect(pathAfterSignIn('/settings#memoire')).toBe('/settings#memoire');
   });
 
   it.each([
-    ['un autre site', 'https://evil.example/reglages#memoire'],
-    ['une adresse sans schéma', '//evil.example/reglages#memoire'],
+    ['un autre site', 'https://evil.example/settings#memoire'],
+    ['une adresse sans schéma', '//evil.example/settings#memoire'],
     ['la valeur courte de l’adresse', 'memoire'],
-    ['les réglages sans la section', '/reglages'],
-    ['une autre section', '/reglages#securite'],
-    ['un paramètre en plus', '/reglages?x=1#memoire'],
-    ['un autre chemin', '/reglages/../x#memoire'],
+    ['les réglages sans la section', '/settings'],
+    ['une autre section', '/settings#securite'],
+    ['un paramètre en plus', '/settings?x=1#memoire'],
+    ['un autre chemin', '/settings/../x#memoire'],
   ])('refuse %s : l’accueil', (_name, value) => {
     expect(pathAfterSignIn(value)).toBe('/');
   });

@@ -68,7 +68,7 @@ export default async function InvitationPage({ params }: { params: Params }) {
       <AuthTitle>{t('expiredTitle')}</AuthTitle>
       <p className="mt-3 text-title leading-[1.5] text-pretty text-fg">{nb(t('expiredText'))}</p>
       <Button asChild variant="primary" className="mt-6 h-10 w-full max-shell:h-11">
-        <Link href="/connexion">{t('signIn')}</Link>
+        <Link href="/sign-in">{t('signIn')}</Link>
       </Button>
     </AuthSheet>
   );

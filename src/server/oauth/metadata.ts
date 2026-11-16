@@ -14,7 +14,7 @@ export const ISSUER = new URL(env.BETTER_AUTH_URL).origin;
 export const RESOURCE = `${ISSUER}${API_PATHS.mcp}`;
 export const OAUTH_SCOPE = 'leon';
 
-export const AUTHORIZE_PATH = '/oauth/autoriser';
+export const AUTHORIZE_PATH = '/oauth/authorize';
 export const RESOURCE_METADATA_PATH = '/.well-known/oauth-protected-resource';
 export const SERVER_METADATA_PATH = '/.well-known/oauth-authorization-server';
 

@@ -5,7 +5,7 @@ import { createContext, type ReactNode, useContext, useEffect, useState } from '
 import { PageHeader, Pill } from '@/components/verre';
 
 // Les cinq groupes : Profil, Sécurité, Assistants (l'ancien onglet « Intégrations », même id), Espace de travail
-// (l'ancien onglet « Équipe », même id : Connexions mène à /reglages#equipe pour les dépôts d'équipe) et Mémoire.
+// (l'ancien onglet « Équipe », même id : Connexions mène à /settings#equipe pour les dépôts d'équipe) et Mémoire.
 const TABS = ['profil', 'securite', 'integrations', 'equipe', 'memoire'] as const;
 type Tab = (typeof TABS)[number];
 const LABELS = {
@@ -44,7 +44,7 @@ const HeadSlot = createContext<HTMLElement | null>(null);
 export const useHeadSlot = () => useContext(HeadSlot);
 
 /**
- * Le titre, les cinq puces et le groupe choisi. Le groupe suit l'ancre de l'URL (/reglages#securite) : un lien ou un
+ * Le titre, les cinq puces et le groupe choisi. Le groupe suit l'ancre de l'URL (/settings#securite) : un lien ou un
  * rechargement ouvre le bon. Tous restent montés (un champ modifié survit à un changement de puce).
  */
 export function SettingsTabs({ title, panels }: { title: string; panels: Record<Tab, ReactNode> }) {
@@ -54,7 +54,7 @@ export function SettingsTabs({ title, panels }: { title: string; panels: Record<
 
   useEffect(() => {
     const follow = () => {
-      if (TEAM_ANCHORS.has(window.location.hash)) return window.location.replace('/equipe');
+      if (TEAM_ANCHORS.has(window.location.hash)) return window.location.replace('/team');
       const tab = tabOf(window.location.hash);
       if (tab) setActive(tab);
     };

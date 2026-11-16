@@ -10,7 +10,7 @@ import {
   enableTotpAction,
   regenerateBackupCodesAction,
   verifyTotpSetupAction,
-} from '@/app/(app)/reglages/actions';
+} from '@/app/(app)/settings/actions';
 import {
   Badge,
   Button,

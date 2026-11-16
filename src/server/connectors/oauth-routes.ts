@@ -83,7 +83,7 @@ const NOT_FOUND = { error: 'Introuvable' };
 
 const pageUrl = (page: OAuthReturnPath, params: Record<string, string>) =>
   `${page}?${new URLSearchParams(params).toString()}`;
-const connexions = (params: Record<string, string>) => pageUrl('/connexions', params);
+const connexions = (params: Record<string, string>) => pageUrl('/connections', params);
 
 // La page demandée par le formulaire (`retour`), si elle est dans la liste fermée ; sinon rien.
 const returnPage = (values: Record<string, string>): OAuthReturnPath | undefined =>
@@ -181,7 +181,7 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
   const client = spec && oauthClient(spec.appKey);
   if (!provider || !connector || !spec || !client) return c.json(NOT_FOUND, 404);
   const ctx = await sessionContext(c);
-  if (!ctx) return c.redirect('/connexion', 303);
+  if (!ctx) return c.redirect('/sign-in', 303);
   if (!connectorsKey())
     return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
 
@@ -192,7 +192,7 @@ async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response
   if (start === 'absent') return c.json(NOT_FOUND, 404);
   if (!start || !since.success)
     return c.redirect(
-      pageUrl(returnTo ?? '/connexions', { erreur: 'champs', outil: provider }),
+      pageUrl(returnTo ?? '/connections', { erreur: 'champs', outil: provider }),
       303,
     );
 
@@ -223,13 +223,13 @@ async function pipedreamStart(
   const app = connector.pipedream?.app;
   if (!pd || !app) return c.json(NOT_FOUND, 404);
   const ctx = await sessionContext(c);
-  if (!ctx) return c.redirect('/connexion', 303);
+  if (!ctx) return c.redirect('/sign-in', 303);
   if (!connectorsKey())
     return c.redirect(connexions({ erreur: 'indisponible', outil: provider }), 303);
 
   const values = stringValues(await c.req.parseBody());
   const returnTo = returnPage(values);
-  const landing = returnTo ?? '/connexions';
+  const landing = returnTo ?? '/connections';
   const since = z.enum(SINCE_VALUES).safeParse(values.since || DEFAULT_SINCE);
   const stored = values.reconnect ? await ownConnection(ctx, provider, values.reconnect) : null;
   if (values.reconnect && !stored) return c.json(NOT_FOUND, 404);
@@ -511,7 +511,7 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
     c.req.query('admin_consent') === undefined
       ? pending?.returnTo
       : returnPage({ retour: c.req.query('state') ?? '' });
-  return c.redirect(pageUrl(landing ?? '/connexions', params), 302);
+  return c.redirect(pageUrl(landing ?? '/connections', params), 302);
 }
 
 // Le retour de Pipedream : le cookie, la même session et le même `state`, puis le compte branché.
@@ -544,7 +544,7 @@ async function pipedreamReturnHandler(c: Context, deps: OAuthRoutesDeps): Promis
   const pending = cookie ? openPending(cookie, (deps.now ?? Date.now)()) : null;
   const outcome = await finishPipedream(c, deps, pending);
   const provider = pending?.provider ?? null;
-  const landing = pending?.returnTo ?? '/connexions';
+  const landing = pending?.returnTo ?? '/connections';
   if (typeof outcome === 'object')
     return c.redirect(pageUrl(landing, { branche: provider ?? '' }), 302);
   // Pas branché : l'utilisateur Pipedream de cet essai ne sert plus.

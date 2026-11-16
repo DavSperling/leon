@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { type FormEvent, type ReactNode, useEffect, useState, useTransition } from 'react';
-import { createInvitationAction, type PlacementInput } from '@/app/(app)/reglages/actions';
+import { createInvitationAction, type PlacementInput } from '@/app/(app)/settings/actions';
 import { AuthNote } from '@/components/verre/auth/frame';
 import { Button } from '@/components/verre/ui/button';
 import { Field, Input } from '@/components/verre/ui/form';

@@ -51,7 +51,7 @@ const inter = localFont({
 
 // Posé avant le premier rendu : un choix mémorisé l'emporte, sinon clair, quoi que dise le système (pas d'éclair du
 // mauvais thème) ; et les animations restent coupées si la personne les a arrêtées (src/lib/verre/instant.ts).
-const THEME_SCRIPT = `try{var d=document.documentElement;d.dataset.theme=localStorage.getItem('leon-theme')==='dark'?'dark':'light';if(localStorage.getItem('leon-motion')==='off')d.dataset.motion='off';else if((location.pathname==='/'||location.pathname==='/accueil')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('js-motion')}catch(e){}`;
+const THEME_SCRIPT = `try{var d=document.documentElement;d.dataset.theme=localStorage.getItem('leon-theme')==='dark'?'dark':'light';if(localStorage.getItem('leon-motion')==='off')d.dataset.motion='off';else if((location.pathname==='/'||location.pathname==='/home')&&!matchMedia('(prefers-reduced-motion: reduce)').matches)d.classList.add('js-motion')}catch(e){}`;
 
 export const metadata: Metadata = {
   title: { default: 'Leon', template: '%s · Leon' },

@@ -24,7 +24,7 @@ export function ConnecteursPage() {
         accent={t('heroAccent')}
         tone={2}
         lead={t('heroLead')}
-        actions={<CtaLink href="/inscription">{cta('create')}</CtaLink>}
+        actions={<CtaLink href="/sign-up">{cta('create')}</CtaLink>}
         note={t('note')}
         aside={<ConnecteursApercu />}
       />

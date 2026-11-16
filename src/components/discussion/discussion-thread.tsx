@@ -313,7 +313,7 @@ export function DiscussionThread({
       text: t('sessionExpired'),
       action: (
         <Button asChild size="xs" icon={LogIn}>
-          <Link href="/connexion">{t('signInAgain')}</Link>
+          <Link href="/sign-in">{t('signInAgain')}</Link>
         </Button>
       ),
     };

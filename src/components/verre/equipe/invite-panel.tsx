@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from 'next-intl';
 import { type FormEvent, useEffect, useState, useTransition } from 'react';
-import { createInvitationAction } from '@/app/(app)/reglages/actions';
+import { createInvitationAction } from '@/app/(app)/settings/actions';
 import {
   Button,
   CopyButton,

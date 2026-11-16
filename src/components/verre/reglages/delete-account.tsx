@@ -18,20 +18,32 @@ type DeletionProps = {
   successors?: DeletionInfo['successors']; // présent seulement quand un nouveau propriétaire est obligatoire
   twoFactor: boolean;
   run: Run;
+  dangerZone?: boolean;
 };
 
-// Le bouton discret sous la feuille, et son panneau. Les mêmes champs servent aux deux suppressions : seuls les textes,
-// le choix du successeur et l'action appelée changent. En cas de succès, l'action ne rend pas : la page part vers la
-// connexion (/connexion?supprime=…). Pas de vue « fait » : la redirection la rend impossible.
+// Le bouton de suppression et son panneau. La suppression de compte ressort dans une zone dédiée ; les mêmes champs
+// servent aux deux suppressions. En cas de succès, l'action redirige vers la connexion (/connexion?supprime=…).
 function Deletion(props: DeletionProps) {
   const [open, setOpen] = useState(false);
   // une clé neuve à chaque ouverture : le mot de passe, le mot tapé et l'erreur ne survivent pas à la fermeture
   const [session, setSession] = useState(0);
+  const t = useTranslations('deleteAccount');
   return (
-    <p className="mt-3">
+    <div
+      className={
+        props.dangerZone
+          ? 'mt-6 flex flex-wrap items-center justify-between gap-3 rounded-card border border-destructive-line bg-sheet px-5 py-4'
+          : 'mt-3'
+      }
+    >
+      {props.dangerZone && <p className="text-label text-muted">{nb(t('irreversible'))}</p>}
       <Button
         variant="quiet"
-        className="ml-2 hover:bg-destructive-soft hover:text-destructive max-sm:ml-0"
+        className={
+          props.dangerZone
+            ? 'ml-0 text-destructive hover:bg-destructive-soft hover:text-destructive'
+            : 'ml-2 hover:bg-destructive-soft hover:text-destructive max-sm:ml-0'
+        }
         onClick={() => {
           setSession((n) => n + 1);
           setOpen(true);
@@ -40,7 +52,7 @@ function Deletion(props: DeletionProps) {
         {props.title}
       </Button>
       <DeletionPanel key={session} open={open} onOpenChange={setOpen} {...props} />
-    </p>
+    </div>
   );
 }
 
@@ -183,6 +195,7 @@ export function DeleteAccountSection({
       }
       successors={info.needsSuccessor ? info.successors : undefined}
       twoFactor={twoFactor}
+      dangerZone
       // Ce que le panneau annonce part avec la demande : si l'équipe a changé entre-temps, le serveur refuse.
       run={(input, successorId) =>
         deleteAccountAction({ ...input, successorId, organizationToo: info.soleActiveMember })

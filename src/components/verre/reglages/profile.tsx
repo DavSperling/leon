@@ -8,7 +8,7 @@ import {
   updateAboutAction,
   updateProfileAction,
 } from '@/app/(app)/reglages/actions';
-import { Avatar, Button, Input, Select, Textarea } from '@/components/verre';
+import { Avatar, Button, Input, Select, Switch, Textarea } from '@/components/verre';
 import { cn, nb, useTheme } from '@/lib/verre';
 import { Row, RowError, Rows, RowsHead } from './reglages';
 import { useHeadSlot } from './settings-tabs';
@@ -204,17 +204,16 @@ export function ProfileSettings({
             />
           </Row>
           <Row label={p('theme')} htmlFor={`${ids}-theme`}>
-            <Select
-              id={`${ids}-theme`}
-              aria-label={p('theme')}
-              className="max-w-[440px]"
-              value={theme}
-              onValueChange={(value) => setTheme(value === 'dark' ? 'dark' : 'light')}
-              options={[
-                { value: 'light', label: p('light') },
-                { value: 'dark', label: p('dark') },
-              ]}
-            />
+            <div className="flex items-center gap-3">
+              <Switch
+                id={`${ids}-theme`}
+                checked={theme === 'dark'}
+                onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              />
+              <span className="text-label text-muted">
+                {theme === 'dark' ? p('dark') : p('light')}
+              </span>
+            </div>
           </Row>
         </Rows>
       </form>

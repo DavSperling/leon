@@ -1389,9 +1389,6 @@ html:has(.s-nav) {
     }
   }
   .s-foot__line {
-    display: flex;
-    align-items: center;
-    gap: 12px;
     margin-top: 14px;
     font: 400 var(--s-lead) / 1.4 var(--font);
     color: var(--s-on-band-2);

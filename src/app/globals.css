@@ -11,6 +11,46 @@
   --color-*: initial;
 }
 
+@layer components {
+  .leon-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    background: var(--bg);
+  }
+  .leon-loader__mark [data-brand-stroke] {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: leon-loader-bars 760ms var(--ease-out) infinite both;
+  }
+  .leon-loader__mark [data-brand-stroke="2"] {
+    animation-delay: 100ms;
+  }
+  .leon-loader__mark [data-brand-stroke="3"] {
+    animation-delay: 200ms;
+  }
+  .leon-loader--transition {
+    animation: leon-loader-exit 170ms ease-out 590ms forwards;
+  }
+  @keyframes leon-loader-bars {
+    0%,
+    100% {
+      transform: scaleX(0.72);
+    }
+    50% {
+      transform: scaleX(1.16);
+    }
+  }
+  @keyframes leon-loader-exit {
+    to {
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+}
+
 /* « dark: » suit le thème choisi (<html data-theme>), pas le système. À garder pour l'exception : un jeton a déjà
    une valeur dans chaque thème. */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

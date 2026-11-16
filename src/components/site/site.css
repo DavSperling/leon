@@ -437,18 +437,19 @@ html:has(.s-nav) {
     }
   }
 
-  /* Le logo de l'en-tête se trace une fois au chargement : les trois traits, puis le point, puis le mot */
-  .s-brand path {
-    stroke-dasharray: 560;
-    animation: s-draw 600ms var(--s-ease) both;
+  /* Les trois barres colorées se tracent une à une, puis le mot apparaît. */
+  .s-brand [data-brand-stroke] {
+    stroke-dasharray: 40;
+    animation: s-draw 420ms var(--s-ease) both;
   }
-  .s-brand circle {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: s-dot 260ms var(--s-ease-flag) 460ms both;
+  .s-brand [data-brand-stroke="2"] {
+    animation-delay: 80ms;
+  }
+  .s-brand [data-brand-stroke="3"] {
+    animation-delay: 160ms;
   }
   .s-brand text {
-    animation: s-fade 360ms ease-out 360ms both;
+    animation: s-fade 360ms ease-out 240ms both;
   }
 
   /* Le panneau « Cas d'usage » : six lignes, un nom et une légende */
@@ -1378,7 +1379,7 @@ html:has(.s-nav) {
     .s-foot .s-brand {
       view-timeline: --s-foot-brand block;
     }
-    .s-foot .s-brand :is(path, circle, text) {
+    .s-foot .s-brand :is([data-brand-stroke], text) {
       animation-duration: auto;
       animation-delay: 0s;
       animation-timing-function: linear;
@@ -1753,12 +1754,7 @@ html:has(.s-nav) {
 
 @keyframes s-draw {
   from {
-    stroke-dashoffset: 560;
-  }
-}
-@keyframes s-dot {
-  from {
-    transform: scale(0);
+    stroke-dashoffset: 40;
   }
 }
 @keyframes s-fade {

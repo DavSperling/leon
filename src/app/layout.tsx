@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 import { MotionProvider } from '@/components/verre/motion-provider';
+import { RouteTransition } from '@/components/verre/shell/route-transition';
 import { TooltipProvider } from '@/components/verre/ui/menu';
 import { Toaster } from '@/components/verre/ui/toast';
 import './globals.css';
@@ -69,6 +70,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <MotionProvider>
             <TooltipProvider>
               {children}
+              <RouteTransition />
               <Toaster />
             </TooltipProvider>
           </MotionProvider>

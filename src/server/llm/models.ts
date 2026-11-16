@@ -63,6 +63,7 @@ const DEFAULT_MODEL_BY_STEP = {
   point: 'claude-sonnet-5-5',
   resume: 'claude-haiku-5-5',
   fil: 'claude-haiku-5-5',
+  agenda: 'claude-haiku-5-5',
 } as const satisfies Record<LlmStep, SupportedModel>;
 
 // Variable d'environnement qui remplace le modèle de chaque étape.
@@ -72,6 +73,7 @@ export const SETTING_BY_STEP = {
   point: 'LEON_MODEL_POINT',
   resume: 'LEON_MODEL_RESUME',
   fil: 'LEON_MODEL_FIL',
+  agenda: 'LEON_MODEL_AGENDA',
 } as const satisfies Record<LlmStep, keyof Env>;
 
 // L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots sur Haiku n'a
@@ -82,6 +84,7 @@ export const EFFORT_BY_STEP = {
   point: 'medium',
   resume: 'low',
   fil: 'low',
+  agenda: 'low',
 } as const satisfies Record<LlmStep, 'low' | 'medium' | 'high'>;
 
 export function modelForStep(step: LlmStep, env: Env): SupportedModel {

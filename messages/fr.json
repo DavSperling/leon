@@ -384,7 +384,19 @@
       "one": "Sur quoi ai-je travaillé cette semaine ?",
       "two": "Quelles décisions ont été prises récemment ?"
     },
-    "syntax": "Syntaxe de recherche"
+    "syntax": "Syntaxe de recherche",
+    "agenda": {
+      "title": "Cette semaine",
+      "open": "Voir la semaine",
+      "dayLabel": "{day}, {count, plural, =0 {aucun rendez-vous} one {# rendez-vous} other {# rendez-vous}}",
+      "today": "Aujourd’hui",
+      "allDay": "Journée",
+      "nothing": "Rien de prévu",
+      "emptyWeek": "Aucun rendez-vous trouvé cette semaine",
+      "restOfWeek": "Rien de prévu d’ici dimanche",
+      "with": "Avec {names}",
+      "newTab": "(s’ouvre dans un nouvel onglet)"
+    }
   },
   "filters": {
     "filters": "Filtres",

@@ -10,6 +10,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { StoredRendezVous } from '@/lib/agenda';
 import type { DiscussionCitation } from '@/lib/discussion-events';
 import { organizations, users } from './auth';
 import { sources, turns } from './memory';
@@ -137,3 +138,22 @@ export const aboutSuggestions = pgTable('about_suggestions', {
   closedAt: timestamp('closed_at', { withTimezone: true }),
   acl: acl(),
 });
+
+// Les rendez-vous de la semaine trouvés dans les e-mails d'une personne (0072-agenda.sql) : un cache refait quand de
+// nouveaux e-mails arrivent, privé à la personne (acl = [user_id], contrôlé par la base) ; seul deleteAccount supprime.
+export const agendas = pgTable(
+  'agendas',
+  {
+    tenantId: uuid('tenant_id')
+      .notNull()
+      .references(() => organizations.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    rendezVous: jsonb('rendez_vous').$type<StoredRendezVous[]>().notNull(),
+    sourceIds: uuid('source_ids').array().notNull().default(sql`'{}'::uuid[]`),
+    preparedAt: timestamp('prepared_at', { withTimezone: true }).notNull(),
+    acl: acl(),
+  },
+  (table) => [primaryKey({ columns: [table.tenantId, table.userId] })],
+);

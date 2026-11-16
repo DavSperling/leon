@@ -384,7 +384,19 @@
       "one": "What did I work on this week?",
       "two": "Which decisions were made recently?"
     },
-    "syntax": "Search syntax"
+    "syntax": "Search syntax",
+    "agenda": {
+      "title": "This week",
+      "open": "See the week",
+      "dayLabel": "{day}, {count, plural, =0 {no meetings} one {# meeting} other {# meetings}}",
+      "today": "Today",
+      "allDay": "All day",
+      "nothing": "Nothing planned",
+      "emptyWeek": "No meetings found this week",
+      "restOfWeek": "Nothing planned until Sunday",
+      "with": "With {names}",
+      "newTab": "(opens in a new tab)"
+    }
   },
   "filters": {
     "filters": "Filters",

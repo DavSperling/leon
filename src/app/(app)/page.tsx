@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { askSuggestions } from '@/components/discussion/ask-suggestions';
 import { runSearch } from '@/components/search/run-search';
@@ -12,17 +11,20 @@ import {
   toResultViews,
   unknownPeopleMessage,
 } from '@/components/search/view-model';
-import { Button, Section } from '@/components/verre';
+import { Section } from '@/components/verre';
 import { AboutSuggestionCard } from '@/components/verre/discussions/about-suggestion-card';
 import { AskTiles } from '@/components/verre/discussions/ask-tiles';
 import { BriefingSheet, Greeting, HomeAsk } from '@/components/verre/recherche/home';
 import { SearchBar } from '@/components/verre/recherche/search-bar';
 import { SearchResults } from '@/components/verre/recherche/search-results';
+import { WeekCalendar } from '@/components/verre/recherche/week-calendar';
 import { SearchSyntax } from '@/components/verre/recherche/welcome';
+import { parisTime } from '@/lib/agenda';
 import { briefingFact } from '@/lib/briefing-view';
 import { dayPart } from '@/lib/day-part';
 import { cn } from '@/lib/verre/cn';
-import { formatDateTime, formatRelative } from '@/lib/verre/format';
+import { formatDateTime } from '@/lib/verre/format';
+import { agendaIsStale, readWeek } from '@/server/agenda/agenda';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -30,13 +32,12 @@ import { getViewerProfile } from '@/server/auth/viewer';
 import { ABOUT_MAX_CHARS } from '@/server/briefing/about';
 import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { refreshShownBriefing } from '@/server/briefing/briefings';
+import { enqueueAgendaRefresh } from '@/server/briefing/queue';
 import { homeBriefing } from '@/server/discussion/citation-sources';
-import { listDiscussions } from '@/server/discussion/discussions';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
 import { parseQuery } from '@/server/search/parse-query';
-import { SHELL_RECENTS } from '@/server/shell/shell';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -107,19 +108,18 @@ const optional = <T,>(what: string, read: Promise<T>) =>
 
 /**
  * L'Accueil : le bonjour et le fait du jour, le champ où l'on demande et ses questions à essayer, puis le point du
- * matin (s'il y en a un) et, à côté, la proposition « About you » et les discussions récentes.
+ * matin (s'il y en a un) et, à côté, le calendrier de la semaine et la proposition « About you ».
  */
 async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
-  const shell = await getTranslations('shell');
   const locale = await getLocale();
   const modelAvailable = getLlm(env) !== null;
-  const [profile, member, suggestion, briefing, discussions] = await Promise.all([
+  const [profile, member, suggestion, briefing, week] = await Promise.all([
     optional('accueil.profil', getViewerProfile(ctx)),
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
     optional('accueil.point', homeBriefing(ctx)),
-    optional('accueil.recentes', listDiscussions(ctx, SHELL_RECENTS)),
+    optional('accueil.semaine', readWeek(ctx)),
   ]);
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
@@ -127,12 +127,18 @@ async function Home({ ctx }: { ctx: TenantContext }) {
     briefing?.stale && modelAvailable
       ? refreshShownBriefing(ctx, briefing.project, briefing.preparedAt)
       : null,
+    // les rendez-vous des e-mails ont vieilli : relus en arrière-plan, sans appel au modèle s'il n'y a rien de neuf
+    week && modelAvailable && agendaIsStale(week.preparedAt)
+      ? optional(
+          'accueil.semaine_file',
+          enqueueAgendaRefresh({ tenantId: ctx.tenantId, userId: ctx.userId }),
+        )
+      : null,
   ]);
   const name = profile?.userName?.trim().split(/\s+/)[0] || null;
   const now = new Date();
   const sources = briefing?.sources.map(({ sourceId: _id, ...source }) => source);
-  const recents = discussions ?? [];
-  const aside = recents.length > 0 || Boolean(suggestion);
+  const aside = Boolean(week) || Boolean(suggestion);
 
   return (
     // group/home : le fait du jour et sa ligne dans le point se répondent quand on pointe l'un (home.tsx)
@@ -150,8 +156,8 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         </div>
       )}
 
-      {/* Le point du matin est la feuille de l'écran ; à sa droite, sur le bureau, les discussions récentes. Sans point,
-          ou à l'étroit, elles passent dans la colonne de lecture. */}
+      {/* Le point du matin est la feuille de l'écran ; à sa droite, sur le bureau, le calendrier de la semaine. Sans
+          point, ou à l'étroit, il passe dans la colonne de lecture. */}
       <div
         className={cn(
           'mt-9 grid grid-cols-[minmax(0,1fr)] items-start gap-x-12 gap-y-10',
@@ -175,40 +181,8 @@ async function Home({ ctx }: { ctx: TenantContext }) {
 
         {aside && (
           <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !briefing && 'max-w-[772px]')}>
-            {recents.length > 0 && (
-              <Section
-                id="recentes"
-                title={shell('recent')}
-                actions={
-                  <Button asChild variant="link">
-                    <Link href="/discussions">{shell('newDiscussion')}</Link>
-                  </Button>
-                }
-                className="mt-0"
-              >
-                {/* sur le bureau : une ligne par discussion, qui l'ouvre ; un filet entre deux */}
-                <ul>
-                  {recents.map((discussion) => (
-                    <li key={discussion.id} className="border-line-strong [&+&]:border-t">
-                      <Link
-                        href={`/discussions/${discussion.id}`}
-                        className="-mx-3 flex min-h-11 items-center gap-4 rounded-item px-3 py-2 text-ui transition-colors duration-150 hover:bg-hover active:bg-n-150"
-                      >
-                        <span className="min-w-0 flex-1 truncate font-medium text-fg">
-                          {discussion.title}
-                        </span>
-                        <time
-                          dateTime={discussion.updatedAt.toISOString()}
-                          // « hier » commence la colonne comme une date : par une majuscule
-                          className="inline-block shrink-0 text-label text-muted first-letter:uppercase"
-                        >
-                          {formatRelative(discussion.updatedAt, now, locale)}
-                        </time>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </Section>
+            {week && (
+              <WeekCalendar days={week.days} rendezVous={week.rendezVous} now={parisTime(now)} />
             )}
             {suggestion && (
               <AboutSuggestionCard

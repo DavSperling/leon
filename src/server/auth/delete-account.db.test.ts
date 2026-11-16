@@ -238,6 +238,12 @@ describe('deleteAccount', () => {
        values ($1, $2, 'Responsable produit.', array[$2::uuid]), ($1, $3, 'Lead back-end.', array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
+    // De même son calendrier, fait de ses e-mails (0072), pas celui de Bob.
+    await adminPool.query(
+      `insert into agendas (tenant_id, user_id, rendez_vous, prepared_at, acl)
+       values ($1, $2, '[]', now(), array[$2::uuid]), ($1, $3, '[]', now(), array[$3::uuid])`,
+      [tenantId, alice.userId, bob.userId],
+    );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas
     // celles de Bob (C12).
     await adminPool.query(
@@ -325,6 +331,11 @@ describe('deleteAccount', () => {
       [tenantId],
     );
     expect(suggestions).toEqual([{ user_id: bob.userId }]);
+    const { rows: calendars } = await adminPool.query(
+      'select user_id from agendas where tenant_id = $1',
+      [tenantId],
+    );
+    expect(calendars).toEqual([{ user_id: bob.userId }]);
     const { rows: versions } = await adminPool.query(
       'select owner_user_id from versions_memoire where tenant_id = $1',
       [tenantId],

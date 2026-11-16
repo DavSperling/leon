@@ -72,6 +72,7 @@ describe('EFFORT_BY_STEP', () => {
       point: 'medium',
       resume: 'low',
       fil: 'low',
+      agenda: 'low',
     });
   });
 });

@@ -6,7 +6,7 @@ import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminPool } from '@/test/db';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
-import { AGENDA_DAILY_CAP, readWeek, refreshAgenda } from './agenda';
+import { AGENDA_DAILY_CAP, AGENDA_MAILS_MAX, readWeek, refreshAgenda } from './agenda';
 
 // Le calendrier de l'Accueil, sous les droits de chacun : la lecture des e-mails par le faux modèle, ce qui est
 // gardé, les réunions Outlook lues telles quelles, et la relecture qui écarte ce que la personne ne voit pas.
@@ -111,6 +111,44 @@ describe('refreshAgenda', () => {
       },
     ]);
     expect(stored?.source_ids).toEqual([own.sourceId]);
+  });
+
+  it('donne au modèle les e-mails qui annoncent un rendez-vous avant les autres, même plus anciens', async () => {
+    await seedRun(alice, {
+      kind: 'gmail',
+      title: 'Nouvelles offres',
+      metadata: { nature: 'fil' },
+      turns: Array.from({ length: AGENDA_MAILS_MAX + 5 }, (_, i) => ({
+        text: `Alerte offre numéro ${i}`,
+        ts: new Date(now.getTime() - (i + 1) * 60_000),
+        role: 'participant' as const,
+      })),
+      status: 'done',
+    });
+    const invitation = await seedRun(alice, {
+      kind: 'gmail',
+      title: 'Invitation: Entretien technique',
+      metadata: { nature: 'fil' },
+      turns: [
+        {
+          text: 'Mardi 10 h, lien Zoom.',
+          ts: new Date(now.getTime() - 10 * 24 * HOUR),
+          role: 'participant',
+        },
+      ],
+      status: 'done',
+    });
+    const llm = createFakeLlm({
+      texts: [`{"n": 1, "titre": "Entretien technique", "debut": "${day(1)}T10:00"}`],
+    });
+
+    await refreshAgenda(alice, { llm, now });
+
+    const prompt = llm.calls[0]?.messages[0]?.content ?? '';
+    expect(prompt).toContain('lien Zoom');
+    expect((await storedOf(alice))?.rendez_vous).toEqual([
+      { titre: 'Entretien technique', debut: `${day(1)}T10:00`, sourceId: invitation.sourceId },
+    ]);
   });
 
   it('ne rappelle pas le modèle sans e-mail arrivé depuis, ni passé le plafond du jour', async () => {

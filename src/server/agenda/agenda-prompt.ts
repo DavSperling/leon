@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { byStart, PARIS_TIME, type StoredRendezVous } from '@/lib/agenda';
+import { byStart, PARIS_TIME, parisTime, type StoredRendezVous } from '@/lib/agenda';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 
@@ -61,15 +61,72 @@ export function buildAgendaPrompt(
   };
 }
 
-const LineSchema = z.object({
-  n: z.number().int().positive(),
-  titre: z.string().trim().min(1).max(160),
-  debut: z.string().regex(PARIS_TIME),
-  fin: z.string().regex(PARIS_TIME).nullish(),
-  avec: z.string().trim().max(200).nullish(),
+// « 2026-11-18T14:00 », « 2026-11-18 14:00:00 », « 2026-11-18T12:00:00Z » ou « …+02:00 » : ramenés à l'heure de Paris
+// (PARIS_TIME). Le modèle ne suit pas toujours le format demandé ; une heure à fuseau est convertie.
+const LOOSE_TIME =
+  /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/;
+function toParisTime(value: string): string | null {
+  const match = LOOSE_TIME.exec(value.trim());
+  if (!match) return null;
+  const [, day, hour, zone] = match;
+  if (zone && hour) {
+    const instant = new Date(`${day}T${hour}:00${zone === 'Z' ? 'Z' : zone}`);
+    return Number.isNaN(instant.getTime()) ? null : parisTime(instant);
+  }
+  return hour ? `${day}T${hour}` : (day ?? null);
+}
+const time = z.string().transform((value, ctx) => {
+  const paris = toParisTime(value);
+  if (paris === null || !PARIS_TIME.test(paris)) {
+    ctx.addIssue({ code: 'custom', message: 'heure illisible' });
+    return z.NEVER;
+  }
+  return paris;
 });
 
-// Les lignes valides de la réponse, rattachées à leur mail ; le reste est écarté sans bruit (un modèle qui bavarde
+const LineSchema = z.object({
+  n: z.coerce.number().int().positive(),
+  titre: z.string().trim().min(1).max(160),
+  debut: time,
+  fin: time.nullish().catch(null),
+  avec: z.string().trim().max(200).nullish().catch(null),
+});
+
+// Un objet et ceux qu'il contient (« {"rendezVous": [{…}]} ») : le schéma trie ensuite.
+function walk(value: unknown, found: unknown[]): void {
+  if (Array.isArray(value)) for (const item of value) walk(item, found);
+  else if (value !== null && typeof value === 'object') {
+    found.push(value);
+    for (const item of Object.values(value)) if (typeof item === 'object') walk(item, found);
+  }
+}
+
+// Chaque objet JSON du texte, où qu'il soit : une ligne par objet comme demandé, mais aussi une liste, un bloc de code
+// ou un objet sur plusieurs lignes. Les accolades dans une chaîne ne comptent pas.
+export function jsonObjects(text: string): unknown[] {
+  const found: unknown[] = [];
+  let depth = 0;
+  let start = -1;
+  let inString = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (inString) {
+      if (char === '\\') i++;
+      else if (char === '"') inString = false;
+    } else if (char === '"') {
+      if (depth > 0) inString = true;
+    } else if (char === '{') {
+      if (depth++ === 0) start = i;
+    } else if (char === '}' && depth > 0 && --depth === 0) {
+      try {
+        walk(JSON.parse(text.slice(start, i + 1)), found);
+      } catch {}
+    }
+  }
+  return found;
+}
+
+// Les rendez-vous valides de la réponse, rattachés à leur mail ; le reste est écarté sans bruit (un modèle qui bavarde
 // ne casse pas le calendrier). Seulement les rendez-vous de la période, une fois chacun, du plus tôt au plus tard.
 export function parseAgendaAnswer(
   answer: string,
@@ -78,13 +135,7 @@ export function parseAgendaAnswer(
 ): StoredRendezVous[] {
   const seen = new Set<string>();
   const found: StoredRendezVous[] = [];
-  for (const line of answer.split('\n')) {
-    let json: unknown;
-    try {
-      json = JSON.parse(line.trim());
-    } catch {
-      continue;
-    }
+  for (const json of jsonObjects(answer)) {
     const parsed = LineSchema.safeParse(json);
     if (!parsed.success) continue;
     const { n, titre, debut, fin, avec } = parsed.data;

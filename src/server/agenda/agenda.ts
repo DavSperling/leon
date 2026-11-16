@@ -25,9 +25,14 @@ export const AGENDA_DAILY_CAP = 4;
 // Un calendrier préparé il y a plus longtemps se refait à la prochaine visite de l'Accueil (sans appel au modèle
 // s'il n'est arrivé aucun e-mail depuis).
 export const AGENDA_STALE_MS = 3 * 60 * 60 * 1000;
-export const AGENDA_MAIL_DAYS = 14;
+export const AGENDA_MAIL_DAYS = 30;
 export const AGENDA_MAILS_MAX = 120;
-const MAIL_CHARS = 600;
+const MAIL_CHARS = 800;
+// Ce qui annonce un rendez-vous dans un e-mail (objet ou texte), en français, en anglais et en hébreu : ces e-mails
+// passent avant les autres. Une boîte pleine d'alertes et de lettres d'information remplissait sinon les 120 places
+// en deux jours, et les invitations n'arrivaient jamais au modèle (premier essai en production, 16/11/2026).
+export const RDV_PATTERN =
+  '\\m(rdv|rendez-vous|r[ée]union\\w*|entretien\\w*|visio\\w*|invit\\w*|meeting\\w*|interview\\w*|appointment\\w*|call|appel|calendar|agenda|webex|calendly)\\M|zoom\\.us|meet\\.google\\.com|teams\\.microsoft\\.com|BEGIN:VCALENDAR|פגישה|ראיון|זימון|שיחת';
 // Borne le texte ET la réflexion du modèle (llm.ts) : 60 lignes JSON en prennent environ 3 000.
 const AGENDA_MAX_TOKENS = 6000;
 const AGENDA_TIMEOUT_MS = 90_000;
@@ -36,7 +41,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const MAIL_KINDS = ['gmail', 'outlook'] satisfies SourceKind[];
 const OUTLOOK = 'outlook' satisfies SourceKind;
 
-// Ses derniers e-mails : un tour par message, le plus récent d'abord, coupé. Les réunions de l'agenda Outlook n'en
+// Ses derniers e-mails : un tour par message, ceux qui annoncent un rendez-vous d'abord (RDV_PATTERN), puis du plus
+// récent au plus ancien, coupés. Les réunions de l'agenda Outlook n'en
 // sont pas (elles se lisent à part). `latest` : l'arrivée dans Leon du dernier tour, à l'heure de la base, pour savoir
 // s'il y a du neuf depuis la dernière lecture.
 async function recentMails(
@@ -62,7 +68,7 @@ async function recentMails(
       and s.kind = any(${textArray(MAIL_KINDS)})
       and coalesce(s.metadata->>'nature', '') <> 'reunion'
       and t.ts >= ${since.toISOString()}
-    order by t.ts desc
+    order by (coalesce(s.title, '') ~* ${RDV_PATTERN} or t.text ~* ${RDV_PATTERN}) desc, t.ts desc
     limit ${AGENDA_MAILS_MAX}`);
   const latest = rows.reduce<Date | null>((max, row) => {
     const at = epochToDate(row.createdAt);
@@ -263,5 +269,17 @@ export async function refreshAgenda(
   }
   // Toutes les sources fournies au modèle, citées ou non.
   const sourceIds = [...new Set(mails.map((mail) => mail.sourceId))];
-  await writeAgenda(ctx, parseAgendaAnswer(answer, mails, period), sourceIds, seenAt);
+  const found = parseAgendaAnswer(answer, mails, period);
+  // Des nombres seulement, jamais de texte : de quoi voir dans les journaux ce que la lecture a donné.
+  console.info(
+    '[leon]',
+    'agenda.refreshed',
+    JSON.stringify({
+      userId: ctx.userId,
+      mails: mails.length,
+      found: found.length,
+      chars: answer.length,
+    }),
+  );
+  await writeAgenda(ctx, found, sourceIds, seenAt);
 }

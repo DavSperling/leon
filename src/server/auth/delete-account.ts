@@ -4,7 +4,7 @@ import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { lecons, versionsMemoire } from '@/server/db/schema/memory';
-import { aboutSuggestions } from '@/server/db/schema/search';
+import { aboutSuggestions, agendas } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
 
@@ -209,6 +209,8 @@ export async function deleteAccount(
       .where(eq(users.id, ctx.userId));
     // La proposition « About you » est écrite d'après ses sources : elle part avec son « À propos ».
     await tx.delete(aboutSuggestions).where(eq(aboutSuggestions.userId, ctx.userId));
+    // Les rendez-vous trouvés dans ses e-mails (0072), privés, partent de même.
+    await tx.delete(agendas).where(eq(agendas.userId, ctx.userId));
     // Ses versions (C12) : ses sources restent, pas ce qui a été écrit d'après elles.
     await tx.delete(versionsMemoire).where(eq(versionsMemoire.ownerUserId, ctx.userId));
     // Ses notes, privées et écrites par ses agents (D38, A12), partent avec elle ; l'app ne supprime pas de source :

@@ -33,6 +33,7 @@ const STEPS: Record<string, string> = {
   point: 'Points du matin',
   resume: 'Résumés de session',
   fil: 'États des fils',
+  agenda: 'Rendez-vous de la semaine',
 };
 
 type Day = AdminStats['parJour'][number];

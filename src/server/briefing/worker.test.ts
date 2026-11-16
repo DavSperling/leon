@@ -99,7 +99,7 @@ describe('startBriefingWorker', () => {
     await startBriefingWorker({ llm: null });
     await startBriefingWorker({ llm: null });
 
-    expect(mocks.work).toHaveBeenCalledTimes(3);
+    expect(mocks.work).toHaveBeenCalledTimes(4);
   });
 
   it('refait le point du job avec le modèle réglé, sous les droits de son utilisateur', async () => {

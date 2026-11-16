@@ -52,14 +52,15 @@ export function modelSpec(model: string): ModelSpec | undefined {
 }
 
 // Choix de la spec du deuxième jet : la réponse en tête est appelée à chaque recherche, elle doit coûter peu
-// et répondre vite ; la discussion a besoin de plus de jugement. Le point du matin est passé à Haiku le 16/11/2026 :
-// sur une vraie session, 0,4 centime au lieu de 4,7 avec Sonnet, pour un point aussi juste et plus court. Le résumé d'une session
+// et répondre vite ; la discussion et le point du matin ont besoin de plus de jugement. Essayé le 16/11/2026 sur une
+// vraie session : Haiku coûte dix fois moins, mais comprend moins ce qui se passe et met la routine en tête ; le point
+// reste sur Sonnet, et son plafond par jour (BRIEFING_DAILY_CAP) borne la dépense. Le résumé d'une session
 // (D8 du plan de la mémoire des sessions) est écrit à chaque session close : il doit coûter peu. L'état d'un fil
 // (D23 du plan de la mémoire à disposition) est réécrit après chaque résumé : de même.
 const DEFAULT_MODEL_BY_STEP = {
   reponse: 'claude-haiku-5-5',
   discussion: 'claude-sonnet-5-5',
-  point: 'claude-haiku-5-5',
+  point: 'claude-sonnet-5-5',
   resume: 'claude-haiku-5-5',
   fil: 'claude-haiku-5-5',
 } as const satisfies Record<LlmStep, SupportedModel>;

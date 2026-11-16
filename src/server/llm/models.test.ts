@@ -36,16 +36,16 @@ describe('modelForStep', () => {
     expect(modelForStep('reponse', reglee)).toBe('claude-haiku-5-5');
   });
 
-  it('prend Sonnet 5.5 pour la discussion et pour le point du matin', () => {
+  it('prend Sonnet 5.5 pour la discussion, Haiku 5.5 pour le point du matin', () => {
     expect(modelForStep('discussion', env)).toBe('claude-sonnet-5-5');
-    expect(modelForStep('point', env)).toBe('claude-sonnet-5-5');
+    expect(modelForStep('point', env)).toBe('claude-haiku-5-5');
   });
 
   it('suit la variable de chaque étape, et d’elle seule', () => {
     const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_DISCUSSION: 'claude-opus-5-5' });
     expect(modelForStep('discussion', reglee)).toBe('claude-opus-5-5');
     expect(modelForStep('reponse', reglee)).toBe('claude-haiku-5-5');
-    expect(modelForStep('point', reglee)).toBe('claude-sonnet-5-5');
+    expect(modelForStep('point', reglee)).toBe('claude-haiku-5-5');
   });
 
   it('suit LEON_MODEL_REPONSE et LEON_MODEL_POINT', () => {

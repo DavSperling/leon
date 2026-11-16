@@ -13,7 +13,6 @@ export function RouteTransition() {
   const instant = useInstant();
   const previousPath = useRef<string | null>(null);
   const [visible, setVisible] = useState(false);
-  const [navigation, setNavigation] = useState(0);
 
   useLayoutEffect(() => {
     if (!pathname) return;
@@ -21,7 +20,6 @@ export function RouteTransition() {
     previousPath.current = pathname;
     if (previous === null || previous === pathname) return;
     setVisible(!instant);
-    setNavigation((n) => n + 1);
   }, [instant, pathname]);
 
   useEffect(() => {
@@ -30,9 +28,11 @@ export function RouteTransition() {
       return;
     }
     if (!visible) return;
-    const timer = setTimeout(() => setVisible(false), 760);
+    const timer = setTimeout(() => {
+      if (previousPath.current === pathname) setVisible(false);
+    }, 760);
     return () => clearTimeout(timer);
-  }, [instant, navigation, visible]);
+  }, [instant, pathname, visible]);
 
   return visible && !instant ? <BrandLoader label={t('loading')} transition /> : null;
 }

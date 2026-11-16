@@ -13,11 +13,7 @@ function ColorBars() {
 /** Le symbole seul : les trois barres colorées, carré pour les petites tailles. */
 export function Logo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 40 40"
-      aria-hidden="true"
-      className={cn('size-6 shrink-0', className)}
-    >
+    <svg viewBox="0 0 40 40" aria-hidden="true" className={cn('size-6 shrink-0', className)}>
       <ColorBars />
     </svg>
   );
@@ -44,7 +40,9 @@ export function Brand({ className }: { className?: string }) {
         fontSize={132}
         fontWeight={500}
         letterSpacing={-2}
-        style={{ fontFamily: "var(--font-inter), 'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+        style={{
+          fontFamily: "var(--font-inter), 'Helvetica Neue', Helvetica, Arial, sans-serif",
+        }}
       >
         Leon
       </text>

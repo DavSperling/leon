@@ -3,12 +3,14 @@ import { getTranslations } from 'next-intl/server';
 import { askSuggestions } from '@/components/discussion/ask-suggestions';
 import { NewDiscussionForm } from '@/components/discussion/new-discussion-form';
 import { readableProviders } from '@/components/discussion/reads';
-import { Notice, PageHeader, Section } from '@/components/verre';
+import { Notice, Section } from '@/components/verre';
 import { AskTiles } from '@/components/verre/discussions/ask-tiles';
 import { DiscussionTiles } from '@/components/verre/discussions/list';
-import { nb } from '@/lib/verre/nb';
+import { Greeting } from '@/components/verre/recherche/home';
+import { dayPart } from '@/lib/day-part';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import { requireUserContext } from '@/server/auth/session';
+import { getViewerProfile } from '@/server/auth/viewer';
 import { listCatalog } from '@/server/connectors/catalog';
 import { listConnections } from '@/server/connectors/connections';
 import { listDiscussions } from '@/server/discussion/discussions';
@@ -24,10 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function DiscussionsPage() {
   const t = await getTranslations('discussions');
   const ctx = await requireUserContext();
-  const [discussions, member, connections] = await Promise.all([
+  const [discussions, member, connections, profile] = await Promise.all([
     listDiscussions(ctx),
     readOnboardingMember(ctx),
     listConnections(ctx),
+    getViewerProfile(ctx),
   ]);
   // Ce que Leon lit pour cette personne, montré dans le champ (reads.ts) : six logos au plus.
   const privateByDefault = new Set(
@@ -38,12 +41,20 @@ export default async function DiscussionsPage() {
   const reads = readableProviders(connections, privateByDefault).slice(0, 6);
   const modelAvailable = getLlm(env) !== null;
   const questions = modelAvailable ? await askSuggestions(member) : [];
+  const name = profile.userName?.trim().split(/\s+/)[0] || null;
+  const now = new Date();
 
   return (
     // La même colonne que le fil d'une discussion : la question part d'ici et sa réponse arrive au même endroit. Le champ
     // est le centre calme de la page, un peu au-dessus du milieu de la fenêtre.
     <div className="mx-auto w-full max-w-[736px] pt-[clamp(8px,11vh,96px)] max-shell:pt-2">
-      <PageHeader title={nb(t('newQuestion'))} />
+      <Greeting
+        name={name}
+        serverPart={dayPart(now.getHours())}
+        centered
+        brand
+        titleId="nouvelle-discussion-titre"
+      />
       <div className="mt-6 grid gap-3">
         <NewDiscussionForm disabled={!modelAvailable} reads={reads} />
         {!modelAvailable && (

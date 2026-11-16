@@ -15,6 +15,7 @@ import {
 } from '@/components/verre';
 import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { type PanelSource, useSourcePanel } from '@/components/verre/discussions/preview';
+import { Logo } from '@/components/verre/shell/brand';
 import { type BriefingLine, type BriefingSection, briefingFact } from '@/lib/briefing-view';
 import { type DayPart, dayPart } from '@/lib/day-part';
 import { DISCUSSION_MESSAGE_MAX_CHARS, type SourceVisibility } from '@/lib/discussion-events';
@@ -132,11 +133,17 @@ export function Greeting({
   serverPart,
   fact,
   sources = [],
+  centered = false,
+  brand = false,
+  titleId = HOME_TITLE_ID,
 }: {
   name: string | null;
   serverPart: DayPart;
   fact?: BriefingLine | null;
   sources?: BriefingSourceView[];
+  centered?: boolean;
+  brand?: boolean;
+  titleId?: string;
 }) {
   const t = useTranslations('welcome');
   const part = useSyncExternalStore(
@@ -146,12 +153,16 @@ export function Greeting({
   );
   const panel = useSourcePanel();
   return (
-    <header>
+    <header className={centered ? 'text-center' : undefined}>
       <h1
-        id={HOME_TITLE_ID}
+        id={titleId}
         tabIndex={-1}
-        className="text-h1 font-semibold tracking-[-0.022em] text-balance text-fg outline-none max-sm:text-[26px]"
+        className={cn(
+          'text-h1 font-semibold tracking-[-0.022em] text-balance text-fg outline-none max-sm:text-[26px]',
+          centered && 'flex items-center justify-center gap-3',
+        )}
       >
+        {brand && <Logo className="size-8 max-sm:size-6" />}
         {name ? t(`greeting.${part}`, { name }) : t(`greetingAnon.${part}`)}
       </h1>
       {fact && (

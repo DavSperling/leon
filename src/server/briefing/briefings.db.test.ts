@@ -14,10 +14,13 @@ import { seedRun } from '@/test/seed-search';
 import { readAbout, saveAbout } from './about';
 import {
   BRIEFING_DAILY_CAP,
+  BRIEFING_DISMISSED_MAX,
   BRIEFING_PENDING_MARKDOWN,
+  dismissBriefingLine,
   latestBriefingProject,
   readBriefing,
   refreshBriefing,
+  restoreBriefingLine,
 } from './briefings';
 import { BRIEFING_QUEUES, briefingKey, getBriefingBoss, signalProjectActivity } from './queue';
 
@@ -461,6 +464,71 @@ describe('readBriefing', () => {
 
     expect(await readBriefing(bob, seeded.project)).toBeNull();
     expect((await rowOf(alice, seeded.project))?.lastReadAt).toBeNull();
+  });
+});
+
+// « C'est réglé » sur l'Accueil (0074) : la ligne ne se lit plus, le recalcul la reçoit pour ne pas la redire, et
+// rien de tout cela n'appelle le modèle.
+describe('dismissBriefingLine', () => {
+  const body = [
+    '## What you did',
+    '- Le jeton est corrigé [1].',
+    '## What is still open',
+    '- Le test reste à écrire [1].',
+  ];
+
+  it('ôte la ligne du point lu, la garde après un recalcul, et la donne au modèle', async () => {
+    const seeded = await seedProject(alice);
+    await refreshBriefing(alice, seeded.project, { llm: writes([body.join('\n')]) });
+
+    await dismissBriefingLine(alice, seeded.project, 'Le test reste à écrire.');
+
+    const read = await readBriefing(alice, seeded.project);
+    expect(read?.markdown).toContain('Le jeton est corrigé');
+    expect(read?.markdown).not.toContain('Le test reste à écrire');
+    expect((await rowOf(alice, seeded.project))?.dismissed).toEqual(['Le test reste à écrire.']);
+
+    const llm = writes([body.join('\n')]);
+    await refreshBriefing(alice, seeded.project, { llm });
+    expect((await rowOf(alice, seeded.project))?.dismissed).toEqual(['Le test reste à écrire.']);
+    const sent = llm.calls[0]?.messages.map((message) => message.content).join('\n') ?? '';
+    expect(sent).toContain('<regle>Le test reste à écrire.</regle>');
+    // le modèle a redit la même ligne : elle reste ôtée
+    expect((await readBriefing(alice, seeded.project))?.markdown).not.toContain(
+      'Le test reste à écrire',
+    );
+  });
+
+  it('« Annuler » la remet ; la liste garde les plus récentes, sans doublon', async () => {
+    const seeded = await seedProject(alice);
+    await refreshBriefing(alice, seeded.project, { llm: writes([body.join('\n')]) });
+
+    await dismissBriefingLine(alice, seeded.project, 'Le test reste à écrire.');
+    await restoreBriefingLine(alice, seeded.project, 'Le test reste à écrire.');
+    expect((await rowOf(alice, seeded.project))?.dismissed).toEqual([]);
+    expect((await readBriefing(alice, seeded.project))?.markdown).toContain(
+      'Le test reste à écrire',
+    );
+
+    for (let n = 0; n <= BRIEFING_DISMISSED_MAX; n++)
+      await dismissBriefingLine(alice, seeded.project, `Ligne ${n}.`);
+    await dismissBriefingLine(alice, seeded.project, `Ligne ${BRIEFING_DISMISSED_MAX}.`);
+    const dismissed = (await rowOf(alice, seeded.project))?.dismissed;
+    expect(dismissed).toHaveLength(BRIEFING_DISMISSED_MAX);
+    expect(dismissed?.[0]).toBe('Ligne 1.');
+    expect(dismissed?.at(-1)).toBe(`Ligne ${BRIEFING_DISMISSED_MAX}.`);
+  });
+
+  it('ne touche jamais au point d’un autre', async () => {
+    const seeded = await seedProject(alice);
+    await refreshBriefing(alice, seeded.project, { llm: writes([body.join('\n')]) });
+
+    await dismissBriefingLine(bob, seeded.project, 'Le test reste à écrire.');
+    expect((await rowOf(alice, seeded.project))?.dismissed).toEqual([]);
+
+    await dismissBriefingLine(alice, seeded.project, 'Le test reste à écrire.');
+    await restoreBriefingLine(bob, seeded.project, 'Le test reste à écrire.');
+    expect((await rowOf(alice, seeded.project))?.dismissed).toEqual(['Le test reste à écrire.']);
   });
 });
 

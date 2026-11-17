@@ -138,6 +138,8 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   const name = profile?.userName?.trim().split(/\s+/)[0] || null;
   const now = new Date();
   const sources = briefing?.sources.map(({ sourceId: _id, ...source }) => source);
+  // toutes ses lignes retirées : le point n'est pas montré, mais son recalcul suit son projet
+  const shown = briefing && briefing.sections.length > 0 ? briefing : null;
   const aside = Boolean(week) || Boolean(suggestion);
 
   return (
@@ -146,7 +148,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
       <Greeting
         name={name}
         serverPart={dayPart(now.getHours())}
-        fact={briefing && briefingFact(briefing.sections)}
+        fact={shown && briefingFact(shown.sections)}
         sources={sources}
       />
       <HomeAsk canAsk={modelAvailable} />
@@ -161,26 +163,32 @@ async function Home({ ctx }: { ctx: TenantContext }) {
       <div
         className={cn(
           'mt-9 grid grid-cols-[minmax(0,1fr)] items-start gap-x-12 gap-y-10',
-          briefing && aside && '@[55rem]:grid-cols-[minmax(0,1fr)_clamp(300px,30cqi,380px)]',
+          shown && aside && '@[55rem]:grid-cols-[minmax(0,1fr)_clamp(300px,30cqi,380px)]',
         )}
       >
-        {briefing && (
+        {shown && (
           <Section
             id="point"
             title={t('briefing.title')}
             actions={
-              <time dateTime={briefing.preparedAt.toISOString()} className="text-label text-muted">
-                {formatDateTime(briefing.preparedAt, locale)}
+              <time dateTime={shown.preparedAt.toISOString()} className="text-label text-muted">
+                {formatDateTime(shown.preparedAt, locale)}
               </time>
             }
             className="mt-0"
           >
-            <BriefingSheet sections={briefing.sections} sources={sources ?? []} />
+            <BriefingSheet
+              // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
+              key={`${shown.project}\u0000${shown.preparedAt.toISOString()}`}
+              project={shown.project}
+              sections={shown.sections}
+              sources={sources ?? []}
+            />
           </Section>
         )}
 
         {aside && (
-          <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !briefing && 'max-w-[772px]')}>
+          <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !shown && 'max-w-[772px]')}>
             {week && (
               <WeekCalendar days={week.days} rendezVous={week.rendezVous} now={parisTime(now)} />
             )}

@@ -2,13 +2,19 @@ import { NextIntlClientProvider } from 'next-intl';
 import { createElement, type ReactElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
+import { TooltipProvider } from '@/components/verre';
 import en from '../../../../messages/en.json';
 import { BriefingSheet, type BriefingSourceView, Greeting, HomeAsk } from './home';
 
 // L'Accueil rendu côté serveur (pas de DOM ici) : ce que le point du matin, le fait du jour et le champ doivent porter.
 
 // Les actions du serveur ne sont pas appelées au rendu : leurs modules (base, session) ne se chargent pas ici.
-vi.mock('@/app/(app)/actions', () => ({ previewPassageAction: vi.fn() }));
+vi.mock('@/app/(app)/actions', () => ({
+  dismissBriefingLineAction: vi.fn(),
+  previewPassageAction: vi.fn(),
+  restoreBriefingLineAction: vi.fn(),
+}));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock('@/app/(app)/discussions/actions', () => ({
   citationDetailsAction: vi.fn(),
   dismissAboutSuggestionAction: vi.fn(),
@@ -22,7 +28,9 @@ const h = createElement as unknown as (
   ...children: ReactNode[]
 ) => ReactElement;
 const html = (node: ReactNode) =>
-  renderToStaticMarkup(h(NextIntlClientProvider, { locale: 'en', messages: en }, node));
+  renderToStaticMarkup(
+    h(NextIntlClientProvider, { locale: 'en', messages: en }, h(TooltipProvider, null, node)),
+  );
 
 const source = (n: number, passageId: string | null = `passage-${n}`): BriefingSourceView => ({
   n,
@@ -46,7 +54,9 @@ const lineOf = (markup: string, words: string) => {
 };
 
 describe('BriefingSheet', () => {
-  const sheet = html(h(BriefingSheet, { sections: SECTIONS, sources: SOURCES }));
+  const sheet = html(
+    h(BriefingSheet, { project: 'github.com/acme/leon', sections: SECTIONS, sources: SOURCES }),
+  );
 
   it('écrit les trois parties dans la langue de l’écran, sans lister les sources', () => {
     expect(sheet).toContain('>What you did</h3>');
@@ -90,6 +100,12 @@ describe('BriefingSheet', () => {
   it('marque la ligne du fait du jour (la première ligne sourcée de « What changed »), et elle seule', () => {
     expect(sheet.match(/data-fact="true"/g)).toHaveLength(1);
     expect(lineOf(sheet, 'Sophie moved')).toContain('data-fact="true"');
+  });
+
+  it('chaque ligne a sa croix « c’est réglé », nommée, au-dessus du bouton de la ligne', () => {
+    const crosses = sheet.match(/<button[^>]*aria-label="Settled: remove this line"[^>]*>/g) ?? [];
+    expect(crosses).toHaveLength(4);
+    for (const cross of crosses) expect(cross).toContain('z-[2]');
   });
 });
 

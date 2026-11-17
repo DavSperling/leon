@@ -156,16 +156,16 @@ export async function homeBriefing(ctx: TenantContext): Promise<{
         preparedAt: briefings.preparedAt,
         project: briefings.project,
         stale: briefings.stale,
+        dismissed: briefings.dismissed,
       })
       .from(briefings)
       .where(eq(briefings.userId, ctx.userId))
       .orderBy(desc(briefings.preparedAt))
       .limit(HOME_BRIEFING_CANDIDATES);
-    const found = rows
-      .map((candidate) => ({ row: candidate, sections: parseBriefing(candidate.markdown) }))
-      .find((candidate) => candidate.sections !== null);
-    if (!found?.sections) return null;
-    const { row, sections } = found;
+    const row = rows.find((candidate) => parseBriefing(candidate.markdown) !== null);
+    if (!row) return null;
+    // sans les lignes retirées (0074) : toutes retirées, il reste le point vide, que l'Accueil fait encore refaire
+    const sections = parseBriefing(row.markdown, row.dismissed) ?? [];
     const wanted = [...new Set(row.sourceIds)];
     const sources = await briefingSources(ctx, wanted, tx);
     return sources.length < wanted.length

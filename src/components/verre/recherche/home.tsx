@@ -1,15 +1,19 @@
 'use client';
 
-import { ArrowUp } from 'lucide-react';
+import { ArrowUp, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useActionState, useEffect, useRef, useSyncExternalStore } from 'react';
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { dismissBriefingLineAction, restoreBriefingLineAction } from '@/app/(app)/actions';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import {
   Button,
   CitationChip,
   GlassCard,
+  IconButton,
   Kbd,
   Strokes,
+  toast,
   toneOf,
   useModKey,
 } from '@/components/verre';
@@ -279,21 +283,77 @@ const SECTION_KEYS: Record<string, 'did' | 'changed' | 'open'> = {
   'What is still open': 'open',
 };
 
+// Le temps d'« Annuler » après « C'est réglé », avant que la ligne ne parte pour de bon de la page.
+const UNDO_MS = 6000;
+
 /**
  * Le point du matin : la feuille de l'écran. Ses trois parties l'une sous l'autre, leur titre dans la marge dès que
  * la feuille est assez large ; chaque ligne finit par ses numéros et ouvre sa source. En 15 px : de vraies phrases.
+ * Une croix au bout de chaque ligne (au pointeur, toujours visible au doigt) la retire : « c'est réglé ». La base le
+ * garde tout de suite (0074) ; la ligne laisse sur place « Ligne retirée · Annuler » quelques secondes, puis s'en va.
  */
 export function BriefingSheet({
+  project,
   sections,
   sources,
 }: {
+  project: string;
   sections: BriefingSection[];
   sources: BriefingSourceView[];
 }) {
   const t = useTranslations('welcome');
+  const router = useRouter();
   const panel = useSourcePanel();
   const byN = byNumber(sources);
   const fact = briefingFact(sections);
+  // les lignes retirées sur cette page, par leur texte : « undo » le temps d'annuler, puis « gone »
+  const [removed, setRemoved] = useState<ReadonlyMap<string, 'undo' | 'gone'>>(new Map());
+  const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      for (const timer of pending.values()) clearTimeout(timer);
+    };
+  }, []);
+
+  const mark = (text: string, state: 'undo' | 'gone' | null) =>
+    setRemoved((current) => {
+      const next = new Map(current);
+      if (state) next.set(text, state);
+      else next.delete(text);
+      return next;
+    });
+  const leave = (text: string) => {
+    timers.current.delete(text);
+    // le focus était sur « Annuler », qui s'en va : il revient au titre de l'Accueil, jamais sur <body>
+    if (document.activeElement?.closest('[data-undo]'))
+      document.getElementById(HOME_TITLE_ID)?.focus();
+    mark(text, 'gone');
+    // le fait du jour sous le bonjour, ou le point entier vidé, suivent : le serveur relit le point sans cette ligne
+    router.refresh();
+  };
+  const dismiss = async (text: string) => {
+    mark(text, 'undo');
+    if (!(await dismissBriefingLineAction(project, text))) {
+      mark(text, null);
+      toast.error(t('briefing.dismissFailed'));
+      return;
+    }
+    timers.current.set(
+      text,
+      setTimeout(() => leave(text), UNDO_MS),
+    );
+  };
+  const undo = async (text: string) => {
+    clearTimeout(timers.current.get(text));
+    timers.current.delete(text);
+    mark(text, null);
+    if (!(await restoreBriefingLineAction(project, text))) {
+      mark(text, 'gone');
+      toast.error(t('briefing.undoFailed'));
+    }
+  };
+
   return (
     <>
       <GlassCard className="@container px-6 py-1 max-shell:px-4">
@@ -301,6 +361,8 @@ export function BriefingSheet({
         <div className="grid gap-x-6 @[32.5rem]:grid-cols-[auto_minmax(0,1fr)]">
           {sections.map((section) => {
             const key = SECTION_KEYS[section.title];
+            const lines = section.lines.filter((line) => removed.get(line.text) !== 'gone');
+            if (lines.length === 0) return null;
             return (
               <section
                 key={section.title}
@@ -310,14 +372,48 @@ export function BriefingSheet({
                   {key ? t(`briefing.${key}`) : section.title}
                 </h3>
                 <ul className="min-w-0">
-                  {section.lines.map((line, index) => (
-                    <li
-                      // biome-ignore lint/suspicious/noArrayIndexKey: lignes fixes, jamais réordonnées ; deux lignes identiques ne se confondent pas
-                      key={`${index}-${line.text}`}
-                    >
-                      <Line line={line} sources={byN} open={panel.open} fact={line === fact} />
-                    </li>
-                  ))}
+                  {lines.map((line, index) =>
+                    removed.get(line.text) === 'undo' ? (
+                      <li
+                        // biome-ignore lint/suspicious/noArrayIndexKey: lignes fixes, jamais réordonnées ; deux lignes identiques ne se confondent pas
+                        key={`${index}-${line.text}`}
+                        data-undo=""
+                        className="flex min-h-[38px] items-center gap-2 py-1 text-ui text-muted"
+                      >
+                        <span role="status">{t('briefing.dismissed')}</span>
+                        <Button
+                          size="xs"
+                          variant="quiet"
+                          // « Annuler » prend la place de la croix : le focus du clavier y passe
+                          autoFocus
+                          onClick={() => undo(line.text)}
+                        >
+                          {t('briefing.undo')}
+                        </Button>
+                      </li>
+                    ) : (
+                      <li
+                        // biome-ignore lint/suspicious/noArrayIndexKey: lignes fixes, jamais réordonnées ; deux lignes identiques ne se confondent pas
+                        key={`${index}-${line.text}`}
+                        className="group/line relative"
+                      >
+                        <Line
+                          line={line}
+                          sources={byN}
+                          open={panel.open}
+                          fact={line === fact}
+                          className="pr-11"
+                        />
+                        <IconButton
+                          icon={X}
+                          label={t('briefing.dismiss')}
+                          onClick={() => dismiss(line.text)}
+                          // au pointeur : visible quand on pointe la ligne ou qu'on y arrive au clavier ; au doigt : toujours
+                          className="absolute top-0.5 right-0 z-[2] opacity-0 transition-opacity group-hover/line:opacity-100 focus-visible:opacity-100 max-shell:top-0 [@media(hover:none)]:opacity-100"
+                        />
+                      </li>
+                    ),
+                  )}
                 </ul>
               </section>
             );

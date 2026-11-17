@@ -3,8 +3,14 @@
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
+import { ProjectSchema } from '@/capture/turn';
 import { type PreviewView, toPreviewView } from '@/components/search/view-model';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
+import {
+  BRIEFING_LINE_MAX_CHARS,
+  dismissBriefingLine,
+  restoreBriefingLine,
+} from '@/server/briefing/briefings';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
 import { NOTHING_FOUND, type ShellFound, searchShell } from '@/server/shell/shell';
@@ -50,5 +56,39 @@ export async function searchShellAction(query: string): Promise<ShellFound> {
   } catch (error) {
     logError('shell.search_failed', error);
     return NOTHING_FOUND;
+  }
+}
+
+const BriefingLineSchema = z.object({
+  project: ProjectSchema,
+  text: z.string().min(1).max(BRIEFING_LINE_MAX_CHARS),
+});
+
+// « C'est réglé » sur une ligne du point du matin (et « Annuler » juste après) : dans le seul point de la personne
+// connectée, sans appel au modèle. Rien ne se revalide : l'écran a déjà ôté (ou remis) la ligne. Rend faux sur une
+// panne, pour que l'écran remette la ligne et le dise.
+export async function dismissBriefingLineAction(project: string, text: string): Promise<boolean> {
+  return briefingLineAction('point.retrait', project, text, dismissBriefingLine);
+}
+
+export async function restoreBriefingLineAction(project: string, text: string): Promise<boolean> {
+  return briefingLineAction('point.annulation', project, text, restoreBriefingLine);
+}
+
+async function briefingLineAction(
+  what: string,
+  project: string,
+  text: string,
+  apply: typeof dismissBriefingLine,
+): Promise<boolean> {
+  const ctx = await requireUserContext();
+  const parsed = BriefingLineSchema.safeParse({ project, text });
+  if (!parsed.success) return false;
+  try {
+    await apply(ctx, parsed.data.project, parsed.data.text);
+    return true;
+  } catch (error) {
+    logError(what, error);
+    return false;
   }
 }

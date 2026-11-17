@@ -381,7 +381,11 @@
       "dismissed": "Ligne retirée.",
       "undo": "Annuler",
       "dismissFailed": "Impossible de retirer la ligne. Réessayez.",
-      "undoFailed": "Impossible de remettre la ligne."
+      "undoFailed": "Impossible de remettre la ligne.",
+      "delete": "Supprimer",
+      "folder": "Dossier",
+      "deleted": "Point supprimé.",
+      "deleteFailed": "Impossible de supprimer le point. Réessayez."
     },
     "ask": "Demander ou chercher dans tout ce que Leon a gardé",
     "askRecent": "Qu’est-ce qui a bougé cette semaine qui me concerne ?",

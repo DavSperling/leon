@@ -5,7 +5,7 @@ import { renderBriefing, renderEmptyBriefing } from '@/server/briefing/briefing-
 import { briefings, passages } from '@/server/db/schema/search';
 import { adminDb } from '@/test/db';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
-import { briefingSources, citationDetails, homeBriefing } from './citation-sources';
+import { briefingSources, citationDetails, homeBriefings } from './citation-sources';
 
 // Ce que l'écran montre d'une source citée (l'outil, « Vous et vos managers », le passage pour le surligneur), relu sous les
 // droits du lecteur : une source qu'il ne voit pas ne dit rien.
@@ -95,7 +95,7 @@ describe('le point du matin de l’Accueil', () => {
   it('rend ses trois parties et ses sources, sans compter la vue comme une lecture', async () => {
     const { tenantId, members } = await newTeam(['Alice', 'Bruno'], tenantIds);
     const [alice, bruno] = members as [TenantContext, TenantContext];
-    expect(await homeBriefing(alice)).toBeNull();
+    expect(await homeBriefings(alice)).toEqual([]);
 
     const one = await seedIndexed(alice, { kind: 'github', acl: [tenantId], title: 'Ticket 1' });
     const markdown = renderBriefing({
@@ -117,7 +117,7 @@ describe('le point du matin de l’Accueil', () => {
       })
       .returning({ id: briefings.id });
 
-    const shown = await homeBriefing(alice);
+    const [shown] = await homeBriefings(alice);
     expect(shown?.sections).toEqual([
       { title: 'What you did', lines: [{ text: 'Renewed the deploy token.', refs: [1] }] },
     ]);
@@ -130,7 +130,7 @@ describe('le point du matin de l’Accueil', () => {
       .where(eq(briefings.id, row?.id ?? ''));
     expect(after?.lastReadAt).toBeNull();
     // le point d'Alice n'existe pas pour Bruno
-    expect(await homeBriefing(bruno)).toBeNull();
+    expect(await homeBriefings(bruno)).toEqual([]);
 
     // une source qui n'est plus visible : le point n'est plus montré
     const hidden = await seedIndexed(bruno, { kind: 'linear', acl: [bruno.userId] });
@@ -138,10 +138,10 @@ describe('le point du matin de l’Accueil', () => {
       .update(briefings)
       .set({ sourceIds: [one.sourceId, hidden.sourceId] })
       .where(eq(briefings.id, row?.id ?? ''));
-    expect(await homeBriefing(alice)).toBeNull();
+    expect(await homeBriefings(alice)).toEqual([]);
   });
 
-  it('montre le point préparé le plus récemment, pas celui du projet lu en dernier, ni un point vide', async () => {
+  it('montre un point par dossier, le plus récent d’abord, sans les points vides ni ceux d’avant la fournée', async () => {
     const { tenantId, members } = await newTeam(['Alice'], tenantIds);
     const [alice] = members as [TenantContext];
     const source = await seedIndexed(alice, { kind: 'claude_code', acl: [alice.userId] });
@@ -161,8 +161,9 @@ describe('le point du matin de l’Accueil', () => {
       acl: [alice.userId],
     });
     await adminDb.insert(briefings).values([
-      // lu à l'instant par une session de code, mais préparé il y a trois jours
+      // lu à l'instant par une session de code, mais préparé trois jours avant la fournée du matin
       point('github.com/acme/leon', 'Vieux point', new Date('2026-11-13T13:57:00Z'), new Date()),
+      point('github.com/acme/site', 'Point d’hier', new Date('2026-11-15T16:00:00Z'), null),
       point('dossier:0123456789abcdef', 'Point du jour', new Date('2026-11-16T07:24:00Z'), null),
       {
         ...point('dossier:fedcba9876543210', 'vide', new Date('2026-11-16T08:00:00Z'), null),
@@ -175,10 +176,14 @@ describe('le point du matin de l’Accueil', () => {
       },
     ]);
 
-    const shown = await homeBriefing(alice);
-    expect(shown?.sections[0]?.lines[0]?.text).toBe('Point du jour.');
-    expect(shown?.preparedAt.toISOString()).toBe('2026-11-16T07:24:00.000Z');
-    expect(shown).toMatchObject({ project: 'dossier:0123456789abcdef', stale: false });
+    const shown = await homeBriefings(alice);
+    expect(shown.map((one) => one.project)).toEqual([
+      'dossier:0123456789abcdef',
+      'github.com/acme/site',
+    ]);
+    expect(shown[0]?.sections[0]?.lines[0]?.text).toBe('Point du jour.');
+    expect(shown[0]?.preparedAt.toISOString()).toBe('2026-11-16T07:24:00.000Z');
+    expect(shown[0]).toMatchObject({ stale: false });
 
     // son projet a bougé depuis : l'Accueil le sait, pour en demander le recalcul
     await adminDb
@@ -187,6 +192,6 @@ describe('le point du matin de l’Accueil', () => {
       .where(
         and(eq(briefings.userId, alice.userId), eq(briefings.project, 'dossier:0123456789abcdef')),
       );
-    expect((await homeBriefing(alice))?.stale).toBe(true);
+    expect((await homeBriefings(alice))[0]?.stale).toBe(true);
   });
 });

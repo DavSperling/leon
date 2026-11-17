@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { CODE_SESSION_KINDS, repoOf } from '@/capture/turn';
 import { askSuggestions } from '@/components/discussion/ask-suggestions';
 import { runSearch } from '@/components/search/run-search';
 import { SearchFilters } from '@/components/search/search-filters';
@@ -33,7 +34,7 @@ import { ABOUT_MAX_CHARS } from '@/server/briefing/about';
 import { readAboutSuggestion } from '@/server/briefing/about-suggestion';
 import { refreshShownBriefing } from '@/server/briefing/briefings';
 import { enqueueAgendaRefresh } from '@/server/briefing/queue';
-import { homeBriefing } from '@/server/discussion/citation-sources';
+import { type HomeBriefing, homeBriefings } from '@/server/discussion/citation-sources';
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
@@ -99,6 +100,15 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   );
 }
 
+// Le nom du dossier d'un point : son dépôt, ou le titre de sa session de code la plus récente (un dossier sans dépôt
+// n'a qu'une clé chiffrée). Les sources d'un point viennent dans l'ordre de ses numéros, les sessions d'abord.
+function pointLabel(point: HomeBriefing): string | null {
+  const repo = repoOf(point.project);
+  if (repo) return repo.split('/')[1] ?? repo;
+  const kinds: readonly string[] = CODE_SESSION_KINDS;
+  return point.sources.find((source) => kinds.includes(source.kind))?.title ?? null;
+}
+
 // Une partie facultative de l'Accueil : sa panne ne prive pas du reste (elle est notée).
 const optional = <T,>(what: string, read: Promise<T>) =>
   read.catch((error) => {
@@ -114,19 +124,19 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
   const locale = await getLocale();
   const modelAvailable = getLlm(env) !== null;
-  const [profile, member, suggestion, briefing, week] = await Promise.all([
+  const [profile, member, suggestion, points, week] = await Promise.all([
     optional('accueil.profil', getViewerProfile(ctx)),
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
-    optional('accueil.point', homeBriefing(ctx)),
+    optional('accueil.point', homeBriefings(ctx)),
     optional('accueil.semaine', readWeek(ctx)),
   ]);
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
-    // le point montré a vieilli : il sera à jour à la prochaine visite
-    briefing?.stale && modelAvailable
-      ? refreshShownBriefing(ctx, briefing.project, briefing.preparedAt)
-      : null,
+    // un point montré a vieilli : il sera à jour à la prochaine visite (le plafond du jour borne la dépense)
+    ...(modelAvailable ? (points ?? []) : [])
+      .filter((point) => point.stale)
+      .map((point) => refreshShownBriefing(ctx, point.project, point.preparedAt)),
     // les rendez-vous des e-mails ont vieilli : relus en arrière-plan, sans appel au modèle s'il n'y a rien de neuf
     week && modelAvailable && agendaIsStale(week.preparedAt)
       ? optional(
@@ -137,9 +147,11 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   ]);
   const name = profile?.userName?.trim().split(/\s+/)[0] || null;
   const now = new Date();
-  const sources = briefing?.sources.map(({ sourceId: _id, ...source }) => source);
-  // toutes ses lignes retirées : le point n'est pas montré, mais son recalcul suit son projet
-  const shown = briefing && briefing.sections.length > 0 ? briefing : null;
+  // toutes ses lignes retirées (ou « Supprimer ») : le point n'est pas montré, mais son recalcul suit son projet
+  const shown = (points ?? []).filter((point) => point.sections.length > 0);
+  const first = shown[0] ?? null;
+  const viewOf = (point: HomeBriefing) =>
+    point.sources.map(({ sourceId: _id, ...source }) => source);
   const aside = Boolean(week) || Boolean(suggestion);
 
   return (
@@ -148,8 +160,8 @@ async function Home({ ctx }: { ctx: TenantContext }) {
       <Greeting
         name={name}
         serverPart={dayPart(now.getHours())}
-        fact={shown && briefingFact(shown.sections)}
-        sources={sources}
+        fact={first && briefingFact(first.sections)}
+        sources={first ? viewOf(first) : undefined}
       />
       <HomeAsk canAsk={modelAvailable} />
       {questions.length > 0 && (
@@ -163,32 +175,40 @@ async function Home({ ctx }: { ctx: TenantContext }) {
       <div
         className={cn(
           'mt-9 grid grid-cols-[minmax(0,1fr)] items-start gap-x-12 gap-y-10',
-          shown && aside && '@[55rem]:grid-cols-[minmax(0,1fr)_clamp(300px,30cqi,380px)]',
+          first && aside && '@[55rem]:grid-cols-[minmax(0,1fr)_clamp(300px,30cqi,380px)]',
         )}
       >
-        {shown && (
-          <Section
-            id="point"
-            title={t('briefing.title')}
-            actions={
-              <time dateTime={shown.preparedAt.toISOString()} className="text-label text-muted">
-                {formatDateTime(shown.preparedAt, locale)}
-              </time>
-            }
-            className="mt-0"
-          >
-            <BriefingSheet
-              // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
-              key={`${shown.project}\u0000${shown.preparedAt.toISOString()}`}
-              project={shown.project}
-              sections={shown.sections}
-              sources={sources ?? []}
-            />
+        {first && (
+          <Section id="point" title={t('briefing.title')} className="mt-0">
+            <div className="grid gap-6">
+              {shown.map((point) => (
+                <BriefingSheet
+                  // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
+                  key={`${point.project}\u0000${point.preparedAt.toISOString()}`}
+                  project={point.project}
+                  heading={
+                    <>
+                      {/* un seul point : pas besoin de dire de quel dossier il parle */}
+                      {shown.length > 1 && (
+                        <span className="truncate font-semibold text-fg">
+                          {pointLabel(point) ?? t('briefing.folder')}
+                        </span>
+                      )}
+                      <time dateTime={point.preparedAt.toISOString()} className="shrink-0">
+                        {formatDateTime(point.preparedAt, locale)}
+                      </time>
+                    </>
+                  }
+                  sections={point.sections}
+                  sources={viewOf(point)}
+                />
+              ))}
+            </div>
           </Section>
         )}
 
         {aside && (
-          <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !shown && 'max-w-[772px]')}>
+          <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !first && 'max-w-[772px]')}>
             {week && (
               <WeekCalendar days={week.days} rendezVous={week.rendezVous} now={parisTime(now)} />
             )}

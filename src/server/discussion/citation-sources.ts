@@ -130,24 +130,31 @@ export async function briefingSources(
   });
 }
 
-// Les derniers points regardés pour en trouver un qui ne soit pas vide (« rien de nouveau », refait chaque matin sur
+// Les derniers points regardés pour en trouver qui ne soient pas vides (« rien de nouveau », refait chaque matin sur
 // un projet en sommeil).
 const HOME_BRIEFING_CANDIDATES = 10;
+// L'Accueil montre un point par dossier de travail (un dépôt, ou un dossier sans dépôt), au plus quatre, tous préparés
+// dans les 24 heures qui précèdent le plus récent : la fournée du matin, pas un vieux point d'un projet abandonné.
+export const HOME_BRIEFINGS_MAX = 4;
+const HOME_BRIEFING_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-// Le point du matin tel que l'Accueil le montre : le plus récemment préparé de la personne, tous projets confondus, qui
-// ne soit pas vide, ses trois parties, et ses sources à leur numéro. Pas celui du projet lu en dernier
-// (latestBriefingProject) : une session de code ouverte sur un autre projet ferait sinon afficher son point, même vieux
-// de plusieurs jours. Une vue de page n'est pas une lecture : ni `lastReadAt`, ni journal ; `stale` dit à l'Accueil
-// que son projet a bougé depuis, pour qu'il en demande le recalcul (refreshShownBriefing). Null sans point non vide, ou
-// quand une des sources du point choisi n'est plus visible (le point n'est plus montré, comme dans readBriefing).
-export async function homeBriefing(ctx: TenantContext): Promise<{
+export type HomeBriefing = {
   sections: BriefingSection[];
   sources: BriefingSource[];
   preparedAt: Date;
   project: string;
   stale: boolean;
-} | null> {
-  // le point et ses sources dans la même transaction : une seule ouverture au lieu de deux
+};
+
+// Les points du matin tels que l'Accueil les montre : un par projet, le plus récemment préparé d'abord, tous projets
+// confondus, sans les points vides, leurs trois parties, et leurs sources à leur numéro. Pas le seul projet lu en
+// dernier (latestBriefingProject) : l'Accueil ne parlerait que d'un sujet. Une vue de page n'est pas une lecture : ni
+// `lastReadAt`, ni journal ; `stale` dit à l'Accueil que le projet a bougé depuis, pour qu'il en demande le recalcul
+// (refreshShownBriefing). Un point dont une source n'est plus visible n'est pas montré, comme dans readBriefing. Un
+// point dont toutes les lignes sont retirées (0074) est rendu sans parties : l'Accueil ne le montre pas, mais en
+// demande encore le recalcul.
+export async function homeBriefings(ctx: TenantContext): Promise<HomeBriefing[]> {
+  // les points et leurs sources dans la même transaction : une seule ouverture
   return withTenant(ctx, async (tx) => {
     const rows = await tx
       .select({
@@ -162,14 +169,23 @@ export async function homeBriefing(ctx: TenantContext): Promise<{
       .where(eq(briefings.userId, ctx.userId))
       .orderBy(desc(briefings.preparedAt))
       .limit(HOME_BRIEFING_CANDIDATES);
-    const row = rows.find((candidate) => parseBriefing(candidate.markdown) !== null);
-    if (!row) return null;
-    // sans les lignes retirées (0074) : toutes retirées, il reste le point vide, que l'Accueil fait encore refaire
-    const sections = parseBriefing(row.markdown, row.dismissed) ?? [];
-    const wanted = [...new Set(row.sourceIds)];
-    const sources = await briefingSources(ctx, wanted, tx);
-    return sources.length < wanted.length
-      ? null
-      : { sections, sources, preparedAt: row.preparedAt, project: row.project, stale: row.stale };
+    const filled = rows.filter((candidate) => parseBriefing(candidate.markdown) !== null);
+    const newest = filled[0]?.preparedAt.getTime() ?? 0;
+    const shown: HomeBriefing[] = [];
+    for (const row of filled) {
+      if (shown.length === HOME_BRIEFINGS_MAX) break;
+      if (newest - row.preparedAt.getTime() > HOME_BRIEFING_WINDOW_MS) break;
+      const wanted = [...new Set(row.sourceIds)];
+      const sources = await briefingSources(ctx, wanted, tx);
+      if (sources.length < wanted.length) continue;
+      shown.push({
+        sections: parseBriefing(row.markdown, row.dismissed) ?? [],
+        sources,
+        preparedAt: row.preparedAt,
+        project: row.project,
+        stale: row.stale,
+      });
+    }
+    return shown;
   });
 }

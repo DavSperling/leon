@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { loadAntigravitySubagents, loadSubagents } from './subagents';
+import { loadAntigravitySubagents, loadCodexSubagents, loadSubagents } from './subagents';
 
 // Un disque inventé : chemin → contenu ; un dossier se liste par ses noms.
 const SESSION = '/home/demo/.claude/projects/-demo/55555555-5555-4555-8555-555555555555.jsonl';
@@ -336,5 +336,135 @@ describe('loadAntigravitySubagents', () => {
   it('sans listage du disque, rend des tables vides', async () => {
     const { readFile } = disque({ [`${fiches(S)}/${R}.json`]: fiche(R) }, {});
     expect(await loadAntigravitySubagents(SESSION_AG, { readFile })).toEqual(vide);
+  });
+});
+
+// Codex (annexe 09) : le fichier d'un sous-agent est `rollout-<date>-<fil>.jsonl`, dans le dossier de la session ; ses
+// fils viennent des éléments SubAgentActivity démarrés.
+describe('loadCodexSubagents', () => {
+  const S = '019a7d2c-1111-7111-8111-111111111111';
+  const L = '019a7d2c-2222-7222-8222-222222222222';
+  const W = '019a7d2c-3333-7333-8333-333333333333';
+  const G = '019a7d2c-4444-7444-8444-444444444444';
+  const JOUR = '/home/demo/.codex/sessions/2026/11/13';
+  const nom = (fil: string) => `rollout-2026-11-13T10-56-00-${fil}.jsonl`;
+  const chemin = (fil: string) => `${JOUR}/${nom(fil)}`;
+  // Un rollout inventé, en historique paginé, qui lance les fils donnés.
+  const lance = (...fils: string[]) =>
+    [
+      JSON.stringify({
+        timestamp: '2026-11-13T10:56:00.000Z',
+        ordinal: 0,
+        type: 'session_meta',
+        payload: { id: 'x', history_mode: 'paginated' },
+      }),
+      ...fils.map((fil, index) =>
+        JSON.stringify({
+          timestamp: '2026-11-13T10:56:01.000Z',
+          ordinal: index + 1,
+          type: 'event_msg',
+          payload: {
+            type: 'item_completed',
+            item: { type: 'SubAgentActivity', kind: 'started', agent_thread_id: fil },
+          },
+        }),
+      ),
+    ].join('\n');
+
+  it('lit la fixture : les deux sous-agents lancés par la session, à côté d’elle', async () => {
+    const dossier = fileURLToPath(
+      new URL('../capture/fixtures/codex-sous-agents', import.meta.url),
+    );
+    const lire = (date: string, fil: string) =>
+      readFile(`${dossier}/rollout-2026-11-13T${date}-${fil}.jsonl`, 'utf8');
+
+    expect(
+      await loadCodexSubagents(`${dossier}/rollout-2026-11-13T10-56-00-${S}.jsonl`, {
+        readFile: (path) => readFile(path, 'utf8'),
+        readdir,
+      }),
+    ).toEqual(
+      new Map([
+        [L, await lire('10-56-05', L)],
+        [W, await lire('10-56-06', W)],
+      ]),
+    );
+  });
+
+  it('lit les sous-agents d’un sous-agent, une fois chacun', async () => {
+    const lus: string[] = [];
+    const deps = disque(
+      { [chemin(S)]: lance(L), [chemin(L)]: lance(G, L), [chemin(G)]: lance(L) },
+      { [JOUR]: [nom(S), nom(L), nom(G)] },
+    );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
+
+    expect(await loadCodexSubagents(chemin(S), { ...deps, readFile })).toEqual(
+      new Map([
+        [L, lance(G, L)],
+        [G, lance(L)],
+      ]),
+    );
+    expect(lus).toEqual([chemin(S), chemin(L), chemin(G)]);
+  });
+
+  it('ignore un fil qui n’est pas un UUID, sans rien lire pour lui', async () => {
+    const lus: string[] = [];
+    const deps = disque(
+      { [chemin(S)]: lance('../x', 'x', `${L}/..`, `${L}.jsonl`), [`${JOUR}/x.jsonl`]: 'x' },
+      { [JOUR]: [nom(S), 'x.jsonl', 'rollout-x-x.jsonl'] },
+    );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
+
+    expect(await loadCodexSubagents(chemin(S), { ...deps, readFile })).toEqual(new Map());
+    expect(lus).toEqual([chemin(S)]);
+  });
+
+  it.each([
+    ['dont le fichier manque', {}, [nom(S), nom(W)]],
+    ['dont le fichier ne se lit pas', {}, [nom(S), nom(L), nom(W)]],
+    [
+      'dont le fichier est dans un autre jour',
+      { [`/home/demo/.codex/sessions/2026/11/12/${nom(L)}`]: 'L' },
+      [nom(S), nom(W)],
+    ],
+    [
+      'porté par deux fichiers',
+      { [chemin(L)]: 'L', [`${JOUR}/rollout-2026-11-13T11-00-00-${L}.jsonl`]: 'L bis' },
+      [nom(S), nom(L), `rollout-2026-11-13T11-00-00-${L}.jsonl`, nom(W)],
+    ],
+  ])(
+    'laisse de côté, sans erreur, un sous-agent %s ; les autres se lisent',
+    async (_cas, fichiers, noms) => {
+      const deps = disque(
+        { ...fichiers, [chemin(S)]: lance(L, W), [chemin(W)]: 'W' },
+        { [JOUR]: noms },
+      );
+
+      expect(await loadCodexSubagents(chemin(S), deps)).toEqual(new Map([[W, 'W']]));
+    },
+  );
+
+  it.each([
+    ['relative', `sessions/2026/11/13/${nom(S)}`],
+    ['illisible', `${JOUR}/${nom(G)}`],
+  ])('rend une table vide pour une session %s', async (_cas, session) => {
+    const deps = disque(
+      { [chemin(S)]: lance(L), [`sessions/2026/11/13/${nom(S)}`]: lance(L), [chemin(L)]: 'L' },
+      { [JOUR]: [nom(S), nom(L)], 'sessions/2026/11/13': [nom(S), nom(L)] },
+    );
+
+    expect(await loadCodexSubagents(session, deps)).toEqual(new Map());
+  });
+
+  it('sans listage du disque, rend une table vide', async () => {
+    const { readFile } = disque({ [chemin(S)]: lance(L), [chemin(L)]: 'L' }, {});
+    expect(await loadCodexSubagents(chemin(S), { readFile })).toEqual(new Map());
   });
 });

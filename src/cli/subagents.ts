@@ -1,6 +1,7 @@
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { z } from 'zod';
 import type { AntigravitySubagents } from '../capture/antigravity';
+import { type CodexSubagents, codexSubagentThreads } from '../capture/codex';
 
 // `agentId` validé avant de servir à un chemin (annexe 08 : 17 caractères vus, lettres minuscules et chiffres).
 const META_FILE = /^agent-([a-z0-9]{1,64})\.meta\.json$/;
@@ -106,4 +107,43 @@ export async function loadAntigravitySubagents(
     }
   }
   return { named, transcripts };
+}
+
+// Les sous-agents d'une session Codex, pour le tri de T63 et les coulisses (codex.ts ; annexe 09) : le fil de chaque
+// sous-agent → le contenu de son rollout. Les fils viennent des éléments SubAgentActivity démarrés de la session
+// (codexSubagentThreads), validés (un UUID) avant de servir à un nom de fichier. Le rollout d'un sous-agent est
+// `rollout-<date>-<fil>.jsonl`, dans le dossier du fichier de la session, jamais un autre jour ; puis ceux de ses propres
+// sous-agents, une fois chacun. Ce qui ne se lit pas est laissé de côté, comme un fil porté par deux fichiers (on ne
+// sait pas lequel juger) : son sous-agent restera externe. Sans `readdir`, aucun sous-agent n'est lu.
+export async function loadCodexSubagents(
+  sessionFile: string,
+  deps: {
+    readFile: (path: string) => Promise<string>;
+    readdir?: (path: string) => Promise<string[]>;
+  },
+): Promise<CodexSubagents> {
+  const subagents = new Map<string, string>();
+  const { readdir } = deps;
+  if (!readdir || !isAbsolute(sessionFile)) return subagents;
+  const session = await deps.readFile(sessionFile).catch(() => null);
+  if (session === null) return subagents;
+  const dir = dirname(sessionFile);
+  const names = await readdir(dir).catch(() => [] as string[]);
+  const queue = [session];
+  const seen = new Set<string>();
+  for (const content of queue) {
+    for (const thread of codexSubagentThreads(content)) {
+      if (!UUID.test(thread) || seen.has(thread)) continue;
+      seen.add(thread);
+      const [file, ...others] = names.filter(
+        (name) => name.startsWith('rollout-') && name.endsWith(`-${thread}.jsonl`),
+      );
+      if (file === undefined || others.length > 0) continue;
+      const child = await deps.readFile(join(dir, file)).catch(() => null);
+      if (child === null) continue;
+      subagents.set(thread, child);
+      queue.push(child);
+    }
+  }
+  return subagents;
 }

@@ -25,10 +25,16 @@
 //
 // Les gestes : les `item_completed` en historique paginé. Le texte des appels (`exec`, `apply_patch`) n'est lu qu'en
 // repli, pour un rollout à l'ancien format.
+//
+// codex-cli 0.159.0 (annexe 09, essai du 13/11) : un sous-agent est un rollout à part, dans le dossier de la session,
+// lancé par un appel `spawn_agent` et nommé par l'élément `SubAgentActivity` (`agent_thread_id`). Son fichier recopie
+// l'historique de sa mère avant le rang `subagent_history_start_ordinal`. Son rapport revient dans la session en
+// `response_item` de type `agent_message`.
 import { resolve } from 'node:path';
 import { z } from 'zod';
-import type { SessionFacts } from './api-contract';
+import type { CoulisseBloc, SessionFacts } from './api-contract';
 import { prepareTurnText } from './prepare-turn-text';
+import { finishBlocs, prepare, target } from './session-backstage';
 import {
   buildFacts,
   type FactsRecord,
@@ -38,6 +44,7 @@ import {
   newFactsRecord,
   recordCommand,
   recordFile,
+  reduceToolName,
   replaceTasks,
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
@@ -56,6 +63,10 @@ export type CodexSession = {
   // `history_base.thread_id` : le rollout dont ce fichier reprend l'historique, noté comme session d'origine.
   origine: string | null;
 };
+
+// Les sous-agents d'une session (T63 amendé le 17/11, chargés par la CLI : loadCodexSubagents) : l'identifiant du fil
+// de chaque sous-agent → le contenu de son rollout. Ils ne décident que de `externe` et des coulisses.
+export type CodexSubagents = ReadonlyMap<string, string>;
 
 const TITLE_FROM_TEXT_MAX = 80;
 
@@ -78,6 +89,7 @@ const SessionMetaSchema = z.object({
   history_base: z
     .object({ thread_id: z.string().min(1), end_ordinal_exclusive: z.number().int() })
     .nullish(),
+  subagent_history_start_ordinal: z.number().int().nonnegative().nullish(),
   git: z
     .object({ branch: z.string().nullish(), commit_hash: z.string().nullish() })
     .nullish()
@@ -85,9 +97,10 @@ const SessionMetaSchema = z.object({
 });
 type SessionMeta = z.infer<typeof SessionMetaSchema>;
 
+// `agent_message` : le message d'un autre agent, sans rôle (annexe 09).
 const MessageSchema = z.object({
-  type: z.literal('message'),
-  role: z.string(),
+  type: z.enum(['message', 'agent_message']),
+  role: z.string().optional(),
   content: z.array(z.unknown()),
 });
 const TextItemSchema = z.object({
@@ -180,7 +193,9 @@ function messageTexts(content: unknown[]): string[] {
 const turnId = (line: Line, index: number): string =>
   `${line.ordinal === undefined ? `l${index}` : `o${line.ordinal}`}@${line.timestamp}`;
 
-// Les lignes propres à ce fichier : celles d'un préfixe hérité (`history_base`), si Codex les recopiait, sont écartées.
+// Les lignes propres à ce fichier : celles d'un préfixe hérité (`history_base`), si Codex les recopiait, sont écartées,
+// comme, dans le fichier d'un sous-agent, l'historique recopié de sa mère avant `subagent_history_start_ordinal`. Le
+// plus grand rang gagne : le `session_meta` recopié de la mère ne le fait pas reculer.
 function* ownLines(content: string): Generator<{ line: Line; index: number }> {
   let baseEnd = 0;
   for (const [index, raw] of content.split('\n').entries()) {
@@ -188,8 +203,12 @@ function* ownLines(content: string): Generator<{ line: Line; index: number }> {
     if (!line) continue;
     if (line.type === 'session_meta') {
       const meta = SessionMetaSchema.safeParse(line.payload);
-      if (meta.success && meta.data.history_base) {
-        baseEnd = meta.data.history_base.end_ordinal_exclusive;
+      if (meta.success) {
+        baseEnd = Math.max(
+          baseEnd,
+          meta.data.history_base?.end_ordinal_exclusive ?? 0,
+          meta.data.subagent_history_start_ordinal ?? 0,
+        );
       }
     } else if (line.ordinal !== undefined && line.ordinal < baseEnd) {
       continue;
@@ -216,10 +235,13 @@ export function parseCodexSession(content: string): CodexSession | null {
     if (line.type !== 'response_item') continue;
     const message = MessageSchema.safeParse(line.payload);
     if (!message.success) continue;
-    const { role, content: items } = message.data;
+    const { type, content: items } = message.data;
+    // Le message d'un autre agent (le rapport d'un sous-agent, annexe 09) est un tour `user` injecté (T63).
+    const role = type === 'agent_message' ? 'user' : message.data.role;
     if (role !== 'user' && role !== 'assistant') continue; // developer, system
     const texts = messageTexts(items);
-    const kind = role === 'user' ? userTextKind(texts) : null;
+    const kind =
+      type === 'agent_message' ? 'injecte' : role === 'user' ? userTextKind(texts) : null;
     if (kind === 'contexte') continue;
     // Les blocs de Leon sont retirés avant la préparation : un tour qui n'a rien d'autre est écarté.
     const text = prepareTurnText(stripLeonBlocks(texts.join('\n\n')));
@@ -268,15 +290,15 @@ const LOCAL_FUNCTIONS = new Set([
   'new_context_window',
 ]);
 // Les éléments de tour (`item_completed`) qui n'apportent rien d'ailleurs : les autres (`McpToolCall`, `WebSearch`,
-// `CollabAgentToolCall`, `SubAgentActivity`, `DynamicToolCall`, `Extension`, `ImageGeneration`, tout type inconnu)
-// rendent la session externe. Une commande l'est si elle va sur le réseau (isExternalCommand).
+// `DynamicToolCall`, `Extension`, `ImageGeneration`, tout type inconnu) rendent la session externe. Une commande l'est
+// si elle va sur le réseau (isExternalCommand).
 // Un `McpToolCall` vers un outil local du serveur `leon` (LEON_LOCAL_TOOLS, D36) ne compte pas, quand la CLI a reconnu
 // ce serveur à l'URL de `config.toml` (leon-mcp.ts) : `server` et `tool` se comparent en entier.
+// Un sous-agent (T63 amendé le 17/11) se juge sur son rollout, en historique paginé seulement : `SubAgentActivity` et
+// l'attente (`CollabAgentToolCall` de `tool: 'wait'`) ne rendent plus la session externe à eux seuls
+// (isExternalSubagent).
 // shortcut: à l'ancien format (avant l'historique paginé), tout appel MCP compte, même vers Leon : sa forme
 // (`namespace`) n'est relevée que par un test ; la lire si un poste garde un Codex d'avant la 0.16x.
-// shortcut: tout sous-agent rend la session externe : l'essai T15 n'a pas relevé ses échanges. Le tri de T63 (un
-// sous-agent qui ne lit que le dépôt) vient dans la quatrième PR du lot 14, après l'essai de Codex (décision 2 d'Amos du
-// 12/11).
 const LOCAL_ITEMS = new Set([
   'UserMessage',
   'AgentMessage',
@@ -294,6 +316,12 @@ const LOCAL_ITEMS = new Set([
 const SHELLS = new Set(['sh', 'bash', 'zsh', 'dash', 'ksh', 'fish']);
 
 const ItemSchema = z.looseObject({ type: z.string() });
+type Item = z.infer<typeof ItemSchema>;
+const StartedSchema = z.object({
+  type: z.literal('SubAgentActivity'),
+  kind: z.literal('started'),
+  agent_thread_id: z.string().min(1),
+});
 const CommandItemSchema = z.object({
   command: z.array(z.string()),
   source: z.string().optional(),
@@ -401,7 +429,77 @@ type Reading = {
   errors: number;
   external: boolean;
   leonMcp: boolean;
+  subagents: CodexSubagents | undefined;
+  visited: Set<string>; // les fils déjà jugés, la session comprise
+  spawned: number; // les appels spawn_agent
+  started: number; // leurs éléments SubAgentActivity démarrés
 };
+
+// L'élément de tour d'une ligne `item_completed`, ou null.
+const completedItem = (line: Line): unknown =>
+  line.type === 'event_msg' &&
+  (line.payload as { type?: unknown } | null)?.type === 'item_completed'
+    ? (line.payload as { item?: unknown }).item
+    : null;
+const eventType = (line: Line): unknown =>
+  line.type === 'event_msg' ? (line.payload as { type?: unknown } | null)?.type : undefined;
+
+// Les lignes propres d'un sous-agent qui a rendu son rapport final (annexe 09) : son premier `session_meta` dit
+// l'historique paginé et le rang de ses lignes propres, et son dernier `task_started` est suivi d'un `task_complete`.
+// null si son fichier manque, porte une ligne illisible, sort de cette forme, ou s'il n'a pas fini : on ne sait pas tout
+// ce qu'il a fait (échec fermé).
+function finishedSubagent(content: string | undefined): Line[] | null {
+  if (content === undefined) return null;
+  if (content.split('\n').some((raw) => raw.trim() !== '' && parseLine(raw) === null)) return null;
+  const meta = firstMeta(content);
+  if (meta?.history_mode !== 'paginated' || typeof meta.subagent_history_start_ordinal !== 'number')
+    return null;
+  const lines = [...ownLines(content)].map(({ line }) => line);
+  let started = false;
+  let finished = false;
+  for (const line of lines) {
+    const type = eventType(line);
+    if (type === 'task_started') [started, finished] = [true, false];
+    else if (type === 'task_complete') finished = started;
+  }
+  return finished ? lines : null;
+}
+
+// Les fils des sous-agents qu'un rollout lance, sur ses lignes propres, en historique paginé seulement : pour le
+// chargeur de la CLI (loadCodexSubagents).
+export function codexSubagentThreads(content: string): string[] {
+  if (firstMeta(content)?.history_mode !== 'paginated') return [];
+  return [...ownLines(content)].flatMap(({ line }) => {
+    const started = StartedSchema.safeParse(completedItem(line));
+    return started.success ? [started.data.agent_thread_id] : [];
+  });
+}
+
+// Un sous-agent rend la session externe si l'on ne sait pas tout ce qu'il a fait (finishedSubagent), ou si l'un de ses
+// éléments propres l'est, par la même règle que la session, ses propres sous-agents compris. Un fil revu n'apporte rien
+// de plus : s'il était externe, la session l'est déjà.
+function isExternalSubagent(thread: string, parent: Reading): boolean {
+  if (parent.visited.has(thread)) return false;
+  parent.visited.add(thread);
+  const lines = finishedSubagent(parent.subagents?.get(thread));
+  if (lines === null) return true;
+  // Ses gestes ne sont pas ceux de la session : seul `external` sert.
+  const reading: Reading = {
+    ...parent,
+    record: newFactsRecord(),
+    errors: 0,
+    external: false,
+    spawned: 0,
+    started: 0,
+  };
+  const calls = new Map<string, CodexCall>();
+  for (const line of lines) readLine(reading, line, true, calls);
+  return isExternal(reading);
+}
+
+// Un appel spawn_agent sans son élément SubAgentActivity (une forme que l'annexe 09 n'a pas vue) : un sous-agent qu'on ne
+// juge pas, la session est externe (échec fermé).
+const isExternal = (reading: Reading) => reading.external || reading.spawned > reading.started;
 
 const McpItemSchema = z.object({ server: z.literal(LEON_MCP_SERVER), tool: z.string() });
 const isLeonLocalCall = (item: unknown) => {
@@ -410,8 +508,18 @@ const isLeonLocalCall = (item: unknown) => {
 };
 
 // Un élément de tour typé par Codex (historique paginé).
-function readItem(reading: Reading, item: z.infer<typeof ItemSchema>): void {
+function readItem(reading: Reading, item: Item): void {
   if (item.type === 'McpToolCall' && reading.leonMcp && isLeonLocalCall(item)) return;
+  if (item.type === 'SubAgentActivity') {
+    const started = StartedSchema.safeParse(item);
+    if (started.success) {
+      reading.started += 1;
+      reading.external ||= isExternalSubagent(started.data.agent_thread_id, reading);
+    } else if (item.kind !== 'completed') reading.external = true; // une forme non relevée
+    return;
+  }
+  // L'attente d'un sous-agent, jugé à son lancement ; un autre outil de sous-agent n'est pas relevé (annexe 09).
+  if (item.type === 'CollabAgentToolCall' && item.tool === 'wait') return;
   if (!LOCAL_ITEMS.has(item.type)) {
     reading.external = true;
     return;
@@ -453,11 +561,94 @@ function readItem(reading: Reading, item: z.infer<typeof ItemSchema>): void {
   }
 }
 
+// Une ligne d'un rollout, en historique paginé (`typed`) ou à l'ancien format : ses gestes vont dans `reading`.
+function readLine(
+  reading: Reading,
+  line: Line,
+  typed: boolean,
+  calls: Map<string, CodexCall>,
+): void {
+  const payload = ItemSchema.safeParse(line.payload);
+  if (!payload.success) return;
+  if (line.type === 'event_msg') {
+    if (payload.data.type === 'item_completed' && typed) {
+      const item = ItemSchema.safeParse(completedItem(line));
+      if (item.success) readItem(reading, item.data);
+    }
+    // L'ancien format garde aussi ces évènements-là. La fin d'un appel MCP porte `invocation` (`server`, `tool`).
+    const invocation = (line.payload as { invocation?: unknown }).invocation;
+    const leonCall =
+      payload.data.type === 'mcp_tool_call_end' && reading.leonMcp && isLeonLocalCall(invocation);
+    if (
+      (payload.data.type === 'mcp_tool_call_end' && !leonCall) ||
+      payload.data.type === 'web_search_end'
+    ) {
+      reading.external = true;
+    }
+    const applied = !typed ? PatchApplyEndSchema.safeParse(line.payload) : null;
+    if (payload.data.type === 'patch_apply_end' && applied?.success) {
+      if (!applied.data.success) reading.errors += 1;
+      else {
+        for (const path of Object.keys(applied.data.changes)) {
+          recordFile(reading.record, resolve(reading.cwd, path), reading.root);
+        }
+      }
+    }
+    return;
+  }
+  if (line.type !== 'response_item') return;
+  if (payload.data.type === 'web_search_call' || payload.data.type === 'tool_search_call') {
+    reading.external = true;
+    return;
+  }
+  const call = CallSchema.safeParse(line.payload);
+  if (call.success) {
+    const { name, namespace, call_id } = call.data;
+    if (name === 'spawn_agent') reading.spawned += 1;
+    // update_plan réécrit toute la liste des tâches, à chaque appel.
+    const plan =
+      name === 'update_plan' ? PlanSchema.safeParse(parseJson(call.data.arguments)) : null;
+    if (plan?.success) {
+      replaceTasks(
+        reading.record,
+        plan.data.plan.map(({ step, status }) => ({ texte: step, etat: PLAN_STATES[status] })),
+      );
+    }
+    if (typed) return; // les éléments de tour disent le reste
+    const local =
+      call.data.type === 'local_shell_call' || (LOCAL_FUNCTIONS.has(name ?? '') && !namespace);
+    const command = callCommand(call.data);
+    reading.external ||= !local || (command !== null && isExternalCommand(command));
+    if (call_id) calls.set(call_id, call.data);
+    return;
+  }
+  const output = CallOutputSchema.safeParse(line.payload);
+  if (!output.success || typed || !output.data.call_id) return;
+  const answered = calls.get(output.data.call_id);
+  if (!answered) return;
+  const text = outputText(output.data.output);
+  const exitCode = exitCodeOf(text);
+  const error = (exitCode ?? 0) !== 0;
+  if (answered.name === 'apply_patch') {
+    if (error || /^\s*(?:error|failed)\b/i.test(text)) reading.errors += 1;
+    else
+      for (const path of patchFiles(answered))
+        recordFile(reading.record, resolve(reading.cwd, path), reading.root);
+    return;
+  }
+  const command = callCommand(answered);
+  if (command === null) return;
+  if (error) reading.errors += 1;
+  recordCommand(reading.record, command, text, error);
+}
+
 // Les gestes d'une session Codex, à partir de son rollout. `root` est la racine du dépôt (chemin absolu) : les fichiers
 // écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. `brancheLue` : la branche que lit git au
 // moment de la capture, prise seulement quand le rollout n'en porte pas (hors dépôt git au démarrage, ou avant le
 // premier commit).
 // `leonMcp` : le serveur `leon` de la configuration de Codex est celui de la connexion (leon-mcp.ts).
+// `subagents` : les sous-agents de la session (loadCodexSubagents), qui ne décident que de `externe` ; sans eux, un
+// sous-agent rend la session externe.
 // shortcut: une branche lue à la capture n'est marquée comme telle que dans le code : C1 n'a pas de champ pour le dire,
 // en ajouter un (le serveur d'abord) si le bloc doit la distinguer.
 export function extractCodexFacts(
@@ -465,6 +656,7 @@ export function extractCodexFacts(
   root: string | null,
   brancheLue: string | null = null,
   leonMcp = false,
+  subagents?: CodexSubagents,
 ): SessionFacts {
   const meta = firstMeta(content);
   const session = parseCodexSession(content);
@@ -477,6 +669,10 @@ export function extractCodexFacts(
     errors: 0,
     external: false,
     leonMcp,
+    subagents,
+    visited: new Set(meta ? [meta.id] : []),
+    spawned: 0,
+    started: 0,
   };
   const calls = new Map<string, CodexCall>();
   let start: string | null = null;
@@ -485,86 +681,182 @@ export function extractCodexFacts(
   for (const { line } of ownLines(content)) {
     start ??= line.timestamp;
     end = line.timestamp;
-    const payload = ItemSchema.safeParse(line.payload);
-    if (!payload.success) continue;
-    if (line.type === 'event_msg') {
-      if (payload.data.type === 'item_completed' && typed) {
-        const item = ItemSchema.safeParse((line.payload as { item?: unknown }).item);
-        if (item.success) readItem(reading, item.data);
-      }
-      // L'ancien format garde aussi ces évènements-là. La fin d'un appel MCP porte `invocation` (`server`, `tool`).
-      const invocation = (line.payload as { invocation?: unknown }).invocation;
-      const leonCall =
-        payload.data.type === 'mcp_tool_call_end' && leonMcp && isLeonLocalCall(invocation);
-      if (
-        (payload.data.type === 'mcp_tool_call_end' && !leonCall) ||
-        payload.data.type === 'web_search_end'
-      ) {
-        reading.external = true;
-      }
-      const applied = !typed ? PatchApplyEndSchema.safeParse(line.payload) : null;
-      if (payload.data.type === 'patch_apply_end' && applied?.success) {
-        if (!applied.data.success) reading.errors += 1;
-        else {
-          for (const path of Object.keys(applied.data.changes)) {
-            recordFile(reading.record, resolve(reading.cwd, path), root);
-          }
-        }
-      }
-      continue;
-    }
-    if (line.type !== 'response_item') continue;
-    if (payload.data.type === 'web_search_call' || payload.data.type === 'tool_search_call') {
-      reading.external = true;
-      continue;
-    }
-    const call = CallSchema.safeParse(line.payload);
-    if (call.success) {
-      const { name, namespace, call_id } = call.data;
-      // update_plan réécrit toute la liste des tâches, à chaque appel.
-      const plan =
-        name === 'update_plan' ? PlanSchema.safeParse(parseJson(call.data.arguments)) : null;
-      if (plan?.success) {
-        replaceTasks(
-          reading.record,
-          plan.data.plan.map(({ step, status }) => ({ texte: step, etat: PLAN_STATES[status] })),
-        );
-      }
-      if (typed) continue; // les éléments de tour disent le reste
-      const local =
-        call.data.type === 'local_shell_call' || (LOCAL_FUNCTIONS.has(name ?? '') && !namespace);
-      const command = callCommand(call.data);
-      reading.external ||= !local || (command !== null && isExternalCommand(command));
-      if (call_id) calls.set(call_id, call.data);
-      continue;
-    }
-    const output = CallOutputSchema.safeParse(line.payload);
-    if (!output.success || typed || !output.data.call_id) continue;
-    const answered = calls.get(output.data.call_id);
-    if (!answered) continue;
-    const text = outputText(output.data.output);
-    const exitCode = exitCodeOf(text);
-    const error = (exitCode ?? 0) !== 0;
-    if (answered.name === 'apply_patch') {
-      if (error || /^\s*(?:error|failed)\b/i.test(text)) reading.errors += 1;
-      else
-        for (const path of patchFiles(answered))
-          recordFile(reading.record, resolve(reading.cwd, path), root);
-      continue;
-    }
-    const command = callCommand(answered);
-    if (command === null) continue;
-    if (error) reading.errors += 1;
-    recordCommand(reading.record, command, text, error);
+    readLine(reading, line, typed, calls);
   }
 
   return buildFacts(reading.record, {
     links: [],
     branch: meta?.git?.branch || brancheLue,
     errors: reading.errors,
-    external: reading.external,
+    external: isExternal(reading),
     echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start,
     end,
   });
+}
+
+// --- Les coulisses (T52 amendé le 17/11, C10) -----------------------------------------------------------------------
+
+// Les éléments de tour qui ne sont pas des appels d'outils.
+const NOT_CALLS = new Set([
+  'UserMessage',
+  'AgentMessage',
+  'Reasoning',
+  'Plan',
+  'HookPrompt',
+  'ContextCompaction',
+  'EnteredReviewMode',
+  'ExitedReviewMode',
+]);
+// Les éléments d'outil connus du lecteur qui n'ont pas de nom commun (C10 amendé le 17/11) : leur nom, sans cible.
+const NAMED_ITEMS = new Set([
+  'WebSearch',
+  'ImageView',
+  'ImageGeneration',
+  'CollabAgentToolCall',
+  'Extension',
+  'DynamicToolCall',
+]);
+const ReasoningSchema = z.object({ type: z.literal('reasoning'), summary: z.array(z.unknown()) });
+const SummarySchema = z.object({ text: z.string() });
+const SpawnArgumentsSchema = z.object({ message: z.string() });
+
+// Les appels d'un élément de tour, par une table fermée (T52 amendé le 17/11) : le nom commun de Claude Code quand il y
+// en a un (une commande est `Bash`, un changement de fichier `Edit`, un bloc par fichier), sinon le nom de l'élément ;
+// un type inconnu, `[outil]`. Un élément qui n'est pas un appel n'en donne aucun, une commande hors forme non plus.
+// shortcut: un chemin relatif se lit depuis la racine du dépôt, pas depuis le dossier de la session (l'annexe 09 n'a vu
+// aucun FileChange) ; le résoudre par `cwd` si Codex en écrit.
+function itemCalls(item: Item, root: string | null): { outil: string; cible?: string }[] {
+  const call = (outil: string, input: unknown) => {
+    const cible = target(outil, input, root);
+    return { outil, ...(cible === undefined ? {} : { cible }) };
+  };
+  if (NOT_CALLS.has(item.type)) return [];
+  if (item.type === 'CommandExecution') {
+    const command = CommandItemSchema.safeParse(item);
+    // Une écriture sur l'entrée d'une commande déjà lancée n'en est pas une nouvelle.
+    if (!command.success || command.data.source === 'unified_exec_interaction') return [];
+    return [call('Bash', { command: commandText(command.data.command) })];
+  }
+  if (item.type === 'FileChange') {
+    const change = FileChangeItemSchema.safeParse(item);
+    if (!change.success) return [];
+    return Object.keys(change.data.changes).map((path) => call('Edit', { file_path: path }));
+  }
+  if (item.type === 'McpToolCall') {
+    // Le serveur seul, jamais le nom de l'outil.
+    return [
+      { outil: typeof item.server === 'string' ? reduceToolName(`mcp:${item.server}`) : '[outil]' },
+    ];
+  }
+  if (item.type === 'SubAgentActivity')
+    return item.kind === 'started' ? [{ outil: 'spawn_agent' }] : [];
+  if (item.type === 'FunctionCallOutput') {
+    const output = FunctionOutputItemSchema.safeParse(item);
+    return [
+      {
+        outil:
+          output.success && LOCAL_FUNCTIONS.has(output.data.name) ? output.data.name : '[outil]',
+      },
+    ];
+  }
+  return [{ outil: NAMED_ITEMS.has(item.type) ? item.type : '[outil]' }];
+}
+
+// C10 amendé le 17/11 : `erreur` si l'élément n'a pas fini normalement (un refus compris) ou sort avec un code non nul.
+const statut = (item: Item) =>
+  (typeof item.status === 'string' && item.status !== 'completed') ||
+  (typeof item.exit_code === 'number' && item.exit_code !== 0)
+    ? 'erreur'
+    : 'ok';
+
+// Les coulisses d'une session Codex, dans l'ordre du temps, en historique paginé seulement (D29 : une forme inconnue ne
+// part pas), sur ses lignes propres : le résumé du raisonnement de la session (`summary[]`, jamais `encrypted_content`),
+// chaque appel d'outil réduit (itemCalls, le statut lu sur son élément), la consigne (`message` de spawn_agent) et le
+// rapport (`last_agent_message` du dernier `task_complete`) de chaque sous-agent, et les appels des sous-agents qui ont
+// fini. Jamais la sortie d'un outil. Identifiants (C10 amendé le 17/11) : le rang de la ligne, précédé du fil du
+// sous-agent pour les siens.
+// shortcut: après un retour en arrière, le nouveau rollout du même fil reprend les rangs de l'ancien : ses blocs de même
+// rang ne partent pas (le premier écrit gagne) ; ajouter l'heure à l'identifiant si ça se voit.
+export function extractCodexBackstage(
+  content: string,
+  root: string | null,
+  subagents: CodexSubagents,
+): CoulisseBloc[] {
+  const meta = firstMeta(content);
+  if (meta?.history_mode !== 'paginated') return [];
+  const blocs: CoulisseBloc[] = [];
+  const seen = new Set<string>();
+  const push = (bloc: CoulisseBloc) => {
+    if (seen.has(bloc.id)) return;
+    seen.add(bloc.id);
+    blocs.push(bloc);
+  };
+  const visited = new Set([meta.id]);
+
+  // `prefix` : vide pour la session, le fil du sous-agent suivi de « : » pour un sous-agent.
+  function read(lines: Line[], prefix: string): void {
+    for (const line of lines) {
+      if (line.ordinal === undefined) continue; // hors de la forme paginée
+      const id = `${prefix}${line.ordinal}`;
+      const ts = line.timestamp;
+      if (line.type === 'response_item') {
+        // Le raisonnement d'un sous-agent ne part pas (D29).
+        const reasoning = prefix === '' ? ReasoningSchema.safeParse(line.payload) : null;
+        if (reasoning?.success) {
+          const texts = reasoning.data.summary.flatMap((part) => {
+            const summary = SummarySchema.safeParse(part);
+            return summary.success ? [summary.data.text] : [];
+          });
+          const texte = prepare(texts.join('\n\n'));
+          if (texte !== null) push({ role: 'raisonnement', id, ts, texte });
+        }
+        // La consigne : le seul `message` de l'appel, pas un outil MCP du même nom.
+        const spawn = CallSchema.safeParse(line.payload);
+        if (!spawn.success || spawn.data.type !== 'function_call') continue;
+        const { name, namespace, arguments: raw } = spawn.data;
+        if (name !== 'spawn_agent' || (namespace && namespace !== 'collaboration')) continue;
+        const args = SpawnArgumentsSchema.safeParse(parseJson(raw));
+        const texte = args.success ? prepare(args.data.message) : null;
+        if (texte !== null)
+          push({ role: 'sous_agent', id: `${id}:consigne`, ts, partie: 'consigne', texte });
+        continue;
+      }
+      const item = ItemSchema.safeParse(completedItem(line));
+      if (!item.success) continue;
+      for (const [rang, call] of itemCalls(item.data, root).entries()) {
+        const callId = item.data.type === 'FileChange' ? `${id}:${rang}` : id;
+        push({ role: 'appel_outil', id: callId, ts, ...call, statut: statut(item.data) });
+      }
+      const started = StartedSchema.safeParse(item.data);
+      if (started.success) subagent(started.data.agent_thread_id);
+    }
+  }
+
+  // Un sous-agent qui n'a pas fini, ou ne se lit pas : ni rapport, ni appels ; sa consigne part seule.
+  function subagent(thread: string): void {
+    if (visited.has(thread)) return;
+    visited.add(thread);
+    const lines = finishedSubagent(subagents.get(thread));
+    if (lines === null) return;
+    read(lines, `${thread}:`);
+    const last = lines.findLast((line) => eventType(line) === 'task_complete');
+    const message = (last?.payload as { last_agent_message?: unknown } | undefined)
+      ?.last_agent_message;
+    const texte = typeof message === 'string' ? prepare(message) : null;
+    if (last && texte !== null)
+      push({
+        role: 'sous_agent',
+        id: `${thread}:rapport`,
+        ts: last.timestamp,
+        partie: 'rapport',
+        texte,
+      });
+  }
+
+  read(
+    [...ownLines(content)].map(({ line }) => line),
+    '',
+  );
+  return finishBlocs(blocs);
 }

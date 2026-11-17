@@ -125,6 +125,25 @@ describe('ADAPTATEURS.cursor', () => {
     );
   });
 
+  // Annexe 10 : le fichier d'un sous-agent n'a ni message ni appel ; le capter ferait partir une session vide.
+  it('un transcript de sous-agent (`subagents/`) n’est jamais un fichier de session : la conversation se déduit', () => {
+    const sousAgent = `${PROJECTS}/Users-demo-essai/agent-transcripts/conv-7/subagents/9f1c.jsonl`;
+    const entree = cursor.entree(
+      {
+        conversation_id: 'conv-7',
+        transcript_path: sousAgent,
+        workspace_roots: ['/Users/demo/essai'],
+      },
+      HOME,
+      { CURSOR_TRANSCRIPT_PATH: sousAgent },
+    );
+
+    expect(entree.fichiers).toEqual([
+      `${PROJECTS}/Users-demo-essai/agent-transcripts/conv-7/conv-7.jsonl`,
+      `${PROJECTS}/Users-demo-essai/agent-transcripts/conv-7.jsonl`,
+    ]);
+  });
+
   it('une entrée illisible ne donne ni session, ni dossier, ni fichier', () => {
     expect(cursor.entree(null, HOME, {})).toEqual({
       session: null,

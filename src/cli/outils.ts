@@ -1,6 +1,7 @@
 // Les adaptateurs des outils hors Claude Code (T16 du plan mémoire des sessions) : ce que chaque outil attend de nos
 // crochets. Chacun lit l'entrée du crochet, enveloppe le bloc injecté, lit une session de l'outil, en relève les faits, et
-// trouve ses fichiers de session (le rattrapage, T19).
+// trouve ses fichiers de session (le rattrapage, T19). Codex et Antigravity chargent aussi les sous-agents d'une session et
+// en relèvent les coulisses (T52 et T63 amendés le 17/11).
 //
 // Codex (essai réel du 06/11, docs/etudes/memoire-sessions-2026-11/annexes/03-essai-codex.md) : la sortie JSON de C5
 // arrive au modèle au premier message, rôle developer, sans autre champ (Codex refuse un champ inconnu). Jamais
@@ -43,9 +44,19 @@
 // `invocationNum` supérieur à 0 n'a été vu qu'en 2.0.1 : à reprendre au premier essai du crochet de Leon lui-même.
 import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
-import { extractAntigravityFacts, parseAntigravitySession } from '../capture/antigravity';
-import type { SessionFacts } from '../capture/api-contract';
-import { extractCodexFacts, parseCodexSession } from '../capture/codex';
+import {
+  type AntigravitySubagents,
+  extractAntigravityBackstage,
+  extractAntigravityFacts,
+  parseAntigravitySession,
+} from '../capture/antigravity';
+import type { CoulisseBloc, SessionFacts } from '../capture/api-contract';
+import {
+  type CodexSubagents,
+  extractCodexBackstage,
+  extractCodexFacts,
+  parseCodexSession,
+} from '../capture/codex';
 import { extractCursorFacts, parseCursorSession } from '../capture/cursor';
 import type { CodeSessionKind, Turn } from '../capture/turn';
 import {
@@ -56,6 +67,7 @@ import {
   type SessionFile,
 } from './find-sessions';
 import type { Evenement, Outil } from './hook-commands';
+import { loadAntigravitySubagents, loadCodexSubagents } from './subagents';
 
 // Ce que la capture lit d'une session de l'outil.
 export type SessionOutil = {
@@ -85,7 +97,16 @@ export type EntreeCrochet = {
 
 type Env = Record<string, string | undefined>;
 
-export type Adaptateur = {
+// Ce que le chargeur de chaque outil lit de ses sous-agents (subagents.ts, T63 amendé le 17/11) : Cursor n'en a pas, rien
+// n'y relie un appel au fichier de son sous-agent (annexe 10).
+type SousAgents = { codex: CodexSubagents; cursor: undefined; antigravity: AntigravitySubagents };
+// La lecture d'un fichier et d'un dossier, pour le chargeur : sans `readdir`, aucun sous-agent n'est lu.
+type Lecture = {
+  readFile: (path: string) => Promise<string>;
+  readdir?: (path: string) => Promise<string[]>;
+};
+
+export type Adaptateur<O extends Outil = Outil> = {
   label: string;
   // Le `kind` de ses sessions, pour l'envoi des tours et des faits.
   kind: CodeSessionKind;
@@ -102,14 +123,25 @@ export type Adaptateur = {
   // rappel pour cet appel (Antigravity : un appel suivant du même message, ou une version dont l'entrée ne le porte pas).
   message: (input: unknown) => string | null;
   lire: (contenu: string, fichier: FichierSession) => SessionOutil | null;
-  // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts).
+  // Le chargeur des sous-agents de la session, lu avant les faits ; absent (Cursor), aucun n'est lu.
+  sousAgents?: (fichier: string, lecture: Lecture) => Promise<SousAgents[O]>;
+  // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts). `sousAgents` :
+  // ce que le chargeur a lu ; sans eux, un sous-agent rend la session externe.
   faits: (
     contenu: string,
     fichier: FichierSession,
     racine: string | null,
     brancheLue: string | null,
     leonMcp: boolean,
+    sousAgents: SousAgents[O] | undefined,
   ) => SessionFacts;
+  // Le relevé des coulisses (T52 amendé le 17/11) ; absent (Cursor, annexe 10), aucune ne part.
+  coulisses?: (
+    contenu: string,
+    fichier: FichierSession,
+    racine: string | null,
+    sousAgents: SousAgents[O],
+  ) => CoulisseBloc[];
   trouver: (home: string, env: Env) => Promise<SessionFile[]>;
   // Le dossier de travail d'un fichier de session que son contenu ne dit pas (le rattrapage, sans crochet).
   dossierDe?: (fichier: string) => Promise<string | null>;
@@ -177,7 +209,7 @@ export async function cursorDirectoryOf(slug: string): Promise<string | null> {
   return parts.length === 0 ? null : walk(sep, 0);
 }
 
-export const ADAPTATEURS: Record<Outil, Adaptateur> = {
+export const ADAPTATEURS: { [O in Outil]: Adaptateur<O> } = {
   codex: {
     label: 'Codex',
     kind: 'codex',
@@ -202,8 +234,11 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       inactif: true,
     }),
     lire: (contenu) => parseCodexSession(contenu),
-    faits: (contenu, _fichier, racine, brancheLue, leonMcp) =>
-      extractCodexFacts(contenu, racine, brancheLue, leonMcp),
+    sousAgents: loadCodexSubagents,
+    faits: (contenu, _fichier, racine, brancheLue, leonMcp, sousAgents) =>
+      extractCodexFacts(contenu, racine, brancheLue, leonMcp, sousAgents),
+    coulisses: (contenu, _fichier, racine, sousAgents) =>
+      extractCodexBackstage(contenu, racine, sousAgents),
     trouver: (home, env) => findCodexSessionFiles(codexHome(home, env)),
   },
   cursor: {
@@ -241,6 +276,7 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       return {
         session: conversation,
         dossier,
+        // Le transcript d'un sous-agent (`<conversation>/subagents/`) n'est pas une session (annexe 10).
         fichiers: under(
           [
             absolute(field(input, 'transcript_path')),
@@ -248,7 +284,7 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
             ...deduits,
           ],
           [projects],
-        ),
+        ).filter((path) => basename(dirname(path)) !== 'subagents'),
         inactif: true,
       };
     },
@@ -285,8 +321,11 @@ export const ADAPTATEURS: Record<Outil, Adaptateur> = {
       };
     },
     lire: (contenu, fichier) => parseAntigravitySession(contenu, fichier),
-    faits: (contenu, fichier, racine, brancheLue) =>
-      extractAntigravityFacts(contenu, fichier, racine, brancheLue),
+    sousAgents: loadAntigravitySubagents,
+    faits: (contenu, fichier, racine, brancheLue, _leonMcp, sousAgents) =>
+      extractAntigravityFacts(contenu, fichier, racine, brancheLue, sousAgents),
+    coulisses: (contenu, fichier, racine, sousAgents) =>
+      extractAntigravityBackstage(contenu, fichier, racine, sousAgents),
     trouver: (home) => findAntigravitySessionFiles(geminiHome(home)),
     // `<variante>/history.jsonl` relie une conversation à son espace de travail.
     dossierDe: (fichier) => antigravityWorkspace(fichier),

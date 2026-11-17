@@ -15,7 +15,8 @@
 // - aucune heure côté assistant, ni dossier, ni identifiant dans les lignes : la conversation est le nom du fichier,
 //   les tours sont datés à l'heure du fichier (T27), et le dossier vient du crochet (`workspace_roots`) ;
 // - le texte que Leon injecte au premier message n'apparaît pas dans le transcript ;
-// - les sous-agents écrivent sous `<conversation>/subagents/` : ce ne sont pas des sessions.
+// - les sous-agents écrivent sous `<conversation>/subagents/` : ce ne sont pas des sessions (le crochet les écarte,
+//   outils.ts ; le rattrapage ne les liste pas, find-sessions.ts).
 import { basename } from 'node:path';
 import { z } from 'zod';
 import type { SessionFacts } from './api-contract';
@@ -56,10 +57,11 @@ const LineSchema = z.object({
 });
 type Line = z.infer<typeof LineSchema>;
 const TextSchema = z.object({ type: z.literal('text'), text: z.string() });
+// `input` facultatif : un appel sans entrée compte dans le tri « externe » (Zod 4 rend obligatoire une clé `unknown`).
 const ToolUseSchema = z.object({
   type: z.literal('tool_use'),
   name: z.string(),
-  input: z.unknown(),
+  input: z.unknown().optional(),
 });
 
 function parseLines(content: string): Line[] {
@@ -163,8 +165,8 @@ export function parseCursorSession(content: string, file: CursorFile): CursorSes
 // reconnu ce serveur à l'URL de `mcp.json` (leon-mcp.ts).
 // shortcut: la forme `mcp_<serveur>_<outil>` d'un appel MCP dans le transcript vient des tests du lot 8, pas de l'essai
 // T26 ; la vérifier au prochain essai (le rapport du témoin). Une autre forme laisse la session externe (échec fermé).
-// shortcut: tout sous-agent rend la session externe. Le tri de T63 (un sous-agent qui ne lit que le dépôt) vient dans la
-// quatrième PR du lot 14, après l'essai de Cursor (décision 2 d'Amos du 12/11).
+// Un sous-agent (`Task`, `GetDynamicTools`, `CallDynamicTool`) rend toujours la session externe : l'essai du 13/11
+// (annexe 10) ne trouve rien qui relie un appel au fichier de son sous-agent (T63 amendé le 17/11).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',

@@ -36,6 +36,7 @@ import { chmod, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promi
 import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
+import { extractBackstage } from '../capture/session-backstage';
 import { extractClaudeCodeFacts } from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
@@ -141,6 +142,9 @@ function warn(message: string): void {
   console.error(`Leon: ${message}`);
 }
 
+const COULISSES_FAILED_MESSAGE =
+  'full capture of the session not sent (server unreachable, too slow or unexpected response).';
+
 function failureMessage(error: unknown): string {
   if (error instanceof TokenRefusedError)
     return 'token refused by the server, session not captured.';
@@ -227,15 +231,12 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   // Dans son propre try : un échec des faits n'empêche pas les coulisses, et l'inverse. Le même délai que les tours
   // et les faits (leon.ts) : une coupe laisse les lots les plus anciens à `leon import-claude-code`.
   try {
-    if (
-      !(await sendSessionBackstage(session, { content, root, subagents }, { dryRun: false }, deps))
-    ) {
+    const blocs = () => extractBackstage(content, root, subagents);
+    if (!(await sendSessionBackstage(session, { blocs }, { dryRun: false }, deps))) {
       warn(COULISSES_REFUSED_MESSAGE);
     }
   } catch {
-    warn(
-      'full capture of the session not sent (server unreachable, too slow or unexpected response).',
-    );
+    warn(COULISSES_FAILED_MESSAGE);
   }
 }
 
@@ -292,13 +293,15 @@ export async function readHookStdin(
 // fichier lu. Perdu ou illisible, tout repart : le serveur ignore les tours qu'il connaît.
 
 // `dossier` : le dossier de travail que le crochet a donné (Cursor ne l'écrit pas dans son transcript), repris par le
-// rattrapage.
+// rattrapage. `coulisses` : la marque des coulisses de cet état du fichier, parties (ou sans rien à envoyer) ; facultative,
+// un curseur d'avant se lit toujours, et tout autre état du fichier l'efface.
 export type Curseur = {
   tours: number;
   dernier: string | null;
   mtime: number;
   taille: number;
   dossier?: string | null;
+  coulisses?: boolean;
 };
 
 const CurseurSchema = z.object({
@@ -307,6 +310,7 @@ const CurseurSchema = z.object({
   mtime: z.number(),
   taille: z.number(),
   dossier: z.string().nullable().optional(),
+  coulisses: z.boolean().optional(),
 });
 
 export const cursorPath = (home: string, outil: Outil, file: string): string =>
@@ -374,7 +378,8 @@ export type ToolCaptureDeps = ImportDeps & {
   mcpUrl?: string;
 };
 
-export type ToolCapture = 'capte' | 'rien';
+// `coulisses_refusees` : la session est captée, mais le serveur ne prend pas ses coulisses (400, 404).
+export type ToolCapture = 'capte' | 'rien' | 'coulisses_refusees';
 
 // La branche courante du dossier, lue par git à la capture : pour un fichier de session qui n'en porte pas.
 async function branchAtCapture(directory: string, git: GitRunner): Promise<string | null> {
@@ -383,12 +388,13 @@ async function branchAtCapture(directory: string, git: GitRunner): Promise<strin
 }
 
 // Capte un fichier de session d'un outil hors Claude Code : ses tours nouveaux, puis, si l'accord le permet
-// (`deps.facts`), ses faits sur tout le fichier. `fin` : une vraie fin de session, ou un fichier resté immobile.
-// `dossier` : le dossier de travail que donne le crochet, pris quand le fichier n'en dit rien (Cursor) ; sinon celui du
-// curseur, puis celui que l'adaptateur retrouve. Le curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi
-// remontent (TokenRefusedError, IngestResponseError).
-export async function captureToolFile(
-  outil: Outil,
+// (`deps.facts`), ses faits sur tout le fichier, sur les sous-agents que son chargeur lit (sans `readdir`, aucun), puis
+// ses coulisses. `fin` : une vraie fin de session, ou un fichier resté immobile. `dossier` : le dossier de travail que
+// donne le crochet, pris quand le fichier n'en dit rien (Cursor) ; sinon celui du curseur, puis celui que l'adaptateur
+// retrouve. Le curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi des tours et des faits remontent
+// (TokenRefusedError, IngestResponseError) ; celles des coulisses, non.
+export async function captureToolFile<O extends Outil>(
+  outil: O,
   file: string,
   options: { fin: boolean; dossier?: string | null },
   deps: ToolCaptureDeps,
@@ -416,13 +422,14 @@ export async function captureToolFile(
   if (turns.length > 0) {
     await importSession({ ...session, turns }, { ...sending, newestFirst: true }, deps, summary);
   }
-  await writeCursor(deps.home, outil, file, {
+  const written: Curseur = {
     tours: session.turns.length,
     dernier: session.turns.at(-1)?.external_id ?? null,
     mtime: mtimeMs,
     taille: size,
     dossier: start,
-  });
+  };
+  await writeCursor(deps.home, outil, file, written);
   if (!deps.facts) return 'capte';
   // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
   const root = start === null ? null : await repoRootFor(start, deps.git);
@@ -435,9 +442,27 @@ export async function captureToolFile(
     url: deps.mcpUrl,
     readFile: deps.readFile,
   });
-  const faits = adapter.faits(content, fichier, root, branch, leonMcp);
+  const sousAgents = await adapter.sousAgents?.(file, deps);
+  const faits = adapter.faits(content, fichier, root, branch, leonMcp, sousAgents);
   const source = { content, root, fin: options.fin, faits };
   if (!(await sendSessionFacts(session, source, sending, deps))) warn(FACTS_REFUSED_MESSAGE);
+  // Les coulisses, la session finie seulement : un appel en cours resterait `sans_resultat`, le premier écrit gagne
+  // (C10 amendé le 17/11). Le crochet d'un tour n'en envoie donc jamais.
+  const { coulisses } = adapter;
+  const { usages, sendCoulisses } = deps.facts;
+  if (!options.fin || !coulisses || sousAgents === undefined) return 'capte';
+  if (!sendCoulisses || !usages?.includes('coulisses')) return 'capte';
+  try {
+    const blocs = () => coulisses(content, fichier, root, sousAgents);
+    if (!(await sendSessionBackstage(session, { blocs }, sending, deps))) {
+      warn(COULISSES_REFUSED_MESSAGE);
+      return 'coulisses_refusees';
+    }
+    // Parties, ou rien à envoyer : le rattrapage ne les doit plus à cet état du fichier.
+    await writeCursor(deps.home, outil, file, { ...written, coulisses: true });
+  } catch {
+    warn(COULISSES_FAILED_MESSAGE);
+  }
   return 'capte';
 }
 

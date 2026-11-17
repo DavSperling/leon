@@ -7,9 +7,10 @@ import { ProjectSchema } from '@/capture/turn';
 import { type PreviewView, toPreviewView } from '@/components/search/view-model';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
 import {
+  BRIEFING_DISMISSED_MAX,
   BRIEFING_LINE_MAX_CHARS,
-  dismissBriefingLine,
-  restoreBriefingLine,
+  dismissBriefingLines,
+  restoreBriefingLines,
 } from '@/server/briefing/briefings';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
@@ -59,33 +60,39 @@ export async function searchShellAction(query: string): Promise<ShellFound> {
   }
 }
 
-const BriefingLineSchema = z.object({
+const BriefingLinesSchema = z.object({
   project: ProjectSchema,
-  text: z.string().min(1).max(BRIEFING_LINE_MAX_CHARS),
+  texts: z.array(z.string().min(1).max(BRIEFING_LINE_MAX_CHARS)).min(1).max(BRIEFING_DISMISSED_MAX),
 });
 
-// « C'est réglé » sur une ligne du point du matin (et « Annuler » juste après) : dans le seul point de la personne
-// connectée, sans appel au modèle. Rien ne se revalide : l'écran a déjà ôté (ou remis) la ligne. Rend faux sur une
-// panne, pour que l'écran remette la ligne et le dise.
-export async function dismissBriefingLineAction(project: string, text: string): Promise<boolean> {
-  return briefingLineAction('point.retrait', project, text, dismissBriefingLine);
+// « C'est réglé » sur une ligne du point du matin, ou « Supprimer » sur le point entier (toutes ses lignes), et
+// « Annuler » juste après : dans le seul point de la personne connectée, sans appel au modèle. Rien ne se revalide :
+// l'écran a déjà ôté (ou remis) les lignes. Rend faux sur une panne, pour que l'écran les remette et le dise.
+export async function dismissBriefingLinesAction(
+  project: string,
+  texts: string[],
+): Promise<boolean> {
+  return briefingLinesAction('point.retrait', project, texts, dismissBriefingLines);
 }
 
-export async function restoreBriefingLineAction(project: string, text: string): Promise<boolean> {
-  return briefingLineAction('point.annulation', project, text, restoreBriefingLine);
+export async function restoreBriefingLinesAction(
+  project: string,
+  texts: string[],
+): Promise<boolean> {
+  return briefingLinesAction('point.annulation', project, texts, restoreBriefingLines);
 }
 
-async function briefingLineAction(
+async function briefingLinesAction(
   what: string,
   project: string,
-  text: string,
-  apply: typeof dismissBriefingLine,
+  texts: string[],
+  apply: typeof dismissBriefingLines,
 ): Promise<boolean> {
   const ctx = await requireUserContext();
-  const parsed = BriefingLineSchema.safeParse({ project, text });
+  const parsed = BriefingLinesSchema.safeParse({ project, texts });
   if (!parsed.success) return false;
   try {
-    await apply(ctx, parsed.data.project, parsed.data.text);
+    await apply(ctx, parsed.data.project, parsed.data.texts);
     return true;
   } catch (error) {
     logError(what, error);

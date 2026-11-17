@@ -10,9 +10,9 @@ import { BriefingSheet, type BriefingSourceView, Greeting, HomeAsk } from './hom
 
 // Les actions du serveur ne sont pas appelées au rendu : leurs modules (base, session) ne se chargent pas ici.
 vi.mock('@/app/(app)/actions', () => ({
-  dismissBriefingLineAction: vi.fn(),
+  dismissBriefingLinesAction: vi.fn(),
   previewPassageAction: vi.fn(),
-  restoreBriefingLineAction: vi.fn(),
+  restoreBriefingLinesAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock('@/app/(app)/discussions/actions', () => ({
@@ -106,6 +106,19 @@ describe('BriefingSheet', () => {
     const crosses = sheet.match(/<button[^>]*aria-label="Settled: remove this line"[^>]*>/g) ?? [];
     expect(crosses).toHaveLength(4);
     for (const cross of crosses) expect(cross).toContain('z-[2]');
+  });
+
+  it('a son bouton « Delete » pour le point entier, et le titre que lui donne l’Accueil', () => {
+    expect(sheet.match(/<button[^>]*>.*?Delete<\/button>/g)).toHaveLength(1);
+    const titled = html(
+      h(BriefingSheet, {
+        project: 'github.com/acme/leon',
+        heading: h('span', null, 'leon'),
+        sections: SECTIONS,
+        sources: SOURCES,
+      }),
+    );
+    expect(titled).toContain('<span>leon</span>');
   });
 });
 

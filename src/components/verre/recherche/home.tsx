@@ -1,10 +1,17 @@
 'use client';
 
-import { ArrowUp, X } from 'lucide-react';
+import { ArrowUp, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { dismissBriefingLineAction, restoreBriefingLineAction } from '@/app/(app)/actions';
+import {
+  type ReactNode,
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
+import { dismissBriefingLinesAction, restoreBriefingLinesAction } from '@/app/(app)/actions';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import {
   Button,
@@ -283,21 +290,28 @@ const SECTION_KEYS: Record<string, 'did' | 'changed' | 'open'> = {
   'What is still open': 'open',
 };
 
-// Le temps d'« Annuler » après « C'est réglé », avant que la ligne ne parte pour de bon de la page.
+// Le temps d'« Annuler » après « C'est réglé » ou « Supprimer », avant que la ligne ou le point ne parte de la page.
 const UNDO_MS = 6000;
+// La minuterie de « Supprimer », à côté de celles des lignes (rangées par leur texte, qui n'a jamais de NUL).
+const DELETE_TIMER = '\u0000point';
 
 /**
  * Le point du matin : la feuille de l'écran. Ses trois parties l'une sous l'autre, leur titre dans la marge dès que
  * la feuille est assez large ; chaque ligne finit par ses numéros et ouvre sa source. En 15 px : de vraies phrases.
  * Une croix au bout de chaque ligne (au pointeur, toujours visible au doigt) la retire : « c'est réglé ». La base le
  * garde tout de suite (0074) ; la ligne laisse sur place « Ligne retirée · Annuler » quelques secondes, puis s'en va.
+ * « Supprimer », au-dessus de la feuille, retire de même toutes ses lignes : le point s'en va jusqu'à ce qu'il y ait
+ * du neuf sur son dossier, et le recalcul ne redit pas ce qui a été supprimé.
  */
 export function BriefingSheet({
   project,
+  heading,
   sections,
   sources,
 }: {
   project: string;
+  /** Au-dessus de la feuille, à gauche de « Supprimer » : le dossier du point et son heure. */
+  heading?: ReactNode;
   sections: BriefingSection[];
   sources: BriefingSourceView[];
 }) {
@@ -309,6 +323,8 @@ export function BriefingSheet({
   // les lignes retirées sur cette page, par leur texte : « undo » le temps d'annuler, puis « gone »
   const [removed, setRemoved] = useState<ReadonlyMap<string, 'undo' | 'gone'>>(new Map());
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
+  // « Supprimer » : les lignes retirées d'un coup, le temps d'annuler (null : le point est là)
+  const [deleted, setDeleted] = useState<string[] | null>(null);
   useEffect(() => {
     const pending = timers.current;
     return () => {
@@ -334,7 +350,7 @@ export function BriefingSheet({
   };
   const dismiss = async (text: string) => {
     mark(text, 'undo');
-    if (!(await dismissBriefingLineAction(project, text))) {
+    if (!(await dismissBriefingLinesAction(project, [text]))) {
       mark(text, null);
       toast.error(t('briefing.dismissFailed'));
       return;
@@ -348,14 +364,63 @@ export function BriefingSheet({
     clearTimeout(timers.current.get(text));
     timers.current.delete(text);
     mark(text, null);
-    if (!(await restoreBriefingLineAction(project, text))) {
+    if (!(await restoreBriefingLinesAction(project, [text]))) {
       mark(text, 'gone');
       toast.error(t('briefing.undoFailed'));
     }
   };
 
+  // le point entier : toutes ses lignes encore à l'écran, une seule écriture
+  const deletePoint = async () => {
+    const texts = sections.flatMap((section) =>
+      section.lines.map((line) => line.text).filter((text) => removed.get(text) !== 'gone'),
+    );
+    if (texts.length === 0) return;
+    setDeleted(texts);
+    if (!(await dismissBriefingLinesAction(project, texts))) {
+      setDeleted(null);
+      toast.error(t('briefing.deleteFailed'));
+      return;
+    }
+    timers.current.set(
+      DELETE_TIMER,
+      setTimeout(() => {
+        timers.current.delete(DELETE_TIMER);
+        if (document.activeElement?.closest('[data-undo]'))
+          document.getElementById(HOME_TITLE_ID)?.focus();
+        // le serveur relit les points : celui-ci n'a plus de ligne, il n'est plus montré
+        router.refresh();
+      }, UNDO_MS),
+    );
+  };
+  const undoDelete = async (texts: string[]) => {
+    clearTimeout(timers.current.get(DELETE_TIMER));
+    timers.current.delete(DELETE_TIMER);
+    setDeleted(null);
+    if (!(await restoreBriefingLinesAction(project, texts))) {
+      toast.error(t('briefing.undoFailed'));
+      router.refresh();
+    }
+  };
+
+  if (deleted)
+    return (
+      <div data-undo="" className="flex min-h-[38px] items-center gap-2 py-1 text-ui text-muted">
+        <span role="status">{t('briefing.deleted')}</span>
+        <Button size="xs" variant="quiet" autoFocus onClick={() => undoDelete(deleted)}>
+          {t('briefing.undo')}
+        </Button>
+      </div>
+    );
+
   return (
-    <>
+    <div>
+      <div className="mb-1.5 flex min-h-8 items-center gap-3">
+        <div className="flex min-w-0 items-baseline gap-2 text-label text-muted">{heading}</div>
+        <Button size="xs" variant="quiet" icon={Trash2} onClick={deletePoint} className="ml-auto">
+          {t('briefing.delete')}
+        </Button>
+      </div>
       <GlassCard className="@container px-6 py-1 max-shell:px-4">
         {/* une seule colonne de titres pour les trois parties, à la largeur du plus long (le français l'est plus) */}
         <div className="grid gap-x-6 @[32.5rem]:grid-cols-[auto_minmax(0,1fr)]">
@@ -421,6 +486,6 @@ export function BriefingSheet({
         </div>
       </GlassCard>
       {panel.panel}
-    </>
+    </div>
   );
 }

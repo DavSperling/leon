@@ -200,13 +200,37 @@ async function readDismissed(ctx: TenantContext, project: string): Promise<strin
 export const BRIEFING_DISMISSED_MAX = 20;
 export const BRIEFING_LINE_MAX_CHARS = 1000;
 
-// « C'est réglé » : la ligne (son texte affiché, parseBriefing) n'est plus montrée, ni sur l'Accueil ni au crochet,
-// et le prochain recalcul la reçoit pour ne pas la redire. Aucun appel au modèle. Sous la sécurité par ligne : seul
-// le point de l'utilisateur change ; sans point sur ce projet, rien ne se passe.
-export async function dismissBriefingLine(
+// « C'est réglé » : les lignes (leur texte affiché, parseBriefing) ne sont plus montrées, ni sur l'Accueil ni au
+// crochet, et le prochain recalcul les reçoit pour ne pas les redire. Une ligne, ou toutes celles d'un point
+// (« Supprimer » sur l'Accueil). Aucun appel au modèle. Sous la sécurité par ligne : seul le point de l'utilisateur
+// change ; sans point sur ce projet, rien ne se passe.
+export async function dismissBriefingLines(
   ctx: TenantContext,
   project: string,
-  text: string,
+  texts: readonly string[],
+): Promise<void> {
+  await editDismissed(ctx, project, (dismissed) =>
+    [...dismissed.filter((line) => !texts.includes(line)), ...new Set(texts)].slice(
+      -BRIEFING_DISMISSED_MAX,
+    ),
+  );
+}
+
+// « Annuler », juste après : les lignes reviennent.
+export async function restoreBriefingLines(
+  ctx: TenantContext,
+  project: string,
+  texts: readonly string[],
+): Promise<void> {
+  await editDismissed(ctx, project, (dismissed) =>
+    dismissed.filter((line) => !texts.includes(line)),
+  );
+}
+
+async function editDismissed(
+  ctx: TenantContext,
+  project: string,
+  edit: (dismissed: string[]) => string[],
 ): Promise<void> {
   await withTenant(ctx, async (tx) => {
     const [row] = await tx
@@ -215,25 +239,11 @@ export async function dismissBriefingLine(
       .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project)))
       .for('update');
     if (!row) return;
-    const dismissed = [...row.dismissed.filter((line) => line !== text), text].slice(
-      -BRIEFING_DISMISSED_MAX,
-    );
-    await tx.update(briefings).set({ dismissed }).where(eq(briefings.id, row.id));
-  });
-}
-
-// « Annuler », juste après : la ligne revient.
-export async function restoreBriefingLine(
-  ctx: TenantContext,
-  project: string,
-  text: string,
-): Promise<void> {
-  await withTenant(ctx, (tx) =>
-    tx
+    await tx
       .update(briefings)
-      .set({ dismissed: sql`array_remove(${briefings.dismissed}, ${text}::text)` })
-      .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project))),
-  );
+      .set({ dismissed: edit(row.dismissed) })
+      .where(eq(briefings.id, row.id));
+  });
 }
 
 const GITHUB = 'github' satisfies SourceKind;

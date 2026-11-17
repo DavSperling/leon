@@ -76,7 +76,7 @@ export type DemoSource = {
   date: string;
   /** Passage cité : les mots entre ** sont surlignés, comme les passages de la recherche. */
   excerpt: string;
-  /** Privé à la personne qui l'a branché (une boîte mail) : le tampon « Privé, pour vous ». */
+  /** Privé à la personne qui l'a branché (une boîte mail) : le tampon « Pas partagé ». */
   private?: boolean;
 };
 
@@ -442,7 +442,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Des règles de confidentialité claires',
-        text: 'Ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive et Slack ; les discussions de chacun avec Leon restent à lui, ses conversations d’IA et ses notes sont lues par lui et, sur le site de Leon, par ses managers en remontant.',
+        text: 'Par défaut, ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive et Slack. Les discussions de chacun avec Leon restent à lui ; ses conversations d’IA, ses sessions de code et ses notes sont lues par lui et, sur le site de Leon, par ses managers en remontant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -555,7 +555,7 @@ export const PILLARS: Pillar[] = [
     text: 'Leon ne résume pas et ne tient pas de fiches. Il garde chaque élément tel qu’il a été écrit, avec un lien vers l’original, et masque les secrets reconnaissables avant de les stocker.',
     points: [
       'Chaque résultat s’ouvre dans son outil d’origine',
-      'Discussions privées ; conversations d’IA et notes lues par leur auteur et ses managers',
+      'Discussions privées ; conversations d’IA, sessions et notes lues par leur auteur et, sur le site de Leon, par ses managers',
       'Clés d’API, jetons et mots de passe de .env masqués avant stockage',
     ],
   },
@@ -645,7 +645,7 @@ export const NOT_YET = [
   { title: 'SOC 2 et ISO 27001', text: 'Leon n’a aucune des deux certifications à ce jour.' },
   {
     title: 'Les droits de chaque outil, repris tels quels',
-    text: 'Pour l’instant, ce que lit une connexion est visible de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
+    text: 'Pour l’instant, ce que lit une connexion est visible par défaut de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
   },
   { title: 'L’export des données', text: 'Pas encore d’export des données d’un espace.' },
 ] as const;
@@ -686,7 +686,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul.',
+    a: 'Par défaut, ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA, vos sessions de code et vos notes sont lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -1164,7 +1164,7 @@ const TEAMS_EN: Team[] = [
       },
       {
         title: 'Clear privacy rules',
-        text: 'Content from shared connections is visible to the team, except email, Google Drive and Slack. Each person’s chats with Leon stay theirs; their AI conversations and notes are read by them and, on the Leon website, by the managers above them.',
+        text: 'By default, content from connections is visible to the team, except email, Google Drive and Slack. Each person’s chats with Leon stay theirs; their AI conversations, coding sessions and notes are read by them and, on the Leon website, by the managers above them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1251,7 +1251,7 @@ const PILLARS_EN: Pillar[] = [
     text: 'Leon stores each item verbatim, with a link to the original. Recognizable secrets are redacted before anything is stored.',
     points: [
       'Every result opens in its source tool',
-      'Private chats; AI conversations and notes read by their author and their managers',
+      'Private chats; AI conversations, sessions and notes read by their author and, on the Leon website, by their managers',
       'API keys, tokens and .env secrets redacted before storage',
     ],
   },
@@ -1336,7 +1336,7 @@ const NOT_YET_EN: Twin<typeof NOT_YET> = [
   { title: 'SOC 2 and ISO 27001', text: 'Leon holds neither certification today.' },
   {
     title: 'Mirroring each tool’s own permissions',
-    text: 'For now a connection’s content is shared with the whole team, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them.',
+    text: 'For now a connection’s content is shared with the whole team by default, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them.',
   },
   { title: 'Data export', text: 'No export of a workspace’s data yet.' },
 ];
@@ -1375,7 +1375,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'Content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations and notes are read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only.',
+    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which are read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes are read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only.',
   },
   {
     q: 'What happens when Leon doesn’t know?',

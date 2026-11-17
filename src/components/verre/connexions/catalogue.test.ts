@@ -96,7 +96,7 @@ describe('Connexions : le bureau', () => {
 
   it('la légende dit qui voit, ou ce qui ne va pas ; jamais un compte, une date ni la raison', () => {
     expect(cards.find((c) => c.includes('Gmail'))).toContain(
-      '<span class="tl__sub">Only you</span>',
+      '<span class="tl__sub">You and your managers</span>',
     );
     expect(cards.find((c) => c.includes('Github'))).toContain('Stopped');
     expect(cards.find((c) => c.includes('Github'))).toContain('is-err');
@@ -179,6 +179,6 @@ describe('Connexions : le bureau', () => {
     expect(at(1)).toContain('<span class="mark is-working">Reading…</span>');
     expect(at(1)).toMatch(/class="tl card[^"]*cx-fresh/);
     expect(at(30)).not.toContain('Reading…');
-    expect(at(30)).toContain('<span class="tl__sub">Only you</span>');
+    expect(at(30)).toContain('<span class="tl__sub">You and your managers</span>');
   });
 });

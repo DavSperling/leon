@@ -102,6 +102,36 @@ const AUTHOR_ONLY = [
   /ce qui reste à vous/,
   /Ce qui est privé le reste/,
   /sauf une boîte Outlook ;/,
+  // Troisième passe : les phrases de la refonte « Papier » (#174), revenues par la fusion de main.
+  /AI conversations stay yours/,
+  /^À vous seul$/,
+  /^Yours only$/,
+  /assistants d’IA, privées, pour vous seul/,
+  /AI assistants, private to you/,
+  /^Privé, pour vous$/,
+  /^Private to you$/,
+  /Vous seul les? retrouvez\. Ils? (?:n’est|ne sont) pas partagés? avec l’équipe/,
+  /Only you can find (?:it|them)\. (?:It isn’t|They aren’t) shared with the team/,
+  /Seuls les membres de \{group\}/,
+  /Only the members of \{group\}/,
+  /moi \{pour vous\}/,
+  /moi \{for you\}/,
+  /^Seulement \{name\}$/,
+  /^Only \{name\}$/,
+  /garder des notes privées/,
+  /keep private notes/,
+  /conversations d’IA et notes lues par leur auteur et ses managers$/,
+  /AI conversations and notes read by their author and their managers$/,
+  /^Ce que lit une connexion est visible de toute l’équipe/,
+  /^Content from a connection is shared with the whole team,/,
+  /connexion est visible de toute l’équipe, sauf/,
+  /connection’s content is shared with the whole team, except/,
+  /^Ce que lisent les outils branchés est partagé/,
+  /^Content from shared connections is visible to the team, except/,
+  // La fiche d'une personne (Équipe) ne montre ni ses conversations d'IA, ni ses sessions, ni ses notes : seule la
+  // recherche les lit.
+  /conversations avec les IA[^.;]*, ici et dans la recherche/,
+  /AI conversations[^.;]*, here and in search/,
 ];
 const leaves = (value: unknown): string[] =>
   typeof value === 'string'
@@ -119,4 +149,29 @@ describe('qui lit les conversations d’IA et les notes, sur le site', () => {
 
     expect(texts.filter((text) => AUTHOR_ONLY.some((pattern) => pattern.test(text)))).toEqual([]);
   });
+
+  // « Vous seul » reste vrai pour les discussions avec Leon (discussions.onlyYou) : ces étiquettes-là, qui parlent de ce
+  // que relève une source, un document ou une connexion, se gardent par leur clé et non par un motif sur le texte.
+  const READ_BY_MANAGERS = [
+    'connections.onlyYou',
+    'documents.captionMe',
+    'discussionView.visibility.moi',
+    'shell.onlyYou',
+    'onboarding.tools.private',
+  ];
+  it.each([
+    ['en', en, /^Only you$/],
+    ['fr', fr, /^Vous seul$/],
+  ] as const)(
+    'en %s, l’étiquette d’une source qu’on ne partage pas ne dit pas « vous seul »',
+    (_locale, messages, old) => {
+      for (const key of READ_BY_MANAGERS) {
+        const value = key
+          .split('.')
+          .reduce<unknown>((node, part) => (node as Record<string, unknown>)[part], messages);
+        expect(value, key).toEqual(expect.any(String));
+        expect(value, key).not.toMatch(old);
+      }
+    },
+  );
 });

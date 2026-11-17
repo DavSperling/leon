@@ -1346,12 +1346,12 @@ describe('installHooks : l’usage rappel et son crochet', () => {
 // `resume`, coché par défaut : [Y/n] dans un terminal. Aucun crochet de plus.
 const NOTER_TEXT = [
   'Agent notes (usage "noter", asked separately):',
-  "  - The agent can keep private notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - The agent can keep notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
   "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
   '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all your assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
 ].join('\n');
 const noterQuestion = () =>
-  `\nLet the agents of the code tools set up now keep private notes in Leon (recorded in ${consentPath(home)})? [Y/n] `;
+  `\nLet the agents of the code tools set up now keep notes in Leon (recorded in ${consentPath(home)})? [Y/n] `;
 const NOTER_NONE = 'Nothing was added: the agent writes no note to Leon.';
 
 describe('installHooks : l’usage noter', () => {

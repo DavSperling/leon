@@ -107,7 +107,7 @@ export function KitShowcase() {
             size="card"
             picture={<ToolLogo kind="gmail" />}
             name="Gmail"
-            caption="Only you"
+            caption="You and your managers"
             label="Manage Gmail"
             onClick={() => open('facts')}
           />
@@ -213,7 +213,7 @@ export function KitShowcase() {
             num={2}
             picture={<ToolLogo kind="hubspot" size={28} />}
             name="Signed V2 quote"
-            caption="Only you"
+            caption="You and your managers"
             onClick={() => open('doc')}
           />
           <Thing
@@ -464,8 +464,8 @@ export function KitShowcase() {
         <Facts>
           <Fact label="Account">julie@kestrel.example</Fact>
           <Fact label="Visible to">
-            Only you
-            <small>Nobody else in the workspace finds what Leon reads here.</small>
+            You and your managers
+            <small>Not shared with the team by default.</small>
           </Fact>
           <Fact label="Saved">1,284 emails</Fact>
           <Fact label="Leon reads">Your inbox and what you sent, since January 2026.</Fact>
@@ -565,7 +565,7 @@ export function KitShowcase() {
         ) : (
           <Facts>
             <Fact label="Leon reads">Your inbox, your calendar, what you sent.</Fact>
-            <Fact label="Visible to">Only you</Fact>
+            <Fact label="Visible to">You and your managers</Fact>
           </Facts>
         )}
       </SidePanel>

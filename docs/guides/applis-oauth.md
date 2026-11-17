@@ -207,7 +207,7 @@ Microsoft 365 (courrier et agenda), via Microsoft Graph. Comptes professionnels 
 - **Pages demandées** : aucune pour créer l'appli. Sans éditeur vérifié (« publisher verification »), Microsoft traite l'appli comme non vérifiée dans les autres annuaires et réclame l'accord de l'administrateur (à vérifier).
 - **Variables** : `LEON_OAUTH_OUTLOOK_ID` = « Application (client) ID » (page Overview), `LEON_OAUTH_OUTLOOK_SECRET` = la « Value » du secret.
 - **Pour que d'autres comptes l'utilisent** : le choix « Multiple Entra ID tenants » ci-dessus. Puis l'administrateur Microsoft du client ouvre une fois le « Lien d'accord pour l'administrateur » que Leon affiche sous le bouton d'Outlook et accepte ; au retour, Leon dit « Accord donné : cliquez de nouveau sur Se connecter avec Outlook. ». Sans cet accord, Microsoft refuse la connexion, ou affiche sa propre page « Approbation de l'administrateur requise » sans revenir vers Leon. Dans votre propre annuaire, vous pouvez l'accorder depuis API permissions › « Grant admin consent ».
-- **À décider avant un client** : par la règle d'équipe de Leon, les courriers et événements lus deviennent visibles de toute l'équipe (le panneau l'écrit).
+- **À savoir avant un client** : par défaut, les courriers et événements lus ne sont pas partagés avec l'équipe : ils sont lus par qui branche Outlook et, sur le site de Leon, par ses managers en remontant.
 
 ## Ce que les documentations lues ne disent pas
 

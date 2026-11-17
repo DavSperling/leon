@@ -752,7 +752,7 @@ html:has(.s-nav) {
     padding-top: 14px;
     border-top: 1px solid var(--line);
   }
-  /* Le tampon « Privé, pour vous » que le produit pose sur une source */
+  /* Le tampon « Pas partagé » que le produit pose sur une source */
   .s-stamp {
     display: inline-flex;
     align-items: center;

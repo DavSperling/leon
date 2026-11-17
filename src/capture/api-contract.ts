@@ -18,7 +18,7 @@ export const API_PATHS = {
   versions: '/api/v1/versions', // POST : les versions lisibles d'un fil, ou l'une d'elles (leon versions)
   lecons: '/api/v1/lecons', // POST : les leçons acceptées du projet, ou l'une d'elles (leon lessons)
   rappel: '/api/v1/rappel', // POST : la ligne de rappel d'un message, ou rien (leon reminder)
-  noter: '/api/v1/noter', // POST : une note privée de l'agent, ou sa version suivante (leon note)
+  noter: '/api/v1/noter', // POST : une note de l'agent, ou sa version suivante (leon note)
   coulisses: '/api/v1/coulisses', // POST : le raisonnement, les sous-agents et les appels d'outils d'une session (lot 14)
   usages: '/api/v1/usages', // POST : un « non » à `noter` dans le terminal coupe `remember` pour le compte (C16)
   oauthClients: '/api/oauth/clients', // POST : l'inscription d'un client OAuth d'assistant (RFC 7591)
@@ -245,7 +245,7 @@ export type RappelRequest = z.infer<typeof RappelRequestSchema>;
 export const RappelResponseSchema = z.object({ texte: z.string() });
 export type RappelResponse = z.infer<typeof RappelResponseSchema>;
 
-// Les notes de l'agent (C14, D38) : une note privée, neuve, ou la version suivante d'une note (`note` et `version`,
+// Les notes de l'agent (C14, D38) : une note neuve, ou la version suivante d'une note (`note` et `version`,
 // ensemble), en compare-and-set, seulement depuis le même outil. `texte` est masqué sur le poste, puis de nouveau par le
 // serveur. `session` est une indication déclarée. Sans `noter` dans `usages`, le serveur refuse. 201 { id, n }, ou 409
 // (version dépassée, autre outil, note introuvable). Un serveur ancien répond 404 : la commande le dit sur la sortie

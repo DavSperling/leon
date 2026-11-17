@@ -70,15 +70,8 @@ export function extractBackstage(
   root: string | null,
   subagents: Subagents,
 ): CoulisseBloc[] {
-  const blocs: CoulisseBloc[] = [];
-  const seen = new Set<string>();
+  const { blocs, push } = collecteur();
   const errors = new Map<string, boolean>();
-  const push = (bloc: CoulisseBloc): boolean => {
-    if (seen.has(bloc.id)) return false;
-    seen.add(bloc.id);
-    blocs.push(bloc);
-    return true;
-  };
 
   // Rend la dernière ligne de conversation du fichier, pour la règle du rapport final.
   function read(file: string, session: boolean): Line | null {
@@ -148,6 +141,20 @@ export function extractBackstage(
     bloc.statut = error === undefined ? 'sans_resultat' : error ? 'erreur' : 'ok';
   }
   return finishBlocs(blocs);
+}
+
+// Le collecteur de blocs commun aux trois outils : un identifiant déjà vu est écarté (le premier écrit gagne). `push`
+// dit si le bloc est entré.
+export function collecteur() {
+  const blocs: CoulisseBloc[] = [];
+  const seen = new Set<string>();
+  const push = (bloc: CoulisseBloc): boolean => {
+    if (seen.has(bloc.id)) return false;
+    seen.add(bloc.id);
+    blocs.push(bloc);
+    return true;
+  };
+  return { blocs, push };
 }
 
 // Le filtre final, commun aux coulisses de tous les outils. Un bloc hors du contrat (un identifiant hors forme) ferait

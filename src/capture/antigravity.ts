@@ -33,7 +33,7 @@ import { basename, dirname } from 'node:path';
 import { z } from 'zod';
 import type { CoulisseBloc, SessionFacts } from './api-contract';
 import { prepareTurnText, removeBlocks } from './prepare-turn-text';
-import { finishBlocs, prepare, target } from './session-backstage';
+import { collecteur, finishBlocs, prepare, target } from './session-backstage';
 import {
   buildFacts,
   isExternalCommand,
@@ -94,8 +94,9 @@ const parseSteps = (content: string): Step[] =>
   content.split('\n').flatMap((raw) => (raw.trim() === '' ? [] : (parseStep(raw) ?? [])));
 
 // Les étapes d'un sous-agent qui a rendu la main (annexe 11) : sa dernière étape est une PLANNER_RESPONSE sans appel
-// d'outil. null si sa conversation manque, porte une ligne illisible, ou s'il n'a pas fini : on ne sait pas tout ce
-// qu'il a fait (échec fermé).
+// d'outil. null si sa conversation manque, porte une ligne illisible, n'est pas celle d'un sous-agent (isSubagent : une
+// conversation ordinaire qu'une fiche nommerait), ou s'il n'a pas fini : on ne sait pas tout ce qu'il a fait (échec
+// fermé).
 function finishedSubagent(content: string | undefined): Step[] | null {
   if (content === undefined) return null;
   const steps: Step[] = [];
@@ -106,7 +107,9 @@ function finishedSubagent(content: string | undefined): Step[] | null {
     steps.push(step);
   }
   const last = steps.at(-1);
-  return last?.type === 'PLANNER_RESPONSE' && !last.tool_calls?.length ? steps : null;
+  return last?.type === 'PLANNER_RESPONSE' && !last.tool_calls?.length && isSubagent(steps)
+    ? steps
+    : null;
 }
 
 // `brain/<conversation>/.system_generated/logs/transcript.jsonl` : la conversation est le dossier sous `brain`.
@@ -383,7 +386,8 @@ const TOOL_NAMES = new Map([
     'schedule',
   ].map((name) => [name, name] as const),
 ]);
-// Le chemin d'un outil de fichier, sous le nom que les faits lisent déjà.
+// Le chemin d'un outil de fichier. `Path` est le nom relevé pour read_file (annexe 11) ; les faits ne le lisent pas
+// (READ_TOOLS écarte read_file avant), ils n'ont que TargetFile et AbsolutePath.
 const PATH_KEYS = ['TargetFile', 'AbsolutePath', 'Path'];
 
 const statut = (result: Step | undefined) =>
@@ -400,13 +404,7 @@ export function extractAntigravityBackstage(
   root: string | null,
   subagents: AntigravitySubagents,
 ): CoulisseBloc[] {
-  const blocs: CoulisseBloc[] = [];
-  const seen = new Set<string>();
-  const push = (bloc: CoulisseBloc) => {
-    if (seen.has(bloc.id)) return;
-    seen.add(bloc.id);
-    blocs.push(bloc);
-  };
+  const { blocs, push } = collecteur();
   const tsOf = (step: Step) => step.created_at ?? file.mtime.toISOString();
   const session = conversationOf(file.path);
   const visited = new Set([session]);

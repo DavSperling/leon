@@ -67,7 +67,7 @@ import {
   type SessionFile,
 } from './find-sessions';
 import type { Evenement, Outil } from './hook-commands';
-import { loadAntigravitySubagents, loadCodexSubagents } from './subagents';
+import { type Lecture, loadAntigravitySubagents, loadCodexSubagents } from './subagents';
 
 // Ce que la capture lit d'une session de l'outil.
 export type SessionOutil = {
@@ -100,11 +100,6 @@ type Env = Record<string, string | undefined>;
 // Ce que le chargeur de chaque outil lit de ses sous-agents (subagents.ts, T63 amendé le 17/11) : Cursor n'en a pas, rien
 // n'y relie un appel au fichier de son sous-agent (annexe 10).
 type SousAgents = { codex: CodexSubagents; cursor: undefined; antigravity: AntigravitySubagents };
-// La lecture d'un fichier et d'un dossier, pour le chargeur : sans `readdir`, aucun sous-agent n'est lu.
-type Lecture = {
-  readFile: (path: string) => Promise<string>;
-  readdir?: (path: string) => Promise<string[]>;
-};
 
 export type Adaptateur<O extends Outil = Outil> = {
   label: string;

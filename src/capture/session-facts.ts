@@ -279,7 +279,7 @@ const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
 // Le dossier personnel ou une variable (« ~/x », « $HOME/x », « %USERPROFILE%\x ») : rien ne les développe ici, ils
 // passeraient pour relatifs au dépôt. Un « $ » au milieu reste (une route « app/routes/$id.tsx »).
-const HOME_OR_VARIABLE = /^[~$]|%[A-Za-z_][A-Za-z0-9_]*%/;
+export const HOME_OR_VARIABLE = /^[~$]|%[A-Za-z_][A-Za-z0-9_]*%/;
 
 // Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque, « ~/x ») ou s'il n'y a pas de dépôt.
 export function repoRelativePath(path: string, root: string | null): string | null {

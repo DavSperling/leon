@@ -768,6 +768,19 @@ describe('Codex 0.159.0 (annexe 09)', () => {
       const petit = sousAgent(L, [commande('cat a.txt')], recopie);
 
       expect(externe(session(...lance(L)), sousAgents({ [L]: petit }))).toBe(false);
+      // Le session_meta recopié d'une mère reprise porte `history_base`, dans la numérotation de la mère : il ne cache pas
+      // le premier tour du sous-agent, qui va sur le web.
+      const deuxTours = sousAgent(L, [
+        element({ type: 'WebSearch', id: 'w' }),
+        tache('task_complete'),
+        tache('task_started'),
+        commande('ls'),
+      ]).replace(
+        '"git":{"branch":"demo/b"}',
+        '"git":{"branch":"demo/b"},"history_base":{"thread_id":"avant","end_ordinal_exclusive":4}',
+      );
+      expect(deuxTours).toContain('"end_ordinal_exclusive":4');
+      expect(externe(session(...lance(L)), sousAgents({ [L]: deuxTours }))).toBe(true);
     });
 
     it('un sous-agent de sous-agent suit la même règle ; un fil déjà visité n’est pas revisité', () => {
@@ -994,6 +1007,18 @@ describe('extractCodexBackstage', () => {
         appel('1:0', TS1, 'Edit', 'ok', 'src/a.ts'),
         appel('1:1', TS1, 'Edit', 'ok', 'src/b.ts'),
       ]);
+    });
+
+    it('un fichier changé en chemin relatif se lit depuis le dossier de la session, comme dans les faits', () => {
+      const contenu = [
+        meta({ cwd: `${RACINE}/pkg` }),
+        element({ type: 'FileChange', id: 'p', changes: { 'src/a.ts': {} }, status: 'completed' }),
+      ].join('\n');
+
+      expect(extractCodexBackstage(contenu, RACINE, new Map())).toEqual([
+        appel('1:0', TS1, 'Edit', 'ok', 'pkg/src/a.ts'),
+      ]);
+      expect(extractCodexFacts(contenu, RACINE).fichiers).toEqual(['pkg/src/a.ts']);
     });
 
     it.each([

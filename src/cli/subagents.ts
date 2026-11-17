@@ -7,6 +7,12 @@ import { type CodexSubagents, codexSubagentThreads } from '../capture/codex';
 const META_FILE = /^agent-([a-z0-9]{1,64})\.meta\.json$/;
 const MetaSchema = z.object({ toolUseId: z.string() });
 
+// La lecture d'un fichier et d'un dossier, pour les chargeurs : sans `readdir`, aucun sous-agent n'est lu.
+export type Lecture = {
+  readFile: (path: string) => Promise<string>;
+  readdir?: (path: string) => Promise<string[]>;
+};
+
 // Les échanges des sous-agents d'une session Claude Code, pour le tri de T63 (extractClaudeCodeFacts) : `id` de
 // l'appel Agent ou Task (le `toolUseId` du `meta.json`) → contenu de `agent-<agentId>.jsonl`. Le dossier se trouve par
 // le nom du fichier de la session, jamais par le sessionId écrit dans ses lignes : `<dossier>/<nom sans .jsonl>/subagents/`,
@@ -15,10 +21,7 @@ const MetaSchema = z.object({ toolUseId: z.string() });
 // Sans `readdir`, aucun sous-agent n'est lu.
 export async function loadSubagents(
   sessionFile: string,
-  deps: {
-    readFile: (path: string) => Promise<string>;
-    readdir?: (path: string) => Promise<string[]>;
-  },
+  deps: Lecture,
 ): Promise<Map<string, string>> {
   const subagents = new Map<string, string>();
   const { readdir } = deps;
@@ -58,10 +61,7 @@ const TRANSCRIPTS = ['transcript_full.jsonl', 'transcript.jsonl'] as const;
 // sous-agent n'est lu.
 export async function loadAntigravitySubagents(
   sessionFile: string,
-  deps: {
-    readFile: (path: string) => Promise<string>;
-    readdir?: (path: string) => Promise<string[]>;
-  },
+  deps: Lecture,
 ): Promise<AntigravitySubagents> {
   const named = new Map<string, string[]>();
   const transcripts = new Map<string, string>();
@@ -117,10 +117,7 @@ export async function loadAntigravitySubagents(
 // sait pas lequel juger) : son sous-agent restera externe. Sans `readdir`, aucun sous-agent n'est lu.
 export async function loadCodexSubagents(
   sessionFile: string,
-  deps: {
-    readFile: (path: string) => Promise<string>;
-    readdir?: (path: string) => Promise<string[]>;
-  },
+  deps: Lecture,
 ): Promise<CodexSubagents> {
   const subagents = new Map<string, string>();
   const { readdir } = deps;

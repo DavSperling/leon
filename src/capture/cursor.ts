@@ -265,7 +265,11 @@ export function extractCursorFacts(
     if (line.role !== 'assistant') continue;
     for (const block of blocks(line)) {
       const tool = ToolUseSchema.safeParse(block);
-      if (!tool.success) continue;
+      if (!tool.success) {
+        // Un appel qu'on ne sait pas lire rend la session externe (échec fermé, T63).
+        if ((block as { type?: unknown } | null)?.type === 'tool_use') external = true;
+        continue;
+      }
       const { name, input } = tool.data;
       if (!LOCAL_TOOLS.has(name) && !(leonMcp && LEON_TOOLS.has(name))) external = true;
       if (SHELL_TOOLS.has(name)) {

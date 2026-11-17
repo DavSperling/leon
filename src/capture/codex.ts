@@ -34,10 +34,11 @@ import { resolve } from 'node:path';
 import { z } from 'zod';
 import type { CoulisseBloc, SessionFacts } from './api-contract';
 import { prepareTurnText } from './prepare-turn-text';
-import { finishBlocs, prepare, target } from './session-backstage';
+import { collecteur, finishBlocs, prepare, target } from './session-backstage';
 import {
   buildFacts,
   type FactsRecord,
+  HOME_OR_VARIABLE,
   isExternalCommand,
   LEON_LOCAL_TOOLS,
   LEON_MCP_SERVER,
@@ -194,22 +195,24 @@ const turnId = (line: Line, index: number): string =>
   `${line.ordinal === undefined ? `l${index}` : `o${line.ordinal}`}@${line.timestamp}`;
 
 // Les lignes propres à ce fichier : celles d'un préfixe hérité (`history_base`), si Codex les recopiait, sont écartées,
-// comme, dans le fichier d'un sous-agent, l'historique recopié de sa mère avant `subagent_history_start_ordinal`. Le
-// plus grand rang gagne : le `session_meta` recopié de la mère ne le fait pas reculer.
+// comme, dans le fichier d'un sous-agent, l'historique recopié de sa mère avant `subagent_history_start_ordinal`. Seul
+// le premier `session_meta`, celui du fil, donne ces bornes : celui de la mère, recopié, compte dans sa numérotation à
+// elle, et on l'ignore, comme `firstMeta`.
 function* ownLines(content: string): Generator<{ line: Line; index: number }> {
   let baseEnd = 0;
+  let seenMeta = false;
   for (const [index, raw] of content.split('\n').entries()) {
     const line = parseLine(raw);
     if (!line) continue;
     if (line.type === 'session_meta') {
       const meta = SessionMetaSchema.safeParse(line.payload);
-      if (meta.success) {
+      if (!seenMeta && meta.success) {
         baseEnd = Math.max(
-          baseEnd,
           meta.data.history_base?.end_ordinal_exclusive ?? 0,
           meta.data.subagent_history_start_ordinal ?? 0,
         );
       }
+      seenMeta = true;
     } else if (line.ordinal !== undefined && line.ordinal < baseEnd) {
       continue;
     }
@@ -723,10 +726,14 @@ const SpawnArgumentsSchema = z.object({ message: z.string() });
 
 // Les appels d'un élément de tour, par une table fermée (T52 amendé le 17/11) : le nom commun de Claude Code quand il y
 // en a un (une commande est `Bash`, un changement de fichier `Edit`, un bloc par fichier), sinon le nom de l'élément ;
-// un type inconnu, `[outil]`. Un élément qui n'est pas un appel n'en donne aucun, une commande hors forme non plus.
-// shortcut: un chemin relatif se lit depuis la racine du dépôt, pas depuis le dossier de la session (l'annexe 09 n'a vu
-// aucun FileChange) ; le résoudre par `cwd` si Codex en écrit.
-function itemCalls(item: Item, root: string | null): { outil: string; cible?: string }[] {
+// un type inconnu, `[outil]`. Un élément qui n'est pas un appel n'en donne aucun, une commande hors forme non plus. Un
+// chemin relatif se lit depuis `cwd`, le dossier de la session, comme dans les faits ; « ~/x » ou « $HOME/x » reste tel
+// quel, pour que `repoRelativePath` l'écarte.
+function itemCalls(
+  item: Item,
+  root: string | null,
+  cwd: string,
+): { outil: string; cible?: string }[] {
   const call = (outil: string, input: unknown) => {
     const cible = target(outil, input, root);
     return { outil, ...(cible === undefined ? {} : { cible }) };
@@ -741,7 +748,9 @@ function itemCalls(item: Item, root: string | null): { outil: string; cible?: st
   if (item.type === 'FileChange') {
     const change = FileChangeItemSchema.safeParse(item);
     if (!change.success) return [];
-    return Object.keys(change.data.changes).map((path) => call('Edit', { file_path: path }));
+    return Object.keys(change.data.changes).map((path) =>
+      call('Edit', { file_path: HOME_OR_VARIABLE.test(path) ? path : resolve(cwd, path) }),
+    );
   }
   if (item.type === 'McpToolCall') {
     // Le serveur seul, jamais le nom de l'outil.
@@ -785,14 +794,9 @@ export function extractCodexBackstage(
 ): CoulisseBloc[] {
   const meta = firstMeta(content);
   if (meta?.history_mode !== 'paginated') return [];
-  const blocs: CoulisseBloc[] = [];
-  const seen = new Set<string>();
-  const push = (bloc: CoulisseBloc) => {
-    if (seen.has(bloc.id)) return;
-    seen.add(bloc.id);
-    blocs.push(bloc);
-  };
+  const { blocs, push } = collecteur();
   const visited = new Set([meta.id]);
+  const cwd = meta.cwd || root || '/';
 
   // `prefix` : vide pour la session, le fil du sous-agent suivi de « : » pour un sous-agent.
   function read(lines: Line[], prefix: string): void {
@@ -824,7 +828,7 @@ export function extractCodexBackstage(
       }
       const item = ItemSchema.safeParse(completedItem(line));
       if (!item.success) continue;
-      for (const [rang, call] of itemCalls(item.data, root).entries()) {
+      for (const [rang, call] of itemCalls(item.data, root, cwd).entries()) {
         const callId = item.data.type === 'FileChange' ? `${id}:${rang}` : id;
         push({ role: 'appel_outil', id: callId, ts, ...call, statut: statut(item.data) });
       }

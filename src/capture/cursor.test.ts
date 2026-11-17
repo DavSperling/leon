@@ -155,6 +155,11 @@ describe('extractCursorFacts', () => {
       expect(externe({ type: 'tool_use', name: 'Read' })).toBe(false);
     });
 
+    it('un appel illisible (sans nom, ou un nom qui n’est pas un texte) la rend externe (échec fermé)', () => {
+      expect(externe({ type: 'tool_use', input: {} })).toBe(true);
+      expect(externe({ type: 'tool_use', name: 123 })).toBe(true);
+    });
+
     // Lire Leon (T44 ; D36, A14) : les outils locaux du serveur `leon`, quand la CLI l'a reconnu à son URL.
     it('un outil local du serveur MCP de Leon reconnu : non ; search, un autre serveur, ou non reconnu : oui', () => {
       const mcp = (name: string, leon: boolean) =>

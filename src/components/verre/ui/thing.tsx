@@ -11,7 +11,7 @@ type ThingOwnProps = {
   picture?: ReactNode;
   /** Ce que c'est, en un nom. */
   name: ReactNode;
-  /** Une légende discrète, au plus : « Équipe », « Vous seul », un métier. Ni compteur, ni date, ni taille. */
+  /** Une légende discrète, au plus : « Équipe », « Vous et vos managers », un métier. Ni compteur, ni date, ni taille. */
   caption?: ReactNode;
   /** Quelque chose ne va pas : la légende passe au rouge, un point rouge se pose sur l'image. */
   error?: boolean;

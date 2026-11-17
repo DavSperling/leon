@@ -71,7 +71,7 @@ function SourceTiles({
         <Thing
           key={c.n}
           num={c.n}
-          // l'outil et « Vous seul » seulement quand le serveur les connaît (citationDetails, sous les droits du lecteur)
+          // l'outil et « Vous et vos managers » seulement quand le serveur les connaît (citationDetails, sous les droits du lecteur)
           picture={c.kind ? <ToolLogo kind={c.kind} size={28} /> : undefined}
           name={titleOf(c, t('untitled'))}
           caption={c.visibility === 'moi' ? t('visibility.moi') : undefined}
@@ -123,7 +123,7 @@ function SourceNotes({
               {c.n}
             </Flag>
             <SourceNumber n={c.n} className="fil-note__num" />
-            {/* l'outil et « Vous seul » seulement quand le serveur les connaît (citationDetails) */}
+            {/* l'outil et « Vous et vos managers » seulement quand le serveur les connaît (citationDetails) */}
             {c.kind && <ToolLogo kind={c.kind} size={20} className="fil-note__logo" />}
             <span className="fil-note__title">{titleOf(c, t('untitled'))}</span>
             {c.visibility === 'moi' && <span className="fil-note__cap">{t('visibility.moi')}</span>}

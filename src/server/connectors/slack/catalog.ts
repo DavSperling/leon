@@ -11,13 +11,13 @@ export const slackCatalog: CatalogEntry = {
   docsUrl: 'https://slack.com/help/articles/360003125231',
   triedForReal: false,
   warning:
-    'Copier les messages de Slack pour les indexer va contre ses conditions : à faire confirmer avant de brancher l’espace d’un client. Le texte reste privé : vous seul le voyez.',
+    'Copier les messages de Slack pour les indexer va contre ses conditions : à faire confirmer avant de brancher l’espace d’un client. Le texte est lu par vous et, sur le site de Leon, par vos managers en remontant.',
   en: {
     fields: {},
     keyHelp: '',
     oauthHelp:
       'The connection goes through Pipedream, the service that holds the access for Leon: Slack asks you to authorize Pipedream’s app in your workspace. Leon only reads the channels you’re a member of, never your direct messages; it writes nothing.',
     warning:
-      'Copying Slack messages in order to index them goes against its terms: get this confirmed before connecting a client’s workspace. The text stays private: only you can see it.',
+      'Copying Slack messages in order to index them goes against its terms: get this confirmed before connecting a client’s workspace. The text is read by you and, on the Leon website, by the managers above you.',
   },
 };

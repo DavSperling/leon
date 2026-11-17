@@ -11,13 +11,13 @@ export const gmailCatalog: CatalogEntry = {
   docsUrl: 'https://support.google.com/accounts/answer/3466521',
   triedForReal: true,
   warning:
-    'Le texte des courriers reste privé, comme une conversation : vous seul le voyez. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
+    'Le texte des courriers est lu, comme une conversation, par vous et, sur le site de Leon, par vos managers en remontant. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
   en: {
     fields: {},
     keyHelp: '',
     oauthHelp:
       'The connection goes through Pipedream, the service that holds the access for Leon: Google asks you to authorize “Pipedream” to read, write, and send your email. Leon only reads (excluding Promotions, Social, drafts, and spam); it writes and sends nothing.',
     warning:
-      'The text of emails stays private, like a conversation: only you can see it. The access is held by Pipedream, hosted in the United States.',
+      'The text of emails is read, like a conversation, by you and, on the Leon website, by the managers above you. The access is held by Pipedream, hosted in the United States.',
   },
 };

@@ -20,7 +20,7 @@ import {
 
 // Les notes de l'agent (T57 ; D33, D34, D38 et C14 du plan de la mémoire à disposition) : writeNote est le seul chemin
 // qui crée ou réécrit une note, pour `leon note` (POST /api/v1/noter) comme pour `remember` (MCP). Une note est une
-// source `mcp_remember` privée à son auteur, avec un tour indexé : sa dernière version (versions.ts), que la recherche
+// source `mcp_remember` lue comme une session (son auteur et, sur le site, ses managers, 0057), avec un tour indexé : sa dernière version (versions.ts), que la recherche
 // trouve. Les anciennes versions restent dans versions_memoire, hors de la recherche et de fetch. Le texte d'une note
 // n'est jamais journalisé. Toute lecture se fait sous withTenant, avec en plus le filtre de l'auteur : la politique
 // equipe_lit (0057) montre des sources aux managers.

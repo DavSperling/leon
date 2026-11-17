@@ -7,8 +7,8 @@ export const SECRET_MASK = '[secret masqué]';
 // - il ne touche jamais au texte ordinaire : aucune règle ne se fonde sur un mot-clé (« password: »,
 //   « token = », « mot de passe : », options de commande) dans une phrase ou dans du code ;
 // - limite assumée : un mot de passe écrit en langage courant (« le mdp c'est Lune#Bleue42 ») ou
-//   passé dans du code (« password: 'X' ») peut passer. Les conversations captées restent privées
-//   à leur auteur.
+//   passé dans du code (« password: 'X' ») peut passer. Les conversations captées ne sont lues que
+//   par leur auteur et, sur le site, par ses managers en remontant (0057).
 //
 // Motifs en temps linéaire, même sur une entrée piégée (des milliers de débuts de motif sans fin) :
 // les répétitions sont bornées, ou s'arrêtent sur un délimiteur qui ne peut pas réapparaître avant

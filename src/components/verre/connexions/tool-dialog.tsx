@@ -436,7 +436,7 @@ export function AddConnection({
   );
 }
 
-/** Qui voit ce qu'une connexion relève, dit en mots : « Équipe », « Vous seul », « Seulement Ana », un groupe. */
+/** Qui voit ce qu'une connexion relève, dit en mots : « Équipe », « Vous et vos managers », « Ana et ses managers », un groupe. */
 function useScopeWord(groups: GroupOption[]) {
   const t = useTranslations('connections');
   const label = usePartageLabel(groups);

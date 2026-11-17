@@ -7,7 +7,7 @@ import { adminDb } from '@/test/db';
 import { dropTeams, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { briefingSources, citationDetails, homeBriefing } from './citation-sources';
 
-// Ce que l'écran montre d'une source citée (l'outil, « Vous seul », le passage pour le surligneur), relu sous les
+// Ce que l'écran montre d'une source citée (l'outil, « Vous et vos managers », le passage pour le surligneur), relu sous les
 // droits du lecteur : une source qu'il ne voit pas ne dit rien.
 
 const tenantIds: string[] = [];

@@ -9,7 +9,7 @@ import { cn } from '@/lib/verre/cn';
 // Un groupe tel que la page des documents le reçoit (listGroups) : un service, ou un groupe libre et son nom.
 export type GroupOption = { id: string; service: string | null; nom: string | null };
 
-// « Toute l'équipe », « Moi seul », puis chaque groupe : les valeurs de PartageSchema (documents.ts).
+// « Toute l'équipe », « Moi et mes managers », puis chaque groupe : les valeurs de PartageSchema (documents.ts).
 export function usePartageOptions(groups: GroupOption[]): SelectOption[] {
   const t = useTranslations('documents');
   const o = useTranslations('onboarding');
@@ -30,7 +30,7 @@ export function usePartageLabel(groups: GroupOption[]): (partage: string) => str
   return (partage) => options.find((o) => o.value === partage)?.label ?? t('shareGroup');
 }
 
-// La légende d'un rectangle (« Équipe », « Vous seul », le nom du groupe) et la promesse qui va avec, dans le panneau.
+// La légende d'un rectangle (« Équipe », « Vous et vos managers », le nom du groupe) et la promesse qui va avec, dans le panneau.
 export function usePartageWords(groups: GroupOption[]) {
   const t = useTranslations('documents');
   const label = usePartageLabel(groups);

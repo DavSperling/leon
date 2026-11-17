@@ -149,7 +149,7 @@ Commands:
                        repositories (with an id: that lesson only). Lessons are written on the website only
                        These five print to standard output and write nothing on disk. They need a connection and
                        the reading consent (\`lecture\`) of one of your code tools, which leon setup offers in a terminal
-  note <text>          Save a private note of the agent to Leon, or the next version of one. Only with the \`noter\`
+  note <text>          Save a note of the agent to Leon, or the next version of one. Only with the \`noter\`
                        consent of that tool in ~/.leon/accord.json: then the text, with secrets masked (4,000
                        characters at most), the project, the tool, the session and the consents of that tool go to
                        your Leon server. The note is read like your sessions (by you and, on the Leon website, by the

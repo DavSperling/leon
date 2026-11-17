@@ -36,7 +36,7 @@ export type DiscussionCitation = {
   url: string | null;
 };
 
-// Qui voit une source : la personne seule (« Vous seul »), toute l'organisation, ou une partie (un groupe, des gens).
+// Qui voit une source : la personne seule (« Vous et vos managers »), toute l'organisation, ou une partie (un groupe, des gens).
 export type SourceVisibility = 'moi' | 'equipe' | 'restreint';
 
 // Une citation telle que l'écran la montre : ce que la source dit d'elle, relu sous les droits du lecteur à chaque

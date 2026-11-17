@@ -20,9 +20,11 @@ const THREAD = '019a5e10-0000-7000-8000-000000000001';
 
 // Fixtures inventées dans la forme de codex-cli 0.159.0 relevée par l'annexe 09 : une session qui lance deux
 // sous-agents et les attend (S), un sous-agent qui lit a.txt par une commande locale (L), un autre qui cherche sur le
-// web (W), et leurs rapports revenus en agent_message. Rangs choisis : la première ligne d'un sous-agent hors
-// numérotation, l'historique recopié de sa mère de 0 à subagent_history_start_ordinal - 1, ses lignes propres ensuite
-// (l'annexe voit son task_started propre à la ligne 10 pour un rang de départ 9).
+// web (W), et leurs rapports revenus en agent_message. Rangs des fixtures, un cran plus bas que le relevé de l'annexe
+// 09 : la première ligne d'un sous-agent sans ordinal, le session_meta de la mère à 0, son task_started propre à
+// subagent_history_start_ordinal. Le relevé a la première ligne à l'ordinal 0 et le task_started propre à
+// subagent_history_start_ordinal + 1. Le code ne dépend pas de ce décalage : il lit les lignes dont l'ordinal vaut au
+// moins subagent_history_start_ordinal, et les session_meta quel que soit leur rang.
 const S = '019a7d2c-1111-7111-8111-111111111111';
 const L = '019a7d2c-2222-7222-8222-222222222222';
 const W = '019a7d2c-3333-7333-8333-333333333333';

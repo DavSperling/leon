@@ -1,0 +1,127 @@
+=== fichier 1
+0 session_meta thread_source=user history_mode=paginated
+1 event_msg/task_started 
+2 response_item/message role=developer content[input_text,input_text,input_text]
+3 response_item/message role=developer content[input_text]
+4 response_item/message role=developer content[input_text]
+5 response_item/message role=user content[input_text]
+6 world_state 
+7 turn_context multi_agent_version=v2
+8 response_item/message role=user content[input_text]
+9 event_msg/item_completed/UserMessage 
+10 event_msg/item_completed/Reasoning 
+11 response_item/reasoning summary[0]
+12 event_msg/item_completed/AgentMessage 
+13 response_item/message role=assistant phase=commentary content[output_text]
+14 response_item/function_call name=spawn_agent
+15 token_usage_record 
+16 event_msg/item_completed/SubAgentActivity kind=started agent_path~/aaaa/aaaa_a
+17 response_item/function_call_output 
+18 event_msg/token_count 
+19 world_state 
+20 response_item/function_call name=spawn_agent
+21 token_usage_record 
+22 event_msg/item_completed/SubAgentActivity kind=started agent_path~/aaaa/aaa_aaaaa
+23 response_item/function_call_output 
+24 event_msg/token_count 
+25 world_state 
+26 response_item/function_call name=wait_agent
+27 token_usage_record 
+28 event_msg/item_completed/SubAgentActivity kind=completed agent_path~/aaaa/aaaa_a
+29 event_msg/item_completed/CollabAgentToolCall item_status=completed item_tool=wait
+30 response_item/function_call_output 
+31 event_msg/token_count 
+32 inter_agent_communication_metadata 
+33 response_item/agent_message author~/aaaa/aaaa_a recipient~/aaaa content[input_text]
+34 response_item/function_call name=wait_agent
+35 token_usage_record 
+36 event_msg/item_completed/SubAgentActivity kind=completed agent_path~/aaaa/aaa_aaaaa
+37 event_msg/item_completed/CollabAgentToolCall item_status=completed item_tool=wait
+38 response_item/function_call_output 
+39 event_msg/token_count 
+40 inter_agent_communication_metadata 
+41 response_item/agent_message author~/aaaa/aaa_aaaaa recipient~/aaaa content[input_text]
+42 event_msg/item_completed/AgentMessage 
+43 response_item/message role=assistant phase=final_answer content[output_text]
+44 token_usage_record 
+45 event_msg/token_count 
+46 event_msg/task_complete 
+47 event_msg/thread_settings_applied 
+48 event_msg/task_started 
+49 response_item/message role=developer content[input_text]
+50 world_state 
+51 turn_context multi_agent_version=v2
+52 response_item/message role=user content[input_text]
+53 event_msg/item_completed/UserMessage 
+54 event_msg/item_completed/AgentMessage 
+55 response_item/message role=assistant phase=commentary content[output_text]
+56 response_item/custom_tool_call name=exec status=completed
+57 token_usage_record 
+58 event_msg/item_completed/CommandExecution item_status=failed exit_code=1
+59 event_msg/item_completed/CommandExecution item_status=failed exit_code=6
+60 response_item/custom_tool_call_output 
+61 event_msg/token_count 
+62 event_msg/item_completed/AgentMessage 
+63 response_item/message role=assistant phase=final_answer content[output_text]
+64 token_usage_record 
+65 event_msg/token_count 
+66 event_msg/task_complete 
+=== fichier 2
+0 session_meta thread_source=subagent history_mode=paginated depth=1 subagent_history_start_ordinal=9 multi_agent_version=v2 agent_path~/aaaa/aaaa_a parent_thread_id:present forked_from_id:present
+1 session_meta thread_source=user history_mode=paginated
+2 event_msg/task_started 
+3 response_item/message role=developer content[input_text,input_text,input_text]
+4 response_item/message role=user content[input_text]
+5 world_state 
+6 turn_context multi_agent_version=v2
+7 response_item/message role=user content[input_text]
+8 response_item/message role=developer content[input_text]
+9 event_msg/thread_settings_applied 
+10 event_msg/task_started 
+11 response_item/message role=developer content[input_text]
+12 world_state 
+13 turn_context multi_agent_version=v2
+14 inter_agent_communication_metadata 
+15 response_item/agent_message author~/aaaa recipient~/aaaa/aaaa_a content[input_text,encrypted_content]
+16 event_msg/item_completed/Reasoning 
+17 response_item/reasoning summary[0]
+18 response_item/custom_tool_call name=exec status=completed
+19 token_usage_record 
+20 event_msg/item_completed/CommandExecution item_status=completed exit_code=0
+21 response_item/custom_tool_call_output 
+22 event_msg/token_count 
+23 event_msg/item_completed/AgentMessage 
+24 response_item/message role=assistant phase=final_answer content[output_text]
+25 token_usage_record 
+26 event_msg/token_count 
+27 event_msg/task_complete 
+=== fichier 3
+0 session_meta thread_source=subagent history_mode=paginated depth=1 subagent_history_start_ordinal=10 multi_agent_version=v2 agent_path~/aaaa/aaa_aaaaa parent_thread_id:present forked_from_id:present
+1 session_meta thread_source=user history_mode=paginated
+2 event_msg/task_started 
+3 response_item/message role=developer content[input_text,input_text,input_text]
+4 response_item/message role=user content[input_text]
+5 world_state 
+6 turn_context multi_agent_version=v2
+7 response_item/message role=user content[input_text]
+8 world_state 
+9 response_item/message role=developer content[input_text]
+10 event_msg/thread_settings_applied 
+11 event_msg/task_started 
+12 response_item/message role=developer content[input_text]
+13 world_state 
+14 turn_context multi_agent_version=v2
+15 inter_agent_communication_metadata 
+16 response_item/agent_message author~/aaaa recipient~/aaaa/aaa_aaaaa content[input_text,encrypted_content]
+17 event_msg/item_completed/Reasoning 
+18 response_item/reasoning summary[1]
+19 response_item/custom_tool_call name=exec status=completed
+20 token_usage_record 
+21 event_msg/item_completed/Extension kind=<string>
+22 response_item/custom_tool_call_output 
+23 event_msg/token_count 
+24 event_msg/item_completed/AgentMessage 
+25 response_item/message role=assistant phase=final_answer content[output_text]
+26 token_usage_record 
+27 event_msg/token_count 
+28 event_msg/task_complete 

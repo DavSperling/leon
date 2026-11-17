@@ -1,0 +1,49 @@
+session_meta.source : "cli"
+thread_spawn : []
+session_meta : cli_version~9.999.9 originator=<string> model_provider=openai git=[]
+response_item/message : cles ["content","id","role","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+metadata de ligne : ["client_authored","mcp_attribution"]
+turn_context : approval_policy=<string> model~aaa-9-aaaa effort=- summary=detailed sandbox_policy=["exclude_slash_tmp","exclude_tmpdir_env_var","network_access","type"] sandbox_type=<string>
+metadata de ligne : ["client_authored","mcp_attribution","retained_source","user_input_order"]
+Reasoning (item) : summary_text=tableau[0] raw_content=tableau[0]
+response_item/reasoning : cles ["encrypted_content","id","summary","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+reasoning : summary [] encrypted_content=chaine(2124)
+response_item/message : cles ["content","id","phase","role","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+metadata de ligne : ["client_authored","retained_source","user_input_order"]
+response_item/function_call : cles ["arguments","call_id","id","name","namespace","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+function_call spawn_agent : namespace=collaboration arguments=chaine(322) cles des arguments ["fork_turns","message","task_name"]
+metadata de ligne : ["client_authored","user_input_order"]
+SubAgentActivity : kind=started cles ["agent_path","agent_thread_id","id","kind","type"]
+response_item/function_call_output : cles ["call_id","id","output","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+function_call_output : output=chaine(28) cles ["task_name"]
+metadata de ligne : ["client_authored","fallback_token_limit_override"]
+function_call spawn_agent : namespace=collaboration arguments=chaine(261) cles des arguments ["fork_turns","message","task_name"]
+function_call_output : output=chaine(31) cles ["task_name"]
+function_call wait_agent : namespace=collaboration arguments=chaine(22) cles des arguments ["timeout_ms"]
+SubAgentActivity : kind=completed cles ["agent_path","agent_thread_id","id","kind","type"]
+CollabAgentToolCall : tool=wait status=completed receiver_thread_ids=tableau[0] receiver_agents=tableau[0] agents_states=object
+function_call_output : output=chaine(47) cles ["message","timed_out"]
+inter_agent_communication_metadata : trigger_turn=boolean
+response_item/agent_message : cles ["author","content","id","recipient","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+agent_message : content [["text","type"]]
+task_complete : last_agent_message=chaine(n)
+response_item/custom_tool_call : cles ["call_id","id","input","name","status","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+custom_tool_call exec : input=chaine(338)
+CommandExecution : status=failed exit_code=1 source=unified_exec_startup parsed_cmd=tableau[1] command=tableau[3]
+CommandExecution : status=failed exit_code=6 source=unified_exec_startup parsed_cmd=tableau[1] command=tableau[3]
+response_item/custom_tool_call_output : cles ["call_id","id","output","type","~aaaaaaaa_aaaa_aaaaaaa_aaaaaaaa_aaaaaaaaaaa"]
+custom_tool_call_output : output=tableau[3]
+session_meta.source : ["subagent"]
+thread_spawn : ["agent_nickname","agent_path","agent_role","depth","parent_thread_id"]
+metadata de ligne : ["client_authored","inherited_user_message"]
+metadata de ligne : ["client_authored","inherited_user_message","mcp_attribution","retained_source","user_input_order"]
+turn_context : approval_policy=<string> model~aaa-9-aaaa effort=medium summary=detailed sandbox_policy=["exclude_slash_tmp","exclude_tmpdir_env_var","network_access","type"] sandbox_type=<string>
+agent_message : content [["text","type"],["encrypted_content","type"]]
+reasoning : summary [] encrypted_content=chaine(3492)
+custom_tool_call exec : input=chaine(95)
+CommandExecution : status=completed exit_code=0 source=unified_exec_startup parsed_cmd=tableau[1] command=tableau[3]
+custom_tool_call_output : output=tableau[2]
+Reasoning (item) : summary_text=tableau[1] raw_content=tableau[0]
+reasoning : summary [["text","type"]] encrypted_content=chaine(2276)
+custom_tool_call exec : input=chaine(105)
+Extension : kind~aaa.aaaaaa action=["type","url"] query=chaine(19) results=tableau[1]

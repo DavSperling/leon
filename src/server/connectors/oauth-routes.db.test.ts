@@ -179,6 +179,19 @@ describe('POST /:outil/debut', () => {
     expect(oauthCookieOf(response)).toBeUndefined();
   });
 
+  // `<a ping>` poste en `text/ping`, que csrf() de Hono ne vérifiait pas avant 4.13.16 (GHSA-46wx-v44x-9hh2).
+  it("refuse aussi le ping d'un lien venu d'un autre site, sans poser de cookie", async () => {
+    const paul = await signUp();
+
+    const response = await start(makeApp().app, paul, undefined, {
+      origin: 'https://evil.test',
+      'content-type': 'text/ping',
+    });
+
+    expect(response.status).toBe(403);
+    expect(oauthCookieOf(response)).toBeUndefined();
+  });
+
   it('refuse un lien piégé : un GET ne démarre rien', async () => {
     const paul = await signUp();
 

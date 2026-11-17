@@ -1,0 +1,7 @@
+{
+  "conversationId": "22222222-2222-4222-8222-222222222222",
+  "subagentDescriptor": { "typeName": "research", "role": "lecteur" },
+  "state": "SUBAGENT_STATE_ALIVE",
+  "spawnStepIndex": 1,
+  "workspaceUris": ["file:///Users/demo/projets/essai"]
+}

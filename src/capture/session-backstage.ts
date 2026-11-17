@@ -39,12 +39,14 @@ function parseLine(raw: string): Line | null {
   return parsed.success ? parsed.data : null;
 }
 
-// Un raisonnement, une consigne ou un rapport, préparé comme un tour de la session ; null : rien à envoyer.
-const prepare = (raw: string) => prepareTurnText(stripLeonBlocks(raw));
+// Un raisonnement, une consigne ou un rapport, préparé comme un tour de la session ; null : rien à envoyer. Repris par
+// les coulisses des autres outils (antigravity.ts).
+export const prepare = (raw: string) => prepareTurnText(stripLeonBlocks(raw));
 
 // La cible d'un appel (C10 amendé le 12/11) : la commande réduite de Bash, le chemin dans le dépôt d'un outil de
-// fichier ou le `path` d'une recherche ; rien pour tout autre outil.
-function target(name: string, input: unknown, root: string | null): string | undefined {
+// fichier ou le `path` d'une recherche ; rien pour tout autre outil. Les autres outils y passent sous le nom commun
+// (C10 amendé le 17/11).
+export function target(name: string, input: unknown, root: string | null): string | undefined {
   const parsed = TargetSchema.safeParse(input);
   if (!parsed.success) return undefined;
   const { command, file_path, notebook_path, path } = parsed.data;
@@ -145,9 +147,12 @@ export function extractBackstage(
     const error = errors.get(bloc.id);
     bloc.statut = error === undefined ? 'sans_resultat' : error ? 'erreur' : 'ok';
   }
-  // Un bloc hors du contrat (un identifiant hors forme) ferait refuser tout l'envoi : il est écarté. Le tri est
-  // stable : à date égale, l'appel précède sa consigne.
-  return blocs
+  return finishBlocs(blocs);
+}
+
+// Le filtre final, commun aux coulisses de tous les outils. Un bloc hors du contrat (un identifiant hors forme) ferait
+// refuser tout l'envoi : il est écarté. Le tri est stable : à date égale, l'appel précède sa consigne.
+export const finishBlocs = (blocs: CoulisseBloc[]): CoulisseBloc[] =>
+  blocs
     .filter((bloc) => CoulisseBlocSchema.safeParse(bloc).success)
     .sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
-}

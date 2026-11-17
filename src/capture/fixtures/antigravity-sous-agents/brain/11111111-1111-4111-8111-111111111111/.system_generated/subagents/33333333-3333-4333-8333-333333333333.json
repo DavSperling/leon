@@ -1,0 +1,7 @@
+{
+  "conversationId": "33333333-3333-4333-8333-333333333333",
+  "subagentDescriptor": { "typeName": "browser", "role": "navigateur de la page" },
+  "state": "SUBAGENT_STATE_ALIVE",
+  "spawnStepIndex": 1,
+  "workspaceUris": ["file:///Users/demo/projets/essai"]
+}

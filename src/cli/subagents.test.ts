@@ -1,5 +1,7 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { loadSubagents } from './subagents';
+import { loadAntigravitySubagents, loadSubagents } from './subagents';
 
 // Un disque inventé : chemin → contenu ; un dossier se liste par ses noms.
 const SESSION = '/home/demo/.claude/projects/-demo/55555555-5555-4555-8555-555555555555.jsonl';
@@ -144,5 +146,164 @@ describe('loadSubagents', () => {
   it('sans listage du disque, rend une table vide', async () => {
     const { readFile } = disque({}, {});
     expect(await loadSubagents(SESSION, { readFile })).toEqual(new Map());
+  });
+});
+
+// Antigravity (annexe 11) : la session nomme ses sous-agents dans `.system_generated/subagents/<id>.json` ; chacun est
+// une conversation à part, `brain/<id>/`, dans la même variante.
+describe('loadAntigravitySubagents', () => {
+  const S = '11111111-1111-4111-8111-111111111111';
+  const R = '22222222-2222-4222-8222-222222222222';
+  const N = '33333333-3333-4333-8333-333333333333';
+  const G = '44444444-4444-4444-8444-444444444444';
+  const BRAIN = '/home/demo/.gemini/antigravity/brain';
+  const logs = (id: string) => `${BRAIN}/${id}/.system_generated/logs`;
+  const fiches = (id: string) => `${BRAIN}/${id}/.system_generated/subagents`;
+  const fiche = (id: string) =>
+    JSON.stringify({ conversationId: id, state: 'SUBAGENT_STATE_ALIVE' });
+  const SESSION_AG = `${logs(S)}/transcript_full.jsonl`;
+  const vide = { named: new Map(), transcripts: new Map() };
+
+  it('lit la fixture : les deux sous-agents nommés par la session et leur transcript complet', async () => {
+    const brain = fileURLToPath(
+      new URL('../capture/fixtures/antigravity-sous-agents/brain', import.meta.url),
+    );
+    const transcript = (id: string) =>
+      readFile(`${brain}/${id}/.system_generated/logs/transcript_full.jsonl`, 'utf8');
+
+    const sousAgents = await loadAntigravitySubagents(
+      `${brain}/${S}/.system_generated/logs/transcript_full.jsonl`,
+      { readFile: (path) => readFile(path, 'utf8'), readdir },
+    );
+
+    expect(sousAgents).toEqual({
+      named: new Map([
+        [S, [R, N]],
+        [R, []],
+        [N, []],
+      ]),
+      transcripts: new Map([
+        [R, await transcript(R)],
+        [N, await transcript(N)],
+      ]),
+    });
+  });
+
+  it('lit transcript.jsonl quand transcript_full.jsonl manque, puis les sous-agents d’un sous-agent', async () => {
+    const deps = disque(
+      {
+        [`${fiches(S)}/${R}.json`]: fiche(R),
+        [`${logs(R)}/transcript.jsonl`]: 'court R',
+        [`${fiches(R)}/${G}.json`]: fiche(G),
+        [`${logs(G)}/transcript_full.jsonl`]: 'complet G',
+        [`${logs(G)}/transcript.jsonl`]: 'court G',
+      },
+      { [fiches(S)]: [`${R}.json`], [fiches(R)]: [`${G}.json`] },
+    );
+
+    expect(await loadAntigravitySubagents(SESSION_AG, deps)).toEqual({
+      named: new Map([
+        [S, [R]],
+        [R, [G]],
+        [G, []],
+      ]),
+      transcripts: new Map([
+        [R, 'court R'],
+        [G, 'complet G'],
+      ]),
+    });
+  });
+
+  it('ignore un nom de fiche qui n’est pas un UUID, sans rien lire pour lui', async () => {
+    const lus: string[] = [];
+    const deps = disque(
+      { [`${BRAIN}/x.json`]: fiche('x') },
+      { [fiches(S)]: ['../x.json', 'x.json', `${R}.JSON`, `${R}.json.bak`, 'read.json'] },
+    );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
+
+    expect(await loadAntigravitySubagents(SESSION_AG, { ...deps, readFile })).toEqual({
+      named: new Map([[S, []]]),
+      transcripts: new Map(),
+    });
+    expect(lus).toEqual([]);
+  });
+
+  it.each([
+    ['une fiche illisible', '{pas du JSON'],
+    ['une fiche sans conversationId', '{"state":"SUBAGENT_STATE_ALIVE"}'],
+    ['une fiche d’une autre conversation', fiche(N)],
+  ])('ne nomme pas le sous-agent d’%s, ni ne lit sa conversation', async (_cas, contenu) => {
+    const deps = disque(
+      {
+        [`${fiches(S)}/${R}.json`]: contenu,
+        [`${logs(R)}/transcript_full.jsonl`]: 'R',
+        [`${logs(N)}/transcript_full.jsonl`]: 'N',
+      },
+      { [fiches(S)]: [`${R}.json`] },
+    );
+
+    expect(await loadAntigravitySubagents(SESSION_AG, deps)).toEqual({
+      named: new Map([[S, []]]),
+      transcripts: new Map(),
+    });
+  });
+
+  it('nomme un sous-agent dont la conversation ne se lit pas, sans transcript', async () => {
+    const deps = disque({ [`${fiches(S)}/${R}.json`]: fiche(R) }, { [fiches(S)]: [`${R}.json`] });
+
+    expect(await loadAntigravitySubagents(SESSION_AG, deps)).toEqual({
+      named: new Map([[S, [R]]]),
+      transcripts: new Map(),
+    });
+  });
+
+  it('ne relit pas une conversation déjà lue (un sous-agent qui nomme la session ou lui-même)', async () => {
+    const lus: string[] = [];
+    const deps = disque(
+      {
+        [`${fiches(S)}/${R}.json`]: fiche(R),
+        [`${logs(R)}/transcript_full.jsonl`]: 'R',
+        [`${fiches(R)}/${S}.json`]: fiche(S),
+        [`${fiches(R)}/${R}.json`]: fiche(R),
+      },
+      { [fiches(S)]: [`${R}.json`], [fiches(R)]: [`${S}.json`, `${R}.json`] },
+    );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
+
+    expect(await loadAntigravitySubagents(SESSION_AG, { ...deps, readFile })).toEqual({
+      named: new Map([
+        [S, [R]],
+        [R, [S, R]],
+      ]),
+      transcripts: new Map([[R, 'R']]),
+    });
+    expect(lus.filter((path) => path.includes('/logs/'))).toEqual([
+      `${logs(R)}/transcript_full.jsonl`,
+    ]);
+  });
+
+  it.each([
+    ['relatif', `antigravity/brain/${S}/.system_generated/logs/transcript_full.jsonl`],
+    ['hors d’un dossier brain', `/home/demo/ailleurs/${S}/.system_generated/logs/transcript.jsonl`],
+    ['d’un autre nom', `${logs(S)}/autre.jsonl`],
+  ])('rend des tables vides pour un fichier de session %s', async (_cas, chemin) => {
+    const deps = disque(
+      { [`${fiches(S)}/${R}.json`]: fiche(R), [`${logs(R)}/transcript_full.jsonl`]: 'R' },
+      { [fiches(S)]: [`${R}.json`] },
+    );
+
+    expect(await loadAntigravitySubagents(chemin, deps)).toEqual(vide);
+  });
+
+  it('sans listage du disque, rend des tables vides', async () => {
+    const { readFile } = disque({ [`${fiches(S)}/${R}.json`]: fiche(R) }, {});
+    expect(await loadAntigravitySubagents(SESSION_AG, { readFile })).toEqual(vide);
   });
 });

@@ -1,5 +1,6 @@
 import { basename, dirname, isAbsolute, join } from 'node:path';
 import { z } from 'zod';
+import type { AntigravitySubagents } from '../capture/antigravity';
 
 // `agentId` validé avant de servir à un chemin (annexe 08 : 17 caractères vus, lettres minuscules et chiffres).
 const META_FILE = /^agent-([a-z0-9]{1,64})\.meta\.json$/;
@@ -40,4 +41,68 @@ export async function loadSubagents(
     }
   }
   return subagents;
+}
+
+// L'identifiant d'une conversation d'Antigravity, validé avant de servir à un chemin.
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const FicheSchema = z.object({ conversationId: z.string() });
+const TRANSCRIPTS = ['transcript_full.jsonl', 'transcript.jsonl'] as const;
+
+// Les sous-agents d'une session Antigravity, pour le tri de T63 et les coulisses (antigravity.ts ; annexe 11). Le
+// fichier de la session est `<variante>/brain/<conversation>/.system_generated/logs/<transcript>` ; elle nomme ses
+// sous-agents dans `.system_generated/subagents/<identifiant>.json`, dont la fiche porte le même `conversationId`.
+// Chacun est une conversation à part, `brain/<identifiant>/`, lue comme une session (`transcript_full.jsonl`, sinon
+// `transcript.jsonl`), dans la même variante ; puis ses propres sous-agents, une fois chacun. Rien n'est lu hors du
+// dossier `brain/`. Ce qui ne se lit pas est laissé de côté : son appel restera externe. Sans `readdir`, aucun
+// sous-agent n'est lu.
+export async function loadAntigravitySubagents(
+  sessionFile: string,
+  deps: {
+    readFile: (path: string) => Promise<string>;
+    readdir?: (path: string) => Promise<string[]>;
+  },
+): Promise<AntigravitySubagents> {
+  const named = new Map<string, string[]>();
+  const transcripts = new Map<string, string>();
+  const logs = dirname(sessionFile);
+  const conversation = dirname(dirname(logs));
+  const brain = dirname(conversation);
+  const { readdir } = deps;
+  const known =
+    isAbsolute(sessionFile) &&
+    (TRANSCRIPTS as readonly string[]).includes(basename(sessionFile)) &&
+    basename(logs) === 'logs' &&
+    basename(dirname(logs)) === '.system_generated' &&
+    basename(brain) === 'brain';
+  if (!readdir || !known) return { named, transcripts };
+  const queue = [basename(conversation)];
+  const seen = new Set(queue);
+  for (const id of queue) {
+    const dir = join(brain, id, '.system_generated', 'subagents');
+    const children: string[] = [];
+    for (const name of (await readdir(dir).catch(() => [])).sort()) {
+      const child = name.endsWith('.json') ? name.slice(0, -'.json'.length) : '';
+      if (!UUID.test(child)) continue;
+      try {
+        const fiche = FicheSchema.parse(JSON.parse(await deps.readFile(join(dir, name))));
+        if (fiche.conversationId === child) children.push(child);
+      } catch {
+        // fiche illisible : le sous-agent n'est pas nommé, son appel reste externe (échec fermé)
+      }
+    }
+    named.set(id, children);
+    for (const child of children) {
+      if (seen.has(child)) continue;
+      seen.add(child);
+      const childLogs = join(brain, child, '.system_generated', 'logs');
+      const transcript = await deps
+        .readFile(join(childLogs, TRANSCRIPTS[0]))
+        .catch(() => deps.readFile(join(childLogs, TRANSCRIPTS[1])))
+        .catch(() => null);
+      if (transcript === null) continue;
+      transcripts.set(child, transcript);
+      queue.push(child);
+    }
+  }
+  return { named, transcripts };
 }

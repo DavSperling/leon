@@ -740,15 +740,15 @@ describe('setup : les outils de code', () => {
   it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
     await allTools();
 
-    // Claude Code, lecture, rappel, noter, coulisses (sans réponse), resume, puis Codex, Cursor (refusé) et
-    // Antigravity, rappel compris.
+    // Claude Code, lecture, rappel, noter, coulisses (sans réponse), resume, puis Codex et sa question coulisses,
+    // Cursor (refusé), et Antigravity et sa question coulisses, rappel compris.
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', '', '', '', null, 'n', 'y', 'n', 'y'] },
+      { interactive: true, answers: ['y', '', '', '', null, 'n', 'y', null, 'n', 'y', null] },
     );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(9);
+    expect(run.questions).toHaveLength(11);
     expect(checkedAsked(run)).toHaveLength(3);
     expect(run.output.split('usage "lecture"')).toHaveLength(2);
     expect(run.output.split('usage "rappel"')).toHaveLength(2);
@@ -764,28 +764,38 @@ describe('setup : les outils de code', () => {
     expect(run.output).toContain('`~/.leon/bin/leon retirer-crochets --outil codex`');
   });
 
-  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul. Demandé une fois, à son passage, le « oui » ne
-  // s'écrit ni pour Codex, ni pour Cursor, ni pour Antigravity, qui passent après lui.
-  it('dans un terminal : un oui à coulisses ne s’écrit que pour Claude Code', async () => {
-    await allTools();
+  // T52 amendée le 17/11 : `coulisses` se demande outil par outil, avec le texte de chacun (Claude Code, Codex,
+  // Antigravity), jamais pour Cursor. Un « oui » ne vaut que pour l'outil à qui il est donné, même dans un seul passage.
+  it.each([
+    ['Claude Code', 'claude_code', ['y', null, null, null, 'y', null, 'y', null, 'y', 'y', null]],
+    ['Codex', 'codex', ['y', null, null, null, null, null, 'y', 'y', 'y', 'y', null]],
+  ] as const)(
+    'dans un terminal : un oui à coulisses pour %s ne s’écrit que pour lui',
+    async (_label, tool, answers) => {
+      await allTools();
 
-    const run = await setup(
-      {},
-      { interactive: true, answers: ['y', null, null, null, 'y', null, 'y', 'y', 'y'] },
-    );
+      const run = await setup({}, { interactive: true, answers: [...answers] });
 
-    expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(9);
-    expect(run.questions[4]).toContain('[y/N]');
-    expect(run.output.split('usage "coulisses"')).toHaveLength(2);
-    expect(await factsConsent(home, 'claude_code')).toMatchObject({
-      usages: ['coulisses'],
-      refus: [],
-    });
-    for (const tool of ['codex', 'cursor', 'antigravity'] as const) {
-      expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
-    }
-  });
+      expect(run.code).toBe(0);
+      expect(run.questions).toHaveLength(11);
+      expect(run.questions[4]).toContain('each session:');
+      expect(run.questions[4]).toContain('[y/N]');
+      expect(run.questions[7]).toContain('each Codex session:');
+      expect(run.questions[7]).toContain('[y/N]');
+      expect(run.questions[10]).toContain('each Antigravity conversation:');
+      expect(run.questions[10]).toContain('[y/N]');
+      expect(run.output.split('usage "coulisses"')).toHaveLength(4);
+      expect(run.output).toContain('when Claude Code writes its text in the transcript');
+      expect(run.output).toContain('Once a Codex session is over');
+      expect(run.output).toContain('Once an Antigravity conversation has not changed');
+      for (const other of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
+        expect(await factsConsent(home, other), other).toMatchObject({
+          usages: other === tool ? ['coulisses'] : [],
+          refus: [],
+        });
+      }
+    },
+  );
 
   it('seulement pour les outils qui en manquent sans refus : la question vient au premier d’entre eux', async () => {
     await hasClaudeCode();
@@ -818,10 +828,13 @@ describe('setup : les outils de code', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', null, null, null, null, null, 'y', 'y', 'y'] },
+      {
+        interactive: true,
+        answers: ['y', null, null, null, null, null, 'y', null, 'y', 'y', null],
+      },
     );
 
-    expect(run.questions).toHaveLength(9);
+    expect(run.questions).toHaveLength(11);
     for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
     }
@@ -837,6 +850,7 @@ describe('setup : les outils de code', () => {
 
     expect(run.questions.length).toBeLessThanOrEqual(4);
     expect(run.output).not.toContain('usage "lecture"');
+    expect(run.output).not.toContain('usage "coulisses"');
     for (const tool of ['claude_code', 'codex', 'cursor', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({ usages: [], refus: [] });
     }

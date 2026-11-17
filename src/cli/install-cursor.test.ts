@@ -217,8 +217,8 @@ describe('installCursorHooks : les usages', () => {
     expect((await factsConsent(home, 'cursor'))?.refus ?? []).toEqual([]);
   });
 
-  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul, tant que la CLI ne relève pas celles de Cursor.
-  it('coulisses n’est ni demandé ni écrit pour Cursor, même tranché oui dans le passage par Claude Code', async () => {
+  // T52 amendée le 17/11 : l'essai de Cursor est négatif (annexe 10), `coulisses` ne s'y propose jamais.
+  it('coulisses n’est ni demandé ni écrit pour Cursor, même tranché oui dans le passage par un autre outil', async () => {
     const { out, asked } = await install(['oui', null, null, null, null], false, {
       ...terminal,
       decisions: new Map([['coulisses', true]]),

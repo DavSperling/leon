@@ -5,7 +5,7 @@ import { CONTENT_EN, CONTENT_FR } from './content';
 import { isFilterQuery } from './parts';
 
 // Le typecheck vérifie la forme des tables anglaises ; les identifiants, les adresses et les outils, eux, doivent
-// être les mêmes qu'en français : une équipe absente casserait /cas-usage/<équipe> en anglais.
+// être les mêmes qu'en français : une équipe absente casserait /use-cases/<équipe> en anglais.
 const ids = <T, K extends keyof T>(rows: readonly T[], key: K) => rows.map((row) => row[key]);
 
 describe('le site en anglais', () => {

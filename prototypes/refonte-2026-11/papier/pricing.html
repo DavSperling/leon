@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pricing · Leon</title>
+<meta name="description" content="A free pilot with one team, then a proposed price per active user per month. Billing is not in place yet.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/site.css">
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body class="site page">
+<a class="skip" href="#main">Skip to content</a>
+
+<!-- Header: the home page's. Product and Developers point back to its sections; Connectors, Security and Pricing are pages. -->
+<header class="nav" data-nav>
+  <div class="wrap nav__in">
+    <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <nav class="nav__links" id="nav-panel" aria-label="Site" data-nav-panel>
+      <a class="nav__link" href="index.html#product">Product</a>
+      <a class="nav__link" href="connectors.html">Connectors</a>
+      <a class="nav__link" href="index.html#developers">Developers</a>
+      <a class="nav__link" href="security.html">Security</a>
+      <a class="nav__link" href="pricing.html" aria-current="page">Pricing</a>
+      <a class="nav__link" href="app/signin.html">Sign in</a>
+    </nav>
+    <a class="btn btn--nav" href="app/signup.html">Create a workspace</a>
+    <button class="nav__menu" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-menu><span class="vh">Menu</span><svg viewBox="0 0 22 22" aria-hidden="true"><line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Page top: what it costs today, and what is proposed for later -->
+  <section class="ptop" aria-labelledby="h1">
+    <div class="wrap grid ptop__grid">
+      <h1 class="ptop__h1" id="h1" data-rv="1"><span class="ptop__line"><span class="hmark" data-hmark="1">A free pilot.</span></span> <span class="ptop__line">Then €25 per active user.</span></h1>
+      <p class="lead ptop__lead" data-rv="2">Pilot Leon free with one team, on your real tools. After that, a proposed €25 per active user per month, once billing is in place.</p>
+      <div class="ptop__cta" data-rv="2">
+        <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <span class="small">Open beta · no billing yet</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- The three plans: one comparison table, lying as a sheet on the desk -->
+  <section class="pstage" aria-labelledby="plans-h">
+    <div class="wrap">
+      <h2 class="vh" id="plans-h">Plans</h2>
+      <div class="ptable sheet" data-rv="3">
+        <table role="table" aria-labelledby="plans-h">
+          <thead role="rowgroup">
+            <tr role="row">
+              <td role="cell"></td>
+              <th role="columnheader" scope="col">Pilot</th>
+              <th role="columnheader" scope="col">Team</th>
+              <th role="columnheader" scope="col">Dedicated</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row">
+              <th role="rowheader" scope="row">Price</th>
+              <td role="cell" data-plan="Pilot"><p><span class="ptable__price"><mark class="hl hl-1">Free</mark></span>for one team</p></td>
+              <td role="cell" data-plan="Team"><p><span class="ptable__price">€25</span>per active user per month, excl.&nbsp;VAT</p></td>
+              <td role="cell" data-plan="Dedicated"><p><span class="ptable__price">Custom</span>quoted to your requirements</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Made for</th>
+              <td role="cell" data-plan="Pilot"><p>One team, trying Leon on its real tools.</p></td>
+              <td role="cell" data-plan="Team"><p>The whole company. No team size limit.</p></td>
+              <td role="cell" data-plan="Dedicated"><p>Companies that need their own instance.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Billing</th>
+              <td role="cell" data-plan="Pilot"><p>None. The pilot is free.</p></td>
+              <td role="cell" data-plan="Team"><p>Not in place yet: the price is a proposal. No commitment.</p></td>
+              <td role="cell" data-plan="Dedicated"><p>By quote.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Hosting</th>
+              <td role="cell" colspan="2" data-plan="Pilot, Team"><p>Each company’s data isolated with row-level security.</p></td>
+              <td role="cell" data-plan="Dedicated"><p>A single-tenant instance and database. Your choice of AI model at each step.</p></td>
+            </tr>
+          </tbody>
+          <tbody role="rowgroup">
+            <tr role="row" class="ptable__group">
+              <th role="columnheader" scope="colgroup" colspan="4"><b>In every plan</b>Plans differ only by team size and hosting.</th>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Connectors</th>
+              <td role="cell" colspan="3"><p>All 42, synced every 15 minutes. <a class="tlink" href="connectors.html">See the connectors</a></p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Search</th>
+              <td role="cell" colspan="3"><p>Full-text and vector search with filters, and a cited answer above the results.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Chat</th>
+              <td role="cell" colspan="3"><p>Private, with cited sources.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Briefing and assistants</th>
+              <td role="cell" colspan="3"><p>A morning briefing, and an MCP server your own AI assistant can query.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Capture</th>
+              <td role="cell" colspan="3"><p>A browser extension, and capture from coding assistants.</p></td>
+            </tr>
+            <tr role="row">
+              <th role="rowheader" scope="row">Protection</th>
+              <td role="cell" colspan="3"><p>Secrets redacted before storage. Credentials encrypted with AES-256-GCM. <a class="tlink" href="security.html">Read the security page</a></p></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small pstage__note">Proposed prices, excluding VAT. Billing is not in place yet: every plan starts with the free pilot.</p>
+    </div>
+  </section>
+
+  <!-- Questions and answers -->
+  <section class="psec" aria-labelledby="qa-h">
+    <div class="wrap">
+      <div class="grid psec__head">
+        <h2 class="h2" id="qa-h" data-rv="1">Before <span class="hmark" data-hmark="2">you start.</span></h2>
+        <p class="lead" data-rv="2">Something else? Start the free pilot and see what Leon indexes from your own tools.</p>
+      </div>
+      <dl class="qa" data-rv="3">
+        <div class="qa__row">
+          <dt>What counts as an active user?</dt>
+          <dd>Anyone who used Leon during the month. Inactive accounts would not be counted, once billing is in place.</dd>
+        </div>
+        <div class="qa__row">
+          <dt>Do we need to switch tools?</dt>
+          <dd>No, as long as they are among the <a class="tlink" href="connectors.html">42 connectors</a>. Leon connects with OAuth or an API key and syncs changes every 15 minutes.</dd>
+        </div>
+        <div class="qa__row">
+          <dt>Who can see what?</dt>
+          <dd>Content from a connection is shared with the whole team, except email, Google Drive and Slack, which stay private to whoever connects them. AI conversations, chats and notes are visible only to their author. <a class="tlink" href="security.html">Read the security page</a></dd>
+        </div>
+        <div class="qa__row">
+          <dt>What happens when Leon doesn’t know?</dt>
+          <dd>It says so. Every claim in an answer is cited. Without a source, the answer is “I don’t know”.</dd>
+        </div>
+        <div class="qa__row">
+          <dt>Does Leon summarize our documents?</dt>
+          <dd>No. It keeps the original text word for word, and each claim cites it with a link to the original.</dd>
+        </div>
+        <div class="qa__row">
+          <dt>Can our AI assistant query Leon?</dt>
+          <dd>Yes, over MCP. Paste the address into your assistant, authorize it in Leon, revoke it in Settings. It is limited to what you can see.</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- Close -->
+  <section class="band band--desk" aria-labelledby="close-h">
+    <div class="wrap grid pclose">
+      <div class="pclose__text">
+        <h2 class="h2" id="close-h" data-rv="1">Start with <span class="hmark" data-hmark="3">the pilot.</span></h2>
+        <p class="lead" data-rv="2">Free, with one team, on all 42 connectors.</p>
+      </div>
+      <div class="pclose__cta" data-rv="3">
+        <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <a class="btn btn--line" href="app/signin.html">Sign in</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Footer: the home page's -->
+<footer class="foot on-ink">
+  <div class="wrap grid foot__grid">
+    <div class="foot__brand">
+      <a class="wordmark" href="index.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    </div>
+    <nav class="foot__col foot__col--product" aria-labelledby="f-product">
+      <h3 id="f-product">Product</h3>
+      <ul>
+        <li><a href="index.html#product">Search and cited answers</a></li>
+        <li><a href="index.html#briefing">Chat and morning briefing</a></li>
+        <li><a href="connectors.html">Connectors</a></li>
+        <li><a href="pricing.html" aria-current="page">Pricing</a></li>
+        <li><a href="#" title="Not in this prototype">Documentation</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--trust" aria-labelledby="f-trust">
+      <h3 id="f-trust">Trust</h3>
+      <ul>
+        <li><a href="security.html">Security</a></li>
+        <li><a href="security.html#in-progress">What’s missing</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--account" aria-labelledby="f-account">
+      <h3 id="f-account">Account</h3>
+      <ul>
+        <li><a href="app/signin.html">Sign in</a></li>
+        <li><a href="app/signup.html">Create a workspace</a></li>
+      </ul>
+    </nav>
+    <div class="foot__base">
+      <p class="foot__lang">Language: <a href="pricing.html" aria-current="true">English</a> · <a href="#" title="Not in this prototype" lang="fr">Français</a></p>
+      <p>© 2026 Leon</p>
+    </div>
+  </div>
+</footer>
+
+<script src="js/pages.js"></script>
+</body>
+</html>

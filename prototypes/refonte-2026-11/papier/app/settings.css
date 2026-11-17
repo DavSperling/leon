@@ -1,0 +1,99 @@
+/* Settings: four groups, one shown at a time. A group is a sheet of rows (a label, its value or field, its action);
+   computers and tokens are the kit's cards. Only the app's tokens. Pieces the kit lacks are marked "kit:". */
+
+/* Three of the app's four columns: a sheet of fields stays readable, and the cards here are the size of
+   Connections' cards (286px at 1512 with the sidebar, 328 with the rail). Never under three cards' width (876). */
+.set { max-width: max(calc(75% - 3px), 876px); }
+
+/* Without script the four groups are stacked under their own heading; with it the chips show one */
+.grp + .grp { margin-top: 40px; }
+.grp { scroll-margin-top: 100vh; } /* #security opens the group without scrolling the page down to it */
+.grp__h { display: flex; align-items: center; min-height: 40px; margin-bottom: 12px; font: 600 var(--fs-4)/1.2 var(--sans); letter-spacing: -.012em; }
+.set.is-js .grp:not(.is-on) { display: none; }
+.set.is-js .grp + .grp { margin-top: 0; }
+.set.is-js .grp__h { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.grp .sec__head h3 { font: 600 var(--fs-4)/1.2 var(--sans); letter-spacing: -.012em; }
+.grp .sec__head--next { margin-top: 40px; }
+.grp__end { margin-top: 12px; }
+.grp__end .btn--quiet { margin-left: 8px; } /* its words line up with the sheet's content (24px in) */
+.grp__end .btn--quiet:hover { color: var(--danger); background: var(--danger-tint); }
+
+/* kit: a sheet of rows. A row: its label, then its value or its field, then its action at the right edge. */
+.paper.rows { padding: 0 24px; }
+.rows__head { display: flex; align-items: center; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+.rows__head .av, .rows__head .ws__tile { width: 44px; height: 44px; border-radius: var(--r-m); font-size: var(--fs-3); }
+.rows__head > span:last-child { display: grid; min-width: 0; }
+.rows__head b { font: 600 var(--fs-4)/1.3 var(--sans); letter-spacing: -.012em; }
+.rows__head b .mark { margin-inline: -4px; padding-inline: 4px; }
+.rows__head b + span { font-size: var(--fs-1); line-height: 1.4; color: var(--ink-2); }
+.row {
+  display: grid; grid-template-columns: 200px minmax(0, 1fr) auto; align-items: center; gap: 8px 24px;
+  min-height: 68px; padding: 14px 0; border-bottom: 1px solid var(--line);
+}
+.row:last-child { border-bottom: 0; }
+.row__k { font: 500 var(--fs-2)/20px var(--sans); color: var(--ink); }
+.row__v { min-width: 0; }
+.row__v .field { max-width: 440px; }
+.row__text { font-size: var(--fs-3); line-height: 22px; overflow-wrap: anywhere; }
+.row__state { font-size: var(--fs-2); color: var(--ink-2); }
+.row__who { display: inline-flex; align-items: center; gap: 10px; }
+.row__who .av { box-shadow: none; }
+.row--top { align-items: start; }
+.row--top .row__k { padding-top: 10px; }
+textarea.field { height: auto; min-height: 88px; padding: 9px 12px; line-height: 1.5; resize: vertical; }
+
+/* kit: the picture of a thing without a logo (a computer, a token): the kit's icon on a blank square of the logo's size */
+.glyph { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 28px; height: 28px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--sheet); color: var(--ink); }
+.glyph .i { width: 16px; height: 16px; }
+.card .glyph { width: 36px; height: 36px; border-radius: var(--r-m); }
+.card .glyph .i { width: 20px; height: 20px; }
+
+/* kit: a value to copy (a command, an address, a token) and real code. Monospace only here: it is real code. */
+.copyline { display: flex; gap: 8px; }
+.copyline .field { flex: 1; min-width: 0; }
+.code { font-family: var(--mono); font-size: var(--fs-1); }
+.field.code { text-overflow: ellipsis; }
+textarea.field.code { line-height: 1.5; }
+.facts dd small .code { display: block; margin-top: 4px; padding: 6px 10px; border-radius: var(--r-s); background: var(--n-50); color: var(--ink); overflow-wrap: anywhere; }
+.facts + .form, .form + .facts, .done + .form { margin-top: 16px; }
+.form + .facts { padding-top: 4px; border-top: 1px solid var(--line); }
+.sso-out { margin-top: 16px; }
+.statusrow > span:last-child:not(.pill) { overflow-wrap: anywhere; }
+
+/* Two-step sign-in: the code to scan, the setup key, the backup codes shown once */
+.scan { display: flex; align-items: flex-start; gap: 20px; margin: 12px 0 16px; }
+.qr { flex: none; width: 136px; height: 136px; padding: 8px; border: 1px solid var(--line); border-radius: var(--r-m); background: #fff; fill: var(--ink); }
+.scan details { padding-top: 6px; font-size: var(--fs-2); }
+.scan summary { cursor: pointer; font-weight: 500; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 4px; }
+.scan summary:hover { text-decoration-color: var(--ink); }
+.scan details p { margin-top: 8px; color: var(--ink); }
+.codes { padding: 16px 0; border-top: 1px solid var(--line); }
+.codes__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.codes h3 { font: 600 var(--fs-3)/1.3 var(--sans); }
+.codes .hint { margin-top: 4px; }
+.codes ul { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 16px; margin-top: 10px; padding: 10px 16px; border-radius: var(--r-m); background: var(--n-50); font: 400 var(--fs-2)/1.5 var(--mono); font-variant-numeric: tabular-nums; }
+.codes + .form { padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* What a deletion takes away, in the product's words */
+.effects { display: grid; gap: 8px; margin: 4px 0 20px; padding-left: 18px; list-style: disc; color: var(--ink-2); line-height: 1.5; }
+.effects li::marker { color: var(--n-500); }
+.panel__what b { color: var(--ink); }
+.statusrow + .facts, .panel__what + .statusrow { margin-top: 12px; }
+
+@media (max-width: 899px) {
+  .set { max-width: none; }
+  .grp__end .btn--quiet { margin-left: 0; }
+}
+@media (max-width: 599px) {
+  .paper.rows { padding: 0 16px; }
+  /* the label, its value under it, the action at the right; a field takes the whole width */
+  .row { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+  .row__k { grid-area: 1 / 1; }
+  .row__v { grid-area: 2 / 1; }
+  .row > .btn { grid-area: 1 / 2 / 3 / 3; }
+  .row__v:has(.field) { grid-column: 1 / -1; margin-top: 4px; }
+  .row__v:empty { display: none; }
+  .row__v .field { max-width: none; }
+  .row--top .row__k { padding-top: 0; }
+  .scan { flex-direction: column; }
+}

@@ -60,6 +60,19 @@ describe('authAttemptAllowed', () => {
     expect(await authAttemptAllowed('connexion', mail, from(address))).toBe(true);
   });
 
+  // L'envoi d'une invitation compte aussi la personne qui envoie : changer d'invité et d'adresse IP n'y change rien.
+  it('refuse les invitations au-delà du plafond par personne qui envoie', async () => {
+    const author = randomUUID();
+    const max = AUTH_LIMITS.invitation.ip;
+
+    for (let i = 0; i < max; i += 1) {
+      expect(await authAttemptAllowed('invitation', email(), from(ip()), author)).toBe(true);
+    }
+
+    expect(await authAttemptAllowed('invitation', email(), from(ip()), author)).toBe(false);
+    expect(await authAttemptAllowed('invitation', email(), from(ip()), randomUUID())).toBe(true);
+  });
+
   it('ne garde ni l’e-mail ni l’adresse IP en clair', async () => {
     const mail = email();
     const address = ip();

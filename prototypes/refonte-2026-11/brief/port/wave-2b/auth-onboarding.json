@@ -1,0 +1,101 @@
+{
+ "files": [
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/auth.css",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/bar.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/frame.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/auth-form.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/other-sign-in.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/password-reset-form.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/auth/standalone-card.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/layout.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/connexion/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/mot-de-passe-oublie/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/reinitialiser/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/invitation/[token]/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/oauth/autoriser/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/ordinateur/autoriser/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(auth)/ordinateur/connecte/page.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/app/(onboarding)/layout.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/steps.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/preview.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/about-step.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/tools-step.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/tools-step.test.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/teammates-step.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/invite-form.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/verre/onboarding/done-step.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/en.json",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/fr.json"
+ ],
+ "summary": "Les pages d'entrée de Leon (se connecter, créer un espace, mot de passe oublié, invitation) et les étapes d'accueil ont maintenant le look Papier de la maquette.\n\n- **Pages d'entrée.** Une feuille blanche pour le formulaire, avec à droite la pile de documents d'exemple (réunion Granola, devis, ticket). En haut, le logo dont les trois traits se dessinent une fois au chargement, le choix de langue et le thème. Les refus s'affichent sous le champ concerné. Un mauvais mot de passe vide le champ, garde l'e-mail et le fait trembler. Les boutons Google, Microsoft et SSO entreprise restent là quand ils sont configurés, comme Google One Tap et le retour vers la ligne de commande et les assistants.\n- **Pages « Autoriser ».** Elles servent à l'assistant et à l'ordinateur et restent des décisions de sécurité. Elles ont pris la feuille, sans changer un mot ni l'ordre. Seul déplacement : sur la page de l'ordinateur, l'avertissement est maintenant juste au-dessus des deux boutons.\n- **Accueil, en quatre étapes.** Le fil d'étapes est en haut.\n  - « Vous » : vos réponses à gauche, et à droite l'aperçu de votre fiche, des outils et de deux questions.\n  - « Outils » : des tuiles à cocher, avec la légende « Vous seul » ou « Équipe ». Le bouton « Brancher N outils » est à côté du titre. Le clic sur un outil ouvre le même panneau latéral que la page Connexions.\n  - « Collaborateurs » : une carte par personne et l'équipe qui se remplit à droite. Une fois le lien créé, on peut le copier ou l'envoyer par e-mail ; l'envoi par e-mail est nouveau ici et vient de la page Équipe.\n  - « C'est prêt » : une feuille, un titre surligné en vert et « Ouvrir le Chat ».\n\nRien n'est commité.",
+ "kept": [
+  "Sign-in refusals under the fields, focus on the first refused field, password emptied with the shake after wrong credentials: src/components/verre/auth/auth-form.tsx (checked live with a made-up address, one attempt).",
+  "Two-step code step, the 'check your email' view, Show/Hide password, the password rules, the forgot link only when email is set up, the hidden token and retour fields: auth-form.tsx.",
+  "Google, Microsoft and company SSO buttons (one form per provider; Escape closes the SSO form and returns focus), retour and token passed through: src/components/verre/auth/other-sign-in.tsx.",
+  "Google One Tap and the language choice (mounted in the layout): src/app/(auth)/layout.tsx and src/components/verre/auth/bar.tsx.",
+  "Account-deleted, social-not-linked and social-failed banners: connexion/page.tsx, through the new notice prop of AuthForm, as AuthNote lines.",
+  "No pre-filled demo value in any field.",
+  "Forgot password and reset: the sent view, the expired link, the email-not-set-up message, 'Request a new link': password-reset-form.tsx, mot-de-passe-oublie/page.tsx, reinitialiser/page.tsx.",
+  "Invitation join-as and expired states: invitation/[token]/page.tsx, metadata unchanged.",
+  "Authorize pages (assistant and computer): every element and word kept in order, the host <p> with font-semibold, Button elements filtered by the tests: oauth/autoriser/page.tsx and ordinateur/autoriser/page.tsx. The only move: the computer page's warning now sits inside the form, just above the buttons.",
+  "Every export, prop and file name the tests pin: AuthForm, AuthPage, RequestPasswordResetForm, ResetPasswordForm, ToolsStep and ToolsStepProps, TeammatesStep, DoneStep, PreviewCard, AboutPreview, OnboardingSteps, InviteForm.",
+  "Tools step: checkbox name 'outils', the recommended tools pre-checked, the saved choice, 'Coming soon' with no checkbox, the code card at the top or the bottom, the queue 'Connect them one by one', the return notice, the panel auto-opened on an error coming back from a provider, focus returned after a refresh, 'Connect my account' for team tools: tools-step.tsx, with ToolDialog imported from connexions (not forked).",
+  "Teammates: one link per person, the link shown once, Copy, the 'leave without copying' confirmation (Radix Dialog kept): teammates-step.tsx.",
+  "Logo draw-in: about 520 ms, once, off under reduced motion; the logo itself is unchanged: auth.css."
+ ],
+ "checks": [
+  {
+   "name": "pnpm typecheck",
+   "result": "passes, no errors"
+  },
+  {
+   "name": "biome check on my files and the two message files",
+   "result": "clean (53 files, nothing left to fix)"
+  },
+  {
+   "name": "vitest unit slice (src/components src/app src/i18n src/test/contracts src/lib)",
+   "result": "1229 of 1230 pass. The one failure is src/test/contracts/translation-keys.test.ts: it pins 'settings.assistantsTitle', which the settings agent's assistants.tsx no longer reads. Not my files. 'Every key exists in fr and en' passes."
+  },
+  {
+   "name": "tools-step.test.ts updated",
+   "result": "16 of 16 pass. The mock now shows which tool the panel opens; asserts the ink pill on the next tool, the panel open after a failure, and the Connect button in the header, before the tools."
+  },
+  {
+   "name": "Captures 1280x800 light, dark, French and 390x844",
+   "result": "OK for sign-in, sign-up, forgot, reset, expired invitation, tools, teammates and done. No horizontal overflow on phone. Screenshots in the scratchpad's port/ao/r2 folder."
+  },
+  {
+   "name": "Flows (act.mjs and the browser pane)",
+   "result": "Empty submit shows both refusals; wrong sign-in with a made-up address shows the refusal under the password with the email kept; 'Connect my account' opens the GitHub panel and Escape returns focus to the card; Français and the logo link work."
+  },
+  {
+   "name": "dead.mjs on the 5 signed-out pages",
+   "result": "0 dead. The two 'NOTHING' entries on /connexion (logo, Français) were the slow server; rerun, both work."
+  },
+  {
+   "name": "Console errors",
+   "result": "none on any page checked"
+  },
+  {
+   "name": "Database tests",
+   "result": "not run: nothing touched in src/server"
+  }
+ ],
+ "notDone": [
+  "The 'About you' step (/bienvenue) was not seen live: the three demo accounts are already onboarded and get redirected to /. It is only typechecked and covered by its tests.",
+  "The tools queue ('Connect them one by one') was not seen live: every tool of the demo accounts is already connected. Only the tests cover it.",
+  "No real Google, Microsoft, SSO or two-step round trip locally (not configured), and no real invitation email sent.",
+  "src/components/site/auth-aside.tsx is now unused but not mine to delete.",
+  "The 'Send by email' block in the teammates step is a copy of SendByEmail from equipe/invite-panel.tsx (not exported there, and that file is not mine); it is marked as a shortcut to export it later.",
+  "The one-line hint 'Optional. To act under your own name' under 'Already connected' was dropped (the panel says it); the key is still in the message files.",
+  "code-tools-card.test.ts shows as changed (Copy no longer has an icon). That change is not from this pass; it comes from the shared Copy button. Left as is.",
+  "The translation-keys contract failure belongs to the settings agent (settings.assistantsTitle)."
+ ],
+ "leastSure": [
+  "The pile of documents on phones: it sits under the form and makes the page longer; it could be hidden under 600 px.",
+  "Choices (language, size, goals, tools) use an ink outline with a check rather than an ink fill: closer to the 'one ink per view' rule, but less visible.",
+  "The computer-authorize warning now sits inside the form, without a box, just above the buttons; the words and order are the same.",
+  "The stepper's current-step number is filled with ink, which competes a little with the single ink button of the view.",
+  "The tools step shows the 'Connect N tools' button in the header instead of under the list; on a long list it can be missed when scrolled down."
+ ]
+}

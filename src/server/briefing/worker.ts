@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { refreshAgenda } from '@/server/agenda/agenda';
 import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import type { Llm } from '@/server/llm/llm';
@@ -18,7 +19,8 @@ import {
 
 // Le worker du point du matin (T13) : il lit la file `point-refresh` (un point à refaire) et, chaque jour à 6 h,
 // heure de Paris, le tic `point-matin` remet en file les points lus dans la semaine, puis une proposition « About
-// you » par personne prête, que lit la file `apropos-proposer`. Sur les files de pg-boss, comme le worker de la
+// you » par personne prête, que lit la file `apropos-proposer`. Il lit aussi `agenda-refresh` (le calendrier de
+// l'Accueil). Sur les files de pg-boss, comme le worker de la
 // recherche (search/worker.ts).
 //
 // Sans modèle (getLlm rend null) : un job de recalcul ou de proposition se termine sans rien faire, sans échec ni
@@ -126,6 +128,20 @@ async function processAboutJob(data: unknown, deps: { llm: Llm | null }): Promis
   }
 }
 
+// Même patron. Sans modèle, rien : le calendrier montre alors les seules réunions Outlook.
+async function processAgendaJob(data: unknown, deps: { llm: Llm | null }): Promise<void> {
+  const { llm } = deps;
+  if (llm === null) return;
+  const job = AboutJobSchema.parse(data);
+  try {
+    const ctx = await resolveTenantContext(job.userId, job.tenantId);
+    if (!ctx) return;
+    await refreshAgenda(ctx, { llm });
+  } catch (error) {
+    rethrowSummary('agenda.refresh_failed', error, { tenantId: job.tenantId, userId: job.userId });
+  }
+}
+
 async function registerWorkers(
   deps: { llm: Llm | null },
   pollingIntervalSeconds: number | undefined,
@@ -168,6 +184,11 @@ async function registerWorkers(
     BRIEFING_QUEUES.about,
     { batchSize: 1, localConcurrency: 1, ...polling },
     async ([job]) => processAboutJob(job?.data, deps),
+  );
+  await boss.work(
+    BRIEFING_QUEUES.agenda,
+    { batchSize: 1, localConcurrency: 1, ...polling },
+    async ([job]) => processAgendaJob(job?.data, deps),
   );
 }
 

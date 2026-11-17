@@ -252,10 +252,10 @@ describe('github : après le branchement', () => {
     vi.stubEnv('LEON_OAUTH_GITHUB_APP', 'leon-memory');
     const { http } = apiHttp([]);
 
-    const next = await githubOAuth.nextStep?.(config, http, '/bienvenue/outils');
+    const next = await githubOAuth.nextStep?.(config, http, '/welcome/tools');
 
     expect(next).toBe(
-      'https://github.com/apps/leon-memory/installations/new?state=%2Fbienvenue%2Foutils',
+      'https://github.com/apps/leon-memory/installations/new?state=%2Fwelcome%2Ftools',
     );
   });
 

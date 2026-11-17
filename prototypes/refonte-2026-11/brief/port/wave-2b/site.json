@@ -1,0 +1,107 @@
+{
+ "files": [
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/site.css",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/content.ts",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/demo-card.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/parts.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/team-tabs.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/site-header.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/site-footer.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/site-shell.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/motion-switch.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/home/signal.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/home/hero-demo.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/home/rights-switch.tsx (new)",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/page-hero.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/tarifs.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/securite.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/connecteurs.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/connecteurs-catalogue.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/produit.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/cas-usage.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/src/components/site/pages/documentation.tsx",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/en.json (site namespace only)",
+  "/Users/david/Downloads/Business/code/leon/.claude/worktrees/leon-interface-redesign-715484/messages/fr.json (site namespace only)",
+  "deleted: src/components/site/fx/ (fx.css, index.ts, layers-3d.tsx, logo-sphere.tsx, particle-field.tsx, split-words.tsx, tilt.tsx)",
+  "deleted: src/components/site/auth-aside.tsx, src/components/site/home/signal.css, src/components/site/pages/pages.css, src/components/site/pages/typing-list.tsx"
+ ],
+ "summary": "I moved the public site to the Papier look, in English and French, light and dark. The header has the logo with its three lines drawing in once, then Product, Use cases menu, Connectors, Security, Pricing and Documentation. Next come the theme button, \"Create a workspace\", and \"Sign in\" to its right. The footer keeps the language choice and the \"stop animations\" switch.\n\nThe home, pricing, security and connectors pages follow the prototype. On those pages, answers highlight only words taken from their sources, and each sheet shows its source stack with flags. The connector catalogue keeps its search, families and empty states, with what Leon reads from each tool. Pricing has its table on a sheet, then \"in every plan\" and the FAQ. Security has two rules (shared with the team, private to you), then what is in place and what is in progress.\n\nThe Product, Use cases, team and Documentation pages use the same components and spacing. I drew nothing new for them.\n\nThe old effects (3D, particles, word splitting, tilt) and the old site CSS files are deleted. Motion is CSS only and stops under reduced motion and with the footer switch. Nothing is committed.\n\nIn this last pass I also fixed three things:\n- The second button no longer runs off the page at 1280 wide (Product page hero).\n- A date like \"15 nov.\" no longer splits across two lines.\n- A full stop after a source number no longer starts a new line on its own.\n- I removed the \"42 connectors\" count from the Product capture panel.",
+ "kept": [
+  "Logo link to /accueil; logo itself unchanged (only the 600ms draw-in, off under reduced motion and the switch)",
+  "Nav order: Product, Use cases (dropdown with six teams), Connectors, Security, Pricing, Documentation visible; Create a workspace then Sign in to its right, set apart",
+  "Theme button (light by default, dark); footer language choice (English/Français) and Stop animations switch",
+  "Footer columns: Product, Use cases, Trust, Account links",
+  "Home: hero with three demo tabs (arrow keys work), cited answer with clickable source numbers and the source pile; 'When the record is silent' answer; Julie/Sophie switch where Sophie's answer never contains Julie's private Gmail source; connectors strip; morning briefing; developers band (MCP tools, paste the address and authorize it in Leon, revocable); security summary; closing CTA",
+  "Connectors: catalogue of all 42 tools grouped by family, search field (Escape clears, clear button, live count), family filter buttons, both empty states, One click / API key per tool, 'what Leon reads' line per tool, four connection steps, AI conversations band (extension, coding assistant, MCP), #pas-encore list (Google Calendar, Microsoft 365, scanned PDFs)",
+  "Security: two rules with tool logos and stamps, five facts in place, #pas-encore in progress (SOC 2/ISO 27001, mirroring tool permissions, data export)",
+  "Pricing: Pilot / Team / Dedicated table (price, made for, billing, hosting), in-every-plan rows with links to /connecteurs and /securite, tax note, FAQ",
+  "Product: four pillars with anchors and their visuals, known limits list",
+  "Use cases hub: six team cards, situations, team tabs, all questions; each team page: crumbs, demo, questions, situations, gains, tools with what Leon reads, other teams",
+  "Documentation: every section, table of contents, 'For you' / 'For an agent (Markdown)' switch and the Markdown twin (its tests pass)",
+  "All existing message wordings that tests pin; documentation.kicker kept because a test reads it"
+ ],
+ "checks": [
+  {
+   "name": "pnpm typecheck",
+   "result": "exit 0, no errors (whole repo, run after the last edit)"
+  },
+  {
+   "name": "npx biome check --vcs-enabled=false on my 35 site files",
+   "result": "clean, no fixes"
+  },
+  {
+   "name": "npx vitest run --project unit src/components src/app src/i18n src/test/contracts src/lib",
+   "result": "1229 passed, 1 failed: translation-keys expects settings.* keys from the Settings area (not mine). After my last edit, src/components/site + src/test/contracts: 306/306 passed"
+  },
+  {
+   "name": "Screens 1512x771 light, all 8 site pages, compared with the prototype over several rounds",
+   "result": "home, pricing, security, connectors, product, use cases, team (sales), documentation reviewed; fixes made (nav spacing, button colors on ink, count caption removed)"
+  },
+  {
+   "name": "Dark 1512",
+   "result": "home, pricing, security, connectors, documentation: readable, highlights and stamps visible"
+  },
+  {
+   "name": "French 1512",
+   "result": "home, pricing, security: no overflow; '15 nov.' split fixed"
+  },
+  {
+   "name": "1280x800",
+   "result": "home OK; product hero button ran off the page, fixed (CTA row now wraps) and checked again"
+  },
+  {
+   "name": "390x844",
+   "result": "home, pricing, connectors: no horizontal scroll (measured 0px); orphaned full stop after a source number fixed"
+  },
+  {
+   "name": "Links and anchors",
+   "result": "159 links across 8 pages: every route exists, every #anchor exists in its target page"
+  },
+  {
+   "name": "Flows (headless Chrome)",
+   "result": "hero tabs click and arrow keys OK; Julie/Sophie switch OK (Sophie never sees the Gmail source); source number click OK; theme toggles; animation switch toggles; nav includes Documentation; Create before Sign in, logo goes to /accueil; catalogue filter 42 -> 1 -> 0 with empty state, family button OK at 1512 and 390"
+  },
+  {
+   "name": "Console errors",
+   "result": "none on any capture (light, dark, French, 390, 1280)"
+  },
+  {
+   "name": "dead.mjs",
+   "result": "could not finish: the dev server took 40-90 s per page load (machine load 20-40), so dead.mjs hit its navigation timeout. I replaced it with the link/anchor check and the flow script above"
+  }
+ ],
+ "notDone": [
+  "dead.mjs did not run to the end: the shared dev server was too slow. Links, anchors and the main controls were checked another way, but not every footer link was clicked one by one",
+  "The hero tabs no longer cycle on their own; they change only when clicked or with the arrow keys",
+  "The pinned 'three rules' version of the home page was not done",
+  "I left out the prototype's claims the code cannot back, and its forms that do nothing",
+  "Dark, French and phone checks covered a subset of pages: product, use cases, team and documentation were checked in light at 1512 only (documentation also in dark)",
+  "Nothing is committed"
+ ],
+ "leastSure": [
+  "The 'what Leon reads' line for each of the 42 tools comes from the prototype; I did not check each one against its connector's code",
+  "French text length on pages I did not capture in French (product, use cases, documentation)",
+  "On phones a source number can still start a line after its highlighted date; the full stop now stays with the number, but the number and the date can still be split",
+  "The translation-keys test fails on Settings keys owned by another area; it passed when run with only the site and contract tests, so it may depend on that area's in-progress work"
+ ]
+}

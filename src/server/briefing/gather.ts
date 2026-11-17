@@ -43,6 +43,12 @@ export const BRIEFING_SESSIONS = 3;
 export const SESSION_TURNS_MAX = 24;
 // Un tour (ou un passage) au-delà est coupé : de quoi comprendre une demande ou une réponse.
 export const TURN_CHARS = 400;
+// Ce que l'utilisateur a écrit ou collé dit pourquoi il travaille (le message d'un recruteur, un mail de refus) et se
+// trouve souvent en début de session : ses messages sont gardés même avant les derniers tours, et plus longs. Au pire
+// 3 sessions × 30 × 1 000 caractères, environ 25 000 jetons de plus (7,5 centimes avec Sonnet 5.5) ; d'ordinaire ses
+// messages font une ligne.
+export const SESSION_USER_TURNS_MAX = 30;
+export const USER_TURN_CHARS = 1000;
 // Les sources du dépôt qui ont bougé, et leurs derniers tours.
 export const CHANGES_MAX = 10;
 const CHANGE_TURNS = 2;
@@ -94,11 +100,11 @@ export function isEmptyMaterial(material: BriefingMaterial): boolean {
   );
 }
 
-// Coupe à TURN_CHARS unités UTF-16 sans séparer les deux moitiés d'un émoji, et le dit par « … ».
-function cut(text: string): string {
-  if (text.length <= TURN_CHARS) return text;
-  const high = text.charCodeAt(TURN_CHARS - 1);
-  const end = high >= 0xd800 && high <= 0xdbff ? TURN_CHARS - 1 : TURN_CHARS;
+// Coupe à `max` unités UTF-16 sans séparer les deux moitiés d'un émoji, et le dit par « … ».
+function cut(text: string, max = TURN_CHARS): string {
+  if (text.length <= max) return text;
+  const high = text.charCodeAt(max - 1);
+  const end = high >= 0xd800 && high <= 0xdbff ? max - 1 : max;
   return `${text.slice(0, end).trimEnd()}…`;
 }
 
@@ -142,38 +148,46 @@ export const sourceOf = (row: SourceRow): SourceInfo =>
 
 const excerptOf = (
   row: Pick<TurnRow, 'role' | 'author_name' | 'epoch' | 'text'>,
+  max = TURN_CHARS,
 ): BriefingExcerpt => ({
   role: row.role,
   authorName: row.author_name,
   ts: epochToDate(row.epoch),
-  text: cut(row.text),
+  text: cut(row.text, max),
 });
 
-// Les `limit` derniers tours de chacune de ces sources, dans l'ordre de la source. Le texte n'est lu qu'au début :
-// une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400. Sans les résumés de Leon
-// (T23) : le point du matin lit ce qui s'est passé, pas ce que le modèle en a dit. Sans les coulisses (QD9).
+const USER_ROLE = 'user' satisfies TurnRole;
+
+// Les `limit` derniers tours de chacune de ces sources, dans l'ordre de la source. Avec `userTurns`, s'y ajoutent les
+// `userTurns` derniers messages de l'utilisateur, même plus anciens, coupés à USER_TURN_CHARS au lieu de TURN_CHARS.
+// Le texte n'est lu qu'au début : une sortie d'outil de 20 000 caractères ne traverse pas la base pour en garder 400.
+// Sans les résumés de Leon (T23) : le point du matin lit ce qui s'est passé, pas ce que le modèle en a dit. Sans les
+// coulisses (QD9).
 export async function lastTurns(
   tx: Tx,
   ctx: TenantContext,
   sourceIds: string[],
   limit: number,
+  userTurns = 0,
 ): Promise<Map<string, BriefingExcerpt[]>> {
   const bySource = new Map<string, BriefingExcerpt[]>();
   if (sourceIds.length === 0) return bySource;
+  const userMax = userTurns > 0 ? USER_TURN_CHARS : TURN_CHARS;
   const { rows } = await tx.execute<TurnRow>(sql`
     select source_id, role, author_name, extract(epoch from ts) as epoch, text from (
       select t.source_id, t.role, t.author_name, t.ts, t.created_at, t.id,
-             left(t.text, ${TURN_CHARS + 1}) as text,
-             row_number() over (partition by t.source_id order by t.ts desc, t.created_at desc, t.id desc) as n
+             left(t.text, case when t.role = ${USER_ROLE} then ${userMax + 1}::int else ${TURN_CHARS + 1}::int end) as text,
+             row_number() over (partition by t.source_id order by t.ts desc, t.created_at desc, t.id desc) as n,
+             row_number() over (partition by t.source_id, t.role order by t.ts desc, t.created_at desc, t.id desc) as n_role
       from turns t
       where t.tenant_id = ${ctx.tenantId} and t.source_id = any(${uuids(sourceIds)})
         and t.external_id not like ${RESUME_LIKE} and ${notBackstage(sql`t.role`)}
     ) recent
-    where n <= ${limit}
+    where n <= ${limit} or (role = ${USER_ROLE} and n_role <= ${userTurns})
     order by source_id, ts, created_at, id`);
   for (const row of rows) {
     const list = bySource.get(row.source_id) ?? [];
-    list.push(excerptOf(row));
+    list.push(excerptOf(row, row.role === USER_ROLE ? userMax : TURN_CHARS));
     bySource.set(row.source_id, list);
   }
   return bySource;
@@ -199,6 +213,7 @@ async function readSessions(tx: Tx, ctx: TenantContext, project: string, cutoff:
     ctx,
     rows.map((row) => row.id),
     SESSION_TURNS_MAX,
+    SESSION_USER_TURNS_MAX,
   );
   const sessions = rows.map((row) => ({ source: sourceOf(row), turns: turns.get(row.id) ?? [] }));
   const start = rows[0]?.first_epoch;

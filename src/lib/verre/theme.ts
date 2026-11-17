@@ -5,9 +5,9 @@ export type Theme = 'dark' | 'light';
 const KEY = 'leon-theme';
 const listeners = new Set<() => void>();
 
-// Au rendu serveur, pas de document : sombre, le thème par défaut.
+// Au rendu serveur, pas de document : clair, le thème d'une première visite.
 const read = (): Theme =>
-  typeof document === 'undefined' || document.documentElement.dataset.theme !== 'light'
+  typeof document !== 'undefined' && document.documentElement.dataset.theme === 'dark'
     ? 'dark'
     : 'light';
 
@@ -27,7 +27,7 @@ const subscribe = (l: () => void) => {
 };
 
 export function useTheme() {
-  const theme = useSyncExternalStore(subscribe, read, () => 'dark' as Theme);
+  const theme = useSyncExternalStore(subscribe, read, () => 'light' as Theme);
   const toggle = useCallback(() => setTheme(read() === 'dark' ? 'light' : 'dark'), []);
   return { theme, setTheme, toggle };
 }

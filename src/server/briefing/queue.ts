@@ -13,11 +13,13 @@ import { getBoss } from '@/server/pipeline/queue';
 // le point d'un utilisateur sur un projet, `point-matin` est le tic de 6 h (worker.ts). Ce module ne dépend d'aucun
 // modèle : l'indexation l'appelle (signalSourceActivity) et doit tourner sans clé Anthropic. `apropos-proposer`
 // écrit, une fois par personne, la proposition « About you » (about-suggestion.ts), mise en file par le tic de 6 h.
+// `agenda-refresh` relit les e-mails d'une personne pour le calendrier de l'Accueil (agenda/agenda.ts).
 
 export const BRIEFING_QUEUES = {
   refresh: 'point-refresh',
   morning: 'point-matin',
   about: 'apropos-proposer',
+  agenda: 'agenda-refresh',
 } as const;
 
 // Contraintes globales du plan : un recalcul au plus toutes les 30 minutes par (utilisateur, projet). Un signal met
@@ -67,6 +69,7 @@ export function getBriefingBoss(): Promise<PgBoss> {
     await boss.createQueue(BRIEFING_QUEUES.refresh, REFRESH_QUEUE);
     await boss.createQueue(BRIEFING_QUEUES.morning, MORNING_QUEUE);
     await boss.createQueue(BRIEFING_QUEUES.about, REFRESH_QUEUE);
+    await boss.createQueue(BRIEFING_QUEUES.agenda, REFRESH_QUEUE);
     return boss;
   })().catch((error) => {
     globalForBriefing.leonBriefingBoss = undefined; // un démarrage raté doit pouvoir être retenté
@@ -99,6 +102,19 @@ export async function requestBriefingRefreshNow(job: BriefingJob): Promise<void>
   await boss.upsert(BRIEFING_QUEUES.refresh, data, {
     singletonKey: briefingKey(data),
     startAfter: new Date(),
+  });
+}
+
+// Met en file la relecture du calendrier d'une personne (clé : organisation, utilisateur). La file est « stately » :
+// une relecture déjà en attente n'est pas doublée, quel que soit le nombre de visites de l'Accueil.
+export async function enqueueAgendaRefresh(job: {
+  tenantId: string;
+  userId: string;
+}): Promise<void> {
+  const data = AboutJobSchema.parse(job);
+  const boss = await getBriefingBoss();
+  await boss.send(BRIEFING_QUEUES.agenda, data, {
+    singletonKey: `${data.tenantId}:${data.userId}`,
   });
 }
 

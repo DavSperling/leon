@@ -55,13 +55,13 @@ type Centre = {
 // L'endroit des Réglages où chaque canal se branche : les sessions des outils de code (Claude Code, Codex, Cursor,
 // Antigravity) se captent par les crochets que pose la commande d'installation des ordinateurs ; `remember` (MCP) vient d'un assistant branché.
 const CANAL_REGLAGE: Record<CaptureKind, string> = {
-  claude_code: '/reglages#ordinateurs',
-  codex: '/reglages#ordinateurs',
-  cursor: '/reglages#ordinateurs',
-  antigravity: '/reglages#ordinateurs',
-  claude_ai: '/reglages#extension',
-  chatgpt: '/reglages#extension',
-  mcp_remember: '/reglages#assistants',
+  claude_code: '/settings#ordinateurs',
+  codex: '/settings#ordinateurs',
+  cursor: '/settings#ordinateurs',
+  antigravity: '/settings#ordinateurs',
+  claude_ai: '/settings#extension',
+  chatgpt: '/settings#extension',
+  mcp_remember: '/settings#assistants',
 };
 
 const STROKES: Record<Etat, { stroke: string; width: number; dash?: string; opacity: number }> = {
@@ -321,7 +321,7 @@ function Bulle({ n }: { n: Noeud }) {
 // La pastille est centrée sur son point : son enveloppe (sans taille) est placée en %, elle se décale de moitié.
 const PASTILLE =
   'absolute inline-flex h-8 -translate-x-1/2 -translate-y-1/2 items-center gap-2 rounded-full border border-line bg-menu px-3 ' +
-  'text-[13px] font-medium whitespace-nowrap text-fg-2 shadow-hi outline-none hover:border-line-strong hover:text-fg ' +
+  'text-[13px] font-medium whitespace-nowrap text-fg-2 outline-none hover:border-line-strong hover:text-fg ' +
   'focus-visible:shadow-[0_0_0_2px_var(--accent-line)] data-[hot]:border-line-strong data-[hot]:text-fg';
 
 function Pastille({

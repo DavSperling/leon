@@ -217,8 +217,8 @@ describe('catalogItem : le bouton', () => {
 
     it('porte la page où revenir quand elle est demandée', () => {
       withApp();
-      expect(catalogItem(entry, connector(), 'en', '/bienvenue/outils').adminConsentUrl).toMatch(
-        /&state=\/bienvenue\/outils$/,
+      expect(catalogItem(entry, connector(), 'en', '/welcome/tools').adminConsentUrl).toMatch(
+        /&state=\/welcome\/tools$/,
       );
     });
 

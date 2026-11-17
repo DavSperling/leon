@@ -10,6 +10,7 @@ import {
   DocumentError,
   deleteDocument,
   deleteFolder,
+  documentText,
   shareDocuments,
 } from '@/server/documents/documents';
 import { logError } from '@/server/log';
@@ -83,20 +84,35 @@ export async function addFileAction(formData: FormData): Promise<DocumentActionS
   return storeFile(ctx, file, partage, { id: folderId, name: folderName, path });
 }
 
-export async function deleteDocumentAction(formData: FormData): Promise<void> {
+// `ok` : le document est parti. Faux quand la base le refuse (ni l'auteur, ni un administrateur pour le document d'un
+// ancien membre) : le panneau le dit au lieu de se fermer comme si c'était fait.
+export async function deleteDocumentAction(formData: FormData): Promise<{ ok: boolean }> {
   const ctx = await requireUserContext();
   const id = z.uuid().safeParse(formData.get('id'));
-  if (!id.success) return;
-  await deleteDocument(ctx, id.data);
+  if (!id.success) return { ok: false };
+  const ok = await deleteDocument(ctx, id.data);
   revalidatePath('/documents');
+  return { ok };
 }
 
-export async function deleteFolderAction(formData: FormData): Promise<void> {
+// `ok` : au moins un fichier du dossier est parti (seuls ceux de l'auteur partent).
+export async function deleteFolderAction(formData: FormData): Promise<{ ok: boolean }> {
   const ctx = await requireUserContext();
   const id = z.uuid().safeParse(formData.get('id'));
-  if (!id.success) return;
-  await deleteFolder(ctx, id.data);
+  if (!id.success) return { ok: false };
+  const removed = await deleteFolder(ctx, id.data);
   revalidatePath('/documents');
+  return { ok: removed > 0 };
+}
+
+// Le texte que Leon a lu d'un document, pour « Ouvrir » ; null s'il n'est pas visible du lecteur.
+export async function readDocumentAction(
+  id: string,
+): Promise<{ text: string; cut: boolean } | null> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return null;
+  return documentText(ctx, parsed.data);
 }
 
 // L'auteur change qui voit un document, ou tous les siens d'un dossier. Faux si rien n'a changé.

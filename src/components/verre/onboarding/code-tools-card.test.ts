@@ -49,7 +49,7 @@ describe('CodeToolsCard', () => {
       'Open a terminal on your computer and paste this command. Your browser will open so you can authorize this computer.',
     );
     expect(html).toContain(`>${COMMAND}</code>`);
-    expect(html).toMatch(/<a [^>]*href="\/reglages#ordinateurs"[^>]*>What gets sent<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/settings#ordinateurs"[^>]*>What gets sent<\/a>/);
     expect(html).toMatch(DOCS_LINK);
   });
 
@@ -61,22 +61,27 @@ describe('CodeToolsCard', () => {
       'Ouvrez un terminal sur votre ordinateur et collez cette commande. Votre navigateur s’ouvrira pour autoriser cet ordinateur.',
     );
     expect(html).toContain(`>${COMMAND}</code>`);
-    expect(html).toMatch(/<a [^>]*href="\/reglages#ordinateurs"[^>]*>Ce qui part<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/settings#ordinateurs"[^>]*>Ce qui part<\/a>/);
     expect(html).toMatch(DOCS_LINK);
   });
 
-  it('nomme les quatre outils, avec un logo quand Simple Icons en a un', () => {
+  it('nomme les quatre outils et affiche leurs logos', () => {
     const html = render('en', en);
 
     for (const name of ['Claude Code', 'Codex', 'Cursor', 'Antigravity']) {
       expect(html, name).toContain(name);
     }
     expect(html).toContain('src="/logos/claude-code.svg"');
+    expect(html).toContain('src="/logos/codex.png"');
     expect(html).toContain('src="/logos/cursor.svg"');
-    // Pas de logo inventé pour Codex ni Antigravity : une icône de terminal neutre.
-    expect(html.match(/<img /g)).toHaveLength(2);
-    // deux icônes de terminal, la copie de la commande et de la consigne, la flèche du lien vers la documentation
-    expect(html.match(/<svg /g)).toHaveLength(2 + 1 + 1 + 1);
+    expect(html).toContain('src="/logos/antigravity.svg"');
+    expect(html.match(/<img /g)).toHaveLength(4);
+  });
+
+  it('garde la commande sur une ligne qui défile : jamais coupée au milieu d’un mot', () => {
+    expect(render('en', en)).toMatch(
+      /<code class="[^"]*overflow-x-auto whitespace-nowrap[^"]*">curl -fsSL https:\/\/leon\.example\/install \| sh<\/code>/,
+    );
   });
 
   it('donne un bouton Copier à la commande', () => {

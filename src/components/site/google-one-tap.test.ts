@@ -7,7 +7,7 @@ vi.mock('@/app/(auth)/actions', () => ({ oneTapAction: vi.fn() }));
 // T55 (décision 5 d'Amos du 11/11) : la reconnexion de la section Mémoire ne montre pas « Continuer en tant que… »,
 // dont la connexion ramène toujours à l'accueil.
 describe('offersOneTap', () => {
-  it('pas de fenêtre sur /connexion?retour=memoire', () => {
+  it('pas de fenêtre sur /sign-in?retour=memoire', () => {
     expect(offersOneTap('?retour=memoire')).toBe(false);
     expect(offersOneTap('?error=x&retour=memoire')).toBe(false);
   });
@@ -32,7 +32,7 @@ describe('startOneTap', () => {
     return { fetchSession, append };
   };
 
-  it('sur /connexion?retour=memoire, ni la session ni le script de Google ne sont demandés', async () => {
+  it('sur /sign-in?retour=memoire, ni la session ni le script de Google ne sont demandés', async () => {
     const { fetchSession, append } = browser('?retour=memoire');
 
     await startOneTap('client', () => false);

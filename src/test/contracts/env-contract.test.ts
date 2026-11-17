@@ -83,6 +83,7 @@ describe('variables d’environnement', () => {
       'LEON_MODEL_POINT',
       'LEON_MODEL_RESUME',
       'LEON_MODEL_FIL',
+      'LEON_MODEL_AGENDA',
     ]) {
       expect(readText('.env.example')).toMatch(new RegExp(`^${variable}=$`, 'm'));
     }

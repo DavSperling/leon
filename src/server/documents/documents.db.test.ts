@@ -9,7 +9,13 @@ import { enqueuePipelineStep, type PipelineJob } from '@/server/pipeline/queue';
 import { indexIngestRun } from '@/server/search/index-run';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, createTestUser, seedSource } from '@/test/fixtures';
-import { addDocument, deleteDocument, deleteFolder, listDocuments } from './documents';
+import {
+  addDocument,
+  deleteDocument,
+  deleteFolder,
+  documentText,
+  listDocuments,
+} from './documents';
 
 // L'ajout met en file l'indexation ; ici on l'appelle à la main. Le point du matin qu'elle prévient est simulé.
 vi.mock('@/server/pipeline/queue');
@@ -180,6 +186,37 @@ describe('liste des documents', () => {
     expect(bobIds).not.toContain(theirs.sourceId);
     expect(bobIds).not.toContain(capture.sourceId);
     expect(seenByZoe.map((doc) => doc.id)).toEqual([theirs.sourceId]);
+  });
+
+  it('dit qu’un document est en cours de lecture tant que son run n’est pas fini', async () => {
+    const { sourceId, job } = await upload(alice, 'en-lecture.txt');
+    const readingOf = async () =>
+      (await listDocuments(bob)).find((doc) => doc.id === sourceId)?.reading;
+
+    expect(await readingOf()).toBe(true);
+    await indexIngestRun(job, { embedder: createFakeEmbedder() });
+    expect(await readingOf()).toBe(false);
+  });
+
+  it('documentText rend ce que Leon a lu, sous les droits du lecteur', async () => {
+    const team = await upload(alice, 'lu.txt');
+    await addDocument(alice, new File(['Notes privées de Alice.'], 'prive.txt'), undefined, 'moi');
+    const [mine] = await listDocuments(alice);
+    const capture = await seedSource(alice, { kind: 'claude_code', title: 'Session' });
+
+    expect(await documentText(bob, team.sourceId)).toEqual({
+      text: 'Devis du chantier Lebrun, lot plomberie.',
+      cut: false,
+    });
+    expect(await documentText(bob, team.sourceId, 5)).toEqual({ text: 'Devis', cut: true });
+    expect(mine?.title).toBe('prive.txt');
+    expect(await documentText(alice, mine?.id as string)).toEqual({
+      text: 'Notes privées de Alice.',
+      cut: false,
+    });
+    expect(await documentText(bob, mine?.id as string)).toBeNull();
+    expect(await documentText(zoe, team.sourceId)).toBeNull();
+    expect(await documentText(alice, capture.sourceId)).toBeNull();
   });
 
   it("garde le document d'un ancien membre, marqué comme tel", async () => {

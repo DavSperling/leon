@@ -147,11 +147,11 @@ describe('toolStates', () => {
 
 describe('nextAfterTools', () => {
   it('un propriétaire seul passe aux collaborateurs', () => {
-    expect(nextAfterTools(true)).toBe('/bienvenue/collaborateurs');
+    expect(nextAfterTools(true)).toBe('/welcome/teammates');
   });
 
   it('tous les autres vont à la fin', () => {
-    expect(nextAfterTools(false)).toBe('/bienvenue/pret');
+    expect(nextAfterTools(false)).toBe('/welcome/ready');
   });
 });
 

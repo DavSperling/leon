@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leon · Know exactly what you promised</title>
+<meta name="description" content="Leon reads your team’s tools and answers in plain English. Every sentence links to the original.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/site.css">
+<!-- Motion: shared rules, then one sheet per module (their pre-hidden states live under html.js-motion). Lenis' own
+     sheet only matters once its script runs, so it never blocks the first paint. -->
+<link rel="stylesheet" href="https://unpkg.com/lenis@1.3.4/dist/lenis.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="css/motion.css">
+<link rel="stylesheet" href="css/motion-hero.css">
+<link rel="stylesheet" href="css/motion-rules.css">
+<link rel="stylesheet" href="css/motion-dev.css">
+<link rel="stylesheet" href="css/motion-ambient.css">
+<script>(function (h) { h.classList.add('js'); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) h.classList.add('js-motion'); })(document.documentElement);</script>
+</head>
+<body class="site">
+<!-- The regions between "gen:name" and "/gen" comments are built by js/demo.js (same markup the script renders).
+     They are pasted in once so that the page is whole without script; see NOTES.md to rebuild them. -->
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" data-nav>
+  <div class="wrap nav__in">
+    <a class="wordmark" href="#top" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <nav class="nav__links" id="nav-panel" aria-label="Site" data-nav-panel>
+      <a class="nav__link" href="#product">Product</a>
+      <a class="nav__link" href="#connectors">Connectors</a>
+      <a class="nav__link" href="#developers">Developers</a>
+      <a class="nav__link" href="#security">Security</a>
+      <a class="nav__link" href="#" title="Not in this prototype">Pricing</a>
+      <a class="nav__link" href="app/signin.html">Sign in</a>
+    </nav>
+    <a class="btn btn--nav" href="app/signup.html">Create a workspace</a>
+    <button class="nav__menu" type="button" aria-expanded="false" aria-controls="nav-panel" data-nav-menu><span class="vh">Menu</span><svg viewBox="0 0 22 22" aria-hidden="true"><line x1="3" y1="7" x2="19" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="15" x2="19" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- 1. Hero: the promise, then the answer marked in the colours of its three sources -->
+  <section class="hero" id="top" aria-labelledby="h1">
+    <div class="wrap grid hero__head">
+      <h1 class="h1" id="h1"><span class="h1__line" data-h1-line="1">Know exactly what you promised.</span> <span class="h1__line" data-h1-line="2"><span class="swp" data-sweep="hero">Source included.<i class="swp__seg" data-sweep-seg="1"></i><i class="swp__seg" data-sweep-seg="2"></i><i class="swp__seg" data-sweep-seg="3"></i></span></span></h1>
+      <p class="lead hero__lead" data-hero-lead>Leon reads your team’s tools and answers in plain English. Every sentence links to the original. When nothing on record supports an answer, it says so.</p>
+      <div class="cta" data-hero-cta>
+        <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <span class="small">Open beta · no billing yet</span>
+      </div>
+    </div>
+
+    <div class="wrap tabs" data-tabs>
+      <div class="tabs__in" role="tablist" aria-label="Three example questions">
+        <button type="button" class="tab" role="tab" id="tab-commitment" data-scenario="commitment" aria-selected="true" aria-controls="stage-panel">A client commitment</button>
+        <button type="button" class="tab" role="tab" id="tab-bug" data-scenario="bug" aria-selected="false" aria-controls="stage-panel" tabindex="-1">A known bug</button>
+        <button type="button" class="tab" role="tab" id="tab-departure" data-scenario="departure" aria-selected="false" aria-controls="stage-panel" tabindex="-1">A departure</button>
+        <span class="tabs__ind" data-tab-indicator aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="stage" id="stage" data-stage data-ui data-linked>
+      <div class="wrap grid stage__grid" role="tabpanel" id="stage-panel" aria-labelledby="tab-commitment">
+        <div class="stage__answer asheet sheet" id="hero-answer" data-sheet="answer"><!--gen:asheet--><p class="q" data-question><span class="avatar" aria-hidden="true">JM</span><span><span class="vh">Julie Martin asked: </span>What did we promise ACME for V2?</span></p><div class="answer" data-answer><p class="answer__p"><span class="seg is-selected" data-sentence="1" data-n="1"><mark class="hl hl-1 hl--a">At the Oct&nbsp;3 monthly check-in, Julie committed to delivering V2 on </mark><span class="nw"><mark class="hl hl-1 hl--b">Nov&nbsp;15.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="true" aria-label="Source 1: Granola, ACME monthly check-in">1</button></span></span> <span class="seg" data-sentence="2" data-n="2"><mark class="hl hl-2 hl--a">The signed quote confirms the date but excludes the data </mark><span class="nw"><mark class="hl hl-2 hl--b">migration.</mark><button type="button" class="cite c2" data-cite="2" data-n="2" aria-pressed="false" aria-label="Source 2: HubSpot, Signed V2 quote">2</button></span></span> <span class="seg" data-sentence="3" data-n="3"><mark class="hl hl-3 hl--a">The migration ticket is still </mark><span class="nw"><mark class="hl hl-3 hl--b">open.</mark><button type="button" class="cite c3" data-cite="3" data-n="3" aria-pressed="false" aria-label="Source 3: Linear, ACME: data migration">3</button></span></span></p><div class="flags" data-flags><button type="button" class="flag c1" data-flag="1" data-n="1" data-for="1" tabindex="-1" aria-pressed="true" aria-label="Source 1: Granola, ACME monthly check-in">1</button><button type="button" class="flag c2" data-flag="2" data-n="2" data-for="2" tabindex="-1" aria-pressed="false" aria-label="Source 2: HubSpot, Signed V2 quote">2</button><button type="button" class="flag c3" data-flag="3" data-n="3" data-for="3" tabindex="-1" aria-pressed="false" aria-label="Source 3: Linear, ACME: data migration">3</button></div></div><ol class="notes" data-notes aria-label="Sources"><li><button type="button" class="note c1" data-note="1" data-n="1" aria-pressed="true"><span class="num"><span class="vh">Source </span>1</span><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><span class="note__title">ACME monthly check-in</span><span class="note__date">Oct&nbsp;3, 2026</span><span class="note__sub">Granola · Meeting · Shared with the team</span></button></li><li><button type="button" class="note c2" data-note="2" data-n="2" aria-pressed="false"><span class="num"><span class="vh">Source </span>2</span><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20"><span class="note__title">Signed V2 quote</span><span class="note__date">Oct&nbsp;7, 2026</span><span class="note__sub">HubSpot · Note · Shared with the team</span></button></li><li><button type="button" class="note c3" data-note="3" data-n="3" aria-pressed="false"><span class="num"><span class="vh">Source </span>3</span><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><span class="note__title">ACME: data migration</span><span class="note__date">Oct&nbsp;21, 2026</span><span class="note__sub">Linear · Ticket · Shared with the team</span></button></li></ol><!--/gen--></div>
+        <h2 class="vh">Sources of the answer</h2>
+        <div class="pile" id="pile" data-pile><!--gen:pile--><article class="doc sheet c1" data-source="1" data-n="1" data-slot="top" aria-label="Original: ACME monthly check-in">
+      <button type="button" class="flag flag--left" data-docflag="1" data-n="1" aria-pressed="true" aria-label="Source 1: ACME monthly check-in">1</button>
+      <header class="doc__head"><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME monthly check-in</h3></header>
+      <p class="doc__meta">Granola · Meeting · Oct&nbsp;3, 2026 · 42 min · Julie Martin, Karim Benali, Dana Whitfield (ACME)</p>
+      <div class="doc__rest"><ol class="tx" aria-label="Transcript, at the passage"><li class="tx__line"><time class="tx__at">14:02</time><div><span class="tx__who">Dana Whitfield (ACME)</span><p class="tx__text">Our board meets on the 20th. We need V2 live before that.</p></div></li><li class="tx__line is-hit"><time class="tx__at">14:31</time><div><span class="tx__who">Julie Martin</span><p class="tx__text">We can <mark class="hl hl-1">commit to November&nbsp;15</mark> for V2, history migration excluded.</p></div></li></ol><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Open in Granola</a><span class="vis">Shared with the team</span></footer></div>
+    </article>
+<article class="doc sheet c2" data-source="2" data-n="2" data-slot="b1" aria-label="Original: Signed V2 quote">
+      <button type="button" class="flag flag--left" data-docflag="2" data-n="2" aria-pressed="false" aria-label="Source 2: Signed V2 quote">2</button>
+      <header class="doc__head"><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20"><h3 class="doc__title">Signed V2 quote</h3></header>
+      <p class="doc__meta">HubSpot · Note · Deal: ACME · V2 build · Note by Karim Benali · Oct&nbsp;7, 2026</p>
+      <div class="doc__rest"><div class="doc__body"><p>Quote Q-2291 signed by Dana Whitfield this morning.</p><p>Delivery on <mark class="hl hl-2">11/15/2026</mark>. The <mark class="hl hl-2">data migration</mark> is quoted separately (Q-2294, not signed yet).</p><p>Next step: kickoff with Sophie on Oct&nbsp;9.</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Open in HubSpot</a><span class="vis">Shared with the team</span></footer></div>
+    </article>
+<article class="doc sheet c3" data-source="3" data-n="3" data-slot="b2" aria-label="Original: ACME: data migration">
+      <button type="button" class="flag flag--left" data-docflag="3" data-n="3" aria-pressed="false" aria-label="Source 3: ACME: data migration">3</button>
+      <header class="doc__head"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME: data migration</h3></header>
+      <p class="doc__meta">Linear · Ticket · Sophie Laurent · Oct&nbsp;21, 2026</p>
+      <div class="doc__rest"><p class="doc__id">ACM-214</p><dl class="props"><div><dt>Status</dt><dd><span class="state">Todo</span></dd></div><div><dt>Priority</dt><dd>High</dd></div><div><dt>Assignee</dt><dd>Sophie Laurent</dd></div></dl><div class="doc__body"><p>Import the 2019–2025 order history into V2.</p><p>Blocked on the client’s <mark class="hl hl-3">export file</mark>. Dana to send it by Oct&nbsp;28.</p></div><footer class="doc__foot"><a class="btn btn--line btn--sm" href="#" title="Not in this prototype">Open in Linear</a><span class="vis">Shared with the team</span></footer></div>
+    </article><!--/gen--></div>
+        <p class="fict">Fictional example</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Three rules. Stacked blocks here (the phone and reduced-motion version); the motion pass pins them on wide screens. -->
+  <section class="rules" id="product" data-rules aria-label="Three rules">
+    <div class="wrap">
+      <ol class="rules__list" data-rules-list>
+        <li><a href="#rule-1" data-rule-link="1">Cited</a></li>
+        <li><a href="#rule-2" data-rule-link="2">Not on record</a></li>
+        <li><a href="#rule-3" data-rule-link="3">Yours only</a></li>
+        <li class="rules__marker" data-rules-marker aria-hidden="true"></li>
+      </ol>
+
+      <article class="rule grid" id="rule-1" data-rule="1">
+        <div class="rule__text" data-rule-text="1">
+          <h2 class="h2" data-rv="1">Every sentence wears <span class="hmark" data-hmark="1">the colour of its source.</span></h2>
+          <p class="lead" data-rv="2">A pink sentence, a pink flag, a pink document. Click any of the three and read the original, opened at the passage.</p>
+        </div>
+        <div class="rule__frag" data-rule-frag="1" data-ui data-linked data-rv="3">
+          <!--gen:rule1--><div class="asheet asheet--plain sheet"><p class="q" data-question><span class="avatar" aria-hidden="true">MC</span><span><span class="vh">Maya Chen asked: </span>Is this PDF export bug already known?</span></p><div class="answer" data-answer><p class="answer__p"><span class="seg" data-sentence="1" data-n="1"><mark class="hl hl-1 hl--a">Yes. Three customers have reported it since </mark><span class="nw"><mark class="hl hl-1 hl--b">Monday.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="false" aria-label="Source 1: Intercom, Empty PDF export">1</button></span></span> <span class="seg" data-sentence="2" data-n="2"><mark class="hl hl-2 hl--a">Engineering reproduced it on invoices longer than 50 </mark><span class="nw"><mark class="hl hl-2 hl--b">lines.</mark><button type="button" class="cite c2" data-cite="2" data-n="2" aria-pressed="false" aria-label="Source 2: Linear, PDF export: blank page past 50 lines">2</button></span></span> <span class="seg" data-sentence="3" data-n="3"><mark class="hl hl-3 hl--a">The fix is in </mark><span class="nw"><mark class="hl hl-3 hl--b">review.</mark><button type="button" class="cite c3" data-cite="3" data-n="3" aria-pressed="false" aria-label="Source 3: GitHub, fix(export): paginate PDF rendering">3</button></span></span></p><div class="flags" data-flags><button type="button" class="flag c1" data-flag="1" data-n="1" data-for="1" tabindex="-1" aria-pressed="false" aria-label="Source 1: Intercom, Empty PDF export">1</button><button type="button" class="flag c2" data-flag="2" data-n="2" data-for="2" tabindex="-1" aria-pressed="false" aria-label="Source 2: Linear, PDF export: blank page past 50 lines">2</button><button type="button" class="flag c3" data-flag="3" data-n="3" data-for="3" tabindex="-1" aria-pressed="false" aria-label="Source 3: GitHub, fix(export): paginate PDF rendering">3</button></div></div></div>
+    <div class="minis minis--3"><article class="mini sheet c1" data-source="1" data-n="1" aria-label="Source 1: Empty PDF export">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/intercom.svg" alt="" width="20" height="20"><h3 class="doc__title">Empty PDF export</h3></header>
+      <p class="mini__sub">Intercom · Conversation</p>
+      <p class="mini__passage">The customer gets a <mark class="hl hl-1">blank PDF</mark> when exporting the October invoice.</p>
+      
+    </article><article class="mini sheet c2" data-source="2" data-n="2" aria-label="Source 2: PDF export: blank page past 50 lines">
+      <span class="flag flag--left" aria-hidden="true">2</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><h3 class="doc__title">PDF export: blank page past 50 lines</h3></header>
+      <p class="mini__sub">Linear · Ticket</p>
+      <p class="mini__passage">Reproduced: <mark class="hl hl-2">past 50 lines</mark>, rendering stops without an error.</p>
+      
+    </article><article class="mini sheet c3" data-source="3" data-n="3" aria-label="Source 3: fix(export): paginate PDF rendering">
+      <span class="flag flag--left" aria-hidden="true">3</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/github.svg" alt="" width="20" height="20"><h3 class="doc__title">fix(export): paginate PDF rendering</h3></header>
+      <p class="mini__sub">GitHub · Pull request</p>
+      <p class="mini__passage">Renders <mark class="hl hl-3">page by page</mark> instead of in one pass. Review requested.</p>
+      
+    </article></div><!--/gen-->
+          <p class="fict">Fictional example</p>
+        </div>
+      </article>
+
+      <article class="rule grid" id="rule-2" data-rule="2">
+        <div class="rule__text" data-rule-text="2">
+          <h2 class="h2" data-rv="1">When the record is silent, <span class="hmark" data-hmark="2">Leon says so.</span></h2>
+          <p class="lead" data-rv="2">No source, no claim. Ask about something nobody wrote down and the answer is “I don’t know”, with the closest thing on record.</p>
+        </div>
+        <div class="rule__frag" data-rule-frag="2" data-ui data-linked data-rv="3">
+          <!--gen:rule2--><div class="asheet asheet--plain sheet"><p class="q" data-question><span class="avatar" aria-hidden="true">KB</span><span><span class="vh">Karim Benali asked: </span>What price did we give Verlant in 2024?</span></p><div class="answer" data-answer><p class="answer__p"><span class="seg seg--none" data-sentence="1">I don’t know. No source on record mentions a price agreed with Verlant in 2024.</span> <span class="seg" data-sentence="2" data-n="1"><mark class="hl hl-1 hl--a">The earliest quote on record dates from </mark><span class="nw"><mark class="hl hl-1 hl--b">March&nbsp;2025.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="false" aria-label="Source 1: Pipedrive, Verlant: first quote">1</button></span></span></p><div class="flags" data-flags><span class="flag flag--empty" data-flag="0" data-for="1"><svg class="ef ef--wide" viewBox="0 0 84 24" width="84" height="24" aria-hidden="true"><polygon data-draw points="1,1 83,1 75,12 83,23 1,23"/></svg><svg class="ef ef--small" viewBox="0 0 34 24" width="34" height="24" aria-hidden="true"><polygon data-draw points="1,1 33,1 25,12 33,23 1,23"/></svg><span class="flag__label">no source</span></span><button type="button" class="flag c1" data-flag="1" data-n="1" data-for="2" tabindex="-1" aria-pressed="false" aria-label="Source 1: Pipedrive, Verlant: first quote">1</button></div></div></div>
+    <div class="minis minis--1"><article class="mini sheet c1" data-source="1" data-n="1" aria-label="Source 1: Verlant: first quote">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/pipedrive.svg" alt="" width="20" height="20"><h3 class="doc__title">Verlant: first quote</h3></header>
+      <p class="mini__sub">Pipedrive · Note</p>
+      <p class="mini__passage">First quote sent at <mark class="hl hl-1">list price</mark>, no discount.</p>
+      
+    </article></div><!--/gen-->
+          <p class="fict">Fictional example</p>
+        </div>
+      </article>
+
+      <article class="rule grid" id="rule-3" data-rule="3">
+        <div class="rule__text" data-rule-text="3">
+          <h2 class="h2" data-rv="1">Leon sees what you see. <span class="hmark" data-hmark="3">Nothing more.</span></h2>
+          <p class="lead" data-rv="2">Every answer is built only from what the person asking can open. Your email, Slack, Drive and AI conversations stay yours.</p>
+        </div>
+        <div class="rule__frag" data-rule-frag="3" data-ui data-linked data-perm data-rv="3">
+          <div class="switch" role="group" aria-label="Who is asking" data-view="0" data-switch>
+            <span class="switch__thumb" data-switch-thumb aria-hidden="true"></span>
+            <button type="button" data-view="0" aria-pressed="true">Asked by Julie</button>
+            <button type="button" data-view="1" aria-pressed="false">Asked by Sophie</button>
+          </div>
+          <div data-perm-body aria-live="polite"><!--gen:rule3--><div class="asheet asheet--plain sheet"><p class="q" data-question><span class="avatar" aria-hidden="true">JM</span><span><span class="vh">Julie Martin asked: </span>Did ACME accept the new migration date?</span></p><div class="answer" data-answer><p class="answer__p"><span class="seg" data-sentence="1" data-n="1"><mark class="hl hl-1 hl--a">Yes. Dana Whitfield accepted December&nbsp;2 by email on </mark><span class="nw"><mark class="hl hl-1 hl--b">Oct&nbsp;27.</mark><button type="button" class="cite c1" data-cite="1" data-n="1" aria-pressed="false" aria-label="Source 1: Outlook, Re: V2 timeline">1</button></span></span> <span class="seg" data-sentence="2" data-n="2"><mark class="hl hl-2 hl--a">The ticket was updated the same </mark><span class="nw"><mark class="hl hl-2 hl--b">day.</mark><button type="button" class="cite c2" data-cite="2" data-n="2" aria-pressed="false" aria-label="Source 2: Linear, ACME: data migration">2</button></span></span></p><div class="flags" data-flags><button type="button" class="flag c1" data-flag="1" data-n="1" data-for="1" tabindex="-1" aria-pressed="false" aria-label="Source 1: Outlook, Re: V2 timeline">1</button><button type="button" class="flag c2" data-flag="2" data-n="2" data-for="2" tabindex="-1" aria-pressed="false" aria-label="Source 2: Linear, ACME: data migration">2</button></div></div></div>
+    <div class="minis minis--2"><article class="mini sheet c1" data-source="1" data-n="1" aria-label="Source 1: Re: V2 timeline">
+      <span class="flag flag--left" aria-hidden="true">1</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/outlook.svg" alt="" width="20" height="20"><h3 class="doc__title">Re: V2 timeline</h3></header>
+      <p class="mini__sub">Outlook · Email</p>
+      <p class="mini__passage">“<mark class="hl hl-1">December&nbsp;2 works for us</mark>, as long as V2 itself ships on the 15th.”</p>
+      <p class="mini__vis"><span class="stamp">Private to you</span></p>
+    </article><article class="mini sheet c2" data-source="2" data-n="2" aria-label="Source 2: ACME: data migration">
+      <span class="flag flag--left" aria-hidden="true">2</span>
+      <header class="doc__head"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><h3 class="doc__title">ACME: data migration</h3></header>
+      <p class="mini__sub">Linear · Ticket</p>
+      <p class="mini__passage">Migration <mark class="hl hl-2">moved to Dec&nbsp;2</mark>.</p>
+      <p class="mini__vis"><span class="vis">Shared with the team</span></p>
+    </article></div><!--/gen--></div>
+          <p class="fict">Fictional example</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 3. Connectors -->
+  <section class="conn" id="connectors" aria-labelledby="conn-h">
+    <div class="wrap grid conn__head">
+      <h2 class="h2" id="conn-h" data-rv="1"><span data-count="42">42</span> connectors. <span class="hmark" data-hmark="2">Nothing to migrate.</span></h2>
+      <p class="lead" data-rv="2">Connect a tool in one click or with an API key. Leon picks up changes every 15 minutes and keeps each item word for word. Your team keeps working where it already works.</p>
+    </div>
+    <div class="marquee" data-marquee data-rv="3">
+      <!--gen:marquee--><ul class="marquee__row" data-marquee-row="1"><li class="tool" data-tool="gmail"><img class="logo" src="../shared/logos/gmail.svg" alt="" width="24" height="24" loading="lazy"><span>Gmail</span></li><li class="tool" data-tool="slack"><img class="logo" src="../shared/logos/slack.svg" alt="" width="24" height="24" loading="lazy"><span>Slack</span></li><li class="tool" data-tool="granola"><img class="logo" src="../shared/logos/granola.svg" alt="" width="24" height="24" loading="lazy"><span>Granola</span></li><li class="tool" data-tool="fireflies"><img class="logo" src="../shared/logos/fireflies.svg" alt="" width="24" height="24" loading="lazy"><span>Fireflies</span></li><li class="tool" data-tool="circleback"><img class="logo" src="../shared/logos/circleback.svg" alt="" width="24" height="24" loading="lazy"><span>Circleback</span></li><li class="tool" data-tool="leexi"><img class="logo" src="../shared/logos/leexi.svg" alt="" width="24" height="24" loading="lazy"><span>Leexi</span></li><li class="tool" data-tool="notion"><img class="logo" src="../shared/logos/notion.svg" alt="" width="24" height="24" loading="lazy"><span>Notion</span></li><li class="tool" data-tool="confluence"><img class="logo" src="../shared/logos/confluence.svg" alt="" width="24" height="24" loading="lazy"><span>Confluence</span></li><li class="tool" data-tool="clickup"><img class="logo" src="../shared/logos/clickup.svg" alt="" width="24" height="24" loading="lazy"><span>ClickUp</span></li><li class="tool" data-tool="monday"><img class="logo" src="../shared/logos/monday.svg" alt="" width="24" height="24" loading="lazy"><span>monday.com</span></li><li class="tool" data-tool="plane"><img class="logo" src="../shared/logos/plane.svg" alt="" width="24" height="24" loading="lazy"><span>Plane</span></li><li class="tool" data-tool="basecamp"><img class="logo" src="../shared/logos/basecamp.svg" alt="" width="24" height="24" loading="lazy"><span>Basecamp</span></li><li class="tool" data-tool="productboard"><img class="logo" src="../shared/logos/productboard.svg" alt="" width="24" height="24" loading="lazy"><span>Productboard</span></li><li class="tool" data-tool="gitlab"><img class="logo" src="../shared/logos/gitlab.svg" alt="" width="24" height="24" loading="lazy"><span>GitLab</span></li><li class="tool" data-tool="sentry"><img class="logo" src="../shared/logos/sentry.svg" alt="" width="24" height="24" loading="lazy"><span>Sentry</span></li><li class="tool" data-tool="attio"><img class="logo" src="../shared/logos/attio.svg" alt="" width="24" height="24" loading="lazy"><span>Attio</span></li><li class="tool" data-tool="pipedrive"><img class="logo" src="../shared/logos/pipedrive.svg" alt="" width="24" height="24" loading="lazy"><span>Pipedrive</span></li><li class="tool" data-tool="intercom"><img class="logo" src="../shared/logos/intercom.svg" alt="" width="24" height="24" loading="lazy"><span>Intercom</span></li><li class="tool" data-tool="freshdesk"><img class="logo" src="../shared/logos/freshdesk.svg" alt="" width="24" height="24" loading="lazy"><span>Freshdesk</span></li><li class="tool" data-tool="front"><img class="logo" src="../shared/logos/front.svg" alt="" width="24" height="24" loading="lazy"><span>Front</span></li><li class="tool" data-tool="crisp"><img class="logo" src="../shared/logos/crisp.svg" alt="" width="24" height="24" loading="lazy"><span>Crisp</span></li></ul>
+<ul class="marquee__row" data-marquee-row="2"><li class="tool" data-tool="outlook"><img class="logo" src="../shared/logos/outlook.svg" alt="" width="24" height="24" loading="lazy"><span>Outlook</span></li><li class="tool" data-tool="drive"><img class="logo" src="../shared/logos/drive.svg" alt="" width="24" height="24" loading="lazy"><span>Google Drive</span></li><li class="tool" data-tool="fathom"><img class="logo" src="../shared/logos/fathom.svg" alt="" width="24" height="24" loading="lazy"><span>Fathom</span></li><li class="tool" data-tool="tldv"><img class="logo" src="../shared/logos/tldv.svg" alt="" width="24" height="24" loading="lazy"><span>tl;dv</span></li><li class="tool" data-tool="claap"><img class="logo" src="../shared/logos/claap.svg" alt="" width="24" height="24" loading="lazy"><span>Claap</span></li><li class="tool" data-tool="gong"><img class="logo" src="../shared/logos/gong.svg" alt="" width="24" height="24" loading="lazy"><span>Gong</span></li><li class="tool" data-tool="jira"><img class="logo" src="../shared/logos/jira.svg" alt="" width="24" height="24" loading="lazy"><span>Jira</span></li><li class="tool" data-tool="asana"><img class="logo" src="../shared/logos/asana.svg" alt="" width="24" height="24" loading="lazy"><span>Asana</span></li><li class="tool" data-tool="trello"><img class="logo" src="../shared/logos/trello.svg" alt="" width="24" height="24" loading="lazy"><span>Trello</span></li><li class="tool" data-tool="shortcut"><img class="logo" src="../shared/logos/shortcut.svg" alt="" width="24" height="24" loading="lazy"><span>Shortcut</span></li><li class="tool" data-tool="airtable"><img class="logo" src="../shared/logos/airtable.svg" alt="" width="24" height="24" loading="lazy"><span>Airtable</span></li><li class="tool" data-tool="miro"><img class="logo" src="../shared/logos/miro.svg" alt="" width="24" height="24" loading="lazy"><span>Miro</span></li><li class="tool" data-tool="github"><img class="logo" src="../shared/logos/github.svg" alt="" width="24" height="24" loading="lazy"><span>GitHub</span></li><li class="tool" data-tool="linear"><img class="logo" src="../shared/logos/linear.svg" alt="" width="24" height="24" loading="lazy"><span>Linear</span></li><li class="tool" data-tool="hubspot"><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="24" height="24" loading="lazy"><span>HubSpot</span></li><li class="tool" data-tool="folk"><img class="logo" src="../shared/logos/folk.svg" alt="" width="24" height="24" loading="lazy"><span>folk</span></li><li class="tool" data-tool="close"><img class="logo" src="../shared/logos/close.svg" alt="" width="24" height="24" loading="lazy"><span>Close</span></li><li class="tool" data-tool="zendesk"><img class="logo" src="../shared/logos/zendesk.svg" alt="" width="24" height="24" loading="lazy"><span>Zendesk</span></li><li class="tool" data-tool="helpscout"><img class="logo" src="../shared/logos/helpscout.svg" alt="" width="24" height="24" loading="lazy"><span>Help Scout</span></li><li class="tool" data-tool="plain"><img class="logo" src="../shared/logos/plain.svg" alt="" width="24" height="24" loading="lazy"><span>Plain</span></li><li class="tool" data-tool="missive"><img class="logo" src="../shared/logos/missive.svg" alt="" width="24" height="24" loading="lazy"><span>Missive</span></li></ul><!--/gen-->
+    </div>
+    <div class="wrap conn__foot" data-rv="3">
+      <a class="more" href="#" title="Not in this prototype">See all 42 connectors<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <p class="small">A browser extension brings in your conversations with AI assistants, private to you.</p>
+    </div>
+  </section>
+
+  <!-- 4. Morning briefing -->
+  <section class="brief band band--desk" id="briefing" aria-labelledby="brief-h">
+    <div class="wrap grid brief__grid">
+      <div class="brief__memo" data-ui data-rv="3">
+        <!--gen:memo--><article class="memo sheet" data-memo aria-label="Morning briefing">
+      <h3 class="memo__title" data-line>Morning briefing</h3>
+      <p class="memo__date" data-line>Tuesday, November&nbsp;10, 2026 · 08:45</p>
+      <section class="memo__sec"><h4 data-line>What you did</h4><ul><li data-line><span data-line-text>Replied to ACME about the V2 <span class="nw">timeline.<span class="num c1" data-chip aria-label="source 1">1</span></span></span></li><li data-line><span data-line-text>Reviewed the Nordia redesign <span class="nw">mockups.<span class="num c2" data-chip aria-label="source 2">2</span></span></span></li></ul></section><section class="memo__sec"><h4 data-line>What changed</h4><ul><li data-line><span data-line-text>Sophie moved the ACME data migration to <span class="nw">Dec&nbsp;2.<span class="num c3" data-chip aria-label="source 3">3</span></span></span></li><li data-line><span data-line-text>Two new support conversations mention the PDF export <span class="nw">bug.<span class="num c4" data-chip aria-label="source 4">4</span></span></span></li></ul></section><section class="memo__sec"><h4 data-line>Still open</h4><ul><li data-line><span data-line-text>The revised Verlant quote, promised on <span class="nw">Oct&nbsp;10.<span class="num c1" data-chip aria-label="source 5">5</span></span></span></li></ul></section>
+    </article><!--/gen-->
+        <p class="fict">Fictional example</p>
+      </div>
+      <div class="brief__text">
+        <h2 class="h2" id="brief-h" data-rv="1">A briefing <span class="hmark" data-hmark="3">every morning.</span></h2>
+        <p class="lead" data-rv="2">What you did, what changed, what is still open. 250 words at most, each line with its source.</p>
+        <p class="small" data-rv="2">Your own AI assistant can ask Leon too, with your permissions.</p>
+        <a class="more" href="#" title="Not in this prototype" data-rv="2">Read the documentation<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. For developers: shared memory and dreaming (ink band) -->
+  <section class="dev band on-ink" id="developers" aria-labelledby="dev-h" data-dev>
+    <div class="wrap grid dev__grid">
+      <div class="dev__text">
+        <h2 class="h2" id="dev-h" data-rv="1">Shared memory and <span class="hmark" data-hmark="1">dreaming</span> for your coding agents.</h2>
+        <p class="lead" data-rv="2">Every session starts from zero. Leon gives your team one memory, and works on it between sessions.</p>
+        <dl class="facts" data-rv="2">
+          <div class="fact" data-fact="1"><dt>One memory, shared by the team.</dt><dd>Tickets, pull requests, meetings and sessions, filed by thread. Read with your rights; your sessions stay yours.</dd></div>
+          <div class="fact" data-fact="2"><dt>Dreaming, between sessions.</dt><dd>While you are away, Leon rereads, files, summarises and prepares the next briefing.</dd></div>
+          <div class="fact" data-fact="3"><dt>Handed over at the start.</dt><dd>In Claude Code, Codex, Cursor and Antigravity.</dd></div>
+        </dl>
+        <p class="dev__line" data-rv="2">Versioned, permissioned, cited. Leon writes the memory, not the agents.</p>
+        <a class="more" href="#" title="Not in this prototype" data-rv="2">Read the documentation<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+      <div class="dev__frag" data-ui data-story data-step="3" data-rv="3">
+        <!--gen:dream--><ol class="dream" data-dream aria-label="How it works, in three steps"><li class="dream__step" data-dream-step="1"><button type="button" class="dream__btn" data-story-step="1" aria-pressed="false"><span class="dream__dot" aria-hidden="true"></span><span class="dream__when">Evening<span class="vh">: </span></span><span class="dream__cap">A session ends. Leon keeps it.</span></button></li><li class="dream__step" data-dream-step="2"><button type="button" class="dream__btn" data-story-step="2" aria-pressed="false"><span class="dream__dot" aria-hidden="true"></span><span class="dream__when">Night<span class="vh">: </span></span><span class="dream__cap">Leon dreams: it rereads, files and prepares.</span></button></li><li class="dream__step" data-dream-step="3"><button type="button" class="dream__btn" data-story-step="3" aria-pressed="true"><span class="dream__dot" aria-hidden="true"></span><span class="dream__when">Morning<span class="vh">: </span></span><span class="dream__cap">The next session starts up to date, in any tool.</span></button></li><li class="dream__marker" data-dream-marker aria-hidden="true"></li></ol><div class="dream__desk"><div class="dream__pile" data-dream-pile><p class="dsheet sheet c1" data-dream-sheet="1"><span class="flag flag--left" aria-hidden="true">1</span><img class="logo" src="../shared/logos/claude-code.svg" alt="" width="16" height="16"><span class="dsheet__title">PDF export pagination</span></p><p class="dsheet sheet c2" data-dream-sheet="2"><span class="flag flag--left" aria-hidden="true">2</span><img class="logo" src="../shared/logos/intercom.svg" alt="" width="16" height="16"><span class="dsheet__title">Empty PDF export</span></p><p class="dsheet sheet c3" data-dream-sheet="3"><span class="flag flag--left" aria-hidden="true">3</span><img class="logo" src="../shared/logos/linear.svg" alt="" width="16" height="16"><span class="dsheet__title">ACME: data migration</span></p><p class="dream__thread" data-dream-thread>Thread <b>fix/export-pagination</b></p></div><button type="button" class="more dream__replay" data-story-replay hidden>Replay</button></div><!--/gen-->
+        <!--gen:terminal--><figure class="term" data-term aria-label="The coding agent’s terminal"><figcaption class="term__bar"><span data-term-title="evening">claude · kestrel/app</span><span data-term-title="morning">codex · kestrel/app</span></figcaption><div class="term__screen"><div class="term__body" data-term-body="morning"><div class="term__line term__strong" data-term-line>Leon · context for github.com/kestrel/app</div><div class="term__line term__head term__gap" data-term-line>Your last sessions on this repository</div><div class="term__line term__session" data-term-line><span class="term__dim">Nov&nbsp;9, 21:02</span>  Claude Code  <span class="term__branch">fix/export-pagination</span><span class="term__what"> · PR #482 updated</span></div><div class="term__line term__session" data-term-line><span class="term__dim">Nov&nbsp;9, 16:07</span>  Codex        <span class="term__branch">fix/export-pagination</span><span class="term__what"> · bug reproduced</span></div><div class="term__line term__session" data-term-line><span class="term__dim">Nov&nbsp;6, 11:40</span>  Cursor       <span class="term__branch">nordia/dashboard</span><span class="term__what"> · mobile layout left</span></div><div class="term__line term__head term__gap" data-term-line>Morning briefing</div><div class="term__line term__item" data-term-line>– Answered the review on PR #482. <span class="term__ref t1" data-term-mark="1">[1]</span></div><div class="term__line term__item" data-term-line>– Two new support conversations mention the export bug. <span class="term__ref t2" data-term-mark="2">[2]</span></div><div class="term__line term__item" data-term-line>– ACME data migration moved to Dec&nbsp;2. <span class="term__ref t3" data-term-mark="3">[3]</span></div><div class="term__line term__head term__gap" data-term-line>Sources</div><div class="term__line term__source t1" data-term-line data-term-source="1"><span data-term-mark="1">[1]</span><span> Claude Code · PDF export pagination · Nov&nbsp;9</span></div><div class="term__line term__source t2" data-term-line data-term-source="2"><span data-term-mark="2">[2]</span><span> Intercom · Empty PDF export · Nov&nbsp;9</span></div><div class="term__line term__source t3" data-term-line data-term-source="3"><span data-term-mark="3">[3]</span><span> Linear · ACME: data migration · Oct&nbsp;27</span></div></div><div class="term__body" data-term-body="evening"><div class="term__line term__strong" data-term-end>Session ended · Nov&nbsp;9, 21:02</div><div class="term__line term__session" data-term-end><span class="term__branch">fix/export-pagination</span><span class="term__what"> · PR #482 updated</span></div><div class="term__line term__head term__gap" data-term-end>Leon · session kept</div><div class="term__line term__item" data-term-end>– What was said, word for word.</div><div class="term__line term__item" data-term-end>– What was done: branch, commits, pull requests, files.</div><div class="term__line term__item term__dim" data-term-end>– Secrets masked. Private to you.</div></div></div></figure><!--/gen-->
+        <p class="fict">Fictional example</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Security (white) -->
+  <section class="sec" id="security" aria-labelledby="sec-h">
+    <div class="wrap grid sec__grid">
+      <h2 class="h2" id="sec-h" data-rv="1">What is <span class="hmark" data-hmark="2">in place</span>, and what is in progress.</h2>
+      <div class="sec__lists" data-rv="2">
+        <div class="sec__list sec__list--yes">
+          <h3>In place</h3>
+          <ul>
+            <li data-check="yes"><svg viewBox="0 0 22 22" aria-hidden="true"><path data-draw d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Each company’s data isolated with row-level security</span></li>
+            <li data-check="yes"><svg viewBox="0 0 22 22" aria-hidden="true"><path data-draw d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Credentials encrypted with AES-256-GCM</span></li>
+            <li data-check="yes"><svg viewBox="0 0 22 22" aria-hidden="true"><path data-draw d="M4.5 11.5l4.2 4.2 8.8-9.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Permissions checked before anything is ranked</span></li>
+          </ul>
+        </div>
+        <div class="sec__list sec__list--wip">
+          <h3>In progress</h3>
+          <ul>
+            <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path data-draw d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>SOC 2 and ISO 27001</span></li>
+            <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path data-draw d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Mirroring each tool’s own permissions</span></li>
+            <li data-check="progress"><svg viewBox="0 0 22 22" aria-hidden="true"><circle cx="11" cy="11" r="7.5" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".26"/><path data-draw d="M11 3.5a7.5 7.5 0 0 1 0 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Data export</span></li>
+          </ul>
+        </div>
+      </div>
+      <a class="more" href="#" title="Not in this prototype" data-rv="3">Read the security page<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </section>
+
+  <!-- 7. Close (desk band) -->
+  <section class="close band band--desk" id="close" aria-labelledby="close-h">
+    <div class="wrap grid close__grid">
+      <div class="close__text">
+        <h2 class="statement" id="close-h" data-rv="1"><span class="h1__line">Everything your team said,</span> <span class="h1__line"><span class="swp swp--one" data-sweep="close">on record.<i class="swp__seg" data-sweep-seg="1"></i></span></span></h2>
+        <p class="lead" data-rv="2">Create a workspace, connect your first tool, ask your first question.</p>
+        <div class="close__cta" data-rv="2">
+          <a class="btn" href="app/signup.html">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+          <a class="btn btn--line" href="app/signin.html">Sign in</a>
+        </div>
+      </div>
+      <div class="close__form" data-ui data-rv="3">
+        <form class="signup sheet" data-inert novalidate aria-labelledby="signup-t">
+          <h3 class="signup__title" id="signup-t">Name your workspace</h3>
+          <div class="row"><label class="label" for="ws-name">Workspace name</label><input class="field" id="ws-name" type="text" value="Kestrel Studio" autocomplete="off"></div>
+          <div class="row"><label class="label" for="ws-email">Work email</label><input class="field" id="ws-email" type="email" placeholder="you@company.com" autocomplete="off"></div>
+          <button class="btn btn--wide" type="submit">Create a workspace<svg class="arr" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8h11M9 3.5 13.5 8 9 12.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot on-ink">
+  <div class="wrap grid foot__grid">
+    <div class="foot__brand">
+      <a class="wordmark" href="#top" aria-label="Leon, back to the top"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    </div>
+    <nav class="foot__col foot__col--product" aria-labelledby="f-product">
+      <h3 id="f-product">Product</h3>
+      <ul>
+        <li><a href="#product">Search and cited answers</a></li>
+        <li><a href="#briefing">Chat and morning briefing</a></li>
+        <li><a href="#connectors">Connectors</a></li>
+        <li><a href="#" title="Not in this prototype">Pricing</a></li>
+        <li><a href="#" title="Not in this prototype">Documentation</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--trust" aria-labelledby="f-trust">
+      <h3 id="f-trust">Trust</h3>
+      <ul>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#" title="Not in this prototype">What’s missing</a></li>
+      </ul>
+    </nav>
+    <nav class="foot__col foot__col--account" aria-labelledby="f-account">
+      <h3 id="f-account">Account</h3>
+      <ul>
+        <li><a href="app/signin.html">Sign in</a></li>
+        <li><a href="app/signup.html">Create a workspace</a></li>
+      </ul>
+    </nav>
+    <div class="foot__base">
+      <p class="foot__lang">Language: <a href="#top" aria-current="true">English</a> · <a href="#" title="Not in this prototype" lang="fr">Français</a></p>
+      <p>© 2026 Leon</p>
+    </div>
+  </div>
+</footer>
+
+<!-- Phone: a source opens here, sliding up from the bottom -->
+<dialog class="bsheet" id="bsheet" aria-label="Source" data-lenis-prevent>
+  <div class="bsheet__bar"><button type="button" class="bsheet__close" data-bsheet-close aria-label="Close"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button></div>
+  <div data-bsheet-body></div>
+</dialog>
+
+<script src="../shared/demo-data.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/site.js"></script>
+<!-- Motion. Open-source libraries, pinned; then the shared core; then one module per part of the page.
+     The page is whole without any of them (see NOTES.md, "Motion core"). -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Flip.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/SplitText.min.js"></script>
+<script defer src="https://unpkg.com/lenis@1.3.4/dist/lenis.min.js"></script>
+<script defer src="https://unpkg.com/rough-notation@0.5.1/lib/rough-notation.iife.js"></script>
+<script defer src="js/motion/core.js"></script>
+<script defer src="js/motion/hero.js"></script>
+<script defer src="js/motion/rules.js"></script>
+<script defer src="js/motion/dev.js"></script>
+<script defer src="js/motion/ambient.js"></script>
+</body>
+</html>

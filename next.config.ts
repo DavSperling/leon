@@ -1,12 +1,21 @@
 import { withSentryConfig } from '@sentry/nextjs/config';
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import { OLD_PATHS } from './src/lib/old-paths';
 
 const nextConfig: NextConfig = {
   experimental: { serverActions: { bodySizeLimit: '12mb' } },
+  // En développement, pas de badge Next : dans chaque coin il recouvre un contrôle (la ligne d'identité en bas à
+  // gauche, le bouton du panneau en bas à droite, sa croix en haut). Une erreur de compilation s'affiche toujours.
+  devIndicators: false,
   // Chargés depuis node_modules, pas empaquetés : officeparser trouve alors le worker de pdf.js sur le disque et
   // lit chaque PDF dans un processus à part, sous plafond de mémoire (server/documents/documents.ts).
   serverExternalPackages: ['officeparser', 'pdfjs-dist'],
+  // Les anciennes adresses en français, renvoyées pour de bon (308) vers les nouvelles : liens d'e-mails, favoris,
+  // « Setup URL » de l'appli GitHub, CLI déjà installées. La requête suit (?outil=…), et le navigateur garde l'ancre.
+  async redirects() {
+    return OLD_PATHS.map(([source, destination]) => ({ source, destination, permanent: true }));
+  },
   // Aucune page ne s'affiche dans un cadre : protège les boutons « Partager » et « Révoquer ».
   async headers() {
     return [

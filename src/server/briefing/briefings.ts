@@ -47,11 +47,11 @@ export const BRIEFING_NO_MODEL_MARKDOWN =
 const BRIEFING_MAX_TOKENS = 8000;
 // Le recalcul tourne dans un job, pas devant l'utilisateur : il a le temps, mais pas indéfiniment.
 const BRIEFING_TIMEOUT_MS = 120_000;
-// Le plafond de dépense : au plus 20 points écrits par le modèle par personne et par jour (UTC, reserver_point,
-// 0060), toutes organisations et tous projets confondus. Du 3 au 10/11/2026, la production en a payé 1 à 6 par
-// jour pour deux personnes, 3,6 centimes au plus chacun : 20 points coûtent au plus 0,72 $ par personne et par jour.
-// Au-delà, le point reste tel quel jusqu'au lendemain.
-export const BRIEFING_DAILY_CAP = 20;
+// Le plafond de dépense : au plus 4 points écrits par le modèle par personne et par jour (UTC, reserver_point,
+// 0060), toutes organisations et tous projets confondus : celui du matin et quelques mises à jour dans la journée.
+// Avec Sonnet (models.ts), un point coûte de 2 à 5 centimes (mesuré le 16/11/2026) : au plus 20 centimes par
+// personne et par jour. Au-delà, le point reste tel quel jusqu'au lendemain.
+export const BRIEFING_DAILY_CAP = 4;
 
 // Le texte du modèle, renvois filtrés : seuls les numéros fournis restent.
 async function writeBody(
@@ -166,6 +166,21 @@ async function requestRefresh(
   } catch (error) {
     logError('briefing.enqueue_failed', error, { tenantId: ctx.tenantId, userId: ctx.userId });
   }
+}
+
+// Le point que l'Accueil montre est périmé (son projet a bougé depuis) : son recalcul est mis en file, 30 minutes au
+// plus tôt après sa préparation, comme pour une lecture (readBriefing). La page devient la façon courante de lire le
+// point : sans cela, il restait celui de la dernière session de code, parfois vieux de plusieurs jours. Le plafond du
+// jour (BRIEFING_DAILY_CAP) borne toujours la dépense, et une mise en file qui échoue ne casse pas la page.
+export async function refreshShownBriefing(
+  ctx: TenantContext,
+  project: string,
+  preparedAt: Date,
+): Promise<void> {
+  const nextAt = preparedAt.getTime() + BRIEFING_DELAY_SECONDS * 1000;
+  await requestRefresh(ctx, project, {
+    delaySeconds: Math.max(0, Math.ceil((nextAt - Date.now()) / 1000)),
+  });
 }
 
 const GITHUB = 'github' satisfies SourceKind;

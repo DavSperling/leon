@@ -278,12 +278,40 @@ export async function listDocuments(ctx: TenantContext) {
         partage: sql<string>`case when ${sources.acl} = array[${sources.tenantId}] then 'equipe'
           when ${sources.acl} = array[${sources.ownerUserId}] then 'moi'
           else (${sources.acl})[2]::text end`,
+        // Leon le lit encore : son run d'indexation n'est pas fini (en file, en cours, ou en échec qu'une reprise
+        // relancera). Le run porte l'accès de sa source : qui voit le document voit son run.
+        reading: sql<boolean>`exists (select 1 from ingest_runs r
+          where r.tenant_id = ${sources.tenantId} and r.source_id = ${sources.id} and r.status <> 'done')`,
       })
       .from(sources)
       .innerJoin(users, eq(users.id, sources.ownerUserId))
       .where(and(eq(sources.tenantId, ctx.tenantId), eq(sources.kind, 'document')))
       .orderBy(desc(sources.createdAt)),
   );
+}
+
+// Ce que Leon a lu d'un document, pour l'ouvrir dans son panneau : ses parties dans l'ordre, sous les droits du
+// lecteur (null s'il ne le voit pas, ou si ce n'est pas un document). Le fichier d'origine n'est pas gardé : c'est ce
+// texte, secrets masqués, qui est cherché et cité. `cut` : il dépasse `max` caractères, seul le début est rendu.
+export const DOCUMENT_TEXT_MAX = 40_000;
+
+export async function documentText(
+  ctx: TenantContext,
+  id: string,
+  max = DOCUMENT_TEXT_MAX,
+): Promise<{ text: string; cut: boolean } | null> {
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<{ text: string | null }>(sql`
+      select left(string_agg(t.text, E'\n\n' order by nullif(split_part(t.external_id, ':', 2), '')::int), ${max + 1}) as text
+      from sources s
+      left join turns t on t.tenant_id = s.tenant_id and t.source_id = s.id
+      where s.tenant_id = ${ctx.tenantId} and s.kind = 'document' and s.id = ${id}
+      group by s.id`),
+  );
+  const row = rows[0];
+  if (!row) return null;
+  const text = row.text ?? '';
+  return { text: text.slice(0, max), cut: text.length > max };
 }
 
 // L'app n'a pas le droit de supprimer du brut : la fonction de 0034 ne retire qu'un document de l'organisation

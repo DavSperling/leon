@@ -25,6 +25,7 @@ const DELETE_ALLOWED = [
   'identities', // retirer un compte déclaré (0017)
   'discussions', // l'auteur supprime ses discussions, les messages partent en cascade (0031)
   'about_suggestions', // seule deleteAccount les efface, avec le reste de la personne (0045)
+  'agendas', // seule deleteAccount les efface, avec le reste de la personne (0072)
   'depots_equipe', // l'administrateur décoche un dépôt d'équipe ; un membre ordinaire ne peut pas (0047)
   'versions_memoire', // seule deleteAccount les efface, avec le reste de la personne (0052)
   'lecons', // seule deleteAccount les efface, avec le reste de la personne (0066)

@@ -1,14 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="131 126 200 200">
-  <!-- Le symbole de Leon (src/components/verre/shell/brand.tsx), aux couleurs du logo fourni ; clair si le système est sombre. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
   <title>Leon</title>
-  <style>
-    .f { fill: none; stroke: #0b0c0e; stroke-width: 17; stroke-linecap: round }
-    .p { fill: #0b0c0e }
-    @media (prefers-color-scheme: dark) {
-      .f { stroke: #e6e7ea }
-      .p { fill: #e6e7ea }
-    }
-  </style>
-  <path class="f" d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226"/>
-  <circle class="p" cx="313" cy="226" r="17"/>
+  <g transform="rotate(-5 20 20)" fill="none" stroke-linecap="round" stroke-width="4.5">
+    <path d="M6 9H29" stroke="#ff8dc1"/>
+    <path d="M7 20H35" stroke="#72e6a3"/>
+    <path d="M9 31H27" stroke="#7fbfff"/>
+  </g>
 </svg>

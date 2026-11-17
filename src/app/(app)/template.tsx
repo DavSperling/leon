@@ -13,13 +13,8 @@ export default function Template({ children }: { children: ReactNode }) {
     booted = true;
   }, []);
   return (
-    <motion.div
-      variants={pageVariants}
-      initial={booted ? 'initial' : false}
-      animate="animate"
-      // largeur figée pendant le repli de la barre latérale (--page-w, app-shell.tsx)
-      className="w-[var(--page-w,auto)]"
-    >
+    // L'ossature fige la largeur de cet élément pendant le repli de la barre latérale (app-shell.tsx).
+    <motion.div variants={pageVariants} initial={booted ? 'initial' : false} animate="animate">
       {children}
     </motion.div>
   );

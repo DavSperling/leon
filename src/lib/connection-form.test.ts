@@ -172,15 +172,15 @@ describe('oauthStartPath', () => {
 describe('isOAuthReturnPath', () => {
   it('accepte exactement les pages de la liste fermée', () => {
     for (const path of OAUTH_RETURN_PATHS) expect(isOAuthReturnPath(path)).toBe(true);
-    expect([...OAUTH_RETURN_PATHS]).toEqual(['/connexions', '/bienvenue/outils']);
+    expect([...OAUTH_RETURN_PATHS]).toEqual(['/connections', '/welcome/tools']);
   });
 
   it.each([
     'https://ailleurs',
     '//ailleurs',
-    '/bienvenue/outils/',
-    '/bienvenue/outils?x=1',
-    '/bienvenue/outils/../x',
+    '/welcome/tools/',
+    '/welcome/tools?x=1',
+    '/welcome/tools/../x',
     '/Bienvenue/outils',
     '',
     undefined,
@@ -337,17 +337,17 @@ describe('setupReturn', () => {
         branche: 'github',
         installation_id: '42',
         setup_action: 'install',
-        state: '/bienvenue/outils',
+        state: '/welcome/tools',
       }),
-    ).toBe('/bienvenue/outils?branche=github');
-    expect(setupReturn({ state: '/bienvenue/outils' })).toBe('/bienvenue/outils');
+    ).toBe('/welcome/tools?branche=github');
+    expect(setupReturn({ state: '/welcome/tools' })).toBe('/welcome/tools');
   });
 
   it.each([
     ['sans state', { branche: 'github' }],
-    ['depuis Connexions', { branche: 'github', state: '/connexions' }],
+    ['depuis Connexions', { branche: 'github', state: '/connections' }],
     ['une adresse hors de la liste', { branche: 'github', state: 'https://ailleurs' }],
-    ['un state en double', { branche: 'github', state: ['/bienvenue/outils', '/x'] }],
+    ['un state en double', { branche: 'github', state: ['/welcome/tools', '/x'] }],
   ])('reste sur Connexions %s', (_, params) => {
     expect(setupReturn(params)).toBeNull();
   });

@@ -1,0 +1,66 @@
+import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import { AboutStep } from '@/components/verre/onboarding/about-step';
+import { onboardingReady } from '@/components/verre/onboarding/tools-model';
+import { onboardingSteps } from '@/lib/onboarding';
+import { isSoleMember, readOnboardingMember, spaceRole } from '@/server/auth/onboarding';
+import { getSession, getUserContext } from '@/server/auth/session';
+import { getViewerProfile } from '@/server/auth/viewer';
+import { listCatalog } from '@/server/connectors/catalog';
+
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations('onboarding'))('metaTitle') };
+}
+
+// Jamais requireUserContext() : sans espace, il renverrait ici même, en boucle. Sans session, la connexion ; avec une
+// session, l'écran se rabat sur ce que la personne est : un nouveau venu sans espace, le propriétaire, ou un membre.
+export default async function WelcomePage() {
+  const session = await getSession();
+  if (!session) redirect('/sign-in');
+
+  // Ce que l'aperçu peut annoncer : les outils que l'étape Vos outils propose sur ce serveur.
+  const readyTools = listCatalog()
+    .filter(onboardingReady)
+    .map((item) => item.id);
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return (
+      <AboutStep
+        mode="newcomer"
+        spaceRole="owner"
+        userName={session.user.name}
+        organizationName={null}
+        placement={null}
+        steps={onboardingSteps('soleOwner')}
+        readyTools={readyTools}
+      />
+    );
+  }
+
+  // Étape déjà validée (ou ligne de membre introuvable) : l'appli, dont la règle de redirection tranche.
+  const member = await readOnboardingMember(ctx);
+  if (!member || member.onboardedAt !== null) redirect('/');
+
+  const role = spaceRole(member.role);
+  const profile = await getViewerProfile(ctx);
+  // Seul dans l'espace, un propriétaire a les trois étapes ; avec une équipe, la première seulement.
+  const steps = onboardingSteps(
+    role !== 'owner' ? 'member' : (await isSoleMember(ctx)) ? 'soleOwner' : 'ownerWithTeam',
+  );
+  return (
+    <AboutStep
+      mode={role === 'owner' ? 'owner' : 'member'}
+      spaceRole={role}
+      userName={profile.userName}
+      organizationName={profile.organizationName}
+      placement={
+        role === 'owner'
+          ? null
+          : { department: member.department, job: member.job, seniority: member.seniority }
+      }
+      steps={steps}
+      readyTools={readyTools}
+    />
+  );
+}

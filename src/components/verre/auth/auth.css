@@ -1,0 +1,99 @@
+/* Les pages hors ossature (connexion, inscription, invitation, mot de passe, autorisations, onboarding) : ce que les
+   classes Tailwind ne savent pas dire. Les couleurs viennent des jetons de globals.css, dans les deux thèmes ; le
+   mouvement s'arrête de lui-même sous « réduire les animations » (règle globale de globals.css). */
+
+@layer components {
+  /* Le logo de la barre : ses trois traits se tracent une fois au chargement, puis le point se pose (≈ 600 ms). Le
+     dessin du logo ne change pas : seul son tracé arrive. Chaque trait mesure moins de 200 unités du viewBox. */
+  .auth-logo path {
+    stroke-dasharray: 200;
+    animation: auth-draw 520ms cubic-bezier(0.3, 0, 0.2, 1) both;
+  }
+  .auth-logo circle {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: auth-dot 200ms 420ms var(--ease-out) both;
+  }
+  @keyframes auth-draw {
+    from {
+      stroke-dashoffset: 200;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes auth-dot {
+    from {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+  }
+
+  /* La pile d'originaux, à côté du formulaire : trois feuilles couchées droites, la première ouverte à son passage. */
+  .auth-talk {
+    padding: 0 40px 0 18px;
+  }
+  /* Pointer la réponse appuie le passage cité dans l'original, comme dans une discussion. */
+  .auth-answer {
+    cursor: default;
+  }
+  .auth-pile:has(.auth-answer:hover) :is(.auth-answer, .doc[data-slot="top"]) .hl {
+    background-image: linear-gradient(var(--hl-deep), var(--hl-deep));
+  }
+  .auth-pile .pile {
+    display: grid;
+    padding: 100px 40px 0 18px;
+  }
+  .auth-pile .doc {
+    grid-area: 1 / 1;
+    align-self: start;
+    padding: 14px 24px 18px 28px;
+    border-radius: 12px;
+  }
+  .auth-pile .doc > .flag--left {
+    top: 14px;
+  }
+  .auth-pile .doc[data-slot="top"] {
+    z-index: 3;
+    box-shadow: var(--sh-3, var(--sh-2));
+  }
+  .auth-pile .doc[data-slot="b1"] {
+    z-index: 2;
+    translate: 20px -40px;
+  }
+  .auth-pile .doc[data-slot="b2"] {
+    z-index: 1;
+    translate: 40px -80px;
+  }
+  /* Une feuille du dessous, pointée, sort un peu de la pile. */
+  .auth-pile .doc:not([data-slot="top"]) {
+    transition:
+      translate var(--med) var(--ease-out),
+      box-shadow var(--med) var(--ease-out);
+  }
+  .auth-pile .doc[data-slot="b1"]:hover {
+    translate: 20px -48px;
+  }
+  .auth-pile .doc[data-slot="b2"]:hover {
+    translate: 40px -88px;
+  }
+  .auth-pile .doc:not([data-slot="top"]) .auth-pile__title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 599px) {
+    .auth-pile .pile {
+      padding: 72px 28px 0 18px;
+    }
+    .auth-pile .doc {
+      padding: 12px 16px 16px 24px;
+    }
+    .auth-pile .doc[data-slot="b1"] {
+      translate: 14px -36px;
+    }
+    .auth-pile .doc[data-slot="b2"] {
+      translate: 28px -72px;
+    }
+  }
+}

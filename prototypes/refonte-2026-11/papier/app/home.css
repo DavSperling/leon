@@ -1,0 +1,44 @@
+/* Home: the morning briefing and three questions to try. The kit's tokens only. */
+
+/* The briefing: one sheet, its three groups standing on the columns of the tiles below (.grid--3), so the page has
+   one set of columns. Under 924px of page (where .grid--3 drops to two columns) the groups stack. */
+.home-brief { container-type: inline-size; }
+.brief.paper { display: grid; padding: 20px 0 8px; }
+.brief__col { position: relative; min-width: 0; padding: 0 24px; }
+.brief__col + .brief__col { margin-top: 20px; }
+.brief h3 { padding-bottom: 8px; font: 600 var(--fs-2)/20px var(--sans); letter-spacing: -.003em; }
+.brief li { border-top: 1px solid var(--line); }
+@container (min-width: 924px) {
+  .brief.paper { grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 12px; }
+  .brief__col + .brief__col { margin-top: 0; }
+  .brief__col + .brief__col::before { content: ""; position: absolute; left: -6.5px; top: -4px; bottom: 0; width: 1px; background: var(--line); }
+  /* The lines of the three groups share their rows: a rule in one group continues in the next, whatever wraps */
+  .brief__col { display: grid; grid-template-rows: subgrid; grid-row: span 3; }
+  .brief__col ul { display: contents; }
+}
+
+/* A line: the whole line is the control. Pointed at, focused or open, the highlighter of its source passes under it
+   (--sweep drives the stroke of ui.css's .is-sweep; app.css registers it, so it can move). */
+.brow {
+  --sweep: 0;
+  display: block; width: 100%; padding: 10px 0; border: 0; border-radius: var(--r-s); background: none;
+  color: var(--ink); font: 400 var(--fs-4)/28px var(--sans); letter-spacing: -.006em; text-align: left; text-wrap: balance;
+  transition: --sweep var(--med) var(--ease);
+}
+.brow .hl { padding-inline: 0; background-color: transparent; background-repeat: no-repeat; background-size: calc(var(--sweep) * 100%) 100%; }
+.brow .hl--a { background-size: calc(min(1, var(--sweep) / .9) * 100%) 100%; }
+.brow .hl--b { background-size: calc(clamp(0, (var(--sweep) - .9) * 10, 1) * 100%) 100%; }
+.brow .hl-1 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23FFB0D4'/%3E%3C/svg%3E"); }
+.brow .hl-2 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23A4F2BE'/%3E%3C/svg%3E"); }
+.brow .hl-3 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23A6D2FF'/%3E%3C/svg%3E"); }
+.brow .hl-4 { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%23FFD48F'/%3E%3C/svg%3E"); }
+.brow:is(:hover, :focus-visible, .is-open) { --sweep: 1; }
+.brow:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.brow .num { position: relative; top: -2px; margin-left: 8px; outline: 1.5px solid transparent; outline-offset: 1px; transition: outline-color var(--fast); }
+.brow:hover .num { outline-color: rgba(15, 15, 13, .45); }
+.brow.is-open .num { outline-color: var(--ink); }
+.brow:active .num { transform: scale(.94); }
+
+@media (max-width: 599px) {
+  .brief__col { padding: 0 20px; }
+}

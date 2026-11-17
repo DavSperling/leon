@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connections · Leon</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='131 126 200 200'%3E%3Cpath d='M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226' fill='none' stroke='%230F0F0D' stroke-width='17' stroke-linecap='round'/%3E%3Ccircle cx='313' cy='226' r='17' fill='%230F0F0D'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app-connections.css">
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body class="app" data-screen="connections">
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+
+<!-- shell: the sidebar. Identical on every app screen, except aria-current="page" on the current entry. -->
+<header class="side" data-side>
+  <div class="side__top">
+    <a class="side__brand" href="app.html" aria-label="Leon, home"><svg viewBox="131 126 200 200" aria-hidden="true"><path d="M140 157C196 157 236 226 300 226M140 226H300M140 294C196 294 236 226 300 226" fill="none" stroke="currentColor" stroke-width="17" stroke-linecap="round"/><circle cx="313" cy="226" r="17" fill="currentColor"/></svg>Leon</a>
+    <button type="button" class="btn btn--line btn--sm side__menu" data-side-menu aria-expanded="false" aria-controls="side-body">Menu</button>
+  </div>
+  <div class="side__body" id="side-body">
+    <div class="acct">
+      <button type="button" class="acct__btn" data-acct aria-expanded="false" aria-controls="acct-menu">
+        <span class="avatar" aria-hidden="true">K</span>
+        <span class="acct__ws">Kestrel Studio</span>
+        <span class="acct__who">Julie Martin</span>
+        <svg class="ico acct__chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 6.25 8 3.5l3 2.75M5 9.75l3 2.75 3-2.75"/></svg>
+      </button>
+      <div class="menu acct__menu" id="acct-menu" hidden>
+        <p class="menu__head">Signed in as <b>julie@kestrel.example</b></p>
+        <a class="menu__item" href="app-settings.html">Profile and settings</a>
+        <a class="menu__item" href="app-team.html">Invite people</a>
+        <a class="menu__item" href="signin.html">Sign out</a>
+      </div>
+    </div>
+    <nav class="side__nav" aria-label="Main">
+      <a class="side__link" data-nav="home" href="app.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7 8 2.25 13.5 7v6.25H9.75v-3.5h-3.5v3.5H2.5z"/></svg>Home</a>
+      <a class="side__link" data-nav="chat" href="app-chat.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.25 3h11.5v8H8.5L5 13.75V11H2.25z"/></svg>Chat</a>
+      <a class="side__link" data-nav="documents" href="app-documents.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.75h5.25L12.5 5v9.25H4zM9 2v3.25h3.25M6.25 8.5h4M6.25 11h4"/></svg>Documents</a>
+      <a class="side__link" data-nav="team" href="app-team.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><circle cx="6" cy="5.25" r="2.5"/><path d="M1.75 13.5c.2-2.3 1.9-3.75 4.25-3.75s4.05 1.45 4.25 3.75M10.75 2.9a2.5 2.5 0 0 1 0 4.7M12 9.9c1.3.5 2.1 1.7 2.25 3.6"/></svg>Team</a>
+      <a class="side__link" data-nav="connections" href="app-connections.html" aria-current="page"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 1.75v3M10.25 1.75v3M3.75 4.75h8.5v2.5a4.25 4.25 0 0 1-8.5 0zM8 11.5v2.75"/></svg>Connections</a>
+      <a class="side__link" data-nav="settings" href="app-settings.html"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.75h6.5M12 4.75h2M2 11.25h2M7.5 11.25H14"/><circle cx="10.25" cy="4.75" r="1.75"/><circle cx="5.75" cy="11.25" r="1.75"/></svg>Settings</a>
+    </nav>
+    <a class="side__state side__state--danger" href="app-connections.html"><span class="dot dot--danger" aria-hidden="true"></span>Intercom needs reconnecting</a>
+  </div>
+</header>
+<!-- /shell -->
+
+<main class="main" id="main">
+<div class="page">
+
+  <header class="top">
+    <div class="top__text">
+      <h1 class="top__title">Connections</h1>
+      <p class="top__sub">Read every 15 minutes. An item is shown only to the people who can already open it.</p>
+    </div>
+    <form class="ask" action="app-search.html" role="search">
+      <label class="vh" for="ask">Ask or search</label>
+      <input class="ask__input" id="ask" name="q" type="text" placeholder="Ask or search…" autocomplete="off" required>
+      <button class="btn" type="submit">Ask</button>
+    </form>
+  </header>
+
+  <!-- Connected: the eight tools of LEON_DEMO.connections. The one that needs an action comes first and holds the
+       screen's only ink pill. "Reconnect" opens the form in the row under it (js/app-connections.js). -->
+  <section class="sec" aria-labelledby="on-h">
+    <div class="sec__head"><h2 class="h-sec" id="on-h">Connected</h2><p class="sec__meta">8 tools</p></div>
+    <div class="table-wrap">
+      <table class="table cx-table">
+        <colgroup><col><col><col><col><col><col></colgroup>
+        <thead><tr><th scope="col">Tool</th><th scope="col">Account</th><th scope="col">Visible to</th><th scope="col">State</th><th scope="col" class="t-num">Items</th><th scope="col" class="t-act"><span class="vh">Actions</span></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="cell"><img class="logo" src="../shared/logos/intercom.svg" alt="" width="20" height="20">Intercom</span></td>
+            <td>Support inbox</td>
+            <td>Team</td>
+            <td data-state><span class="status status--danger"><span class="dot dot--danger" aria-hidden="true"></span>Last synced 2 days ago</span><span class="cell__sub cx-why">The key was revoked. Reconnect to resume.</span></td>
+            <td class="t-num">1,470</td>
+            <td class="t-act"><button type="button" class="btn btn--sm" data-reconnect aria-expanded="false" aria-controls="cx-fix" aria-label="Reconnect Intercom">Reconnect</button></td>
+          </tr>
+          <tr class="cx-fix" id="cx-fix" hidden>
+            <td colspan="6">
+              <form class="cx-fix__form" data-fix novalidate>
+                <label class="label" for="cx-key">New Intercom key</label>
+                <div class="cx-fix__line">
+                  <input class="field" id="cx-key" name="key" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="cx-key-hint cx-key-err">
+                  <button type="submit" class="btn">Reconnect</button>
+                  <button type="button" class="btn btn--line" data-cancel>Cancel</button>
+                </div>
+                <p class="field-error" id="cx-key-err" hidden>Paste a key to reconnect.</p>
+                <p class="hint" id="cx-key-hint">Create a new key in Intercom and paste it here. Leon stores it encrypted.</p>
+              </form>
+            </td>
+          </tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20">Gmail</span></td><td>julie@kestrel.example</td><td><span class="vis vis--only">Only you</span></td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 4 min ago</span></td><td class="t-num">1,842</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage Gmail">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/slack.svg" alt="" width="20" height="20">Slack</span></td><td>Kestrel Studio</td><td><span class="vis vis--only">Only you</span></td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 4 min ago</span></td><td class="t-num">9,310</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage Slack">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/notion.svg" alt="" width="20" height="20">Notion</span></td><td>Team wiki</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 11 min ago</span></td><td class="t-num">624</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage Notion">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20">Linear</span></td><td>Kestrel</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 11 min ago</span></td><td class="t-num">2,207</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage Linear">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/github.svg" alt="" width="20" height="20">GitHub</span></td><td>kestrel/app, kestrel/site</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 2 min ago</span></td><td class="t-num">3,981</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage GitHub">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20">HubSpot</span></td><td>Sales pipeline</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 9 min ago</span></td><td class="t-num">512</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage HubSpot">Manage</button></td></tr>
+          <tr><td><span class="cell"><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20">Granola</span></td><td>Julie Martin</td><td>Team</td><td><span class="status"><span class="dot dot--ok" aria-hidden="true"></span>Synced 14 min ago</span></td><td class="t-num">96</td><td class="t-act"><button type="button" class="btn btn--line btn--sm" title="Not in this prototype" aria-label="Manage Granola">Manage</button></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="vh" role="status" data-live></p>
+  </section>
+
+  <!-- Add a tool: the 42 connectors of LEON_DEMO.catalogue by family. The filter is offered only once its script
+       runs. The rows between the gen markers are written by tools/build-app.mjs: do not edit them by hand. -->
+  <section class="sec" aria-labelledby="add-h">
+    <div class="sec__head"><h2 class="h-sec" id="add-h">Add a tool</h2><p class="sec__meta" data-count aria-live="polite">42 tools · 8 connected</p></div>
+    <div class="filter-row" data-filter hidden>
+      <label class="vh" for="cx-q">Filter the tools by name or family</label>
+      <input class="field" id="cx-q" type="text" placeholder="Filter by name or family" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button type="button" class="link" data-clear hidden>Clear</button>
+    </div>
+    <dl class="kv cx-fams">
+<!--gen:LEON_DEMO.catalogue.map((f) => '\n      <div data-family><dt>' + f.family + '</dt><dd><ul class="cx-tools">' + f.tools.map(([t, n]) => '\n        <li class="cx-tool" data-tool="' + t + '">' + LeonUI.logo(t) + '<span class="cx-tool__name">' + n + '</span><span class="cx-tool__reads">' + LEON_APP.reads[t] + '</span>' + (LEON_DEMO.connections.some((c) => c.tool === t) ? '<span class="muted cx-tool__act">Connected</span>' : '<button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect ' + n + '">Connect</button>') + '</li>').join('') + '\n      </ul></dd></div>').join('') + '\n'-->
+      <div data-family><dt>Email, chat and files</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="gmail"><img class="logo" src="../shared/logos/gmail.svg" alt="" width="20" height="20"><span class="cx-tool__name">Gmail</span><span class="cx-tool__reads">Email threads. Promotions, Social, drafts and spam are left out.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="outlook"><img class="logo" src="../shared/logos/outlook.svg" alt="" width="20" height="20"><span class="cx-tool__name">Outlook</span><span class="cx-tool__reads">Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Outlook">Connect</button></li>
+        <li class="cx-tool" data-tool="slack"><img class="logo" src="../shared/logos/slack.svg" alt="" width="20" height="20"><span class="cx-tool__name">Slack</span><span class="cx-tool__reads">The channels you are a member of. Never your direct messages.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="drive"><img class="logo" src="../shared/logos/drive.svg" alt="" width="20" height="20"><span class="cx-tool__name">Google Drive</span><span class="cx-tool__reads">Google documents, presentations and spreadsheets, PDF, Word, Excel, PowerPoint and text files.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Google Drive">Connect</button></li>
+      </ul></dd></div>
+      <div data-family><dt>Meetings</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="granola"><img class="logo" src="../shared/logos/granola.svg" alt="" width="20" height="20"><span class="cx-tool__name">Granola</span><span class="cx-tool__reads">Meeting notes, with their transcript and summary.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="fathom"><img class="logo" src="../shared/logos/fathom.svg" alt="" width="20" height="20"><span class="cx-tool__name">Fathom</span><span class="cx-tool__reads">Meetings the key’s owner recorded or was shared: transcript and summary.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Fathom">Connect</button></li>
+        <li class="cx-tool" data-tool="fireflies"><img class="logo" src="../shared/logos/fireflies.svg" alt="" width="20" height="20"><span class="cx-tool__name">Fireflies</span><span class="cx-tool__reads">Transcribed meetings the key’s owner has access to.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Fireflies">Connect</button></li>
+        <li class="cx-tool" data-tool="tldv"><img class="logo" src="../shared/logos/tldv.svg" alt="" width="20" height="20"><span class="cx-tool__name">tl;dv</span><span class="cx-tool__reads">Meetings the key’s owner attended, with their transcript.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect tl;dv">Connect</button></li>
+        <li class="cx-tool" data-tool="circleback"><img class="logo" src="../shared/logos/circleback.svg" alt="" width="20" height="20"><span class="cx-tool__name">Circleback</span><span class="cx-tool__reads">Meetings of the key’s owner, not those only shared with them.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Circleback">Connect</button></li>
+        <li class="cx-tool" data-tool="claap"><img class="logo" src="../shared/logos/claap.svg" alt="" width="20" height="20"><span class="cx-tool__name">Claap</span><span class="cx-tool__reads">The workspace’s recordings, meetings and captures, with their transcript.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Claap">Connect</button></li>
+        <li class="cx-tool" data-tool="leexi"><img class="logo" src="../shared/logos/leexi.svg" alt="" width="20" height="20"><span class="cx-tool__name">Leexi</span><span class="cx-tool__reads">Calls, with what each speaker said.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Leexi">Connect</button></li>
+        <li class="cx-tool" data-tool="gong"><img class="logo" src="../shared/logos/gong.svg" alt="" width="20" height="20"><span class="cx-tool__name">Gong</span><span class="cx-tool__reads">Calls, with their participants and transcript.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Gong">Connect</button></li>
+      </ul></dd></div>
+      <div data-family><dt>Projects and docs</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="notion"><img class="logo" src="../shared/logos/notion.svg" alt="" width="20" height="20"><span class="cx-tool__name">Notion</span><span class="cx-tool__reads">Pages, block by block, and their comments.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="jira"><img class="logo" src="../shared/logos/jira.svg" alt="" width="20" height="20"><span class="cx-tool__name">Jira</span><span class="cx-tool__reads">Issues and their comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Jira">Connect</button></li>
+        <li class="cx-tool" data-tool="confluence"><img class="logo" src="../shared/logos/confluence.svg" alt="" width="20" height="20"><span class="cx-tool__name">Confluence</span><span class="cx-tool__reads">Pages and their footer comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Confluence">Connect</button></li>
+        <li class="cx-tool" data-tool="asana"><img class="logo" src="../shared/logos/asana.svg" alt="" width="20" height="20"><span class="cx-tool__name">Asana</span><span class="cx-tool__reads">Tasks, with their description and comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Asana">Connect</button></li>
+        <li class="cx-tool" data-tool="clickup"><img class="logo" src="../shared/logos/clickup.svg" alt="" width="20" height="20"><span class="cx-tool__name">ClickUp</span><span class="cx-tool__reads">Tasks, closed ones included, and their comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect ClickUp">Connect</button></li>
+        <li class="cx-tool" data-tool="trello"><img class="logo" src="../shared/logos/trello.svg" alt="" width="20" height="20"><span class="cx-tool__name">Trello</span><span class="cx-tool__reads">Cards on your open boards, with their comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Trello">Connect</button></li>
+        <li class="cx-tool" data-tool="monday"><img class="logo" src="../shared/logos/monday.svg" alt="" width="20" height="20"><span class="cx-tool__name">monday.com</span><span class="cx-tool__reads">Boards, items and updates, limited to the boards you see.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect monday.com">Connect</button></li>
+        <li class="cx-tool" data-tool="shortcut"><img class="logo" src="../shared/logos/shortcut.svg" alt="" width="20" height="20"><span class="cx-tool__name">Shortcut</span><span class="cx-tool__reads">Stories and their comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Shortcut">Connect</button></li>
+        <li class="cx-tool" data-tool="plane"><img class="logo" src="../shared/logos/plane.svg" alt="" width="20" height="20"><span class="cx-tool__name">Plane</span><span class="cx-tool__reads">Work items and their comments. Archived items and drafts are skipped.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Plane">Connect</button></li>
+        <li class="cx-tool" data-tool="airtable"><img class="logo" src="../shared/logos/airtable.svg" alt="" width="20" height="20"><span class="cx-tool__name">Airtable</span><span class="cx-tool__reads">Records, with their text and comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Airtable">Connect</button></li>
+        <li class="cx-tool" data-tool="basecamp"><img class="logo" src="../shared/logos/basecamp.svg" alt="" width="20" height="20"><span class="cx-tool__name">Basecamp</span><span class="cx-tool__reads">Messages, documents and comments.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Basecamp">Connect</button></li>
+        <li class="cx-tool" data-tool="miro"><img class="logo" src="../shared/logos/miro.svg" alt="" width="20" height="20"><span class="cx-tool__name">Miro</span><span class="cx-tool__reads">The text on your boards: sticky notes, shapes, cards, frames and documents. Never images.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Miro">Connect</button></li>
+        <li class="cx-tool" data-tool="productboard"><img class="logo" src="../shared/logos/productboard.svg" alt="" width="20" height="20"><span class="cx-tool__name">Productboard</span><span class="cx-tool__reads">Notes. Archived notes are skipped.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Productboard">Connect</button></li>
+      </ul></dd></div>
+      <div data-family><dt>Engineering</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="github"><img class="logo" src="../shared/logos/github.svg" alt="" width="20" height="20"><span class="cx-tool__name">GitHub</span><span class="cx-tool__reads">Issues and pull requests, with comments and reviews, in the team repositories an admin chose.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="gitlab"><img class="logo" src="../shared/logos/gitlab.svg" alt="" width="20" height="20"><span class="cx-tool__name">GitLab</span><span class="cx-tool__reads">Issues and merge requests of the 20 most active projects you are a member of.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect GitLab">Connect</button></li>
+        <li class="cx-tool" data-tool="linear"><img class="logo" src="../shared/logos/linear.svg" alt="" width="20" height="20"><span class="cx-tool__name">Linear</span><span class="cx-tool__reads">Issues and their comments.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="sentry"><img class="logo" src="../shared/logos/sentry.svg" alt="" width="20" height="20"><span class="cx-tool__name">Sentry</span><span class="cx-tool__reads">Issues. Neither stack traces nor event data.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Sentry">Connect</button></li>
+      </ul></dd></div>
+      <div data-family><dt>CRM</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="hubspot"><img class="logo" src="../shared/logos/hubspot.svg" alt="" width="20" height="20"><span class="cx-tool__name">HubSpot</span><span class="cx-tool__reads">Notes, calls, meetings and emails, with the company, deal or contact they are linked to.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="attio"><img class="logo" src="../shared/logos/attio.svg" alt="" width="20" height="20"><span class="cx-tool__name">Attio</span><span class="cx-tool__reads">Notes and comment threads.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Attio">Connect</button></li>
+        <li class="cx-tool" data-tool="folk"><img class="logo" src="../shared/logos/folk.svg" alt="" width="20" height="20"><span class="cx-tool__name">folk</span><span class="cx-tool__reads">Public notes on contacts and companies. Private notes are not read.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect folk">Connect</button></li>
+        <li class="cx-tool" data-tool="pipedrive"><img class="logo" src="../shared/logos/pipedrive.svg" alt="" width="20" height="20"><span class="cx-tool__name">Pipedrive</span><span class="cx-tool__reads">The notes and activities your account sees.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Pipedrive">Connect</button></li>
+        <li class="cx-tool" data-tool="close"><img class="logo" src="../shared/logos/close.svg" alt="" width="20" height="20"><span class="cx-tool__name">Close</span><span class="cx-tool__reads">Notes, calls with their transcripts, emails, SMS and WhatsApp messages of your leads.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Close">Connect</button></li>
+      </ul></dd></div>
+      <div data-family><dt>Support</dt><dd><ul class="cx-tools">
+        <li class="cx-tool" data-tool="intercom"><img class="logo" src="../shared/logos/intercom.svg" alt="" width="20" height="20"><span class="cx-tool__name">Intercom</span><span class="cx-tool__reads">Conversations, with their messages and internal notes.</span><span class="muted cx-tool__act">Connected</span></li>
+        <li class="cx-tool" data-tool="zendesk"><img class="logo" src="../shared/logos/zendesk.svg" alt="" width="20" height="20"><span class="cx-tool__name">Zendesk</span><span class="cx-tool__reads">Tickets and their comments, internal notes included.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Zendesk">Connect</button></li>
+        <li class="cx-tool" data-tool="freshdesk"><img class="logo" src="../shared/logos/freshdesk.svg" alt="" width="20" height="20"><span class="cx-tool__name">Freshdesk</span><span class="cx-tool__reads">Tickets, with their replies and internal notes.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Freshdesk">Connect</button></li>
+        <li class="cx-tool" data-tool="helpscout"><img class="logo" src="../shared/logos/helpscout.svg" alt="" width="20" height="20"><span class="cx-tool__name">Help Scout</span><span class="cx-tool__reads">Conversations.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Help Scout">Connect</button></li>
+        <li class="cx-tool" data-tool="front"><img class="logo" src="../shared/logos/front.svg" alt="" width="20" height="20"><span class="cx-tool__name">Front</span><span class="cx-tool__reads">Conversations, with their messages and comments. Personal inboxes only if their owner allows it.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Front">Connect</button></li>
+        <li class="cx-tool" data-tool="plain"><img class="logo" src="../shared/logos/plain.svg" alt="" width="20" height="20"><span class="cx-tool__name">Plain</span><span class="cx-tool__reads">Threads and their messages.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Plain">Connect</button></li>
+        <li class="cx-tool" data-tool="crisp"><img class="logo" src="../shared/logos/crisp.svg" alt="" width="20" height="20"><span class="cx-tool__name">Crisp</span><span class="cx-tool__reads">The website’s conversations, with their messages and internal notes.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Crisp">Connect</button></li>
+        <li class="cx-tool" data-tool="missive"><img class="logo" src="../shared/logos/missive.svg" alt="" width="20" height="20"><span class="cx-tool__name">Missive</span><span class="cx-tool__reads">Team conversations, with their messages and comments. Not your personal email.</span><button type="button" class="btn btn--line btn--sm cx-tool__act" title="Not in this prototype" aria-label="Connect Missive">Connect</button></li>
+      </ul></dd></div>
+<!--/gen-->
+    </dl>
+    <div class="empty cx-none" data-none hidden>
+      <h3 class="empty__title">No tool matches “<span data-none-q></span>”</h3>
+      <p class="empty__text">Leon connects to 42 tools today. Check the spelling, or clear the filter to see them all.</p>
+      <p class="empty__act"><button type="button" class="btn btn--line btn--sm" data-clear>Clear the filter</button></p>
+    </div>
+  </section>
+
+</div>
+</main>
+</div>
+
+<script src="../shared/demo-data.js" defer></script>
+<script src="js/app-data.js" defer></script>
+<script src="js/demo.js" defer></script>
+<script src="js/app.js" defer></script>
+<script src="js/app-connections.js" defer></script>
+</body>
+</html>

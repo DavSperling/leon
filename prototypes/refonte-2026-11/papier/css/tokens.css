@@ -1,0 +1,88 @@
+/* Leon « Papier » v2 : tokens. White page, ink, four highlighters. Leon speaks in sans; the record speaks in serif. */
+:root {
+  /* Canvas */
+  --ground: #FFFFFF;      /* the page */
+  --desk: #F1F1EE;        /* the stage bands where sheets lie */
+  --desk-2: #E6E6E1;      /* idle tabs */
+  --desk-3: #DBDBD5;      /* idle tab, pointed at */
+  --sheet: #FFFFFF;
+  --ink: #0F0F0D;
+  --ink-hover: #2B2B27;
+  --ink-2: #5B5B55;
+  --line: #E2E2DC;
+  --line-strong: #C6C6BE;
+  --on-ink-2: #B7B7AF;    /* secondary text on an ink band */
+  --on-ink-line: rgba(255, 255, 255, .16);
+  --term: #1C1C19;        /* the terminal panel: a step lighter than the ink band */
+  --term-line: #2E2E2A;
+  --term-text: #D6D6CF;
+  --term-dim: #9C9C94;
+
+  /* Highlighters (source 1 to 4), their deeper stroke when linked, and flags (ink text on them) */
+  --m1: #FFB0D4;  --m2: #A4F2BE;  --m3: #A6D2FF;  --m4: #FFD48F;
+  --d1: #FF8DC1;  --d2: #72E6A3;  --d3: #7FBFFF;  --d4: #FFC064;
+  --f1: #FF6FB0;  --f2: #44D98A;  --f3: #5AAEFF;  --f4: #FFAD3D;
+  --ok: #1F7A4D;
+  --danger: #B42318;
+
+  /* Type: two voices */
+  --sans: "Schibsted Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "STIX Two Text", "Iowan Old Style", Georgia, serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;  /* the terminal only: real output */
+
+  /* The five sizes of the page (outside interface fragments) */
+  --t-h1: clamp(3rem, 3.9vw, 3.5rem);  /* 56 at 1440, 50 at 1280: the first line must hold on eight columns */
+  --t-h2: 2.5rem;        /* 40 */
+  --t-lead: 1.125rem;    /* 18 */
+  --t-body: 1rem;        /* 16 */
+  --t-small: .84375rem;  /* 13.5 */
+
+  /* Interface sizes, inside fragments (13px minimum) */
+  --t-answer: 1.25rem;   /* 20: Leon's answer */
+  --t-orig: 1rem;        /* 16: the words of an original, in serif */
+  --t-ui-l: .9375rem;    /* 15 */
+  --t-ui: .875rem;       /* 14 */
+  --t-ui-s: .84375rem;   /* 13.5 */
+  --t-chip: .8125rem;    /* 13 */
+
+  /* Grid */
+  --margin: 48px;
+  --gutter: 24px;
+  --maxw: 1344px;
+  --nav-h: 72px;
+  --sec-gap: 148px;
+  --band-pad: 104px;
+
+  /* Shapes */
+  --r: 6px;              /* sheets, fields, panels */
+  --r-mark: 3px;         /* highlighter strokes, number chips */
+  --r-pill: 999px;       /* every button */
+  --sheet-shadow: 0 1px 0 rgba(15, 15, 13, .05), 0 16px 28px -16px rgba(15, 15, 13, .22);
+
+  /* The flag */
+  --flag-w: 34px;
+  --flag-h: 24px;
+  --flag-notch: 8px;
+  --flag-out: 18px;      /* how far it sticks out past the sheet's edge */
+  --flag-gutter: 64px;   /* room kept on the sheet's right side for flags */
+
+  /* Motion */
+  --ease-out: cubic-bezier(.16, 1, .3, 1);       /* arrivals */
+  --ease-flag: cubic-bezier(.34, 1.56, .64, 1);  /* flags only: a slight overshoot */
+  --t-fast: 200ms;   /* the same three durations as LeonMotion.dur (js/motion/core.js): one scale for CSS and script */
+  --t-base: 420ms;
+  --t-move: 600ms;
+}
+
+@media (max-width: 1099px) {
+  /* 5.6vw: the first line (15.9em wide) still holds on one line at 700 */
+  :root { --margin: 24px; --sec-gap: 120px; --band-pad: 88px; --t-h1: clamp(2.25rem, 5.6vw, 2.75rem); --t-h2: 2.25rem; }
+}
+@media (max-width: 699px) {
+  :root {
+    --margin: 16px; --sec-gap: 96px; --band-pad: 72px;
+    --t-h1: clamp(1.625rem, 7.4vw, 2.125rem); /* 29px at 390: the widest size at which the headline holds on two lines (32px takes three) */ --t-h2: 1.75rem; --t-lead: 1.0625rem;
+    --t-answer: 1.0625rem;
+    --flag-out: 10px; --flag-gutter: 46px;
+  }
+}

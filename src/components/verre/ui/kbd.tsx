@@ -10,7 +10,7 @@ export function Kbd({ className, ...props }: ComponentProps<'kbd'>) {
     <kbd
       aria-hidden="true"
       className={cn(
-        'inline-grid h-[18px] min-w-[18px] place-items-center rounded-[6px] border border-line-strong bg-glass-3 px-[5px] font-mono text-[10.5px] leading-none font-medium tracking-normal text-muted',
+        'inline-flex h-6 min-w-6 shrink-0 items-center justify-center rounded-chip border border-b-2 border-line bg-n-50 px-1.5 font-sans text-label leading-none font-medium text-fg-2 tabular-nums',
         className,
       )}
       {...props}

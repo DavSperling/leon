@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <title>Pixel avatar 1</title>
+  <path fill="#5142a1" d="M0 0h64v64H0z"/><path fill="#17223d" d="M12 12h8V8h24v4h8v28h-8V24H20v16h-8z"/>
+  <path fill="#f4bb8b" d="M20 20h24v20H20z"/><path fill="#17223d" d="M16 16h8v8h-4v8h-4zm24 0h8v16h-4v-8h-4z"/>
+  <path fill="#30233d" d="M24 28h4v4h-4zm12 0h4v4h-4z"/><path fill="#d77c69" d="M28 36h8v4h-8z"/>
+  <path fill="#3e9de0" d="M12 48h8v-8h24v8h8v16H12z"/><path fill="#efb74e" d="M8 20h8v20H8zm40 0h8v20h-8z"/>
+</svg>

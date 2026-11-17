@@ -255,7 +255,7 @@ async function waitForBrowser(
     if (!result || !sameSecret(target.searchParams.get('etat'), etat)) return reply(response, 400);
     response
       .writeHead(302, {
-        Location: `${origin}/ordinateur/connecte${refused ? '?refus=1' : ''}`,
+        Location: `${origin}/computer/connected${refused ? '?refus=1' : ''}`,
         Connection: 'close',
       })
       .end(() => settle(result));
@@ -336,7 +336,7 @@ async function loginWithBrowser(
       empreinte,
       ...(asked.length > 0 ? { usages: asked.join(',') } : {}),
     });
-    const address = `${origin}/ordinateur/autoriser?${query}`;
+    const address = `${origin}/computer/authorize?${query}`;
     deps.out('Opening your browser to authorize this computer. If it does not open, go to:');
     deps.out(`  ${address}`);
     deps.open(address);

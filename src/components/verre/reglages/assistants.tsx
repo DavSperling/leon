@@ -1,11 +1,8 @@
 'use client';
 
-import { Plug } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
 import { useTranslations } from 'next-intl';
-import { CodeLine, EmptyState, GlassCard, Section } from '@/components/verre';
-import { SECTION } from './reglages';
-import { type Token, TokenRow } from './tokens';
+import { CodeLine } from '@/components/verre';
+import { PATH_TITLE } from './computers';
 
 // Un client par ligne : comment l'ajouter (messages `client<Id>Name` et `client<Id>How`), et la ou les commandes à
 // copier quand il s'ajoute en ligne de commande. Les autres (Gemini CLI, Antigravity…) vivent dans la documentation.
@@ -24,64 +21,27 @@ const CLIENTS: {
 ];
 
 /**
- * Section « Assistants connectés » (ancre #assistants) : l'adresse du MCP de Leon à coller dans l'assistant (elle doit
- * être celle des métadonnées, au caractère près : Claude compare), une ligne par client pour dire où la coller, puis
- * les assistants que l'utilisateur a branchés (jetons `assistant`, lus par la page), avec leur révocation.
+ * Le corps du panneau « Connecter un assistant » (la tuile porte l'ancre #assistants) : l'adresse du MCP de Leon à
+ * coller dans l'assistant (celle des métadonnées, au caractère près : Claude compare), puis une ligne par client pour
+ * dire où la coller. Les assistants branchés sont des cartes du groupe ; leur révocation est dans leur panneau.
  */
-export function AssistantsSection({
-  address,
-  assistants,
-}: {
-  address: string;
-  assistants: Token[];
-}) {
+export function AssistantSetup({ address }: { address: string }) {
   const t = useTranslations('settings');
-
-  // la ligne disparaît avec son bouton : le focus passe à la ligne voisine, ou au premier bouton de la section
-  const focusAfter = (id: string) => {
-    const i = assistants.findIndex((x) => x.id === id);
-    const neighbour = assistants[i + 1] ?? assistants[i - 1];
-    requestAnimationFrame(() =>
-      (
-        document.querySelector<HTMLElement>(`[data-revoke="${neighbour?.id}"]`) ??
-        document.querySelector<HTMLElement>('#assistants button')
-      )?.focus({ preventScroll: true }),
-    );
-  };
-
   return (
-    <Section
-      id="assistants"
-      title={t('assistantsTitle')}
-      description={t('assistantsDescription')}
-      className={SECTION}
-    >
-      <p className="mb-2.5 text-body text-fg-2">{t('assistantsLead')}</p>
+    <div>
+      <p className="mb-3 text-ui leading-[1.55] text-fg-2">{t('assistantsLead')}</p>
       <CodeLine code={address} />
-      <ul className="mt-6 mb-8 grid gap-5">
+      <ul className="mt-2 divide-y divide-line">
         {CLIENTS.map(({ id, commands }) => (
-          <li key={id}>
-            <h3 className="mb-1 text-ui font-semibold text-fg">{t(`client${id}Name`)}</h3>
-            <p className="text-body text-fg-2">{t(`client${id}How`)}</p>
+          <li key={id} className="py-4 last:pb-0">
+            <h3 className={PATH_TITLE}>{t(`client${id}Name`)}</h3>
+            <p className="text-ui leading-[1.55] text-fg-2">{t(`client${id}How`)}</p>
             {commands?.(address).map((command) => (
               <CodeLine key={command} code={command} wrap className="mt-2.5" />
             ))}
           </li>
         ))}
       </ul>
-      {assistants.length > 0 ? (
-        <GlassCard className="p-1.5">
-          <ul aria-label={t('yourAssistants')} className="grid grid-cols-[minmax(0,1fr)]">
-            <AnimatePresence initial={false}>
-              {assistants.map((a) => (
-                <TokenRow key={a.id} token={a} onGone={() => focusAfter(a.id)} />
-              ))}
-            </AnimatePresence>
-          </ul>
-        </GlassCard>
-      ) : (
-        <EmptyState icon={Plug} title={t('noAssistants')} className="py-8" />
-      )}
-    </Section>
+    </div>
   );
 }

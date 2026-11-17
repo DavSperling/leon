@@ -1,0 +1,127 @@
+{
+ "modules": [
+  {
+   "name": "core",
+   "effort": "small",
+   "missing": [
+    "`html.js-motion` (add to THEME_SCRIPT in src/app/layout.tsx, which already reads leon-motion)",
+    "leon-failsafe keyframes scoped to .s-root in site.css",
+    "a client hook/helpers: useInstant-aware start, InView flag (data-in), revert on 'Stop animations'",
+    "--k index hooks in AnswerText, Pile, AnswerSheet",
+    "Lenis, anchor travel, M.refresh: not needed (no in-page anchors on the real home; drop with Lenis/ScrollTrigger)"
+   ],
+   "notes": "The real home has no motion hook, no GSAP, no Lenis. Everything below depends on this scaffolding. Durations and eases already exist as CSS tokens (--s-ease, --s-ease-flag, --fast, --med) and in src/lib/verre/motion.ts. JS animations must read useInstant() (system preference or data-motion=off) and revert live; the global CSS rule only stops CSS."
+  },
+  {
+   "name": "hero",
+   "effort": "medium",
+   "missing": [
+    "staged demo (question, marks swept, cites pop, notes written, docs land one after the other): needs --k per mark/cite/note/doc and animation-delay; the answer is one <p>, sentences are not nodes",
+    "leave phase (0.2 s) before the question swap in HeroTabs (one choose(i), last question wins)",
+    "sliding tab indicator (span in .s-tabs with --ind-l/--ind-r, set from tabs refs)",
+    "selection pass-over (data-was z-index for 200 ms + 14% pull on the chosen doc); slot travel already exists as 420 ms CSS transitions",
+    "side flags per sentence do not exist in the real sheet (pop .cite and the doc flag instead)",
+    "linked pointing (.is-lit) does not exist (styling, not motion)"
+   ],
+   "notes": "Already in CSS and to keep: headline lines (s-line), 3 strokes (s-wipe), lead/pill/tabs+stage (s-arrive), logo draw (s-draw). Porting the hero JS as is would play them twice. Because DemoScene remounts on key={demo.id}, a mount-time CSS animation replays on each question for free; stage the demo in CSS so it starts at first paint, not after hydration (the film shows the real entrance already finished at the load event). kit.css already has .hl-arrive and @property --sweep. Watch the 160 ms .hl colour transition blinking after a sweep. Pile hidden under 1100 px."
+  },
+  {
+   "name": "rules",
+   "effort": "large",
+   "missing": [
+    "list of three names + marker (new en/fr copy)",
+    "pin structure: list and the three .s-rule3 in one grid cell (grid-area 1/1, margin 0, inert on non-current), one desk panel, caption once; real fragments are separate padded panels each with its own figcaption",
+    "data-rule / data-rules hooks (real blocks are plain div.s-rule3, no id)",
+    "mini documents (rule 1: 3, rule 2: 1, rule 3: 2) do not exist: map to the s-note rows arriving, or new markup (founder decision)",
+    "RightsSwitch must become controlled so the scroll can switch to Sophie at unit 25 (keep one view in the DOM: Sophie's DOM must never hold Julie's email)",
+    "empty flag: add pathLength=1 on the polygon (outline is solid, a plain dashoffset draw works)",
+    "sliding switch thumb (optional)",
+    "scrub driver: sticky wrapper + Motion scroll(), or GSAP ScrollTrigger"
+   ],
+   "notes": "Real rule heights 424/337/433 px at 1512x771 (room 699) and 455/368/433 at 1280x800: one rule fits, pin it; 390 px: 633/546/634, stacked. Pin length min(2000, 2.2 x height). Remove .s-rv from the pinned text and fragments (a running CSS animation overrides inline transform/opacity). Under 1024 or when a rule does not fit: stacked, entrance only (already provided by .s-rv). Prototype's frozen/slide/travel code is not needed. Heading marks are inline spans: draw with background-size/--sweep, not scaleX."
+  },
+  {
+   "name": "dev",
+   "effort": "large",
+   "missing": [
+    "the whole story: strip with 3 steps and marker, desk row with 3 sheets and thread, evening and morning terminal bodies (13 lines + marks + sources), Replay, state step, new en/fr copy and data: none of it exists and the real copy is about the MCP server (content decision for the founder)",
+    "'dreaming' heading mark (real heading has none)",
+    "closing line .dev__line (not in the real page)",
+    "terminal printing and the 3 logo pops on the real 5-line terminal: portable now, needs a client island and line hooks"
+   ],
+   "notes": "Real band: h2#assistant, lead, 3 li points, ArrowLink, s-term (bar + aria-hidden body with 5 p). Port in two steps: terminal printing (40 ms per line) + entrance on today's content (small), then the 3-step story only if the founder wants it in the real copy (large). Story state machine needs React state (step) and a timeline (Motion animate sequences or CSS classes); skip and replay rules, off-screen pause, and revert on 'Stop animations' must be rewritten for React."
+  },
+  {
+   "name": "ambient",
+   "effort": "medium",
+   "missing": [
+    "data-count span for 42 (number is inside the translated connTitle string): t.rich or a CountUp client island",
+    "mark in Security() heading (none today) and mark passed to CtaBand for 'on record.'",
+    "--k hooks on .s-memo p/h3/li and .num chips; hooks on footer blocks",
+    "tool hover swept stroke (.s-tool has no hover rule); marquee --dur 40/46 s and ease-to-stop",
+    "drawn marks on 7 headings: one CSS gesture (background-size with @property --sweep) triggered by data-in",
+    "sign-up sheet landing: n/a, the real close band has no form"
+   ],
+   "notes": "Mostly CSS plus a tiny in-view flag. Already present: s-roll marquee (42 s, row 2 reverse, pause on hover/focus-within, tools doubled in server markup), CheckMark/ProgressMark with pathLength=1 and stroke-dasharray:1 (ticks and rings draw with a plain dashoffset), .s-rv scroll-linked rise on 14 nodes (keep except where JS owns the node), pills and arrow-link feedback. Many small wins and the cheapest visible gain after the hero."
+  }
+ ],
+ "libraries": [
+  {
+   "name": "GSAP core 3.13.0 (gsap, includes ScrollTrigger, Flip, SplitText)",
+   "neededFor": "Every tween and timeline of the prototype: hero, memo, count, story, scrubbed rules timeline",
+   "license": "npm: \"Standard 'no charge' license: https://gsap.com/standard-license.\" (same on 3.15.1). The 3.13.0 tarball has no LICENSE file; text is on gsap.com (effective 30 Apr 2025, Webflow). Permitted on any website/web app; prohibited in no-code visual animation builders competing with Webflow; Webflow may terminate and amend. FAQ: commercial use free, plugins included. The old 'end users not charged' summary is commented out in the page source. Allows Leon (not an animation builder). Not open source; not legal advice.",
+   "canDrop": "Mostly. Hero demo, entrances, memo, ticks, marks, terminal: CSS keyframes with animation-delay. Count-up, story, leave phase: Motion animate() (already installed, MIT). Keep GSAP only if the pinned scrub proves too fiddly with Motion scroll()."
+  },
+  {
+   "name": "ScrollTrigger (in gsap 3.13.0)",
+   "neededFor": "Rules pin + scrub (the only real need); once-on-enter triggers; refresh; anchors; off-screen pause",
+   "license": "Same Standard 'no charge' license as gsap (same package).",
+   "canDrop": "Yes, with work: position: sticky for the pin (main has overflow-x: clip, which keeps sticky working), Motion scroll() for the scrub, IntersectionObserver/Motion inView for once-on-enter. The frozen/slide/travel code disappears (no in-page anchors on the real home)."
+  },
+  {
+   "name": "Flip (in gsap 3.13.0)",
+   "neededFor": "Hero only: the three pile sheets travelling to new slots",
+   "license": "Same Standard 'no charge' license as gsap.",
+   "canDrop": "Yes. Slots already transition in CSS (translate/rotate 420 ms); add data-was for z-index and a 14% pull in CSS. Motion layout projection is the fallback."
+  },
+  {
+   "name": "SplitText (in gsap 3.13.0)",
+   "neededFor": "Nothing: registered in core.js, never called",
+   "license": "Same Standard 'no charge' license as gsap.",
+   "canDrop": "Yes, drop it."
+  },
+  {
+   "name": "Lenis 1.3.4",
+   "neededFor": "Inertial scroll, smoother scrub, anchor travel",
+   "license": "MIT (LICENSE: Copyright (c) 2024 darkroom.engineering); latest 1.3.27 also MIT.",
+   "canDrop": "Yes, without changing the choreography: only the scroll feel changes. The real home has no in-page anchors. A small catch-up (spring on progress, equal to scrub: 0.42) can replace the smoothing."
+  },
+  {
+   "name": "Rough Notation 0.5.1",
+   "neededFor": "Hand-drawn strokes: 3 hero strokes, 7 heading marks",
+   "license": "MIT (LICENSE: Copyright (c) 2020 Preet Shihn); no dependencies.",
+   "canDrop": "Yes, with a small visible change: a straight wipe instead of a rough hand stroke. Headings (inline spans): background-size on the registered @property --sweep (already in kit.css); hero strokes: scaleX wipe (s-wipe already in place)."
+  },
+  {
+   "name": "Motion 14.5.0 (already in package.json; framer-motion and motion-dom 14.5.0)",
+   "neededFor": "The replacement for GSAP: animate(), scroll(), inView(), stagger, spring, hover, press (vanilla exports verified in node_modules); the app already uses motion/react",
+   "license": "MIT (LICENSE.md: Copyright (c) 2024 Motion B.V.). Allows a commercial product.",
+   "canDrop": "Not a drop: it is the no-new-dependency route. Its handling of CSS individual translate/rotate/scale properties (used across the kit) was not verified."
+  }
+ ],
+ "risks": [
+  "Content, not only motion: the developers story (Evening/Night/Morning, sheets, thread, codex terminal), the rules' list of names, the mini documents, the 'dreaming' mark, a mark on the security heading and the close sign-up sheet do not exist in the real page or in messages/en.json and fr.json. Each needs a founder decision and new copy; do not port them silently.",
+  "Hydration flash and LCP: the SSR hero is painted before hydration (in next dev the CSS entrance has already finished at the load event). A JS sequence started at hydration would show a finished hero, hide it, replay it. Keep the headline and hero visible, stage the demo in CSS (starts at first paint), pre-hide with html.js-motion only what JS owns, keep the 3 s failsafe.",
+  "Double play: real CSS (s-arrive, s-rv view timelines on 14 nodes, s-land re-fired on every slot change, transitions) plus a JS port plays twice, and a running CSS animation overrides inline transform/opacity. Remove .s-rv/.s-arrive/.s-land from nodes that JS owns.",
+  "JS ignores data-motion=off: the global rule stops CSS only. Effects must read useInstant(), revert live (pin teardown shortens the page by about 1,700 px, re-measure) and re-run when switched back.",
+  "React owns the DOM: key remounts (question, view), a controlled switch, Strict Mode double effects, useLayoutEffect before paint, inline styles on React-managed nodes. Every setup must be revertable; kill tweens before a key remount; never write innerHTML.",
+  "Rule 3 privacy: Sophie's DOM must never contain Julie's email; keep one view rendered at a time and switch by state, not by cross-fading two views.",
+  "Pin geometry: fixed 72 px bar, main overflow-x: clip (must stay clip, hidden breaks sticky), rule heights 337 to 633 px by width, fragments of different heights stretched into one panel, pin only when a rule fits (h + 32 <= window height - bar); header/footer links go to other pages and the skip link to #contenu must keep working.",
+  "GSAP licence is permissive for Leon but not open source (terms editable and terminable by Webflow, no LICENSE file in the 3.13.0 tarball); adopting it also breaks the port brief (no new dependency) and brings the translate/rotate folding trap against a kit built on individual translate/rotate/scale. Motion's behaviour with those properties is not verified.",
+  "Prototype defects not to copy: 160 ms .hl colour fade blinking after a sweep (real .hl has the same transition), 3-line heading at 1024-1099 px when pinned, hero strokes at 0.2 s, GSAP transform folding, story terminal taller than a 900 px window.",
+  "Browser support: view()/scroll() timelines are @supports-guarded (Firefox without them shows the final state, same as today); @property --sweep is registered in kit.css. Nothing tested in Safari, Firefox, on a real touch device, with a trackpad or a screen reader; both films are Chrome headless at 1512x771.",
+  "DemoScene is mounted twice (hero and rule 1) with independent state: hero-only logic must be scoped to the hero instance; the pile is hidden under 1100 px so selection motion must check it is displayed.",
+  "Recommended order: (1) scaffolding; (2) hero demo + question switch + tab indicator + selection, mostly CSS; (3) ambient small wins (marks drawn on 7 headings, count 42, memo lines, ticks, footer, marquee tweaks); (4) rules pinned, after the founder rules on mini documents; (5) developers: terminal printing now, the 3-step story only once its copy is decided. Recommendation: no new dependency (CSS + motion already installed); if one library is wanted back, Rough Notation (MIT, 4 kB gzip) is the smallest."
+ ],
+ "mapPath": "/private/tmp/claude-501/-Users-david-Downloads-Business-code-leon--claude-worktrees-leon-interface-redesign-715484/da99c0d6-086f-421a-bb71-53f736ad2f3a/scratchpad/port/motion-map.md"
+}

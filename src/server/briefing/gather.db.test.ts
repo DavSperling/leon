@@ -10,7 +10,9 @@ import {
   gatherBriefingMaterial,
   MENTIONS_MAX,
   SESSION_TURNS_MAX,
+  SESSION_USER_TURNS_MAX,
   TURN_CHARS,
+  USER_TURN_CHARS,
 } from './gather';
 
 // La matière du point du matin, rassemblée sous les droits du lecteur : ses sessions sur le projet, ce qui a bougé
@@ -292,23 +294,46 @@ describe('gatherBriefingMaterial : bornes', () => {
   const local: string[] = [];
   afterAll(() => dropTeams(local));
 
-  it('coupe les tours longs et ne garde que les derniers tours d’une session', async () => {
+  it('garde les derniers tours d’une session, et tous les messages de l’utilisateur, plus longs', async () => {
     const team = await newTeam(['Camille'], local);
     const [camille] = team.members as [TenantContext];
-    const long = `${'mot '.repeat(TURN_CHARS)}fin`;
-    const texts = Array.from({ length: SESSION_TURNS_MAX + 5 }, (_, index) =>
-      index === SESSION_TURNS_MAX + 4 ? long : `Tour ${index}`,
+    const long = `${'mot '.repeat(USER_TURN_CHARS)}fin`;
+    // Les tours pairs sont de l'utilisateur, les impairs de l'assistant (session()).
+    const texts = Array.from({ length: SESSION_TURNS_MAX + 6 }, (_, index) =>
+      index === 0 || index === SESSION_TURNS_MAX + 5 ? long : `Tour ${index}`,
     );
     await session(camille, { title: 'Longue session', startedAgo: 2 * HOUR, texts });
 
     const material = await gatherBriefingMaterial(camille, PROJECT, new Date());
 
     const turns = material.sessions[0]?.turns ?? [];
-    expect(turns).toHaveLength(SESSION_TURNS_MAX);
-    expect(turns[0]?.text).toBe('Tour 5');
-    const last = turns.at(-1)?.text ?? '';
-    expect(last.length).toBeLessThanOrEqual(TURN_CHARS + 1);
-    expect(last.endsWith('…')).toBe(true);
+    // Les 24 derniers tours (6 à 29), plus les messages de l'utilisateur d'avant (0, 2, 4) ; pas les réponses 1, 3, 5.
+    expect(turns).toHaveLength(SESSION_TURNS_MAX + 3);
+    expect(turns.slice(1, 4).map((turn) => turn.text)).toEqual(['Tour 2', 'Tour 4', 'Tour 6']);
+    const first = turns[0];
+    expect(first?.role).toBe('user');
+    expect(first?.text.length).toBeLessThanOrEqual(USER_TURN_CHARS + 1);
+    expect(first?.text.length).toBeGreaterThan(TURN_CHARS + 1);
+    const last = turns.at(-1);
+    expect(last?.role).toBe('assistant');
+    expect(last?.text.length).toBeLessThanOrEqual(TURN_CHARS + 1);
+    expect(last?.text.endsWith('…')).toBe(true);
+  });
+
+  it('ne garde que les SESSION_USER_TURNS_MAX derniers messages de l’utilisateur', async () => {
+    const team = await newTeam(['Dany'], local);
+    const [dany] = team.members as [TenantContext];
+    const texts = Array.from(
+      { length: 2 * (SESSION_USER_TURNS_MAX + 5) },
+      (_, index) => `Tour ${index}`,
+    );
+    await session(dany, { title: 'Très longue session', startedAgo: 3 * HOUR, texts });
+
+    const material = await gatherBriefingMaterial(dany, PROJECT, new Date());
+
+    const turns = material.sessions[0]?.turns ?? [];
+    expect(turns.filter((turn) => turn.role === 'user')).toHaveLength(SESSION_USER_TURNS_MAX);
+    expect(turns[0]?.text).toBe('Tour 10');
   });
 
   it('ne donne pas au point du matin le résumé d’une session écrit par Leon (T23)', async () => {

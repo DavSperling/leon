@@ -9,16 +9,15 @@ import { toolStates } from './tools-model';
 import { ToolsStep, type ToolsStepProps } from './tools-step';
 
 // Le composant client importe les actions de Connexions et de l'onboarding, donc Better Auth : seul le dessin de
-// l'étape se teste ici. Le formulaire de connexion d'un outil est remplacé par un repère.
+// l'étape se teste ici. Le panneau d'un outil est remplacé par un repère : l'outil qu'il montre, et s'il est ouvert.
 vi.mock('@/components/verre/connexions/tool-dialog', async () => {
   const { createElement } = await import('react');
   return {
-    ToolDialog: () => null,
-    AddConnection: ({ entry }: { entry: { id: string } }) =>
-      createElement('div', { 'data-add': entry.id }),
+    ToolDialog: ({ entry, open }: { entry: { id: string } | null; open: boolean }) =>
+      createElement('div', { 'data-dialog': entry?.id ?? '', 'data-open': String(open) }),
   };
 });
-vi.mock('@/app/(onboarding)/bienvenue/actions', () => ({ chooseToolsAction: vi.fn() }));
+vi.mock('@/app/(onboarding)/welcome/actions', () => ({ chooseToolsAction: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const COMMAND = 'curl -fsSL https://leon.example/install | sh';
@@ -59,7 +58,7 @@ const step = (over: Partial<ToolsStepProps> & { recommended?: string[]; conns?: 
     now: new Date('2026-11-03T10:00:00Z'),
     canConnect: true,
     consentUrl: null,
-    nextHref: '/bienvenue/collaborateurs',
+    nextHref: '/welcome/teammates',
     steps: ['about', 'tools', 'teammates'],
     notice: null,
     connecting: false,
@@ -83,6 +82,14 @@ const render = (element: ReactElement, locale: 'en' | 'fr' = 'en') =>
 
 const checkbox = (html: string, id: string) =>
   html.match(new RegExp(`<input[^>]*value="${id}"[^>]*>`))?.[0] ?? null;
+
+// La carte de la file qui porte la pastille d'encre : la prochaine à brancher.
+const inked = (html: string) =>
+  html
+    .split('data-queue="')
+    .slice(1)
+    .find((card) => card.slice(0, card.indexOf('</li>')).includes('tl__pill--ink'))
+    ?.split('"')[0] ?? null;
 
 describe('ToolsStep : le choix', () => {
   it('ne propose à cocher que les outils prêts, les conseillés déjà cochés', () => {
@@ -123,20 +130,21 @@ describe('ToolsStep : le choix', () => {
 
     expect(checkbox(html, 'github')).toBeNull();
     expect(html).not.toContain('type="submit"');
-    expect(html).toContain('href="/bienvenue/collaborateurs"');
+    expect(html).toContain('href="/welcome/teammates"');
     expect(html).toContain('>Continue<');
   });
 });
 
 describe('ToolsStep : la file « Branchez-les un par un »', () => {
-  it('ouvre le premier outil à brancher, avec son formulaire de connexion dans la page', () => {
+  it('une carte par outil, la pastille d’encre sur le premier à brancher, le panneau fermé', () => {
     const html = render(step({ connecting: true, chosen: ['github', 'gmail'] }));
 
     expect(html).toContain('Connect them one by one');
     expect(html).toContain('Connected: 0 of 2');
-    expect(html).toContain('data-add="github"');
-    expect(html).not.toContain('data-add="gmail"');
-    expect(html).toContain('href="/bienvenue/outils"');
+    expect(inked(html)).toBe('github');
+    expect(html).toContain('aria-label="Connect gmail"');
+    expect(html).toContain('data-open="false"');
+    expect(html).toContain('href="/welcome/tools"');
     expect(html).toContain('I’ll connect the rest later');
   });
 
@@ -146,11 +154,11 @@ describe('ToolsStep : la file « Branchez-les un par un »', () => {
     );
 
     expect(html).toContain('Connected: 1 of 2');
-    expect(html).toContain('aria-valuenow="1"');
-    expect(html).toContain('data-add="gmail"');
+    expect(inked(html)).toBe('gmail');
+    expect(html).not.toContain('aria-label="Connect github"');
   });
 
-  it('au retour d’un échec, l’outil concerné reste ouvert', () => {
+  it('au retour d’un échec, le panneau de l’outil concerné est ouvert', () => {
     const notice = { tone: 'error', text: 'Connexion à Gmail annulée.', tool: 'gmail' } as const;
     const html = render(
       step({
@@ -160,8 +168,7 @@ describe('ToolsStep : la file « Branchez-les un par un »', () => {
       }),
     );
 
-    expect(html).toContain('data-add="gmail"');
-    expect(html).not.toContain('data-add="github"');
+    expect(html).toContain('data-dialog="gmail" data-open="true"');
   });
 
   it('tout branché : le bravo et Continuer', () => {
@@ -170,8 +177,8 @@ describe('ToolsStep : la file « Branchez-les un par un »', () => {
     );
 
     expect(html).toContain('Everything is connected');
-    expect(html).toContain('href="/bienvenue/collaborateurs"');
-    expect(html).not.toContain('data-add=');
+    expect(html).toContain('href="/welcome/teammates"');
+    expect(html).not.toContain('tl__pill');
   });
 
   it('sans rien dans la file (choix perdu), on revient au choix', () => {
@@ -201,18 +208,19 @@ describe('ToolsStep : Vos outils de code', () => {
     expect(html.indexOf(CARD)).toBeLessThan(html.indexOf('<fieldset'));
   });
 
-  it('vient à la fin, après les outils et avant le bouton, pour les autres services', () => {
+  // Le bouton « Brancher » vit dans l'en-tête, à côté du titre : le bloc passe seulement après les outils.
+  it('vient à la fin, après les outils, pour les autres services', () => {
     const html = render(withCode(['linear', 'gmail'], COMMAND));
 
     expect(html.indexOf(CARD)).toBeGreaterThan(html.lastIndexOf('</fieldset>'));
-    expect(html.indexOf(CARD)).toBeLessThan(html.indexOf('type="submit"'));
+    expect(html.indexOf('type="submit"')).toBeLessThan(html.indexOf('<fieldset'));
   });
 
   it('ne s’affiche pas sans commande : l’adresse du serveur est refusée, rien de faux à copier', () => {
     const html = render(withCode(['github'], null));
 
     expect(html).not.toContain(CARD);
-    expect(html).not.toContain('/reglages#ordinateurs');
+    expect(html).not.toContain('/settings#ordinateurs');
   });
 
   it('se lit en français', () => {

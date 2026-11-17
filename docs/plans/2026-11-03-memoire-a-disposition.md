@@ -122,6 +122,15 @@ Ses réponses au questionnaire d'ouverture du lot 14. Elles priment sur le texte
 7. **Le rapport d'un sous-agent au premier plan est capté aussi**, contre la recommandation de Claude. Sous l'accord de base, il devient un tour `user` marqué injecté (T43), « écrit par l'outil, pas par vous », comme l'est déjà le rapport d'un sous-agent en tâche de fond. Il entre donc au condensé d'une session non externe, marqué « agent », et n'est jamais preuve d'une `[décision]`. Le texte de base (`CONSENT_LINES`) gagne ce rapport, dans la PR 1, sans redemander l'accord. T63 ne dit donc plus « rien de plus n'est envoyé ». Le reste ne part qu'avec l'usage `coulisses` : la consigne du sous-agent, ses appels d'outils réduits et le raisonnement.
 8. **L'essai de T50** est lancé par Claude seul, par `claude -p --safe-mode` dans un dépôt jetable, sans les crochets de Leon. Amos a donné l'accord de lire le dossier de cette session de test, et lui seul. Seule la forme est relevée, puis la session est supprimée.
 
+## Décision d'Amos du 17/11 pour le lot 15
+
+Après lecture de l'article d'Anthropic « The components of agent memory » (6/11), le rêve par règles gagne deux règles, toujours sans modèle (D39, C15, T60, T61, amendés le 17/11). L'article mesure son plus gros gain quand le rêve corrige une mémoire fausse, et il note que retenir les seuls échecs fait perdre une part du gain. Nos quatre règles voyaient l'âge d'une leçon, pas qu'elle ne sert plus, et ne retenaient que les échecs. Les seuils, les noms et les gabarits sont des choix du rédacteur.
+
+1. **L'échec disparu** (`echec_disparu`). Une leçon née d'une règle sur une commande ne la voit plus échouer : le rêve demande si elle sert encore.
+2. **La reprise répétée** (`reprise_repetee`). Une commande qui échoue, puis passe après une autre, dans plusieurs sessions : le rêve propose d'en faire une leçon, celle de ce qui a marché.
+
+Effort : 0,5 j de plus pour le lot 15 (estimation du rédacteur, à confirmer). La version avec modèle du rêve reste à placer par Amos : c'est elle qui pourra dire qu'une leçon est fausse, et pas seulement qu'elle ne sert plus.
+
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
@@ -129,7 +138,7 @@ Ses réponses au questionnaire d'ouverture du lot 14. Elles priment sur le texte
 | 12. Les fils et le dossier | Leon range la mémoire par fil, y relie les connecteurs et GitHub ; trois commandes de lecture (et les mêmes outils au MCP) ; le bloc de démarrage devient un sommaire des fils (niveau 1). Depuis le 04/11 : l'état du fil versionné et hors recherche, un verrou par fil, l'historique (`leon versions`, l'outil `versions`). Depuis le 05/11 : les usages cochés par défaut, et leurs cases sur la page « Autoriser » (T64) | T39 à T47, T53, T54 et T64 | 12 j (le 05/11 retire la restauration de T54 et ajoute la marque « injecté » à T43 : effort à confirmer ; puis 1,5 j pour T64, après A16, estimation du rédacteur, à confirmer) |
 | 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`). Depuis le 05/11 : l'historique sur le site, « Remettre cette version » et la connexion récente (T55) ; décocher `noter` coupe aussi `remember` (T65). Depuis le 11/11 : le rappel aussi pour Cursor, Codex et Antigravity, et trois PR (décisions d'Amos du 11/11 pour le lot 13) | T48, T49, T55 à T57 et T65 | 5,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes ; le 05/11 y déplace la restauration retirée de T54, et ajoute l'historique des fils sur le site et la connexion récente ; puis 1 j pour T65, après A16) |
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande. Depuis le 05/11 : un sous-agent qui ne lit que le dépôt ne rend plus la session externe (T63) ; après la relecture, les appels d'outils réduits remontent aussi (`appel_outil`, T52). Depuis le 12/11 : quatre PR, les trois premières pour Claude Code, la quatrième pour Codex, Cursor et Antigravity après un essai par outil ; le rapport d'un sous-agent capté sous l'accord de base (décisions d'Amos du 12/11 pour le lot 14) | T50 à T52, T63 | 5 j (dont 0,5 j pour les appels d'outils, estimation du rédacteur, à confirmer) |
-| 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite | T58 à T62 | 5,5 j (5 j pour le rêve, 0,5 j pour T62) |
+| 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite. Depuis le 17/11 : une leçon dont la commande n'échoue plus, et ce qui a fait passer une commande | T58 à T62 | 6 j (5,5 j pour le rêve, dont 0,5 j pour les deux règles du 17/11, et 0,5 j pour T62) |
 
 Changements au plan mémoire des sessions (le détail est dans ses « Amendements du 03/11 ») :
 - **Le lot 10 (RAG au premier prompt) est remplacé** par le lot 13 et par la lecture à la demande du lot 12. D18 n'a plus d'objet.
@@ -157,7 +166,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 
 Amendé le 05/11 : 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
 
-Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos).
+Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 pour ses deux nouvelles règles (D39). La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos).
 
 Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est accepté et le lot 6 est lancé. Pour une session sans l'usage `resume`, ou sans modèle réglé, le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
@@ -414,6 +423,13 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
     - un fil dormant, dont toutes les PR sont fusionnées ou fermées, sans session depuis 14 jours : le clore ;
     - une leçon sans preuve récente (tranché le 05/11) : toutes ses preuves ont plus de 90 jours. Le rêve propose de la retirer, l'humain décide. Jamais pour une leçon écrite à la main. Une leçon dont une preuve a disparu ou est devenue invisible ne se montre déjà plus (D33) : la règle ne la propose pas ;
     - des notes `leon noter` proches, dans au moins 3 sessions distinctes et vérifiées : en faire une leçon. Une session ne compte que si elle existe comme session de code de la personne (le kind de `outil`, l'`external_id` de `session`, le même auteur). Une note sans session vérifiée, et toute note `remember`, ne compte pas. La proposition laisse vide le texte de la leçon : les notes sont montrées comme preuves, marquées « écrit par l'agent », et l'humain écrit la leçon.
+    - Amendé le 17/11 (décision d'Amos), deux règles de plus. Elles ne lisent que les commandes réduites des faits (`commandes`, C1 : les 30 dernières de la session, chacune avec `erreur`, dans l'ordre). Une réussite ne compte que dans une session de Claude Code ou de Codex. Cursor n'écrit aucune sortie, et Antigravity range avec `erreur: false` une commande dont il n'a pas vu la fin : chez eux, `erreur: false` ne prouve pas que la commande a marché.
+      - **L'échec disparu** (`echec_disparu`). Une leçon acceptée depuis une proposition `echec_repete` ou `reprise_repetee` sur une commande, acceptée depuis au moins 14 jours. Si la commande a tourné dans au moins 5 sessions distinctes sur les 14 derniers jours, sans un seul échec, le rêve propose de la retirer : « `pnpm test:db` a réussi dans 5 sessions sur 5 depuis le 03/12, sans un échec : cette leçon sert-elle encore ? ». L'humain décide.
+        - Jamais pour une leçon écrite à la main, ni pour une leçon sur un outil hors Bash (`outils_en_erreur` compte les échecs, pas les réussites).
+        - Limite connue : une leçon suivie peut être la raison même de la réussite. Le texte pose la question au lieu d'affirmer, et un rejet n'est plus reproposé pour cette version de la leçon.
+      - **La reprise répétée** (`reprise_repetee`). Dans une session, une commande X échoue, puis une autre commande Y réussit, puis X réussit. Y est la dernière commande réussie, autre que X, avant cette réussite. Les commandes qui ne font que lire ou se déplacer ne comptent pas comme Y : `cd`, `ls`, `pwd`, `cat`, `head`, `tail`, `echo`, `grep`, `git status`, `git diff`, `git log`. Si la même paire revient dans au moins 3 sessions distinctes sur 14 jours, le rêve propose une leçon à compléter : « Quand `pnpm test:db` échoue, `docker compose` l'a fait passer (3 sessions sur 7) ».
+        - Si la même nuit `echec_repete` vise la même commande X, seule `reprise_repetee` est proposée : elle dit aussi le remède.
+        - Limites connues : la réduction ne garde que la première commande d'une suite (« cd x && pnpm test » donne `cd`), et seulement les 30 dernières commandes d'une session. Un remède qui passe par un autre outil (une modification de fichier) ne se voit pas.
   - **Les preuves** (10 ids de sources au plus) sont vérifiées par le serveur, visibles de la personne. **La fréquence** est calculée par le serveur : les sessions touchées sur les sessions de la période.
   - Les propositions vont dans `propositions_memoire` (C15), sur le modèle de `about_suggestions`.
   - **La décision** se prend sur une page Accepter ou Rejeter du site.
@@ -555,13 +571,13 @@ Contrats du 04/11 :
 **C15. Les propositions du rêve** (D39 ; lot 15).
 - **La table `propositions_memoire`**, sur le modèle de `about_suggestions` (0045) :
   - `id`, `tenant_id`, `user_id`, `acl` avec `check (acl = array[user_id])`, `projet` (facultatif) ;
-  - `regle` (`echec_repete`, `fil_dormant`, `lecon_sans_preuve`, `notes_recurrentes`) et `cle`, une empreinte : la commande ou l'outil réduit, l'id du fil avec la date de sa dernière session, l'id de la leçon avec le numéro de sa version, ou les ids des notes ;
+  - `regle` (`echec_repete`, `fil_dormant`, `lecon_sans_preuve`, `notes_recurrentes`) et `cle`, une empreinte : la commande ou l'outil réduit, l'id du fil avec la date de sa dernière session, l'id de la leçon avec le numéro de sa version, ou les ids des notes. Amendé le 17/11 (D39) : `regle` gagne `echec_disparu` (sa clé, comme `lecon_sans_preuve`, est l'id de la leçon avec le numéro de sa version) et `reprise_repetee` (sa clé est la paire des deux commandes réduites, « X → Y ») ;
   - `action` (`ajouter`, `retirer`, `clore`) ; la cible, `lecon_id` ou `fil_id`, et `version_cible`, la dernière version lue à la rédaction ;
   - `texte`, 300 caractères au plus, vide pour `notes_recurrentes` ; `preuves uuid[]`, des ids de sources seulement, 10 au plus ; `tours uuid[]`, les tours cités ; `sessions_touchees`, `sessions_periode` ;
   - `cree_le`, `decision` (`acceptee`, `rejetee`, `depassee`), `decide_le`.
 - Un index unique partiel sur `(tenant_id, user_id, regle, cle)`, `where decision is distinct from 'depassee'` : une proposition ouverte, acceptée ou rejetée n'est jamais reproposée ; une dépassée peut revenir. Un fil clos, rouvert puis de nouveau dormant a une autre clé, et revient.
 - **L'interrupteur du rêve** : une colonne datée de `member`, comme `onboardedAt` (0043), nulle par défaut, écrite par l'action du site. `reves_a_faire()` saute ceux qui l'ont coupé.
-- RLS `tenant_acl`. `grant select, insert, delete` (la suppression ne sert qu'à `deleteAccount`) et `grant update (decision, decide_le)`.
+- RLS `tenant_acl`. `grant select, insert, delete` (la suppression ne sert qu'à `deleteAccount`) et `grant update (decision, decide_le)`. Amendé le 17/11 (D39) : `grant update (decision, decide_le, lecon_id)`. L'acceptation d'une proposition `ajouter` écrit dans `lecon_id` la leçon qu'elle crée : c'est ce lien qui dit à `echec_disparu` de quelle commande parle une leçon.
 - `reves_a_faire()`, en `security definer` avec `pg_temp` en dernier, rend les couples (organisation, utilisateur) à traiter : des identifiants seulement, comme `apropos_a_proposer` (0045).
 - Aucune route à jeton ni aucun outil MCP : la décision passe par les actions serveur du site. Accepter une proposition qui écrit une leçon exige la connexion récente (D37, T61).
 
@@ -1691,6 +1707,8 @@ Ajoutée le 05/11 (A14, D36). Effort : 0,5 j.
 
 Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui propose des changements, qu'elle accepte ou rejette (D39). Environ 5 j, après le lot 11, et 0,5 j pour refaire la mesure (T62). Il dépend des lots 12 et 13 (fils, versions, leçons, notes) et du lot 3 (l'état des PR, pour clore un fil). Il ne dépend pas du lot 6.
 
+> **Amendé le 17/11 (décision d'Amos) :** deux règles de plus, `echec_disparu` et `reprise_repetee` (D39, C15). Le rêve fait environ 5,5 j, plus 0,5 j pour T62.
+
 ### T58 · Les faits gagnent `outils_en_erreur`
 
 > **Amendé le 05/11 (relecture, C10) :** le nom réduit est celui de T52 (`reduceToolName`), dans la seule forme de C10 : `mcp__` testé avant `EXECUTABLE`, `mcp:<serveur>` pour un outil MCP, sinon `[outil]`. Sur le poste comme dans `record-facts.ts`, qui la repasse. Elle remplace la forme `[A-Za-z0-9_:.-]` de 60 caractères ci-dessous. Test de plus, pour `record-facts` : `mcp__linear__get_issue` reçu tel quel est rangé `mcp:linear`.
@@ -1730,6 +1748,17 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
 ### T60 · La tâche de nuit et les règles
 
+> **Amendé le 17/11 (décision d'Amos, D39) :** les règles sont six, avec `echec_disparu` et `reprise_repetee`.
+> - Une réussite ne compte que dans une session de Claude Code ou de Codex (D39).
+> - Leur texte est un gabarit rempli de commandes réduites, de nombres et de dates, comme celui de `echec_repete`.
+> - Tests de plus, dans `dream-rules.db.test.ts` :
+>   - une leçon acceptée depuis `echec_repete` sur `pnpm test:db`, acceptée il y a 20 jours, et `pnpm test:db` réussi dans 5 sessions de Claude Code sur 14 jours, sans un échec : « retirer », 5 preuves. Avec un échec dans ces 14 jours : rien. Avec 4 sessions : rien. Acceptée il y a 10 jours : rien ;
+>   - la même leçon, avec 5 réussites dans des sessions de Cursor : rien ;
+>   - une leçon écrite à la main sur la même commande : jamais ;
+>   - `pnpm test:db` en échec, puis `docker compose` réussi, puis `pnpm test:db` réussi, dans 3 sessions sur 14 jours : « ajouter », texte « Quand `pnpm test:db` échoue, `docker compose` l'a fait passer (3 sessions sur …) ». Dans 2 sessions : rien. Avec `cd` ou `git status` entre l'échec et la réussite, et rien d'autre : rien ;
+>   - la même nuit, `pnpm test:db` en échec dans 3 sessions et la reprise par `docker compose` dans 3 sessions : une seule proposition, `reprise_repetee` ;
+>   - une reprise rejetée n'est jamais reproposée, même paire.
+
 **Fichiers :** `src/server/memory/dream-rules.ts` (nouveau), `src/server/memory/dream-queue.ts` (nouveau), `src/server/memory/dream-worker.ts` (nouveau), `src/instrumentation-node.ts`, et leurs tests.
 
 **Fait quand :**
@@ -1758,6 +1787,8 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 - `dream-worker.db.test.ts` : membre parti ou interrupteur coupé, rien ; compte supprimé pendant la tâche, aucune proposition écrite ; un faux modèle qui lève n'est jamais appelé.
 
 ### T61 · Accepter ou rejeter
+
+> **Amendé le 17/11 (décision d'Amos, D39, C15) :** accepter une proposition `ajouter` écrit dans `lecon_id` la leçon créée, dans la même transaction. Test de plus, dans `proposals.db.test.ts` : une proposition `reprise_repetee` acceptée porte l'id de sa leçon, et `echec_disparu` retrouve la commande de cette leçon par ce lien.
 
 **Fichiers :** `src/server/memory/proposals.ts` (nouveau : lire, accepter, rejeter) et `src/server/memory/proposals.db.test.ts` (nouveau), `src/components/verre/reglages/memoire.tsx`, `src/app/(app)/reglages/actions.ts` et son test, `src/server/auth/session.ts` (lu : la connexion récente de T55), `src/server/sessions/threads.ts` (réouverture d'un fil clos), `src/server/sessions/start-context.ts` (un fil clos quitte le sommaire), `src/test/contracts/api-contract.db.test.ts`, `src/test/contracts/mcp-descriptions.test.ts`.
 

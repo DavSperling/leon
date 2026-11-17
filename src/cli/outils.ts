@@ -1,7 +1,8 @@
 // Les adaptateurs des outils hors Claude Code (T16 du plan mémoire des sessions) : ce que chaque outil attend de nos
 // crochets. Chacun lit l'entrée du crochet, enveloppe le bloc injecté, lit une session de l'outil, en relève les faits, et
 // trouve ses fichiers de session (le rattrapage, T19). Codex et Antigravity chargent aussi les sous-agents d'une session et
-// en relèvent les coulisses (T52 et T63 amendés le 17/11).
+// en relèvent les coulisses (T52 et T63 amendés le 17/11) ; Antigravity en tire aussi les messages de ses sous-agents à
+// la session, des tours injectés (décision d'Amos du 17/11).
 //
 // Codex (essai réel du 06/11, docs/etudes/memoire-sessions-2026-11/annexes/03-essai-codex.md) : la sortie JSON de C5
 // arrive au modèle au premier message, rôle developer, sans autre champ (Codex refuse un champ inconnu). Jamais
@@ -46,6 +47,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import {
   type AntigravitySubagents,
+  antigravityReportTurns,
   extractAntigravityBackstage,
   extractAntigravityFacts,
   parseAntigravitySession,
@@ -118,8 +120,11 @@ export type Adaptateur<O extends Outil = Outil> = {
   // rappel pour cet appel (Antigravity : un appel suivant du même message, ou une version dont l'entrée ne le porte pas).
   message: (input: unknown) => string | null;
   lire: (contenu: string, fichier: FichierSession) => SessionOutil | null;
-  // Le chargeur des sous-agents de la session, lu avant les faits ; absent (Cursor), aucun n'est lu.
+  // Le chargeur des sous-agents de la session, lu avant les tours ; absent (Cursor), aucun n'est lu.
   sousAgents?: (fichier: string, lecture: Lecture) => Promise<SousAgents[O]>;
+  // Les tours que les sous-agents écrivent à la session hors de son fichier (Antigravity : leurs messages, décision
+  // d'Amos du 17/11) ; absent, il n'y en a pas (Codex et Cursor les écrivent dans le fichier de la session).
+  rapports?: (fichier: FichierSession, sousAgents: SousAgents[O]) => Turn[];
   // `leonMcp` : le serveur `leon` de la configuration de l'outil est celui de la connexion (leon-mcp.ts). `sousAgents` :
   // ce que le chargeur a lu ; sans eux, un sous-agent rend la session externe.
   faits: (
@@ -317,6 +322,7 @@ export const ADAPTATEURS: { [O in Outil]: Adaptateur<O> } = {
     },
     lire: (contenu, fichier) => parseAntigravitySession(contenu, fichier),
     sousAgents: loadAntigravitySubagents,
+    rapports: antigravityReportTurns,
     faits: (contenu, fichier, racine, brancheLue, _leonMcp, sousAgents) =>
       extractAntigravityFacts(contenu, fichier, racine, brancheLue, sousAgents),
     coulisses: (contenu, fichier, racine, sousAgents) =>

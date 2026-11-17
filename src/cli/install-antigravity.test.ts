@@ -98,7 +98,10 @@ describe('installAntigravityHooks', () => {
 
     for (const line of ANTIGRAVITY_CONSENT_LINES) expect(out).toContain(line);
     const text = ANTIGRAVITY_CONSENT_LINES.join('\n');
-    expect(text).toContain('labeled as written by Antigravity, not by you');
+    // Décision d'Amos du 17/11 : le rapport d'un sous-agent part sous cet accord, marqué, comme chez Cursor.
+    expect(text).toContain(
+      "the messages Antigravity writes itself in your place, such as a subagent's report, labeled as written by Antigravity, not by you;",
+    );
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).

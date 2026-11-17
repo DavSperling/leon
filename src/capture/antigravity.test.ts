@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   type AntigravitySubagents,
+  antigravityReportTurns,
   conversationOf,
   extractAntigravityBackstage,
   extractAntigravityFacts,
@@ -9,7 +10,7 @@ import {
 } from './antigravity';
 import { SECRET_MASK } from './mask-secrets';
 import { SessionFactsSchema } from './session-facts';
-import { isTypedTurn, TURN_TEXT_MAX } from './turn';
+import { isTypedTurn, TURN_TEXT_MAX, TurnSchema } from './turn';
 
 // Fixture inventée, sur la forme d'un transcript d'Antigravity relevée par un lecteur public (jamais une vraie
 // conversation). shortcut: à rejouer sur un transcript de l'essai T31.
@@ -896,5 +897,197 @@ describe('extractAntigravityBackstage', () => {
     );
 
     expect(ids).toEqual(['1:0', '1:0:consigne']);
+  });
+});
+
+// --- Le rapport d'un sous-agent sous l'accord de base (décision d'Amos du 17/11, « Oui, comme Claude Code ») --------
+describe('antigravityReportTurns', () => {
+  const at = (secondes: string) => `2026-11-13T11:${secondes}Z`;
+  const rapport = (sousAgent: string, rang: string, ts: string, text: string) => ({
+    external_id: `${S}:${sousAgent}:${rang}`,
+    role: 'user',
+    text,
+    ts,
+    capture_mode: 'file',
+    injecte: true,
+  });
+  const textes = (sa: AntigravitySubagents) =>
+    antigravityReportTurns(FICHIER, sa).map(({ text }) => text);
+  const ecrit = (Message: unknown, Recipient: unknown = S) =>
+    sousAgent(['send_message', { Message, Recipient }]);
+  const RELAIS = sousAgent(['invoke_subagent', { Prompt: 'Va plus loin.' }]);
+  // Une conversation ordinaire, qu'une fiche nommerait, qui écrit à la session.
+  const ORDINAIRE_QUI_ECRIT = [
+    etape(0, { source: 'USER_EXPLICIT', type: 'USER_INPUT', content: 'Écris au parent.' }),
+    appels(1, ['send_message', { Message: 'Trouvé.', Recipient: S }]),
+    resultat(2),
+    fin(3),
+  ].join('\n');
+
+  it('chaque message d’un sous-agent direct à la session devient un tour user injecté, daté de son étape', () => {
+    const turns = antigravityReportTurns(FICHIER, FIXTURE);
+
+    expect(turns).toEqual([
+      rapport(R, '3:0', at('45:08'), 'a.txt contient « bonjour ».'),
+      rapport(N, '3:0', at('45:09'), "La page ne s'ouvre pas encore, je réessaie."),
+      rapport(N, '9:0', at('45:28'), 'La page affiche « Exemple ».'),
+    ]);
+    // Des identifiants stables, dans la forme du contrat ; aucun n'est un message tapé.
+    expect(antigravityReportTurns(FICHIER, FIXTURE)).toEqual(turns);
+    for (const turn of turns) expect(TurnSchema.parse(turn)).toEqual(turn);
+    expect(turns.filter(isTypedTurn)).toEqual([]);
+  });
+
+  it('sans date à son étape, un tour prend l’heure du fichier de la session', () => {
+    const sansDate = ecrit('Trouvé.').replaceAll('"created_at":"2026-11-06T10:00:00Z",', '');
+
+    expect(antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: sansDate }))).toEqual([
+      rapport(R, '1:0', FICHIER.mtime.toISOString(), 'Trouvé.'),
+    ]);
+  });
+
+  it('un sous-agent qui n’a pas fini donne ses messages envoyés ; le bloc rapport des coulisses, lui, attend sa fin', () => {
+    const enCours = sousAgents({ [S]: [R] }, { [R]: coupe(RECHERCHE) });
+    // Sa dernière étape est l'envoi même, sans résultat ni réponse.
+    const aLEnvoi = sousAgents({ [S]: [N] }, { [N]: coupe(coupe(NAVIGATEUR)) });
+
+    expect(textes(enCours)).toEqual(['a.txt contient « bonjour ».']);
+    expect(textes(aLEnvoi)).toEqual([
+      "La page ne s'ouvre pas encore, je réessaie.",
+      'La page affiche « Exemple ».',
+    ]);
+    const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, enCours);
+    expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ['dont une ligne est illisible', { [S]: [R] }, { [R]: illisible(RECHERCHE) }],
+    ['qui est une conversation ordinaire', { [S]: [R] }, { [R]: ORDINAIRE_QUI_ECRIT }],
+    ['qui est la session elle-même', { [S]: [S] }, { [S]: SESSION }],
+    ['dont la conversation manque', { [S]: [R] }, {}],
+    ['que la session ne nomme pas', { [R]: [] }, { [R]: RECHERCHE }],
+    ['qui écrit à un autre que la session', { [S]: [R] }, { [R]: ecrit('À un autre.', N) }],
+    [
+      'de sous-agent, qui écrit à son parent',
+      { [S]: [R], [R]: [G] },
+      { [R]: RELAIS, [G]: ecrit('Au parent.', R) },
+    ],
+    [
+      'de sous-agent, même s’il écrit à la session',
+      { [S]: [R], [R]: [G] },
+      { [R]: RELAIS, [G]: ecrit('Par-dessus.') },
+    ],
+    [
+      'dont le Message ou le Recipient n’est pas une chaîne',
+      { [S]: [R] },
+      {
+        [R]: sousAgent(
+          ['send_message', { Message: 'Sans destinataire.' }],
+          ['send_message', { Message: 'Un nombre.', Recipient: 42 }],
+          ['send_message', { Message: ['Une liste.'], Recipient: S }],
+        ),
+      },
+    ],
+  ])('un sous-agent %s : aucun tour', (_cas, named, transcripts) => {
+    expect(antigravityReportTurns(FICHIER, sousAgents(named, transcripts))).toEqual([]);
+  });
+
+  describe('la préparation du texte', () => {
+    const avec = (Message: string) => textes(sousAgents({ [S]: [R] }, { [R]: ecrit(Message) }));
+
+    it('masque un faux secret et retire un bloc de Leon', () => {
+      expect(avec(`<rappel-leon>Rappel.</rappel-leon>Trouvé ${FAUX_SECRET}.`)).toEqual([
+        `Trouvé ${SECRET_MASK}.`,
+      ]);
+    });
+
+    it.each([
+      ['vide', ''],
+      ['blanc', '  \n'],
+      ['un bloc de Leon seul', '<contexte-leon>Le sommaire.</contexte-leon>'],
+    ])('un message %s ne donne aucun tour', (_cas, Message) => {
+      expect(avec(Message)).toEqual([]);
+    });
+  });
+
+  it('ni Role, TypeName, Model, ni la sortie d’un outil, ni la consigne, le raisonnement ou la réponse d’un sous-agent, ni le message de la session', () => {
+    const TEMOIN = 'temoin-9c1f4a';
+    const petit = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: `<SYSTEM_MESSAGE>${TEMOIN}</SYSTEM_MESSAGE>`,
+      }),
+      etape(1, {
+        type: 'PLANNER_RESPONSE',
+        content: TEMOIN,
+        thinking: TEMOIN,
+        tool_calls: [{ name: 'read_file', args: { Path: `${ESSAI}/a.txt`, toolSummary: TEMOIN } }],
+      }),
+      resultat(2, 'DONE', `contenu ${TEMOIN}`),
+      appels(3, ['send_message', { Message: 'Trouvé.', Recipient: S, toolSummary: TEMOIN }]),
+      resultat(4, 'DONE', TEMOIN),
+      etape(5, { type: 'PLANNER_RESPONSE', content: TEMOIN, thinking: TEMOIN }),
+    ].join('\n');
+    const session = [
+      appels(1, [
+        'invoke_subagent',
+        { Prompt: TEMOIN, Role: TEMOIN, TypeName: TEMOIN, Model: TEMOIN },
+      ]),
+      resultat(2, 'DONE', TEMOIN),
+      etape(3, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: `<SYSTEM_MESSAGE>${TEMOIN}</SYSTEM_MESSAGE>`,
+      }),
+      appels(4, ['send_message', { Message: TEMOIN, Recipient: R }]),
+      resultat(5, 'DONE', TEMOIN),
+      fin(6),
+    ].join('\n');
+
+    // Tout ce qui part en tours : ceux de la session, puis les rapports.
+    const turns = [
+      ...(parseAntigravitySession(session, FICHIER)?.turns ?? []),
+      ...antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: petit })),
+    ];
+
+    expect(turns.map(({ text }) => text)).toEqual(['Fini.', 'Trouvé.']);
+    expect(JSON.stringify(turns)).not.toContain(TEMOIN);
+  });
+
+  it('tout identifiant tient dans 200 caractères et n’y figure qu’une fois, même relu deux fois', () => {
+    const deuxDansUneEtape = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+      }),
+      appels(
+        1,
+        ['send_message', { Message: 'Un.', Recipient: S }],
+        ['send_message', { Message: 'Deux.', Recipient: S }],
+      ),
+      resultat(2),
+      resultat(3),
+      fin(4),
+    ].join('\n');
+    const turns = antigravityReportTurns(
+      FICHIER,
+      sousAgents(
+        { [S]: [R, N, N] },
+        { [R]: deuxDansUneEtape, [N]: `${NAVIGATEUR}\n${NAVIGATEUR}` },
+      ),
+    );
+    const ids = turns.map(({ external_id }) => external_id);
+
+    expect(ids).toEqual([`${S}:${R}:1:0`, `${S}:${R}:1:1`, `${S}:${N}:3:0`, `${S}:${N}:9:0`]);
+    for (const id of ids) expect(id.length).toBeLessThanOrEqual(200);
+    // Un nom trop long (jamais l'UUID que valide le chargeur) ne donne rien : le serveur refuserait tout le lot.
+    const long = 'x'.repeat(200);
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [long] }, { [long]: RECHERCHE })),
+    ).toEqual([]);
   });
 });

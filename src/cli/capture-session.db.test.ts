@@ -187,7 +187,7 @@ describe('la capture de Codex et d’Antigravity et leurs coulisses, jusqu’en 
       .where(and(eq(sources.tenantId, tenantId), eq(sources.externalId, externalId)));
     if (!source) throw new Error('session absente de la base');
     const stored = await adminDb
-      .select({ role: turns.role, text: turns.text })
+      .select({ role: turns.role, text: turns.text, injecte: turns.injecte })
       .from(turns)
       .where(eq(turns.sourceId, source.id));
     return { messages, stored };
@@ -280,6 +280,13 @@ describe('la capture de Codex et d’Antigravity et leurs coulisses, jusqu’en 
     );
 
     expect(messages).toEqual([]);
+    // Le message de chaque sous-agent à la session, rangé comme un tour `user` injecté (décision d'Amos du 17/11).
+    for (const text of [
+      'a.txt contient « bonjour ».',
+      "La page ne s'ouvre pas encore, je réessaie.",
+      'La page affiche « Exemple ».',
+    ])
+      expect(stored).toContainEqual({ role: 'user', text, injecte: true });
     expect(stored.some((turn) => turn.role === 'raisonnement')).toBe(true);
     expect(stored.map((turn) => turn.text)).toContain('[rapport]\na.txt contient « bonjour ».');
     expect(appels(stored)).toEqual(

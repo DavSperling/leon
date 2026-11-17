@@ -28,7 +28,8 @@
 //   session de la personne.
 // L'appli 2.31.0 (annexe 11, essai du 13/11) : plus d'étape RUN_COMMAND ni de code de sortie, le résultat d'un appel est
 // une étape GENERIC en `status` DONE ou ERROR ; la conversation d'un sous-agent commence par un SYSTEM_MESSAGE (sa
-// consigne), et la session nomme ses sous-agents (chargés par la CLI : subagents.ts).
+// consigne), et la session nomme ses sous-agents (chargés par la CLI : subagents.ts). Le message d'un sous-agent à la
+// session (send_message, dans la conversation du sous-agent) part en tour injecté : antigravityReportTurns.
 import { basename, dirname } from 'node:path';
 import { z } from 'zod';
 import type { CoulisseBloc, SessionFacts } from './api-contract';
@@ -49,7 +50,7 @@ export type AntigravitySession = {
   cwd: string | null;
   title: string | null;
   // Les messages d'utilisateur qu'Antigravity écrit lui-même, jamais un message de la personne (T63), partent marqués
-  // `injecte` (T43), comme tout tour `user`.
+  // `injecte` (T43), comme tout tour `user`. Les messages des sous-agents n'y sont pas : antigravityReportTurns.
   turns: Turn[];
   branche: null; // le transcript n'en porte pas : la capture la lit par git
 };
@@ -58,7 +59,8 @@ export type AntigravityFile = { path: string; mtime: Date };
 
 // Les sous-agents d'une session (T63 amendé le 17/11, chargés par la CLI : loadAntigravitySubagents) : `named`, pour
 // chaque conversation lue (la session comprise), les identifiants des sous-agents qu'elle nomme ; `transcripts`, la
-// conversation de chaque sous-agent qui se lit. Ils ne décident que de `externe` et des coulisses.
+// conversation de chaque sous-agent qui se lit. Ils décident de `externe` et des coulisses, et donnent les tours de leurs
+// messages à la session (antigravityReportTurns).
 export type AntigravitySubagents = {
   named: ReadonlyMap<string, readonly string[]>;
   transcripts: ReadonlyMap<string, string>;
@@ -93,11 +95,9 @@ function parseStep(raw: string): Step | null {
 const parseSteps = (content: string): Step[] =>
   content.split('\n').flatMap((raw) => (raw.trim() === '' ? [] : (parseStep(raw) ?? [])));
 
-// Les étapes d'un sous-agent qui a rendu la main (annexe 11) : sa dernière étape est une PLANNER_RESPONSE sans appel
-// d'outil. null si sa conversation manque, porte une ligne illisible, n'est pas celle d'un sous-agent (isSubagent : une
-// conversation ordinaire qu'une fiche nommerait), ou s'il n'a pas fini : on ne sait pas tout ce qu'il a fait (échec
-// fermé).
-function finishedSubagent(content: string | undefined): Step[] | null {
+// Les étapes de la conversation d'un sous-agent, ou null si elle manque, porte une ligne illisible, ou n'est pas celle
+// d'un sous-agent (isSubagent : une conversation ordinaire qu'une fiche nommerait).
+function subagentSteps(content: string | undefined): Step[] | null {
   if (content === undefined) return null;
   const steps: Step[] = [];
   for (const raw of content.split('\n')) {
@@ -106,10 +106,16 @@ function finishedSubagent(content: string | undefined): Step[] | null {
     if (step === null) return null;
     steps.push(step);
   }
-  const last = steps.at(-1);
-  return last?.type === 'PLANNER_RESPONSE' && !last.tool_calls?.length && isSubagent(steps)
-    ? steps
-    : null;
+  return isSubagent(steps) ? steps : null;
+}
+
+// Les étapes d'un sous-agent qui a rendu la main (annexe 11) : sa dernière étape est une PLANNER_RESPONSE sans appel
+// d'outil. null si sa conversation ne se lit pas (subagentSteps), ou s'il n'a pas fini : on ne sait pas tout ce qu'il
+// a fait (échec fermé).
+function finishedSubagent(content: string | undefined): Step[] | null {
+  const steps = subagentSteps(content);
+  const last = steps?.at(-1);
+  return last?.type === 'PLANNER_RESPONSE' && !last.tool_calls?.length ? steps : null;
 }
 
 // `brain/<conversation>/.system_generated/logs/transcript.jsonl` : la conversation est le dossier sous `brain`.
@@ -202,6 +208,17 @@ function callsWithResults(steps: Step[]): CallWithResult[] {
   return all;
 }
 
+// Les messages d'un sous-agent à la conversation qui l'a lancé (annexe 11) : ses appels send_message dont le `Recipient`
+// porte l'identifiant de cette conversation (dans `transcript.jsonl`, écrit entre guillemets : calls()). Le tour de
+// chaque message (antigravityReportTurns) et le bloc rapport des coulisses en partent.
+const messagesTo = (parent: string, steps: Step[]) =>
+  callsWithResults(steps).filter(
+    ({ name, args }) =>
+      name === 'send_message' &&
+      typeof args?.Recipient === 'string' &&
+      args.Recipient.includes(parent),
+  );
+
 const turnId = (conversation: string, step: Step, index: number) =>
   `${conversation}:${String(step.step_index ?? index).padStart(6, '0')}`;
 
@@ -245,6 +262,44 @@ export function parseAntigravitySession(
     turns,
     branche: null,
   };
+}
+
+const EXTERNAL_ID_MAX = 200; // celui du contrat (TurnSchema)
+
+// Le message de chaque sous-agent direct de la session (décision d'Amos du 17/11, « comme Claude Code ») : un tour
+// `user` marqué injecté (T43), écrit par Antigravity, qui part sous l'accord de base. Le message d'un sous-agent de
+// sous-agent va à son parent, pas à la session. Un sous-agent qui n'a pas fini donne les messages qu'il a déjà
+// envoyés : la session les a reçus. Rien d'autre de sa conversation (sa consigne, son raisonnement, ses appels et leurs
+// sorties), ni le texte des étapes SYSTEM_MESSAGE de la session (jamais relevé). Ces tours viennent d'autres fichiers
+// que celui de la session : la CLI les envoie à part de ses tours (captureToolFile). Identifiant : la session, le
+// sous-agent, le rang de l'étape, celui de l'appel dans l'étape.
+export function antigravityReportTurns(
+  file: AntigravityFile,
+  subagents: AntigravitySubagents,
+): Turn[] {
+  const session = conversationOf(file.path);
+  const turns: Turn[] = [];
+  const seen = new Set<string>();
+  for (const child of subagents.named.get(session) ?? []) {
+    const steps = subagentSteps(subagents.transcripts.get(child));
+    for (const { args, step, index, rang } of steps === null ? [] : messagesTo(session, steps)) {
+      const message = args?.Message;
+      const text = typeof message === 'string' ? prepareTurnText(stripLeonBlocks(message)) : null;
+      const external_id = `${session}:${child}:${step.step_index ?? index}:${rang}`;
+      // Un identifiant trop long ferait refuser tout le lot par le serveur.
+      if (text === null || external_id.length > EXTERNAL_ID_MAX || seen.has(external_id)) continue;
+      seen.add(external_id);
+      turns.push({
+        external_id,
+        role: 'user',
+        text,
+        ts: step.created_at ?? file.mtime.toISOString(),
+        capture_mode: 'file',
+        injecte: true,
+      });
+    }
+  }
+  return turns;
 }
 
 // --- Les gestes (C1) -----------------------------------------------------------------------------------------------
@@ -453,13 +508,8 @@ export function extractAntigravityBackstage(
       const childSteps = finishedSubagent(subagents.transcripts.get(child));
       if (childSteps === null) continue;
       read(child, childSteps, `${child}:`);
-      // Le rapport : le Message du dernier send_message vers la conversation qui l'a lancé.
-      const report = callsWithResults(childSteps).findLast(
-        ({ name, args }) =>
-          name === 'send_message' &&
-          typeof args?.Recipient === 'string' &&
-          args.Recipient.includes(id),
-      );
+      // Le rapport : le Message du dernier send_message vers la conversation qui l'a lancé, le sous-agent fini.
+      const report = messagesTo(id, childSteps).at(-1);
       const message = report?.args?.Message;
       const texte = typeof message === 'string' ? prepare(message) : null;
       if (report && texte !== null)

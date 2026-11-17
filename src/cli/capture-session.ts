@@ -294,7 +294,8 @@ export async function readHookStdin(
 
 // `dossier` : le dossier de travail que le crochet a donné (Cursor ne l'écrit pas dans son transcript), repris par le
 // rattrapage. `coulisses` : la marque des coulisses de cet état du fichier, parties (ou sans rien à envoyer) ; facultative,
-// un curseur d'avant se lit toujours, et tout autre état du fichier l'efface.
+// un curseur d'avant se lit toujours, et tout autre état du fichier l'efface. `rapports` : les identifiants des messages
+// de sous-agents déjà envoyés (Antigravity), que `tours` et `dernier` ne comptent pas ; facultatif de même.
 export type Curseur = {
   tours: number;
   dernier: string | null;
@@ -302,6 +303,7 @@ export type Curseur = {
   taille: number;
   dossier?: string | null;
   coulisses?: boolean;
+  rapports?: string[];
 };
 
 const CurseurSchema = z.object({
@@ -311,6 +313,7 @@ const CurseurSchema = z.object({
   taille: z.number(),
   dossier: z.string().nullable().optional(),
   coulisses: z.boolean().optional(),
+  rapports: z.array(z.string()).optional(),
 });
 
 export const cursorPath = (home: string, outil: Outil, file: string): string =>
@@ -387,11 +390,11 @@ async function branchAtCapture(directory: string, git: GitRunner): Promise<strin
   return branch ? branch : null;
 }
 
-// Capte un fichier de session d'un outil hors Claude Code : ses tours nouveaux, puis, si l'accord le permet
-// (`deps.facts`), ses faits sur tout le fichier, sur les sous-agents que son chargeur lit (sans `readdir`, aucun), puis
-// ses coulisses. `fin` : une vraie fin de session, ou un fichier resté immobile. `dossier` : le dossier de travail que
-// donne le crochet, pris quand le fichier n'en dit rien (Cursor) ; sinon celui du curseur, puis celui que l'adaptateur
-// retrouve. Le curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi des tours et des faits remontent
+// Capte un fichier de session d'un outil hors Claude Code : ses tours nouveaux, avec les messages nouveaux de ses
+// sous-agents (Antigravity), puis, si l'accord le permet (`deps.facts`), ses faits sur tout le fichier, puis ses
+// coulisses. Les sous-agents sont ceux que son chargeur lit (sans `readdir`, aucun), une fois, avant les tours. `fin` :
+// une vraie fin de session, ou un fichier resté immobile. `dossier` : le dossier de travail que donne le crochet, pris
+// quand le fichier n'en dit rien (Cursor) ; sinon celui du curseur, puis celui que l'adaptateur retrouve. Le curseur n'avance qu'une fois les tours reçus. Les erreurs d'envoi des tours et des faits remontent
 // (TokenRefusedError, IngestResponseError) ; celles des coulisses, non.
 export async function captureToolFile<O extends Outil>(
   outil: O,
@@ -406,7 +409,17 @@ export async function captureToolFile<O extends Outil>(
   const session = adapter.lire(content, fichier);
   if (session === null) return 'rien';
   const cursor = await readCursor(deps.home, outil, file);
-  const turns = turnsAfter(session.turns, cursor);
+  const sousAgents = await adapter.sousAgents?.(file, deps);
+  // Les messages des sous-agents (décision d'Amos du 17/11) viennent d'autres fichiers et peuvent dater d'avant des tours
+  // déjà envoyés : hors de la liste des tours, que turnsAfter suppose seulement allongée, ils partent sous l'accord de
+  // base tant que le curseur ne les a pas.
+  const rapports = sousAgents === undefined ? [] : (adapter.rapports?.(fichier, sousAgents) ?? []);
+  const dejaEnvoyes = new Set(cursor?.rapports);
+  const turns = [
+    ...turnsAfter(session.turns, cursor),
+    ...rapports.filter((turn) => !dejaEnvoyes.has(turn.external_id)),
+  ];
+  const envoyes = [...new Set([...dejaEnvoyes, ...rapports.map((turn) => turn.external_id)])];
   const candidates = [session.cwd, options.dossier ?? null, cursor?.dossier ?? null];
   let start = candidates.find((dir): dir is string => dir !== null && isAbsolute(dir)) ?? null;
   if (start === null && adapter.dossierDe) start = await adapter.dossierDe(file);
@@ -428,6 +441,7 @@ export async function captureToolFile<O extends Outil>(
     mtime: mtimeMs,
     taille: size,
     dossier: start,
+    ...(envoyes.length > 0 ? { rapports: envoyes } : {}),
   };
   await writeCursor(deps.home, outil, file, written);
   if (!deps.facts) return 'capte';
@@ -442,7 +456,6 @@ export async function captureToolFile<O extends Outil>(
     url: deps.mcpUrl,
     readFile: deps.readFile,
   });
-  const sousAgents = await adapter.sousAgents?.(file, deps);
   const faits = adapter.faits(content, fichier, root, branch, leonMcp, sousAgents);
   const source = { content, root, fin: options.fin, faits };
   if (!(await sendSessionFacts(session, source, sending, deps))) warn(FACTS_REFUSED_MESSAGE);

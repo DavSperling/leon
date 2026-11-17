@@ -152,6 +152,9 @@ async function catchUpTool(
     const fin = deps.now().getTime() - file.mtimeMs >= IDLE_MS;
     const cursor = await readCursor(deps.home, outil, file.path);
     // Un fichier inchangé est sauté, sauf s'il doit encore ses coulisses : fini, avec l'usage, sans la marque.
+    // shortcut: le message d'un sous-agent d'Antigravity écrit après la dernière capture attend que la session bouge (le
+    // crochet Stop, ou ce rattrapage) ; regarder aussi l'heure des conversations des sous-agents si un essai montre un
+    // message reçu sans que le fichier de la session change.
     const owed =
       fin &&
       usages.includes('coulisses') &&

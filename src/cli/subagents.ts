@@ -73,7 +73,8 @@ export async function loadAntigravitySubagents(
     (TRANSCRIPTS as readonly string[]).includes(basename(sessionFile)) &&
     basename(logs) === 'logs' &&
     basename(dirname(logs)) === '.system_generated' &&
-    basename(brain) === 'brain';
+    basename(brain) === 'brain' &&
+    UUID.test(basename(conversation)); // elle sert aussi à un chemin
   if (!readdir || !known) return { named, transcripts };
   const queue = [basename(conversation)];
   const seen = new Set(queue);

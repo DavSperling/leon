@@ -302,6 +302,37 @@ describe('loadAntigravitySubagents', () => {
     expect(await loadAntigravitySubagents(chemin, deps)).toEqual(vide);
   });
 
+  // La conversation de la session sert aussi à un chemin : hors d'un UUID, rien n'est lu, même hors de `brain/`.
+  it.each([
+    ['dont la conversation n’est pas un UUID', `${BRAIN}/essai`],
+    ['qui remonte hors de brain', `${BRAIN}/..`],
+  ])('ne lit rien pour une session %s', async (_cas, conversation) => {
+    const lus: string[] = [];
+    const deps = disque(
+      {
+        [`${conversation}/.system_generated/subagents/${R}.json`]: fiche(R),
+        [`/home/demo/.gemini/antigravity/.system_generated/subagents/${R}.json`]: fiche(R),
+        [`${logs(R)}/transcript_full.jsonl`]: 'R',
+      },
+      {
+        [`${conversation}/.system_generated/subagents`]: [`${R}.json`],
+        '/home/demo/.gemini/antigravity/.system_generated/subagents': [`${R}.json`],
+      },
+    );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
+
+    expect(
+      await loadAntigravitySubagents(
+        `${conversation}/.system_generated/logs/transcript_full.jsonl`,
+        { ...deps, readFile },
+      ),
+    ).toEqual(vide);
+    expect(lus).toEqual([]);
+  });
+
   it('sans listage du disque, rend des tables vides', async () => {
     const { readFile } = disque({ [`${fiches(S)}/${R}.json`]: fiche(R) }, {});
     expect(await loadAntigravitySubagents(SESSION_AG, { readFile })).toEqual(vide);

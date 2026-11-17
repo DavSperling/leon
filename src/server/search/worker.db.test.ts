@@ -123,9 +123,10 @@ describe('worker de recherche sur le vrai pg-boss', () => {
     expect(rows[0]).toEqual({ passages: 1, vectors: 1 });
   });
 
-  // Mesuré avec pg-boss 12 : un emplacement ne prend qu'un job par sondage, soit environ 2 jobs par seconde
-  // au sondage par défaut (2 s), 9 jobs par seconde à 0,5 s. Une relève de connecteur met un job par élément
-  // dans la file : à 2 par seconde, 200 éléments demandent plus d'une minute.
+  // Mesuré avec pg-boss 12 : avec l'écoute, le débit vient du réveil des boucles après chaque job. Au seul sondage
+  // (le repli quand l'écoute manque), un emplacement ne prend qu'un job par sondage : environ 2 jobs par seconde au
+  // défaut (2 s), 9 à 0,5 s. Une relève de connecteur met un job par élément dans la file : à 2 par seconde,
+  // 200 éléments demandent plus d'une minute.
   it('vide la file à plus de 5 jobs par seconde avec les réglages de production', async () => {
     const jobs = await Promise.all(Array.from({ length: 30 }, trivialRun));
 
@@ -146,11 +147,15 @@ describe('worker de recherche sur le vrai pg-boss', () => {
   // La migration 0010 a remis tout l'historique en attente, et le tic de reprise le met en file à raison de 200
   // par minute : un élément neuf ne doit pas attendre derrière cet historique.
   it('lit un run neuf avant les jobs de reprise déjà dans la file', async () => {
+    const boss = await getBoss();
     const revived = await Promise.all(Array.from({ length: 20 }, trivialRun));
     const fresh = await trivialRun();
-    for (const job of revived) {
-      await enqueuePipelineStep('index', job, { priority: INDEX_PRIORITY.reprise });
-    }
+    // D'un coup : réveillés à chaque envoi, les lecteurs prendraient sinon chaque reprise dès son arrivée, et
+    // aucune n'attendrait dans la file.
+    await boss.insert(
+      PIPELINE_QUEUES.index,
+      revived.map((data) => ({ data, priority: INDEX_PRIORITY.reprise })),
+    );
 
     await enqueuePipelineStep('index', fresh);
 
@@ -159,10 +164,18 @@ describe('worker de recherche sur le vrai pg-boss', () => {
       ([status]) => status === 'done',
       10,
     );
-    const revivedDone = await doneCount(revived.map((job) => job.ingestRunId));
+    const startOf = async (job: PipelineJob) => {
+      const [found] = await boss.findJobs(PIPELINE_QUEUES.index, {
+        data: { ingestRunId: job.ingestRunId },
+      });
+      return found?.startedOn?.getTime() ?? Number.POSITIVE_INFINITY;
+    };
+    const freshStart = await startOf(fresh);
+    const revivedStarts = await Promise.all(revived.map(startOf));
     expect(await statuses([fresh.ingestRunId])).toEqual(['done']);
-    // Les 20 reprises demandent plusieurs secondes : si le run neuf est passé derrière, elles sont toutes faites.
-    expect(revivedDone).toBeLessThan(15);
+    // Les reprises se vident en quelques millisecondes : c'est l'ordre des départs qui compte. Seules celles que
+    // les quatre lecteurs avaient déjà prises partent avant le run neuf.
+    expect(revivedStarts.filter((start) => start < freshStart).length).toBeLessThan(15);
   }, 30_000);
 
   it('lit les deux files des tics : un job envoyé lance la reprise des runs, puis des vecteurs', async () => {

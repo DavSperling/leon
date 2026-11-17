@@ -220,10 +220,10 @@ describe('correctLesson', () => {
   it('deux corrections depuis la même version : une seule passe, l’autre « modifiée entre-temps »', async () => {
     const [alice] = await pair();
     const id = await written(alice, 'Première.');
-    // Le pool chauffé (5 connexions, client.ts) : les deux corrections partent vraiment ensemble, et seul le verrou de
+    // Le pool chauffé (4 connexions, client.ts) : les deux corrections partent vraiment ensemble, et seul le verrou de
     // la leçon (lockTarget) fait lire n=2 à la seconde, au lieu de buter sur la contrainte unique.
     await Promise.all(
-      Array.from({ length: 5 }, () =>
+      Array.from({ length: 4 }, () =>
         withTenant(alice, (tx) => tx.execute(sql`select pg_sleep(0.2)`)),
       ),
     );

@@ -33,7 +33,7 @@ vi.mock('./threads-queue', async (importOriginal) => ({
   enqueueFilMaj: mocks.enqueueFilMaj,
   enqueueRangement: mocks.enqueueRangement,
   enqueueLiaison: mocks.enqueueLiaison,
-  getThreadsBoss: async () => ({ work: mocks.work }),
+  getThreadsBoss: async () => ({ work: mocks.work, getWipData: () => [] }),
 }));
 
 const { fileSession, startThreadsWorker } = await import('./threads');

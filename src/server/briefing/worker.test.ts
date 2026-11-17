@@ -26,7 +26,12 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('./queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./queue')>()),
-  getBriefingBoss: async () => ({ work: mocks.work, schedule: mocks.schedule, send: mocks.send }),
+  getBriefingBoss: async () => ({
+    work: mocks.work,
+    schedule: mocks.schedule,
+    send: mocks.send,
+    getWipData: () => [],
+  }),
   enqueueBriefingRefresh: mocks.enqueueBriefingRefresh,
 }));
 vi.mock('./briefings', () => ({

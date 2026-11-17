@@ -25,6 +25,7 @@ vi.mock('@/server/pipeline/queue', async (importOriginal) => ({
     work: mocks.work,
     schedule: mocks.schedule,
     unschedule: mocks.unschedule,
+    getWipData: () => [],
   }),
 }));
 vi.mock('@/server/pipeline/runs', () => ({ failRun: mocks.failRun }));

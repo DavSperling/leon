@@ -69,6 +69,25 @@ describe('démarrage de pg-boss', () => {
       await boss.deleteQueue(name);
     }
   });
+
+  // L'écoute ne réveille que les lecteurs d'une file à `notify` ; les files de la production ont été créées sans,
+  // et createQueue ne change pas une file qui existe.
+  it('met `notify` sur une file créée avant, sans, comme sur une file neuve', async () => {
+    const boss = await getBoss();
+    const [before, fresh] = [`test-notify-${randomUUID()}`, `test-notify-${randomUUID()}`];
+    await boss.createQueue(before);
+    try {
+      expect((await boss.getQueue(before))?.notify).toBeFalsy();
+
+      await ensureQueue(boss, before, {});
+      await ensureQueue(boss, fresh, {});
+
+      expect((await boss.getQueue(before))?.notify).toBe(true);
+      expect((await boss.getQueue(fresh))?.notify).toBe(true);
+    } finally {
+      for (const name of [before, fresh]) await boss.deleteQueue(name);
+    }
+  });
 });
 
 describe('enqueuePipelineStep', () => {

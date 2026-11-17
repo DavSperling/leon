@@ -1,6 +1,6 @@
 import type { PgBoss } from 'pg-boss';
 import { z } from 'zod';
-import { getBoss } from '@/server/pipeline/queue';
+import { ensureQueue, getBoss } from '@/server/pipeline/queue';
 
 // La file du résumé d'une session (T23, D9 et QD5 du plan mémoire des sessions, tranchée par Amos le 05/11) : la
 // route des faits y met chaque session dont l'outil a l'usage `resume` (C7 révisé), et le worker (resume-worker.ts)
@@ -29,7 +29,7 @@ const globalForResume = globalThis as typeof globalThis & { leonResumeBoss?: Pro
 export function getResumeBoss(): Promise<PgBoss> {
   globalForResume.leonResumeBoss ??= (async () => {
     const boss = await getBoss();
-    await boss.createQueue(RESUME_QUEUE, QUEUE);
+    await ensureQueue(boss, RESUME_QUEUE, QUEUE);
     return boss;
   })().catch((error) => {
     globalForResume.leonResumeBoss = undefined; // un démarrage raté doit pouvoir être retenté

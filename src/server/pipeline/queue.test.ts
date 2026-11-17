@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import type { PgBoss } from 'pg-boss';
+import { describe, expect, it, vi } from 'vitest';
+import { logError } from '@/server/log';
 import { productionSources } from '@/test/contracts/files';
-import { PIPELINE_QUEUES } from './queue';
+import { logBossWarning, PIPELINE_QUEUES, wakeQueueAfter } from './queue';
+
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 
 // Files de l'indexation que personne ne lit. Vide depuis T05 : le worker de la recherche
 // (`src/server/search/worker.ts`) lit `index` (le travail), `requeue` et `reindex` (les deux tics de reprise).
@@ -69,5 +73,53 @@ describe('files du pipeline', () => {
     expect(consumedQueues()).toEqual(['index', 'reindex', 'requeue']);
     expect(producedQueues()).toEqual(['index', 'reindex', 'requeue']);
     expect(scheduledQueues()).toEqual(['reindex', 'requeue']);
+  });
+});
+
+// Le débit réel, avec l'écoute, est mesuré dans search/worker.db.test.ts.
+describe('wakeQueueAfter', () => {
+  it('réveille après chaque job, même raté, les seules boucles de sa file, et rend l’échec', async () => {
+    const notifyWorker = vi.fn();
+    const boss = {
+      getWipData: () => [
+        { id: 'a1', name: 'file-a' },
+        { id: 'b1', name: 'file-b' },
+        { id: 'a2', name: 'file-a' },
+      ],
+      notifyWorker,
+    } as unknown as PgBoss;
+    const handler = wakeQueueAfter(boss, 'file-a', async () => {
+      throw new Error('échec');
+    });
+
+    await expect(handler([])).rejects.toThrow('échec');
+    expect(notifyWorker.mock.calls).toEqual([['a1'], ['a2']]);
+  });
+});
+
+describe('logBossWarning', () => {
+  it('journalise l’écoute indisponible, sans ses données', () => {
+    logBossWarning({
+      message: 'Failed to start LISTEN/NOTIFY listener. Continuing with polling only.',
+      data: { type: 'listen_notify_unavailable', error: 'connect ECONNREFUSED db.example:5432' },
+    });
+
+    expect(logError).toHaveBeenCalledTimes(1);
+    const [event, error] = vi.mocked(logError).mock.calls[0] ?? [];
+    expect(event).toBe('pgboss.listen_unavailable');
+    expect((error as Error).message).toBe(
+      'Failed to start LISTEN/NOTIFY listener. Continuing with polling only.',
+    );
+  });
+
+  it('ne journalise pas les autres alertes, qui portent du SQL et des valeurs de jobs', () => {
+    vi.mocked(logError).mockClear();
+
+    logBossWarning({
+      message: 'Slow query',
+      data: { type: 'slow_query', sql: 'SELECT …', values: ['texte de conversation'] },
+    });
+
+    expect(logError).not.toHaveBeenCalled();
   });
 });

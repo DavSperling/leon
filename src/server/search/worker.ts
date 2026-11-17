@@ -6,6 +6,7 @@ import {
   PIPELINE_QUEUES,
   type PipelineJob,
   PipelineJobSchema,
+  wakeQueueAfter,
 } from '@/server/pipeline/queue';
 import { failRun } from '@/server/pipeline/runs';
 import { purgeCited } from '@/server/sessions/reminder';
@@ -18,9 +19,10 @@ import { indexIngestRun } from './index-run';
 
 // Jobs d'indexation traités en parallèle dans un processus : chacun lit et écrit sa propre source.
 const INDEX_CONCURRENCY = 4;
-// Un emplacement de pg-boss ne prend qu'un job par sondage : au sondage par défaut (2 s), quatre emplacements
-// vident la file à 2 jobs par seconde, alors qu'une relève de connecteur y met un job par élément (jusqu'à 200
-// par passage) et que le tic de reprise en remet 200 par minute. À 0,5 s (le minimum de pg-boss) : 8 par seconde.
+// Avec l'écoute, chaque job fini réveille les boucles de la file (wakeQueueAfter) : le débit vient de là. Le sondage
+// n'est que le repli quand l'écoute manque, et un emplacement ne prend alors qu'un job par sondage : au défaut (2 s),
+// quatre emplacements vident la file à 2 jobs par seconde, alors qu'une relève de connecteur y met un job par élément
+// (jusqu'à 200 par passage) et que le tic de reprise en remet 200 par minute. À 0,5 s (le minimum) : 8 par seconde.
 const INDEX_POLLING_SECONDS = 0.5;
 // Un run « en attente » depuis plus longtemps est remis en file (mise en file ratée ou job perdu).
 const STALE_RUN_MINUTES = 5;
@@ -77,49 +79,57 @@ async function registerWorkers(
       localConcurrency: INDEX_CONCURRENCY,
       pollingIntervalSeconds: pollingIntervalSeconds ?? INDEX_POLLING_SECONDS,
     },
-    async ([job]) => processIndexJob(job?.data, deps),
+    wakeQueueAfter(boss, PIPELINE_QUEUES.index, async ([job]) => processIndexJob(job?.data, deps)),
   );
 
   const tick = { batchSize: 1, localConcurrency: 1, ...polling };
   let purgedAt = 0;
   await boss.schedule(PIPELINE_QUEUES.requeue, EVERY_MINUTE);
-  await boss.work(PIPELINE_QUEUES.requeue, tick, async () => {
-    if (Date.now() - purgedAt >= PURGE_EVERY_MS) {
-      purgedAt = Date.now();
-      await purgeCited().catch((error) => logError('reminder.purge_failed', error));
-    }
-    await requeueStaleRuns(STALE_RUN_MINUTES).catch((error) =>
-      rethrowSummary('search.requeue_tick_failed', error),
-    );
-  });
+  await boss.work(
+    PIPELINE_QUEUES.requeue,
+    tick,
+    wakeQueueAfter(boss, PIPELINE_QUEUES.requeue, async () => {
+      if (Date.now() - purgedAt >= PURGE_EVERY_MS) {
+        purgedAt = Date.now();
+        await purgeCited().catch((error) => logError('reminder.purge_failed', error));
+      }
+      await requeueStaleRuns(STALE_RUN_MINUTES).catch((error) =>
+        rethrowSummary('search.requeue_tick_failed', error),
+      );
+    }),
+  );
 
   const { embedder } = deps;
   if (embedder) {
     await boss.schedule(PIPELINE_QUEUES.reindex, EVERY_MINUTE);
-    await boss.work(PIPELINE_QUEUES.reindex, tick, async () => {
-      const start = Date.now();
-      // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit et aucun passage sorti de la
-      // file, le fournisseur a échoué ou refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie
-      // seulement est écrite (textes refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
-      // Audit 4 n° 1 : le lot lu compte aussi les passages que la lecture sort de la file sans les rendre.
-      let batch = { read: EMBED_PER_TICK, stored: 1, removed: 0 };
-      while (
-        batch.read === EMBED_PER_TICK &&
-        batch.stored + batch.removed > 0 &&
-        Date.now() - start < EMBED_TICK_MS
-      ) {
-        batch = await embedMissingBatch({ embedder }, EMBED_PER_TICK).catch((error) =>
-          rethrowSummary('search.embed_tick_failed', error),
-        );
-      }
-      // Audit 3 n° 4 : seulement quand le tic n'a plus rien trouvé à vectoriser (dernier lot lu incomplet) : ni
-      // pendant un rattrapage, ni quand le temps du tic est écoulé.
-      if (batch.read < EMBED_PER_TICK) {
-        await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
-          rethrowSummary('search.drop_old_vectors_failed', error),
-        );
-      }
-    });
+    await boss.work(
+      PIPELINE_QUEUES.reindex,
+      tick,
+      wakeQueueAfter(boss, PIPELINE_QUEUES.reindex, async () => {
+        const start = Date.now();
+        // Audit 3 n° 3 : un lot lu incomplet, il n'en reste plus ; aucun vecteur écrit et aucun passage sorti de la
+        // file, le fournisseur a échoué ou refusé tout le lot (le tic suivant reprendra). Un lot plein dont une partie
+        // seulement est écrite (textes refusés, passages déjà vectorisés ou disparus) ne dit pas qu'il n'en reste plus.
+        // Audit 4 n° 1 : le lot lu compte aussi les passages que la lecture sort de la file sans les rendre.
+        let batch = { read: EMBED_PER_TICK, stored: 1, removed: 0 };
+        while (
+          batch.read === EMBED_PER_TICK &&
+          batch.stored + batch.removed > 0 &&
+          Date.now() - start < EMBED_TICK_MS
+        ) {
+          batch = await embedMissingBatch({ embedder }, EMBED_PER_TICK).catch((error) =>
+            rethrowSummary('search.embed_tick_failed', error),
+          );
+        }
+        // Audit 3 n° 4 : seulement quand le tic n'a plus rien trouvé à vectoriser (dernier lot lu incomplet) : ni
+        // pendant un rattrapage, ni quand le temps du tic est écoulé.
+        if (batch.read < EMBED_PER_TICK) {
+          await dropOldVectors(embedder.model, OLD_VECTORS_PER_TICK).catch((error) =>
+            rethrowSummary('search.drop_old_vectors_failed', error),
+          );
+        }
+      }),
+    );
   } else {
     // Le tic d'un lancement précédent, avec fournisseur, resterait planifié dans la base : il remplirait
     // une file que plus personne ne lit.

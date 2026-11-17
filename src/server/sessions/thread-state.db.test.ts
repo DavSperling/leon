@@ -27,7 +27,7 @@ const withdraw = (ctx: TenantContext, outil: CodeSessionKind) =>
 const mocks = vi.hoisted(() => ({ work: vi.fn() }));
 vi.mock('./threads-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./threads-queue')>()),
-  getThreadsBoss: async () => ({ work: mocks.work }),
+  getThreadsBoss: async () => ({ work: mocks.work, getWipData: () => [] }),
 }));
 
 const { ENTREES_MAX, startFilStateWorker, updateFilState } = await import('./thread-state-worker');

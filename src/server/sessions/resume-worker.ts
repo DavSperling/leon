@@ -7,6 +7,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { createIngestRun, enqueueIndexing, insertNewTurns } from '@/server/ingest/ingest-turns';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
+import { wakeQueueAfter } from '@/server/pipeline/queue';
 import {
   epochToDate,
   notBackstage,
@@ -344,7 +345,7 @@ export function startResumeWorker(deps: { llm: Llm | null }): Promise<void> {
     await boss.work(
       RESUME_QUEUE,
       { batchSize: 1, localConcurrency: RESUME_CONCURRENCY },
-      async ([job]) => processResumeJob(job?.data, deps),
+      wakeQueueAfter(boss, RESUME_QUEUE, async ([job]) => processResumeJob(job?.data, deps)),
     );
   })().catch((error) => {
     globalForWorker.leonResumeWorker = undefined; // un démarrage raté doit pouvoir être retenté

@@ -1,5 +1,5 @@
 import { logError, safeErrorSummary } from '@/server/log';
-import { getBoss } from '@/server/pipeline/queue';
+import { ensureQueue, getBoss, wakeQueueAfter } from '@/server/pipeline/queue';
 import { CONNECTOR_QUEUES, ConnectorSyncJobSchema } from './queue';
 import { getConnector } from './registry';
 import { enqueueDueSyncs, runConnectorSync, type SyncDeps } from './sync';
@@ -19,23 +19,31 @@ function rethrowSummary(event: string, error: unknown, ids: Record<string, strin
 // pg-boss teste la présence de la clé : `pollingIntervalSeconds: undefined` y est refusé.
 async function registerWorkers(deps: SyncDeps, pollingIntervalSeconds: number | undefined) {
   const boss = await getBoss();
-  await boss.createQueue(CONNECTOR_QUEUES.tick, RETRY);
-  await boss.createQueue(CONNECTOR_QUEUES.sync, SYNC_QUEUE);
+  await ensureQueue(boss, CONNECTOR_QUEUES.tick, RETRY);
+  await ensureQueue(boss, CONNECTOR_QUEUES.sync, SYNC_QUEUE);
   await boss.schedule(CONNECTOR_QUEUES.tick, '* * * * *');
   const polling = pollingIntervalSeconds === undefined ? {} : { pollingIntervalSeconds };
   const options = { batchSize: 1, localConcurrency: 1, ...polling };
   // Quatre relèves à la fois : le long premier passage d'un outil ne bloque pas les autres. La
   // réservation de chaque connexion empêche deux relèves sur la même.
   const syncOptions = { ...options, localConcurrency: 4 };
-  await boss.work(CONNECTOR_QUEUES.tick, options, async () => {
-    await enqueueDueSyncs().catch((error) => rethrowSummary('connector.tick_failed', error));
-  });
-  await boss.work(CONNECTOR_QUEUES.sync, syncOptions, async ([job]) => {
-    const parsed = ConnectorSyncJobSchema.parse(job?.data);
-    await runConnectorSync(parsed, deps).catch((error) =>
-      rethrowSummary('connector.job_failed', error, { connectionId: parsed.connectionId }),
-    );
-  });
+  await boss.work(
+    CONNECTOR_QUEUES.tick,
+    options,
+    wakeQueueAfter(boss, CONNECTOR_QUEUES.tick, async () => {
+      await enqueueDueSyncs().catch((error) => rethrowSummary('connector.tick_failed', error));
+    }),
+  );
+  await boss.work(
+    CONNECTOR_QUEUES.sync,
+    syncOptions,
+    wakeQueueAfter(boss, CONNECTOR_QUEUES.sync, async ([job]) => {
+      const parsed = ConnectorSyncJobSchema.parse(job?.data);
+      await runConnectorSync(parsed, deps).catch((error) =>
+        rethrowSummary('connector.job_failed', error, { connectionId: parsed.connectionId }),
+      );
+    }),
+  );
 }
 
 const globalForWorker = globalThis as typeof globalThis & { leonConnectorWorker?: Promise<void> };

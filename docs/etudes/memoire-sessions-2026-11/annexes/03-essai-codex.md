@@ -35,3 +35,5 @@ Autres relevés pour le lot 5 (T18) :
 2. **`additionalContextLimit: 8000`** sur le crochet de démarrage. Le bloc fait au plus 8 000 octets, soit au plus 8 000 jetons quel que soit le texte : Codex ne le tronque jamais, donc n'en écrit jamais de copie sur le disque (D31). À vérifier au premier essai du crochet installé (T17), puisque l'option change l'empreinte.
 3. **Approbation** : l'installateur dit qu'il faut approuver le crochet par `/hooks` au prochain lancement de Codex, sinon il ne tourne pas. Les mises à jour de Leon ne redemandent pas l'approbation tant que la commande du crochet (`~/.leon/bin/leon crochet codex demarrage`) et ses options ne changent pas.
 4. **Pour le lot 5** : la capture ne peut compter ni sur SessionEnd (absent à `/quit`), ni sur Stop en `codex exec`. Il faut capter à chaque Stop dans le terminal, rattraper au démarrage suivant et après 15 min sans tour (D32), et décider pour `codex exec` (SessionEnd y tourne, lui).
+
+La suite de l'essai de Codex, pour les coulisses (raisonnement, sous-agents, appels d'outils), est dans l'[annexe 9](09-essai-codex-coulisses.md).

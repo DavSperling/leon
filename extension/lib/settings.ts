@@ -8,9 +8,10 @@ export const STATUS_KEY = 'leon.status';
 // que pour le texte qu'on a lu : donné sur une version plus ancienne, il ne permet plus de capter, et l'écran se
 // réaffiche jusqu'au nouvel accord. 1 : premier jet (analyse par l'API d'Anthropic pour en extraire des faits) ;
 // 2 : deuxième jet (le serveur garde et indexe la conversation, et peut envoyer des passages au fournisseur du
-// modèle d'IA pour répondre aux questions). Un réglage enregistré avant les versions vaut 0.
+// modèle d'IA pour répondre aux questions) ; 3 : la conversation est lue aussi, sur le site, par les managers en
+// remontant (0057), et leurs questions peuvent en envoyer des passages. Un réglage enregistré avant les versions vaut 0.
 // consent-version.test.ts lie le texte à cette version : changer le texte impose de la monter.
-export const CONSENT_VERSION = 2;
+export const CONSENT_VERSION = 3;
 
 export type KeyValueStore = {
   get(key: string): Promise<unknown>;

@@ -8,6 +8,7 @@ import { CONSENT_VERSION } from './settings';
 // CONSENT_VERSION et ajouter ici son empreinte ; une empreinte notée ne change jamais.
 const CONSENT_FINGERPRINTS: Record<number, string> = {
   2: '48c5422c0a2afb2ac9e9949a77245510f0c446a222dfd632f564601086d1256a',
+  3: '2c419f5f6d1069a928e862959ae9aba505c7e6a49b4076d1c880ea4fde79d256',
 };
 
 // Le texte lisible de la section #consent de la page d'options : sans balises, espaces regroupées.

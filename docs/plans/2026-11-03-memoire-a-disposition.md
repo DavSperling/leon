@@ -279,6 +279,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
       - Amendé le 05/11 (relecture) : ils ont leur rôle, `appel_outil`, à côté de `raisonnement` et `sous_agent` (C10). Chaque appel porte le nom réduit de l'outil, sa cible réduite comme `session-facts.ts` réduit déjà les commandes (`reduceCommand`, `repoRelativePath`), et son statut. Jamais sa sortie, ni ses autres arguments, ni un secret : tout passe par `maskSecrets` sur le poste, puis de nouveau sur le serveur. Ceux des sous-agents suivent la même forme, quand T50 trouve leurs échanges (T52).
       - Les lots d'outils (Codex, Cursor, Antigravity) relèvent les appels de leur outil dans la même forme, selon la forme relevée à leur essai (T15, T26, T31). Un appel de forme inconnue ne part pas : rien plutôt qu'un argument brut.
         > **Amendé le 12/11 (décision 2 d'Amos pour le lot 14) :** ces lots sont fusionnés sans coulisses. C'est la quatrième PR du lot 14 qui les porte, après un essai par outil, pour chaque outil dont l'essai est bon.
+        > **Amendé le 17/11 (essais du 13/11, annexes 09 à 11) :** Codex et Antigravity les relèvent (amendement du 17/11 de T52). Cursor s'arrête à son annexe : son transcript n'écrit ni raisonnement, ni résultat d'appel.
   - Ils passent par leur propre route (`POST /api/v1/coulisses`), pas par le contrat d'ingestion (règle du plan mémoire des sessions).
   - Ils sont rangés comme tours de la session, sous son ACL, avec deux nouveaux rôles, `raisonnement` et `sous_agent` (migration du check de `turns.role`), que la recherche peut filtrer. Amendé le 05/11 (relecture) : trois rôles, avec `appel_outil`, dans la même migration.
     - Tranché le 05/11 par Amos (QD9) : ces trois rôles sont exclus du point du matin et, comme tout texte du modèle ou capté, du bloc de démarrage. Ils restent toujours visibles dans la recherche, sans filtre : Amos veut toujours pouvoir les voir quand il cherche. Le filtre `type` (raisonnement, sous-agent, appel d'outil) du MCP permet de les cibler. `leon chercher` les rend aussi, sans ce filtre (C11).
@@ -527,6 +528,12 @@ Tranché le 05/11 par Amos (QD9, D29) : les tours rangés par cette route, des t
 > - `cible` n'est gardée que pour `Bash` et pour `Read`, `Write`, `Edit`, `MultiEdit`, `NotebookEdit`, `Glob`, `Grep` et `LS`. Pour `Bash`, elle passe par `recheckCommand` (hors forme : `[commande]`). Pour un outil de fichier, un chemin absolu ou qui contient un segment `..` est retiré. Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée ne fait jamais ranger une URL, un motif ou une requête. Puis `factText` (masque et borne).
 >
 > Les compteurs (décision 6 d'Amos pour le lot 14) : à chaque envoi accepté, le serveur compte les blocs et les octets reçus par rôle, sans texte, sans identifiant de session ni de fil, sur le modèle des compteurs de T53 (`count` dans `src/server/memory/versions.ts`). Le lot 11 les relève.
+
+> **Amendé le 17/11 (quatrième PR du lot 14 ; annexes 09 et 11 ; choix du rédacteur) :** le contrat ne change pas, et le serveur non plus. Voici comment Codex et Antigravity le remplissent.
+> - **`outil` : le nom commun.** Le serveur ne garde une cible que sous les noms de Claude Code (`Bash`, `Read`, `Write`, `Edit`, `Grep`, `LS`…). La CLI ramène donc chaque outil connu de Codex ou d'Antigravity à ce nom commun : une commande est `Bash`, une lecture `Read`, une écriture `Write` ou `Edit`. La recherche trouve ainsi les mêmes mots d'un outil à l'autre. Un outil connu qui n'a pas de nom commun garde son nom propre, sans cible. **Un nom que la CLI ne connaît pas part en `[outil]`**, sans cible : ces outils n'écrivent pas `mcp__<serveur>__<outil>`, et un nom inconnu peut être celui d'un outil MCP, qui ne part jamais.
+> - **`id`**, stable d'un envoi à l'autre, dans la forme `[A-Za-z0-9_.:-]`. Codex : le rang de la ligne (`ordinal`). Antigravity : le rang de l'étape (`step_index`), puis le rang de l'appel dans l'étape. Pour un bloc d'un sous-agent, l'identifiant de son fil (Codex) ou de sa conversation (Antigravity) vient devant. La consigne porte l'identifiant de son appel suivi de `:consigne` ; le rapport, l'identifiant du sous-agent suivi de `:rapport`. Le lien exact entre un appel et son sous-agent ne se lit pas toujours (deux appels dans une même étape d'Antigravity), et rien ne s'en sert.
+> - **`statut`.** Codex : `erreur` si la commande n'a pas fini normalement (`status` autre que `completed`, un refus compris) ou sort avec un code non nul ; `ok` sinon. Antigravity : `erreur` si l'étape de résultat est en `ERROR` (un refus l'est), `ok` si elle est en `DONE`, `sans_resultat` s'il n'y a pas d'étape de résultat. Une commande qui échoue y reste `ok` : l'appli n'écrit plus son code de sortie (annexe 11).
+> - **Quand.** Ces outils n'ont pas de fin de session sûre. Leurs coulisses partent quand la session est finie : à l'évènement de fin (Codex, en `codex exec`), sinon au premier rattrapage après 30 minutes sans changement du fichier (`IDLE_MS`, la règle de l'import de Claude Code). Jamais à la fin d'un tour : le premier statut écrit gagne, et un appel en cours resterait `sans_resultat`.
 
 **C11. Les routes de lecture** : `POST /api/v1/dossier`, `POST /api/v1/fil` (les corps de C9) et `POST /api/v1/chercher { projet, requete, session?, outil? }`, le dépôt se déduisant de `projet`. Chaque corps porte aussi `usages`.
 - Elles demandent le jeton et `lecture` dans les `usages` envoyés, et sont en `.strict()`, 4 Kio au plus.
@@ -1414,6 +1421,11 @@ Le chemin sur main : `/api/mcp` (`mcp-routes.ts`) passe par `apiTokenGuard({ ass
 > - **Pourquoi 08.** Les numéros 06 et 07 sont réservés par le plan mère : 06 par T37, 07 par T38 (que T62 reprend).
 > - **L'essai a aussi établi** le lien entre un appel `Agent` et son fichier (le `toolUseId` du `meta.json`), la marque de fin d'un sous-agent, et que le rapport d'un sous-agent au premier plan est un `tool_result`, pas un tour.
 
+> **Amendé le 17/11 (décision 2 d'Amos pour le lot 14 : un essai par outil) :** les essais des trois autres outils sont faits, le 13/11, avec Amos devant chaque appli. Chacun a son annexe ; les scripts témoins sont dans `docs/etudes/memoire-sessions-2026-11/essais/coulisses-autres-outils/`. Ils ne relèvent que la forme et refusent de tourner hors d'un dossier d'essai.
+> - **Codex** (codex-cli 0.159.0), annexe 09 : **positif**. Un sous-agent est un fichier à part, relié à son appel ; chaque commande a son statut ; le résumé du raisonnement est écrit quand Codex en fait un.
+> - **Cursor** (fenêtre « Agents », compte gratuit), annexe 10 : **négatif** pour les coulisses et pour la règle du sous-agent. Le transcript n'écrit ni raisonnement, ni résultat, ni identifiant, ni date d'un appel, et rien ne relie un sous-agent à son appel. Cursor s'arrête à son annexe (décision 2).
+> - **Antigravity** (appli 2.31.0), annexe 11 : **positif**. Le raisonnement est écrit en entier, chaque appel est suivi de son résultat, et chaque sous-agent est nommé par sa conversation.
+
 **Fait quand :** sur une session de test créée pour l'occasion (un dépôt jetable, une tâche qui lance un sous-agent), on relève dans le transcript :
 - si les blocs de raisonnement portent leur texte, selon le modèle et la version de Claude Code ;
 - où vivent les échanges des sous-agents : lignes isSidechain du même fichier, ou fichiers à part ;
@@ -1561,6 +1573,73 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - Une session reprise recopie son historique sous un autre identifiant : au crochet de fin, ses coulisses repartent sous la nouvelle session (les identifiants de bloc sont les mêmes, mais la session diffère). L'import, lui, ne renvoie pas un bloc déjà relevé.
 >   - Mesuré à l'essai de la PR 2 : beaucoup d'appels d'outils courts évincent les messages dans une recherche sans filtre. À trancher par Amos avant d'ouvrir l'usage à d'autres.
 
+> **Amendé le 17/11 (décision 2 d'Amos pour le lot 14 ; essais du 13/11, annexes 09 à 11 ; choix du rédacteur) :** c'est ce que la PR 4 code. Le serveur ne change pas (C10, amendé le 17/11).
+> - **Le périmètre.** Codex et Antigravity reçoivent les coulisses. Cursor non : son essai est négatif, `coulisses` n'y est ni proposé ni écrit, et rien n'en part.
+> - **Codex : `extractCodexBackstage(content, root, subagents)`**, dans `src/capture/codex.ts`, pur. Il ne lit que la forme paginée (`history_mode: 'paginated'`), celle des faits : sans elle, aucun bloc (D29 : une forme inconnue ne part pas). Il ne lit que les lignes propres à la session (`ownLines` : pas l'historique recopié d'une reprise).
+>   - **Le raisonnement** : chaque `response_item` de type `reasoning` dont les textes de `summary[]` ne sont pas vides après préparation. C'est un résumé ; Codex ne l'écrit pas toujours (vide deux fois sur trois à l'essai). Jamais `encrypted_content`. Celui d'un sous-agent ne part pas, comme pour Claude Code.
+>   - **Un appel d'outil** : chaque `event_msg` `item_completed`, par une table fermée :
+>     - `CommandExecution` : `Bash`, la cible par `reduceCommand` sur la commande que les faits lisent déjà, le statut de C10. Une ligne d'interaction (`source: 'unified_exec_interaction'`) n'est pas un appel ;
+>     - `FileChange` : `Edit`, un bloc par fichier changé, la cible par `repoRelativePath` (rien s'il sort du dépôt) ;
+>     - `McpToolCall` : `mcp:<serveur>`, par `reduceToolName`, jamais le nom de l'outil ;
+>     - `SubAgentActivity` de `kind: 'started'` : `spawn_agent`, sans cible ;
+>     - les autres éléments d'outil que le lecteur connaît (`WebSearch`, `ImageView`, `ImageGeneration`, `CollabAgentToolCall`, `Extension`, `DynamicToolCall`) : le nom de l'élément, sans cible ;
+>     - `FunctionCallOutput` : son `name` s'il est dans `LOCAL_FUNCTIONS`, sinon `[outil]` ;
+>     - un élément qui n'est pas un appel n'en fait pas (`UserMessage`, `AgentMessage`, `Reasoning`, `Plan`, `HookPrompt`, `ContextCompaction`, les modes de relecture) ; un type inconnu part en `[outil]`.
+>   - **Un sous-agent** : la consigne est le champ `message` des arguments de l'appel `spawn_agent` (un `response_item` `function_call`), datée de sa ligne. Aucun autre argument ne part (`task_name`, `fork_turns`). Le rapport est le `last_agent_message` du dernier `task_complete` du fichier du sous-agent, seulement s'il a fini (la règle de T63, amendée le 17/11).
+>   - Les appels d'un sous-agent, et ceux d'un sous-agent de sous-agent, sont relevés de même, sur ses seules lignes propres (à partir de `subagent_history_start_ordinal`).
+> - **Antigravity : `extractAntigravityBackstage(content, file, root, subagents)`**, dans `src/capture/antigravity.ts`, pur.
+>   - **Le raisonnement** : le champ `thinking` de chaque étape `PLANNER_RESPONSE`, s'il n'est pas vide après préparation. C'est le texte entier, pas un résumé : le texte d'accord le dit. Celui d'un sous-agent ne part pas.
+>   - **Un appel d'outil** : chaque élément de `tool_calls` d'une étape `PLANNER_RESPONSE`, de la forme `{ name, args }`. Son résultat est l'étape qui le suit : après une étape à k appels, les k étapes suivantes de source `MODEL` qui ne sont pas des `PLANNER_RESPONSE`, dans l'ordre (annexe 11). Par une table fermée :
+>     - `run_command` : `Bash`, la cible par `reduceCommand` sur `CommandLine` ;
+>     - `read_file`, `view_file` : `Read` ; `write_to_file` : `Write` ; `replace_file_content` : `Edit` ; la cible est le chemin que les faits lisent déjà (`Path`, `AbsolutePath`, `TargetFile`), par `repoRelativePath` ;
+>     - `grep_search` : `Grep` ; `list_dir` : `LS` ; sans cible tant que le nom de leur argument de chemin n'est pas relevé ;
+>     - les autres outils que le lecteur connaît (`invoke_subagent`, `send_message`, `manage_task`, `search_web`, `read_url_content`, `webview_browser`, `schedule`) : leur nom, sans cible ;
+>     - tout autre nom : `[outil]`, sans cible.
+>   - **Un sous-agent** : la consigne est le `Prompt` de l'appel `invoke_subagent`. Aucun autre argument ne part (`Role`, `TypeName`, `Model`). Le rapport est le `Message` du dernier appel `send_message` du sous-agent dont le `Recipient` contient l'identifiant de la conversation qui l'a lancé, seulement s'il a fini (T63, amendé le 17/11). Le `Message` d'un `send_message` de la session vers un sous-agent ne part pas : c'est un appel d'outil comme un autre.
+>   - Les appels d'un sous-agent, et d'un sous-agent de sous-agent, sont relevés de même.
+> - **La préparation** est celle de Claude Code : `stripLeonBlocks` puis `prepareTurnText` pour un texte, `factText` pour une cible, le filtre final par `CoulisseBlocSchema`, le tri par date. La sortie d'un outil ne part jamais : l'étape de résultat d'Antigravity et les éléments de Codex ne servent qu'au statut.
+> - **L'envoi.**
+>   - `sendSessionBackstage` ne relève plus lui-même : il reçoit le `kind` et les blocs. Un seul envoi pour tous les outils, avec les mêmes lots, la même relecture du retrait et les mêmes réponses (403 sans bruit, 400 et 404 : message fixe).
+>   - `captureToolFile` envoie les coulisses après les faits, dans son propre `try`, seulement si `fin` est vrai, si `coulisses` est dans les usages et si l'outil a un relevé. Le crochet d'un tour ne les envoie donc jamais ; le crochet de fin de Codex et le rattrapage, oui.
+>   - Le curseur du fichier gagne une marque, `coulisses`, écrite une fois les coulisses de cet état du fichier parties (ou sans rien à envoyer). Le rattrapage saute un fichier inchangé, sauf s'il lui doit ses coulisses : `coulisses` dans ses usages (déjà filtrés par la date de l'usage : une session d'avant l'acceptation n'envoie rien), 30 minutes sans changement, et pas de marque. Un 400 ou un 404 arrête les coulisses du passage, sans marque : le passage suivant réessaie.
+>   - `toolCapture` et le rattrapage reçoivent `sendCoulisses` et la lecture d'un dossier.
+> - **L'usage `coulisses`.**
+>   - Il se propose pour Claude Code, Codex et Antigravity ; jamais pour Cursor.
+>   - **Il se demande outil par outil, avec le texte de l'outil.** Les textes diffèrent (ce qui est relevé, et quand) : un « oui » donné pour un outil ne vaut pas pour un autre, même dans un seul passage de `leon setup`. Les autres usages gardent leur question unique par passage.
+>   - Toujours en `[y/N]`, jamais par `--yes` ni `--oui`, jamais hors terminal, jamais sur la page « Autoriser ».
+>   - `COULISSES_LINES` ne change pas d'un mot : c'est le texte de Claude Code, déjà accepté. Les deux autres outils ont le leur. Leurs deuxième et troisième puces sont celles de `COULISSES_LINES`, mot pour mot.
+> - **Les textes (anglais), mot pour mot.** Ce sont des textes d'accord : les agents les codent tels quels.
+>   - Codex, première puce :
+>     ```
+>       - Once a Codex session is over, the Leon server this computer is connected to also receives what happened behind the exchanges: the summary of the agent's reasoning, when Codex writes one in the session file; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file change, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. A session is over at its end when Codex runs that hook (`codex exec`), otherwise once its file has not changed for 30 minutes: it is then sent in the background the next time Leon's start hook runs on this computer.
+>     ```
+>   - Antigravity, première puce :
+>     ```
+>       - Once an Antigravity conversation has not changed for 30 minutes, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, which Antigravity writes in full in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for any other tool, nothing, and a tool Leon does not know, such as an MCP tool, is kept without its name. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. It is sent in the background the next time Leon's start hook runs on this computer.
+>     ```
+>   - La première ligne (`Full capture (usage "coulisses", optional, asked separately):`) est la même pour les trois.
+>   - **Les mêmes phrases suivent ailleurs** : la documentation du site en anglais et en français (`site.documentation.sent.coulisses` et `sent.tools`, qui disaient « for Claude Code only »), le README (« ce qui part »), l'aide de la CLI (`src/cli/leon.ts`), et le commentaire de `SessionFactsSchema.externe` (`api-contract.ts`).
+> - **Les tests.**
+>   - `src/capture/codex.test.ts` et `src/capture/antigravity.test.ts`, sur des fixtures inventées dans la forme des annexes 09 et 11 :
+>     - un faux secret masqué ; la coupe à 20 000 ; un bloc de Leon retiré ;
+>     - un raisonnement vide non relevé ; celui d'un sous-agent non relevé ;
+>     - la consigne et le rapport d'un sous-agent ; un sous-agent qui n'a pas fini : la consigne sans rapport, et aucun de ses appels ;
+>     - une commande réduite à son exécutable (`curl -u a:X https://exemple.test` donne `curl`) ; un chemin hors du dépôt, ou en `~/…`, sans cible ;
+>     - un nom d'outil inconnu donne `[outil]` ; un outil MCP ne dit jamais son nom ;
+>     - les trois statuts ; chez Codex un refus est `erreur` ; chez Antigravity une étape en `ERROR` est `erreur` ;
+>     - un appel d'un sous-agent, et d'un sous-agent de sous-agent, relevé dans la même forme ;
+>     - une chaîne témoin placée dans la sortie d'un outil, dans un argument d'un autre outil et dans un argument de l'appel du sous-agent autre que sa consigne n'apparaît nulle part dans les blocs ;
+>     - tout identifiant tient dans `[A-Za-z0-9_.:-]` ; Codex hors forme paginée : aucun bloc.
+>   - `src/cli/capture-session.test.ts` et `src/cli/catch-up.test.ts` : sans l'usage, aucun appel à la route ; au crochet d'un tour, aucun ; à la fin, l'envoi après les faits ; un fichier inchangé et sans marque est repris après 30 minutes, puis sauté ; une session d'avant l'acceptation n'envoie rien ; un 404 n'arrête pas les faits et ne pose pas la marque ; un retrait relu juste avant l'envoi l'empêche.
+>   - Un test en base par outil, de la capture d'un fichier jusqu'aux tours de coulisses rangés.
+>   - `src/cli/install-hooks.test.ts`, `install-codex.test.ts`, `install-antigravity.test.ts`, `install-cursor.test.ts`, `setup.test.ts` : le texte exact de chaque outil ; la question posée par outil ; un « oui » pour Claude Code ne s'écrit pas pour Codex ; jamais pour Cursor ; les comptes de questions.
+>   - La documentation du site : la première puce de chaque outil, mot pour mot, en anglais.
+> - **Les limites à dire dans la PR.**
+>   - Les coulisses de ces outils arrivent avec retard : 30 minutes sans changement, puis le prochain démarrage d'une session dans un des outils.
+>   - Codex : la forme d'un refus et celle d'un appel MCP ne sont pas vues à l'essai (elles viennent du lecteur des faits) ; un sous-agent rangé dans le dossier d'un autre jour n'est pas retrouvé.
+>   - Antigravity : seule l'appli 2.31.0 est essayée (ni l'IDE, ni `agy`) ; une commande qui échoue reste `ok` ; la forme d'un appel MCP et les noms des outils d'écriture de cette version ne sont pas vus ; une longue conversation en plusieurs morceaux non plus.
+>   - Le point laissé à Amos à la PR 3 tient toujours : beaucoup d'appels d'outils courts évincent les messages d'une recherche sans filtre.
+
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
 
 **Fait quand :**
@@ -1676,6 +1755,26 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 > - **Les autres outils.** Codex, Cursor et Antigravity suivent dans la quatrième PR du lot 14, après leur essai (décision 2), et non « dans leur lot », déjà fusionné.
 > - **Le texte de base** dit encore que le marqueur signale « a subagent ». Après T63, il ne signale qu'un sous-agent qui sort du dépôt : le marqueur en dit moins que le texte. On ne change pas cette phrase.
 > - **Un défaut de main corrigé au passage.** Les lignes `api-request-blob` de Claude Code 2.1.322 recopient des blocs d'outils (annexe 08). `extractClaudeCodeFacts` ne lit plus les blocs que sur les lignes `user` et `assistant` : sinon les commandes et les erreurs d'une session comptaient deux fois.
+
+> **Amendé le 17/11 (décision 2 d'Amos pour le lot 14 ; essais du 13/11, annexes 09 à 11 ; choix du rédacteur) :** c'est ce que la PR 4 code, avec les coulisses de ces outils (T52, amendé le 17/11).
+> - **Codex** (annexe 09), dans la forme paginée seulement :
+>   - Où chercher : le fichier d'un sous-agent est `rollout-<date>-<identifiant du fil>.jsonl`, dans le dossier du fichier de la session. On ne cherche pas dans un autre jour.
+>   - Le lien : chaque élément `SubAgentActivity` de `kind: 'started'` donne `agent_thread_id`, l'identifiant du fil du sous-agent. Il est validé (un UUID) avant de servir à un nom de fichier.
+>   - Le rapport final : le dernier `task_started` du fichier est suivi d'un `task_complete`.
+>   - La règle : `SubAgentActivity` et `CollabAgentToolCall` ne rendent plus la session externe à eux seuls. Un sous-agent la rend externe si son fichier ne se retrouve pas ; si sa première ligne `session_meta` ne dit pas la forme paginée, ou n'a pas `subagent_history_start_ordinal` ; s'il n'a pas rendu son rapport final ; si l'un de ses éléments propres (à partir de ce rang) est externe par la règle de la session ; ou si l'un de ses propres sous-agents rend externe, par la même règle. Un fil déjà visité n'est pas revisité.
+>   - Hors forme paginée, un appel `spawn_agent` reste externe, comme aujourd'hui.
+>   - **Le rapport d'un sous-agent n'était pas capté** : Codex 0.159 l'écrit en `response_item` de type `agent_message`, que le lecteur ne lisait pas, alors que le texte de base de Codex le promet (« such as a subagent's report »). Il devient un tour `user` marqué injecté (T43), comme la notification `<subagent_notification>` : le lecteur tient sa promesse, et le texte ne change pas.
+> - **Antigravity** (annexe 11) :
+>   - Où chercher : la session nomme ses sous-agents dans `.system_generated/subagents/<identifiant>.json`, à côté de son dossier `logs/`. Chacun est une conversation à part, `brain/<identifiant>/`, lue comme une session (`transcript_full.jsonl`, sinon `transcript.jsonl`), dans la même variante. L'identifiant est validé (un UUID) avant de servir à un chemin.
+>   - Le rapport final : la dernière étape du sous-agent est un `PLANNER_RESPONSE` sans appel d'outil. Le `state` du fichier de la session n'est pas lu : il reste `SUBAGENT_STATE_ALIVE`.
+>   - La règle : `invoke_subagent` et `send_message` ne rendent plus la session externe à eux seuls. La session est externe s'il y a moins de sous-agents nommés que d'appels `invoke_subagent` ; si la conversation d'un sous-agent ne se retrouve pas, ou porte une ligne illisible ; s'il n'a pas rendu la main ; si l'un de ses appels est externe par la règle de la session (le navigateur, le web, une commande réseau, un outil inconnu) ; ou si l'un de ses propres sous-agents rend externe.
+>   - **La conversation d'un sous-agent n'est pas une session.** Sa première étape est un `SYSTEM_MESSAGE` (sa consigne), pas un `USER_INPUT` : le lecteur la reconnaît à cela, en plus de l'ancienne forme (`<subagent_reminder>`), et ne la capte plus. Elle partait jusqu'ici comme une session sans message.
+>   - **Les faits de la 2.31.0.** L'appli n'écrit plus d'étape `RUN_COMMAND` ni de code de sortie : le résultat d'un appel est l'étape qui le suit (T52, amendé le 17/11). Les faits lisent là l'erreur d'une commande (`ERROR`, ou un code de sortie cité dans le texte) et sa sortie (les commits, la PR créée). `read_file` rejoint les outils locaux de lecture : c'est le nom de `view_file` dans cette version.
+>   - Le rapport d'un sous-agent ne devient pas un tour sous l'accord de base : le texte de base d'Antigravity ne le nomme pas. Il ne part qu'avec `coulisses`. À faire trancher par Amos (comme sa décision 7 pour Claude Code).
+> - **Cursor** (annexe 10) : la règle ne change pas. `Task`, `GetDynamicTools` et `CallDynamicTool` rendent la session externe (un test les nomme). Deux gardes en plus : un appel sans champ `input` compte (il échappait au tri, donc à l'échec fermé), et un fichier sous `subagents/` n'est jamais capté comme une session, au crochet comme au rattrapage.
+> - **Les chargeurs** vivent à côté de `loadSubagents` (`src/cli/subagents.ts`) : ils lisent les fichiers, et les lecteurs restent purs. Sans lecture de dossier, aucun sous-agent n'est lu, et l'appel reste externe.
+> - **Tests.** Par outil, sur des fixtures inventées dans la forme de son annexe : un sous-agent qui ne lit que le dépôt (non externe) ; un sous-agent qui va sur le web (externe) ; un fichier introuvable, une ligne illisible, un sous-agent qui n'a pas fini (externes) ; un sous-agent de sous-agent ; un outil de Leon dans un sous-agent (D36, là où le lecteur le reconnaît). Codex : un `agent_message` capté en tour injecté, qui ne compte pas comme un échange ; l'historique recopié d'un sous-agent n'est pas lu. Antigravity : une conversation de sous-agent n'est pas une session ; une commande en `ERROR` compte une erreur ; un commit lu dans l'étape de résultat. Cursor : les trois outils de sous-agent, l'appel sans `input`, le fichier sous `subagents/`.
+> - **Fichiers.** `src/capture/codex.ts`, `src/capture/antigravity.ts`, `src/capture/cursor.ts` et leurs tests, des fixtures inventées ; `src/cli/subagents.ts`, `src/cli/outils.ts`, `src/cli/capture-session.ts`, `src/cli/catch-up.ts`, `src/cli/import-claude-code.ts`, `src/cli/leon.ts` et leurs tests ; `src/cli/install-hooks.ts`, `install-codex.ts`, `install-antigravity.ts`, `setup.ts` et leurs tests ; `messages/en.json`, `messages/fr.json`, la page Documentation ; le `README.md` ; les annexes 09 à 11 et le `README.md` de l'étude.
 
 Ajoutée le 05/11 (A14, D36). Effort : 0,5 j.
 

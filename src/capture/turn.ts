@@ -102,7 +102,8 @@ export const OFFERED_NATURES = ITEM_NATURES.filter((nature) => nature !== 'fil_d
 export const CAPTURE_MODES = ['file', 'network', 'dom', 'manual'] as const;
 export type CaptureMode = (typeof CAPTURE_MODES)[number];
 // Les coulisses d'une session de code (lot 14, C10) : rangées par leur seule route, jamais par l'ingestion. Ni le point du
-// matin, ni le résumé, ni l'état du fil ne les lisent ; la recherche les rend toujours (QD9).
+// matin, ni le résumé, ni l'état du fil ne les lisent ; la recherche rend le raisonnement et les sous-agents (QD9), et les
+// appels d'outils seulement demandés par le filtre de type (décision d'Amos du 18/11).
 export const BACKSTAGE_ROLES = ['raisonnement', 'sous_agent', 'appel_outil'] as const;
 export type BackstageRole = (typeof BACKSTAGE_ROLES)[number];
 export const isBackstageRole = (role: string | null): role is BackstageRole =>

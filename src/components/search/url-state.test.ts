@@ -174,6 +174,13 @@ describe('withFilter', () => {
     expect(parseQuery(withFilter('x', 'de', 'Julie Martin'), new Date()).people).toEqual([
       'Julie Martin',
     ]);
+    // Le rôle des appels d'outils, sous son nom anglais (menu Type en anglais, 18/11).
+    expect(withFilter('pnpm', 'type', 'tool call')).toBe('type:"tool call" pnpm');
+    expect(parseQuery(withFilter('pnpm', 'type', 'tool call'), new Date()).filters).toEqual({
+      roles: ['appel_outil'],
+    });
+    expect(hasFilter('type:"Tool Call" pnpm', 'type', 'tool call')).toBe(true);
+    expect(withoutFilter('type:"tool call" pnpm', 'type', 'tool call')).toBe('pnpm');
   });
 
   it('ne répète pas un filtre déjà là, à la casse et à la ponctuation près', () => {

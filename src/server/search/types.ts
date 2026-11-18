@@ -6,7 +6,7 @@ import type { BackstageRole, ItemNature, SourceKind, TurnRole } from '@/capture/
 export type SearchFilters = {
   tools?: SourceKind[]; // outil:
   natures?: ItemNature[]; // type:
-  // Les rôles des coulisses (T51), par le paramètre `type` des outils seulement : la barre n'en a pas.
+  // Les rôles des coulisses (T51), par `type:` aussi. Vide : jamais un appel d'outil (décision d'Amos du 18/11).
   roles?: BackstageRole[];
   authorEmails?: string[]; // de: une fois résolu (people.ts)
   authorNames?: { kind: SourceKind; name: string }[]; // de: sur un identifiant d'outil (T19)
@@ -22,7 +22,7 @@ export type SearchFilters = {
 
 export type ParsedQuery = {
   text: string;
-  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot' | 'fil' | 'roles'>;
+  filters: Omit<SearchFilters, 'authorEmails' | 'authorNames' | 'depot' | 'fil'>;
   people: string[];
 };
 

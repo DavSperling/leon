@@ -37,8 +37,9 @@ import { type ApiEnv, requireApiToken } from './require-api-token';
 // - Un usage absent : 403. Un fil introuvable : 200 et un texte fixe, jamais 404, que la CLI lit comme un serveur
 //   ancien (C11).
 // - /chercher : la recherche existante, bornée au dépôt du projet par le filtre `depot`, qui ne vient que des
-//   paramètres (search.ts) : la requête ne peut pas l'élargir. Sans filtre `type` (QD9), une page, sans pages. Une
-//   session trouvée cite son fil et ses PR, comme au MCP.
+//   paramètres (search.ts) : la requête ne peut pas l'élargir. Sans paramètre `type` : les appels d'outils ne viennent
+//   que demandés dans la requête, par `type:"tool call"` (décision d'Amos du 18/11). Une page, sans pages. Une session
+//   trouvée cite son fil et ses PR, comme au MCP.
 // - /versions : l'historique d'un fil ou d'une leçon, sans aucune restauration (D33 : le site seul restaure).
 // - /lecons : les leçons du dépôt et celles sans dépôt, ou une seule par son id ; aucune écriture : les leçons
 //   s'écrivent sur le site seulement (D37).

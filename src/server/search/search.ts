@@ -165,10 +165,10 @@ function intersect<T>(a: T[] | undefined, b: T[] | undefined): T[] | undefined {
   return a.filter((value) => b.includes(value));
 }
 
-// Les filtres passés à part et ceux écrits dans la requête s'appliquent tous deux : les outils et les types se
-// croisent, la date la plus étroite l'emporte, les auteurs s'additionnent (comme deux `de:`). Une liste vide
-// ne restreint rien. `impossible` : deux listes sans rien en commun, ou un fil sans source. Le dépôt et le fil ne
-// viennent que des paramètres, comme les rôles des coulisses.
+// Les filtres passés à part et ceux écrits dans la requête s'appliquent tous deux : les outils, les types et les rôles
+// des coulisses se croisent, la date la plus étroite l'emporte, les auteurs s'additionnent (comme deux `de:`). Une
+// liste vide ne restreint rien. `impossible` : deux listes sans rien en commun, ou un fil sans source. Le dépôt et le
+// fil ne viennent que des paramètres.
 function mergeFilters(
   explicit: SearchFilters,
   inline: Omit<SearchFilters, 'authorEmails' | 'authorNames'>,
@@ -179,6 +179,7 @@ function mergeFilters(
     emptyToUndefined(explicit.natures),
     inline.natures,
   );
+  const roles = intersect(emptyToUndefined(explicit.roles), inline.roles);
   const latest = (a: Date | undefined, b: Date | undefined) =>
     a && b ? (a > b ? a : b) : (a ?? b);
   const earliest = (a: Date | undefined, b: Date | undefined) =>
@@ -190,7 +191,11 @@ function mergeFilters(
   const since = latest(explicit.since, inline.since);
   const until = earliest(explicit.until, inline.until);
   return {
-    impossible: tools?.length === 0 || natures?.length === 0 || explicit.fil?.length === 0,
+    impossible:
+      tools?.length === 0 ||
+      natures?.length === 0 ||
+      roles?.length === 0 ||
+      explicit.fil?.length === 0,
     filters: {
       ...(tools ? { tools } : {}),
       ...(natures ? { natures } : {}),
@@ -200,7 +205,7 @@ function mergeFilters(
       ...(until ? { until } : {}),
       ...(explicit.depot ? { depot: explicit.depot } : {}),
       ...(explicit.fil ? { fil: explicit.fil } : {}),
-      ...(explicit.roles ? { roles: explicit.roles } : {}),
+      ...(roles ? { roles } : {}),
     },
   };
 }
@@ -330,30 +335,21 @@ async function rankedSources(
   // Sans réglage accepté, plus de vecteurs : le plein texte seul répond (voir `tuneVectorIndex`).
   const vector = query.vector !== null && (await tuneVectorIndex(tx)) ? query.vector : null;
   const literal = vector ? `[${vector.join(',')}]` : null;
-  // Sans filtre, la requête ne lit que les vecteurs : l'index HNSW la sert directement. Avec un filtre sur la
-  // source ou le passage, elle les joint : Postgres choisit alors entre un parcours filtré de l'index (qui se
-  // poursuit tant qu'il n'a pas ses candidats) et un tri exact des passages qui passent le filtre.
-  const neighbours = (join: SQL, where: SQL) => sql`
-    select v.passage_id, v.embedding <=> ${literal}::halfvec(${num(EMBEDDING_DIMS)}) as dist
-    from passage_vectors v ${join}
-    where v.tenant_id = ${tenant} and v.model = ${query.model} ${where}
-    order by dist
-    limit ${num(CANDIDATES)}`;
-  const joined = sql`
-    join passages p on p.tenant_id = v.tenant_id and p.id = v.passage_id
-    join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id`;
+  // Les vecteurs joints à leurs passages et à leurs sources, même sans filtre : `passageWhere` écarte toujours les
+  // appels d'outils (filters-sql.ts). Postgres choisit entre un parcours filtré de l'index (qui se poursuit tant qu'il
+  // n'a pas ses candidats) et un tri exact des passages qui passent les conditions.
   const vectorLeg =
     vector && literal
       ? sql`vec as (
           select passage_id, rank() over (order by dist) as r from (
-            ${
-              hasFilters(filters) || terms.negated.length > 0
-                ? neighbours(
-                    joined,
-                    sql`and ${passageWhere} and ${sourceWhere} and ${withoutNegated(terms)}`,
-                  )
-                : neighbours(sql``, sql``)
-            }
+            select v.passage_id, v.embedding <=> ${literal}::halfvec(${num(EMBEDDING_DIMS)}) as dist
+            from passage_vectors v
+            join passages p on p.tenant_id = v.tenant_id and p.id = v.passage_id
+            join sources s on s.tenant_id = p.tenant_id and s.id = p.source_id
+            where v.tenant_id = ${tenant} and v.model = ${query.model}
+              and ${passageWhere} and ${sourceWhere} and ${withoutNegated(terms)}
+            order by dist
+            limit ${num(CANDIDATES)}
           ) neighbours
           where dist < ${num(MAX_VECTOR_DISTANCE)}
         )`

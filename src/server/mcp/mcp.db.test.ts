@@ -682,9 +682,10 @@ describe('outil search', () => {
     ]);
   });
 
-  // T51 (QD9) : les coulisses restent dans la recherche sans filtre ; `type` cible chacun de leurs rôles, et le rendu
-  // étiquette un passage des coulisses par son rôle.
-  it('le filtre type cible chaque rôle des coulisses ; sans lui, les trois sont rendus ; une nature filtre comme avant', async () => {
+  // T51 (QD9, amendé le 18/11 par Amos pour `appel_outil`) : le raisonnement et les sous-agents restent dans la recherche
+  // sans filtre, les appels d'outils seulement sur demande ; `type` cible chacun des rôles, et le rendu étiquette un
+  // passage des coulisses par son rôle.
+  it('le filtre type cible chaque rôle des coulisses ; sans lui, jamais un appel d’outil ; une nature filtre comme avant', async () => {
     const { tenantId, paul } = await setupTeam();
     const word = 'coulissarium';
     const minute = (n: number) => new Date(Date.UTC(2026, 10, 12, 9, n));
@@ -698,6 +699,12 @@ describe('outil search', () => {
         // Un outil sans cible : son nom réduit et son statut (C10).
         { text: `${word} · ok`, role: 'appel_outil', ts: minute(3) },
       ],
+    });
+    // Une session dont seul un appel d'outil contient le mot : elle ne vient que sur demande.
+    await seedIndexed(paul, {
+      kind: 'claude_code',
+      title: 'Session d’appels',
+      turns: [{ text: `Bash · ${word} · erreur`, role: 'appel_outil', ts: minute(4) }],
     });
     await seedIndexed(paul, {
       kind: 'github',
@@ -717,7 +724,10 @@ describe('outil search', () => {
       only('raisonnement'),
     );
     expect(snippets(await search({ query: word, type: 'subagent' }))).toEqual(only('sous-agent'));
-    expect(snippets(await search({ query: word, type: 'tool call' }))).toEqual([word]);
+    const calls = await search({ query: word, type: 'tool call' });
+    expect(titlesOf(calls).sort()).toEqual(['Session de code', 'Session d’appels']);
+    expect(snippets(calls).toSorted()).toEqual([`Bash · ${word} · erreur`, word]);
+    expect(calls.text).toContain('role="appel_outil"');
     // Sans mot à chercher, le filtre seul : le passage le plus récent de ce rôle.
     expect(snippets(await search({ type: 'reasoning' }))).toEqual(only('raisonnement'));
 
@@ -725,7 +735,7 @@ describe('outil search', () => {
     expect(titlesOf(all).sort()).toEqual(['Session de code', 'Ticket']);
     expect(all.text).toContain('role="raisonnement"');
     expect(all.text).toContain('role="sous_agent"');
-    expect(all.text).toContain('role="appel_outil"');
+    expect(all.text).not.toContain('role="appel_outil"');
     expect(all.text).not.toContain('role="document"');
     expect(titlesOf(await search({ query: word, type: 'ticket' }))).toEqual(['Ticket']);
     expect(titlesOf(await search({ query: word, type: 'conversation' }))).toEqual([

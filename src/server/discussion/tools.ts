@@ -121,7 +121,7 @@ const optionalFilter = (description: string) =>
 const TOOL_DESCRIPTION = {
   outil:
     'Limite à un outil, par son identifiant ou son nom : github, linear, notion, outlook, claude_code, fathom…',
-  type: `Limite à une nature : ${OFFERED_NATURES.join(', ')}.`,
+  type: `Limite à une nature : ${OFFERED_NATURES.join(', ')}. Ou à une partie des coulisses d’une session de code : raisonnement et sous_agent, que la recherche rend de toute façon, ou appel_outil, qu’elle ne rend que demandé ainsi.`,
   de: "Limite à ce qu'une personne a écrit : son nom, son e-mail ou son identifiant d'outil.",
   depuis: 'Limite aux éléments récents : 7j (jours), 2s (semaines), 3m (mois) ou AAAA-MM-JJ.',
 };

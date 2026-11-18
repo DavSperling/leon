@@ -1,12 +1,12 @@
 import { TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { OFFERED_NATURES } from '@/capture/turn';
+import { type BackstageRole, OFFERED_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
 import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
-import { parseQuery } from '@/server/search/parse-query';
+import { BACKSTAGE_ROLE_NAMES_EN, parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
 import {
   type CanonicalKey,
@@ -46,6 +46,19 @@ const KEY_LABELS_EN: Record<CanonicalKey, string> = {
   type: 'Type',
   depuis: 'Since',
   avant: 'Before',
+};
+
+// Les rôles des coulisses que `type:` lit aussi (parse-query.ts). Seuls les appels d'outils ont une entrée de menu : la
+// recherche ne les rend que demandés (décision d'Amos du 18/11) ; le raisonnement et les sous-agents viennent sans filtre.
+const ROLE_LABELS: Record<BackstageRole, string> = {
+  raisonnement: 'Raisonnement',
+  sous_agent: 'Sous-agent',
+  appel_outil: 'Appels d’outils',
+};
+const ROLE_LABELS_EN: Record<BackstageRole, string> = {
+  raisonnement: 'Reasoning',
+  sous_agent: 'Subagent',
+  appel_outil: 'Tool calls',
 };
 
 // Les unités de `depuis:` : françaises (7j, 2s, 3m) ou anglaises (7d, 2w, 3mo), que la recherche lit toutes.
@@ -93,7 +106,10 @@ function describeFilter(
     }
     case 'type': {
       const nature = filters.natures?.[0];
-      const labels = locale === 'en' ? NATURE_LABELS_EN : NATURE_LABELS;
+      const role = filters.roles?.[0];
+      const en = locale === 'en';
+      if (role) return { text: (en ? ROLE_LABELS_EN : ROLE_LABELS)[role], recognized: true };
+      const labels = en ? NATURE_LABELS_EN : NATURE_LABELS;
       return { text: nature ? labels[nature] : value, recognized: nature !== undefined };
     }
     case 'depuis':
@@ -164,11 +180,16 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
     {
       name: 'type',
       label: 'Type',
-      options: OFFERED_NATURES.map((nature) =>
+      options: [
+        ...OFFERED_NATURES.map((nature) =>
+          en
+            ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
+            : option(q, 'type', nature, NATURE_LABELS[nature]),
+        ),
         en
-          ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
-          : option(q, 'type', nature, NATURE_LABELS[nature]),
-      ),
+          ? option(q, 'type', BACKSTAGE_ROLE_NAMES_EN.appel_outil, ROLE_LABELS_EN.appel_outil)
+          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil),
+      ],
     },
     {
       name: 'periode',

@@ -1,11 +1,6 @@
-import {
-  type BackstageRole,
-  OFFERED_NATURES,
-  projectKeyFromInput,
-  TOOL_KINDS,
-} from '@/capture/turn';
+import { OFFERED_NATURES, projectKeyFromInput, TOOL_KINDS } from '@/capture/turn';
 import { NATURE_LABELS_EN } from '@/lib/labels';
-import { parseQuery } from './parse-query';
+import { BACKSTAGE_ROLE_NAMES_EN, parseQuery } from './parse-query';
 import type { SearchFilters } from './types';
 
 // Les filtres qu'un assistant écrit dans les paramètres d'un outil (`outil`, `type`, `depuis`, `de`), lus comme la
@@ -27,25 +22,6 @@ export const QUERY_SYNTAX_DESCRIPTION_EN =
 export const NATURE_NAMES_EN = OFFERED_NATURES.map((nature) =>
   NATURE_LABELS_EN[nature].toLowerCase(),
 );
-
-// Les rôles des coulisses d'une session de code (T51, QD9), que `type` accepte aussi, nommés comme les natures. Ils se
-// lisent sans casse, sans espace ni ponctuation, au singulier comme au pluriel, et par leur identifiant.
-export const BACKSTAGE_ROLE_NAMES_EN: Record<BackstageRole, string> = {
-  raisonnement: 'reasoning',
-  sous_agent: 'subagent',
-  appel_outil: 'tool call',
-};
-const squashName = (text: string) => text.toLowerCase().replace(/[^a-z]/g, '');
-const ROLE_BY_NAME = new Map<string, BackstageRole>(
-  Object.entries(BACKSTAGE_ROLE_NAMES_EN).flatMap(([role, name]) => [
-    [squashName(role), role as BackstageRole],
-    [squashName(name), role as BackstageRole],
-  ]),
-);
-const toRole = (value: string): BackstageRole | undefined => {
-  const name = squashName(value);
-  return ROLE_BY_NAME.get(name) ?? ROLE_BY_NAME.get(name.replace(/s$/, ''));
-};
 
 // Une valeur de filtre sur une seule ligne, sans guillemet ni caractère de contrôle : elle s'écrit entre
 // guillemets dans la syntaxe de la barre et ne peut rien d'autre qu'être une valeur.
@@ -73,17 +49,16 @@ export function readToolFilters(
     }
     filters.tools = tools;
   }
+  // Une nature, ou un rôle des coulisses (T51) : lus comme la barre les lit (parse-query.ts).
   const type = cleanFilterValue(input.type);
-  const role = toRole(type);
-  if (role) {
-    filters.roles = [role];
-  } else if (type !== '') {
-    const natures = parseQuery(`type:"${type}"`, now).filters.natures;
-    if (!natures) {
+  if (type !== '') {
+    const { natures, roles } = parseQuery(`type:"${type}"`, now).filters;
+    if (!natures && !roles) {
       const known = [...NATURE_NAMES_EN, ...Object.values(BACKSTAGE_ROLE_NAMES_EN)];
       return { error: `Unknown type: "${type}". Known types: ${known.join(', ')}.` };
     }
-    filters.natures = natures;
+    if (natures) filters.natures = natures;
+    if (roles) filters.roles = roles;
   }
   const depuis = cleanFilterValue(input.depuis);
   if (depuis !== '') {

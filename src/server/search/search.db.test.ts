@@ -941,6 +941,100 @@ describe('vecteurs', () => {
   });
 });
 
+// Décision d'Amos du 18/11 (amende QD9 pour `appel_outil` seulement) : sans filtre de rôle, le passage d'un appel d'outil
+// n'est candidat à aucun classement ; le filtre `appel_outil` le rend ; le raisonnement et les sous-agents ne changent pas.
+describe.each([
+  ['plein texte', null],
+  ['hybride', factice],
+])('coulisses : les appels d’outils seulement sur demande (%s)', (_, embedder) => {
+  const minute = (n: number) => new Date(NOW.getTime() - DAY + n * 60_000);
+  async function seedBackstage() {
+    const { alice } = await team();
+    // Chaque mot n'est que dans un appel d'outil : la session ne vient que par lui, ou pas du tout.
+    await seedIndexed(alice, {
+      title: 'Session plein texte',
+      turns: [
+        { text: 'Un message sans rapport.', ts: minute(0) },
+        { text: 'Bash · grumpfaille · ok', role: 'appel_outil', ts: minute(1) },
+      ],
+    });
+    await seedIndexed(alice, {
+      title: 'Fouinardise',
+      turns: [{ text: 'Read · src/a.ts · ok', role: 'appel_outil', ts: minute(2) }],
+    });
+    await seedIndexed(alice, {
+      title: 'Session passe élargie',
+      turns: [{ text: 'Bash · bidulmuche · ok', role: 'appel_outil', ts: minute(3) }],
+    });
+    await seedIndexed(alice, {
+      title: 'Session raisonnée',
+      turns: [
+        { text: 'Je pèse la chouquetterie avant de changer.', role: 'raisonnement', ts: minute(4) },
+        { text: '[rapport]\nLa chouquetterie tient.', role: 'sous_agent', ts: minute(5) },
+      ],
+    });
+    return alice;
+  }
+
+  it('sans filtre, un appel d’outil n’est candidat ni au plein texte, ni aux vecteurs, ni au titre, ni à la passe élargie', async () => {
+    const alice = await seedBackstage();
+    // Plein texte et vecteurs : le seul passage qui contient le mot.
+    expect((await search(alice, 'grumpfaille', { embedder })).hits).toEqual([]);
+    // Titre : la source n'a d'autre passage qu'un appel d'outil.
+    expect((await search(alice, 'Fouinardise', { embedder })).hits).toEqual([]);
+    // Passe élargie : deux mots, dont un seul dans l'appel.
+    expect((await search(alice, 'bidulmuche trucmachinchose', { embedder })).hits).toEqual([]);
+  });
+
+  it('avec le filtre appel_outil, passé à part ou écrit dans la requête, l’appel est rendu, seul', async () => {
+    const alice = await seedBackstage();
+    const asked = await search(alice, 'grumpfaille', {
+      embedder,
+      filters: { roles: ['appel_outil'] },
+    });
+    expect(titles(asked)).toEqual(['Session plein texte']);
+    expect(asked.hits[0]?.passages.map((passage) => passage.role)).toEqual(['appel_outil']);
+    for (const query of ['type:"tool call" grumpfaille', 'type:appel_outil grumpfaille']) {
+      expect(titles(await search(alice, query, { embedder })), query).toEqual([
+        'Session plein texte',
+      ]);
+    }
+    expect(titles(await search(alice, 'type:appel_outil Fouinardise', { embedder }))).toEqual([
+      'Fouinardise',
+    ]);
+    // Le rôle passé à part et celui de la requête s'appliquent tous deux.
+    const both = await search(alice, 'type:raisonnement grumpfaille', {
+      embedder,
+      filters: { roles: ['appel_outil'] },
+    });
+    expect(both.hits).toEqual([]);
+  });
+
+  it('rend toujours le raisonnement et les sous-agents sans filtre', async () => {
+    const alice = await seedBackstage();
+    const page = await search(alice, 'chouquetterie', { embedder });
+    expect(titles(page)).toEqual(['Session raisonnée']);
+    expect(page.hits[0]?.passages.map((passage) => passage.role).toSorted()).toEqual([
+      'raisonnement',
+      'sous_agent',
+    ]);
+  });
+
+  it('ne rend rien pour une requête vide, et ne prend pas un appel comme passage le plus récent d’une recherche faite de filtres', async () => {
+    const alice = await seedBackstage();
+    expect(await search(alice, '', { embedder })).toMatchObject({ hits: [], totalSources: 0 });
+    const recent = await search(alice, 'outil:claude_code', { embedder });
+    // Les sources faites d'appels seuls ne sont pas rendues ; la plus récente garde un passage qui n'est pas un appel.
+    expect(titles(recent)).toEqual(['Session raisonnée', 'Session plein texte']);
+    expect(recent.hits.flatMap((hit) => hit.passages.map((passage) => passage.role))).toEqual([
+      'sous_agent',
+      'user',
+    ]);
+    const calls = await search(alice, 'type:appel_outil', { embedder });
+    expect(titles(calls)).toEqual(['Session passe élargie', 'Fouinardise', 'Session plein texte']);
+  });
+});
+
 // Audit 3 n° 17 : « -mot » vaut aussi pour les vecteurs et les titres.
 describe('mot nié, côté vecteurs et titres', () => {
   it('calcule le vecteur de la requête sans les mots niés', async () => {

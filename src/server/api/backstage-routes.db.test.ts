@@ -178,7 +178,7 @@ describe('POST /api/v1/coulisses', () => {
     expect(rows).toEqual([{ text: 'Le cache de Redis tombe le lundi.', acl: [paul.userId] }]);
   });
 
-  // QD9, C11 : `leon search` n'a pas de filtre `type`, les coulisses y apparaissent toujours, étiquetées.
+  // QD9, C11 : sans filtre de type, le raisonnement et les sous-agents apparaissent dans `leon search`, étiquetés.
   it('chercher rend un tour raisonnement de la session, une fois indexé', async () => {
     const { paul, paulToken } = await setup();
     const project = 'github.com/acme/leon';
@@ -206,6 +206,47 @@ describe('POST /api/v1/coulisses', () => {
     expect(response.status).toBe(200);
     const { texte } = ReadResponseSchema.parse(await response.json());
     expect(texte).toMatch(/<passage [^>]*role="raisonnement">[^<]*Redis vacille le jeudi/);
+  });
+
+  // Décision d'Amos du 18/11 : `leon search` ne rend un appel d'outil que demandé par le filtre de type, dans la requête.
+  it('chercher ne rend un appel d’outil que demandé par type: dans la requête ; le raisonnement, toujours', async () => {
+    const { paul, paulToken } = await setup();
+    const project = 'github.com/acme/leon';
+    const value = body([
+      raisonnement({ texte: 'Le cache de Redis vacille le jeudi.' }),
+      appel({ outil: 'Bash', cible: 'redis-cli' }),
+    ]);
+    await adminDb.insert(sources).values({
+      tenantId: paul.tenantId,
+      kind: 'claude_code',
+      externalId: value.external_id,
+      ownerUserId: paul.userId,
+      acl: [paul.userId],
+      metadata: { project },
+    });
+    await post(paulToken, value);
+    const job = vi.mocked(enqueuePipelineStep).mock.calls.at(-1)?.[1] as { ingestRunId: string };
+    await indexIngestRun(
+      { ingestRunId: job.ingestRunId, tenantId: paul.tenantId, userId: paul.userId },
+      { embedder: null },
+    );
+    const chercher = async (requete: string) => {
+      const response = await apiRequest(API_PATHS.chercher, {
+        token: paulToken,
+        body: { projet: project, usages: ['lecture'], requete },
+      });
+      expect(response.status).toBe(200);
+      return ReadResponseSchema.parse(await response.json()).texte;
+    };
+
+    const plain = await chercher('redis');
+    expect(plain).toContain('role="raisonnement"');
+    expect(plain).not.toContain('role="appel_outil"');
+    for (const requete of ['type:"tool call" redis', 'type:appel_outil redis']) {
+      const asked = await chercher(requete);
+      expect(asked, requete).toMatch(/<passage [^>]*role="appel_outil">Bash · redis/);
+      expect(asked, requete).not.toContain('role="raisonnement"');
+    }
   });
 
   it.each([

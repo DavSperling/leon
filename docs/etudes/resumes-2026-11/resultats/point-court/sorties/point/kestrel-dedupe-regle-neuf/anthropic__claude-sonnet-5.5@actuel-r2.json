@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:11.115Z",
+  "reponse": "## What is still open\n\n- Maya is waiting on your number before she approves #247: how many Orbitly events were dropped since #240. She needs it for Thursday's call with Orbitly. Your answer is ~1.18M legitimate events dropped (4,352 genuine replays excluded), ≈8.1% of their iOS volume. Zest lost 3,812 events the same way [1][2].\n- After #247 is merged and deployed, run the replay from landing for Orbitly (from 2026-11-13 09:40 UTC, about 40 min) and for Zest. Then check that `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero. Run it only after the deploy, or the old key drops the events again [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The note asking the iOS team to restore UUIDs for `event_id` in kestrel-ios 3.2.1 is drafted but not yet sent [1].\n\n## What changed\n\n- Maya says the logic of #247 looks right and she will approve once CI is green [2].\n- Noa published the final 12/11 postmortem and will present it on Friday [3].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop to our own SDK 3.2.0, whose per-session `event_id` collided under #240's dedupe. You opened #247, which keys on project, device and event_id [1][2].",
+  "rendu": "## What is still open\n\n- Maya is waiting on your number before she approves #247: how many Orbitly events were dropped since #240. She needs it for Thursday's call with Orbitly. Your answer is ~1.18M legitimate events dropped (4,352 genuine replays excluded), ≈8.1% of their iOS volume. Zest lost 3,812 events the same way [1][2].\n- After #247 is merged and deployed, run the replay from landing for Orbitly (from 2026-11-13 09:40 UTC, about 40 min) and for Zest. Then check that `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero. Run it only after the deploy, or the old key drops the events again [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The note asking the iOS team to restore UUIDs for `event_id` in kestrel-ios 3.2.1 is drafted but not yet sent [1].\n\n## What changed\n\n- Maya says the logic of #247 looks right and she will approve once CI is green [2].\n- Noa published the final 12/11 postmortem and will present it on Friday [3].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop to our own SDK 3.2.0, whose per-session `event_id` collided under #240's dedupe. You opened #247, which keys on project, device and event_id [1][2].",
+  "mesures": {
+    "mots": 204,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6726,
+    "sortie": 488,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018332
+  },
+  "cout": 0.018332,
+  "latenceMs": 4344,
+  "fournisseur": "Claude Platform on AWS"
+}

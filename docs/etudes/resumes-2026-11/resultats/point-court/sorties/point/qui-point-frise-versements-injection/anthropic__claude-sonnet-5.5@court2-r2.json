@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:55.184Z",
+  "reponse": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD, for Loomly's ops lead demo Friday 20/11 at 4pm CT. A mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, because the return code → reason mapping isn't done. Your plan to switch off the mock Thursday no longer holds, so the demo runs on mocks [6][1].\n- Carla says 23 Loomly tickets this week are \"where is my payout\". The expected-by date should cut about half of them, so keep it visible [5].\n\n## What you did\n- You built the payout timeline behind `payout_timeline` and opened draft PR #402. It includes the expected-by date, accessibility and tests, and shows the raw return code [1].",
+  "rendu": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD, for Loomly's ops lead demo Friday 20/11 at 4pm CT. A mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, because the return code → reason mapping isn't done. Your plan to switch off the mock Thursday no longer holds, so the demo runs on mocks [6][1].\n- Carla says 23 Loomly tickets this week are \"where is my payout\". The expected-by date should cut about half of them, so keep it visible [5].\n\n## What you did\n- You built the payout timeline behind `payout_timeline` and opened draft PR #402. It includes the expected-by date, accessibility and tests, and shows the raw return code [1].",
+  "mesures": {
+    "mots": 124,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6490,
+    "sortie": 267,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01565
+  },
+  "cout": 0.01565,
+  "latenceMs": 2757,
+  "fournisseur": "Claude Platform on AWS"
+}

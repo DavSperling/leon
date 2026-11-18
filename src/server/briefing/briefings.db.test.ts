@@ -139,7 +139,7 @@ describe('refreshBriefing', () => {
     ]);
     const now = new Date();
 
-    await refreshBriefing(alice, seeded.project, { llm, now });
+    expect(await refreshBriefing(alice, seeded.project, { llm, now })).toBe('fait');
 
     const row = await rowOf(alice, seeded.project);
     expect(row?.sourceIds.toSorted()).toEqual(
@@ -217,7 +217,7 @@ describe('refreshBriefing', () => {
     const team = await newTeam(['Solo'], tenantIds);
     const [solo] = team.members as [TenantContext];
 
-    await refreshBriefing(solo, project, { llm });
+    expect(await refreshBriefing(solo, project, { llm })).toBe('rien');
 
     const row = await rowOf(solo, project);
     expect(llm.calls).toEqual([]);
@@ -231,7 +231,7 @@ describe('refreshBriefing', () => {
     await adminDb.update(users).set({ deletedAt: new Date() }).where(eq(users.id, gone.userId));
     const llm = writes(['ne doit pas servir']);
 
-    await refreshBriefing(gone, seeded.project, { llm });
+    expect(await refreshBriefing(gone, seeded.project, { llm })).toBe('parti');
 
     expect(llm.calls).toEqual([]);
     expect(await rowOf(gone, seeded.project)).toBeUndefined();
@@ -293,7 +293,7 @@ describe('refreshBriefing', () => {
       seeded.project,
     ]);
     const llm = writes(['Point de trop [1].']);
-    await refreshBriefing(alice, seeded.project, { llm });
+    expect(await refreshBriefing(alice, seeded.project, { llm })).toBe('plafond');
 
     expect(llm.calls).toEqual([]);
     const row = await rowOf(alice, seeded.project);

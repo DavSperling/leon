@@ -1,0 +1,6 @@
+{
+  "prefere": "A",
+  "raison": "A couvre tous les points essentiels, y compris la cause exacte du bug (event_id en compteur par session dans le SDK iOS 3.2.0) et le contenu de la PR #247, alors que B omet ces deux éléments.",
+  "aDabord": true,
+  "cout": 0.010158
+}

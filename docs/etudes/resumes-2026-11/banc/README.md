@@ -16,6 +16,7 @@ Tout se lance depuis la racine du worktree. La clé OpenRouter est lue dans `OPE
 | `npx tsx …/banc/lancer.ts --etapes point,resume --modeles a,b [--cas x,y] [--reps 2] [--budget 1]` | appelle les modèles, garde chaque sortie dans `resultats/sorties/` | payant, plafonné par `--budget` |
 | `npx tsx …/banc/noter.ts --verificateur openai/gpt-6.1-terra [--budget 1]` | un modèle vérificateur pointe les faits attendus et les pièges dans chaque sortie | payant |
 | `npx tsx …/banc/tableau.ts` | notes sur 100, coût, temps : `resultats/tableau.md` et `resultats/notes.csv` | gratuit |
+| `SERIE=point-court npx tsx …/banc/comparer-point.ts --a actuel --b court2` | deux consignes du point face à face : longueur, essentiel gardé, duels à l'aveugle (`point-court.md`) | payant (les duels) |
 
 Une sortie ou une vérification déjà faite n'est jamais refaite : relancer ne repaie que ce qui manque.
 

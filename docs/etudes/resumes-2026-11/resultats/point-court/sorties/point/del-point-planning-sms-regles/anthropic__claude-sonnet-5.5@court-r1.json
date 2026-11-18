@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:22.692Z",
+  "reponse": "## What is still open\n- Les SMS de rappel J-1 partent encore avec 9h au lieu de 8h : Lucas demande de corriger `sms.py` dans #214, avant l'envoi de mercredi 18h [3][4].\n- Sandrine attend ta confirmation que les SMS sont bons, pour rappeler Peltier, Bréhier et Hervé [7].\n- Après la fusion de #214, lance la reprise des 41 interventions décalées à la main, sans `--dry-run` [1].\n- Bloque l'audit RGE chez Le Floch le 8/12 (verrou dans l'admin) avant vendredi, à la demande de Franck [2].\n\n## What changed\n- Sandrine signale sur #219 que le formulaire de devis refuse les numéros avec espaces [6].",
+  "rendu": "## What is still open\n- Les SMS de rappel J-1 partent encore avec 9h au lieu de 8h : Lucas demande de corriger `sms.py` dans #214, avant l'envoi de mercredi 18h [3][4].\n- Sandrine attend ta confirmation que les SMS sont bons, pour rappeler Peltier, Bréhier et Hervé [7].\n- Après la fusion de #214, lance la reprise des 41 interventions décalées à la main, sans `--dry-run` [1].\n- Bloque l'audit RGE chez Le Floch le 8/12 (verrou dans l'admin) avant vendredi, à la demande de Franck [2].\n\n## What changed\n- Sandrine signale sur #219 que le formulaire de devis refuse les numéros avec espaces [6].",
+  "mesures": {
+    "mots": 100,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9064,
+    "sortie": 272,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020848
+  },
+  "cout": 0.020848,
+  "latenceMs": 3854,
+  "fournisseur": "Claude Platform on AWS"
+}

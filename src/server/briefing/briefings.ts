@@ -43,7 +43,7 @@ export const BRIEFING_PENDING_MARKDOWN =
 // ne prépare alors aucun point, et promettre « à la prochaine session » serait faux. Rien n'est mis en file.
 export const BRIEFING_NO_MODEL_MARKDOWN =
   'The morning briefing is not prepared: no model is configured on this server.';
-// Borne le texte ET la réflexion du modèle (llm.ts) : 250 mots en prennent environ 600, la réflexion de l'effort
+// Borne le texte ET la réflexion du modèle (llm.ts) : 150 mots en prennent environ 350, la réflexion de l'effort
 // « medium » quelques milliers. De la marge, pour ne jamais couper le point avant son premier mot.
 const BRIEFING_MAX_TOKENS = 8000;
 // Le recalcul tourne dans un job, pas devant l'utilisateur : il a le temps, mais pas indéfiniment.
@@ -51,7 +51,8 @@ const BRIEFING_TIMEOUT_MS = 120_000;
 // Le plafond de dépense : au plus 4 points écrits par le modèle par personne et par jour (UTC, reserver_point,
 // 0060), toutes organisations et tous projets confondus : celui du matin et quelques mises à jour dans la journée.
 // Avec Sonnet (models.ts), un point coûte de 2 à 5 centimes (mesuré le 16/11/2026) : au plus 20 centimes par
-// personne et par jour. Au-delà, le point reste tel quel jusqu'au lendemain.
+// personne et par jour. Au-delà, le point reste tel quel jusqu'au lendemain. Le message de « Refaire » sur l'Accueil
+// (welcome.briefing.redoCapped, messages/*.json) répète ce nombre : à changer avec lui.
 export const BRIEFING_DAILY_CAP = 4;
 
 // Le texte du modèle, renvois filtrés : seuls les numéros fournis restent.
@@ -86,20 +87,22 @@ export async function accountIsGone(userId: string): Promise<boolean> {
   return row === undefined || row.deletedAt !== null;
 }
 
-// Refait le point de l'utilisateur sur ce projet. Sans rien de neuf (ni session, ni changement, ni mention), le
-// point le dit sans appeler le modèle. Une panne du modèle remonte (LlmError) et laisse le point précédent tel quel.
-// Passé le plafond du jour (BRIEFING_DAILY_CAP), rien n'est écrit : le point reste périmé, sans appel au modèle.
+// Refait le point de l'utilisateur sur ce projet et rend ce qui s'est passé : « fait » (point du modèle écrit),
+// « rien » (rien de neuf, ni session, ni changement, ni mention : le point le dit sans appeler le modèle), « plafond »
+// (passé le plafond du jour, BRIEFING_DAILY_CAP : rien n'est écrit, le point reste périmé, sans appel au modèle) ou
+// « parti » (compte supprimé : rien). Une panne du modèle remonte (LlmError) et laisse le point précédent tel quel.
 export async function refreshBriefing(
   ctx: TenantContext,
   project: string,
   deps: { llm: Llm; now?: Date },
-): Promise<void> {
-  if (await accountIsGone(ctx.userId)) return;
+): Promise<'fait' | 'rien' | 'plafond' | 'parti'> {
+  if (await accountIsGone(ctx.userId)) return 'parti';
   const now = deps.now ?? new Date();
   const material = await gatherBriefingMaterial(ctx, project, now);
   let markdown: string;
   let sourceIds: string[];
-  if (isEmptyMaterial(material)) {
+  const empty = isEmptyMaterial(material);
+  if (empty) {
     markdown = renderEmptyBriefing(project, now, BRIEFING_DAYS);
     sourceIds = [];
   } else {
@@ -108,7 +111,7 @@ export async function refreshBriefing(
     );
     if (rows[0]?.ok !== true) {
       console.warn('[leon]', 'briefing.daily_cap', JSON.stringify({ userId: ctx.userId }));
-      return;
+      return 'plafond';
     }
     const prompt = buildBriefingPrompt(
       material,
@@ -140,10 +143,22 @@ export async function refreshBriefing(
         set: { markdown, sourceIds, preparedAt: now, stale: false },
       }),
   );
+  return empty ? 'rien' : 'fait';
 }
 
 // Le point existe et rien n'est arrivé sur son projet depuis sa préparation (`stale` est posé par chaque signal et
 // par une source devenue invisible) : le refaire coûterait un appel au modèle pour le même texte.
+// L'utilisateur a déjà un point sur ce projet : « Refaire » ne crée pas de point pour une clé de projet inventée.
+export async function briefingExists(ctx: TenantContext, project: string): Promise<boolean> {
+  const [row] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ id: briefings.id })
+      .from(briefings)
+      .where(and(eq(briefings.userId, ctx.userId), eq(briefings.project, project))),
+  );
+  return row !== undefined;
+}
+
 export async function briefingIsFresh(ctx: TenantContext, project: string): Promise<boolean> {
   const [row] = await withTenant(ctx, (tx) =>
     tx

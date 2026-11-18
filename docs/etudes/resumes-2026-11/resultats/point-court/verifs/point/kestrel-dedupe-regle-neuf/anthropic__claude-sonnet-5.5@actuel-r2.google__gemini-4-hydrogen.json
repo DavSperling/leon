@@ -1,0 +1,23 @@
+{
+  "verificateur": "google/gemini-4-hydrogen",
+  "faits": {
+    "f-perte": 1,
+    "f-cause": 1,
+    "f-247": 1,
+    "f-maya": 1,
+    "f-nombre": 1,
+    "f-replay": 1,
+    "f-dlq": 1,
+    "f-zest": 1
+  },
+  "interdits": {
+    "i-240-nouvelle": 0,
+    "i-backfill": 0,
+    "i-postmortem": 0,
+    "i-replay-fait": 0,
+    "i-sentry": 0
+  },
+  "contraires": [],
+  "premier": "f-maya",
+  "langueOk": true
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:38.177Z",
+  "reponse": "## What is still open\n\n- Don't send the follow-up email as drafted. It promises CAD payouts \"in Q1 2027\", and Sofia says that's wrong: Q2 at the earliest, since Corvane is reviewing the cross-border program. She also asks that no date go in writing to a prospect [6][1]. CAD matters to Hearthly because about 30% of their pros are in Canada [1].\n- The 15% discount on a 2-year commit needs Rachel's sign-off. Anything above 10% requires it now that the Q1 grid is out, and she wants to talk before you send numbers [3]. Your draft already has the 15% in it [1].\n- The SIG Lite is due Monday Nov 23, and Hearthly's security team won't keep a vendor in the final round without it [4]. You still need to confirm with Shira that she owns it. It's about 200 questions, so the deadline is tight [1].\n- The reference call is still undecided. Loomly and Pinecrest were hit by the payout delay, and Tradewell isn't live yet, so you need Rachel to name a customer [1].\n\n## What changed\n\n- Hearthly moved its provider decision up to Wed Dec 2 because their board meeting moved. The mutual action plan still assumes Dec 4, so its dates need to come forward [4][1].\n- Rachel and one other person viewed your Gong call recording [2].",
+  "rendu": "## What is still open\n\n- Don't send the follow-up email as drafted. It promises CAD payouts \"in Q1 2027\", and Sofia says that's wrong: Q2 at the earliest, since Corvane is reviewing the cross-border program. She also asks that no date go in writing to a prospect [6][1]. CAD matters to Hearthly because about 30% of their pros are in Canada [1].\n- The 15% discount on a 2-year commit needs Rachel's sign-off. Anything above 10% requires it now that the Q1 grid is out, and she wants to talk before you send numbers [3]. Your draft already has the 15% in it [1].\n- The SIG Lite is due Monday Nov 23, and Hearthly's security team won't keep a vendor in the final round without it [4]. You still need to confirm with Shira that she owns it. It's about 200 questions, so the deadline is tight [1].\n- The reference call is still undecided. Loomly and Pinecrest were hit by the payout delay, and Tradewell isn't live yet, so you need Rachel to name a customer [1].\n\n## What changed\n\n- Hearthly moved its provider decision up to Wed Dec 2 because their board meeting moved. The mutual action plan still assumes Dec 4, so its dates need to come forward [4][1].\n- Rachel and one other person viewed your Gong call recording [2].",
+  "mesures": {
+    "mots": 219,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5680,
+    "sortie": 451,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01587
+  },
+  "cout": 0.01587,
+  "latenceMs": 3839,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:41.483Z",
+  "reponse": "## What is still open\n\n- Claire Verdier refuse que la Saône soit en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix) ; Hugo pose la même question sur la PR #63. Il faut retirer la Saône de la grille avant la fusion. [10][4]\n- Sophie veut le flux Google Shopping à jour dès le 6 janvier, sinon les annonces sont refusées. Il faut relancer la régénération juste après le script (#65). [5]\n- La PR #63 attend toujours la fusion : Hugo a validé le test sur la boutique de dev, mais sa question sur la Saône reste sans réponse. [4]\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 (shooting le 2 décembre), et non plus vendredi. [11]\n- Sophie signale que la bannière soldes cache « Ajouter au panier » sur petit mobile (#64). [6]\n\n## What you did\n\n- Le script des soldes (6 janvier, restauration le 3 février) est prêt et testé sur la boutique de dev. Le dry-run prod couvre 212 variantes, et 3 variantes déjà en promotion sont exclues. [1]",
+  "rendu": "## What is still open\n\n- Claire Verdier refuse que la Saône soit en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix) ; Hugo pose la même question sur la PR #63. Il faut retirer la Saône de la grille avant la fusion. [10][4]\n- Sophie veut le flux Google Shopping à jour dès le 6 janvier, sinon les annonces sont refusées. Il faut relancer la régénération juste après le script (#65). [5]\n- La PR #63 attend toujours la fusion : Hugo a validé le test sur la boutique de dev, mais sa question sur la Saône reste sans réponse. [4]\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 (shooting le 2 décembre), et non plus vendredi. [11]\n- Sophie signale que la bannière soldes cache « Ajouter au panier » sur petit mobile (#64). [6]\n\n## What you did\n\n- Le script des soldes (6 janvier, restauration le 3 février) est prêt et testé sur la boutique de dev. Le dry-run prod couvre 212 variantes, et 3 variantes déjà en promotion sont exclues. [1]",
+  "mesures": {
+    "mots": 169,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7214,
+    "sortie": 415,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018578
+  },
+  "cout": 0.018578,
+  "latenceMs": 3215,
+  "fournisseur": "Claude Platform on AWS"
+}

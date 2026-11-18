@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:48.874Z",
+  "reponse": "## What is still open\n- Tanguy a envoyé son avis d'imposition ; dépose son dossier avant le début des travaux lundi 23, sinon elle perd la prime, et confirme-lui la date [3][1].\n- Peltier a signé son devis, il est dans le Drive (Dossiers MPR > Peltier) : tu peux déposer, travaux prévus le 27/11 [4][1].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés (client, date, prime attendue) pour l'avance de trésorerie du Crédit Ligérien [5].\n- Guillou : le RIB manque toujours dans ton suivi, et ses travaux commencent le 01/12 [1].\n- Morvan : dépôt à faire (travaux le 07/12), et son attestation RGE expire le 31/12, renouvellement dépendant de l'audit de décembre [1].",
+  "rendu": "## What is still open\n- Tanguy a envoyé son avis d'imposition ; dépose son dossier avant le début des travaux lundi 23, sinon elle perd la prime, et confirme-lui la date [3][1].\n- Peltier a signé son devis, il est dans le Drive (Dossiers MPR > Peltier) : tu peux déposer, travaux prévus le 27/11 [4][1].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés (client, date, prime attendue) pour l'avance de trésorerie du Crédit Ligérien [5].\n- Guillou : le RIB manque toujours dans ton suivi, et ses travaux commencent le 01/12 [1].\n- Morvan : dépôt à faire (travaux le 07/12), et son attestation RGE expire le 31/12, renouvellement dépendant de l'audit de décembre [1].",
+  "mesures": {
+    "mots": 110,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5837,
+    "sortie": 307,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.014744
+  },
+  "cout": 0.014744,
+  "latenceMs": 2751,
+  "fournisseur": "Claude Platform on AWS"
+}

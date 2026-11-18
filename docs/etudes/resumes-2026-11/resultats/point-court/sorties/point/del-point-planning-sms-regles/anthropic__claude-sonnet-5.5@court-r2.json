@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:22.700Z",
+  "reponse": "## What is still open\n- Les SMS de rappel J-1 annoncent encore 9h au lieu de 8h ; Yannick veut que ce soit corrigé avant l'envoi de mercredi 18h, et Sandrine attend ta confirmation [4][7].\n- Lucas bloque la PR #214 tant que `sms.py` n'est pas corrigé dans cette PR, alors que tu l'avais laissé de côté pour sa réécriture [3][1].\n- Une fois #214 fusionnée, il faudra lancer en prod la reprise des 41 interventions décalées à la main, jamais avant [1].\n- Bloquer le chantier Le Floch du 8/12 pour l'audit RGE, demandé par Franck, avant vendredi [2].\n- La PR Dependabot #205 a été rebasée [5].\n\n## What changed\n- Le formulaire de devis refuse les numéros avec espaces (#219), ce qui fait perdre des demandes [6].",
+  "rendu": "## What is still open\n- Les SMS de rappel J-1 annoncent encore 9h au lieu de 8h ; Yannick veut que ce soit corrigé avant l'envoi de mercredi 18h, et Sandrine attend ta confirmation [4][7].\n- Lucas bloque la PR #214 tant que `sms.py` n'est pas corrigé dans cette PR, alors que tu l'avais laissé de côté pour sa réécriture [3][1].\n- Une fois #214 fusionnée, il faudra lancer en prod la reprise des 41 interventions décalées à la main, jamais avant [1].\n- Bloquer le chantier Le Floch du 8/12 pour l'audit RGE, demandé par Franck, avant vendredi [2].\n- La PR Dependabot #205 a été rebasée [5].\n\n## What changed\n- Le formulaire de devis refuse les numéros avec espaces (#219), ce qui fait perdre des demandes [6].",
+  "mesures": {
+    "mots": 122,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9064,
+    "sortie": 329,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021418
+  },
+  "cout": 0.021418,
+  "latenceMs": 2829,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -6,6 +6,8 @@ en qualité ?
 
 ## Verdict final (18/11 au soir)
 
+> Suite le même soir : le point du matin raccourci de moitié, avec un bouton « Refaire » (`point-court.md`).
+
 Après le premier passage (plus bas), on a **corrigé les défauts dans Leon**, re-testé 19 modèles sur le code
 corrigé, puis fait passer les finalistes sur **52 cas neufs** (anglais, français, allemand) qu'aucun modèle n'avait
 vus, notés par **deux vérificateurs** (GPT-6.1 Terra et Gemini 4 Hydrogen) et contre-vérifiés à l'aveugle.
@@ -115,7 +117,7 @@ en une ligne, rendez-vous à New York qu'il faut convertir en heure de Paris…
 
 | Tâche | Cas | Ce que Leon produit |
 |---|---|---|
-| point | 10 | le point du matin (3 parties, 120 mots au plus) |
+| point | 10 | le point du matin (3 parties, 250 mots au plus ; 150 depuis `point-court.md`) |
 | resume | 10 | le résumé d'une session de code, réinjecté dans la suivante |
 | fil | 6 | l'état d'un fil de travail sur plusieurs sessions |
 | agenda | 6 boîtes de 12 à 25 mails | les rendez-vous de la semaine, à la minute |

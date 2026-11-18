@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:33.122Z",
+  "reponse": "## What is still open\n\n- Die Aufwandsschätzung zur Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Frau Kranich und Thomas sein. Am Freitag um 14 Uhr geht Frau Kranich alles mit dir durch [5]. Deine Schätzung von 15 PT und dem 1. April 2027 ist überholt: Jonas sagt, `/api/v1/auftraege` hat keine Mandantentrennung. Für externe Händler müsste der Kunde aus dem Token abgeleitet, alle Abfragen abgesichert und vor dem Go-live ein Pen-Test gemacht werden. Er rechnet eher mit 25 PT, und der 1. April klappt nur, wenn der Spike (#222) noch im Dezember startet [2]. Deine Vorlage für Thomas nennt noch 15 PT, bevor du sie schickst, muss sie angepasst werden [1].\n- Frau Kranich bleibt beim Jahresbonus bei 2 %. Die API gibt es nur, wenn Pfeiffer eine Mindestabnahme von 3 Mio. € im Jahr zusagt [5]. Pfeiffer hat 2026 bisher 2,61 Mio. € netto bestellt [1]. Die Konditionen entscheiden Thomas und Frau Kranich, nicht du [1].\n\n## What changed\n\n- Das Jahresgespräch bei Pfeiffer ist verschoben: Pfeiffer hat für Donnerstag abgesagt, der neue Termin ist Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt um 8:00 Uhr bei euch, Thomas fährt [6].\n\n## What you did\n\n- Du hast die Vorlage für Thomas erstellt. Sie enthält Ausgangslage, technisches Angebot, Aufwand und Termin, aber keine Konditionen. EDIFACT ORDERS ist nur als Option „auf Anfrage“ erwähnt, dafür wären 30 bis 40 PT zu rechnen [1].",
+  "rendu": "## What is still open\n\n- Die Aufwandsschätzung zur Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Frau Kranich und Thomas sein. Am Freitag um 14 Uhr geht Frau Kranich alles mit dir durch [5]. Deine Schätzung von 15 PT und dem 1. April 2027 ist überholt: Jonas sagt, `/api/v1/auftraege` hat keine Mandantentrennung. Für externe Händler müsste der Kunde aus dem Token abgeleitet, alle Abfragen abgesichert und vor dem Go-live ein Pen-Test gemacht werden. Er rechnet eher mit 25 PT, und der 1. April klappt nur, wenn der Spike (#222) noch im Dezember startet [2]. Deine Vorlage für Thomas nennt noch 15 PT, bevor du sie schickst, muss sie angepasst werden [1].\n- Frau Kranich bleibt beim Jahresbonus bei 2 %. Die API gibt es nur, wenn Pfeiffer eine Mindestabnahme von 3 Mio. € im Jahr zusagt [5]. Pfeiffer hat 2026 bisher 2,61 Mio. € netto bestellt [1]. Die Konditionen entscheiden Thomas und Frau Kranich, nicht du [1].\n\n## What changed\n\n- Das Jahresgespräch bei Pfeiffer ist verschoben: Pfeiffer hat für Donnerstag abgesagt, der neue Termin ist Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt um 8:00 Uhr bei euch, Thomas fährt [6].\n\n## What you did\n\n- Du hast die Vorlage für Thomas erstellt. Sie enthält Ausgangslage, technisches Angebot, Aufwand und Termin, aber keine Konditionen. EDIFACT ORDERS ist nur als Option „auf Anfrage“ erwähnt, dafür wären 30 bis 40 PT zu rechnen [1].",
+  "mesures": {
+    "mots": 223,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6991,
+    "sortie": 730,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021282
+  },
+  "cout": 0.021282,
+  "latenceMs": 5053,
+  "fournisseur": "Claude Platform on AWS"
+}

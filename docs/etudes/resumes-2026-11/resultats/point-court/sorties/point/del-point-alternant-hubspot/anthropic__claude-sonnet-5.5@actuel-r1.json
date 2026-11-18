@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:27.655Z",
+  "reponse": "## What is still open\n- **PR #217** : Thomas valide le `get_or_create` et le mapping, mais refuse la migration 0041 qui supprime les doublons. En prod, un doublon peut avoir des interventions, des photos et un dossier MPR rattachés. Il demande une commande de gestion à part avec `--dry-run` qui liste ce qui serait supprimé, pour regarder la liste ensemble [3]. Comme la migration 0042 (champ unique) a besoin que les doublons aient disparu, il faudra ordonner les deux [1].\n- **Ticket #216**, qui t'est assigné : le webhook ne vérifie pas la signature `X-HubSpot-Signature-v3`, donc n'importe qui connaissant l'URL peut créer des chantiers [4]. Thomas bloque la mise en prod de la synchro, pas avant lundi 23 et pas sans ce correctif [7].\n- **Création du chantier** : Camille veut la créer seulement quand l'acompte est reçu (case « Acompte reçu »), sinon Yannick planifie des chantiers qui ne se feront jamais. Hélène est d'accord [8]. Ton code crée encore le chantier dès « gagné » ; il faudra écouter `acompte_recu` [2].\n- Thomas est en congé jeudi et vendredi. Si tu bloques sur la sandbox HubSpot, demande à Camille [7].\n\n## What changed\n- **Ticket #219** : le formulaire de devis du site refuse les numéros avec des espaces. Deux clients ont appelé Sandrine, qui parle de demandes perdues, sans urgence [6].\n- **PR #213** (bouton « Photo plaque signalétique » de l'appli poseurs) : fusionnée par Thomas, elle part en prod [5].\n\n## What you did\n- Tu as corrigé les doublons de chantier à la source (champ `hubspot_deal_id` unique, test ajouté), ce qui a donné la PR #217 [1].\n- Tu as normalisé la propriété `type_travaux` : 350 deals sur 364 sont mappés, 14 restent « à préciser » [2].",
+  "rendu": "## What is still open\n- **PR #217** : Thomas valide le `get_or_create` et le mapping, mais refuse la migration 0041 qui supprime les doublons. En prod, un doublon peut avoir des interventions, des photos et un dossier MPR rattachés. Il demande une commande de gestion à part avec `--dry-run` qui liste ce qui serait supprimé, pour regarder la liste ensemble [3]. Comme la migration 0042 (champ unique) a besoin que les doublons aient disparu, il faudra ordonner les deux [1].\n- **Ticket #216**, qui t'est assigné : le webhook ne vérifie pas la signature `X-HubSpot-Signature-v3`, donc n'importe qui connaissant l'URL peut créer des chantiers [4]. Thomas bloque la mise en prod de la synchro, pas avant lundi 23 et pas sans ce correctif [7].\n- **Création du chantier** : Camille veut la créer seulement quand l'acompte est reçu (case « Acompte reçu »), sinon Yannick planifie des chantiers qui ne se feront jamais. Hélène est d'accord [8]. Ton code crée encore le chantier dès « gagné » ; il faudra écouter `acompte_recu` [2].\n- Thomas est en congé jeudi et vendredi. Si tu bloques sur la sandbox HubSpot, demande à Camille [7].\n\n## What changed\n- **Ticket #219** : le formulaire de devis du site refuse les numéros avec des espaces. Deux clients ont appelé Sandrine, qui parle de demandes perdues, sans urgence [6].\n- **PR #213** (bouton « Photo plaque signalétique » de l'appli poseurs) : fusionnée par Thomas, elle part en prod [5].\n\n## What you did\n- Tu as corrigé les doublons de chantier à la source (champ `hubspot_deal_id` unique, test ajouté), ce qui a donné la PR #217 [1].\n- Tu as normalisé la propriété `type_travaux` : 350 deals sur 364 sont mappés, 14 restent « à préciser » [2].",
+  "mesures": {
+    "mots": 269,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6588,
+    "sortie": 733,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020506
+  },
+  "cout": 0.020506,
+  "latenceMs": 5452,
+  "fournisseur": "Claude Platform on AWS"
+}

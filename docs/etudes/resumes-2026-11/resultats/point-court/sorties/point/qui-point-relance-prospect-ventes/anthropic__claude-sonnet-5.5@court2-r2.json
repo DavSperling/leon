@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:55.491Z",
+  "reponse": "## What is still open\n\n- Hearthly moved its decision to Wed Dec 2, two days earlier. Your plan's Dec 1 reference call and Dec 2 legal review now need to move up too [4][1].\n- The SIG Lite is still due Mon Nov 23, and Hearthly's security team won't keep Quillon in the final round without it. You still need to confirm with Shira that she owns it (about 200 questions) [4][1].\n- Your draft email promises CAD payouts in Q1 2027. Sofia says that's wrong: Q2 at the earliest, and she asks you not to put a date in writing. Fix it before sending [6][1].\n- Your 15% offer is above the 10% threshold, so Rachel must sign off before you send any numbers [3][1].\n- The reference customer is still TBD: you don't want to ask Loomly or Pinecrest, and Tradewell isn't live yet. Ask Rachel who you can use [1].",
+  "rendu": "## What is still open\n\n- Hearthly moved its decision to Wed Dec 2, two days earlier. Your plan's Dec 1 reference call and Dec 2 legal review now need to move up too [4][1].\n- The SIG Lite is still due Mon Nov 23, and Hearthly's security team won't keep Quillon in the final round without it. You still need to confirm with Shira that she owns it (about 200 questions) [4][1].\n- Your draft email promises CAD payouts in Q1 2027. Sofia says that's wrong: Q2 at the earliest, and she asks you not to put a date in writing. Fix it before sending [6][1].\n- Your 15% offer is above the 10% threshold, so Rachel must sign off before you send any numbers [3][1].\n- The reference customer is still TBD: you don't want to ask Loomly or Pinecrest, and Tradewell isn't live yet. Ask Rachel who you can use [1].",
+  "mesures": {
+    "mots": 148,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5976,
+    "sortie": 313,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015082
+  },
+  "cout": 0.015082,
+  "latenceMs": 2797,
+  "fournisseur": "Claude Platform on AWS"
+}

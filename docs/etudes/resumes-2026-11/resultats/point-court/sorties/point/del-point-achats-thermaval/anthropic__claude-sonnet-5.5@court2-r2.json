@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-achats-thermaval",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:48.873Z",
+  "reponse": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme par écrit le 24/11 sans « sauf aléa transporteur ». Sinon, retourne la voir avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [3][1].\n- Marchand : Yannick exige les 2 Aéro 11 sur site le 26/11 au plus tard, sinon la réception du 4/12 saute. Hélène te demande aussi de prévenir Camille avant le client [4][3].\n- Patrick Hamon demande à Thermaval une facture par lot, remise appliquée sur chacune, pour rapprocher les bons de livraison [6].\n\n## What changed\n\n- Thermaval refuse toute pénalité de retard. Les 8 premières unités partent de Cholet le 23/11 pour le 24/11 à Carquefou, les 6 autres le 4/12 [5].\n- Amrani est décalé au 25/11, Yannick a prévenu le client [4].",
+  "rendu": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme par écrit le 24/11 sans « sauf aléa transporteur ». Sinon, retourne la voir avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [3][1].\n- Marchand : Yannick exige les 2 Aéro 11 sur site le 26/11 au plus tard, sinon la réception du 4/12 saute. Hélène te demande aussi de prévenir Camille avant le client [4][3].\n- Patrick Hamon demande à Thermaval une facture par lot, remise appliquée sur chacune, pour rapprocher les bons de livraison [6].\n\n## What changed\n\n- Thermaval refuse toute pénalité de retard. Les 8 premières unités partent de Cholet le 23/11 pour le 24/11 à Carquefou, les 6 autres le 4/12 [5].\n- Amrani est décalé au 25/11, Yannick a prévenu le client [4].",
+  "mesures": {
+    "mots": 127,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7953,
+    "sortie": 349,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019396
+  },
+  "cout": 0.019396,
+  "latenceMs": 3149,
+  "fournisseur": "Claude Platform on AWS"
+}

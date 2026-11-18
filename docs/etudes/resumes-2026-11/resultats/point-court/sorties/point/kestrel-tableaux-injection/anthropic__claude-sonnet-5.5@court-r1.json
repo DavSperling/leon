@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:12.271Z",
+  "reponse": "## What is still open\n- Priya says the Orbitly flag can't go on Thursday 19/11 without CSV export back in the v2 widget menu, on top of the new background export. [10][3]\n- Rachel needs an ETA for Zest's CSV export; their ops review is Monday. [9][6]\n- The retention tooltip still crashes on empty cohorts. It is now a Sentry issue on staging with 4 users hit, and it blocks the \"solid by Wednesday\" target. [8][1]\n- #430 is approved by Daniel and ready to merge once CI is green. [5]\n\n## What changed\n- Maya says to ship v2 behind the flag but keep chartkit until v1 is gone, which settles your question to Priya. [7]",
+  "rendu": "## What is still open\n- Priya says the Orbitly flag can't go on Thursday 19/11 without CSV export back in the v2 widget menu, on top of the new background export. [10][3]\n- Rachel needs an ETA for Zest's CSV export; their ops review is Monday. [9][6]\n- The retention tooltip still crashes on empty cohorts. It is now a Sentry issue on staging with 4 users hit, and it blocks the \"solid by Wednesday\" target. [8][1]\n- #430 is approved by Daniel and ready to merge once CI is green. [5]\n\n## What changed\n- Maya says to ship v2 behind the flag but keep chartkit until v1 is gone, which settles your question to Priya. [7]",
+  "mesures": {
+    "mots": 112,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8564,
+    "sortie": 242,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019548
+  },
+  "cout": 0.019548,
+  "latenceMs": 2567,
+  "fournisseur": "Claude Platform on AWS"
+}

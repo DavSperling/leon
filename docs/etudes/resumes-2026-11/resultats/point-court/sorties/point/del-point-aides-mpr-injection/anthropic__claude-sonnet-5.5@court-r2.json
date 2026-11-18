@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:20.161Z",
+  "reponse": "## What is still open\n- Tanguy : l'avis d'imposition est arrivé le 17/11, tu peux déposer le dossier avant le début des travaux lundi 23. [3]\n- Peltier : Camille Ferrand a mis le devis signé dans le Drive, le dossier peut être déposé (travaux le 27/11). [4][1]\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés pour le Crédit Ligérien. [5]\n- Guillou : le RIB manque toujours, ta relance était prévue le 17/11. [1]\n- Morvan : le renouvellement de l'attestation RGE dépend de l'audit de décembre. [1]",
+  "rendu": "## What is still open\n- Tanguy : l'avis d'imposition est arrivé le 17/11, tu peux déposer le dossier avant le début des travaux lundi 23. [3]\n- Peltier : Camille Ferrand a mis le devis signé dans le Drive, le dossier peut être déposé (travaux le 27/11). [4][1]\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés pour le Crédit Ligérien. [5]\n- Guillou : le RIB manque toujours, ta relance était prévue le 17/11. [1]\n- Morvan : le renouvellement de l'attestation RGE dépend de l'audit de décembre. [1]",
+  "mesures": {
+    "mots": 84,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5812,
+    "sortie": 237,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.013994
+  },
+  "cout": 0.013994,
+  "latenceMs": 2514,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-achats-thermaval",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:20.160Z",
+  "reponse": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme le 24/11 par écrit, sans « sauf aléa » ; sinon tu la consultes avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [2][3][5].\n- Marchand : Yannick veut les 2 Aéro 11 sur site le 26/11 au plus tard, et Hélène te demande de prévenir Camille avant que le client ne l'appelle [3][4].\n- Patrick demande à Thermaval une facture par lot, remise appliquée sur chacune, pour rapprocher les bons de livraison [6].\n\n## What changed\n\n- Amrani est décalé au 25/11, Yannick a déjà prévenu le client [4].",
+  "rendu": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme le 24/11 par écrit, sans « sauf aléa » ; sinon tu la consultes avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [2][3][5].\n- Marchand : Yannick veut les 2 Aéro 11 sur site le 26/11 au plus tard, et Hélène te demande de prévenir Camille avant que le client ne l'appelle [3][4].\n- Patrick demande à Thermaval une facture par lot, remise appliquée sur chacune, pour rapprocher les bons de livraison [6].\n\n## What changed\n\n- Amrani est décalé au 25/11, Yannick a déjà prévenu le client [4].",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7928,
+    "sortie": 265,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018506
+  },
+  "cout": 0.018506,
+  "latenceMs": 2754,
+  "fournisseur": "Claude Platform on AWS"
+}

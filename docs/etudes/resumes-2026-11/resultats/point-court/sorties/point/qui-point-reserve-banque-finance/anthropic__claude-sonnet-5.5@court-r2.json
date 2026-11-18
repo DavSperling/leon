@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:26.549Z",
+  "reponse": "## What is still open\n- Corvane refused phasing: the full reserve must be in place by Nov 30. Gil's sign-off already covers moving the $900k from the sweep, so you can go ahead without asking him again. [5][3]\n- Gil wants the reserve change on the cash slide of Thursday's board pack. [3]\n- Jenna asks whether to chase Northpeak's missing SRE search invoice or keep the accrual and close October on Friday. [4]\n\n## What changed\n- Your Northpeak deposit is coded to prepaid, while Jenna has accrued the full invoice. Check the two don't double-count before the October close. [2][4]",
+  "rendu": "## What is still open\n- Corvane refused phasing: the full reserve must be in place by Nov 30. Gil's sign-off already covers moving the $900k from the sweep, so you can go ahead without asking him again. [5][3]\n- Gil wants the reserve change on the cash slide of Thursday's board pack. [3]\n- Jenna asks whether to chase Northpeak's missing SRE search invoice or keep the accrual and close October on Friday. [4]\n\n## What changed\n- Your Northpeak deposit is coded to prepaid, while Jenna has accrued the full invoice. Check the two don't double-count before the October close. [2][4]",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6828,
+    "sortie": 213,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015786
+  },
+  "cout": 0.015786,
+  "latenceMs": 2182,
+  "fournisseur": "Claude Platform on AWS"
+}

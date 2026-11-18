@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:55.560Z",
+  "reponse": "## What is still open\n\n- Corvane refused phasing: the full $2.4M reserve must be funded by Nov 30. Gil already approved moving the $900k from the sweep, so you can go ahead. Runway falls to about 18.3 months, only ~0.3 above the floor. [5][3][1]\n- Put the reserve change on the cash slide of Thursday's board pack, as Gil asked. [3]\n- Jenna is asking whether to chase Northpeak for the $27,500 SRE search invoice or keep the accrual and close October on Friday. Your $4,500 deposit is in prepaid 1450. [4][2]",
+  "rendu": "## What is still open\n\n- Corvane refused phasing: the full $2.4M reserve must be funded by Nov 30. Gil already approved moving the $900k from the sweep, so you can go ahead. Runway falls to about 18.3 months, only ~0.3 above the floor. [5][3][1]\n- Put the reserve change on the cash slide of Thursday's board pack, as Gil asked. [3]\n- Jenna is asking whether to chase Northpeak for the $27,500 SRE search invoice or keep the accrual and close October on Friday. Your $4,500 deposit is in prepaid 1450. [4][2]",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6853,
+    "sortie": 207,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015776
+  },
+  "cout": 0.015776,
+  "latenceMs": 2463,
+  "fournisseur": "Claude Platform on AWS"
+}

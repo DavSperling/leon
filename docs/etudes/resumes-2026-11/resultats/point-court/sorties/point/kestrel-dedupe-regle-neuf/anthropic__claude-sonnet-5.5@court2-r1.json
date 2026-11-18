@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:36.320Z",
+  "reponse": "## What is still open\n\n- Maya needs the number of Orbitly events dropped since #240 before Thursday's call with Orbitly: about 1.18M legitimate events (≈8.1% of iOS volume), plus 3,812 for Zest. Reply on #247 so she can approve [1][2].\n- After #247 is deployed, run the replay from 13/11 for Orbitly and Zest (about 40 minutes), then check that drops stay near zero. Running it earlier would drop the events again [1].\n- Before Friday's incident review (20/11), add an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The iOS team still has to be told that SDK 3.2.0 must go back to UUID event_ids; otherwise this will happen again [1].\n\n## What changed\n\n- Maya will approve #247 once CI is green [2].",
+  "rendu": "## What is still open\n\n- Maya needs the number of Orbitly events dropped since #240 before Thursday's call with Orbitly: about 1.18M legitimate events (≈8.1% of iOS volume), plus 3,812 for Zest. Reply on #247 so she can approve [1][2].\n- After #247 is deployed, run the replay from 13/11 for Orbitly and Zest (about 40 minutes), then check that drops stay near zero. Running it earlier would drop the events again [1].\n- Before Friday's incident review (20/11), add an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The iOS team still has to be told that SDK 3.2.0 must go back to UUID event_ids; otherwise this will happen again [1].\n\n## What changed\n\n- Maya will approve #247 once CI is green [2].",
+  "mesures": {
+    "mots": 123,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7022,
+    "sortie": 278,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016824
+  },
+  "cout": 0.016824,
+  "latenceMs": 3142,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:11.112Z",
+  "reponse": "## What is still open\n\n- Maya is waiting on you in #247: she'll approve once CI is green, but wants the number of Orbitly events lost since #240 for Thursday's Orbitly call. Your replay run gives it: about 1.18M legitimate events dropped (≈8.1% of their iOS volume), with 4,352 genuine replays excluded [2][1].\n- After #247 is merged and deployed, run the replay from landing for Orbitly (from 13/11 09:40 UTC) and for Zest (3,812 events lost). Then check that `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero. Landing keeps 30 days, so the data is still there [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The note asking the iOS team to restore UUIDs for `event_id` in 3.2.1 is drafted but not sent [1].\n\n## What changed\n\n- Maya's review and CI status on #247 are the only open point there. Nothing else on it has moved [2].\n- Noa published the final postmortem for #233 and will present it on Friday [3].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop, which Rachel relayed from their PM, to your own #240 dedupe. kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so distinct events from different devices collided. You then opened #247, which keys the dedupe on project, device and event_id [1].",
+  "rendu": "## What is still open\n\n- Maya is waiting on you in #247: she'll approve once CI is green, but wants the number of Orbitly events lost since #240 for Thursday's Orbitly call. Your replay run gives it: about 1.18M legitimate events dropped (≈8.1% of their iOS volume), with 4,352 genuine replays excluded [2][1].\n- After #247 is merged and deployed, run the replay from landing for Orbitly (from 13/11 09:40 UTC) and for Zest (3,812 events lost). Then check that `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero. Landing keeps 30 days, so the data is still there [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n- The note asking the iOS team to restore UUIDs for `event_id` in 3.2.1 is drafted but not sent [1].\n\n## What changed\n\n- Maya's review and CI status on #247 are the only open point there. Nothing else on it has moved [2].\n- Noa published the final postmortem for #233 and will present it on Friday [3].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop, which Rachel relayed from their PM, to your own #240 dedupe. kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so distinct events from different devices collided. You then opened #247, which keys the dedupe on project, device and event_id [1].",
+  "mesures": {
+    "mots": 217,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6726,
+    "sortie": 511,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018562
+  },
+  "cout": 0.018562,
+  "latenceMs": 4427,
+  "fournisseur": "Claude Platform on AWS"
+}

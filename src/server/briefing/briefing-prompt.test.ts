@@ -5,6 +5,7 @@ import {
   BRIEFING_BLOCK_CLOSE,
   BRIEFING_BLOCK_OPEN,
   BRIEFING_MARKDOWN_MAX_CHARS,
+  BRIEFING_MAX_BULLETS,
   BRIEFING_MAX_WORDS,
   BRIEFING_RENDER_MAX_CHARS,
   BRIEFING_SECTIONS,
@@ -130,11 +131,13 @@ describe('buildBriefingPrompt', () => {
     }
   });
 
-  it('demande 250 mots au plus, en trois parties, avec des renvois aux seuls numéros fournis', () => {
+  it('demande un point court (150 mots, 5 puces), en trois parties, avec des renvois aux seuls numéros fournis', () => {
     const { system } = buildBriefingPrompt(material(), NOW);
 
-    expect(BRIEFING_MAX_WORDS).toBe(250);
+    expect(BRIEFING_MAX_WORDS).toBe(150);
     expect(system).toContain(`${BRIEFING_MAX_WORDS} mots au plus`);
+    expect(system).toContain(`${BRIEFING_MAX_BULLETS} puces au plus dans tout le point`);
+    expect(system).toMatch(/qu'il ouvre d'un clic/);
     expect(BRIEFING_SECTIONS).toEqual(['What is still open', 'What changed', 'What you did']);
     for (const section of BRIEFING_SECTIONS) expect(system).toContain(`## ${section}`);
     expect(system).toContain('[2]');

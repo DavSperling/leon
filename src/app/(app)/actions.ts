@@ -9,9 +9,13 @@ import { getSession, requireUserContext, signOutCurrentUser } from '@/server/aut
 import {
   BRIEFING_DISMISSED_MAX,
   BRIEFING_LINE_MAX_CHARS,
+  briefingExists,
   dismissBriefingLines,
+  refreshBriefing,
   restoreBriefingLines,
 } from '@/server/briefing/briefings';
+import { env } from '@/server/env';
+import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
 import { NOTHING_FOUND, type ShellFound, searchShell } from '@/server/shell/shell';
@@ -80,6 +84,27 @@ export async function restoreBriefingLinesAction(
   texts: string[],
 ): Promise<boolean> {
   return briefingLinesAction('point.annulation', project, texts, restoreBriefingLines);
+}
+
+// « Refaire » sur un point de l'Accueil : refait tout de suite, sans passer par la file, pour dire sur-le-champ si le
+// plafond du jour (BRIEFING_DAILY_CAP) est atteint, ou s'il n'y avait rien de neuf (l'Accueil ne montre plus ce point). Une panne
+// (modèle compris) ou l'absence de modèle rendent « erreur », et l'écran garde l'ancien point.
+export async function refreshBriefingAction(
+  project: string,
+): Promise<'fait' | 'rien' | 'plafond' | 'erreur'> {
+  const ctx = await requireUserContext();
+  const parsed = ProjectSchema.safeParse(project);
+  const llm = getLlm(env);
+  if (!parsed.success || llm === null) return 'erreur';
+  try {
+    if (!(await briefingExists(ctx, parsed.data))) return 'erreur';
+    const status = await refreshBriefing(ctx, parsed.data, { llm });
+    if (status === 'plafond') return 'plafond';
+    return status === 'parti' ? 'erreur' : status;
+  } catch (error) {
+    logError('point.refaire', error);
+    return 'erreur';
+  }
 }
 
 async function briefingLinesAction(

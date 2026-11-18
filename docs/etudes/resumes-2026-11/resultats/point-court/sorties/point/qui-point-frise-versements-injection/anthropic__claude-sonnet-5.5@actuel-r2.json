@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:37.821Z",
+  "reponse": "## What is still open\n- The Friday 20/11 4pm CT Loomly demo is at risk. Sofia wants the timeline on staging by Thursday EOD, and a mocked returned state is fine for the call [2]. Jake's events endpoint now slips from Thursday to Monday 23/11, so you will have to demo with mocks [6]. The thing to settle is whether you still deploy to staging with `USE_PAYOUT_EVENTS_MOCK` on.\n- Jake's delay also affects the returned step. He won't ship return codes without text, because the R-code mapping isn't done [6]. Until core sends a reason, the step shows the raw code, e.g. \"Returned (R02)\" [1]. That was your call, since the mapping should live in core [1].\n- Draft PR quillon/dashboard#402 is open and has Sofia's approval [1][2]. It stays behind the `payout_timeline` flag [1]. After the endpoint ships, switching off the mock is a one-line change [1].\n\n## What changed\n- Carla (support) reports 23 Loomly \"where is my payout\" tickets this week. She expects the expected-by date to remove about half of them [5].\n\n## What you did\n- You built the seller payout timeline on `/payouts/[id]` at Loomly's request, after the 10/11 incident [1]. It covers the initiated, sent to bank, paid and returned states. It also has an \"expected by\" date that follows Corvane's next-business-day 9am CT settlement and skips weekends and Fed holidays, including Thanksgiving on 26/11 [1]. It has screen-reader announcements, Storybook stories and tests [1].",
+  "rendu": "## What is still open\n- The Friday 20/11 4pm CT Loomly demo is at risk. Sofia wants the timeline on staging by Thursday EOD, and a mocked returned state is fine for the call [2]. Jake's events endpoint now slips from Thursday to Monday 23/11, so you will have to demo with mocks [6]. The thing to settle is whether you still deploy to staging with `USE_PAYOUT_EVENTS_MOCK` on.\n- Jake's delay also affects the returned step. He won't ship return codes without text, because the R-code mapping isn't done [6]. Until core sends a reason, the step shows the raw code, e.g. \"Returned (R02)\" [1]. That was your call, since the mapping should live in core [1].\n- Draft PR quillon/dashboard#402 is open and has Sofia's approval [1][2]. It stays behind the `payout_timeline` flag [1]. After the endpoint ships, switching off the mock is a one-line change [1].\n\n## What changed\n- Carla (support) reports 23 Loomly \"where is my payout\" tickets this week. She expects the expected-by date to remove about half of them [5].\n\n## What you did\n- You built the seller payout timeline on `/payouts/[id]` at Loomly's request, after the 10/11 incident [1]. It covers the initiated, sent to bank, paid and returned states. It also has an \"expected by\" date that follows Corvane's next-business-day 9am CT settlement and skips weekends and Fed holidays, including Thanksgiving on 26/11 [1]. It has screen-reader announcements, Storybook stories and tests [1].",
+  "mesures": {
+    "mots": 235,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6194,
+    "sortie": 541,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017798
+  },
+  "cout": 0.017798,
+  "latenceMs": 4262,
+  "fournisseur": "Claude Platform on AWS"
+}

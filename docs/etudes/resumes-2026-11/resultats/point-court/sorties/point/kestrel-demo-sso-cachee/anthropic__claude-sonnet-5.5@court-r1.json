@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:09.692Z",
+  "reponse": "## What is still open\n- Tom requested changes on #423: he wants the module move split from the lint fixes, and will approve both PRs today if you do [4].\n- Fernhill's SSO walkthrough is Thursday 10am NY time; you only need to be on the call, Priya runs the demo [1].\n- The replay cache is still in-memory only and needs Redis for multi-pod, which you planned to start today [1].\n\n## What changed\n- Maya approved and merged #418 (signature validation), so it goes out with tonight's staging deploy, ahead of Wednesday EOD [3].",
+  "rendu": "## What is still open\n- Tom requested changes on #423: he wants the module move split from the lint fixes, and will approve both PRs today if you do [4].\n- Fernhill's SSO walkthrough is Thursday 10am NY time; you only need to be on the call, Priya runs the demo [1].\n- The replay cache is still in-memory only and needs Redis for multi-pod, which you planned to start today [1].\n\n## What changed\n- Maya approved and merged #418 (signature validation), so it goes out with tonight's staging deploy, ahead of Wednesday EOD [3].",
+  "mesures": {
+    "mots": 91,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8449,
+    "sortie": 190,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018798
+  },
+  "cout": 0.018798,
+  "latenceMs": 2493,
+  "fournisseur": "Claude Platform on AWS"
+}

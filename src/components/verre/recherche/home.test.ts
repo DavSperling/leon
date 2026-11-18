@@ -12,6 +12,7 @@ import { BriefingSheet, type BriefingSourceView, Greeting, HomeAsk } from './hom
 vi.mock('@/app/(app)/actions', () => ({
   dismissBriefingLinesAction: vi.fn(),
   previewPassageAction: vi.fn(),
+  refreshBriefingAction: vi.fn(),
   restoreBriefingLinesAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -119,6 +120,19 @@ describe('BriefingSheet', () => {
       }),
     );
     expect(titled).toContain('<span>leon</span>');
+  });
+
+  it('propose « Redo » seulement quand un modèle est branché', () => {
+    expect(sheet).not.toContain('Redo');
+    const redo = html(
+      h(BriefingSheet, {
+        project: 'github.com/acme/leon',
+        sections: SECTIONS,
+        sources: SOURCES,
+        canRedo: true,
+      }),
+    );
+    expect(redo.match(/<button[^>]*>.*?Redo<\/button>/g)).toHaveLength(1);
   });
 });
 

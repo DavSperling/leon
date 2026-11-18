@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:12.197Z",
+  "reponse": "## What is still open\n- The cutover window moved to Sunday 22/11, 02:00–04:00 UTC. Update the runbook, which still says Saturday, then merge #321, which Maya approved. [8][3][1]\n- Rehearse rollback on a fresh clone Thursday 19/11. It is only a TODO in the runbook, and #321 still lists it as undone. [1][3]\n- Give Lior 30 minutes' notice before the switchover so he can pause the consumers, and ping Daniel when you start (he is on call for the API). [9][7]\n\n## What changed\n- Maya's approval of #321 is conditional on the window being confirmed with Fernhill, which she has now done. [3][8]",
+  "rendu": "## What is still open\n- The cutover window moved to Sunday 22/11, 02:00–04:00 UTC. Update the runbook, which still says Saturday, then merge #321, which Maya approved. [8][3][1]\n- Rehearse rollback on a fresh clone Thursday 19/11. It is only a TODO in the runbook, and #321 still lists it as undone. [1][3]\n- Give Lior 30 minutes' notice before the switchover so he can pause the consumers, and ping Daniel when you start (he is on call for the API). [9][7]\n\n## What changed\n- Maya's approval of #321 is conditional on the window being confirmed with Fernhill, which she has now done. [3][8]",
+  "mesures": {
+    "mots": 100,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7635,
+    "sortie": 232,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01759
+  },
+  "cout": 0.01759,
+  "latenceMs": 2242,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:51.970Z",
+  "reponse": "## What is still open\n\n- Les SMS de rappel J-1 partent encore à la mauvaise heure : Lucas demande de corriger `sms.py` dans #214 (2 lignes), sa réécriture n'arrive qu'après le 30/11 [3]. Il faut que ce soit bon avant l'envoi de mercredi 18h, sinon on recommence jeudi [4].\n- Sandrine rappelle Peltier, Bréhier et Hervé demain à la première heure pour confirmer 8h, et attend que tu lui dises quand les SMS seront bons [7].\n- Une fois #214 fusionnée, lance `reprise_heure_hiver` en prod : 41 interventions à décaler de +1 h [1].\n- Verrouille avant vendredi le chantier Le Floch (CH-2604) du 8/12 pour l'audit RGE, demandé par Franck [2].\n- Le formulaire de devis refuse les numéros avec espaces et fait perdre des demandes (#219) [6].",
+  "rendu": "## What is still open\n\n- Les SMS de rappel J-1 partent encore à la mauvaise heure : Lucas demande de corriger `sms.py` dans #214 (2 lignes), sa réécriture n'arrive qu'après le 30/11 [3]. Il faut que ce soit bon avant l'envoi de mercredi 18h, sinon on recommence jeudi [4].\n- Sandrine rappelle Peltier, Bréhier et Hervé demain à la première heure pour confirmer 8h, et attend que tu lui dises quand les SMS seront bons [7].\n- Une fois #214 fusionnée, lance `reprise_heure_hiver` en prod : 41 interventions à décaler de +1 h [1].\n- Verrouille avant vendredi le chantier Le Floch (CH-2604) du 8/12 pour l'audit RGE, demandé par Franck [2].\n- Le formulaire de devis refuse les numéros avec espaces et fait perdre des demandes (#219) [6].",
+  "mesures": {
+    "mots": 122,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9089,
+    "sortie": 342,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021598
+  },
+  "cout": 0.021598,
+  "latenceMs": 2815,
+  "fournisseur": "Claude Platform on AWS"
+}

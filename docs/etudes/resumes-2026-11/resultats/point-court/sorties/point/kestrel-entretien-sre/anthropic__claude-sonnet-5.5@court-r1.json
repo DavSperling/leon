@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:09.693Z",
+  "reponse": "## What is still open\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00, with you and Noa as the panel. He is the only active candidate, and you still need to send Noa the plan. [1]\n- Eitan wants the SRE shortlist before Friday for Monday's board deck. [4]\n- You plan to propose a higher SRE band to Eitan at Monday's leadership sync, after two recent declines tied to pay. [1]\n- Talentbridge still has to send 3 more profiles by end of next week, ideally people with on-call experience for US customers. [1]\n\n## What changed\n- Noa confirmed Thursday and will prepare the Terraform exercise. [3]",
+  "rendu": "## What is still open\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00, with you and Noa as the panel. He is the only active candidate, and you still need to send Noa the plan. [1]\n- Eitan wants the SRE shortlist before Friday for Monday's board deck. [4]\n- You plan to propose a higher SRE band to Eitan at Monday's leadership sync, after two recent declines tied to pay. [1]\n- Talentbridge still has to send 3 more profiles by end of next week, ideally people with on-call experience for US customers. [1]\n\n## What changed\n- Noa confirmed Thursday and will prepare the Terraform exercise. [3]",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6185,
+    "sortie": 229,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01466
+  },
+  "cout": 0.01466,
+  "latenceMs": 2719,
+  "fournisseur": "Claude Platform on AWS"
+}

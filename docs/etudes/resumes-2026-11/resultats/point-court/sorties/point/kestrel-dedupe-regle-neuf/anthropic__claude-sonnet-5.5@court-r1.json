@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:09.687Z",
+  "reponse": "## What is still open\n- Maya needs the number of Orbitly events dropped since #240 for Thursday's Orbitly call, before she approves and merges #247 once CI is green [2].\n- After #247 is deployed, replay Orbitly and Zest from landing starting 13/11, then check that drops stay near zero [1].\n- Add the dead-letter queue alert before Friday's incident review (20/11) [7].\n- The iOS team still needs your note asking to restore UUID event_ids in the SDK [1].",
+  "rendu": "## What is still open\n- Maya needs the number of Orbitly events dropped since #240 for Thursday's Orbitly call, before she approves and merges #247 once CI is green [2].\n- After #247 is deployed, replay Orbitly and Zest from landing starting 13/11, then check that drops stay near zero [1].\n- Add the dead-letter queue alert before Friday's incident review (20/11) [7].\n- The iOS team still needs your note asking to restore UUID event_ids in the SDK [1].",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6997,
+    "sortie": 168,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015674
+  },
+  "cout": 0.015674,
+  "latenceMs": 2501,
+  "fournisseur": "Claude Platform on AWS"
+}

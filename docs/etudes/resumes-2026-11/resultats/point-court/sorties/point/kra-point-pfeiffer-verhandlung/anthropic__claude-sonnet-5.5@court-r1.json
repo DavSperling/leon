@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:23.024Z",
+  "reponse": "## What is still open\n\n- Sabine Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die gemeinsame Runde bei ihr [5].\n- Jonas hält 25 statt 15 PT für realistisch: keine Mandantentrennung in der API, Pen-Test nötig; der 1. April klappt nur, wenn der Spike im Dezember startet (#222) [2].\n- Das Jahresgespräch bei Pfeiffer in Nürnberg ist auf Montag, 23.11., 10:00 Uhr verschoben, Abfahrt 8:00 mit Thomas [6].\n- Sabine Kranich nennt Bedingungen für das API-Angebot (u. a. eine Mindestabnahme); die Vorlage für Thomas solltest du darauf abgleichen [5].\n\n## What changed\n\n- Die Dependabot-Updates (#218) und der Chargen-Export (#214) sind gemergt [3][4].",
+  "rendu": "## What is still open\n\n- Sabine Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die gemeinsame Runde bei ihr [5].\n- Jonas hält 25 statt 15 PT für realistisch: keine Mandantentrennung in der API, Pen-Test nötig; der 1. April klappt nur, wenn der Spike im Dezember startet (#222) [2].\n- Das Jahresgespräch bei Pfeiffer in Nürnberg ist auf Montag, 23.11., 10:00 Uhr verschoben, Abfahrt 8:00 mit Thomas [6].\n- Sabine Kranich nennt Bedingungen für das API-Angebot (u. a. eine Mindestabnahme); die Vorlage für Thomas solltest du darauf abgleichen [5].\n\n## What changed\n\n- Die Dependabot-Updates (#218) und der Chargen-Export (#214) sind gemergt [3][4].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7262,
+    "sortie": 365,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018174
+  },
+  "cout": 0.018174,
+  "latenceMs": 3151,
+  "fournisseur": "Claude Platform on AWS"
+}

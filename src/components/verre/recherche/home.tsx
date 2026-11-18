@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUp, Trash2, X } from 'lucide-react';
+import { ArrowUp, RefreshCw, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
@@ -11,7 +11,11 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react';
-import { dismissBriefingLinesAction, restoreBriefingLinesAction } from '@/app/(app)/actions';
+import {
+  dismissBriefingLinesAction,
+  refreshBriefingAction,
+  restoreBriefingLinesAction,
+} from '@/app/(app)/actions';
 import { type NewDiscussionState, newDiscussionAction } from '@/app/(app)/discussions/actions';
 import {
   Button,
@@ -301,19 +305,23 @@ const DELETE_TIMER = '\u0000point';
  * Une croix au bout de chaque ligne (au pointeur, toujours visible au doigt) la retire : « c'est réglé ». La base le
  * garde tout de suite (0074) ; la ligne laisse sur place « Ligne retirée · Annuler » quelques secondes, puis s'en va.
  * « Supprimer », au-dessus de la feuille, retire de même toutes ses lignes : le point s'en va jusqu'à ce qu'il y ait
- * du neuf sur son dossier, et le recalcul ne redit pas ce qui a été supprimé.
+ * du neuf sur son dossier, et le recalcul ne redit pas ce qui a été supprimé. « Refaire », à sa gauche quand un modèle
+ * est branché, refait le point tout de suite ; la page le relit ensuite.
  */
 export function BriefingSheet({
   project,
   heading,
   sections,
   sources,
+  canRedo = false,
 }: {
   project: string;
   /** Au-dessus de la feuille, à gauche de « Supprimer » : le dossier du point et son heure. */
   heading?: ReactNode;
   sections: BriefingSection[];
   sources: BriefingSourceView[];
+  /** Un modèle est branché : « Refaire » est proposé. */
+  canRedo?: boolean;
 }) {
   const t = useTranslations('welcome');
   const router = useRouter();
@@ -325,6 +333,7 @@ export function BriefingSheet({
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
   // « Supprimer » : les lignes retirées d'un coup, le temps d'annuler (null : le point est là)
   const [deleted, setDeleted] = useState<string[] | null>(null);
+  const [redoing, setRedoing] = useState(false);
   useEffect(() => {
     const pending = timers.current;
     return () => {
@@ -403,6 +412,17 @@ export function BriefingSheet({
     }
   };
 
+  // le point refait a une autre heure : la page le relit, et cette feuille est remplacée (sa clé, page.tsx)
+  const redo = async () => {
+    setRedoing(true);
+    const result = await refreshBriefingAction(project);
+    setRedoing(false);
+    if (result === 'fait' || result === 'rien') router.refresh();
+    if (result === 'rien') toast(t('briefing.redoNothing'));
+    else if (result === 'plafond') toast(t('briefing.redoCapped'));
+    else if (result === 'erreur') toast.error(t('briefing.redoFailed'));
+  };
+
   if (deleted)
     return (
       <div data-undo="" className="flex min-h-[38px] items-center gap-2 py-1 text-ui text-muted">
@@ -417,9 +437,23 @@ export function BriefingSheet({
     <div>
       <div className="mb-1.5 flex min-h-8 items-center gap-3">
         <div className="flex min-w-0 items-baseline gap-2 text-label text-muted">{heading}</div>
-        <Button size="xs" variant="quiet" icon={Trash2} onClick={deletePoint} className="ml-auto">
-          {t('briefing.delete')}
-        </Button>
+        <div className="ml-auto flex items-center gap-1">
+          {canRedo && (
+            <Button
+              size="xs"
+              variant="quiet"
+              icon={RefreshCw}
+              loading={redoing}
+              onClick={redo}
+              className={cn(redoing && '[&_svg]:animate-spin')}
+            >
+              {t('briefing.redo')}
+            </Button>
+          )}
+          <Button size="xs" variant="quiet" icon={Trash2} onClick={deletePoint}>
+            {t('briefing.delete')}
+          </Button>
+        </div>
       </div>
       <GlassCard className="@container px-6 py-1 max-shell:px-4">
         {/* une seule colonne de titres pour les trois parties, à la largeur du plus long (le français l'est plus) */}

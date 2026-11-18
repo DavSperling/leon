@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:52.313Z",
+  "reponse": "## What is still open\n\n- Frau Kranich will bis Donnerstag, 19.11., 17 Uhr deine Aufwandsschätzung zur API; Freitag 14 Uhr ist die Runde bei ihr. Sie bietet die API nur bei Mindestabnahme von 3 Mio. € an und bleibt beim Bonus bei 2 % [5].\n- Deine Schätzung von 15 PT ist überholt: Jonas sieht eher 25 PT, weil `/api/v1/auftraege` keine Mandantentrennung hat und ein Pen-Test nötig ist. Der 1. April hält nur, wenn der Spike im Dezember startet [2].\n- Das Gespräch mit Pfeiffer ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben; Abfahrt 8:00 Uhr, Thomas fährt [6].\n\n## What changed\n\n- Neckar Systemhaus meldet NS-44120 (Zertifikat HP_PORTAL) weiterhin „In Bearbeitung“, Ablauf am 30.11. [7]",
+  "rendu": "## What is still open\n\n- Frau Kranich will bis Donnerstag, 19.11., 17 Uhr deine Aufwandsschätzung zur API; Freitag 14 Uhr ist die Runde bei ihr. Sie bietet die API nur bei Mindestabnahme von 3 Mio. € an und bleibt beim Bonus bei 2 % [5].\n- Deine Schätzung von 15 PT ist überholt: Jonas sieht eher 25 PT, weil `/api/v1/auftraege` keine Mandantentrennung hat und ein Pen-Test nötig ist. Der 1. April hält nur, wenn der Spike im Dezember startet [2].\n- Das Gespräch mit Pfeiffer ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben; Abfahrt 8:00 Uhr, Thomas fährt [6].\n\n## What changed\n\n- Neckar Systemhaus meldet NS-44120 (Zertifikat HP_PORTAL) weiterhin „In Bearbeitung“, Ablauf am 30.11. [7]",
+  "mesures": {
+    "mots": 110,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 383,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018404
+  },
+  "cout": 0.018404,
+  "latenceMs": 2997,
+  "fournisseur": "Claude Platform on AWS"
+}

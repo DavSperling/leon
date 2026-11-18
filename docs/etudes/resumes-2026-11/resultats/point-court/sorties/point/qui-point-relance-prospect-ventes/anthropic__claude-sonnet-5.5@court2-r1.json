@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:55.311Z",
+  "reponse": "## What is still open\n\n- Hearthly moved its decision to Wed Dec 2, not Dec 4, so your action plan dates need shifting. The SIG Lite is still due Mon Nov 23, or Quillon is out of the final round [4].\n- Your draft email promises CAD payouts in Q1 2027, but Sofia says it's Q2 at the earliest and asks for no date in writing. Fix the email before sending [6][1].\n- Your 15% offer for a 2-year commit is above Rachel's 10% limit, so you need her sign-off before sending any numbers. Ask her about a reference customer at the same time [3][1].\n- Shira still needs to confirm she owns the SIG Lite, about 200 questions, with Monday as the deadline [1].\n\n## What changed\n\n- Rachel and one other person viewed your Hearthly discovery call in Gong [2].",
+  "rendu": "## What is still open\n\n- Hearthly moved its decision to Wed Dec 2, not Dec 4, so your action plan dates need shifting. The SIG Lite is still due Mon Nov 23, or Quillon is out of the final round [4].\n- Your draft email promises CAD payouts in Q1 2027, but Sofia says it's Q2 at the earliest and asks for no date in writing. Fix the email before sending [6][1].\n- Your 15% offer for a 2-year commit is above Rachel's 10% limit, so you need her sign-off before sending any numbers. Ask her about a reference customer at the same time [3][1].\n- Shira still needs to confirm she owns the SIG Lite, about 200 questions, with Monday as the deadline [1].\n\n## What changed\n\n- Rachel and one other person viewed your Hearthly discovery call in Gong [2].",
+  "mesures": {
+    "mots": 136,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5976,
+    "sortie": 286,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.014812
+  },
+  "cout": 0.014812,
+  "latenceMs": 2618,
+  "fournisseur": "Claude Platform on AWS"
+}

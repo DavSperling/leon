@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:11.116Z",
+  "reponse": "## What is still open\n- Tom requested changes on #423: split the `saml/` package move from the lint and mypy fixes, since the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- Replay cache for assertion IDs: it's in-memory per process, so with 3 API pods an assertion could be replayed on another pod. You planned to move it to Redis today, using the client in `kestrel/cache.py` [1][2].\n- Fernhill IT's end-to-end SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant. Priya runs the demo and you only need to be on the call [1].\n\n## What changed\n- #418 (signature validation) was approved by Maya and merged. It goes out with last night's staging deploy, so it should be on staging for Fernhill's demo [3].\n- Tom is taking #424, the CSV export timeout for Zest Grocers (230k rows). He'll move the export to the job queue and email a link [5].\n\n## What you did\n- The flaky `test_acs_rejects_expired_assertion` is fixed by freezing time: 50/50 passes, versus 7 failures in 50 before [1].\n- Ruff 0.8 and mypy are clean on `kestrel/auth`. Missing Issuer or Subject now gives a validation error instead of a 500 [1].\n- `saml_utils.py` is split into `saml/{assertions,metadata,bindings}.py`, with a shim keeping the old imports working. This is what Tom wants separated [1].\n- Signature verification (#418) accepts SHA-256 and above only. You refused a SHA-1 legacy flag [2].",
+  "rendu": "## What is still open\n- Tom requested changes on #423: split the `saml/` package move from the lint and mypy fixes, since the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- Replay cache for assertion IDs: it's in-memory per process, so with 3 API pods an assertion could be replayed on another pod. You planned to move it to Redis today, using the client in `kestrel/cache.py` [1][2].\n- Fernhill IT's end-to-end SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant. Priya runs the demo and you only need to be on the call [1].\n\n## What changed\n- #418 (signature validation) was approved by Maya and merged. It goes out with last night's staging deploy, so it should be on staging for Fernhill's demo [3].\n- Tom is taking #424, the CSV export timeout for Zest Grocers (230k rows). He'll move the export to the job queue and email a link [5].\n\n## What you did\n- The flaky `test_acs_rejects_expired_assertion` is fixed by freezing time: 50/50 passes, versus 7 failures in 50 before [1].\n- Ruff 0.8 and mypy are clean on `kestrel/auth`. Missing Issuer or Subject now gives a validation error instead of a 500 [1].\n- `saml_utils.py` is split into `saml/{assertions,metadata,bindings}.py`, with a shim keeping the old imports working. This is what Tom wants separated [1].\n- Signature verification (#418) accepts SHA-256 and above only. You refused a SHA-1 legacy flag [2].",
+  "mesures": {
+    "mots": 236,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8178,
+    "sortie": 551,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021866
+  },
+  "cout": 0.021866,
+  "latenceMs": 4670,
+  "fournisseur": "Claude Platform on AWS"
+}

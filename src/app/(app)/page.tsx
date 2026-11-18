@@ -201,6 +201,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
                   }
                   sections={point.sections}
                   sources={viewOf(point)}
+                  canRedo={modelAvailable}
                 />
               ))}
             </div>

@@ -1033,6 +1033,37 @@ describe.each([
     const calls = await search(alice, 'type:appel_outil', { embedder });
     expect(titles(calls)).toEqual(['Session passe élargie', 'Fouinardise', 'Session plein texte']);
   });
+
+  it('rend une source trouvée par son titre seul avec son premier message, jamais un appel plus ancien', async () => {
+    const { alice } = await team();
+    await seedIndexed(alice, {
+      title: 'Pistachonnerie',
+      turns: [
+        { text: 'Bash · ls · ok', role: 'appel_outil', ts: minute(0) },
+        { text: 'Un message sans rapport.', ts: minute(1) },
+      ],
+    });
+    const page = await search(alice, 'Pistachonnerie', { embedder });
+    expect(titles(page)).toEqual(['Pistachonnerie']);
+    expect(page.hits[0]?.passages.map((passage) => passage.role)).toEqual(['user']);
+  });
+
+  it('ne rend rien quand le rôle passé à part et celui de la requête ne se recoupent pas', async () => {
+    const { alice } = await team();
+    // Le mot est dans un raisonnement et dans un appel : chacun des deux rôles, seul, trouverait la session.
+    await seedIndexed(alice, {
+      title: 'Session croisée',
+      turns: [
+        { text: 'Je pèse la gribouillance.', role: 'raisonnement', ts: minute(0) },
+        { text: 'Bash · gribouillance · ok', role: 'appel_outil', ts: minute(1) },
+      ],
+    });
+    const page = await search(alice, 'type:raisonnement gribouillance', {
+      embedder,
+      filters: { roles: ['appel_outil'] },
+    });
+    expect(page.hits).toEqual([]);
+  });
 });
 
 // Audit 3 n° 17 : « -mot » vaut aussi pour les vecteurs et les titres.

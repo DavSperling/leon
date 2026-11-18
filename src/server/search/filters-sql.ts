@@ -96,8 +96,10 @@ export function passageConditions(filters: SearchFilters, kind: SQL): SQL {
   // Un rôle des coulisses (T51) : par le tour du passage ; les passages n'en gardent rien. Sans rôle demandé, jamais un
   // appel d'outil : nombreux et courts, ils évinçaient les messages (décision d'Amos du 18/11, amende QD9) ; le
   // raisonnement et les sous-agents restent. Pas une clé de `filters` : une requête vide ne rend toujours rien.
-  // shortcut: aucun index sur turns.role, Postgres joint par hachage après un parcours des tours (5 ms pour 30 000 tours
-  // à l'essai du 12/11) ; ajouter un index (tenant_id, role) quand une recherche filtrée par rôle dépassera 300 ms.
+  // shortcut: toute recherche paie ce test sur turns, que Postgres parcourt (mesures du 18/11 sur 160 000 tours :
+  // environ 40 ms par jambe, une recherche avec des mots perd de 15 à 60 %, une faite de filtres seuls passe de 7 ms à
+  // 19-31 ms), recopier le rôle sur passages et passage_vectors (une migration, écartée le 18/11 pendant le changement
+  // d'hébergeur de la base) quand une recherche sans filtre dépassera 500 ms.
   if (filters.roles?.length) {
     conditions.push(sql`exists (select 1 from turns rt
       where rt.tenant_id = p.tenant_id and rt.id = p.turn_id and rt.role = any(${textArray(filters.roles)}))`);

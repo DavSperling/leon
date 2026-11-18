@@ -19,7 +19,7 @@ export const SYNTAX = [
   },
   {
     code: 'type:appel_outil',
-    text: 'les appels d’outils des sessions de code, que la recherche ne montre que demandés (seuls, sans autre type)',
+    text: 'les appels d’outils des sessions de code, montrés seulement sur demande (sans autre type)',
   },
   { code: 'depuis:7j', text: 'les 7 derniers jours (j), semaines (s) ou mois (m)' },
   { code: 'avant:2026-10-01', text: 'avant une date' },
@@ -40,7 +40,7 @@ export const SYNTAX_EN = [
   { code: 'type:meeting', text: 'a kind of source: ticket, page, email, file, conversation…' },
   {
     code: 'type:"tool call"',
-    text: 'the tool calls of coding sessions, which search shows only when asked (on their own, with no other type)',
+    text: 'the tool calls of coding sessions, shown only on request (with no other type)',
   },
   { code: 'since:7d', text: 'the past 7 days (d), weeks (w), or months (mo)' },
   { code: 'before:2026-10-01', text: 'before a date' },

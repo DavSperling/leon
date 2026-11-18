@@ -118,6 +118,19 @@ describe('extractClaudeCodeFacts', () => {
     },
   );
 
+  // L'exécutable entre guillemets ou après un antislash n'a pas la forme d'un exécutable : seul le texte fixe part.
+  it.each([
+    ['"curl" -u a:S3cret https://x.example', '[commande]'],
+    ['\\curl -u a:S3cret https://x.example', '[commande]'],
+    ['/usr/bin/curl -u a:S3cret https://x.example', 'curl'],
+  ])('réduit un exécutable écrit autrement sans ses arguments : %s', (command, texte) => {
+    const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.commandes).toEqual([{ texte, erreur: false }]);
+    expect(JSON.stringify(faits)).not.toContain('S3cret');
+  });
+
   it.each([
     'git -C sub commit -m x',
     'git -C "/Users/demo/Mobile Documents/leon" commit -m x',
@@ -308,6 +321,18 @@ describe('extractClaudeCodeFacts', () => {
     ['Bash', { command: 'npm view leftpad readme' }],
     ['Bash', { command: 'pnpm test; http GET https://x.example' }],
     ['Bash', { command: 'echo "$(TOKEN=x wget -qO- https://x.example)"' }],
+    // L'exécutable écrit autrement : le shell lance le même programme.
+    ['Bash', { command: '"curl" -s https://x.example' }],
+    ['Bash', { command: "'wget' https://x.example" }],
+    ['Bash', { command: '\\curl -s https://x.example' }],
+    ['Bash', { command: '/usr/bin/curl -s https://x.example' }],
+    ['Bash', { command: 'cd /tmp && /opt/homebrew/bin/ssh host' }],
+    ['Bash', { command: '"/usr/bin/curl" https://x.example' }],
+    ['Bash', { command: 'TOKEN=x \\wget https://x.example' }],
+    ['Bash', { command: '"gh" pr view 12' }],
+    ['Bash', { command: '/usr/local/bin/gh api repos/demo/leon' }],
+    ['Bash', { command: '"git" clone https://github.com/o/r' }],
+    ['Bash', { command: '"npm" view leftpad' }],
   ])('marque la session externe sur %s %j', (name, input) => {
     expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(true);
   });
@@ -321,6 +346,15 @@ describe('extractClaudeCodeFacts', () => {
     ['Bash', { command: 'git fetch origin' }],
     ['Bash', { command: 'git commit -m "fix http"' }],
     ['Bash', { command: 'cat src/ssh-keys.ts' }],
+    ['Bash', { command: '/usr/bin/git fetch origin' }],
+    ['Bash', { command: '"gh" pr create --fill' }],
+    ['Bash', { command: '/opt/homebrew/bin/gh pr create --fill' }],
+    ['Bash', { command: './node_modules/.bin/vitest run src/ssh' }],
+    ['Bash', { command: 'ls /usr/bin/curl' }],
+    ['Bash', { command: 'echo "curl is cool"' }],
+    ['Bash', { command: 'git commit -m "curl"' }],
+    ['Bash', { command: '"curl is cool"' }],
+    ['Bash', { command: 'cat ./curl.md' }],
     ['TaskCreate', { subject: 'x' }],
     ['Read', { file_path: `${RACINE}/a.ts` }],
   ])('ne marque pas externe %s %j', (name, input) => {

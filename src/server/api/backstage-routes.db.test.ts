@@ -343,6 +343,26 @@ describe('POST /api/v1/coulisses', () => {
     ['un chemin par $HOME', { outil: 'LS', cible: '$HOME/.ssh' }, 'LS · ok'],
     ['un chemin par %USERPROFILE%', { outil: 'Read', cible: '%USERPROFILE%\\x' }, 'Read · ok'],
     [
+      'un chemin absolu entre guillemets',
+      { outil: 'Read', cible: '"/Users/x/secret.txt"' },
+      'Read · ok',
+    ],
+    [
+      'un chemin absolu entre apostrophes',
+      { outil: 'Read', cible: "'/Users/x/secret.txt'" },
+      'Read · ok',
+    ],
+    [
+      'un chemin absolu après une espace',
+      { outil: 'Read', cible: ' /Users/x/secret.txt' },
+      'Read · ok',
+    ],
+    [
+      'un chemin du dossier personnel après une tabulation',
+      { outil: 'Edit', cible: '\t~/.ssh/id_rsa' },
+      'Edit · ok',
+    ],
+    [
       'un $ au milieu d’un chemin du dépôt',
       { outil: 'Read', cible: 'app/routes/$id.tsx' },
       'Read · app/routes/$id.tsx · ok',

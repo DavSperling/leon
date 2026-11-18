@@ -413,6 +413,29 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     ]);
   });
 
+  it('un fichier dont l’écriture est en ERROR n’est pas un fichier écrit, comme l’appel en erreur des coulisses', () => {
+    const contenu = [
+      appels(
+        1,
+        ['write_to_file', { TargetFile: `${ESSAI}/refuse.ts`, CodeContent: 'x' }],
+        ['write_to_file', { TargetFile: `${ESSAI}/ecrit.ts`, CodeContent: 'x' }],
+      ),
+      resultat(2, 'ERROR', 'refusée'),
+      resultat(3, 'DONE'),
+      appels(4, ['replace_file_content', { TargetFile: `${ESSAI}/coupe.ts` }]), // sans étape de résultat
+    ].join('\n');
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).fichiers).toEqual([
+      'ecrit.ts',
+      'coupe.ts',
+    ]);
+    expect(
+      extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).map((bloc) =>
+        bloc.role === 'appel_outil' ? `${bloc.cible} · ${bloc.statut}` : bloc.role,
+      ),
+    ).toEqual(['refuse.ts · erreur', 'ecrit.ts · ok', 'coupe.ts · sans_resultat']);
+  });
+
   it('une étape de source SYSTEM entre un appel et son résultat n’en est pas le résultat', () => {
     const contenu = [
       appels(

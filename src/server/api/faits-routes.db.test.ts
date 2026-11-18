@@ -399,6 +399,35 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
+  it('ne garde que les fichiers relatifs au dépôt, comme les cibles des coulisses', async () => {
+    const { paul, paulToken } = await setup();
+    const fichiers = [
+      'src/a.ts',
+      'app/routes/$id.tsx',
+      '/Users/x/secret.txt',
+      '"/Users/x/secret.txt"',
+      "'/Users/x/secret.txt'",
+      ' /Users/x/secret.txt',
+      '~/.ssh/id_rsa',
+      '$HOME/.ssh/config',
+      '%USERPROFILE%\\x',
+      'C:\\Users\\x.txt',
+      'file:///Users/x/.ssh/id_ed25519',
+      '../autre/x.ts',
+      'src/../../autre/x.ts',
+      'src/a\nb.ts',
+    ];
+    const body = { ...validBody(), faits: facts({ fichiers }) };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    const [stored] = await storedMetadata(paul, body.external_id);
+    expect(stored?.metadata).toMatchObject({
+      faits: { fichiers: ['src/a.ts', 'app/routes/$id.tsx'] },
+    });
+  });
+
   it('réapplique la borne de 200 caractères après le masque, qui allonge le texte', async () => {
     const { paul, paulToken } = await setup();
     const url = ' postgres://u:p@h/db';

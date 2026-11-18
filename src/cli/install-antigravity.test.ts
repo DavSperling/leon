@@ -102,6 +102,8 @@ describe('installAntigravityHooks', () => {
     expect(text).toContain(
       "the messages Antigravity writes itself in your place, such as a subagent's report, labeled as written by Antigravity, not by you;",
     );
+    // Amendé le 18/11 : les faits relèvent aussi les commits et les PR, le texte les dit comme celui de Codex.
+    expect(text).toContain('Git (branch, commits, pull requests)');
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).

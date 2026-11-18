@@ -1941,6 +1941,10 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
 ### T62 · Refaire la mesure (après T61)
 
+> **Amendé le 18/11 (décision d'Amos) :** la mesure se refait avec le même outil, le même modèle et le même effort que T38, notés dans l'annexe 07 (T38 du plan mère, amendé le 18/11). Sans ça, un score qui monte pourrait venir d'un meilleur modèle et non du rêve.
+> - Si ce modèle n'est plus disponible, la référence sans rêve se refait aussi avec le nouveau modèle, dans les mêmes cas, et seule cette nouvelle référence se compare au rêve. L'annexe le dit. Effort : 0,5 j de plus dans ce cas seulement.
+> - L'annexe 07 note le modèle, sa version et l'effort à côté de chaque résultat.
+
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/07-mesure-ancrage.md`.
 
 **Fait quand :** les 5 tâches gardées par T38 du plan mère sont refaites, dans les mêmes cas, le rêve en marche depuis au moins 14 jours. Les tokens, la durée et la justesse sont notés dans l'annexe 07, à côté de la référence sans rêve, avec les compteurs de T44 et T53. Effort : 0,5 j.

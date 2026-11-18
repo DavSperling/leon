@@ -1066,6 +1066,11 @@ Contrat : `api-contract.db.test.ts`.
 > - relever les compteurs côté serveur, sans texte ni id de fil, que posent T53 et T44 du nouveau plan : les versions écrites, les écritures abandonnées pour conflit, les restaurations, les états masqués par la règle de lecture. Relever aussi la part de sessions externes (A14 du nouveau plan, tranchée le 05/11, T63) ;
 > - effort du lot 11 : 1 j devient 1,5 j.
 
+> **Amendé le 18/11 (décision d'Amos) :** le modèle se note à chaque mesure. L'article d'Anthropic « The components of agent memory » (6/11) montre que la même mémoire aide beaucoup un modèle récent et presque pas un ancien : le gain dépend du modèle autant que de la mémoire.
+> - Pour chaque tâche et chaque cas, l'annexe 07 note l'outil et sa version (par exemple Claude Code 2.1.322), le modèle et sa version (par exemple `claude-opus-5-5`) et l'effort de raisonnement.
+> - Tous les cas d'une même tâche tournent avec le même outil, le même modèle et le même effort. Sinon, l'écart viendrait aussi du modèle, et pas seulement de la mémoire.
+> - Les 5 tâches gardées pour T62 notent aussi ce réglage, pour qu'il soit repris tel quel.
+
 **Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/07-mesure-ancrage.md` (nouveau).
 
 **Fait quand :** 10 tâches réelles, dans trois cas : sans bloc, avec le bloc, avec le bloc et le rappel au prompt. Amos les note sans savoir le cas, sur une grille : juste, faux, ou ancré sur un résumé périmé. La conclusion fixe le budget retenu et la recommandation pour T36.

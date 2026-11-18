@@ -1010,6 +1010,48 @@ describe('antigravityReportTurns', () => {
     expect(antigravityReportTurns(FICHIER, sousAgents(named, transcripts))).toEqual([]);
   });
 
+  it('dans transcript.jsonl le Recipient est entre guillemets : le message à la session donne un tour, celui à un autre aucun', () => {
+    // shortcut déjà noté dans calls() : le Message garde ses guillemets, ici tel quel.
+    expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${S}"`) }))).toEqual([
+      '"Trouvé."',
+    ]);
+    expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${N}"`) }))).toEqual([]);
+  });
+
+  it('une étape sans step_index prend le rang de sa ligne dans l’identifiant', () => {
+    const sansIndex = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+      }),
+      step({
+        type: 'PLANNER_RESPONSE',
+        status: 'DONE',
+        tool_calls: [{ name: 'send_message', args: { Message: 'Trouvé.', Recipient: S } }],
+      }),
+      resultat(2),
+      fin(3),
+    ].join('\n');
+
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: sansIndex })).map(
+        ({ external_id }) => external_id,
+      ),
+    ).toEqual([`${S}:${R}:1:0`]);
+  });
+
+  it('un autre outil que send_message, même avec un Recipient et un Message, ne donne ni tour ni bloc rapport', () => {
+    const autre = sousAgent(['write_to_file', { Message: 'Pas un message.', Recipient: S }]);
+    const sa = sousAgents({ [S]: [R] }, { [R]: autre });
+
+    expect(antigravityReportTurns(FICHIER, sa)).toEqual([]);
+    const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, sa);
+    expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+      false,
+    );
+  });
+
   describe('la préparation du texte', () => {
     const avec = (Message: string) => textes(sousAgents({ [S]: [R] }, { [R]: ecrit(Message) }));
 

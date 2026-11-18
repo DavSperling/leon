@@ -156,6 +156,23 @@ describe('buildMenus', () => {
     expect(en?.href).toBe('/?q=type%3A%22tool+call%22+pnpm');
     expect(parseQuery(queryOf(en?.href ?? ''), NOW).filters).toEqual({ roles: ['appel_outil'] });
   });
+
+  // Une nature et un rôle se croisent : `type:ticket type:appel_outil` ne rend jamais rien (un ticket n'a pas d'appels
+  // d'outils). Chaque entrée du menu Type retire donc l'autre sorte ; deux natures, elles, s'additionnent toujours.
+  it('ne croise jamais une nature et les appels d’outils', () => {
+    const type = (q: string, locale = 'fr') =>
+      buildMenus(q, locale).find((m) => m.name === 'type')?.options ?? [];
+
+    expect(type('type:ticket x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+x');
+    expect(type('type:ticket x', 'en').at(-1)?.href).toBe('/?q=type%3A%22tool+call%22+x');
+    expect(type('type:appel_outil x').find((o) => o.label === 'Ticket')).toMatchObject({
+      active: false,
+      href: '/?q=type%3Aticket+x',
+    });
+    expect(type('type:ticket x').find((o) => o.label === 'Réunion')?.href).toBe(
+      '/?q=type%3Areunion+type%3Aticket+x',
+    );
+  });
 });
 
 // Les menus, les exemples et l'aide de la page d'accueil écrivent des filtres (`outil:github`, `type:ticket`,

@@ -156,19 +156,34 @@ const PERIODS_EN: Array<{ value: string; label: string }> = [
   { value: '12mo', label: 'Last 12 months' },
 ];
 
-// Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic.
-function option(q: string, key: FilterKey, value: string, label: string): FilterOption {
+// Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic. Une
+// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser).
+function option(q: string, key: FilterKey, value: string, label: string, base = q): FilterOption {
   const active = hasFilter(q, key, value);
   return {
     label,
     active,
-    href: searchHref({ q: active ? withoutFilter(q, key, value) : withFilter(q, key, value) }),
+    href: searchHref({ q: active ? withoutFilter(q, key, value) : withFilter(base, key, value) }),
   };
+}
+
+// La requête sans ses `type:` d'une sorte (`natures` ou `roles`). La date ne compte pas pour `type:`.
+function withoutTypes(q: string, kind: 'natures' | 'roles'): string {
+  return filterTokens(q)
+    .filter(
+      (token) =>
+        canonicalKey(token.key) === 'type' &&
+        parseQuery(`type:"${token.value}"`, new Date()).filters[kind] !== undefined,
+    )
+    .reduce((rest, token) => withoutFilter(rest, token.key, token.value), q);
 }
 
 // En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
 export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
   const en = locale === 'en';
+  // Une nature et les appels d'outils se croisent (un ticket n'a jamais d'appels) : chaque entrée retire l'autre sorte.
+  const noRoles = withoutTypes(q, 'roles');
+  const noNatures = withoutTypes(q, 'natures');
   return [
     {
       name: 'outil',
@@ -183,12 +198,24 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
       options: [
         ...OFFERED_NATURES.map((nature) =>
           en
-            ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
-            : option(q, 'type', nature, NATURE_LABELS[nature]),
+            ? option(
+                q,
+                'type',
+                NATURE_LABELS_EN[nature].toLowerCase(),
+                NATURE_LABELS_EN[nature],
+                noRoles,
+              )
+            : option(q, 'type', nature, NATURE_LABELS[nature], noRoles),
         ),
         en
-          ? option(q, 'type', BACKSTAGE_ROLE_NAMES_EN.appel_outil, ROLE_LABELS_EN.appel_outil)
-          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil),
+          ? option(
+              q,
+              'type',
+              BACKSTAGE_ROLE_NAMES_EN.appel_outil,
+              ROLE_LABELS_EN.appel_outil,
+              noNatures,
+            )
+          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil, noNatures),
       ],
     },
     {

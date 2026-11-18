@@ -108,7 +108,7 @@ describe('installAntigravityHooks', () => {
     expect(text).toContain('(.pb) and its databases are never read');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).
     expect(text).toContain(
-      'Each conversation is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+      'Each conversation can be read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
     );
     expect(text).not.toContain('private');
     expect(text).toContain(CATCH_UP_WHEN);

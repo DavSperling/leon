@@ -157,8 +157,8 @@ Commands:
   note <text>          Save a note of the agent to Leon, or the next version of one. Only with the \`noter\`
                        consent of that tool in ~/.leon/accord.json: then the text, with secrets masked (4,000
                        characters at most), the project, the tool, the session and the consents of that tool go to
-                       your Leon server. The note is read like your sessions (by you and, on the Leon website, by the
-                       managers above you); Leon's search finds it, and it is never put as is in the context of a
+                       your Leon server. The note can be read like your sessions (by you and, on the Leon website,
+                       by the managers above you); Leon's search finds it, and it is never put as is in the context of a
                        session. Prints the id and the version number, writes nothing on disk.
                        The start block of a session gives this command with --tool and --session filled in, and
                        -- before the text, so that a text starting with a dash is not read as an option

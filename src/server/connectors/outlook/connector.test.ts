@@ -87,9 +87,11 @@ describe('outlookConnector : configuration', () => {
 describe('outlookConnector : catalogue', () => {
   const item = listCatalog('fr').find((entry) => entry.id === 'outlook');
 
-  it('est disponible, sans clé collée, et dit que le texte est lu par son auteur et ses managers', () => {
+  it('est disponible, sans clé collée, et dit que le texte peut être lu par son auteur et ses managers', () => {
     expect(item).toMatchObject({ available: true, keyAccepted: false, fields: [] });
-    expect(item?.warning).toContain('par vous et, sur le site de Leon');
+    expect(item?.warning).toContain(
+      'peut être lu, comme une conversation, par vous et, sur le site de Leon',
+    );
     expect(item?.warning).toContain('par vos managers en remontant');
   });
 

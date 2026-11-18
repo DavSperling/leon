@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T14:24:33.457Z",
+  "reponse": "## What changed\n- Rachel is closing Zest Grocers’ Zendesk ticket for the 12 Nov incident. [6]\n- PR #245 merged, bumping Go to 1.23.4 in CI and the Dockerfile. [4]\n\n## What is still open\n- Maya says she’ll approve #247 once CI passes and wants the Orbitly loss count before merge for Thursday’s customer call: you estimated 1.18M legitimate events dropped, about 8.1% of iOS volume. [1][2] After #247 deploys, your follow-up is to replay from 13 Nov for Orbitly and Zest’s pilot (3,812 events), then verify Orbitly’s dedupe drops stay near zero. [1]\n- You’re on the hook to add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Noa presents the final postmortem on Friday, 20 Nov. [3][7]\n- You drafted a note asking the iOS team to restore UUIDs in SDK 3.2.1. The #247 key separates devices, but session counters can still collide across sessions on the same device. [1][2]",
+  "rendu": "## What changed\n- Rachel is closing Zest Grocers’ Zendesk ticket for the 12 Nov incident. [6]\n- PR #245 merged, bumping Go to 1.23.4 in CI and the Dockerfile. [4]\n\n## What is still open\n- Maya says she’ll approve #247 once CI passes and wants the Orbitly loss count before merge for Thursday’s customer call: you estimated 1.18M legitimate events dropped, about 8.1% of iOS volume. [1][2] After #247 deploys, your follow-up is to replay from 13 Nov for Orbitly and Zest’s pilot (3,812 events), then verify Orbitly’s dedupe drops stay near zero. [1]\n- You’re on the hook to add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Noa presents the final postmortem on Friday, 20 Nov. [3][7]\n- You drafted a note asking the iOS team to restore UUIDs in SDK 3.2.1. The #247 key separates devices, but session counters can still collide across sessions on the same device. [1][2]",
+  "mesures": {
+    "mots": 150,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4523,
+    "sortie": 420,
+    "reflexion": 166,
+    "cache": 0,
+    "cout": 0.015506
+  },
+  "cout": 0.015506,
+  "latenceMs": 5226,
+  "fournisseur": "Azure"
+}

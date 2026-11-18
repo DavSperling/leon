@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:30:14.604Z",
+  "reponse": "## Où j'en suis\nBranchement de l'API d'étiquettes TransAlp sur `hugo/transalp-etiquettes` : client OAuth2, ZPL par défaut avec correctif `^CI28` (accents validés par Karim sur la Zebra), et `choix.ts` qui n'active TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre), Rapidis gardant le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La PR #91 est poussée, toujours en brouillon, en attente de la relecture de Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 en brouillon, poussée sur `hugo/transalp-etiquettes` (commits `3e8b1d0`, `a90c4f7`), relecture de Julien en attente (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Attendre la relecture de Julien sur la PR #91 ; la bascule Lyon/Paris est fixée au mardi 1er décembre, la clé de prod sera mise dans les secrets par Julien, rien ne s'active avant (source: ses-tr-2, src-slack-julien)\n- [prochaine-étape] Faire le point avec l'équipe après les soldes sur le retrait de Rapidis (prévu au 15 janvier pour le reste de la France et les +30 kg) (source: ses-tr-2, src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : le format n'est disponible qu'en recette et en production ; les essais ont donc été faits sur la recette (source: ses-tr-1, ses-tr-2, src-mail-transalp)\n- [essai-raté] Accents en bougie à l'impression (« SaÃ´ne chÃªne ») : le ZPL de TransAlp ne déclare pas l'encodage ; corrigé en insérant `^CI28` après `^XA` dans `zpl.ts`, confirmé par Karim (source: ses-tr-2)\n- [essai-raté] Auth par en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [décision] Rapidis reste en secours et prend tout colis de plus de 30 kg, même à Lyon/Paris ; aucune résiliation (source: h1-03)\n- [décision] Basculer le mardi 1er décembre (Lyon et Paris seulement), pas le 23 ; Karim doit d'abord former l'équipe sur le nouveau poste d'impression (source: src-slack-julien, h2-07)\n- [décision] Rapidis conservé jusqu'au 15 janvier pour le reste de la France et les +30 kg, point après les soldes ; pas de tarif Premium, le passage du mail de TransAlp est ignoré (source: h2-09, src-slack-julien)",
+  "rendu": "## Où j'en suis\nBranchement de l'API d'étiquettes TransAlp sur `hugo/transalp-etiquettes` : client OAuth2, ZPL par défaut avec correctif `^CI28` (accents validés par Karim sur la Zebra), et `choix.ts` qui n'active TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre), Rapidis gardant le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La PR #91 est poussée, toujours en brouillon, en attente de la relecture de Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 en brouillon, poussée sur `hugo/transalp-etiquettes` (commits `3e8b1d0`, `a90c4f7`), relecture de Julien en attente (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Attendre la relecture de Julien sur la PR #91 ; la bascule Lyon/Paris est fixée au mardi 1er décembre, la clé de prod sera mise dans les secrets par Julien, rien ne s'active avant (de: connecteur, agent; source: ses-tr-2, src-slack-julien)\n- [prochaine-étape] Faire le point avec l'équipe après les soldes sur le retrait de Rapidis (prévu au 15 janvier pour le reste de la France et les +30 kg) (de: connecteur, agent; source: ses-tr-2, src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : le format n'est disponible qu'en recette et en production ; les essais ont donc été faits sur la recette (de: connecteur, agent; source: ses-tr-1, ses-tr-2, src-mail-transalp)\n- [essai-raté] Accents en bougie à l'impression (« SaÃ´ne chÃªne ») : le ZPL de TransAlp ne déclare pas l'encodage ; corrigé en insérant `^CI28` après `^XA` dans `zpl.ts`, confirmé par Karim (de: agent; source: ses-tr-2)\n- [essai-raté] Auth par en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [décision] Rapidis reste en secours et prend tout colis de plus de 30 kg, même à Lyon/Paris ; aucune résiliation (de: toi; source: h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1857,
+    "lignesRetirees": 2,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3844,
+    "sortie": 710,
+    "reflexion": 1,
+    "cache": 0,
+    "cout": 0.00085472
+  },
+  "cout": 0.00085472,
+  "latenceMs": 3276,
+  "fournisseur": "Particle AI"
+}

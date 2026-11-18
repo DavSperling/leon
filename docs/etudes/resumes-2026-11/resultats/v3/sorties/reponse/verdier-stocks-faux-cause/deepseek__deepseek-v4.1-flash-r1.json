@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:35.090Z",
+  "reponse": "Deux causes distinctes apparaissent. La synchro décrémentait le stock deux fois quand un produit a deux emplacements, car chaque webhook inventory_levels/update était traité séparément [1] ; les logs montrent le même updated_at avec deux location_id [2]. Pour la variante Saône chêne clair passée en stock négatif, le ticket #91 demande si c'est lié à la PR #87 [3], mais un message Slack du 18 novembre l'écarte : l'import nocturne CSV aurait écrasé le stock avec le fichier de la veille avant deux commandes [5]. Un client se plaint d'un délai annoncé après une commande affichée en stock [4].",
+  "rendu": "Deux causes distinctes apparaissent. La synchro décrémentait le stock deux fois quand un produit a deux emplacements, car chaque webhook inventory_levels/update était traité séparément [1] ; les logs montrent le même updated_at avec deux location_id [2]. Pour la variante Saône chêne clair passée en stock négatif, le ticket #91 demande si c'est lié à la PR #87 [3], mais un message Slack du 18 novembre l'écarte : l'import nocturne CSV aurait écrasé le stock avec le fichier de la veille avant deux commandes [5]. Un client se plaint d'un délai annoncé après une commande affichée en stock [4].",
+  "mesures": {
+    "mots": 96,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1167,
+    "sortie": 394,
+    "reflexion": 229,
+    "cache": 0,
+    "cout": 0.00081123
+  },
+  "cout": 0.00081123,
+  "latenceMs": 2394,
+  "fournisseur": "Crusoe"
+}

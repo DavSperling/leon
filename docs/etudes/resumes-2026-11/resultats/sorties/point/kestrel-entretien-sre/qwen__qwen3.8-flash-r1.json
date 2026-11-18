@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:59.379Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4278,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 1024,
+    "cout": 0.004264484
+  },
+  "cout": 0.004264484,
+  "latenceMs": 152740,
+  "fournisseur": "Alibaba"
+}

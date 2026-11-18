@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:02.339Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif de la Saône est identifiée : les webhooks `orders/create` et `orders/updated` décrémentaient un stock que Shopify décrémente déjà. Le décrément a été retiré des webhooks, la synchro de nuit écrit désormais une valeur absolue (`inventorySetQuantities`), le dédoublonnage est retiré, le seuil d'alerte passé à 3, `syncStock` renommé `synchroniserStocks`, la Saône remise à 0 côté Shopify, et la config de l'app déployée sans `orders/updated`. La PR #87, Hugo en relecteur, est fusionnée.\n\n- [en-cours] La Saône reste à 0 et ne doit pas être remise en vente avant son retour de chez Bois & Fils le 2 décembre ; la synchro de nuit la remettra à jour ensuite\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues #1041, #1043, #1044\n- [essai-raté] Dédoublonnage par `X-Shopify-Webhook-Id` : les webhooks `create` et `updated` ont des ids différents, le test « une commande ne décrémente le stock qu'une fois » échouait, et ça ne réglait pas la cause\n- [décision] Ne plus toucher au stock dans les webhooks, le script de nuit corrige en valeur absolue, sans dédoublonnage (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Remettre la Saône à 0 dans Shopify (source: t15)\n- [décision] Pas de précommande sur la Saône (source: t17)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config de l'app (source: t19)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône est identifiée : les webhooks `orders/create` et `orders/updated` décrémentaient un stock que Shopify décrémente déjà. Le décrément a été retiré des webhooks, la synchro de nuit écrit désormais une valeur absolue (`inventorySetQuantities`), le dédoublonnage est retiré, le seuil d'alerte passé à 3, `syncStock` renommé `synchroniserStocks`, la Saône remise à 0 côté Shopify, et la config de l'app déployée sans `orders/updated`. La PR #87, Hugo en relecteur, est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] La Saône reste à 0 et ne doit pas être remise en vente avant son retour de chez Bois & Fils le 2 décembre ; la synchro de nuit la remettra à jour ensuite\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues #1041, #1043, #1044\n- [essai-raté] Dédoublonnage par `X-Shopify-Webhook-Id` : les webhooks `create` et `updated` ont des ids différents, le test « une commande ne décrémente le stock qu'une fois » échouait, et ça ne réglait pas la cause\n- [décision] Ne plus toucher au stock dans les webhooks, le script de nuit corrige en valeur absolue, sans dédoublonnage (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1328,
+    "decisions": 2,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3849,
+    "sortie": 1304,
+    "reflexion": 848,
+    "cache": 0,
+    "cout": 0.00134797
+  },
+  "cout": 0.00134797,
+  "latenceMs": 9100,
+  "fournisseur": "CoreWeave"
+}

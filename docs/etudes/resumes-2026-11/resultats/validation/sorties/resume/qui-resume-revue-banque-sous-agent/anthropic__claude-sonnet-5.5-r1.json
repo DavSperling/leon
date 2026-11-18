@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-revue-banque-sous-agent",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:43.137Z",
+  "reponse": "## Où j'en suis\nCorvane oversight package (due Fri Nov 27 to Kofi Mensah) is almost complete: complaints log (214 complaints, built from monthly exports after the 1,000-result cap), full 41-seller high-risk list with PII stripped, Nov 10 incident disclosure, and a seeded 25-item OFAC sample are done. AML policy v3.1 plus the v3.2 draft are ready to send. The cover letter has not been started.\n\n- [en-cours] Incident disclosure is drafted but its root cause stays preliminary, since postmortem QPAY-2291 is still a draft.\n- [prochaine-étape] Confirm with Rotem (KYC ops) that refreshing the 6 expired EDD reviews by 2026-12-11 is realistic.\n- [prochaine-étape] Write the cover letter, mentioning the v3.1 plus v3.2 draft submission.\n- [prochaine-étape] Do a final read of the whole package before Nov 27.\n- [essai-raté] The single export hit the Zendesk Search API cap of 1,000 tickets, so it was discarded and redone month by month.\n- [décision] Send all 41 high-risk sellers, with the 6 expired ones flagged, never a filtered list (source: t11)\n- [décision] Disclose every incident affecting settlement, with no $50k threshold (source: t17)",
+  "rendu": "## Où j'en suis\nCorvane oversight package (due Fri Nov 27 to Kofi Mensah) is almost complete: complaints log (214 complaints, built from monthly exports after the 1,000-result cap), full 41-seller high-risk list with PII stripped, Nov 10 incident disclosure, and a seeded 25-item OFAC sample are done. AML policy v3.1 plus the v3.2 draft are ready to send. The cover letter has not been started.\n\n- [en-cours] Incident disclosure is drafted but its root cause stays preliminary, since postmortem QPAY-2291 is still a draft.\n- [prochaine-étape] Confirm with Rotem (KYC ops) that refreshing the 6 expired EDD reviews by 2026-12-11 is realistic.\n- [prochaine-étape] Write the cover letter, mentioning the v3.1 plus v3.2 draft submission.\n- [prochaine-étape] Do a final read of the whole package before Nov 27.\n- [essai-raté] The single export hit the Zendesk Search API cap of 1,000 tickets, so it was discarded and redone month by month.\n- [décision] Send all 41 high-risk sellers, with the 6 expired ones flagged, never a filtered list (source: t11)\n- [décision] Disclose every incident affecting settlement, with no $50k threshold (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1144,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5224,
+    "sortie": 463,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015078
+  },
+  "cout": 0.015078,
+  "latenceMs": 4083,
+  "fournisseur": "Amazon Bedrock"
+}

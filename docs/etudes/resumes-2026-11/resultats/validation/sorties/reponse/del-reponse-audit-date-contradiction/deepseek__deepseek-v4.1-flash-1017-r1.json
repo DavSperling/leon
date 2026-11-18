@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-audit-date-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:35.480Z",
+  "reponse": "L'audit de qualification RGE est fixé au mardi 8 décembre 2026, de 8h30 à 16h, sur le chantier Le Floch à Rezé [3], confirmé par mail avec un appel de préparation en visio le 20 novembre [1]. Mais un message Slack plus récent fait état d'un empêchement de l'auditeur ce jour-là : l'audit passerait au jeudi 10 décembre, même chantier, sous réserve d'une confirmation écrite de Laure Bihan [2]. Le créneau du 8/12 resterait à bloquer dans le planning en attendant [4].",
+  "rendu": "L'audit de qualification RGE est fixé au mardi 8 décembre 2026, de 8h30 à 16h, sur le chantier Le Floch à Rezé [3], confirmé par mail avec un appel de préparation en visio le 20 novembre [1]. Mais un message Slack plus récent fait état d'un empêchement de l'auditeur ce jour-là : l'audit passerait au jeudi 10 décembre, même chantier, sous réserve d'une confirmation écrite de Laure Bihan [2]. Le créneau du 8/12 resterait à bloquer dans le planning en attendant [4].",
+  "mesures": {
+    "mots": 81,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1161,
+    "sortie": 565,
+    "reflexion": 421,
+    "cache": 512,
+    "cout": 0.000381386
+  },
+  "cout": 0.000381386,
+  "latenceMs": 3412,
+  "fournisseur": "Cohere"
+}

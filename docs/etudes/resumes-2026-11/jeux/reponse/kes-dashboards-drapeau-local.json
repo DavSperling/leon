@@ -1,0 +1,146 @@
+{
+  "id": "kes-dashboards-drapeau-local",
+  "titre": "Recherche « comment activer les nouveaux tableaux de bord en local » : la méthode d'un vieux message Slack est remplacée par une PR fusionnée ; la réponse doit donner la méthode actuelle",
+  "langue": "en",
+  "entree": {
+    "recherche": "how do I turn on the new dashboards locally",
+    "resultats": [
+      {
+        "id": "sl-frontend-1028",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#frontend",
+        "url": null,
+        "date": "2026-10-28T13:10:00Z",
+        "passages": [
+          {
+            "id": "ps4",
+            "auteur": "Tom Becker",
+            "date": "2026-10-28T13:10:00Z",
+            "texte": "To try the new dashboards locally: set FEATURE_FLAGS=new_dash in your .env.local and restart vite. Ping me if the tiles stay empty, the seed data is a bit thin."
+          }
+        ]
+      },
+      {
+        "id": "gh-platform-447",
+        "kind": "github",
+        "nature": "ticket",
+        "titre": "kestrel-analytics/platform#447 Rename flag new_dash → dashboards_v2, serve flags from the API",
+        "url": "https://github.com/kestrel-analytics/platform/pull/447",
+        "date": "2026-11-13T17:40:00Z",
+        "passages": [
+          {
+            "id": "pg2",
+            "auteur": "tom-becker",
+            "date": "2026-11-13T11:02:00Z",
+            "texte": "Flags are now served by the API (GET /api/flags) instead of the build-time env.\n- new_dash is renamed dashboards_v2\n- locally: run `make dev-flags FLAGS=dashboards_v2` to enable it for the dev workspace\n- FEATURE_FLAGS in .env.local is ignored from now on"
+          },
+          {
+            "id": "pg3",
+            "auteur": "daniel-levi",
+            "date": "2026-11-13T17:40:00Z",
+            "texte": "daniel-levi approved these changes. tom-becker merged commit e41a7d0 into main."
+          }
+        ]
+      },
+      {
+        "id": "cu-priya-1116",
+        "kind": "cursor",
+        "nature": "conversation",
+        "titre": "dashboards v2 not showing locally",
+        "url": null,
+        "date": "2026-11-16T08:25:00Z",
+        "passages": [
+          {
+            "id": "pc2",
+            "auteur": "Priya Shah",
+            "date": "2026-11-16T08:21:00Z",
+            "role": "user",
+            "texte": "dashboards v2 doesnt show up locally even with FEATURE_FLAGS=new_dash in .env.local, what am i missing"
+          },
+          {
+            "id": "pc3",
+            "date": "2026-11-16T08:25:00Z",
+            "role": "assistant",
+            "texte": "Since #447 the front reads flags from /api/flags, so FEATURE_FLAGS is ignored. Run `make dev-flags FLAGS=dashboards_v2` (the API must be running), then hard-reload the page. You can check the result with `curl localhost:8000/api/flags`."
+          }
+        ]
+      },
+      {
+        "id": "no-dash-rollout",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Dashboards v2 – rollout plan",
+        "url": null,
+        "date": "2026-11-14T09:00:00Z",
+        "passages": [
+          {
+            "id": "pn4",
+            "auteur": "Priya Shah",
+            "date": "2026-11-14T09:00:00Z",
+            "texte": "Flag: dashboards_v2. Rollout: internal workspaces Nov 16, Fernhill + Orbitly beta Nov 30, general availability in January. Kill switch: turn the flag off in the admin, no deploy needed."
+          }
+        ]
+      },
+      {
+        "id": "lin-kes-470",
+        "kind": "linear",
+        "nature": "ticket",
+        "titre": "KES-470 Dashboards v2: empty states for new workspaces",
+        "url": "https://linear.app/kestrel/issue/KES-470",
+        "date": "2026-11-15T12:00:00Z",
+        "passages": [
+          {
+            "id": "pl3",
+            "auteur": "Tom Becker",
+            "date": "2026-11-15T12:00:00Z",
+            "texte": "New workspaces with no events show a blank grid. Add an empty state with a link to the SDK setup guide. Design in Figma, frame \"Empty / first run\"."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Pour activer les nouveaux tableaux de bord en local, lancer `make dev-flags FLAGS=dashboards_v2`.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le drapeau s'appelle désormais dashboards_v2 (renommé depuis new_dash).",
+        "poids": 2
+      },
+      {
+        "id": "f3",
+        "texte": "FEATURE_FLAGS dans .env.local est ignoré : les drapeaux sont servis par l'API depuis la PR #447.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "La PR #447 est fusionnée.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Conseiller FEATURE_FLAGS=new_dash dans .env.local (et redémarrer vite) comme méthode actuelle."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que le drapeau s'appelle toujours new_dash."
+      }
+    ],
+    "pieges": [
+      "Périmé : le message Slack d'octobre donne une méthode que la PR fusionnée du 13 novembre remplace explicitement ; ce n'est pas une contradiction à signaler, c'est une méthode abandonnée.",
+      "Le premier résultat est le périmé.",
+      "Croiser : la commande est dans la PR et dans la session Cursor, qui confirme que l'ancienne méthode ne marche plus."
+    ],
+    "cites": [
+      2,
+      3
+    ]
+  }
+}

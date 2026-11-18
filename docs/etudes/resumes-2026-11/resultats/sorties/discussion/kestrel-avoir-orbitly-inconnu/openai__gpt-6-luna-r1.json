@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.842Z",
+  "reponse": "I don’t know the amount owed: Orbitly’s VP claimed a credit under section 7 of the MSA, but the signed MSA’s custom credit terms aren’t in the records I found. [2][5] The outage lasted 3 hours 40 minutes on Nov 12; I can’t calculate a credit from that duration alone without the contract terms. [2]",
+  "rendu": "I don’t know the amount owed: Orbitly’s VP claimed a credit under section 7 of the MSA, but the signed MSA’s custom credit terms aren’t in the records I found. [2][5] The outage lasted 3 hours 40 minutes on Nov 12; I can’t calculate a credit from that duration alone without the contract terms. [2]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 11190,
+    "sortie": 372,
+    "reflexion": 150,
+    "cache": 4612,
+    "cout": 0.001054145
+  },
+  "latenceMs": 7544,
+  "fournisseur": "OpenAI",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits last week's outage contract owed VP settled SLA service credits\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"slack-deal-desk-orbitly\"}",
+    "chercher {\"requete\":\"Orbitly signed MSA 2024 service credit SLA monthly fee uptime contract credit terms\",\"depuis\":\"2024-01-01\"}"
+  ],
+  "cout": 0.001054145
+}

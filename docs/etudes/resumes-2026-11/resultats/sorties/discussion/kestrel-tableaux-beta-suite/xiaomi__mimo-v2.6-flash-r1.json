@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:01.097Z",
+  "reponse": "Phase 1 (chart builder + saved views) opens its design-partner beta on **Wednesday, December 9**, for 5 customers — Orbitly, Zest Grocers and three others [6][11].\n\nBeyond that list:\n- No date is set for general availability; customers who ask are told not to expect access, with a waitlist planned for January [11].\n- Pinecrest was explicitly declined for the beta, \"not before GA\" [11].\n\nI didn't find a stated GA date — I searched the dashboards spec, the Linear project updates and the #product discussions for a release date.",
+  "rendu": "Phase 1 (chart builder + saved views) opens its design-partner beta on **Wednesday, December 9**, for 5 customers — Orbitly, Zest Grocers and three others [6][11].\n\nBeyond that list:\n- No date is set for general availability; customers who ask are told not to expect access, with a waitlist planned for January [11].\n- Pinecrest was explicitly declined for the beta, \"not before GA\" [11].\n\nI didn't find a stated GA date — I searched the dashboards spec, the Linear project updates and the #product discussions for a release date.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6929,
+    "sortie": 365,
+    "reflexion": 169,
+    "cache": 2944,
+    "cout": 0.0006683432
+  },
+  "latenceMs": 10457,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"dashboards roadmap date livraison phase pilote clients \\\"new dashboards\\\" when\"}",
+    "chercher {\"requete\":\"dashboards module 1 GA disponibilité clients release date première phase\"}"
+  ],
+  "cout": 0.0006683432
+}

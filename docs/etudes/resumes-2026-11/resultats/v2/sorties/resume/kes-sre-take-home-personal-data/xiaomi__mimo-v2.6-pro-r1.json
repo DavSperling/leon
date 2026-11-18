@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:23:30.163Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home for the candidate is complete and lives in the new private repo `kestrel-analytics/sre-take-home`: docker-compose stack with `flaky-svc` built from source (multi-arch, no prebuilt image), a planted broken alert rule (renamed metric), a connection leak, and an over-broad IAM policy, plus `RUBRIC.md` (4 areas, 0–3 each). `hiring/` was removed from the infra branch working tree (uncommitted) and no PR was opened there. Nothing was sent to the candidate.\n\n- [prochaine-étape] Maya sends the exercise herself after the Thursday 4pm Tel Aviv call, then invites the candidate to the repo\n- [décision] No Kubernetes, Terraform + compose only, 3 hours max (source: t03)\n- [décision] Compose builds `flaky-svc` from source, no prebuilt image (source: t06)\n- [décision] No pass threshold: rubric scores are input for the panel (Maya + Noa), not a cut-off (source: t10)\n- [décision] Exercise lives in its own private repo, and no PR is opened in the infra repo for it (source: t14)\n- [décision] No email to anyone: Maya sends the exercise herself (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home for the candidate is complete and lives in the new private repo `kestrel-analytics/sre-take-home`: docker-compose stack with `flaky-svc` built from source (multi-arch, no prebuilt image), a planted broken alert rule (renamed metric), a connection leak, and an over-broad IAM policy, plus `RUBRIC.md` (4 areas, 0–3 each). `hiring/` was removed from the infra branch working tree (uncommitted) and no PR was opened there. Nothing was sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Maya sends the exercise herself after the Thursday 4pm Tel Aviv call, then invites the candidate to the repo\n- [décision] No Kubernetes, Terraform + compose only, 3 hours max (source: t03)\n- [décision] Compose builds `flaky-svc` from source, no prebuilt image (source: t06)\n- [décision] No pass threshold: rubric scores are input for the panel (Maya + Noa), not a cut-off (source: t10)\n- [décision] Exercise lives in its own private repo, and no PR is opened in the infra repo for it (source: t14)\n- [décision] No email to anyone: Maya sends the exercise herself (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1182,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3859,
+    "sortie": 437,
+    "reflexion": 130,
+    "cache": 0,
+    "cout": 0.00154414125
+  },
+  "cout": 0.00154414125,
+  "latenceMs": 9554,
+  "fournisseur": "GMICloud"
+}

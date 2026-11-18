@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:09:01.023Z",
+  "reponse": "The upgrade was postponed — the current plan is:\n\n- **Maintenance window: Saturday December 5, 02:00–05:00 UTC** (production cutover of the main database from Postgres 13 to 17), per the updated KES-398 ticket, approved by Maya Cohen [2]. This supersedes the earlier Nov 21 date [3], which was pushed after the Nov 12 sync because Maya didn't want to stack risk right before the Fernhill go-live [4].\n- **Staging rehearsal:** Friday Nov 27 [2]\n- **Customer notice (status page + in-app banner):** Saturday Nov 28 [2]\n- **Migration freeze:** from Thursday Dec 3 [2]\n\nNote: the Notion runbook hasn't been updated with the new date — Noa Friedman says the Linear ticket KES-398 is the reference for the maintenance window [2], so treat that as the source of truth for your customer notice and support macro.",
+  "rendu": "The upgrade was postponed — the current plan is:\n\n- **Maintenance window: Saturday December 5, 02:00–05:00 UTC** (production cutover of the main database from Postgres 13 to 17), per the updated KES-398 ticket, approved by Maya Cohen [2]. This supersedes the earlier Nov 21 date [3], which was pushed after the Nov 12 sync because Maya didn't want to stack risk right before the Fernhill go-live [4].\n- **Staging rehearsal:** Friday Nov 27 [2]\n- **Customer notice (status page + in-app banner):** Saturday Nov 28 [2]\n- **Migration freeze:** from Thursday Dec 3 [2]\n\nNote: the Notion runbook hasn't been updated with the new date — Noa Friedman says the Linear ticket KES-398 is the reference for the maintenance window [2], so treat that as the source of truth for your customer notice and support macro.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9853,
+    "sortie": 282,
+    "reflexion": 25,
+    "cache": 4864,
+    "cout": 0.00949004
+  },
+  "latenceMs": 3809,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"database migration scheduled date\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}"
+  ],
+  "cout": 0.00949004
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:12.323Z",
+  "reponse": "## Où j'en suis\n\nDraft PR #57 (kestrel-analytics/infra) opened with the pg17 blue/green work for staging: postgres17 parameter group, blue/green enabled on analytics-staging, prod prepared behind `pg17_enabled = false`, AWS provider pinned `~> 5.82.0`. Plans are clean (staging 1 to add / 1 to change, prod no changes); nothing applied.\n\n- [en-cours] Staging apply is waiting on the pg_partman upgrade (4.7.4 → 5.1.0 must run on 16.4 first, then verify `run_maintenance_proc()` on `events_raw` / `events_daily`) — todo only, nothing run against the DB.\n- [prochaine-étape] Run the pg_partman upgrade on staging, then apply staging plan.\n- [prochaine-étape] Pick the production window after Maya's sign-off, avoiding the nightly dbt lock on `events_daily` (01:00–03:30 UTC); candidate slots are Sat/Sun 04:00–06:00 UTC.\n- [essai-raté] `terraform init` with the bumped constraint pulled AWS provider v6 → 37 unrelated changes (S3 ACL, `aws_eip.vpc`); fixed by pinning `~> 5.82.0`.\n- [essai-raté] Proposed prod cutover Sat 28 Nov 02:00 UTC falls inside the dbt lock; discarded.\n- [question] Prod date still undecided, pending Maya's sign-off.\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays false on prod (source: t14)\n- [décision] Pin the AWS provider to 5.82, no v6 in this PR (source: t04)",
+  "rendu": "## Où j'en suis\nDraft PR #57 (kestrel-analytics/infra) opened with the pg17 blue/green work for staging: postgres17 parameter group, blue/green enabled on analytics-staging, prod prepared behind `pg17_enabled = false`, AWS provider pinned `~> 5.82.0`. Plans are clean (staging 1 to add / 1 to change, prod no changes); nothing applied.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Staging apply is waiting on the pg_partman upgrade (4.7.4 → 5.1.0 must run on 16.4 first, then verify `run_maintenance_proc()` on `events_raw` / `events_daily`) — todo only, nothing run against the DB.\n- [prochaine-étape] Run the pg_partman upgrade on staging, then apply staging plan.\n- [prochaine-étape] Pick the production window after Maya's sign-off, avoiding the nightly dbt lock on `events_daily` (01:00–03:30 UTC); candidate slots are Sat/Sun 04:00–06:00 UTC.\n- [essai-raté] `terraform init` with the bumped constraint pulled AWS provider v6 → 37 unrelated changes (S3 ACL, `aws_eip.vpc`); fixed by pinning `~> 5.82.0`.\n- [essai-raté] Proposed prod cutover Sat 28 Nov 02:00 UTC falls inside the dbt lock; discarded.\n- [question] Prod date still undecided, pending Maya's sign-off.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1264,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4076,
+    "sortie": 733,
+    "reflexion": 316,
+    "cache": 4032,
+    "cout": 0.0002226896
+  },
+  "cout": 0.0002226896,
+  "latenceMs": 28987,
+  "fournisseur": "Xiaomi"
+}

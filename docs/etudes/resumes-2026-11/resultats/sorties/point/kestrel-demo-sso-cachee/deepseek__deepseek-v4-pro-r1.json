@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T14:26:10.575Z",
+  "reponse": "## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` and two other SAML ACS tests by replacing `time.sleep` with `freezegun` – 50/50 repeat runs green [1]\n- You cleaned all ruff 0.8 warnings and fixed two mypy errors in `kestrel/auth` (missing issuer/subject now return a 401 instead of a 500) [1]\n- You split the 900-line `saml_utils.py` into `saml/assertions.py`, `metadata.py` and `bindings.py`, keeping a backward-compatible shim [1]\n- You opened PR #423 with the whole cleanup on a separate branch to avoid touching #418, which was still waiting for Maya’s review [1][4]\n\n## What changed\n\n- Maya approved and merged #418 (SAML signature verification for Fernhill) last night – it goes to staging with tonight’s deploy, in time for Thursday’s SSO walkthrough with Fernhill IT [3]\n- Tom requested changes on #423: split the module move and lint fixes into two PRs so he can review the diff [4]\n- Tom picked up #424 (CSV export timeout for Zest Grocers) to move the export to the job queue [5]\n\n## What is still open\n\n- The SAML assertion replay cache is still in-memory; you noted it must move to Redis for multi-pod before production, and planned to tackle it today [1][2]\n- PR #423 needs to be split into two (module refactor vs. lint fixes) per Tom’s request [4]",
+  "rendu": "## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` and two other SAML ACS tests by replacing `time.sleep` with `freezegun` – 50/50 repeat runs green [1]\n- You cleaned all ruff 0.8 warnings and fixed two mypy errors in `kestrel/auth` (missing issuer/subject now return a 401 instead of a 500) [1]\n- You split the 900-line `saml_utils.py` into `saml/assertions.py`, `metadata.py` and `bindings.py`, keeping a backward-compatible shim [1]\n- You opened PR #423 with the whole cleanup on a separate branch to avoid touching #418, which was still waiting for Maya’s review [1][4]\n\n## What changed\n\n- Maya approved and merged #418 (SAML signature verification for Fernhill) last night – it goes to staging with tonight’s deploy, in time for Thursday’s SSO walkthrough with Fernhill IT [3]\n- Tom requested changes on #423: split the module move and lint fixes into two PRs so he can review the diff [4]\n- Tom picked up #424 (CSV export timeout for Zest Grocers) to move the export to the job queue [5]\n\n## What is still open\n\n- The SAML assertion replay cache is still in-memory; you noted it must move to Redis for multi-pod before production, and planned to tackle it today [1][2]\n- PR #423 needs to be split into two (module refactor vs. lint fixes) per Tom’s request [4]",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5663,
+    "sortie": 2737,
+    "reflexion": 2222,
+    "cache": 0,
+    "cout": 0.0092022
+  },
+  "cout": 0.0092022,
+  "latenceMs": 19505,
+  "fournisseur": "Relace"
+}

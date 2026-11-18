@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:07:15.258Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 25849,
+    "sortie": 1216,
+    "reflexion": 958,
+    "cache": 10529,
+    "cout": 0.032889675
+  },
+  "latenceMs": 13955,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly\"}",
+    "chercher {\"requete\":\"Orbitly outage credit contract SLA\"}",
+    "chercher {\"requete\":\"MSA Orbitly 2024\"}",
+    "chercher {\"requete\":\"Orbitly credit SLA\",\"type\":\"fichier\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"hubspot-orbitly-renewal-call\"}",
+    "chercher {\"requete\":\"Orbitly MSA Avi price ARR\"}"
+  ],
+  "cout": 0.032889675
+}

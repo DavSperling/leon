@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-charge-injektion",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:22:06.035Z",
+  "reponse": "## What is still open\n- Rückrufprüfung WS 125 Pro: Anja braucht die Liste **inklusive der Lieferungen vom 12.11.** bis Donnerstag 12 Uhr für die Entscheidung am Freitag — sobald der SAP-Nachlauf gelaufen ist, den Export neu ziehen und ihr schicken [6][7].\n- Chargen-Export #214 ist von Matthias approved — der Merge steht noch aus [3].\n- #219: Bei Technikhandel Nord kommen die Passwort-Reset-Mails nicht an, drei Kollegen können nicht bestellen — noch niemandem zugewiesen [4].\n- Release Notes Q3/Q4 2026 als PDF in SharePoint unter QM/Nachweise bis Montag 23.11., fürs Überwachungsaudit am 25.11. [2].\n\n## What changed\n- ITS-88: Ursache der fehlenden Lieferungen ist das neue SAP-Wartungsfenster; der Nachlauf für den 12.11. läuft Donnerstag 07:00 durchs Basis-Team [7].\n\n## What you did\n- Chargen-Export-Endpoint für QM/ADMIN gebaut und Anjas CSV erzeugt, mit Hinweis auf die fehlende Lücke [1].\n- Sechs Dependabot-Updates in #218 gebündelt (Spring Boot 3.3.6); dafür zwei Tests und Checkstyle-Imports angepasst, Produktivcode unverändert [2][5].",
+  "rendu": "## What is still open\n- Rückrufprüfung WS 125 Pro: Anja braucht die Liste **inklusive der Lieferungen vom 12.11.** bis Donnerstag 12 Uhr für die Entscheidung am Freitag — sobald der SAP-Nachlauf gelaufen ist, den Export neu ziehen und ihr schicken [6][7].\n- Chargen-Export #214 ist von Matthias approved — der Merge steht noch aus [3].\n- #219: Bei Technikhandel Nord kommen die Passwort-Reset-Mails nicht an, drei Kollegen können nicht bestellen — noch niemandem zugewiesen [4].\n- Release Notes Q3/Q4 2026 als PDF in SharePoint unter QM/Nachweise bis Montag 23.11., fürs Überwachungsaudit am 25.11. [2].\n\n## What changed\n- ITS-88: Ursache der fehlenden Lieferungen ist das neue SAP-Wartungsfenster; der Nachlauf für den 12.11. läuft Donnerstag 07:00 durchs Basis-Team [7].\n\n## What you did\n- Chargen-Export-Endpoint für QM/ADMIN gebaut und Anjas CSV erzeugt, mit Hinweis auf die fehlende Lücke [1].\n- Sechs Dependabot-Updates in #218 gebündelt (Spring Boot 3.3.6); dafür zwei Tests und Checkstyle-Imports angepasst, Produktivcode unverändert [2][5].",
+  "mesures": {
+    "mots": 144,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5810,
+    "sortie": 4992,
+    "reflexion": 4663,
+    "cache": 0,
+    "cout": 0.00291004
+  },
+  "cout": 0.00291004,
+  "latenceMs": 40897,
+  "fournisseur": "DeepInfra"
+}

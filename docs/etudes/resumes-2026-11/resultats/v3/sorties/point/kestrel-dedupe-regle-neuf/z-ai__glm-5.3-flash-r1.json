@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.673Z",
+  "reponse": "## What is still open\n\n- PR #247 (dedupe keyed on project + device + event_id) is open, Maya will approve once CI is green — then you must run the Orbitly replay from 13/11 (and the quick Zest one), only after deploy, and check the dedupe drop counter stays near zero [1][2].\n- Maya wants the number of dropped Orbitly events (~1.18M, ≈8.1% of their iOS volume) for Thursday's call with Orbitly [2].\n- Due before Friday's incident review: add an alert when the ingest dead-letter queue exceeds 1,000 messages (your action item from the prep meeting) [7].\n- You promised a note to the iOS team asking them to restore UUID event_ids in SDK 3.2.1 — the draft is written but not sent [1].\n\n## What changed\n\n- Rachel confirmed Zest's dashboards are complete after the backfill and closed their Zendesk ticket [6].\n- Noa finalized the 12/11 postmortem and will present it at Friday's review; action items are in the Fathom notes [3][7].\n- PR #245 bumped CI and Dockerfile to Go 1.23.4, merged by Daniel [4].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop to SDK 3.2.0 sending per-session counter event_ids, which #240's dedupe wrongly dropped (1.18M legit events), built the fix in PR #247, scoped the impact to Orbitly and Zest, and planned the post-deploy replay [1].",
+  "rendu": "## What is still open\n\n- PR #247 (dedupe keyed on project + device + event_id) is open, Maya will approve once CI is green — then you must run the Orbitly replay from 13/11 (and the quick Zest one), only after deploy, and check the dedupe drop counter stays near zero [1][2].\n- Maya wants the number of dropped Orbitly events (~1.18M, ≈8.1% of their iOS volume) for Thursday's call with Orbitly [2].\n- Due before Friday's incident review: add an alert when the ingest dead-letter queue exceeds 1,000 messages (your action item from the prep meeting) [7].\n- You promised a note to the iOS team asking them to restore UUID event_ids in SDK 3.2.1 — the draft is written but not sent [1].\n\n## What changed\n\n- Rachel confirmed Zest's dashboards are complete after the backfill and closed their Zendesk ticket [6].\n- Noa finalized the 12/11 postmortem and will present it at Friday's review; action items are in the Fathom notes [3][7].\n- PR #245 bumped CI and Dockerfile to Go 1.23.4, merged by Daniel [4].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop to SDK 3.2.0 sending per-session counter event_ids, which #240's dedupe wrongly dropped (1.18M legit events), built the fix in PR #247, scoped the impact to Orbitly and Zest, and planned the post-deploy replay [1].",
+  "mesures": {
+    "mots": 211,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4714,
+    "sortie": 392,
+    "reflexion": 47,
+    "cache": 0,
+    "cout": 0.00094632
+  },
+  "cout": 0.00094632,
+  "latenceMs": 9749,
+  "fournisseur": "Inceptron"
+}

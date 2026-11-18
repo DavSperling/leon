@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:55:25.823Z",
+  "reponse": "## What is still open\n\n- Priya says the Orbitly flag can't go on Thursday 19/11 unless CSV export is back in the v2 widget menu, built on the new background export. You removed it because it called the v1 endpoint and would 404 on v2 widget ids [1][10].\n- The retention tooltip still crashes on empty cohorts (this week's) at `RetentionChart.tsx:212`. Sentry has it as #432 on staging: 37 events, 4 users. You planned a `point?.label` guard, a \"No data yet\" state and a test, but it isn't fixed yet [1][8]. It needs to be solid on staging by today, Wednesday 18/11 [3].\n- Zest's CSV export is still waiting. Rachel is asking for an ETA because their ops review is Monday [9][6]. PR #430 is approved by Daniel, so merge once CI is green [5].\n\n## What changed\n\n- Maya says to ship v2 behind the flag but keep `@chartkit/react` until v1 is gone, so there are no two migrations at once. That settles the question you took to Priya [7].\n\n## What you did\n\n- You polished the v2 dashboard in PR #427: compact widget header, dark-mode borders, a three-entry menu, readable retention tooltip and axis labels, a loading skeleton and the categorical cohort palette [1].",
+  "rendu": "## What is still open\n\n- Priya says the Orbitly flag can't go on Thursday 19/11 unless CSV export is back in the v2 widget menu, built on the new background export. You removed it because it called the v1 endpoint and would 404 on v2 widget ids [1][10].\n- The retention tooltip still crashes on empty cohorts (this week's) at `RetentionChart.tsx:212`. Sentry has it as #432 on staging: 37 events, 4 users. You planned a `point?.label` guard, a \"No data yet\" state and a test, but it isn't fixed yet [1][8]. It needs to be solid on staging by today, Wednesday 18/11 [3].\n- Zest's CSV export is still waiting. Rachel is asking for an ETA because their ops review is Monday [9][6]. PR #430 is approved by Daniel, so merge once CI is green [5].\n\n## What changed\n\n- Maya says to ship v2 behind the flag but keep `@chartkit/react` until v1 is gone, so there are no two migrations at once. That settles the question you took to Priya [7].\n\n## What you did\n\n- You polished the v2 dashboard in PR #427: compact widget header, dark-mode borders, a three-entry menu, readable retention tooltip and axis labels, a loading skeleton and the categorical cohort palette [1].",
+  "mesures": {
+    "mots": 201,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8293,
+    "sortie": 439,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020976
+  },
+  "cout": 0.020976,
+  "latenceMs": 3880,
+  "fournisseur": "Amazon Bedrock"
+}

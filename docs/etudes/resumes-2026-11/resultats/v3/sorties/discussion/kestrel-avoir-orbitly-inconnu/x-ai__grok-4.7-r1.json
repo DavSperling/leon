@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:07:37.628Z",
+  "reponse": "Je cherche le contrat signé et les termes de crédit, pas seulement la demande d’Orbitly.",
+  "rendu": "Je cherche le contrat signé et les termes de crédit, pas seulement la demande d’Orbitly.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21418,
+    "sortie": 372,
+    "reflexion": 164,
+    "cache": 10368,
+    "cout": 0.029516
+  },
+  "latenceMs": 8112,
+  "fournisseur": "xAI",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits outage contract\",\"depuis\":\"3m\"}",
+    "chercher {\"requete\":\"Orbitly outage service credits SLA\"}",
+    "chercher {\"requete\":\"Orbitly MSA service credit SLA signed 2024\"}",
+    "chercher {\"requete\":\"\\\"service credit\\\" Orbitly MSA OR contract OR \\\"monthly fee\\\"\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"gmail-orbitly-renewal-proposal\"}",
+    "chercher {\"requete\":\"\\\"section 7\\\" Orbitly MSA OR SLA \\\"Service Credit\\\"\"}",
+    "chercher {\"requete\":\"Orbitly \\\"Downtime\\\" OR Availability exhibit credit percentage seats price\"}"
+  ],
+  "cout": 0.029516
+}

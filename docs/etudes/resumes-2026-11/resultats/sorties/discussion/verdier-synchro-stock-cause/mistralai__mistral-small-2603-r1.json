@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:27:05.079Z",
+  "reponse": "Origine : un bug dans la synchronisation du stock Shopify après l’ajout de l’emplacement « Showroom » le 3 novembre 2026. Le script sync-stock ne mettait à jour que l’entrepôt « Vénissieux » et ignorait le showroom, donc Shopify additionnait les deux stocks et affichait des quantités erronées, permettant des achats sur des produits déjà vendus [11][12].\n\nRéparé : oui. Julien a corrigé le script via la PR #87 (fusionnée le 13/11), qui met à jour tous les emplacements à partir de l’export CSV. Un contrôle quotidien a été mis en place [7][12]. Les tickets Zendesk montrent que les annulations pour rupture ont cessé après cette correction [9][10][13].",
+  "rendu": "Origine : un bug dans la synchronisation du stock Shopify après l’ajout de l’emplacement « Showroom » le 3 novembre 2026. Le script sync-stock ne mettait à jour que l’entrepôt « Vénissieux » et ignorait le showroom, donc Shopify additionnait les deux stocks et affichait des quantités erronées, permettant des achats sur des produits déjà vendus [11][12].\n\nRéparé : oui. Julien a corrigé le script via la PR #87 (fusionnée le 13/11), qui met à jour tous les emplacements à partir de l’export CSV. Un contrôle quotidien a été mis en place [7][12]. Les tickets Zendesk montrent que les annulations pour rupture ont cessé après cette correction [9][10][13].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9522,
+    "sortie": 817,
+    "reflexion": 583,
+    "cache": 4208,
+    "cout": 0.00135042
+  },
+  "latenceMs": 8533,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"meubles indisponibles achat client\"}",
+    "chercher {\"requete\":\"rupture stock achat client indisponible commande synchro stock problème\"}"
+  ],
+  "cout": 0.00135042
+}

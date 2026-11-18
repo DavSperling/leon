@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:44.477Z",
+  "reponse": "## Où j'en suis\nLa synchro des stocks a deux correctifs : #87 (fusionné) sur le double décrément, et #96 en attente de la relecture d'Hugo pour les reprises à 4 h et 6 h. La relance manuelle du 17/11 a bien corrigé les 40 références, 0 erreur. (source: ses-st-3)\n\n- [en-cours] PR #96 ouverte sur maison-verdier/boutique, Hugo en relecteur, pas encore fusionnée (source: ses-st-3)\n- [en-cours] branch julien/fix-synchro-stocks, commit d7c2e41 — cron à 2 h/4 h/6 h Europe/Paris, mail à Karim à 6 h si le CSV manque (source: ses-st-3)\n- [prochaine-étape] suivre la relecture d'Hugo sur #96, puis vérifier la première nuit avec le nouveau cron (source: u3-07, u3-10)\n- [décision] rien dans le script pour la réservation des 2 tables Saône des Galeries Brotteaux : c'est Claire qui voit ça avec eux (source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit écrit en valeur absolue (source: u1-02)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)\n- [question] la note advisory (verrou Postgres contre deux exécutions simultanées) est-elle encore en attente après #96 ? (source: src-note-advisory)",
+  "rendu": "## Où j'en suis\nLa synchro des stocks a deux correctifs : #87 (fusionné) sur le double décrément, et #96 en attente de la relecture d'Hugo pour les reprises à 4 h et 6 h. La relance manuelle du 17/11 a bien corrigé les 40 références, 0 erreur. (de: agent; source: ses-st-3)\n\n- [en-cours] PR #96 ouverte sur maison-verdier/boutique, Hugo en relecteur, pas encore fusionnée (de: agent; source: ses-st-3)\n- [en-cours] branch julien/fix-synchro-stocks, commit d7c2e41 — cron à 2 h/4 h/6 h Europe/Paris, mail à Karim à 6 h si le CSV manque (de: agent; source: ses-st-3)\n- [prochaine-étape] suivre la relecture d'Hugo sur #96, puis vérifier la première nuit avec le nouveau cron (de: toi, agent; source: u3-07, u3-10)\n- [décision] rien dans le script pour la réservation des 2 tables Saône des Galeries Brotteaux : c'est Claire qui voit ça avec eux (de: toi; source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit écrit en valeur absolue (de: toi; source: u1-02)\n- [décision] seuil d'alerte stock bas à 3 (de: toi; source: u1-04)\n- [question] la note advisory (verrou Postgres contre deux exécutions simultanées) est-elle encore en attente après #96 ? (de: agent; source: src-note-advisory)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1222,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4724,
+    "sortie": 404,
+    "reflexion": 6,
+    "cache": 0,
+    "cout": 0.00077448
+  },
+  "cout": 0.00077448,
+  "latenceMs": 10261,
+  "fournisseur": "Xiaomi"
+}

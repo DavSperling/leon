@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:24:01.279Z",
+  "reponse": "## Où j'en suis\nLa PR #405 sur les webhooks est fermée. La PR #409 ajoute la synchronisation HubSpot par polling toutes les 15 minutes, avec pagination au-delà de 10 000 résultats et filtrage des entreprises avec ARR > 0. Elle est ouverte selon les faits de session ; le test e2e échoue et l’auto-merge n’a donc pas abouti.\n\n- [en-cours] Le test `test_accounts_table_shows_owner` échoue : 2 lignes avec propriétaire au lieu de 3, car la fixture contient une entreprise d’essai sans ARR.\n- [prochaine-étape] Corriger le test e2e, puis vérifier à nouveau les checks de la PR. Noa doit ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging et production.\n- [essai-raté] L’appel pour enregistrer les webhooks a échoué : le jeton d’application privée ne permet pas de gérer les abonnements.\n- [décision] Passer au polling toutes les 15 minutes (source: t04)\n- [décision] Synchroniser uniquement les entreprises avec un ARR > 0 (source: t10)",
+  "rendu": "## Où j'en suis\nLa PR #405 sur les webhooks est fermée. La PR #409 ajoute la synchronisation HubSpot par polling toutes les 15 minutes, avec pagination au-delà de 10 000 résultats et filtrage des entreprises avec ARR > 0. Elle est ouverte selon les faits de session ; le test e2e échoue et l’auto-merge n’a donc pas abouti.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Le test `test_accounts_table_shows_owner` échoue : 2 lignes avec propriétaire au lieu de 3, car la fixture contient une entreprise d’essai sans ARR.\n- [prochaine-étape] Corriger le test e2e, puis vérifier à nouveau les checks de la PR. Noa doit ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging et production.\n- [essai-raté] L’appel pour enregistrer les webhooks a échoué : le jeton d’application privée ne permet pas de gérer les abonnements.\n- [décision] Passer au polling toutes les 15 minutes (source: t04)\n- [décision] Synchroniser uniquement les entreprises avec un ARR > 0 (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1126,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3282,
+    "sortie": 256,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000538175
+  },
+  "cout": 0.000538175,
+  "latenceMs": 3269,
+  "fournisseur": "OpenAI"
+}

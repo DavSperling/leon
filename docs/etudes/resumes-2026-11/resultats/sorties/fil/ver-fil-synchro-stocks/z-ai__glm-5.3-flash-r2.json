@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:43.359Z",
+  "reponse": "## Où j'en suis\nLe fil suit la branche `julien/fix-synchro-stocks`. Le correctif initial (webhooks hors stock, synchro de nuit en valeur absolue) est fusionné (#87), et la première nuit avec le correctif a montré 0 écart avec le stock physique TransAlp. Mais le 16/11, le CSV TransAlp est arrivé 47 minutes après le passage du script : la sécurité « CSV absent → rien n'est écrit » a annulé la synchro, et les 40 références reçues à l'entrepôt n'ont pas été mises à jour sur le site pendant la journée du 16. La personne a demandé des reprises à 4 h et 6 h avec un mail à Karim si le CSV manque toujours à 6 h ; le cron est modifié (commit `d7c2e41`, fuseau `Europe/Paris` après un essai raté en UTC), la synchro manuelle du 17/11 a corrigé les 40 références, et la PR #96 est ouverte avec Hugo en relecteur. (source: ses-st-3, ses-st-2, src-pr87, u3-02)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », en open, attend la relecture d'Hugo (source: ses-st-3, src-pr87)\n- [prochaine-étape] relecture de la PR #96 par Hugo (source: ses-st-3)\n- [essai-raté] premier passage des tests de reprise : « reprise à 4 h » attendait 2 appels, en a reçu 1 — les heures du cron étaient lues en UTC, donc la reprise de 4 h tombait à 5 h à Paris ; fuseau `Europe/Paris` fixé dans le planificateur, 15 tests passent (source: ses-st-3)\n- [question] que faire du mail des Galeries Brotteaux (2 tables Saône réservées sur le réassort du 2 décembre) — la personne a refusé de toucher au script pour ça, à voir avec Claire (source: ses-st-3, src-mail-brotteaux)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: ses-st-1, src-pr87)\n- [décision] reprises de synchro à 4 h et 6 h, et mail à Karim si le CSV manque toujours à 6 h (source: ses-st-3)\n- [décision] seuil d'alerte stock bas abaissé à 3 unités (source: ses-st-1)\n- [décision] pas de précommande pour la Saône, elle ne revient de chez Bois & Fils que le 2 décembre (source: ses-st-1)\n- [décision] on ne touche pas au script pour la réservation Brotteaux : Claire voit ça avec eux (source: ses-st-3)",
+  "rendu": "## Où j'en suis\nLe fil suit la branche `julien/fix-synchro-stocks`. Le correctif initial (webhooks hors stock, synchro de nuit en valeur absolue) est fusionné (#87), et la première nuit avec le correctif a montré 0 écart avec le stock physique TransAlp. Mais le 16/11, le CSV TransAlp est arrivé 47 minutes après le passage du script : la sécurité « CSV absent → rien n'est écrit » a annulé la synchro, et les 40 références reçues à l'entrepôt n'ont pas été mises à jour sur le site pendant la journée du 16. La personne a demandé des reprises à 4 h et 6 h avec un mail à Karim si le CSV manque toujours à 6 h ; le cron est modifié (commit `d7c2e41`, fuseau `Europe/Paris` après un essai raté en UTC), la synchro manuelle du 17/11 a corrigé les 40 références, et la PR #96 est ouverte avec Hugo en relecteur. (de: équipe, agent; source: ses-st-3, ses-st-2, src-pr87, u3-02)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », en open, attend la relecture d'Hugo (de: équipe, agent; source: ses-st-3, src-pr87)\n- [prochaine-étape] relecture de la PR #96 par Hugo (de: agent; source: ses-st-3)\n- [essai-raté] premier passage des tests de reprise : « reprise à 4 h » attendait 2 appels, en a reçu 1 — les heures du cron étaient lues en UTC, donc la reprise de 4 h tombait à 5 h à Paris ; fuseau `Europe/Paris` fixé dans le planificateur, 15 tests passent (de: agent; source: ses-st-3)\n- [question] que faire du mail des Galeries Brotteaux (2 tables Saône réservées sur le réassort du 2 décembre) — la personne a refusé de toucher au script pour ça, à voir avec Claire (de: connecteur, agent; source: ses-st-3, src-mail-brotteaux)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: équipe, agent; source: ses-st-1, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1820,
+    "lignesRetirees": 4,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4264,
+    "sortie": 710,
+    "reflexion": 5,
+    "cache": 0,
+    "cout": 0.0009946
+  },
+  "cout": 0.0009946,
+  "latenceMs": 4752,
+  "fournisseur": "Modal"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:53.873Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 upgrade of the analytics RDS is live on staging: on branch `noa/rds-pg17`, pg_partman was upgraded to 5.1.0 on staging 16.4, then a blue/green deployment brought `analytics-staging` to PG 17.2 (switchover at 14:20 UTC, 41 s of refused writes); dbt on 17.2 passes 14 models with runtime within noise of 16.4. PR #57 is still a draft, open, with the new commits `7e3c9d4` and `b0f18a2`. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Staging soak: noa asked the team to watch staging this week, and Maya will sign off on prod only after a full week on 17 without incident (sign-off on the 24th at the earliest) (source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] runbook step 0 for prod is set: enable `rds.logical_replication = 1` and reboot (≈2–3 min downtime on prod) before creating the blue/green deployment — prod needs its own window (source: ses-pg-3, ses-pg-3)\n- [prochaine-étape] pick the production window with Maya after her sign-off (source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first `terraform apply` of the blue/green deployment failed: PostgreSQL blue/green requires `rds.logical_replication = 1` in the source parameter group, with a reboot (source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, adding 37 unrelated plan changes (S3 ACLs, `aws_eip.vpc` removal) (source: ses-pg-1)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: ses-pg-1)\n- [décision] no prod date until Maya signs off, and `apply_immediately` stays false; agent-proposed Nov 28 slots were reverted (source: ses-pg-1)\n- [décision] posted in #infra that staging is on PG 17.2 and that prod will need a reboot for logical replication before blue/green, so two windows (source: src-slack-infra)\n- [question] which production window — candidate slots outside the 01:00–03:30 UTC dbt lock are Saturday and Sunday 04:00–06:00 UTC, and an agent note mentions Nov 28 04:00 UTC, but nothing was decided (source: ses-pg-1, src-note-cutover)",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 upgrade of the analytics RDS is live on staging: on branch `noa/rds-pg17`, pg_partman was upgraded to 5.1.0 on staging 16.4, then a blue/green deployment brought `analytics-staging` to PG 17.2 (switchover at 14:20 UTC, 41 s of refused writes); dbt on 17.2 passes 14 models with runtime within noise of 16.4. PR #57 is still a draft, open, with the new commits `7e3c9d4` and `b0f18a2`. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Staging soak: noa asked the team to watch staging this week, and Maya will sign off on prod only after a full week on 17 without incident (sign-off on the 24th at the earliest) (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] runbook step 0 for prod is set: enable `rds.logical_replication = 1` and reboot (≈2–3 min downtime on prod) before creating the blue/green deployment — prod needs its own window (de: agent; source: ses-pg-3)\n- [prochaine-étape] pick the production window with Maya after her sign-off (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first `terraform apply` of the blue/green deployment failed: PostgreSQL blue/green requires `rds.logical_replication = 1` in the source parameter group, with a reboot (de: agent; source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, adding 37 unrelated plan changes (S3 ACLs, `aws_eip.vpc` removal) (de: agent; source: ses-pg-1)\n- [décision] posted in #infra that staging is on PG 17.2 and that prod will need a reboot for logical replication before blue/green, so two windows (de: connecteur; source: src-slack-infra)\n- [question] which production window — candidate slots outside the 01:00–03:30 UTC dbt lock are Saturday and Sunday 04:00–06:00 UTC, and an agent note mentions Nov 28 04:00 UTC, but nothing was decided (de: agent; source: ses-pg-1, src-note-cutover)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1925,
+    "lignesRetirees": 2,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4176,
+    "sortie": 678,
+    "reflexion": 53,
+    "cache": 0,
+    "cout": 0.0009654
+  },
+  "cout": 0.0009654,
+  "latenceMs": 4462,
+  "fournisseur": "Modal"
+}

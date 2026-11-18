@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:12:24.639Z",
+  "reponse": "## What you did\n- Locked the prod PostgreSQL 15 to 17 migration strategy using RDS blue/green, fixing the Terraform lifecycle so the read replica upgrades in place rather than triggering a destructive recreation [1].\n- Validated the workflow on a replicated snapshot clone, confirming a predictable 74-second write outage that API pods recovered from without restarting [1].\n- Published PR #321 carrying the infrastructure definitions, the replica safeguard, and the operational runbook [1][3].\n- Zeroed out the rehearsal footprint immediately after testing to prevent wasted spend [1].\n\n## What changed\n- Fernhill’s month-end batch blocks Saturday night, moving the cutover window to Sunday 22/11, 02:00–04:00 UTC; Maya validated this shift with engineering leads and aligned client success managers [8].\n- Maya approved PR #321 but explicitly blocked merging until Fernhill formally confirms the new date [3][8].\n- Daniel will cover API on-call for Sunday and asked to be contacted the moment switchover begins [7].\n- Renovate opened PR #320 to advance the Terraform AWS provider to v5.82 [4].\n\n## What is still open\n- Rewrite the runbook with the Sunday slot and merge PR #321 once Fernhill’s calendar is locked [8].\n- Book a fresh-clone rollback rehearsal for Thursday 19/11 to measure actual data loss and recovery time [1].\n- Synchronize with Lior to halt the SSM-driven ingest consumers exactly thirty minutes before the switchover [9].\n- Decide whether to merge provider PR #320 before the migration window or defer it to keep the environment stable [4].",
+  "rendu": "## What you did\n- Locked the prod PostgreSQL 15 to 17 migration strategy using RDS blue/green, fixing the Terraform lifecycle so the read replica upgrades in place rather than triggering a destructive recreation [1].\n- Validated the workflow on a replicated snapshot clone, confirming a predictable 74-second write outage that API pods recovered from without restarting [1].\n- Published PR #321 carrying the infrastructure definitions, the replica safeguard, and the operational runbook [1][3].\n- Zeroed out the rehearsal footprint immediately after testing to prevent wasted spend [1].\n\n## What changed\n- Fernhill’s month-end batch blocks Saturday night, moving the cutover window to Sunday 22/11, 02:00–04:00 UTC; Maya validated this shift with engineering leads and aligned client success managers [8].\n- Maya approved PR #321 but explicitly blocked merging until Fernhill formally confirms the new date [3][8].\n- Daniel will cover API on-call for Sunday and asked to be contacted the moment switchover begins [7].\n- Renovate opened PR #320 to advance the Terraform AWS provider to v5.82 [4].\n\n## What is still open\n- Rewrite the runbook with the Sunday slot and merge PR #321 once Fernhill’s calendar is locked [8].\n- Book a fresh-clone rollback rehearsal for Thursday 19/11 to measure actual data loss and recovery time [1].\n- Synchronize with Lior to halt the SSM-driven ingest consumers exactly thirty minutes before the switchover [9].\n- Decide whether to merge provider PR #320 before the migration window or defer it to keep the environment stable [4].",
+  "mesures": {
+    "mots": 233,
+    "tropLong": false,
+    "puces": 12,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5545,
+    "sortie": 3039,
+    "reflexion": 2661,
+    "cache": 0,
+    "cout": 0.00056142
+  },
+  "cout": 0.00056142,
+  "latenceMs": 31789,
+  "fournisseur": "Alibaba"
+}

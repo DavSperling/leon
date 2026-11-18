@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-cloture-pieces-comptable",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:06.762Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 1035,
+    "sortie": 1500,
+    "reflexion": 1500,
+    "cache": 0,
+    "cout": 0.00086025
+  },
+  "cout": 0.00086025,
+  "latenceMs": 26053,
+  "fournisseur": "Alibaba"
+}

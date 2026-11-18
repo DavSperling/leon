@@ -1,5 +1,6 @@
 import { isBackstageRole } from '@/capture/turn';
 import { ANSWER_NOT_ENOUGH } from '@/lib/answer-events';
+import { detectLanguage, languageLine } from '@/server/llm/language';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { isoDate, oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
@@ -26,7 +27,7 @@ const SYSTEM = `Tu es Leon, la mémoire de l'entreprise. L'utilisateur vient de 
 Le message de l'utilisateur contient sa recherche, entre balises <recherche>, puis des passages tirés de ses résultats, chacun entre balises <passage> : l'attribut n est le numéro du résultat d'où vient le passage, suivi de l'outil, du titre de la source et de la date. Un passage qui porte l'attribut role vient des coulisses d'une session de code (le raisonnement de l'agent, un échange avec un sous-agent, un appel d'outil) : c'est ce que l'agent a pensé ou fait, pas un message d'une personne ni un fait vérifié.
 
 Comment répondre :
-- Dans la langue de la recherche ; en anglais quand elle ne se devine pas (des mots-clés, des noms, des filtres). En ${ANSWER_MAX_WORDS} mots au plus : quelques phrases simples, sans titre, sans liste, sans mise en forme.
+- Dans la langue que le message t'indique en tête. En ${ANSWER_MAX_WORDS} mots au plus : quelques phrases simples, sans titre, sans liste, sans mise en forme.
 - Seulement d'après les passages fournis : rien de ce que tu sais par ailleurs, aucune supposition.
 - Après chaque affirmation, le numéro du résultat qui la prouve, entre crochets et séparé du mot par une espace, par exemple « signé [2] ». Seulement des numéros donnés par l'attribut n des passages ; pour deux résultats, écris [1][3].
 - Si deux passages se contredisent, dis-le, en citant le plus récent d'abord.
@@ -99,7 +100,17 @@ export function buildAnswerPrompt(
     return hit ? [{ n: index + 1, hit }] : [];
   });
   const picked = pickPassages(ranked, input.texts).sort((a, b) => a.n - b.n || a.round - b.round);
+  // La recherche dit la langue ; des mots-clés (« q1 payout fee ») ne la disent pas : alors celle des passages
+  // trouvés, puis l'anglais. Sans ligne, un modèle suit le français du prompt (étude docs/etudes/resumes-2026-11).
+  const fromQuery = detectLanguage([query]);
+  const fromPassages = fromQuery ? null : detectLanguage(picked.map((entry) => entry.block));
+  const language = fromQuery
+    ? languageLine(fromQuery, 'sa recherche')
+    : fromPassages
+      ? languageLine(fromPassages, 'ce que la recherche a trouvé')
+      : languageLine('anglais');
   const content = [
+    ...(language ? [language] : []),
     `Recherche de l'utilisateur : <recherche>${escapeData(oneLine(query))}</recherche>`,
     '',
     'Passages des résultats :',

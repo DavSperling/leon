@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:36.333Z",
+  "reponse": "Deux causes distinctes ont faussé le stock. D'abord, avec deux emplacements (entrepôt et showroom), Shopify envoie un webhook inventory_levels/update par emplacement et la synchro décrémentait deux fois le même stock [1], confirmé par les logs (même updated_at, deux location_id) [2] ; une dédup a été mergée le 16 novembre [1]. Ensuite, pour la variante SAO-180-CC à -2, l'issue #91 se demandait si c'était lié à cette PR, mais Slack indique que non : c'est l'import nocturne qui a écrasé le stock avec le CSV Bois & Fils de la veille [5][3]. Un client a déjà été impacté par un stock affiché faux [4].",
+  "rendu": "Deux causes distinctes ont faussé le stock. D'abord, avec deux emplacements (entrepôt et showroom), Shopify envoie un webhook inventory_levels/update par emplacement et la synchro décrémentait deux fois le même stock [1], confirmé par les logs (même updated_at, deux location_id) [2] ; une dédup a été mergée le 16 novembre [1]. Ensuite, pour la variante SAO-180-CC à -2, l'issue #91 se demandait si c'était lié à cette PR, mais Slack indique que non : c'est l'import nocturne qui a écrasé le stock avec le CSV Bois & Fils de la veille [5][3]. Un client a déjà été impacté par un stock affiché faux [4].",
+  "mesures": {
+    "mots": 100,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1153,
+    "sortie": 329,
+    "reflexion": 144,
+    "cache": 0,
+    "cout": 0.00034575
+  },
+  "cout": 0.00034575,
+  "latenceMs": 16919,
+  "fournisseur": "Makora"
+}

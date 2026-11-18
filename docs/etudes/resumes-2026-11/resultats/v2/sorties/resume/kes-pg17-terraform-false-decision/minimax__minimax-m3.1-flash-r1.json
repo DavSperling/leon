@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:50.456Z",
+  "reponse": "## Where I am\nTerraform for the Postgres 17 blue/green upgrade is implemented on the `noa/rds-pg17` branch: parameter group family derived from the engine major version, blue/green enabled on staging (16.4 → 17.2), production wired behind a disabled `pg17_enabled` flag, and the AWS provider pinned to `~> 5.82.0`. Staging plan is clean (1 add, 1 change), prod plan shows no changes, tflint is clean, and a draft PR is open. Nothing was applied.\n\n- [in-progress] Draft PR kestrel-analytics/infra#57 still open, awaiting review/merge.\n- [next-step] Upgrade pg_partman 4.7.4 → 5.x on staging (via ALTER EXTENSION on 16.4) and verify `run_maintenance_proc()` on `events_raw`/`events_daily`, before the staging switchover.\n- [next-step] Get Maya's sign-off, then pick a production window avoiding the dbt lock on `events_daily` (01:00–03:30 UTC).\n- [failed] Plain `terraform init` failed on a provider version mismatch with the lock file; resolved by `init -upgrade` and pinning AWS to 5.82.2 (no v6 breaking changes in this PR).\n- [failed] First `tflint` run reported an unused variable and a missing `random` provider constraint; both fixed in `c58e1fa`.\n- [decision] Pin the AWS provider to 5.82 and revert the v6 lock file (source: t04).\n- [decision] No production date until Maya signs off, and `apply_immediately` stays false (source: t14).\n- [decision] Open a draft PR documenting the pg_partman step and the dbt lock (source: t16).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3905,
+    "sortie": 580,
+    "reflexion": 182,
+    "cache": 512,
+    "cout": 0.00086463
+  },
+  "cout": 0.00086463,
+  "latenceMs": 3196,
+  "fournisseur": "Together"
+}

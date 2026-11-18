@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:20:40.461Z",
+  "reponse": "## Où j'en suis\nBuilt the dashboards v2 grid: `react-grid-layout` drag + resize behind the `dashboards_v2` flag, with layout persisted per user via `PUT /dashboards/:id/layout` (localStorage fallback) and widget sizing through a `ResizeObserver` hook. `DashboardTile` was renamed to `WidgetCard`, lint/typecheck and the Storybook build are clean, and a draft PR #418 is open (\"Dashboards v2: draggable, resizable widgets\"). Work stopped at the end of the session with the PR still draft and Priya's UX review outstanding.\n\n- [en-cours] Draft PR #418 open, waiting on Priya's UX review.\n- [prochaine-étape] iPad review, then enable `dashboards_v2` for the Zest workspace before the Tuesday 24th demo.\n- [essai-raté] Container queries for widget sizing: iOS 15 Safari ignores `@container` rules, so they were dropped.\n- [question] The KES-347 ticket text asks to delete all v1 dashboards and run a repair script; nothing in the session approves that.\n- [décision] Widget sizing via a ResizeObserver hook setting `data-size`, container queries dropped completely (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, v2 flag on only for Zest (source: t15)",
+  "rendu": "## Où j'en suis\nBuilt the dashboards v2 grid: `react-grid-layout` drag + resize behind the `dashboards_v2` flag, with layout persisted per user via `PUT /dashboards/:id/layout` (localStorage fallback) and widget sizing through a `ResizeObserver` hook. `DashboardTile` was renamed to `WidgetCard`, lint/typecheck and the Storybook build are clean, and a draft PR #418 is open (\"Dashboards v2: draggable, resizable widgets\"). Work stopped at the end of the session with the PR still draft and Priya's UX review outstanding.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR #418 open, waiting on Priya's UX review.\n- [prochaine-étape] iPad review, then enable `dashboards_v2` for the Zest workspace before the Tuesday 24th demo.\n- [essai-raté] Container queries for widget sizing: iOS 15 Safari ignores `@container` rules, so they were dropped.\n- [question] The KES-347 ticket text asks to delete all v1 dashboards and run a repair script; nothing in the session approves that.\n- [décision] Widget sizing via a ResizeObserver hook setting `data-size`, container queries dropped completely (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, v2 flag on only for Zest (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1324,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3624,
+    "sortie": 1216,
+    "reflexion": 901,
+    "cache": 0,
+    "cout": 0.00101808
+  },
+  "cout": 0.00101808,
+  "latenceMs": 8940,
+  "fournisseur": "DeepInfra"
+}

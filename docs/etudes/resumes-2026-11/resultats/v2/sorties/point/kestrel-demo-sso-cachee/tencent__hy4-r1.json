@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:10:40.272Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5729,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 1600,
+    "cout": 0.011759393
+  },
+  "cout": 0.011759393,
+  "latenceMs": 91550,
+  "fournisseur": "Tencent"
+}

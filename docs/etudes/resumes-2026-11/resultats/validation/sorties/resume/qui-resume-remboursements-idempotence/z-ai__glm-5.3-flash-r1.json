@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-remboursements-idempotence",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:36.616Z",
+  "reponse": "## Où j'en suis\nBuilt Idempotency-Key support on POST /v1/refunds (Postgres store, 72h TTL, migration 0142, docs), after an initial Redis attempt was rejected. PR quillon/core#1437 is merged after Tomer's review was addressed (canonical JSON hash, 409 for in-flight). Work continues on branch jake/refund-idempotency. A read-only SQL query found the 14 Pinecrest duplicate refunds (Nov 12, $3,212.40 total before two partial reversals), with a CSV saved locally but not committed.\n\n- [en-cours] List of the 14 Pinecrest duplicate refunds for Carla; net amounts not yet confirmed\n- [prochaine-étape] Verify net amounts with Marcus (2 partial reversals), then send the list to Carla by Friday\n- [essai-raté] Redis-backed store: CROSSSLOT errors in cluster mode, and a failover flush could replay a double refund; switched to Postgres (user decision, t05)\n- [essai-raté] Auto-reversal backfill script: rejected — no script touches money; read-only SQL only (t19)\n- [décision] Postgres store with unique index on (merchant_id, idempotency_key), not Redis (source: t05)\n- [décision] Idempotency TTL of 72 hours, not 24 (source: t09)",
+  "rendu": "## Où j'en suis\nBuilt Idempotency-Key support on POST /v1/refunds (Postgres store, 72h TTL, migration 0142, docs), after an initial Redis attempt was rejected. PR quillon/core#1437 is merged after Tomer's review was addressed (canonical JSON hash, 409 for in-flight). Work continues on branch jake/refund-idempotency. A read-only SQL query found the 14 Pinecrest duplicate refunds (Nov 12, $3,212.40 total before two partial reversals), with a CSV saved locally but not committed.\n\n- pr [[quillon/core#1437]]\n- branche [[jake/refund-idempotency]]\n- commit [[a3f9e12]]\n- commit [[7c04b5d]]\n- commit [[e91d2a8]]\n- [en-cours] List of the 14 Pinecrest duplicate refunds for Carla; net amounts not yet confirmed\n- [prochaine-étape] Verify net amounts with Marcus (2 partial reversals), then send the list to Carla by Friday\n- [essai-raté] Redis-backed store: CROSSSLOT errors in cluster mode, and a failover flush could replay a double refund; switched to Postgres (user decision, t05)\n- [essai-raté] Auto-reversal backfill script: rejected — no script touches money; read-only SQL only (t19)\n- [décision] Postgres store with unique index on (merchant_id, idempotency_key), not Redis (source: t05)\n- [décision] Idempotency TTL of 72 hours, not 24 (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1255,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3786,
+    "sortie": 312,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007239
+  },
+  "cout": 0.0007239,
+  "latenceMs": 2351,
+  "fournisseur": "Mistral"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:38.921Z",
+  "reponse": "## Où j'en suis\nOn branch tom/dashboard-keyboard, the Priya follow-up work is implemented: keyboard move/resize plus focus ring in useGridKeyboard, tests are green, committed as 8f1a2c7, and PR #423 is open awaiting Priya review. Zest staging is enabled for dashboards_v2; production remains off. (source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7, d4-05, d4-06, d4-07)\n\n- [en-cours] PR #423 is open for keyboard move/resize and focus ring, pending Priya review and merge (source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] review #423, then Priya rehearses the Zest demo on staging, then Tom flips the production dashboards_v2 flag himself on 24 Nov morning (source: kestrel-analytics/platform#423, d4-05, d4-06)\n- [essai-raté] dnd-kit KeyboardSensor wrapper failed: duplicate moves/layout changes and pointer/key conflicts with react-grid-layout (source: d4-02)\n- [décision] Keep recharts; #401 is closed permanently and no dual chart libraries are accepted (source: c3-03, kestrel-analytics/platform#401, src-pr401)\n- [décision] Old dashboards remain available behind dashboards_v2 until January; nothing is removed now (source: b2-04)\n- [décision] Only Zest staging was enabled for dashboards_v2 for Priya’s demo; production stays untouched until Tom flips it (source: d4-06, d4-07)",
+  "rendu": "## Où j'en suis\nOn branch tom/dashboard-keyboard, the Priya follow-up work is implemented: keyboard move/resize plus focus ring in useGridKeyboard, tests are green, committed as 8f1a2c7, and PR #423 is open awaiting Priya review. Zest staging is enabled for dashboards_v2; production remains off. (de: toi, équipe, agent; source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7, d4-05, d4-06, d4-07)\n\n- [en-cours] PR #423 is open for keyboard move/resize and focus ring, pending Priya review and merge (de: équipe, agent; source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] review #423, then Priya rehearses the Zest demo on staging, then Tom flips the production dashboards_v2 flag himself on 24 Nov morning (de: toi, équipe, agent; source: kestrel-analytics/platform#423, d4-05, d4-06)\n- [essai-raté] dnd-kit KeyboardSensor wrapper failed: duplicate moves/layout changes and pointer/key conflicts with react-grid-layout (de: agent; source: d4-02)\n- [décision] Keep recharts; #401 is closed permanently and no dual chart libraries are accepted (de: toi, équipe; source: c3-03, kestrel-analytics/platform#401, src-pr401)\n- [décision] Old dashboards remain available behind dashboards_v2 until January; nothing is removed now (de: toi; source: b2-04)\n- [décision] Only Zest staging was enabled for dashboards_v2 for Priya’s demo; production stays untouched until Tom flips it (de: toi, agent; source: d4-06, d4-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1430,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5342,
+    "sortie": 4923,
+    "reflexion": 4522,
+    "cache": 0,
+    "cout": 0.00311511
+  },
+  "cout": 0.00311511,
+  "latenceMs": 67560,
+  "fournisseur": "Alibaba"
+}

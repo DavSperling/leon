@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:39.857Z",
+  "reponse": "## Où j'en suis\nLa PR #91 (brouillon, ouverte) sur `hugo/transalp-etiquettes` est à jour. Le client TransAlp sort des étiquettes ZPL par défaut, testées en recette et imprimées sur la Zebra, accents corrigés avec `^CI28`. `choix.ts` n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre 2026). Rapidis garde le reste de la France et les colis de plus de 30 kg. Reste la relecture de Julien. (source: ses-tr-2, src-pr91, a90c4f7)\n\n- [en-cours] Relecture de la PR #91 par Julien, toujours en brouillon. (source: src-pr91, h2-12)\n- [prochaine-étape] Julien met la clé de production dans les secrets. Rien ne s'active avant le 1er décembre. (source: h2-07)\n- [essai-raté] ZPL en sandbox : refusé, il ne fonctionne qu'en recette et en production. (source: ses-tr-1, h2-01)\n- [essai-raté] Sans `^CI28`, les accents sortaient illisibles (« SaÃ´ne chÃªne »), la Zebra lisant en CP850. Corrigé dans `zpl.ts`, confirmé par Karim. (source: h2-03, h2-04, h2-05)\n- [décision] Bascule de Lyon et Paris au 1er décembre, ZPL par défaut. (source: src-slack-julien, h2-01, h2-07)\n- [décision] Rapidis n'est pas désactivé : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. Le passage du mail sur un contrat Premium est à ignorer. (source: h2-09, src-slack-julien)",
+  "rendu": "## Où j'en suis\nLa PR #91 (brouillon, ouverte) sur `hugo/transalp-etiquettes` est à jour. Le client TransAlp sort des étiquettes ZPL par défaut, testées en recette et imprimées sur la Zebra, accents corrigés avec `^CI28`. `choix.ts` n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre 2026). Rapidis garde le reste de la France et les colis de plus de 30 kg. Reste la relecture de Julien. (de: équipe, agent; source: ses-tr-2, src-pr91, a90c4f7)\n\n- [en-cours] Relecture de la PR #91 par Julien, toujours en brouillon. (de: équipe, agent; source: src-pr91, h2-12)\n- [prochaine-étape] Julien met la clé de production dans les secrets. Rien ne s'active avant le 1er décembre. (de: toi; source: h2-07)\n- [essai-raté] ZPL en sandbox : refusé, il ne fonctionne qu'en recette et en production. (de: toi, agent; source: ses-tr-1, h2-01)\n- [essai-raté] Sans `^CI28`, les accents sortaient illisibles (« SaÃ´ne chÃªne »), la Zebra lisant en CP850. Corrigé dans `zpl.ts`, confirmé par Karim. (de: toi, agent; source: h2-03, h2-04, h2-05)\n- [décision] Bascule de Lyon et Paris au 1er décembre, ZPL par défaut. (de: toi, connecteur; source: src-slack-julien, h2-01, h2-07)\n- [décision] Rapidis n'est pas désactivé : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. Le passage du mail sur un contrat Premium est à ignorer. (de: toi, connecteur; source: h2-09, src-slack-julien)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1427,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5434,
+    "sortie": 641,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017278
+  },
+  "cout": 0.017278,
+  "latenceMs": 4416,
+  "fournisseur": "Amazon Bedrock"
+}

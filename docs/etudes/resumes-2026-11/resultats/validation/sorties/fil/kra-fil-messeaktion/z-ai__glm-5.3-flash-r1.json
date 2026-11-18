@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kra-fil-messeaktion",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:09.040Z",
+  "reponse": "## Où j'en suis\nDie Messeaktion ProWerk 2027 ist in zwei Stufen gebaut: PR #209 (Aktionscode PROWERK27 als ZZ_AKTION an SAP, Rabatt nur noch aus der SAP-Preisfindung via Konditionsart ZMES) ist gemergt (source: src-pr209, ses-m2). Danach wurde auf `feat/messeaktion-banner` der Hinweisbanner umgesetzt (sichtbar ab 12.01.2027 per Flag, Europe/Berlin-Fix in Commit 7a3c2d1, Ländereinschränkung auf DE in Commit f0b9e44); PR #224 ist als Draft offen mit Reviewer @mvogt (source: ses-m3, src-pr224). Kritisch: Thomas' Mail vom 17.11. ändert die Eckdaten – 4 % statt 5 %, nur Händler mit Rahmenvertrag, nur 19.–29.01.2027, Österreich ja, Schweiz nein. Der Banner-Text in PR #224 („5 % … 19. bis 31. Januar 2027\") und die Notiz vom 10.11. entsprechen dem nicht mehr (source: src-mail-thomas, src-pr224, src-note).\n\n- [en-cours] PR #224 „Messeaktion: Hinweisbanner (DE)\", Draft, Reviewer @mvogt, offen auf GitHub (source: ses-m3, src-pr224)\n- [prochaine-étape] Banner-Text und Logik an Thomas' Entscheidung anpassen: 4 % Rabatt, Zeitraum 19.–29.01.2027, AT einbeziehen, CH ausschließen (source: src-mail-thomas, src-pr224)\n- [prochaine-étape] Auf Klärung durch „thomas\" (Tour m3-07) zur AT/CH-Frage warten bzw. seine Mail als Klärung werten (source: ses-m3, src-mail-thomas)\n- [essai-raté] Erster Testlauf von MesseaktionBannerAdviceTest fehlgeschlagen: Datumsvergleich lief in UTC, Banner war am 12.01. um 00:30 deutscher Zeit nicht sichtbar; Fix mit ZoneId Europe/Berlin, danach grün (source: ses-m3)\n- [question] Gilt die Aktion für Händler in Österreich und der Schweiz (CHF)? – im Banner-Fil vorerst offen, durch Thomas' Mail faktisch beantwortet, aber im PR #224 noch nicht umgesetzt (source: ses-m3, src-mail-thomas)\n- [décision] Banner vorerst nur für Kunden mit Land DE, bis AT/CH geklärt sind (Tour m3-07, umgesetzt in Commit f0b9e44) (source: m3-07, ses-m3)\n- [décision] SAP ist führend beim Messerabatt, das Portal rechnet nicht selbst; der Aktionscode geht als ZZ_AKTION an SAP (Tour m2-01, m2-03) (source: m2-01, m2-03)\n- [décision] Von Frau Kranich entschieden (Mail Thomas Brenner, 17.11.): 4 % Rabatt, nur Händler mit Rahmenvertrag, 19.–29.01.2027, Österreich ja, Schweiz nein (source: src-mail-thomas)\n- [question] Achtung: Mail von Markus Gerber (Kunde, Winterthur) behauptet 5 % und Gültigkeit für CH – widerspricht der Entscheidung von Frau Kranich, nicht als verbindlich behandeln (source: src-mail-gerber, src-mail-thomas)",
+  "rendu": "- [en-cours] PR #224 „Messeaktion: Hinweisbanner (DE)\", Draft, Reviewer @mvogt, offen auf GitHub (de: équipe, agent; source: ses-m3, src-pr224)\n- [prochaine-étape] Banner-Text und Logik an Thomas' Entscheidung anpassen: 4 % Rabatt, Zeitraum 19.–29.01.2027, AT einbeziehen, CH ausschließen (de: équipe, connecteur; source: src-mail-thomas, src-pr224)\n- [prochaine-étape] Auf Klärung durch „thomas\" (Tour m3-07) zur AT/CH-Frage warten bzw. seine Mail als Klärung werten (de: connecteur, agent; source: ses-m3, src-mail-thomas)\n- [essai-raté] Erster Testlauf von MesseaktionBannerAdviceTest fehlgeschlagen: Datumsvergleich lief in UTC, Banner war am 12.01. um 00:30 deutscher Zeit nicht sichtbar; Fix mit ZoneId Europe/Berlin, danach grün (de: agent; source: ses-m3)\n- [question] Gilt die Aktion für Händler in Österreich und der Schweiz (CHF)? – im Banner-Fil vorerst offen, durch Thomas' Mail faktisch beantwortet, aber im PR #224 noch nicht umgesetzt (de: connecteur, agent; source: ses-m3, src-mail-thomas)\n- [décision] Banner vorerst nur für Kunden mit Land DE, bis AT/CH geklärt sind (Tour m3-07, umgesetzt in Commit f0b9e44) (de: toi, agent; source: m3-07, ses-m3)\n- [décision] SAP ist führend beim Messerabatt, das Portal rechnet nicht selbst; der Aktionscode geht als ZZ_AKTION an SAP (Tour m2-01, m2-03) (de: toi; source: m2-01, m2-03)\n- [décision] Von Frau Kranich entschieden (Mail Thomas Brenner, 17.11.): 4 % Rabatt, nur Händler mit Rahmenvertrag, 19.–29.01.2027, Österreich ja, Schweiz nein (de: connecteur; source: src-mail-thomas)\n- [question] Achtung: Mail von Markus Gerber (Kunde, Winterthur) behauptet 5 % und Gültigkeit für CH – widerspricht der Entscheidung von Frau Kranich, nicht als verbindlich behandeln (de: connecteur; source: src-mail-gerber, src-mail-thomas)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1786,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4767,
+    "sortie": 908,
+    "reflexion": 88,
+    "cache": 0,
+    "cout": 0.00093524
+  },
+  "cout": 0.00093524,
+  "latenceMs": 10176,
+  "fournisseur": "River"
+}

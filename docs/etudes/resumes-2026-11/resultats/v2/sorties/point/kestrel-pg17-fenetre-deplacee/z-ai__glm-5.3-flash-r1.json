@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:12:12.084Z",
+  "reponse": "## What you did\n\n- You got prod PG17 cutover ready: blue/green Terraform on the prod instance (replica now follows the swap instead of being recreated — plan is 2 changes, 0 destroys), the runbook in `runbooks/pg17-cutover.md`, and PR #321 opened with Maya as reviewer [1][3].\n- You rehearsed the whole blue/green on a snapshot clone: 74 seconds of write downtime, replication lag under 1 s, dashboards API reconnected without restarts — then tore the clone down to stop the cost [1].\n- You corrected the runbook on rollback: after switchover the blue instance diverges, so rollback is not just switching back [1].\n\n## What changed\n\n- The window moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC**. Maya confirmed it and says you can update the runbook and merge #321 [8][10].\n- Maya approved #321, with the condition not to merge before the window was confirmed — that's now lifted [3].\n- Daniel Levi will be on call for the API side on Sunday; ping him when you start the switchover [7].\n- Lior Ben-David confirmed the ingest workers need nothing (SSM-based DATABASE_URL), but asked for 30 min notice before switchover to pause consumers cleanly [9].\n\n## What is still open\n\n- Rollback rehearsal on a fresh clone is scheduled for **Thursday 19/11** — measure duration and data loss, keep it in the runbook as a todo [1].\n- Update the runbook to the Sunday window before merging #321 [8][10].",
+  "rendu": "## What you did\n\n- You got prod PG17 cutover ready: blue/green Terraform on the prod instance (replica now follows the swap instead of being recreated — plan is 2 changes, 0 destroys), the runbook in `runbooks/pg17-cutover.md`, and PR #321 opened with Maya as reviewer [1][3].\n- You rehearsed the whole blue/green on a snapshot clone: 74 seconds of write downtime, replication lag under 1 s, dashboards API reconnected without restarts — then tore the clone down to stop the cost [1].\n- You corrected the runbook on rollback: after switchover the blue instance diverges, so rollback is not just switching back [1].\n\n## What changed\n\n- The window moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC**. Maya confirmed it and says you can update the runbook and merge #321 [8][10].\n- Maya approved #321, with the condition not to merge before the window was confirmed — that's now lifted [3].\n- Daniel Levi will be on call for the API side on Sunday; ping him when you start the switchover [7].\n- Lior Ben-David confirmed the ingest workers need nothing (SSM-based DATABASE_URL), but asked for 30 min notice before switchover to pause consumers cleanly [9].\n\n## What is still open\n\n- Rollback rehearsal on a fresh clone is scheduled for **Thursday 19/11** — measure duration and data loss, keep it in the runbook as a todo [1].\n- Update the runbook to the Sunday window before merging #321 [8][10].",
+  "mesures": {
+    "mots": 232,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5064,
+    "sortie": 410,
+    "reflexion": 34,
+    "cache": 0,
+    "cout": 0.0009646
+  },
+  "cout": 0.0009646,
+  "latenceMs": 3086,
+  "fournisseur": "Friendli"
+}

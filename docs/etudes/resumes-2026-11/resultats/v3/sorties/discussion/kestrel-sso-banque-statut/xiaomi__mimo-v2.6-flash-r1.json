@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:55.710Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 34620,
+    "sortie": 645,
+    "reflexion": 324,
+    "cache": 16416,
+    "cout": 0.0027784079999999996
+  },
+  "latenceMs": 8588,
+  "fournisseur": "Cohere",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise SSO 1er décembre\"}",
+    "chercher {\"requete\":\"\\\"December 1st\\\" bank staff login company accounts SSO launch\"}",
+    "lire {\"sourceId\":\"8\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"passageId\":\"slack-eng-sso-sha1-4\"}",
+    "lire {\"passageId\":\"gmail-fernhill-sso-config-4\"}",
+    "chercher {\"requete\":\"KES-412 SSO remaining tasks provisioning \\\"Require SSO\\\" flag go-live checklist\",\"outil\":\"linear\"}",
+    "chercher {\"requete\":\"Fernhill go-live prep just-in-time provisioning default role Viewer admin copy review\"}"
+  ],
+  "cout": 0.0027784079999999996
+}

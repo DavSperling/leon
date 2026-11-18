@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:30.120Z",
+  "reponse": "## Où j'en suis\nL'endpoint SAML ACS de Fernhill est terminé : vérification de signature via signxml (python3-saml abandonné à cause d'une incompatibilité lxml/xmlsec sur Alpine), vérifications des conditions (audience, recipient, fenêtre de temps), protection anti-replay Redis, skew fixé à 120 s (annexe contractuelle Fernhill). `saml_utils.py` déplacé dans `api/auth/saml/verify.py`, mypy et ruff propres. La PR #412 est fusionnée (squash, commits 3f9c2a1, b71e04d, e0a5c93).\n\n- [prochaine-étape] charger les métadonnées IdP de staging de Fernhill et envoyer nos métadonnées SP de staging, avant mercredi fin de journée (démo jeudi 10h New York)\n- [prochaine-étape] créer un ticket séparé : imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (explicitement hors périmètre de la PR)\n- [essai-raté] build de l'image avec python3-saml/xmlsec : échec (mismatch de versions libxml2), puis lxml compilé depuis source : toujours en échec (module xmlsec1-openssl absent d'Alpine 3.20) — d'où le choix de signxml\n- [essai-raté] `gh pr merge 412 --squash` refusé par la protection de branche (review de Maya manquante) — sans conséquence, la PR est depuis fusionnée\n- [décision] utiliser signxml, supprimer python3-saml et xmlsec du Dockerfile, écrire les vérifications de conditions soi-même, et ne lire que depuis `signed_xml` (source: t08)\n- [décision] skew de 2 minutes (120 s), exigence du questionnaire de sécurité Fernhill en annexe de contrat, réglage non codé en dur (source: t12)\n- [décision] ne pas toucher au login par mot de passe dans cette PR — ticket séparé (source: t12)\n- [décision] pas de `--admin` ni `--auto` pour la fusion, la personne contactera Maya elle-même (source: t21)",
+  "rendu": "## Où j'en suis\nL'endpoint SAML ACS de Fernhill est terminé : vérification de signature via signxml (python3-saml abandonné à cause d'une incompatibilité lxml/xmlsec sur Alpine), vérifications des conditions (audience, recipient, fenêtre de temps), protection anti-replay Redis, skew fixé à 120 s (annexe contractuelle Fernhill). `saml_utils.py` déplacé dans `api/auth/saml/verify.py`, mypy et ruff propres. La PR #412 est fusionnée (squash, commits 3f9c2a1, b71e04d, e0a5c93).\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] charger les métadonnées IdP de staging de Fernhill et envoyer nos métadonnées SP de staging, avant mercredi fin de journée (démo jeudi 10h New York)\n- [prochaine-étape] créer un ticket séparé : imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (explicitement hors périmètre de la PR)\n- [essai-raté] build de l'image avec python3-saml/xmlsec : échec (mismatch de versions libxml2), puis lxml compilé depuis source : toujours en échec (module xmlsec1-openssl absent d'Alpine 3.20) — d'où le choix de signxml\n- [essai-raté] `gh pr merge 412 --squash` refusé par la protection de branche (review de Maya manquante) — sans conséquence, la PR est depuis fusionnée",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1324,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4447,
+    "sortie": 514,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00028135
+  },
+  "cout": 0.00028135,
+  "latenceMs": 6862,
+  "fournisseur": "Wafer"
+}

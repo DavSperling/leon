@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:39.761Z",
+  "reponse": "## Où j'en suis\nPrepared the Postgres 17 blue/green upgrade for `analytics-staging`: parameter group family derived from the major version, blue/green enabled, engine 16.4 → 17.2, AWS provider pinned and `tflint` clean; prod is prepared behind `pg17_enabled = false`. Nothing has been applied — staging plan is 1 to add / 1 to change and prod plan is empty — and PR #57 is open as a draft with the pg_partman and dbt-lock caveats in its description.\n\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on 16.4 and verify `run_maintenance_proc()` on `events_raw`/`events_daily` before any staging apply\n- [prochaine-étape] Pick a prod window after Maya's sign-off, outside the 01:00–03:30 UTC dbt lock\n- [essai-raté] `init -upgrade` selected AWS provider v6 and produced 37 unrelated changes; reverted\n- [décision] Pin AWS provider ~> 5.82.0, no v6 in this PR (source: t04)\n- [décision] Plan only, nothing applied (source: t01)\n- [décision] No prod date and `apply_immediately = false` until Maya signs off (source: t14)",
+  "rendu": "## Où j'en suis\nPrepared the Postgres 17 blue/green upgrade for `analytics-staging`: parameter group family derived from the major version, blue/green enabled, engine 16.4 → 17.2, AWS provider pinned and `tflint` clean; prod is prepared behind `pg17_enabled = false`. Nothing has been applied — staging plan is 1 to add / 1 to change and prod plan is empty — and PR #57 is open as a draft with the pg_partman and dbt-lock caveats in its description.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on 16.4 and verify `run_maintenance_proc()` on `events_raw`/`events_daily` before any staging apply\n- [prochaine-étape] Pick a prod window after Maya's sign-off, outside the 01:00–03:30 UTC dbt lock\n- [essai-raté] `init -upgrade` selected AWS provider v6 and produced 37 unrelated changes; reverted\n- [décision] Pin AWS provider ~> 5.82.0, no v6 in this PR (source: t04)\n- [décision] Plan only, nothing applied (source: t01)\n- [décision] No prod date and `apply_immediately = false` until Maya signs off (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1147,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4023,
+    "sortie": 1723,
+    "reflexion": 1408,
+    "cache": 0,
+    "cout": 0.00164294
+  },
+  "cout": 0.00164294,
+  "latenceMs": 8007,
+  "fournisseur": "CoreWeave"
+}

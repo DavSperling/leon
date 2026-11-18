@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.842Z",
+  "reponse": "Je ne sais pas, car nous n'avons pas encore trouvé le MSA personnalisé d'Orbitly signé en 2024 qui précise leurs conditions exactes de crédit SLA [1][4]. J'ai cherché « Orbitly outage credits contract », examiné les conversations sur les crédits SLA [1], les notes HubSpot [2], les fils de discussion sur l'incident et le deal desk [3][4], ainsi que les propositions de renouvellement [6] et le postmortem de l'incident du 12 novembre [9].",
+  "rendu": "Je ne sais pas, car nous n'avons pas encore trouvé le MSA personnalisé d'Orbitly signé en 2024 qui précise leurs conditions exactes de crédit SLA [1][4]. J'ai cherché « Orbitly outage credits contract », examiné les conversations sur les crédits SLA [1], les notes HubSpot [2], les fils de discussion sur l'incident et le deal desk [3][4], ainsi que les propositions de renouvellement [6] et le postmortem de l'incident du 12 novembre [9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 4729,
+    "sortie": 191,
+    "reflexion": 57,
+    "cache": 0,
+    "cout": 0.0018961999999999998
+  },
+  "latenceMs": 2772,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage credits contract\"}"
+  ],
+  "cout": 0.0018961999999999998
+}

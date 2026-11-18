@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:27:46.484Z",
+  "reponse": "## Où j'en suis\nLe SSO SAML pour Fernhill progresse en vue de la démonstration prévue jeudi 19 novembre à 10h00 heure de New York : les métadonnées de l'IdP de staging ont été chargées, et un test de connexion réel aboutit avec la création JIT de l'utilisateur en rôle `viewer` grâce à la PR #415 fusionnée. La PR #421 est ouverte pour gérer le mappage des groupes, en attendant que l'équipe informatique de Fernhill ajoute l'attribut de groupe de son côté. (source: src-linear-kes311, ses-sso-3)\n\n- [en-cours] PR #421 pour le mappage des groupes et la gestion d'un RelayState court (source: ses-sso-3)\n- [prochaine-étape] attente de l'ajout du claim `groups` par l'informatique de Fernhill avant la démo de jeudi (source: ses-sso-3)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC (source: s1-03)\n- [décision] les utilisateurs créés lors de la première connexion obtiennent le rôle `viewer` (source: s1-05)\n- [décision] aucun compte n'est créé pour un domaine non vérifié, même si l'IdP l'envoie (source: s2-03)",
+  "rendu": "## Où j'en suis\nLe SSO SAML pour Fernhill progresse en vue de la démonstration prévue jeudi 19 novembre à 10h00 heure de New York : les métadonnées de l'IdP de staging ont été chargées, et un test de connexion réel aboutit avec la création JIT de l'utilisateur en rôle `viewer` grâce à la PR #415 fusionnée. La PR #421 est ouverte pour gérer le mappage des groupes, en attendant que l'équipe informatique de Fernhill ajoute l'attribut de groupe de son côté. (de: connecteur, agent; source: src-linear-kes311, ses-sso-3)\n\n- [en-cours] PR #421 pour le mappage des groupes et la gestion d'un RelayState court (de: agent; source: ses-sso-3)\n- [prochaine-étape] attente de l'ajout du claim `groups` par l'informatique de Fernhill avant la démo de jeudi (de: agent; source: ses-sso-3)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC (de: toi; source: s1-03)\n- [décision] les utilisateurs créés lors de la première connexion obtiennent le rôle `viewer` (de: toi; source: s1-05)\n- [décision] aucun compte n'est créé pour un domaine non vérifié, même si l'IdP l'envoie (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1091,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5054,
+    "sortie": 325,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0023287
+  },
+  "cout": 0.0023287,
+  "latenceMs": 1640,
+  "fournisseur": "Google"
+}

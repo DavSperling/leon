@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:10:47.973Z",
+  "reponse": "## What you did\n\n- You implemented SAML assertion signature verification for Fernhill's Okta — assertion-level signatures, SHA-256+ only, per-tenant IdP certificates, replay cache — and opened PR #418 for Maya's review [2].\n- You killed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, converted the two other sleep-based tests, and brought `kestrel/auth` to clean ruff 0.8 + mypy — missing Issuer/Subject now yields 401 instead of a 500 [1].\n- You split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}` with a compatibility shim; full suite green, ruff and mypy clean [1].\n- You parked that cleanup on branch `daniel/auth-cleanup` as PR #423, deliberately leaving #418 untouched [1].\n\n## What changed\n\n- Maya approved and merged #418 last night; it ships with the staging deploy — signature validation is on staging ahead of the Wed EOD deadline for Fernhill [3][1].\n- Tom requested changes on #423: he wants the module move split from the lint fixes into two PRs, since the 1,900-line diff hides the real changes; he said he'd approve both today [4].\n\n## What is still open\n\n- The Fernhill end-to-end SSO walkthrough on staging is Thursday 10:00 NY time against their Okta tenant; Priya runs the demo, you only need to be on the call [1].\n- Split #423 into two PRs as Tom asked and get them approved today [4].\n- Your queued task: move the assertion-ID replay cache to Redis so replay protection holds across the 3 API pods — it's an in-process TTLCache today [1].",
+  "rendu": "## What you did\n\n- You implemented SAML assertion signature verification for Fernhill's Okta — assertion-level signatures, SHA-256+ only, per-tenant IdP certificates, replay cache — and opened PR #418 for Maya's review [2].\n- You killed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, converted the two other sleep-based tests, and brought `kestrel/auth` to clean ruff 0.8 + mypy — missing Issuer/Subject now yields 401 instead of a 500 [1].\n- You split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}` with a compatibility shim; full suite green, ruff and mypy clean [1].\n- You parked that cleanup on branch `daniel/auth-cleanup` as PR #423, deliberately leaving #418 untouched [1].\n\n## What changed\n\n- Maya approved and merged #418 last night; it ships with the staging deploy — signature validation is on staging ahead of the Wed EOD deadline for Fernhill [3][1].\n- Tom requested changes on #423: he wants the module move split from the lint fixes into two PRs, since the 1,900-line diff hides the real changes; he said he'd approve both today [4].\n\n## What is still open\n\n- The Fernhill end-to-end SSO walkthrough on staging is Thursday 10:00 NY time against their Okta tenant; Priya runs the demo, you only need to be on the call [1].\n- Split #423 into two PRs as Tom asked and get them approved today [4].\n- Your queued task: move the assertion-ID replay cache to Redis so replay protection holds across the 3 API pods — it's an in-process TTLCache today [1].",
+  "mesures": {
+    "mots": 232,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6098,
+    "sortie": 2020,
+    "reflexion": 1611,
+    "cache": 0,
+    "cout": 0.0033075225
+  },
+  "cout": 0.0033075225,
+  "latenceMs": 51636,
+  "fournisseur": "GMICloud"
+}

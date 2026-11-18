@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:13.224Z",
+  "reponse": "Daniel Levi owns Fernhill's SAML SSO end to end [1][3]; Priya owns customer comms and the demo [3]. The ticket KES-430 has an internal due date of November 27, set to leave buffer before the contractual go-live [1]. The contract itself commits to SSO being live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Work is currently blocked on Fernhill's production IdP metadata, which can only come after their change board meeting on the 26th [1][6], though Daniel says the swap is a same-day config change on our side [6].",
+  "rendu": "Daniel Levi owns Fernhill's SAML SSO end to end [1][3]; Priya owns customer comms and the demo [3]. The ticket KES-430 has an internal due date of November 27, set to leave buffer before the contractual go-live [1]. The contract itself commits to SSO being live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Work is currently blocked on Fernhill's production IdP metadata, which can only come after their change board meeting on the 26th [1][6], though Daniel says the swap is a same-day config change on our side [6].",
+  "mesures": {
+    "mots": 99,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1380,
+    "sortie": 214,
+    "reflexion": 71,
+    "cache": 664,
+    "cout": 0.00024576
+  },
+  "cout": 0.00024576,
+  "latenceMs": 1759,
+  "fournisseur": "Fireworks"
+}

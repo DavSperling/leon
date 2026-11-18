@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:28.941Z",
+  "reponse": "We don't know yet — nothing is agreed on paper. Here's what the record shows:\n\n- The current Corvane per-item ACH fee is **$0.08**, and the current agreement runs until **March 31, 2027** [1]. October's invoice ($14,212.40 for 177,655 ACH items) is consistent with that rate [12].\n- Marcus Oyelaran is to open renewal talks with Corvane in November; the Q1 planning memo assumes the fee stays at $0.08 in 2027, with a concern threshold if it goes above $0.10 [1].\n- Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 reject incident, but \"nothing on paper yet\" [6]. The renewal call with Paula Brandt was moved to the week of Nov 23 [6]. Marcus also noted Corvane only affects Quillon's margin, not customer pricing [6].\n\nSo: still $0.08 per payout item today, with a possible increase to be negotiated — I'd check back after that renewal call.",
+  "rendu": "We don't know yet — nothing is agreed on paper. Here's what the record shows:\n\n- The current Corvane per-item ACH fee is **$0.08**, and the current agreement runs until **March 31, 2027** [1]. October's invoice ($14,212.40 for 177,655 ACH items) is consistent with that rate [12].\n- Marcus Oyelaran is to open renewal talks with Corvane in November; the Q1 planning memo assumes the fee stays at $0.08 in 2027, with a concern threshold if it goes above $0.10 [1].\n- Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 reject incident, but \"nothing on paper yet\" [6]. The renewal call with Paula Brandt was moved to the week of Nov 23 [6]. Marcus also noted Corvane only affects Quillon's margin, not customer pricing [6].\n\nSo: still $0.08 per payout item today, with a possible increase to be negotiated — I'd check back after that renewal call.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7619,
+    "sortie": 321,
+    "reflexion": 52,
+    "cache": 0,
+    "cout": 0.001780585
+  },
+  "latenceMs": 3431,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"Corvane pricing per payout\"}",
+    "chercher {\"requete\":\"Corvane fees 2026\"}"
+  ],
+  "cout": 0.001780585
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:11:08.346Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4154,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 0,
+    "cout": 0.00126939
+  },
+  "cout": 0.00126939,
+  "latenceMs": 61771,
+  "fournisseur": "Tencent"
+}

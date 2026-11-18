@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:59:47.823Z",
+  "reponse": "Selon le postmortem du 16 novembre, la cause racine de la panne d'ingest du 12 novembre est le disque du broker Kafka ingest-kafka-2 rempli suite au changement de rétention dans l'infra PR #221 (rétention par taille supprimée, conservée à 7 jours par temps) ; le broker est passé en lecture seule à 09h38 UTC [2]. Durée : 2h47, événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le déploiement du PR #388 (taille de batch) était une fausse piste : son revert n'a rien changé [1][3], et #388 a été réappliqué [5]. Des alertes disque à 80 % et le rétablissement de la rétention par taille sont prévus [5].",
+  "rendu": "Selon le postmortem du 16 novembre, la cause racine de la panne d'ingest du 12 novembre est le disque du broker Kafka ingest-kafka-2 rempli suite au changement de rétention dans l'infra PR #221 (rétention par taille supprimée, conservée à 7 jours par temps) ; le broker est passé en lecture seule à 09h38 UTC [2]. Durée : 2h47, événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le déploiement du PR #388 (taille de batch) était une fausse piste : son revert n'a rien changé [1][3], et #388 a été réappliqué [5]. Des alertes disque à 80 % et le rétablissement de la rétention par taille sont prévus [5].",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1216,
+    "sortie": 189,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00068617
+  },
+  "cout": 0.00068617,
+  "latenceMs": 2436,
+  "fournisseur": "Z.AI"
+}

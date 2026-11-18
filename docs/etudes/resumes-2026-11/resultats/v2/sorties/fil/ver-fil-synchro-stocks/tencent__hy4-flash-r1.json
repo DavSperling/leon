@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:32.651Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4462,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.00099917
+  },
+  "cout": 0.00099917,
+  "latenceMs": 41952,
+  "fournisseur": "Tencent"
+}

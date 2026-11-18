@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:14.470Z",
+  "reponse": "## Where I am\n\nThe replay tool `cmd/replay` is written, with a dry run, per-partition ordering, a rejects file and a topic allowlist (`events.replay.v3` only). The dry run on the 12/11 window (14:10–17:40 UTC) finished: 18,442,107 events would be replayed, and 3,118 schema v2 lines went to the rejects file. PR #233 is open and waiting for Daniel's review. The real replay and the aggregator backfill have not been run.\n\n- [en-cours] Waiting for Daniel's review of PR #233 before the real replay\n- [prochaine-étape] Get PR #233 reviewed and merged\n- [prochaine-étape] Run the real replay into `events.replay.v3` for the 12/11 window\n- [prochaine-étape] Run the aggregator `--backfill` for 2026-11-12 on `events.replay.v3`\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly by Friday (after Daniel's review)\n- [essai-raté] Dry run at `--batch 50000` was OOMKilled against the 2Gi limit (peak around 2.6 GiB); re-ran at `--batch 5000` (peak 310 MiB, completed in 19m42s). The memory limit stays untouched because of the namespace quota.\n- [essai-raté] Sharing 4 workers across objects of the same hour broke per-partition order (sessionization depends on it); fixed by assigning each partition to one worker.\n- [décision] Replay the whole 12/11 window, do not drop anything older than 72h; never produce directly to `events.v3` from this tool (source: t05)\n- [décision] Write malformed lines to the rejects file in the bucket instead of skipping them silently (source: t15)\n- [décision] Keep the 2Gi memory limit and use batches of 5k (source: t13)\n- [décision] Open PR #233 ready for review with Daniel as reviewer (source: t17)",
+  "rendu": "- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Waiting for Daniel's review of PR #233 before the real replay\n- [prochaine-étape] Get PR #233 reviewed and merged\n- [prochaine-étape] Run the real replay into `events.replay.v3` for the 12/11 window\n- [prochaine-étape] Run the aggregator `--backfill` for 2026-11-12 on `events.replay.v3`\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly by Friday (after Daniel's review)\n- [essai-raté] Dry run at `--batch 50000` was OOMKilled against the 2Gi limit (peak around 2.6 GiB); re-ran at `--batch 5000` (peak 310 MiB, completed in 19m42s). The memory limit stays untouched because of the namespace quota.\n- [essai-raté] Sharing 4 workers across objects of the same hour broke per-partition order (sessionization depends on it); fixed by assigning each partition to one worker.\n- [décision] Replay the whole 12/11 window, do not drop anything older than 72h; never produce directly to `events.v3` from this tool (source: t05)\n- [décision] Write malformed lines to the rejects file in the bucket instead of skipping them silently (source: t15)\n- [décision] Keep the 2Gi memory limit and use batches of 5k (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1251,
+    "decisions": 3,
+    "decisionsRetirees": 1,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5740,
+    "sortie": 660,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000904
+  },
+  "cout": 0.000904,
+  "latenceMs": 3534,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:56.622Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 39847,
+    "sortie": 920,
+    "reflexion": 538,
+    "cache": 22528,
+    "cout": 0.003390698
+  },
+  "latenceMs": 18530,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage service credits contract\"}",
+    "chercher {\"requete\":\"\\\"Orbitly\\\" \\\"credits\\\"\"}",
+    "chercher {\"requete\":\"last week Orbitly downtime compensation VP settled\"}",
+    "chercher {\"requete\":\"Orbitly MSA signed 2024 service credit uptime terms\"}",
+    "chercher {\"requete\":\"Avi legal folder contract Orbitly credit finance\"}",
+    "chercher {\"requete\":\"Orbitly annual contract value monthly fee 120 seats price\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"hubspot-orbitly-renewal-call\"}"
+  ],
+  "cout": 0.003390698
+}

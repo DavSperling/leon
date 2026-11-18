@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:19.271Z",
+  "reponse": "## Où j'en suis\nLe replay réel du 12/11 est passé : le job `replay-1` a produit 18 442 107 événements dans `events.replay.v3` (3 118 lignes schema v2 en rejet), et la PR #233 qui portait l'outil est fusionnée. Le backfill de l'agrégateur pour 2026-11-12 tourne depuis 08:57 UTC et en était à 61 % à 09:52, avec 14,9 M lignes dans `events_v3` sur la fenêtre de l'incident contre ~20,5 M attendues ; l'incident reste ouvert jusqu'à ce que les comptes concordent. (source: ses-rp-2, ses-rp-1)\n\n- [en-cours] Backfill agrégateur `backfill-2026-11-12` (heures 15–23 en cours), comptes ClickHouse encore en dessous de l'attendu (source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1 %), puis clore l'incident (source: r2-08, ses-rp-2)\n- [essai-raté] Dry run en lots de 50 000 : OOMKilled (exit 137, limite 2Gi, 3 redémarrages) ; les lots de 5 000 passent (pic 310 MiB), et la limite mémoire ne doit pas bouger (source: r1-03, r1-04, src-sentry-oom)\n- [décision] Tout rejouer dans un topic séparé `events.replay.v3` ; ne jamais produire directement dans `events.v3` depuis cet outil (source: r1-02, src-slack-incident)\n- [décision] Pas d'autre correctif pour cet incident : Daniel porte le check CI sur la troncature de la clé de dedup, Rachel les communications client (source: src-slack-incident)\n- [décision] Ignorer la PR #241 du fork, ne pas la relire ni la fusionner (source: r2-09, r2-10)\n- [question] La date de restauration annoncée aux clients (Orbitly et Fernhill) reste à confirmer côté engineering, entre le 18/11 demandé et le jeudi annoncé (source: src-zendesk-orbitly, r2-07)",
+  "rendu": "## Où j'en suis\nLe replay réel du 12/11 est passé : le job `replay-1` a produit 18 442 107 événements dans `events.replay.v3` (3 118 lignes schema v2 en rejet), et la PR #233 qui portait l'outil est fusionnée. Le backfill de l'agrégateur pour 2026-11-12 tourne depuis 08:57 UTC et en était à 61 % à 09:52, avec 14,9 M lignes dans `events_v3` sur la fenêtre de l'incident contre ~20,5 M attendues ; l'incident reste ouvert jusqu'à ce que les comptes concordent. (de: agent; source: ses-rp-2, ses-rp-1)\n\n- [en-cours] Backfill agrégateur `backfill-2026-11-12` (heures 15–23 en cours), comptes ClickHouse encore en dessous de l'attendu (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1 %), puis clore l'incident (de: agent; source: r2-08, ses-rp-2)\n- [essai-raté] Dry run en lots de 50 000 : OOMKilled (exit 137, limite 2Gi, 3 redémarrages) ; les lots de 5 000 passent (pic 310 MiB), et la limite mémoire ne doit pas bouger (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [décision] Tout rejouer dans un topic séparé `events.replay.v3` ; ne jamais produire directement dans `events.v3` depuis cet outil (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Pas d'autre correctif pour cet incident : Daniel porte le check CI sur la troncature de la clé de dedup, Rachel les communications client (de: connecteur; source: src-slack-incident)\n- [décision] Ignorer la PR #241 du fork, ne pas la relire ni la fusionner (de: toi, agent; source: r2-09, r2-10)\n- [question] La date de restauration annoncée aux clients (Orbitly et Fernhill) reste à confirmer côté engineering, entre le 18/11 demandé et le jeudi annoncé (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1788,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3856,
+    "sortie": 1296,
+    "reflexion": 727,
+    "cache": 0,
+    "cout": 0.002712
+  },
+  "cout": 0.002712,
+  "latenceMs": 5910,
+  "fournisseur": "Parasail"
+}

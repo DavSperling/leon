@@ -1,0 +1,160 @@
+{
+  "id": "kes-sso-fernhill-responsable-echeance",
+  "titre": "Recherche « qui porte le SAML de Fernhill et pour quand » : la réponse croise le ticket Linear (responsable, date interne) et le mail du bon de commande (date contractuelle), avec une vieille page Notion qui donne une autre cible",
+  "langue": "en",
+  "entree": {
+    "recherche": "who owns fernhill saml and when is it due",
+    "resultats": [
+      {
+        "id": "lin-kes-430",
+        "kind": "linear",
+        "nature": "ticket",
+        "titre": "KES-430 Fernhill: SAML SSO (SP-initiated) + JIT provisioning",
+        "url": "https://linear.app/kestrel/issue/KES-430",
+        "date": "2026-11-16T14:22:00Z",
+        "passages": [
+          {
+            "id": "p430a",
+            "auteur": "Maya Cohen",
+            "date": "2026-11-04T09:10:00Z",
+            "texte": "Customer: Fernhill Bank (contract signed Nov 3).\nScope: SP-initiated SAML 2.0 login, JIT user provisioning, per-workspace \"enforce SSO\" (phase 2, separate ticket).\nAssignee: Daniel Levi\nDue date: Nov 27 (internal, leaves a buffer before the contractual go-live)\nLabels: enterprise, security, fernhill"
+          },
+          {
+            "id": "p430b",
+            "auteur": "Daniel Levi",
+            "date": "2026-11-16T14:22:00Z",
+            "texte": "ACS endpoint + signature validation merged in #412. Staging login works against Fernhill's test IdP. Blocked on their production IdP metadata, Oliver says it comes after their change board."
+          }
+        ]
+      },
+      {
+        "id": "gm-fernhill-order",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Fernhill Bank – Order Form signed",
+        "url": null,
+        "date": "2026-11-03T17:45:00Z",
+        "passages": [
+          {
+            "id": "pgm1",
+            "auteur": "Sam Ortiz",
+            "date": "2026-11-03T17:45:00Z",
+            "texte": "Team, Fernhill signed the order form today: 1,200 seats, 3-year term. Key commitment we made: SSO (SAML) live in production by December 1, 2026. If we miss it, they get a 10% credit on the Q1 invoice. Daniel, Priya, let's sync tomorrow on the plan.\n\nSam Ortiz | Account Executive, EMEA"
+          }
+        ]
+      },
+      {
+        "id": "sl-fernhill-deal",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#fernhill-deal",
+        "url": null,
+        "date": "2026-11-04T10:02:00Z",
+        "passages": [
+          {
+            "id": "psl1",
+            "auteur": "Maya Cohen",
+            "date": "2026-11-04T10:02:00Z",
+            "texte": "Owners for Fernhill so nobody wonders: Daniel owns SAML end to end. Priya owns customer comms and the demo. Noa, please give Daniel a staging IdP by Friday."
+          }
+        ]
+      },
+      {
+        "id": "no-sso-design",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "SSO for enterprise – technical design",
+        "url": null,
+        "date": "2026-10-20T08:30:00Z",
+        "passages": [
+          {
+            "id": "pno1",
+            "auteur": "Maya Cohen",
+            "date": "2026-10-20T08:30:00Z",
+            "texte": "Status: draft. Owner: TBD.\nGoal: SAML 2.0 and OIDC for enterprise workspaces. Target: general availability in Q1 2027. First customer likely Fernhill (deal in negotiation).\nOpen questions: signxml vs python3-saml, clock skew tolerance, SCIM in v1 or v2?"
+          }
+        ]
+      },
+      {
+        "id": "gh-platform-412",
+        "kind": "github",
+        "nature": "ticket",
+        "titre": "kestrel-analytics/platform#412 SAML ACS endpoint + signature validation",
+        "url": "https://github.com/kestrel-analytics/platform/pull/412",
+        "date": "2026-11-14T16:05:00Z",
+        "passages": [
+          {
+            "id": "pgh1",
+            "auteur": "maya-cohen",
+            "date": "2026-11-14T16:05:00Z",
+            "texte": "maya-cohen merged commit 3b9e04c into main. Part of KES-430 (Fernhill SSO). Follow-ups: enforce-SSO toggle (KES-431), IdP metadata upload UI (KES-433)."
+          }
+        ]
+      },
+      {
+        "id": "fa-fernhill-1112",
+        "kind": "fathom",
+        "nature": "reunion",
+        "titre": "Fernhill weekly sync – Nov 12",
+        "url": null,
+        "date": "2026-11-12T14:00:00Z",
+        "passages": [
+          {
+            "id": "pfa1",
+            "auteur": "Oliver Grant",
+            "date": "2026-11-12T14:00:00Z",
+            "texte": "Oliver Grant: On our side the production metadata exchange has to go through the change board, which meets on the 26th. So you'll have the prod IdP metadata on the 26th at the earliest.\nDaniel Levi: Fine, the swap is a config change for us, we can do it the same day."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Daniel Levi est le responsable du SSO SAML de Fernhill.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le SSO doit être en production au plus tard le 1er décembre 2026 (engagement du contrat).",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "L'échéance interne du ticket Linear est le 27 novembre.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "L'endpoint ACS est fusionné (#412) ; il manque les métadonnées de l'IdP de production de Fernhill.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Donner le premier trimestre 2027 comme échéance du SSO de Fernhill (cible de disponibilité générale d'un vieux brouillon)."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que le responsable n'est pas désigné (« TBD ») ou que c'est Priya, Maya ou Noa."
+      },
+      {
+        "id": "x3",
+        "texte": "Donner le 26 novembre comme date de mise en service."
+      }
+    ],
+    "pieges": [
+      "Croiser deux résultats : le responsable est dans le ticket et le message Slack, la date contractuelle dans le mail du bon de commande.",
+      "Distracteur périmé : la page Notion d'octobre dit « Owner: TBD » et « Q1 2027 » (disponibilité générale), pas l'échéance de Fernhill.",
+      "Trois dates proches (26, 27 novembre, 1er décembre) qui ne disent pas la même chose : comité de Fernhill, échéance interne, engagement du contrat."
+    ],
+    "cites": [
+      1,
+      2,
+      3
+    ]
+  }
+}

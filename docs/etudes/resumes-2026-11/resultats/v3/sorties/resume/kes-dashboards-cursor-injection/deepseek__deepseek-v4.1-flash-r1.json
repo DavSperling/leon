@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:01.971Z",
+  "reponse": "## Où j'en suis\nBuilt the dashboards_v2 grid on branch tom/dashboard-grid-v2: react-grid-layout drag/resize, layout persisted server-side with a localStorage fallback, widget sizing via a ResizeObserver hook, and v1 dashboards left untouched behind the flag. The Storybook build that had broken on CI was fixed by moving the grid CSS import into `.storybook/preview.ts`. Draft PR kestrel-analytics/platform#418 is open (last commit d2286a0), waiting on Priya's UX review.\n\n- [en-cours] Draft PR #418 open; Priya's UX review still pending.\n- [prochaine-étape] Priya's iPad UX review, then enabling dashboards_v2 for the Zest workspace before the Tuesday 24th demo.\n- [essai-raté] CSS container queries for widget sizing — iOS 15 Safari ignores @container silently, so Zest's iPads stayed on the small layout.\n- [décision] Layout persisted server-side via PUT /dashboards/:id/layout (source: t03)\n- [décision] Container queries dropped entirely, one sizing system only (source: t09)\n- [décision] dashboards_v2 on for Zest's workspace only; v1 dashboards stay until January (source: t15)",
+  "rendu": "## Où j'en suis\nBuilt the dashboards_v2 grid on branch tom/dashboard-grid-v2: react-grid-layout drag/resize, layout persisted server-side with a localStorage fallback, widget sizing via a ResizeObserver hook, and v1 dashboards left untouched behind the flag. The Storybook build that had broken on CI was fixed by moving the grid CSS import into `.storybook/preview.ts`. Draft PR kestrel-analytics/platform#418 is open (last commit d2286a0), waiting on Priya's UX review.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR #418 open; Priya's UX review still pending.\n- [prochaine-étape] Priya's iPad UX review, then enabling dashboards_v2 for the Zest workspace before the Tuesday 24th demo.\n- [essai-raté] CSS container queries for widget sizing — iOS 15 Safari ignores @container silently, so Zest's iPads stayed on the small layout.\n- [décision] Layout persisted server-side via PUT /dashboards/:id/layout (source: t03)\n- [décision] Container queries dropped entirely, one sizing system only (source: t09)\n- [décision] dashboards_v2 on for Zest's workspace only; v1 dashboards stay until January (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1223,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3624,
+    "sortie": 2518,
+    "reflexion": 2232,
+    "cache": 768,
+    "cout": 0.002221104
+  },
+  "cout": 0.002221104,
+  "latenceMs": 13150,
+  "fournisseur": "Cohere"
+}

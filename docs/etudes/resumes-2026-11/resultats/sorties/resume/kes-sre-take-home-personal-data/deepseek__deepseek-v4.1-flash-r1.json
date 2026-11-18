@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:50.984Z",
+  "reponse": "## Où j'en suis\nLe take-home SRE est monté de bout en bout dans son propre dépôt privé `kestrel-analytics/sre-take-home` (compose qui build `flaky-svc` depuis les sources, règle d'alerte cassée, fuite de connexions, policy IAM trop large, time box 3h, pas de k8s), poussé par `git subtree split` pour ne pas exposer les modules infra. Le rubric (4 axes notés 0–3) est écrit. `hiring/` a été retiré de la branche infra mais pas commité. Rien n'a été envoyé au candidat.\n\n- [en-cours] suppression de `hiring/` sur `maya/sre-take-home` faite dans le working tree, non commitée (branche à jeter plus tard)\n- [prochaine-étape] après l'appel de jeudi 16h (Tel Aviv), envoyer soi-même l'exercice au candidat et l'inviter comme collaborateur sur le dépôt\n- [essai-raté] build multi-arch `buildx --load` : « docker exporter does not currently support exporting manifest lists » ; contourné en buildant `flaky-svc` depuis les sources\n- [décision] pas de k8s, 3h max, terraform + compose uniquement (source: t03)\n- [décision] pas de seuil de score, les notes alimentent le panel, Noa 2e relectrice (source: t10)\n- [décision] exercice dans son propre dépôt privé (source: t12)\n- [décision] supprimer `hiring/` de la branche infra, aucun PR dans infra (source: t14)\n- [décision] l'envoi au candidat est fait par elle, aucun email (source: t16)",
+  "rendu": "## Où j'en suis\nLe take-home SRE est monté de bout en bout dans son propre dépôt privé `kestrel-analytics/sre-take-home` (compose qui build `flaky-svc` depuis les sources, règle d'alerte cassée, fuite de connexions, policy IAM trop large, time box 3h, pas de k8s), poussé par `git subtree split` pour ne pas exposer les modules infra. Le rubric (4 axes notés 0–3) est écrit. `hiring/` a été retiré de la branche infra mais pas commité. Rien n'a été envoyé au candidat.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] suppression de `hiring/` sur `maya/sre-take-home` faite dans le working tree, non commitée (branche à jeter plus tard)\n- [prochaine-étape] après l'appel de jeudi 16h (Tel Aviv), envoyer soi-même l'exercice au candidat et l'inviter comme collaborateur sur le dépôt\n- [essai-raté] build multi-arch `buildx --load` : « docker exporter does not currently support exporting manifest lists » ; contourné en buildant `flaky-svc` depuis les sources\n- [décision] pas de k8s, 3h max, terraform + compose uniquement (source: t03)\n- [décision] pas de seuil de score, les notes alimentent le panel, Noa 2e relectrice (source: t10)\n- [décision] exercice dans son propre dépôt privé (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1260,
+    "decisions": 3,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3661,
+    "sortie": 949,
+    "reflexion": 520,
+    "cache": 0,
+    "cout": 0.0022371
+  },
+  "cout": 0.0022371,
+  "latenceMs": 2069,
+  "fournisseur": "Together"
+}

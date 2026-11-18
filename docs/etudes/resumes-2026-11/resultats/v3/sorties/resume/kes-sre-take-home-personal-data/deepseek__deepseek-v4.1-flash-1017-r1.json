@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:57:44.967Z",
+  "reponse": "## Où j'en suis\nBuilt the SRE take-home — docker compose, a planted broken alert rule, a connection leak and an over-broad IAM policy — plus a 4-area rubric, and moved the whole exercise into its own private repo `kestrel-analytics/sre-take-home` via a subtree split so candidates never see the infra history. The work is essentially finished (3 commits on the exercise repo) and waits on Thursday's call; nothing has been sent to the candidate.\n\n- [en-cours] `hiring/` deleted from the working tree on `maya/sre-take-home` but not committed, since the branch will be dropped.\n- [prochaine-étape] After the Thursday 4pm Tel Aviv call, Maya sends the exercise and invites the candidate to the repo herself.\n- [essai-raté] Multi-arch `buildx --load` fails (\"docker exporter does not currently support exporting manifest lists\"), and the prebuilt image was amd64-only; compose now builds `flaky-svc` from source.\n- [décision] No Kubernetes, 3-hour cap, Terraform + compose only (source: t03)\n- [décision] No pass threshold: scores feed the panel, with Noa as second reviewer (source: t10)\n- [décision] Nobody emails the candidate; Maya sends it herself (source: t16)",
+  "rendu": "## Où j'en suis\nBuilt the SRE take-home — docker compose, a planted broken alert rule, a connection leak and an over-broad IAM policy — plus a 4-area rubric, and moved the whole exercise into its own private repo `kestrel-analytics/sre-take-home` via a subtree split so candidates never see the infra history. The work is essentially finished (3 commits on the exercise repo) and waits on Thursday's call; nothing has been sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] `hiring/` deleted from the working tree on `maya/sre-take-home` but not committed, since the branch will be dropped.\n- [prochaine-étape] After the Thursday 4pm Tel Aviv call, Maya sends the exercise and invites the candidate to the repo herself.\n- [essai-raté] Multi-arch `buildx --load` fails (\"docker exporter does not currently support exporting manifest lists\"), and the prebuilt image was amd64-only; compose now builds `flaky-svc` from source.\n- [décision] No Kubernetes, 3-hour cap, Terraform + compose only (source: t03)\n- [décision] No pass threshold: scores feed the panel, with Noa as second reviewer (source: t10)\n- [décision] Nobody emails the candidate; Maya sends it herself (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1259,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 1101,
+    "reflexion": 801,
+    "cache": 768,
+    "cout": 0.000994704
+  },
+  "cout": 0.000994704,
+  "latenceMs": 8548,
+  "fournisseur": "Cohere"
+}

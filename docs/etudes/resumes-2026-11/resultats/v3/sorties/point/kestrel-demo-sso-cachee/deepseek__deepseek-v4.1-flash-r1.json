@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:03.488Z",
+  "reponse": "## What is still open\n- Thursday 10:00 NY: Fernhill's end-to-end SSO walkthrough on staging against their Okta tenant — Priya runs the demo, you only need to be on the call [1].\n- PR #423: Tom wants the 1,900-line diff split into two PRs, module move separate from the lint fixes; he says he'll approve both today [4].\n- Redis-backed replay cache for assertion IDs to replace the process-local one, so a replay can't land on another of the 3 API pods — your task for today [1].\n\n## What changed\n- Maya approved and merged #418 (assertion signature verification); it goes out with tonight's staging deploy, so signature validation is on staging for the Fernhill deadline [3].\n\n## What you did\n- Fixed the flaky ACS expiry test by freezing time instead of sleeping, and converted the two other sleep-based tests the same way — green on repeat runs [1].\n- Cleared the ruff 0.8 warnings and two mypy errors in `kestrel/auth`; an assertion missing its Issuer or Subject now returns a 401 instead of a 500 [1][4].\n- Split `saml_utils.py` into `kestrel/auth/saml/` (assertions, metadata, bindings), keeping old imports working through a shim [1][4].",
+  "rendu": "## What is still open\n- Thursday 10:00 NY: Fernhill's end-to-end SSO walkthrough on staging against their Okta tenant — Priya runs the demo, you only need to be on the call [1].\n- PR #423: Tom wants the 1,900-line diff split into two PRs, module move separate from the lint fixes; he says he'll approve both today [4].\n- Redis-backed replay cache for assertion IDs to replace the process-local one, so a replay can't land on another of the 3 API pods — your task for today [1].\n\n## What changed\n- Maya approved and merged #418 (assertion signature verification); it goes out with tonight's staging deploy, so signature validation is on staging for the Fernhill deadline [3].\n\n## What you did\n- Fixed the flaky ACS expiry test by freezing time instead of sleeping, and converted the two other sleep-based tests the same way — green on repeat runs [1].\n- Cleared the ruff 0.8 warnings and two mypy errors in `kestrel/auth`; an assertion missing its Issuer or Subject now returns a 401 instead of a 500 [1][4].\n- Split `saml_utils.py` into `kestrel/auth/saml/` (assertions, metadata, bindings), keeping old imports working through a shim [1][4].",
+  "mesures": {
+    "mots": 183,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5740,
+    "sortie": 1383,
+    "reflexion": 1091,
+    "cache": 0,
+    "cout": 0.00236712
+  },
+  "cout": 0.00236712,
+  "latenceMs": 7861,
+  "fournisseur": "Fireworks"
+}

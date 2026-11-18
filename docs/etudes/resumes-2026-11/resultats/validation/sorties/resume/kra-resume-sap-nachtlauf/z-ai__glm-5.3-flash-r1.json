@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-sap-nachtlauf",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:24.424Z",
+  "reponse": "## Où j'en suis\nDer SAP-Nachtlauf brach seit dem 9.11. dreimal ab, weil das Wartungsfenster von PRD (Backup, RFC-Gateway-Neustart) auf 02:00–02:45 verlegt wurde und der Job um 02:15 hineinläuft. Der Chunk-Retry legte bereits angelegte Aufträge doppelt an (4 betroffen, dokumentiert in `docs/betrieb/duplikate-2026-11.md`). Behoben: Suche über die Portal-Bestellnummer (BSTKD) vor dem Anlegen plus Exportstatus pro Auftrag (Migration V57); alle 421 Tests laufen grün. Draft-PR kranich/haendlerportal#221 ist offen, Reviewer ist Matthias.\n\n- [en-cours] PR #221 als Draft, wartet auf Review von Matthias\n- [prochaine-étape] Storno der 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst klären (Pfeiffer-Aufträge: nur den zweiten stornieren)\n- [prochaine-étape] Startzeit des Jobs mit dem Basis-Team klären (Matthias)\n- [essai-raté] Retry pro Auftrag mit Backoff allein: Timeout heißt nicht, dass SAP nichts angelegt hat — Test `abbruchNachAnlage` zeigte weiterhin doppelte Aufträge\n- [décision] Uhrzeit/Cron des Jobs nicht anpassen, das klärt Matthias mit dem Basis-Team (source: t07)\n- [décision] Duplikate zuerst beheben, mehr Retries statt neuer Lösung verwerfen; Retry pro Auftrag bleibt trotzdem drin (source: t07, t11)",
+  "rendu": "## Où j'en suis\nDer SAP-Nachtlauf brach seit dem 9.11. dreimal ab, weil das Wartungsfenster von PRD (Backup, RFC-Gateway-Neustart) auf 02:00–02:45 verlegt wurde und der Job um 02:15 hineinläuft. Der Chunk-Retry legte bereits angelegte Aufträge doppelt an (4 betroffen, dokumentiert in `docs/betrieb/duplikate-2026-11.md`). Behoben: Suche über die Portal-Bestellnummer (BSTKD) vor dem Anlegen plus Exportstatus pro Auftrag (Migration V57); alle 421 Tests laufen grün. Draft-PR kranich/haendlerportal#221 ist offen, Reviewer ist Matthias.\n\n- pr [[kranich/haendlerportal#221]]\n- branche [[fix/sap-nachtlauf-idempotenz]]\n- commit [[4c1e9a7]]\n- commit [[b07d3f2]]\n- commit [[e95a610]]\n- [en-cours] PR #221 als Draft, wartet auf Review von Matthias\n- [prochaine-étape] Storno der 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst klären (Pfeiffer-Aufträge: nur den zweiten stornieren)\n- [prochaine-étape] Startzeit des Jobs mit dem Basis-Team klären (Matthias)\n- [essai-raté] Retry pro Auftrag mit Backoff allein: Timeout heißt nicht, dass SAP nichts angelegt hat — Test `abbruchNachAnlage` zeigte weiterhin doppelte Aufträge\n- [décision] Uhrzeit/Cron des Jobs nicht anpassen, das klärt Matthias mit dem Basis-Team (source: t07)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1228,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4914,
+    "sortie": 410,
+    "reflexion": 31,
+    "cache": 0,
+    "cout": 0.0009421
+  },
+  "cout": 0.0009421,
+  "latenceMs": 2875,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:36.914Z",
+  "reponse": "The two things Martin flagged on the Nov 12 sync [1]: webhook signature verification, and per-seller payout schedules.\n\nWebhooks: every payout.paid and seller.verified event failed signature verification on sandbox (about 1 in 20 passed) [1]; Ellen had turned verification off on sandbox, which they can't do in production [1]. Jake took it as our bug [1]. Root cause confirmed: the Rust core signs the canonical JSON (sorted keys), while the TS worker re-serializes after adding delivered_at/attempt, so attempts 1-3 always fail [9]. Fixed in core#1187, already on sandbox [9][17], shipping in release 2026.47 on Tue Nov 24 [17]. Ellen turned verification back on Nov 17 and 300+ events since all verify [5]. Picked up and closed out.\n\nPer-seller payout schedules: Tradewell wants net-7 for ~200 top sellers, net-30 for the rest [1]. Scoped as QPAY-2362; engineering estimate 3-4 weeks, and Avi ruled it out for Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", earliest late January, moved to Backlog for 2027-Q1, with a request that Owen set expectations with Martin [4]. Owen promised Martin a clear answer by Friday Nov 20 [5]. As of Nov 17 Martin is still asking for the update and it's needed for their seller comms [5] — no answer from Owen visible in the sources yet. So picked up in the sense that it's scoped and assigned, but not answered to the customer, and it won't be in for go-live.",
+  "rendu": "The two things Martin flagged on the Nov 12 sync [1]: webhook signature verification, and per-seller payout schedules.\n\nWebhooks: every payout.paid and seller.verified event failed signature verification on sandbox (about 1 in 20 passed) [1]; Ellen had turned verification off on sandbox, which they can't do in production [1]. Jake took it as our bug [1]. Root cause confirmed: the Rust core signs the canonical JSON (sorted keys), while the TS worker re-serializes after adding delivered_at/attempt, so attempts 1-3 always fail [9]. Fixed in core#1187, already on sandbox [9][17], shipping in release 2026.47 on Tue Nov 24 [17]. Ellen turned verification back on Nov 17 and 300+ events since all verify [5]. Picked up and closed out.\n\nPer-seller payout schedules: Tradewell wants net-7 for ~200 top sellers, net-30 for the rest [1]. Scoped as QPAY-2362; engineering estimate 3-4 weeks, and Avi ruled it out for Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", earliest late January, moved to Backlog for 2027-Q1, with a request that Owen set expectations with Martin [4]. Owen promised Martin a clear answer by Friday Nov 20 [5]. As of Nov 17 Martin is still asking for the update and it's needed for their seller comms [5] — no answer from Owen visible in the sources yet. So picked up in the sense that it's scoped and assigned, but not answered to the customer, and it won't be in for go-live.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35179,
+    "sortie": 1146,
+    "reflexion": 495,
+    "cache": 23552,
+    "cout": 0.0020018448000000003
+  },
+  "latenceMs": 16837,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync flagged concerns\"}",
+    "chercher {\"requete\":\"Tradewell go-live blockers action items\"}",
+    "lire {\"passageId\":\"gong-tradewell-1112-3\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "chercher {\"requete\":\"per-seller payout schedules Martin reply expectations Owen\",\"depuis\":\"2026-11-16\"}",
+    "activite {\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.0020018448000000003
+}

@@ -1,0 +1,10 @@
+[1/2] point/verdier-transalp-alternant openai/gpt-6.2-sol r1 : 0.0120 $ (total 0.012 $)
+[2/2] point/verdier-transalp-alternant google/gemini-4-carbon r1 : 0.0902 $ (total 0.102 $)
+
+Fini : 2 sorties, 0 échecs ou sautées, 0.102 $ dépensés.
+Budget de 0.08 $ atteint : des appels n'ont pas été faits.
+[1/3] fil/ver-fil-transporteur xiaomi/mimo-v2.6-flash r2 : 0.0010 $ (total 0.001 $)
+[2/3] fil/ver-fil-transporteur z-ai/glm-5.3-flash r2 : 0.0003 $ (total 0.001 $)
+[3/3] fil/ver-fil-transporteur deepseek/deepseek-v4.1-flash r2 : 0.0022 $ (total 0.003 $)
+
+Fini : 3 sorties, 0 échecs ou sautées, 0.003 $ dépensés.

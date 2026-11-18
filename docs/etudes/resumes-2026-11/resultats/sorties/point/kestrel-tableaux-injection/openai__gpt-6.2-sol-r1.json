@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T14:32:40.807Z",
+  "reponse": "## What you did\n\n- You pushed the v2 widget and retention chart updates to PR #427: more compact cards, clearer cohort labels, and no layout jump while the chart loads. All nine Orbitly dashboards loaded on staging. [1]\n\n## What changed\n\n- Maya backed shipping v2 behind the flag and keeping Chartkit until v1 is retired. Dependabot opened #429 for Chartkit 5.0, which changes the tooltip API. [7][4]\n\n## What is still open\n\n- **Orbitly’s Thursday, Nov 19 rollout is blocked on CSV export.** Priya asked you to restore it in the v2 widget menu using the new background export. Staging was due to be ready today. [10][3]\n- **Zest needs an export ETA for Monday’s ops review.** Rachel asked what she can tell them. Your background export PR #430 fixes the timeout in #424 by emailing a download link; Daniel approved it, with merge pending green CI. [9][2][5][6]\n- **Fix the empty-cohort tooltip crash today.** Hovering a cohort with no data on Orbitly staging throws an error in `RetentionChart.tsx`; Sentry logged it as #432. You left the empty-state fix and regression test for today. [1][8]",
+  "rendu": "## What you did\n\n- You pushed the v2 widget and retention chart updates to PR #427: more compact cards, clearer cohort labels, and no layout jump while the chart loads. All nine Orbitly dashboards loaded on staging. [1]\n\n## What changed\n\n- Maya backed shipping v2 behind the flag and keeping Chartkit until v1 is retired. Dependabot opened #429 for Chartkit 5.0, which changes the tooltip API. [7][4]\n\n## What is still open\n\n- **Orbitly’s Thursday, Nov 19 rollout is blocked on CSV export.** Priya asked you to restore it in the v2 widget menu using the new background export. Staging was due to be ready today. [10][3]\n- **Zest needs an export ETA for Monday’s ops review.** Rachel asked what she can tell them. Your background export PR #430 fixes the timeout in #424 by emailing a download link; Daniel approved it, with merge pending green CI. [9][2][5][6]\n- **Fix the empty-cohort tooltip crash today.** Hovering a cohort with no data on Orbitly staging throws an error in `RetentionChart.tsx`; Sentry logged it as #432. You left the empty-state fix and regression test for today. [1][8]",
+  "mesures": {
+    "mots": 179,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5532,
+    "sortie": 441,
+    "reflexion": 163,
+    "cache": 1417,
+    "cout": 0.0148377
+  },
+  "cout": 0.0148377,
+  "latenceMs": 6037,
+  "fournisseur": "Azure"
+}

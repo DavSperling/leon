@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:16.129Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2062,
+    "sortie": 90,
+    "reflexion": 82,
+    "cache": 0,
+    "cout": 0.0004439
+  },
+  "cout": 0.0004439,
+  "latenceMs": 1745,
+  "fournisseur": "Makora"
+}

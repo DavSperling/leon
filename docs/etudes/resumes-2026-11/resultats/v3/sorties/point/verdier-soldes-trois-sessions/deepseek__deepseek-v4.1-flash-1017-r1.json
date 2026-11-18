@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:55:56.438Z",
+  "reponse": "## What is still open\n- Retirer la Saône de la grille de Sophie : Claire refuse toute remise (rupture jusqu'à mi-janvier, précommandes au plein prix) ; c'est aussi la question qu'Hugo pose sur la PR #63 [10][4].\n- Relancer le flux Google Shopping juste après le passage du script, le 6 janvier, sinon les annonces sont refusées pour écart de prix avec le site [5].\n- Corriger la bannière « Soldes d'hiver » (#64) qui masque le bouton « Ajouter au panier » sur petit téléphone, avant le shooting [6].\n\n## What changed\n- Sophie décale le shooting au 2 décembre : elle veut les prix soldés dans Shopify pour le lundi 30/11, tu gagnes donc quelques jours [11].\n- Hugo a testé la PR sur la boutique de dev et confirme que ça fonctionne [4].\n- L'étiquette « soldes » automatique sur les produits remisés (#59) est relue et fusionnée [7].\n- Le widget d'aide Zendesk (#52) tourne en production : Lucie compte 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## What you did\n- Écrit le script de soldes et son workflow : application le 6 janvier à 8 h et restauration le 3 février, prix arrondis à l'euro inférieur, prix d'origine sauvegardés, les 3 variantes déjà en promotion laissées de côté, les 7 lignes de la grille sans produit actif listées pour que Sophie les nettoie [1].\n- Validé l'ensemble par un dry-run sur la production (212 variantes, 57 produits) puis par un essai des deux déclenchements sur la boutique de dev, et ouvert la PR #63 pour relecture [1].",
+  "rendu": "## What is still open\n- Retirer la Saône de la grille de Sophie : Claire refuse toute remise (rupture jusqu'à mi-janvier, précommandes au plein prix) ; c'est aussi la question qu'Hugo pose sur la PR #63 [10][4].\n- Relancer le flux Google Shopping juste après le passage du script, le 6 janvier, sinon les annonces sont refusées pour écart de prix avec le site [5].\n- Corriger la bannière « Soldes d'hiver » (#64) qui masque le bouton « Ajouter au panier » sur petit téléphone, avant le shooting [6].\n\n## What changed\n- Sophie décale le shooting au 2 décembre : elle veut les prix soldés dans Shopify pour le lundi 30/11, tu gagnes donc quelques jours [11].\n- Hugo a testé la PR sur la boutique de dev et confirme que ça fonctionne [4].\n- L'étiquette « soldes » automatique sur les produits remisés (#59) est relue et fusionnée [7].\n- Le widget d'aide Zendesk (#52) tourne en production : Lucie compte 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## What you did\n- Écrit le script de soldes et son workflow : application le 6 janvier à 8 h et restauration le 3 février, prix arrondis à l'euro inférieur, prix d'origine sauvegardés, les 3 variantes déjà en promotion laissées de côté, les 7 lignes de la grille sans produit actif listées pour que Sophie les nettoie [1].\n- Validé l'ensemble par un dry-run sur la production (212 variantes, 57 produits) puis par un essai des deux déclenchements sur la boutique de dev, et ouvert la PR #63 pour relecture [1].",
+  "mesures": {
+    "mots": 244,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4916,
+    "sortie": 1820,
+    "reflexion": 1409,
+    "cache": 0,
+    "cout": 0.00128058
+  },
+  "cout": 0.00128058,
+  "latenceMs": 12988,
+  "fournisseur": "StepFun"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.828Z",
+  "reponse": "## What you did\n- Diagnosed Orbitly's 8% iOS drop as a side effect of #240: kestrel-ios 3.2.0 sends sequence numbers instead of UUIDs for `event_id`, causing the deduplicator to drop ~1.18 million Orbitly events and 3,812 Zest events [1].\n- Opened PR #247 updating the dedupe key to `project_id:device_id:event_id` and drafted a warning for the iOS team to restore UUIDs [1].\n\n## What changed\n- Maya Cohen reviewed PR #247 and requested the exact Orbitly drop count ahead of Thursday's client call [2].\n- Zest confirmed their dashboards are complete and closed their Zendesk ticket [6].\n- Noa finalized the 12/11 postmortem for Friday's incident review [3].\n\n## What is still open\n- Provide Maya with the exact dropped event count for Thursday's call with Orbitly [1][2].\n- Add an alert when the ingest dead-letter queue exceeds 1,000 messages before Friday's review [7].\n- Run the landing data replay for Orbitly and Zest from November 13 onward once PR #247 is merged and deployed [1].",
+  "rendu": "## What you did\n- Diagnosed Orbitly's 8% iOS drop as a side effect of #240: kestrel-ios 3.2.0 sends sequence numbers instead of UUIDs for `event_id`, causing the deduplicator to drop ~1.18 million Orbitly events and 3,812 Zest events [1].\n- Opened PR #247 updating the dedupe key to `project_id:device_id:event_id` and drafted a warning for the iOS team to restore UUIDs [1].\n\n## What changed\n- Maya Cohen reviewed PR #247 and requested the exact Orbitly drop count ahead of Thursday's client call [2].\n- Zest confirmed their dashboards are complete and closed their Zendesk ticket [6].\n- Noa finalized the 12/11 postmortem for Friday's incident review [3].\n\n## What is still open\n- Provide Maya with the exact dropped event count for Thursday's call with Orbitly [1][2].\n- Add an alert when the ingest dead-letter queue exceeds 1,000 messages before Friday's review [7].\n- Run the landing data replay for Orbitly and Zest from November 13 onward once PR #247 is merged and deployed [1].",
+  "mesures": {
+    "mots": 155,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5165,
+    "sortie": 2095,
+    "reflexion": 1813,
+    "cache": 0,
+    "cout": 0.006787
+  },
+  "cout": 0.006787,
+  "latenceMs": 6867,
+  "fournisseur": "Google"
+}

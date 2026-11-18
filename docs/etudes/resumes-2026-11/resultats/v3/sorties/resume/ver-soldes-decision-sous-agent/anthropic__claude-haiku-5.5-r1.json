@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:10.230Z",
+  "reponse": "## Où j'en suis\nLe script d'application des soldes d'hiver est codé, testé et ouvert en PR #94 (branche `julien/script-soldes-hiver`). Il a été appliqué sur la boutique de dev via une opération en masse, et la programmation est faite pour le mercredi 13 janvier 2027 à 08:00. Reste le script de retour aux prix d'origine, à faire en décembre.\n\n- [prochaine-étape] Écrire le script de retour aux prix d'origine pour la fin des soldes, en décembre.\n- [prochaine-étape] Vérifier la veille, le 12 janvier, sur la boutique de dev avec `pnpm soldes:repetition`, et régénérer le CSV de la newsletter si des prix ont changé.\n- [essai-raté] Les appels un par produit ont été bloqués par la limite de l'API (THROTTLED) à mi-chemin sur dev-verdier : boutique à moitié soldée, remise à l'état d'origine, puis passage à une opération en masse.\n- [décision] Remises -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (source: t05).\n- [décision] Application en opération en masse (JSONL, `bulkOperationRunMutation`) plutôt qu'un appel par produit (source: t11).\n- [décision] Application programmée le mercredi 13 janvier 2027 à 08:00, et non le 12 au soir (source: t15).",
+  "rendu": "## Où j'en suis\nLe script d'application des soldes d'hiver est codé, testé et ouvert en PR #94 (branche `julien/script-soldes-hiver`). Il a été appliqué sur la boutique de dev via une opération en masse, et la programmation est faite pour le mercredi 13 janvier 2027 à 08:00. Reste le script de retour aux prix d'origine, à faire en décembre.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Écrire le script de retour aux prix d'origine pour la fin des soldes, en décembre.\n- [prochaine-étape] Vérifier la veille, le 12 janvier, sur la boutique de dev avec `pnpm soldes:repetition`, et régénérer le CSV de la newsletter si des prix ont changé.\n- [essai-raté] Les appels un par produit ont été bloqués par la limite de l'API (THROTTLED) à mi-chemin sur dev-verdier : boutique à moitié soldée, remise à l'état d'origine, puis passage à une opération en masse.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 970,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5668,
+    "sortie": 1687,
+    "reflexion": 1189,
+    "cache": 0,
+    "cout": 0.0014103
+  },
+  "cout": 0.0014103,
+  "latenceMs": 10910,
+  "fournisseur": "Amazon Bedrock"
+}

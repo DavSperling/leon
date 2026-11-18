@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:24:04.939Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is complete: signature verification with signxml (python3-saml was dropped after xmlsec/lxml conflicts on Alpine), condition/audience/recipient checks, replay protection in Redis, 120s clock skew per the contract annex, code moved to api/auth/saml/verify.py, mypy and full test suite green. PR kestrel-analytics/platform#412 was opened and has been merged (squash), covering commits 3f9c2a1, b71e04d and e0a5c93.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the Thursday 10am NY demo\n- [prochaine-étape] Create the separate ticket for enforcing SSO / disabling password login for Fernhill users\n- [essai-raté] python3-saml via xmlsec failed on Alpine (libxml2 mismatch; building lxml from source still failed) — switched to signxml\n- [essai-raté] `gh pr merge 412 --squash` was refused by branch protection (Maya's approval missing); user declined --admin/--auto\n- [décision] Use signxml, write condition checks ourselves, remove xmlsec from the Dockerfile, only read from signed_xml (source: t08)\n- [décision] Clock skew set to 120s per Fernhill's security questionnaire, as a setting not hard-coded; password login out of scope for this PR (source: t12)",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is complete: signature verification with signxml (python3-saml was dropped after xmlsec/lxml conflicts on Alpine), condition/audience/recipient checks, replay protection in Redis, 120s clock skew per the contract annex, code moved to api/auth/saml/verify.py, mypy and full test suite green. PR kestrel-analytics/platform#412 was opened and has been merged (squash), covering commits 3f9c2a1, b71e04d and e0a5c93.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the Thursday 10am NY demo\n- [prochaine-étape] Create the separate ticket for enforcing SSO / disabling password login for Fernhill users\n- [essai-raté] python3-saml via xmlsec failed on Alpine (libxml2 mismatch; building lxml from source still failed) — switched to signxml\n- [essai-raté] `gh pr merge 412 --squash` was refused by branch protection (Maya's approval missing); user declined --admin/--auto\n- [décision] Use signxml, write condition checks ourselves, remove xmlsec from the Dockerfile, only read from signed_xml (source: t08)\n- [décision] Clock skew set to 120s per Fernhill's security questionnaire, as a setting not hard-coded; password login out of scope for this PR (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1417,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4500,
+    "sortie": 421,
+    "reflexion": 80,
+    "cache": 832,
+    "cout": 0.00194581
+  },
+  "cout": 0.00194581,
+  "latenceMs": 4146,
+  "fournisseur": "Z.AI"
+}

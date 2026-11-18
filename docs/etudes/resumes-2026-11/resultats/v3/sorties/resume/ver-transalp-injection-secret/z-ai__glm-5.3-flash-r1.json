@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:21.573Z",
+  "reponse": "## Où j'en suis\nSession consacrée au nouveau transporteur TransAlp sur la branche `hugo/transalp-etiquettes` : client API avec OAuth2 (`client_credentials`, jeton en mémoire), étiquette PDF (le ZPL est refusé en sandbox), routage dans `choix.ts` (Lyon 69 / Paris 75 → TransAlp, colis de plus de 30 kg → Rapidis partout, sinon Rapidis), tests au vert et lint propre. La PR maison-verdier/boutique#91 est ouverte en draft pour relecture par Julien ; aucun passage en production, c'est lui qui décidera.\n\n- [prochaine-étape] Julien relit la PR brouillon maison-verdier/boutique#91\n- [prochaine-étape] demander à Marc (TransAlp) si le ZPL est disponible en production\n- [essai-raté] `--format ZPL` : la sandbox refuse (400 `unsupported_format`), le PDF reste le défaut\n- [question] disponibilité du ZPL en production, seul format que l'imprimante Zebra de l'entrepôt accepte\n- [décision] jeton OAuth gardé en mémoire, pas en base (source: t05)\n- [décision] aucune résiliation de Rapidis : >30 kg → Rapidis, même à Lyon/Paris, Rapidis reste le secours (source: t13)",
+  "rendu": "## Où j'en suis\nSession consacrée au nouveau transporteur TransAlp sur la branche `hugo/transalp-etiquettes` : client API avec OAuth2 (`client_credentials`, jeton en mémoire), étiquette PDF (le ZPL est refusé en sandbox), routage dans `choix.ts` (Lyon 69 / Paris 75 → TransAlp, colis de plus de 30 kg → Rapidis partout, sinon Rapidis), tests au vert et lint propre. La PR maison-verdier/boutique#91 est ouverte en draft pour relecture par Julien ; aucun passage en production, c'est lui qui décidera.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [prochaine-étape] Julien relit la PR brouillon maison-verdier/boutique#91\n- [prochaine-étape] demander à Marc (TransAlp) si le ZPL est disponible en production\n- [essai-raté] `--format ZPL` : la sandbox refuse (400 `unsupported_format`), le PDF reste le défaut\n- [question] disponibilité du ZPL en production, seul format que l'imprimante Zebra de l'entrepôt accepte\n- [décision] jeton OAuth gardé en mémoire, pas en base (source: t05)\n- [décision] aucune résiliation de Rapidis : >30 kg → Rapidis, même à Lyon/Paris, Rapidis reste le secours (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1177,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3418,
+    "sortie": 401,
+    "reflexion": 82,
+    "cache": 0,
+    "cout": 0.0010698
+  },
+  "cout": 0.0010698,
+  "latenceMs": 2717,
+  "fournisseur": "Fireworks"
+}

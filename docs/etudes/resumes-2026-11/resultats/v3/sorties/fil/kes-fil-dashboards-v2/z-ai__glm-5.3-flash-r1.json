@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:33.079Z",
+  "reponse": "## Où j'en suis\nPR #418 (dashboards v2 grid, branch tom/dashboard-grid-v2) is merged. Priya's two follow-up items — keyboard move/resize and a visible focus ring — are done on the new branch tom/dashboard-keyboard in PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\"), open and awaiting Priya's review; 11 new tests pass, commit 8f1a2c7. The `dashboards_v2` flag is on for the zest-grocers workspace on staging so Priya can rehearse the demo; production stays off, and Tom will flip the prod flag himself the morning of the demo on Tuesday the 24th. The visx migration (PR #401) was closed for good: recharts is the only chart library, confirmed nothing visx remains on main or in web/package.json. (source: ses-db-4, src-pr418, src-pr401, d4-01)\n\n- [en-cours] PR #423 open on branch tom/dashboard-keyboard: keyboard move/resize (Tab to focus, Enter to pick up, Arrow keys move, Shift+Arrow resize, Escape cancels, aria-live announcements) plus focus ring; awaiting Priya's review (source: ses-db-4, d4-05)\n- [prochaine-étape] Get Priya's review on PR #423, then run the Zest demo on Tuesday the 24th (source: d4-01, d4-06)\n- [prochaine-étape] On the morning of the 24th, Tom flips the `dashboards_v2` flag to on for zest-grocers in production himself (source: d4-06)\n- [essai-raté] Wrapping the grid with dnd-kit's KeyboardSensor: both libraries listen to the same events, every move applied twice and mouse drags fired two layout changes; making them cooperate would mean rewriting the grid, so dnd-kit was removed in favor of the custom `useGridKeyboard()` handler (source: d4-02, d4-04)\n- [décision] Keep recharts and close visx migration #401 — not worth two chart libs or rewriting 9 charts (source: c3-03, c3-04)\n- [décision] Legacy v1 dashboards stay available behind the flag until January, nothing removed now (source: b2-04)",
+  "rendu": "## Où j'en suis\nPR #418 (dashboards v2 grid, branch tom/dashboard-grid-v2) is merged. Priya's two follow-up items — keyboard move/resize and a visible focus ring — are done on the new branch tom/dashboard-keyboard in PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\"), open and awaiting Priya's review; 11 new tests pass, commit 8f1a2c7. The `dashboards_v2` flag is on for the zest-grocers workspace on staging so Priya can rehearse the demo; production stays off, and Tom will flip the prod flag himself the morning of the demo on Tuesday the 24th. The visx migration (PR #401) was closed for good: recharts is the only chart library, confirmed nothing visx remains on main or in web/package.json. (de: toi, équipe, agent; source: ses-db-4, src-pr418, src-pr401, d4-01)\n\n- [en-cours] PR #423 open on branch tom/dashboard-keyboard: keyboard move/resize (Tab to focus, Enter to pick up, Arrow keys move, Shift+Arrow resize, Escape cancels, aria-live announcements) plus focus ring; awaiting Priya's review (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] Get Priya's review on PR #423, then run the Zest demo on Tuesday the 24th (de: toi; source: d4-01, d4-06)\n- [prochaine-étape] On the morning of the 24th, Tom flips the `dashboards_v2` flag to on for zest-grocers in production himself (de: toi; source: d4-06)\n- [essai-raté] Wrapping the grid with dnd-kit's KeyboardSensor: both libraries listen to the same events, every move applied twice and mouse drags fired two layout changes; making them cooperate would mean rewriting the grid, so dnd-kit was removed in favor of the custom `useGridKeyboard()` handler (de: toi, agent; source: d4-02, d4-04)\n- [décision] Keep recharts and close visx migration #401 — not worth two chart libs or rewriting 9 charts (de: toi, agent; source: c3-03, c3-04)\n- [décision] Legacy v1 dashboards stay available behind the flag until January, nothing removed now (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1939,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4869,
+    "sortie": 537,
+    "reflexion": 12,
+    "cache": 0,
+    "cout": 0.00099885
+  },
+  "cout": 0.00099885,
+  "latenceMs": 8387,
+  "fournisseur": "Mistral"
+}

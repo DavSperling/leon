@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:58:08.518Z",
+  "reponse": "## Où j'en suis\nLe script de soldes d’hiver est prêt : remises par collection, application en masse avec export CSV, lancement programmé le 13 janvier 2027 à 08:00 et export des prix pour la newsletter. La boutique de dev a été remise en état puis testée ; les tests passent. La PR #94 est ouverte.\n\n- [en-cours] Le script de retour aux prix d’origine reste à faire.\n- [prochaine-étape] En décembre, créer le script de retour aux prix d’origine, puis régénérer le CSV avant la newsletter du 6 janvier si les prix changent.\n- [décision] Remises de 20 % sur Rhône, 30 % sur les fins de série et aucune sur Saône (source: t05)\n- [décision] Prix terminés par 9, après arrondi à l’euro inférieur puis ajustement (source: t07)\n- [décision] Appliquer les soldes le 13 janvier à 08:00, après vérification sur la boutique de dev la veille (source: t15)",
+  "rendu": "## Où j'en suis\nLe script de soldes d’hiver est prêt : remises par collection, application en masse avec export CSV, lancement programmé le 13 janvier 2027 à 08:00 et export des prix pour la newsletter. La boutique de dev a été remise en état puis testée ; les tests passent. La PR #94 est ouverte.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Le script de retour aux prix d’origine reste à faire.\n- [prochaine-étape] En décembre, créer le script de retour aux prix d’origine, puis régénérer le CSV avant la newsletter du 6 janvier si les prix changent.\n- [décision] Remises de 20 % sur Rhône, 30 % sur les fins de série et aucune sur Saône (source: t05)\n- [décision] Prix terminés par 9, après arrondi à l’euro inférieur puis ajustement (source: t07)\n- [décision] Appliquer les soldes le 13 janvier à 08:00, après vérification sur la boutique de dev la veille (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 983,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 13138,
+    "sortie": 571,
+    "reflexion": 112,
+    "cache": 7380,
+    "cout": 0.0009351
+  },
+  "cout": 0.0009351,
+  "latenceMs": 5163,
+  "fournisseur": "Azure"
+}

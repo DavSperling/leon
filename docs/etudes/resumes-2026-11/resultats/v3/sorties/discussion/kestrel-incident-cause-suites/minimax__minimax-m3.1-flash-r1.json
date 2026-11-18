@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:20.012Z",
+  "reponse": "I'll dig into the incident records. Let me start with a few parallel searches.\n\nLet me read the postmortem, the customer-facing incident report, and the incident channel thread in full.\n\nLet me check the status of the remediation tickets and the fix PR.\n\n**Thursday Nov 12 (SEV2, 08:47–12:27 UTC, 3h40 of stale dashboards)** [1]\n\n**What broke.** The v2.14.0 deploy (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, but the ingest-worker pods only have a 512 Mi memory limit — so on the first large batch they went OOM and crash-looped, and the change hit all pods at once [1][3][9]. A Kafka broker-disk hypothesis was raised early and ruled out at 09:41 (disk was at 62%) [3].\n\n**Was customer data lost? No.** Events kept arriving in Kafka and were only processed late. Reconciliation on Nov 13 confirmed per-workspace event counts matched Kafka offsets for 08:00–13:00 UTC — \"nothing lost, just late\" [1][3]. Impact was delayed dashboards for all workspaces, with 4 customers contacting support (Orbitly, Zest Grocers, 2 trials); Maya sent incident reports to Orbitly and Zest on Nov 15 [1][2]. Note the commercial side: Orbitly is claiming an SLA service credit under section 7 of their MSA, and Sam is still checking terms with finance — their signed MSA isn't attached to the HubSpot deal [2][7].\n\n**Detection was the weak point:** there was no consumer-lag alert. The first signal was a Sentry OOM alert at 09:14, 27 minutes after deploy [1][9].\n\n**Changes we're making:**\n- Alert on consumer lag > 5 min, routed to on-call — KES-431, Noa, due Nov 20. The rule is live but still being tuned because 5 min fires on every nightly backfill; stays In Progress until quiet for 3 nights [1][10]\n- Config changes go to a canary pool first — KES-432, Daniel, due Nov 27. The ingest#419 fix itself was shipped as v2.14.1 through canary [1][6]\n- Raise worker memory limit to 1 Gi and add a load test on batch sizes — KES-433, Lior, due Nov 27 [1]\n- Code fix merged Nov 13 (ingest#419): default `max_batch_bytes` back to 1 MB, plus a batcher guard that refuses batches over 25% of the container memory limit and warns; the bulk import path keeps 10 MB explicitly since it runs on the 2 Gi pool [1][6]\n\n**Also changed:** the Postgres 17 cutover was moved from Nov 21 to Dec 5, after the Fernhill go-live, to avoid stacking a DB migration on a fresh incident [5][15].\n\nTwo caveats: I couldn't find the current status of KES-432 and KES-433 in Linear — only KES-431 has updates [10]. And the cause took ~54 minutes to identify, but the rollback itself was fast once found (13 minutes) [1].",
+  "rendu": "I'll dig into the incident records. Let me start with a few parallel searches.\n\nLet me read the postmortem, the customer-facing incident report, and the incident channel thread in full.\n\nLet me check the status of the remediation tickets and the fix PR.\n\n**Thursday Nov 12 (SEV2, 08:47–12:27 UTC, 3h40 of stale dashboards)** [1]\n\n**What broke.** The v2.14.0 deploy (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, but the ingest-worker pods only have a 512 Mi memory limit — so on the first large batch they went OOM and crash-looped, and the change hit all pods at once [1][3][9]. A Kafka broker-disk hypothesis was raised early and ruled out at 09:41 (disk was at 62%) [3].\n\n**Was customer data lost? No.** Events kept arriving in Kafka and were only processed late. Reconciliation on Nov 13 confirmed per-workspace event counts matched Kafka offsets for 08:00–13:00 UTC — \"nothing lost, just late\" [1][3]. Impact was delayed dashboards for all workspaces, with 4 customers contacting support (Orbitly, Zest Grocers, 2 trials); Maya sent incident reports to Orbitly and Zest on Nov 15 [1][2]. Note the commercial side: Orbitly is claiming an SLA service credit under section 7 of their MSA, and Sam is still checking terms with finance — their signed MSA isn't attached to the HubSpot deal [2][7].\n\n**Detection was the weak point:** there was no consumer-lag alert. The first signal was a Sentry OOM alert at 09:14, 27 minutes after deploy [1][9].\n\n**Changes we're making:**\n- Alert on consumer lag > 5 min, routed to on-call — KES-431, Noa, due Nov 20. The rule is live but still being tuned because 5 min fires on every nightly backfill; stays In Progress until quiet for 3 nights [1][10]\n- Config changes go to a canary pool first — KES-432, Daniel, due Nov 27. The ingest#419 fix itself was shipped as v2.14.1 through canary [1][6]\n- Raise worker memory limit to 1 Gi and add a load test on batch sizes — KES-433, Lior, due Nov 27 [1]\n- Code fix merged Nov 13 (ingest#419): default `max_batch_bytes` back to 1 MB, plus a batcher guard that refuses batches over 25% of the container memory limit and warns; the bulk import path keeps 10 MB explicitly since it runs on the 2 Gi pool [1][6]\n\n**Also changed:** the Postgres 17 cutover was moved from Nov 21 to Dec 5, after the Fernhill go-live, to avoid stacking a DB migration on a fresh incident [5][15].\n\nTwo caveats: I couldn't find the current status of KES-432 and KES-433 in Linear — only KES-431 has updates [10]. And the cause took ~54 minutes to identify, but the rollback itself was fast once found (13 minutes) [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24587,
+    "sortie": 1219,
+    "reflexion": 291,
+    "cache": 17024,
+    "cout": 0.0021212099999999997
+  },
+  "latenceMs": 8630,
+  "fournisseur": "Parasail",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident broken\",\"depuis\":\"30j\"}",
+    "activite {\"depuis\":\"14j\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"slack-incidents-1112\"}",
+    "chercher {\"requete\":\"KES-432 KES-433 canary memory limit load test\",\"outil\":\"linear\"}",
+    "lire {\"sourceId\":\"github-ingest-419\"}"
+  ],
+  "cout": 0.0021212099999999997
+}

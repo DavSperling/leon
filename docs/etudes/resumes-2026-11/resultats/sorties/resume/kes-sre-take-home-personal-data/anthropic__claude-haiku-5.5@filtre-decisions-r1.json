@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:24:47.995Z",
+  "reponse": "## Où j'en suis\n\nThe SRE take-home now lives in its own private repo, `kestrel-analytics/sre-take-home`, with three commits: compose built from source, the rubric, and the README time box. The exercise has a broken alert rule (`http_requests_total` should be `http_server_requests_total`), a connection leak on 500 responses, and an over-broad S3/IAM policy in Terraform, with a 3-hour limit and no Kubernetes. The rubric has four areas scored 0–3, with no cut-off; the panel is Maya and Noa. `hiring/` has been removed from the infra branch, but only in the working tree, and no PR was opened. Nothing has been sent to the candidate.\n\n- [en-cours] Removal of `hiring/` from `maya/sre-take-home` is uncommitted; the branch will be dropped later.\n- [prochaine-étape] After the call on Thursday at 4pm Tel Aviv time, Maya sends the repo invite and the exercise herself.\n- [essai-raté] `docker buildx --platform linux/amd64,linux/arm64 --load` fails because the docker exporter doesn't support manifest lists. The workaround was an arm64-only local build, then building from source in compose.\n- [décision] No Kubernetes part; 3-hour maximum; terraform and compose only. (source: t03)\n- [décision] `flaky-svc` is built from source in compose, with no prebuilt image published. (source: t06)\n- [décision] No pass threshold; scores are input to the panel discussion. Noa is second reviewer. (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra. (source: t12)\n- [décision] Delete `hiring/` from the infra branch, with no PR in infra. (source: t14)\n- [décision] Maya sends the exercise herself after the call; nobody is emailed by the agent. (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home now lives in its own private repo, `kestrel-analytics/sre-take-home`, with three commits: compose built from source, the rubric, and the README time box. The exercise has a broken alert rule (`http_requests_total` should be `http_server_requests_total`), a connection leak on 500 responses, and an over-broad S3/IAM policy in Terraform, with a 3-hour limit and no Kubernetes. The rubric has four areas scored 0–3, with no cut-off; the panel is Maya and Noa. `hiring/` has been removed from the infra branch, but only in the working tree, and no PR was opened. Nothing has been sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] No Kubernetes part; 3-hour maximum; terraform and compose only. (source: t03)\n- [décision] `flaky-svc` is built from source in compose, with no prebuilt image published. (source: t06)\n- [décision] No pass threshold; scores are input to the panel discussion. Noa is second reviewer. (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra. (source: t12)\n- [décision] Delete `hiring/` from the infra branch, with no PR in infra. (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1211,
+    "decisions": 5,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5097,
+    "sortie": 1429,
+    "reflexion": 799,
+    "cache": 0,
+    "cout": 0.0012242
+  },
+  "cout": 0.0012242,
+  "latenceMs": 7199,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

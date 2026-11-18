@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:17:15.775Z",
+  "reponse": "## What you did\n- Tu as monté le script de soldes et son planning : remises de la grille de Sophie appliquées le 6 janvier à 8 h (prix barré = prix actuel, prix arrondi à l'euro inférieur) et prix d'origine restaurés le 3 février ; PR #63 ouverte, Hugo en relecteur [1].\n- Les deux déclenchements ont été testés sur la boutique de dev et fonctionnent [1].\n- Dry-run sur la prod en lecture seule : 212 variantes de 57 produits seraient soldées, remise moyenne 24 % ; 3 variantes déjà en promotion laissées de côté [1].\n\n## What changed\n- Sophie a décalé le shooting au 2 décembre : elle lui faut désormais les prix soldés dans Shopify pour le lundi 30 novembre, au lieu de vendredi [11].\n- Le ticket #59 (tag `soldes` automatique sur les produits remisés) a été relu et fusionné par Hugo [7].\n- Le widget Zendesk (#52) est bien en place : Lucie le confirme, 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## What is still open\n- La Saône doit sortir des soldes : Hugo posait la question sur #63, Claire a tranché — rupture jusqu'à mi-janvier et des précommandes au plein prix, pas de prix remisé pour ces clients [4][10].\n- #65 : Sophie demande de relancer le flux Google Shopping juste après le script des soldes, sinon les annonces Google seront refusées pour prix différent du site [5].\n- #64 : la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur petit écran — à corriger avant le shooting, donc avant le 2 décembre [6][11].\n- Dependabot attend sur #66 (montée de `@shopify/shopify-api` 11.4.0 → 11.6.1) [8].",
+  "rendu": "## What you did\n- Tu as monté le script de soldes et son planning : remises de la grille de Sophie appliquées le 6 janvier à 8 h (prix barré = prix actuel, prix arrondi à l'euro inférieur) et prix d'origine restaurés le 3 février ; PR #63 ouverte, Hugo en relecteur [1].\n- Les deux déclenchements ont été testés sur la boutique de dev et fonctionnent [1].\n- Dry-run sur la prod en lecture seule : 212 variantes de 57 produits seraient soldées, remise moyenne 24 % ; 3 variantes déjà en promotion laissées de côté [1].\n\n## What changed\n- Sophie a décalé le shooting au 2 décembre : elle lui faut désormais les prix soldés dans Shopify pour le lundi 30 novembre, au lieu de vendredi [11].\n- Le ticket #59 (tag `soldes` automatique sur les produits remisés) a été relu et fusionné par Hugo [7].\n- Le widget Zendesk (#52) est bien en place : Lucie le confirme, 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## What is still open\n- La Saône doit sortir des soldes : Hugo posait la question sur #63, Claire a tranché — rupture jusqu'à mi-janvier et des précommandes au plein prix, pas de prix remisé pour ces clients [4][10].\n- #65 : Sophie demande de relancer le flux Google Shopping juste après le script des soldes, sinon les annonces Google seront refusées pour prix différent du site [5].\n- #64 : la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur petit écran — à corriger avant le shooting, donc avant le 2 décembre [6][11].\n- Dependabot attend sur #66 (montée de `@shopify/shopify-api` 11.4.0 → 11.6.1) [8].",
+  "mesures": {
+    "mots": 255,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5258,
+    "sortie": 2568,
+    "reflexion": 2099,
+    "cache": 0,
+    "cout": 0.0033910425
+  },
+  "cout": 0.0033910425,
+  "latenceMs": 66916,
+  "fournisseur": "GMICloud"
+}

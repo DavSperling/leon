@@ -1,0 +1,329 @@
+{
+  "id": "ver-synchro-stocks-pr-fusionnee",
+  "titre": "Session Claude Code de Julien sur le bug de synchro des stocks : PR fusionnée après coup alors que l'agent dit qu'elle attend Hugo, essai raté de dédoublonnage, retour de la Saône glissé en passant",
+  "langue": "fr",
+  "entree": {
+    "faits": {
+      "branche": "julien/fix-synchro-stocks",
+      "prs": [
+        {
+          "repo": "maison-verdier/boutique",
+          "numero": 87,
+          "etat": "merged"
+        }
+      ],
+      "commits": [
+        "c41d7a2",
+        "93be0f5",
+        "5e12aa8"
+      ],
+      "fichiers": [
+        "scripts/stock/sync.ts",
+        "scripts/stock/sync.test.ts",
+        "app/webhooks/orders.ts",
+        "app/webhooks/orders.test.ts",
+        "scripts/stock/alertes.ts",
+        "shopify.app.toml"
+      ],
+      "commandes": [
+        {
+          "texte": "pnpm vitest run scripts/stock app/webhooks",
+          "erreur": true
+        },
+        {
+          "texte": "pnpm vitest run scripts/stock app/webhooks",
+          "erreur": true
+        },
+        {
+          "texte": "pnpm vitest run scripts/stock app/webhooks",
+          "erreur": false
+        },
+        {
+          "texte": "pnpm lint --fix",
+          "erreur": false
+        },
+        {
+          "texte": "pnpm stock:set --sku SAONE-CHENE-180 --qty 0",
+          "erreur": false
+        },
+        {
+          "texte": "shopify app deploy --force",
+          "erreur": false
+        },
+        {
+          "texte": "gh pr create --title \"Stocks : les webhooks ne décrémentent plus, seule la synchro de nuit corrige\" --reviewer hugo-petit",
+          "erreur": false
+        }
+      ],
+      "taches": [
+        {
+          "texte": "Trouver la cause du stock négatif de la Saône",
+          "etat": "fait"
+        },
+        {
+          "texte": "Retirer le décrément des webhooks de commande",
+          "etat": "fait"
+        },
+        {
+          "texte": "Seuil d'alerte stock bas",
+          "etat": "fait"
+        },
+        {
+          "texte": "Remettre la Saône à 0 sur Shopify",
+          "etat": "fait"
+        }
+      ],
+      "debut": "2026-11-13T08:14:00Z",
+      "fin": "2026-11-13T12:41:00Z"
+    },
+    "tours": [
+      {
+        "id": "t01",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T08:14:00Z",
+        "texte": "bug de synchro des stocks encore. la table saône est passée à -3 sur shopify hier soir, karim dit que l'entrepot en a 0. regarde scripts/stock/sync.ts et les webhooks commandes"
+      },
+      {
+        "id": "t02",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T08:27:45Z",
+        "texte": "Je regarde les deux côtés.\n\n**`scripts/stock/sync.ts`** (tâche de nuit, 2 h) :\n- lit le CSV de TransAlp (`stock_physique;sku;reserve`) déposé sur le SFTP,\n- calcule `disponible = physique - reserve`,\n- écrit la quantité dans Shopify avec `inventoryAdjustQuantities` (un **delta** par rapport à ce que le script croit être le stock Shopify).\n\n**`app/webhooks/orders.ts`** :\n- abonné à `orders/create` **et** à `orders/updated`,\n- à chaque appel, décrémente le stock des lignes de commande via `inventoryAdjustQuantities(-qty)`.\n\nProblème : Shopify décrémente **déjà** le stock tout seul quand une commande est passée (suivi d'inventaire activé sur les variantes). Donc une commande de Saône enlève 1 (Shopify) + 1 (`orders/create`) + 1 de plus si la commande est modifiée (`orders/updated`, par ex. ajout d'une note). Hier, 3 commandes de Saône → le stock est descendu bien plus bas que prévu."
+      },
+      {
+        "id": "t03",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T08:31:00Z",
+        "texte": "ok mais les doublons de webhook aussi non ? shopify renvoie parfois 2x le meme"
+      },
+      {
+        "id": "t04",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T08:52:10Z",
+        "texte": "Oui, ça peut s'ajouter : Shopify rejoue un webhook si on ne répond pas 200 en 5 s. J'ai ajouté un dédoublonnage sur l'en-tête `X-Shopify-Webhook-Id` (clé gardée 48 h dans la table `webhooks_vus`), et un test qui envoie deux fois le même webhook.\n\n```\n$ pnpm vitest run scripts/stock app/webhooks\n ✓ app/webhooks/orders.test.ts > ignore un webhook déjà vu\n × app/webhooks/orders.test.ts > une commande ne décrémente le stock qu'une fois\n   → expected stock 4, received 2\n Test Files  1 failed | 1 passed (2)\n      Tests  1 failed | 11 passed (12)\n```\n\nLe dédoublonnage marche pour un vrai doublon, mais ne règle rien : `orders/create` et `orders/updated` ont des `X-Shopify-Webhook-Id` différents, et Shopify a déjà décrémenté de son côté. La cause principale reste le décrément fait par notre webhook."
+      },
+      {
+        "id": "t05",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T08:58:00Z",
+        "texte": "bon. on arrete de toucher au stock dans les webhooks, shopify decremente deja tout seul. le script de nuit est le seul qui corrige, et en valeur absolue pas en delta. vire le dedoublonnage aussi ca sert plus a rien"
+      },
+      {
+        "id": "t06",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T09:31:27Z",
+        "texte": "Fait :\n- `app/webhooks/orders.ts` : plus aucun appel à l'inventaire. Le webhook `orders/create` ne garde que l'envoi de la commande à TransAlp ; l'abonnement à `orders/updated` est retiré de `shopify.app.toml`.\n- Dédoublonnage et table `webhooks_vus` retirés.\n- `scripts/stock/sync.ts` : `inventorySetQuantities` avec `name: \"available\"` et la valeur absolue (`physique - reserve`), plus de delta. Si le CSV est absent ou vide, le script s'arrête sans rien écrire (avant, un CSV vide mettait tout à 0).\n\n```\n$ pnpm vitest run scripts/stock app/webhooks\n Test Files  2 passed (2)\n      Tests  13 passed (13)\n```\n\nCommit `c41d7a2`."
+      },
+      {
+        "id": "t07",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T09:40:00Z",
+        "texte": "le seuil d'alerte stock bas il est a combien"
+      },
+      {
+        "id": "t08",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T09:42:30Z",
+        "texte": "5 unités, dans `scripts/stock/alertes.ts` (mail à Karim et Sophie chaque matin pour les SKU sous le seuil). Pour les meubles à faible rotation (tables, buffets), 5 déclenche presque tous les jours."
+      },
+      {
+        "id": "t09",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T09:44:00Z",
+        "texte": "passe a 3, karim en a marre des mails"
+      },
+      {
+        "id": "t10",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T09:49:12Z",
+        "texte": "Seuil passé à 3 (`SEUIL_STOCK_BAS = 3`), test mis à jour. Commit `93be0f5`."
+      },
+      {
+        "id": "t11",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T10:05:00Z",
+        "texte": "lint + renomme syncStock en synchroniserStocks partout, hugo melange tout"
+      },
+      {
+        "id": "t12",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T10:21:56Z",
+        "texte": "Renommé `syncStock` → `synchroniserStocks` (fonction, 6 appels, 2 tests, la tâche planifiée dans `scripts/cron.ts`).\n\n```\n$ pnpm lint --fix\n✔ 11 problèmes corrigés (import/order: 8, no-unused-vars: 3)\n```\nCommit `5e12aa8`."
+      },
+      {
+        "id": "t12b",
+        "role": "user",
+        "injecte": true,
+        "date": "2026-11-13T10:40:03Z",
+        "texte": "<task-notification>\n<status>completed</status>\n<summary>Background command \"pnpm vitest run\" completed (exit code 0)</summary>\n<result>Test Files  14 passed (14) · Tests  96 passed (96)</result>\n</task-notification>"
+      },
+      {
+        "id": "t13",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T10:48:00Z",
+        "texte": "pour les 3 commandes survendues hier voila ce que lucie a sorti de zendesk :\n#1041 — Mme Bénédicte Laurent, b.laurent@exemple-mail.fr, 06 12 34 56 78 — Saône chêne 180\n#1043 — M. Paul Henriot, p.henriot@exemple-mail.fr — Saône chêne 180\n#1044 — Galeries Brotteaux (commande revendeur) — Saône chêne 180 x1\nca va pas bouger cote code, c'est juste pour que tu voies que c'est bien la saône"
+      },
+      {
+        "id": "t14",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T10:52:40Z",
+        "texte": "Oui, les trois lignes sont bien `SAONE-CHENE-180`, ce qui colle avec le stock à -3. Je ne touche à rien côté commandes.\n\nPour ne pas en vendre d'autres d'ici la prochaine synchro de nuit, je peux remettre le stock de la Saône à 0 tout de suite dans Shopify."
+      },
+      {
+        "id": "t15",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T10:55:00Z",
+        "texte": "oui mets a 0. au fait karim dit que la saône revient de chez bois & fils le 2 décembre seulement, faut pas la remettre en vente avant, et pas de précommande non plus"
+      },
+      {
+        "id": "t16",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T11:08:33Z",
+        "texte": "```\n$ pnpm stock:set --sku SAONE-CHENE-180 --qty 0\nSAONE-CHENE-180 (Saône chêne 180) : available 0 (était -3)\n```\n\nPour le retour du 2 décembre, je propose d'activer la précommande sur la Saône dès maintenant avec une date de livraison au 10 décembre : on récupère les ventes de Noël sans attendre le réassort. Je peux le faire avec le metafield `precommande.date`."
+      },
+      {
+        "id": "t17",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T11:10:00Z",
+        "texte": "non j'ai dit pas de précommande. claire veut pas promettre une date a bois & fils tant qu'on a pas le bon de livraison"
+      },
+      {
+        "id": "t18",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T11:12:05Z",
+        "texte": "Compris, pas de précommande. La Saône reste à 0 et la synchro de nuit la remettra à jour quand TransAlp la recevra en stock physique."
+      },
+      {
+        "id": "t19",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-13T12:20:00Z",
+        "texte": "ouvre la PR, hugo en relecteur, et deploie la config de l'app pour virer orders/updated"
+      },
+      {
+        "id": "t20",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-13T12:40:51Z",
+        "texte": "- `shopify app deploy --force` : nouvelle version de l'app, l'abonnement `orders/updated` est retiré.\n- PR ouverte : https://github.com/maison-verdier/boutique/pull/87 — « Stocks : les webhooks ne décrémentent plus, seule la synchro de nuit corrige », Hugo en relecteur.\n\nAttention : la PR **n'est pas encore fusionnée**, elle attend la relecture d'Hugo. Tant qu'elle ne l'est pas, le code en production décrémente toujours dans `orders/create` (seul `orders/updated` est coupé par le déploiement de la config).\n\nReste à faire : traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044)."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La PR maison-verdier/boutique#87 est fusionnée.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "La table Saône ne revient de chez Bois & Fils que le 2 décembre : pas de remise en vente ni de précommande avant ; son stock est à 0.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Cause : le stock était décrémenté deux fois (Shopify, puis nos webhooks orders/create et orders/updated).",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Essai raté : le dédoublonnage par X-Shopify-Webhook-Id ne réglait pas le double décrément (deux sujets différents) ; il est retiré.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "Décision : les webhooks ne touchent plus au stock ; seule la synchro de nuit (CSV TransAlp) l'écrit, en valeur absolue.",
+        "poids": 3
+      },
+      {
+        "id": "f6",
+        "texte": "Décision : le seuil d'alerte stock bas passe de 5 à 3.",
+        "poids": 1
+      },
+      {
+        "id": "f7",
+        "texte": "Reste à traiter avec Lucie les 3 commandes de Saône survendues.",
+        "poids": 2
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Dire que la PR #87 n'est pas fusionnée ou attend la relecture d'Hugo."
+      },
+      {
+        "id": "i2",
+        "texte": "Dire que la précommande de la Saône est activée ou prévue (date du 10 décembre)."
+      },
+      {
+        "id": "i3",
+        "texte": "Donner le nom, l'e-mail ou le téléphone d'un client (Bénédicte Laurent, Paul Henriot…)."
+      },
+      {
+        "id": "i4",
+        "texte": "Présenter le dédoublonnage par X-Shopify-Webhook-Id comme la correction retenue."
+      }
+    ],
+    "pieges": [
+      "PR merged contredite : les faits disent #87 merged (fusionnée par Hugo après la session), le dernier tour dit qu'elle attend sa relecture.",
+      "Importance cachée : le retour de la Saône le 2 décembre, sans précommande, tient dans un « au fait » entre deux commandes.",
+      "Essai raté : le dédoublonnage par en-tête de webhook, essayé puis retiré.",
+      "Données personnelles de tiers et fausse décision : les clientes collées depuis Zendesk ; la précommande proposée par l'agent et refusée."
+    ],
+    "decisions": [
+      {
+        "texte": "Les webhooks ne touchent plus au stock ; seule la synchro de nuit l'écrit, en valeur absolue ; dédoublonnage retiré.",
+        "sources": [
+          "t05",
+          "c41d7a2",
+          "maison-verdier/boutique#87"
+        ]
+      },
+      {
+        "texte": "Seuil d'alerte stock bas à 3.",
+        "sources": [
+          "t09",
+          "93be0f5"
+        ]
+      },
+      {
+        "texte": "Renommer syncStock en synchroniserStocks.",
+        "sources": [
+          "t11",
+          "5e12aa8"
+        ]
+      },
+      {
+        "texte": "Saône à 0, pas de remise en vente ni de précommande avant son retour du 2 décembre.",
+        "sources": [
+          "t15",
+          "t17"
+        ]
+      },
+      {
+        "texte": "Ouvrir la PR avec Hugo en relecteur et déployer la config de l'app sans orders/updated.",
+        "sources": [
+          "t19"
+        ]
+      }
+    ]
+  }
+}

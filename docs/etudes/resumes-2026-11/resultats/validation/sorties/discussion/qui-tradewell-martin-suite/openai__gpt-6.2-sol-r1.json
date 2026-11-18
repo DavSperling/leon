@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:33.376Z",
+  "reponse": "Yes—both were picked up. The webhook fix is verified in sandbox; per-seller payout schedules won’t make the December 7 launch [3][5][14].\n\n1. **Webhook signatures were failing in sandbox.** Jake Whitfield took it on and deployed the fix to sandbox on Nov 16. Ellen turned verification back on and confirmed that 300+ events passed on Nov 17. Production rollout is scheduled for Nov 24 [1][5][14].\n2. **Tradewell needs two payout schedules:** net-7 for about 200 top sellers and net-30 for everyone else. Owen Park took it to Product and Engineering, Sofia Alvarez filed QPAY-2362, and Avi Kessler moved it to the Q1 backlog, with late January the earliest. Owen promised Martin an answer by Nov 20; Martin chased on Nov 17, and I don’t see a reply yet [1][3][5].",
+  "rendu": "Yes—both were picked up. The webhook fix is verified in sandbox; per-seller payout schedules won’t make the December 7 launch [3][5][14].\n\n1. **Webhook signatures were failing in sandbox.** Jake Whitfield took it on and deployed the fix to sandbox on Nov 16. Ellen turned verification back on and confirmed that 300+ events passed on Nov 17. Production rollout is scheduled for Nov 24 [1][5][14].\n2. **Tradewell needs two payout schedules:** net-7 for about 200 top sellers and net-30 for everyone else. Owen Park took it to Product and Engineering, Sofia Alvarez filed QPAY-2362, and Avi Kessler moved it to the Q1 backlog, with late January the earliest. Owen promised Martin an answer by Nov 20; Martin chased on Nov 17, and I don’t see a reply yet [1][3][5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.8,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 31365,
+    "sortie": 460,
+    "reflexion": 0,
+    "cache": 18930,
+    "cout": 0.0375745
+  },
+  "latenceMs": 7834,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi November 12 weekly sync flagged two\"}",
+    "chercher {\"requete\":\"Tradewell blocker follow-up owner Martin Kobayashi go-live December 7\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "lire {\"sourceId\":\"jira-qpay-2362\"}",
+    "lire {\"sourceId\":\"slack-ext-tradewell\"}",
+    "chercher {\"requete\":\"Tradewell webhook signature mismatch Jake fix merged deployed sandbox Jira GitHub\"}",
+    "lire {\"passageId\":\"github-core-1187-3\"}",
+    "chercher {\"requete\":\"Tradewell Owen Martin per-seller payout schedules late January workaround Nov 20 follow up\"}"
+  ],
+  "cout": 0.0375745
+}

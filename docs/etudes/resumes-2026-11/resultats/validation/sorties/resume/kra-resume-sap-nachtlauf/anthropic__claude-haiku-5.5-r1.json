@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-sap-nachtlauf",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:25.614Z",
+  "reponse": "## Wo ich stehe\nDie Ursache der nächtlichen Abbrüche ist geklärt. Seit dem 9. November liegt das Wartungsfenster des Systems PRD bei 02:00–02:45 Uhr, der Job startet um 02:15 Uhr, und der Chunk-Retry legte bereits angelegte Aufträge erneut an. Umgesetzt sind die Suche nach der Portal-Nr. in BSTKD vor dem Anlegen, der Status pro Auftrag (Migration V57) und der Retry pro Auftrag; 421 Tests sind grün. PR #221 ist als Draft offen.\n\n- [en-cours] PR #221 ist offen als Draft, das Review durch Matthias steht aus.\n- [prochaine-étape] Storno der 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst; bei P-2026-119230 und P-2026-119237 nur den zweiten SAP-Auftrag stornieren.\n- [essai-raté] Retry pro Auftrag allein reicht nicht: Bei einem Timeout wird der Auftrag in SAP trotzdem doppelt angelegt.\n- [question] Startzeit des Jobs: Matthias klärt sie mit dem Basis-Team.\n- [décision] Uhrzeit des Jobs bleibt unverändert und das Retry-Limit wird nicht erhöht (source: t07).\n- [décision] Duplikatschutz über die Suche nach BSTKD vor dem Anlegen (source: t11).",
+  "rendu": "- pr [[kranich/haendlerportal#221]]\n- branche [[fix/sap-nachtlauf-idempotenz]]\n- commit [[4c1e9a7]]\n- commit [[b07d3f2]]\n- commit [[e95a610]]\n- [en-cours] PR #221 ist offen als Draft, das Review durch Matthias steht aus.\n- [prochaine-étape] Storno der 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst; bei P-2026-119230 und P-2026-119237 nur den zweiten SAP-Auftrag stornieren.\n- [essai-raté] Retry pro Auftrag allein reicht nicht: Bei einem Timeout wird der Auftrag in SAP trotzdem doppelt angelegt.\n- [question] Startzeit des Jobs: Matthias klärt sie mit dem Basis-Team.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 579,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7658,
+    "sortie": 2529,
+    "reflexion": 1995,
+    "cache": 0,
+    "cout": 0.0020303
+  },
+  "cout": 0.0020303,
+  "latenceMs": 14121,
+  "fournisseur": "Google"
+}

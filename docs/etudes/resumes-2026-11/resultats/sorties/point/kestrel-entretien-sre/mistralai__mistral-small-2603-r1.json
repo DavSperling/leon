@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:27:00.431Z",
+  "reponse": "## Ce que tu as fait\n- **Entretien d’Ilan Barak confirmé** : panel avec toi et Noa Friedman le 19/11 à 15h (heure Israël), exercice Terraform + scénario incident du 12/11, questions sur l’on-call et le bruit PagerDuty [1][3].\n- **Plan d’entretien finalisé et envoyé** : document unique avec le déroulé, les critères de notation et les préparations pour Noa [1].\n- **Décision sur la fourchette salariale** : tu notes de proposer une hausse à ₪42–48k/mois à Eitan lors du leadership sync de lundi [1].\n- **Relance à la recruteuse** : Dana doit envoyer 3 profils supplémentaires d’ici fin de semaine prochaine, idéalement des profils ayant fait de l’on-call pour des clients US [1].\n\n## Ce qui a bougé\n- **Pipeline SRE** : seul Ilan Barak reste en course après les retraits de Yoav (contre-offre) et Elena (package insuffisant) [1].\n- **Demande urgente d’Eitan** : il te demande la shortlist SRE avant vendredi pour le board deck de lundi [4].\n- **Nouvelle source de candidats** : HireLoop te propose 5 profils SRE ouverts à de nouvelles opportunités [2].\n\n## Ce qui reste ouvert\n- **Préparation finale pour l’entretien d’Ilan** le 19/11 : finalise les derniers détails avec Noa et vérifie la logistique [1].\n- **Relance à Dana** pour les 3 profils supplémentaires, avec l’échéance de fin de semaine prochaine [1].\n- **Soumission de la proposition salariale** à Eitan lors du leadership sync de lundi [1].",
+  "rendu": "## Ce que tu as fait\n- **Entretien d’Ilan Barak confirmé** : panel avec toi et Noa Friedman le 19/11 à 15h (heure Israël), exercice Terraform + scénario incident du 12/11, questions sur l’on-call et le bruit PagerDuty [1][3].\n- **Plan d’entretien finalisé et envoyé** : document unique avec le déroulé, les critères de notation et les préparations pour Noa [1].\n- **Décision sur la fourchette salariale** : tu notes de proposer une hausse à ₪42–48k/mois à Eitan lors du leadership sync de lundi [1].\n- **Relance à la recruteuse** : Dana doit envoyer 3 profils supplémentaires d’ici fin de semaine prochaine, idéalement des profils ayant fait de l’on-call pour des clients US [1].\n\n## Ce qui a bougé\n- **Pipeline SRE** : seul Ilan Barak reste en course après les retraits de Yoav (contre-offre) et Elena (package insuffisant) [1].\n- **Demande urgente d’Eitan** : il te demande la shortlist SRE avant vendredi pour le board deck de lundi [4].\n- **Nouvelle source de candidats** : HireLoop te propose 5 profils SRE ouverts à de nouvelles opportunités [2].\n\n## Ce qui reste ouvert\n- **Préparation finale pour l’entretien d’Ilan** le 19/11 : finalise les derniers détails avec Noa et vérifie la logistique [1].\n- **Relance à Dana** pour les 3 profils supplémentaires, avec l’échéance de fin de semaine prochaine [1].\n- **Soumission de la proposition salariale** à Eitan lors du leadership sync de lundi [1].",
+  "mesures": {
+    "mots": 213,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4182,
+    "sortie": 1430,
+    "reflexion": 1031,
+    "cache": 0,
+    "cout": 0.00163383
+  },
+  "cout": 0.00163383,
+  "latenceMs": 9660,
+  "fournisseur": "Mistral"
+}

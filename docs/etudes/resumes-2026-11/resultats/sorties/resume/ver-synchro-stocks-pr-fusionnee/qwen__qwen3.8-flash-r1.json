@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:02.737Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif de la Saône est résolu dans `julien/fix-synchro-stocks`: les webhooks de commande ne touchent plus à l'inventaire, Shopify décrémente déjà seul, l'abonnement `orders/updated` est retiré et la synchro de nuit corrige en valeur absolue. Le seuil d'alerte stock bas est passé à 3, `syncStock` est devenu `synchroniserStocks`, lint et tests sont verts. Le stock Shopify de `SAONE-CHENE-180` a été remis à 0 et la PR #87 est fusionnée.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues #1041, #1043 et #1044, sans précommande ni remise en vente avant le réassort du 2 décembre.\n- [essai-raté] Le dédoublonnage par `X-Shopify-Webhook-Id` n'a rien corrigé: `orders/create` et `orders/updated` ont des IDs différents et Shopify décrémentait déjà.\n- [décision] Arrêter tout décrément dans les webhooks et faire la correction uniquement la nuit en valeur absolue (source: t05).\n- [décision] Passer le seuil d'alerte stock bas à 3 (source: t09).\n- [décision] Ne pas activer de précommande pour la Saône avant d'avoir le bon de livraison (source: t17).",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif de la Saône est résolu dans `julien/fix-synchro-stocks`: les webhooks de commande ne touchent plus à l'inventaire, Shopify décrémente déjà seul, l'abonnement `orders/updated` est retiré et la synchro de nuit corrige en valeur absolue. Le seuil d'alerte stock bas est passé à 3, `syncStock` est devenu `synchroniserStocks`, lint et tests sont verts. Le stock Shopify de `SAONE-CHENE-180` a été remis à 0 et la PR #87 est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues #1041, #1043 et #1044, sans précommande ni remise en vente avant le réassort du 2 décembre.\n- [essai-raté] Le dédoublonnage par `X-Shopify-Webhook-Id` n'a rien corrigé: `orders/create` et `orders/updated` ont des IDs différents et Shopify décrémentait déjà.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 934,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3989,
+    "sortie": 2217,
+    "reflexion": 1868,
+    "cache": 0,
+    "cout": 0.00164034
+  },
+  "cout": 0.00164034,
+  "latenceMs": 43745,
+  "fournisseur": "Alibaba"
+}

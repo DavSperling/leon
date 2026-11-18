@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-vp-sales-austin",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:35.785Z",
+  "reponse": "{\"n\": 7, \"titre\": \"Harborline deal review\", \"debut\": \"2026-11-17T00:30\", \"fin\": \"2026-11-17T01:00\", \"avec\": \"Owen Park\"}\n{\"n\": 8, \"titre\": \"Lunch with Nate Holloway\", \"debut\": \"2026-11-17T19:30\", \"avec\": \"Nate Holloway\"}\n{\"n\": 15, \"titre\": \"Final round interview: Bianca Ferreira\", \"debut\": \"2026-11-16T17:00\", \"fin\": \"2026-11-16T17:45\", \"avec\": \"Bianca Ferreira\"}\n{\"n\": 11, \"titre\": \"Q1 pricing review\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:45\", \"avec\": \"Gil Shamir, Marcus\"}\n{\"n\": 3, \"titre\": \"Tradewell x Quillon – go-live readiness review\", \"debut\": \"2026-11-19T17:00\", \"fin\": \"2026-11-19T18:00\", \"avec\": \"Ellen Vance, Martin Kobayashi, Tomer Golan, Sofia Alvarez\"}\n{\"n\": 9, \"titre\": \"Loomly – payout incident follow-up\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T16:45\", \"avec\": \"Hannah Brooke, Carla Reyes\"}",
+  "rendu": "2026-11-16T17:00→2026-11-16T17:45 Final round interview: Bianca Ferreira (avec Bianca Ferreira)\n2026-11-17T00:30→2026-11-17T01:00 Harborline deal review (avec Owen Park)\n2026-11-17T19:30 Lunch with Nate Holloway (avec Nate Holloway)\n2026-11-18T16:00→2026-11-18T16:45 Q1 pricing review (avec Gil Shamir, Marcus)\n2026-11-19T17:00→2026-11-19T18:00 Tradewell x Quillon – go-live readiness review (avec Ellen Vance, Martin Kobayashi, Tomer Golan, Sofia Alvarez)\n2026-11-20T16:00→2026-11-20T16:45 Loomly – payout incident follow-up (avec Hannah Brooke, Carla Reyes)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3384,
+    "sortie": 3557,
+    "reflexion": 3206,
+    "cache": 0,
+    "cout": 0.0052836
+  },
+  "cout": 0.0052836,
+  "latenceMs": 11895,
+  "fournisseur": "CoreWeave"
+}

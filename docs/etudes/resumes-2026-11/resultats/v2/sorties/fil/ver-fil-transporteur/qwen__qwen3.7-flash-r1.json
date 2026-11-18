@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:30:24.246Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est à jour et poussée. La PR #91 (brouillon) intègre le client TransAlp avec le format ZPL par défaut et une correction d'encodage UTF-8 (`^CI28`), ainsi que la logique de routage dans `choix.ts` : Lyon et Paris vers TransAlp depuis le 1er décembre, tout le reste (hors +30 kg) vers Rapidis jusqu'au 15 janvier. L'environnement recette est validé par Karim et la config prod est prête mais inactive. (source: ses-tr-2, h2-12, src-pr91)\n- [en-cours] Relecture de la PR #91 par Julien avant fusion ; injection des clés de production prévue après validation. (source: src-pr91, ses-tr-2)\n- [prochaine-étape] Attendre l'aval de Julien sur le brouillon, fusionner la PR et activer les clés prod pour déclencher le basculement au 1er décembre. (source: src-slack-julien, src-pr91)\n- [essai-raté] Imprimation ZPL initiale générant des caractères corrompus car la commande `^CI28` manquait ; corrigé dans `zpl.ts`. Le refus du ZPL en sandbox confirme ce qu'a annoncé le support TransAlp. (source: h2-03, h2-04, src-mail-transalp)\n- [décision] Basculer uniquement Lyon et Paris chez TransAlp le mardi 1er décembre ; Rapidis maintient le reste de la France et les colis >30 kg jusqu'au 15 janvier pour laisser le temps à la formation Karim et aux soldes. (source: src-slack-julien, h2-09)",
+  "rendu": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est à jour et poussée. La PR #91 (brouillon) intègre le client TransAlp avec le format ZPL par défaut et une correction d'encodage UTF-8 (`^CI28`), ainsi que la logique de routage dans `choix.ts` : Lyon et Paris vers TransAlp depuis le 1er décembre, tout le reste (hors +30 kg) vers Rapidis jusqu'au 15 janvier. L'environnement recette est validé par Karim et la config prod est prête mais inactive. (de: équipe, agent; source: ses-tr-2, h2-12, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien avant fusion ; injection des clés de production prévue après validation. (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] Attendre l'aval de Julien sur le brouillon, fusionner la PR et activer les clés prod pour déclencher le basculement au 1er décembre. (de: équipe, connecteur; source: src-slack-julien, src-pr91)\n- [essai-raté] Imprimation ZPL initiale générant des caractères corrompus car la commande `^CI28` manquait ; corrigé dans `zpl.ts`. Le refus du ZPL en sandbox confirme ce qu'a annoncé le support TransAlp. (de: toi, connecteur, agent; source: h2-03, h2-04, src-mail-transalp)\n- [décision] Basculer uniquement Lyon et Paris chez TransAlp le mardi 1er décembre ; Rapidis maintient le reste de la France et les colis >30 kg jusqu'au 15 janvier pour laisser le temps à la formation Karim et aux soldes. (de: toi, connecteur; source: src-slack-julien, h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1444,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4105,
+    "sortie": 3815,
+    "reflexion": 3396,
+    "cache": 0,
+    "cout": 0.0006191
+  },
+  "cout": 0.0006191,
+  "latenceMs": 35921,
+  "fournisseur": "Alibaba"
+}

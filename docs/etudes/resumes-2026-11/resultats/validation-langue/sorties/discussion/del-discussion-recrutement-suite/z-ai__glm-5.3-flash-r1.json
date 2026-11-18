@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:03.639Z",
+  "reponse": "Personne n'est encore pris pour l'instant, d'après ce que j'ai trouvé :\n\n- Le process : Aurélie Jaouen pilote le recrutement et Yannick Moreau passe les entretiens techniques ; l'annonce est en ligne depuis le 2/11 et a généré 11 candidatures [1].\n- 4 candidats ont été convoqués à des entretiens les 19 et 20/11 à l'atelier de Carquefou : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [4]. Les convocations étaient rédigées mais rien n'était encore envoyé au 17/11 [4].\n- Mathis Le Gac a depuis retiré sa candidature (il a accepté une offre près de Vannes) [9].\n- Au CODIR du 16/11, l'équipe visait de faire une offre « la semaine prochaine » pour une arrivée début janvier [8], et un modèle de promesse d'embauche en CDI a été préparé [2] — mais je ne vois nulle part trace d'une offre faite ni de candidat accepté à ce stade.\n\nDonc : entretiens en cours, une candidature en moins, pas encore de recrutement confirmé.",
+  "rendu": "Personne n'est encore pris pour l'instant, d'après ce que j'ai trouvé :\n\n- Le process : Aurélie Jaouen pilote le recrutement et Yannick Moreau passe les entretiens techniques ; l'annonce est en ligne depuis le 2/11 et a généré 11 candidatures [1].\n- 4 candidats ont été convoqués à des entretiens les 19 et 20/11 à l'atelier de Carquefou : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [4]. Les convocations étaient rédigées mais rien n'était encore envoyé au 17/11 [4].\n- Mathis Le Gac a depuis retiré sa candidature (il a accepté une offre près de Vannes) [9].\n- Au CODIR du 16/11, l'équipe visait de faire une offre « la semaine prochaine » pour une arrivée début janvier [8], et un modèle de promesse d'embauche en CDI a été préparé [2] — mais je ne vois nulle part trace d'une offre faite ni de candidat accepté à ce stade.\n\nDonc : entretiens en cours, une candidature en moins, pas encore de recrutement confirmé.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6135,
+    "sortie": 438,
+    "reflexion": 113,
+    "cache": 0,
+    "cout": 0.00113925
+  },
+  "latenceMs": 21219,
+  "fournisseur": "Venice",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs entretien candidat embauche\"}",
+    "chercher {\"requete\":\"Aurélie Jaouen recruter deux installateurs\"}"
+  ],
+  "cout": 0.00113925
+}

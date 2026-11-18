@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:27:17.137Z",
+  "reponse": "**D'où ça venait :** de la synchro du stock. L'emplacement « Showroom » a été ajouté dans Shopify le 3/11 [3]. Le script `sync-stock` ne mettait à jour que l'« Entrepôt Vénissieux » [1][3]. Le showroom gardait donc son ancien stock. Shopify additionne les emplacements, donc le site affichait du stock qui n'existait plus [3].\n\nLes clients ont été touchés ainsi :\n- **Banc Rhône :** commande annulée pour rupture [2].\n- **Buffet Croix-Rousse :** commande annulée, avec livraison offerte sur la prochaine commande [12].\n- **Chaises Fourvière :** le site affichait 9 chaises, mais seules 2 pouvaient partir [13].\n\n**Est-ce réparé ?** Oui, d'après le point d'équipe du 16/11, la synchro a été corrigée le vendredi précédent (13/11) par Julien [6]. Le correctif était dans la PR #87 [3]. Je n'ai pas lu la PR elle-même, ni vérifié qu'elle a été fusionnée.\n\nUn contrôle quotidien des écarts de stock est en préparation, porté par Hugo [6]. Sa PR #91 comparera chaque matin le stock Shopify, emplacement par emplacement, à l'export de l'entrepôt. Au 17/11, Julien demandait encore des retouches avant fusion [11]. Ce filet de sécurité n'est donc pas encore en place.",
+  "rendu": "**D'où ça venait :** de la synchro du stock. L'emplacement « Showroom » a été ajouté dans Shopify le 3/11 [3]. Le script `sync-stock` ne mettait à jour que l'« Entrepôt Vénissieux » [1][3]. Le showroom gardait donc son ancien stock. Shopify additionne les emplacements, donc le site affichait du stock qui n'existait plus [3].\n\nLes clients ont été touchés ainsi :\n- **Banc Rhône :** commande annulée pour rupture [2].\n- **Buffet Croix-Rousse :** commande annulée, avec livraison offerte sur la prochaine commande [12].\n- **Chaises Fourvière :** le site affichait 9 chaises, mais seules 2 pouvaient partir [13].\n\n**Est-ce réparé ?** Oui, d'après le point d'équipe du 16/11, la synchro a été corrigée le vendredi précédent (13/11) par Julien [6]. Le correctif était dans la PR #87 [3]. Je n'ai pas lu la PR elle-même, ni vérifié qu'elle a été fusionnée.\n\nUn contrôle quotidien des écarts de stock est en préparation, porté par Hugo [6]. Sa PR #91 comparera chaque matin le stock Shopify, emplacement par emplacement, à l'export de l'entrepôt. Au 17/11, Julien demandait encore des retouches avant fusion [11]. Ce filet de sécurité n'est donc pas encore en place.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 11234,
+    "sortie": 711,
+    "reflexion": 60,
+    "cache": 0,
+    "cout": 0.029578
+  },
+  "latenceMs": 6093,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"meubles plus disponibles achetés stock indisponible clients\"}",
+    "chercher {\"requete\":\"survente stock oversell produit indisponible commande\"}"
+  ],
+  "cout": 0.029578
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:12:31.024Z",
+  "reponse": "## What you did\n- Got the prod PG17 blue/green cutover ready: Terraform plan shows 2 changes, 0 destroys, with the read replica made to follow the blue/green instead of being replaced — opened as PR #321, approved by Maya [1][3].\n- Rehearsed the full cutover on a restored prod snapshot clone: 74 s of write downtime, replication lag under 1 s, no row-count mismatch, and the clone and its instances torn down afterwards [1].\n- Wrote the cutover runbook, `runbooks/pg17-cutover.md` [1].\n\n## What changed\n- The window moved: Fernhill's month-end batch runs Saturday night until ~06:00 UTC, so the cutover is now Sunday 22/11, 02:00–04:00 UTC — Maya confirmed with Sam and told the CSMs, while the runbook still says Saturday [8][10].\n- Maya approved #321 but wants the window confirmed with Fernhill before you merge [3]; the rollback rehearsal is still noted as outstanding [3].\n- Lior needs nothing changed on ingest workers, but wants 30 min notice before switchover to pause the consumers cleanly [9]; Daniel is on call for the API side Sunday and wants a ping when you start [7].\n\n## What is still open\n- Rollback is not a switch-back — blue is renamed and stops taking writes — so rehearse it on a fresh clone (Thursday 19/11) and measure downtime and data loss; it's a TODO in the runbook [1].\n- Update the runbook to the Sunday window and merge #321 once it's locked [8][10][3].",
+  "rendu": "## What you did\n- Got the prod PG17 blue/green cutover ready: Terraform plan shows 2 changes, 0 destroys, with the read replica made to follow the blue/green instead of being replaced — opened as PR #321, approved by Maya [1][3].\n- Rehearsed the full cutover on a restored prod snapshot clone: 74 s of write downtime, replication lag under 1 s, no row-count mismatch, and the clone and its instances torn down afterwards [1].\n- Wrote the cutover runbook, `runbooks/pg17-cutover.md` [1].\n\n## What changed\n- The window moved: Fernhill's month-end batch runs Saturday night until ~06:00 UTC, so the cutover is now Sunday 22/11, 02:00–04:00 UTC — Maya confirmed with Sam and told the CSMs, while the runbook still says Saturday [8][10].\n- Maya approved #321 but wants the window confirmed with Fernhill before you merge [3]; the rollback rehearsal is still noted as outstanding [3].\n- Lior needs nothing changed on ingest workers, but wants 30 min notice before switchover to pause the consumers cleanly [9]; Daniel is on call for the API side Sunday and wants a ping when you start [7].\n\n## What is still open\n- Rollback is not a switch-back — blue is renamed and stops taking writes — so rehearse it on a fresh clone (Thursday 19/11) and measure downtime and data loss; it's a TODO in the runbook [1].\n- Update the runbook to the Sunday window and merge #321 once it's locked [8][10][3].",
+  "mesures": {
+    "mots": 227,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5182,
+    "sortie": 1585,
+    "reflexion": 1227,
+    "cache": 0,
+    "cout": 0.00138264
+  },
+  "cout": 0.00138264,
+  "latenceMs": 11391,
+  "fournisseur": "River"
+}

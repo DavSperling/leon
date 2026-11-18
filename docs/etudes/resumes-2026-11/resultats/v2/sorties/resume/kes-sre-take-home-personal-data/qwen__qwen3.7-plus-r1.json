@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:23:35.122Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home exercise was created, scoped to 3 hours with Terraform and Docker Compose, and moved to a dedicated private repository to hide internal infrastructure history. The evaluation rubric was finalized without a strict pass threshold, and the exercise files were removed from the main infrastructure branch.\n\n- [prochaine-étape] Send the private repository invite to the SRE candidate after the Thursday call.\n- [essai-raté] Multi-arch Docker build with `--load` failed because the exporter does not support manifest lists; solved by building from source in Compose.\n- [décision] The rubric will not use a cut-off score; scores are just input for the panel to decide (source: t10).\n- [décision] The exercise must be sent manually after the call, with no automated emails (source: t16).",
+  "rendu": "## Où j'en suis\nThe SRE take-home exercise was created, scoped to 3 hours with Terraform and Docker Compose, and moved to a dedicated private repository to hide internal infrastructure history. The evaluation rubric was finalized without a strict pass threshold, and the exercise files were removed from the main infrastructure branch.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Send the private repository invite to the SRE candidate after the Thursday call.\n- [essai-raté] Multi-arch Docker build with `--load` failed because the exporter does not support manifest lists; solved by building from source in Compose.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 690,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3860,
+    "sortie": 2786,
+    "reflexion": 2597,
+    "cache": 512,
+    "cout": 0.004670208
+  },
+  "cout": 0.004670208,
+  "latenceMs": 46383,
+  "fournisseur": "Alibaba"
+}

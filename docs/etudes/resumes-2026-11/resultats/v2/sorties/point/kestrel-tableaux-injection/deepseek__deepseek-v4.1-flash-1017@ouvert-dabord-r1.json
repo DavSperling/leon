@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:15:03.227Z",
+  "reponse": "## What is still open\n- Priya's blocker for Thursday: v2's widget menu no longer offers Export CSV, so the `dashboards_v2` flag can't go on for Orbitly on 19/11 until it's back — on top of the new background export [10].\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`); you noted it to fix today, and Sentry already logs 37 events from 4 users on staging [1][8].\n\n## What changed\n- Daniel approved PR #430 (\"merge when CI is green\") — that's the ETA Rachel can give Zest, whose ops review is Monday [5][9].\n- Maya answered your chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone, no two migrations at once [7].\n- Dependabot proposes bumping `@chartkit/react` from 4.2.0 to 5.0.0 [4].\n\n## What you did\n- Polished the v2 widget card and retention chart — compact header on tokens, subtler dark-mode border, shorter menu, readable cohort labels, loading skeleton, categorical cohort colors — and pushed it to PR #427 [1].\n- Rebuilt the CSV export as a background job: streamed rows, 202 response and a signed 24h link by email, with the v1 button now confirming instead of spinning [2].\n- Earlier, put v2 behind the per-workspace flag with a 12-column snap grid, targeting Orbitly first [3].",
+  "rendu": "## What is still open\n- Priya's blocker for Thursday: v2's widget menu no longer offers Export CSV, so the `dashboards_v2` flag can't go on for Orbitly on 19/11 until it's back — on top of the new background export [10].\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`); you noted it to fix today, and Sentry already logs 37 events from 4 users on staging [1][8].\n\n## What changed\n- Daniel approved PR #430 (\"merge when CI is green\") — that's the ETA Rachel can give Zest, whose ops review is Monday [5][9].\n- Maya answered your chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone, no two migrations at once [7].\n- Dependabot proposes bumping `@chartkit/react` from 4.2.0 to 5.0.0 [4].\n\n## What you did\n- Polished the v2 widget card and retention chart — compact header on tokens, subtler dark-mode border, shorter menu, readable cohort labels, loading skeleton, categorical cohort colors — and pushed it to PR #427 [1].\n- Rebuilt the CSV export as a background job: streamed rows, 202 response and a signed 24h link by email, with the v1 button now confirming instead of spinning [2].\n- Earlier, put v2 behind the per-workspace flag with a 12-column snap grid, targeting Orbitly first [3].",
+  "mesures": {
+    "mots": 201,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5906,
+    "sortie": 1713,
+    "reflexion": 1375,
+    "cache": 0,
+    "cout": 0.00229644
+  },
+  "cout": 0.00229644,
+  "latenceMs": 5792,
+  "fournisseur": "Nebius"
+}

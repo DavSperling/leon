@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:00.712Z",
+  "reponse": "## What you did\n- Root cause of Orbitly's ~8% iOS funnel drop: our own kestrel-ios 3.2.0 made `event_id` a per-session counter, so #240's dedupe collapsed distinct events across devices. You rekeyed dedupe on (project, device, event_id), all 412 tests green, and opened PR #247 with Maya reviewing [1][2].\n\n## What changed\n- Maya will approve #247 once CI is green, and wants the drop count for Thursday's call with Orbitly: you have it — ~1.18M legitimate events (≈8.1% of their iOS volume), 4,352 being genuine replays; Zest lost 3,812 [2][1].\n- Rachel: Zest confirmed their dashboards are complete again after the backfill; their Zendesk ticket is closed [6].\n\n## What is still open\n- Once #247 is deployed, replay Orbitly from landing from 13/11 (~40 min, skips genuine replays), then the same for Zest, and verify `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- Add an alert for when the ingest dead-letter queue goes above 1,000 messages — due before Friday's incident review (20/11) [7].\n- The drafted note to the iOS team still needs sending: restore UUID `event_id`s in 3.2.1, otherwise this bites again [1].",
+  "rendu": "## What you did\n- Root cause of Orbitly's ~8% iOS funnel drop: our own kestrel-ios 3.2.0 made `event_id` a per-session counter, so #240's dedupe collapsed distinct events across devices. You rekeyed dedupe on (project, device, event_id), all 412 tests green, and opened PR #247 with Maya reviewing [1][2].\n\n## What changed\n- Maya will approve #247 once CI is green, and wants the drop count for Thursday's call with Orbitly: you have it — ~1.18M legitimate events (≈8.1% of their iOS volume), 4,352 being genuine replays; Zest lost 3,812 [2][1].\n- Rachel: Zest confirmed their dashboards are complete again after the backfill; their Zendesk ticket is closed [6].\n\n## What is still open\n- Once #247 is deployed, replay Orbitly from landing from 13/11 (~40 min, skips genuine replays), then the same for Zest, and verify `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- Add an alert for when the ingest dead-letter queue goes above 1,000 messages — due before Friday's incident review (20/11) [7].\n- The drafted note to the iOS team still needs sending: restore UUID `event_id`s in 3.2.1, otherwise this bites again [1].",
+  "mesures": {
+    "mots": 174,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5157,
+    "sortie": 1368,
+    "reflexion": 1027,
+    "cache": 0,
+    "cout": 0.00110502
+  },
+  "cout": 0.00110502,
+  "latenceMs": 16001,
+  "fournisseur": "Xiaomi"
+}

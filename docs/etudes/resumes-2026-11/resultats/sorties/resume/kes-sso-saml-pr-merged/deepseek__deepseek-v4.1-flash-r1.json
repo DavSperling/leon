@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T13:33:19.557Z",
+  "reponse": "## Où j'en suis\nL'endpoint SAML ACS est terminé : la signature de l'assertion est vérifiée avec signxml et les contrôles de conditions (audience, recipient, fenêtre temporelle, replay via Redis) sont écrits à la main, avec `saml_utils` déplacé dans `api/auth/saml/verify.py`, ruff et mypy propres. La PR #412 est fusionnée (squash) après CI verte (lint, mypy, tests, docker build).\n\n- [prochaine-étape] Charger les métadonnées du IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée, pour la démo de jeudi 10h NY\n- [prochaine-étape] Ouvrir le ticket séparé pour imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur la base Alpine : échec du build sur le mismatch lxml/xmlsec (libxml2 2.12 vs 2.11) ; la compilation de lxml depuis les sources échoue aussi (pas de module xmlsec1-openssl sur Alpine 3.20) et fait passer le build de 1m50 à 9m12\n- [décision] Passer à signxml, abandonner python3-saml et xmlsec, écrire les contrôles de conditions soi-même en ne lisant que depuis signed_xml (source: t08)\n- [décision] Tolérance de skew à 120 s (exigence du questionnaire sécurité Fernhill), ne pas toucher au login par mot de passe dans cette PR (source: t12)\n- [décision] Pas de `--admin` ni `--auto` pour le merge ; Maya sera relancée manuellement (source: t21)",
+  "rendu": "## Où j'en suis\nL'endpoint SAML ACS est terminé : la signature de l'assertion est vérifiée avec signxml et les contrôles de conditions (audience, recipient, fenêtre temporelle, replay via Redis) sont écrits à la main, avec `saml_utils` déplacé dans `api/auth/saml/verify.py`, ruff et mypy propres. La PR #412 est fusionnée (squash) après CI verte (lint, mypy, tests, docker build).\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées du IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée, pour la démo de jeudi 10h NY\n- [prochaine-étape] Ouvrir le ticket séparé pour imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur la base Alpine : échec du build sur le mismatch lxml/xmlsec (libxml2 2.12 vs 2.11) ; la compilation de lxml depuis les sources échoue aussi (pas de module xmlsec1-openssl sur Alpine 3.20) et fait passer le build de 1m50 à 9m12\n- [décision] Passer à signxml, abandonner python3-saml et xmlsec, écrire les contrôles de conditions soi-même en ne lisant que depuis signed_xml (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1247,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4563,
+    "sortie": 855,
+    "reflexion": 429,
+    "cache": 0,
+    "cout": 0.00095796
+  },
+  "cout": 0.00095796,
+  "latenceMs": 8451,
+  "fournisseur": "Novita"
+}

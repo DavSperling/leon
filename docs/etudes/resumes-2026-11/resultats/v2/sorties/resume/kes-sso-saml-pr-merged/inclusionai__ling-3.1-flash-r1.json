@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:49.817Z",
+  "reponse": "## Où j'en suis\nSAML ACS verification is done: the handler verifies the assertion signature with signxml (reading attributes only from the verified element), checks Conditions, Audience, Recipient and replay via Redis, with a 120 s clock-skew setting. Tests, ruff, mypy and full CI are green, saml_utils was moved to api/auth/saml/verify.py, and PR kestrel-analytics/platform#412 is merged on branch daniel/saml-acs.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of their SSO demo Thursday 10:00 New York.\n- [prochaine-étape] Open a separate ticket to enforce SSO and disable password login for Fernhill's email domain.\n- [essai-raté] python3-saml on Alpine: xmlsec/lxml libxml2 version mismatch at import; building lxml from source also failed (xmlsec crypto lib) and slowed builds to 9 min, so it was dropped.\n- [décision] Use signxml, drop python3-saml entirely and remove xmlsec from the Dockerfile (source: t08).\n- [décision] Clock skew tolerance set to 120 s per the Fernhill contract annex; password login left untouched for a separate ticket (source: t12).",
+  "rendu": "## Où j'en suis\nSAML ACS verification is done: the handler verifies the assertion signature with signxml (reading attributes only from the verified element), checks Conditions, Audience, Recipient and replay via Redis, with a 120 s clock-skew setting. Tests, ruff, mypy and full CI are green, saml_utils was moved to api/auth/saml/verify.py, and PR kestrel-analytics/platform#412 is merged on branch daniel/saml-acs.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of their SSO demo Thursday 10:00 New York.\n- [prochaine-étape] Open a separate ticket to enforce SSO and disable password login for Fernhill's email domain.\n- [essai-raté] python3-saml on Alpine: xmlsec/lxml libxml2 version mismatch at import; building lxml from source also failed (xmlsec crypto lib) and slowed builds to 9 min, so it was dropped.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1018,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5104,
+    "sortie": 3440,
+    "reflexion": 3135,
+    "cache": 0,
+    "cout": 0.00069408
+  },
+  "cout": 0.00069408,
+  "latenceMs": 36274,
+  "fournisseur": "Novita"
+}

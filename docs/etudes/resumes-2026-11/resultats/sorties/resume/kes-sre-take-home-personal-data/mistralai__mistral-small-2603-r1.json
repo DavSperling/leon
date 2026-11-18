@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:53.054Z",
+  "reponse": "## Où j'en suis\nLe take-home SRE est prêt dans son propre dépôt privé `kestrel-analytics/sre-take-home` : docker compose qui build `flaky-svc` depuis le Dockerfile (fonctionne sur arm64 et amd64), règle d'alerte cassée, fuite de connexions, politique IAM trop large, temps limité à 3h. La rubrique est finalisée (4 critères notés 0-3, scores pour discussion en panel Maya+Noa, sans seuil de passage). Le dossier `hiring/` a été retiré de la branche infra sans PR.\n\n- [prochaine-étape] Envoyer le lien du repo privé à Ethan Moradi après l'appel de jeudi 4pm Tel Aviv\n- [décision] L'envoi du take-home sera géré par l'utilisateur après l'appel (source: t16)",
+  "rendu": "## Où j'en suis\nLe take-home SRE est prêt dans son propre dépôt privé `kestrel-analytics/sre-take-home` : docker compose qui build `flaky-svc` depuis le Dockerfile (fonctionne sur arm64 et amd64), règle d'alerte cassée, fuite de connexions, politique IAM trop large, temps limité à 3h. La rubrique est finalisée (4 critères notés 0-3, scores pour discussion en panel Maya+Noa, sans seuil de passage). Le dossier `hiring/` a été retiré de la branche infra sans PR.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Envoyer le lien du repo privé à Ethan Moradi après l'appel de jeudi 4pm Tel Aviv\n- [décision] L'envoi du take-home sera géré par l'utilisateur après l'appel (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 751,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3797,
+    "sortie": 627,
+    "reflexion": 431,
+    "cache": 0,
+    "cout": 0.001040325
+  },
+  "cout": 0.001040325,
+  "latenceMs": 5246,
+  "fournisseur": "Mistral"
+}

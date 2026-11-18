@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:29:16.460Z",
+  "reponse": "## Où j'en suis\nSAML SSO for Fernhill is implemented and tested on staging with real login working end-to-end after fixing a RelayState length issue. JIT provisioning is merged, and group-to-role mapping is in an open PR. We are waiting for Fernhill IT to add the groups claim to their IdP before the Thursday demo. (source: ses-sso-3, s3-11, src-linear-kes311)\n\n- [en-cours] PR #421 for SAML group to role mapping and short RelayState is open. (source: ses-sso-3, s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Wait for Fernhill IT to add the groups claim to their staging IdP. (source: ses-sso-3, s3-08, src-linear-kes311)\n- [prochaine-étape] Create the admin test account once the groups claim is available for the Thursday demo. (source: ses-sso-3, s3-08)\n- [essai-raté] Sending the full return URL as RelayState failed because Fernhill ADFS enforces an 80-byte limit; fixed by storing the URL in Redis and sending a short opaque ID. (source: ses-sso-3, s3-02, s3-04)\n- [décision] Default role for new JIT users is viewer, not analyst or editor. (source: s1-05, s3-07)\n- [décision] SP-initiated login stays enabled despite Fernhill IT requesting IdP-initiated only. (source: s3-07)\n- [décision] Only verified domains are accepted for JIT provisioning. (source: s2-03)",
+  "rendu": "## Où j'en suis\nSAML SSO for Fernhill is implemented and tested on staging with real login working end-to-end after fixing a RelayState length issue. JIT provisioning is merged, and group-to-role mapping is in an open PR. We are waiting for Fernhill IT to add the groups claim to their IdP before the Thursday demo. (de: connecteur, agent; source: ses-sso-3, s3-11, src-linear-kes311)\n\n- [en-cours] PR #421 for SAML group to role mapping and short RelayState is open. (de: équipe, agent; source: ses-sso-3, s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Wait for Fernhill IT to add the groups claim to their staging IdP. (de: connecteur, agent; source: ses-sso-3, s3-08, src-linear-kes311)\n- [prochaine-étape] Create the admin test account once the groups claim is available for the Thursday demo. (de: agent; source: ses-sso-3, s3-08)\n- [essai-raté] Sending the full return URL as RelayState failed because Fernhill ADFS enforces an 80-byte limit; fixed by storing the URL in Redis and sending a short opaque ID. (de: agent; source: ses-sso-3, s3-02, s3-04)\n- [décision] Default role for new JIT users is viewer, not analyst or editor. (de: toi; source: s1-05, s3-07)\n- [décision] SP-initiated login stays enabled despite Fernhill IT requesting IdP-initiated only. (de: toi; source: s3-07)\n- [décision] Only verified domains are accepted for JIT provisioning. (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1397,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4981,
+    "sortie": 3328,
+    "reflexion": 2935,
+    "cache": 512,
+    "cout": 0.005722688
+  },
+  "cout": 0.005722688,
+  "latenceMs": 55084,
+  "fournisseur": "Alibaba"
+}

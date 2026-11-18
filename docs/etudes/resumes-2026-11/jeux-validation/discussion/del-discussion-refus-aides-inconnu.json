@@ -1,0 +1,57 @@
+{
+ "id": "del-discussion-refus-aides-inconnu",
+ "titre": "Les refus de primes de l'année ne sont nulle part : « Je ne sais pas » et ce qui a été cherché, sans prendre une demande de pièce pour un refus ni la fiche ChatGPT pour un cas réel",
+ "langue": "fr",
+ "entree": {
+  "corpus": "corpus-delorme",
+  "question": "Sur les aides de nos clients, on s'est fait refuser combien de dossiers cette année, et pour quelles raisons ?"
+ },
+ "attendu": {
+  "jeNeSaisPas": true,
+  "sources": [
+   "dr-suivi-mpr",
+   "sl-aides"
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Commence par dire qu'il ne sait pas : rien de trouvé ne compte ni n'explique les refus de dossiers d'aides de l'année.",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit ce qu'il a cherché (par exemple refus, MaPrimeRénov', dossiers, aides, Anah) et ce qu'il a lu.",
+    "poids": 2
+   },
+   {
+    "id": "f3",
+    "texte": "Dit que la demande de pièce complémentaire sur le dossier Cariou n'est pas un refus (le dossier reste en instruction).",
+    "poids": 1
+   },
+   {
+    "id": "f4",
+    "texte": "Indique où chercher : Manon Pichon, qui tient le suivi des dossiers (le suivi trouvé ne couvre que novembre).",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Donne un nombre de dossiers refusés, ou affirme qu'il n'y en a eu aucun cette année."
+   },
+   {
+    "id": "i2",
+    "texte": "Présente la demande de pièce complémentaire du dossier Cariou comme un refus."
+   },
+   {
+    "id": "i3",
+    "texte": "Présente la fiche de recours de la conversation ChatGPT, ou l'enquête de Rénov'Actu Pro sur les refus, comme des cas de Delorme Énergies."
+   }
+  ],
+  "pieges": [
+   "Je ne sais pas : le corpus ne parle que des dossiers de novembre, déposés ou à déposer ; aucun refus, aucun chiffre de l'année.",
+   "Quasi-réponses : une demande de pièce complémentaire (Cariou), une conversation ChatGPT sur le recours en cas de refus, une lettre d'information qui titre sur les refus en hausse.",
+   "Vocabulaire : « se faire refuser », « aides de nos clients » au lieu de MaPrimeRénov', dossier, Anah."
+  ]
+ }
+}

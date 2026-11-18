@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:28.950Z",
+  "reponse": "La table Saône revient en stock à partir du jeudi 3 décembre : 25 plateaux arrivent à l'entrepôt le 1er décembre, et ils seront expédiables après deux jours de montage et d'emballage [2]. Les 15 suivants sont prévus pour la semaine du 14 décembre [1]. Le ticket client du 17 novembre annonce une livraison sous 6 semaines environ [3], ce qui ne correspond pas à ces dates. Une estimation de fin novembre, datée du 10 novembre, est aussi dépassée [4].",
+  "rendu": "La table Saône revient en stock à partir du jeudi 3 décembre : 25 plateaux arrivent à l'entrepôt le 1er décembre, et ils seront expédiables après deux jours de montage et d'emballage [2]. Les 15 suivants sont prévus pour la semaine du 14 décembre [1]. Le ticket client du 17 novembre annonce une livraison sous 6 semaines environ [3], ce qui ne correspond pas à ces dates. Une estimation de fin novembre, datée du 10 novembre, est aussi dépassée [4].",
+  "mesures": {
+    "mots": 79,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1549,
+    "sortie": 830,
+    "reflexion": 636,
+    "cache": 0,
+    "cout": 0.0005699
+  },
+  "cout": 0.0005699,
+  "latenceMs": 7233,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:53.421Z",
+  "reponse": "Oui, pour l'appli des poseurs : le correctif (#214) est fusionné et déployé en prod depuis le 17/11, et l'appli affiche de nouveau la bonne heure [1][2][4]. Les 41 interventions déjà décalées ont été corrigées à la main [1].\n\nLe problème n'est pas entièrement réglé. Le SMS de rappel J-1 envoyé aux clients utilise encore l'ancien décalage de +2 h (`rappels/sms.py`). Lucas Tessier doit le corriger dans sa réécriture du module rappels, pas avant le 30/11 [4][6]. Résultat : des clients ont reçu un SMS annonçant 9h au lieu de 8h, et Yannick demande à Sandrine de les rappeler [3].",
+  "rendu": "Oui, pour l'appli des poseurs : le correctif (#214) est fusionné et déployé en prod depuis le 17/11, et l'appli affiche de nouveau la bonne heure [1][2][4]. Les 41 interventions déjà décalées ont été corrigées à la main [1].\n\nLe problème n'est pas entièrement réglé. Le SMS de rappel J-1 envoyé aux clients utilise encore l'ancien décalage de +2 h (`rappels/sms.py`). Lucas Tessier doit le corriger dans sa réécriture du module rappels, pas avant le 30/11 [4][6]. Résultat : des clients ont reçu un SMS annonçant 9h au lieu de 8h, et Yannick demande à Sandrine de les rappeler [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7586,
+    "sortie": 584,
+    "reflexion": 173,
+    "cache": 0,
+    "cout": 0.0010506
+  },
+  "latenceMs": 7752,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"appli poseurs horaires bug\"}",
+    "chercher {\"requete\":\"poseurs planning horaires appli corrigé\",\"depuis\":\"2m\"}"
+  ],
+  "cout": 0.0010506
+}

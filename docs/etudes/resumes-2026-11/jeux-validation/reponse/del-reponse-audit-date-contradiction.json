@@ -1,0 +1,138 @@
+{
+ "id": "del-reponse-audit-date-contradiction",
+ "titre": "Recherche en mots-clés sur la date de l'audit : le mail de l'organisme et la page de préparation disent le 8, un message plus récent dit le 10 sans confirmation écrite",
+ "langue": "fr",
+ "entree": {
+  "recherche": "audit rge date",
+  "resultats": [
+   {
+    "id": "gm-certen",
+    "kind": "gmail",
+    "nature": "fil",
+    "titre": "Audit de qualification RGE – Delorme Énergies",
+    "url": null,
+    "date": "2026-11-13T15:30:00+01:00",
+    "passages": [
+     {
+      "id": "q1a",
+      "texte": "Madame, nous vous confirmons l'audit de qualification sur chantier le mardi 8 décembre 2026, avec M. Jean-Marc Ollivier, auditeur. Au préalable, nous vous proposons un appel de préparation en visio le vendredi 20 novembre à 11h (45 minutes), pour passer en revue la liste des chantiers et les pièces à nous transmettre avant le 27 novembre.",
+      "date": "2026-11-13T15:30:00+01:00",
+      "auteur": "Laure Bihan"
+     }
+    ]
+   },
+   {
+    "id": "sl-rge",
+    "kind": "slack",
+    "nature": "fil",
+    "titre": "#rge",
+    "url": null,
+    "date": "2026-11-17T17:35:00+01:00",
+    "passages": [
+     {
+      "id": "q1b",
+      "texte": "Certénergie vient d'appeler : M. Ollivier a un empêchement le 8, l'audit passerait au jeudi 10 décembre, même chantier (Le Floch, Rezé). Laure Bihan doit nous le confirmer par écrit. En attendant on ne bouge rien dans planif.",
+      "date": "2026-11-17T17:35:00+01:00",
+      "auteur": "Franck Le Gall"
+     }
+    ]
+   },
+   {
+    "id": "no-audit",
+    "kind": "notion",
+    "nature": "page",
+    "titre": "Audit RGE 2026 – préparation",
+    "url": null,
+    "date": "2026-11-12T18:00:00+01:00",
+    "passages": [
+     {
+      "id": "q1c",
+      "texte": "Date de l'audit : mardi 8 décembre 2026, de 8h30 à 16h. Chantier présenté : CH-2604 Le Floch (Rezé). Référent : Franck Le Gall. Pièces à envoyer avant le 27/11 : liste des chantiers 2026, attestations de formation, attestations d'assurance décennale, dossiers PDF de 3 chantiers.",
+      "date": "2026-11-12T18:00:00+01:00",
+      "auteur": "Franck Le Gall"
+     }
+    ]
+   },
+   {
+    "id": "cc-menage",
+    "kind": "claude_code",
+    "nature": "conversation",
+    "titre": "on fait du ménage : sépare settings.py en base/dev/prod",
+    "url": null,
+    "date": "2026-11-17T15:21:00+01:00",
+    "passages": [
+     {
+      "id": "q1d",
+      "texte": "au fait franck m'a demandé à la machine à café de bloquer le créneau de l'audit rge dans planif : le chantier le floch le 8/12 toute la journée, pour que personne replanifie dessus pendant que l'auditeur est là.",
+      "date": "2026-11-17T14:58:00+01:00",
+      "auteur": "Thomas Riou",
+      "role": "user"
+     }
+    ]
+   },
+   {
+    "id": "dr-engagement",
+    "kind": "drive",
+    "nature": "page",
+    "titre": "Lettre d'engagement – audit de qualification.pdf",
+    "url": null,
+    "date": "2026-11-12T10:00:00+01:00",
+    "passages": [
+     {
+      "id": "q1e",
+      "texte": "L'entreprise s'engage à mettre à la disposition de l'auditeur un chantier en cours ou achevé depuis moins de 12 mois, à la date fixée par l'organisme, et à lui donner accès aux documents listés en annexe.",
+      "date": "2026-11-12T10:00:00+01:00"
+     }
+    ]
+   }
+  ]
+ },
+ "attendu": {
+  "contradiction": true,
+  "cites": [
+   2,
+   1
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que d'après Franck (17/11, le plus récent), l'audit passerait au jeudi 10 décembre, en attendant une confirmation écrite de Certénergie [2].",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Signale que cela contredit le mail de Certénergie (et la page de préparation), qui donnent le mardi 8 décembre [1].",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Cite le message de Franck avant le mail de Certénergie.",
+    "poids": 1
+   },
+   {
+    "id": "f4",
+    "texte": "Dit que le chantier audité reste le chantier Le Floch à Rezé.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Donne le 8 décembre comme la date sûre, sans parler du report."
+   },
+   {
+    "id": "i2",
+    "texte": "Dit que le 10 décembre est confirmé par Certénergie."
+   },
+   {
+    "id": "i3",
+    "texte": "Donne le vendredi 20 novembre (l'appel de préparation) comme date de l'audit."
+   }
+  ],
+  "pieges": [
+   "Contradiction : le mail officiel et la page Notion (8 décembre) contre un message plus récent (10 décembre, pas encore confirmé par écrit).",
+   "Leurres : l'appel de préparation du 20 novembre, et une session qui bloque le 8/12 dans le planning (antérieure au report).",
+   "Recherche en trois mots-clés, sans phrase."
+  ]
+ }
+}

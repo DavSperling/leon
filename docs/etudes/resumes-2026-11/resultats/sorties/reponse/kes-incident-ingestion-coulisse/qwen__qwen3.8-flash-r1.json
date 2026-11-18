@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:11.830Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 1317,
+    "sortie": 1500,
+    "reflexion": 1500,
+    "cache": 0,
+    "cout": 0.00090255
+  },
+  "cout": 0.00090255,
+  "latenceMs": 20255,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:33.858Z",
+  "reponse": "Short answer: yes, Fernhill Bank's SSO go-live is still set for December 1, 2026 — that date is written in the signed contract [2] — but there's one open dependency that could put it at risk.\n\nWhere things stand (as of Nov 17):\n- Fernhill's IdP metadata and signing certificate finally arrived and are loaded on staging; IdP-initiated login works [3][8].\n- SP-initiated login is currently failing: their IdP signs assertions with RSA-SHA1, and our platform only accepts SHA-256 or stronger [8][2]. Maya explicitly refused to relax this for a bank (pen test / SOC 2 exposure), so we're waiting on Fernhill instead [8].\n\nWhat's left before Dec 1:\n1. Fernhill switches its signing algorithm to SHA-256 — Helen has put it on her change board's agenda for Tuesday Nov 24; if approved it's applied that evening [3].\n2. Joint end-to-end test session with Helen on Wednesday Nov 25, 16:00 TLV / 14:00 London [3][8].\n3. Priya's review of the SSO admin page copy (page is on staging with metadata upload, \"Require SSO\" toggle and test-login button) [2].\n4. Remaining SAML migrations to land before the Dec 3 freeze, ahead of the Postgres 17 cutover, which was deliberately moved to Dec 5 so it can't interfere with the go-live [5][2].\n\nRisk to flag for support: if Fernhill's board doesn't approve on the 24th, Sam Ortiz tells them the same day that Dec 1 is at risk — no surprises for the bank [8]. So the honest answer to give them is \"on track, contingent on their Nov 24 change board and the Nov 25 joint test.\"",
+  "rendu": "Short answer: yes, Fernhill Bank's SSO go-live is still set for December 1, 2026 — that date is written in the signed contract [2] — but there's one open dependency that could put it at risk.\n\nWhere things stand (as of Nov 17):\n- Fernhill's IdP metadata and signing certificate finally arrived and are loaded on staging; IdP-initiated login works [3][8].\n- SP-initiated login is currently failing: their IdP signs assertions with RSA-SHA1, and our platform only accepts SHA-256 or stronger [8][2]. Maya explicitly refused to relax this for a bank (pen test / SOC 2 exposure), so we're waiting on Fernhill instead [8].\n\nWhat's left before Dec 1:\n1. Fernhill switches its signing algorithm to SHA-256 — Helen has put it on her change board's agenda for Tuesday Nov 24; if approved it's applied that evening [3].\n2. Joint end-to-end test session with Helen on Wednesday Nov 25, 16:00 TLV / 14:00 London [3][8].\n3. Priya's review of the SSO admin page copy (page is on staging with metadata upload, \"Require SSO\" toggle and test-login button) [2].\n4. Remaining SAML migrations to land before the Dec 3 freeze, ahead of the Postgres 17 cutover, which was deliberately moved to Dec 5 so it can't interfere with the go-live [5][2].\n\nRisk to flag for support: if Fernhill's board doesn't approve on the 24th, Sam Ortiz tells them the same day that Dec 1 is at risk — no surprises for the bank [8]. So the honest answer to give them is \"on track, contingent on their Nov 24 change board and the Nov 25 joint test.\"",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 33031,
+    "sortie": 1058,
+    "reflexion": 489,
+    "cache": 19968,
+    "cout": 0.0021809704
+  },
+  "latenceMs": 28866,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise 1er décembre SSO\"}",
+    "chercher {\"requete\":\"\\\"December 1\\\" company accounts login bank support\"}",
+    "chercher {\"requete\":\"Fernhill SHA-256 change board test session go-live status\",\"depuis\":\"7j\"}",
+    "chercher {\"requete\":\"KES-412 remaining tasks SSO launch checklist\"}",
+    "chercher {\"requete\":\"just-in-time provisioning rôle Viewer per-workspace setting SSO enablement\"}"
+  ],
+  "cout": 0.0021809704
+}

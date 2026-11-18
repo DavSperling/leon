@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:29.896Z",
+  "reponse": "I don't know yet. Corvane hasn't put a 2027 price on paper.\n\n- **Current assumption:** Finance's pricing memo (9 Nov) assumes Corvane's per-item ACH fee stays at $0.08 in 2027. The memo says that if the fee goes above $0.10, something else is triggered, but the passage cuts off before it says what. [1]\n- **Contract timing:** The current Corvane agreement runs until March 31, 2027. Marcus is to open renewal talks. [1]\n- **Risk of an increase:** On 16 Nov, Marcus wrote that Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 rejected-file incident. He said there was \"nothing on paper yet\". The renewal call moved to the week of Nov 23. [5]\n- **Recent cost:** The October Corvane fee invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item (my own calculation).\n\nI searched for Corvane fee and pricing terms and read the snippets that came back. I did not find the renewal outcome or a quote. The notes from the week-of-Nov-23 call would be the next place to look.",
+  "rendu": "I don't know yet. Corvane hasn't put a 2027 price on paper.\n\n- **Current assumption:** Finance's pricing memo (9 Nov) assumes Corvane's per-item ACH fee stays at $0.08 in 2027. The memo says that if the fee goes above $0.10, something else is triggered, but the passage cuts off before it says what. [1]\n- **Contract timing:** The current Corvane agreement runs until March 31, 2027. Marcus is to open renewal talks. [1]\n- **Risk of an increase:** On 16 Nov, Marcus wrote that Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 rejected-file incident. He said there was \"nothing on paper yet\". The renewal call moved to the week of Nov 23. [5]\n- **Recent cost:** The October Corvane fee invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item (my own calculation).\n\nI searched for Corvane fee and pricing terms and read the snippets that came back. I did not find the renewal outcome or a quote. The notes from the week-of-Nov-23 call would be the next place to look.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 10682,
+    "sortie": 520,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.026563999999999997
+  },
+  "latenceMs": 5096,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"Corvane payout fee per payout pricing next year\"}",
+    "chercher {\"requete\":\"Corvane tarif par virement 2026\"}"
+  ],
+  "cout": 0.026563999999999997
+}

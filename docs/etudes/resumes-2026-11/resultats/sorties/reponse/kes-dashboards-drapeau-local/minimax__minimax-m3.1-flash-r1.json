@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:07.551Z",
+  "reponse": "Since #447, FEATURE_FLAGS in .env.local is ignored — the frontend now reads flags from the API endpoint GET /api/flags, and the flag was renamed from new_dash to dashboards_v2 [2][3]. So locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. Note that the earlier advice to set FEATURE_FLAGS=new_dash is outdated [1], which explains why that didn't work [3]. There's also a kill switch in the admin if you need to turn it off without a deploy [4]. If your workspace is new and has no events yet, the grid may look blank by design — an empty state is being tracked separately [5].",
+  "rendu": "Since #447, FEATURE_FLAGS in .env.local is ignored — the frontend now reads flags from the API endpoint GET /api/flags, and the flag was renamed from new_dash to dashboards_v2 [2][3]. So locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. Note that the earlier advice to set FEATURE_FLAGS=new_dash is outdated [1], which explains why that didn't work [3]. There's also a kill switch in the admin if you need to turn it off without a deploy [4]. If your workspace is new and has no events yet, the grid may look blank by design — an empty state is being tracked separately [5].",
+  "mesures": {
+    "mots": 111,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1243,
+    "sortie": 246,
+    "reflexion": 73,
+    "cache": 184,
+    "cout": 0.000278289
+  },
+  "cout": 0.000278289,
+  "latenceMs": 1970,
+  "fournisseur": "Wafer"
+}

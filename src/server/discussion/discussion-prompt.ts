@@ -1,4 +1,5 @@
 import type { DiscussionCitation } from '@/lib/discussion-events';
+import { detectLanguage, languageLine } from '@/server/llm/language';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes } from '@/server/llm/prompt-guard';
 import { DISCUSSION_MAX_STEPS, DISCUSSION_READ_BUDGET, spaced } from './tools';
@@ -24,7 +25,7 @@ Tes outils :
 Tu as au plus ${DISCUSSION_MAX_STEPS} appels d'outils et ${spaced(DISCUSSION_READ_BUDGET)} caractères de lecture par réponse : choisis ce que tu lis, écarte ce qui ne sert pas.
 
 Chaque source que les outils te montrent porte un numéro, l'attribut n de <source>. Comment répondre :
-- Dans la langue du dernier message de l'utilisateur ; en anglais quand elle ne se devine pas. De façon concise : quelques phrases, ou une courte liste quand il y a plusieurs éléments. Pas de titre.
+- Dans la langue que son dernier message t'indique en tête, à défaut celle de ses messages ; en anglais quand elle ne se devine pas. De façon concise : quelques phrases, ou une courte liste quand il y a plusieurs éléments. Pas de titre.
 - Seulement d'après ce que les outils t'ont montré : rien de ce que tu sais par ailleurs, aucune supposition.
 - Après chaque affirmation, le numéro de la source qui la prouve, entre crochets et séparé du mot par une espace, par exemple « signé [2] ». Seulement des numéros n donnés par les outils pendant cette réponse (ou parmi les résultats joints à la question) ; pour deux sources, écris [1][3]. Les numéros de tes réponses précédentes ne valent plus.
 - Si deux sources se contredisent, dis-le, en citant la plus récente d'abord.
@@ -60,8 +61,18 @@ export function buildDiscussionMessages(
   const start = recent.findIndex((message) => message.role === 'user');
   const messages = start === -1 ? [] : recent.slice(start).map((message) => ({ ...message }));
   const last = messages.at(-1);
-  if (last && last.role === 'user' && seeds.length > 0) {
-    last.content = `${last.content}\n\n${renderSeeds(seeds)}`;
+  if (last && last.role === 'user') {
+    // La langue du dernier message, ou à défaut de tous les siens, dite en tête (llm/language.ts) : avant les
+    // résultats joints, qui peuvent être dans une autre langue.
+    const typed = messages
+      .filter((message) => message.role === 'user')
+      .map((message) => message.content);
+    const language = languageLine(
+      detectLanguage([last.content]) ?? detectLanguage(typed),
+      'ses messages',
+    );
+    if (seeds.length > 0) last.content = `${last.content}\n\n${renderSeeds(seeds)}`;
+    if (language) last.content = `${language}\n${last.content}`;
   }
   return messages;
 }

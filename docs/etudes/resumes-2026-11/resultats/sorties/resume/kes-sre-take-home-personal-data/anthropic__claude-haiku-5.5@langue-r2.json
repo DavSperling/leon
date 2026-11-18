@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:39:16.827Z",
+  "reponse": "## Where I am\n\nThe SRE take-home exercise now lives in its own private repo, `kestrel-analytics/sre-take-home`. It has a Docker Compose setup that builds `flaky-svc` from source, a broken alert rule, a connection leak, an over-broad IAM policy in Terraform, a 3-hour time box, and a rubric with four areas scored 0–3 and no cut-off. The `hiring/` folder is removed from the infra branch, but that removal is not committed, and no PR was opened. Nothing has been sent to the candidate.\n\n- [en-cours] Removing `hiring/` from `maya/sre-take-home` is an uncommitted working-tree change. The branch will be dropped later.\n- [prochaine-étape] After the candidate call on Thursday at 4pm Tel Aviv time, Maya sends the exercise herself.\n- [essai-raté] `docker compose up` failed with `exec format error` because the prebuilt `flaky-svc:0.3` image was amd64-only. A multi-arch `buildx --load` also failed: the docker exporter cannot export manifest lists. The fix was to build `flaky-svc` from source in compose.\n- [décision] No k8s and no optional part; 3-hour limit; Terraform and compose only (source: t03)\n- [décision] Candidates build `flaky-svc` from source; no prebuilt image is published (source: t06)\n- [décision] No threshold on scores; they are input for the panel, with Noa as second reviewer (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra (source: t12)\n- [décision] Delete `hiring/` from the infra branch, with no PR in infra (source: t14)\n- [décision] Nobody is emailed by Leon; Maya sends the exercise herself after the call (source: t16)",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Removing `hiring/` from `maya/sre-take-home` is an uncommitted working-tree change. The branch will be dropped later.\n- [prochaine-étape] After the candidate call on Thursday at 4pm Tel Aviv time, Maya sends the exercise herself.\n- [essai-raté] `docker compose up` failed with `exec format error` because the prebuilt `flaky-svc:0.3` image was amd64-only. A multi-arch `buildx --load` also failed: the docker exporter cannot export manifest lists. The fix was to build `flaky-svc` from source in compose.\n- [décision] No k8s and no optional part; 3-hour limit; Terraform and compose only (source: t03)\n- [décision] Candidates build `flaky-svc` from source; no prebuilt image is published (source: t06)\n- [décision] No threshold on scores; they are input for the panel, with Noa as second reviewer (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra (source: t12)\n- [décision] Delete `hiring/` from the infra branch, with no PR in infra (source: t14)\n- [décision] Nobody is emailed by Leon; Maya sends the exercise herself after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1190,
+    "decisions": 6,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5123,
+    "sortie": 1160,
+    "reflexion": 556,
+    "cache": 0,
+    "cout": 0.0010923
+  },
+  "cout": 0.0010923,
+  "latenceMs": 5708,
+  "fournisseur": "Claude Platform on AWS"
+}

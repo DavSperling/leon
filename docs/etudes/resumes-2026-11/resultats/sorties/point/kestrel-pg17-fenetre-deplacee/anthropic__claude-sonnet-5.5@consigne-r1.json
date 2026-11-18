@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5@consigne",
+  "rep": 1,
+  "date": "2026-11-18T14:40:16.257Z",
+  "reponse": "## What changed\n\n- Le créneau de bascule passe de samedi 21/11 à **dimanche 22/11, 02:00–04:00 UTC**, car le batch de fin de mois de Fernhill tourne jusqu'à ~06:00 UTC samedi soir [8][10]. Maya a prévenu les CSM et te dit de mettre à jour le runbook, qui indique encore samedi, puis de fusionner #321 [8].\n- #321 est approuvée par Maya, qui trouve le Terraform correct et salue le correctif sur le réplica [3]. Sa consigne de ne pas fusionner avant confirmation de la date est levée par son message du jour, qui confirme dimanche [3][8].\n- Daniel Levi sera d'astreinte côté API dimanche et veut un ping quand tu lances la bascule [7]. Lior (KES-530) demande 30 min de préavis pour mettre les consommateurs d'ingest en pause proprement. Rien à changer de son côté, ils lisent `DATABASE_URL` dans SSM [9].\n\n## What is still open\n\n- Répétition du rollback sur un clone neuf, prévue jeudi 19/11. Après la bascule, l'ancienne instance ne reçoit plus d'écritures et diverge aussitôt, donc revenir en arrière n'est pas un simple retour. Il reste à mesurer la durée et les données perdues. C'est noté en TODO dans le runbook [1][3].\n- Runbook `runbooks/pg17-cutover.md` à corriger : la date, et prévoir un préavis de 30 min à Lior et un ping à Daniel [1][8][9].\n- Avec #321 en attente de fusion, la prod est prête : le plan donne 2 modifications, 0 destruction, et le réplica suit le blue/green. La répétition sur clone a donné 74 s d'indisponibilité en écriture [1].",
+  "rendu": "## What changed\n\n- Le créneau de bascule passe de samedi 21/11 à **dimanche 22/11, 02:00–04:00 UTC**, car le batch de fin de mois de Fernhill tourne jusqu'à ~06:00 UTC samedi soir [8][10]. Maya a prévenu les CSM et te dit de mettre à jour le runbook, qui indique encore samedi, puis de fusionner #321 [8].\n- #321 est approuvée par Maya, qui trouve le Terraform correct et salue le correctif sur le réplica [3]. Sa consigne de ne pas fusionner avant confirmation de la date est levée par son message du jour, qui confirme dimanche [3][8].\n- Daniel Levi sera d'astreinte côté API dimanche et veut un ping quand tu lances la bascule [7]. Lior (KES-530) demande 30 min de préavis pour mettre les consommateurs d'ingest en pause proprement. Rien à changer de son côté, ils lisent `DATABASE_URL` dans SSM [9].\n\n## What is still open\n\n- Répétition du rollback sur un clone neuf, prévue jeudi 19/11. Après la bascule, l'ancienne instance ne reçoit plus d'écritures et diverge aussitôt, donc revenir en arrière n'est pas un simple retour. Il reste à mesurer la durée et les données perdues. C'est noté en TODO dans le runbook [1][3].\n- Runbook `runbooks/pg17-cutover.md` à corriger : la date, et prévoir un préavis de 30 min à Lior et un ping à Daniel [1][8][9].\n- Avec #321 en attente de fusion, la prod est prête : le plan donne 2 modifications, 0 destruction, et le réplica suit le blue/green. La répétition sur clone a donné 74 s d'indisponibilité en écriture [1].",
+  "mesures": {
+    "mots": 247,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7291,
+    "sortie": 644,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021022
+  },
+  "cout": 0.021022,
+  "latenceMs": 5870,
+  "fournisseur": "Claude Platform on AWS"
+}

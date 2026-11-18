@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:57:39.916Z",
+  "reponse": "## Where I am\nThe PostgreSQL 17 Terraform changes are committed, and draft PR `kestrel-analytics/infra#57` is open. Staging is configured for a blue/green upgrade; production is prepared behind a disabled flag. Plans were run only—nothing was applied.\n\n- [in-progress] Staging upgrade is blocked until pg_partman is upgraded to 5.x and maintenance on `events_raw` and `events_daily` is checked.\n- [next-step] Complete the pg_partman staging work, then review the staging plan before any apply.\n- [next-step] Get Maya’s sign-off before choosing a production window; avoid the dbt lock from 01:00–03:30 UTC.\n- [decision] Keep production disabled and `apply_immediately = false` until sign-off. (source: t14)\n- [decision] Do not run anything against the database for the pg_partman task. (source: t10)",
+  "rendu": "- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [décision] Keep production disabled and `apply_immediately = false` until sign-off. (source: t14)\n- [décision] Do not run anything against the database for the pg_partman task. (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 318,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3735,
+    "sortie": 202,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005678
+  },
+  "cout": 0.0005678,
+  "latenceMs": 3252,
+  "fournisseur": "Azure"
+}

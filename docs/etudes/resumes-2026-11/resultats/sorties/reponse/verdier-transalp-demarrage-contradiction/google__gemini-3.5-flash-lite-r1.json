@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:33:35.934Z",
+  "reponse": "Le plan initial et la fin de Rapid'Colis au 30 novembre prévoient une bascule générale vers TransAlp le 1er décembre [1][3][4][5]. Cependant, pour la Maison Verdier, TransAlp a confirmé un démarrage des enlèvements réguliers le 8 décembre en raison de contraintes de volume à l'agence de Vénissieux, tout en maintenant l'enlèvement test au 20 novembre [2].",
+  "rendu": "Le plan initial et la fin de Rapid'Colis au 30 novembre prévoient une bascule générale vers TransAlp le 1er décembre [1][3][4][5]. Cependant, pour la Maison Verdier, TransAlp a confirmé un démarrage des enlèvements réguliers le 8 décembre en raison de contraintes de volume à l'agence de Vénissieux, tout en maintenant l'enlèvement test au 20 novembre [2].",
+  "mesures": {
+    "mots": 56,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1013,
+    "sortie": 99,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005514
+  },
+  "cout": 0.0005514,
+  "latenceMs": 981,
+  "fournisseur": "Google"
+}

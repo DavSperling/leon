@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:00.493Z",
+  "reponse": "## Où j'en suis\nBuilt cmd/replay on lior/replay-12-11 with dry run, per-partition ordering, rejects output, and a hard allowlist for events.replay.v3 only. The 12/11 dry run finished with 18,442,107 events to replay and 3,118 schema-v2 rejects; PR #233 is open for Daniel’s review.\n\n- [prochaine-étape] After Daniel reviews, run the real replay into events.replay.v3, then the aggregator backfill for 2026-11-12.\n- [essai-raté] dry-run-1 with batch 50k timed out and was OOMKilled at 2Gi; batch 5k completed at 310 MiB.\n- [essai-raté] Early tests found out-of-order events because workers mixed partitions; splitting workers by partition fixed it.\n- [décision] Replay the full 12/11 window only to events.replay.v3, never events.v3; aggregates will be recomputed by --backfill. (source: t05)\n- [décision] Use batch 5k and do not change the memory limit. (source: t13)\n- [décision] Do not draft the Fernhill/Orbitly ETA; you will give it yourself after Daniel reviews. (source: t19)",
+  "rendu": "## Où j'en suis\nBuilt cmd/replay on lior/replay-12-11 with dry run, per-partition ordering, rejects output, and a hard allowlist for events.replay.v3 only. The 12/11 dry run finished with 18,442,107 events to replay and 3,118 schema-v2 rejects; PR #233 is open for Daniel’s review.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [prochaine-étape] After Daniel reviews, run the real replay into events.replay.v3, then the aggregator backfill for 2026-11-12.\n- [essai-raté] dry-run-1 with batch 50k timed out and was OOMKilled at 2Gi; batch 5k completed at 310 MiB.\n- [essai-raté] Early tests found out-of-order events because workers mixed partitions; splitting workers by partition fixed it.\n- [décision] Replay the full 12/11 window only to events.replay.v3, never events.v3; aggregates will be recomputed by --backfill. (source: t05)\n- [décision] Use batch 5k and do not change the memory limit. (source: t13)\n- [décision] Do not draft the Fernhill/Orbitly ETA; you will give it yourself after Daniel reviews. (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1093,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4151,
+    "sortie": 3678,
+    "reflexion": 3381,
+    "cache": 0,
+    "cout": 0.000662044
+  },
+  "cout": 0.000662044,
+  "latenceMs": 27386,
+  "fournisseur": "Tencent"
+}

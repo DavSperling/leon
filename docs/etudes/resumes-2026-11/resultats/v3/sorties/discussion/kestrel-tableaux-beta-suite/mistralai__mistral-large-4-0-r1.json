@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:12:03.432Z",
+  "reponse": "The first part (phase 1: chart builder + saved views) is planned to be feature-complete behind the `dash_v2` flag by **December 4**, with a design-partner beta opening **Wednesday, December 9** for 5 customers — Orbitly, Zest Grocers, and three accounts from the October trial cohort [9][11]. Other customers won't get access before general availability, targeted for **late January 2027** (the spec says not before end of January 2027), and a waitlist will open in January [1][11][12].",
+  "rendu": "The first part (phase 1: chart builder + saved views) is planned to be feature-complete behind the `dash_v2` flag by **December 4**, with a design-partner beta opening **Wednesday, December 9** for 5 customers — Orbitly, Zest Grocers, and three accounts from the October trial cohort [9][11]. Other customers won't get access before general availability, targeted for **late January 2027** (the spec says not before end of January 2027), and a waitlist will open in January [1][11][12].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15944,
+    "sortie": 732,
+    "reflexion": 362,
+    "cache": 4864,
+    "cout": 0.010597048
+  },
+  "latenceMs": 25138,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"dashboards release date customers beta early access availability rollout first part\",\"type\":\"page\"}",
+    "chercher {\"requete\":\"nouveaux tableaux de bord quand les clients pourront tester disponibilité bêta date de sortie\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"dashboards GA general availability customer-facing launch milestone\",\"type\":\"conversation\"}",
+    "chercher {\"requete\":\"dashboards première partie clients essayer bêta privée planning sortie\",\"type\":\"reunion\"}",
+    "lire {\"sourceId\":\"notion-dashboards-redesign-spec\"}",
+    "lire {\"sourceId\":\"fathom-weekly-sync-1112\"}",
+    "chercher {\"depuis\":\"2026-11-12\",\"requete\":\"dashboards beta design partners date confirmed December dash_v2 flag rollout customers\"}",
+    "chercher {\"depuis\":\"2026-11-12\",\"requete\":\"beta dashboards date confirmée clients décembre partenaires Orbitly Zest lancement\",\"outil\":\"outlook\"}"
+  ],
+  "cout": 0.010597048
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T17:53:56.782Z",
+  "reponse": "## What is still open\n- **PR #247 is waiting on you**: Maya approves once CI is green and asked on the PR how many Orbitly events were dropped since #240 — you have the number (1,179,950 legitimate, ≈8.1% of their iOS volume) for Thursday's (19/11) Orbitly call [1][2].\n- Once #247 is deployed, replay from landing for Orbitly (`prj_0rb1`) from 13/11 09:40 UTC (~1.18M events, ~40 min) and Zest (`prj_z3st`, 3,812), then confirm `ingest_dedupe_dropped_total` for `prj_0rb1` stays near zero — post-deploy only [1].\n- Alert on the ingest dead-letter queue above 1,000 messages is due before Friday's (20/11) incident review [7].\n- The note to the iOS team — restore UUID event_ids in kestrel-ios 3.2.1 — is drafted but not sent [1].\n\n## What changed\n- #233 postmortem is final; Noa presents it at Friday's incident review [3].\n- Rachel Kim is closing Zest's Zendesk ticket in #support-escalations after their confirmation [6].\n\n## What you did\n- Diagnosed Orbitly's ~8% iOS funnel drop: #240's dedupe keys on event_id alone and kestrel-ios 3.2.0 sends per-session counters instead of UUIDs, so distinct events from different devices collided — 1,184,302 drops for Orbitly (99% of all projects), 1,179,950 legitimate; Zest lost 3,812 [1].\n- Changed the dedupe key to `project_id:device_id:event_id` with tests (412 pass, lint clean) and opened PR #247 with Maya as reviewer [1].",
+  "rendu": "## What is still open\n- **PR #247 is waiting on you**: Maya approves once CI is green and asked on the PR how many Orbitly events were dropped since #240 — you have the number (1,179,950 legitimate, ≈8.1% of their iOS volume) for Thursday's (19/11) Orbitly call [1][2].\n- Once #247 is deployed, replay from landing for Orbitly (`prj_0rb1`) from 13/11 09:40 UTC (~1.18M events, ~40 min) and Zest (`prj_z3st`, 3,812), then confirm `ingest_dedupe_dropped_total` for `prj_0rb1` stays near zero — post-deploy only [1].\n- Alert on the ingest dead-letter queue above 1,000 messages is due before Friday's (20/11) incident review [7].\n- The note to the iOS team — restore UUID event_ids in kestrel-ios 3.2.1 — is drafted but not sent [1].\n\n## What changed\n- #233 postmortem is final; Noa presents it at Friday's incident review [3].\n- Rachel Kim is closing Zest's Zendesk ticket in #support-escalations after their confirmation [6].\n\n## What you did\n- Diagnosed Orbitly's ~8% iOS funnel drop: #240's dedupe keys on event_id alone and kestrel-ios 3.2.0 sends per-session counters instead of UUIDs, so distinct events from different devices collided — 1,184,302 drops for Orbitly (99% of all projects), 1,179,950 legitimate; Zest lost 3,812 [1].\n- Changed the dedupe key to `project_id:device_id:event_id` with tests (412 pass, lint clean) and opened PR #247 with Maya as reviewer [1].",
+  "mesures": {
+    "mots": 207,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4605,
+    "sortie": 6275,
+    "reflexion": 5854,
+    "cache": 0,
+    "cout": 0.0180411
+  },
+  "cout": 0.0180411,
+  "latenceMs": 216107,
+  "fournisseur": "Mistral"
+}

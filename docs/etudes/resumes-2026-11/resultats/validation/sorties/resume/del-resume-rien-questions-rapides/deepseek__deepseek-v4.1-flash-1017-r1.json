@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-rien-questions-rapides",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:09.114Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1804,
+    "sortie": 56,
+    "reflexion": 50,
+    "cache": 0,
+    "cout": 0.00017792
+  },
+  "cout": 0.00017792,
+  "latenceMs": 1609,
+  "fournisseur": "Particle AI"
+}

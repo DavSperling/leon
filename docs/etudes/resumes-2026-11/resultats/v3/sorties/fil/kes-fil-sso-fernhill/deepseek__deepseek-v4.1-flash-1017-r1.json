@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:59:08.536Z",
+  "reponse": "## Où j'en suis\nAt the end of the last session the Fernhill SSO branch `daniel/saml-sso-fernhill` works end to end on staging: real SAML login against Fernhill's IdP succeeds after the short-RelayState fix, and JIT creates users as `viewer` via the merged #415. Group-to-role mapping plus the RelayState change sit in PR #421, still open, and everything is blocked on Fernhill IT adding the `groups` claim before Thursday's demo (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open: per-tenant `saml_role_mapping`, applied on every login, 41 auth tests and the full suite green (source: ses-sso-3)\n- [prochaine-étape] Daniel emails Fernhill IT to add the `groups` claim; their metadata is already loaded on staging (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] once the claim exists, add an admin test account next to `kestrel.test1`, then demo Thursday Nov 19, 10:00 ET (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 reviewed and merged (source: ses-sso-3)\n- [essai-raté] full return URL as RelayState was refused by Fernhill's ADFS (MSIS7042, over the 80-byte cap); truncating was dropped because it breaks deep links (source: ses-sso-3)\n- [essai-raté] Fernhill IT's request for an `analyst` default and IdP-initiated only was declined — no analyst role exists, `viewer` stays until Maya talks to them (source: ses-sso-3, src-slack-fernhill)\n- [décision] short opaque RelayState id, return URL kept in Redis 10 min and deleted on use (source: s3-03, 6d0e2b8)\n- [décision] `viewer` stays the default role and SP-initiated login stays on for the fernhill tenant (source: s3-07)\n- [décision] new SAML users get `viewer`, least privilege for a bank (source: s1-05)\n- [décision] SAML only for Fernhill, no OIDC, both login flows (source: s1-03)\n- [décision] JIT only accepts the tenant's verified domains, unverified ones logged without the email (source: s2-03, src-pr415)\n- [question] a note says SSO enforcement for the fernhill tenant lands Dec 1 — nothing in the fil confirms it (source: src-note-enforce)",
+  "rendu": "## Où j'en suis\nAt the end of the last session the Fernhill SSO branch `daniel/saml-sso-fernhill` works end to end on staging: real SAML login against Fernhill's IdP succeeds after the short-RelayState fix, and JIT creates users as `viewer` via the merged #415. Group-to-role mapping plus the RelayState change sit in PR #421, still open, and everything is blocked on Fernhill IT adding the `groups` claim before Thursday's demo (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open: per-tenant `saml_role_mapping`, applied on every login, 41 auth tests and the full suite green (de: agent; source: ses-sso-3)\n- [prochaine-étape] Daniel emails Fernhill IT to add the `groups` claim; their metadata is already loaded on staging (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] once the claim exists, add an admin test account next to `kestrel.test1`, then demo Thursday Nov 19, 10:00 ET (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 reviewed and merged (de: agent; source: ses-sso-3)\n- [essai-raté] full return URL as RelayState was refused by Fernhill's ADFS (MSIS7042, over the 80-byte cap); truncating was dropped because it breaks deep links (de: agent; source: ses-sso-3)\n- [essai-raté] Fernhill IT's request for an `analyst` default and IdP-initiated only was declined — no analyst role exists, `viewer` stays until Maya talks to them (de: connecteur, agent; source: ses-sso-3, src-slack-fernhill)\n- [décision] short opaque RelayState id, return URL kept in Redis 10 min and deleted on use (de: toi, équipe; source: s3-03, 6d0e2b8)\n- [décision] `viewer` stays the default role and SP-initiated login stays on for the fernhill tenant (de: toi; source: s3-07)\n- [décision] new SAML users get `viewer`, least privilege for a bank (de: toi; source: s1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1937,
+    "lignesRetirees": 3,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4716,
+    "sortie": 1630,
+    "reflexion": 1004,
+    "cache": 0,
+    "cout": 0.00117978
+  },
+  "cout": 0.00117978,
+  "latenceMs": 9645,
+  "fournisseur": "StepFun"
+}

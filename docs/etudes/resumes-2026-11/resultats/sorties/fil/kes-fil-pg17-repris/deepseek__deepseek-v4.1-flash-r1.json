@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:16.260Z",
+  "reponse": "## Où j'en suis\nSur la branche noa/rds-pg17 (PR #57 ouverte, encore en brouillon), analytics-staging est passé en PostgreSQL 17.2 le 17 novembre par blue/green, pg_partman migré en 5.1.0 et dbt validé ; la prod est préparée mais désactivée (pg17_enabled=false) et il reste à choisir sa fenêtre de bascule. (source: ses-pg-3, src-pr57)\n\n- [en-cours] staging tourne en 17.2 depuis 14:20 UTC, à laisser une semaine complète sans incident avant validation (source: s3-09, src-slack-infra)\n- [prochaine-étape] attendre le feu vert de Maya après cette semaine (au plus tôt le 24), puis fixer la date prod (source: s3-10, src-linear-kes298)\n- [prochaine-étape] étape 0 prod : passer rds.logical_replication=1 et rebooter (2–3 min d'indispo, fenêtre dédiée) avant le blue/green, comme documenté dans runbooks/pg17-upgrade.md (source: s3-10, src-slack-infra)\n- [essai-raté] terraform init -upgrade a tiré le provider AWS v6 : 37 changements sans rapport avec RDS dans le plan (source: s1-01)\n- [essai-raté] le premier apply staging a échoué : le blue/green PostgreSQL exige rds.logical_replication=1 sur le groupe de paramètres de l'instance source (source: s3-04)\n- [décision] provider AWS épinglé en 5.82, pas de v6 dans cette PR (source: s1-02)\n- [décision] aucune date prod avant la validation de Maya, apply_immediately reste false (source: s1-04)\n- [question] quelle fenêtre prod retenir, hors verrou dbt 01:00–03:30 UTC (source: s1-05, s3-10)",
+  "rendu": "## Où j'en suis\nSur la branche noa/rds-pg17 (PR #57 ouverte, encore en brouillon), analytics-staging est passé en PostgreSQL 17.2 le 17 novembre par blue/green, pg_partman migré en 5.1.0 et dbt validé ; la prod est préparée mais désactivée (pg17_enabled=false) et il reste à choisir sa fenêtre de bascule. (de: équipe, agent; source: ses-pg-3, src-pr57)\n\n- [en-cours] staging tourne en 17.2 depuis 14:20 UTC, à laisser une semaine complète sans incident avant validation (de: toi, connecteur; source: s3-09, src-slack-infra)\n- [prochaine-étape] attendre le feu vert de Maya après cette semaine (au plus tôt le 24), puis fixer la date prod (de: connecteur, agent; source: s3-10, src-linear-kes298)\n- [prochaine-étape] étape 0 prod : passer rds.logical_replication=1 et rebooter (2–3 min d'indispo, fenêtre dédiée) avant le blue/green, comme documenté dans runbooks/pg17-upgrade.md (de: connecteur, agent; source: s3-10, src-slack-infra)\n- [essai-raté] terraform init -upgrade a tiré le provider AWS v6 : 37 changements sans rapport avec RDS dans le plan (de: agent; source: s1-01)\n- [essai-raté] le premier apply staging a échoué : le blue/green PostgreSQL exige rds.logical_replication=1 sur le groupe de paramètres de l'instance source (de: agent; source: s3-04)\n- [décision] provider AWS épinglé en 5.82, pas de v6 dans cette PR (de: toi; source: s1-02)\n- [décision] aucune date prod avant la validation de Maya, apply_immediately reste false (de: toi; source: s1-04)\n- [question] quelle fenêtre prod retenir, hors verrou dbt 01:00–03:30 UTC (de: agent; source: s1-05, s3-10)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1577,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4325,
+    "sortie": 1702,
+    "reflexion": 1225,
+    "cache": 0,
+    "cout": 0.0033399
+  },
+  "cout": 0.0033399,
+  "latenceMs": 8743,
+  "fournisseur": "BaseTen"
+}

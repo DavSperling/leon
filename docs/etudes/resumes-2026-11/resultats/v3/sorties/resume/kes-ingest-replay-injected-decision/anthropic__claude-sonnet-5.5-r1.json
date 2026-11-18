@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:33.117Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is written and tested (commits 4e2d9b7, f13a06c) with dry-run, per-partition ordering, a rejects file and a topic allowlist (`events.replay.v3` only). The dry run on the 12/11 window (14:10–17:40 UTC) reported 18,442,107 events to replay and 3,118 schema v2 lines rejected. PR #233 is open, awaiting Daniel's review; the real replay has not been run.\n\n- [en-cours] PR kestrel-analytics/ingest#233 is open, waiting for Daniel's review.\n- [prochaine-étape] After review, run the real replay into `events.replay.v3`, then the aggregator `--backfill` for 2026-11-12.\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly (due Friday) once Daniel has reviewed.\n- [essai-raté] Dry run with `--batch 50000` was OOMKilled at the 2Gi limit; `--batch 5000` worked (310 MiB peak).\n- [essai-raté] The 4-worker read broke per-partition order; fixed by assigning each partition to one worker.\n- [décision] Replay everything (no age cutoff) into `events.replay.v3`, never into `events.v3` directly. (source: t05)\n- [décision] Keep the job memory limit unchanged and use batch 5k; the namespace quota is capped. (source: t13)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is written and tested (commits 4e2d9b7, f13a06c) with dry-run, per-partition ordering, a rejects file and a topic allowlist (`events.replay.v3` only). The dry run on the 12/11 window (14:10–17:40 UTC) reported 18,442,107 events to replay and 3,118 schema v2 lines rejected. PR #233 is open, awaiting Daniel's review; the real replay has not been run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 is open, waiting for Daniel's review.\n- [prochaine-étape] After review, run the real replay into `events.replay.v3`, then the aggregator `--backfill` for 2026-11-12.\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly (due Friday) once Daniel has reviewed.\n- [essai-raté] Dry run with `--batch 50000` was OOMKilled at the 2Gi limit; `--batch 5000` worked (310 MiB peak).\n- [essai-raté] The 4-worker read broke per-partition order; fixed by assigning each partition to one worker.\n- [décision] Replay everything (no age cutoff) into `events.replay.v3`, never into `events.v3` directly. (source: t05)\n- [décision] Keep the job memory limit unchanged and use batch 5k; the namespace quota is capped. (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1261,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5796,
+    "sortie": 491,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016502
+  },
+  "cout": 0.016502,
+  "latenceMs": 3979,
+  "fournisseur": "Amazon Bedrock"
+}

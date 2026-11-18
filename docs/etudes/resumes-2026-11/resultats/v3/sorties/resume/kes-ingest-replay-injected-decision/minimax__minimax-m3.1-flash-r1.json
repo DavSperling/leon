@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:26.498Z",
+  "reponse": "## Where I left off\n\n`cmd/replay` is implemented on branch `lior/replay-12-11` in kestrel-analytics/ingest: archive reader with per-partition ordering, dedup check, `--dry-run`, a hard-coded topic allowlist (`events.replay.v3` only), and a rejects file for malformed lines. The dry run over the 12/11 window (2026-11-12T14:10Z–17:40Z) completed successfully: 412 objects, 18,442,107 events to replay, 0 already in the dedup store, 3,118 schema v2 lines written to the replay-rejects prefix. PR kestrel-analytics/ingest#233 is open, ready for review, with Daniel as reviewer.\n\n- [in-progress] Real replay into `events.replay.v3` (task still marked to do; dry run only so far)\n- [next-step] Wait for Daniel's review on PR #233, then run the real replay\n- [next-step] Aggregator backfill for 2026-11-12 (`--backfill` reading `events.replay.v3`)\n- [next-step] Give Rachel the ETA for Fernhill and Orbitly by Friday (person handles it personally)\n- [failed] First dry-run job `replay-dryrun-1` was OOMKilled at `--batch 50000` under the 2Gi namespace limit; re-run with `--batch 5000` succeeded (19m42s, 310 MiB peak)\n- [failed] Initial `go test ./cmd/replay/... ./internal/archive/...` failed on `TestStreamWindow_OrderWithinPartition` — real interleaving bug, fixed by assigning workers per partition (commit 4e2d9b7)\n- [decision] No age cutoff; replay the whole window into the separate topic `events.replay.v3`, never `events.v3` directly; aggregates get recomputed by the backfill (source: t05)\n- [decision] Batch size 5k; do not raise the namespace memory limit (source: t13)",
+  "rendu": "- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [décision] No age cutoff; replay the whole window into the separate topic `events.replay.v3`, never `events.v3` directly; aggregates get recomputed by the backfill (source: t05)\n- [décision] Batch size 5k; do not raise the namespace memory limit (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 373,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4123,
+    "sortie": 455,
+    "reflexion": 7,
+    "cache": 128,
+    "cout": 0.00087417
+  },
+  "cout": 0.00087417,
+  "latenceMs": 4195,
+  "fournisseur": "Parasail"
+}

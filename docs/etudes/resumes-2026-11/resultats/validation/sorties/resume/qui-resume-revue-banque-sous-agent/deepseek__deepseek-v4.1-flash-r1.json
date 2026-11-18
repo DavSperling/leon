@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-revue-banque-sous-agent",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:39.743Z",
+  "reponse": "## Où j'en suis\nCorvane annual oversight review: the package is built in `corvane-2026/` — complaints log (1,368 tickets exported month by month, 214 complaints, median resolution 31 h), high-risk sellers list (all 41, 6 with expired EDD flagged), the Nov 10 payout-delay incident disclosure, and a 25-row OFAC screening sample. Four of the five checklist items are ready; the cover letter is not started, and the package is due to Corvane's third-party risk team by Fri Nov 27.\n\n- [en-cours] the cover letter, the only checklist item not started\n- [prochaine-étape] write the cover letter, get KYC ops confirmation on the 11/12 EDD remediation date, final read before Fri 27 Nov\n- [essai-raté] one-shot Zendesk export hit the Search API's 1,000-ticket cap; redone month by month\n- [décision] all 41 sellers sent, the 6 expired ones flagged with a remediation date, owner names/SSN/DOB stripped (source: t11)\n- [décision] every incident affecting settlement disclosed, no $50k threshold (source: t17)\n- [décision] send AML/KYC v3.1 as current plus the v3.2 draft pending board approval, stated in the cover letter (source: t23)",
+  "rendu": "## Où j'en suis\nCorvane annual oversight review: the package is built in `corvane-2026/` — complaints log (1,368 tickets exported month by month, 214 complaints, median resolution 31 h), high-risk sellers list (all 41, 6 with expired EDD flagged), the Nov 10 payout-delay incident disclosure, and a 25-row OFAC screening sample. Four of the five checklist items are ready; the cover letter is not started, and the package is due to Corvane's third-party risk team by Fri Nov 27.\n\n- [en-cours] the cover letter, the only checklist item not started\n- [prochaine-étape] write the cover letter, get KYC ops confirmation on the 11/12 EDD remediation date, final read before Fri 27 Nov\n- [essai-raté] one-shot Zendesk export hit the Search API's 1,000-ticket cap; redone month by month\n- [décision] all 41 sellers sent, the 6 expired ones flagged with a remediation date, owner names/SSN/DOB stripped (source: t11)\n- [décision] every incident affecting settlement disclosed, no $50k threshold (source: t17)\n- [décision] send AML/KYC v3.1 as current plus the v3.2 draft pending board approval, stated in the cover letter (source: t23)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1127,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3856,
+    "sortie": 1638,
+    "reflexion": 1325,
+    "cache": 768,
+    "cout": 0.001685544
+  },
+  "cout": 0.001685544,
+  "latenceMs": 9293,
+  "fournisseur": "Cohere"
+}

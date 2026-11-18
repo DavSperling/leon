@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 1,
+  "date": "2026-11-18T14:25:18.479Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is implemented. Assertion signatures are verified with signxml, and assertion conditions, replay protection (Redis) and a 120 s clock skew are checked. PR #412 is merged on GitHub, and the full suite passed (1284 passed, 3 skipped). What remains is Fernhill onboarding for the Thursday demo.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them Kestrel's staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo Maya requested\n- [prochaine-étape] Create the separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine base: the lxml and xmlsec libxml2 versions clash, and building lxml from source still failed on a missing crypto library\n- [décision] Use signxml instead of python3-saml and remove xmlsec from the image (source: t08)\n- [décision] Clock skew set to 120 s, per the Fernhill security questionnaire (source: t12)\n- [décision] SSO enforcement and the password-login change stay out of this PR (source: t12)",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is implemented. Assertion signatures are verified with signxml, and assertion conditions, replay protection (Redis) and a 120 s clock skew are checked. PR #412 is merged on GitHub, and the full suite passed (1284 passed, 3 skipped). What remains is Fernhill onboarding for the Thursday demo.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them Kestrel's staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo Maya requested\n- [prochaine-étape] Create the separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine base: the lxml and xmlsec libxml2 versions clash, and building lxml from source still failed on a missing crypto library\n- [décision] Use signxml instead of python3-saml and remove xmlsec from the image (source: t08)\n- [décision] Clock skew set to 120 s, per the Fernhill security questionnaire (source: t12)\n- [décision] SSO enforcement and the password-login change stay out of this PR (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1199,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6505,
+    "sortie": 1583,
+    "reflexion": 1171,
+    "cache": 0,
+    "cout": 0.001442
+  },
+  "cout": 0.001442,
+  "latenceMs": 7732,
+  "fournisseur": "Claude Platform on AWS"
+}

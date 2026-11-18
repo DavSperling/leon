@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3-flash@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:17:23.923Z",
+  "reponse": "## What is still open\n\n- **Saône à exclure des soldes** : Hugo a validé la PR #63 sur la boutique de dev mais demande si le -20 % sur la Saône est voulu, et Claire a tranché sur Slack : pas de Saône en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix). Il faut retirer la Saône de la grille et répondre à Hugo avant fusion [4][10]\n- **Flux Google Shopping** (#65) : Sophie demande de relancer la régénération du flux juste après le script des soldes le 6 janvier, sinon les annonces seront refusées pour divergence de prix — c'est à toi de l'intégrer au workflow [5]\n- **Bannière soldes sur mobile** (#64) : sur petit téléphone elle cache le bouton « Ajouter au panier » sur les pages produit ; Sophie veut une correction avant le shooting [6]\n\n## What changed\n\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11, tu as donc une semaine de plus [11]\n- Ticket #59 (tag `soldes` automatique sur les produits remisés) relué et fusionné par Hugo [7]\n- Ticket #52 (widget Zendesk sur les pages produit) : Lucie confirme qu'il est déjà utilisé, 23 conversations ouvertes depuis les pages produit cette semaine [9]\n\n## What you did\n\n- **PR #63 ouverte, prête pour relecture** : le script applique la grille de Sophie le 6 janvier (prix barré, arrondi à l'euro inférieur) et restaure les prix le 3 février, avec les deux déclenchements planifiés. Dry-run sur la prod : 212 variantes de 57 produits, 3 variantes déjà en promo mises de côté, 7 lignes de la grille sans produit signalées à Sophie. Les deux crons ont été testés sur la boutique de dev [1][4]\n- Hier tu as aussi poussé le thème en préservant les réglages de Sophie dans l'éditeur (commande `push` avec exclusions) [2]",
+  "rendu": "## What is still open\n\n- **Saône à exclure des soldes** : Hugo a validé la PR #63 sur la boutique de dev mais demande si le -20 % sur la Saône est voulu, et Claire a tranché sur Slack : pas de Saône en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix). Il faut retirer la Saône de la grille et répondre à Hugo avant fusion [4][10]\n- **Flux Google Shopping** (#65) : Sophie demande de relancer la régénération du flux juste après le script des soldes le 6 janvier, sinon les annonces seront refusées pour divergence de prix — c'est à toi de l'intégrer au workflow [5]\n- **Bannière soldes sur mobile** (#64) : sur petit téléphone elle cache le bouton « Ajouter au panier » sur les pages produit ; Sophie veut une correction avant le shooting [6]\n\n## What changed\n\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11, tu as donc une semaine de plus [11]\n- Ticket #59 (tag `soldes` automatique sur les produits remisés) relué et fusionné par Hugo [7]\n- Ticket #52 (widget Zendesk sur les pages produit) : Lucie confirme qu'il est déjà utilisé, 23 conversations ouvertes depuis les pages produit cette semaine [9]\n\n## What you did\n\n- **PR #63 ouverte, prête pour relecture** : le script applique la grille de Sophie le 6 janvier (prix barré, arrondi à l'euro inférieur) et restaure les prix le 3 février, avec les deux déclenchements planifiés. Dry-run sur la prod : 212 variantes de 57 produits, 3 variantes déjà en promo mises de côté, 7 lignes de la grille sans produit signalées à Sophie. Les deux crons ont été testés sur la boutique de dev [1][4]\n- Hier tu as aussi poussé le thème en préservant les réglages de Sophie dans l'éditeur (commande `push` avec exclusions) [2]",
+  "mesures": {
+    "mots": 293,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4736,
+    "sortie": 571,
+    "reflexion": 85,
+    "cache": 0,
+    "cout": 0.000711338
+  },
+  "cout": 0.000711338,
+  "latenceMs": 4927,
+  "fournisseur": "InferenceNet"
+}

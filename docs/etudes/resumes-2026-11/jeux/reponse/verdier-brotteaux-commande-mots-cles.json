@@ -1,0 +1,137 @@
+{
+  "id": "verdier-brotteaux-commande-mots-cles",
+  "titre": "Recherche faite seulement d'un nom et d'un numéro (« Galeries Brotteaux PO-2291 ») dans une entreprise francophone : le prompt veut alors une réponse en anglais ; la réponse croise le bon de commande, la note HubSpot et Slack",
+  "langue": "en",
+  "entree": {
+    "recherche": "Galeries Brotteaux PO-2291",
+    "resultats": [
+      {
+        "id": "gm-po-2291",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Bon de commande PO-2291",
+        "url": null,
+        "date": "2026-11-05T10:15:00Z",
+        "passages": [
+          {
+            "id": "pb1",
+            "auteur": "Hélène Vasseur",
+            "date": "2026-11-05T10:15:00Z",
+            "texte": "Bonjour Claire,\n\nVeuillez trouver ci-joint notre bon de commande PO-2291 : 12 buffets « Rhône » chêne naturel, au prix revendeur de 690 € HT l'unité. Livraison souhaitée au plus tard le 27 novembre au magasin. Paiement à 60 jours fin de mois, comme d'habitude.\n\nHélène Vasseur\nResponsable achats maison, Galeries Brotteaux"
+          }
+        ]
+      },
+      {
+        "id": "hs-brotteaux-reassort",
+        "kind": "hubspot",
+        "nature": "note",
+        "titre": "Galeries Brotteaux – réassort hiver",
+        "url": null,
+        "date": "2026-11-06T08:20:00Z",
+        "passages": [
+          {
+            "id": "pb2",
+            "auteur": "Claire Verdier",
+            "date": "2026-11-06T08:20:00Z",
+            "texte": "PO-2291 reçu : 12 buffets Rhône, 8 280 € HT. Marge correcte. Livraison encore avec Rapid'Colis (avant la fin de leur contrat le 30/11)."
+          }
+        ]
+      },
+      {
+        "id": "sl-logistique-1116",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#logistique",
+        "url": null,
+        "date": "2026-11-16T14:30:00Z",
+        "passages": [
+          {
+            "id": "pb3",
+            "auteur": "Karim Haddad",
+            "date": "2026-11-16T14:30:00Z",
+            "texte": "PO-2291 Brotteaux : les 12 Rhône sont emballés. Enlèvement Rapid'Colis le 24/11, livraison au magasin le 25."
+          }
+        ]
+      },
+      {
+        "id": "ol-facture-brotteaux",
+        "kind": "outlook",
+        "nature": "fil",
+        "titre": "Facturation Galeries Brotteaux",
+        "url": null,
+        "date": "2026-11-17T09:00:00Z",
+        "passages": [
+          {
+            "id": "pb4",
+            "auteur": "Antoine Roussel",
+            "date": "2026-11-17T09:00:00Z",
+            "texte": "Claire, je facturerai la commande Brotteaux à la livraison. Avec leurs 60 jours fin de mois, l'encaissement tombera fin janvier : à garder en tête pour la trésorerie des soldes."
+          }
+        ]
+      },
+      {
+        "id": "tl-showroom-1116",
+        "kind": "tldv",
+        "nature": "reunion",
+        "titre": "Visite showroom Galeries Brotteaux – 16/11",
+        "url": null,
+        "date": "2026-11-16T10:30:00Z",
+        "passages": [
+          {
+            "id": "pb5",
+            "auteur": "Hélène Vasseur",
+            "date": "2026-11-16T10:30:00Z",
+            "texte": "Hélène Vasseur : Pour le printemps, on regarderait les tables basses Loire, peut-être 8 pièces. Je vous envoie une demande de prix la semaine prochaine.\nClaire Verdier : Avec plaisir, Sophie vous prépare le tarif revendeur."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "PO-2291 est une commande des Galeries Brotteaux de 12 buffets Rhône.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le montant est de 8 280 € HT (690 € HT l'unité).",
+        "poids": 2
+      },
+      {
+        "id": "f3",
+        "texte": "Enlèvement le 24 novembre et livraison au magasin le 25, avant la date limite du 27.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Paiement à 60 jours fin de mois (encaissement fin janvier).",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Dire que la commande est livrée par TransAlp."
+      },
+      {
+        "id": "x2",
+        "texte": "Présenter les tables basses Loire du printemps comme faisant partie de PO-2291."
+      },
+      {
+        "id": "x3",
+        "texte": "Donner 690 € comme montant de la commande entière."
+      }
+    ],
+    "pieges": [
+      "Langue : une recherche faite d'un nom et d'un numéro ne dit pas sa langue ; le prompt demande alors l'anglais, même si toutes les sources sont en français.",
+      "Croiser : le contenu et le prix sont dans le bon de commande et la note HubSpot, les dates d'enlèvement et de livraison dans Slack.",
+      "Distracteur : la réunion du showroom parle d'une future commande de tables basses, pas de PO-2291."
+    ],
+    "cites": [
+      1,
+      3
+    ]
+  }
+}

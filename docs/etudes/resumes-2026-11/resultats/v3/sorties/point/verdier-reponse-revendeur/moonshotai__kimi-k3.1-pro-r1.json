@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:35.336Z",
+  "reponse": "## What is still open\n\n- **Réponds à Bertrand Lemaire ce matin** : Claire valide **10 % de remise sur les 4 tables** et la réservation de **4 Saône chêne sur le réassort de janvier**. Ton brouillon reconnaît l’erreur et annonce une proposition, mais rien n’a encore été envoyé ; le client est très remonté et menace de suspendre ses réassorts pour les soldes. [4][1][6]\n- Si le geste prend la forme d’un avoir, préviens Antoine avant son émission : il doit être rattaché à la facture **FA-2026-1187 du 10/11** pour être correctement comptabilisé en TVA. [5]\n\n## What changed\n\n- **Hugo a approuvé la PR #62** et vérifié que la Saône chêne ressort désormais à **0** sur le fichier du 10/11. Le correctif exporte le stock réellement disponible, hors unités réservées par les commandes web, et couvre par des tests les incidents Saône et buffet Rhône de septembre. [2][1]",
+  "rendu": "## What is still open\n\n- **Réponds à Bertrand Lemaire ce matin** : Claire valide **10 % de remise sur les 4 tables** et la réservation de **4 Saône chêne sur le réassort de janvier**. Ton brouillon reconnaît l’erreur et annonce une proposition, mais rien n’a encore été envoyé ; le client est très remonté et menace de suspendre ses réassorts pour les soldes. [4][1][6]\n- Si le geste prend la forme d’un avoir, préviens Antoine avant son émission : il doit être rattaché à la facture **FA-2026-1187 du 10/11** pour être correctement comptabilisé en TVA. [5]\n\n## What changed\n\n- **Hugo a approuvé la PR #62** et vérifié que la Saône chêne ressort désormais à **0** sur le fichier du 10/11. Le correctif exporte le stock réellement disponible, hors unités réservées par les commandes web, et couvre par des tests les incidents Saône et buffet Rhône de septembre. [2][1]",
+  "mesures": {
+    "mots": 141,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4623,
+    "sortie": 832,
+    "reflexion": 543,
+    "cache": 0,
+    "cout": 0.017566
+  },
+  "cout": 0.017566,
+  "latenceMs": 17731,
+  "fournisseur": "Together"
+}

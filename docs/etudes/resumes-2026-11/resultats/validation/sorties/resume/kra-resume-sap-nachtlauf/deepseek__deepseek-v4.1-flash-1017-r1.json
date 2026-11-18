@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-sap-nachtlauf",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:23.105Z",
+  "reponse": "## Où j'en suis\nDie Ursache der Nachtlauf-Abbrüche ist gefunden: das SAP-Wartungsfenster PRD wurde ab 09.11. auf 02:00–02:45 gelegt, der Job startet um 02:15. Der Chunk-Retry legte bereits angelegte Aufträge erneut an (4 Duplikate). Der Export wurde auf Idempotenz über die Portal-Bestellnummer (BSTKD) umgestellt, Status pro Auftrag mit Migration V57 eingeführt, `./mvnw -q verify` mit 421 Tests grün, Draft-PR #221 ist offen.\n\n- [en-cours] Draft-PR #221 wartet auf Review durch Matthias\n- [prochaine-étape] Die 4 doppelten SAP-Aufträge stornieren lassen (Liste in `docs/betrieb/duplikate-2026-11.md`, bei Pfeiffer nur den zweiten)\n- [prochaine-étape] Startzeit des Jobs mit dem Basis-Team klären (Matthias)\n- [essai-raté] Retry pro Auftrag mit Backoff allein: Test `abbruchNachAnlage` zeigt weiterhin 2 Aufträge, weil ein Timeout nicht heißt, dass SAP nichts angelegt hat\n- [décision] Uhrzeit nicht anfassen, keine höheren Retry-Limits, erst die Duplikate lösen (source: t07)\n- [décision] Idempotent über BSTKD-Suche vor dem Anlegen, Retry pro Auftrag bleibt drin (source: t11)\n- [décision] Exportstatus pro Auftrag in der DB statt Flag pro Chunk, mit Migration (source: t13)",
+  "rendu": "## Où j'en suis\nDie Ursache der Nachtlauf-Abbrüche ist gefunden: das SAP-Wartungsfenster PRD wurde ab 09.11. auf 02:00–02:45 gelegt, der Job startet um 02:15. Der Chunk-Retry legte bereits angelegte Aufträge erneut an (4 Duplikate). Der Export wurde auf Idempotenz über die Portal-Bestellnummer (BSTKD) umgestellt, Status pro Auftrag mit Migration V57 eingeführt, `./mvnw -q verify` mit 421 Tests grün, Draft-PR #221 ist offen.\n\n- pr [[kranich/haendlerportal#221]]\n- branche [[fix/sap-nachtlauf-idempotenz]]\n- commit [[4c1e9a7]]\n- commit [[b07d3f2]]\n- commit [[e95a610]]\n- [en-cours] Draft-PR #221 wartet auf Review durch Matthias\n- [prochaine-étape] Die 4 doppelten SAP-Aufträge stornieren lassen (Liste in `docs/betrieb/duplikate-2026-11.md`, bei Pfeiffer nur den zweiten)\n- [prochaine-étape] Startzeit des Jobs mit dem Basis-Team klären (Matthias)\n- [essai-raté] Retry pro Auftrag mit Backoff allein: Test `abbruchNachAnlage` zeigt weiterhin 2 Aufträge, weil ein Timeout nicht heißt, dass SAP nichts angelegt hat\n- [décision] Uhrzeit nicht anfassen, keine höheren Retry-Limits, erst die Duplikate lösen (source: t07)\n- [décision] Idempotent über BSTKD-Suche vor dem Anlegen, Retry pro Auftrag bleibt drin (source: t11)\n- [décision] Exportstatus pro Auftrag in der DB statt Flag pro Chunk, mit Migration (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1319,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5180,
+    "sortie": 541,
+    "reflexion": 159,
+    "cache": 0,
+    "cout": 0.00142322
+  },
+  "cout": 0.00142322,
+  "latenceMs": 4449,
+  "fournisseur": "Ionstream"
+}

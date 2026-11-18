@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:59.132Z",
+  "reponse": "Customers can try the first part (chart builder + saved views) starting Wednesday Dec 9 as part of the design-partner beta with Orbitly, Zest Grocers and three other accounts [1][2].",
+  "rendu": "Customers can try the first part (chart builder + saved views) starting Wednesday Dec 9 as part of the design-partner beta with Orbitly, Zest Grocers and three other accounts [1][2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17971,
+    "sortie": 421,
+    "reflexion": 310,
+    "cache": 6256,
+    "cout": 0.002306121
+  },
+  "latenceMs": 7021,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"dashboards customer try release beta access\"}",
+    "chercher {\"requete\":\"dashboards customer try release beta access\"}",
+    "chercher {\"requete\":\"customers try first part dashboards release date\"}"
+  ],
+  "cout": 0.002306121
+}

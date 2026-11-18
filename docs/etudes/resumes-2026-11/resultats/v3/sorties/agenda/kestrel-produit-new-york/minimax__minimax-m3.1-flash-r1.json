@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:48.748Z",
+  "reponse": "{\"n\":14,\"titre\":\"Dashboards redesign – design review\",\"debut\":\"2026-11-17T17:00\",\"fin\":\"2026-11-17T18:00\",\"avec\":\"Tom Becker, Maya Cohen, Jonah Reyes (Northfold Studio)\"}\n{\"n\":16,\"titre\":\"Coffee\",\"debut\":\"2026-11-18T15:30\",\"avec\":\"Lior Ben-David\"}\n{\"n\":9,\"titre\":\"Kestrel dashboards feedback – Zest\",\"debut\":\"2026-11-18T21:00\",\"fin\":\"2026-11-18T21:45\",\"avec\":\"Hannah Wolfe, Leah Turner\"}\n{\"n\":7,\"titre\":\"Customer interview\",\"debut\":\"2026-11-19T17:30\",\"fin\":\"2026-11-19T18:15\",\"avec\":\"Ana Ruiz\"}\n{\"n\":22,\"titre\":\"Dinner\",\"debut\":\"2026-11-20T01:30\",\"avec\":\"Jonah Reyes (Northfold Studio)\"}\n{\"n\":3,\"titre\":\"Fernhill – SSO demo\",\"debut\":\"2026-11-20T16:00\",\"fin\":\"2026-11-20T17:00\",\"avec\":\"Maya Cohen, Daniel Levi, Oliver Grant (Fernhill Bank)\"}\n{\"n\":1,\"titre\":\"Fernhill dashboards review – prep\",\"debut\":\"2026-11-22T23:30\",\"fin\":\"2026-11-23T00:30\",\"avec\":\"Ethan Brooks\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes (Northfold Studio))\n2026-11-18T15:30 Coffee (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview (avec Ana Ruiz)\n2026-11-20T01:30 Dinner (avec Jonah Reyes (Northfold Studio))\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant (Fernhill Bank))\n2026-11-22T23:30→2026-11-23T00:30 Fernhill dashboards review – prep (avec Ethan Brooks)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.857,
+    "f1": 0.923,
+    "faux": "2026-11-22T23:30 Fernhill dashboards review – prep",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2994,
+    "sortie": 855,
+    "reflexion": 533,
+    "cache": 0,
+    "cout": 0.0009621
+  },
+  "cout": 0.0009621,
+  "latenceMs": 6066,
+  "fournisseur": "Together"
+}

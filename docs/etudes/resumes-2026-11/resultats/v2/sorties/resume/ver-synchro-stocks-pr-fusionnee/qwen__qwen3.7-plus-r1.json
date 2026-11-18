@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:25:48.728Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif de la Saône venait d'un double décrément entre Shopify et nos webhooks. Les webhooks ne modifient plus le stock, le script de nuit utilise des valeurs absolues, le seuil d'alerte est abaissé et le stock a été remis à zéro sans précommande. La configuration est déployée et la PR est fusionnée.\n\n- [en-cours] Traiter les trois commandes survendues de la Saône avec Lucie.\n- [essai-raté] Le dédoublonnage des webhooks via l'en-tête `X-Shopify-Webhook-Id` ne corrigeait pas le double décrément.\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue. (source: t05)\n- [décision] Le seuil d'alerte de stock bas est abaissé à 3 unités. (source: t09)\n- [décision] La Saône reste à 0 sans précommande avant son retour physique. (source: t15)",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif de la Saône venait d'un double décrément entre Shopify et nos webhooks. Les webhooks ne modifient plus le stock, le script de nuit utilise des valeurs absolues, le seuil d'alerte est abaissé et le stock a été remis à zéro sans précommande. La configuration est déployée et la PR est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traiter les trois commandes survendues de la Saône avec Lucie.\n- [essai-raté] Le dédoublonnage des webhooks via l'en-tête `X-Shopify-Webhook-Id` ne corrigeait pas le double décrément.\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue. (source: t05)\n- [décision] Le seuil d'alerte de stock bas est abaissé à 3 unités. (source: t09)\n- [décision] La Saône reste à 0 sans précommande avant son retour physique. (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 961,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4001,
+    "sortie": 3386,
+    "reflexion": 3133,
+    "cache": 512,
+    "cout": 0.005483328
+  },
+  "cout": 0.005483328,
+  "latenceMs": 55753,
+  "fournisseur": "Alibaba"
+}

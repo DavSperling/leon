@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:15.909Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is done and lives in its own private repo kestrel-analytics/sre-take-home (subtree push, 3 commits): compose builds flaky-svc from source, with a planted broken alert (renamed metric), a connection leak, and an over-broad Terraform IAM policy; 3-hour box, no Kubernetes. RUBRIC.md scores 4 areas 0–3 with no cut-off; scores feed the panel (Maya + Noa). hiring/ removed from the infra branch working tree (uncommitted, branch to be dropped); no PR in infra. Nothing emailed to the candidate; the prebuilt amd64 image and a multi-arch --load build both failed, hence the source build.\n\n- [décision] No k8s, Terraform + compose only, 3-hour max (source: t03)\n",
+  "rendu": "## Où j'en suis\nThe SRE take-home is done and lives in its own private repo kestrel-analytics/sre-take-home (subtree push, 3 commits): compose builds flaky-svc from source, with a planted broken alert (renamed metric), a connection leak, and an over-broad Terraform IAM policy; 3-hour box, no Kubernetes. RUBRIC.md scores 4 areas 0–3 with no cut-off; scores feed the panel (Maya + Noa). hiring/ removed from the infra branch working tree (uncommitted, branch to be dropped); no PR in infra. Nothing emailed to the candidate; the prebuilt amd64 image and a multi-arch --load build both failed, hence the source build.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] No k8s, Terraform + compose only, 3-hour max (source: t03)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 785,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4066,
+    "sortie": 4000,
+    "reflexion": 3810,
+    "cache": 0,
+    "cout": 0.00072297
+  },
+  "cout": 0.00072297,
+  "latenceMs": 38980,
+  "fournisseur": "Novita"
+}

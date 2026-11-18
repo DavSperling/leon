@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:11:53.441Z",
+  "reponse": "The first part — phase 1, the chart builder and saved views — opens to customers in a design-partner beta on Wednesday Dec 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [6][10]. Everyone else waits for general availability, targeted for late January and not committed [6].\n\nThe Oct 26 spec only said early December with the exact date still TBD [1]. The Nov 12 sync said phase 1 should be feature-complete behind the flag by Dec 4, with the beta right after [5]. The Dec 9 date is the later, more specific plan [6].",
+  "rendu": "The first part — phase 1, the chart builder and saved views — opens to customers in a design-partner beta on Wednesday Dec 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [6][10]. Everyone else waits for general availability, targeted for late January and not committed [6].\n\nThe Oct 26 spec only said early December with the exact date still TBD [1]. The Nov 12 sync said phase 1 should be feature-complete behind the flag by Dec 4, with the beta right after [5]. The Dec 9 date is the later, more specific plan [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14006,
+    "sortie": 370,
+    "reflexion": 131,
+    "cache": 8704,
+    "cout": 0.017176
+  },
+  "latenceMs": 7462,
+  "fournisseur": "xAI",
+  "trace": [
+    "chercher {\"requete\":\"dashboards customers try first part beta release timeline\",\"type\":\"page\"}",
+    "chercher {\"requete\":\"\\\"new dashboards\\\" launch OR beta OR pilot OR customers OR rollout OR preview\"}",
+    "lire {\"sourceId\":\"notion-dashboards-redesign-spec\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}",
+    "lire {\"passageId\":\"fathom-weekly-sync-1112-1\"}"
+  ],
+  "cout": 0.017176
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:09:31.528Z",
+  "reponse": "## What you did\n- Investigated Orbitly iOS funnel drop, calculated ~1.18 M legitimate events lost (and 3,812 Zest) and identified cause [1].\n- Implemented dedupe key change locally and added tests to validate replay safety [1].\n- Prepared replay command documentation and shared it with the team [1].\n- Responded to Maya’s request with Orbitly drop numbers for Thursday’s call [1][2].\n\n## What changed\n- PR #247 opened to fix dedupe and prevent further drops [2].\n- Postmortem #233 finalized with root cause and backfill details [3].\n- Go bump #245 merged in CI, updating toolchain to 1.23.4 [4].\n- Zest dashboard restored and support ticket closed after backfill completion [6].\n\n## What is still open\n- Replay of ~1.18 M Orbitly events (and 3,812 Zest) pending after #247 deploys [1].\n- iOS team note awaiting send [1].\n- Add alert for ingest dead‑letter queue >1,000 before Friday’s review [7].",
+  "rendu": "## What you did\n- Investigated Orbitly iOS funnel drop, calculated ~1.18 M legitimate events lost (and 3,812 Zest) and identified cause [1].\n- Implemented dedupe key change locally and added tests to validate replay safety [1].\n- Prepared replay command documentation and shared it with the team [1].\n- Responded to Maya’s request with Orbitly drop numbers for Thursday’s call [1][2].\n\n## What changed\n- PR #247 opened to fix dedupe and prevent further drops [2].\n- Postmortem #233 finalized with root cause and backfill details [3].\n- Go bump #245 merged in CI, updating toolchain to 1.23.4 [4].\n- Zest dashboard restored and support ticket closed after backfill completion [6].\n\n## What is still open\n- Replay of ~1.18 M Orbitly events (and 3,812 Zest) pending after #247 deploys [1].\n- iOS team note awaiting send [1].\n- Add alert for ingest dead‑letter queue >1,000 before Friday’s review [7].",
+  "mesures": {
+    "mots": 137,
+    "tropLong": false,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4476,
+    "sortie": 7679,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0128613
+  },
+  "cout": 0.0128613,
+  "latenceMs": 40338,
+  "fournisseur": "Cohere"
+}

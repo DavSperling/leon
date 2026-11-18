@@ -1,0 +1,22 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-antoine": 1,
+    "f-57": 0.5,
+    "f-cause": 1,
+    "f-ecarts": 1,
+    "f-karim": 1,
+    "f-58": 1,
+    "f-17refs": 1
+  },
+  "interdits": {
+    "i-57-ouverte": 0,
+    "i-reassort": 0,
+    "i-clients": 1,
+    "i-boutiko": 0,
+    "i-details": 0
+  },
+  "contraires": [],
+  "premier": "f-antoine",
+  "langueOk": true
+}

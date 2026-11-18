@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:03:09.127Z",
+  "reponse": "Here's what happened on Thursday, Nov 12 — a SEV2 incident, fully documented in the postmortem [1]:\n\n**What broke**\n- From 08:47 to 12:27 UTC (3h40), customer dashboards showed stale data [1].\n- Root cause: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB. With the 512 Mi memory limit, the ingest-worker pods OOM'd on the first large batch and crash-looped — and the change rolled out to all pods at once [1].\n- Detection was slow: there was no alert on consumer lag; the first signal was a Sentry out-of-memory alert at 09:14, 27 minutes after the deploy [1][4]. Fixed by rolling back to v2.13.3 at 10:05; lag drained by 12:27 [1].\n\n**Data loss: none**\n- Events kept arriving in Kafka and were just processed late. Lior's reconciliation on Nov 13 confirmed event counts per workspace match the Kafka offsets — \"Nothing lost, just late\" [1][11].\n\n**What's changing (action items)**\n1. KES-431 – Page on-call when the ingest-events consumer lag exceeds 5 minutes (Noa, due Nov 20) [1][12]\n2. KES-432 – Ingest config changes go to a canary pool first instead of all pods (Daniel, due Nov 27) [1][2]\n3. KES-433 – Raise worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27) [1]\n\nIncident reports went to Orbitly and Zest Grocers on Nov 15 [1]; note Orbitly is claiming an SLA credit under their custom 2024 MSA, which Sam is handling as part of their renewal [2][14].",
+  "rendu": "Here's what happened on Thursday, Nov 12 — a SEV2 incident, fully documented in the postmortem [1]:\n\n**What broke**\n- From 08:47 to 12:27 UTC (3h40), customer dashboards showed stale data [1].\n- Root cause: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB. With the 512 Mi memory limit, the ingest-worker pods OOM'd on the first large batch and crash-looped — and the change rolled out to all pods at once [1].\n- Detection was slow: there was no alert on consumer lag; the first signal was a Sentry out-of-memory alert at 09:14, 27 minutes after the deploy [1][4]. Fixed by rolling back to v2.13.3 at 10:05; lag drained by 12:27 [1].\n\n**Data loss: none**\n- Events kept arriving in Kafka and were just processed late. Lior's reconciliation on Nov 13 confirmed event counts per workspace match the Kafka offsets — \"Nothing lost, just late\" [1][11].\n\n**What's changing (action items)**\n1. KES-431 – Page on-call when the ingest-events consumer lag exceeds 5 minutes (Noa, due Nov 20) [1][12]\n2. KES-432 – Ingest config changes go to a canary pool first instead of all pods (Daniel, due Nov 27) [1][2]\n3. KES-433 – Raise worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27) [1]\n\nIncident reports went to Orbitly and Zest Grocers on Nov 15 [1]; note Orbitly is claiming an SLA credit under their custom 2024 MSA, which Sam is handling as part of their renewal [2][14].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13083,
+    "sortie": 490,
+    "reflexion": 11,
+    "cache": 8448,
+    "cout": 0.00296105
+  },
+  "latenceMs": 13022,
+  "fournisseur": "Z.AI",
+  "trace": [
+    "chercher {\"depuis\":\"3m\",\"requete\":\"event pipeline incident outage last Thursday\"}",
+    "chercher {\"requete\":\"customer data loss event pipeline incident postmortem\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.00296105
+}

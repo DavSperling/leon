@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:33:34.655Z",
+  "reponse": "Le démarrage est annoncé pour le mardi 8 décembre dans un courriel de TransAlp du 17 novembre [2]. Ce courriel indique que l'agence de Vénissieux ne peut pas absorber les volumes avant cette date, et que l'enlèvement test du 20 novembre est maintenu [2]. Il contredit les documents antérieurs, qui prévoyaient une bascule complète le 1er décembre [1][3][4]. Rapid'Colis cesse les enlèvements après le 30 novembre [5].",
+  "rendu": "Le démarrage est annoncé pour le mardi 8 décembre dans un courriel de TransAlp du 17 novembre [2]. Ce courriel indique que l'agence de Vénissieux ne peut pas absorber les volumes avant cette date, et que l'enlèvement test du 20 novembre est maintenu [2]. Il contredit les documents antérieurs, qui prévoyaient une bascule complète le 1er décembre [1][3][4]. Rapid'Colis cesse les enlèvements après le 30 novembre [5].",
+  "mesures": {
+    "mots": 67,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1550,
+    "sortie": 339,
+    "reflexion": 155,
+    "cache": 0,
+    "cout": 0.0003245
+  },
+  "cout": 0.0003245,
+  "latenceMs": 2542,
+  "fournisseur": "Claude Platform on AWS"
+}

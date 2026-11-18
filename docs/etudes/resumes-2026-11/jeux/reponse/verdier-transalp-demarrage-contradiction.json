@@ -1,0 +1,140 @@
+{
+  "id": "verdier-transalp-demarrage-contradiction",
+  "titre": "Recherche de la date de démarrage chez TransAlp : le plan interne, Slack et la réunion disent le 1er décembre, le mail le plus récent du transporteur dit le 8 ; l'ancien transporteur s'arrête le 30 novembre",
+  "langue": "fr",
+  "entree": {
+    "recherche": "date de démarrage TransAlp",
+    "resultats": [
+      {
+        "id": "no-passage-transalp",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Passage à TransAlp – plan",
+        "url": null,
+        "date": "2026-11-10T14:00:00Z",
+        "passages": [
+          {
+            "id": "pt1",
+            "auteur": "Karim Haddad",
+            "date": "2026-11-10T14:00:00Z",
+            "texte": "Bascule complète le 1er décembre : tous les enlèvements passent chez TransAlp à partir de cette date.\nFin du contrat Rapid'Colis le 30/11.\nÉtapes : réunion de lancement (16/11), enlèvement test (20/11), nouvelles étiquettes imprimées avant le 27/11."
+          }
+        ]
+      },
+      {
+        "id": "gm-transalp-planning",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Planning de démarrage – Maison Verdier",
+        "url": null,
+        "date": "2026-11-17T16:45:00Z",
+        "passages": [
+          {
+            "id": "pt2",
+            "auteur": "Nadia Ouali",
+            "date": "2026-11-17T16:45:00Z",
+            "texte": "Bonjour Monsieur Haddad,\n\nSuite à notre réunion de lancement, nous vous confirmons le démarrage des enlèvements réguliers le mardi 8 décembre. Notre agence de Vénissieux ne peut pas absorber vos volumes avant cette date. L'enlèvement test du vendredi 20 novembre est maintenu.\n\nCordialement,\nNadia Ouali\nExploitation – TransAlp Logistique"
+          }
+        ]
+      },
+      {
+        "id": "sl-logistique-1113",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#logistique",
+        "url": null,
+        "date": "2026-11-13T15:20:00Z",
+        "passages": [
+          {
+            "id": "pt3",
+            "auteur": "Karim Haddad",
+            "date": "2026-11-13T15:20:00Z",
+            "texte": "On bascule chez TransAlp le 1er décembre comme prévu, j'ai confirmé la résiliation à Rapid'Colis."
+          }
+        ]
+      },
+      {
+        "id": "tl-lancement-1116",
+        "kind": "tldv",
+        "nature": "reunion",
+        "titre": "Lancement TransAlp – 16/11",
+        "url": null,
+        "date": "2026-11-16T13:00:00Z",
+        "passages": [
+          {
+            "id": "pt4",
+            "auteur": "Bruno Ferrand",
+            "date": "2026-11-16T13:00:00Z",
+            "texte": "Bruno Ferrand : On vise un démarrage début décembre.\nKarim Haddad : Le 1er, c'est impératif : Rapid'Colis s'arrête le 30.\nBruno Ferrand : Je vois avec l'exploitation et je vous confirme par écrit."
+          }
+        ]
+      },
+      {
+        "id": "gm-rapidcolis-fin",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Fin de contrat au 30/11",
+        "url": null,
+        "date": "2026-11-09T08:00:00Z",
+        "passages": [
+          {
+            "id": "pt5",
+            "auteur": "Sandrine Pujol",
+            "date": "2026-11-09T08:00:00Z",
+            "texte": "Monsieur Haddad,\n\nNous prenons acte de la résiliation : votre contrat prend fin le 30 novembre et aucun enlèvement ne sera assuré après cette date.\n\nSandrine Pujol, Rapid'Colis – Agence Rhône-Alpes"
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "contradiction": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Le mail le plus récent de TransAlp (17 novembre) annonce le démarrage des enlèvements réguliers le mardi 8 décembre.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le plan interne (Notion, Slack, réunion de lancement) prévoit le 1er décembre.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "La réponse signale que les sources se contredisent, en donnant le 8 décembre avant le 1er décembre.",
+        "poids": 3
+      },
+      {
+        "id": "f4",
+        "texte": "Rapid'Colis s'arrête le 30 novembre : du 1er au 7 décembre, aucun transporteur n'est prévu.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "L'enlèvement test du vendredi 20 novembre est maintenu.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Affirmer sans réserve que TransAlp démarre le 1er décembre."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que Rapid'Colis assure des enlèvements en décembre."
+      }
+    ],
+    "pieges": [
+      "Contradiction : trois sources internes disent le 1er décembre, le transporteur écrit ensuite le 8 ; il faut le dire, le plus récent d'abord.",
+      "Croiser : avec la fin de Rapid'Colis au 30/11, le vrai sujet est une semaine sans transporteur.",
+      "La réunion ne tranche pas : Bruno promet une confirmation écrite, qui est le mail du 17."
+    ],
+    "cites": [
+      2,
+      1,
+      5
+    ]
+  }
+}

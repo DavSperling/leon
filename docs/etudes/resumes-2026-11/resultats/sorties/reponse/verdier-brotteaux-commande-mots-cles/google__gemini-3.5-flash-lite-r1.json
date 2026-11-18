@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:32:56.199Z",
+  "reponse": "Le bon de commande PO-2291 des Galeries Brotteaux concerne 12 buffets « Rhône » en chêne naturel pour un montant de 8 280 € HT [1][2]. La livraison par Rapid'Colis est prévue le 25 novembre [3]. La facturation sera émise à la livraison avec un paiement à 60 jours fin de mois [4]. Par ailleurs, Hélène Vasseur a évoqué un futur intérêt pour des tables basses Loire au printemps [5].",
+  "rendu": "Le bon de commande PO-2291 des Galeries Brotteaux concerne 12 buffets « Rhône » en chêne naturel pour un montant de 8 280 € HT [1][2]. La livraison par Rapid'Colis est prévue le 25 novembre [3]. La facturation sera émise à la livraison avec un paiement à 60 jours fin de mois [4]. Par ailleurs, Hélène Vasseur a évoqué un futur intérêt pour des tables basses Loire au printemps [5].",
+  "mesures": {
+    "mots": 67,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1012,
+    "sortie": 110,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005786
+  },
+  "cout": 0.0005786,
+  "latenceMs": 1205,
+  "fournisseur": "Google"
+}

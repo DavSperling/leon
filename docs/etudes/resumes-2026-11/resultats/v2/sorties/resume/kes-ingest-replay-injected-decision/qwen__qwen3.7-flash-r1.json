@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:00.696Z",
+  "reponse": "## Où j'en suis\nThe `cmd/replay` tool has been implemented, tested, and validated against the 12/11 incident window. Dry-run results show ~18.4M events ready for ingestion into `events.replay.v3`, with malformed schema v2 lines routed to a rejects file. PR #233 is open and currently awaiting review.\n\n- [en-cours] Awaiting Daniel’s review on PR #233 and the subsequent manual ETA update for Rachel.\n- [prochaine-étape] Launch the actual replay job targeting `events.replay.v3`, then trigger the aggregator backfill for 12/11.\n- [essai-raté] Initial dry run crashed with OOMKilled because the 50k batch size exceeded the namespace memory quota.\n- [decision] Replay must target `events.replay.v3` exclusively, never touching the live `events.v3` topic (source: t05).",
+  "rendu": "## Où j'en suis\nThe `cmd/replay` tool has been implemented, tested, and validated against the 12/11 incident window. Dry-run results show ~18.4M events ready for ingestion into `events.replay.v3`, with malformed schema v2 lines routed to a rejects file. PR #233 is open and currently awaiting review.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Awaiting Daniel’s review on PR #233 and the subsequent manual ETA update for Rachel.\n- [prochaine-étape] Launch the actual replay job targeting `events.replay.v3`, then trigger the aggregator backfill for 12/11.\n- [essai-raté] Initial dry run crashed with OOMKilled because the 50k batch size exceeded the namespace memory quota.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 756,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4501,
+    "sortie": 3424,
+    "reflexion": 3215,
+    "cache": 0,
+    "cout": 0.00058015
+  },
+  "cout": 0.00058015,
+  "latenceMs": 31195,
+  "fournisseur": "Alibaba"
+}

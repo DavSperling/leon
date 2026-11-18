@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:42:30.742Z",
+  "reponse": "**Short answer: Dec 1 is at risk, not confirmed.** The most recent information I found is from November 17.\n\n**Status:**\n- IdP-initiated login works on staging, and Fernhill's metadata and signing certificate are loaded [8][3].\n- SP-initiated login is blocked because Fernhill's identity provider signs assertions with RSA-SHA1, and our platform only accepts SHA-256 or stronger [8][3][9]. Engineering offered a temporary SHA-1 exception, but Maya Cohen rejected it, since it would appear in the bank's pen test and in the SOC 2 audit [8].\n\n**What's left before Dec 1:**\n1. Fernhill's change advisory board has to approve switching its signing algorithm to SHA-256 at its Nov 24 meeting [8][3].\n2. A joint test with Fernhill's IAM lead is set for Wed Nov 25, 16:00 Tel Aviv time [3][8].\n3. The SSO admin page's copy still needed Priya's review as of Nov 10 [2]. I found no later update on it.\n\n**Contingency:** If the board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill that Dec 1 is at risk that same day [8]. I found nothing newer than that.\n\nFor the support reply, I'd avoid confirming Dec 1 for now. The Nov 24 board decision is the deciding factor, and someone should check whether it has happened since Nov 17.",
+  "rendu": "**Short answer: Dec 1 is at risk, not confirmed.** The most recent information I found is from November 17.\n\n**Status:**\n- IdP-initiated login works on staging, and Fernhill's metadata and signing certificate are loaded [8][3].\n- SP-initiated login is blocked because Fernhill's identity provider signs assertions with RSA-SHA1, and our platform only accepts SHA-256 or stronger [8][3][9]. Engineering offered a temporary SHA-1 exception, but Maya Cohen rejected it, since it would appear in the bank's pen test and in the SOC 2 audit [8].\n\n**What's left before Dec 1:**\n1. Fernhill's change advisory board has to approve switching its signing algorithm to SHA-256 at its Nov 24 meeting [8][3].\n2. A joint test with Fernhill's IAM lead is set for Wed Nov 25, 16:00 Tel Aviv time [3][8].\n3. The SSO admin page's copy still needed Priya's review as of Nov 10 [2]. I found no later update on it.\n\n**Contingency:** If the board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill that Dec 1 is at risk that same day [8]. I found nothing newer than that.\n\nFor the support reply, I'd avoid confirming Dec 1 for now. The Nov 24 board decision is the deciding factor, and someone should check whether it has happened since Nov 17.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22671,
+    "sortie": 1324,
+    "reflexion": 653,
+    "cache": 0,
+    "cout": 0.0029291
+  },
+  "latenceMs": 9376,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion SSO 1er décembre\"}",
+    "chercher {\"requete\":\"bank login SSO December 1st rollout\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.0029291
+}

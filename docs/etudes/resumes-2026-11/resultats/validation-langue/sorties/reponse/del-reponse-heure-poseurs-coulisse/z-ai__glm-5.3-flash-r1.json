@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:29.565Z",
+  "reponse": "L'appli des poseurs affichait les créneaux une heure trop tard depuis le passage à l'heure d'hiver du 25/10 : l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de +2 h à l'heure UTC, ce qui était juste en été mais faux en hiver, d'où 8h affiché à 9h [2]. Un ticket #208 avait été ouvert pour ce bug [1][3], avec des retards d'équipes chez les clients [3] et une réclamation client [5]. La correction consiste à utiliser l'heure locale de Paris via zoneinfo [2]. Attention : les SMS de rappel ont encore annoncé 9h au lieu de 8h le 17/11, la correction ne semblant pas les couvrir [4].",
+  "rendu": "L'appli des poseurs affichait les créneaux une heure trop tard depuis le passage à l'heure d'hiver du 25/10 : l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de +2 h à l'heure UTC, ce qui était juste en été mais faux en hiver, d'où 8h affiché à 9h [2]. Un ticket #208 avait été ouvert pour ce bug [1][3], avec des retards d'équipes chez les clients [3] et une réclamation client [5]. La correction consiste à utiliser l'heure locale de Paris via zoneinfo [2]. Attention : les SMS de rappel ont encore annoncé 9h au lieu de 8h le 17/11, la correction ne semblant pas les couvrir [4].",
+  "mesures": {
+    "mots": 112,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1174,
+    "sortie": 190,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002711
+  },
+  "cout": 0.0002711,
+  "latenceMs": 1567,
+  "fournisseur": "Together"
+}

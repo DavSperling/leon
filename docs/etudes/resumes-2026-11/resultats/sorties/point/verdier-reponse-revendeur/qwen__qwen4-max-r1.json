@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:34:15.821Z",
+  "reponse": "## Ce qui a bougé\n\n- Claire a tranché pour Galeries Brotteaux : 10 % sur les 4 tables vendues et 4 Saône chêne réservées sur le réassort de janvier. Elle veut ta réponse à Bertrand Lemaire **ce matin** ; ton brouillon (`brouillons/galeries-brotteaux-2026-11-17.md`) est prêt mais rien n'est parti, et sans proposition avant vendredi ils suspendent leurs réassorts de soldes. [4][1]\n- Hugo a approuvé la PR #62 : l'export revendeurs ne compte plus que le stock réellement disponible, hors réservations web. C'était la cause des deux incidents Brotteaux (buffet Rhône le 22/09, 6 Saône annoncées le 10/11 alors qu'elles étaient toutes précommandées), un défaut présent depuis mars ; corrigé et testé, il reste à fusionner. [2][1]\n- Antoine Roussel demande à être prévenu avant toute émission d'avoir : il doit être rattaché à la facture FA-2026-1187 du 10/11 pour passer correctement en TVA. À cadrer avec Claire selon la forme du geste. [5]\n- Lucie Fontaine signale que Brotteaux a aussi appelé le service client, très remontés ; elle leur a annoncé ton retour. [6]",
+  "rendu": "## Ce qui a bougé\n\n- Claire a tranché pour Galeries Brotteaux : 10 % sur les 4 tables vendues et 4 Saône chêne réservées sur le réassort de janvier. Elle veut ta réponse à Bertrand Lemaire **ce matin** ; ton brouillon (`brouillons/galeries-brotteaux-2026-11-17.md`) est prêt mais rien n'est parti, et sans proposition avant vendredi ils suspendent leurs réassorts de soldes. [4][1]\n- Hugo a approuvé la PR #62 : l'export revendeurs ne compte plus que le stock réellement disponible, hors réservations web. C'était la cause des deux incidents Brotteaux (buffet Rhône le 22/09, 6 Saône annoncées le 10/11 alors qu'elles étaient toutes précommandées), un défaut présent depuis mars ; corrigé et testé, il reste à fusionner. [2][1]\n- Antoine Roussel demande à être prévenu avant toute émission d'avoir : il doit être rattaché à la facture FA-2026-1187 du 10/11 pour passer correctement en TVA. À cadrer avec Claire selon la forme du geste. [5]\n- Lucie Fontaine signale que Brotteaux a aussi appelé le service client, très remontés ; elle leur a annoncé ton retour. [6]",
+  "mesures": {
+    "mots": 164,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4232,
+    "sortie": 2730,
+    "reflexion": 2411,
+    "cache": 1280,
+    "cout": 0.01596855
+  },
+  "cout": 0.01596855,
+  "latenceMs": 54992,
+  "fournisseur": "Alibaba"
+}

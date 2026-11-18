@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:22:41.275Z",
+  "reponse": "## Où j'en suis\nTerraform for the PostgreSQL 17 blue/green upgrade is prepared: staging plans one add and one change, while production is prepared but disabled and plans no changes. A draft PR is open; nothing has been applied.\n\n- [en-cours] PR #57 is open; staging still needs the pg_partman upgrade and validation before applying.\n- [prochaine-étape] Upgrade pg_partman on staging to 5.x, then check maintenance for `events_raw` and `events_daily`.\n- [prochaine-étape] Get Maya’s sign-off, then choose a production window outside the 01:00–03:30 UTC dbt lock.\n- [essai-raté] Initial `terraform init` failed because the lock file had AWS provider 5.31.0; `init -upgrade` selected v6 and caused unrelated plan changes. Pinning to 5.82 resolved this.\n- [décision] Do not apply anything; keep work plan-only (source: t01)\n- [décision] No production date until Maya signs off; keep `apply_immediately` false (source: t14)",
+  "rendu": "## Où j'en suis\nTerraform for the PostgreSQL 17 blue/green upgrade is prepared: staging plans one add and one change, while production is prepared but disabled and plans no changes. A draft PR is open; nothing has been applied.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] PR #57 is open; staging still needs the pg_partman upgrade and validation before applying.\n- [prochaine-étape] Upgrade pg_partman on staging to 5.x, then check maintenance for `events_raw` and `events_daily`.\n- [prochaine-étape] Get Maya’s sign-off, then choose a production window outside the 01:00–03:30 UTC dbt lock.\n- [essai-raté] Initial `terraform init` failed because the lock file had AWS provider 5.31.0; `init -upgrade` selected v6 and caused unrelated plan changes. Pinning to 5.82 resolved this.\n- [décision] Do not apply anything; keep work plan-only (source: t01)\n- [décision] No production date until Maya signs off; keep `apply_immediately` false (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1044,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3735,
+    "sortie": 388,
+    "reflexion": 142,
+    "cache": 0,
+    "cout": 0.0006608
+  },
+  "cout": 0.0006608,
+  "latenceMs": 5400,
+  "fournisseur": "OpenAI"
+}

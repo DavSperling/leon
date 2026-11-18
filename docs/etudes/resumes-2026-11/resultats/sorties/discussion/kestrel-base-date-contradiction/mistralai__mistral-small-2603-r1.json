@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:20.951Z",
+  "reponse": "The Nov 21 cutover was postponed; Noa is to propose a new date, likely the first weekend of December [4].",
+  "rendu": "The Nov 21 cutover was postponed; Noa is to propose a new date, likely the first weekend of December [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6606,
+    "sortie": 356,
+    "reflexion": 291,
+    "cache": 3568,
+    "cout": 0.00072282
+  },
+  "latenceMs": 3881,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"database upgrade maintenance window\"}"
+  ],
+  "cout": 0.00072282
+}

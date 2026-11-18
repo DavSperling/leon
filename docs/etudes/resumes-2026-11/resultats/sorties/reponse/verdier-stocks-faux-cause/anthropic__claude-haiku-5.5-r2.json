@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:16.658Z",
+  "reponse": "Le stock affiché est faux pour au moins deux raisons. D'abord, Shopify envoyait un webhook par emplacement, et le script décrémentait deux fois le stock. La déduplication de la PR #87 corrige ce point [1][2]. Ensuite, pour la variante SAO-180-CC à -2, un message Slack du 18 novembre indique que ce n'est pas #87 mais l'import nocturne du CSV de Bois & Fils, qui a écrasé le stock avant deux commandes [5][3]. Un client a vu la table Saône en stock, puis annoncée à 6 semaines [4].",
+  "rendu": "Le stock affiché est faux pour au moins deux raisons. D'abord, Shopify envoyait un webhook par emplacement, et le script décrémentait deux fois le stock. La déduplication de la PR #87 corrige ce point [1][2]. Ensuite, pour la variante SAO-180-CC à -2, un message Slack du 18 novembre indique que ce n'est pas #87 mais l'import nocturne du CSV de Bois & Fils, qui a écrasé le stock avant deux commandes [5][3]. Un client a vu la table Saône en stock, puis annoncée à 6 semaines [4].",
+  "mesures": {
+    "mots": 86,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1605,
+    "sortie": 811,
+    "reflexion": 601,
+    "cache": 0,
+    "cout": 0.000566
+  },
+  "cout": 0.000566,
+  "latenceMs": 4558,
+  "fournisseur": "Claude Platform on AWS"
+}

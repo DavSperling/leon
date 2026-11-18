@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:24:07.890Z",
+  "reponse": "## Where I stand\nSAML ACS signature verification is complete on `daniel/saml-acs`: the assertion is verified with signxml (XML-DSig plus Conditions, audience, SubjectConfirmation and Redis replay protection, 120 s skew), `saml_utils` moved to `api/auth/saml/verify.py`, and PR #412 is merged after green CI. What remains is the Fernhill staging setup ahead of Thursday's demo.\n\n- [en-cours] Fernhill staging IdP metadata not loaded yet, and our staging SP metadata still to send them by Wednesday end of day, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket to enforce SSO / disable password login for Fernhill users.\n- [essai-raté] Building lxml from source to fix the xmlsec/libxml2 mismatch still failed (Alpine has no loadable xmlsec1-openssl), so python3-saml was dropped entirely.\n- [décision] Use signxml instead of python3-saml, with condition checks written by hand and attributes read only from the verified signed element (source: t08)\n- [décision] Clock skew tolerance is 120 s, per Fernhill's contract annex (source: t12)\n- [décision] Merge without `--admin` and without `--auto` (source: t21)",
+  "rendu": "- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill staging IdP metadata not loaded yet, and our staging SP metadata still to send them by Wednesday end of day, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket to enforce SSO / disable password login for Fernhill users.\n- [essai-raté] Building lxml from source to fix the xmlsec/libxml2 mismatch still failed (Alpine has no loadable xmlsec1-openssl), so python3-saml was dropped entirely.\n- [décision] Use signxml instead of python3-saml, with condition checks written by hand and attributes read only from the verified signed element (source: t08)\n- [décision] Clock skew tolerance is 120 s, per Fernhill's contract annex (source: t12)\n- [décision] Merge without `--admin` and without `--auto` (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 897,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4841,
+    "sortie": 917,
+    "reflexion": 614,
+    "cache": 768,
+    "cout": 0.0025723098
+  },
+  "cout": 0.0025723098,
+  "latenceMs": 15168,
+  "fournisseur": "StreamLake"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:26.399Z",
+  "reponse": "## Où j'en suis\nÀ la fin de la dernière session, le client TransAlp (OAuth2, étiquettes ZPL par défaut avec `^CI28`) et la bascule dans `choix.ts` sont en place sur la branche `hugo/transalp-etiquettes`, poussée ; la PR #91 est à jour, toujours en brouillon, en relecture par Julien. Rien n'est activé en production : TransAlp n'est choisi qu'à partir de `TRANSALP_DEBUT` (1er décembre), Rapidis reste en place comme avant. (source: h2-12, src-pr91, h2-08)\n\n- [en-cours] PR #91 en brouillon, relecture par julien-morel (source: src-pr91, h2-12)\n- [prochaine-étape] Julien met la clé de prod de TransAlp dans les secrets ; rien ne s'active avant le 1er décembre (source: h2-07, src-slack-julien)\n- [prochaine-étape] Karim forme l'équipe sur le nouveau poste d'impression avant la bascule (source: src-slack-julien)\n- [prochaine-étape] Faire le point après les soldes sur la suite pour Rapidis (reste de la France et +30 kg jusqu'au 15 janvier) (source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : TransAlp ne le propose qu'en recette et en production, d'où l'essai sur la recette (source: src-mail-transalp, h2-01)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] Accents en bouillie sur la Zebra (« SaÃ´ne ») faute de `^CI28` : corrigé dans `zpl.ts`, confirmé bon par Karim (source: h2-03, h2-04, h2-05)\n- [décision] Bascule de Lyon et Paris chez TransAlp le mardi 1er décembre, pas le 23 (source: src-slack-julien)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut, PDF encore possible (source: h2-01)",
+  "rendu": "## Où j'en suis\nÀ la fin de la dernière session, le client TransAlp (OAuth2, étiquettes ZPL par défaut avec `^CI28`) et la bascule dans `choix.ts` sont en place sur la branche `hugo/transalp-etiquettes`, poussée ; la PR #91 est à jour, toujours en brouillon, en relecture par Julien. Rien n'est activé en production : TransAlp n'est choisi qu'à partir de `TRANSALP_DEBUT` (1er décembre), Rapidis reste en place comme avant. (de: équipe, agent; source: h2-12, src-pr91, h2-08)\n\n- [en-cours] PR #91 en brouillon, relecture par julien-morel (de: équipe, agent; source: src-pr91, h2-12)\n- [prochaine-étape] Julien met la clé de prod de TransAlp dans les secrets ; rien ne s'active avant le 1er décembre (de: toi, connecteur; source: h2-07, src-slack-julien)\n- [prochaine-étape] Karim forme l'équipe sur le nouveau poste d'impression avant la bascule (de: connecteur; source: src-slack-julien)\n- [prochaine-étape] Faire le point après les soldes sur la suite pour Rapidis (reste de la France et +30 kg jusqu'au 15 janvier) (de: connecteur; source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : TransAlp ne le propose qu'en recette et en production, d'où l'essai sur la recette (de: toi, connecteur; source: src-mail-transalp, h2-01)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] Accents en bouillie sur la Zebra (« SaÃ´ne ») faute de `^CI28` : corrigé dans `zpl.ts`, confirmé bon par Karim (de: toi, agent; source: h2-03, h2-04, h2-05)\n- [décision] Bascule de Lyon et Paris chez TransAlp le mardi 1er décembre, pas le 23 (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut, PDF encore possible (de: toi; source: h2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1898,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3950,
+    "sortie": 1258,
+    "reflexion": 652,
+    "cache": 0,
+    "cout": 0.00116165
+  },
+  "cout": 0.00116165,
+  "latenceMs": 8181,
+  "fournisseur": "InferenceNet"
+}

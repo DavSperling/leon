@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:53.206Z",
+  "reponse": "## Où j'en suis\nLe dashboard v2 (grille drag/resize, react-grid-layout, layout par utilisateur) est fusionné dans #418 ; les deux retours restants de Priya — déplacement/redimensionnement au clavier et focus ring visible — sont traités sur la branche `tom/dashboard-keyboard` avec le hook `useGridKeyboard` (Tab/Entrée/flèches, Shift+flèches, Escape, annonces aria-live, focus ring 2px), commit `8f1a2c7`, ouverts en PR #423 avec 11 tests verts. Le flag `dashboards_v2` est activé sur staging pour le workspace zest-grocers ; la prod reste éteinte. (source: ses-db-4, d4-01, d4-05, src-pr418)\n\n- [en-cours] PR #423 « Dashboards v2: keyboard move/resize + focus ring » ouverte, review de Priya demandée (source: ses-db-4, d4-05)\n- [prochaine-étape] review de Priya sur la PR #423, puis répétition de la démo sur staging (flag déjà activé pour zest-grocers) (source: ses-db-4, d4-05, d4-07)\n- [prochaine-étape] démo Zest le mardi 24 ; la personne activera elle-même le flag en prod le matin même (source: ses-db-4, d4-06, ses-db-2)\n- [essai-raté] dnd-kit `KeyboardSensor` par-dessus react-grid-layout : chaque mouvement appliqué deux fois, double `onLayoutChange` au drag souris — il faudrait réécrire la grille pour les faire coopérer (source: ses-db-4, d4-02)\n- [décision] garder recharts, migration visx abandonnée : #401 close, aucune dépendance `@visx/*` restante (source: c3-03, src-pr401, d4-09)\n- [décision] ResizeObserver (`useWidgetSize`) au lieu des container queries, incompatibles iOS 15 (source: b2-02, b2-03)\n- [décision] v1 reste derrière le flag jusqu'en janvier, rien ne sera supprimé maintenant (source: b2-04)",
+  "rendu": "## Où j'en suis\nLe dashboard v2 (grille drag/resize, react-grid-layout, layout par utilisateur) est fusionné dans #418 ; les deux retours restants de Priya — déplacement/redimensionnement au clavier et focus ring visible — sont traités sur la branche `tom/dashboard-keyboard` avec le hook `useGridKeyboard` (Tab/Entrée/flèches, Shift+flèches, Escape, annonces aria-live, focus ring 2px), commit `8f1a2c7`, ouverts en PR #423 avec 11 tests verts. Le flag `dashboards_v2` est activé sur staging pour le workspace zest-grocers ; la prod reste éteinte. (de: toi, équipe, agent; source: ses-db-4, d4-01, d4-05, src-pr418)\n\n- [en-cours] PR #423 « Dashboards v2: keyboard move/resize + focus ring » ouverte, review de Priya demandée (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] review de Priya sur la PR #423, puis répétition de la démo sur staging (flag déjà activé pour zest-grocers) (de: agent; source: ses-db-4, d4-05, d4-07)\n- [prochaine-étape] démo Zest le mardi 24 ; la personne activera elle-même le flag en prod le matin même (de: toi, agent; source: ses-db-4, d4-06, ses-db-2)\n- [essai-raté] dnd-kit `KeyboardSensor` par-dessus react-grid-layout : chaque mouvement appliqué deux fois, double `onLayoutChange` au drag souris — il faudrait réécrire la grille pour les faire coopérer (de: agent; source: ses-db-4, d4-02)\n- [décision] garder recharts, migration visx abandonnée : #401 close, aucune dépendance `@visx/*` restante (de: toi, équipe, agent; source: c3-03, src-pr401, d4-09)\n- [décision] ResizeObserver (`useWidgetSize`) au lieu des container queries, incompatibles iOS 15 (de: toi, agent; source: b2-02, b2-03)\n- [décision] v1 reste derrière le flag jusqu'en janvier, rien ne sera supprimé maintenant (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1749,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4840,
+    "sortie": 543,
+    "reflexion": 21,
+    "cache": 0,
+    "cout": 0.0009975
+  },
+  "cout": 0.0009975,
+  "latenceMs": 5485,
+  "fournisseur": "Crusoe"
+}

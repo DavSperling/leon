@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:57:48.160Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is ready in its own private repo: a 3-hour Compose/Terraform exercise with no Kubernetes, a flawed alert, a connection leak, and an over-broad IAM policy. The rubric has four scored areas with no cutoff; the panel decides. The `hiring/` directory was removed from the infra branch’s working tree, and no PR was opened there.\n\n- [en-cours] The infra-branch removal is uncommitted; the branch is to be dropped later.\n- [prochaine-étape] Hold the Thursday call, then invite the candidate and send the exercise yourself.\n- [décision] Keep the exercise to Terraform and Compose only, with a 3-hour maximum (source: t03)\n- [décision] Scores are input for the panel, not a cutoff; Noa is the second reviewer (source: t10)\n- [décision] Keep the exercise in its own private repo and do not open an infra PR (source: t14)\n- [décision] Do not email anyone; send the exercise yourself after the call (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is ready in its own private repo: a 3-hour Compose/Terraform exercise with no Kubernetes, a flawed alert, a connection leak, and an over-broad IAM policy. The rubric has four scored areas with no cutoff; the panel decides. The `hiring/` directory was removed from the infra branch’s working tree, and no PR was opened there.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] The infra-branch removal is uncommitted; the branch is to be dropped later.\n- [prochaine-étape] Hold the Thursday call, then invite the candidate and send the exercise yourself.\n- [décision] Keep the exercise to Terraform and Compose only, with a 3-hour maximum (source: t03)\n- [décision] Scores are input for the panel, not a cutoff; Noa is the second reviewer (source: t10)\n- [décision] Keep the exercise in its own private repo and do not open an infra PR (source: t14)\n- [décision] Do not email anyone; send the exercise yourself after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1031,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3490,
+    "sortie": 372,
+    "reflexion": 126,
+    "cache": 0,
+    "cout": 0.000622175
+  },
+  "cout": 0.000622175,
+  "latenceMs": 4628,
+  "fournisseur": "Azure"
+}

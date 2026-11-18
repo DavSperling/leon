@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-audit-date-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:36.062Z",
+  "reponse": "L'audit de qualification RGE était d'abord fixé au mardi 8 décembre 2026, sur le chantier CH-2604 Le Floch à Rezé [1][3], avec un appel de préparation en visio le 20 novembre [1] et des pièces à transmettre avant le 27 novembre [1][3].\n\nUn message Slack du 17 novembre annonce que l'auditeur, M. Ollivier, est empêché le 8 : l'audit passerait au jeudi 10 décembre, même chantier, sous réserve de confirmation écrite de Laure Bihan ; rien n'est modifié dans le planning en attendant [2]. Ces deux dates se contredisent, la plus récente étant le 10 décembre [2].\n\nUn message évoque aussi un blocage du créneau du 8 décembre dans le planning [4].",
+  "rendu": "L'audit de qualification RGE était d'abord fixé au mardi 8 décembre 2026, sur le chantier CH-2604 Le Floch à Rezé [1][3], avec un appel de préparation en visio le 20 novembre [1] et des pièces à transmettre avant le 27 novembre [1][3].\n\nUn message Slack du 17 novembre annonce que l'auditeur, M. Ollivier, est empêché le 8 : l'audit passerait au jeudi 10 décembre, même chantier, sous réserve de confirmation écrite de Laure Bihan ; rien n'est modifié dans le planning en attendant [2]. Ces deux dates se contredisent, la plus récente étant le 10 décembre [2].\n\nUn message évoque aussi un blocage du créneau du 8 décembre dans le planning [4].",
+  "mesures": {
+    "mots": 110,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1161,
+    "sortie": 381,
+    "reflexion": 190,
+    "cache": 0,
+    "cout": 0.000348183
+  },
+  "cout": 0.000348183,
+  "latenceMs": 2725,
+  "fournisseur": "InferenceNet"
+}

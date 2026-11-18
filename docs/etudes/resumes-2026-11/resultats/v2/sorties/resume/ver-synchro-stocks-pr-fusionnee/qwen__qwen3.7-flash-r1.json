@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:17.818Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif sur la Saône chêne 180 est corrigé : les webhooks ne modifient plus les inventaires, laissant Shopify gérer ses propres ajustements. La synchro nocturne passe en valeur absolue, le seuil d'alerte est ramené à 3 unités, et le nom de fonction a été harmonisé. La PR #87 est fusionnée et le déploiement effectué, stock remis à zéro sans activation de précommande.\n\n- [en-cours] Traiter les trois commandes survendues (#1041, #1043, #1044) en coordination avec Lucie.\n- [prochaine-étape] Vérifier que le réassort physique déclenchera bien la réactivation du stock via la synchro de nuit.\n- [essai-raté] Dédoublonnage par entête X-Shopify-Webhook-Id : supprimé car il ne couvrait pas les doublons entre orders/create et orders/updated.\n- [décision] Arrêt complet des décréments de stock dans les webhooks, seule la synchro de nuit peut les corriger. (source: t05)",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif sur la Saône chêne 180 est corrigé : les webhooks ne modifient plus les inventaires, laissant Shopify gérer ses propres ajustements. La synchro nocturne passe en valeur absolue, le seuil d'alerte est ramené à 3 unités, et le nom de fonction a été harmonisé. La PR #87 est fusionnée et le déploiement effectué, stock remis à zéro sans activation de précommande.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traiter les trois commandes survendues (#1041, #1043, #1044) en coordination avec Lucie.\n- [prochaine-étape] Vérifier que le réassort physique déclenchera bien la réactivation du stock via la synchro de nuit.\n- [essai-raté] Dédoublonnage par entête X-Shopify-Webhook-Id : supprimé car il ne couvrait pas les doublons entre orders/create et orders/updated.\n- [décision] Arrêt complet des décréments de stock dans les webhooks, seule la synchro de nuit peut les corriger. (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1037,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4001,
+    "sortie": 3389,
+    "reflexion": 3118,
+    "cache": 0,
+    "cout": 0.0005606
+  },
+  "cout": 0.0005606,
+  "latenceMs": 30907,
+  "fournisseur": "Alibaba"
+}

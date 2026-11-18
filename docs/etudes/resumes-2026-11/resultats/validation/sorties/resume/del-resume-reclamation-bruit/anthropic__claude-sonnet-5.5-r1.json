@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-reclamation-bruit",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:07.763Z",
+  "reponse": "## Où j'en suis\nLa réponse à M. Corbel (ticket 4093) est rédigée dans `sav/reclamations/corbel-4093.md`. Elle s'excuse pour les plots anti-vibratiles oubliés et le mode nuit non activé, et propose le passage d'un technicien à nos frais suivi d'une mesure de nuit. Elle refuse le remplacement et les 2 000 €. Un modèle générique pour les plaintes de bruit est créé dans `sav/modeles/reponse-nuisance-sonore.md`. Rien n'est encore envoyé.\n\n- [en-cours] Envoi de la réponse à M. Corbel depuis Zendesk, prévu par la personne ; il a fixé un délai de 8 jours avant de saisir le médiateur.\n- [prochaine-étape] Prévenir Franck pour ajouter plots et mode nuit à la checklist de mise en service.\n- [question] Geste commercial de 150 € : Hélène doit trancher, la personne lui demande ; il est retiré du brouillon.\n- [question] Les 4 plaintes sur Aéro 11 viennent-elles toutes des plots ou du mode nuit ? À remonter au directeur technique si oui.\n- [décision] Pas de remplacement ni de 2 000 € ; retour du technicien à nos frais, créneaux mardi 24 matin ou mercredi 25 après-midi (source: t05, t09).\n- [décision] Le relevé de la mesure de nuit sera remis à M. Corbel pour son voisinage (source: t13).",
+  "rendu": "## Où j'en suis\nLa réponse à M. Corbel (ticket 4093) est rédigée dans `sav/reclamations/corbel-4093.md`. Elle s'excuse pour les plots anti-vibratiles oubliés et le mode nuit non activé, et propose le passage d'un technicien à nos frais suivi d'une mesure de nuit. Elle refuse le remplacement et les 2 000 €. Un modèle générique pour les plaintes de bruit est créé dans `sav/modeles/reponse-nuisance-sonore.md`. Rien n'est encore envoyé.\n\n- [en-cours] Envoi de la réponse à M. Corbel depuis Zendesk, prévu par la personne ; il a fixé un délai de 8 jours avant de saisir le médiateur.\n- [prochaine-étape] Prévenir Franck pour ajouter plots et mode nuit à la checklist de mise en service.\n- [question] Geste commercial de 150 € : Hélène doit trancher, la personne lui demande ; il est retiré du brouillon.\n- [question] Les 4 plaintes sur Aéro 11 viennent-elles toutes des plots ou du mode nuit ? À remonter au directeur technique si oui.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 934,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4140,
+    "sortie": 536,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01364
+  },
+  "cout": 0.01364,
+  "latenceMs": 4105,
+  "fournisseur": "Amazon Bedrock"
+}

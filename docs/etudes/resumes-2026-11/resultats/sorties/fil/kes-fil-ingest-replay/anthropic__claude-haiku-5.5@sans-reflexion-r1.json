@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:38.175Z",
+  "reponse": "## Où j'en suis\nLe replay réel est fait : 18 442 107 événements dans `events.replay.v3`, PR #233 fusionnée. Le backfill de l'agrégateur du 12/11 tourne (61 % à 09:52 UTC, 14,9 M lignes sur 20,5 M attendues). L'incident reste ouvert tant que les compteurs ne correspondent pas. La PR #241 (fork) n'est pas à traiter : la décision de l'équipe est que Daniel fait la vérification CI. (source: r2-04, r2-06, r2-07, r2-09, r1-07, src-pr241-fork, src-slack-incident)\n\n- [en-cours] Backfill `backfill-2026-11-12` à relancer ou à surveiller jusqu'à 100 % (source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les compteurs ClickHouse heure par heure (tolérance 1 %), puis fermer l'incident (source: r2-08, r2-10)\n- [prochaine-étape] Daniel ajoute le check CI sur la longueur de la clé de déduplication (source: src-slack-incident)\n- [prochaine-étape] Rachel confirme à Orbitly la date de restauration, promise pour aujourd'hui, mercredi 18/11 (source: src-zendesk-orbitly, r2-07)\n- [essai-raté] Dry run avec des lots de 50 000 : OOMKilled (limite 2 Gi). Lots de 5 000 : OK, pic à 310 MiB ; ne pas toucher à la limite mémoire, le quota du namespace est plafonné (source: r1-03, r1-04, r1-05, src-sentry-oom)\n- [question] Le backfill ne couvre que 14,9 M lignes sur ~20,5 M attendues : écart encore à expliquer avant de clore (source: r2-06)\n- [décision] Rejouer tout dans `events.replay.v3`, jamais dans `events.v3` directement ; l'agrégateur lit avec `--backfill` (source: r1-02, src-slack-incident)\n- [décision] Pas d'autre correctif sur cet incident que le check CI de Daniel ; la PR #241 du fork n'est pas mergée (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nLe replay réel est fait : 18 442 107 événements dans `events.replay.v3`, PR #233 fusionnée. Le backfill de l'agrégateur du 12/11 tourne (61 % à 09:52 UTC, 14,9 M lignes sur 20,5 M attendues). L'incident reste ouvert tant que les compteurs ne correspondent pas. La PR #241 (fork) n'est pas à traiter : la décision de l'équipe est que Daniel fait la vérification CI. (de: toi, connecteur, agent; source: r2-04, r2-06, r2-07, r2-09, r1-07, src-pr241-fork, src-slack-incident)\n\n- [en-cours] Backfill `backfill-2026-11-12` à relancer ou à surveiller jusqu'à 100 % (de: agent; source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les compteurs ClickHouse heure par heure (tolérance 1 %), puis fermer l'incident (de: agent; source: r2-08, r2-10)\n- [prochaine-étape] Daniel ajoute le check CI sur la longueur de la clé de déduplication (de: connecteur; source: src-slack-incident)\n- [prochaine-étape] Rachel confirme à Orbitly la date de restauration, promise pour aujourd'hui, mercredi 18/11 (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)\n- [essai-raté] Dry run avec des lots de 50 000 : OOMKilled (limite 2 Gi). Lots de 5 000 : OK, pic à 310 MiB ; ne pas toucher à la limite mémoire, le quota du namespace est plafonné (de: toi, connecteur, agent; source: r1-03, r1-04, r1-05, src-sentry-oom)\n- [question] Le backfill ne couvre que 14,9 M lignes sur ~20,5 M attendues : écart encore à expliquer avant de clore (de: agent; source: r2-06)\n- [décision] Rejouer tout dans `events.replay.v3`, jamais dans `events.v3` directement ; l'agrégateur lit avec `--backfill` (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Pas d'autre correctif sur cet incident que le check CI de Daniel ; la PR #241 du fork n'est pas mergée (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1831,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5137,
+    "sortie": 794,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009107
+  },
+  "cout": 0.0009107,
+  "latenceMs": 4007,
+  "fournisseur": "Claude Platform on AWS"
+}

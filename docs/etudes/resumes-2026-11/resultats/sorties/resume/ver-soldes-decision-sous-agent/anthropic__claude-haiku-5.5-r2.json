@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:39:40.756Z",
+  "reponse": "## Où j'en suis\nLe script d'application des soldes d'hiver est écrit et ouvert en PR #94 (état : ouverte). Les remises sont en place sur la boutique de dev, après une tentative ratée remplacée par une opération en masse, qui a réussi et a remis la boutique de dev à ses prix d'origine avant. L'application est programmée le mercredi 13 janvier 2027 à 08:00. Un CSV des prix soldés a été préparé pour la newsletter de Sophie. Reste le script de retour aux prix d'origine, à faire en décembre.\n\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre\n- [prochaine-étape] Vérifier la boutique de dev la veille (12 janvier 2027), comme prévu\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix ont changé\n- [essai-raté] Un appel par produit à l'API Shopify a été bloqué par la limite de débit (THROTTLED) après 61 produits, et la boutique de dev s'est retrouvée à moitié soldée ; remplacé par une opération en masse (JSONL), qui a fonctionné sans rejet\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (rupture). Le taux d'un produit dans les deux collections est le plus fort. (source: t05)\n- [décision] Prix arrondis à l'euro inférieur, puis au premier nombre finissant par 9 ; prix sous 20 € non touchés (source: t07)\n- [décision] Application par opération en masse Shopify, pas par appels unitaires (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 08:00, et non le 12 au soir, pour que les prix barrés ne soient pas visibles avant l'ouverture (source: t15)",
+  "rendu": "## Où j'en suis\nLe script d'application des soldes d'hiver est écrit et ouvert en PR #94 (état : ouverte). Les remises sont en place sur la boutique de dev, après une tentative ratée remplacée par une opération en masse, qui a réussi et a remis la boutique de dev à ses prix d'origine avant. L'application est programmée le mercredi 13 janvier 2027 à 08:00. Un CSV des prix soldés a été préparé pour la newsletter de Sophie. Reste le script de retour aux prix d'origine, à faire en décembre.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre\n- [prochaine-étape] Vérifier la boutique de dev la veille (12 janvier 2027), comme prévu\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix ont changé\n- [essai-raté] Un appel par produit à l'API Shopify a été bloqué par la limite de débit (THROTTLED) après 61 produits, et la boutique de dev s'est retrouvée à moitié soldée ; remplacé par une opération en masse (JSONL), qui a fonctionné sans rejet",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1167,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5589,
+    "sortie": 1227,
+    "reflexion": 557,
+    "cache": 0,
+    "cout": 0.0011724
+  },
+  "cout": 0.0011724,
+  "latenceMs": 6175,
+  "fournisseur": "Claude Platform on AWS"
+}

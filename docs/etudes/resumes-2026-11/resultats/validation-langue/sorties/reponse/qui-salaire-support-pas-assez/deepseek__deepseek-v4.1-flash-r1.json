@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:46.164Z",
+  "reponse": "No internal salary band for the Austin Support Engineer appears here: the job description and the H2 hiring plan both point to a comp sheet instead [1][5], and Northpeak's recruiter was still asking Carla to share the band on 16 November [4]. The only figure is a general market estimate of $75,000–$95,000 base for a Tier 2 fintech support engineer in Austin with 3–5 years' experience, which the source itself says is not the company's band [2]. The ₪40–47k/month gross band approved on 13 November covers the senior SRE in Tel Aviv, a different role and location [3].",
+  "rendu": "No internal salary band for the Austin Support Engineer appears here: the job description and the H2 hiring plan both point to a comp sheet instead [1][5], and Northpeak's recruiter was still asking Carla to share the band on 16 November [4]. The only figure is a general market estimate of $75,000–$95,000 base for a Tier 2 fintech support engineer in Austin with 3–5 years' experience, which the source itself says is not the company's band [2]. The ₪40–47k/month gross band approved on 13 November covers the senior SRE in Tel Aviv, a different role and location [3].",
+  "mesures": {
+    "mots": 98,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1109,
+    "sortie": 781,
+    "reflexion": 640,
+    "cache": 512,
+    "cout": 0.000633411
+  },
+  "cout": 0.000633411,
+  "latenceMs": 4273,
+  "fournisseur": "Cohere"
+}

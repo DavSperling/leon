@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:23:07.673Z",
+  "reponse": "## Where I'm at\n\nMaya built a 3-hour SRE take-home for a candidate and moved it to its own private repo, `kestrel-analytics/sre-take-home`. The compose stack now builds `flaky-svc` from source, so it runs on arm64 and amd64. The rubric is committed, with no pass threshold, and Noa is the second reviewer. `hiring/` is removed from the infra branch, with no PR. Nothing has been sent to the candidate: Maya will send the exercise herself after the Thursday call.\n\n- [en-cours] Verifying the final state of the exercise repo before the Thursday call is not recorded; the repo is otherwise complete.\n- [prochaine-étape] Maya sends the exercise to the candidate herself after the Thursday 4pm Tel Aviv call, including the collaborator invite if needed.\n- [essai-raté] Multi-arch `docker buildx --load` failed: the docker exporter cannot load manifest lists into the local daemon.\n- [question] Whether to delete the `maya/sre-take-home` branch in infra later is left to Maya.\n- [décision] Maya wants the exercise in its own private repo, so candidates don't see real infra modules in the history (source: t12).\n- [décision] Maya decided that rubric scores are input for the panel, with no cut-off (source: t10).\n- [décision] Maya decided that Noa is the second reviewer (source: t10).\n- [décision] Maya decided that nothing is emailed to the candidate, and she sends the exercise herself after the call (source: t16).",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Verifying the final state of the exercise repo before the Thursday call is not recorded; the repo is otherwise complete.\n- [prochaine-étape] Maya sends the exercise to the candidate herself after the Thursday 4pm Tel Aviv call, including the collaborator invite if needed.\n- [essai-raté] Multi-arch `docker buildx --load` failed: the docker exporter cannot load manifest lists into the local daemon.\n- [question] Whether to delete the `maya/sre-take-home` branch in infra later is left to Maya.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 603,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5178,
+    "sortie": 515,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007753
+  },
+  "cout": 0.0007753,
+  "latenceMs": 2941,
+  "fournisseur": "Claude Platform on AWS"
+}

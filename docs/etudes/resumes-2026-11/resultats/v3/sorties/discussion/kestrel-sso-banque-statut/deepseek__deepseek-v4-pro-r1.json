@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:11:29.242Z",
+  "reponse": "Yes, mostly on track, but there's one open dependency on Fernhill Bank's side. The go-live date of December 1, 2026 is in the contract [5], and our side has progressed: the SP-initiated flow is merged behind the `saml_sso` flag [16], the admin/SSO settings page is on staging [5], and the IdP metadata has been loaded with IdP-initiated login working on staging [5][18].\n\nWhat's still blocking full login: Fernhill's IdP signs assertions with RSA-SHA1, which we reject (we require SHA-256 or stronger) [5][18]. We decided not to accept SHA-1 even temporarily for a bank [18]. Fernhill needs their change advisory board to approve switching to RSA-SHA256; that board meets Tuesday Nov 24, and if approved it's applied the same evening [6][18]. A joint end-to-end test is then scheduled with Helen for Wednesday Nov 25 at 16:00 Tel Aviv time [6][18].\n\nSo the remaining items before December 1:\n- Nov 24: Fernhill's change board approves the signing-algorithm switch to RSA-SHA256 [6][18]. If it doesn't approve, Sam Ortiz tells Fernhill the same day that Dec 1 is at risk [18].\n- Nov 25: joint end-to-end test [6][18].\n- Presumably then flipping the workspace live for December 1; the Postgres 17 cutover was deliberately moved to Dec 5, after the Fernhill go-live, to reduce risk [7][4].",
+  "rendu": "Yes, mostly on track, but there's one open dependency on Fernhill Bank's side. The go-live date of December 1, 2026 is in the contract [5], and our side has progressed: the SP-initiated flow is merged behind the `saml_sso` flag [16], the admin/SSO settings page is on staging [5], and the IdP metadata has been loaded with IdP-initiated login working on staging [5][18].\n\nWhat's still blocking full login: Fernhill's IdP signs assertions with RSA-SHA1, which we reject (we require SHA-256 or stronger) [5][18]. We decided not to accept SHA-1 even temporarily for a bank [18]. Fernhill needs their change advisory board to approve switching to RSA-SHA256; that board meets Tuesday Nov 24, and if approved it's applied the same evening [6][18]. A joint end-to-end test is then scheduled with Helen for Wednesday Nov 25 at 16:00 Tel Aviv time [6][18].\n\nSo the remaining items before December 1:\n- Nov 24: Fernhill's change board approves the signing-algorithm switch to RSA-SHA256 [6][18]. If it doesn't approve, Sam Ortiz tells Fernhill the same day that Dec 1 is at risk [18].\n- Nov 25: joint end-to-end test [6][18].\n- Presumably then flipping the workspace live for December 1; the Postgres 17 cutover was deliberately moved to Dec 5, after the Fernhill go-live, to reduce risk [7][4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 34688,
+    "sortie": 1267,
+    "reflexion": 586,
+    "cache": 19712,
+    "cout": 0.024541696
+  },
+  "latenceMs": 23644,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise 1er décembre support\"}",
+    "chercher {\"requete\":\"staff log in company accounts December 1st bank\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "activite {\"depuis\":\"2026-11-17\",\"outil\":\"linear\"}",
+    "chercher {\"requete\":\"Fernhill signing algorithm RSA-SHA256 resolved\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.024541696
+}

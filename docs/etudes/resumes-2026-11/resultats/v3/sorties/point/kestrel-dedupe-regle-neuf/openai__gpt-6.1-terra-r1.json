@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.670Z",
+  "reponse": "## What is still open\n\n- Maya needs your Orbitly loss count before merging #247, for Thursday’s customer call: **1,179,950 legitimate events** were dropped; 4,352 were genuine replays. She’ll approve once CI is green. [1][2]\n- After #247 is **deployed**, replay Orbitly and Zest from landing, then check Orbitly’s dedupe-drop counter. Zest lost 3,812 events. [1]\n- Add a dead-letter queue alert above 1,000 messages before Friday’s incident review. [7]\n- You have a draft note asking the iOS team to restore UUID event IDs in SDK 3.2.1; version 3.2.0’s per-session counters conflict with the ingest contract. [1]\n\n## What changed\n\n- Noa has finalized the 12/11 postmortem and will present it at Friday’s review. [3]\n- PR #245 merged, upgrading Go to 1.23.4 in CI and the Dockerfile. [4]",
+  "rendu": "## What is still open\n\n- Maya needs your Orbitly loss count before merging #247, for Thursday’s customer call: **1,179,950 legitimate events** were dropped; 4,352 were genuine replays. She’ll approve once CI is green. [1][2]\n- After #247 is **deployed**, replay Orbitly and Zest from landing, then check Orbitly’s dedupe-drop counter. Zest lost 3,812 events. [1]\n- Add a dead-letter queue alert above 1,000 messages before Friday’s incident review. [7]\n- You have a draft note asking the iOS team to restore UUID event IDs in SDK 3.2.1; version 3.2.0’s per-session counters conflict with the ingest contract. [1]\n\n## What changed\n\n- Noa has finalized the 12/11 postmortem and will present it at Friday’s review. [3]\n- PR #245 merged, upgrading Go to 1.23.4 in CI and the Dockerfile. [4]",
+  "mesures": {
+    "mots": 122,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 637,
+    "reflexion": 411,
+    "cache": 0,
+    "cout": 0.00889925
+  },
+  "cout": 0.00889925,
+  "latenceMs": 7137,
+  "fournisseur": "Azure"
+}

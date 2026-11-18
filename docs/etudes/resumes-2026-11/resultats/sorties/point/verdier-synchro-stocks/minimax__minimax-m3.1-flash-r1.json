@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:37:31.811Z",
+  "reponse": "## Ce qui a changé\n\n- La PR #57 d’Hugo a été fusionnée : la synchronisation utilise désormais la correspondance exacte des SKU, les 17 références à finitions manquantes ont été ajoutées et le ticket #55 sur la Saône est marqué comme corrigé. La synchro de cette nuit tiendra compte de la correction. [3][4]\n\n## Ce qui reste à faire\n\n- Tu dois fournir à Antoine l’export des ventes Shopify d’octobre pour le calcul de la TVA, avant jeudi. [1]\n- La PR #58, qui ajoute le mode `--dry-run` et un rapport des écarts sans écriture, reste à faire relire puis fusionner. Le comptage physique des 14 variantes en écart par Karim est prévu jeudi matin ; ses chiffres restent à intégrer. [1][5][7]",
+  "rendu": "## Ce qui a changé\n\n- La PR #57 d’Hugo a été fusionnée : la synchronisation utilise désormais la correspondance exacte des SKU, les 17 références à finitions manquantes ont été ajoutées et le ticket #55 sur la Saône est marqué comme corrigé. La synchro de cette nuit tiendra compte de la correction. [3][4]\n\n## Ce qui reste à faire\n\n- Tu dois fournir à Antoine l’export des ventes Shopify d’octobre pour le calcul de la TVA, avant jeudi. [1]\n- La PR #58, qui ajoute le mode `--dry-run` et un rapport des écarts sans écriture, reste à faire relire puis fusionner. Le comptage physique des 14 variantes en écart par Karim est prévu jeudi matin ; ses chiffres restent à intégrer. [1][5][7]",
+  "mesures": {
+    "mots": 116,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4767,
+    "sortie": 1078,
+    "reflexion": 906,
+    "cache": 128,
+    "cout": 0.00134457
+  },
+  "cout": 0.00134457,
+  "latenceMs": 8843,
+  "fournisseur": "Minimax"
+}

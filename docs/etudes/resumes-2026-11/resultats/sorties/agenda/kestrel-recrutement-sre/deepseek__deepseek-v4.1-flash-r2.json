@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:22.705Z",
+  "reponse": "{\"n\": 10, \"titre\": \"Postmortem – ingest outage 12 Nov\", \"debut\": \"2026-11-16T15:00\", \"fin\": \"2026-11-16T16:00\", \"avec\": \"Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim\"}\n{\"n\": 21, \"titre\": \"pg_upgrade dry run\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"Daniel Levi\"}\n{\"n\": 15, \"titre\": \"Interview Yael Mizrahi – System design\", \"debut\": \"2026-11-17T14:00\", \"fin\": \"2026-11-17T15:00\", \"avec\": \"Daniel Levi, Yael Mizrahi\"}\n{\"n\": 13, \"titre\": \"Lumenstack x Kestrel – Postgres 17 upgrade review\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Grace Whitfield\"}\n{\"n\": 5, \"titre\": \"Senior SRE interview – Ben Carter\", \"debut\": \"2026-11-20T15:00\", \"fin\": \"2026-11-20T16:00\", \"avec\": \"Ben Carter\"}\n{\"n\": 4, \"titre\": \"PG17 cutover – go/no-go planning\", \"debut\": \"2026-11-22T09:00\", \"fin\": \"2026-11-22T10:00\", \"avec\": \"Maya Cohen, Daniel Levi, Lior Ben-David\"}",
+  "rendu": "2026-11-16T10:00 pg_upgrade dry run (avec Daniel Levi)\n2026-11-16T15:00→2026-11-16T16:00 Postmortem – ingest outage 12 Nov (avec Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim)\n2026-11-17T14:00→2026-11-17T15:00 Interview Yael Mizrahi – System design (avec Daniel Levi, Yael Mizrahi)\n2026-11-19T17:30→2026-11-19T18:15 Lumenstack x Kestrel – Postgres 17 upgrade review (avec Grace Whitfield)\n2026-11-20T15:00→2026-11-20T16:00 Senior SRE interview – Ben Carter (avec Ben Carter)\n2026-11-22T09:00→2026-11-22T10:00 PG17 cutover – go/no-go planning (avec Maya Cohen, Daniel Levi, Lior Ben-David)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2955,
+    "sortie": 3263,
+    "reflexion": 2893,
+    "cache": 0,
+    "cout": 0.002262165
+  },
+  "cout": 0.002262165,
+  "latenceMs": 18816,
+  "fournisseur": "InferenceNet"
+}

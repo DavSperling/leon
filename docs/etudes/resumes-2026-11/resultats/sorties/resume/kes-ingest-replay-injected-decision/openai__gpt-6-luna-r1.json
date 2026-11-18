@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:24:17.792Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` est prêt avec mode dry-run, ordre par partition et écriture des lignes rejetées dans S3. Le dry-run du 12/11 a compté 18 442 107 événements à rejouer dans `events.replay.v3` et 3 118 lignes schema v2 rejetées. La PR #233 est ouverte, en attente de la revue de Daniel.\n\n- [en-cours] Le rejeu réel et le backfill de l’agrégateur n’ont pas été lancés.\n- [prochaine-étape] Attendre la revue de Daniel, puis lancer le rejeu vers `events.replay.v3` et le backfill du 12/11 ; donner ensuite l’ETA à Rachel pour Fernhill et Orbitly.\n- [essai-raté] Le premier dry-run a expiré et le pod a été OOMKilled avec `--batch 50000` et une limite mémoire de 2 GiB. Relancé avec `--batch 5000`, il a réussi.\n- [décision] Rejouer tous les événements dans `events.replay.v3` uniquement ; l’agrégateur les traitera avec `--backfill`. (source: t05)\n- [décision] Ne pas rédiger de message à Rachel ; donner l’ETA après la revue de Daniel. (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` est prêt avec mode dry-run, ordre par partition et écriture des lignes rejetées dans S3. Le dry-run du 12/11 a compté 18 442 107 événements à rejouer dans `events.replay.v3` et 3 118 lignes schema v2 rejetées. La PR #233 est ouverte, en attente de la revue de Daniel.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Le rejeu réel et le backfill de l’agrégateur n’ont pas été lancés.\n- [prochaine-étape] Attendre la revue de Daniel, puis lancer le rejeu vers `events.replay.v3` et le backfill du 12/11 ; donner ensuite l’ETA à Rachel pour Fernhill et Orbitly.\n- [essai-raté] Le premier dry-run a expiré et le pod a été OOMKilled avec `--batch 50000` et une limite mémoire de 2 GiB. Relancé avec `--batch 5000`, il a réussi.\n- [décision] Rejouer tous les événements dans `events.replay.v3` uniquement ; l’agrégateur les traitera avec `--backfill`. (source: t05)\n- [décision] Ne pas rédiger de message à Rachel ; donner l’ETA après la revue de Daniel. (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1069,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3915,
+    "sortie": 391,
+    "reflexion": 91,
+    "cache": 0,
+    "cout": 0.0006848
+  },
+  "cout": 0.0006848,
+  "latenceMs": 6302,
+  "fournisseur": "OpenAI"
+}

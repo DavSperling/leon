@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:20.279Z",
+  "reponse": "## What is still open\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr; am Freitag um 14 Uhr geht ihr alles durch. Sie bietet die API nur an, wenn Pfeiffer eine Mindestabnahme von 3 Mio. € pro Jahr zusagt, und der Jahresbonus bleibt bei 2 % [5].\n- Jonas hält #222 für 25 PT statt 15: `/api/v1/auftraege` hat keine Mandantentrennung, dazu kommen Token-Ableitung, Absicherung und Pen-Test. Den 1. April hält er nur für machbar, wenn der Spike im Dezember startet [2]. #222 ist noch offen.\n\n## What changed\n- Pfeiffer hat das Jahresgespräch für Donnerstag abgesagt. Neuer Termin: Montag, 23.11., 10 Uhr in Nürnberg. Abfahrt 8 Uhr, Thomas fährt [6].\n- Zwei Tickets sind gemerged: #214 (Export Lieferungen nach Charge) und #218 (Abhängigkeiten, Spring Boot 3.3.6) [3][4].\n\n## What you did\n- Du hast die Zahlen von Pfeiffer aus dem Lesereplikat geholt (1.412 Aufträge, 2,61 Mio. € netto, 6,1 % manuell nachbearbeitet) und daraus die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` mit Technik, Aufwand und Termin 1. April 2027 gebaut [1].\n- Bonus, Preise und Zahlungsziel hast du wieder herausgenommen, weil Thomas und Frau Kranich darüber entscheiden. EDI steht nur als „auf Anfrage, separat zu bewerten“ drin [1].\n- Du hast #222 angelegt und Jonas zum Gegenlesen zugewiesen [1].",
+  "rendu": "## What is still open\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr; am Freitag um 14 Uhr geht ihr alles durch. Sie bietet die API nur an, wenn Pfeiffer eine Mindestabnahme von 3 Mio. € pro Jahr zusagt, und der Jahresbonus bleibt bei 2 % [5].\n- Jonas hält #222 für 25 PT statt 15: `/api/v1/auftraege` hat keine Mandantentrennung, dazu kommen Token-Ableitung, Absicherung und Pen-Test. Den 1. April hält er nur für machbar, wenn der Spike im Dezember startet [2]. #222 ist noch offen.\n\n## What changed\n- Pfeiffer hat das Jahresgespräch für Donnerstag abgesagt. Neuer Termin: Montag, 23.11., 10 Uhr in Nürnberg. Abfahrt 8 Uhr, Thomas fährt [6].\n- Zwei Tickets sind gemerged: #214 (Export Lieferungen nach Charge) und #218 (Abhängigkeiten, Spring Boot 3.3.6) [3][4].\n\n## What you did\n- Du hast die Zahlen von Pfeiffer aus dem Lesereplikat geholt (1.412 Aufträge, 2,61 Mio. € netto, 6,1 % manuell nachbearbeitet) und daraus die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` mit Technik, Aufwand und Termin 1. April 2027 gebaut [1].\n- Bonus, Preise und Zahlungsziel hast du wieder herausgenommen, weil Thomas und Frau Kranich darüber entscheiden. EDI steht nur als „auf Anfrage, separat zu bewerten“ drin [1].\n- Du hast #222 angelegt und Jonas zum Gegenlesen zugewiesen [1].",
+  "mesures": {
+    "mots": 196,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6991,
+    "sortie": 2769,
+    "reflexion": 2065,
+    "cache": 0,
+    "cout": 0.0020836
+  },
+  "cout": 0.0020836,
+  "latenceMs": 12073,
+  "fournisseur": "Google"
+}

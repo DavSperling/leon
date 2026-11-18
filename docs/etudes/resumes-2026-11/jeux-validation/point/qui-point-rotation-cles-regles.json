@@ -1,0 +1,365 @@
+{
+  "id": "qui-point-rotation-cles-regles",
+  "titre": "Point d'un dev backend : rotation des clés du coffre de cartes ; trois lignes déjà réglées, une seule a du neuf (Shira change les preuves), et une fenêtre de prod fixée par le CTO",
+  "langue": "en",
+  "entree": {
+    "maintenant": "2026-11-18T05:30:00Z",
+    "projet": "github.com/quillon/core",
+    "depuis": "2026-11-16T07:40:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [
+      "Elad asked you to move the KMS key policy change out of #1412 into a separate quillon/terraform PR.",
+      "Shira needs evidence of the card vault key rotation for the PCI assessment.",
+      "Dependabot PR #1405 (ring 0.17.8 → 0.17.14) is waiting for review."
+    ],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-rotation",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "ok the KEK rotation for the card vault. PCI 3.7.4",
+          "url": null,
+          "date": "2026-11-17T13:20:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-16T07:40:00Z",
+            "texte": "ok the KEK rotation for the card vault. PCI 3.7.4, annual, last one was nov 2025 so we're due before the audit. plan: new KEK in KMS (alias vault-kek-2026), a job re-wraps every token DEK under the new KEK, old KEK goes decrypt-only. no plaintext PAN ever leaves the vault process. start by reading crates/vault/src/envelope.rs and tell me how the header looks"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T07:43:30Z",
+            "texte": "I read `crates/vault/src/envelope.rs` and `crates/vault/src/kms.rs`.\n\nCurrent envelope (v2), written since March 2023:\n```\n| magic 'QV' | version u8 = 2 | kek_id len u8 | kek_id utf8 | wrapped_dek len u16 | wrapped_dek | nonce 12B | ciphertext | tag 16B |\n```\nEach token carries the id of the KEK that wrapped its DEK, so the rotation only has to unwrap the DEK with the KEK named in the header, re-wrap it with the new KEK and rewrite header + wrapped_dek. The ciphertext (the PAN) is never touched, so no plaintext PAN is materialized, only the DEK in memory.\n\nThere is also a `version == 1` branch in `Envelope::parse` with no kek_id; it falls back to `DEFAULT_KEK_ALIAS`. I'll check whether any v1 tokens still exist.\n\nProposed layout:\n- `crates/vault/src/rekey.rs`: `RekeyJob { from, to, batch, dry_run }`, streams tokens by primary-key range, one transaction per batch\n- `src/bin/vault-rekey.rs`: CLI wrapper\n- metrics: scanned / rewrapped / failed counters"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T07:51:00Z",
+            "texte": "yes go. batch size param, default 1000, and a --pause-on-error flag. dry run first"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T08:24:10Z",
+            "texte": "Implemented:\n- `rekey.rs`: `RekeyJob::run()` pages through `vault.tokens` by id range (`WHERE id > $1 ORDER BY id LIMIT $batch`), unwraps each DEK with the KEK from its header, re-wraps under `to`, and updates `envelope_header` + `wrapped_dek` in one transaction per batch.\n- `--dry-run`: does the unwrap/re-wrap in memory and rolls back every batch, so nothing is written.\n- `--pause-on-error`: stops at the first batch with a failure and prints the last committed id, so a re-run can resume with `--from-id`.\n- `vault-rekey` CLI with `--from`, `--to`, `--batch` (default 1000).\n\n`cargo build -p vault` OK. Running the unit tests next."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T08:30:00Z",
+            "texte": "cargo clippy is screaming"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T08:41:45Z",
+            "texte": "Fixed the 14 clippy warnings in `crates/vault`:\n- `needless_borrow` x6 (`&format!(..)` passed to fns taking `impl AsRef<str>`)\n- `redundant_clone` x4 in `kms.rs` (the `KekRef` was cloned before being moved)\n- `manual_let_else` x2 in `envelope.rs`\n- `too_many_arguments` on `RekeyJob::new`: replaced the 8 args with a `RekeyConfig` struct\n- `uninlined_format_args` x1\n\n`cargo clippy -p vault -- -D warnings` is clean now."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T08:45:00Z",
+            "texte": "rename RekeyJob -> KekRotation everywhere, rekey is confusing with the api key rotation thing jake did"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T08:52:20Z",
+            "texte": "Renamed across 9 files: `RekeyJob` → `KekRotation`, `RekeyConfig` → `KekRotationConfig`, `rekey.rs` → `kek_rotation.rs`, the binary `vault-rekey` → `vault-kek-rotation`, metric names `vault_rekey_*` → `vault_kek_rotation_*`, and the two doc comments that said \"rekey\". `cargo build` and `cargo clippy` still clean."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T09:10:00Z",
+            "texte": "run it on staging dry run. creds are in the usual place, dont print them"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T09:58:40Z",
+            "texte": "Dry run on staging (`vault-kek-rotation --dry-run --batch 1000 --from vault-kek-2025 --to vault-kek-2026`):\n- 1,204,880 tokens scanned\n- 1,202,563 would re-wrap OK\n- **2,317 failed** with `EnvelopeError::UnknownKek(\"vault-kek-default\")`\n\nAll 2,317 are `version == 1` envelopes (no kek_id in the header). The v1 fallback resolves `DEFAULT_KEK_ALIAS = \"vault-kek-default\"`, and that alias no longer exists in KMS. Their `created_at` are all between 2021-06 and 2023-02. Options: recreate the `vault-kek-default` alias pointing at the old key, or map v1 explicitly in the rotation."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T10:06:00Z",
+            "texte": "those are pre-2023 tokens, created before envelope v2. the alias was renamed to vault-kek-2022 when we moved kms accounts. dont resurrect the old alias, map v1 explicitly to vault-kek-2022 in the rotation only"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T10:31:15Z",
+            "texte": "Done: `KekRotation` resolves v1 envelopes to `vault-kek-2022` explicitly (new config field `legacy_v1_kek`), and every re-wrapped token is written as a v2 envelope with `kek_id = vault-kek-2026`, so after the run no v1 envelope is left. `Envelope::parse` is unchanged and the old alias is not recreated.\n\nDry run again on staging: 1,204,880 scanned, 1,204,880 OK, **0 failed**. Throughput ~4,100 tokens/s with batch 1000, p99 batch latency 310 ms."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T10:40:00Z",
+            "texte": "prod is ~9.8M tokens right? so 40 min. ok. what about the old KEKs after"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T10:44:50Z",
+            "texte": "Prod has 9,812,440 tokens (yesterday's metrics), so about 40 minutes at the staging rate.\n\nFor the old keys, I'd schedule deletion of `vault-kek-2025` and `vault-kek-2022` in KMS right after the run, with the 7-day minimum waiting period. That reduces the number of live keys before the audit and makes the rotation clean for the assessor. I'll add a `schedule_deletion` step at the end of the job."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T10:49:00Z",
+            "texte": "no. keep 2025 and 2022 enabled for decrypt only, 30 days, then disable. backups from before the rotation still need them. deletion is a separate decision with shira, not in this job"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T10:58:30Z",
+            "texte": "Understood, no deletion step. After the run, `vault-kek-2025` and `vault-kek-2022` stay enabled with a key policy that only allows `Decrypt` for the vault role (that policy lives in terraform, not in this job). I added a post-rotation checklist to the job's output: verify 0 v1 envelopes, verify all `kek_id = vault-kek-2026`, and a reminder to disable the two old keys after 30 days."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T11:05:00Z",
+            "texte": "audit: emit one audit record at the end with totals + operator + from/to kek. into the usual audit sink"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T11:19:00Z",
+            "texte": "Added `AuditEvent::KekRotationCompleted { from, to, legacy_v1_kek, scanned, rewrapped, failed, operator, started_at, finished_at }`, emitted once at the end of the run into `audit_sink` (same path as the other vault events, so it lands in the immutable audit bucket). In `--dry-run` the event is emitted with `dry_run: true`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T11:20:00Z",
+            "texte": "tests"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T11:36:40Z",
+            "texte": "`cargo test -p vault`: 212 passed, 0 failed. New tests (6): v1 envelope mapped to `legacy_v1_kek`; re-wrapped token is v2 with the new kek_id; `--dry-run` writes nothing; `--pause-on-error` stops at the failing batch and reports the last committed id; resume with `--from-id`; audit event fields."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:50:00Z",
+            "texte": "fmt + open the PR. reviewers elad and avi. mention the terraform side is separate"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:05:20Z",
+            "texte": "`cargo fmt` done. Opened quillon/core#1412 \"vault: KEK rotation job for card tokens (PCI 3.7.4)\", reviewers Elad Navon and Avi Kessler. The description covers the envelope handling, the legacy v1 mapping, the staging dry run (1,204,880 tokens, 0 failures) and says the KMS key policy change (decrypt-only for the old keys) is in a separate quillon/terraform PR."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T12:58:00Z",
+            "texte": "ci red on cargo deny? check"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:06:30Z",
+            "texte": "`cargo deny check advisories` fails on an advisory for `ring 0.17.8` (pulled in by `rustls`). It's unrelated to this PR: Dependabot's PR #1405 bumps ring to 0.17.14 and is still waiting for review. The other CI jobs (build, test, clippy) are green on #1412."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T13:20:00Z",
+            "texte": "ok not mine, ignore. done for today"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-runbook",
+          "kind": "cursor",
+          "nature": "conversation",
+          "titre": "write docs/runbooks/vault-kek-rotation.md from PR 1412",
+          "url": null,
+          "date": "2026-11-17T14:40:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T14:00:00Z",
+            "texte": "write docs/runbooks/vault-kek-rotation.md from PR 1412. steps for the prod run: pre-checks, dry run against the prod read replica, real run with --pause-on-error, verification query, post rotation key policy (decrypt only 30d). on call = placeholder"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:09:10Z",
+            "texte": "Created `docs/runbooks/vault-kek-rotation.md`:\n1. Pre-checks: `vault-kek-2026` exists and is enabled, vault role can `Encrypt`/`Decrypt` on it, last backup < 24 h\n2. Dry run against the prod read replica (`--dry-run --batch 1000`), expect 0 failed\n3. Real run on primary with `--pause-on-error`, watch `vault_kek_rotation_failed_total`\n4. Verification: `SELECT count(*) FROM vault.tokens WHERE kek_id <> 'vault-kek-2026'` must be 0\n5. Post-rotation: apply the terraform policy (old keys decrypt-only), calendar reminder to disable them after 30 days\nOn call: `<TBD>`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:20:00Z",
+            "texte": "add rollback: if failed > 0 we stop, tokens already rewrapped stay valid since the new kek works, nothing to roll back, fix and re-run with --from-id"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:24:30Z",
+            "texte": "Added a \"Failure / rollback\" section: the job stops at the first failing batch; already re-wrapped tokens are valid under `vault-kek-2026` and unchanged tokens still decrypt with their old key, so there is nothing to roll back. Fix the cause, then re-run with `--from-id <last committed id>`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:40:00Z",
+            "texte": "good"
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-1412",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "vault: KEK rotation job for card tokens (PCI 3.7.4)",
+          "url": "https://github.com/quillon/core/pull/1412",
+          "date": "2026-11-17T18:45:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "date": "2026-11-17T10:05:00Z",
+            "texte": "Adds `vault-kek-rotation`: re-wraps every token DEK under vault-kek-2026, legacy v1 envelopes mapped to vault-kek-2022. Staging dry run: 1,204,880 tokens, 0 failures. KMS key policy (old keys decrypt-only) is in a separate quillon/terraform PR.",
+            "auteur": "Noam Peretz"
+          },
+          {
+            "role": "participant",
+            "date": "2026-11-17T16:20:00Z",
+            "texte": "Approved, with one change before merge: emit an audit event per batch (id range, count, from/to kek), not only the final summary. Assessors ask for per-batch traceability under 10.2, a single summary record won't be enough.",
+            "auteur": "Elad Navon"
+          },
+          {
+            "role": "participant",
+            "date": "2026-11-17T18:45:00Z",
+            "texte": "LGTM once Elad's point is in. Please merge by Monday so we can run it Tuesday night.",
+            "auteur": "Avi Kessler"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-1421",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "chore(deps): bump tokio from 1.41.0 to 1.41.1",
+          "url": "https://github.com/quillon/core/pull/1421",
+          "date": "2026-11-17T03:02:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "date": "2026-11-17T03:02:00Z",
+            "texte": "Bumps tokio from 1.41.0 to 1.41.1. Release notes: fix a panic in `JoinSet::try_join_next` under heavy load. Dependabot will resolve any conflicts with this PR as long as you don't alter it yourself.",
+            "auteur": "dependabot[bot]"
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "slack-compliance",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#compliance, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T15:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-17T15:30:00Z",
+          "texte": "@Noam re the KEK rotation evidence: spoke to Victor (Ardent). Screenshots won't do. He wants (1) the export of the rotation job's audit log for the prod run and (2) the signed change ticket for it. I need both by Wed 25/11 to file them before the on-site.",
+          "auteur": "Shira Ben-Ami"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-payouts",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#eng-payouts, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T19:10:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-17T19:10:00Z",
+          "texte": "@Noam prod window for the KEK rotation confirmed: Tue 24/11, 22:00–23:30 IL time, Elad on call with you. Change freeze for the PCI on-site starts Tue 1/12, so the only fallback is Thu 26/11, same time.",
+          "auteur": "Avi Kessler"
+        }
+      },
+      {
+        "source": {
+          "id": "mail-keyfort",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "Cut your KMS bill by 40%",
+          "url": null,
+          "date": "2026-11-17T23:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-17T23:00:00Z",
+          "texte": "Hi Noam, engineering teams like yours cut their KMS costs by 40% with Keyfort's HSM-as-a-service. Book a 15-minute demo this week and get 3 months free. You're receiving this email because you signed up for Keyfort updates. Unsubscribe",
+          "auteur": "Keyfort"
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-fenetre",
+    "faits": [
+      {
+        "id": "f-fenetre",
+        "texte": "Says the production key rotation is scheduled for Tuesday 24 November, 22:00–23:30 Israel time, with Thursday 26 November as the only fallback before the 1 December change freeze.",
+        "poids": 3
+      },
+      {
+        "id": "f-audit",
+        "texte": "Says Elad approved #1412 but requires an audit event per batch (not only the final summary) before it is merged.",
+        "poids": 3
+      },
+      {
+        "id": "f-lundi",
+        "texte": "Says Avi wants #1412 merged by Monday (23 November).",
+        "poids": 2
+      },
+      {
+        "id": "f-preuves",
+        "texte": "Says Shira (for the assessor) now needs the prod run's audit log export and the signed change ticket, by Wednesday 25 November, screenshots not being enough.",
+        "poids": 2
+      },
+      {
+        "id": "f-legacy",
+        "texte": "Says the staging dry run is clean (0 failures) once the 2,317 legacy v1 tokens were mapped to the vault-kek-2022 key.",
+        "poids": 2
+      },
+      {
+        "id": "f-anciennes",
+        "texte": "Says the old keys stay enabled for decryption only for 30 days, with no deletion in the job.",
+        "poids": 1
+      },
+      {
+        "id": "f-runbook",
+        "texte": "Says the prod runbook for the rotation is written.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-split",
+        "texte": "Repeats that the KMS key policy change has to move into a separate quillon/terraform PR (dismissed, nothing new on it)."
+      },
+      {
+        "id": "i-ring",
+        "texte": "Mentions the ring bump (Dependabot PR #1405) or the cargo deny failure (dismissed, nothing new)."
+      },
+      {
+        "id": "i-tokio",
+        "texte": "Mentions the Dependabot tokio PR #1421."
+      },
+      {
+        "id": "i-keyfort",
+        "texte": "Mentions the Keyfort offer."
+      },
+      {
+        "id": "i-suppression",
+        "texte": "Says the old keys will be scheduled for deletion after the run."
+      },
+      {
+        "id": "i-captures",
+        "texte": "Says screenshots are (part of) the evidence Shira needs."
+      }
+    ],
+    "pieges": [
+      "Déjà réglé : trois lignes dans regles ; la séparation Terraform et la PR ring n'ont rien de neuf (ne pas les redire), la demande de preuves de Shira a du neuf (export du journal + ticket signé avant le 25/11) : dire seulement ce neuf.",
+      "Importance cachée : la routine (clippy, renommage, cargo deny) prend la moitié de la session ; l'essentiel est dans deux messages Slack et un commentaire de PR (fenêtre de prod, repli unique, gel du 1/12, journal par lot exigé avant fusion).",
+      "Fausse décision : l'agent propose de programmer la suppression des anciennes clés ; Noam refuse (déchiffrement seul 30 jours).",
+      "Bruit : la PR Dependabot tokio et l'offre commerciale Keyfort."
+    ]
+  }
+}

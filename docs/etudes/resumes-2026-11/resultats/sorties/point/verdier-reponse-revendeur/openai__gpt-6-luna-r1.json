@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:32:46.847Z",
+  "reponse": "## Ce qui a changé\n- La correction de l’export des stocks est approuvée dans la PR #62 ; Hugo a confirmé que les Saône chêne du fichier du 10/11 sortent maintenant à 0 quand elles sont réservées. [2]\n\n## Ce qui reste à faire\n- Le brouillon à Bertrand n’est pas parti. Claire valide une remise de 10 % sur les quatre tables et la réservation de quatre Saône chêne pour janvier ; elle veut que tu lui répondes ce matin, avant l’échéance de vendredi. Si la remise prend la forme d’un avoir, Antoine demande qu’il soit rattaché à la facture FA-2026-1187. [1][4][5]",
+  "rendu": "## Ce qui a changé\n- La correction de l’export des stocks est approuvée dans la PR #62 ; Hugo a confirmé que les Saône chêne du fichier du 10/11 sortent maintenant à 0 quand elles sont réservées. [2]\n\n## Ce qui reste à faire\n- Le brouillon à Bertrand n’est pas parti. Claire valide une remise de 10 % sur les quatre tables et la réservation de quatre Saône chêne pour janvier ; elle veut que tu lui répondes ce matin, avant l’échéance de vendredi. Si la remise prend la forme d’un avoir, Antoine demande qu’il soit rattaché à la facture FA-2026-1187. [1][4][5]",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "puces": 2,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3805,
+    "sortie": 1306,
+    "reflexion": 1146,
+    "cache": 1417,
+    "cout": 0.000965595
+  },
+  "cout": 0.000965595,
+  "latenceMs": 17709,
+  "fournisseur": "OpenAI"
+}

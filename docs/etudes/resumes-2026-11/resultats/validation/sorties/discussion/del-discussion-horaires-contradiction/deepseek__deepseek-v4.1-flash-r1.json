@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:51.644Z",
+  "reponse": "Côté appli poseurs, oui : le correctif #214 a été déployé en prod le 17/11, l'appli réaffiche la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1][2]. L'issue #208 est fermée [2].\n\nEn revanche le problème n'est pas éteint partout : les SMS de rappel envoyés le soir du 17/11 annonçaient encore 9h au lieu de 8h à Mme Bréhier et M. Hervé — Yannick précise que dans l'appli c'est bon, mais que les clients concernés devaient être rappelés [4], ce que Sandrine a confirmé faire à 8h30 [4] et elle a répondu à Mme Bréhier que c'était bien 8h, en présentant des excuses pour le SMS erroné [3].",
+  "rendu": "Côté appli poseurs, oui : le correctif #214 a été déployé en prod le 17/11, l'appli réaffiche la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1][2]. L'issue #208 est fermée [2].\n\nEn revanche le problème n'est pas éteint partout : les SMS de rappel envoyés le soir du 17/11 annonçaient encore 9h au lieu de 8h à Mme Bréhier et M. Hervé — Yannick précise que dans l'appli c'est bon, mais que les clients concernés devaient être rappelés [4], ce que Sandrine a confirmé faire à 8h30 [4] et elle a répondu à Mme Bréhier que c'était bien 8h, en présentant des excuses pour le SMS erroné [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8009,
+    "sortie": 488,
+    "reflexion": 123,
+    "cache": 2816,
+    "cout": 0.0010617984
+  },
+  "latenceMs": 7287,
+  "fournisseur": "Fireworks",
+  "trace": [
+    "chercher {\"requete\":\"horaires poseurs application bug\"}",
+    "chercher {\"requete\":\"appli poseurs problème horaires\"}",
+    "lire {\"sourceId\":\"zd-4135\"}",
+    "lire {\"sourceId\":\"sl-chantiers-1118\"}"
+  ],
+  "cout": 0.0010617984
+}

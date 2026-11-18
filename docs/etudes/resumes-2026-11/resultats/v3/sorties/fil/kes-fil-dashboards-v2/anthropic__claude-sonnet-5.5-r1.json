@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:42.762Z",
+  "reponse": "## Où j'en suis\nPR #418 (grid v2) is merged, and #401 (visx) is closed with recharts kept. The follow-up PR #423 (keyboard move/resize with `useGridKeyboard`, plus a focus ring) is open and awaiting Priya's review, committed as 8f1a2c7. `dashboards_v2` is on for zest-grocers on staging, and production is untouched. (source: ses-db-4, kestrel-analytics/platform#423, kestrel-analytics/platform#418)\n\n- [en-cours] PR #423 is open, with Priya requested as reviewer and 11 new tests green. (source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging, then Tom flips the production flag himself the morning of Tuesday the 24th. (source: d4-06, b2-04)\n- [essai-raté] dnd-kit `KeyboardSensor` on react-grid-layout applied every move twice and fired two layout changes per mouse drag. Making them cooperate would mean rewriting the grid, so it was removed. (source: d4-02, d4-04)\n- [décision] Use our own keyboard handler on top of the layout state, with no dnd-kit. (source: d4-04)\n- [décision] Close #401 and keep recharts: no second chart library, and no time to rewrite 9 charts. (source: c3-03)\n- [décision] The production flag is on ONLY for the Zest workspace, and the old dashboards stay behind the flag until January. (source: b2-04)",
+  "rendu": "## Où j'en suis\nPR #418 (grid v2) is merged, and #401 (visx) is closed with recharts kept. The follow-up PR #423 (keyboard move/resize with `useGridKeyboard`, plus a focus ring) is open and awaiting Priya's review, committed as 8f1a2c7. `dashboards_v2` is on for zest-grocers on staging, and production is untouched. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423, kestrel-analytics/platform#418)\n\n- [en-cours] PR #423 is open, with Priya requested as reviewer and 11 new tests green. (de: équipe, agent; source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging, then Tom flips the production flag himself the morning of Tuesday the 24th. (de: toi; source: d4-06, b2-04)\n- [essai-raté] dnd-kit `KeyboardSensor` on react-grid-layout applied every move twice and fired two layout changes per mouse drag. Making them cooperate would mean rewriting the grid, so it was removed. (de: toi, agent; source: d4-02, d4-04)\n- [décision] Use our own keyboard handler on top of the layout state, with no dnd-kit. (de: toi; source: d4-04)\n- [décision] Close #401 and keep recharts: no second chart library, and no time to rewrite 9 charts. (de: toi; source: c3-03)\n- [décision] The production flag is on ONLY for the Zest workspace, and the old dashboards stay behind the flag until January. (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1375,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6925,
+    "sortie": 528,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01913
+  },
+  "cout": 0.01913,
+  "latenceMs": 3746,
+  "fournisseur": "Amazon Bedrock"
+}

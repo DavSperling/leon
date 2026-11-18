@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:33:18.176Z",
+  "reponse": "Les 25 premiers plateaux Saône arrivent à l'entrepôt le mardi 1er décembre [1][2], et la table sera expédiable à partir du jeudi 3 décembre, après deux jours de montage et d'emballage [2]. La précommande ouvre jeudi avec cette mention [5]. Les 15 plateaux suivants sont prévus mi-décembre, semaine du 14 [1].\n\nLe suivi des ruptures du 10 novembre annonçait un retour « fin novembre », à confirmer [4]. Il est plus ancien que les messages ci-dessus, qui indiquent désormais le 1er décembre. Pour la finition chêne clair, un client s'est vu annoncer environ 6 semaines [3].",
+  "rendu": "Les 25 premiers plateaux Saône arrivent à l'entrepôt le mardi 1er décembre [1][2], et la table sera expédiable à partir du jeudi 3 décembre, après deux jours de montage et d'emballage [2]. La précommande ouvre jeudi avec cette mention [5]. Les 15 plateaux suivants sont prévus mi-décembre, semaine du 14 [1].\n\nLe suivi des ruptures du 10 novembre annonçait un retour « fin novembre », à confirmer [4]. Il est plus ancien que les messages ci-dessus, qui indiquent désormais le 1er décembre. Pour la finition chêne clair, un client s'est vu annoncer environ 6 semaines [3].",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1532,
+    "sortie": 253,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005594
+  },
+  "cout": 0.005594,
+  "latenceMs": 2230,
+  "fournisseur": "Claude Platform on AWS"
+}

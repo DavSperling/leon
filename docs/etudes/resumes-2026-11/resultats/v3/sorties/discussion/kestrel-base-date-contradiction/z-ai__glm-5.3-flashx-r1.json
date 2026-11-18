@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:02:49.590Z",
+  "reponse": "The Postgres 17 production cutover was postponed from Nov 21 and now lands on **Saturday, December 5, 02:00–05:00 UTC** [2][4], after the Fernhill go-live on Dec 1 [2]. Maya approved the new date [2].\n\nKey dates for your customer notice and support macro:\n- Staging rehearsal: Friday Nov 27 [2]\n- Customer notice (status page + in-app banner): Saturday Nov 28 [2]\n- Migration freeze: from Thursday Dec 3 [2]\n\nNote: the Notion runbook hasn't been updated yet — Linear ticket KES-398 is the current reference for the maintenance window [2][1].",
+  "rendu": "The Postgres 17 production cutover was postponed from Nov 21 and now lands on **Saturday, December 5, 02:00–05:00 UTC** [2][4], after the Fernhill go-live on Dec 1 [2]. Maya approved the new date [2].\n\nKey dates for your customer notice and support macro:\n- Staging rehearsal: Friday Nov 27 [2]\n- Customer notice (status page + in-app banner): Saturday Nov 28 [2]\n- Migration freeze: from Thursday Dec 3 [2]\n\nNote: the Notion runbook hasn't been updated yet — Linear ticket KES-398 is the current reference for the maintenance window [2][1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6433,
+    "sortie": 219,
+    "reflexion": 34,
+    "cache": 3648,
+    "cout": 0.0015777999999999999
+  },
+  "latenceMs": 11777,
+  "fournisseur": "Z.AI",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}"
+  ],
+  "cout": 0.0015777999999999999
+}

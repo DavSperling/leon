@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:33:13.573Z",
+  "reponse": "Les 25 tables Saône arrivent à l’entrepôt le 1er décembre et seront expédiables à partir du 3 décembre [2]. Les 15 suivantes sont prévues pour la semaine du 14 décembre [1].",
+  "rendu": "Les 25 tables Saône arrivent à l’entrepôt le 1er décembre et seront expédiables à partir du 3 décembre [2]. Les 15 suivantes sont prévues pour la semaine du 14 décembre [1].",
+  "mesures": {
+    "mots": 31,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 952,
+    "sortie": 52,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001212
+  },
+  "cout": 0.0001212,
+  "latenceMs": 1697,
+  "fournisseur": "OpenAI"
+}

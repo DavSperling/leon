@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:29:15.051Z",
+  "reponse": "## Où j'en suis\nSAML SSO for Fernhill works end to end on staging: IdP metadata loaded, real login through Fernhill's ADFS, JIT creates users as `viewer` (PR #415 merged), and the RelayState length fix plus per-tenant group-to-role mapping are in PR #421 (open, not merged). Remaining blocker before the Thursday demo: Fernhill IT must add the `groups` claim to their assertion. (source: ses-sso-3, src-pr415)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" (commits 6d0e2b8, f4a91c7) is open and needs review/merge (source: ses-sso-3, pr)\n- [en-cours] Fernhill IT to add the `groups` claim on their side; the user is emailing them (source: s3-05, src-linear-kes311)\n- [prochaine-étape] once the claim exists, create an admin test account to verify `Fernhill-Kestrel-Admins` → `admin` mapping (source: s3-08)\n- [prochaine-étape] demo with Fernhill IT, Thursday Nov 19, 10:00 New York, on staging (source: s3-10, src-linear-kes311)\n- [prochaine-étape] go-live Dec 1 (source: src-linear-kes311)\n- [essai-raté] SP-initiated login failed with ADFS error `MSIS7042: RelayState too long` (143-byte return URL vs 80-byte cap); fixed by a short opaque ID stored server-side in Redis (TTL 10 min, deleted on use) (source: s3-02, s3-04)\n- [décision] SAML 2.0 only, no OIDC for now; both SP-initiated and IdP-initiated flows enabled (source: s1-03)\n- [décision] default role for JIT-created users is `viewer` (least privilege); Fernhill admins upgrade people (source: s1-05)\n- [décision] JIT refuses unverified email domains even if the IdP asserts them; refusal logged without the email (source: s2-03, src-pr415)\n- [décision] keep `viewer` as default role and SP-initiated login on, despite the Fernhill IT message asking for `analyst` default and IdP-initiated only; that waits until Maya talks to them (source: s3-07)",
+  "rendu": "## Où j'en suis\nSAML SSO for Fernhill works end to end on staging: IdP metadata loaded, real login through Fernhill's ADFS, JIT creates users as `viewer` (PR #415 merged), and the RelayState length fix plus per-tenant group-to-role mapping are in PR #421 (open, not merged). Remaining blocker before the Thursday demo: Fernhill IT must add the `groups` claim to their assertion. (de: équipe, agent; source: ses-sso-3, src-pr415)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" (commits 6d0e2b8, f4a91c7) is open and needs review/merge (de: agent; source: ses-sso-3)\n- [en-cours] Fernhill IT to add the `groups` claim on their side; the user is emailing them (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] once the claim exists, create an admin test account to verify `Fernhill-Kestrel-Admins` → `admin` mapping (de: agent; source: s3-08)\n- [prochaine-étape] demo with Fernhill IT, Thursday Nov 19, 10:00 New York, on staging (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [prochaine-étape] go-live Dec 1 (de: connecteur; source: src-linear-kes311)\n- [essai-raté] SP-initiated login failed with ADFS error `MSIS7042: RelayState too long` (143-byte return URL vs 80-byte cap); fixed by a short opaque ID stored server-side in Redis (TTL 10 min, deleted on use) (de: agent; source: s3-02, s3-04)\n- [décision] SAML 2.0 only, no OIDC for now; both SP-initiated and IdP-initiated flows enabled (de: toi; source: s1-03)\n- [décision] default role for JIT-created users is `viewer` (least privilege); Fernhill admins upgrade people (de: toi; source: s1-05)\n- [décision] JIT refuses unverified email domains even if the IdP asserts them; refusal logged without the email (de: toi, équipe; source: s2-03, src-pr415)\n- [décision] keep `viewer` as default role and SP-initiated login on, despite the Fernhill IT message asking for `analyst` default and IdP-initiated only; that waits until Maya talks to them (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1983,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4990,
+    "sortie": 991,
+    "reflexion": 400,
+    "cache": 1024,
+    "cout": 0.0025910664
+  },
+  "cout": 0.0025910664,
+  "latenceMs": 19313,
+  "fournisseur": "StreamLake"
+}

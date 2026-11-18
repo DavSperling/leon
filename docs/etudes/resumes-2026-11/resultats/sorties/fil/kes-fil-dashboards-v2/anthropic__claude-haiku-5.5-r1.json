@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:26:31.864Z",
+  "reponse": "## Où j'en suis\nLe travail est sur la branche `tom/dashboard-keyboard`. La PR #418 est fusionnée. La PR #423 ajoute le déplacement et le redimensionnement des widgets au clavier, ainsi que l'anneau de focus, et attend la revue de Priya. Le flag `dashboards_v2` est activé en staging pour Zest Grocers ; la production reste désactivée. (ses-db-4, d4-05, d4-07, src-pr418)\n\n- [en-cours] PR #423 ouverte : `useGridKeyboard()` (Tab, Entrée, flèches, Maj+flèches, Échap) et anneau de focus 2 px, 11 tests verts, revue demandée à Priya. (d4-05, kestrel-analytics/platform#423)\n- [prochaine-étape] Revue de Priya sur #423, puis fusion. (d4-05)\n- [prochaine-étape] Le matin du 24, Tom active `dashboards_v2` en production (décision de Tom, à faire à la main). Démo de Zest le mardi 24. (d4-06, b2-04)\n- [essai-raté] dnd-kit `KeyboardSensor` appliquait chaque déplacement deux fois en même temps que react-grid-layout ; le remplacer demandait de réécrire la grille. (d4-02)\n- [question] Confirmer la suppression des dashboards v1 (DashboardList, DashboardTile) le 5 janvier : seule une note de l'agent la mentionne. (src-note-v1)\n- [décision] Garder recharts et fermer #401 (visx abandonné). (c3-03, src-pr401)\n- [décision] Supprimer les container queries au profit de `useWidgetSize()` avec ResizeObserver. (b2-02)\n- [décision] Les dashboards v1 restent derrière le flag jusqu'en janvier, rien n'est supprimé maintenant. (b2-04)\n- [décision] Activer `dashboards_v2` pour le seul workspace Zest. (b2-04, d4-06)",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 9,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6882,
+    "sortie": 1514,
+    "reflexion": 809,
+    "cache": 0,
+    "cout": 0.0014452
+  },
+  "cout": 0.0014452,
+  "latenceMs": 7054,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:29.626Z",
+  "reponse": "## What you did\n- You got SAML signature verification for Fernhill through review and merged: PR #418 was approved by Maya and went out with last night's staging deploy, which unblocks the Wednesday deadline for the Okta walkthrough [1][3].\n- You cleaned up `kestrel/auth` and opened PR #423: flaky SAML tests now use freezegun, ruff/mypy are clean (missing Issuer/Subject returns 401 instead of 500), and `saml_utils.py` is split into a `saml/` package behind a compatibility shim [1][4].\n\n## What changed\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today — that's the fastest way to land the cleanup [4].\n\n## What is still open\n- The demo is Thursday 10am NY with Fernhill's Okta tenant; Priya runs it and you just need to be on the call, so verify #418 is actually live on staging [1][3].\n- The replay cache is still per-process `TTLCache`: with multiple API pods a replay can slip through, and you planned to move it to Redis today (~40 lines, Redis client already in `kestrel/cache.py`) [1][2].\n- Maya left a non-blocking nit on the #418 error message wording if you want to address it in a follow-up [3].",
+  "rendu": "## What you did\n- You got SAML signature verification for Fernhill through review and merged: PR #418 was approved by Maya and went out with last night's staging deploy, which unblocks the Wednesday deadline for the Okta walkthrough [1][3].\n- You cleaned up `kestrel/auth` and opened PR #423: flaky SAML tests now use freezegun, ruff/mypy are clean (missing Issuer/Subject returns 401 instead of 500), and `saml_utils.py` is split into a `saml/` package behind a compatibility shim [1][4].\n\n## What changed\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today — that's the fastest way to land the cleanup [4].\n\n## What is still open\n- The demo is Thursday 10am NY with Fernhill's Okta tenant; Priya runs it and you just need to be on the call, so verify #418 is actually live on staging [1][3].\n- The replay cache is still per-process `TTLCache`: with multiple API pods a replay can slip through, and you planned to move it to Redis today (~40 lines, Redis client already in `kestrel/cache.py`) [1][2].\n- Maya left a non-blocking nit on the #418 error message wording if you want to address it in a follow-up [3].",
+  "mesures": {
+    "mots": 196,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5515,
+    "sortie": 516,
+    "reflexion": 211,
+    "cache": 0,
+    "cout": 0.00108525
+  },
+  "cout": 0.00108525,
+  "latenceMs": 5044,
+  "fournisseur": "Modal"
+}

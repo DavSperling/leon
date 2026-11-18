@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:37.229Z",
+  "reponse": "## Où j'en suis\nLes dashboards v2 (grille avec drag/resize, layout par utilisateur) sont derrière le flag `dashboards_v2` : #418 est fusionnée, et la suite demandée par Priya — déplacement/redimensionnement au clavier et focus ring — est dans la PR #423, ouverte et en attente de sa review. Le flag est allumé pour le seul workspace zest-grocers en staging, pour la démo du 24. La migration visx est abandonnée : #401 est fermée et recharts reste la seule librairie de charts. (source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 ouverte (clavier + focus ring), Priya demandée en review (source: kestrel-analytics/platform#423, ses-db-4)\n- [prochaine-étape] review de Priya sur #423, puis répétition de la démo Zest (source: ses-db-4)\n- [prochaine-étape] allumer le flag `dashboards_v2` en prod le matin du 24, par Tom (source: d4-06)\n- [essai-raté] dnd-kit `KeyboardSensor` par-dessus react-grid-layout : chaque déplacement appliqué deux fois, le drag souris déclenche deux `onLayoutChange` ; les faire coopérer supposerait de réécrire la grille (source: d4-02)\n- [essai-raté] container queries ignorées sur les iPads iOS 15 de Zest, tout restait en petit layout (source: b2-01)\n- [décision] garder recharts, fermer #401 pour de bon, pas de deuxième librairie de charts (source: c3-03, src-pr401)\n- [décision] gestion clavier maison au-dessus de l'état de layout, sans dnd-kit (source: d4-04)\n- [décision] les dashboards v1 restent disponibles derrière le flag jusqu'en janvier, on ne supprime rien maintenant (source: b2-04)\n- [décision] `useWidgetSize()` avec ResizeObserver au lieu des container queries (source: b2-02)\n- [question] une note d'agent mentionne une suppression des dashboards v1 le 5 janvier, ce qui contredit la décision de ne rien supprimer : à confirmer (source: src-note-v1)",
+  "rendu": "## Où j'en suis\nLes dashboards v2 (grille avec drag/resize, layout par utilisateur) sont derrière le flag `dashboards_v2` : #418 est fusionnée, et la suite demandée par Priya — déplacement/redimensionnement au clavier et focus ring — est dans la PR #423, ouverte et en attente de sa review. Le flag est allumé pour le seul workspace zest-grocers en staging, pour la démo du 24. La migration visx est abandonnée : #401 est fermée et recharts reste la seule librairie de charts. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 ouverte (clavier + focus ring), Priya demandée en review (de: équipe, agent; source: kestrel-analytics/platform#423, ses-db-4)\n- [prochaine-étape] review de Priya sur #423, puis répétition de la démo Zest (de: agent; source: ses-db-4)\n- [prochaine-étape] allumer le flag `dashboards_v2` en prod le matin du 24, par Tom (de: toi; source: d4-06)\n- [essai-raté] dnd-kit `KeyboardSensor` par-dessus react-grid-layout : chaque déplacement appliqué deux fois, le drag souris déclenche deux `onLayoutChange` ; les faire coopérer supposerait de réécrire la grille (de: agent; source: d4-02)\n- [essai-raté] container queries ignorées sur les iPads iOS 15 de Zest, tout restait en petit layout (de: agent; source: b2-01)\n- [décision] garder recharts, fermer #401 pour de bon, pas de deuxième librairie de charts (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] gestion clavier maison au-dessus de l'état de layout, sans dnd-kit (de: toi; source: d4-04)\n- [décision] les dashboards v1 restent disponibles derrière le flag jusqu'en janvier, on ne supprime rien maintenant (de: toi; source: b2-04)\n- [décision] `useWidgetSize()` avec ResizeObserver au lieu des container queries (de: toi; source: b2-02)\n- [question] une note d'agent mentionne une suppression des dashboards v1 le 5 janvier, ce qui contredit la décision de ne rien supprimer : à confirmer (de: agent; source: src-note-v1)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1984,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5033,
+    "sortie": 2545,
+    "reflexion": 1978,
+    "cache": 0,
+    "cout": 0.002045399
+  },
+  "cout": 0.002045399,
+  "latenceMs": 16562,
+  "fournisseur": "InferenceNet"
+}

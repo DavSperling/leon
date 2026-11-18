@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:59:42.894Z",
+  "reponse": "The old approach was to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but that no longer works: the flag is now renamed dashboards_v2 and flags are served by the API, so FEATURE_FLAGS in .env.local is ignored [2]. Locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [3]; you can verify with `curl localhost:8000/api/flags` [3].",
+  "rendu": "The old approach was to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but that no longer works: the flag is now renamed dashboards_v2 and flags are served by the API, so FEATURE_FLAGS in .env.local is ignored [2]. Locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [3]; you can verify with `curl localhost:8000/api/flags` [3].",
+  "mesures": {
+    "mots": 59,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1212,
+    "sortie": 160,
+    "reflexion": 49,
+    "cache": 0,
+    "cout": 0.00019856
+  },
+  "cout": 0.00019856,
+  "latenceMs": 2887,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:35.705Z",
+  "reponse": "## Où j'en suis\nThe dashboards v2 grid is merged: PR #418 (draggable, resizable widgets) went in after Priya's approval, and the two follow-ups she left — keyboard move/resize and a visible focus ring — are done in open PR #423 on branch `tom/dashboard-keyboard`, with Priya asked to review. The `dashboards_v2` flag is on for the Zest Grocers workspace in staging only, so Priya can rehearse; production stays off until Tom flips it himself on the morning of the 24th, the demo day. (source: src-pr418, ses-db-4)\n\n- [en-cours] PR #423 open: `useGridKeyboard()` (Tab to focus, Enter to pick up/drop, arrows to move, Shift+arrows to resize, Escape to cancel, aria-live announcements), focus ring, 11 new tests green, commit `8f1a2c7` (source: d4-05, ses-db-4)\n- [prochaine-étape] Priya's review of #423 before the demo (source: d4-05, src-pr418)\n- [prochaine-étape] Tom turns `dashboards_v2` on in production on the morning of the 24th; the staging flag for zest-grocers is already on (source: d4-06, d4-07)\n- [essai-raté] wrapping grid items with dnd-kit's KeyboardSensor: both libraries handled the same pointer and key events, every move applied twice and mouse drags fired two layout changes (source: d4-02, d4-03)\n- [essai-raté] CSS container queries for widget sizing — ignored on iOS 15 Safari, Zest's iPads (source: b2-01, b2-02)\n- [décision] own keyboard handler on top of the layout state, no dnd-kit (source: d4-04)\n- [décision] keep recharts and close the visx migration #401; nothing from it reached main (source: c3-03, src-pr401)\n- [décision] v1 dashboards stay available behind the flag, nothing removed now (source: b2-04)\n- [question] when the legacy v1 dashboards actually go: b2-04 keeps them until January, while a note records a Jan 5 deletion (source: src-note-v1, b2-04)",
+  "rendu": "## Où j'en suis\nThe dashboards v2 grid is merged: PR #418 (draggable, resizable widgets) went in after Priya's approval, and the two follow-ups she left — keyboard move/resize and a visible focus ring — are done in open PR #423 on branch `tom/dashboard-keyboard`, with Priya asked to review. The `dashboards_v2` flag is on for the Zest Grocers workspace in staging only, so Priya can rehearse; production stays off until Tom flips it himself on the morning of the 24th, the demo day. (de: équipe, agent; source: src-pr418, ses-db-4)\n\n- [en-cours] PR #423 open: `useGridKeyboard()` (Tab to focus, Enter to pick up/drop, arrows to move, Shift+arrows to resize, Escape to cancel, aria-live announcements), focus ring, 11 new tests green, commit `8f1a2c7` (de: agent; source: d4-05, ses-db-4)\n- [prochaine-étape] Priya's review of #423 before the demo (de: équipe, agent; source: d4-05, src-pr418)\n- [prochaine-étape] Tom turns `dashboards_v2` on in production on the morning of the 24th; the staging flag for zest-grocers is already on (de: toi, agent; source: d4-06, d4-07)\n- [essai-raté] wrapping grid items with dnd-kit's KeyboardSensor: both libraries handled the same pointer and key events, every move applied twice and mouse drags fired two layout changes (de: toi, agent; source: d4-02, d4-03)\n- [essai-raté] CSS container queries for widget sizing — ignored on iOS 15 Safari, Zest's iPads (de: toi, agent; source: b2-01, b2-02)\n- [décision] own keyboard handler on top of the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] keep recharts and close the visx migration #401; nothing from it reached main (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] v1 dashboards stay available behind the flag, nothing removed now (de: toi; source: b2-04)\n- [question] when the legacy v1 dashboards actually go: b2-04 keeps them until January, while a note records a Jan 5 deletion (de: toi, agent; source: src-note-v1, b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1941,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5062,
+    "sortie": 1934,
+    "reflexion": 1394,
+    "cache": 0,
+    "cout": 0.00226353
+  },
+  "cout": 0.00226353,
+  "latenceMs": 10701,
+  "fournisseur": "Cohere"
+}

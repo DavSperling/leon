@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:53.749Z",
+  "reponse": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS on branch noa/rds-pg17, open draft PR #57. On Nov 17, pg_partman was upgraded 4.7.4 → 5.1.0 on staging and maintenance ran clean; after fixing the blue/green blocker (rds.logical_replication = 1 + reboot), the staging apply succeeded and analytics-staging has run PG 17.2 since 14:20 UTC, with dbt all green (14/14 models, time within noise of 16.4). The runbook was updated with the logical_replication + reboot step for prod. (source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [en-cours] Full week of staging on PG 17 before prod sign-off; watch for incidents on staging this week (source: ses-pg-3, src-linear-kes298, src-slack-infra)\n- [prochaine-étape] After Maya's sign-off (earliest Nov 24), pick the prod window: prod needs its own reboot window for rds.logical_replication before the blue/green cutover, avoiding the dbt lock 01:00–03:30 UTC (source: ses-pg-3, ses-pg-1, src-linear-kes298)\n- [essai-raté] terraform apply of the staging blue/green failed first: RDS requires rds.logical_replication = 1 in the source parameter group plus a reboot; fixed by adding it and rebooting (source: ses-pg-3)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6 (37 unrelated changes); provider pinned to 5.82 instead (source: ses-pg-1, src-pr57)\n- [question] Prod cutover date and window, to be decided with Maya after the staging week (source: ses-pg-3, src-linear-kes298)\n- [décision] No prod date until Maya signs off; apply_immediately stays false; avoid the dbt lock window (source: ses-pg-1)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (source: ses-pg-1, src-pr57)",
+  "rendu": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS on branch noa/rds-pg17, open draft PR #57. On Nov 17, pg_partman was upgraded 4.7.4 → 5.1.0 on staging and maintenance ran clean; after fixing the blue/green blocker (rds.logical_replication = 1 + reboot), the staging apply succeeded and analytics-staging has run PG 17.2 since 14:20 UTC, with dbt all green (14/14 models, time within noise of 16.4). The runbook was updated with the logical_replication + reboot step for prod. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [en-cours] Full week of staging on PG 17 before prod sign-off; watch for incidents on staging this week (de: connecteur, agent; source: ses-pg-3, src-linear-kes298, src-slack-infra)\n- [prochaine-étape] After Maya's sign-off (earliest Nov 24), pick the prod window: prod needs its own reboot window for rds.logical_replication before the blue/green cutover, avoiding the dbt lock 01:00–03:30 UTC (de: connecteur, agent; source: ses-pg-3, ses-pg-1, src-linear-kes298)\n- [essai-raté] terraform apply of the staging blue/green failed first: RDS requires rds.logical_replication = 1 in the source parameter group plus a reboot; fixed by adding it and rebooting (de: agent; source: ses-pg-3)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6 (37 unrelated changes); provider pinned to 5.82 instead (de: équipe, agent; source: ses-pg-1, src-pr57)\n- [question] Prod cutover date and window, to be decided with Maya after the staging week (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (de: équipe, agent; source: ses-pg-1, src-pr57)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1700,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4176,
+    "sortie": 509,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008809
+  },
+  "cout": 0.0008809,
+  "latenceMs": 2927,
+  "fournisseur": "Together"
+}

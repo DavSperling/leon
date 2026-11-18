@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:59:41.301Z",
+  "reponse": "The old method (FEATURE_FLAGS=new_dash in .env.local) no longer works: since PR #447, flags are served by the API via GET /api/flags, and the flag was renamed dashboards_v2 [2]. To enable it locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. Note that new workspaces with no events show a blank grid [5].",
+  "rendu": "The old method (FEATURE_FLAGS=new_dash in .env.local) no longer works: since PR #447, flags are served by the API via GET /api/flags, and the flag was renamed dashboards_v2 [2]. To enable it locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. Note that new workspaces with no events show a blank grid [5].",
+  "mesures": {
+    "mots": 63,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1135,
+    "sortie": 112,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00055995
+  },
+  "cout": 0.00055995,
+  "latenceMs": 1593,
+  "fournisseur": "Z.AI"
+}

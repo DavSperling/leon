@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:18:36.440Z",
+  "reponse": "## What you did\n\n- Tu as trouvé la cause des faux stocks de la Saône : `sync-stock` appariait les SKU par préfixe, donc la référence entrepôt sans finition écrivait la même quantité sur les variantes chêne et noyer — à l'origine des trois commandes du 14/11 sur une rupture [1][2].\n- Tu as complété la PR #57 d'Hugo (17 correspondances SKU manquantes sur 58, un test de garde et un avertissement) : fusionnée hier, la synchro tourne désormais avec, et le ticket #55 est réglé [1][4][3].\n- Tu as doté `sync-stock` d'un mode `--dry-run` qui sort les écarts entrepôt/Shopify sans rien écrire : 14 variantes en écart sur le fichier du 17/11, avec un CSV trié prêt pour le comptage [1].\n\n## What changed\n\n- Karim a bien reçu le fichier des 14 écarts : comptage physique jeudi matin à l'entrepôt, vrais chiffres dans la foulée [7].\n- Les trois clients de la Saône acceptent tous une livraison mi-janvier [9].\n\n## What is still open\n\n- L'export des ventes Shopify d'octobre pour la TVA d'Antoine, que tu lui as promis avant jeudi : rien n'est encore fait, l'échéance est demain [1].\n- Les écarts de stock relevés restent à arbitrer avec les chiffres du comptage de jeudi [1][7].\n- La PR #58 (mode `--dry-run`) attend un relecteur : Hugo était à l'école hier [1][5].",
+  "rendu": "## What you did\n\n- Tu as trouvé la cause des faux stocks de la Saône : `sync-stock` appariait les SKU par préfixe, donc la référence entrepôt sans finition écrivait la même quantité sur les variantes chêne et noyer — à l'origine des trois commandes du 14/11 sur une rupture [1][2].\n- Tu as complété la PR #57 d'Hugo (17 correspondances SKU manquantes sur 58, un test de garde et un avertissement) : fusionnée hier, la synchro tourne désormais avec, et le ticket #55 est réglé [1][4][3].\n- Tu as doté `sync-stock` d'un mode `--dry-run` qui sort les écarts entrepôt/Shopify sans rien écrire : 14 variantes en écart sur le fichier du 17/11, avec un CSV trié prêt pour le comptage [1].\n\n## What changed\n\n- Karim a bien reçu le fichier des 14 écarts : comptage physique jeudi matin à l'entrepôt, vrais chiffres dans la foulée [7].\n- Les trois clients de la Saône acceptent tous une livraison mi-janvier [9].\n\n## What is still open\n\n- L'export des ventes Shopify d'octobre pour la TVA d'Antoine, que tu lui as promis avant jeudi : rien n'est encore fait, l'échéance est demain [1].\n- Les écarts de stock relevés restent à arbitrer avec les chiffres du comptage de jeudi [1][7].\n- La PR #58 (mode `--dry-run`) attend un relecteur : Hugo était à l'école hier [1][5].",
+  "mesures": {
+    "mots": 207,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5596,
+    "sortie": 6107,
+    "reflexion": 5706,
+    "cache": 1536,
+    "cout": 0.0070847196
+  },
+  "cout": 0.0070847196,
+  "latenceMs": 131473,
+  "fournisseur": "StreamLake"
+}

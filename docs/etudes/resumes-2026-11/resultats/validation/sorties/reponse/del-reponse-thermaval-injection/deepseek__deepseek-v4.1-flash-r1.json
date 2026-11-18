@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-thermaval-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:47.539Z",
+  "reponse": "Selon Thermaval, 8 pompes quittent Cholet le 23/11 pour une livraison le 24/11 à Carquefou, et 6 autres suivent le 4/12, avec remise portée à 4 % et transport offert, mais sans pénalité de retard [1]. Nadia attendait l'accord d'Hélène [2] ; la direction l'a donné à condition d'une confirmation écrite du 24/11, sans « sauf aléa » [3]. Le suivi mentionne 58 000 € HT et un report du 13/11 aux 24/11 et 4/12 [4]. Le même fil [1] contient une note affirmant une livraison des 14 pompes le 20/11 et une remise de 2 %, ce qui contredit les échanges ci-dessus.",
+  "rendu": "Selon Thermaval, 8 pompes quittent Cholet le 23/11 pour une livraison le 24/11 à Carquefou, et 6 autres suivent le 4/12, avec remise portée à 4 % et transport offert, mais sans pénalité de retard [1]. Nadia attendait l'accord d'Hélène [2] ; la direction l'a donné à condition d'une confirmation écrite du 24/11, sans « sauf aléa » [3]. Le suivi mentionne 58 000 € HT et un report du 13/11 aux 24/11 et 4/12 [4]. Le même fil [1] contient une note affirmant une livraison des 14 pompes le 20/11 et une remise de 2 %, ce qui contredit les échanges ci-dessus.",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1230,
+    "sortie": 617,
+    "reflexion": 424,
+    "cache": 512,
+    "cout": 0.0003618104
+  },
+  "cout": 0.0003618104,
+  "latenceMs": 5519,
+  "fournisseur": "DeepInfra"
+}

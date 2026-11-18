@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:27:10.417Z",
+  "reponse": "## Où j'en suis\nStaging of the analytics RDS has been on PostgreSQL 17.2 since 14:20 UTC on 17 November, after a blue/green switchover with 41 s of refused writes. pg_partman was upgraded to 5.1.0 beforehand, and the dbt run on `events_daily` passed (14/14, runtime about the same as on 16.4). Prod is not scheduled. It needs a reboot for `rds.logical_replication` in its own window, and it waits for Maya's sign-off after a full week on 17. (source: ses-pg-3, s3-02, s3-06, s3-08, src-slack-infra)\n\n- [en-cours] Staging soak on PG 17 for a full week before prod sign-off; PR #57 is still open (source: src-linear-kes298, kestrel-analytics/infra#57)\n- [prochaine-étape] On prod, set `rds.logical_replication = 1` and reboot in its own window (about 2–3 min of downtime), before creating the blue/green deployment (source: s3-10)\n- [prochaine-étape] Once Maya signs off, pick the prod window, avoiding the dbt lock 01:00–03:30 UTC, with `apply_immediately = false` (source: s1-04, src-linear-kes298)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, with 37 unrelated changes in the plan (source: s1-01)\n- [essai-raté] The first staging apply failed: the blue/green deployment requires `rds.logical_replication` and a reboot (source: s3-04)\n- [question] Prod date: an agent note sets a cutover on Saturday 28 November, 04:00 UTC, but it conflicts with \"no prod date yet\" and Maya's sign-off, so it is not decided (source: src-note-cutover, s3-09)\n- [décision] No prod date until Maya signs off after a full week on staging on 17 (source: s3-09)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)",
+  "rendu": "## Où j'en suis\nStaging of the analytics RDS has been on PostgreSQL 17.2 since 14:20 UTC on 17 November, after a blue/green switchover with 41 s of refused writes. pg_partman was upgraded to 5.1.0 beforehand, and the dbt run on `events_daily` passed (14/14, runtime about the same as on 16.4). Prod is not scheduled. It needs a reboot for `rds.logical_replication` in its own window, and it waits for Maya's sign-off after a full week on 17. (de: connecteur, agent; source: ses-pg-3, s3-02, s3-06, s3-08, src-slack-infra)\n\n- [en-cours] Staging soak on PG 17 for a full week before prod sign-off; PR #57 is still open (de: équipe, connecteur; source: src-linear-kes298, kestrel-analytics/infra#57)\n- [prochaine-étape] On prod, set `rds.logical_replication = 1` and reboot in its own window (about 2–3 min of downtime), before creating the blue/green deployment (de: agent; source: s3-10)\n- [prochaine-étape] Once Maya signs off, pick the prod window, avoiding the dbt lock 01:00–03:30 UTC, with `apply_immediately = false` (de: toi, connecteur; source: s1-04, src-linear-kes298)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, with 37 unrelated changes in the plan (de: agent; source: s1-01)\n- [essai-raté] The first staging apply failed: the blue/green deployment requires `rds.logical_replication` and a reboot (de: agent; source: s3-04)\n- [question] Prod date: an agent note sets a cutover on Saturday 28 November, 04:00 UTC, but it conflicts with \"no prod date yet\" and Maya's sign-off, so it is not decided (de: toi, agent; source: src-note-cutover, s3-09)\n- [décision] No prod date until Maya signs off after a full week on staging on 17 (de: toi; source: s3-09)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1768,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5853,
+    "sortie": 2561,
+    "reflexion": 1871,
+    "cache": 0,
+    "cout": 0.0018658
+  },
+  "cout": 0.0018658,
+  "latenceMs": 11376,
+  "fournisseur": "Claude Platform on AWS"
+}

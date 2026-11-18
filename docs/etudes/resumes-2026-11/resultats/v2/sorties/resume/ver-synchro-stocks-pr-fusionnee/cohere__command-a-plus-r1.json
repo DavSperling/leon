@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:25:41.336Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3521,
+    "sortie": 3994,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0070473
+  },
+  "cout": 0.0070473,
+  "latenceMs": 17851,
+  "fournisseur": "Cohere"
+}

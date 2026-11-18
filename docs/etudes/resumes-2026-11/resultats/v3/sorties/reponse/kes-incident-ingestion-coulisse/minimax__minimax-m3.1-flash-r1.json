@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:48.242Z",
+  "reponse": "The root cause was the broker ingest-kafka-2 running out of disk after the retention change in infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2][3]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed up to that long but none lost since producers buffered [2]. Consumers logged NOT_ENOUGH_REPLICAS and 18,402 KafkaConsumerTimeout errors on group ingest-events between 09:39 and 12:24 UTC [1][4]. The earlier suspect, PR #388 raising the insert batch size from 500 to 5000, was a red herring: reverting it (commit 9c1e2fa) did not stop the lag, and the change was re-applied on Friday [1][3][5]. Follow-up actions include an 80% disk alert and restoring size-based retention [5].",
+  "rendu": "The root cause was the broker ingest-kafka-2 running out of disk after the retention change in infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2][3]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed up to that long but none lost since producers buffered [2]. Consumers logged NOT_ENOUGH_REPLICAS and 18,402 KafkaConsumerTimeout errors on group ingest-events between 09:39 and 12:24 UTC [1][4]. The earlier suspect, PR #388 raising the insert batch size from 500 to 5000, was a red herring: reverting it (commit 9c1e2fa) did not stop the lag, and the change was re-applied on Friday [1][3][5]. Follow-up actions include an 80% disk alert and restoring size-based retention [5].",
+  "mesures": {
+    "mots": 121,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1332,
+    "sortie": 254,
+    "reflexion": 45,
+    "cache": 638,
+    "cout": 0.00026607
+  },
+  "cout": 0.00026607,
+  "latenceMs": 2022,
+  "fournisseur": "Fireworks"
+}

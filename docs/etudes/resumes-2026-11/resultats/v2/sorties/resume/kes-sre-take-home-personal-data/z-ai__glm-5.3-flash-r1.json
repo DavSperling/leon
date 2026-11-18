@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:10.618Z",
+  "reponse": "## Où j'en suis\nBuilt the SRE take-home for the candidate on branch `maya/sre-take-home`: compose-based scenario (broken alert rule, flaky Go service, over-broad Terraform IAM policy), 3-hour time box, no Kubernetes. It now lives in its own private repo `kestrel-analytics/sre-take-home` (pushed via subtree split, clean history), with a rubric of 4 areas scored 0–3 and no pass threshold. The exercise was removed from the infra branch working tree (uncommitted); no PRs were opened and nothing was emailed to anyone.\n\n- [prochaine-étape] Thursday 4pm call with the candidate; Maya sends the exercise herself after the call and can add a collaborator invite to the private repo (source: t16).\n- [prochaine-étape] Maya will drop the `maya/sre-take-home` branch later; the `hiring/` removal there is uncommitted (source: t14).\n- [décision] No Kubernetes, Terraform + compose only, 3 hours max (source: t03).\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06).\n- [décision] No pass threshold: scores are input, the panel (Maya + Noa) decides (source: t10).\n- [décision] Move the exercise to its own private repo, not the infra repo (source: t12).\n- [décision] Delete `hiring/` from the infra branch, no PR in infra (source: t14).\n- [décision] Maya sends the exercise herself; agent must not email anyone (source: t16).\n- [essai-raté] Multi-arch image build with `--load` fails (`docker exporter does not currently support exporting manifest lists`); multi-arch was sidestepped by building from source. Earlier amd64-only image gave `exec format error` on Apple Silicon.",
+  "rendu": "## Où j'en suis\nBuilt the SRE take-home for the candidate on branch `maya/sre-take-home`: compose-based scenario (broken alert rule, flaky Go service, over-broad Terraform IAM policy), 3-hour time box, no Kubernetes. It now lives in its own private repo `kestrel-analytics/sre-take-home` (pushed via subtree split, clean history), with a rubric of 4 areas scored 0–3 and no pass threshold. The exercise was removed from the infra branch working tree (uncommitted); no PRs were opened and nothing was emailed to anyone.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Thursday 4pm call with the candidate; Maya sends the exercise herself after the call and can add a collaborator invite to the private repo (source: t16).\n- [prochaine-étape] Maya will drop the `maya/sre-take-home` branch later; the `hiring/` removal there is uncommitted (source: t14).\n- [essai-raté] Multi-arch image build with `--load` fails (`docker exporter does not currently support exporting manifest lists`); multi-arch was sidestepped by building from source. Earlier amd64-only image gave `exec format error` on Apple Silicon.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1172,
+    "decisions": 0,
+    "decisionsRetirees": 6,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3616,
+    "sortie": 439,
+    "reflexion": 12,
+    "cache": 18,
+    "cout": 0.00054567
+  },
+  "cout": 0.00054567,
+  "latenceMs": 5287,
+  "fournisseur": "OpenInference"
+}

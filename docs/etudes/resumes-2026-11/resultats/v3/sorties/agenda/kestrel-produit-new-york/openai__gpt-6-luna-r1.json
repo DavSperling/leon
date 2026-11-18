@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:00:53.253Z",
+  "reponse": "{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 16, \"titre\": \"Coffee\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 7, \"titre\": \"Customer interview\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 22, \"titre\": \"Dinner\", \"debut\": \"2026-11-20T01:30\", \"avec\": \"Jonah Reyes\"}\n{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Coffee (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview (avec Ana Ruiz)\n2026-11-20T01:30 Dinner (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2834,
+    "sortie": 765,
+    "reflexion": 447,
+    "cache": 0,
+    "cout": 0.000736675
+  },
+  "cout": 0.000736675,
+  "latenceMs": 8906,
+  "fournisseur": "Azure"
+}

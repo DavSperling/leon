@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:27:44.924Z",
+  "reponse": "## Where I am\nStaging (`analytics-staging`) has run PostgreSQL 17.2 since the blue/green switchover at 14:20 UTC on 17 November, with 41 s of refused writes. dbt `events_daily` passes 14/14, and its runtime is within noise of the 16.4 run. Prod is not upgraded: its window is not picked, and Maya wants a full week on 17 first. PR #57 is open, with commits `7e3c9d4` and `b0f18a2` pushed. (source: ses-pg-3, s3-06, s3-07, s3-08, src-slack-infra, src-pr57)\n\n- [en-cours] Staging is on 17.2 and under watch for the week before prod sign-off. Noa asked the team to report anything odd on staging. (source: src-slack-infra, src-linear-kes298)\n- [prochaine-étape] 1. Let staging run a full week on 17 without incident. (source: src-linear-kes298, s3-09)\n- [prochaine-étape] 2. Maya signs off on prod. (source: src-linear-kes298)\n- [prochaine-étape] 3. Pick the prod window. Prod needs two: a reboot for `rds.logical_replication`, then the blue/green. (source: s3-10, src-slack-infra)\n- [prochaine-étape] 4. Prod step 0 in the runbook: set `rds.logical_replication = 1` and reboot, about 2–3 min of downtime. This is already written in the runbook. (source: s3-10)\n- [essai-raté] Blue/green creation failed because the source parameter group lacked `rds.logical_replication = 1`. Fixed in the module, then applied after a staging reboot. (source: s3-04, s3-06)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, which produced 37 unrelated changes. Pinned back to 5.82. (source: s1-01, s1-02)\n- [question] A note records a prod cutover on Saturday 28 Nov, 04:00 UTC. No prod date is set, and Maya has not signed off. Confirm the date before using the note. (source: src-note-cutover, s1-04, src-linear-kes298)\n- [décision] AWS provider pinned to 5.82, with no v6 in this PR. (source: s1-02)\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays false. (source: s1-04)",
+  "rendu": "- [en-cours] Staging is on 17.2 and under watch for the week before prod sign-off. Noa asked the team to report anything odd on staging. (de: connecteur; source: src-slack-infra, src-linear-kes298)\n- [prochaine-étape] 1. Let staging run a full week on 17 without incident. (de: toi, connecteur; source: src-linear-kes298, s3-09)\n- [prochaine-étape] 2. Maya signs off on prod. (de: connecteur; source: src-linear-kes298)\n- [prochaine-étape] 3. Pick the prod window. Prod needs two: a reboot for `rds.logical_replication`, then the blue/green. (de: connecteur, agent; source: s3-10, src-slack-infra)\n- [prochaine-étape] 4. Prod step 0 in the runbook: set `rds.logical_replication = 1` and reboot, about 2–3 min of downtime. This is already written in the runbook. (de: agent; source: s3-10)\n- [essai-raté] Blue/green creation failed because the source parameter group lacked `rds.logical_replication = 1`. Fixed in the module, then applied after a staging reboot. (de: agent; source: s3-04, s3-06)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, which produced 37 unrelated changes. Pinned back to 5.82. (de: toi, agent; source: s1-01, s1-02)\n- [question] A note records a prod cutover on Saturday 28 Nov, 04:00 UTC. No prod date is set, and Maya has not signed off. Confirm the date before using the note. (de: toi, connecteur, agent; source: src-note-cutover, s1-04, src-linear-kes298)\n- [décision] AWS provider pinned to 5.82, with no v6 in this PR. (de: toi; source: s1-02)\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays false. (de: toi; source: s1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1602,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5896,
+    "sortie": 2934,
+    "reflexion": 2121,
+    "cache": 0,
+    "cout": 0.0020566
+  },
+  "cout": 0.0020566,
+  "latenceMs": 13455,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T17:58:07.750Z",
+  "reponse": "## What is still open\n- Priya needs you to restore widget CSV export in dashboards v2 using the new background export flow. It’s a blocker for enabling `dashboards_v2` for Orbitly on Thursday, Nov 19; staging is due to be ready today. [10][3]\n- In PR #427, your Orbitly staging check confirmed all nine dashboards load, but hovering over an empty retention cohort crashes the tooltip. The fix is still pending and tracked in #432. [1][8]\n- Rachel is waiting for an ETA she can give Zest Grocers before Monday’s ops review. Your background CSV export fix for #424 streams large exports and emails a signed link; Daniel approved PR #430, with merge pending green CI. [9][6][2][5]\n\n## What changed\n- Maya backed shipping v2 behind the flag and keeping ChartKit until v1 is retired. Dependabot separately proposed a ChartKit 5 upgrade in #429 that changes the tooltip API and drops legacy browser support. [7][4]",
+  "rendu": "## What is still open\n- Priya needs you to restore widget CSV export in dashboards v2 using the new background export flow. It’s a blocker for enabling `dashboards_v2` for Orbitly on Thursday, Nov 19; staging is due to be ready today. [10][3]\n- In PR #427, your Orbitly staging check confirmed all nine dashboards load, but hovering over an empty retention cohort crashes the tooltip. The fix is still pending and tracked in #432. [1][8]\n- Rachel is waiting for an ETA she can give Zest Grocers before Monday’s ops review. Your background CSV export fix for #424 streams large exports and emails a signed link; Daniel approved PR #430, with merge pending green CI. [9][6][2][5]\n\n## What changed\n- Maya backed shipping v2 behind the flag and keeping ChartKit until v1 is retired. Dependabot separately proposed a ChartKit 5 upgrade in #429 that changes the tooltip API and drops legacy browser support. [7][4]",
+  "mesures": {
+    "mots": 149,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5581,
+    "sortie": 351,
+    "reflexion": 129,
+    "cache": 1451,
+    "cout": 0.0139786
+  },
+  "cout": 0.0139786,
+  "latenceMs": 3698,
+  "fournisseur": "Azure"
+}

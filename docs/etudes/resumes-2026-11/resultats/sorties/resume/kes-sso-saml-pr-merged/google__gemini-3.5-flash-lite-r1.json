@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:25:13.099Z",
+  "reponse": "## Où j'en suis\nL'endpoint ACS pour SAML a été implémenté avec `signxml` (en remplaçant `python3-saml` pour des raisons de compatibilité d'image Docker). La vérification de la signature, les conditions (fenêtre de tolérance fixée à 120 s conformément au contrat Fernhill) et la protection contre le rejeu via Redis sont en place, testées et validées par mypy et ruff. La PR a été ouverte, mais n'est pas fusionnée en raison des règles de la branche principale nécessitant une relecture.\n\n- [en-cours] Attente de la validation de la PR par Maya pour pouvoir fusionner\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging d'ici mercredi fin de journée (pour la démo de jeudi 10h NY)\n- [prochaine-étape] Créer un ticket séparé pour l'obligation du SSO et la désactivation de la connexion par mot de passe pour les utilisateurs de Fernhill\n- [décision] Utiliser `signxml` au lieu de `python3-saml` et supprimer `xmlsec` du Dockerfile (source: t08)\n- [décision] Fixer la tolérance d'écart d'horloge (skew) à 120 secondes (source: t12)\n- [décision] Ne pas toucher à la connexion par mot de passe dans cette PR (source: t12)",
+  "rendu": "## Où j'en suis\nL'endpoint ACS pour SAML a été implémenté avec `signxml` (en remplaçant `python3-saml` pour des raisons de compatibilité d'image Docker). La vérification de la signature, les conditions (fenêtre de tolérance fixée à 120 s conformément au contrat Fernhill) et la protection contre le rejeu via Redis sont en place, testées et validées par mypy et ruff. La PR a été ouverte, mais n'est pas fusionnée en raison des règles de la branche principale nécessitant une relecture.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Attente de la validation de la PR par Maya pour pouvoir fusionner\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging d'ici mercredi fin de journée (pour la démo de jeudi 10h NY)\n- [prochaine-étape] Créer un ticket séparé pour l'obligation du SSO et la désactivation de la connexion par mot de passe pour les utilisateurs de Fernhill\n- [décision] Utiliser `signxml` au lieu de `python3-saml` et supprimer `xmlsec` du Dockerfile (source: t08)\n- [décision] Fixer la tolérance d'écart d'horloge (skew) à 120 secondes (source: t12)\n- [décision] Ne pas toucher à la connexion par mot de passe dans cette PR (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1314,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4951,
+    "sortie": 339,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0023328
+  },
+  "cout": 0.0023328,
+  "latenceMs": 2103,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:40.929Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1900,
+    "sortie": 47,
+    "reflexion": 42,
+    "cache": 128,
+    "cout": 0.00029592
+  },
+  "cout": 0.00029592,
+  "latenceMs": 1072,
+  "fournisseur": "ModelRun"
+}

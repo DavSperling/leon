@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:02:30.628Z",
+  "reponse": "I'll look into this.",
+  "rendu": "I'll look into this.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 31185,
+    "sortie": 671,
+    "reflexion": 240,
+    "cache": 14720,
+    "cout": 0.003245575
+  },
+  "latenceMs": 10560,
+  "fournisseur": "Cohere",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage credits contract\"}",
+    "chercher {\"requete\":\"Orbitly SLA credit\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"sourceId\":\"1\"}",
+    "lire {\"passageId\":\"gmail-incident-report-orbitly-2\"}",
+    "lire {\"passageId\":\"claude-ai-sam-sla-credits-2\"}",
+    "chercher {\"requete\":\"Orbitly MSA section 7 service credit\"}",
+    "chercher {\"requete\":\"Orbitly signed MSA 2024 legal folder\"}"
+  ],
+  "cout": 0.003245575
+}

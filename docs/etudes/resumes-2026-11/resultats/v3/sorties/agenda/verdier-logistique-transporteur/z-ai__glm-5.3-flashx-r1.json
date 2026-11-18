@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:01:56.136Z",
+  "reponse": "{\"n\": 13, \"titre\": \"Réunion de lancement TransAlp\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T15:30\", \"avec\": \"Bruno Ferrand, Nadia Ouali\"}\n{\"n\": 3, \"titre\": \"Réunion soldes d'hiver – logistique\", \"debut\": \"2026-11-18T11:30\", \"avec\": \"Claire Verdier, Sophie Garnier\"}\n{\"n\": 10, \"titre\": \"Visio mousses et tissus collection 2027\", \"debut\": \"2026-11-18T14:00\", \"avec\": \"Rui Carvalho\"}\n{\"n\": 17, \"titre\": \"Point téléphonique rupture table Saône\", \"debut\": \"2026-11-19T09:00\", \"avec\": \"Paul Besson\"}\n{\"n\": 6, \"titre\": \"Appel distribution au Québec\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Geneviève Tremblay\"}\n{\"n\": 15, \"titre\": \"Enlèvement test TransAlp\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T11:00\"}\n{\"n\": 7, \"titre\": \"Déjeuner avec Bruno Ferrand\", \"debut\": \"2026-11-20T12:30\", \"avec\": \"Bruno Ferrand\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T15:30 Réunion de lancement TransAlp (avec Bruno Ferrand, Nadia Ouali)\n2026-11-18T11:30 Réunion soldes d'hiver – logistique (avec Claire Verdier, Sophie Garnier)\n2026-11-18T14:00 Visio mousses et tissus collection 2027 (avec Rui Carvalho)\n2026-11-19T09:00 Point téléphonique rupture table Saône (avec Paul Besson)\n2026-11-19T16:00 Appel distribution au Québec (avec Geneviève Tremblay)\n2026-11-20T09:00→2026-11-20T11:00 Enlèvement test TransAlp\n2026-11-20T12:30 Déjeuner avec Bruno Ferrand (avec Bruno Ferrand)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.714,
+    "f1": 0.769,
+    "faux": "2026-11-18T14:00 Visio mousses et tissus collection 2027 | 2026-11-20T09:00 Enlèvement test TransAlp",
+    "manques": "2026-11-18T16:00 Visio Têxteis Douro – mousses et tissus",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2697,
+    "sortie": 559,
+    "reflexion": 215,
+    "cache": 512,
+    "cout": 0.0015456
+  },
+  "cout": 0.0015456,
+  "latenceMs": 3571,
+  "fournisseur": "Z.AI"
+}

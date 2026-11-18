@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:20.013Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3561,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 0,
+    "cout": 0.000686635
+  },
+  "cout": 0.000686635,
+  "latenceMs": 33363,
+  "fournisseur": "Tencent"
+}

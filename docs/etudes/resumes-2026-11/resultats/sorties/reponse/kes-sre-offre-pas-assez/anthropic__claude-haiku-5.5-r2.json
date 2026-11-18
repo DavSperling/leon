@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:09.769Z",
+  "reponse": "Les résultats n'indiquent aucune offre de salaire faite à Yael Mizrahi. Le 17 novembre, l'équipe rappelait de ne pas discuter d'offre avant la finale [3], et elle n'a qu'été passée en finale ce jour-là [1][3]. Le 13 novembre, Yael avait seulement demandé quelque chose de « compétitif avec les big tech », sans chiffre [4]. La fourchette du poste est de 520 à 600 k ILS de base à Tel Aviv [2], mais ce n'est pas une offre.",
+  "rendu": "Les résultats n'indiquent aucune offre de salaire faite à Yael Mizrahi. Le 17 novembre, l'équipe rappelait de ne pas discuter d'offre avant la finale [3], et elle n'a qu'été passée en finale ce jour-là [1][3]. Le 13 novembre, Yael avait seulement demandé quelque chose de « compétitif avec les big tech », sans chiffre [4]. La fourchette du poste est de 520 à 600 k ILS de base à Tel Aviv [2], mais ce n'est pas une offre.",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1501,
+    "sortie": 490,
+    "reflexion": 295,
+    "cache": 0,
+    "cout": 0.0003951
+  },
+  "cout": 0.0003951,
+  "latenceMs": 3274,
+  "fournisseur": "Claude Platform on AWS"
+}

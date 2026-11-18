@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:22.704Z",
+  "reponse": "{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Oliver Grant, Maya Cohen, Daniel Levi\"}\n{\"n\": 7, \"titre\": \"Customer interview Ana Ruiz\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 16, \"titre\": \"Café avec Lior Ben-David\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 23, \"titre\": \"Dîner avec l'équipe Northfold Studio\", \"debut\": \"2026-11-20T01:30\", \"avec\": \"Jonah Reyes\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Café avec Lior Ben-David (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview Ana Ruiz (avec Ana Ruiz)\n2026-11-20T01:30 Dîner avec l'équipe Northfold Studio (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Oliver Grant, Maya Cohen, Daniel Levi)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4517,
+    "sortie": 3148,
+    "reflexion": 2694,
+    "cache": 0,
+    "cout": 0.0020257
+  },
+  "cout": 0.0020257,
+  "latenceMs": 13344,
+  "fournisseur": "Claude Platform on AWS"
+}

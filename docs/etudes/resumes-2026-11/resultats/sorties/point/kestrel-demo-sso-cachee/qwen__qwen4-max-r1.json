@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:26:15.955Z",
+  "reponse": "## What changed\n- **#418 (SAML signature verification) is merged** — Maya approved and merged it last night, and it ships with tonight's staging deploy, so the Wednesday EOD deadline for Fernhill is met [1][3].\n- **#423 (auth cleanup) is blocked on review**: Tom wants the `saml_utils` → `saml/` module move separated from the ruff/mypy fixes — the 1,900-line diff hides the real changes. Two PRs and he approves both today [4].\n\n## What is still open\n- **Thursday 10am NY**: end-to-end SSO walkthrough on staging with Fernhill IT's Okta tenant. Priya runs the demo, you only need to be on the call [1].\n- **Replay cache must move to Redis**: assertion IDs are still in a process-local TTL cache, so a replay can succeed on another of the 3 API pods. Fine for staging, needed before production; the Redis client already exists in `kestrel/cache.py` [1][2].\n- Maya left a non-blocking inline nit on error message wording in #418 [3].",
+  "rendu": "## What changed\n- **#418 (SAML signature verification) is merged** — Maya approved and merged it last night, and it ships with tonight's staging deploy, so the Wednesday EOD deadline for Fernhill is met [1][3].\n- **#423 (auth cleanup) is blocked on review**: Tom wants the `saml_utils` → `saml/` module move separated from the ruff/mypy fixes — the 1,900-line diff hides the real changes. Two PRs and he approves both today [4].\n\n## What is still open\n- **Thursday 10am NY**: end-to-end SSO walkthrough on staging with Fernhill IT's Okta tenant. Priya runs the demo, you only need to be on the call [1].\n- **Replay cache must move to Redis**: assertion IDs are still in a process-local TTL cache, so a replay can succeed on another of the 3 API pods. Fine for staging, needed before production; the Redis client already exists in `kestrel/cache.py` [1][2].\n- Maya left a non-blocking inline nit on error message wording in #418 [3].",
+  "mesures": {
+    "mots": 150,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5991,
+    "sortie": 908,
+    "reflexion": 657,
+    "cache": 0,
+    "cout": 0.012418875
+  },
+  "cout": 0.012418875,
+  "latenceMs": 21646,
+  "fournisseur": "Alibaba"
+}

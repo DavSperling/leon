@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:25.382Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is complete and tested (per-partition ordering fix `4e2d9b7`, rejects file `f13a06c`), and the dry run on the 12/11 window finished: 18,442,107 events to replay into `events.replay.v3`, 3,118 schema v2 lines written to the rejects file. PR #233 is open with Daniel as reviewer; the real replay has not been run.\n- [en-cours] PR #233 awaiting Daniel's review\n- [prochaine-étape] run the real replay into `events.replay.v3` after review, then the aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [essai-raté] dry run at `--batch 50000` was OOMKilled (2Gi limit); `--batch 5000` completed in 19m42s at 310 MiB\n- [décision] no age cutoff, all events replayed, target topic hard-locked to `events.replay.v3`, never `events.v3` (source: t05)\n- [décision] batch 5000, memory limit untouched (namespace quota capped) (source: t13)\n- [décision] no ETA draft for Rachel; you give it yourself after Daniel's review (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is complete and tested (per-partition ordering fix `4e2d9b7`, rejects file `f13a06c`), and the dry run on the 12/11 window finished: 18,442,107 events to replay into `events.replay.v3`, 3,118 schema v2 lines written to the rejects file. PR #233 is open with Daniel as reviewer; the real replay has not been run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 awaiting Daniel's review\n- [prochaine-étape] run the real replay into `events.replay.v3` after review, then the aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [essai-raté] dry run at `--batch 50000` was OOMKilled (2Gi limit); `--batch 5000` completed in 19m42s at 310 MiB\n- [décision] no age cutoff, all events replayed, target topic hard-locked to `events.replay.v3`, never `events.v3` (source: t05)\n- [décision] batch 5000, memory limit untouched (namespace quota capped) (source: t13)\n- [décision] no ETA draft for Rachel; you give it yourself after Daniel's review (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1141,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4438,
+    "sortie": 381,
+    "reflexion": 25,
+    "cache": 768,
+    "cout": 0.0006226304
+  },
+  "cout": 0.0006226304,
+  "latenceMs": 8214,
+  "fournisseur": "Xiaomi"
+}

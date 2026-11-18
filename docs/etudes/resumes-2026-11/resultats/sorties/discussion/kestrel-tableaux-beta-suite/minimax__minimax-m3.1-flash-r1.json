@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:05.490Z",
+  "reponse": "The first phase (chart builder + saved views) will be available to 5 design partners — Orbitly, Zest Grocers, and three accounts from the October trial cohort — on Wednesday, December 9 [3]. General availability is targeted for late January, but that date isn't committed [3].",
+  "rendu": "The first phase (chart builder + saved views) will be available to 5 design partners — Orbitly, Zest Grocers, and three accounts from the October trial cohort — on Wednesday, December 9 [3]. General availability is targeted for late January, but that date isn't committed [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12747,
+    "sortie": 336,
+    "reflexion": 170,
+    "cache": 7424,
+    "cout": 0.00111141
+  },
+  "latenceMs": 4712,
+  "fournisseur": "Inferact vLLM",
+  "trace": [
+    "chercher {\"requete\":\"dashboards customers beta first phase launch date timeline\"}",
+    "chercher {\"requete\":\"dashboard rollout pilot customer preview availability\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}"
+  ],
+  "cout": 0.00111141
+}

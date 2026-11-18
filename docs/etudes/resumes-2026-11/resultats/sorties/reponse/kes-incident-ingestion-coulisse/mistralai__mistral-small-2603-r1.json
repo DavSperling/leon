@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:32:11.933Z",
+  "reponse": "The root cause was the disks of Kafka broker ingest-kafka-2 filling up after the retention change in infra PR #221, making the broker read-only at 09:38 UTC and stalling consumers [2][3]. PR #388's batch size change was a red herring [1][5].",
+  "rendu": "The root cause was the disks of Kafka broker ingest-kafka-2 filling up after the retention change in infra PR #221, making the broker read-only at 09:38 UTC and stalling consumers [2][3]. PR #388's batch size change was a red herring [1][5].",
+  "mesures": {
+    "mots": 41,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1278,
+    "sortie": 631,
+    "reflexion": 559,
+    "cache": 0,
+    "cout": 0.0005703
+  },
+  "cout": 0.0005703,
+  "latenceMs": 4615,
+  "fournisseur": "Mistral"
+}

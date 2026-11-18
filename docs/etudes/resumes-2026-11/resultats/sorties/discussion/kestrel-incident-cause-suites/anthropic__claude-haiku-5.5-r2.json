@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:42:12.406Z",
+  "reponse": "**What broke:** On Thursday Nov 12, ingest v2.14.0 raised the default `max_batch_bytes` from 1 MB to 10 MB to improve throughput. With the 512 Mi memory limit, the ingest-worker pods ran out of memory on the first large batch and crash-looped. The change went to all pods at once. [1] Dashboards showed stale data from 08:47 to 12:27 UTC, up to about 3h40 behind at peak. [1][5] Rollback to v2.13.3 happened at 10:05, and lag fully drained at 12:27. [1]\n\n**Customer data loss:** No. Events kept arriving in Kafka and were processed late. Lior's reconciliation matched event counts per workspace to the Kafka offsets for 08:00–13:00 UTC. [5] Maya told Orbitly the same thing. [2]\n\n**What's changing:**\n- Ingest#419 reverted the default to 1 MB, added a memory guard that refuses batches over 25% of the container limit, and kept 10 MB only for the bulk import path. [6]\n- KES-431 (Noa, due Nov 20): page on-call when consumer lag exceeds 5 minutes. [9]\n- KES-432 (Daniel, due Nov 27): send ingest config changes to a canary pool first. [1]\n- KES-433 (Lior, due Nov 27): raise the worker memory limit to 1 Gi and load-test batch sizes. [1]\n\n**Open commercial item:** Orbitly is claiming a service credit under section 7 of their MSA. [2] Sam is checking terms with finance, and the signed MSA isn't attached to the HubSpot deal. [7] I didn't find the credit amount or the contract terms in what I searched.",
+  "rendu": "**What broke:** On Thursday Nov 12, ingest v2.14.0 raised the default `max_batch_bytes` from 1 MB to 10 MB to improve throughput. With the 512 Mi memory limit, the ingest-worker pods ran out of memory on the first large batch and crash-looped. The change went to all pods at once. [1] Dashboards showed stale data from 08:47 to 12:27 UTC, up to about 3h40 behind at peak. [1][5] Rollback to v2.13.3 happened at 10:05, and lag fully drained at 12:27. [1]\n\n**Customer data loss:** No. Events kept arriving in Kafka and were processed late. Lior's reconciliation matched event counts per workspace to the Kafka offsets for 08:00–13:00 UTC. [5] Maya told Orbitly the same thing. [2]\n\n**What's changing:**\n- Ingest#419 reverted the default to 1 MB, added a memory guard that refuses batches over 25% of the container limit, and kept 10 MB only for the bulk import path. [6]\n- KES-431 (Noa, due Nov 20): page on-call when consumer lag exceeds 5 minutes. [9]\n- KES-432 (Daniel, due Nov 27): send ingest config changes to a canary pool first. [1]\n- KES-433 (Lior, due Nov 27): raise the worker memory limit to 1 Gi and load-test batch sizes. [1]\n\n**Open commercial item:** Orbitly is claiming a service credit under section 7 of their MSA. [2] Sam is checking terms with finance, and the signed MSA isn't attached to the HubSpot deal. [7] I didn't find the credit amount or the contract terms in what I searched.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22410,
+    "sortie": 2013,
+    "reflexion": 1061,
+    "cache": 0,
+    "cout": 0.0032475
+  },
+  "latenceMs": 10377,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident jeudi\",\"depuis\":\"14j\"}",
+    "chercher {\"requete\":\"pipeline événements panne perte de données postmortem\",\"depuis\":\"14j\"}",
+    "chercher {\"requete\":\"event pipeline outage customer data loss\",\"depuis\":\"14j\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.0032475
+}

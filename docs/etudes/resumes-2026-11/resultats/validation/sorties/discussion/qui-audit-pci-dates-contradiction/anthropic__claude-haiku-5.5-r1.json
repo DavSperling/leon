@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:23.992Z",
+  "reponse": "The auditors' on-site visit is now **December 15–17, 2026** in Austin. Ardent moved it from December 8–10 on November 16, and Shira agreed to the new dates [2]. Before you book, note that a #compliance reminder posted on November 17 still says December 8–10 [5]. That message looks outdated given the email thread, so it's worth confirming the dates with Shira. The evidence package is still due December 1 [2].",
+  "rendu": "The auditors' on-site visit is now **December 15–17, 2026** in Austin. Ardent moved it from December 8–10 on November 16, and Shira agreed to the new dates [2]. Before you book, note that a #compliance reminder posted on November 17 still says December 8–10 [5]. That message looks outdated given the email thread, so it's worth confirming the dates with Shira. The evidence package is still due December 1 [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20456,
+    "sortie": 846,
+    "reflexion": 520,
+    "cache": 0,
+    "cout": 0.0024686
+  },
+  "latenceMs": 9514,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors office visit dates\"}",
+    "chercher {\"requete\":\"PCI audit visite auditeurs bureau Austin\"}",
+    "lire {\"sourceId\":\"gmail-ardent-fieldwork\"}"
+  ],
+  "cout": 0.0024686
+}

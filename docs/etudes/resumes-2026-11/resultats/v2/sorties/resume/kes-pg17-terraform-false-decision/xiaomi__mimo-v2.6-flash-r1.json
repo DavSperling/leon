@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:36.636Z",
+  "reponse": "## Où j'en suis\n\nThe PG17 blue/green Terraform work for the analytics RDS is written and linted on branch noa/rds-pg17: module parameter group family is derived from engine version, staging is set to 17.2 with blue/green enabled, prod is prepared but disabled, and the AWS provider is pinned to ~> 5.82.0. A draft PR (#57) is open with plans verified (staging: 1 add/1 change; prod: no changes); nothing has been applied.\n\n- [en-cours] pg_partman 4.7.4 → 5.1.0 upgrade on staging 16.4, plus a check of run_maintenance_proc() on events_raw/events_daily — not yet run (source: t10)\n- [prochaine-étape] pick a production window only after Maya signs off, avoiding the dbt lock on events_daily (01:00–03:30 UTC); candidate slots Sat/Sun 04:00–06:00 UTC (source: t14)\n- [essai-raté] letting init select AWS provider v6 produced 37 unrelated breaking changes; reverted to a ~> 5.82.0 pin (source: t04)\n- [essai-raté] proposed prod cutover Sat 28 Nov 02:00 UTC with apply_immediately = true — rejected: falls inside the dbt lock, apply_immediately stays false (source: t14)\n- [décision] no production date until Maya signs off on the whole upgrade (source: t14)",
+  "rendu": "## Où j'en suis\nThe PG17 blue/green Terraform work for the analytics RDS is written and linted on branch noa/rds-pg17: module parameter group family is derived from engine version, staging is set to 17.2 with blue/green enabled, prod is prepared but disabled, and the AWS provider is pinned to ~> 5.82.0. A draft PR (#57) is open with plans verified (staging: 1 add/1 change; prod: no changes); nothing has been applied.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] pg_partman 4.7.4 → 5.1.0 upgrade on staging 16.4, plus a check of run_maintenance_proc() on events_raw/events_daily — not yet run (source: t10)\n- [prochaine-étape] pick a production window only after Maya signs off, avoiding the dbt lock on events_daily (01:00–03:30 UTC); candidate slots Sat/Sun 04:00–06:00 UTC (source: t14)\n- [essai-raté] letting init select AWS provider v6 produced 37 unrelated breaking changes; reverted to a ~> 5.82.0 pin (source: t04)\n- [essai-raté] proposed prod cutover Sat 28 Nov 02:00 UTC with apply_immediately = true — rejected: falls inside the dbt lock, apply_immediately stays false (source: t14)\n- [décision] no production date until Maya signs off on the whole upgrade (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1279,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4130,
+    "sortie": 381,
+    "reflexion": 19,
+    "cache": 0,
+    "cout": 0.00068488
+  },
+  "cout": 0.00068488,
+  "latenceMs": 4637,
+  "fournisseur": "Cohere"
+}

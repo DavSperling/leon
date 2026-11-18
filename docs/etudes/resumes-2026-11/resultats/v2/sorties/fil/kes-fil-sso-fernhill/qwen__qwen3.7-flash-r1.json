@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:41.535Z",
+  "reponse": "## Where I am\nWork sits on branch `daniel/saml-sso-fernhill`. JIT provisioning (PR #415) and SAML assertion validation are merged. Real login against Fernhill's staging ADFS now succeeds after implementing a Redis-backed short opaque RelayState token to bypass their 80-byte limit. Group-to-role mapping is coded and staged in PR #421. We are blocked until Fernhill IT exposes the `groups` claim in their IdP response ahead of Thursday’s demo. (source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] Group-to-role mapping implementation and staging verification. Fernhill IT must activate the `groups` claim so admin/analyst roles apply correctly during login. (source: ses-sso-3)\n- [prochaine-étape] Run live SSO demo with Fernhill IT on Thursday 10:00 NY time. Merge PR #421 after acceptance. Enforce SSO/disabled password login for the fernhill tenant by Dec 1. (source: s3-10, src-note-enforce)\n- [essai-raté] Truncating the full return URL to fit the 80-byte RelayState cap. Caused broken deep links on their ADFS. Switched to server-side Redis storage with a 16-byte base64url ID instead. (source: ses-sso-3)\n- [décision] Keep the default role as `viewer` and retain SP-initiated login for this tenant, rather than switching to `analyst` or IdP-initiated only. (source: s3-07)",
+  "rendu": "- [en-cours] Group-to-role mapping implementation and staging verification. Fernhill IT must activate the `groups` claim so admin/analyst roles apply correctly during login. (de: agent; source: ses-sso-3)\n- [prochaine-étape] Run live SSO demo with Fernhill IT on Thursday 10:00 NY time. Merge PR #421 after acceptance. Enforce SSO/disabled password login for the fernhill tenant by Dec 1. (de: toi, agent; source: s3-10, src-note-enforce)\n- [essai-raté] Truncating the full return URL to fit the 80-byte RelayState cap. Caused broken deep links on their ADFS. Switched to server-side Redis storage with a 16-byte base64url ID instead. (de: agent; source: ses-sso-3)\n- [décision] Keep the default role as `viewer` and retain SP-initiated login for this tenant, rather than switching to `analyst` or IdP-initiated only. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 842,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4981,
+    "sortie": 4169,
+    "reflexion": 3813,
+    "cache": 0,
+    "cout": 0.0006914
+  },
+  "cout": 0.0006914,
+  "latenceMs": 38039,
+  "fournisseur": "Alibaba"
+}

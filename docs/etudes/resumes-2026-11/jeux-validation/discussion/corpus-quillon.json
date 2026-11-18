@@ -1,0 +1,1499 @@
+{
+ "entreprise": "Quillon Systems",
+ "utilisateur": "Gil Shamir",
+ "maintenant": "2026-11-18T09:00:00Z",
+ "sources": [
+  {
+   "id": "gmail-corvane-file-rejected",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "ACH file rejected - QUILLON_20261110_01",
+   "url": null,
+   "auteurs": [
+    "Corvane Bank ACH Operations"
+   ],
+   "tours": [
+    {
+     "id": "gmail-corvane-file-rejected-1",
+     "role": "participant",
+     "auteur": "Corvane Bank ACH Operations",
+     "date": "2026-11-10T08:14:00Z",
+     "texte": "CORVANE BANK - ACH ORIGINATION SERVICES\nAutomated notice. Do not reply to this message.\n\nCompany: QUILLON SYSTEMS INC (ODFI ref 4471-QS)\nFile ID: QUILLON_20261110_01\nReceived: 11/10/2026 01:31 CT\nStatus: REJECTED\n\nReason code: R-FMT-07\nBatch Header Record (type 5), field 7 \"Company Entry Description\" exceeds 10 characters: \"QUILLON PAYOUTS\"\n\nEntries in file: 1,840\nTotal credit amount: $2,417,903.55\n\nThe file was not processed. Please correct and resubmit. Same-day ACH window closes 14:30 CT. Next-day window opens 08:30 CT.\n\nFor assistance contact your Corvane Treasury Management representative."
+    }
+   ]
+  },
+  {
+   "id": "slack-inc-payout-delay",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#inc-payout-delay",
+   "url": null,
+   "auteurs": [
+    "Carla Reyes",
+    "Tomer Golan",
+    "Avi Kessler"
+   ],
+   "tours": [
+    {
+     "id": "slack-inc-payout-delay-1",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-10T13:52:00Z",
+     "texte": "Loomly support just called, none of their sellers got paid this morning. Pinecrest opened a ticket too. Anyone looking at payouts??"
+    },
+    {
+     "id": "slack-inc-payout-delay-2",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-10T14:05:00Z",
+     "texte": "looking. Corvane rejected last night's file at 02:14 CT. the reject notice went to the ach-ops@ alias that nobody watches since the mailbox migration 🤦"
+    },
+    {
+     "id": "slack-inc-payout-delay-3",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-10T14:21:00Z",
+     "texte": "cause: core#1162 (merged friday) changed the company entry description to \"QUILLON PAYOUTS\" = 15 chars, NACHA max is 10. reverting to \"QPAYOUTS\" and regenerating the file now"
+    },
+    {
+     "id": "slack-inc-payout-delay-4",
+     "role": "participant",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-10T15:10:00Z",
+     "texte": "We missed the same-day window (14:30 CT). Next window is tomorrow 08:30 CT. @Carla please tell Loomly and Pinecrest the payouts land tomorrow end of day. I'm declaring this SEV2, postmortem in Jira."
+    },
+    {
+     "id": "slack-inc-payout-delay-5",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-11T14:45:00Z",
+     "texte": "resubmitted at 08:30 CT, Corvane accepted the file. 1,840 payouts, $2.42M total. funds should land by EOD"
+    },
+    {
+     "id": "slack-inc-payout-delay-6",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-12T01:10:00Z",
+     "texte": "Loomly and Pinecrest both confirm sellers have their money. Final count: Loomly 1,312 payouts affected, Pinecrest 528."
+    },
+    {
+     "id": "slack-inc-payout-delay-7",
+     "role": "participant",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-12T09:00:00Z",
+     "texte": "Thanks all. Postmortem + follow-ups in QPAY-2291. Short version: field length validation before upload (Tomer), alert if we have no bank acknowledgement by 04:00 CT (Elad), and the ach-ops@ alias goes to #eng-payouts + PagerDuty (Elad). Commercial gesture for the two platforms: Rachel + Marcus."
+    }
+   ]
+  },
+  {
+   "id": "jira-qpay-2291",
+   "kind": "jira",
+   "nature": "ticket",
+   "titre": "QPAY-2291 Payout delay of Nov 10 - postmortem and follow-ups",
+   "url": "https://quillon.atlassian.net/browse/QPAY-2291",
+   "auteurs": [
+    "Avi Kessler",
+    "Tomer Golan",
+    "Elad Navon"
+   ],
+   "tours": [
+    {
+     "id": "jira-qpay-2291-1",
+     "role": "document",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-12T09:30:00Z",
+     "texte": "Severity: SEV2. Status: In Progress.\n\nImpact: 1,840 seller payouts ($2,417,903.55) arrived about 30 hours late. Loomly: 1,312 payouts. Pinecrest Rentals: 528 payouts. No funds lost.\n\nTimeline (CT):\n- Nov 10 01:31 payout file QUILLON_20261110_01 sent to Corvane Bank\n- Nov 10 02:14 file rejected (batch header field 7 > 10 characters)\n- Nov 10 07:52 Loomly calls support, incident opened\n- Nov 10 08:21 cause found: core#1162 changed the company entry description to a 15-character value\n- Nov 11 08:30 corrected file resubmitted and accepted; funds landed end of day\n\nRoot cause: core#1162 changed a NACHA field without length validation; nothing checks the file before upload.\nDetection gap: the reject notice went to an unmonitored alias (ach-ops@). We learned about it from a customer 5h40 later.\n\nFollow-ups:\n- QPAY-2295 validate NACHA field lengths before upload (Tomer)\n- QPAY-2296 alert when no bank acknowledgement by 04:00 CT (Elad)\n- QPAY-2297 route ach-ops@ to #eng-payouts and PagerDuty (Elad)\n- Customer comms: Carla. Commercial gesture for Loomly and Pinecrest: Rachel and Marcus."
+    },
+    {
+     "id": "jira-qpay-2291-2",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-12T17:30:00Z",
+     "texte": "QPAY-2295 done: core#1171 merged, ships with 2026.46."
+    },
+    {
+     "id": "jira-qpay-2291-3",
+     "role": "participant",
+     "auteur": "Elad Navon",
+     "date": "2026-11-17T11:00:00Z",
+     "texte": "QPAY-2297 done (alias now forwards to #eng-payouts and pages the payouts on-call). QPAY-2296 in review (terraform#388), should land this week."
+    }
+   ]
+  },
+  {
+   "id": "github-core-1171",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "core#1171 payouts: validate NACHA field lengths before upload",
+   "url": "https://github.com/quillon/core/pull/1171",
+   "auteurs": [
+    "Tomer Golan",
+    "Noam Peretz"
+   ],
+   "tours": [
+    {
+     "id": "github-core-1171-1",
+     "role": "document",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-11T16:00:00Z",
+     "texte": "Follow-up to the Nov 10 payout delay (QPAY-2291 / QPAY-2295).\n\n- New `nacha::validate_file()` runs on the generated file before it is uploaded to Corvane: record lengths (94), field lengths per record type, required fields, batch and file control totals.\n- The upload job refuses to send an invalid file and pages #eng-payouts with the first 20 errors.\n- Company entry description is now a typed `EntryDescription` (max 10 chars) so it can't be set wrong in config again.\n- Tests: golden files from the last 30 days of real files (anonymised) + the Nov 10 file, which now fails validation as expected."
+    },
+    {
+     "id": "github-core-1171-2",
+     "role": "participant",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-12T08:20:00Z",
+     "texte": "LGTM. nit: the error for field 7 should say the max length, ops won't know NACHA by heart. Approving."
+    },
+    {
+     "id": "github-core-1171-3",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-12T17:25:00Z",
+     "texte": "Fixed the nit. Merged. Ships with 2026.46."
+    }
+   ]
+  },
+  {
+   "id": "codex-tomer-nacha-validation",
+   "kind": "codex",
+   "nature": "conversation",
+   "titre": "core: validate nacha file before corvane upload",
+   "url": null,
+   "auteurs": [
+    "Tomer Golan"
+   ],
+   "tours": [
+    {
+     "id": "codex-tomer-nacha-validation-1",
+     "role": "user",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-11T09:10:00Z",
+     "texte": "in crates/payouts we build the nacha file in nacha/writer.rs and upload in jobs/upload_corvane.rs. i want a validate_file() that checks every record before upload. lengths, required fields, control totals. fail = no upload + page. look at the writer first"
+    },
+    {
+     "id": "codex-tomer-nacha-validation-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-11T09:14:00Z",
+     "texte": "I read `nacha/writer.rs` and `jobs/upload_corvane.rs`.\n\n- The writer builds records with `format!` and pads with `{:<n}`, which pads but never truncates: a value longer than the field shifts every following field, which is exactly what happened with \"QUILLON PAYOUTS\" (15 chars in a 10-char field).\n- The upload job reads the file and sends it over SFTP without any check.\n\nPlan:\n1. `nacha/validate.rs` with `validate_file(&[u8]) -> Result<(), Vec<NachaError>>`: each line is 94 chars, record type order (1, 5, 6/7..., 8, 9), field-level checks per record type, entry/addenda counts and hash totals in batch control (8) and file control (9).\n2. Make the description a newtype `EntryDescription` that refuses more than 10 chars at config load.\n3. Call `validate_file` in the upload job before SFTP; on error, no upload and an alert to #eng-payouts with the first 20 errors."
+    },
+    {
+     "id": "codex-tomer-nacha-validation-3",
+     "role": "user",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-11T09:16:00Z",
+     "texte": "go. use the files in fixtures/nacha/ as golden tests, + add the nov 10 one as a failing case"
+    },
+    {
+     "id": "codex-tomer-nacha-validation-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-11T10:02:00Z",
+     "texte": "Done:\n- `nacha/validate.rs` (312 lines) with 14 checks, each error carries the line number, record type and field.\n- `EntryDescription` newtype, config load fails on >10 chars.\n- Upload job: validation before SFTP, alert with the first 20 errors.\n- Tests: 30 golden files pass, `QUILLON_20261110_01` fails with `Batch header field 7 (company_entry_description): 15 chars, max 10`.\n\ncargo test -p payouts ... 188 passed. cargo clippy ... clean."
+    },
+    {
+     "id": "codex-tomer-nacha-validation-5",
+     "role": "user",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-11T10:05:00Z",
+     "texte": "nice. open the PR, title \"payouts: validate NACHA field lengths before upload\", link QPAY-2295"
+    },
+    {
+     "id": "codex-tomer-nacha-validation-6",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-11T10:07:00Z",
+     "texte": "Pushed branch `tomer/nacha-validate` and opened core#1171 with the description, linked to QPAY-2295."
+    }
+   ]
+  },
+  {
+   "id": "zendesk-48213",
+   "kind": "zendesk",
+   "nature": "ticket",
+   "titre": "#48213 Payouts not received - compensation request",
+   "url": null,
+   "auteurs": [
+    "Bianca Ferreira",
+    "Carla Reyes"
+   ],
+   "tours": [
+    {
+     "id": "zendesk-48213-1",
+     "role": "participant",
+     "auteur": "Bianca Ferreira",
+     "date": "2026-11-11T15:22:00Z",
+     "texte": "Hi,\n\nThis is Bianca from Loomly Ops. Yesterday's payouts never arrived: 1,312 of our sellers were paid about 30 hours late. For a lot of them this is rent money. Several sellers have been charged overdraft fees by their banks because of it.\n\nWe expect proper compensation for this, and we would like Quillon to reimburse the overdraft fees our sellers incurred.\n\nPlease advise.\n\nBianca Ferreira\nHead of Seller Operations, Loomly"
+    },
+    {
+     "id": "zendesk-48213-2",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-11T16:01:00Z",
+     "texte": "Hi Bianca,\n\nI'm really sorry. The root cause was a formatting error in the payout file we send to our bank; it's fixed and all payouts landed yesterday evening. Our team is discussing compensation now and I'll come back to you within 48 hours.\n\nCarla Reyes\nSupport Manager, Quillon Systems"
+    },
+    {
+     "id": "zendesk-48213-3",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-13T17:20:00Z",
+     "texte": "Hi Bianca,\n\nThanks for your patience. We will apply a credit of $18,400, the equivalent of your full November platform fees, on your December invoice.\n\nOn your sellers' overdraft fees: we are reviewing it and will give you an answer by November 25. To help, could you send us the list of affected sellers and the fee amounts?\n\nCarla"
+    },
+    {
+     "id": "zendesk-48213-4",
+     "role": "participant",
+     "auteur": "Bianca Ferreira",
+     "date": "2026-11-16T14:05:00Z",
+     "texte": "Thanks Carla. List attached (loomly_overdraft_fees.csv): 214 sellers, $7,690 in overdraft fees in total.\n\nBianca"
+    },
+    {
+     "id": "zendesk-48213-5",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-16T14:40:00Z",
+     "texte": "[Internal note] Sent the CSV to Marcus and Rachel for a decision on the overdraft fees. Loomly has been promised an answer by Nov 25."
+    }
+   ]
+  },
+  {
+   "id": "slack-finance-credits",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#finance",
+   "url": null,
+   "auteurs": [
+    "Rachel Dunmore",
+    "Marcus Oyelaran"
+   ],
+   "tours": [
+    {
+     "id": "slack-finance-credits-1",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-12T22:05:00Z",
+     "texte": "Loomly is furious about the payout delay, Pinecrest less so. Proposal: 50% of their November platform fees back as a credit, for both. @Marcus ok for you?"
+    },
+    {
+     "id": "slack-finance-credits-2",
+     "role": "participant",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-12T22:40:00Z",
+     "texte": "50% = ~$9.2k for Loomly, ~$3.1k for Pinecrest. Ok in principle. Credit or cash? I'd much rather credit, cash refunds are a pain to reconcile"
+    },
+    {
+     "id": "slack-finance-credits-3",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-13T15:10:00Z",
+     "texte": "Talked to Bianca at Loomly this morning. 50% won't fly: 1,312 of the 1,840 late payouts were theirs and some sellers ate overdraft fees. Let's do 100% of November fees for both, as credits on the December invoice. No cash."
+    },
+    {
+     "id": "slack-finance-credits-4",
+     "role": "participant",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-13T15:32:00Z",
+     "texte": "Agreed. Loomly $18,400 + Pinecrest $6,200 = $24,600, as credit memos on their December invoices. I'll accrue it in the November close."
+    },
+    {
+     "id": "slack-finance-credits-5",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-13T15:40:00Z",
+     "texte": "👍 I'll email Grant at Pinecrest today, Carla answers Loomly in their Zendesk ticket."
+    }
+   ]
+  },
+  {
+   "id": "claude-ai-rachel-pinecrest-draft",
+   "kind": "claude_ai",
+   "nature": "conversation",
+   "titre": "Apology email to Pinecrest about payout delay",
+   "url": null,
+   "auteurs": [
+    "Rachel Dunmore"
+   ],
+   "tours": [
+    {
+     "id": "claude-ai-rachel-pinecrest-draft-1",
+     "role": "user",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-12T23:02:00Z",
+     "texte": "help me write an apology email to Grant Holloway, CFO at Pinecrest Rentals. our payout file got rejected by the bank on nov 10 and 528 of their hosts' payouts landed ~30h late. we're offering a credit of 50% of their november platform fees. warm but not grovelling"
+    },
+    {
+     "id": "claude-ai-rachel-pinecrest-draft-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T23:03:00Z",
+     "texte": "Subject: Your host payouts on November 10\n\nHi Grant,\n\nI wanted to reach out personally about the delay your hosts experienced last week. On November 10, our payout file was rejected by our bank, and as a result 528 of your hosts' payouts arrived roughly 30 hours later than scheduled.\n\nI know how much your hosts rely on predictable payouts, and I'm sorry we fell short. We've already put a validation step in place so a file like this can't be sent again.\n\nAs a gesture of goodwill, we'd like to offer a credit of 50% of your November platform fees, applied to your next invoice.\n\nIf it would help to walk through what happened, I'm happy to set up a call with our CTO.\n\nBest regards,\nRachel Dunmore\nVP Sales, Quillon Systems"
+    },
+    {
+     "id": "claude-ai-rachel-pinecrest-draft-3",
+     "role": "user",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-12T23:06:00Z",
+     "texte": "shorter. and dont say rejected by the bank, say a formatting error in our payout file. drop the cto call"
+    },
+    {
+     "id": "claude-ai-rachel-pinecrest-draft-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T23:07:00Z",
+     "texte": "Subject: Your host payouts on November 10\n\nHi Grant,\n\nOn November 10, a formatting error in our payout file meant 528 of your hosts' payouts arrived about 30 hours late. I'm sorry, that's not the standard you should expect from us. We've added a validation step so it can't happen again.\n\nAs a gesture, we'll credit 50% of your November platform fees on your next invoice.\n\nBest,\nRachel"
+    }
+   ]
+  },
+  {
+   "id": "gmail-pinecrest-credit",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Your host payouts on November 10",
+   "url": null,
+   "auteurs": [
+    "Rachel Dunmore",
+    "Grant Holloway"
+   ],
+   "tours": [
+    {
+     "id": "gmail-pinecrest-credit-1",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-13T23:10:00Z",
+     "texte": "Hi Grant,\n\nI wanted to follow up personally on last week's payout delay. On November 10, a formatting error in the payout file we send to our bank meant 528 of your hosts' payouts arrived about 30 hours late. That's not the standard you should expect from us, and I'm sorry.\n\nAs a gesture, we'll apply a credit of $6,200 on your December invoice, the equivalent of your full November platform fees. We've also added a validation step so this file can't go out malformed again.\n\nHappy to jump on a call if useful.\n\nBest,\nRachel Dunmore\nVP Sales, Quillon Systems"
+    },
+    {
+     "id": "gmail-pinecrest-credit-2",
+     "role": "participant",
+     "auteur": "Grant Holloway",
+     "date": "2026-11-16T15:02:00Z",
+     "texte": "Thanks Rachel, appreciated. Our hosts were mostly understanding once the funds arrived.\n\nGrant\n\n> On Fri, Nov 13, 2026, Rachel Dunmore wrote:\n> As a gesture, we'll apply a credit of $6,200 on your December invoice..."
+    }
+   ]
+  },
+  {
+   "id": "chatgpt-marcus-nov-close",
+   "kind": "chatgpt",
+   "nature": "conversation",
+   "titre": "Booking customer service credits in November close",
+   "url": null,
+   "auteurs": [
+    "Marcus Oyelaran"
+   ],
+   "tours": [
+    {
+     "id": "chatgpt-marcus-nov-close-1",
+     "role": "user",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-17T19:30:00Z",
+     "texte": "november close question. we had a payout incident on nov 10 (bank rejected our ACH file, seller payouts ~30h late). we agreed service credits: Loomly $18,400 and Pinecrest $6,200, both applied as credit memos on their december invoices, no cash. how do i book this for november? my instinct is an opex line, \"customer concessions\""
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-17T19:31:00Z",
+     "texte": "Under ASC 606, a credit you give a customer on its future invoices is generally not an operating expense: it's consideration payable to the customer, which is accounted for as a reduction of revenue (contra-revenue), unless you're getting a distinct good or service in return, which you aren't here.\n\nTiming: the obligation arose in November (the incident happened on Nov 10 and you committed to the amounts on Nov 13), so it belongs in the November close even though the credit memos will be issued on the December invoices.\n\nSuggested entry for November:\n- Dr Revenue - service credits (contra-revenue) $24,600\n- Cr Accrued customer credits (current liability) $24,600\n\nIn December, when the credit memos are issued:\n- Dr Accrued customer credits $24,600\n- Cr Accounts receivable $24,600\n\nBooking it as \"customer concessions\" in opex would overstate revenue and gross margin; your auditors would likely ask you to reclassify. Worth confirming with them, but this is the standard treatment."
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-3",
+     "role": "user",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-17T19:38:00Z",
+     "texte": "ok makes sense, our auditors will ask anyway. going with a contra-revenue accrual in november for the 24,600. jenna posts the JE, reversal when the dec credit memos go out"
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-17T19:39:00Z",
+     "texte": "Here's the JE description for Jenna:\n\n\"Nov-26 accrual: service credits granted to Loomly ($18,400) and Pinecrest Rentals ($6,200) following the Nov 10 payout delay (QPAY-2291). Credits to be issued as credit memos on December invoices. Contra-revenue. Reverse upon issuance of the credit memos.\"\n\nAttach the Slack approval and the customer communications to the support for the entry."
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-5",
+     "role": "user",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-17T19:52:00Z",
+     "texte": "one more. loomly also wants us to reimburse their sellers' overdraft fees, 214 sellers, $7,690 total. rachel and i havent decided yet, carla told them answer by nov 25. do i accrue that too?"
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-6",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-17T19:54:00Z",
+     "texte": "Only if it's probable that you'll pay and the amount can be reasonably estimated. The amount is known ($7,690), but you haven't decided to pay it and you have no contractual obligation that I can see from what you've said, so it doesn't look probable yet.\n\nOptions:\n- If you decide to reimburse before the November books lock, accrue it then (same contra-revenue treatment if it's paid as a credit; if you pay the sellers directly it's more of a customer concession and you should discuss the classification with your auditors).\n- If it's still undecided at lock, don't accrue; mention it in the close memo as an open item."
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-7",
+     "role": "user",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-17T20:05:00Z",
+     "texte": "close locks dec 7 (BD5). leaving the overdraft fees out of november for now, i'll flag it as open in the close memo. write me that paragraph"
+    },
+    {
+     "id": "chatgpt-marcus-nov-close-8",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-17T20:06:00Z",
+     "texte": "\"Payout incident of November 10 (QPAY-2291). Service credits of $24,600 (Loomly $18,400; Pinecrest Rentals $6,200) were approved on November 13 and are accrued in November as a reduction of revenue; they will be issued as credit memos on the December invoices. Loomly has also requested reimbursement of overdraft fees incurred by 214 of its sellers ($7,690). No decision had been made at the close date and no amount is accrued; Loomly has been told it will receive an answer by November 25.\""
+    }
+   ]
+  },
+  {
+   "id": "drive-november-close-checklist",
+   "kind": "drive",
+   "nature": "fichier",
+   "titre": "November 2026 close - checklist",
+   "url": null,
+   "auteurs": [
+    "Jenna Kowalski"
+   ],
+   "tours": [
+    {
+     "id": "drive-november-close-checklist-1",
+     "role": "document",
+     "auteur": "Jenna Kowalski",
+     "date": "2026-11-16T22:00:00Z",
+     "texte": "November 2026 close - checklist\nOwner: Jenna Kowalski. Reviewer: Marcus Oyelaran. Books lock: BD5 = Mon Dec 7.\n\nTask | Owner | Due | Status\nBank recs: Corvane operating + settlement accounts | Jenna | BD2 | Not started\nCorvane October fee invoice reconciliation ($14,212.40, 177,655 ACH items) | Jenna | Nov 16 | Done\nPlatform fee revenue by customer (billing export) | Jenna | BD3 | Not started\nService credits accrual - payout incident (Loomly, Pinecrest) | Marcus | BD3 | In progress\nPayroll + bonus accrual (US + IL) | Jenna | BD3 | Not started\nDeferred revenue roll-forward (Tradewell onboarding fee) | Jenna | BD4 | Not started\nFX revaluation of ILS balances | Jenna | BD4 | Not started\nClose memo | Marcus | BD5 | Not started"
+    }
+   ]
+  },
+  {
+   "id": "drive-pci-evidence-tracker",
+   "kind": "drive",
+   "nature": "fichier",
+   "titre": "PCI DSS 4.0.1 - 2026 assessment - evidence tracker",
+   "url": null,
+   "auteurs": [
+    "Shira Ben-Ami"
+   ],
+   "tours": [
+    {
+     "id": "drive-pci-evidence-tracker-1",
+     "role": "document",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-09T12:00:00Z",
+     "texte": "PCI DSS v4.0.1 - 2026 assessment - evidence tracker\nAssessor: Ardent Assurance (QSA: Victor Lindqvist)\nScope: service provider level 1 - card vault (core/vault), API edge, merchant dashboard\n\nKey dates\n- Evidence package due in the Ardent portal: Tue Dec 1, 2026\n- On-site fieldwork: Tue Dec 8 - Thu Dec 10, 2026, Austin office (interviews and walkthroughs)\n- Draft Report on Compliance: early January 2027\n\nReq | Evidence | Owner | Status\n1.2.7 | Security group / firewall rule review export (Q4) | Elad | Done\n3.5.1 | Vault key rotation logs + KMS key policy | Tomer | In progress\n6.4.3 | Inventory and authorization of scripts on payment pages (dashboard checkout widget) | Lily | Not started\n8.4.2 | MFA enforcement screenshots (AWS, GitHub, Okta) | Elad | In progress\n10.5.1 | Audit log retention of at least 12 months (CloudWatch, S3) | Elad | In progress\n11.3.2 | Quarterly external ASV scan (Q4) | Elad | In progress\n12.8 | Third-party service provider list + AOCs (Corvane, AWS, Okta) | Shira | Done\n12.10.1 | Incident response plan, updated, + tabletop exercise record | Shira | In progress"
+    }
+   ]
+  },
+  {
+   "id": "gmail-ardent-portal",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Ardent evidence portal - access for Quillon Systems",
+   "url": null,
+   "auteurs": [
+    "Victor Lindqvist"
+   ],
+   "tours": [
+    {
+     "id": "gmail-ardent-portal-1",
+     "role": "participant",
+     "auteur": "Victor Lindqvist",
+     "date": "2026-11-09T15:00:00Z",
+     "texte": "Hi Shira,\n\nYour team's access to the Ardent evidence portal is now active. Each control owner gets their own login; please upload evidence against the requirement numbers in the request list (attached, 212 items).\n\nAs per the SOW, fieldwork is scheduled for December 8-10 at your Austin office, and the evidence package is due by December 1.\n\nBest regards,\nVictor Lindqvist\nQSA, Ardent Assurance"
+    }
+   ]
+  },
+  {
+   "id": "gmail-ardent-fieldwork",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Ardent / Quillon - fieldwork dates",
+   "url": null,
+   "auteurs": [
+    "Victor Lindqvist",
+    "Shira Ben-Ami"
+   ],
+   "tours": [
+    {
+     "id": "gmail-ardent-fieldwork-1",
+     "role": "participant",
+     "auteur": "Victor Lindqvist",
+     "date": "2026-11-16T14:12:00Z",
+     "texte": "Hi Shira,\n\nI'm afraid we need to move the on-site. Our second assessor, who leads the service-provider interviews, has a conflict the week of December 7. Could we do Tuesday December 15 to Thursday December 17 instead, same format, at your Austin office?\n\nThe December 1 deadline for the evidence package does not change.\n\nApologies for the shuffle.\n\nVictor Lindqvist\nQSA, Ardent Assurance"
+    },
+    {
+     "id": "gmail-ardent-fieldwork-2",
+     "role": "participant",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-16T15:03:00Z",
+     "texte": "Hi Victor,\n\nDecember 15-17 works on our side. I'll update our plan and let the team know. Please send updated invites.\n\nBest,\nShira\n\nShira Ben-Ami\nCompliance Officer, Quillon Systems"
+    },
+    {
+     "id": "gmail-ardent-fieldwork-3",
+     "role": "participant",
+     "auteur": "Victor Lindqvist",
+     "date": "2026-11-16T15:40:00Z",
+     "texte": "Thanks Shira, updated invites to follow.\n\nVictor"
+    }
+   ]
+  },
+  {
+   "id": "slack-compliance",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#compliance",
+   "url": null,
+   "auteurs": [
+    "Shira Ben-Ami",
+    "Lily Chen",
+    "Avi Kessler",
+    "Elad Navon",
+    "Tomer Golan"
+   ],
+   "tours": [
+    {
+     "id": "slack-compliance-1",
+     "role": "participant",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-12T08:30:00Z",
+     "texte": "PCI evidence status: everything is due Dec 1 in the Ardent portal. Still missing: 3.5.1 key rotation (@Tomer), 8.4.2 MFA screenshots (@Elad), 6.4.3 script inventory (@Lily, not started 😬), 12.10.1 IR plan (me, this week)."
+    },
+    {
+     "id": "slack-compliance-2",
+     "role": "participant",
+     "auteur": "Lily Chen",
+     "date": "2026-11-12T15:02:00Z",
+     "texte": "on it next week, sorry. is the list of scripts on the checkout widget enough or do they want the CSP too?"
+    },
+    {
+     "id": "slack-compliance-3",
+     "role": "participant",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-12T15:20:00Z",
+     "texte": "both: inventory + the CSP/SRI config as proof they're authorized"
+    },
+    {
+     "id": "slack-compliance-4",
+     "role": "participant",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-17T14:12:00Z",
+     "texte": "Reminder for everyone in scope: the PCI auditors are on site Dec 8-10 in Austin. Elad, Tomer, Lily, Carla, Marcus: block those 3 days, no PTO. TLV folks flying in, book your flights by end of week."
+    },
+    {
+     "id": "slack-compliance-5",
+     "role": "participant",
+     "auteur": "Elad Navon",
+     "date": "2026-11-17T14:30:00Z",
+     "texte": "blocked 👍 flying in on the 7th"
+    },
+    {
+     "id": "slack-compliance-6",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-17T15:01:00Z",
+     "texte": "same, booking tonight"
+    }
+   ]
+  },
+  {
+   "id": "claude-ai-shira-irp",
+   "kind": "claude_ai",
+   "nature": "conversation",
+   "titre": "Incident response plan update for PCI 12.10.1",
+   "url": null,
+   "auteurs": [
+    "Shira Ben-Ami"
+   ],
+   "tours": [
+    {
+     "id": "claude-ai-shira-irp-1",
+     "role": "user",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-12T10:00:00Z",
+     "texte": "I need to update our incident response plan for PCI DSS 12.10.1 before the on-site (dec 8-10). the assessor will want to see it covers a suspected card data compromise, roles, comms incl. card brands and our acquirer, and a tabletop record from the last 12 months. our current plan is 4 pages from 2025 and only talks about outages. give me the outline of what to add"
+    },
+    {
+     "id": "claude-ai-shira-irp-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T10:02:00Z",
+     "texte": "Here's what 12.10.1 expects and what your plan likely needs on top of the outage content:\n\n1. Roles and contacts: incident commander, security lead, legal, comms, executive sponsor, with deputies.\n2. Specific procedures for a suspected compromise of cardholder data: containment, preserving evidence (logs, images), when to engage a PCI Forensic Investigator (PFI).\n3. Notification: payment brands and your acquirer within their timeframes, customers (platforms), legal/regulatory notification by jurisdiction.\n4. Business recovery and continuity: how payouts and card processing continue or stop.\n5. Data backup processes.\n6. Analysis of legal requirements for reporting compromises.\n7. Coverage and responses of all critical system components (vault, API edge, dashboard).\n8. Reference to the incident response procedures of the payment brands.\n\nFor 12.10.2 you also need evidence that the plan was reviewed and tested at least once in the last 12 months, typically a tabletop record with date, participants, scenario and lessons learned."
+    },
+    {
+     "id": "claude-ai-shira-irp-3",
+     "role": "user",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-12T10:09:00Z",
+     "texte": "can we use the nov 10 payout incident as our tabletop? it was a real incident but no card data involved"
+    },
+    {
+     "id": "claude-ai-shira-irp-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T10:11:00Z",
+     "texte": "You can use it as evidence that the plan's communication and escalation steps work, and it's worth documenting (timeline, detection gap, lessons learned). But it doesn't exercise the cardholder-data parts of the plan (containment, forensics, brand notification), which is what the assessor will look for. I'd add a short tabletop on a card-data scenario before the on-site so you have both."
+    },
+    {
+     "id": "claude-ai-shira-irp-5",
+     "role": "user",
+     "auteur": "Shira Ben-Ami",
+     "date": "2026-11-12T10:15:00Z",
+     "texte": "ok. 1h tabletop next week with avi elad tomer. scenario: a leaked API key is used to enumerate vault tokens. draft it with injects"
+    },
+    {
+     "id": "claude-ai-shira-irp-6",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T10:18:00Z",
+     "texte": "Tabletop: \"Leaked API key enumerating vault tokens\" (60 min)\n\nInject 1 (T+0): WAF alert, unusual volume of GET /v1/vault/tokens from one API key, 40x baseline.\nInject 2 (T+10): the key belongs to a marketplace's staging integration, but traffic comes from an unknown ASN.\nInject 3 (T+20): logs show 3,100 token lookups returned card metadata (last 4, brand, expiry) but no PAN.\nInject 4 (T+35): a journalist emails asking about \"a Quillon data breach\".\n\nQuestions per inject: who decides, what do we contain, what do we preserve, who do we notify and when, do we call a PFI.\n\nRecord template: date, participants, decisions per inject, gaps found, owners and dates for fixes."
+    }
+   ]
+  },
+  {
+   "id": "jira-qpay-2318",
+   "kind": "jira",
+   "nature": "ticket",
+   "titre": "QPAY-2318 PCI 11.3.2: Q4 external ASV scan",
+   "url": "https://quillon.atlassian.net/browse/QPAY-2318",
+   "auteurs": [
+    "Elad Navon"
+   ],
+   "tours": [
+    {
+     "id": "jira-qpay-2318-1",
+     "role": "document",
+     "auteur": "Elad Navon",
+     "date": "2026-11-03T08:00:00Z",
+     "texte": "Run the Q4 external vulnerability scan with our ASV (ScanGuard) on all public endpoints (api.quillon.example, dashboard, webhooks egress IPs). Need a passing scan uploaded to the Ardent portal before Dec 1."
+    },
+    {
+     "id": "jira-qpay-2318-2",
+     "role": "participant",
+     "auteur": "Elad Navon",
+     "date": "2026-11-15T09:40:00Z",
+     "texte": "First scan flagged TLS 1.0 on the legacy webhooks egress LB. Disabled it (terraform#385), rescan passed on 14/11. Passing report uploaded to the Ardent portal. Done."
+    }
+   ]
+  },
+  {
+   "id": "claude-code-elad-log-retention",
+   "kind": "claude_code",
+   "nature": "conversation",
+   "titre": "terraform: log retention 400 days",
+   "url": null,
+   "auteurs": [
+    "Elad Navon"
+   ],
+   "tours": [
+    {
+     "id": "claude-code-elad-log-retention-1",
+     "role": "user",
+     "auteur": "Elad Navon",
+     "date": "2026-11-15T07:30:00Z",
+     "texte": "quillon/terraform: pci 10.5.1 wants 12 months of audit logs, 3 months immediately available. set every cloudwatch log group in modules/observability to 400 days and add an s3 lifecycle on the audit-logs bucket: standard 90d -> glacier IR, expire at 400d"
+    },
+    {
+     "id": "claude-code-elad-log-retention-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-15T07:41:00Z",
+     "texte": "Changes:\n- `modules/observability/log_groups.tf`: `retention_in_days = var.log_retention_days`, default 400 (was 30 on 11 groups, 90 on 4, never-expire on 2).\n- `modules/audit_logs/s3.tf`: lifecycle rule `audit-retention`: transition to GLACIER_IR after 90 days, expiration after 400 days. Object Lock in governance mode is already on, so expiration only applies after the lock period (365 days), consistent.\n\n`terraform plan` (prod): 17 to change, 0 to add, 0 to destroy. Estimated extra storage cost: about $310/month, mostly the api-edge access logs."
+    },
+    {
+     "id": "claude-code-elad-log-retention-3",
+     "role": "user",
+     "auteur": "Elad Navon",
+     "date": "2026-11-15T07:45:00Z",
+     "texte": "310/month is fine. open the pr, ill attach the plan output to the evidence in the ardent portal"
+    },
+    {
+     "id": "claude-code-elad-log-retention-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-15T07:47:00Z",
+     "texte": "Opened terraform#386 \"observability: 400-day log retention for PCI 10.5.1\" with the plan output in the description."
+    }
+   ]
+  },
+  {
+   "id": "drive-tradewell-contract-summary",
+   "kind": "drive",
+   "nature": "fichier",
+   "titre": "Tradewell - MSA key terms (internal)",
+   "url": null,
+   "auteurs": [
+    "Rachel Dunmore"
+   ],
+   "tours": [
+    {
+     "id": "drive-tradewell-contract-summary-1",
+     "role": "document",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-10-23T14:00:00Z",
+     "texte": "Tradewell - MSA key terms (internal summary, not the contract)\n\nSigned: Oct 22, 2026\nGo-live: Monday Dec 7, 2026 (contractual, section 4.2)\nLate go-live: if go-live slips for reasons attributable to Quillon, fee credit of 10% of the first month's platform fees per week of delay, capped at 30%.\n\nPricing: 0.38% payout fee (custom), minimum $25k/month from month 3. Onboarding fee $40k, invoiced at signature.\nIn scope at go-live: split payments, seller KYC (US + Canada), ACH payouts on one platform-wide payout schedule, webhooks.\nNot in scope: instant payouts, payouts in CAD.\nTradewell obligations: provide seller data files for KYC; complete webhook integration on sandbox.\n\nContacts: Martin Kobayashi (Head of Payments, our sponsor), Ellen Vance (Engineering lead).\nQuillon team: Owen (AE), Rachel (exec sponsor), Jake (integration), Noam (KYC import)."
+    }
+   ]
+  },
+  {
+   "id": "gong-tradewell-1112",
+   "kind": "gong",
+   "nature": "reunion",
+   "titre": "Tradewell - weekly onboarding sync",
+   "url": null,
+   "auteurs": [
+    "Owen Park",
+    "Martin Kobayashi",
+    "Ellen Vance",
+    "Jake Whitfield"
+   ],
+   "tours": [
+    {
+     "id": "gong-tradewell-1112-1",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-12T17:01:00Z",
+     "texte": "Okay, I think we have everyone. Martin, Ellen, thanks for joining. From our side the agenda is the KYC import, your sandbox testing, and anything that could block you for December 7th."
+    },
+    {
+     "id": "gong-tradewell-1112-2",
+     "role": "participant",
+     "auteur": "Martin Kobayashi",
+     "date": "2026-11-12T17:03:00Z",
+     "texte": "Yeah, so December 7th is still the date on our side, our seller comms are scheduled around it, so we really can't move. Two things I want to flag though. The first one is that Ellen's team has been fighting your webhooks all week."
+    },
+    {
+     "id": "gong-tradewell-1112-3",
+     "role": "participant",
+     "auteur": "Ellen Vance",
+     "date": "2026-11-12T17:04:00Z",
+     "texte": "Right. Every payout.paid and seller.verified event we receive on sandbox fails signature verification. We compute the HMAC-SHA256 over the raw body with the secret from the dashboard, like your docs say, and it doesn't match. Maybe one in twenty verifies, which is weird. Right now we've turned verification off on sandbox, which obviously we can't do in production."
+    },
+    {
+     "id": "gong-tradewell-1112-4",
+     "role": "participant",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-12T17:06:00Z",
+     "texte": "Okay, that one's on us. One in twenty smells like a serialization problem on our side. I'll take it. Can you send me a few failing event IDs?"
+    },
+    {
+     "id": "gong-tradewell-1112-5",
+     "role": "participant",
+     "auteur": "Ellen Vance",
+     "date": "2026-11-12T17:06:00Z",
+     "texte": "Sure, I'll drop them in the shared channel after the call."
+    },
+    {
+     "id": "gong-tradewell-1112-6",
+     "role": "participant",
+     "auteur": "Martin Kobayashi",
+     "date": "2026-11-12T17:08:00Z",
+     "texte": "The second thing is bigger. Our top sellers, about two hundred of them, are on net-7 payouts in our current system, everybody else is on net-30. Today Quillon gives us one payout schedule for the whole platform. We need schedules per seller, otherwise we're downgrading our best sellers on day one."
+    },
+    {
+     "id": "gong-tradewell-1112-7",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-12T17:10:00Z",
+     "texte": "Understood. I don't want to promise something on the call. Let me take it back to product and engineering and come back to you with a clear answer."
+    },
+    {
+     "id": "gong-tradewell-1112-8",
+     "role": "participant",
+     "auteur": "Martin Kobayashi",
+     "date": "2026-11-12T17:10:00Z",
+     "texte": "Fine, but I need it soon. We have to tell those sellers what happens in December."
+    },
+    {
+     "id": "gong-tradewell-1112-9",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-12T17:12:00Z",
+     "texte": "Noted. On KYC, we have about 1,400 of your 3,200 sellers through verification; the rest is waiting on the next seller files from your side."
+    },
+    {
+     "id": "gong-tradewell-1112-10",
+     "role": "participant",
+     "auteur": "Martin Kobayashi",
+     "date": "2026-11-12T17:13:00Z",
+     "texte": "You'll have the remaining files early next week."
+    }
+   ]
+  },
+  {
+   "id": "slack-ext-tradewell",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#ext-tradewell",
+   "url": null,
+   "auteurs": [
+    "Ellen Vance",
+    "Owen Park",
+    "Noam Peretz",
+    "Jake Whitfield",
+    "Martin Kobayashi"
+   ],
+   "tours": [
+    {
+     "id": "slack-ext-tradewell-1",
+     "role": "participant",
+     "auteur": "Ellen Vance",
+     "date": "2026-11-12T18:20:00Z",
+     "texte": "@Jake failing event ids from this morning (all payout.paid): evt_9KQ2xT, evt_9KQ7mB, evt_9KRb4L. the one that verified: evt_9KQ5aa"
+    },
+    {
+     "id": "slack-ext-tradewell-2",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-13T16:05:00Z",
+     "texte": "@Martin on per-seller payout schedules: we're scoping it with product and engineering, you'll have a clear answer from me by Friday Nov 20."
+    },
+    {
+     "id": "slack-ext-tradewell-3",
+     "role": "participant",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-16T12:30:00Z",
+     "texte": "@Ellen got seller files 3 and 4, thanks. import running."
+    },
+    {
+     "id": "slack-ext-tradewell-4",
+     "role": "participant",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-16T21:40:00Z",
+     "texte": "@Ellen the fix for webhook signatures is deployed on sandbox (we were signing a re-serialized body, not the bytes we actually send). Can you turn verification back on and retry?"
+    },
+    {
+     "id": "slack-ext-tradewell-5",
+     "role": "participant",
+     "auteur": "Ellen Vance",
+     "date": "2026-11-17T15:15:00Z",
+     "texte": "Turned verification back on this morning, 300+ events since, all payout.paid and seller.verified verify ✅ thanks Jake"
+    },
+    {
+     "id": "slack-ext-tradewell-6",
+     "role": "participant",
+     "auteur": "Martin Kobayashi",
+     "date": "2026-11-17T15:30:00Z",
+     "texte": "Good news. @Owen any update on the payout schedules? We need it for our seller comms."
+    }
+   ]
+  },
+  {
+   "id": "github-core-1187",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "core#1187 webhooks: sign the raw request body instead of re-serialized JSON",
+   "url": "https://github.com/quillon/core/pull/1187",
+   "auteurs": [
+    "Jake Whitfield",
+    "Noam Peretz"
+   ],
+   "tours": [
+    {
+     "id": "github-core-1187-1",
+     "role": "document",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-16T16:05:00Z",
+     "texte": "Fixes the signature mismatches Tradewell sees on sandbox (about 95% of webhooks fail verification).\n\nCause: the Rust core signs the canonical event JSON (keys sorted). The TypeScript delivery worker parses that JSON, adds `delivered_at` and `attempt`, then re-serializes with `JSON.stringify`, which keeps insertion order, not sorted order. The body we send is not the body we signed. Only retries after the 3rd attempt verify, because they go through the legacy Rust delivery path, which sends the signed bytes as is: hence \"one in twenty\".\n\nFix:\n- The worker now builds the final body first, signs exactly those bytes (HMAC-SHA256, `Quillon-Signature: t=...,v1=...`) and sends the same buffer.\n- `delivered_at` and `attempt` move to headers (`Quillon-Delivered-At`, `Quillon-Attempt`), as documented.\n- Regression test: verify every fixture event with the reference verifier from our docs (Node, Python, Ruby snippets)."
+    },
+    {
+     "id": "github-core-1187-2",
+     "role": "participant",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-16T18:40:00Z",
+     "texte": "Approve. Checked that the docs snippets are what the test runs. Please note in the changelog that delivered_at moved to a header, someone may read it from the body."
+    },
+    {
+     "id": "github-core-1187-3",
+     "role": "participant",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-16T21:30:00Z",
+     "texte": "Changelog updated. Merged and deployed to sandbox. Goes to production with release 2026.47 (Tue Nov 24)."
+    }
+   ]
+  },
+  {
+   "id": "jira-qpay-2362",
+   "kind": "jira",
+   "nature": "ticket",
+   "titre": "QPAY-2362 Per-seller payout schedules (Tradewell request)",
+   "url": "https://quillon.atlassian.net/browse/QPAY-2362",
+   "auteurs": [
+    "Sofia Alvarez",
+    "Tomer Golan",
+    "Avi Kessler"
+   ],
+   "tours": [
+    {
+     "id": "jira-qpay-2362-1",
+     "role": "document",
+     "auteur": "Sofia Alvarez",
+     "date": "2026-11-13T15:00:00Z",
+     "texte": "Tradewell asked on the 12/11 sync for payout schedules per seller: net-7 for about 200 top sellers, net-30 for everyone else. Today a platform has a single payout schedule.\n\nNeeded:\n- schedule override at seller level (API + dashboard)\n- payout batching per schedule\n- ledger: available balance computed per seller schedule\n\nQuestion for eng: can this make the Dec 7 go-live?"
+    },
+    {
+     "id": "jira-qpay-2362-2",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-15T09:00:00Z",
+     "texte": "Not small. The batcher groups by platform schedule; per-seller means splitting batches and changing how the ledger computes available balances. Estimate 3-4 weeks including testing and a dry run with Corvane."
+    },
+    {
+     "id": "jira-qpay-2362-3",
+     "role": "participant",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-16T08:30:00Z",
+     "texte": "Not for Dec 7. We're not touching the batcher three weeks before a contractual go-live. Earliest is late January. @Owen please set expectations with Martin. Moving to Backlog, target 2027-Q1."
+    }
+   ]
+  },
+  {
+   "id": "claude-code-jake-webhook-sig",
+   "kind": "claude_code",
+   "nature": "conversation",
+   "titre": "core: tradewell webhook signature mismatch",
+   "url": null,
+   "auteurs": [
+    "Jake Whitfield"
+   ],
+   "tours": [
+    {
+     "id": "claude-code-jake-webhook-sig-1",
+     "role": "user",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-13T15:02:00Z",
+     "texte": "tradewell says our webhook signatures dont verify on sandbox, ~1 in 20 works. failing: evt_9KQ2xT evt_9KQ7mB evt_9KRb4L, ok: evt_9KQ5aa. signing is in crates/webhooks (rust) and delivery in services/webhook-worker (ts). find why"
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-13T15:10:00Z",
+     "texte": "I'll compare what is signed and what is sent for the four events.\n\n1. `crates/webhooks/src/sign.rs`: the signature is HMAC-SHA256 over `serde_json::to_vec(&event)` with `BTreeMap` fields, so keys are sorted.\n2. `services/webhook-worker/src/deliver.ts`: the worker receives `{ body, signature }` from the queue, then does `const payload = JSON.parse(body); payload.delivered_at = now(); payload.attempt = n; await post(url, JSON.stringify(payload), headers)`.\n\nSo the body sent is not the body signed:\n- keys come out in insertion order after `JSON.parse` + `JSON.stringify`, not sorted;\n- two fields are added after signing.\n\nThe working event `evt_9KQ5aa` has an empty `metadata` object and, by chance, its keys are already in insertion order; with the two added fields at the end it still fails... let me check that one more carefully."
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-3",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-13T15:18:00Z",
+     "texte": "Correction: `evt_9KQ5aa` verifies because it was a retry delivered by the old Rust delivery path (`attempt > 3` falls back to `crates/webhooks/src/legacy_deliver.rs`, which sends the signed bytes as is). So:\n- events delivered by the TS worker (attempts 1-3) always fail;\n- events that reach the legacy path verify.\nThat's the \"1 in 20\".\n\nFix options:\nA. Sign in the worker: build the final body, sign those exact bytes, send the same buffer. Move `delivered_at`/`attempt` to headers.\nB. Keep signing in Rust and forbid the worker from touching the body.\n\nA is simpler and matches our docs, which already describe `Quillon-Attempt` as a header."
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-4",
+     "role": "user",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-13T15:25:00Z",
+     "texte": "A. and kill the legacy path while youre at it? no, leave it, separate pr. do A + regression test that runs the doc snippets"
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-5",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-13T16:40:00Z",
+     "texte": "Done on branch `jake/webhook-raw-body`:\n- `deliver.ts`: body built once, signed with the endpoint secret, same Buffer sent. `delivered_at` and `attempt` are now headers.\n- `sign.ts` mirrors the Rust signer (t=timestamp, v1=hex).\n- New test `signature.docs.test.ts` runs the Node, Python and Ruby verification snippets from docs/webhooks.md against 40 fixture events: all verify.\n- pnpm test (webhook-worker) ... 96 passed.\n\nI haven't pushed yet. Want me to deploy to sandbox first so Tradewell can retry?"
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-6",
+     "role": "user",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-13T16:44:00Z",
+     "texte": "no deploy on a friday evening lol. monday"
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-7",
+     "role": "user",
+     "auteur": "Jake Whitfield",
+     "date": "2026-11-16T14:05:00Z",
+     "texte": "rebase on main and open the PR. title: webhooks: sign the raw request body instead of re-serialized JSON. mention tradewell + changelog note"
+    },
+    {
+     "id": "claude-code-jake-webhook-sig-8",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-16T16:06:00Z",
+     "texte": "Rebased on main (no conflicts), pushed, and opened core#1187 with the cause, the fix and the changelog note about `delivered_at` moving to a header. PR #1187 is open and ready for review."
+    }
+   ]
+  },
+  {
+   "id": "jira-qpay-2340",
+   "kind": "jira",
+   "nature": "ticket",
+   "titre": "QPAY-2340 Tradewell: bulk seller KYC import (3,200 sellers)",
+   "url": "https://quillon.atlassian.net/browse/QPAY-2340",
+   "auteurs": [
+    "Noam Peretz"
+   ],
+   "tours": [
+    {
+     "id": "jira-qpay-2340-1",
+     "role": "document",
+     "auteur": "Noam Peretz",
+     "date": "2026-10-28T09:00:00Z",
+     "texte": "Import Tradewell's existing sellers (about 3,200, US + Canada) through the bulk KYC endpoint before go-live. Files delivered by Tradewell in batches (CSV + documents). Target: all sellers verified or flagged by Nov 30."
+    },
+    {
+     "id": "jira-qpay-2340-2",
+     "role": "participant",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-12T10:00:00Z",
+     "texte": "1,400 / 3,200 verified. Waiting for seller files 3 and 4 from Tradewell."
+    },
+    {
+     "id": "jira-qpay-2340-3",
+     "role": "participant",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-16T16:00:00Z",
+     "texte": "Files 3 and 4 received today. 1,950 / 3,200 verified, 140 need manual review (address mismatch). On track for Nov 30."
+    }
+   ]
+  },
+  {
+   "id": "slack-eng-payouts-releases",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#eng-payouts",
+   "url": null,
+   "auteurs": [
+    "Elad Navon",
+    "Tomer Golan"
+   ],
+   "tours": [
+    {
+     "id": "slack-eng-payouts-releases-1",
+     "role": "participant",
+     "auteur": "Elad Navon",
+     "date": "2026-11-17T10:00:00Z",
+     "texte": "Release 2026.46 is in production: core#1171 (NACHA field validation before upload), core#1179 (ledger balance index). Next train 2026.47 on Tue Nov 24: core#1187 (webhook raw-body signing, already on sandbox), dashboard#903."
+    },
+    {
+     "id": "slack-eng-payouts-releases-2",
+     "role": "participant",
+     "auteur": "Tomer Golan",
+     "date": "2026-11-17T10:12:00Z",
+     "texte": "tonight's file went through validation fine, 2,031 entries, ack from Corvane at 02:05 CT ✅"
+    }
+   ]
+  },
+  {
+   "id": "drive-q1-pricing-memo",
+   "kind": "drive",
+   "nature": "fichier",
+   "titre": "Q1 2027 pricing change - decision memo (v3)",
+   "url": null,
+   "auteurs": [
+    "Sofia Alvarez"
+   ],
+   "tours": [
+    {
+     "id": "drive-q1-pricing-memo-1",
+     "role": "document",
+     "auteur": "Sofia Alvarez",
+     "date": "2026-11-09T17:00:00Z",
+     "texte": "Q1 2027 pricing change - decision memo (v3, approved Nov 6)\nAuthors: Sofia Alvarez, Marcus Oyelaran\n\nWhat changes on January 1, 2027\nThe payout fee moves from a flat 0.50% to volume tiers, on monthly payout volume:\n- 0.50% up to $5M\n- 0.35% from $5M to $20M\n- 0.25% above $20M\nInstant payouts stay at 1.0%. Platforms on custom pricing (Tradewell, Loomly) are not affected until their renewal.\n\nNotice\nOur standard terms require 30 days' written notice: notices must go out by December 1. Plan: Tuesday November 24.\n\nMargin\nBank cost assumption: the Corvane per-item ACH fee stays at $0.08 in 2027. The current Corvane agreement runs until March 31, 2027. Marcus to open renewal talks with Corvane in November. If the per-item fee goes above $0.10, revisit the bottom tier.\n\nExpected impact: about -3% revenue on the top 10 platforms, about +2% net revenue on the long tail (fewer discounts negotiated by hand)."
+    }
+   ]
+  },
+  {
+   "id": "slack-finance-corvane",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#finance",
+   "url": null,
+   "auteurs": [
+    "Marcus Oyelaran",
+    "Jenna Kowalski"
+   ],
+   "tours": [
+    {
+     "id": "slack-finance-corvane-1",
+     "role": "participant",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-16T17:20:00Z",
+     "texte": "FYI Corvane renewal: Paula Brandt (our RM) is out this week, so the call we had for Thursday moves to the week of Nov 23. She hinted they want to raise the per-item fee after the Nov 10 reject mess 🙄 nothing on paper yet."
+    },
+    {
+     "id": "slack-finance-corvane-2",
+     "role": "participant",
+     "auteur": "Jenna Kowalski",
+     "date": "2026-11-16T17:31:00Z",
+     "texte": "noted. does it change anything for the Q1 notices?"
+    },
+    {
+     "id": "slack-finance-corvane-3",
+     "role": "participant",
+     "auteur": "Marcus Oyelaran",
+     "date": "2026-11-16T17:35:00Z",
+     "texte": "No, the notices go out Nov 24 either way. Corvane only affects our margin, not customer pricing."
+    }
+   ]
+  },
+  {
+   "id": "slack-sales-q1-notices",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#sales",
+   "url": null,
+   "auteurs": [
+    "Rachel Dunmore",
+    "Owen Park"
+   ],
+   "tours": [
+    {
+     "id": "slack-sales-q1-notices-1",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-16T15:00:00Z",
+     "texte": "Q1 pricing notices go out Tue Nov 24 to every platform on standard pricing. Template is in Drive (\"Q1 pricing notice v2\"). AEs: if one of your accounts is above $20M/month payout volume, call them before the email lands."
+    },
+    {
+     "id": "slack-sales-q1-notices-2",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-16T15:12:00Z",
+     "texte": "Tradewell is on custom pricing so not affected, right? From SFDC:\nOpportunity: Tradewell - Marketplace payments | Stage: Closed Won | ARR: $412,000 | Close date: 10/22/2026 | Go-live: 12/07/2026 | Pricing: custom (0.38%)"
+    },
+    {
+     "id": "slack-sales-q1-notices-3",
+     "role": "participant",
+     "auteur": "Rachel Dunmore",
+     "date": "2026-11-16T15:15:00Z",
+     "texte": "Correct, not affected until renewal."
+    }
+   ]
+  },
+  {
+   "id": "slack-hiring",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#hiring",
+   "url": null,
+   "auteurs": [
+    "Hadas Levin",
+    "Avi Kessler"
+   ],
+   "tours": [
+    {
+     "id": "slack-hiring-1",
+     "role": "participant",
+     "auteur": "Hadas Levin",
+     "date": "2026-11-16T09:15:00Z",
+     "texte": "🎉 Yarden Tal signed the Senior SRE offer! Starts Monday Jan 4 in TLV. Thanks Elad and Avi for the fast loop."
+    },
+    {
+     "id": "slack-hiring-2",
+     "role": "participant",
+     "auteur": "Avi Kessler",
+     "date": "2026-11-16T09:20:00Z",
+     "texte": "🔥 welcome Yarden"
+    },
+    {
+     "id": "slack-hiring-3",
+     "role": "participant",
+     "auteur": "Hadas Levin",
+     "date": "2026-11-17T13:00:00Z",
+     "texte": "Support engineer (Austin): final round Thu Nov 19 with 2 candidates. Panel: Carla + Jake. Scorecards in the ATS please, same day."
+    }
+   ]
+  },
+  {
+   "id": "chatgpt-hadas-support-scorecard",
+   "kind": "chatgpt",
+   "nature": "conversation",
+   "titre": "Support engineer interview scorecard",
+   "url": null,
+   "auteurs": [
+    "Hadas Levin"
+   ],
+   "tours": [
+    {
+     "id": "chatgpt-hadas-support-scorecard-1",
+     "role": "user",
+     "auteur": "Hadas Levin",
+     "date": "2026-11-12T08:40:00Z",
+     "texte": "i'm recruiting a support engineer for a payments API company (B2B, marketplaces are our customers). hiring manager is the support manager. final round = 1h troubleshooting exercise + 30 min with an engineer. build me a scorecard, 4-5 criteria, 1-4 scale with anchors"
+    },
+    {
+     "id": "chatgpt-hadas-support-scorecard-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T08:42:00Z",
+     "texte": "Support Engineer - final round scorecard (1-4)\n\n1. Technical troubleshooting: reads API logs and webhook payloads, forms and tests hypotheses. 1 = guesses; 4 = isolates the cause and proves it.\n2. Payments domain: understands payouts, KYC, chargebacks, settlement timing. 1 = none; 4 = explains trade-offs to a customer.\n3. Written communication: the reply to the customer in the exercise. 1 = unclear or blames; 4 = clear, honest, actionable.\n4. Escalation judgment: knows when to involve engineering and what to give them. 1 = escalates everything or nothing; 4 = a reproducible ticket.\n5. Customer empathy under pressure. 1 = defensive; 4 = calm, owns the problem.\n\nDecision rule: hire if average >= 3 and no criterion at 1."
+    },
+    {
+     "id": "chatgpt-hadas-support-scorecard-3",
+     "role": "user",
+     "auteur": "Hadas Levin",
+     "date": "2026-11-12T08:50:00Z",
+     "texte": "good. make the exercise: a marketplace says webhooks stopped arriving since yesterday. give the candidate fake logs"
+    },
+    {
+     "id": "chatgpt-hadas-support-scorecard-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T08:53:00Z",
+     "texte": "Exercise: \"Webhooks stopped arriving\". Material: a customer email, 30 lines of delivery logs showing 410 Gone from the customer's endpoint since 14:02 UTC, and the endpoint settings page showing the URL was changed yesterday at 14:00. Expected: spot that the customer changed their endpoint, check the new URL returns 410, reply with the fix and how to replay missed events."
+    }
+   ]
+  },
+  {
+   "id": "gmail-northpeak-shortlist",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Support Engineer (Austin) - shortlist",
+   "url": null,
+   "auteurs": [
+    "Liam Ortega"
+   ],
+   "tours": [
+    {
+     "id": "gmail-northpeak-shortlist-1",
+     "role": "participant",
+     "auteur": "Liam Ortega",
+     "date": "2026-11-10T16:30:00Z",
+     "texte": "Hi Hadas,\n\nHere's the shortlist for the Support Engineer role in Austin:\n\n1. Candidate A: 4 years of API support at a payroll SaaS, strong on webhooks and logs.\n2. Candidate B: 3 years at a card issuer's developer support team, payments domain, some SQL.\n3. Candidate C: 2 years of technical support at a logistics marketplace, very strong written communication.\n\nFull profiles are in the shared folder. All three are available for interviews next week.\n\nAs a reminder, our fee is 20% of first-year base salary, payable on start date.\n\nBest,\nLiam Ortega\nNorthpeak Talent"
+    }
+   ]
+  },
+  {
+   "id": "cursor-ido-dashboard-dark-mode",
+   "kind": "cursor",
+   "nature": "conversation",
+   "titre": "dashboard: payouts table unreadable in dark mode",
+   "url": null,
+   "auteurs": [
+    "Ido Marom"
+   ],
+   "tours": [
+    {
+     "id": "cursor-ido-dashboard-dark-mode-1",
+     "role": "user",
+     "auteur": "Ido Marom",
+     "date": "2026-11-15T11:00:00Z",
+     "texte": "payouts table in dark mode: status badges are grey on grey, failed rows unreadable. fix in components/PayoutsTable + the badge tokens, dont hardcode colors"
+    },
+    {
+     "id": "cursor-ido-dashboard-dark-mode-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-15T11:06:00Z",
+     "texte": "The badges use `bg-muted text-muted-foreground` for every status, and the failed row uses `bg-red-50`, which has no dark variant.\n\nChanges:\n- `StatusBadge.tsx`: one variant per status mapped to tokens `--status-paid`, `--status-pending`, `--status-failed`, `--status-returned`, each defined for light and dark in `globals.css`.\n- `PayoutsTable.tsx`: the failed row uses `bg-[var(--status-failed-surface)]`.\nContrast checked: all badge texts are above 4.5:1 in both themes."
+    },
+    {
+     "id": "cursor-ido-dashboard-dark-mode-3",
+     "role": "user",
+     "auteur": "Ido Marom",
+     "date": "2026-11-15T11:10:00Z",
+     "texte": "ok, run the storybook snapshot tests"
+    },
+    {
+     "id": "cursor-ido-dashboard-dark-mode-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-15T11:14:00Z",
+     "texte": "pnpm test:visual ... 42 passed, 6 updated (the badge stories, light and dark). Ready to commit."
+    }
+   ]
+  },
+  {
+   "id": "codex-noam-ledger-index",
+   "kind": "codex",
+   "nature": "conversation",
+   "titre": "core: slow ledger balance query",
+   "url": null,
+   "auteurs": [
+    "Noam Peretz"
+   ],
+   "tours": [
+    {
+     "id": "codex-noam-ledger-index-1",
+     "role": "user",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-11T07:20:00Z",
+     "texte": "GET /v1/sellers/:id/balance p95 went from 40ms to 900ms this week. query is in crates/ledger/src/balance.rs. find why"
+    },
+    {
+     "id": "codex-noam-ledger-index-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-11T07:31:00Z",
+     "texte": "EXPLAIN ANALYZE on the balance query shows a sequential scan on `ledger_entries` (41M rows) filtered by `seller_id` and `status IN ('posted','pending')`. The existing index is on `(platform_id, created_at)`; it stopped being used after the planner statistics were refreshed on Monday.\n\nProposal: a partial composite index `(seller_id, currency) WHERE status IN ('posted','pending')`, created CONCURRENTLY. On a copy of prod: p95 drops to 12ms."
+    },
+    {
+     "id": "codex-noam-ledger-index-3",
+     "role": "user",
+     "auteur": "Noam Peretz",
+     "date": "2026-11-11T07:35:00Z",
+     "texte": "do it, migration with concurrently, PR"
+    },
+    {
+     "id": "codex-noam-ledger-index-4",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-11T07:52:00Z",
+     "texte": "Migration `0147_ledger_entries_seller_balance_idx.sql` added (CREATE INDEX CONCURRENTLY, no transaction). Opened core#1179."
+    }
+   ]
+  },
+  {
+   "id": "github-dashboard-907",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "dashboard#907 chore(deps): bump next from 15.5.4 to 15.5.6",
+   "url": "https://github.com/quillon/dashboard/pull/907",
+   "auteurs": [
+    "dependabot[bot]",
+    "Lily Chen"
+   ],
+   "tours": [
+    {
+     "id": "github-dashboard-907-1",
+     "role": "document",
+     "auteur": "dependabot[bot]",
+     "date": "2026-11-14T03:00:00Z",
+     "texte": "Bumps next from 15.5.4 to 15.5.6.\n\nRelease notes: bug fixes in the app router cache and image optimization.\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself."
+    },
+    {
+     "id": "github-dashboard-907-2",
+     "role": "participant",
+     "auteur": "Lily Chen",
+     "date": "2026-11-16T15:30:00Z",
+     "texte": "CI green, merging."
+    }
+   ]
+  },
+  {
+   "id": "jira-qpay-2350",
+   "kind": "jira",
+   "nature": "ticket",
+   "titre": "QPAY-2350 CSV export uses UTC dates for payouts",
+   "url": "https://quillon.atlassian.net/browse/QPAY-2350",
+   "auteurs": [
+    "Lily Chen",
+    "Sofia Alvarez"
+   ],
+   "tours": [
+    {
+     "id": "jira-qpay-2350-1",
+     "role": "document",
+     "auteur": "Lily Chen",
+     "date": "2026-11-10T18:00:00Z",
+     "texte": "Platforms outside UTC see payouts on the wrong day in the CSV export (a payout at 20:00 CT on Nov 9 shows as Nov 10). The dashboard table uses the platform time zone, the export doesn't. Fix: format dates in the platform time zone and add an ISO timestamp column with offset."
+    },
+    {
+     "id": "jira-qpay-2350-2",
+     "role": "participant",
+     "auteur": "Sofia Alvarez",
+     "date": "2026-11-11T14:00:00Z",
+     "texte": "Pinecrest and two others reported it. Not urgent but let's ship it this month."
+    }
+   ]
+  },
+  {
+   "id": "zendesk-48377",
+   "kind": "zendesk",
+   "nature": "ticket",
+   "titre": "#48377 How do I change the bank account for my payouts?",
+   "url": null,
+   "auteurs": [
+    "Hearthside Goods support",
+    "Carla Reyes"
+   ],
+   "tours": [
+    {
+     "id": "zendesk-48377-1",
+     "role": "participant",
+     "auteur": "Hearthside Goods support",
+     "date": "2026-11-17T16:10:00Z",
+     "texte": "Hello, we changed banks and need our marketplace payouts to go to the new account from next week. How do we update it? Thanks"
+    },
+    {
+     "id": "zendesk-48377-2",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-17T16:45:00Z",
+     "texte": "Hi! In your dashboard go to Settings > Payouts > Bank account > Replace. We'll send a micro-deposit to the new account to verify it (1-2 business days). Until it's verified, payouts keep going to the current account. Let me know if anything is unclear!"
+    }
+   ]
+  },
+  {
+   "id": "gong-brightlane-discovery",
+   "kind": "gong",
+   "nature": "reunion",
+   "titre": "Brightlane - discovery call",
+   "url": null,
+   "auteurs": [
+    "Owen Park",
+    "Hannah Okafor"
+   ],
+   "tours": [
+    {
+     "id": "gong-brightlane-discovery-1",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-13T18:00:00Z",
+     "texte": "Thanks for taking the time, Hannah. Could you walk me through how payouts work for your sellers today?"
+    },
+    {
+     "id": "gong-brightlane-discovery-2",
+     "role": "participant",
+     "auteur": "Hannah Okafor",
+     "date": "2026-11-13T18:02:00Z",
+     "texte": "Sure. We're a resale marketplace for furniture, about 6,000 active sellers, US only for now. We're on PayRail today. The pain is twofold: payouts take five business days, and we want to launch in Germany and the Netherlands next year, which PayRail doesn't support."
+    },
+    {
+     "id": "gong-brightlane-discovery-3",
+     "role": "participant",
+     "auteur": "Owen Park",
+     "date": "2026-11-13T18:05:00Z",
+     "texte": "Got it. On EU payouts, I'll be honest, that's on our roadmap but not live. What's your timeline for Germany?"
+    },
+    {
+     "id": "gong-brightlane-discovery-4",
+     "role": "participant",
+     "auteur": "Hannah Okafor",
+     "date": "2026-11-13T18:06:00Z",
+     "texte": "Q3 next year at the earliest. Send me something on your pricing and the EU roadmap and let's talk again in January."
+    }
+   ]
+  },
+  {
+   "id": "gmail-newsletter-ledger-letter",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "The Ledger Letter - Issue #87",
+   "url": null,
+   "auteurs": [
+    "The Ledger Letter"
+   ],
+   "tours": [
+    {
+     "id": "gmail-newsletter-ledger-letter-1",
+     "role": "participant",
+     "auteur": "The Ledger Letter",
+     "date": "2026-11-17T12:00:00Z",
+     "texte": "This week: what instant payouts really cost marketplaces, why sponsor banks are tightening ACH origination reviews, and 5 charts on cross-border fees. Plus: our 2027 payments salary survey is open.\n\nRead online | Unsubscribe"
+    }
+   ]
+  },
+  {
+   "id": "slack-general-holiday-party",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#general",
+   "url": null,
+   "auteurs": [
+    "Gil Shamir",
+    "Carla Reyes"
+   ],
+   "tours": [
+    {
+     "id": "slack-general-holiday-party-1",
+     "role": "participant",
+     "auteur": "Gil Shamir",
+     "date": "2026-11-13T17:00:00Z",
+     "texte": "Save the dates 🎄 Austin holiday party Friday Dec 11 at the office rooftop, TLV party Thursday Dec 17. Plus-ones welcome, details from the office team next week."
+    },
+    {
+     "id": "slack-general-holiday-party-2",
+     "role": "participant",
+     "auteur": "Carla Reyes",
+     "date": "2026-11-13T17:20:00Z",
+     "texte": "🎉🎉"
+    }
+   ]
+  }
+ ]
+}

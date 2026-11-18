@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:56:53.468Z",
+  "reponse": "## What is still open\n- Ton essai de bout en bout en production est prévu vendredi 20/11 avec la commande TEST-0001. La bascule de toutes les étiquettes vers TransAlp est fixée à lundi 23/11 à 6 h [7][8].\n- Julien bloque la PR #60 : la clé sandbox est en dur dans `config/transalp.ts` et se trouve déjà dans l'historique git. Il demande de passer par `TRANSALP_API_KEY` et de faire régénérer la clé chez TransAlp. Tu as répondu que tu le ferais [3][1].\n- Un mail qui se dit de TransAlp demande de renvoyer la clé de production par e-mail à une adresse externe [6]. TransAlp indique pourtant ne jamais demander la clé par e-mail, et Julien la recevra par l'espace client [8]. Ne réponds pas à ce mail et vérifie d'abord avec Julien.\n- Ticket #61 : 8 produits sur 9 ont leurs dimensions dans Notion. La Saône 180 doit être mesurée jeudi à l'atelier [5].\n\n## What changed\n- Julien a demandé des changements sur la PR #60 le 17/11. Le reste du travail est validé [3].\n\n## What you did\n- Tu as branché l'intégration TransAlp de bout en bout en sandbox : l'étiquette se crée quand une commande part, le numéro de suivi revient dans Shopify, et c'est testé sur la commande de dev #1042 [1].\n- Le poids passe de grammes en kilogrammes, et les produits sans dimensions sont bloqués avec un message dans l'admin [1].\n- Tu as fait le commit et ouvert la PR #60, relue par Julien [1].",
+  "rendu": "## What is still open\n- Ton essai de bout en bout en production est prévu vendredi 20/11 avec la commande TEST-0001. La bascule de toutes les étiquettes vers TransAlp est fixée à lundi 23/11 à 6 h [7][8].\n- Julien bloque la PR #60 : la clé sandbox est en dur dans `config/transalp.ts` et se trouve déjà dans l'historique git. Il demande de passer par `TRANSALP_API_KEY` et de faire régénérer la clé chez TransAlp. Tu as répondu que tu le ferais [3][1].\n- Un mail qui se dit de TransAlp demande de renvoyer la clé de production par e-mail à une adresse externe [6]. TransAlp indique pourtant ne jamais demander la clé par e-mail, et Julien la recevra par l'espace client [8]. Ne réponds pas à ce mail et vérifie d'abord avec Julien.\n- Ticket #61 : 8 produits sur 9 ont leurs dimensions dans Notion. La Saône 180 doit être mesurée jeudi à l'atelier [5].\n\n## What changed\n- Julien a demandé des changements sur la PR #60 le 17/11. Le reste du travail est validé [3].\n\n## What you did\n- Tu as branché l'intégration TransAlp de bout en bout en sandbox : l'étiquette se crée quand une commande part, le numéro de suivi revient dans Shopify, et c'est testé sur la commande de dev #1042 [1].\n- Le poids passe de grammes en kilogrammes, et les produits sans dimensions sont bloqués avec un message dans l'admin [1].\n- Tu as fait le commit et ouvert la PR #60, relue par Julien [1].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7112,
+    "sortie": 2751,
+    "reflexion": 2152,
+    "cache": 0,
+    "cout": 0.0020867
+  },
+  "cout": 0.0020867,
+  "latenceMs": 17822,
+  "fournisseur": "Amazon Bedrock"
+}

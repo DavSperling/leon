@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:55.473Z",
+  "reponse": "## Où j'en suis\nLe SSO SAML de Fernhill fonctionne de bout en bout sur staging : le JIT est fusionné via #415, le contournement du RelayState court est implémenté et la connexion réelle avec l'IdP de Fernhill a réussi (session 2026-11-17, ses-sso-3). Le mapping des groupes est en revue dans la PR #421, ouverte (source: ses-sso-3, src-pr415).\n\n- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » (commits 6d0e2b8, f4a91c7), ouverte sur GitHub (source: ses-sso-3)\n- [prochaine-étape] attendre que l'IT de Fernhill ajoute le claim `groups`, puis créer un compte admin de test avant la démo de jeudi 19 nov, 10:00 NY (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] la première connexion SP-initiated a échoué côté ADFS de Fernhill : RelayState trop long (143 bytes > limite de 80) ; corrigé par un ID opaque de 16 bytes stocké dans Redis avec TTL de 10 min (source: ses-sso-3, s3-02)\n- [question] l'IT de Fernhill demande IdP-initiated uniquement et le rôle `analyst` par défaut pour tous leurs utilisateurs (source: src-slack-fernhill, s3-06)\n- [décision] le rôle par défaut reste `viewer` et la connexion SP-initiated reste active, en attente que Maya parle à Fernhill ; pas de rôle `analyst` (source: s3-07)\n- [décision] JIT seulement depuis les domaines vérifiés, jamais depuis un domaine non vérifié (source: s2-03, src-pr415)\n- [décision] SAML uniquement, les deux flux de connexion, rôle par défaut `viewer` pour les nouveaux utilisateurs (source: s1-03, s1-05)",
+  "rendu": "- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » (commits 6d0e2b8, f4a91c7), ouverte sur GitHub (de: agent; source: ses-sso-3)\n- [prochaine-étape] attendre que l'IT de Fernhill ajoute le claim `groups`, puis créer un compte admin de test avant la démo de jeudi 19 nov, 10:00 NY (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] la première connexion SP-initiated a échoué côté ADFS de Fernhill : RelayState trop long (143 bytes > limite de 80) ; corrigé par un ID opaque de 16 bytes stocké dans Redis avec TTL de 10 min (de: agent; source: ses-sso-3, s3-02)\n- [question] l'IT de Fernhill demande IdP-initiated uniquement et le rôle `analyst` par défaut pour tous leurs utilisateurs (de: connecteur, agent; source: src-slack-fernhill, s3-06)\n- [décision] le rôle par défaut reste `viewer` et la connexion SP-initiated reste active, en attente que Maya parle à Fernhill ; pas de rôle `analyst` (de: toi; source: s3-07)\n- [décision] JIT seulement depuis les domaines vérifiés, jamais depuis un domaine non vérifié (de: toi, équipe; source: s2-03, src-pr415)\n- [décision] SAML uniquement, les deux flux de connexion, rôle par défaut `viewer` pour les nouveaux utilisateurs (de: toi; source: s1-03, s1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1250,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4543,
+    "sortie": 470,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00068616
+  },
+  "cout": 0.00068616,
+  "latenceMs": 4559,
+  "fournisseur": "Reka"
+}

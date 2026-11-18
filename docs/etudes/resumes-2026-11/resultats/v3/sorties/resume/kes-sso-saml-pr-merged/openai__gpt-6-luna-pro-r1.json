@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:58.212Z",
+  "reponse": "## Where I am\nSAML ACS signature and condition verification is implemented with signxml, 120-second clock skew, and Redis replay protection; the work was merged in PR #412. The PR description includes the Fernhill staging metadata tasks for the demo.\n\n- [in-progress] Load Fernhill’s staging IdP metadata.\n- [next-step] Send Fernhill our staging SP metadata by Wednesday EOD, ahead of Thursday’s 10:00 a.m. New York demo.\n- [failed-attempt] Docker builds with python3-saml/xmlsec failed due to library incompatibilities on Alpine; switching to signxml resolved the dependency issue.\n- [decision] Do not use admin privileges or auto-merge; password-login changes are out of scope. (source: t21)",
+  "rendu": "- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [décision] Do not use admin privileges or auto-merge; password-login changes are out of scope. (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 243,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 15231,
+    "sortie": 522,
+    "reflexion": 180,
+    "cache": 8776,
+    "cout": 0.00099426
+  },
+  "cout": 0.00099426,
+  "latenceMs": 10304,
+  "fournisseur": "Azure"
+}

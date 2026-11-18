@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:00.523Z",
+  "reponse": "## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and converted the other timing-dependent SAML tests the same way — 50/50 green on repeat, suite ~2s faster [1].\n- You cleaned up `kestrel/auth` for ruff 0.8 and fixed the two mypy errors the old ignores were hiding (missing Issuer/Subject now rejected as a 401, not a 500), then split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping old imports working. Full suite green [1].\n- You opened PR #423 for that cleanup, reviewer Tom, and deliberately kept PR #418 untouched [1].\n\n## What changed\n\n- Maya approved and **merged PR #418** (SAML signature verification) yesterday evening; it ships in tonight's staging deploy — which unblocks the Fernhill walkthrough: signature validation on staging by Wednesday EOD, demo Thursday 10am NY with Priya running it [3].\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs — he'll approve both today once that's done [4].\n\n## What is still open\n\n- Split #423 into two PRs today so Tom can approve [4].\n- Replay cache for assertion IDs is still in-memory only (per-process); you planned to move it to Redis for multi-pod tomorrow [1].",
+  "rendu": "## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and converted the other timing-dependent SAML tests the same way — 50/50 green on repeat, suite ~2s faster [1].\n- You cleaned up `kestrel/auth` for ruff 0.8 and fixed the two mypy errors the old ignores were hiding (missing Issuer/Subject now rejected as a 401, not a 500), then split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping old imports working. Full suite green [1].\n- You opened PR #423 for that cleanup, reviewer Tom, and deliberately kept PR #418 untouched [1].\n\n## What changed\n\n- Maya approved and **merged PR #418** (SAML signature verification) yesterday evening; it ships in tonight's staging deploy — which unblocks the Fernhill walkthrough: signature validation on staging by Wednesday EOD, demo Thursday 10am NY with Priya running it [3].\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs — he'll approve both today once that's done [4].\n\n## What is still open\n\n- Split #423 into two PRs today so Tom can approve [4].\n- Replay cache for assertion IDs is still in-memory only (per-process); you planned to move it to Redis for multi-pod tomorrow [1].",
+  "mesures": {
+    "mots": 194,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5559,
+    "sortie": 401,
+    "reflexion": 77,
+    "cache": 0,
+    "cout": 0.000740722
+  },
+  "cout": 0.000740722,
+  "latenceMs": 4928,
+  "fournisseur": "InferenceNet"
+}

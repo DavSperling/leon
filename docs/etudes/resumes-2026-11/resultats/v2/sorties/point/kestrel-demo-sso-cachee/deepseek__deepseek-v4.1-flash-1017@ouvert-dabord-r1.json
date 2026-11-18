@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:10:54.842Z",
+  "reponse": "## What is still open\n- PR #423 is blocked: Tom wants the module move split out from the lint fixes — two PRs instead of one 1,900-line diff, and he'll approve both today [4]. The SAML test fix and the auth cleanup are stuck behind that split [1][4].\n- The assertion-replay cache is still process-local, so a replay could land on another pod; moving it to Redis (client already in `kestrel/cache.py`) is what you lined up for today [1].\n\n## What changed\n- PR #418 was approved by Maya and merged, so signature validation ships with tonight's staging deploy — in place for Fernhill's Okta walkthrough Thursday 10am NY, with Priya running the demo and you on the call [3][1].\n- #424: Zest Grocers' 230k-row CSV export times out; Tom took it and is moving the export to the job queue [5].\n\n## What you did\n- Traced the flaky `test_acs_rejects_expired_assertion` to the 2s sleep against a 3s clock skew, and froze time with freezegun instead — 50/50 green on repeat, and two more sleeping tests converted the same way [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors it uncovered, so a missing Issuer/Subject is now a 401 rather than a 500 [1][4].\n- Split the 900-line `saml_utils.py` into `saml/assertions`, `metadata` and `bindings`, keeping old imports working through a shim [1][4].",
+  "rendu": "## What is still open\n- PR #423 is blocked: Tom wants the module move split out from the lint fixes — two PRs instead of one 1,900-line diff, and he'll approve both today [4]. The SAML test fix and the auth cleanup are stuck behind that split [1][4].\n- The assertion-replay cache is still process-local, so a replay could land on another pod; moving it to Redis (client already in `kestrel/cache.py`) is what you lined up for today [1].\n\n## What changed\n- PR #418 was approved by Maya and merged, so signature validation ships with tonight's staging deploy — in place for Fernhill's Okta walkthrough Thursday 10am NY, with Priya running the demo and you on the call [3][1].\n- #424: Zest Grocers' 230k-row CSV export times out; Tom took it and is moving the export to the job queue [5].\n\n## What you did\n- Traced the flaky `test_acs_rejects_expired_assertion` to the 2s sleep against a 3s clock skew, and froze time with freezegun instead — 50/50 green on repeat, and two more sleeping tests converted the same way [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors it uncovered, so a missing Issuer/Subject is now a 401 rather than a 500 [1][4].\n- Split the 900-line `saml_utils.py` into `saml/assertions`, `metadata` and `bindings`, keeping old imports working through a shim [1][4].",
+  "mesures": {
+    "mots": 215,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5732,
+    "sortie": 1047,
+    "reflexion": 688,
+    "cache": 0,
+    "cout": 0.0010416
+  },
+  "cout": 0.0010416,
+  "latenceMs": 7676,
+  "fournisseur": "StepFun"
+}

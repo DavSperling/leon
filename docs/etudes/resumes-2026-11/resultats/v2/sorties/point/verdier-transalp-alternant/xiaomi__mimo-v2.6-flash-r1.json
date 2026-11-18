@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:19:02.928Z",
+  "reponse": "## What you did\n- Intégration TransAlp en sandbox de bout en bout : étiquette créée, numéro de suivi renvoyé dans Shopify avec e-mail d'expédition au client, validé sur la commande de dev #1042 [1]\n- Les 9 produits sans dimensions bloquent l'expédition : tu as laissé un message clair dans l'admin et ouvert le ticket #61 en citant Karim [1][2]\n\n## What changed\n- Un mail de TransAlp (17/11) te demande de renvoyer ta clé de production par e-mail ; leur cheffe de projet indique pourtant le 16/11 que la clé ne passe jamais par e-mail et revient à Julien via l'espace client [6][8]\n- Karim a mesuré 8 des 9 produits dans les fiches logistiques ; il reste la table Saône 180, à mesurer jeudi chez Bois & Fils [5]\n\n## What is still open\n- Julien a demandé des changements sur la PR #60, bloquant : sortir la clé sandbox de l'historique git (variable d'environnement `TRANSALP_API_KEY`) et la faire régénérer [3]\n- Essai de bout en bout en production vendredi 20/11 sur la commande TEST-0001, avant la bascule TransAlp le lundi 23/11 à 6 h [7][8]\n- La Saône 180 est toujours sans dimensions : son expédition reste bloquée [5]",
+  "rendu": "## What you did\n- Intégration TransAlp en sandbox de bout en bout : étiquette créée, numéro de suivi renvoyé dans Shopify avec e-mail d'expédition au client, validé sur la commande de dev #1042 [1]\n- Les 9 produits sans dimensions bloquent l'expédition : tu as laissé un message clair dans l'admin et ouvert le ticket #61 en citant Karim [1][2]\n\n## What changed\n- Un mail de TransAlp (17/11) te demande de renvoyer ta clé de production par e-mail ; leur cheffe de projet indique pourtant le 16/11 que la clé ne passe jamais par e-mail et revient à Julien via l'espace client [6][8]\n- Karim a mesuré 8 des 9 produits dans les fiches logistiques ; il reste la table Saône 180, à mesurer jeudi chez Bois & Fils [5]\n\n## What is still open\n- Julien a demandé des changements sur la PR #60, bloquant : sortir la clé sandbox de l'historique git (variable d'environnement `TRANSALP_API_KEY`) et la faire régénérer [3]\n- Essai de bout en bout en production vendredi 20/11 sur la commande TEST-0001, avant la bascule TransAlp le lundi 23/11 à 6 h [7][8]\n- La Saône 180 est toujours sans dimensions : son expédition reste bloquée [5]",
+  "mesures": {
+    "mots": 186,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5278,
+    "sortie": 1781,
+    "reflexion": 1414,
+    "cache": 0,
+    "cout": 0.0012376
+  },
+  "cout": 0.0012376,
+  "latenceMs": 52477,
+  "fournisseur": "Cohere"
+}

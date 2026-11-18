@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:18.717Z",
+  "reponse": "## Où j'en suis\nFin de session sur la branche daniel/saml-acs : la vérification SAML de l'ACS Fernhill est terminée — signature via signxml (python3-saml abandonné à cause du conflit lxml/xmlsec sur Alpine), checks maison des conditions (audience, recipient, fenêtre temporelle, skew 120 s fixé par l'annexe du questionnaire sécurité Fernhill, replay protection Redis), saml_utils déplacé dans api/auth/saml/verify.py, mypy et ruff propres, 1284 tests verts. La PR #412 est fusionnée (squash), commits 3f9c2a1, b71e04d, e0a5c93.\n\n- [prochaine-étape] Charger les métadonnées staging IdP de Fernhill et envoyer nos métadonnées SP staging, avant mercredi EOD (démo SSO jeudi 10:00 NY)\n- [prochaine-étape] Créer un ticket séparé : forcer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (hors périmètre de la PR #412)\n- [essai-raté] python3-saml dans l'image : build Docker échoué (mismatch libxml2 lxml/xmlsec), et build lxml from source aussi échoué (xmlsec1-openssl absent sur Alpine 3.20, build 9 min) — d'où le choix de signxml\n- [essai-raté] gh pr merge 412 --squash refusé par la protection de branche (approbation Maya manquante) ; l'utilisateur a refusé --admin et --auto\n- [décision] Utiliser signxml (pas python3-saml), écrire les checks de conditions soi-même et ne lire les attributs que du signed_xml vérifié (source: t08)\n- [décision] Skew de 120 s (et non 300 s), exigé par l'annexe du questionnaire sécurité Fernhill (source: t12)\n- [décision] Ne pas toucher au login par mot de passe dans cette PR (source: t12)",
+  "rendu": "## Où j'en suis\nFin de session sur la branche daniel/saml-acs : la vérification SAML de l'ACS Fernhill est terminée — signature via signxml (python3-saml abandonné à cause du conflit lxml/xmlsec sur Alpine), checks maison des conditions (audience, recipient, fenêtre temporelle, skew 120 s fixé par l'annexe du questionnaire sécurité Fernhill, replay protection Redis), saml_utils déplacé dans api/auth/saml/verify.py, mypy et ruff propres, 1284 tests verts. La PR #412 est fusionnée (squash), commits 3f9c2a1, b71e04d, e0a5c93.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées staging IdP de Fernhill et envoyer nos métadonnées SP staging, avant mercredi EOD (démo SSO jeudi 10:00 NY)\n- [prochaine-étape] Créer un ticket séparé : forcer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (hors périmètre de la PR #412)\n- [essai-raté] python3-saml dans l'image : build Docker échoué (mismatch libxml2 lxml/xmlsec), et build lxml from source aussi échoué (xmlsec1-openssl absent sur Alpine 3.20, build 9 min) — d'où le choix de signxml",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1189,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4447,
+    "sortie": 544,
+    "reflexion": 65,
+    "cache": 0,
+    "cout": 0.00085011
+  },
+  "cout": 0.00085011,
+  "latenceMs": 4507,
+  "fournisseur": "Particle AI"
+}

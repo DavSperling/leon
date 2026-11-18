@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:19:54.158Z",
+  "reponse": "## What you did\n- Tu as mené l'intégration TransAlp de bout en bout en sandbox : étiquette créée à l'expédition, numéro de suivi remis dans Shopify avec e-mail client, conversion du poids corrigée, et les 9 produits sans dimensions bloqués proprement. PR #60 ouverte pour relecture par Julien [1][2].\n\n## What changed\n- Julien demande des changements sur la PR #60, avec un point bloquant : la clé sandbox en dur dans `config/transalp.ts` est dans l'historique git — passe-la en `TRANSALP_API_KEY` et fais-la régénérer par TransAlp ; lui mettra la clé de prod dans l'hébergeur, jamais dans le code [3].\n- Au point logistique hebdo, la bascule TransAlp est confirmée lundi 23/11 ; on attend de toi un essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001 [7][8].\n- Karim a renseigné les dimensions de 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5].\n- ⚠️ Prudence : un mail signé « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, mais Mathilde Rey (TransAlp) précise qu'ils n'envoient jamais de clé par mail et que Julien la recevra via l'espace client [6][8]. N'envoie rien, vérifie avant.\n\n## What is still open\n- Corriger la PR #60 : clé en variable d'environnement et régénération de la clé sandbox exposée, avant que Julien ne relise [1][3].\n- L'essai en production de vendredi 20/11, condition de la bascule du 23/11 [7][8].\n- La Saône 180 attend ses dimensions de jeudi avant de pouvoir partir via TransAlp [5].",
+  "rendu": "## What you did\n- Tu as mené l'intégration TransAlp de bout en bout en sandbox : étiquette créée à l'expédition, numéro de suivi remis dans Shopify avec e-mail client, conversion du poids corrigée, et les 9 produits sans dimensions bloqués proprement. PR #60 ouverte pour relecture par Julien [1][2].\n\n## What changed\n- Julien demande des changements sur la PR #60, avec un point bloquant : la clé sandbox en dur dans `config/transalp.ts` est dans l'historique git — passe-la en `TRANSALP_API_KEY` et fais-la régénérer par TransAlp ; lui mettra la clé de prod dans l'hébergeur, jamais dans le code [3].\n- Au point logistique hebdo, la bascule TransAlp est confirmée lundi 23/11 ; on attend de toi un essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001 [7][8].\n- Karim a renseigné les dimensions de 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5].\n- ⚠️ Prudence : un mail signé « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, mais Mathilde Rey (TransAlp) précise qu'ils n'envoient jamais de clé par mail et que Julien la recevra via l'espace client [6][8]. N'envoie rien, vérifie avant.\n\n## What is still open\n- Corriger la PR #60 : clé en variable d'environnement et régénération de la clé sandbox exposée, avant que Julien ne relise [1][3].\n- L'essai en production de vendredi 20/11, condition de la bascule du 23/11 [7][8].\n- La Saône 180 attend ses dimensions de jeudi avant de pouvoir partir via TransAlp [5].",
+  "mesures": {
+    "mots": 245,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4793,
+    "sortie": 725,
+    "reflexion": 271,
+    "cache": 0,
+    "cout": 0.0148503
+  },
+  "cout": 0.0148503,
+  "latenceMs": 3101,
+  "fournisseur": "Parasail"
+}

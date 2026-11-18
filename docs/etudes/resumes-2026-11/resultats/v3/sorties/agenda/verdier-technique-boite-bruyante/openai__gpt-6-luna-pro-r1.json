@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:02:19.591Z",
+  "reponse": "{\"n\": 24, \"titre\": \"Visite de suivi en entreprise\", \"debut\": \"2026-11-17\", \"avec\": \"Nathalie Delorme\"}\n{\"n\": 14, \"titre\": \"Point sur le bug de synchro\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 6, \"titre\": \"Point tunnel de commande – Studio Canut\", \"debut\": \"2026-11-17T16:00\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 4, \"titre\": \"Webhook duplicates – debugging session\", \"debut\": \"2026-11-18T18:00\", \"avec\": \"Ryan Okafor\"}",
+  "rendu": "2026-11-17 Visite de suivi en entreprise (avec Nathalie Delorme)\n2026-11-17T10:00 Point sur le bug de synchro (avec Hugo Petit)\n2026-11-17T16:00 Point tunnel de commande – Studio Canut (avec Mélanie Roche)\n2026-11-18T18:00 Webhook duplicates – debugging session (avec Ryan Okafor)",
+  "mesures": {
+    "trouves": 4,
+    "attendus": 4,
+    "justes": 4,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 10695,
+    "sortie": 917,
+    "reflexion": 565,
+    "cache": 5542,
+    "cout": 0.00102922
+  },
+  "cout": 0.00102922,
+  "latenceMs": 11035,
+  "fournisseur": "Azure"
+}

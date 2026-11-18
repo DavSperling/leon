@@ -1,0 +1,147 @@
+{
+  "id": "kra-reponse-charge-oesterreich",
+  "titre": "Question en allemand : quels revendeurs autrichiens ont reçu la charge 26-38 et combien ; il faut croiser l'export par numéro client, la fiche clients (numéro → nom, pays) et les livraisons du 12/11 ajoutées à la main, sans compter la charge 26-39",
+  "langue": "de",
+  "entree": {
+    "recherche": "Welche Händler in Österreich haben die Winkelschleifer aus der Charge 26-38 bekommen, und wie viele Geräte sind es?",
+    "resultats": [
+      {
+        "id": "jira-qm-41",
+        "kind": "jira",
+        "nature": "ticket",
+        "titre": "QM-41 Rückrufprüfung WS 125 Pro – Charge 26-38",
+        "url": "https://kranich.atlassian.net/browse/QM-41",
+        "date": "2026-11-17T09:20:00Z",
+        "passages": [
+          {
+            "id": "q41-1",
+            "auteur": "Jonas Hartmann",
+            "date": "2026-11-16T14:20:00Z",
+            "texte": "Export aus dem Händlerportal, Stand 16.11., Artikel 4012-125P (WS 125 Pro), Charge 26-38, Stückzahl pro Kundennummer:\n10023: 310 · 10187: 142 · 10240: 96 · 10311: 88 · 10402: 81 · 10455: 64 · 10519: 52 · 10603: 41 · 10688: 28 · 40117: 116 · 40342: 60 · 50021: 64 · 50108: 42\nSumme 1.184. ACHTUNG: Lieferungen vom 12.11. fehlen im Portal (SAP-Nachtlauf ausgefallen)."
+          },
+          {
+            "id": "q41-2",
+            "auteur": "Jonas Hartmann",
+            "date": "2026-11-17T09:20:00Z",
+            "texte": "Nachtrag 12.11., manuell aus SAP (VL06O), bis der Nachlauf gelaufen ist:\n40117: +120 (Lieferung 80044711, Charge 26-38)\n40342: +60 (Lieferung 80044712, Charge 26-38)\nDie Lieferung 80044713 an 40117 (40 Stück) ist Charge 26-39 und nicht betroffen, ebenso 80044714 an 10023 (Charge 26-41)."
+          }
+        ]
+      },
+      {
+        "id": "doc-kundenstamm",
+        "kind": "document",
+        "nature": "fichier",
+        "titre": "Kundenstamm Großhandel DACH (Auszug, Stand 01.10.2026).xlsx",
+        "url": null,
+        "date": "2026-10-01T08:00:00Z",
+        "passages": [
+          {
+            "id": "ks-1",
+            "auteur": "Vertriebsinnendienst",
+            "date": "2026-10-01T08:00:00Z",
+            "texte": "Kundennr. | Name | Ort | Land\n10023 | Werkzeug Pfeiffer GmbH & Co. KG | Nürnberg | DE\n10187 | Profi-Werkzeug Sachsen GmbH | Chemnitz | DE\n10240 | Technikhandel Nord GmbH | Hamburg | DE\n40117 | Bauprofi Huber GmbH | Linz | AT\n40342 | Eisen-Mayr KG | Graz | AT\n40388 | Werkzeughaus Tirol GmbH | Innsbruck | AT\n50021 | Eisenwaren Gerber AG | Winterthur | CH\n50108 | Ferrum Handels AG | Basel | CH"
+          }
+        ]
+      },
+      {
+        "id": "mail-anja-rueckruf",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "Rückruf WS 125 Pro: Entscheidung am Freitag",
+        "url": null,
+        "date": "2026-11-17T17:40:00Z",
+        "passages": [
+          {
+            "id": "ar-1",
+            "auteur": "Dr. Anja Lindner",
+            "date": "2026-11-17T17:40:00Z",
+            "texte": "Frau Kranich und ich entscheiden am Freitag um 9 Uhr, ob wir die WS 125 Pro aus Charge 26-38 zurückrufen. Bis dahin bitte keine Information an die Händler. Thomas bereitet für den Fall eines Rückrufs ein Anschreiben an die betroffenen Händler vor."
+          }
+        ]
+      },
+      {
+        "id": "mail-taishan-8d",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "RE: Complaint QR-2611 – switch TS-KS-220 sticking",
+        "url": null,
+        "date": "2026-11-16T03:10:00Z",
+        "passages": [
+          {
+            "id": "ts-1",
+            "auteur": "Kevin Lin",
+            "date": "2026-11-16T03:10:00Z",
+            "texte": "Dear Ms. Schuster, we acknowledge receipt of complaint QR-2611 (switch TS-KS-220, lot TS-2607). Our engineering team is analyzing the returned samples. We will send the D3 containment actions this week."
+          }
+        ]
+      },
+      {
+        "id": "mail-prowerk-aussteller",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "ProWerk 2027: Ausstellerausweise und Händlertag Österreich",
+        "url": null,
+        "date": "2026-11-13T10:00:00Z",
+        "passages": [
+          {
+            "id": "pw-1",
+            "auteur": "ProWerk Ausstellerservice",
+            "date": "2026-11-13T10:00:00Z",
+            "texte": "Neu auf der ProWerk 2027: Am 21. Januar findet der Händlertag Österreich statt, mit Fachhändlern aus Wien, Linz und Graz. Bestellen Sie jetzt Ihre Ausstellerausweise im Ausstellershop."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f-huber",
+        "texte": "Bauprofi Huber GmbH (Linz) a reçu 236 appareils de la charge 26-38 (116 dans l'export + 120 le 12/11).",
+        "poids": 3
+      },
+      {
+        "id": "f-mayr",
+        "texte": "Eisen-Mayr KG (Graz) a reçu 120 appareils de la charge 26-38 (60 + 60 le 12/11).",
+        "poids": 3
+      },
+      {
+        "id": "f-summe",
+        "texte": "En tout, 356 appareils de la charge 26-38 sont partis chez des revendeurs autrichiens.",
+        "poids": 2
+      },
+      {
+        "id": "f-1211",
+        "texte": "Les livraisons du 12/11 ont été ajoutées à la main depuis SAP, car elles manquaient dans l'export du portail.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-2639",
+        "texte": "Compte les 40 appareils de la charge 26-39 (par exemple 276 pour Huber ou 396 au total)."
+      },
+      {
+        "id": "i-176",
+        "texte": "Donne 176 comme total pour l'Autriche (sans les livraisons du 12/11), ou 116 et 60 comme totaux finaux."
+      },
+      {
+        "id": "i-tirol",
+        "texte": "Cite Werkzeughaus Tirol (aucune livraison de la charge) ou un revendeur suisse comme revendeur autrichien concerné."
+      },
+      {
+        "id": "i-rueckruf",
+        "texte": "Dit que le rappel est décidé."
+      }
+    ],
+    "pieges": [
+      "Croiser : l'export ne donne que des numéros clients ; les noms et le pays sont dans la fiche clients (4xxxx = Autriche).",
+      "Compléter : le complément du 12/11 ajoute 180 appareils ; la livraison de la charge 26-39 ne compte pas.",
+      "Distracteurs : un client autrichien sans livraison dans la liste, et un mail du salon qui parle de Linz et Graz."
+    ],
+    "cites": [
+      1,
+      2
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "id": "kestrel-sso-banque-statut",
+  "titre": "Statut du SSO de la banque : croiser ticket, mails et Slack, sans reprendre l'option SHA-1 refusée ni le blocage périmé",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-kestrel",
+    "question": "Someone at the bank wrote to support asking whether their staff will be able to log in with their company accounts from December 1st. Are we still on track, and what's left to do before that works?"
+  },
+  "attendu": {
+    "sources": ["linear-kes-412", "gmail-fernhill-sso-config", "slack-eng-sso-sha1"],
+    "faits": [
+      { "id": "f1", "texte": "Says the promised go-live date is still December 1 (no new date has been set).", "poids": 3 },
+      { "id": "f2", "texte": "Says Fernhill sent its IdP metadata on November 17 and that it is loaded on staging (IdP-initiated login works).", "poids": 3 },
+      { "id": "f3", "texte": "Says the remaining blocker is that Fernhill signs its SAML assertions with SHA-1, which Kestrel rejects, so Fernhill must switch to SHA-256.", "poids": 3 },
+      { "id": "f4", "texte": "Says Fernhill's change board has to approve that switch on Tuesday November 24.", "poids": 2 },
+      { "id": "f5", "texte": "Says a joint end-to-end test with Fernhill is planned on Wednesday November 25 (16:00 Tel Aviv).", "poids": 2 },
+      { "id": "f6", "texte": "Says Maya refused to accept SHA-1, even temporarily, as a workaround.", "poids": 2 },
+      { "id": "f7", "texte": "Says that if the November 24 approval doesn't happen, Sam warns Fernhill the same day that December 1 is at risk.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Says SSO is already live or already works for Fernhill's users." },
+      { "id": "i2", "texte": "Says Kestrel will temporarily accept SHA-1 for Fernhill to keep the date (option (a), rejected by Maya)." },
+      { "id": "i3", "texte": "Says Kestrel is still waiting for Fernhill's metadata (true on November 11, outdated since November 17)." },
+      { "id": "i4", "texte": "Gives a go-live date other than December 1, or says December 1 has been officially pushed back." },
+      { "id": "i5", "texte": "Presents Google Workspace / OIDC sign-in as part of the bank's rollout (that is Zest Grocers' request, not on the roadmap)." }
+    ],
+    "pieges": [
+      "Croiser : l'état complet se lit dans trois sources (ticket Linear, fil de mails avec la banque, fil Slack) ; le ticket seul s'arrête au blocage SHA-1, sans la date du 24 ni le refus de Maya.",
+      "Périmé : le commentaire du 11/11 « toujours pas de métadonnées » est dépassé depuis le 17/11.",
+      "Fausse décision : l'option « accepter SHA-1 pour Fernhill » a été proposée par Daniel puis refusée par Maya.",
+      "Vocabulaire : « the bank », « log in with their company accounts » au lieu de Fernhill, SAML, SSO ; un distracteur (Zest Grocers veut aussi une connexion d'entreprise) traîne dans les résultats."
+    ]
+  }
+}

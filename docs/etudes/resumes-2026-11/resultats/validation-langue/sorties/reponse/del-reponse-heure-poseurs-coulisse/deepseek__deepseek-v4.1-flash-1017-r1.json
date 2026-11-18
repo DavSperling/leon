@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:45:29.718Z",
+  "reponse": "L'export ICS et l'API mobile ajoutaient un décalage fixe de 2 h à l'heure UTC : juste en été, faux depuis le passage à l'heure d'hiver du 25/10, donc une intervention de 8h00 s'affichait à 9h00 [2]. La correction passe par l'heure locale de Paris avec zoneinfo, les réglages serveur (TIME_ZONE, USE_TZ) étant eux-mêmes corrects [2]. Le problème avait été signalé le 13/11 : créneaux une heure trop tard, deux équipes arrivées en retard [3], et Yannick a ouvert le ticket #208 le 16/11 en demandant de regarder ics.py et l'API mobile [1]. À noter une piste écartée dans le raisonnement du même ticket : l'hypothèse d'un conteneur en UTC ne tenant pas la variable TIME_ZONE [1] contredit le diagnostic retenu [2]. Enfin, le 17/11 les SMS de rappel annonçaient encore 9h au lieu de 8h pour six clients [4].",
+  "rendu": "L'export ICS et l'API mobile ajoutaient un décalage fixe de 2 h à l'heure UTC : juste en été, faux depuis le passage à l'heure d'hiver du 25/10, donc une intervention de 8h00 s'affichait à 9h00 [2]. La correction passe par l'heure locale de Paris avec zoneinfo, les réglages serveur (TIME_ZONE, USE_TZ) étant eux-mêmes corrects [2]. Le problème avait été signalé le 13/11 : créneaux une heure trop tard, deux équipes arrivées en retard [3], et Yannick a ouvert le ticket #208 le 16/11 en demandant de regarder ics.py et l'API mobile [1]. À noter une piste écartée dans le raisonnement du même ticket : l'hypothèse d'un conteneur en UTC ne tenant pas la variable TIME_ZONE [1] contredit le diagnostic retenu [2]. Enfin, le 17/11 les SMS de rappel annonçaient encore 9h au lieu de 8h pour six clients [4].",
+  "mesures": {
+    "mots": 137,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1239,
+    "sortie": 420,
+    "reflexion": 167,
+    "cache": 512,
+    "cout": 0.0004351032
+  },
+  "cout": 0.0004351032,
+  "latenceMs": 2212,
+  "fournisseur": "DigitalOcean"
+}

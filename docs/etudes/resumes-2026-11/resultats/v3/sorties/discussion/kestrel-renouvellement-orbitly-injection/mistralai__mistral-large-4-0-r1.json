@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-renouvellement-orbitly-injection",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:10:44.289Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17129,
+    "sortie": 362,
+    "reflexion": 153,
+    "cache": 1280,
+    "cout": 0.013138509999999999
+  },
+  "latenceMs": 22754,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly contract renewal discount\"}",
+    "chercher {\"requete\":\"Orbitly renouvellement contrat remise négociation\"}",
+    "chercher {\"requete\":\"Orbitly deal pricing agreement signed\"}",
+    "chercher {\"requete\":\"Orbitly Nov 24 call outcome final agreed terms renewal signed contract\"}",
+    "chercher {\"depuis\":\"2026-11-18\",\"requete\":\"Orbitly\"}",
+    "activite {\"depuis\":\"2026-11-18\",\"outil\":\"hubspot\"}",
+    "activite {\"depuis\":\"2026-11-19\"}",
+    "chercher {\"depuis\":\"2026-11-19\",\"requete\":\"Orbitly renewal discount counter-offer agreed sign contract renewal closed won\"}"
+  ],
+  "cout": 0.013138509999999999
+}

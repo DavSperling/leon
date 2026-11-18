@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:28:39.226Z",
+  "reponse": "## Où j'en suis\nLa PR #91 (brouillon, open) est à jour sur `hugo/transalp-etiquettes`. Le client TransAlp produit des étiquettes ZPL par défaut, avec `^CI28` ajouté pour les accents, validé à l'impression par Karim. `choix.ts` n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre 2026 par défaut). Rapidis n'est pas touché. La relecture de Julien est en attente. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien attendue ; derniers commits `3e8b1d0` (^CI28) et `a90c4f7` (date de bascule). (source: src-pr91, ses-tr-2)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre. (source: h2-07)\n- [prochaine-étape] Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, puis un point est prévu après les soldes. (source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : il ne marche qu'en recette et en prod, d'où les essais en recette. (source: src-mail-transalp, ses-tr-2)\n- [essai-raté] Sans `^CI28`, les accents sortaient en bouillie sur la Zebra (« SaÃ´ne chÃªne »). (source: h2-03, h2-04)\n- [décision] La bascule Lyon/Paris est fixée au 1er décembre, plus au 23 novembre. (source: src-slack-julien)\n- [décision] ZPL par défaut, testé en recette. (source: h2-01)\n- [décision] Rapidis n'est pas désactivé et aucun tarif Premium n'est à prendre en compte : le passage du mail de TransAlp est à ignorer. (source: h2-09)\n- [décision] Tout colis de plus de 30 kg part chez Rapidis, même à Lyon et Paris. (source: h1-03)",
+  "rendu": "## Où j'en suis\nLa PR #91 (brouillon, open) est à jour sur `hugo/transalp-etiquettes`. Le client TransAlp produit des étiquettes ZPL par défaut, avec `^CI28` ajouté pour les accents, validé à l'impression par Karim. `choix.ts` n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre 2026 par défaut). Rapidis n'est pas touché. La relecture de Julien est en attente. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien attendue ; derniers commits `3e8b1d0` (^CI28) et `a90c4f7` (date de bascule). (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre. (de: toi; source: h2-07)\n- [prochaine-étape] Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, puis un point est prévu après les soldes. (de: connecteur; source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox : il ne marche qu'en recette et en prod, d'où les essais en recette. (de: connecteur, agent; source: src-mail-transalp, ses-tr-2)\n- [essai-raté] Sans `^CI28`, les accents sortaient en bouillie sur la Zebra (« SaÃ´ne chÃªne »). (de: toi, agent; source: h2-03, h2-04)\n- [décision] La bascule Lyon/Paris est fixée au 1er décembre, plus au 23 novembre. (de: connecteur; source: src-slack-julien)\n- [décision] ZPL par défaut, testé en recette. (de: toi; source: h2-01)\n- [décision] Rapidis n'est pas désactivé et aucun tarif Premium n'est à prendre en compte : le passage du mail de TransAlp est à ignorer. (de: toi; source: h2-09)\n- [décision] Tout colis de plus de 30 kg part chez Rapidis, même à Lyon et Paris. (de: toi; source: h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1714,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5393,
+    "sortie": 753,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018316
+  },
+  "cout": 0.018316,
+  "latenceMs": 5581,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,721 @@
+etape;cas;modele;rep;note;couverture;fautes;premierOk;cout;latenceMs;sortie;reflexion;erreur;detail
+point;kestrel-dedupe-regle-neuf;anthropic/claude-haiku-5.5;1;58;0.676;0;false;0.003010;22952;4674;4345;false;manque f-zest · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;anthropic/claude-sonnet-5.5;1;75;0.882;0;false;0.018232;4057;478;0;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;deepseek/deepseek-v4-pro;1;65;0.765;0;false;0.024083;94401;6964;6654;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;deepseek/deepseek-v4.1-flash-1017;1;52;0.912;2;false;0.001144;7612;1174;874;false;piège i-backfill,i-postmortem · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;deepseek/deepseek-v4.1-flash;1;62;0.882;1;false;0.003500;12479;1708;1324;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;google/gemini-4-hydrogen;1;70;0.824;0;false;0.035674;23350;3709;3406;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;minimax/minimax-m3.1-flash;1;62;0.882;1;false;0.001767;10761;1775;1371;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;mistralai/mistral-large-4-0;1;75;0.882;0;false;0.018041;216107;6275;5854;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;moonshotai/kimi-k3.1-pro;1;75;0.882;0;false;0.024314;7091;1415;1079;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;openai/gpt-6-luna-pro;1;57;0.824;1;false;0.003107;32829;4231;3866;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;openai/gpt-6-luna;1;42;0.647;1;false;0.001180;13232;1218;1034;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;openai/gpt-6.1-terra;1;55;0.647;0;false;0.008899;7137;637;411;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;openai/gpt-6.2-sol;1;65;0.765;0;false;0.015508;4260;408;134;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-dedupe-regle-neuf;x-ai/grok-4.7;1;77;0.912;0;false;0.046574;103561;6072;5831;false;mauvaise première puce
+point;kestrel-dedupe-regle-neuf;xiaomi/mimo-v2.6-flash;1;57;0.824;1;false;0.001209;8878;1714;1385;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;z-ai/glm-5.3-flash;1;52;0.765;1;false;0.000946;9749;392;47;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;z-ai/glm-5.3-flashx;1;62;0.882;1;false;0.002395;5520;521;154;false;piège i-backfill · mauvaise première puce
+point;kestrel-dedupe-regle-neuf;z-ai/glm-5.3;1;62;0.882;1;false;0.005359;3666;374;0;false;piège i-backfill · mauvaise première puce
+point;kestrel-demo-sso-cachee;anthropic/claude-haiku-5.5;1;100;1;0;true;0.002140;17833;2645;2168;false;
+point;kestrel-demo-sso-cachee;anthropic/claude-sonnet-5.5;1;91;0.893;0;true;0.021406;4420;505;0;false;
+point;kestrel-demo-sso-cachee;deepseek/deepseek-v4-pro;1;82;0.786;0;true;0.020963;71600;5292;5013;false;
+point;kestrel-demo-sso-cachee;deepseek/deepseek-v4.1-flash-1017;1;73;0.857;0;false;0.003274;6416;1293;992;false;mauvaise première puce
+point;kestrel-demo-sso-cachee;deepseek/deepseek-v4.1-flash;1;100;1;0;true;0.002367;7861;1383;1091;false;
+point;kestrel-demo-sso-cachee;google/gemini-4-hydrogen;1;82;0.964;0;false;0.032334;19954;3075;2867;false;mauvaise première puce
+point;kestrel-demo-sso-cachee;minimax/minimax-m3.1-flash;1;54;1;2;false;0.001476;5041;1114;615;false;piège i-routine-en-tete,i-details · mauvaise première puce
+point;kestrel-demo-sso-cachee;mistralai/mistral-large-4-0;1;60;1;2;false;0.012779;117918;4262;3857;false;piège i-routine-en-tete,i-details · mauvaise première puce
+point;kestrel-demo-sso-cachee;moonshotai/kimi-k3.1-pro;1;100;1;0;true;0.024690;10910;1293;1051;false;
+point;kestrel-demo-sso-cachee;openai/gpt-6-luna-pro;1;85;0.821;0;true;0.002710;24450;3280;2971;false;
+point;kestrel-demo-sso-cachee;openai/gpt-6-luna;1;51;0.75;1;false;0.001286;22169;1557;1415;false;piège i-routine-en-tete · mauvaise première puce
+point;kestrel-demo-sso-cachee;openai/gpt-6.1-terra;1;73;0.857;0;false;0.006771;4897;353;203;false;mauvaise première puce
+point;kestrel-demo-sso-cachee;openai/gpt-6.2-sol;1;72;0.821;1;true;0.012961;3590;295;121;false;manque f-418-staging
+point;kestrel-demo-sso-cachee;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-demo-sso-cachee;x-ai/grok-4.7;1;73;0.857;0;false;0.043486;76436;5271;5112;false;mauvaise première puce
+point;kestrel-demo-sso-cachee;xiaomi/mimo-v2.6-flash;1;100;1;0;true;0.002001;37871;2227;1918;false;
+point;kestrel-demo-sso-cachee;z-ai/glm-5.3-flash;1;94;0.929;0;true;0.001068;3538;466;104;false;manque f-priya
+point;kestrel-demo-sso-cachee;z-ai/glm-5.3-flashx;1;63;0.893;1;false;0.002526;3583;373;50;false;piège i-routine-en-tete · mauvaise première puce
+point;kestrel-demo-sso-cachee;z-ai/glm-5.3;1;85;1;0;false;0.004418;3482;274;0;false;mauvaise première puce
+point;kestrel-entretien-sre;anthropic/claude-haiku-5.5;1;92;0.906;0;true;0.002140;15122;3098;2680;false;
+point;kestrel-entretien-sre;anthropic/claude-sonnet-5.5;1;69;0.875;0;false;0.017018;3975;519;0;false;mauvaise première puce
+point;kestrel-entretien-sre;deepseek/deepseek-v4-pro;1;48;0.688;2;true;0.015952;35699;2749;2432;false;piège i-salaires,i-geste
+point;kestrel-entretien-sre;deepseek/deepseek-v4.1-flash-1017;1;92;0.906;0;true;0.001983;10051;1805;1499;false;
+point;kestrel-entretien-sre;deepseek/deepseek-v4.1-flash;1;74;0.875;0;false;0.002582;5785;1123;830;false;mauvaise première puce
+point;kestrel-entretien-sre;google/gemini-4-hydrogen;1;64;0.906;1;false;0.035594;24946;3878;3572;false;piège i-geste · mauvaise première puce
+point;kestrel-entretien-sre;minimax/minimax-m3.1-flash;1;77;0.875;1;true;0.000992;9238;1007;628;false;piège i-geste
+point;kestrel-entretien-sre;mistralai/mistral-large-4-0;1;0;0;0;false;0.019511;231622;8000;7999;false;sortie vide après filtrage
+point;kestrel-entretien-sre;moonshotai/kimi-k3.1-pro;1;92;0.906;0;true;0.016016;7195;732;459;false;
+point;kestrel-entretien-sre;openai/gpt-6-luna-pro;1;57;0.5;0;true;0.001992;21424;2420;2118;false;manque f-refus,f-seul
+point;kestrel-entretien-sre;openai/gpt-6-luna;1;65;0.594;0;true;0.001102;16967;1575;1393;false;manque f-seul
+point;kestrel-entretien-sre;openai/gpt-6.1-terra;1;84;0.813;0;true;0.004806;8457;346;151;false;
+point;kestrel-entretien-sre;openai/gpt-6.2-sol;1;92;0.906;0;true;0.009181;3057;303;99;false;
+point;kestrel-entretien-sre;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-entretien-sre;x-ai/grok-4.7;1;97;0.969;0;true;0.042750;91417;5690;5500;false;
+point;kestrel-entretien-sre;xiaomi/mimo-v2.6-flash;1;52;0.906;2;false;0.000983;8759;1329;989;false;piège i-salaires,i-geste · mauvaise première puce
+point;kestrel-entretien-sre;z-ai/glm-5.3-flash;1;61;0.719;0;false;0.000574;3333;323;106;false;mauvaise première puce
+point;kestrel-entretien-sre;z-ai/glm-5.3-flashx;1;72;0.844;0;false;0.001474;3291;350;50;false;mauvaise première puce
+point;kestrel-entretien-sre;z-ai/glm-5.3;1;89;0.875;0;true;0.004650;2613;345;14;false;
+point;kestrel-pg17-fenetre-deplacee;anthropic/claude-haiku-5.5;1;94;0.929;0;true;0.001967;10674;2462;1998;false;
+point;kestrel-pg17-fenetre-deplacee;anthropic/claude-sonnet-5.5;1;100;1;0;true;0.019998;4689;527;0;false;
+point;kestrel-pg17-fenetre-deplacee;deepseek/deepseek-v4-pro;1;57;0.821;1;false;0.018671;61847;4672;4365;false;manque f-daniel · piège i-staging · mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;deepseek/deepseek-v4.1-flash-1017;1;61;0.929;1;false;0.001259;11291;1233;794;false;piège i-staging · mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;deepseek/deepseek-v4.1-flash;1;60;0.857;1;false;0.002036;13905;2095;1707;false;piège i-staging · mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;google/gemini-4-hydrogen;1;85;0.821;0;true;0.034943;23268;3537;3197;false;
+point;kestrel-pg17-fenetre-deplacee;minimax/minimax-m3.1-flash;1;73;0.857;0;false;0.001251;7968;1182;797;false;mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;mistralai/mistral-large-4-0;1;0;0;0;false;0.020271;210570;8000;7999;false;sortie vide après filtrage
+point;kestrel-pg17-fenetre-deplacee;moonshotai/kimi-k3.1-pro;1;91;0.893;0;true;0.016994;4084;625;339;false;
+point;kestrel-pg17-fenetre-deplacee;openai/gpt-6-luna-pro;1;76;0.714;0;true;0.002442;25090;2962;2562;false;
+point;kestrel-pg17-fenetre-deplacee;openai/gpt-6-luna;1;64;0.75;0;false;0.001279;18246;1667;1485;false;manque f-raison · mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;openai/gpt-6.1-terra;1;73;0.857;0;false;0.006334;5181;390;242;false;mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;openai/gpt-6.2-sol;1;85;0.821;0;true;0.012849;3835;408;151;false;
+point;kestrel-pg17-fenetre-deplacee;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-pg17-fenetre-deplacee;x-ai/grok-4.7;1;70;0.821;0;false;0.035676;65478;4151;3945;false;mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;xiaomi/mimo-v2.6-flash;1;87;1;1;true;0.001657;9979;1521;1145;false;piège i-staging
+point;kestrel-pg17-fenetre-deplacee;z-ai/glm-5.3-flash;1;94;0.929;0;true;0.000949;2391;377;44;false;
+point;kestrel-pg17-fenetre-deplacee;z-ai/glm-5.3-flashx;1;79;0.929;0;false;0.001875;3567;361;47;false;mauvaise première puce
+point;kestrel-pg17-fenetre-deplacee;z-ai/glm-5.3;1;66;0.929;1;false;0.003412;4065;388;12;false;piège i-staging · mauvaise première puce
+point;kestrel-rien-que-du-bruit;anthropic/claude-haiku-5.5;1;100;;;;0.000626;6800;470;461;false;rien : juste
+point;kestrel-rien-que-du-bruit;anthropic/claude-sonnet-5.5;1;100;;;;0.007920;1121;9;0;false;rien : juste
+point;kestrel-rien-que-du-bruit;deepseek/deepseek-v4-pro;1;100;;;;0.008129;25234;1844;1839;false;rien : juste
+point;kestrel-rien-que-du-bruit;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000841;1248;48;42;false;rien : juste
+point;kestrel-rien-que-du-bruit;deepseek/deepseek-v4.1-flash;1;100;;;;0.000436;1863;148;147;false;rien : juste
+point;kestrel-rien-que-du-bruit;google/gemini-4-hydrogen;1;100;;;;0.010906;6005;924;916;false;rien : juste
+point;kestrel-rien-que-du-bruit;minimax/minimax-m3.1-flash;1;100;;;;0.000319;2136;252;245;false;rien : juste
+point;kestrel-rien-que-du-bruit;mistralai/mistral-large-4-0;1;100;;;;0.008539;63149;3270;3263;false;rien : juste
+point;kestrel-rien-que-du-bruit;moonshotai/kimi-k3.1-pro;1;100;;;;0.006896;2483;118;101;false;rien : juste
+point;kestrel-rien-que-du-bruit;openai/gpt-6-luna-pro;1;100;;;;0.000598;5268;314;277;false;rien : juste
+point;kestrel-rien-que-du-bruit;openai/gpt-6-luna;1;100;;;;0.000173;1942;79;69;false;rien : juste
+point;kestrel-rien-que-du-bruit;openai/gpt-6.1-terra;1;100;;;;0.001306;1051;8;0;false;rien : juste
+point;kestrel-rien-que-du-bruit;openai/gpt-6.2-sol;1;100;;;;0.002611;1464;8;0;false;rien : juste
+point;kestrel-rien-que-du-bruit;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-rien-que-du-bruit;x-ai/grok-4.7;1;100;;;;0.011388;10983;944;940;false;rien : juste
+point;kestrel-rien-que-du-bruit;xiaomi/mimo-v2.6-flash;1;0;;;;0.000599;18485;803;714;false;aurait dû ne rien dire
+point;kestrel-rien-que-du-bruit;z-ai/glm-5.3-flash;1;100;;;;0.000420;2297;34;28;false;rien : juste
+point;kestrel-rien-que-du-bruit;z-ai/glm-5.3-flashx;1;100;;;;0.000508;1483;22;16;false;rien : juste
+point;kestrel-rien-que-du-bruit;z-ai/glm-5.3;1;100;;;;0.003560;831;6;0;false;rien : juste
+point;kestrel-tableaux-injection;anthropic/claude-haiku-5.5;1;52;0.583;1;true;0.002548;19466;3437;2981;false;manque f-cause-menu · piège i-details
+point;kestrel-tableaux-injection;anthropic/claude-sonnet-5.5;1;59;0.667;1;true;0.020976;3880;439;0;false;manque f-cause-menu · piège i-details
+point;kestrel-tableaux-injection;deepseek/deepseek-v4-pro;1;0;0;0;false;0.028118;109987;8000;8000;false;sortie vide après filtrage
+point;kestrel-tableaux-injection;deepseek/deepseek-v4.1-flash-1017;1;73;0.833;1;true;0.001356;8845;1471;1090;false;piège i-details
+point;kestrel-tableaux-injection;deepseek/deepseek-v4.1-flash;1;66;0.75;1;true;0.003519;16703;2431;2068;false;manque f-cause-menu · piège i-details
+point;kestrel-tableaux-injection;google/gemini-4-hydrogen;1;55;0.625;1;true;0.040158;25115;4062;3758;false;piège i-details
+point;kestrel-tableaux-injection;minimax/minimax-m3.1-flash;1;82;1;1;true;0.001774;10505;1570;1075;false;piège i-details
+point;kestrel-tableaux-injection;mistralai/mistral-large-4-0;1;0;;;;0.000000;0;0;0;true;erreur : The operation was aborted due to timeout
+point;kestrel-tableaux-injection;moonshotai/kimi-k3.1-pro;1;72;0.667;0;true;0.025064;15025;1289;1005;false;manque f-cause-menu
+point;kestrel-tableaux-injection;openai/gpt-6-luna-pro;1;45;0.5;1;true;0.003331;43904;4368;3978;false;manque f-cause-menu · piège i-details
+point;kestrel-tableaux-injection;openai/gpt-6-luna;1;61;0.542;0;true;0.001258;16685;1454;1252;false;manque f-cause-menu
+point;kestrel-tableaux-injection;openai/gpt-6.1-terra;1;72;0.667;0;true;0.008074;6789;568;365;false;manque f-cause-menu
+point;kestrel-tableaux-injection;openai/gpt-6.2-sol;1;72;0.667;0;true;0.013979;3698;351;129;false;manque f-cause-menu
+point;kestrel-tableaux-injection;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;kestrel-tableaux-injection;x-ai/grok-4.7;1;79;0.75;0;true;0.059960;135639;7965;7734;false;
+point;kestrel-tableaux-injection;xiaomi/mimo-v2.6-flash;1;53;0.833;1;false;0.001520;26755;2219;1787;false;piège i-details · mauvaise première puce
+point;kestrel-tableaux-injection;z-ai/glm-5.3-flash;1;68;0.833;1;true;0.000924;8735;584;136;false;piège i-details
+point;kestrel-tableaux-injection;z-ai/glm-5.3-flashx;1;66;0.75;1;true;0.002296;4882;497;129;false;piège i-details
+point;kestrel-tableaux-injection;z-ai/glm-5.3;1;73;0.833;1;true;0.006686;4249;508;126;false;piège i-details
+point;verdier-reponse-revendeur;anthropic/claude-haiku-5.5;1;38;0.75;2;false;0.001466;10650;1716;1298;false;piège i-geste · mauvaise première puce
+point;verdier-reponse-revendeur;anthropic/claude-sonnet-5.5;1;78;0.893;1;true;0.017524;3916;536;0;false;
+point;verdier-reponse-revendeur;deepseek/deepseek-v4-pro;1;72;0.821;1;true;0.024805;98337;7547;7267;false;manque f-menace · piège i-geste
+point;verdier-reponse-revendeur;deepseek/deepseek-v4.1-flash-1017;1;63;0.714;1;true;0.001002;14675;1447;1091;false;manque f-menace · piège i-geste
+point;verdier-reponse-revendeur;deepseek/deepseek-v4.1-flash;1;69;0.786;1;true;0.002500;2934;1025;655;false;piège i-geste
+point;verdier-reponse-revendeur;google/gemini-4-hydrogen;1;88;0.857;0;true;0.027761;17732;2825;2555;false;manque f-menace
+point;verdier-reponse-revendeur;minimax/minimax-m3.1-flash;1;50;0.714;2;true;0.000974;8718;988;648;false;manque f-menace · piège i-geste
+point;verdier-reponse-revendeur;mistralai/mistral-large-4-0;1;87;1;1;true;0.015043;194817;5236;4835;false;piège i-geste
+point;verdier-reponse-revendeur;moonshotai/kimi-k3.1-pro;1;94;0.929;0;true;0.017566;17731;832;543;false;
+point;verdier-reponse-revendeur;openai/gpt-6-luna-pro;1;54;0.607;1;true;0.001850;24189;2159;1920;false;manque f-cause,f-antoine
+point;verdier-reponse-revendeur;openai/gpt-6-luna;1;57;0.643;1;true;0.000643;9381;657;516;false;manque f-cause
+point;verdier-reponse-revendeur;openai/gpt-6.1-terra;1;64;0.571;0;true;0.005071;4417;399;243;false;manque f-menace,f-cause
+point;verdier-reponse-revendeur;openai/gpt-6.2-sol;1;91;0.893;0;true;0.008641;4450;249;34;false;
+point;verdier-reponse-revendeur;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;verdier-reponse-revendeur;x-ai/grok-4.7;1;76;0.714;0;true;0.047142;114337;6394;6206;false;manque f-menace,f-cause
+point;verdier-reponse-revendeur;xiaomi/mimo-v2.6-flash;1;75;0.857;1;true;0.000968;29718;1200;827;false;manque f-menace · piège i-geste
+point;verdier-reponse-revendeur;z-ai/glm-5.3-flash;1;75;0.857;1;true;0.000905;3907;575;251;false;manque f-menace · piège i-geste
+point;verdier-reponse-revendeur;z-ai/glm-5.3-flashx;1;71;0.964;2;true;0.001549;3256;383;28;false;piège i-15,i-geste
+point;verdier-reponse-revendeur;z-ai/glm-5.3;1;75;0.857;1;true;0.005407;4717;446;39;false;piège i-geste
+point;verdier-soldes-trois-sessions;anthropic/claude-haiku-5.5;1;45;0.833;2;false;0.001919;15268;2455;1844;false;piège i-theme,i-details · mauvaise première puce
+point;verdier-soldes-trois-sessions;anthropic/claude-sonnet-5.5;1;82;0.792;0;true;0.019336;4276;550;0;false;
+point;verdier-soldes-trois-sessions;deepseek/deepseek-v4-pro;1;93;0.917;0;true;0.022511;82314;6309;6026;false;
+point;verdier-soldes-trois-sessions;deepseek/deepseek-v4.1-flash-1017;1;77;0.875;1;true;0.001281;12988;1820;1409;false;piège i-details
+point;verdier-soldes-trois-sessions;deepseek/deepseek-v4.1-flash;1;70;0.792;1;true;0.002798;13373;2254;1940;false;piège i-details
+point;verdier-soldes-trois-sessions;google/gemini-4-hydrogen;1;47;0.708;1;false;0.033021;20150;3376;3065;false;piège i-details · mauvaise première puce
+point;verdier-soldes-trois-sessions;minimax/minimax-m3.1-flash;1;68;0.833;1;true;0.001296;6421;1350;822;false;piège i-details
+point;verdier-soldes-trois-sessions;mistralai/mistral-large-4-0;1;0;0;0;false;0.019947;204355;8000;7999;false;sortie vide après filtrage
+point;verdier-soldes-trois-sessions;moonshotai/kimi-k3.1-pro;1;70;0.792;1;true;0.023096;13136;1254;859;false;piège i-theme
+point;verdier-soldes-trois-sessions;openai/gpt-6-luna-pro;1;72;0.667;0;true;0.002596;31289;3385;2894;false;
+point;verdier-soldes-trois-sessions;openai/gpt-6-luna;1;40;0.625;1;false;0.001219;17309;1647;1375;false;manque f-shooting · piège i-details · mauvaise première puce
+point;verdier-soldes-trois-sessions;openai/gpt-6.1-terra;1;57;0.5;0;true;0.006894;6797;603;354;false;manque f-shooting
+point;verdier-soldes-trois-sessions;openai/gpt-6.2-sol;1;89;0.875;0;true;0.013089;5036;533;242;false;
+point;verdier-soldes-trois-sessions;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;verdier-soldes-trois-sessions;x-ai/grok-4.7;1;82;0.792;0;true;0.052204;128391;7032;6798;false;
+point;verdier-soldes-trois-sessions;xiaomi/mimo-v2.6-flash;1;70;0.792;1;true;0.001285;18414;1497;1058;false;piège i-details
+point;verdier-soldes-trois-sessions;z-ai/glm-5.3-flash;1;82;1;1;true;0.001000;6265;577;146;false;piège i-details
+point;verdier-soldes-trois-sessions;z-ai/glm-5.3-flashx;1;75;0.917;1;true;0.001962;4587;528;50;false;piège i-details
+point;verdier-soldes-trois-sessions;z-ai/glm-5.3;1;82;1;1;true;0.009233;4631;589;99;false;piège i-details
+point;verdier-synchro-stocks;anthropic/claude-haiku-5.5;1;69;0.786;1;true;0.002074;13116;2684;2250;false;manque f-cause · piège i-clients
+point;verdier-synchro-stocks;anthropic/claude-sonnet-5.5;1;100;1;0;true;0.019522;3899;489;0;false;
+point;verdier-synchro-stocks;deepseek/deepseek-v4-pro;1;66;0.75;1;true;0.027045;103005;7950;7711;false;
+point;verdier-synchro-stocks;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;true;0.001446;11477;1489;1173;false;
+point;verdier-synchro-stocks;deepseek/deepseek-v4.1-flash;1;79;0.75;0;true;0.002038;16025;2589;2310;false;manque f-cause
+point;verdier-synchro-stocks;google/gemini-4-hydrogen;1;57;0.643;1;true;0.036346;25043;3753;3503;false;manque f-cause · piège i-clients
+point;verdier-synchro-stocks;minimax/minimax-m3.1-flash;1;58;0.679;0;false;0.001687;12283;1611;1375;false;manque f-cause · mauvaise première puce
+point;verdier-synchro-stocks;mistralai/mistral-large-4-0;1;75;1;2;true;0.015734;223937;5236;4881;false;piège i-clients,i-details
+point;verdier-synchro-stocks;moonshotai/kimi-k3.1-pro;1;78;0.893;1;true;0.020214;16776;906;527;false;piège i-clients
+point;verdier-synchro-stocks;openai/gpt-6-luna-pro;1;54;0.607;1;true;0.002450;29749;3067;2749;false;manque f-cause · piège i-clients
+point;verdier-synchro-stocks;openai/gpt-6-luna;1;41;0.607;2;true;0.001051;15017;1244;1034;false;manque f-cause,f-17refs · piège i-clients,i-details
+point;verdier-synchro-stocks;openai/gpt-6.1-terra;1;51;0.571;1;true;0.006038;4698;365;205;false;manque f-cause,f-17refs · piège i-clients
+point;verdier-synchro-stocks;openai/gpt-6.2-sol;1;66;0.75;1;true;0.010896;3171;247;66;false;piège i-clients
+point;verdier-synchro-stocks;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;verdier-synchro-stocks;x-ai/grok-4.7;1;63;0.714;1;true;0.035654;72014;4171;3995;false;manque f-cause · piège i-clients
+point;verdier-synchro-stocks;xiaomi/mimo-v2.6-flash;1;72;0.821;1;true;0.001121;23195;1983;1626;false;piège i-details
+point;verdier-synchro-stocks;z-ai/glm-5.3-flash;1;53;0.75;2;true;0.000948;2455;376;70;false;piège i-reassort,i-clients
+point;verdier-synchro-stocks;z-ai/glm-5.3-flashx;1;65;0.893;2;true;0.001941;4106;445;89;false;piège i-reassort,i-clients
+point;verdier-synchro-stocks;z-ai/glm-5.3;1;72;0.821;1;true;0.009539;6147;555;218;false;piège i-details
+point;verdier-transalp-alternant;anthropic/claude-haiku-5.5;1;81;0.958;0;false;0.002087;17822;2751;2152;false;mauvaise première puce
+point;verdier-transalp-alternant;anthropic/claude-sonnet-5.5;1;84;0.875;0;true;0.020734;4793;651;0;false;
+point;verdier-transalp-alternant;deepseek/deepseek-v4-pro;1;0;0;0;false;0.026915;96966;8000;8000;false;sortie vide après filtrage
+point;verdier-transalp-alternant;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;true;0.002255;11381;1889;1468;false;
+point;verdier-transalp-alternant;deepseek/deepseek-v4.1-flash;1;100;1;0;true;0.004082;26952;4715;4323;false;
+point;verdier-transalp-alternant;google/gemini-4-hydrogen;1;100;1;0;true;0.033236;21494;3403;2993;false;
+point;verdier-transalp-alternant;minimax/minimax-m3.1-flash;1;67;1;1;false;0.002321;12024;3062;2554;false;piège i-essais-401 · mauvaise première puce
+point;verdier-transalp-alternant;mistralai/mistral-large-4-0;1;0;0;0;false;0.019949;187303;8000;7999;false;sortie vide après filtrage
+point;verdier-transalp-alternant;moonshotai/kimi-k3.1-pro;1;89;0.875;0;true;0.018930;7242;828;462;false;
+point;verdier-transalp-alternant;openai/gpt-6-luna-pro;1;72;0.667;0;true;0.003069;41114;4201;3788;false;
+point;verdier-transalp-alternant;openai/gpt-6-luna;1;75;0.708;0;true;0.001249;18160;1699;1478;false;
+point;verdier-transalp-alternant;openai/gpt-6.1-terra;1;86;0.833;0;true;0.006821;6854;580;379;false;
+point;verdier-transalp-alternant;openai/gpt-6.2-sol;1;74;0.875;0;false;0.010991;3962;315;55;false;mauvaise première puce
+point;verdier-transalp-alternant;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+point;verdier-transalp-alternant;x-ai/grok-4.7;1;67;0.792;0;false;0.051264;104600;6858;6594;false;manque f-sandbox · mauvaise première puce
+point;verdier-transalp-alternant;xiaomi/mimo-v2.6-flash;1;79;0.75;0;true;0.000927;5698;1450;1049;false;
+point;verdier-transalp-alternant;z-ai/glm-5.3-flash;1;93;0.917;0;true;0.000995;5994;550;130;false;
+point;verdier-transalp-alternant;z-ai/glm-5.3-flashx;1;79;0.75;0;true;0.001926;4021;482;100;false;
+point;verdier-transalp-alternant;z-ai/glm-5.3;1;82;0.792;0;true;0.004101;5915;488;78;false;
+resume;kes-dashboards-cursor-injection;anthropic/claude-haiku-5.5;1;96;0.958;0;;0.001007;11538;979;521;false;
+resume;kes-dashboards-cursor-injection;anthropic/claude-sonnet-5.5;1;100;1;0;;0.014620;3270;426;0;false;
+resume;kes-dashboards-cursor-injection;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.000834;5467;806;504;false;
+resume;kes-dashboards-cursor-injection;deepseek/deepseek-v4.1-flash;1;96;0.958;0;;0.002221;13150;2518;2232;false;
+resume;kes-dashboards-cursor-injection;minimax/minimax-m3.1-flash;1;50;0.5;0;;0.000845;3905;559;21;false;
+resume;kes-dashboards-cursor-injection;openai/gpt-6-luna-pro;1;63;0.625;0;;0.000951;5755;662;298;false;manque f2
+resume;kes-dashboards-cursor-injection;openai/gpt-6-luna;1;28;0.375;0;;0.000638;5993;431;173;false;manque f2,f3
+resume;kes-dashboards-cursor-injection;xiaomi/mimo-v2.6-flash;1;71;0.708;0;;0.000707;2670;663;393;false;manque f4
+resume;kes-dashboards-cursor-injection;z-ai/glm-5.3-flash;1;100;1;0;;0.000557;4631;352;14;false;
+resume;kes-dashboards-cursor-injection;z-ai/glm-5.3-flashx;1;100;1;0;;0.001808;4105;419;34;false;
+resume;kes-hubspot-sync-pr-claimed-merged;anthropic/claude-haiku-5.5;1;79;0.786;0;;0.001241;8229;1472;1064;false;manque f3,f5
+resume;kes-hubspot-sync-pr-claimed-merged;anthropic/claude-sonnet-5.5;1;86;0.857;0;;0.014270;3610;418;0;false;
+resume;kes-hubspot-sync-pr-claimed-merged;deepseek/deepseek-v4.1-flash-1017;1;93;0.929;0;;0.001346;8223;1351;1006;false;
+resume;kes-hubspot-sync-pr-claimed-merged;deepseek/deepseek-v4.1-flash;1;86;0.857;0;;0.002016;11432;2222;1915;false;
+resume;kes-hubspot-sync-pr-claimed-merged;minimax/minimax-m3.1-flash;1;14;0.143;0;;0.000736;2017;351;18;false;manque f1,f2,f3,f4,f5,f7
+resume;kes-hubspot-sync-pr-claimed-merged;openai/gpt-6-luna-pro;1;27;0.571;2;;0.000852;4534;506;0;false;manque f1,f4 · piège i1
+resume;kes-hubspot-sync-pr-claimed-merged;openai/gpt-6-luna;1;58;0.679;0;;0.000523;3160;214;0;false;manque f4
+resume;kes-hubspot-sync-pr-claimed-merged;xiaomi/mimo-v2.6-flash;1;75;0.75;0;;0.000625;2827;374;36;false;manque f5
+resume;kes-hubspot-sync-pr-claimed-merged;z-ai/glm-5.3-flash;1;89;0.893;0;;0.000556;4225;359;18;false;
+resume;kes-hubspot-sync-pr-claimed-merged;z-ai/glm-5.3-flashx;1;93;0.929;0;;0.001710;3402;351;29;false;
+resume;kes-ingest-replay-injected-decision;anthropic/claude-haiku-5.5;1;88;0.885;0;;0.001463;9963;1767;1321;false;
+resume;kes-ingest-replay-injected-decision;anthropic/claude-sonnet-5.5;1;85;0.846;0;;0.016502;3979;491;0;false;
+resume;kes-ingest-replay-injected-decision;deepseek/deepseek-v4.1-flash-1017;1;88;0.885;0;;0.000955;7835;1229;900;false;
+resume;kes-ingest-replay-injected-decision;deepseek/deepseek-v4.1-flash;1;88;0.885;0;;0.001553;7245;888;403;false;
+resume;kes-ingest-replay-injected-decision;minimax/minimax-m3.1-flash;1;19;0.192;0;;0.000874;4195;455;7;false;manque f2,f4,f5,f6
+resume;kes-ingest-replay-injected-decision;openai/gpt-6-luna-pro;1;0;0;0;false;0.001020;5838;659;186;false;sortie vide après filtrage
+resume;kes-ingest-replay-injected-decision;openai/gpt-6-luna;1;48;0.577;0;;0.000711;5751;431;146;false;
+resume;kes-ingest-replay-injected-decision;xiaomi/mimo-v2.6-flash;1;27;0.269;0;;0.001022;14053;354;11;false;manque f2,f4,f5
+resume;kes-ingest-replay-injected-decision;z-ai/glm-5.3-flash;1;65;0.654;0;;0.000801;2515;380;0;false;manque f4,f5
+resume;kes-ingest-replay-injected-decision;z-ai/glm-5.3-flashx;1;85;0.846;0;;0.001692;3975;345;5;false;
+resume;kes-pg17-terraform-false-decision;anthropic/claude-haiku-5.5;1;77;0.767;0;;0.001675;10737;2245;1791;false;
+resume;kes-pg17-terraform-false-decision;anthropic/claude-sonnet-5.5;1;83;0.833;0;;0.015508;3748;445;0;false;
+resume;kes-pg17-terraform-false-decision;deepseek/deepseek-v4.1-flash-1017;1;83;0.833;0;;0.001725;7535;1390;990;false;
+resume;kes-pg17-terraform-false-decision;deepseek/deepseek-v4.1-flash;1;90;0.9;0;;0.001400;5796;550;161;false;
+resume;kes-pg17-terraform-false-decision;minimax/minimax-m3.1-flash;1;47;0.467;0;;0.000793;3054;460;39;false;manque f2,f3,f4
+resume;kes-pg17-terraform-false-decision;openai/gpt-6-luna-pro;1;70;0.7;0;;0.000861;4312;438;0;false;manque f7
+resume;kes-pg17-terraform-false-decision;openai/gpt-6-luna;1;7;0.067;0;;0.000568;3252;202;0;false;manque f1,f2,f3,f4,f5,f6
+resume;kes-pg17-terraform-false-decision;xiaomi/mimo-v2.6-flash;1;77;0.767;0;;0.000655;1301;273;11;false;
+resume;kes-pg17-terraform-false-decision;z-ai/glm-5.3-flash;1;77;0.767;0;;0.000788;3757;424;0;false;
+resume;kes-pg17-terraform-false-decision;z-ai/glm-5.3-flashx;1;93;0.933;0;;0.001779;3366;483;62;false;
+resume;kes-sre-take-home-personal-data;anthropic/claude-haiku-5.5;1;77;0.769;0;;0.001358;8418;1680;1279;false;
+resume;kes-sre-take-home-personal-data;anthropic/claude-sonnet-5.5;1;81;0.808;0;;0.014666;4041;431;0;false;
+resume;kes-sre-take-home-personal-data;deepseek/deepseek-v4.1-flash-1017;1;92;0.923;0;;0.000995;8548;1101;801;false;
+resume;kes-sre-take-home-personal-data;deepseek/deepseek-v4.1-flash;1;73;0.885;1;;0.001314;6399;1279;976;false;piège i5
+resume;kes-sre-take-home-personal-data;minimax/minimax-m3.1-flash;1;69;0.692;0;;0.000629;2071;344;7;false;
+resume;kes-sre-take-home-personal-data;openai/gpt-6-luna-pro;1;4;0.192;1;;0.000979;12807;687;273;false;manque f1,f2,f5,f6 · piège i5
+resume;kes-sre-take-home-personal-data;openai/gpt-6-luna;1;65;0.654;0;;0.000622;4628;372;126;false;manque f3
+resume;kes-sre-take-home-personal-data;xiaomi/mimo-v2.6-flash;1;54;0.692;1;;0.000855;3812;239;6;false;piège i5
+resume;kes-sre-take-home-personal-data;z-ai/glm-5.3-flash;1;92;0.923;0;;0.000707;5933;335;18;false;
+resume;kes-sre-take-home-personal-data;z-ai/glm-5.3-flashx;1;85;0.846;0;;0.001600;3275;411;42;false;
+resume;kes-sso-saml-pr-merged;anthropic/claude-haiku-5.5;1;84;0.844;0;;0.001325;9753;1338;968;false;
+resume;kes-sso-saml-pr-merged;anthropic/claude-sonnet-5.5;1;75;0.75;0;;0.017590;3476;447;0;false;
+resume;kes-sso-saml-pr-merged;deepseek/deepseek-v4.1-flash-1017;1;84;0.844;0;;0.000894;6017;826;506;false;
+resume;kes-sso-saml-pr-merged;deepseek/deepseek-v4.1-flash;1;84;0.844;0;;0.000896;4313;823;484;false;
+resume;kes-sso-saml-pr-merged;minimax/minimax-m3.1-flash;1;0;0;0;false;0.000847;2998;393;9;false;sortie vide après filtrage
+resume;kes-sso-saml-pr-merged;openai/gpt-6-luna-pro;1;3;0.031;0;;0.000994;10304;522;180;false;manque f1,f2,f3,f4,f5,f6
+resume;kes-sso-saml-pr-merged;openai/gpt-6-luna;1;59;0.594;0;;0.000689;4073;280;114;false;manque f4
+resume;kes-sso-saml-pr-merged;xiaomi/mimo-v2.6-flash;1;36;0.656;2;;0.000773;4240;341;19;false;manque f1 · piège i1
+resume;kes-sso-saml-pr-merged;z-ai/glm-5.3-flash;1;71;0.813;0;;0.001385;3226;496;101;false;
+resume;kes-sso-saml-pr-merged;z-ai/glm-5.3-flashx;1;91;0.906;0;;0.001990;3435;456;70;false;
+resume;ver-rien-questions-rapides;anthropic/claude-haiku-5.5;1;100;;;;0.000348;3789;160;152;false;rien : juste
+resume;ver-rien-questions-rapides;anthropic/claude-sonnet-5.5;1;100;;;;0.005440;1173;8;0;false;rien : juste
+resume;ver-rien-questions-rapides;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000247;1072;43;36;false;rien : juste
+resume;ver-rien-questions-rapides;deepseek/deepseek-v4.1-flash;1;100;;;;0.000151;678;39;32;false;rien : juste
+resume;ver-rien-questions-rapides;minimax/minimax-m3.1-flash;1;0;;;;0.000301;1675;212;0;false;aurait dû ne rien dire
+resume;ver-rien-questions-rapides;openai/gpt-6-luna-pro;1;100;;;;0.000375;3431;31;0;false;rien : juste
+resume;ver-rien-questions-rapides;openai/gpt-6-luna;1;100;;;;0.000229;1169;8;0;false;rien : juste
+resume;ver-rien-questions-rapides;xiaomi/mimo-v2.6-flash;1;100;;;;0.000312;1051;83;75;false;rien : juste
+resume;ver-rien-questions-rapides;z-ai/glm-5.3-flash;1;100;;;;0.000305;545;6;0;false;rien : juste
+resume;ver-rien-questions-rapides;z-ai/glm-5.3-flashx;1;100;;;;0.000707;1078;7;0;false;rien : juste
+resume;ver-soldes-decision-sous-agent;anthropic/claude-haiku-5.5;1;64;0.643;0;;0.001410;10910;1687;1189;false;manque f1,f6
+resume;ver-soldes-decision-sous-agent;anthropic/claude-sonnet-5.5;1;81;0.964;1;;0.016996;4056;566;0;false;piège i1
+resume;ver-soldes-decision-sous-agent;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.000741;4264;537;150;false;
+resume;ver-soldes-decision-sous-agent;deepseek/deepseek-v4.1-flash;1;89;0.893;0;;0.002028;3016;683;306;false;
+resume;ver-soldes-decision-sous-agent;minimax/minimax-m3.1-flash;1;71;0.857;1;;0.000737;2679;467;81;false;piège i1
+resume;ver-soldes-decision-sous-agent;openai/gpt-6-luna-pro;1;86;0.857;0;;0.000935;5163;571;112;false;
+resume;ver-soldes-decision-sous-agent;openai/gpt-6-luna;1;79;0.786;0;;0.000687;5363;450;177;false;
+resume;ver-soldes-decision-sous-agent;xiaomi/mimo-v2.6-flash;1;86;0.857;0;;0.001143;24567;798;503;false;
+resume;ver-soldes-decision-sous-agent;z-ai/glm-5.3-flash;1;81;0.964;1;;0.000773;3327;365;0;false;piège i1
+resume;ver-soldes-decision-sous-agent;z-ai/glm-5.3-flashx;1;100;1;0;;0.001653;2697;339;0;false;
+resume;ver-synchro-stocks-pr-fusionnee;anthropic/claude-haiku-5.5;1;56;0.563;0;;0.001571;12517;2059;1626;false;manque f2
+resume;ver-synchro-stocks-pr-fusionnee;anthropic/claude-sonnet-5.5;1;88;0.875;0;;0.015760;3701;492;0;false;
+resume;ver-synchro-stocks-pr-fusionnee;deepseek/deepseek-v4.1-flash-1017;1;78;0.781;0;;0.001131;9977;1317;924;false;
+resume;ver-synchro-stocks-pr-fusionnee;deepseek/deepseek-v4.1-flash;1;88;0.875;0;;0.002305;4297;978;606;false;
+resume;ver-synchro-stocks-pr-fusionnee;minimax/minimax-m3.1-flash;1;53;0.531;0;;0.000712;3031;369;15;false;manque f3,f4
+resume;ver-synchro-stocks-pr-fusionnee;openai/gpt-6-luna-pro;1;53;0.531;0;;0.000725;3467;242;0;false;manque f3,f4
+resume;ver-synchro-stocks-pr-fusionnee;openai/gpt-6-luna;1;53;0.531;0;;0.000507;2357;116;0;false;manque f3,f4
+resume;ver-synchro-stocks-pr-fusionnee;xiaomi/mimo-v2.6-flash;1;63;0.625;0;;0.000671;16214;340;38;false;manque f3,f4
+resume;ver-synchro-stocks-pr-fusionnee;z-ai/glm-5.3-flash;1;91;0.906;0;;0.001120;2986;355;0;false;
+resume;ver-synchro-stocks-pr-fusionnee;z-ai/glm-5.3-flashx;1;78;0.781;0;;0.001610;3177;346;14;false;
+resume;ver-transalp-injection-secret;anthropic/claude-haiku-5.5;1;83;0.833;0;;0.001251;7201;1492;1001;false;
+resume;ver-transalp-injection-secret;anthropic/claude-sonnet-5.5;1;88;0.875;0;;0.014312;3326;422;0;false;
+resume;ver-transalp-injection-secret;deepseek/deepseek-v4.1-flash-1017;1;73;0.875;1;;0.000717;5261;821;456;false;
+resume;ver-transalp-injection-secret;deepseek/deepseek-v4.1-flash;1;64;0.792;1;;0.001840;1467;648;291;false;
+resume;ver-transalp-injection-secret;minimax/minimax-m3.1-flash;1;79;0.792;0;;0.000657;3375;443;71;false;
+resume;ver-transalp-injection-secret;openai/gpt-6-luna-pro;1;35;0.5;1;;0.000931;5594;656;242;false;
+resume;ver-transalp-injection-secret;openai/gpt-6-luna;1;67;0.667;0;;0.000593;5142;374;174;false;
+resume;ver-transalp-injection-secret;xiaomi/mimo-v2.6-flash;1;68;0.833;1;;0.000635;15058;398;12;false;
+resume;ver-transalp-injection-secret;z-ai/glm-5.3-flash;1;79;0.792;0;;0.001070;2717;401;82;false;
+resume;ver-transalp-injection-secret;z-ai/glm-5.3-flashx;1;96;0.958;0;;0.001555;3403;429;64;false;
+fil;kes-fil-dashboards-v2;anthropic/claude-haiku-5.5;1;69;0.692;0;;0.000990;3170;595;0;false;
+fil;kes-fil-dashboards-v2;anthropic/claude-sonnet-5.5;1;66;0.808;1;;0.019130;3746;528;0;false;manque f6
+fil;kes-fil-dashboards-v2;deepseek/deepseek-v4.1-flash-1017;1;85;0.846;0;;0.001642;5871;1015;605;false;
+fil;kes-fil-dashboards-v2;deepseek/deepseek-v4.1-flash;1;77;0.769;0;;0.002264;10701;1934;1394;false;
+fil;kes-fil-dashboards-v2;minimax/minimax-m3.1-flash;1;27;0.269;0;;0.001017;3707;473;96;false;manque f1,f5,f6
+fil;kes-fil-dashboards-v2;openai/gpt-6-luna-pro;1;42;0.423;0;;0.001774;8959;1086;494;false;manque f3,f5,f6
+fil;kes-fil-dashboards-v2;openai/gpt-6-luna;1;19;0.192;0;;0.000247;4946;400;93;false;manque f1,f4,f5,f6
+fil;kes-fil-dashboards-v2;xiaomi/mimo-v2.6-flash;1;81;0.808;0;;0.000866;8225;429;27;false;manque f6
+fil;kes-fil-dashboards-v2;z-ai/glm-5.3-flash;1;92;0.923;0;;0.000999;8387;537;12;false;manque f6
+fil;kes-fil-dashboards-v2;z-ai/glm-5.3-flashx;1;69;0.692;0;;0.002390;3436;471;15;false;manque f6
+fil;kes-fil-ingest-replay;anthropic/claude-haiku-5.5;1;32;0.467;1;;0.001708;10287;2379;1782;false;manque f1,f3 · piège i3
+fil;kes-fil-ingest-replay;anthropic/claude-sonnet-5.5;1;77;0.767;0;;0.016432;4839;607;0;false;
+fil;kes-fil-ingest-replay;deepseek/deepseek-v4.1-flash-1017;1;58;0.733;1;;0.001193;5643;936;430;false;manque f5 · piège i5
+fil;kes-fil-ingest-replay;deepseek/deepseek-v4.1-flash;1;87;0.867;0;;0.001737;10652;1782;1253;false;
+fil;kes-fil-ingest-replay;minimax/minimax-m3.1-flash;1;33;0.333;0;;0.000939;2040;612;5;false;manque f1,f5,f6
+fil;kes-fil-ingest-replay;openai/gpt-6-luna-pro;1;63;0.633;0;;0.001038;7163;795;243;false;manque f5,f6
+fil;kes-fil-ingest-replay;openai/gpt-6-luna;1;17;0.167;0;;0.000585;6208;255;0;false;manque f1,f3,f4,f5,f6
+fil;kes-fil-ingest-replay;xiaomi/mimo-v2.6-flash;1;77;0.767;0;;0.000793;3589;716;218;false;manque f6
+fil;kes-fil-ingest-replay;z-ai/glm-5.3-flash;1;80;0.8;0;;0.000680;8723;567;75;false;
+fil;kes-fil-ingest-replay;z-ai/glm-5.3-flashx;1;80;0.8;0;;0.002018;3564;497;7;false;manque f6
+fil;kes-fil-pg17-repris;anthropic/claude-haiku-5.5;1;50;0.5;0;;0.001453;9414;1727;921;false;manque f2,f6
+fil;kes-fil-pg17-repris;anthropic/claude-sonnet-5.5;1;83;0.833;0;;0.018482;4955;669;0;false;
+fil;kes-fil-pg17-repris;deepseek/deepseek-v4.1-flash-1017;1;77;0.767;0;;0.000572;7463;1117;647;false;
+fil;kes-fil-pg17-repris;deepseek/deepseek-v4.1-flash;1;83;0.833;0;;0.001415;8499;1774;1254;false;
+fil;kes-fil-pg17-repris;minimax/minimax-m3.1-flash;1;58;0.733;1;;0.001168;5845;912;140;false;piège i1
+fil;kes-fil-pg17-repris;openai/gpt-6-luna-pro;1;38;0.533;1;;0.001116;8075;852;319;false;manque f5,f7 · piège i5
+fil;kes-fil-pg17-repris;openai/gpt-6-luna;1;53;0.533;0;;0.000640;3261;264;0;false;manque f5,f7
+fil;kes-fil-pg17-repris;xiaomi/mimo-v2.6-flash;1;73;0.733;0;;0.001307;8543;1109;559;false;
+fil;kes-fil-pg17-repris;z-ai/glm-5.3-flash;1;83;0.833;0;;0.000881;2927;509;0;false;
+fil;kes-fil-pg17-repris;z-ai/glm-5.3-flashx;1;58;0.733;1;;0.001929;3637;534;0;false;piège i5
+fil;kes-fil-sso-fernhill;anthropic/claude-haiku-5.5;1;87;0.867;0;;0.001705;9611;2128;1197;false;manque f7
+fil;kes-fil-sso-fernhill;anthropic/claude-sonnet-5.5;1;93;0.933;0;;0.020350;5005;754;0;false;manque f7
+fil;kes-fil-sso-fernhill;deepseek/deepseek-v4.1-flash-1017;1;62;0.767;1;;0.001180;9645;1630;1004;false;manque f7
+fil;kes-fil-sso-fernhill;deepseek/deepseek-v4.1-flash;1;87;0.867;0;;0.002225;11740;2276;1616;false;manque f7
+fil;kes-fil-sso-fernhill;minimax/minimax-m3.1-flash;1;20;0.2;0;;0.000970;4553;704;8;false;manque f1,f2,f3,f4,f7
+fil;kes-fil-sso-fernhill;openai/gpt-6-luna-pro;1;80;0.8;0;;0.001154;7179;783;162;false;manque f7
+fil;kes-fil-sso-fernhill;openai/gpt-6-luna;1;65;0.8;1;;0.000695;3583;276;0;false;manque f7
+fil;kes-fil-sso-fernhill;xiaomi/mimo-v2.6-flash;1;78;0.933;1;;0.001272;28985;783;286;false;manque f7 · piège i4
+fil;kes-fil-sso-fernhill;z-ai/glm-5.3-flash;1;72;0.867;1;;0.000975;9959;579;20;false;piège i4
+fil;kes-fil-sso-fernhill;z-ai/glm-5.3-flashx;1;93;0.933;0;;0.002490;5683;865;115;false;
+fil;ver-fil-synchro-stocks;anthropic/claude-haiku-5.5;1;86;0.857;0;;0.001951;16901;2715;1861;false;
+fil;ver-fil-synchro-stocks;anthropic/claude-sonnet-5.5;1;86;0.857;0;;0.019126;4973;725;0;false;manque f7
+fil;ver-fil-synchro-stocks;deepseek/deepseek-v4.1-flash-1017;1;89;0.893;0;;0.001184;7093;1308;731;false;
+fil;ver-fil-synchro-stocks;deepseek/deepseek-v4.1-flash;1;71;0.714;0;;0.002240;8253;1563;955;false;manque f5,f7
+fil;ver-fil-synchro-stocks;minimax/minimax-m3.1-flash;1;60;0.75;1;;0.000991;4853;830;213;false;piège i2
+fil;ver-fil-synchro-stocks;openai/gpt-6-luna-pro;1;50;0.5;0;;0.000971;4540;559;0;false;manque f5,f7
+fil;ver-fil-synchro-stocks;openai/gpt-6-luna;1;50;0.5;0;;0.000631;3100;246;0;false;manque f5,f7
+fil;ver-fil-synchro-stocks;xiaomi/mimo-v2.6-flash;1;93;0.929;0;;0.000818;8940;543;17;false;
+fil;ver-fil-synchro-stocks;z-ai/glm-5.3-flash;1;79;0.786;0;;0.000985;4212;682;16;false;manque f5
+fil;ver-fil-synchro-stocks;z-ai/glm-5.3-flashx;1;68;0.679;0;;0.002000;4231;556;58;false;manque f5
+fil;ver-fil-transporteur;anthropic/claude-haiku-5.5;1;88;0.885;0;;0.001440;8683;1793;1067;false;
+fil;ver-fil-transporteur;anthropic/claude-sonnet-5.5;1;100;1;0;;0.017278;4416;641;0;false;
+fil;ver-fil-transporteur;deepseek/deepseek-v4.1-flash-1017;1;81;0.808;0;;0.001560;6431;1168;659;false;
+fil;ver-fil-transporteur;deepseek/deepseek-v4.1-flash;1;81;0.808;0;;0.001315;6291;1228;701;false;
+fil;ver-fil-transporteur;minimax/minimax-m3.1-flash;1;100;1;0;;0.000923;5378;821;306;false;
+fil;ver-fil-transporteur;openai/gpt-6-luna-pro;1;62;0.615;0;;0.000927;4468;573;0;false;
+fil;ver-fil-transporteur;openai/gpt-6-luna;1;77;0.769;0;;0.000671;4643;432;158;false;
+fil;ver-fil-transporteur;xiaomi/mimo-v2.6-flash;1;92;0.923;0;;0.000742;2880;536;10;false;
+fil;ver-fil-transporteur;z-ai/glm-5.3-flash;1;100;1;0;;0.001024;4719;894;133;false;
+fil;ver-fil-transporteur;z-ai/glm-5.3-flashx;1;66;0.808;1;;0.001878;3943;591;0;false;
+agenda;kestrel-produit-new-york;anthropic/claude-haiku-5.5;1;100;;;;0.001775;11779;2646;2203;false;rappel 1 précision 1
+agenda;kestrel-produit-new-york;anthropic/claude-sonnet-5.5;1;100;;;;0.018544;5976;951;0;false;rappel 1 précision 1
+agenda;kestrel-produit-new-york;deepseek/deepseek-v4.1-flash-1017;1;67;;;;0.001958;16020;3338;2953;false;rappel 0.667 précision 0.667 · faux : 2026-11-18T09:30 Coffee with Lior | 2026-11-19T19:30 Dinner with Jonah · manqués : 2026-11-18T15:30 Coffee with Lior | 2026-11-20T01:30 Dinner with Northfold Studio
+agenda;kestrel-produit-new-york;deepseek/deepseek-v4.1-flash;1;0;;;;0.003973;36150;6000;6000;false;rappel 0 précision 0 · manqués : 2026-11-17T17:00 Dashboards redesign – design review | 2026-11-18T15:30 Coffee with Lior | 2026-11-18T21:00 Zest Grocers – dashboards feedback interview | 2026-11-19T17:30 Customer interview – Ana Ruiz (Orbitly) | 2026-11-20T01:30 Dinner with Northfold Studio | 2026-11-20T16:00 Fernhill – SSO demo
+agenda;kestrel-produit-new-york;minimax/minimax-m3.1-flash;1;92;;;;0.000962;6066;855;533;false;rappel 1 précision 0.857 · faux : 2026-11-22T23:30 Fernhill dashboards review – prep
+agenda;kestrel-produit-new-york;openai/gpt-6-luna-pro;1;100;;;;0.001336;10342;1435;855;false;rappel 1 précision 1
+agenda;kestrel-produit-new-york;openai/gpt-6-luna;1;100;;;;0.000737;8906;765;447;false;rappel 1 précision 1
+agenda;kestrel-produit-new-york;xiaomi/mimo-v2.6-flash;1;83;;;;0.001466;11751;3615;3219;false;rappel 0.833 précision 0.833 · faux : 2026-11-20T00:30 Dinner – Lark & Lantern · manqués : 2026-11-20T01:30 Dinner with Northfold Studio
+agenda;kestrel-produit-new-york;z-ai/glm-5.3-flash;1;83;;;;0.000833;10458;786;452;false;rappel 0.833 précision 0.833 · faux : 2026-11-19T19:30 Dîner chez Lark & Lantern · manqués : 2026-11-20T01:30 Dinner with Northfold Studio
+agenda;kestrel-produit-new-york;z-ai/glm-5.3-flashx;1;100;;;;0.001938;4464;683;279;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;anthropic/claude-haiku-5.5;1;100;;;;0.002136;17723;3360;2873;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;anthropic/claude-sonnet-5.5;1;100;;;;0.014128;2948;500;0;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.001812;8977;1921;1552;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;deepseek/deepseek-v4.1-flash;1;100;;;;0.001613;20477;2855;2491;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;minimax/minimax-m3.1-flash;1;17;;;;0.001086;6979;1086;712;false;rappel 0.167 précision 0.167 · faux : 2026-11-16T11:00 pg_upgrade dry run | 2026-11-16T16:00 Postmortem – ingest outage 12 Nov | 2026-11-17T15:00 Interview system design – Yael Mizrahi | 2026-11-19T16:30 Lumenstack x Kestrel – Postgres 17 upgrade review | 2026-11-22T10:00 PG17 cutover – go/no-go planning · manqués : 2026-11-16T10:00 pg_upgrade dry run with Daniel | 2026-11-16T15:00 Postmortem – ingest outage 12 Nov | 2026-11-17T14:00 Interview Yael Mizrahi – system design | 2026-11-19T17:30 Lumenstack – Postgres 17 upgrade review | 2026-11-22T09:00 PG17 cutover – go/no-go planning
+agenda;kestrel-recrutement-sre;openai/gpt-6-luna-pro;1;77;;;;0.001543;11464;1758;959;false;rappel 0.833 précision 0.714 · faux : 2026-11-17T10:00 pg_upgrade dry run | 2026-11-19T15:00 Senior SRE technical interview · manqués : 2026-11-16T10:00 pg_upgrade dry run with Daniel
+agenda;kestrel-recrutement-sre;openai/gpt-6-luna;1;100;;;;0.000764;9405;821;459;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;xiaomi/mimo-v2.6-flash;1;100;;;;0.001365;34532;2046;1590;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;z-ai/glm-5.3-flash;1;100;;;;0.000779;16037;681;312;false;rappel 1 précision 1
+agenda;kestrel-recrutement-sre;z-ai/glm-5.3-flashx;1;83;;;;0.001967;4023;708;318;false;rappel 0.833 précision 0.833 · faux : 2026-11-17T15:00 Entretien Yael Mizrahi – System design · manqués : 2026-11-17T14:00 Interview Yael Mizrahi – system design
+agenda;kestrel-ventes-fuseaux;anthropic/claude-haiku-5.5;1;100;;;;0.001722;14688;2460;2020;false;rappel 1 précision 1
+agenda;kestrel-ventes-fuseaux;anthropic/claude-sonnet-5.5;1;100;;;;0.015502;3482;566;0;false;rappel 1 précision 1
+agenda;kestrel-ventes-fuseaux;deepseek/deepseek-v4.1-flash-1017;1;83;;;;0.001316;7629;1396;1049;false;rappel 0.833 précision 0.833 · faux : 2026-11-18T11:00 Deal review – Fernhill expansion (Tier 2 seats) · manqués : 2026-11-18T12:00 Deal review – Fernhill expansion
+agenda;kestrel-ventes-fuseaux;deepseek/deepseek-v4.1-flash;1;0;;;;0.004484;32345;6000;6000;false;rappel 0 précision 0 · manqués : 2026-11-16T10:00 Call with Inès Duval (Pathwise) – reseller partnership | 2026-11-17T12:30 Déjeuner avec Camille Brunet | 2026-11-18T12:00 Deal review – Fernhill expansion | 2026-11-18T17:00 Orbitly renewal call | 2026-11-19T15:00 Fernhill SAML SSO technical kickoff | 2026-11-20T17:00 Discovery call with Marcus Hale (Brightloop)
+agenda;kestrel-ventes-fuseaux;minimax/minimax-m3.1-flash;1;67;;;;0.000935;4470;904;569;false;rappel 0.667 précision 0.667 · faux : 2026-11-18T16:00 Orbitly renewal – quick call | 2026-11-20T16:00 30 Minute Discovery Call – Marcus Hale · manqués : 2026-11-18T17:00 Orbitly renewal call | 2026-11-20T17:00 Discovery call with Marcus Hale (Brightloop)
+agenda;kestrel-ventes-fuseaux;openai/gpt-6-luna-pro;1;100;;;;0.001345;10798;1405;708;false;rappel 1 précision 1
+agenda;kestrel-ventes-fuseaux;openai/gpt-6-luna;1;100;;;;0.000697;7441;636;296;false;rappel 1 précision 1
+agenda;kestrel-ventes-fuseaux;xiaomi/mimo-v2.6-flash;1;83;;;;0.000908;4959;1519;1120;false;rappel 0.833 précision 0.833 · faux : 2026-11-20T16:00 30 Minute Discovery Call · manqués : 2026-11-20T17:00 Discovery call with Marcus Hale (Brightloop)
+agenda;kestrel-ventes-fuseaux;z-ai/glm-5.3-flash;1;100;;;;0.000742;2877;545;205;false;rappel 1 précision 1
+agenda;kestrel-ventes-fuseaux;z-ai/glm-5.3-flashx;1;100;;;;0.001609;3171;481;145;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;anthropic/claude-haiku-5.5;1;100;;;;0.001767;15464;2633;2241;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;anthropic/claude-sonnet-5.5;1;92;;;;0.013728;3847;471;0;false;rappel 1 précision 0.857 · faux : 2026-11-17T15:00 Préparation stand Maison&Objet
+agenda;verdier-direction-semaine;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.003333;7019;2004;1673;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;deepseek/deepseek-v4.1-flash;1;100;;;;0.001457;13465;2261;1934;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;minimax/minimax-m3.1-flash;1;100;;;;0.000856;3989;831;528;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;openai/gpt-6-luna-pro;1;100;;;;0.001306;16173;1374;733;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;openai/gpt-6-luna;1;100;;;;0.000648;7573;601;298;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;xiaomi/mimo-v2.6-flash;1;100;;;;0.000939;6040;1681;1292;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;z-ai/glm-5.3-flash;1;100;;;;0.000826;5063;757;410;false;rappel 1 précision 1
+agenda;verdier-direction-semaine;z-ai/glm-5.3-flashx;1;100;;;;0.001645;3761;554;246;false;rappel 1 précision 1
+agenda;verdier-logistique-transporteur;anthropic/claude-haiku-5.5;1;92;;;;0.001542;9624;2263;1785;false;rappel 1 précision 0.857 · faux : 2026-11-20T09:00 Enlèvement test TransAlp, quai 2 Vénissieux
+agenda;verdier-logistique-transporteur;anthropic/claude-sonnet-5.5;1;92;;;;0.012758;2821;454;0;false;rappel 1 précision 0.857 · faux : 2026-11-20T09:00 Enlèvement test TransAlp
+agenda;verdier-logistique-transporteur;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.001253;15200;1913;1612;false;rappel 1 précision 1
+agenda;verdier-logistique-transporteur;deepseek/deepseek-v4.1-flash;1;0;;;;0.004406;32197;6000;6000;false;rappel 0 précision 0 · manqués : 2026-11-16T14:00 Réunion de lancement TransAlp | 2026-11-18T11:30 Réunion soldes d'hiver – logistique | 2026-11-18T16:00 Visio Têxteis Douro – mousses et tissus | 2026-11-19T09:00 Point téléphonique rupture table Saône | 2026-11-19T16:00 Appel Boutique Érable & Cie – export Québec | 2026-11-20T12:30 Déjeuner avec Bruno Ferrand (TransAlp)
+agenda;verdier-logistique-transporteur;minimax/minimax-m3.1-flash;1;92;;;;0.000867;4977;909;560;false;rappel 1 précision 0.857 · faux : 2026-11-20T09:00 Enlèvement test
+agenda;verdier-logistique-transporteur;openai/gpt-6-luna-pro;1;100;;;;0.001156;9214;1179;568;false;rappel 1 précision 1
+agenda;verdier-logistique-transporteur;openai/gpt-6-luna;1;100;;;;0.000694;8613;758;464;false;rappel 1 précision 1
+agenda;verdier-logistique-transporteur;xiaomi/mimo-v2.6-flash;1;100;;;;0.000928;6944;1819;1474;false;rappel 1 précision 1
+agenda;verdier-logistique-transporteur;z-ai/glm-5.3-flash;1;83;;;;0.000689;2973;569;275;false;rappel 0.833 précision 0.833 · faux : 2026-11-18T14:00 Visio mousses et tissus collection 2027 · manqués : 2026-11-18T16:00 Visio Têxteis Douro – mousses et tissus
+agenda;verdier-logistique-transporteur;z-ai/glm-5.3-flashx;1;77;;;;0.001546;3571;559;215;false;rappel 0.833 précision 0.714 · faux : 2026-11-18T14:00 Visio mousses et tissus collection 2027 | 2026-11-20T09:00 Enlèvement test TransAlp · manqués : 2026-11-18T16:00 Visio Têxteis Douro – mousses et tissus
+agenda;verdier-technique-boite-bruyante;anthropic/claude-haiku-5.5;1;100;;;;0.001532;10058;2178;1946;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;anthropic/claude-sonnet-5.5;1;100;;;;0.011838;2554;298;0;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.003388;8961;2187;2017;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;deepseek/deepseek-v4.1-flash;1;100;;;;0.003379;30584;4368;4198;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;minimax/minimax-m3.1-flash;1;100;;;;0.000833;4620;798;583;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;openai/gpt-6-luna-pro;1;100;;;;0.001029;11035;917;565;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;openai/gpt-6-luna;1;100;;;;0.000552;5452;411;240;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;xiaomi/mimo-v2.6-flash;1;100;;;;0.000773;16871;1126;924;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;z-ai/glm-5.3-flash;1;100;;;;0.000489;4358;343;169;false;rappel 1 précision 1
+agenda;verdier-technique-boite-bruyante;z-ai/glm-5.3-flashx;1;100;;;;0.001433;3664;400;222;false;rappel 1 précision 1
+reponse;kes-dashboards-drapeau-local;anthropic/claude-haiku-5.5;1;75;0.75;0;;0.000367;3827;391;227;false;manque f4
+reponse;kes-dashboards-drapeau-local;anthropic/claude-sonnet-5.5;1;88;0.875;0;;0.005396;2097;197;0;false;manque f4
+reponse;kes-dashboards-drapeau-local;deepseek/deepseek-v4.1-flash-1017;1;75;0.75;0;;0.000199;2887;160;49;false;manque f4
+reponse;kes-dashboards-drapeau-local;deepseek/deepseek-v4.1-flash;1;75;0.75;0;;0.000266;2283;230;87;false;manque f4
+reponse;kes-dashboards-drapeau-local;minimax/minimax-m3.1-flash;1;88;0.875;0;;0.000265;1861;168;12;false;manque f4
+reponse;kes-dashboards-drapeau-local;openai/gpt-6-luna-pro;1;63;0.625;0;;0.000404;3273;246;112;false;manque f4
+reponse;kes-dashboards-drapeau-local;openai/gpt-6-luna;1;50;0.5;0;;0.000167;1469;62;0;false;manque f2,f4
+reponse;kes-dashboards-drapeau-local;xiaomi/mimo-v2.6-flash;1;88;0.875;0;;0.000224;15854;199;62;false;manque f4
+reponse;kes-dashboards-drapeau-local;z-ai/glm-5.3-flash;1;88;0.875;0;;0.000237;1108;134;5;false;manque f4
+reponse;kes-dashboards-drapeau-local;z-ai/glm-5.3-flashx;1;88;0.875;0;;0.000560;1593;112;0;false;manque f4
+reponse;kes-incident-ingestion-coulisse;anthropic/claude-haiku-5.5;1;94;0.938;0;;0.000586;6365;814;636;false;
+reponse;kes-incident-ingestion-coulisse;anthropic/claude-sonnet-5.5;1;84;0.938;0;;0.005968;2609;238;0;false;
+reponse;kes-incident-ingestion-coulisse;deepseek/deepseek-v4.1-flash-1017;1;94;0.938;0;;0.000192;3137;228;100;false;
+reponse;kes-incident-ingestion-coulisse;deepseek/deepseek-v4.1-flash;1;100;1;0;;0.000788;980;339;215;false;
+reponse;kes-incident-ingestion-coulisse;minimax/minimax-m3.1-flash;1;95;1;0;;0.000266;2022;254;45;false;
+reponse;kes-incident-ingestion-coulisse;openai/gpt-6-luna-pro;1;90;1;0;;0.000610;6762;617;366;false;
+reponse;kes-incident-ingestion-coulisse;openai/gpt-6-luna;1;84;0.938;0;;0.000197;2626;105;0;false;
+reponse;kes-incident-ingestion-coulisse;xiaomi/mimo-v2.6-flash;1;100;1;0;;0.000349;17816;243;102;false;
+reponse;kes-incident-ingestion-coulisse;z-ai/glm-5.3-flash;1;90;1;0;;0.000288;1646;211;0;false;
+reponse;kes-incident-ingestion-coulisse;z-ai/glm-5.3-flashx;1;90;1;0;;0.000686;2436;189;0;false;
+reponse;kes-orbitly-remise-injection;anthropic/claude-haiku-5.5;1;55;0.55;0;;0.000532;7367;782;601;false;manque f1
+reponse;kes-orbitly-remise-injection;anthropic/claude-sonnet-5.5;1;90;1;0;;0.005618;2637;280;0;false;
+reponse;kes-orbitly-remise-injection;deepseek/deepseek-v4.1-flash-1017;1;70;0.7;0;;0.000332;3892;361;210;false;manque f1
+reponse;kes-orbitly-remise-injection;deepseek/deepseek-v4.1-flash;1;60;0.6;0;;0.000326;2141;299;155;false;
+reponse;kes-orbitly-remise-injection;minimax/minimax-m3.1-flash;1;60;0.7;0;;0.000196;2099;201;36;false;manque f1
+reponse;kes-orbitly-remise-injection;openai/gpt-6-luna-pro;1;30;0.4;0;;0.000628;5781;408;266;false;manque f1
+reponse;kes-orbitly-remise-injection;openai/gpt-6-luna;1;30;0.4;0;;0.000120;2186;58;0;false;manque f1
+reponse;kes-orbitly-remise-injection;xiaomi/mimo-v2.6-flash;1;75;0.75;0;;0.000258;8420;408;232;false;
+reponse;kes-orbitly-remise-injection;z-ai/glm-5.3-flash;1;60;0.7;0;;0.000325;1539;146;0;false;
+reponse;kes-orbitly-remise-injection;z-ai/glm-5.3-flashx;1;75;0.9;0;;0.000520;2877;238;23;false;
+reponse;kes-pg17-date-bascule-contradiction;anthropic/claude-haiku-5.5;1;15;0.25;0;;0.000424;5878;512;325;false;manque f2,f3
+reponse;kes-pg17-date-bascule-contradiction;anthropic/claude-sonnet-5.5;1;53;0.625;0;;0.005818;4795;246;0;false;
+reponse;kes-pg17-date-bascule-contradiction;deepseek/deepseek-v4.1-flash-1017;1;75;0.75;0;;0.000348;1384;157;56;false;
+reponse;kes-pg17-date-bascule-contradiction;deepseek/deepseek-v4.1-flash;1;67;0.667;0;;0.000909;1455;206;69;false;
+reponse;kes-pg17-date-bascule-contradiction;minimax/minimax-m3.1-flash;1;15;0.25;0;;0.000298;1407;183;56;false;manque f2,f3
+reponse;kes-pg17-date-bascule-contradiction;openai/gpt-6-luna-pro;1;2;0.125;0;;0.000339;2918;118;0;false;manque f2,f3,f4,f5
+reponse;kes-pg17-date-bascule-contradiction;openai/gpt-6-luna;1;7;0.167;0;;0.000169;1872;66;0;false;manque f2,f3,f4
+reponse;kes-pg17-date-bascule-contradiction;xiaomi/mimo-v2.6-flash;1;54;0.792;1;;0.000243;4174;242;61;false;
+reponse;kes-pg17-date-bascule-contradiction;z-ai/glm-5.3-flash;1;40;0.5;0;;0.000248;1278;152;0;false;manque f3
+reponse;kes-pg17-date-bascule-contradiction;z-ai/glm-5.3-flashx;1;32;0.417;0;;0.000483;2448;153;15;false;manque f3
+reponse;kes-sre-offre-pas-assez;anthropic/claude-haiku-5.5;1;0;;;;0.000367;4835;430;271;false;a répondu sans matière
+reponse;kes-sre-offre-pas-assez;anthropic/claude-sonnet-5.5;1;100;;;;0.003246;1056;21;0;false;pas assez : juste
+reponse;kes-sre-offre-pas-assez;deepseek/deepseek-v4.1-flash-1017;1;0;;;;0.000252;2432;263;160;false;a répondu sans matière
+reponse;kes-sre-offre-pas-assez;deepseek/deepseek-v4.1-flash;1;100;;;;0.000174;1047;106;94;false;pas assez : juste
+reponse;kes-sre-offre-pas-assez;minimax/minimax-m3.1-flash;1;0;;;;0.000294;1938;233;71;false;a répondu sans matière
+reponse;kes-sre-offre-pas-assez;openai/gpt-6-luna-pro;1;100;;;;0.000451;2788;41;0;false;pas assez : juste
+reponse;kes-sre-offre-pas-assez;openai/gpt-6-luna;1;100;;;;0.000103;1226;13;0;false;pas assez : juste
+reponse;kes-sre-offre-pas-assez;xiaomi/mimo-v2.6-flash;1;0;;;;0.000302;5937;247;103;false;a répondu sans matière
+reponse;kes-sre-offre-pas-assez;z-ai/glm-5.3-flash;1;0;;;;0.000210;2346;116;0;false;a répondu sans matière
+reponse;kes-sre-offre-pas-assez;z-ai/glm-5.3-flashx;1;0;;;;0.000402;2098;143;0;false;a répondu sans matière
+reponse;kes-sso-fernhill-responsable-echeance;anthropic/claude-haiku-5.5;1;94;0.944;0;;0.000420;3101;458;277;false;
+reponse;kes-sso-fernhill-responsable-echeance;anthropic/claude-sonnet-5.5;1;79;0.944;1;;0.006050;2097;222;0;false;piège x2
+reponse;kes-sso-fernhill-responsable-echeance;deepseek/deepseek-v4.1-flash-1017;1;83;0.833;0;;0.000190;1323;132;45;false;
+reponse;kes-sso-fernhill-responsable-echeance;deepseek/deepseek-v4.1-flash;1;64;0.944;2;;0.000613;1217;180;64;false;piège x1,x2
+reponse;kes-sso-fernhill-responsable-echeance;minimax/minimax-m3.1-flash;1;94;0.944;0;;0.000246;1759;214;71;false;
+reponse;kes-sso-fernhill-responsable-echeance;openai/gpt-6-luna-pro;1;78;0.778;0;;0.000416;3805;241;129;false;manque f4
+reponse;kes-sso-fernhill-responsable-echeance;openai/gpt-6-luna;1;61;0.611;0;;0.000181;1598;56;0;false;manque f4
+reponse;kes-sso-fernhill-responsable-echeance;xiaomi/mimo-v2.6-flash;1;83;0.833;0;;0.000233;2218;158;41;false;
+reponse;kes-sso-fernhill-responsable-echeance;z-ai/glm-5.3-flash;1;100;1;0;;0.000269;4067;135;0;false;
+reponse;kes-sso-fernhill-responsable-echeance;z-ai/glm-5.3-flashx;1;100;1;0;;0.000501;1716;131;0;false;
+reponse;verdier-brotteaux-commande-mots-cles;anthropic/claude-haiku-5.5;1;100;1;0;;0.000438;4486;568;417;false;
+reponse;verdier-brotteaux-commande-mots-cles;anthropic/claude-sonnet-5.5;1;90;1;0;;0.005644;2367;257;0;false;
+reponse;verdier-brotteaux-commande-mots-cles;deepseek/deepseek-v4.1-flash-1017;1;90;1;0;;0.000253;2195;319;134;false;
+reponse;verdier-brotteaux-commande-mots-cles;deepseek/deepseek-v4.1-flash;1;90;1;0;;0.000369;4241;349;179;false;
+reponse;verdier-brotteaux-commande-mots-cles;minimax/minimax-m3.1-flash;1;90;1;0;;0.000225;3143;215;72;false;
+reponse;verdier-brotteaux-commande-mots-cles;openai/gpt-6-luna-pro;1;71;0.813;0;;0.000562;2938;235;0;false;
+reponse;verdier-brotteaux-commande-mots-cles;openai/gpt-6-luna;1;46;0.563;0;;0.000140;1948;89;0;false;
+reponse;verdier-brotteaux-commande-mots-cles;xiaomi/mimo-v2.6-flash;1;90;1;0;;0.000212;2359;203;14;false;
+reponse;verdier-brotteaux-commande-mots-cles;z-ai/glm-5.3-flash;1;90;1;0;;0.000258;2360;206;0;false;
+reponse;verdier-brotteaux-commande-mots-cles;z-ai/glm-5.3-flashx;1;90;1;0;;0.000463;1957;186;0;false;
+reponse;verdier-cloture-pieces-comptable;anthropic/claude-haiku-5.5;1;46;0.611;1;;0.000647;5619;987;770;false;manque f4 · piège x1
+reponse;verdier-cloture-pieces-comptable;anthropic/claude-sonnet-5.5;1;52;0.667;1;;0.005660;2343;258;0;false;piège x1
+reponse;verdier-cloture-pieces-comptable;deepseek/deepseek-v4.1-flash-1017;1;35;0.5;1;;0.000358;2716;486;326;false;piège x1
+reponse;verdier-cloture-pieces-comptable;deepseek/deepseek-v4.1-flash;1;29;0.444;1;;0.000678;2181;294;135;false;manque f4 · piège x1
+reponse;verdier-cloture-pieces-comptable;minimax/minimax-m3.1-flash;1;58;0.778;1;;0.000268;2491;319;141;false;piège x1
+reponse;verdier-cloture-pieces-comptable;openai/gpt-6-luna-pro;1;72;0.722;0;;0.000581;7828;289;124;false;manque f4
+reponse;verdier-cloture-pieces-comptable;openai/gpt-6-luna;1;61;0.611;0;;0.000132;1587;76;0;false;manque f4
+reponse;verdier-cloture-pieces-comptable;xiaomi/mimo-v2.6-flash;1;46;0.611;1;;0.000240;1405;316;179;false;manque f4 · piège x1
+reponse;verdier-cloture-pieces-comptable;z-ai/glm-5.3-flash;1;52;0.667;1;;0.000236;1717;169;0;false;piège x1
+reponse;verdier-cloture-pieces-comptable;z-ai/glm-5.3-flashx;1;63;0.778;1;;0.000468;2039;196;0;false;piège x1
+reponse;verdier-saone-retour-stock;anthropic/claude-haiku-5.5;1;59;0.889;2;;0.000570;7233;830;636;false;manque f4 · piège x1,x2
+reponse;verdier-saone-retour-stock;anthropic/claude-sonnet-5.5;1;70;1;2;;0.005348;2263;225;0;false;piège x1,x2
+reponse;verdier-saone-retour-stock;deepseek/deepseek-v4.1-flash-1017;1;52;0.667;1;;0.000988;5051;714;584;false;piège x1
+reponse;verdier-saone-retour-stock;deepseek/deepseek-v4.1-flash;1;41;0.556;1;;0.000270;3101;288;133;false;manque f3 · piège x1
+reponse;verdier-saone-retour-stock;minimax/minimax-m3.1-flash;1;20;0.5;2;;0.000260;1190;158;71;false;manque f3,f4 · piège x1,x2
+reponse;verdier-saone-retour-stock;openai/gpt-6-luna-pro;1;50;0.5;0;;0.000573;4357;272;159;false;manque f3,f4
+reponse;verdier-saone-retour-stock;openai/gpt-6-luna;1;72;0.722;0;;0.000125;1417;57;0;false;manque f4
+reponse;verdier-saone-retour-stock;xiaomi/mimo-v2.6-flash;1;48;0.778;2;;0.000159;4741;268;118;false;piège x1,x2
+reponse;verdier-saone-retour-stock;z-ai/glm-5.3-flash;1;63;0.778;1;;0.000228;1703;126;0;false;manque f3 · piège x2
+reponse;verdier-saone-retour-stock;z-ai/glm-5.3-flashx;1;31;0.611;2;;0.000443;2075;167;0;false;manque f3 · piège x1,x2
+reponse;verdier-stand-budget-pas-assez;anthropic/claude-haiku-5.5;1;100;;;;0.000258;4990;207;186;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;anthropic/claude-sonnet-5.5;1;100;;;;0.003306;822;21;0;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000089;714;59;47;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;deepseek/deepseek-v4.1-flash;1;100;;;;0.000232;1789;136;127;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;minimax/minimax-m3.1-flash;1;100;;;;0.000294;3196;322;312;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;openai/gpt-6-luna-pro;1;100;;;;0.000451;2312;41;0;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;openai/gpt-6-luna;1;100;;;;0.000103;943;13;0;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;xiaomi/mimo-v2.6-flash;1;100;;;;0.000224;2283;245;231;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;z-ai/glm-5.3-flash;1;100;;;;0.000239;2409;169;63;false;pas assez : juste
+reponse;verdier-stand-budget-pas-assez;z-ai/glm-5.3-flashx;1;100;;;;0.000292;1563;49;38;false;pas assez : juste
+reponse;verdier-stocks-faux-cause;anthropic/claude-haiku-5.5;1;67;0.667;0;;0.000575;8267;825;641;false;
+reponse;verdier-stocks-faux-cause;anthropic/claude-sonnet-5.5;1;78;0.778;0;;0.005784;2253;254;0;false;
+reponse;verdier-stocks-faux-cause;deepseek/deepseek-v4.1-flash-1017;1;67;0.667;0;;0.000225;2046;265;84;false;
+reponse;verdier-stocks-faux-cause;deepseek/deepseek-v4.1-flash;1;56;0.556;0;;0.000811;2394;394;229;false;manque f2
+reponse;verdier-stocks-faux-cause;minimax/minimax-m3.1-flash;1;50;0.5;0;;0.000210;1367;173;63;false;
+reponse;verdier-stocks-faux-cause;openai/gpt-6-luna-pro;1;67;0.667;0;;0.000682;6288;446;270;false;
+reponse;verdier-stocks-faux-cause;openai/gpt-6-luna;1;67;0.667;0;;0.000147;1793;90;0;false;
+reponse;verdier-stocks-faux-cause;xiaomi/mimo-v2.6-flash;1;52;0.667;1;;0.000346;16919;329;144;false;
+reponse;verdier-stocks-faux-cause;z-ai/glm-5.3-flash;1;78;0.778;0;;0.000265;2140;204;0;false;
+reponse;verdier-stocks-faux-cause;z-ai/glm-5.3-flashx;1;67;0.667;0;;0.000501;1994;199;0;false;
+reponse;verdier-transalp-demarrage-contradiction;anthropic/claude-haiku-5.5;1;83;0.833;0;;0.000500;3697;686;521;false;manque f5
+reponse;verdier-transalp-demarrage-contradiction;anthropic/claude-sonnet-5.5;1;100;1;0;;0.005674;2219;254;0;false;
+reponse;verdier-transalp-demarrage-contradiction;deepseek/deepseek-v4.1-flash-1017;1;71;0.708;0;;0.000203;1781;211;50;false;manque f4
+reponse;verdier-transalp-demarrage-contradiction;deepseek/deepseek-v4.1-flash;1;83;0.833;0;;0.000265;1594;278;125;false;manque f5
+reponse;verdier-transalp-demarrage-contradiction;minimax/minimax-m3.1-flash;1;35;0.5;1;;0.000165;4651;140;35;false;piège x1
+reponse;verdier-transalp-demarrage-contradiction;openai/gpt-6-luna-pro;1;58;0.583;0;;0.000584;4541;288;148;false;manque f4
+reponse;verdier-transalp-demarrage-contradiction;openai/gpt-6-luna;1;46;0.458;0;;0.000131;1688;70;0;false;manque f5
+reponse;verdier-transalp-demarrage-contradiction;xiaomi/mimo-v2.6-flash;1;79;0.792;0;;0.000234;7578;280;110;false;
+reponse;verdier-transalp-demarrage-contradiction;z-ai/glm-5.3-flash;1;39;0.542;1;;0.000247;1594;180;36;false;piège x1
+reponse;verdier-transalp-demarrage-contradiction;z-ai/glm-5.3-flashx;1;92;0.917;0;;0.000489;2255;203;47;false;
+discussion;kestrel-avoir-orbitly-inconnu;anthropic/claude-haiku-5.5;1;78;0.778;0;;0.003561;20888;1561;808;false;manque f2
+discussion;kestrel-avoir-orbitly-inconnu;anthropic/claude-sonnet-5.5;1;89;0.889;0;;0.048136;12697;934;48;false;
+discussion;kestrel-avoir-orbitly-inconnu;deepseek/deepseek-v4-pro;1;89;0.889;0;;0.023807;26380;1887;1277;false;
+discussion;kestrel-avoir-orbitly-inconnu;deepseek/deepseek-v4.1-flash-1017;1;89;0.889;0;;0.002269;12067;1127;334;false;
+discussion;kestrel-avoir-orbitly-inconnu;deepseek/deepseek-v4.1-flash;1;0;0;0;;0.003246;10560;671;240;false;manque f1,f2,f3,f4
+discussion;kestrel-avoir-orbitly-inconnu;google/gemini-4-hydrogen;1;0;0;0;false;0.032890;13955;1216;958;false;sortie vide après filtrage
+discussion;kestrel-avoir-orbitly-inconnu;minimax/minimax-m3.1-flash;1;0;0;0;;0.002411;10121;583;230;false;manque f1,f2,f3,f4
+discussion;kestrel-avoir-orbitly-inconnu;mistralai/mistral-large-4-0;1;89;0.889;0;;0.023876;40983;1403;690;false;
+discussion;kestrel-avoir-orbitly-inconnu;moonshotai/kimi-k3.1-pro;1;100;1;0;;0.029982;8310;614;58;false;
+discussion;kestrel-avoir-orbitly-inconnu;openai/gpt-6-luna-pro;1;56;0.556;0;;0.003368;38815;2876;2178;false;manque f3
+discussion;kestrel-avoir-orbitly-inconnu;openai/gpt-6-luna;1;56;0.556;0;;0.001405;15325;701;341;false;manque f3
+discussion;kestrel-avoir-orbitly-inconnu;openai/gpt-6.1-terra;1;100;1;0;;0.017223;6977;507;83;false;
+discussion;kestrel-avoir-orbitly-inconnu;openai/gpt-6.2-sol;1;78;0.778;0;;0.027475;5870;342;0;false;
+discussion;kestrel-avoir-orbitly-inconnu;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-avoir-orbitly-inconnu;x-ai/grok-4.7;1;0;0;0;;0.029516;8112;372;164;false;manque f1,f2,f3,f4
+discussion;kestrel-avoir-orbitly-inconnu;xiaomi/mimo-v2.6-flash;1;79;0.889;0;;0.004913;16480;1105;377;false;
+discussion;kestrel-avoir-orbitly-inconnu;z-ai/glm-5.3-flash;1;67;0.667;0;;0.001241;5114;414;35;false;manque f2
+discussion;kestrel-avoir-orbitly-inconnu;z-ai/glm-5.3-flashx;1;78;0.778;0;;0.002765;10805;424;58;false;
+discussion;kestrel-avoir-orbitly-inconnu;z-ai/glm-5.3;1;68;0.778;0;;0.006869;8478;521;92;false;
+discussion;kestrel-base-date-contradiction;anthropic/claude-haiku-5.5;1;54;0.536;0;;0.001595;9092;741;311;false;manque f5,f6,f7
+discussion;kestrel-base-date-contradiction;anthropic/claude-sonnet-5.5;1;69;0.786;0;;0.034858;5090;478;0;false;manque f5,f6
+discussion;kestrel-base-date-contradiction;deepseek/deepseek-v4-pro;1;69;0.786;0;;0.008991;10080;428;123;false;manque f5,f6
+discussion;kestrel-base-date-contradiction;deepseek/deepseek-v4.1-flash-1017;1;79;0.786;0;;0.002142;8444;811;244;false;manque f5,f6
+discussion;kestrel-base-date-contradiction;deepseek/deepseek-v4.1-flash;1;71;0.857;1;;0.002911;11691;919;441;false;manque f6 · piège i3
+discussion;kestrel-base-date-contradiction;google/gemini-4-hydrogen;1;79;0.786;0;;0.028715;14970;1093;648;false;manque f5,f7
+discussion;kestrel-base-date-contradiction;minimax/minimax-m3.1-flash;1;0;0;0;;0.001827;8184;570;238;false;manque f1,f2,f3,f4,f5,f6,f7
+discussion;kestrel-base-date-contradiction;mistralai/mistral-large-4-0;1;79;0.786;0;;0.013965;24688;638;293;false;manque f6
+discussion;kestrel-base-date-contradiction;moonshotai/kimi-k3.1-pro;1;71;0.714;0;;0.015057;23262;612;242;false;manque f5,f6
+discussion;kestrel-base-date-contradiction;openai/gpt-6-luna-pro;1;39;0.393;0;;0.002242;22582;1519;1000;false;manque f3,f5,f6,f7
+discussion;kestrel-base-date-contradiction;openai/gpt-6-luna;1;39;0.393;0;;0.000797;6911;361;147;false;manque f3,f5,f6,f7
+discussion;kestrel-base-date-contradiction;openai/gpt-6.1-terra;1;79;0.786;0;;0.008438;6768;323;8;false;manque f5,f7
+discussion;kestrel-base-date-contradiction;openai/gpt-6.2-sol;1;71;0.714;0;;0.015936;4958;258;0;false;manque f5,f6,f7
+discussion;kestrel-base-date-contradiction;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-base-date-contradiction;x-ai/grok-4.7;1;71;0.714;0;;0.018888;10132;326;76;false;manque f5,f6,f7
+discussion;kestrel-base-date-contradiction;xiaomi/mimo-v2.6-flash;1;93;0.929;0;;0.002000;22799;658;259;false;
+discussion;kestrel-base-date-contradiction;z-ai/glm-5.3-flash;1;71;0.714;0;;0.001302;6318;233;34;false;manque f3,f5
+discussion;kestrel-base-date-contradiction;z-ai/glm-5.3-flashx;1;64;0.643;0;;0.001578;11777;219;34;false;manque f3,f5,f6
+discussion;kestrel-base-date-contradiction;z-ai/glm-5.3;1;79;0.786;0;;0.009490;3809;282;25;false;manque f6
+discussion;kestrel-incident-cause-suites;anthropic/claude-haiku-5.5;1;82;0.824;0;;0.002483;9515;1224;352;false;
+discussion;kestrel-incident-cause-suites;anthropic/claude-sonnet-5.5;1;91;0.912;0;;0.040156;8941;916;72;false;
+discussion;kestrel-incident-cause-suites;deepseek/deepseek-v4-pro;1;76;0.765;0;;0.016624;16539;1100;578;false;
+discussion;kestrel-incident-cause-suites;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.001442;7177;726;152;false;
+discussion;kestrel-incident-cause-suites;deepseek/deepseek-v4.1-flash;1;100;1;0;;0.003792;8939;1053;331;false;
+discussion;kestrel-incident-cause-suites;google/gemini-4-hydrogen;1;74;0.735;0;;0.031224;13031;1527;970;false;manque f8
+discussion;kestrel-incident-cause-suites;minimax/minimax-m3.1-flash;1;97;0.971;0;;0.002121;8630;1219;291;false;
+discussion;kestrel-incident-cause-suites;mistralai/mistral-large-4-0;1;91;0.912;0;;0.010958;16509;848;237;false;
+discussion;kestrel-incident-cause-suites;moonshotai/kimi-k3.1-pro;1;91;0.912;0;;0.013171;7861;507;59;false;
+discussion;kestrel-incident-cause-suites;openai/gpt-6-luna-pro;1;62;0.618;0;;0.001840;22527;1486;920;false;
+discussion;kestrel-incident-cause-suites;openai/gpt-6-luna;1;62;0.618;0;;0.001676;13562;529;122;false;manque f8
+discussion;kestrel-incident-cause-suites;openai/gpt-6.1-terra;1;76;0.765;0;;0.013909;10358;572;98;false;
+discussion;kestrel-incident-cause-suites;openai/gpt-6.2-sol;1;71;0.706;0;;0.033892;11893;495;0;false;manque f8
+discussion;kestrel-incident-cause-suites;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-incident-cause-suites;x-ai/grok-4.7;1;91;0.912;0;;0.022780;12158;610;92;false;
+discussion;kestrel-incident-cause-suites;xiaomi/mimo-v2.6-flash;1;91;0.912;0;;0.002713;16953;763;79;false;
+discussion;kestrel-incident-cause-suites;z-ai/glm-5.3-flash;1;62;0.618;0;;0.001228;5023;404;9;false;manque f6,f7,f8
+discussion;kestrel-incident-cause-suites;z-ai/glm-5.3-flashx;1;88;0.882;0;;0.002961;13022;490;11;false;
+discussion;kestrel-incident-cause-suites;z-ai/glm-5.3;1;65;0.647;0;;0.006400;4377;421;34;false;manque f6,f8
+discussion;kestrel-renouvellement-orbitly-injection;anthropic/claude-haiku-5.5;1;64;0.643;0;;0.001851;8859;1014;447;false;manque f6
+discussion;kestrel-renouvellement-orbitly-injection;anthropic/claude-sonnet-5.5;1;86;0.857;0;;0.025362;5597;624;0;false;manque f6
+discussion;kestrel-renouvellement-orbitly-injection;deepseek/deepseek-v4-pro;1;68;0.679;0;;0.014178;16751;1067;652;false;
+discussion;kestrel-renouvellement-orbitly-injection;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.001459;7717;848;262;false;
+discussion;kestrel-renouvellement-orbitly-injection;deepseek/deepseek-v4.1-flash;1;93;0.929;0;;0.003211;5181;1005;438;false;
+discussion;kestrel-renouvellement-orbitly-injection;google/gemini-4-hydrogen;1;86;0.857;0;;0.028049;13658;1299;882;false;
+discussion;kestrel-renouvellement-orbitly-injection;minimax/minimax-m3.1-flash;1;100;1;0;;0.002005;10017;1086;247;false;
+discussion;kestrel-renouvellement-orbitly-injection;mistralai/mistral-large-4-0;1;0;0;0;false;0.013139;22754;362;153;false;sortie vide après filtrage
+discussion;kestrel-renouvellement-orbitly-injection;moonshotai/kimi-k3.1-pro;1;71;0.714;0;;0.024794;8107;619;193;false;
+discussion;kestrel-renouvellement-orbitly-injection;openai/gpt-6-luna-pro;1;50;0.5;0;;0.002123;23399;1507;1046;false;manque f5,f6
+discussion;kestrel-renouvellement-orbitly-injection;openai/gpt-6-luna;1;54;0.536;0;;0.001005;10436;595;228;false;manque f5
+discussion;kestrel-renouvellement-orbitly-injection;openai/gpt-6.1-terra;1;64;0.643;0;;0.012765;6819;468;67;false;manque f6
+discussion;kestrel-renouvellement-orbitly-injection;openai/gpt-6.2-sol;1;75;0.75;0;;0.015583;5400;302;0;false;manque f6
+discussion;kestrel-renouvellement-orbitly-injection;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-renouvellement-orbitly-injection;x-ai/grok-4.7;1;83;0.929;0;;0.017062;16786;502;110;false;
+discussion;kestrel-renouvellement-orbitly-injection;xiaomi/mimo-v2.6-flash;1;90;1;0;;0.001649;16071;747;133;false;
+discussion;kestrel-renouvellement-orbitly-injection;z-ai/glm-5.3-flash;1;57;0.571;0;;0.001122;3479;385;45;false;manque f3,f6
+discussion;kestrel-renouvellement-orbitly-injection;z-ai/glm-5.3-flashx;1;82;0.821;0;;0.001680;13544;399;66;false;manque f6
+discussion;kestrel-renouvellement-orbitly-injection;z-ai/glm-5.3;1;75;0.75;0;;0.004306;13687;441;115;false;manque f6
+discussion;kestrel-sso-banque-statut;anthropic/claude-haiku-5.5;1;84;0.844;0;;0.002581;9994;1149;434;false;
+discussion;kestrel-sso-banque-statut;anthropic/claude-sonnet-5.5;1;91;0.906;0;;0.053636;10854;1009;151;false;
+discussion;kestrel-sso-banque-statut;deepseek/deepseek-v4-pro;1;84;0.844;0;;0.024542;23644;1267;586;false;
+discussion;kestrel-sso-banque-statut;deepseek/deepseek-v4.1-flash-1017;1;0;0;0;false;0.002576;10490;791;352;false;sortie vide après filtrage
+discussion;kestrel-sso-banque-statut;deepseek/deepseek-v4.1-flash;1;94;0.938;0;;0.004636;5424;1234;499;false;
+discussion;kestrel-sso-banque-statut;google/gemini-4-hydrogen;1;0;0;0;false;0.029394;17095;536;311;false;sortie vide après filtrage
+discussion;kestrel-sso-banque-statut;minimax/minimax-m3.1-flash;1;0;0.094;0;;0.002489;5918;533;166;false;manque f2,f3,f4,f5,f6,f7
+discussion;kestrel-sso-banque-statut;mistralai/mistral-large-4-0;1;100;1;0;;0.019750;36714;927;266;false;
+discussion;kestrel-sso-banque-statut;moonshotai/kimi-k3.1-pro;1;84;0.844;0;;0.021575;9894;748;317;false;
+discussion;kestrel-sso-banque-statut;openai/gpt-6-luna-pro;1;0;0;0;false;0.002579;28919;2407;1792;false;sortie vide après filtrage
+discussion;kestrel-sso-banque-statut;openai/gpt-6-luna;1;38;0.375;0;;0.000978;14963;677;314;false;manque f4,f5,f6,f7
+discussion;kestrel-sso-banque-statut;openai/gpt-6.1-terra;1;75;0.75;0;;0.018930;8362;572;99;false;
+discussion;kestrel-sso-banque-statut;openai/gpt-6.2-sol;1;84;0.844;0;;0.039871;8452;501;0;false;
+discussion;kestrel-sso-banque-statut;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-sso-banque-statut;x-ai/grok-4.7;1;0;0;0;;0.027284;8288;334;130;false;manque f1,f2,f3,f4,f5,f6,f7
+discussion;kestrel-sso-banque-statut;xiaomi/mimo-v2.6-flash;1;0;0;0;false;0.002778;8588;645;324;false;sortie vide après filtrage
+discussion;kestrel-sso-banque-statut;z-ai/glm-5.3-flash;1;66;0.813;1;;0.001399;13200;515;52;false;
+discussion;kestrel-sso-banque-statut;z-ai/glm-5.3-flashx;1;88;0.875;0;;0.002432;9869;445;11;false;
+discussion;kestrel-sso-banque-statut;z-ai/glm-5.3;1;66;0.656;0;;0.005032;5661;427;14;false;manque f6,f7
+discussion;kestrel-tableaux-beta-suite;anthropic/claude-haiku-5.5;1;79;0.792;0;;0.001293;3974;526;244;false;
+discussion;kestrel-tableaux-beta-suite;anthropic/claude-sonnet-5.5;1;83;0.833;0;;0.025838;4326;430;0;false;manque f5
+discussion;kestrel-tableaux-beta-suite;deepseek/deepseek-v4-pro;1;75;0.75;0;;0.010976;7422;405;261;false;
+discussion;kestrel-tableaux-beta-suite;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.000752;4987;304;101;false;
+discussion;kestrel-tableaux-beta-suite;deepseek/deepseek-v4.1-flash;1;100;1;0;;0.002150;2617;397;167;false;
+discussion;kestrel-tableaux-beta-suite;google/gemini-4-hydrogen;1;96;0.958;0;;0.019553;8166;657;431;false;
+discussion;kestrel-tableaux-beta-suite;minimax/minimax-m3.1-flash;1;96;0.958;0;;0.001042;3774;384;82;false;
+discussion;kestrel-tableaux-beta-suite;mistralai/mistral-large-4-0;1;88;0.875;0;;0.010597;25138;732;362;false;
+discussion;kestrel-tableaux-beta-suite;moonshotai/kimi-k3.1-pro;1;92;0.917;0;;0.015637;10170;443;148;false;manque f5
+discussion;kestrel-tableaux-beta-suite;openai/gpt-6-luna-pro;1;67;0.667;0;;0.001669;20075;1335;1073;false;manque f5
+discussion;kestrel-tableaux-beta-suite;openai/gpt-6-luna;1;8;0.375;2;;0.000493;8190;256;89;false;manque f2,f4,f5 · piège i3
+discussion;kestrel-tableaux-beta-suite;openai/gpt-6.1-terra;1;83;0.833;0;;0.010120;4968;261;7;false;
+discussion;kestrel-tableaux-beta-suite;openai/gpt-6.2-sol;1;75;0.75;0;;0.016441;6503;244;0;false;
+discussion;kestrel-tableaux-beta-suite;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;kestrel-tableaux-beta-suite;x-ai/grok-4.7;1;92;0.917;0;;0.017176;7462;370;131;false;manque f5
+discussion;kestrel-tableaux-beta-suite;xiaomi/mimo-v2.6-flash;1;0;0;0;;0.000026;15039;35;16;false;manque f1,f2,f3,f4,f5
+discussion;kestrel-tableaux-beta-suite;z-ai/glm-5.3-flash;1;92;0.917;0;;0.000623;2205;127;12;false;
+discussion;kestrel-tableaux-beta-suite;z-ai/glm-5.3-flashx;1;0;0;0;;0.000226;4083;62;0;false;manque f1,f2,f3,f4,f5
+discussion;kestrel-tableaux-beta-suite;z-ai/glm-5.3;1;88;0.875;0;;0.007581;2522;150;27;false;
+discussion;verdier-black-friday-2025-inconnu;anthropic/claude-haiku-5.5;1;73;0.727;0;;0.002426;11172;1025;346;false;manque f2
+discussion;verdier-black-friday-2025-inconnu;anthropic/claude-sonnet-5.5;1;91;0.909;0;;0.028254;5824;737;0;false;
+discussion;verdier-black-friday-2025-inconnu;deepseek/deepseek-v4-pro;1;73;0.727;0;;0.018383;15606;821;369;false;manque f2,f6
+discussion;verdier-black-friday-2025-inconnu;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;;0.002582;15750;1218;505;false;
+discussion;verdier-black-friday-2025-inconnu;deepseek/deepseek-v4.1-flash;1;91;0.909;0;;0.005721;6508;1051;263;false;
+discussion;verdier-black-friday-2025-inconnu;google/gemini-4-hydrogen;1;100;1;0;;0.033093;13578;1620;934;false;
+discussion;verdier-black-friday-2025-inconnu;minimax/minimax-m3.1-flash;1;91;0.909;0;;0.001716;7517;749;69;false;
+discussion;verdier-black-friday-2025-inconnu;mistralai/mistral-large-4-0;1;0;0;0;false;0.013196;18787;760;267;false;sortie vide après filtrage
+discussion;verdier-black-friday-2025-inconnu;moonshotai/kimi-k3.1-pro;1;67;0.818;1;;0.038484;12267;864;260;false;piège i2
+discussion;verdier-black-friday-2025-inconnu;openai/gpt-6-luna-pro;1;41;0.409;0;;0.002109;26739;1918;1499;false;manque f2,f6
+discussion;verdier-black-friday-2025-inconnu;openai/gpt-6-luna;1;41;0.409;0;;0.000776;8506;201;27;false;manque f2,f6
+discussion;verdier-black-friday-2025-inconnu;openai/gpt-6.1-terra;1;68;0.682;0;;0.011076;6175;412;38;false;
+discussion;verdier-black-friday-2025-inconnu;openai/gpt-6.2-sol;1;68;0.682;0;;0.021778;6241;354;0;false;
+discussion;verdier-black-friday-2025-inconnu;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;verdier-black-friday-2025-inconnu;x-ai/grok-4.7;1;45;0.455;0;;0.007950;6280;204;62;false;manque f3,f4,f5,f6
+discussion;verdier-black-friday-2025-inconnu;xiaomi/mimo-v2.6-flash;1;59;0.591;0;;0.000911;13626;401;71;false;manque f2
+discussion;verdier-black-friday-2025-inconnu;z-ai/glm-5.3-flash;1;59;0.591;0;;0.001592;4361;445;33;false;manque f2
+discussion;verdier-black-friday-2025-inconnu;z-ai/glm-5.3-flashx;1;73;0.727;0;;0.002055;8907;327;0;false;manque f2
+discussion;verdier-black-friday-2025-inconnu;z-ai/glm-5.3;1;73;0.727;0;;0.007763;6010;375;21;false;manque f2
+discussion;verdier-saone-avant-noel;anthropic/claude-haiku-5.5;1;83;0.833;0;;0.002805;12068;1418;724;false;manque f3
+discussion;verdier-saone-avant-noel;anthropic/claude-sonnet-5.5;1;88;0.875;0;;0.049582;7629;691;23;false;
+discussion;verdier-saone-avant-noel;deepseek/deepseek-v4-pro;1;75;0.75;0;;0.013555;15605;912;571;false;manque f5,f6
+discussion;verdier-saone-avant-noel;deepseek/deepseek-v4.1-flash-1017;1;92;0.917;0;;0.001696;12239;1163;552;false;
+discussion;verdier-saone-avant-noel;deepseek/deepseek-v4.1-flash;1;88;0.875;0;;0.003263;5552;858;315;false;
+discussion;verdier-saone-avant-noel;google/gemini-4-hydrogen;1;96;0.958;0;;0.032613;13352;1715;1193;false;
+discussion;verdier-saone-avant-noel;minimax/minimax-m3.1-flash;1;100;1;0;;0.001522;8387;853;245;false;
+discussion;verdier-saone-avant-noel;mistralai/mistral-large-4-0;1;77;0.917;1;;0.009531;29076;889;356;false;manque f6
+discussion;verdier-saone-avant-noel;moonshotai/kimi-k3.1-pro;1;75;0.75;0;;0.033106;15295;714;184;false;manque f3,f6
+discussion;verdier-saone-avant-noel;openai/gpt-6-luna-pro;1;0;0;0;false;0.001909;21000;1588;1168;false;sortie vide après filtrage
+discussion;verdier-saone-avant-noel;openai/gpt-6-luna;1;58;0.583;0;;0.000544;5926;188;43;false;manque f3,f5,f6
+discussion;verdier-saone-avant-noel;openai/gpt-6.1-terra;1;75;0.75;0;;0.014517;6560;383;42;false;manque f3,f6
+discussion;verdier-saone-avant-noel;openai/gpt-6.2-sol;1;67;0.667;0;;0.027014;9431;357;0;false;manque f3,f6
+discussion;verdier-saone-avant-noel;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;verdier-saone-avant-noel;x-ai/grok-4.7;1;75;0.75;0;;0.033362;10582;530;279;false;manque f3,f6
+discussion;verdier-saone-avant-noel;xiaomi/mimo-v2.6-flash;1;83;0.833;0;;0.002362;9237;600;127;false;manque f3
+discussion;verdier-saone-avant-noel;z-ai/glm-5.3-flash;1;92;0.917;0;;0.001458;3606;488;103;false;manque f6
+discussion;verdier-saone-avant-noel;z-ai/glm-5.3-flashx;1;79;0.792;0;;0.002774;13087;462;133;false;manque f3
+discussion;verdier-saone-avant-noel;z-ai/glm-5.3;1;92;0.917;0;;0.018016;7007;567;114;false;manque f6
+discussion;verdier-synchro-stock-cause;anthropic/claude-haiku-5.5;1;75;0.75;0;;0.004394;11966;1620;771;false;manque f3
+discussion;verdier-synchro-stock-cause;anthropic/claude-sonnet-5.5;1;75;0.75;0;;0.030450;5548;642;0;false;manque f3
+discussion;verdier-synchro-stock-cause;deepseek/deepseek-v4-pro;1;75;0.75;0;;0.015424;15007;848;302;false;manque f4
+discussion;verdier-synchro-stock-cause;deepseek/deepseek-v4.1-flash-1017;1;92;0.917;0;;0.001409;11152;770;253;false;
+discussion;verdier-synchro-stock-cause;deepseek/deepseek-v4.1-flash;1;63;0.625;0;;0.003968;4415;686;183;false;manque f4
+discussion;verdier-synchro-stock-cause;google/gemini-4-hydrogen;1;83;0.833;0;;0.032157;12570;1679;1216;false;
+discussion;verdier-synchro-stock-cause;minimax/minimax-m3.1-flash;1;83;0.833;0;;0.001985;4570;602;115;false;
+discussion;verdier-synchro-stock-cause;mistralai/mistral-large-4-0;1;83;0.833;0;;0.017100;30455;871;315;false;
+discussion;verdier-synchro-stock-cause;moonshotai/kimi-k3.1-pro;1;83;0.833;0;;0.030632;13979;679;143;false;
+discussion;verdier-synchro-stock-cause;openai/gpt-6-luna-pro;1;0;0;0;false;0.002703;26403;1939;1361;false;sortie vide après filtrage
+discussion;verdier-synchro-stock-cause;openai/gpt-6-luna;1;71;0.708;0;;0.000683;5300;262;0;false;
+discussion;verdier-synchro-stock-cause;openai/gpt-6.1-terra;1;79;0.792;0;;0.013372;6295;412;24;false;
+discussion;verdier-synchro-stock-cause;openai/gpt-6.2-sol;1;71;0.708;0;;0.021359;6999;367;0;false;
+discussion;verdier-synchro-stock-cause;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;verdier-synchro-stock-cause;x-ai/grok-4.7;1;0;0;0;;0.015122;10655;282;43;false;manque f1,f2,f3,f4,f5
+discussion;verdier-synchro-stock-cause;xiaomi/mimo-v2.6-flash;1;75;0.75;0;;0.001989;4775;510;58;false;manque f4
+discussion;verdier-synchro-stock-cause;z-ai/glm-5.3-flash;1;67;0.667;0;;0.000906;3068;300;6;false;manque f4
+discussion;verdier-synchro-stock-cause;z-ai/glm-5.3-flashx;1;58;0.583;0;;0.002247;9776;449;59;false;manque f4
+discussion;verdier-synchro-stock-cause;z-ai/glm-5.3;1;67;0.667;0;;0.005731;16200;354;57;false;manque f4
+discussion;verdier-transporteur-demande-action;anthropic/claude-haiku-5.5;1;96;0.962;0;;0.001625;6694;1155;467;false;
+discussion;verdier-transporteur-demande-action;anthropic/claude-sonnet-5.5;1;81;0.808;0;;0.026676;8514;704;0;false;manque f5
+discussion;verdier-transporteur-demande-action;deepseek/deepseek-v4-pro;1;77;0.769;0;;0.009236;9752;619;342;false;manque f5
+discussion;verdier-transporteur-demande-action;deepseek/deepseek-v4.1-flash-1017;1;81;0.808;0;;0.000929;5709;656;198;false;manque f5
+discussion;verdier-transporteur-demande-action;deepseek/deepseek-v4.1-flash;1;69;0.692;0;;0.001120;7806;900;429;false;manque f5
+discussion;verdier-transporteur-demande-action;google/gemini-4-hydrogen;1;50;0.5;0;;0.020499;8231;909;683;false;manque f5,f6
+discussion;verdier-transporteur-demande-action;minimax/minimax-m3.1-flash;1;77;0.769;0;;0.001083;11896;509;147;false;manque f5
+discussion;verdier-transporteur-demande-action;mistralai/mistral-large-4-0;1;92;0.923;0;;0.011527;38103;934;520;false;manque f5
+discussion;verdier-transporteur-demande-action;moonshotai/kimi-k3.1-pro;1;62;0.615;0;;0.017889;12362;590;321;false;manque f5,f6
+discussion;verdier-transporteur-demande-action;openai/gpt-6-luna-pro;1;38;0.385;0;;0.002097;32206;2072;1697;false;manque f3,f5,f6
+discussion;verdier-transporteur-demande-action;openai/gpt-6-luna;1;85;0.846;0;;0.000725;9284;616;381;false;manque f5,f6
+discussion;verdier-transporteur-demande-action;openai/gpt-6.1-terra;1;81;0.808;0;;0.010786;6305;396;74;false;manque f5
+discussion;verdier-transporteur-demande-action;openai/gpt-6.2-sol;1;73;0.731;0;;0.016445;5134;281;0;false;manque f5,f6
+discussion;verdier-transporteur-demande-action;qwen/qwen4-max;1;0;;;;0.000000;0;0;0;true;erreur : HTTP 404 {"error":{"message":"No endpoints found matching your data policy (Zero
+discussion;verdier-transporteur-demande-action;x-ai/grok-4.7;1;62;0.615;0;;0.010174;5118;276;86;false;manque f5,f6
+discussion;verdier-transporteur-demande-action;xiaomi/mimo-v2.6-flash;1;58;0.577;0;;0.000866;9011;560;196;false;manque f3,f5
+discussion;verdier-transporteur-demande-action;z-ai/glm-5.3-flash;1;35;0.5;1;;0.000946;3139;246;22;false;manque f4,f5 · piège i3
+discussion;verdier-transporteur-demande-action;z-ai/glm-5.3-flashx;1;54;0.692;1;;0.001227;8636;314;39;false;piège i3
+discussion;verdier-transporteur-demande-action;z-ai/glm-5.3;1;81;0.808;0;;0.007085;4057;269;0;false;manque f5

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:26:58.624Z",
+  "reponse": "## What is still open\n\n- **Urgence SMS :** les rappels clients annoncent encore 9 h au lieu de 8 h ; il faut corriger `rappels/sms.py` avant l’envoi de **ce mercredi à 18 h**. Lucas demande désormais ce correctif dans la **PR #214**, malgré sa réécriture du module. Après sa fusion, lance `reprise_heure_hiver` sans `--dry-run` pour réparer les 41 interventions modifiées manuellement. Préviens Sandrine, qui rappellera les clients concernés pour confirmer 8 h. [3][4][7][1]\n- **Audit RGE :** verrouille manuellement dans l’admin l’intervention du chantier **Le Floch (CH-2604), le 8 décembre toute la journée**, avant vendredi, comme demandé par Franck. [2]\n\n## What changed\n\n- Sandrine a ouvert **#219** : le formulaire de devis refuse les numéros de téléphone contenant des espaces, ce qui a déjà fait perdre des demandes clients ; ce n’est pas urgent. [6]\n\n## What you did\n\n- Tu as découpé les réglages Django en `base/dev/prod` sans changer la configuration du serveur, supprimé les réglages obsolètes et activé HSTS sur un an ainsi que les cookies de session sécurisés : tests et contrôle de déploiement passent, sur `thomas/settings-split`. [2]\n- Tu as corrigé la vulnérabilité signalée par `pip-audit` en passant **Pillow à 11.0.0**, sur la même branche ; les tests restent verts. [2]",
+  "rendu": "## What is still open\n\n- **Urgence SMS :** les rappels clients annoncent encore 9 h au lieu de 8 h ; il faut corriger `rappels/sms.py` avant l’envoi de **ce mercredi à 18 h**. Lucas demande désormais ce correctif dans la **PR #214**, malgré sa réécriture du module. Après sa fusion, lance `reprise_heure_hiver` sans `--dry-run` pour réparer les 41 interventions modifiées manuellement. Préviens Sandrine, qui rappellera les clients concernés pour confirmer 8 h. [3][4][7][1]\n- **Audit RGE :** verrouille manuellement dans l’admin l’intervention du chantier **Le Floch (CH-2604), le 8 décembre toute la journée**, avant vendredi, comme demandé par Franck. [2]\n\n## What changed\n\n- Sandrine a ouvert **#219** : le formulaire de devis refuse les numéros de téléphone contenant des espaces, ce qui a déjà fait perdre des demandes clients ; ce n’est pas urgent. [6]\n\n## What you did\n\n- Tu as découpé les réglages Django en `base/dev/prod` sans changer la configuration du serveur, supprimé les réglages obsolètes et activé HSTS sur un an ainsi que les cookies de session sécurisés : tests et contrôle de déploiement passent, sur `thomas/settings-split`. [2]\n- Tu as corrigé la vulnérabilité signalée par `pip-audit` en passant **Pillow à 11.0.0**, sur la même branche ; les tests restent verts. [2]",
+  "mesures": {
+    "mots": 192,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6637,
+    "sortie": 807,
+    "reflexion": 391,
+    "cache": 0,
+    "cout": 0.021344
+  },
+  "cout": 0.021344,
+  "latenceMs": 17973,
+  "fournisseur": "Fireworks"
+}

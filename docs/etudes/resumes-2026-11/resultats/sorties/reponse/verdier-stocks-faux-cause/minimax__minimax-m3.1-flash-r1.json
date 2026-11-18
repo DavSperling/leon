@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:33.877Z",
+  "reponse": "Le stock affiché faux a deux causes distinctes. D'abord, un bug corrigé : Shopify envoie un webhook inventory_levels/update par emplacement, et la synchro décrémentait donc deux fois le stock d'un produit présent à la fois en entrepôt et en showroom ; le correctif déduplique sur (inventory_item_id, location_id, updated_at) [1][2]. Ensuite, l'incident encore ouvert sur la table Saône chêne clair n'est pas lié à ce correctif [3][5] : l'import nocturne scripts/stock/import-csv.ts a écrasé le stock avec le CSV de Bois & Fils de la veille, avant les deux commandes, d'où le stock négatif de -2 sur la variante SAO-180-CC [3][5]. L'équipe envisage de lancer l'import avant l'ouverture plutôt qu'à 3h [5]. Un client signale de son côté un délai de 6 semaines annoncé après commande [4].",
+  "rendu": "Le stock affiché faux a deux causes distinctes. D'abord, un bug corrigé : Shopify envoie un webhook inventory_levels/update par emplacement, et la synchro décrémentait donc deux fois le stock d'un produit présent à la fois en entrepôt et en showroom ; le correctif déduplique sur (inventory_item_id, location_id, updated_at) [1][2]. Ensuite, l'incident encore ouvert sur la table Saône chêne clair n'est pas lié à ce correctif [3][5] : l'import nocturne scripts/stock/import-csv.ts a écrasé le stock avec le CSV de Bois & Fils de la veille, avant les deux commandes, d'où le stock négatif de -2 sur la variante SAO-180-CC [3][5]. L'équipe envisage de lancer l'import avant l'ouverture plutôt qu'à 3h [5]. Un client signale de son côté un délai de 6 semaines annoncé après commande [4].",
+  "mesures": {
+    "mots": 121,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1173,
+    "sortie": 225,
+    "reflexion": 26,
+    "cache": 512,
+    "cout": 0.00024183
+  },
+  "cout": 0.00024183,
+  "latenceMs": 2055,
+  "fournisseur": "Parasail"
+}

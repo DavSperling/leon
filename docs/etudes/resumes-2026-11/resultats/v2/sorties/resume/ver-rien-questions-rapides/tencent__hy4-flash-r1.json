@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:17.877Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1977,
+    "sortie": 378,
+    "reflexion": 370,
+    "cache": 0,
+    "cout": 0.000122304
+  },
+  "cout": 0.000122304,
+  "latenceMs": 4475,
+  "fournisseur": "Tencent"
+}

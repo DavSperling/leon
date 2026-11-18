@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "google/gemini-3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:11.484Z",
+  "reponse": "## What changed\n\n- Go was bumped to 1.23.4 in CI and the Dockerfile by Noa and merged [4].\n- Noa finalized the 12/11 postmortem for Friday's incident review [3].\n\n## What is still open\n\n- Answer Maya's question on PR #247 about the ~1.18M legitimate events dropped for Orbitly (plus 3.8k for Zest) so she can approve before Thursday's call, then merge, deploy, and replay the lost events from landing [1][2]. You opened PR #247 to key deduplication on `(project_id, device_id, event_id)` after discovering that iOS SDK 3.2.0 switched `event_id` to per-session counters [1].\n- Ask the iOS team to restore UUIDs for `event_id` in SDK 3.2.1 to prevent future ingest collisions [1].\n- Add an alert before Friday's review when the ingest dead-letter queue exceeds 1,000 messages, as assigned in the postmortem prep meeting [7].",
+  "rendu": "## What changed\n\n- Go was bumped to 1.23.4 in CI and the Dockerfile by Noa and merged [4].\n- Noa finalized the 12/11 postmortem for Friday's incident review [3].\n\n## What is still open\n\n- Answer Maya's question on PR #247 about the ~1.18M legitimate events dropped for Orbitly (plus 3.8k for Zest) so she can approve before Thursday's call, then merge, deploy, and replay the lost events from landing [1][2]. You opened PR #247 to key deduplication on `(project_id, device_id, event_id)` after discovering that iOS SDK 3.2.0 switched `event_id` to per-session counters [1].\n- Ask the iOS team to restore UUIDs for `event_id` in SDK 3.2.1 to prevent future ingest collisions [1].\n- Add an alert before Friday's review when the ingest dead-letter queue exceeds 1,000 messages, as assigned in the postmortem prep meeting [7].",
+  "mesures": {
+    "mots": 130,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5167,
+    "sortie": 7924,
+    "reflexion": 7680,
+    "cache": 0,
+    "cout": 0.03359025
+  },
+  "cout": 0.03359025,
+  "latenceMs": 78139,
+  "fournisseur": "Google AI Studio"
+}

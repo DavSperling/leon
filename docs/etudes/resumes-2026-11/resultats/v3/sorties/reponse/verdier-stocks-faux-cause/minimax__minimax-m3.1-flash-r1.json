@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:36.186Z",
+  "reponse": "La cause la plus récente est l’import nocturne : le script scripts/stock/import-csv.ts a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes, provoquant l’affichage de -2 pour la variante Saône chêne clair [5][3]. Ce problème est distinct du double webhook Shopify, corrigé par déduplication quand un produit a plusieurs emplacements [1][2]. Un client signalait déjà un stock affiché faux et un délai de 6 semaines [4].",
+  "rendu": "La cause la plus récente est l’import nocturne : le script scripts/stock/import-csv.ts a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes, provoquant l’affichage de -2 pour la variante Saône chêne clair [5][3]. Ce problème est distinct du double webhook Shopify, corrigé par déduplication quand un produit a plusieurs emplacements [1][2]. Un client signalait déjà un stock affiché faux et un délai de 6 semaines [4].",
+  "mesures": {
+    "mots": 71,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1172,
+    "sortie": 173,
+    "reflexion": 63,
+    "cache": 512,
+    "cout": 0.00021048
+  },
+  "cout": 0.00021048,
+  "latenceMs": 1367,
+  "fournisseur": "Together"
+}

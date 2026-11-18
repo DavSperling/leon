@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:08:47.406Z",
+  "reponse": "The maintenance window is **Saturday, December 5, 02:00–05:00 UTC** for the Postgres 17 production cutover [3].\n\nFor your notice and support macro:\n- **Customer notice:** scheduled for Saturday, November 28, via status page and in-app banner [3].\n- **Migration freeze:** starts Thursday, December 3 [3].\n- **Staging rehearsal:** Friday, November 27 [3].\n\nThis replaces the previously announced November 21 window; KES-398 is the current reference because the Notion runbook has not been updated [3][6].",
+  "rendu": "The maintenance window is **Saturday, December 5, 02:00–05:00 UTC** for the Postgres 17 production cutover [3].\n\nFor your notice and support macro:\n- **Customer notice:** scheduled for Saturday, November 28, via status page and in-app banner [3].\n- **Migration freeze:** starts Thursday, December 3 [3].\n- **Staging rehearsal:** Friday, November 27 [3].\n\nThis replaces the previously announced November 21 window; KES-398 is the current reference because the Notion runbook has not been updated [3][6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13454,
+    "sortie": 612,
+    "reflexion": 242,
+    "cache": 9984,
+    "cout": 0.0150568
+  },
+  "latenceMs": 23262,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window customer notice support macro\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}",
+    "lire {\"passageId\":\"slack-eng-announce-pg17-4\"}"
+  ],
+  "cout": 0.0150568
+}

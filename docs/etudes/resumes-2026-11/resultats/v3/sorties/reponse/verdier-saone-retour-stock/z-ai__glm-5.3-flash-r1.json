@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:24.101Z",
+  "reponse": "La Saône est en rupture depuis le 28/10 [4]. Vingt-cinq plateaux arrivent à l'entrepôt le 1er décembre, puis deux jours de montage et d'emballage : les tables seront expédiables à partir du jeudi 3 décembre [1][2]. La précommande ouvre jeudi avec cette mention [5]. À noter, un ticket du même jour indiquait une livraison sous 6 semaines pour une cliente, mais les dates les plus récentes du 17/11 font état du 3 décembre [3][2].",
+  "rendu": "La Saône est en rupture depuis le 28/10 [4]. Vingt-cinq plateaux arrivent à l'entrepôt le 1er décembre, puis deux jours de montage et d'emballage : les tables seront expédiables à partir du jeudi 3 décembre [1][2]. La précommande ouvre jeudi avec cette mention [5]. À noter, un ticket du même jour indiquait une livraison sous 6 semaines pour une cliente, mais les dates les plus récentes du 17/11 font état du 3 décembre [3][2].",
+  "mesures": {
+    "mots": 73,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1040,
+    "sortie": 126,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00022814
+  },
+  "cout": 0.00022814,
+  "latenceMs": 1703,
+  "fournisseur": "Inceptron"
+}

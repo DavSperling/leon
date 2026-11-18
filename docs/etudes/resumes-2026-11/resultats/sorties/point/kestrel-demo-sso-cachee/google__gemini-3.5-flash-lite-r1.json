@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:56.202Z",
+  "reponse": "## Ce que tu as fait\n* Tu as fiabilisé les tests SAML en remplaçant les délais d'attente par `freezegun`, corrigé les alertes Ruff et Mypy, et structuré `saml_utils.py` en un sous-paquet `saml/` tout en conservant les imports publics [1].\n* Tu as proposé cette refactorisation et ce nettoyage de code dans la PR #423 [1][4].\n\n## Ce qui a bougé\n* Maya a approuvé et fusionné la PR #418 sur la vérification des signatures SAML, qui part en staging ce soir [3].\n* Tom a demandé de scinder la PR #423 pour séparer le déplacement des modules de la correction des linters [4].\n\n## Ce qui reste ouvert\n* La validation des signatures doit impérativement tourner en staging d'ici mercredi soir pour la répétition SSO de jeudi avec l'IdP Okta de Fernhill (animée par Priya) [1].\n* Il te reste à basculer le cache de rejeu des assertions d'une solution en mémoire vers Redis pour le support multi-pod [1].\n* Tu dois diviser la PR #423 en deux PRs distinctes comme l'a demandé Tom [4].",
+  "rendu": "## Ce que tu as fait\n* Tu as fiabilisé les tests SAML en remplaçant les délais d'attente par `freezegun`, corrigé les alertes Ruff et Mypy, et structuré `saml_utils.py` en un sous-paquet `saml/` tout en conservant les imports publics [1].\n* Tu as proposé cette refactorisation et ce nettoyage de code dans la PR #423 [1][4].\n\n## Ce qui a bougé\n* Maya a approuvé et fusionné la PR #418 sur la vérification des signatures SAML, qui part en staging ce soir [3].\n* Tom a demandé de scinder la PR #423 pour séparer le déplacement des modules de la correction des linters [4].\n\n## Ce qui reste ouvert\n* La validation des signatures doit impérativement tourner en staging d'ici mercredi soir pour la répétition SSO de jeudi avec l'IdP Okta de Fernhill (animée par Priya) [1].\n* Il te reste à basculer le cache de rejeu des assertions d'une solution en mémoire vers Redis pour le support multi-pod [1].\n* Tu dois diviser la PR #423 en deux PRs distinctes comme l'a demandé Tom [4].",
+  "mesures": {
+    "mots": 166,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6143,
+    "sortie": 2003,
+    "reflexion": 1721,
+    "cache": 0,
+    "cout": 0.0068504
+  },
+  "cout": 0.0068504,
+  "latenceMs": 6678,
+  "fournisseur": "Google"
+}

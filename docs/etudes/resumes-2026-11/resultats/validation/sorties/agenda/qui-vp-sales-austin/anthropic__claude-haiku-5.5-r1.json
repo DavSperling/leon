@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-vp-sales-austin",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:47.680Z",
+  "reponse": "{\"n\": 15, \"titre\": \"Entretien final AE Bianca Ferreira\", \"debut\": \"2026-11-16T17:00\", \"fin\": \"2026-11-16T17:45\", \"avec\": \"Bianca Ferreira\"}\n{\"n\": 7, \"titre\": \"Revue deal Harborline\", \"debut\": \"2026-11-17T00:30\", \"fin\": \"2026-11-17T01:00\", \"avec\": \"Owen Park\"}\n{\"n\": 8, \"titre\": \"Déjeuner avec Nate Holloway\", \"debut\": \"2026-11-17T18:30\", \"avec\": \"Nate Holloway\"}\n{\"n\": 11, \"titre\": \"Validation des tarifs Q1\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:45\", \"avec\": \"Gil Shamir, Marcus\"}\n{\"n\": 3, \"titre\": \"Revue de mise en production Tradewell\", \"debut\": \"2026-11-19T17:00\", \"fin\": \"2026-11-19T18:00\", \"avec\": \"Martin Kobayashi, Ellen Vance\"}\n{\"n\": 9, \"titre\": \"Suivi incident paiements Loomly\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T16:45\", \"avec\": \"Hannah Brooke, Carla Reyes\"}",
+  "rendu": "2026-11-16T17:00→2026-11-16T17:45 Entretien final AE Bianca Ferreira (avec Bianca Ferreira)\n2026-11-17T00:30→2026-11-17T01:00 Revue deal Harborline (avec Owen Park)\n2026-11-17T18:30 Déjeuner avec Nate Holloway (avec Nate Holloway)\n2026-11-18T16:00→2026-11-18T16:45 Validation des tarifs Q1 (avec Gil Shamir, Marcus)\n2026-11-19T17:00→2026-11-19T18:00 Revue de mise en production Tradewell (avec Martin Kobayashi, Ellen Vance)\n2026-11-20T16:00→2026-11-20T16:45 Suivi incident paiements Loomly (avec Hannah Brooke, Carla Reyes)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.833,
+    "f1": 0.833,
+    "faux": "2026-11-17T18:30 Déjeuner avec Nate Holloway",
+    "manques": "2026-11-17T19:30 Lunch with Nate Holloway (Gearloft)",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5237,
+    "sortie": 2852,
+    "reflexion": 2406,
+    "cache": 0,
+    "cout": 0.0019497
+  },
+  "cout": 0.0019497,
+  "latenceMs": 15749,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "anthropic/claude-haiku-5.5@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:20:12.444Z",
+  "reponse": "## What is still open\n- Bascule vers TransAlp lundi 23/11 à 6 h : tu dois faire un essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001 [7][8].\n- PR #60 : Julien demande de sortir la clé sandbox de `config/transalp.ts` vers la variable `TRANSALP_API_KEY`, et de faire régénérer cette clé par TransAlp. La clé est déjà dans le commit `b71c2e0` [1][3].\n- Ticket #61 : Karim a saisi 8 des 9 fiches dans Notion ; il reste la Saône 180, qu'il mesure jeudi [5].\n\n## What changed\n- Un mail se présentant comme de TransAlp Support demande de renvoyer la clé de production à une adresse externe [6]. Mathilde Rey indique pourtant que TransAlp n'envoie jamais de clé par e-mail et que Julien la recevra par l'espace client [8]. Ne réponds pas à ce mail et vérifie-le avec Julien.\n- Julien a demandé des changements sur la PR #60 le 17/11 ; le reste du code est validé [3].\n\n## What you did\n- Création des étiquettes TransAlp et ajout du numéro de suivi dans Shopify, testés de bout en bout en sandbox sur la commande de dev #1042 ; PR #60 ouverte [1].\n- Les produits sans dimensions sont bloqués à l'expédition avec un message, et le ticket #61 a été ouvert pour Karim [1][2].",
+  "rendu": "## What is still open\n- Bascule vers TransAlp lundi 23/11 à 6 h : tu dois faire un essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001 [7][8].\n- PR #60 : Julien demande de sortir la clé sandbox de `config/transalp.ts` vers la variable `TRANSALP_API_KEY`, et de faire régénérer cette clé par TransAlp. La clé est déjà dans le commit `b71c2e0` [1][3].\n- Ticket #61 : Karim a saisi 8 des 9 fiches dans Notion ; il reste la Saône 180, qu'il mesure jeudi [5].\n\n## What changed\n- Un mail se présentant comme de TransAlp Support demande de renvoyer la clé de production à une adresse externe [6]. Mathilde Rey indique pourtant que TransAlp n'envoie jamais de clé par e-mail et que Julien la recevra par l'espace client [8]. Ne réponds pas à ce mail et vérifie-le avec Julien.\n- Julien a demandé des changements sur la PR #60 le 17/11 ; le reste du code est validé [3].\n\n## What you did\n- Création des étiquettes TransAlp et ajout du numéro de suivi dans Shopify, testés de bout en bout en sandbox sur la commande de dev #1042 ; PR #60 ouverte [1].\n- Les produits sans dimensions sont bloqués à l'expédition avec un message, et le ticket #61 a été ouvert pour Karim [1][2].",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7099,
+    "sortie": 2343,
+    "reflexion": 1809,
+    "cache": 0,
+    "cout": 0.0018814
+  },
+  "cout": 0.0018814,
+  "latenceMs": 11637,
+  "fournisseur": "Claude Platform on AWS"
+}

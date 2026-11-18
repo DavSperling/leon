@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:08:32.350Z",
+  "reponse": "The Postgres 17 production cutover is scheduled for **Saturday, December 5, 2026, from 02:00 to 05:00 UTC**, per the Linear ticket KES-398 (updated November 16) [2].\n\n* **Contradiction with older docs:** The Notion runbook (October 28) [1] and the `#eng-announce` Slack post (November 3) [3] still show the original November 21 date, as the upgrade was postponed on November 12 [4] and the runbook has not been updated yet—KES-398 is the current reference [2].\n* **Customer notice & impact:** The customer notice (status page and in-app banner) is scheduled to go out on **Saturday, November 28** [2]. During the maintenance window, dashboards will be read-only for about 40 minutes during the switch, while ingestion continues buffering in Kafka with no data loss [1].",
+  "rendu": "The Postgres 17 production cutover is scheduled for **Saturday, December 5, 2026, from 02:00 to 05:00 UTC**, per the Linear ticket KES-398 (updated November 16) [2].\n\n* **Contradiction with older docs:** The Notion runbook (October 28) [1] and the `#eng-announce` Slack post (November 3) [3] still show the original November 21 date, as the upgrade was postponed on November 12 [4] and the runbook has not been updated yet—KES-398 is the current reference [2].\n* **Customer notice & impact:** The customer notice (status page and in-app banner) is scheduled to go out on **Saturday, November 28** [2]. During the maintenance window, dashboards will be read-only for about 40 minutes during the switch, while ingestion continues buffering in Kafka with no data loss [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20677,
+    "sortie": 1093,
+    "reflexion": 648,
+    "cache": 7367,
+    "cout": 0.028715024999999998
+  },
+  "latenceMs": 14970,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"database upgrade\"}",
+    "chercher {\"requete\":\"maintenance window customer notice\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}",
+    "lire {\"sourceId\":\"slack-eng-announce-pg17\"}",
+    "lire {\"sourceId\":\"notion-pg17-runbook\"}",
+    "lire {\"passageId\":\"fathom-weekly-sync-1112-1\"}",
+    "chercher {\"requete\":\"Postgres 17 OR cutover OR \\\"Dec 5\\\" OR \\\"December 5\\\"\",\"depuis\":\"2026-11-16\"}"
+  ],
+  "cout": 0.028715024999999998
+}

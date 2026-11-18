@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T17:58:51.781Z",
+  "reponse": "## What is still open\n- Priya blocks the Orbitly launch on one thing: CSV export must be back in the v2 widget menu (on top of the new background export) before the flag goes on Thursday — you'd removed it because it called the v1 endpoint. She's waiting on you [10].\n- The retention chart tooltip crash on empty cohorts (`RetentionChart.tsx:212`) is still unfixed — you deferred it to \"tomorrow\", i.e. today. It now has a Sentry ticket, #432, with 37 events on staging [1][8].\n- PR #430 (background CSV export) is approved by Daniel; merge it once CI is green [5].\n- Rachel needs an ETA for Zest's export — they asked again this morning and use it for their Monday ops review [9].\n\n## What changed\n- Your chartkit question is settled: Maya answered on #427 that v2 ships behind the flag, but chartkit stays until v1 is retired — no second migration now [7].\n- Dependabot opened #429 bumping `@chartkit/react` 4.2.0 → 5.0.0, a major with a new tooltip API; it touches v1, which still serves every customer [4].\n\n## What you did\n- On v2 (PR #427): compact 40px widget headers on tokens, dark-mode border fix, trimmed the widget menu to Duplicate/Rename/Delete, human-readable \"Week of …\" retention labels, a loading skeleton that kills the layout shift, and the categorical palette for cohorts [1].\n- On #424/#430: moved the CSV export to a streaming background job with an emailed 24h link, updated the v1 button to confirm instead of spinning, and opened the PR with Daniel as reviewer [2].",
+  "rendu": "## What is still open\n- Priya blocks the Orbitly launch on one thing: CSV export must be back in the v2 widget menu (on top of the new background export) before the flag goes on Thursday — you'd removed it because it called the v1 endpoint. She's waiting on you [10].\n- The retention chart tooltip crash on empty cohorts (`RetentionChart.tsx:212`) is still unfixed — you deferred it to \"tomorrow\", i.e. today. It now has a Sentry ticket, #432, with 37 events on staging [1][8].\n- PR #430 (background CSV export) is approved by Daniel; merge it once CI is green [5].\n- Rachel needs an ETA for Zest's export — they asked again this morning and use it for their Monday ops review [9].\n\n## What changed\n- Your chartkit question is settled: Maya answered on #427 that v2 ships behind the flag, but chartkit stays until v1 is retired — no second migration now [7].\n- Dependabot opened #429 bumping `@chartkit/react` 4.2.0 → 5.0.0, a major with a new tooltip API; it touches v1, which still serves every customer [4].\n\n## What you did\n- On v2 (PR #427): compact 40px widget headers on tokens, dark-mode border fix, trimmed the widget menu to Duplicate/Rename/Delete, human-readable \"Week of …\" retention labels, a loading skeleton that kills the layout shift, and the categorical palette for cohorts [1].\n- On #424/#430: moved the CSV export to a streaming background job with an emailed 24h link, updated the v1 button to confirm instead of spinning, and opened the PR with Daniel as reviewer [2].",
+  "mesures": {
+    "mots": 246,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5751,
+    "sortie": 508,
+    "reflexion": 126,
+    "cache": 0,
+    "cout": 0.00668629
+  },
+  "cout": 0.00668629,
+  "latenceMs": 4249,
+  "fournisseur": "DigitalOcean"
+}

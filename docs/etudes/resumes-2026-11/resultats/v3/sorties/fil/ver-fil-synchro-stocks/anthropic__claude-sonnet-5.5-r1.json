@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:28.779Z",
+  "reponse": "## Où j'en suis\nLe correctif de #87 (fusionnée) est en place : les webhooks ne touchent plus au stock et la synchro de nuit écrit la valeur absolue. Le 16/11, la synchro a été annulée parce que le CSV TransAlp est arrivé 47 min trop tard, d'où 40 références fausses sur le site. Sur la branche, des reprises à 2 h, 4 h et 6 h (Europe/Paris) ont été ajoutées, avec un mail à Karim si le CSV manque encore à 6 h. La synchro du 17/11 a été relancée à la main (40 références corrigées). La PR #96 est ouverte et attend la relecture d'Hugo. (source: ses-st-3, maison-verdier/boutique#96, maison-verdier/boutique#87, d7c2e41)\n\n- [en-cours] Relecture de la PR #96 par Hugo (source: ses-st-3, maison-verdier/boutique#96)\n- [prochaine-étape] Après la fusion de #96, vérifier au prochain retard de TransAlp que la reprise de 4 h ou 6 h écrit bien le stock et que le mail part à 6 h (source: u3-03, d7c2e41)\n- [essai-raté] Premier passage des tests : les heures du cron étaient lues en UTC, donc la reprise de « 4 h » tombait à 5 h à Paris. Corrigé en fixant `Europe/Paris` (source: u3-04, d7c2e41)\n- [question] La réservation de 2 tables Saône pour les Galeries Brotteaux (réassort du 2 décembre) reste à voir avec eux, côté Claire. Le mail demande une confirmation de la date de livraison (source: u3-09, src-mail-brotteaux)\n- [décision] Reprises de la synchro à 4 h et 6 h, avec mail à Karim si le CSV manque encore à 6 h (source: u3-03)\n- [décision] Aucune réservation de stock pour les Galeries Brotteaux dans le script de synchro : c'est Claire qui traite avec eux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLe correctif de #87 (fusionnée) est en place : les webhooks ne touchent plus au stock et la synchro de nuit écrit la valeur absolue. Le 16/11, la synchro a été annulée parce que le CSV TransAlp est arrivé 47 min trop tard, d'où 40 références fausses sur le site. Sur la branche, des reprises à 2 h, 4 h et 6 h (Europe/Paris) ont été ajoutées, avec un mail à Karim si le CSV manque encore à 6 h. La synchro du 17/11 a été relancée à la main (40 références corrigées). La PR #96 est ouverte et attend la relecture d'Hugo. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96, maison-verdier/boutique#87, d7c2e41)\n\n- [en-cours] Relecture de la PR #96 par Hugo (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96)\n- [prochaine-étape] Après la fusion de #96, vérifier au prochain retard de TransAlp que la reprise de 4 h ou 6 h écrit bien le stock et que le mail part à 6 h (de: toi, équipe; source: u3-03, d7c2e41)\n- [essai-raté] Premier passage des tests : les heures du cron étaient lues en UTC, donc la reprise de « 4 h » tombait à 5 h à Paris. Corrigé en fixant `Europe/Paris` (de: équipe, agent; source: u3-04, d7c2e41)\n- [question] La réservation de 2 tables Saône pour les Galeries Brotteaux (réassort du 2 décembre) reste à voir avec eux, côté Claire. Le mail demande une confirmation de la date de livraison (de: toi, connecteur; source: u3-09, src-mail-brotteaux)\n- [décision] Reprises de la synchro à 4 h et 6 h, avec mail à Karim si le CSV manque encore à 6 h (de: toi; source: u3-03)\n- [décision] Aucune réservation de stock pour les Galeries Brotteaux dans le script de synchro : c'est Claire qui traite avec eux (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1688,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5938,
+    "sortie": 725,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019126
+  },
+  "cout": 0.019126,
+  "latenceMs": 4973,
+  "fournisseur": "Amazon Bedrock"
+}

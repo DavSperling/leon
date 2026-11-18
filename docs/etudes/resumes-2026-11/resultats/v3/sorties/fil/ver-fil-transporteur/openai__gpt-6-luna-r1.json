@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:59:38.166Z",
+  "reponse": "## Où j'en suis\nLa PR #91 est toujours ouverte en brouillon sur `hugo/transalp-etiquettes`. Les étiquettes ZPL sont configurées par défaut et le test en recette a réussi, accents corrigés. TransAlp ne doit être activé qu’à partir du 1er décembre pour Lyon et Paris ; Rapidis reste prévu pour le reste de la France et les colis de plus de 30 kg. (source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] La configuration de production est préparée, mais les clés restent à ajouter aux secrets par Julien ; l’activation est différée au 1er décembre. (source: h2-07, ses-tr-2)\n- [prochaine-étape] Faire relire la PR par Julien, puis ajouter les clés de production aux secrets et respecter la date d’activation du 1er décembre. (source: src-pr91, h2-07)\n- [essai-raté] Le ZPL ne fonctionne pas en sandbox ; TransAlp indique qu’il est disponible en recette et en production. Le test ZPL en recette, lui, a réussi. (source: ses-tr-1, src-mail-transalp, h2-02)",
+  "rendu": "## Où j'en suis\nLa PR #91 est toujours ouverte en brouillon sur `hugo/transalp-etiquettes`. Les étiquettes ZPL sont configurées par défaut et le test en recette a réussi, accents corrigés. TransAlp ne doit être activé qu’à partir du 1er décembre pour Lyon et Paris ; Rapidis reste prévu pour le reste de la France et les colis de plus de 30 kg. (de: équipe, connecteur, agent; source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] La configuration de production est préparée, mais les clés restent à ajouter aux secrets par Julien ; l’activation est différée au 1er décembre. (de: toi, agent; source: h2-07, ses-tr-2)\n- [prochaine-étape] Faire relire la PR par Julien, puis ajouter les clés de production aux secrets et respecter la date d’activation du 1er décembre. (de: toi, équipe; source: src-pr91, h2-07)\n- [essai-raté] Le ZPL ne fonctionne pas en sandbox ; TransAlp indique qu’il est disponible en recette et en production. Le test ZPL en recette, lui, a réussi. (de: connecteur, agent; source: ses-tr-1, src-mail-transalp, h2-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1043,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3641,
+    "sortie": 432,
+    "reflexion": 158,
+    "cache": 0,
+    "cout": 0.00067105
+  },
+  "cout": 0.00067105,
+  "latenceMs": 4643,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,272 @@
+{
+  "id": "qui-point-relance-prospect-ventes",
+  "titre": "Point d'un commercial, session hors code (relance après un appel Gong) : le brouillon promet le CAD au T1, la produit dit T2 ; échéance du questionnaire lundi ; date de décision avancée ; remise au-delà de 10 % à faire valider",
+  "langue": "en",
+  "entree": {
+    "maintenant": "2026-11-18T13:15:00Z",
+    "projet": "dossier:9b04e6a1c37f2d58",
+    "depuis": "2026-11-17T19:20:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-hearthly",
+          "kind": "claude_ai",
+          "nature": "conversation",
+          "titre": "Hearthly follow-up after discovery call",
+          "url": null,
+          "date": "2026-11-17T20:42:30Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T19:20:00Z",
+            "texte": "Gong summary, Quillon <> Hearthly discovery (Tue Nov 17, 11:00–11:48 CT)\nAttendees: Nadia Brooks (VP Finance), Tom Ferris (CTO), me\n• Hearthly: home-services marketplace, ~40k service pros, $310M GMV 2026, ~30% of pros in Canada\n• Current provider pays out in 3-5 days, pros complain. Instant payouts = #1 ask\n• Need CAD payouts to Canadian pros (today USD, pros eat the FX)\n• 1099-K: want the provider to file\n• Shortlist of 2, decision Fri Dec 4, go-live target March 1\nAction items:\n• Owen: SIG Lite security questionnaire, their security team needs it by Mon Nov 23\n• Owen: reference call with a marketplace of similar size\n• Owen: pricing proposal on the 2027 grid\n• Tom: volume data (monthly payouts by country)\n\ndraft the follow up email for nadia + tom. warm but short"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:22:10Z",
+            "texte": "Subject: Quillon <> Hearthly: next steps\n\nHi Nadia, hi Tom,\nThank you for the time today. What we heard: your pros wait too long to get paid, a third of them are in Canada and lose money on FX, and you want 1099-K off your plate.\nThat's exactly where Quillon fits: instant payouts to debit cards, CAD payouts to Canadian pros (available in Q1 2027), and 1099-K filing handled for you.\nNext steps on our side:\n- SIG Lite questionnaire by Monday, Nov 23\n- A reference call with a marketplace of your size\n- A pricing proposal on our 2027 grid\nTom, the monthly payout volumes by country will help us size the proposal.\nBest,\nOwen"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T19:26:00Z",
+            "texte": "hmm CAD in Q1, i think thats what sofia said at the roadmap review but not 100%. leave it for now, i'll check before sending"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:26:40Z",
+            "texte": "Left as is. I'd confirm it before sending: a date in writing to a prospect tends to end up in the contract."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T19:31:00Z",
+            "texte": "pricing: ~$310M GMV, on the Q1 grid that's the scale tier, 0.38% per payout. i want to propose 15% off for a 2 year commit. what does that give"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:34:20Z",
+            "texte": "Assuming most of the $310M GMV is paid out to pros: list price at 0.38% ≈ $1.18M/year. With 15% off for a 2-year commit: 0.323% ≈ $1.0M/year.\n\nGiven they're comparing two providers and the incumbent will fight to keep them, I'd open at 20% off (0.304%, ≈ $942k/year): it leaves room to concede on payment terms rather than rate. I've put 20% in the proposal section."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T19:36:00Z",
+            "texte": "no, 15. rachel hates when we open at 20 and we'd have nothing left to give"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:36:50Z",
+            "texte": "Changed to 15% off for a 2-year commit (0.323% per payout, ≈ $1.0M/year at their volume)."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T19:44:00Z",
+            "texte": "reference call: loomly is about their size but after the payout delay i dont want to ask them now. pinecrest also got hit. tradewell isnt live yet. ugh. put 'reference: TBD' and i'll ask rachel who we can use"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:45:10Z",
+            "texte": "Done: the email says a reference call will follow, without naming a customer, and I noted \"Reference: TBD (ask Rachel)\" in your next steps."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T19:52:00Z",
+            "texte": "mutual action plan table, dates working back from their dec 4 decision"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T19:55:30Z",
+            "texte": "| Date | Step | Owner |\n|---|---|---|\n| Mon Nov 23 | SIG Lite questionnaire returned | Owen / Quillon |\n| Wed Nov 25 | Monthly payout volumes by country | Tom (Hearthly) |\n| Mon Nov 30 | Pricing proposal (2027 grid) | Owen |\n| Tue Dec 1 | Reference call | Owen + reference customer |\n| Wed Dec 2 | Final questions, legal review of the MSA | Nadia + Quillon |\n| Fri Dec 4 | Provider decision | Hearthly |"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T20:05:00Z",
+            "texte": "SIG Lite: who fills that here? shira right?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T20:05:50Z",
+            "texte": "I can't tell from this conversation who owns security questionnaires at Quillon. If Shira is your compliance officer, she's the likely owner, but it's worth confirming with her directly, especially with a Monday deadline."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T20:10:00Z",
+            "texte": "ok i'll ask shira tomorrow, it's like 200 questions, monday is tight"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T20:10:40Z",
+            "texte": "Noted. If she has last year's answers for another prospect, most of the SIG Lite can be reused; the payouts and data-residency sections usually need fresh answers."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T20:40:00Z",
+            "texte": "final version of the email pls with the 15%. i send it tomorrow morning after sofia confirms CAD"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T20:42:30Z",
+            "texte": "Final version:\n\nSubject: Quillon <> Hearthly: next steps\n\nHi Nadia, hi Tom,\nThank you for the time today. … instant payouts to debit cards, CAD payouts to Canadian pros (available in Q1 2027), and 1099-K filing handled for you.\nNext steps: SIG Lite by Monday Nov 23, a reference call, and our proposal: 15% off the 2027 grid for a 2-year commitment …\nBest,\nOwen\n\nIt's ready to send once Sofia confirms the CAD date; I haven't sent anything."
+          }
+        ]
+      }
+    ],
+    "changements": [],
+    "mentions": [
+      {
+        "source": {
+          "id": "gong-hearthly",
+          "kind": "gong",
+          "nature": "reunion",
+          "titre": "Quillon <> Hearthly – discovery",
+          "url": null,
+          "date": "2026-11-18T09:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-18T09:30:00Z",
+          "texte": "Rachel Dunmore and 1 other viewed your call \"Quillon <> Hearthly – discovery\". Your week in Gong: 3 calls, talk ratio 58%, 4 action items detected. View in Gong →",
+          "auteur": "Gong"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-sales",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#sales, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T22:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-17T22:00:00Z",
+          "texte": "@Owen saw Hearthly in the pipeline 🎉 reminder: anything above 10% discount needs my sign-off now that the Q1 grid is out. Let's talk before you send them numbers.",
+          "auteur": "Rachel Dunmore"
+        }
+      },
+      {
+        "source": {
+          "id": "mail-nadia",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "Re: Quillon <> Hearthly",
+          "url": null,
+          "date": "2026-11-18T01:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-18T01:30:00Z",
+          "texte": "Hi Owen, thanks for yesterday. Quick update: our board meeting moved, so we'll make the provider decision on Wednesday Dec 2 instead of Dec 4. The SIG Lite by Monday 23rd still stands: our security team won't keep a vendor in the final round without it. Nadia",
+          "auteur": "Nadia Brooks"
+        }
+      },
+      {
+        "source": {
+          "id": "mail-leadradar",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "12 new marketplace leads match your saved search",
+          "url": null,
+          "date": "2026-11-18T10:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-18T10:00:00Z",
+          "texte": "12 new leads match your saved search \"marketplaces, 200-1000 employees, US\". Unlock their contact details with LeadRadar Pro, 30% off this week only. Manage your alerts or unsubscribe.",
+          "auteur": "LeadRadar"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-product",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#product, 18/11/2026",
+          "url": null,
+          "date": "2026-11-18T12:40:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "date": "2026-11-18T12:40:00Z",
+          "texte": "@Owen CAD payouts: not Q1. Corvane is reviewing our cross-border program, so Q2 at the earliest, and please don't put a date in writing to a prospect.",
+          "auteur": "Sofia Alvarez"
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-cad",
+    "faits": [
+      {
+        "id": "f-cad",
+        "texte": "Says Sofia confirmed CAD payouts are not in Q1 (Q2 at the earliest, no date to put in writing), so the follow-up draft that promises CAD in Q1 must be corrected before it goes out.",
+        "poids": 3
+      },
+      {
+        "id": "f-sig",
+        "texte": "Says Hearthly's security team needs the SIG Lite questionnaire by Monday 23 November, or Quillon drops out of the final round.",
+        "poids": 3
+      },
+      {
+        "id": "f-date",
+        "texte": "Says Hearthly now decides on Wednesday 2 December (moved from 4 December).",
+        "poids": 2
+      },
+      {
+        "id": "f-remise",
+        "texte": "Says Rachel must sign off any discount above 10%, so the 15% two-year discount needs her approval before the numbers are sent.",
+        "poids": 2
+      },
+      {
+        "id": "f-besoins",
+        "texte": "Says what Hearthly wants: instant payouts for its pros, CAD payouts for the Canadian ones, and 1099-K filing.",
+        "poids": 2
+      },
+      {
+        "id": "f-reference",
+        "texte": "Says the reference customer is still to find (Loomly and Pinecrest set aside after the payout delay; ask Rachel).",
+        "poids": 1
+      },
+      {
+        "id": "f-brouillon",
+        "texte": "Says the follow-up e-mail is drafted but not sent.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-cad-t1",
+        "texte": "Says CAD payouts are available or planned in Q1 2027."
+      },
+      {
+        "id": "i-20",
+        "texte": "Presents a 20% discount as proposed or decided."
+      },
+      {
+        "id": "i-4dec",
+        "texte": "Gives Friday 4 December as Hearthly's decision date (without saying it moved)."
+      },
+      {
+        "id": "i-envoye",
+        "texte": "Says the follow-up e-mail has been sent."
+      },
+      {
+        "id": "i-bruit",
+        "texte": "Mentions the Gong viewing/weekly notification or the LeadRadar leads e-mail."
+      },
+      {
+        "id": "i-geste",
+        "texte": "Narrates gestures instead of meaning, e.g. \"you pasted the Gong summary\" or \"you asked for a mutual action plan\"."
+      }
+    ],
+    "pieges": [
+      "Session hors code : préparer la relance d'un prospect après un appel ; il faut lire que le brouillon contient une promesse fausse (CAD au T1) que Sofia dément ensuite.",
+      "Périmé : la décision du prospect passe du 4 au 2 décembre (le plan d'action de la session est bâti sur le 4).",
+      "Fausse décision : l'agent propose 20 % de remise ; Owen garde 15 %, qui reste soumis à l'accord de Rachel (au-delà de 10 %).",
+      "Bruit : la notification automatique de Gong et l'offre de LeadRadar."
+    ]
+  }
+}

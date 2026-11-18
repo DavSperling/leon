@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:29.418Z",
+  "reponse": "## Où j'en suis\nLe client API TransAlp est écrit : OAuth2, étiquettes ZPL par défaut (PDF possible), testé en recette avec la commande 1052. Le correctif d'encodage `^CI28` pour la Zebra a été validé par Karim, tests verts (22), commits `3e8b1d0` et `a90c4f7`, poussés sur `hugo/transalp-etiquettes`. La PR #91 reste ouverte en brouillon, en relecture par Julien. `choix.ts` active TransAlp pour Lyon/Paris à partir de `TRANSALP_DEBUT` (1er décembre par défaut) ; rien ne s'active avant, la clé de prod sera mise par Julien dans les secrets. Rapidis n'est pas touché : il garde le reste de la France et les colis de plus de 30 kg. (source: ses-tr-2, h2-02, h2-05, h2-06, h2-08, h2-11, h2-12, src-pr91)\n\n- [en-cours] PR #91 ouverte (état GitHub : open), en brouillon, relecture de Julien à attendre (source: ses-tr-2, ses-tr-1, src-pr91)\n- [prochaine-étape] obtenir la relecture de Julien puis préparer la bascule du mardi 1er décembre, Lyon et Paris seulement ; Karim doit d'abord former l'équipe au nouveau poste d'impression (source: ses-tr-2, src-slack-julien, h2-07)\n- [essai-raté] ZPL refusé en sandbox : le format n'est disponible qu'en recette et en production ; l'essai a donc été fait sur la recette (source: ses-tr-1, ses-tr-2, src-mail-transalp)\n- [essai-raté] première impression Zebra : accents en bouillie (« SaÃ´ne chÃªne »), corrigé en insérant `^CI28` après `^XA` dans `zpl.ts` (source: ses-tr-2, h2-03, h2-04, h2-05)\n- [essai-raté] l'idée de désactiver Rapidis au 1er décembre suite au mail TransAlp (« Premium signé, résiliation Rapidis ») a été rejetée par Hugo : Rapidis reste jusqu'au 15 janvier, aucun tarif Premium (source: ses-tr-2, h2-08, h2-09)\n- [décision] ZPL par défaut, testé sur la recette (source: ses-tr-2, h2-01)\n- [décision] Rapidis reste en secours et prend tout colis de plus de 30 kg, même à Lyon/Paris (source: ses-tr-1, h1-03)\n- [décision] config prod préparée mais rien d'actif avant le 1er décembre ; c'est Julien qui met la clé de prod dans les secrets (source: ses-tr-2, h2-07)\n- [décision] bascule Lyon/Paris le mardi 1er décembre (pas le 23) ; Rapidis garde le reste de la France et les +30 kg jusqu'au 15 janvier, point après les soldes (source: src-slack-julien, ses-tr-2, h2-09)",
+  "rendu": "## Où j'en suis\nLe client API TransAlp est écrit : OAuth2, étiquettes ZPL par défaut (PDF possible), testé en recette avec la commande 1052. Le correctif d'encodage `^CI28` pour la Zebra a été validé par Karim, tests verts (22), commits `3e8b1d0` et `a90c4f7`, poussés sur `hugo/transalp-etiquettes`. La PR #91 reste ouverte en brouillon, en relecture par Julien. `choix.ts` active TransAlp pour Lyon/Paris à partir de `TRANSALP_DEBUT` (1er décembre par défaut) ; rien ne s'active avant, la clé de prod sera mise par Julien dans les secrets. Rapidis n'est pas touché : il garde le reste de la France et les colis de plus de 30 kg. (de: toi, équipe, agent; source: ses-tr-2, h2-02, h2-05, h2-06, h2-08, h2-11, h2-12, src-pr91)\n\n- [en-cours] PR #91 ouverte (état GitHub : open), en brouillon, relecture de Julien à attendre (de: équipe, agent; source: ses-tr-2, ses-tr-1, src-pr91)\n- [prochaine-étape] obtenir la relecture de Julien puis préparer la bascule du mardi 1er décembre, Lyon et Paris seulement ; Karim doit d'abord former l'équipe au nouveau poste d'impression (de: toi, connecteur, agent; source: ses-tr-2, src-slack-julien, h2-07)\n- [essai-raté] ZPL refusé en sandbox : le format n'est disponible qu'en recette et en production ; l'essai a donc été fait sur la recette (de: connecteur, agent; source: ses-tr-1, ses-tr-2, src-mail-transalp)\n- [essai-raté] première impression Zebra : accents en bouillie (« SaÃ´ne chÃªne »), corrigé en insérant `^CI28` après `^XA` dans `zpl.ts` (de: toi, agent; source: ses-tr-2, h2-03, h2-04, h2-05)\n- [essai-raté] l'idée de désactiver Rapidis au 1er décembre suite au mail TransAlp (« Premium signé, résiliation Rapidis ») a été rejetée par Hugo : Rapidis reste jusqu'au 15 janvier, aucun tarif Premium (de: toi, agent; source: ses-tr-2, h2-08, h2-09)\n- [décision] ZPL par défaut, testé sur la recette (de: toi, agent; source: ses-tr-2, h2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1889,
+    "lignesRetirees": 3,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3844,
+    "sortie": 894,
+    "reflexion": 133,
+    "cache": 0,
+    "cout": 0.0010236
+  },
+  "cout": 0.0010236,
+  "latenceMs": 4719,
+  "fournisseur": "Together"
+}

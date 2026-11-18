@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:56.621Z",
+  "reponse": "Je ne sais pas encore : le chiffre exact du nombre de commandes de la semaine du Black Friday 2025 n'est pas disponible dans Leon. Antoine Roussel travaille dessus mais doit recouper avec les relevés Shopify Payments et les ventes revendeurs : il prévoit d'envoyer ça le mercredi 25 novembre [2]. La page « Plan commercial fin d'année 2026 » indique toujours « Chiffres 2025 : à compléter (Antoine) » [5].\n\nEn attendant, quelques repères pour dimensionner le service client :\n\n- Karim estime qu'**à peu près doublé les commandes** sur la semaine l'an dernier, mais renvoie aux chiffres d'Antoine pour les vrais chiffres [4].\n- L'an dernier le SAV avait été **débordé** : des tickets étaient restés 4 jours sans réponse [4].\n- Cette année, pour le Black Friday, le SAV sera **3** : Lucie, Inès et Karim l'après-midi [4].\n- L'objectif commercial est **+20 % de CA** par rapport au Black Friday 2025, ce qui laisserait présager une charge au moins équivalente, voire supérieure à l'an dernier [5].\n\nÀ surveiller aussi côté attente client : les délais de livraison annoncés sont de 3 à 5 jours ouvrés, et la table Saône passe en précommande avec expédition à partir du 14 décembre [6][8].",
+  "rendu": "Je ne sais pas encore : le chiffre exact du nombre de commandes de la semaine du Black Friday 2025 n'est pas disponible dans Leon. Antoine Roussel travaille dessus mais doit recouper avec les relevés Shopify Payments et les ventes revendeurs : il prévoit d'envoyer ça le mercredi 25 novembre [2]. La page « Plan commercial fin d'année 2026 » indique toujours « Chiffres 2025 : à compléter (Antoine) » [5].\n\nEn attendant, quelques repères pour dimensionner le service client :\n\n- Karim estime qu'**à peu près doublé les commandes** sur la semaine l'an dernier, mais renvoie aux chiffres d'Antoine pour les vrais chiffres [4].\n- L'an dernier le SAV avait été **débordé** : des tickets étaient restés 4 jours sans réponse [4].\n- Cette année, pour le Black Friday, le SAV sera **3** : Lucie, Inès et Karim l'après-midi [4].\n- L'objectif commercial est **+20 % de CA** par rapport au Black Friday 2025, ce qui laisserait présager une charge au moins équivalente, voire supérieure à l'an dernier [5].\n\nÀ surveiller aussi côté attente client : les délais de livraison annoncés sont de 3 à 5 jours ouvrés, et la table Saône passe en précommande avec expédition à partir du 14 décembre [6][8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 15304,
+    "sortie": 601,
+    "reflexion": 115,
+    "cache": 7040,
+    "cout": 0.001442762
+  },
+  "latenceMs": 7909,
+  "fournisseur": "Makora",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday commandes nombre\"}",
+    "chercher {\"requete\":\"\\\"Black Friday\\\" prévisions affluence service client\"}",
+    "chercher {\"requete\":\"nombre commandes semaine Black Friday 2025 Antoine relevés Shopify\",\"depuis\":\"2026-11-14\"}",
+    "activite {\"outil\":\"outlook\",\"depuis\":\"7j\"}"
+  ],
+  "cout": 0.001442762
+}

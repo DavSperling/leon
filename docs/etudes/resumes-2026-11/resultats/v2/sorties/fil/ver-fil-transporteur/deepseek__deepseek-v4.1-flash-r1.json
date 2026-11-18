@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:30:35.477Z",
+  "reponse": "## Où j'en suis\nÀ la fin de la session ses-tr-2, la branche `hugo/transalp-etiquettes` est poussée et la PR #91 (brouillon, relecture de Julien) est à jour : le client TransAlp sort les étiquettes en ZPL par défaut (correctif `^CI28` validé par l'impression de Karim), `choix.ts` ne choisit TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut), et Rapidis n'est pas touché. Rien ne s'active avant le 1er décembre. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon : ZPL par défaut, `^CI28`, tests du choix par date ; Rapidis inchangé (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis relit la PR (source: ses-tr-2, h2-07)\n- [prochaine-étape] bascule Lyon/Paris le 1er décembre ; point sur Rapidis après les soldes (source: src-slack-julien)\n- [essai-raté] clé en en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible en recette et en prod seulement (source: ses-tr-1, src-mail-transalp)\n- [essai-raté] accents sortis en CP850 (« SaÃ´ne ») faute de `^CI28`, corrigé dans `zpl.ts` (source: h2-03, h2-04)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement, pas le 23 (formation de l'équipe par Karim) (source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (source: src-slack-julien, h1-03)",
+  "rendu": "## Où j'en suis\nÀ la fin de la session ses-tr-2, la branche `hugo/transalp-etiquettes` est poussée et la PR #91 (brouillon, relecture de Julien) est à jour : le client TransAlp sort les étiquettes en ZPL par défaut (correctif `^CI28` validé par l'impression de Karim), `choix.ts` ne choisit TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut), et Rapidis n'est pas touché. Rien ne s'active avant le 1er décembre. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon : ZPL par défaut, `^CI28`, tests du choix par date ; Rapidis inchangé (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis relit la PR (de: toi, agent; source: ses-tr-2, h2-07)\n- [prochaine-étape] bascule Lyon/Paris le 1er décembre ; point sur Rapidis après les soldes (de: connecteur; source: src-slack-julien)\n- [essai-raté] clé en en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible en recette et en prod seulement (de: connecteur, agent; source: ses-tr-1, src-mail-transalp)\n- [essai-raté] accents sortis en CP850 (« SaÃ´ne ») faute de `^CI28`, corrigé dans `zpl.ts` (de: toi, agent; source: h2-03, h2-04)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement, pas le 23 (formation de l'équipe par Karim) (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (de: toi, connecteur; source: src-slack-julien, h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1580,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3979,
+    "sortie": 1285,
+    "reflexion": 777,
+    "cache": 1024,
+    "cout": 0.001083557
+  },
+  "cout": 0.001083557,
+  "latenceMs": 8768,
+  "fournisseur": "InferenceNet"
+}

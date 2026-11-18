@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.676Z",
+  "reponse": "## What is still open\n\n- Answer Maya on #247 before Thursday’s Orbitly call: 1,179,950 of the drops since #240 were legitimate events (~8.1% of Orbitly’s iOS volume), which matches the funnel drop Rachel flagged. [1][2] She will approve once CI is green. [2] kestrel-ios 3.2.0 sends `event_id` as a per-session counter; your change keys dedupe on project, device, and event_id. [1] Replay Orbitly from landing from 13/11 only after #247 is deployed — Zest’s pilot lost 3,812 events the same way. [1]\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday’s incident review on 20/11. [7]\n- iOS still needs UUID `event_id`s back in 3.2.1; you only drafted that note. Only Orbitly and Zest’s pilot are on 3.2.0, and other consumers still treat `event_id` as globally unique. [1]",
+  "rendu": "## What is still open\n\n- Answer Maya on #247 before Thursday’s Orbitly call: 1,179,950 of the drops since #240 were legitimate events (~8.1% of Orbitly’s iOS volume), which matches the funnel drop Rachel flagged. [1][2] She will approve once CI is green. [2] kestrel-ios 3.2.0 sends `event_id` as a per-session counter; your change keys dedupe on project, device, and event_id. [1] Replay Orbitly from landing from 13/11 only after #247 is deployed — Zest’s pilot lost 3,812 events the same way. [1]\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday’s incident review on 20/11. [7]\n- iOS still needs UUID `event_id`s back in 3.2.1; you only drafted that note. Only Orbitly and Zest’s pilot are on 3.2.0, and other consumers still treat `event_id` as globally unique. [1]",
+  "mesures": {
+    "mots": 130,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5935,
+    "sortie": 6072,
+    "reflexion": 5831,
+    "cache": 1152,
+    "cout": 0.046574
+  },
+  "cout": 0.046574,
+  "latenceMs": 103561,
+  "fournisseur": "xAI"
+}

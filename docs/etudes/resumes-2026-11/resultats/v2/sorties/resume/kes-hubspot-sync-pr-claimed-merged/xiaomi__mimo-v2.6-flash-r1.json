@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:19.001Z",
+  "reponse": "## Où j'en suis\nWebhook PR #405 was closed (private app tokens can't manage subscriptions) and replaced by a 15-min polling job via CRM search, with windowed paging past HubSpot's 10k result cap and an `arr > 0` filter to skip trials. PR #409 was opened with automerge, but the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` failed (fixture trial company now skipped: 2 rows instead of 3), so auto-merge never fired — the PR is still open.\n\n- [en-cours] PR #409 blocked by the failing e2e fixture test\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py` fixture (ARR > 0 for the third company, or expect 2 rows), push, let checks pass and automerge land #409\n- [prochaine-étape] Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging/prod\n- [essai-raté] Registering webhooks via API — HubSpot returned 401: private app tokens can't manage webhook subscriptions (source: t04)\n- [décision] Polling every 15 min instead of webhooks, close #405 (source: t04)\n- [décISION] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "rendu": "## Où j'en suis\nWebhook PR #405 was closed (private app tokens can't manage subscriptions) and replaced by a 15-min polling job via CRM search, with windowed paging past HubSpot's 10k result cap and an `arr > 0` filter to skip trials. PR #409 was opened with automerge, but the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` failed (fixture trial company now skipped: 2 rows instead of 3), so auto-merge never fired — the PR is still open.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 blocked by the failing e2e fixture test\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py` fixture (ARR > 0 for the third company, or expect 2 rows), push, let checks pass and automerge land #409\n- [prochaine-étape] Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging/prod\n- [essai-raté] Registering webhooks via API — HubSpot returned 401: private app tokens can't manage webhook subscriptions (source: t04)\n- [décision] Polling every 15 min instead of webhooks, close #405 (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1254,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 356,
+    "reflexion": 34,
+    "cache": 0,
+    "cout": 0.00061964
+  },
+  "cout": 0.00061964,
+  "latenceMs": 14104,
+  "fournisseur": "Cohere"
+}

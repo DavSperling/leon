@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:29.460Z",
+  "reponse": "I don't have a confirmed 2027 price from Corvane. The only figure is an internal assumption: the Q1 2027 pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027 [11]. That is a planning number, not a quote.\n\nThe current agreement runs until March 31, 2027, and Marcus is opening renewal talks in November [11]. On Nov 16, Marcus said Corvane hinted they want to raise the per-item fee after the Nov 10 file rejection, but nothing is on paper yet [14]. The memo predates that hint, so the $0.08 assumption may not hold. The memo also says that if the fee goes above $0.10, the bottom pricing tier should be revisited [11].",
+  "rendu": "I don't have a confirmed 2027 price from Corvane. The only figure is an internal assumption: the Q1 2027 pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027 [11]. That is a planning number, not a quote.\n\nThe current agreement runs until March 31, 2027, and Marcus is opening renewal talks in November [11]. On Nov 16, Marcus said Corvane hinted they want to raise the per-item fee after the Nov 10 file rejection, but nothing is on paper yet [14]. The memo predates that hint, so the $0.08 assumption may not hold. The memo also says that if the fee goes above $0.10, the bottom pricing tier should be revisited [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22209,
+    "sortie": 896,
+    "reflexion": 446,
+    "cache": 0,
+    "cout": 0.0026689
+  },
+  "latenceMs": 7996,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Corvane frais par versement payout prix next year\"}",
+    "chercher {\"requete\":\"Corvane pricing per payout\",\"depuis\":\"2025-01-01\"}",
+    "lire {\"sourceId\":\"drive-q1-pricing-memo\"}"
+  ],
+  "cout": 0.0026689
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:49.374Z",
+  "reponse": "The Q1 payout fee is 0.45%, not 0.40%: a Slack message says Gil's review changed it and that the v3 deck is outdated [2]. That's the most recent word, dated November 17, 2026 [2], and it contradicts the v3 proposal and the draft customer notice, which both still state 0.40% [1][4]. Volume tiers are unchanged [2]: minus 0.05 points above $5M/month and minus 0.10 points above $20M/month [1]. A Pinecrest QBR had already been told 0.40% [3], and someone said they'd correct it with Rob [2]. Customer notices go out by December 1 [2].",
+  "rendu": "The Q1 payout fee is 0.45%, not 0.40%: a Slack message says Gil's review changed it and that the v3 deck is outdated [2]. That's the most recent word, dated November 17, 2026 [2], and it contradicts the v3 proposal and the draft customer notice, which both still state 0.40% [1][4]. Volume tiers are unchanged [2]: minus 0.05 points above $5M/month and minus 0.10 points above $20M/month [1]. A Pinecrest QBR had already been told 0.40% [3], and someone said they'd correct it with Rob [2]. Customer notices go out by December 1 [2].",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1034,
+    "sortie": 286,
+    "reflexion": 127,
+    "cache": 0,
+    "cout": 0.0006534
+  },
+  "cout": 0.0006534,
+  "latenceMs": 1853,
+  "fournisseur": "Parasail"
+}

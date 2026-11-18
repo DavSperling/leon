@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:32.816Z",
+  "reponse": "Deux causes distinctes ont rendu le stock faux. D'abord, le webhook inventory_levels/update arrivait deux fois quand un produit a deux emplacements (entrepôt + showroom), ce qui décrémentait le stock en double ; la déduplication sur (inventory_item_id, location_id, updated_at) a été mergée dans la PR #87 [1][2]. Ensuite, le stock négatif de la variante Saône chêne clair (-2) n'est pas lié à #87 : c'est l'import nocturne scripts/stock/import-csv.ts qui a écrasé le stock avec le CSV de Bois & Fils de la veille avant les commandes [5], ce qui a aussi provoqué le délai annoncé à une cliente [4]. Une question reste ouverte sur ce point [3].",
+  "rendu": "Deux causes distinctes ont rendu le stock faux. D'abord, le webhook inventory_levels/update arrivait deux fois quand un produit a deux emplacements (entrepôt + showroom), ce qui décrémentait le stock en double ; la déduplication sur (inventory_item_id, location_id, updated_at) a été mergée dans la PR #87 [1][2]. Ensuite, le stock négatif de la variante Saône chêne clair (-2) n'est pas lié à #87 : c'est l'import nocturne scripts/stock/import-csv.ts qui a écrasé le stock avec le CSV de Bois & Fils de la veille avant les commandes [5], ce qui a aussi provoqué le délai annoncé à une cliente [4]. Une question reste ouverte sur ce point [3].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1139,
+    "sortie": 249,
+    "reflexion": 62,
+    "cache": 512,
+    "cout": 0.0001589336
+  },
+  "cout": 0.0001589336,
+  "latenceMs": 5021,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:03.578Z",
+  "reponse": "## Où j'en suis\nStaging (`analytics-staging`) has run PostgreSQL 17.2 since 14:20 UTC on Nov 17, after the pg_partman 5.1.0 upgrade and the blue/green switchover (41 s of refused writes). The dbt run passed 14/14. Draft PR #57 is still open with commits 7e3c9d4 and b0f18a2. The runbook is updated. Prod has no date and is waiting for Maya's sign-off after a full week of staging on 17. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Staging soak on 17.2: a full week is required, so the earliest sign-off is Nov 24. (source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] After Maya's sign-off, pick the prod window outside the 01:00–03:30 UTC dbt lock. Two windows are needed: first the reboot for `rds.logical_replication = 1`, then the blue/green switchover. (source: ses-pg-3, src-slack-infra, ses-pg-1)\n- [prochaine-étape] Keep `apply_immediately` false and prod behind `pg17_enabled = false` until then. (source: s1-04, ses-pg-1)\n- [essai-raté] The first staging apply failed because the source 16.4 parameter group lacked `rds.logical_replication = 1`, a static parameter that needs a reboot. It was fixed by adding the parameter and rebooting (1m48s). (source: s3-04, s3-06)\n- [question] The prod window is not set. The Nov 28, 04:00 UTC date in the agent note was never approved by the user, who said no prod date until Maya signs off. (source: s1-04, src-note-cutover)\n- [décision] No prod date until Maya signs off. (source: s1-04, s3-09)\n- [décision] The AWS provider stays pinned to 5.82, with no v6 in this PR. (source: s1-02)",
+  "rendu": "## Où j'en suis\nStaging (`analytics-staging`) has run PostgreSQL 17.2 since 14:20 UTC on Nov 17, after the pg_partman 5.1.0 upgrade and the blue/green switchover (41 s of refused writes). The dbt run passed 14/14. Draft PR #57 is still open with commits 7e3c9d4 and b0f18a2. The runbook is updated. Prod has no date and is waiting for Maya's sign-off after a full week of staging on 17. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Staging soak on 17.2: a full week is required, so the earliest sign-off is Nov 24. (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] After Maya's sign-off, pick the prod window outside the 01:00–03:30 UTC dbt lock. Two windows are needed: first the reboot for `rds.logical_replication = 1`, then the blue/green switchover. (de: connecteur, agent; source: ses-pg-3, src-slack-infra, ses-pg-1)\n- [prochaine-étape] Keep `apply_immediately` false and prod behind `pg17_enabled = false` until then. (de: toi, agent; source: s1-04, ses-pg-1)\n- [essai-raté] The first staging apply failed because the source 16.4 parameter group lacked `rds.logical_replication = 1`, a static parameter that needs a reboot. It was fixed by adding the parameter and rebooting (1m48s). (de: agent; source: s3-04, s3-06)\n- [question] The prod window is not set. The Nov 28, 04:00 UTC date in the agent note was never approved by the user, who said no prod date until Maya signs off. (de: toi, agent; source: s1-04, src-note-cutover)\n- [décision] No prod date until Maya signs off. (de: toi; source: s1-04, s3-09)\n- [décision] The AWS provider stays pinned to 5.82, with no v6 in this PR. (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1694,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5896,
+    "sortie": 669,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018482
+  },
+  "cout": 0.018482,
+  "latenceMs": 4955,
+  "fournisseur": "Amazon Bedrock"
+}

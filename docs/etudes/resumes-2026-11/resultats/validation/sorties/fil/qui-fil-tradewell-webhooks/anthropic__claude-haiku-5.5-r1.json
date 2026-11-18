@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:33.725Z",
+  "reponse": "## Où j'en suis\nThe Tradewell certification run on Nov 18 scored 46/48. WH-17 is fixed in commit c41f9a2e on `jake/tradewell-webhook-cert`. WH-31 has fresh-timestamp signing written locally with unit tests green, but it is not committed, and the retry integration test in `tests/retry.rs` still checks the old header. The re-run is blocked because the Tradewell sandbox API key expired on Nov 17. PR #1468, the earlier webhook work, was merged on Nov 17. (source: w3-01, w3-04, w3-06, w3-08, src-pr1468)\n\n- [en-cours] WH-31: sign each attempt at send time with a fresh timestamp. Written and unit-tested, not committed. (source: w3-06)\n- [prochaine-étape] Rewrite the retry integration test in `tests/retry.rs`, commit and push. (source: w3-06, w3-11)\n- [prochaine-étape] Get a new sandbox API key from Ellen Vance (Tradewell), then re-run `./scripts/tradewell-cert.sh --env sandbox`. (source: w3-08, w3-09)\n- [prochaine-étape] Get a green sandbox run before Friday Nov 20. The next window is Dec 2, which leaves no buffer before the Dec 7 go-live. (source: src-jira-2310)\n- [essai-raté] Ed25519 signing: started, then reverted, because Tradewell's spec 4.2 requires HMAC-SHA256 with the shared secret. (source: w1-05)\n- [essai-raté] Certification re-run: the sandbox key expired on 2026-11-17, so the run returned 401 and nothing was tested. (source: w3-08)\n- [question] Ellen's Slack message says mTLS and `payout.updated` were agreed for go-live. Jake doesn't recall agreeing, and neither is in the spec. Check with Sofia before building anything. (source: src-slack-tradewell, w3-09)\n- [décision] Sign every delivery attempt at send time with a fresh timestamp. Don't ask Tradewell to raise the 300 s tolerance. (source: w3-05)\n- [décision] Use HMAC-SHA256 over `{t}.{raw_body}` with the shared secret, as the spec requires. (source: w1-05)\n- [décision] Don't open the PR yet. Push once the integration test is done. (source: w3-11)\n- [décision] Retries stop after 24 h, then the event goes to the dead-letter queue. (source: w2-05)",
+  "rendu": "## Où j'en suis\nThe Tradewell certification run on Nov 18 scored 46/48. WH-17 is fixed in commit c41f9a2e on `jake/tradewell-webhook-cert`. WH-31 has fresh-timestamp signing written locally with unit tests green, but it is not committed, and the retry integration test in `tests/retry.rs` still checks the old header. The re-run is blocked because the Tradewell sandbox API key expired on Nov 17. PR #1468, the earlier webhook work, was merged on Nov 17. (de: toi, équipe, agent; source: w3-01, w3-04, w3-06, w3-08, src-pr1468)\n\n- [en-cours] WH-31: sign each attempt at send time with a fresh timestamp. Written and unit-tested, not committed. (de: agent; source: w3-06)\n- [prochaine-étape] Rewrite the retry integration test in `tests/retry.rs`, commit and push. (de: toi, agent; source: w3-06, w3-11)\n- [prochaine-étape] Get a new sandbox API key from Ellen Vance (Tradewell), then re-run `./scripts/tradewell-cert.sh --env sandbox`. (de: toi, agent; source: w3-08, w3-09)\n- [prochaine-étape] Get a green sandbox run before Friday Nov 20. The next window is Dec 2, which leaves no buffer before the Dec 7 go-live. (de: connecteur; source: src-jira-2310)\n- [essai-raté] Ed25519 signing: started, then reverted, because Tradewell's spec 4.2 requires HMAC-SHA256 with the shared secret. (de: toi; source: w1-05)\n- [essai-raté] Certification re-run: the sandbox key expired on 2026-11-17, so the run returned 401 and nothing was tested. (de: agent; source: w3-08)\n- [question] Ellen's Slack message says mTLS and `payout.updated` were agreed for go-live. Jake doesn't recall agreeing, and neither is in the spec. Check with Sofia before building anything. (de: toi, connecteur; source: src-slack-tradewell, w3-09)\n- [décision] Sign every delivery attempt at send time with a fresh timestamp. Don't ask Tradewell to raise the 300 s tolerance. (de: toi; source: w3-05)\n- [décision] Use HMAC-SHA256 over `{t}.{raw_body}` with the shared secret, as the spec requires. (de: toi; source: w1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1986,
+    "lignesRetirees": 2,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8110,
+    "sortie": 2345,
+    "reflexion": 1479,
+    "cache": 0,
+    "cout": 0.0019835
+  },
+  "cout": 0.0019835,
+  "latenceMs": 10483,
+  "fournisseur": "Google"
+}

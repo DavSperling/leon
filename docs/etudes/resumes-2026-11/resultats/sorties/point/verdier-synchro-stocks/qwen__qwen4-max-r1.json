@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:38:17.724Z",
+  "reponse": "## Ce qui a changé\n- La cause des faux stocks est corrigée : Hugo a fusionné #57 (correspondance exacte des SKU, plus tes 17 références à finitions manquantes). La synchro de cette nuit tourne avec, et #55 « Saône affichée en stock » est marqué corrigé. [4][3][1]\n- Karim a bien reçu ton fichier des 14 écarts : il fait le comptage physique jeudi matin à l'entrepôt et t'envoie les vrais chiffres dans la foulée — de quoi savoir si les écarts restants viennent de l'entrepôt. [7][1]\n- Les trois clients Saône acceptent une livraison mi-janvier. [9]\n\n## Ce qui reste ouvert\n- L'export des ventes Shopify d'octobre que tu as promis à Antoine pour la TVA, avant jeudi : rien ne montre qu'il est parti. [1]\n- Ta PR #58 (`--dry-run` + rapport d'écarts, lint et 38 tests OK) est ouverte sans relecteur, Hugo était à l'école : à faire relire et fusionner. [1][5]",
+  "rendu": "## Ce qui a changé\n- La cause des faux stocks est corrigée : Hugo a fusionné #57 (correspondance exacte des SKU, plus tes 17 références à finitions manquantes). La synchro de cette nuit tourne avec, et #55 « Saône affichée en stock » est marqué corrigé. [4][3][1]\n- Karim a bien reçu ton fichier des 14 écarts : il fait le comptage physique jeudi matin à l'entrepôt et t'envoie les vrais chiffres dans la foulée — de quoi savoir si les écarts restants viennent de l'entrepôt. [7][1]\n- Les trois clients Saône acceptent une livraison mi-janvier. [9]\n\n## Ce qui reste ouvert\n- L'export des ventes Shopify d'octobre que tu as promis à Antoine pour la TVA, avant jeudi : rien ne montre qu'il est parti. [1]\n- Ta PR #58 (`--dry-run` + rapport d'écarts, lint et 38 tests OK) est ouverte sans relecteur, Hugo était à l'école : à faire relire et fusionner. [1][5]",
+  "mesures": {
+    "mots": 141,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5326,
+    "sortie": 1590,
+    "reflexion": 1329,
+    "cache": 0,
+    "cout": 0.0143868
+  },
+  "cout": 0.0143868,
+  "latenceMs": 34577,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T14:31:51.178Z",
+  "reponse": "## What you did\n- Tu as affiné l’interface des widgets v2 (header ramené à 40 px, menu réduit à 3 entrées, tooltip des cohortes en clair, squelette de chargement sans saut, palette catégorielle) et poussé sur la PR #427 [1].\n\n## What changed\n- Maya a répondu sur #427 : on garde ChartKit pour les clients v1, pas de suppression tant que v1 tourne [7].\n- Dependabot a ouvert #429, un bump majeur vers ChartKit 5.0 avec des breaking changes nécessitant un script de migration [4].\n- Priya valide le rendu v2 pour Orbitly mais bloque le déploiement tant que l’export CSV n’est pas revenu dans le menu widget v2 [10].\n\n## What is still open\n- Réintégrer l’export CSV dans le menu widget v2 : ton job d’export en arrière-plan est prêt (PR #430 approuvé par Daniel, prête à merger) ; il faut le brancher côté v2 pour qu’Orbitly puisse activer le flag demain [2][5][10].\n- Corriger le crash du tooltip sur les cohortes vides (ticket Sentry #432), repéré hier en staging et laissé pour aujourd’hui [1][8].\n- Donner un ETA à Rachel pour Zest, dont l’export sera rétabli dès que la correction est mergée et déployée [9].",
+  "rendu": "## What you did\n- Tu as affiné l’interface des widgets v2 (header ramené à 40 px, menu réduit à 3 entrées, tooltip des cohortes en clair, squelette de chargement sans saut, palette catégorielle) et poussé sur la PR #427 [1].\n\n## What changed\n- Maya a répondu sur #427 : on garde ChartKit pour les clients v1, pas de suppression tant que v1 tourne [7].\n- Dependabot a ouvert #429, un bump majeur vers ChartKit 5.0 avec des breaking changes nécessitant un script de migration [4].\n- Priya valide le rendu v2 pour Orbitly mais bloque le déploiement tant que l’export CSV n’est pas revenu dans le menu widget v2 [10].\n\n## What is still open\n- Réintégrer l’export CSV dans le menu widget v2 : ton job d’export en arrière-plan est prêt (PR #430 approuvé par Daniel, prête à merger) ; il faut le brancher côté v2 pour qu’Orbitly puisse activer le flag demain [2][5][10].\n- Corriger le crash du tooltip sur les cohortes vides (ticket Sentry #432), repéré hier en staging et laissé pour aujourd’hui [1][8].\n- Donner un ETA à Rachel pour Zest, dont l’export sera rétabli dès que la correction est mergée et déployée [9].",
+  "mesures": {
+    "mots": 187,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5837,
+    "sortie": 4487,
+    "reflexion": 3845,
+    "cache": 0,
+    "cout": 0.0119838
+  },
+  "cout": 0.0119838,
+  "latenceMs": 47044,
+  "fournisseur": "Relace"
+}

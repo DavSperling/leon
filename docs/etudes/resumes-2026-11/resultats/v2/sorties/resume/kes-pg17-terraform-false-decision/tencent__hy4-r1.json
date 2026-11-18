@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:22:53.656Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3978,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 768,
+    "cout": 0.006356698
+  },
+  "cout": 0.006356698,
+  "latenceMs": 41464,
+  "fournisseur": "Tencent"
+}

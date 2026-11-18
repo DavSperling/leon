@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:21.291Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3945,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 0,
+    "cout": 0.000717525
+  },
+  "cout": 0.000717525,
+  "latenceMs": 39199,
+  "fournisseur": "Novita"
+}

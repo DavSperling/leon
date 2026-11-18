@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:42.402Z",
+  "reponse": "La cause est identifiée : l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de 2 h à l'heure UTC, juste en été mais faux depuis le passage à l'heure d'hiver du 25/10 [2]. Les réglages du serveur (TIME_ZONE, USE_TZ) étaient bons, contrairement à l'hypothèse d'un conteneur en UTC évoquée en cours d'analyse [1][2]. Le correctif passe par l'heure locale de Paris via zoneinfo [2]. Le symptôme est bien des créneaux décalés de 8h à 9h [1][3], avec des équipes arrivées en retard chez des clients [3][5]. Reste ouvert : les SMS de rappel annonçaient encore 9h au lieu de 8h à 6 clients [4].",
+  "rendu": "La cause est identifiée : l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de 2 h à l'heure UTC, juste en été mais faux depuis le passage à l'heure d'hiver du 25/10 [2]. Les réglages du serveur (TIME_ZONE, USE_TZ) étaient bons, contrairement à l'hypothèse d'un conteneur en UTC évoquée en cours d'analyse [1][2]. Le correctif passe par l'heure locale de Paris via zoneinfo [2]. Le symptôme est bien des créneaux décalés de 8h à 9h [1][3], avec des équipes arrivées en retard chez des clients [3][5]. Reste ouvert : les SMS de rappel annonçaient encore 9h au lieu de 8h à 6 clients [4].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1249,
+    "sortie": 326,
+    "reflexion": 123,
+    "cache": 0,
+    "cout": 0.00029552
+  },
+  "cout": 0.00029552,
+  "latenceMs": 2795,
+  "fournisseur": "Particle AI"
+}

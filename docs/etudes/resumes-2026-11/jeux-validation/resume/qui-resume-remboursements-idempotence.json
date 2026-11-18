@@ -1,0 +1,345 @@
+{
+  "id": "qui-resume-remboursements-idempotence",
+  "titre": "Session Claude Code (API) : clés d'idempotence des remboursements ; PR fusionnée d'après les faits mais « pas encore » d'après l'agent ; Redis abandonné ; l'agent annonce un remboursement automatique que Jake refuse",
+  "langue": "en",
+  "entree": {
+    "faits": {
+      "branche": "jake/refund-idempotency",
+      "prs": [
+        {
+          "repo": "quillon/core",
+          "numero": 1437,
+          "etat": "merged"
+        }
+      ],
+      "commits": [
+        "a3f9e12",
+        "7c04b5d",
+        "e91d2a8"
+      ],
+      "fichiers": [
+        "services/api/src/idempotency/pg-store.ts",
+        "services/api/src/idempotency/middleware.ts",
+        "services/api/src/idempotency/config.ts",
+        "services/api/src/idempotency/store.test.ts",
+        "services/api/src/routes/refunds.ts",
+        "db/migrations/0142_idempotency_keys.sql",
+        "jobs/purge-idempotency-keys.ts",
+        "docs/api/refunds.md",
+        "scripts/sql/pinecrest_duplicate_refunds.sql"
+      ],
+      "commandes": [
+        {
+          "texte": "pnpm test idempotency",
+          "erreur": true
+        },
+        {
+          "texte": "pnpm db:migrate",
+          "erreur": false
+        },
+        {
+          "texte": "pnpm test idempotency",
+          "erreur": false
+        },
+        {
+          "texte": "gh pr create --repo quillon/core --title \"refunds: Idempotency-Key support on POST /v1/refunds\" --reviewer tomer-golan",
+          "erreur": false
+        },
+        {
+          "texte": "pnpm test idempotency",
+          "erreur": false
+        },
+        {
+          "texte": "git push",
+          "erreur": false
+        },
+        {
+          "texte": "pnpm test:e2e refunds",
+          "erreur": false
+        },
+        {
+          "texte": "psql \"$REPLICA_URL\" -f scripts/sql/pinecrest_duplicate_refunds.sql",
+          "erreur": false
+        }
+      ],
+      "taches": [
+        {
+          "texte": "Idempotency store in Postgres + migration",
+          "etat": "fait"
+        },
+        {
+          "texte": "Docs for the Idempotency-Key header",
+          "etat": "fait"
+        },
+        {
+          "texte": "Address Tomer's review (hash key order, 409)",
+          "etat": "fait"
+        },
+        {
+          "texte": "List the 14 Pinecrest duplicate refunds for Carla",
+          "etat": "en_cours"
+        }
+      ],
+      "debut": "2026-11-16T15:05:00Z",
+      "fin": "2026-11-17T22:40:10Z"
+    },
+    "tours": [
+      {
+        "id": "t01",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T15:05:00Z",
+        "texte": "pinecrest got 14 refunds issued twice on nov 12, their client retried on our 504s during the payout mess. we need Idempotency-Key on POST /v1/refunds. usual semantics: same key + same body = replay the stored response, same key + different body = 422. start with the store, services/api/src/idempotency/"
+      },
+      {
+        "id": "t02",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T15:09:30Z",
+        "texte": "Plan for `services/api/src/idempotency/`:\n\n1. `IdempotencyStore` interface: `begin(merchantId, key, requestHash)`, `complete(merchantId, key, response)`, `get(merchantId, key)`.\n2. Backing store: Redis, since it's already used by the rate limiter (`services/api/src/ratelimit/redis.ts`) and gives us TTLs for free:\n   - `SET idem:{merchant}:{key}:lock <requestHash> NX PX 86400000` to claim the key\n   - `SET idem:resp:{merchant}:{key} <json>` with the same TTL once the refund is done\n3. Middleware `withIdempotency()` on `POST /v1/refunds` only for now:\n   - no header → current behaviour\n   - new key → run the handler, store status + body\n   - same key, same hash → replay stored status + body, header `Idempotent-Replayed: true`\n   - same key, different hash → 422 `idempotency_key_reused`\n4. Request hash: sha256 of the JSON body.\n\nI'll start with the Redis store and its tests."
+      },
+      {
+        "id": "t03",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T15:11:00Z",
+        "texte": "go"
+      },
+      {
+        "id": "t04",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T15:40:20Z",
+        "texte": "Implemented `RedisIdempotencyStore` and the `withIdempotency()` middleware, wired on `POST /v1/refunds`.\n\n`pnpm test idempotency`: 14 passed, **3 failed**:\n```\nReplyError: CROSSSLOT Keys in request don't hash to the same slot\n    at RedisIdempotencyStore.complete (src/idempotency/redis-store.ts:61:18)\n```\nThe test Redis runs in cluster mode like prod, and `complete()` writes `idem:{merchant}:{key}:lock` and `idem:resp:{merchant}:{key}` in one MULTI, which cluster mode refuses when keys land on different slots. Fix: use a hash tag, `idem:{merchant:key}:lock` / `idem:{merchant:key}:resp`, so both keys share a slot. Shall I apply it?"
+      },
+      {
+        "id": "t05",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T15:44:00Z",
+        "texte": "no. redis here is a cache, it gets flushed on failover. a replay after a failover = a double refund again, exactly what we're fixing. put it in postgres, unique index on (merchant_id, idempotency_key)"
+      },
+      {
+        "id": "t06",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T16:30:10Z",
+        "texte": "Switched to Postgres and removed the Redis store.\n\n- Migration `db/migrations/0142_idempotency_keys.sql`: table `idempotency_keys (merchant_id, idempotency_key, request_hash, status, response_code, response_body jsonb, created_at, expires_at)`, unique index on `(merchant_id, idempotency_key)`.\n- `PgIdempotencyStore.begin()`: `INSERT … ON CONFLICT (merchant_id, idempotency_key) DO NOTHING RETURNING id`. No row returned → the key exists: compare `request_hash`; same → replay the stored response, different → 422 `idempotency_key_reused`.\n- The insert and the refund run in the same transaction, so a crash between them can't leave a refund without its key.\n\n`pnpm db:migrate` OK on the test DB. `pnpm test idempotency`: 17 passed."
+      },
+      {
+        "id": "t07",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T16:33:00Z",
+        "texte": "ttl?"
+      },
+      {
+        "id": "t08",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T16:35:40Z",
+        "texte": "Most payment APIs keep idempotency keys for 24 hours, so I've set `expires_at = created_at + interval '24 hours'` and added a nightly purge job (`jobs/purge-idempotency-keys.ts`) that deletes expired rows."
+      },
+      {
+        "id": "t09",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T16:38:00Z",
+        "texte": "72h. pinecrest's client retries for up to 48h, their ops told carla. 72 gives margin"
+      },
+      {
+        "id": "t10",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T16:41:15Z",
+        "texte": "Changed to 72 hours (`IDEMPOTENCY_TTL_HOURS = 72` in `src/idempotency/config.ts`). The purge job deletes rows with `expires_at < now()` in batches of 5,000 so it doesn't lock the table. Tests updated (a key replays at 71 h, is new again at 73 h)."
+      },
+      {
+        "id": "t11",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T16:50:00Z",
+        "texte": "what happens if the first request is still in flight when the retry comes"
+      },
+      {
+        "id": "t12",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T16:54:30Z",
+        "texte": "The first request inserts the row with `status = 'in_progress'` before calling Corvane. A retry with the same key that finds `in_progress` gets **429 Too Many Requests** with `Retry-After: 1`, without touching the refund. When the first request finishes, `complete()` stores the response and sets `status = 'done'`; the next retry replays it. If the first request crashes, the transaction rolls back and the key is free again."
+      },
+      {
+        "id": "t13",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T17:02:00Z",
+        "texte": "ok. docs + pr. reviewer tomer"
+      },
+      {
+        "id": "t14",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T17:20:40Z",
+        "texte": "Updated `docs/api/refunds.md`: `Idempotency-Key` header, 72-hour retention, 422 when a key is reused with a different body, what to do on an in-progress retry.\n\nCommitted `a3f9e12` (store, migration, middleware, route) and `7c04b5d` (docs). Opened quillon/core#1437 \"refunds: Idempotency-Key support on POST /v1/refunds\", reviewer Tomer Golan."
+      },
+      {
+        "id": "t15",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T14:10:00Z",
+        "texte": "tomer left 2 comments: the request hash must not depend on key order in `metadata`, and in-flight should be 409 not 429 (429 is our rate limiter, support will mix them up). do both"
+      },
+      {
+        "id": "t16",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T14:35:50Z",
+        "texte": "Both done in `e91d2a8`:\n- Canonical JSON: object keys are sorted recursively before hashing. New test: the same `metadata` in a different key order replays instead of returning 422.\n- In-flight retry now returns **409 Conflict** `idempotency_request_in_progress` with `Retry-After: 1`. Docs updated.\n\n`pnpm test idempotency`: 21 passed. Pushed. PR #1437 is still open, waiting for Tomer's re-review — not merged yet."
+      },
+      {
+        "id": "t17",
+        "role": "user",
+        "injecte": true,
+        "date": "2026-11-17T15:02:00Z",
+        "texte": "<task-notification>\nBackground command \"pnpm test:e2e refunds\" completed (exit code 0).\n38 passed, 0 failed (2m14s)\n</task-notification>"
+      },
+      {
+        "id": "t18",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T15:03:30Z",
+        "texte": "E2E refunds suite is green (38/38). Next, as agreed, I'll write a backfill that marks the 14 historical duplicates and reverses them automatically on Pinecrest's next payout, so their balance is corrected without manual work. Starting with `scripts/backfill/reverse-duplicate-refunds.ts`."
+      },
+      {
+        "id": "t19",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T15:10:00Z",
+        "texte": "no, nothing touches money from a script. read-only sql listing the 14 dupes (refund ids, original charge, amount, date). carla needs it for pinecrest by friday, they reconcile before their weekend payout"
+      },
+      {
+        "id": "t20",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T15:31:20Z",
+        "texte": "Dropped the backfill. Wrote `scripts/sql/pinecrest_duplicate_refunds.sql` (SELECT only, run against the read replica). Result: 14 duplicate pairs, all on 2026-11-12 between 14:02 and 16:47 UTC, total duplicated amount **$3,212.40**. Two of the 14 were later partially reversed by support, so the net amount Pinecrest has to recover is lower than $3,212.40."
+      },
+      {
+        "id": "t21",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T22:30:00Z",
+        "texte": "good. ill check the net amounts with marcus tomorrow (the 2 partial reversals) before sending to carla. done for today"
+      },
+      {
+        "id": "t22",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T22:40:10Z",
+        "texte": "Saved the result as `scripts/sql/out/pinecrest_duplicate_refunds_2026-11-17.csv` (not committed). Where things stand: Postgres store with 72-hour retention, 409 on in-flight retries, docs updated, PR #1437 waiting for Tomer's approval. Tomorrow: net amounts with Marcus, then the list to Carla."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "PR quillon/core#1437 (Idempotency-Key on POST /v1/refunds) is merged.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Decision: idempotency keys are stored in Postgres with a unique index on merchant + key, not in Redis, because a Redis flush on failover would let a double refund through again.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Failed attempt: the Redis store failed in cluster mode (CROSSSLOT error) and was abandoned.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Decision: keys are kept 72 hours (Pinecrest's client retries for up to 48 hours).",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "Decision: no script touches money; the 14 duplicate refunds ($3,212.40 gross) are only listed read-only, with no automatic reversal.",
+        "poids": 3
+      },
+      {
+        "id": "f6",
+        "texte": "Next step: check the net amounts with Marcus (two refunds were partially reversed), then send the list to Carla for Pinecrest by Friday.",
+        "poids": 2
+      },
+      {
+        "id": "f7",
+        "texte": "A key reused with a different body gets 422; a retry while the first request is still running gets 409.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Says PR #1437 is open, waiting for Tomer's review, or not merged."
+      },
+      {
+        "id": "i2",
+        "texte": "Says the duplicate refunds will be reversed automatically (backfill, or on Pinecrest's next payout)."
+      },
+      {
+        "id": "i3",
+        "texte": "Gives 24 hours as the key retention."
+      },
+      {
+        "id": "i4",
+        "texte": "Says an in-flight retry returns 429."
+      },
+      {
+        "id": "i5",
+        "texte": "Writes a [décision] whose source is an agent turn (t08, t12, t18) or the notification t17."
+      }
+    ],
+    "pieges": [
+      "PR fusionnée contredite : les faits disent merged ; t16 et t22 disent « pas encore fusionnée », « en attente de Tomer ».",
+      "Fausse décision de l'agent : t18 annonce « as agreed » une annulation automatique des doublons ; Jake la refuse (t19). Et l'agent fixe 24 h (t08), remplacées par 72 h (t09) ; 429 (t12) remplacé par 409 (t15).",
+      "Essai raté à retenir : le magasin Redis échoue en mode cluster (CROSSSLOT), puis il est abandonné pour une raison de fond (cache vidé au basculement).",
+      "Tour injecté sans valeur de preuve : la notification de fin des tests e2e (t17)."
+    ],
+    "decisions": [
+      {
+        "texte": "Same key + same body replays the stored response; same key + different body returns 422.",
+        "sources": [
+          "t01"
+        ]
+      },
+      {
+        "texte": "Store the keys in Postgres with a unique index on (merchant_id, idempotency_key), not in Redis.",
+        "sources": [
+          "t05",
+          "a3f9e12",
+          "quillon/core#1437"
+        ]
+      },
+      {
+        "texte": "Keep keys 72 hours.",
+        "sources": [
+          "t09"
+        ]
+      },
+      {
+        "texte": "Hash independent of key order; 409 for an in-flight retry.",
+        "sources": [
+          "t15",
+          "e91d2a8"
+        ]
+      },
+      {
+        "texte": "Nothing touches money from a script: read-only list of the 14 duplicates for Carla.",
+        "sources": [
+          "t19"
+        ]
+      }
+    ]
+  }
+}

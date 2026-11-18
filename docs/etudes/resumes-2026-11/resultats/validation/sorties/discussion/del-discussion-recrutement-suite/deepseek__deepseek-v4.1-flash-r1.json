@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:07.244Z",
+  "reponse": "Non, personne n'est encore pris à ce que je vois.\n\n- 11 candidatures, 4 candidats convoqués (Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré) à l'atelier de Carquefou les jeudi 19 et vendredi 20/11 [2][1].\n- Mathis Le Gac a retiré sa candidature le 18/11, il a accepté une offre près de Vannes : il ne reste donc que 3 entretiens [6].\n- L'objectif annoncé est de faire une offre la semaine suivante, pour une arrivée début janvier [5].\n- Un modèle de promesse d'embauche est prêt, mais c'est un gabarit avec des champs à remplir : aucune offre signée n'apparaît [25].\n\nDeux points de contexte : l'attestation fluides n'est pas éliminatoire (la formation est payée si le reste est bon) [2], et un candidat (Haddou) n'a pas été convoqué car il cherche en Mayenne [2].",
+  "rendu": "Non, personne n'est encore pris à ce que je vois.\n\n- 11 candidatures, 4 candidats convoqués (Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré) à l'atelier de Carquefou les jeudi 19 et vendredi 20/11 [2][1].\n- Mathis Le Gac a retiré sa candidature le 18/11, il a accepté une offre près de Vannes : il ne reste donc que 3 entretiens [6].\n- L'objectif annoncé est de faire une offre la semaine suivante, pour une arrivée début janvier [5].\n- Un modèle de promesse d'embauche est prêt, mais c'est un gabarit avec des champs à remplir : aucune offre signée n'apparaît [25].\n\nDeux points de contexte : l'attestation fluides n'est pas éliminatoire (la formation est payée si le reste est bon) [2], et un candidat (Haddou) n'a pas été convoqué car il cherche en Mayenne [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21643,
+    "sortie": 851,
+    "reflexion": 285,
+    "cache": 12544,
+    "cout": 0.0015481490000000002
+  },
+  "latenceMs": 5446,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs\"}",
+    "chercher {\"requete\":\"recrutement installateurs candidats entretiens\",\"depuis\":\"2m\"}",
+    "activite {\"depuis\":\"7j\"}",
+    "chercher {\"requete\":\"offre installateur recrutement décision candidat retenu\",\"depuis\":\"2s\"}",
+    "lire {\"sourceId\":\"gm-le-gac\"}",
+    "chercher {\"requete\":\"offre embauche installateur signée\",\"depuis\":\"7j\",\"de\":\"Aurélie Jaouen\"}"
+  ],
+  "cout": 0.0015481490000000002
+}

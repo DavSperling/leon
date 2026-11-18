@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kra-agenda-it-leitung",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:16.358Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Mittagessen beim Italiener\", \"debut\": \"2026-11-18T12:15\", \"avec\": \"Jonas Hartmann, Can\"}\n{\"n\": 2, \"titre\": \"Vorbereitung Jahresgespräch Pfeiffer mit Frau Kranich\", \"debut\": \"2026-11-20T14:00\", \"fin\": \"2026-11-20T15:00\", \"avec\": \"Thomas Brenner, Frau Kranich\"}\n{\"n\": 7, \"titre\": \"Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD\", \"debut\": \"2026-11-17T13:30\", \"fin\": \"2026-11-17T14:00\", \"avec\": \"Rainer Kolb\"}\n{\"n\": 11, \"titre\": \"Vorstellungsgespräch Java-Entwickler (Herr Okafor)\", \"debut\": \"2026-11-16T11:00\", \"fin\": \"2026-11-16T12:00\", \"avec\": \"Daniel Okafor, Jonas Hartmann, Lena Roth\"}\n{\"n\": 13, \"titre\": \"Demo Ironbridge SAP Connector for Spring\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:45\", \"avec\": \"Megan Fairfax, Raj Patel\"}\n{\"n\": 16, \"titre\": \"ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:30\", \"avec\": \"Dr. Anja Lindner, Jonas Hartmann\"}",
+  "rendu": "2026-11-16T11:00→2026-11-16T12:00 Vorstellungsgespräch Java-Entwickler (Herr Okafor) (avec Daniel Okafor, Jonas Hartmann, Lena Roth)\n2026-11-17T13:30→2026-11-17T14:00 Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD (avec Rainer Kolb)\n2026-11-18T12:15 Mittagessen beim Italiener (avec Jonas Hartmann, Can)\n2026-11-18T16:00→2026-11-18T16:45 Demo Ironbridge SAP Connector for Spring (avec Megan Fairfax, Raj Patel)\n2026-11-19T14:00→2026-11-19T15:30 ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse (avec Dr. Anja Lindner, Jonas Hartmann)\n2026-11-20T14:00→2026-11-20T15:00 Vorbereitung Jahresgespräch Pfeiffer mit Frau Kranich (avec Thomas Brenner, Frau Kranich)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2728,
+    "sortie": 1250,
+    "reflexion": 851,
+    "cache": 0,
+    "cout": 0.00096824
+  },
+  "cout": 0.00096824,
+  "latenceMs": 10859,
+  "fournisseur": "Particle AI"
+}

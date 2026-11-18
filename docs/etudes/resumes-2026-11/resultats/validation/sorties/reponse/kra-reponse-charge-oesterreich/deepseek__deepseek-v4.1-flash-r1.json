@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:50.557Z",
+  "reponse": "Laut Händlerportal erhielten in Österreich Bauprofi Huber GmbH in Linz (Kundennr. 40117) 116 Stück und Eisen-Mayr KG in Graz (40342) 60 Stück aus Charge 26-38 [1][2]. Im SAP-Nachtrag vom 12.11. kommen für 40117 weitere 120 und für 40342 weitere 60 Stück hinzu, also 236 bzw. 120 Geräte [1]. Die Werkzeughaus Tirol GmbH in Innsbruck ist als österreichischer Kunde geführt, ohne Stückzahl in der Lieferliste [2]. Lieferungen an 40117 mit 40 Stück betreffen Charge 26-39, an 10023 Charge 26-41 [1].",
+  "rendu": "Laut Händlerportal erhielten in Österreich Bauprofi Huber GmbH in Linz (Kundennr. 40117) 116 Stück und Eisen-Mayr KG in Graz (40342) 60 Stück aus Charge 26-38 [1][2]. Im SAP-Nachtrag vom 12.11. kommen für 40117 weitere 120 und für 40342 weitere 60 Stück hinzu, also 236 bzw. 120 Geräte [1]. Die Werkzeughaus Tirol GmbH in Innsbruck ist als österreichischer Kunde geführt, ohne Stückzahl in der Lieferliste [2]. Lieferungen an 40117 mit 40 Stück betreffen Charge 26-39, an 10023 Charge 26-41 [1].",
+  "mesures": {
+    "mots": 79,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1508,
+    "sortie": 424,
+    "reflexion": 252,
+    "cache": 0,
+    "cout": 0.00047164
+  },
+  "cout": 0.00047164,
+  "latenceMs": 3116,
+  "fournisseur": "CoreWeave"
+}

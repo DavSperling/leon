@@ -1,0 +1,29 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:09.851Z",
+  "reponse": "Internal trial for the reader dashboard is scheduled for Feb 15 [1].",
+  "rendu": "Internal trial for the reader dashboard is scheduled for Feb 15.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 0,
+    "vide": false,
+    "renvoisInvalides": 1,
+    "sourcesAttenduesVues": 0,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 1584,
+    "sortie": 35,
+    "reflexion": 16,
+    "cache": 1504,
+    "cout": 0.000025512
+  },
+  "latenceMs": 15039,
+  "fournisseur": "Cohere",
+  "trace": [],
+  "cout": 0.000025512
+}

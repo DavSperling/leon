@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:59:50.262Z",
+  "reponse": "La panne venait du disque plein du broker Kafka `ingest-kafka-2`, après la suppression de la rétention basée sur la taille dans le PR infra #221. Le broker est passé en lecture seule à 09:38 UTC, bloquant les consommateurs pendant 2 h 47 min. [2] Le changement de taille des lots dans #388 était une fausse piste. [3][5] Aucun événement n’a été perdu ; certains ont été retardés jusqu’à 2 h 47 min. [2]",
+  "rendu": "La panne venait du disque plein du broker Kafka `ingest-kafka-2`, après la suppression de la rétention basée sur la taille dans le PR infra #221. Le broker est passé en lecture seule à 09:38 UTC, bloquant les consommateurs pendant 2 h 47 min. [2] Le changement de taille des lots dans #388 était une fausse piste. [3][5] Aucun événement n’a été perdu ; certains ont été retardés jusqu’à 2 h 47 min. [2]",
+  "mesures": {
+    "mots": 72,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5094,
+    "sortie": 617,
+    "reflexion": 366,
+    "cache": 2314,
+    "cout": 0.00060964
+  },
+  "cout": 0.00060964,
+  "latenceMs": 6762,
+  "fournisseur": "Azure"
+}

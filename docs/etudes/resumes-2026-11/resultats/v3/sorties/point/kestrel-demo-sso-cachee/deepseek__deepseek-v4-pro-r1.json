@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:54:16.524Z",
+  "reponse": "## What is still open\n- Fernhill’s e2e SSO walkthrough is Thursday 10am NY with their Okta tenant; Priya runs it, you need to be on the call [1].\n- PR #423 needs rework before Tom approves: split the module move from the lint fixes into two PRs [4].\n- The replay cache is still per-process; you planned to move it to Redis (`SET NX EX`, key tenant+assertion ID, ttl `NotOnOrAfter`+skew) before production [1].\n\n## What changed\n- Maya approved and merged #418; your SAML signature validation goes out with the staging deploy [3].\n\n## What you did\n- You implemented SAML assertion signature verification: SHA-256+ only, rejecting unsigned, wrong cert, SHA-1, and signature-wrapping; missing Issuer/Subject is now a 401, plus in-process replay cache [2].\n- You fixed the flaky `test_acs_rejects_expired_assertion` with freezegun and converted two other sleep-based ACS tests; repeat run 50/50 green [1].\n- You applied ruff 0.8 and mypy cleanup, then split `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` [1].",
+  "rendu": "## What is still open\n- Fernhill’s e2e SSO walkthrough is Thursday 10am NY with their Okta tenant; Priya runs it, you need to be on the call [1].\n- PR #423 needs rework before Tom approves: split the module move from the lint fixes into two PRs [4].\n- The replay cache is still per-process; you planned to move it to Redis (`SET NX EX`, key tenant+assertion ID, ttl `NotOnOrAfter`+skew) before production [1].\n\n## What changed\n- Maya approved and merged #418; your SAML signature validation goes out with the staging deploy [3].\n\n## What you did\n- You implemented SAML assertion signature verification: SHA-256+ only, rejecting unsigned, wrong cert, SHA-1, and signature-wrapping; missing Issuer/Subject is now a 401, plus in-process replay cache [2].\n- You fixed the flaky `test_acs_rejects_expired_assertion` with freezegun and converted two other sleep-based ACS tests; repeat run 50/50 green [1].\n- You applied ruff 0.8 and mypy cleanup, then split `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` [1].",
+  "mesures": {
+    "mots": 149,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5793,
+    "sortie": 5292,
+    "reflexion": 5013,
+    "cache": 0,
+    "cout": 0.02096256
+  },
+  "cout": 0.02096256,
+  "latenceMs": 71600,
+  "fournisseur": "Novita"
+}

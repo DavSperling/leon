@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:21:44.020Z",
+  "reponse": "## What is still open\n\n- **#216** : le webhook `/sync/hubspot/` ne vérifie pas la signature `X-HubSpot-Signature-v3` — c'est assigné à toi et bloquant pour la prod. Thomas est absent jeudi et vendredi : pas de mise en prod de la synchro avant lundi 23, et pas sans ce ticket ; si l'accès à la sandbox HubSpot te bloque, vois avec Camille [4][7].\n- **PR #217** : Thomas refuse la migration 0041 qui supprime des chantiers (en prod, un doublon peut porter des interventions, des photos, un dossier MPR). Il veut une commande de gestion à part, avec un `--dry-run` qui liste ce qu'elle supprimerait, et la liste à relire ensemble lundi [3].\n- Le déclenchement de la création du chantier est à revoir : Camille, appuyée par Hélène, veut qu'on ne crée le chantier qu'à l'acompte reçu, pas dès « gagné », sinon Yannick planifie des chantiers qui ne se font pas [8].\n- **#219** : le formulaire de devis du site refuse les numéros tapés avec des espaces, deux clients ont déjà appelé — pas urgent mais ça fait perdre des demandes [6].\n\n## What changed\n\n- **#213** (bouton « Photo plaque signalétique » dans l'appli poseurs) est fusionnée et partie en prod [5].\n\n## What you did\n\n- Réglé les doublons de chantiers de la synchro HubSpot : `hubspot_deal_id` unique + `get_or_create`, 17 doublons existants en dev traités, test de non-régression, PR #217 ouverte pour relecture par Thomas [1][3].\n- Fait le mapping de `type_travaux` vers `Chantier.type` : variantes de saisie normalisées sur les 364 deals, 14 « à préciser » pour les valeurs vides, et renommé `sync/hubspot.py` en `hubspot_deals.py`, poussé sur la PR #217 [2].",
+  "rendu": "## What is still open\n\n- **#216** : le webhook `/sync/hubspot/` ne vérifie pas la signature `X-HubSpot-Signature-v3` — c'est assigné à toi et bloquant pour la prod. Thomas est absent jeudi et vendredi : pas de mise en prod de la synchro avant lundi 23, et pas sans ce ticket ; si l'accès à la sandbox HubSpot te bloque, vois avec Camille [4][7].\n- **PR #217** : Thomas refuse la migration 0041 qui supprime des chantiers (en prod, un doublon peut porter des interventions, des photos, un dossier MPR). Il veut une commande de gestion à part, avec un `--dry-run` qui liste ce qu'elle supprimerait, et la liste à relire ensemble lundi [3].\n- Le déclenchement de la création du chantier est à revoir : Camille, appuyée par Hélène, veut qu'on ne crée le chantier qu'à l'acompte reçu, pas dès « gagné », sinon Yannick planifie des chantiers qui ne se font pas [8].\n- **#219** : le formulaire de devis du site refuse les numéros tapés avec des espaces, deux clients ont déjà appelé — pas urgent mais ça fait perdre des demandes [6].\n\n## What changed\n\n- **#213** (bouton « Photo plaque signalétique » dans l'appli poseurs) est fusionnée et partie en prod [5].\n\n## What you did\n\n- Réglé les doublons de chantiers de la synchro HubSpot : `hubspot_deal_id` unique + `get_or_create`, 17 doublons existants en dev traités, test de non-régression, PR #217 ouverte pour relecture par Thomas [1][3].\n- Fait le mapping de `type_travaux` vers `Chantier.type` : variantes de saisie normalisées sur les 364 deals, 14 « à préciser » pour les valeurs vides, et renommé `sync/hubspot.py` en `hubspot_deals.py`, poussé sur la PR #217 [2].",
+  "mesures": {
+    "mots": 252,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4615,
+    "sortie": 1377,
+    "reflexion": 884,
+    "cache": 0,
+    "cout": 0.00121476
+  },
+  "cout": 0.00121476,
+  "latenceMs": 11582,
+  "fournisseur": "River"
+}

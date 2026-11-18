@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:34.254Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif de la Saône est corrigé : les webhooks de commande ne décrémentent plus le stock, la synchro de nuit écrit désormais une valeur absolue, et le seuil d'alerte est passé de 5 à 3. La PR #87 est fusionnée, l'app a été redéployée, le stock Shopify de SAONE-CHENE-180 est remis à 0, et la Saône reste non disponible jusqu'au retour du 2 décembre, sans précommande.\n\n- [décision] Les webhooks ne touchent plus au stock, la synchro de nuit corrige seule, en valeur absolue, et le dédoublonnage a été retiré (source: t05)\n- [décision] Seuil d'alerte stock bas abaissé à 3 (source: t09)\n- [décision] Renommage de `syncStock` en `synchroniserStocks` et lint passé (source: t11)\n- [décision] Saône remise à 0, non remise en vente avant le 2 décembre et sans précommande (source: t15, t17)\n- [décision] Déploiement de la config pour retirer l'abonnement `orders/updated` (source: t19)\n- [en-cours] Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie ; la remise à 0 du stock laisse ces commandes en attente de traitement.",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif de la Saône est corrigé : les webhooks de commande ne décrémentent plus le stock, la synchro de nuit écrit désormais une valeur absolue, et le seuil d'alerte est passé de 5 à 3. La PR #87 est fusionnée, l'app a été redéployée, le stock Shopify de SAONE-CHENE-180 est remis à 0, et la Saône reste non disponible jusqu'au retour du 2 décembre, sans précommande.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [décision] Les webhooks ne touchent plus au stock, la synchro de nuit corrige seule, en valeur absolue, et le dédoublonnage a été retiré (source: t05)\n- [décision] Seuil d'alerte stock bas abaissé à 3 (source: t09)\n- [décision] Renommage de `syncStock` en `synchroniserStocks` et lint passé (source: t11)\n- [décision] Déploiement de la config pour retirer l'abonnement `orders/updated` (source: t19)\n- [en-cours] Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie ; la remise à 0 du stock laisse ces commandes en attente de traitement.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1104,
+    "decisions": 4,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3733,
+    "sortie": 331,
+    "reflexion": 14,
+    "cache": 512,
+    "cout": 0.00068943
+  },
+  "cout": 0.00068943,
+  "latenceMs": 3668,
+  "fournisseur": "Inferact vLLM"
+}

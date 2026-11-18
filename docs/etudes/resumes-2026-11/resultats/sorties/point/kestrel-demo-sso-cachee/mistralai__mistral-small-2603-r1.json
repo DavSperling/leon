@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:11.214Z",
+  "reponse": "## What you did\n\n- Tu as corrigé trois tests SAML flaky en remplaçant les `time.sleep` par `freezegun` pour figer le temps, ce qui a supprimé les échecs intermittents et accéléré la suite de tests. [1]\n- Tu as corrigé les problèmes de lint (ruff 0.8) et de typage (mypy) dans `kestrel/auth`, notamment en gérant les erreurs de type `None` et en nettoyant les imports. [1]\n- Tu as restructuré le fichier `saml_utils.py` (900 lignes) en trois modules (`assertions`, `metadata`, `bindings`) pour améliorer la maintenabilité, tout en gardant les imports existants via un shim. [1]\n- Tu as ouvert la PR #423 pour le cleanup (sans toucher à la PR #418), et préparé le terrain pour demain : le cache de replay Redis pour les assertion IDs, actuellement limité à un seul pod. [1]\n\n## What changed\n\n- La PR #418 (vérification des signatures SAML pour Fernhill SSO) a été **mergée par Maya Cohen** et sera déployée sur staging ce soir. [3]\n- La PR #423 (cleanup) a été ouverte, mais Tom Becker demande de la **séparer en deux PR** : une pour les corrections de lint/mypy, une autre pour le move du module, pour faciliter la revue. [4]\n- Le ticket #424 (timeout de l’export CSV pour Zest Grocers, >200k lignes) est pris en charge par Tom Becker, qui va déporter l’export en tâche asynchrone. [5]\n- Le ticket #426 (mise à jour de `cryptography` 43.0.1 → 43.0.3) est en cours via Dependabot. [6]\n\n## What is still open\n\n- **À faire demain** : implémenter le cache de replay Redis pour les assertion IDs, afin de couvrir plusieurs pods API (actuellement, le cache en mémoire ne couvre qu’un seul pod). [1]",
+  "rendu": "## What you did\n\n- Tu as corrigé trois tests SAML flaky en remplaçant les `time.sleep` par `freezegun` pour figer le temps, ce qui a supprimé les échecs intermittents et accéléré la suite de tests. [1]\n- Tu as corrigé les problèmes de lint (ruff 0.8) et de typage (mypy) dans `kestrel/auth`, notamment en gérant les erreurs de type `None` et en nettoyant les imports. [1]\n- Tu as restructuré le fichier `saml_utils.py` (900 lignes) en trois modules (`assertions`, `metadata`, `bindings`) pour améliorer la maintenabilité, tout en gardant les imports existants via un shim. [1]\n- Tu as ouvert la PR #423 pour le cleanup (sans toucher à la PR #418), et préparé le terrain pour demain : le cache de replay Redis pour les assertion IDs, actuellement limité à un seul pod. [1]\n\n## What changed\n\n- La PR #418 (vérification des signatures SAML pour Fernhill SSO) a été **mergée par Maya Cohen** et sera déployée sur staging ce soir. [3]\n- La PR #423 (cleanup) a été ouverte, mais Tom Becker demande de la **séparer en deux PR** : une pour les corrections de lint/mypy, une autre pour le move du module, pour faciliter la revue. [4]\n- Le ticket #424 (timeout de l’export CSV pour Zest Grocers, >200k lignes) est pris en charge par Tom Becker, qui va déporter l’export en tâche asynchrone. [5]\n- Le ticket #426 (mise à jour de `cryptography` 43.0.1 → 43.0.3) est en cours via Dependabot. [6]\n\n## What is still open\n\n- **À faire demain** : implémenter le cache de replay Redis pour les assertion IDs, afin de couvrir plusieurs pods API (actuellement, le cache en mémoire ne couvre qu’un seul pod). [1]",
+  "mesures": {
+    "mots": 266,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5983,
+    "sortie": 1425,
+    "reflexion": 950,
+    "cache": 1408,
+    "cout": 0.001718607
+  },
+  "cout": 0.001718607,
+  "latenceMs": 10667,
+  "fournisseur": "Mistral"
+}

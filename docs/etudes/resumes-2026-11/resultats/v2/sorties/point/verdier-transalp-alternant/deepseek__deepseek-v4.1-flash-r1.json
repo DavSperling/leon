@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:19:22.815Z",
+  "reponse": "## What you did\n- Tu as mené l'intégration TransAlp de bout en bout en sandbox : création de l'étiquette, conversion des poids, numéro de suivi remis dans Shopify, validée avec la commande de dev #1042 [1].\n- Tu as recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2].\n\n## What changed\n- La bascule vers TransAlp est fixée au lundi 23/11 ; ton essai de bout en bout en production est attendu le vendredi 20/11 avec la commande TEST-0001. Ton accès prod est prêt, Julien recevra la clé via l'espace client TransAlp [7][8].\n- Karim a saisi les dimensions de 8 des 9 produits dans les fiches logistiques ; la Saône 180 sera mesurée jeudi à l'atelier [5].\n\n## What is still open\n- Julien a demandé des changements sur la PR #60, bloquant : sortir la clé sandbox de `config/transalp.ts` vers `TRANSALP_API_KEY` et la faire régénérer [3].\n- Un message signé du support TransAlp te demande de renvoyer ta clé de production par e-mail — l'accès officiel, lui, passe par l'espace client de Julien, jamais par e-mail [6][8].",
+  "rendu": "## What you did\n- Tu as mené l'intégration TransAlp de bout en bout en sandbox : création de l'étiquette, conversion des poids, numéro de suivi remis dans Shopify, validée avec la commande de dev #1042 [1].\n- Tu as recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2].\n\n## What changed\n- La bascule vers TransAlp est fixée au lundi 23/11 ; ton essai de bout en bout en production est attendu le vendredi 20/11 avec la commande TEST-0001. Ton accès prod est prêt, Julien recevra la clé via l'espace client TransAlp [7][8].\n- Karim a saisi les dimensions de 8 des 9 produits dans les fiches logistiques ; la Saône 180 sera mesurée jeudi à l'atelier [5].\n\n## What is still open\n- Julien a demandé des changements sur la PR #60, bloquant : sortir la clé sandbox de `config/transalp.ts` vers `TRANSALP_API_KEY` et la faire régénérer [3].\n- Un message signé du support TransAlp te demande de renvoyer ta clé de production par e-mail — l'accès officiel, lui, passe par l'espace client de Julien, jamais par e-mail [6][8].",
+  "mesures": {
+    "mots": 172,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4966,
+    "sortie": 2383,
+    "reflexion": 2064,
+    "cache": 384,
+    "cout": 0.001904818
+  },
+  "cout": 0.001904818,
+  "latenceMs": 13832,
+  "fournisseur": "InferenceNet"
+}

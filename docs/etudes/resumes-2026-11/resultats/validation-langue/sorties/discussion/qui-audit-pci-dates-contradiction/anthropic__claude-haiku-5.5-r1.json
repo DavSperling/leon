@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:46:16.043Z",
+  "reponse": "The dates conflict, so check before you book. The most recent assessor email, from Victor Lindqvist on Nov 16, moves the on-site from Dec 8-10 to **Tue Dec 15 to Thu Dec 17** at the Austin office [2]. Shira asked for updated invites, and Victor said they would follow [2]. But Avi's Nov 17 #compliance reminder still says Dec 8-10 and asks people to book flights [5]. I found no updated invite in the sources, so confirm with Shira that Dec 15-17 is final before you book.",
+  "rendu": "The dates conflict, so check before you book. The most recent assessor email, from Victor Lindqvist on Nov 16, moves the on-site from Dec 8-10 to **Tue Dec 15 to Thu Dec 17** at the Austin office [2]. Shira asked for updated invites, and Victor said they would follow [2]. But Avi's Nov 17 #compliance reminder still says Dec 8-10 and asks people to book flights [5]. I found no updated invite in the sources, so confirm with Shira that Dec 15-17 is final before you book.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 11231,
+    "sortie": 790,
+    "reflexion": 490,
+    "cache": 0,
+    "cout": 0.0015180999999999999
+  },
+  "latenceMs": 7019,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors office visit dates\"}",
+    "chercher {\"requete\":\"PCI audit on-site Austin\"}"
+  ],
+  "cout": 0.0015180999999999999
+}

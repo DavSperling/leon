@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:21:32.510Z",
+  "reponse": "## Où j'en suis\nThe polling implementation was merged in PR #409: it syncs HubSpot companies with ARR > 0 every 15 minutes and handles the CRM search 10k-result limit. However, CI’s `test_accounts_table_shows_owner` e2e check is failing, so the change may not be deployed yet.\n\n- [en-cours] Fix `tests/e2e/test_admin_accounts.py`: the fixture includes a trial company excluded by the ARR filter.\n- [prochaine-étape] Decide whether to give the third fixture company ARR > 0 or change the expected row count to 2; then rerun checks.\n- [prochaine-étape] Ask Noa to add `HUBSPOT_TOKEN` to Secrets Manager for staging and production.\n- [essai-raté] Webhook subscription registration failed: HubSpot does not support managing subscriptions with a private-app token.",
+  "rendu": "## Où j'en suis\nThe polling implementation was merged in PR #409: it syncs HubSpot companies with ARR > 0 every 15 minutes and handles the CRM search 10k-result limit. However, CI’s `test_accounts_table_shows_owner` e2e check is failing, so the change may not be deployed yet.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix `tests/e2e/test_admin_accounts.py`: the fixture includes a trial company excluded by the ARR filter.\n- [prochaine-étape] Decide whether to give the third fixture company ARR > 0 or change the expected row count to 2; then rerun checks.\n- [prochaine-étape] Ask Noa to add `HUBSPOT_TOKEN` to Secrets Manager for staging and production.\n- [essai-raté] Webhook subscription registration failed: HubSpot does not support managing subscriptions with a private-app token.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 942,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3330,
+    "sortie": 192,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000512175
+  },
+  "cout": 0.000512175,
+  "latenceMs": 2712,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:24:26.248Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit et la PR #94 est ouverte. Il applique les remises en une seule opération en masse, testée sur la boutique de dev, et la mise en ligne est programmée pour le mercredi 13 janvier 2027 à 8h00. Le script de retour aux prix d'origine reste à faire, en décembre.\n\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre.\n- [prochaine-étape] Vérifier sur la boutique de dev la veille (`pnpm soldes:repetition`).\n- [prochaine-étape] Régénérer le CSV des prix soldes pour la newsletter du 6 janvier si des prix changent.\n- [essai-raté] Un appel par produit a atteint la limite de débit de l'API Shopify : 73 produits non mis à jour, boutique de dev à moitié soldée. Remplacé par une opération en masse.\n- [décision] Remises : -20 % sur Rhône, -30 % sur fins de série, rien sur la Saône (source: t05)\n- [décision] Prix finissant par 9, arrondis à l'euro inférieur (source: t07)\n- [décision] Écriture par opération en masse (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 8h00, prix barrés non visibles avant l'ouverture (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit et la PR #94 est ouverte. Il applique les remises en une seule opération en masse, testée sur la boutique de dev, et la mise en ligne est programmée pour le mercredi 13 janvier 2027 à 8h00. Le script de retour aux prix d'origine reste à faire, en décembre.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre.\n- [prochaine-étape] Vérifier sur la boutique de dev la veille (`pnpm soldes:repetition`).\n- [prochaine-étape] Régénérer le CSV des prix soldes pour la newsletter du 6 janvier si des prix changent.\n- [essai-raté] Un appel par produit a atteint la limite de débit de l'API Shopify : 73 produits non mis à jour, boutique de dev à moitié soldée. Remplacé par une opération en masse.\n- [décision] Remises : -20 % sur Rhône, -30 % sur fins de série, rien sur la Saône (source: t05)\n- [décision] Prix finissant par 9, arrondis à l'euro inférieur (source: t07)\n- [décision] Écriture par opération en masse (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 8h00, prix barrés non visibles avant l'ouverture (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1276,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5668,
+    "sortie": 1827,
+    "reflexion": 1340,
+    "cache": 0,
+    "cout": 0.0014803
+  },
+  "cout": 0.0014803,
+  "latenceMs": 8997,
+  "fournisseur": "Claude Platform on AWS"
+}

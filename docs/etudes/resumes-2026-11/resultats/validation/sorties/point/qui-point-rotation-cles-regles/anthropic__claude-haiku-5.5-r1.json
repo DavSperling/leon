@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:57.600Z",
+  "reponse": "## What is still open\n\n- Elad approved #1412 on one condition: an audit event per batch (id range, count, from/to KEK), not just the final summary. Avi wants it merged by Monday 23/11 [3].\n- The prod window is Tue 24/11, 22:00–23:30 IL time, with Elad on call with you. The fallback is Thu 26/11, since the change freeze starts Tue 1/12 [6].\n- Shira needs the audit log export of the prod run and the signed change ticket by Wed 25/11, for the on-site [5].\n- The runbook's on-call entry is still a placeholder [2].\n\n## What changed\n\n- Ardent's assessor now wants the audit log export and a signed change ticket, not screenshots [5].\n\n## What you did\n\n- Built the KEK rotation job in quillon/core and opened #1412. The staging dry run passed with 1,204,880 tokens and 0 failures, after legacy v1 envelopes were mapped explicitly to `vault-kek-2022`. Tests pass (212) [1][3].\n- Kept the old KEKs decrypt-only for 30 days, with deletion left out of the job for Shira to decide [1].\n- Wrote `docs/runbooks/vault-kek-rotation.md`, covering the prod steps and the rollback [2].",
+  "rendu": "## What is still open\n\n- Elad approved #1412 on one condition: an audit event per batch (id range, count, from/to KEK), not just the final summary. Avi wants it merged by Monday 23/11 [3].\n- The prod window is Tue 24/11, 22:00–23:30 IL time, with Elad on call with you. The fallback is Thu 26/11, since the change freeze starts Tue 1/12 [6].\n- Shira needs the audit log export of the prod run and the signed change ticket by Wed 25/11, for the on-site [5].\n- The runbook's on-call entry is still a placeholder [2].\n\n## What changed\n\n- Ardent's assessor now wants the audit log export and a signed change ticket, not screenshots [5].\n\n## What you did\n\n- Built the KEK rotation job in quillon/core and opened #1412. The staging dry run passed with 1,204,880 tokens and 0 failures, after legacy v1 envelopes were mapped explicitly to `vault-kek-2022`. Tests pass (212) [1][3].\n- Kept the old KEKs decrypt-only for 30 days, with deletion left out of the job for Shira to decide [1].\n- Wrote `docs/runbooks/vault-kek-rotation.md`, covering the prod steps and the rollback [2].",
+  "mesures": {
+    "mots": 177,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7704,
+    "sortie": 2566,
+    "reflexion": 2138,
+    "cache": 0,
+    "cout": 0.0020534
+  },
+  "cout": 0.0020534,
+  "latenceMs": 18162,
+  "fournisseur": "Amazon Bedrock"
+}

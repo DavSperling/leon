@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:40:02.915Z",
+  "reponse": "## Where I am\nDashboards v2 keyboard move/resize and the focus ring are implemented on `tom/dashboard-keyboard` (commit `8f1a2c7`) in PR #423, which is open with Priya requested as reviewer. PR #418, the grid itself, is merged, and Priya's two follow-up comments are what #423 addresses. `dashboards_v2` is on for zest-grocers on staging only; production is untouched. (source: ses-db-4, d4-05, src-pr418)\n\n- [en-cours] PR #423 (keyboard move/resize, focus ring) is open, waiting for Priya's review. (source: d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging. (source: d4-06)\n- [prochaine-étape] Tom flips the production `dashboards_v2` flag himself on the morning of the 24th, the day of the Zest demo. (source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout applied every move twice and broke mouse drag, so it was removed. (source: d4-02)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16). (source: b2-01)\n- [décision] Keyboard handling is our own `useGridKeyboard()` on the layout state, with no dnd-kit. (source: d4-04)\n- [décision] ResizeObserver replaces container queries, so there is only one sizing system. (source: b2-02)\n- [décision] Keep recharts; the visx migration (#401) is closed. (source: c3-03)\n- [décision] Legacy v1 dashboards stay available behind the flag until January; nothing is removed now. (source: b2-04)",
+  "rendu": "- [en-cours] PR #423 (keyboard move/resize, focus ring) is open, waiting for Priya's review. (de: agent; source: d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging. (de: toi; source: d4-06)\n- [prochaine-étape] Tom flips the production `dashboards_v2` flag himself on the morning of the 24th, the day of the Zest demo. (de: toi; source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout applied every move twice and broke mouse drag, so it was removed. (de: agent; source: d4-02)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16). (de: agent; source: b2-01)\n- [décision] Keyboard handling is our own `useGridKeyboard()` on the layout state, with no dnd-kit. (de: toi; source: d4-04)\n- [décision] ResizeObserver replaces container queries, so there is only one sizing system. (de: toi; source: b2-02)\n- [décision] Keep recharts; the visx migration (#401) is closed. (de: toi; source: c3-03)\n- [décision] Legacy v1 dashboards stay available behind the flag until January; nothing is removed now. (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1102,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6908,
+    "sortie": 2455,
+    "reflexion": 1859,
+    "cache": 0,
+    "cout": 0.0019183
+  },
+  "cout": 0.0019183,
+  "latenceMs": 11321,
+  "fournisseur": "Claude Platform on AWS"
+}

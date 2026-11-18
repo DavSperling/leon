@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:57.837Z",
+  "reponse": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp (sandbox) sur la branche hugo/transalp-etiquettes : client avec OAuth2 `client_credentials` (jeton en mémoire), choix Transporteur (69/75 → TransAlp, >30 kg → Rapidis partout, sinon Rapidis), tests 18/18 et lint OK, PR draft maison-verdier/boutique#91 ouverte pour relecture par Julien.\n\n- [en-cours] PR draft #91 en attente de relecture de Julien ; aucun passage en production (Julien décide)\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production (la Zebra de l'entrepôt n'imprime que ça) ; en attendant PDF\n- [prochaine-étape] Après validation ZPL, préparer le passage production et la sortie de draft de la PR\n- [essai-raté] Clé API en `X-Api-Key` → 401 ; l'API exige un échange OAuth2 contre jeton valable 1 h\n- [essai-raté] `--format ZPL` → 400 : ZPL non disponible en sandbox\n- [essai-raté] Fixture de test avec code postal en nombre → `startsWith` plantait en silence dans le `try` du webhook ; `codePostal` typé en string partout\n- [décision] Résiliation de Rapidis refusée : Rapidis reste en secours au moins jusqu'à la fin des soldes, et tout colis >30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Jeton OAuth gardé en mémoire, pas en base (source: t05)\n- [question] Disponibilité du ZPL en production chez TransAlp à confirmer",
+  "rendu": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp (sandbox) sur la branche hugo/transalp-etiquettes : client avec OAuth2 `client_credentials` (jeton en mémoire), choix Transporteur (69/75 → TransAlp, >30 kg → Rapidis partout, sinon Rapidis), tests 18/18 et lint OK, PR draft maison-verdier/boutique#91 ouverte pour relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR draft #91 en attente de relecture de Julien ; aucun passage en production (Julien décide)\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production (la Zebra de l'entrepôt n'imprime que ça) ; en attendant PDF\n- [prochaine-étape] Après validation ZPL, préparer le passage production et la sortie de draft de la PR\n- [essai-raté] Clé API en `X-Api-Key` → 401 ; l'API exige un échange OAuth2 contre jeton valable 1 h\n- [essai-raté] `--format ZPL` → 400 : ZPL non disponible en sandbox\n- [essai-raté] Fixture de test avec code postal en nombre → `startsWith` plantait en silence dans le `try` du webhook ; `codePostal` typé en string partout",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1143,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3365,
+    "sortie": 412,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00071075
+  },
+  "cout": 0.00071075,
+  "latenceMs": 2833,
+  "fournisseur": "Together"
+}

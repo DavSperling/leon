@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:09.908Z",
+  "reponse": "## Où j'en suis\n\nLe polling HubSpot remplace les webhooks : l'abonnement API est refusé avec un token d'app privée (401), donc #405 a été fermée comme « Superseded by polling approach ». Sur `daniel/hubspot-owner-sync`, le job `hubspot_sync_companies` tourne toutes les 15 min via la recherche CRM, avec pagination par fenêtres pour dépasser la limite de 10 000 résultats, résolution des owners via `/crm/v3/owners` (cache 1 h), cursor stocké en base. Le filtre `arr GT 0` est appliqué dans la requête, donc les trials ne sont jamais récupérés ; les comptes trial déjà rattachés à un owner par un ancien import manuel n'ont pas été nettoyés. Commits 8b3e6f1, 2d90ac4, ae47c15. PR #409 ouverte avec automerge squash, mais elle reste ouverte : le check e2e `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` échoue (3 lignes attendues avec owner, 2 obtenues), donc l'automerge ne s'est pas déclenché.\n\n- [en-cours] Correctif du test e2e `test_admin_accounts` : la fixture contient une company trial avec owner que le filtre `arr > 0` exclut désormais\n- [prochaine-étape] Modifier la fixture (donner un ARR > 0 à la troisième company, ou attendre 2 lignes), relancer les checks, fusionner #409\n- [essai-raté] POST /webhooks/v3/{appId}/subscriptions : 401, un token d'app privée ne peut pas gérer les subscriptions webhook ; abandon des webhooks au profit du polling\n- [essai-raté] Pagination directe de la recherche CRM au-delà de 10 000 résultats : 400 « paging beyond 10000 results is not supported », contourné par le fenêtrage sur `hs_lastmodifieddate`\n- [question] Faut-il purger les owner/ARR historiques des comptes trial, laissés en place après l'ajout du filtre ?\n- [décision] Passer au polling toutes les 15 min et fermer #405 (source: t04)\n- [décision] Ne synchroniser que les companies avec ARR > 0, exclure les trials (source: t10)\n- [décision] Stocker le token dans Secrets Manager pour staging/prod, Noa sollicité (source: t12)",
+  "rendu": "## Où j'en suis\nLe polling HubSpot remplace les webhooks : l'abonnement API est refusé avec un token d'app privée (401), donc #405 a été fermée comme « Superseded by polling approach ». Sur `daniel/hubspot-owner-sync`, le job `hubspot_sync_companies` tourne toutes les 15 min via la recherche CRM, avec pagination par fenêtres pour dépasser la limite de 10 000 résultats, résolution des owners via `/crm/v3/owners` (cache 1 h), cursor stocké en base. Le filtre `arr GT 0` est appliqué dans la requête, donc les trials ne sont jamais récupérés ; les comptes trial déjà rattachés à un owner par un ancien import manuel n'ont pas été nettoyés. Commits 8b3e6f1, 2d90ac4, ae47c15. PR #409 ouverte avec automerge squash, mais elle reste ouverte : le check e2e `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` échoue (3 lignes attendues avec owner, 2 obtenues), donc l'automerge ne s'est pas déclenché.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Correctif du test e2e `test_admin_accounts` : la fixture contient une company trial avec owner que le filtre `arr > 0` exclut désormais",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1247,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3470,
+    "sortie": 617,
+    "reflexion": 87,
+    "cache": 0,
+    "cout": 0.0008907
+  },
+  "cout": 0.0008907,
+  "latenceMs": 10914,
+  "fournisseur": "Makora"
+}

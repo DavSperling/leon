@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:27:43.889Z",
+  "reponse": "## Où j'en suis\nLe login SAML réel fonctionne sur le staging Fernhill, avec création JIT en rôle `viewer`. Le mapping des groupes et le RelayState court sont dans la PR #421, toujours ouverte ; la PR #415 est fusionnée. Les tests complets passent (1 301 réussis, 3 ignorés). (source: ses-sso-3, kestrel-analytics/platform#421, kestrel-analytics/platform#415)\n\n- [en-cours] Attendre que l’IT Fernhill ajoute la claim `groups` ; le mapping `Fernhill-Kestrel-Admins` → `admin` est configuré. (source: ses-sso-3)\n- [prochaine-étape] Après ajout de la claim, vérifier le mapping avec un compte admin, puis préparer la démo de jeudi à 10 h, heure de New York. (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Le premier login SP-initié échouait car le RelayState dépassait la limite de 80 octets imposée par ADFS ; le stockage Redis avec identifiant opaque court corrige le problème. (source: ses-sso-3, s3-02, 6d0e2b8)\n- [décision] Le rôle par défaut reste `viewer` et le login SP-initié reste activé, en attendant la discussion de Maya avec Fernhill. (source: s3-07)",
+  "rendu": "## Où j'en suis\nLe login SAML réel fonctionne sur le staging Fernhill, avec création JIT en rôle `viewer`. Le mapping des groupes et le RelayState court sont dans la PR #421, toujours ouverte ; la PR #415 est fusionnée. Les tests complets passent (1 301 réussis, 3 ignorés). (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#421, kestrel-analytics/platform#415)\n\n- [en-cours] Attendre que l’IT Fernhill ajoute la claim `groups` ; le mapping `Fernhill-Kestrel-Admins` → `admin` est configuré. (de: agent; source: ses-sso-3)\n- [prochaine-étape] Après ajout de la claim, vérifier le mapping avec un compte admin, puis préparer la démo de jeudi à 10 h, heure de New York. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Le premier login SP-initié échouait car le RelayState dépassait la limite de 80 octets imposée par ADFS ; le stockage Redis avec identifiant opaque court corrige le problème. (de: équipe, agent; source: ses-sso-3, s3-02, 6d0e2b8)\n- [décision] Le rôle par défaut reste `viewer` et le login SP-initié reste activé, en attendant la discussion de Maya avec Fernhill. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1148,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4426,
+    "sortie": 442,
+    "reflexion": 122,
+    "cache": 0,
+    "cout": 0.000774175
+  },
+  "cout": 0.000774175,
+  "latenceMs": 7979,
+  "fournisseur": "OpenAI"
+}

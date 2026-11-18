@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:52.889Z",
+  "reponse": "Ein bestätigter Liefertermin von Tai Shan für die Ersatzschalter steht noch aus [3]. Tai Shan hat die Reklamation bestätigt und angekündigt, den Lieferplan für die Ersatzteile „so bald wie möglich\" nachzureichen [2]. In der Planung wird ersatzweise mit sechs Wochen ab Bestellung gerechnet, was ausdrücklich nur eine Annahme und nicht abgestimmt ist [5]. Eine Eskalation an den Sales Director ist für den Fall vorgesehen, dass bis Freitag keine Antwort kommt [3]. Ein Termin 27.11.2026 betrifft lediglich Kohlebürsten, nicht die Ersatzschalter [4].",
+  "rendu": "Ein bestätigter Liefertermin von Tai Shan für die Ersatzschalter steht noch aus [3]. Tai Shan hat die Reklamation bestätigt und angekündigt, den Lieferplan für die Ersatzteile „so bald wie möglich\" nachzureichen [2]. In der Planung wird ersatzweise mit sechs Wochen ab Bestellung gerechnet, was ausdrücklich nur eine Annahme und nicht abgestimmt ist [5]. Eine Eskalation an den Sales Director ist für den Fall vorgesehen, dass bis Freitag keine Antwort kommt [3]. Ein Termin 27.11.2026 betrifft lediglich Kohlebürsten, nicht die Ersatzschalter [4].",
+  "mesures": {
+    "mots": 81,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1199,
+    "sortie": 231,
+    "reflexion": 71,
+    "cache": 512,
+    "cout": 0.000205741
+  },
+  "cout": 0.000205741,
+  "latenceMs": 3407,
+  "fournisseur": "InferenceNet"
+}

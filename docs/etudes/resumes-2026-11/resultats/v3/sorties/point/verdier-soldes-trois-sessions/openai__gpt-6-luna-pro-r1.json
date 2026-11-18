@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:56:07.167Z",
+  "reponse": "## What is still open\n- La PR #63 attend encore la relecture de Hugo. Il signale que la Saône est en rupture jusqu’en janvier ; Claire précise qu’elle ne doit pas être soldée, pour protéger les précommandes au plein prix. Sophie a aussi besoin des prix dans Shopify le lundi 30 novembre pour ses visuels, alors que l’application est prévue le 6 janvier : il faut régler ces deux points avant la suite. [4][10][11][1]\n- Sophie demande que le flux Google Shopping soit relancé après l’application des soldes, pour éviter des prix différents entre les annonces et le site. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur mobile ; c’est à corriger avant le shooting du 2 décembre. [6][11]\n\n## What changed\n- Le ticket #59 sur l’ajout et le retrait automatique du tag « soldes » a été relu et fusionné. [7]",
+  "rendu": "## What is still open\n- La PR #63 attend encore la relecture de Hugo. Il signale que la Saône est en rupture jusqu’en janvier ; Claire précise qu’elle ne doit pas être soldée, pour protéger les précommandes au plein prix. Sophie a aussi besoin des prix dans Shopify le lundi 30 novembre pour ses visuels, alors que l’application est prévue le 6 janvier : il faut régler ces deux points avant la suite. [4][10][11][1]\n- Sophie demande que le flux Google Shopping soit relancé après l’application des soldes, pour éviter des prix différents entre les annonces et le site. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur mobile ; c’est à corriger avant le shooting du 2 décembre. [6][11]\n\n## What changed\n- Le ticket #59 sur l’ajout et le retrait automatique du tag « soldes » a été relu et fusionné. [7]",
+  "mesures": {
+    "mots": 138,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 17127,
+    "sortie": 3385,
+    "reflexion": 2894,
+    "cache": 8988,
+    "cout": 0.00259628
+  },
+  "cout": 0.00259628,
+  "latenceMs": 31289,
+  "fournisseur": "Azure"
+}

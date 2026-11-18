@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:46.484Z",
+  "reponse": "## Où j'en suis\nThe work is parked at the end of today's session: the grid PR #418 is merged, the follow-up (keyboard move/resize + focus ring) is on branch tom/dashboard-keyboard as open PR #423 with commit 8f1a2c7 and 11 green tests, dashboards_v2 is switched on for zest-grocers on staging (production untouched), and nothing visx remains anywhere — #401 was closed for good. (source: ses-db-4, ses-db-3, src-pr418, src-pr401)\n\n- [en-cours] PR #423 is open and awaiting Priya's review. (source: ses-db-4)\n- [prochaine-étape] Before the Zest demo on Tuesday the 24th: Priya rehearses with the staging flag on; Tom flips the production flag himself that morning. (source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both listen to the same events, so moves were applied twice and mouse drags fired two layout changes — dropped, no dnd-kit. (source: d4-02, d4-04)\n- [essai-raté] CSS container queries: ignored on Zest's iPads (iOS 15 < Safari 16), replaced by a ResizeObserver hook. (source: b2-01, b2-03)\n- [décision] No dnd-kit: a keyboard handler of our own on top of the layout state. (source: d4-04)\n- [décision] Keep recharts, no visx — #401 closed, no second chart lib, nobody rewrites 9 charts. (source: c3-03, src-pr401)\n- [décision] dashboards_v2 enabled only for the Zest workspace; the old dashboards stay available behind the flag until January, nothing removed now. (source: b2-04, src-pr418)",
+  "rendu": "## Où j'en suis\nThe work is parked at the end of today's session: the grid PR #418 is merged, the follow-up (keyboard move/resize + focus ring) is on branch tom/dashboard-keyboard as open PR #423 with commit 8f1a2c7 and 11 green tests, dashboards_v2 is switched on for zest-grocers on staging (production untouched), and nothing visx remains anywhere — #401 was closed for good. (de: équipe, agent; source: ses-db-4, ses-db-3, src-pr418, src-pr401)\n\n- [en-cours] PR #423 is open and awaiting Priya's review. (de: agent; source: ses-db-4)\n- [prochaine-étape] Before the Zest demo on Tuesday the 24th: Priya rehearses with the staging flag on; Tom flips the production flag himself that morning. (de: toi; source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both listen to the same events, so moves were applied twice and mouse drags fired two layout changes — dropped, no dnd-kit. (de: toi, agent; source: d4-02, d4-04)\n- [essai-raté] CSS container queries: ignored on Zest's iPads (iOS 15 < Safari 16), replaced by a ResizeObserver hook. (de: agent; source: b2-01, b2-03)\n- [décision] No dnd-kit: a keyboard handler of our own on top of the layout state. (de: toi; source: d4-04)\n- [décision] Keep recharts, no visx — #401 closed, no second chart lib, nobody rewrites 9 charts. (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] dashboards_v2 enabled only for the Zest workspace; the old dashboards stay available behind the flag until January, nothing removed now. (de: toi, équipe; source: b2-04, src-pr418)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1554,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5298,
+    "sortie": 1165,
+    "reflexion": 703,
+    "cache": 0,
+    "cout": 0.00106792
+  },
+  "cout": 0.00106792,
+  "latenceMs": 11687,
+  "fournisseur": "Xiaomi"
+}

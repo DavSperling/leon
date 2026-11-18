@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:26:09.523Z",
+  "reponse": "## Où j'en suis\nBranche `hugo/transalp-etiquettes` : client TransAlp sandbox en place (OAuth2 `client_credentials`, jeton en mémoire), étiquette PDF, et `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, tout le reste et les colis > 30 kg vers Rapidis. Tests (18/18) et lint OK, commits `b8d2e19` et `47fa0c6`, PR maison-verdier/boutique#91 ouverte en brouillon pour relecture par Julien.\n\n- [en-cours] PR maison-verdier/boutique#91 en attente de relecture par Julien, sandbox uniquement\n- [prochaine-étape] Demander à Marc si le ZPL est dispo en prod (la Zebra n'imprime que ça) ; ne brancher la prod que quand Julien le décidera\n- [essai-raté] Clé en en-tête `X-Api-Key` → 401 : l'API exige un jeton OAuth2 ; ZPL en sandbox → 400 `unsupported_format`, le format ZPL reste un paramètre prêt mais inactif\n- [essai-raté] Fixture code postal en nombre : `startsWith` plantait silencieusement dans le `try` du webhook, `codePostal` typé `string` partout\n- [question] Le ZPL est-il disponible en production ?\n- [décision] Rapidis n'est pas résilié : il reste en secours jusqu'à la fin des soldes, et tout colis > 30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Pas de mise en production maintenant, c'est Julien qui décidera quand (source: t15)",
+  "rendu": "## Où j'en suis\nBranche `hugo/transalp-etiquettes` : client TransAlp sandbox en place (OAuth2 `client_credentials`, jeton en mémoire), étiquette PDF, et `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, tout le reste et les colis > 30 kg vers Rapidis. Tests (18/18) et lint OK, commits `b8d2e19` et `47fa0c6`, PR maison-verdier/boutique#91 ouverte en brouillon pour relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR maison-verdier/boutique#91 en attente de relecture par Julien, sandbox uniquement\n- [prochaine-étape] Demander à Marc si le ZPL est dispo en prod (la Zebra n'imprime que ça) ; ne brancher la prod que quand Julien le décidera\n- [essai-raté] Clé en en-tête `X-Api-Key` → 401 : l'API exige un jeton OAuth2 ; ZPL en sandbox → 400 `unsupported_format`, le format ZPL reste un paramètre prêt mais inactif\n- [essai-raté] Fixture code postal en nombre : `startsWith` plantait silencieusement dans le `try` du webhook, `codePostal` typé `string` partout\n- [question] Le ZPL est-il disponible en production ?\n- [décision] Rapidis n'est pas résilié : il reste en secours jusqu'à la fin des soldes, et tout colis > 30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Pas de mise en production maintenant, c'est Julien qui décidera quand (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1382,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3738,
+    "sortie": 763,
+    "reflexion": 345,
+    "cache": 768,
+    "cout": 0.0019585248
+  },
+  "cout": 0.0019585248,
+  "latenceMs": 15840,
+  "fournisseur": "Xiaomi"
+}

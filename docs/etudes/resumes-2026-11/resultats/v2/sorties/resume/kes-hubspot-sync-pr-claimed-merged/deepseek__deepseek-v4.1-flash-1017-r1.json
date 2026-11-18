@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:21:18.336Z",
+  "reponse": "## Où j'en suis\nHubSpot owner + ARR sync for the admin accounts page: the webhook subscription call was refused (401), so the approach moved to polling; #405 was closed and #409 opened with auto-merge and squash. Polling (15 min, windowed paging past the 10k search cap, ARR > 0 only) is committed, but #409 is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails, so auto-merge did not fire.\n\n- [en-cours] #409 open; e2e fails because the fixture's trial company is now skipped by the arr > 0 filter\n- [prochaine-étape] fix the e2e fixture (give the third company ARR > 0 or expect 2 rows), get checks green, then Noa adds HUBSPOT_TOKEN to Secrets Manager for staging/prod\n- [essai-raté] managing webhook subscriptions with the private app token: 401, not supported for private apps\n- [décision] poll every 15 min instead of webhooks, close #405 (source: t04)\n- [décision] sync only companies with arr > 0, skip trials entirely (source: t10)\n- [décision] token to Secrets Manager via Noa, open the PR with auto-merge (source: t12)",
+  "rendu": "## Où j'en suis\nHubSpot owner + ARR sync for the admin accounts page: the webhook subscription call was refused (401), so the approach moved to polling; #405 was closed and #409 opened with auto-merge and squash. Polling (15 min, windowed paging past the 10k search cap, ARR > 0 only) is committed, but #409 is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails, so auto-merge did not fire.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] #409 open; e2e fails because the fixture's trial company is now skipped by the arr > 0 filter\n- [prochaine-étape] fix the e2e fixture (give the third company ARR > 0 or expect 2 rows), get checks green, then Noa adds HUBSPOT_TOKEN to Secrets Manager for staging/prod\n- [essai-raté] managing webhook subscriptions with the private app token: 401, not supported for private apps\n- [décision] poll every 15 min instead of webhooks, close #405 (source: t04)\n- [décision] sync only companies with arr > 0, skip trials entirely (source: t10)\n- [décision] token to Secrets Manager via Noa, open the PR with auto-merge (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1251,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3572,
+    "sortie": 1288,
+    "reflexion": 982,
+    "cache": 0,
+    "cout": 0.0011798
+  },
+  "cout": 0.0011798,
+  "latenceMs": 7504,
+  "fournisseur": "Cohere"
+}

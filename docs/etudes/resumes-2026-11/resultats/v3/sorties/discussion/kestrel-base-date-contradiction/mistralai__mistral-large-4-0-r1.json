@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:09:10.670Z",
+  "reponse": "The upgrade has been rescheduled: the production cutover of the main database from Postgres 13 to Postgres 17 is now **Saturday, December 5, 2026, 02:00–05:00 UTC** [2]. This was approved by Maya Cohen [2] and replaces the earlier plan of Saturday Nov 21, 02:00–05:00 UTC announced in #eng-announce [3], which was postponed after the Nov 12 incident and ahead of the Fernhill go-live on Dec 1 [5].\n\nKey dates for your customer notice and support macro, per ticket KES-398 (which is now the reference for the window, since the Notion runbook isn't updated yet) [2]:\n- Customer notice (status page + in-app banner): **Saturday, Nov 28**\n- Migration/schema freeze: from **Thursday, Dec 3**\n- Staging rehearsal: **Friday, Nov 27**\n- Maintenance window: **Saturday, Dec 5, 02:00–05:00 UTC**",
+  "rendu": "The upgrade has been rescheduled: the production cutover of the main database from Postgres 13 to Postgres 17 is now **Saturday, December 5, 2026, 02:00–05:00 UTC** [2]. This was approved by Maya Cohen [2] and replaces the earlier plan of Saturday Nov 21, 02:00–05:00 UTC announced in #eng-announce [3], which was postponed after the Nov 12 incident and ahead of the Fernhill go-live on Dec 1 [5].\n\nKey dates for your customer notice and support macro, per ticket KES-398 (which is now the reference for the window, since the Notion runbook isn't updated yet) [2]:\n- Customer notice (status page + in-app banner): **Saturday, Nov 28**\n- Migration/schema freeze: from **Thursday, Dec 3**\n- Staging rehearsal: **Friday, Nov 27**\n- Maintenance window: **Saturday, Dec 5, 02:00–05:00 UTC**",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17374,
+    "sortie": 638,
+    "reflexion": 293,
+    "cache": 1280,
+    "cout": 0.01396472
+  },
+  "latenceMs": 24688,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window scheduled date\"}",
+    "chercher {\"requete\":\"mise à niveau base de données fenêtre de maintenance planifiée reportée\"}",
+    "chercher {\"requete\":\"migration base de données jour J heure maintenance clients à prévenir\"}",
+    "chercher {\"requete\":\"database migration postponed rescheduled new date downtime\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}"
+  ],
+  "cout": 0.01396472
+}

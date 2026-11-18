@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:00:18.087Z",
+  "reponse": "Galeries Brotteaux a commandé 12 buffets Rhône en chêne naturel pour 8 280 € HT, avec un paiement à 60 jours fin de mois [1][2]. Les buffets étaient emballés et la livraison au magasin était prévue le 25 novembre 2026 [3]. La facturation devait avoir lieu à la livraison, avec un encaissement attendu fin janvier [4].",
+  "rendu": "Galeries Brotteaux a commandé 12 buffets Rhône en chêne naturel pour 8 280 € HT, avec un paiement à 60 jours fin de mois [1][2]. Les buffets étaient emballés et la livraison au magasin était prévue le 25 novembre 2026 [3]. La facturation devait avoir lieu à la livraison, avec un encaissement attendu fin janvier [4].",
+  "mesures": {
+    "mots": 55,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 950,
+    "sortie": 89,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001395
+  },
+  "cout": 0.0001395,
+  "latenceMs": 1948,
+  "fournisseur": "Azure"
+}

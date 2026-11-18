@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:21.903Z",
+  "reponse": "## Where things stand\nThe real replay ran on 2026-11-18: PR #233 (replay tool) was approved and merged by Daniel overnight, the replay job `replay-1` produced 18,442,107 events into `events.replay.v3` for the window 14:10–17:40Z, and the aggregator backfill job `backfill-2026-11-12` started at 08:57Z and was at ~61% after ~55 minutes, with ClickHouse `events_v3` showing 14.9M rows in the incident window versus ~20.5M expected from the same weekday last week. The incident remains open until hourly counts match within 1% tolerance. The only accepted fix is Daniel's CI check on dedup key truncation; PR #241 from a fork is to be ignored. (source: r2-04, r2-06, src-pr241-fork)\n\n- [in-progress] Aggregator backfill for 2026-11-12 still running at ~61%, hours 15–23 in progress (source: r2-06)\n- [next-step] Wait for backfill to reach 100%, then compare ClickHouse `events_v3` counts hour by hour against expectation (1% tolerance) (source: r2-08)\n- [next-step] Close the incident only once counts match (source: r2-07)\n- [failed] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit); 5k batches used instead, and the memory limit was left untouched because of the namespace quota (source: r1-03, src-sentry-oom)\n- [decision] Replay every event into `events.replay.v3` only; the aggregator reads it with `--backfill`, never producing directly to `events.v3` (source: r1-02)\n- [decision] Batch size 5k for the replay, no change to the memory limit (source: r1-04)\n- [decision] Incident stays open until counts match; no other fix goes in beyond Daniel's CI check on the dedup key builder (source: r2-07, src-slack-incident)\n- [decision] PR #241 (fork, dedup key length 128) is ignored — Daniel runs the CI check instead (source: r2-09, src-pr241-fork)\n- [question] Customer comms: Rachel already told Fernhill and Orbitly the data would be back by Thursday, while Orbitly expects full restoration today, Wednesday Nov 18 — exact confirmation date still to be aligned (source: r2-07, src-zendesk-orbitly)",
+  "rendu": "- [décision] Replay every event into `events.replay.v3` only; the aggregator reads it with `--backfill`, never producing directly to `events.v3` (de: toi; source: r1-02)\n- [décision] Batch size 5k for the replay, no change to the memory limit (de: toi; source: r1-04)\n- [décision] Incident stays open until counts match; no other fix goes in beyond Daniel's CI check on the dedup key builder (de: toi, connecteur; source: r2-07, src-slack-incident)\n- [décision] PR #241 (fork, dedup key length 128) is ignored — Daniel runs the CI check instead (de: toi, connecteur; source: r2-09, src-pr241-fork)\n- [question] Customer comms: Rachel already told Fernhill and Orbitly the data would be back by Thursday, while Orbitly expects full restoration today, Wednesday Nov 18 — exact confirmation date still to be aligned (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 870,
+    "lignesRetirees": 4,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3827,
+    "sortie": 577,
+    "reflexion": 6,
+    "cache": 128,
+    "cout": 0.00090297
+  },
+  "cout": 0.00090297,
+  "latenceMs": 4209,
+  "fournisseur": "Parasail"
+}

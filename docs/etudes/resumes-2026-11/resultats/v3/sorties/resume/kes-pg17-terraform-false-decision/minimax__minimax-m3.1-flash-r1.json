@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:37.598Z",
+  "reponse": "## Where I am\nTerraform for the PostgreSQL 17 blue/green upgrade was prepared on branch `noa/rds-pg17`: the RDS module derives the parameter group family from the major version, staging `analytics-staging` goes 16.4 → 17.2 with blue/green enabled, and prod is prepared behind `pg17_enabled = false` (prod plan shows no changes). The AWS provider is pinned to `~> 5.82.0` with the lock file reverted to that line, tflint is clean, and nothing was applied. A draft PR was opened with the pg_partman and dbt-lock notes in the description.\n\n- [in progress] pg_partman 4.7.4 → 5.1.0 on staging 16.4 (plus `run_maintenance_proc()` check on `events_raw`/`events_daily`) — documented as a TODO, nothing run against the DB.\n- [next step] Perform the pg_partman upgrade on staging, then re-plan.\n- [next step] Obtain Maya's sign-off before picking any production window; the window must avoid the nightly dbt lock on `events_daily` (01:00–03:30 UTC).\n- [failed] `terraform init` failed on the old lock file, and `init -upgrade` on provider v6 produced 37 unrelated changes (S3 ACL, `aws_eip.vpc`); resolved by pinning AWS to 5.82.\n- [failed] `tflint` initially flagged an unused `snapshot_identifier` variable and a missing `random` provider constraint; both fixed.\n- [decision] AWS provider pinned to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [decision] Prod `apply_immediately` stays false and no production date is set until Maya signs off (source: t14)\n- [decision] Draft PR opened with pg_partman and dbt lock documented (source: t16)",
+  "rendu": "- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [décision] AWS provider pinned to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] Prod `apply_immediately` stays false and no production date is set until Maya signs off (source: t14)\n- [décision] Draft PR opened with pg_partman and dbt lock documented (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 403,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3905,
+    "sortie": 460,
+    "reflexion": 39,
+    "cache": 512,
+    "cout": 0.00079263
+  },
+  "cout": 0.00079263,
+  "latenceMs": 3054,
+  "fournisseur": "Together"
+}

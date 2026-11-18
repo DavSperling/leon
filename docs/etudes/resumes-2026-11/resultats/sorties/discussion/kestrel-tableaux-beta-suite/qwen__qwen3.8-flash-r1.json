@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:59.025Z",
+  "reponse": "Phase 1 (chart builder + saved views) is behind the `dash_v2` flag and was due feature-complete by Dec 4 [1]. The design-partner beta then opens **Wednesday Dec 9** for 5 customers: Orbitly, Zest Grocers and three accounts from the October trial cohort [11][12].\n\nEveryone else waits for general availability, targeted for late January, with a waitlist opening in January — so if another customer asks, don't promise access [11][12]. (The earlier spec said \"4–6 design partners in early December\" without a date [6], so Dec 9 is the newer, confirmed version.)",
+  "rendu": "Phase 1 (chart builder + saved views) is behind the `dash_v2` flag and was due feature-complete by Dec 4 [1]. The design-partner beta then opens **Wednesday Dec 9** for 5 customers: Orbitly, Zest Grocers and three accounts from the October trial cohort [11][12].\n\nEveryone else waits for general availability, targeted for late January, with a waitlist opening in January — so if another customer asks, don't promise access [11][12]. (The earlier spec said \"4–6 design partners in early December\" without a date [6], so Dec 9 is the newer, confirmed version.)",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7731,
+    "sortie": 392,
+    "reflexion": 180,
+    "cache": 2048,
+    "cout": 0.001069458
+  },
+  "latenceMs": 8205,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards first part customer pilot release date\"}",
+    "chercher {\"requete\":\"dashboard beta customers early access\"}"
+  ],
+  "cout": 0.001069458
+}

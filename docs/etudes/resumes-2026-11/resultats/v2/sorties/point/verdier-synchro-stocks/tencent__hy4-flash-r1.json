@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:17:48.242Z",
+  "reponse": "## What changed\n\n- Hugo a fusionné #57 avec tes ajouts de correspondances SKU et d’avertissement pour les références inconnues [4][1] ; #55 est marqué corrigé [3].\n- Les trois clients Saône sont d’accord pour une livraison mi-janvier [9].\n\n## What is still open\n\n- Tu t’es engagé à fournir à Antoine l’export des ventes Shopify d’octobre pour la TVA avant jeudi [1].\n- Ta PR #58 sur le dry-run attend encore une relecture [1][5] ; Karim doit compter jeudi les 14 écarts et te renvoyer les vrais chiffres [7].",
+  "rendu": "## What changed\n\n- Hugo a fusionné #57 avec tes ajouts de correspondances SKU et d’avertissement pour les références inconnues [4][1] ; #55 est marqué corrigé [3].\n- Les trois clients Saône sont d’accord pour une livraison mi-janvier [9].\n\n## What is still open\n\n- Tu t’es engagé à fournir à Antoine l’export des ventes Shopify d’octobre pour la TVA avant jeudi [1].\n- Ta PR #58 sur le dry-run attend encore une relecture [1][5] ; Karim doit compter jeudi les 14 écarts et te renvoyer les vrais chiffres [7].",
+  "mesures": {
+    "mots": 82,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5298,
+    "sortie": 7884,
+    "reflexion": 7718,
+    "cache": 0,
+    "cout": 0.001293132
+  },
+  "cout": 0.001293132,
+  "latenceMs": 51129,
+  "fournisseur": "Tencent"
+}

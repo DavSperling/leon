@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:19.172Z",
+  "reponse": "## Where I am\n\nThe postgres 17 blue/green change for the analytics RDS is in draft PR kestrel-analytics/infra#57. Staging is prepared: the parameter group family is derived from the major version, blue/green is enabled, and the AWS provider is pinned to ~> 5.82.0 (no v6 in this PR). Prod is prepared but disabled behind `pg17_enabled = false`, with `apply_immediately = false`. Nothing has been applied. The only database access was a read-only check of staging extensions.\n\n- [en-cours] Draft PR #57 is open. Staging plan shows 1 to add and 1 to change; prod plan shows no changes.\n- [prochaine-étape] Upgrade pg_partman from 4.7.4 to 5.1.0 on staging (ALTER EXTENSION on 16.4), then check `run_maintenance_proc()` on `events_raw` and `events_daily`. This must happen before the staging blue/green apply, otherwise the green environment will not be created.\n- [prochaine-étape] Pick the prod window after Maya signs off. It must avoid the nightly dbt lock on `events_daily` (01:00–03:30 UTC). Saturday 04:00–06:00 UTC and Sunday 04:00–06:00 UTC are the lowest-traffic slots outside the lock.\n- [essai-raté] `terraform init` failed on the lock file. Upgrading the provider to v6 produced 37 unrelated changes (S3 ACL, `aws_eip.vpc` removed), so the pin was set back to 5.82.\n- [essai-raté] `tflint` flagged an unused `snapshot_identifier` variable and a missing version constraint for the `random` provider. Both were fixed in `c58e1fa`.\n- [question] Maya's sign-off on the whole change is still pending before any prod date is set.\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays `false` on prod. (source: t14)\n- [décision] Do not run anything against the database beyond read-only checks, and treat the pg_partman upgrade as a separate step. (source: t10)",
+  "rendu": "- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR #57 is open. Staging plan shows 1 to add and 1 to change; prod plan shows no changes.\n- [prochaine-étape] Upgrade pg_partman from 4.7.4 to 5.1.0 on staging (ALTER EXTENSION on 16.4), then check `run_maintenance_proc()` on `events_raw` and `events_daily`. This must happen before the staging blue/green apply, otherwise the green environment will not be created.\n- [prochaine-étape] Pick the prod window after Maya signs off. It must avoid the nightly dbt lock on `events_daily` (01:00–03:30 UTC). Saturday 04:00–06:00 UTC and Sunday 04:00–06:00 UTC are the lowest-traffic slots outside the lock.\n- [essai-raté] `terraform init` failed on the lock file. Upgrading the provider to v6 produced 37 unrelated changes (S3 ACL, `aws_eip.vpc` removed), so the pin was set back to 5.82.\n- [essai-raté] `tflint` flagged an unused `snapshot_identifier` variable and a missing version constraint for the `random` provider. Both were fixed in `c58e1fa`.\n- [question] Maya's sign-off on the whole change is still pending before any prod date is set.\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays `false` on prod. (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1292,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5473,
+    "sortie": 712,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009033
+  },
+  "cout": 0.0009033,
+  "latenceMs": 3516,
+  "fournisseur": "Claude Platform on AWS"
+}

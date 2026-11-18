@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:11:25.494Z",
+  "reponse": "Je rassemble le fil support et le statut SSO de la banque.",
+  "rendu": "Je rassemble le fil support et le statut SSO de la banque.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20800,
+    "sortie": 334,
+    "reflexion": 130,
+    "cache": 10880,
+    "cout": 0.027284
+  },
+  "latenceMs": 8288,
+  "fournisseur": "xAI",
+  "trace": [
+    "chercher {\"requete\":\"bank staff login company accounts December 1st SSO support\",\"type\":\"mail\"}",
+    "chercher {\"requete\":\"December 1 login company accounts bank SSO on track\"}",
+    "chercher {\"requete\":\"\\\"December 1\\\" login OR SSO OR \\\"company accounts\\\" bank\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "chercher {\"requete\":\"Fernhill support login company accounts December staff\"}",
+    "chercher {\"requete\":\"Fernhill staff company accounts login support December\",\"type\":\"ticket\"}"
+  ],
+  "cout": 0.027284
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:45.699Z",
+  "reponse": "No internal salary band for the Austin Support Engineer role appears in these results. The job description only mentions \"competitive base + equity\" and refers to a comp sheet [1], and the hiring plan likewise points to the comp sheet [5]. Kelsey Moran asked Carla Reyes to share the band on Nov 16, suggesting it wasn't yet communicated [4]. The only figure found is a general market estimate of $75,000–$95,000 for a Tier 2 fintech support engineer in Austin — explicitly not your company's band [2]. The Slack message about an approved band concerns a senior SRE in Tel Aviv, not this role [3].",
+  "rendu": "No internal salary band for the Austin Support Engineer role appears in these results. The job description only mentions \"competitive base + equity\" and refers to a comp sheet [1], and the hiring plan likewise points to the comp sheet [5]. Kelsey Moran asked Carla Reyes to share the band on Nov 16, suggesting it wasn't yet communicated [4]. The only figure found is a general market estimate of $75,000–$95,000 for a Tier 2 fintech support engineer in Austin — explicitly not your company's band [2]. The Slack message about an approved band concerns a senior SRE in Tel Aviv, not this role [3].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1058,
+    "sortie": 150,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.0002337
+  },
+  "cout": 0.0002337,
+  "latenceMs": 1580,
+  "fournisseur": "Mistral"
+}

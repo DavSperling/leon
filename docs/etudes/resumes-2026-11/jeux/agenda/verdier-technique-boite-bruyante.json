@@ -1,0 +1,284 @@
+{
+  "id": "verdier-technique-boite-bruyante",
+  "titre": "Boîte du responsable technique de Maison Verdier, noyée sous les notifications : créneau négocié (« 15h ça te va ? » « plutôt 16h »), visite sans heure, appel en heure du Pacifique, démo reportée hors période, réunion annulée",
+  "langue": "fr",
+  "entree": {
+    "periode": {
+      "first": "2026-11-16",
+      "last": "2026-11-22"
+    },
+    "mails": [
+      {
+        "sourceId": "gmail-thr-ea1130",
+        "title": "Invitation : Entretien annuel – Julien Morel @ lun. 30 nov. 2026 09:00 - 10:00 (CET)",
+        "author": "Claire Verdier",
+        "at": "2026-11-17T11:00",
+        "text": "Claire Verdier vous a invité à cet événement.\n\nEntretien annuel – Julien Morel\nlundi 30 novembre 2026 ⋅ 09:00 – 10:00 (heure normale d'Europe centrale - Paris)\nLieu : bureau de Claire\n\nInvitation de Google Agenda"
+      },
+      {
+        "sourceId": "gmail-thr-rt1119c",
+        "title": "Événement annulé : Réunion tech hebdo @ jeu. 19 nov. 2026 09:30 - 10:00 (CET)",
+        "author": "Claire Verdier",
+        "at": "2026-11-17T10:00",
+        "text": "Cet événement a été annulé et supprimé de votre agenda.\n\nRéunion tech hebdo\njeudi 19 novembre 2026 ⋅ 09:30 – 10:00 (heure normale d'Europe centrale - Paris)\n\nNote de Claire : je suis en déplacement jeudi, on fait le point lundi.\n\nInvitation de Google Agenda"
+      },
+      {
+        "sourceId": "gmail-thr-ba1119b",
+        "title": "Live : les nouveautés Shopify de l'hiver",
+        "author": "Boutik Academy",
+        "at": "2026-11-16T10:00",
+        "text": "Bonjour Julien,\n\nRendez-vous en direct jeudi 19 novembre à 18h30 pour découvrir les nouveautés de l'hiver : checkout extensible, nouvelles API de stock, Shopify Functions.\n\n[Je m'inscris gratuitement]\n\nBoutik Academy – Se désinscrire"
+      },
+      {
+        "sourceId": "gmail-thr-sp1113",
+        "title": "Webhook duplicates – debugging session",
+        "author": "Julien Morel",
+        "at": "2026-11-14T09:30",
+        "text": "Hi Ryan,\n\nWednesday 9:00 AM PT works for me. Please send the invite.\n\nJulien"
+      },
+      {
+        "sourceId": "gmail-thr-sp1113",
+        "title": "Webhook duplicates – debugging session",
+        "author": "Ryan Okafor",
+        "at": "2026-11-13T23:40",
+        "text": "Hi Julien,\n\nThanks for the logs. Our engineer can join a call on Wednesday, November 18 at 9:00 AM PT to look at the duplicate inventory webhooks together. Does that work?\n\nRyan Okafor\nSupport Engineer, StockPilot | San Francisco"
+      },
+      {
+        "sourceId": "gmail-thr-sc1112",
+        "title": "Point tunnel de commande – Studio Canut",
+        "author": "Mélanie Roche",
+        "at": "2026-11-12T11:20",
+        "text": "Va pour mardi 16h ! Je t'envoie le lien Meet : meet.google.com/tdc-kwpo-zue\n\nMélanie\n\n> Le jeu. 12 nov. 2026 à 11:02, Julien Morel a écrit :\n> Plutôt 16h si possible ?"
+      },
+      {
+        "sourceId": "gmail-thr-rt1119",
+        "title": "Invitation : Réunion tech hebdo @ jeu. 19 nov. 2026 09:30 - 10:00 (CET)",
+        "author": "Claire Verdier",
+        "at": "2026-11-12T09:00",
+        "text": "Claire Verdier vous a invité à cet événement.\n\nRéunion tech hebdo\njeudi 19 novembre 2026 ⋅ 09:30 – 10:00 (heure normale d'Europe centrale - Paris)\nInvités : Claire Verdier (organisatrice), Julien Morel, Hugo Petit\n\nInvitation de Google Agenda"
+      },
+      {
+        "sourceId": "gmail-thr-gh91",
+        "title": "[maison-verdier/boutique] Stock négatif sur la variante Saône chêne clair (#91)",
+        "author": "Lucie Fontaine",
+        "at": "2026-11-18T08:10",
+        "text": "La variante SAO-180-CC affiche -2 en stock depuis ce matin, deux clients ont pu commander. Est-ce lié à la PR #87 ?\n\n—\nReply to this email directly or view it on GitHub."
+      },
+      {
+        "sourceId": "gmail-thr-gh87",
+        "title": "[maison-verdier/boutique] Fix: webhook inventory_levels/update traité deux fois (PR #87)",
+        "author": "Julien Morel",
+        "at": "2026-11-17T18:05",
+        "text": "Merged #87 into main.\n\n—\nReply to this email directly or view it on GitHub."
+      },
+      {
+        "sourceId": "gmail-thr-zd5521",
+        "title": "[Zendesk] Ticket #5521 : « Stock affiché faux sur la table Saône »",
+        "author": "Zendesk",
+        "at": "2026-11-17T09:15",
+        "text": "Lucie Fontaine vous a assigné le ticket #5521.\n\n« Bonjour, j'ai commandé la table Saône chêne clair affichée en stock et on m'annonce maintenant 6 semaines de délai. »\n\nPriorité : haute · Canal : e-mail\n\nVoir le ticket dans Zendesk"
+      },
+      {
+        "sourceId": "gmail-thr-dm1113",
+        "title": "Démo du nouveau tunnel de commande",
+        "author": "Julien Morel",
+        "at": "2026-11-17T08:52",
+        "text": "OK, lundi 23 à 14h, même salle. Je préviens les autres.\n\nJulien"
+      },
+      {
+        "sourceId": "gmail-thr-dm1113",
+        "title": "Démo du nouveau tunnel de commande",
+        "author": "Claire Verdier",
+        "at": "2026-11-17T08:30",
+        "text": "Julien, je ne peux pas vendredi, je suis chez Bois & Fils. On peut faire lundi 23 à la place ?\n\nClaire"
+      },
+      {
+        "sourceId": "gmail-thr-st1117",
+        "title": "Nouvelle erreur : InventorySyncError",
+        "author": "Sentry",
+        "at": "2026-11-17T04:22",
+        "text": "Nouvelle erreur dans boutique-sync (production)\n\nInventorySyncError: quantity mismatch for SKU SAO-180-CC (shopify=3, local=1)\nPremière occurrence : 17 nov. 2026 03:21 UTC · 9 événements\n\nVoir dans Sentry"
+      },
+      {
+        "sourceId": "gmail-thr-hp1116",
+        "title": "Bug synchro",
+        "author": "Julien Morel",
+        "at": "2026-11-16T18:41",
+        "text": "Ok demain 10h. Apporte tes logs."
+      },
+      {
+        "sourceId": "gmail-thr-hp1116",
+        "title": "Bug synchro",
+        "author": "Hugo Petit",
+        "at": "2026-11-16T18:30",
+        "text": "Julien, on fait le point sur le bug de synchro demain matin à 10h ? J'ai reproduit le doublon en local avec deux emplacements.\n\nHugo"
+      },
+      {
+        "sourceId": "gmail-thr-gh87",
+        "title": "[maison-verdier/boutique] Fix: webhook inventory_levels/update traité deux fois (PR #87)",
+        "author": "github-actions",
+        "at": "2026-11-16T15:31",
+        "text": "CI / test (push) : succès en 3m12s\nCI / lint (push) : échec, eslint : 2 erreurs (no-unused-vars) dans scripts/stock/sync.ts\n\n—\nReply to this email directly or view it on GitHub."
+      },
+      {
+        "sourceId": "gmail-thr-gh87",
+        "title": "[maison-verdier/boutique] Fix: webhook inventory_levels/update traité deux fois (PR #87)",
+        "author": "Hugo Petit",
+        "at": "2026-11-16T15:20",
+        "text": "@hugo-petit requested your review on: maison-verdier/boutique#87\n\nFix: webhook inventory_levels/update traité deux fois\n\nQuand un produit a deux emplacements (entrepôt + showroom), Shopify envoie deux webhooks et on décrémentait deux fois. On déduplique sur (inventory_item_id, location_id, updated_at).\n\n—\nReply to this email directly or view it on GitHub."
+      },
+      {
+        "sourceId": "gmail-thr-rd93",
+        "title": "Le Récap Dev #93",
+        "author": "Le Récap Dev",
+        "at": "2026-11-16T06:30",
+        "text": "Le Récap Dev #93\n\n- TypeScript 6 : ce qui change pour vos scripts\n- Webhooks : idempotence, le guide pratique\n- Outils : trois alternatives à cron pour les petites équipes\n\nLire en ligne · Se désabonner"
+      },
+      {
+        "sourceId": "gmail-thr-sh2701",
+        "title": "Action requise : mise à jour de la version de l'API avant le 1er janvier 2027",
+        "author": "Shopify",
+        "at": "2026-11-15T16:00",
+        "text": "Bonjour,\n\nVotre application « Maison Verdier – Stocks » utilise la version 2026-01 de l'API Admin, qui ne sera plus prise en charge à partir du 1er janvier 2027. Merci de passer à la version 2026-10 avant cette date.\n\nL'équipe Shopify Partners"
+      },
+      {
+        "sourceId": "gmail-thr-nh2211",
+        "title": "Maintenance planifiée de votre serveur VPS-boutique-01",
+        "author": "Nuage Hébergement",
+        "at": "2026-11-15T12:00",
+        "text": "Bonjour,\n\nUne maintenance de l'hyperviseur hébergeant votre serveur VPS-boutique-01 aura lieu le dimanche 22 novembre entre 2h et 4h (heure de Paris). Une coupure de 10 minutes est possible.\n\nNuage Hébergement – Support"
+      },
+      {
+        "sourceId": "gmail-thr-dm1113",
+        "title": "Démo du nouveau tunnel de commande",
+        "author": "Julien Morel",
+        "at": "2026-11-13T16:00",
+        "text": "Bonjour à tous,\n\nJe vous propose une démo du nouveau tunnel de commande vendredi 20 à 14h en salle Rhône (30 min). Vos retours avant les soldes seront précieux.\n\nJulien"
+      },
+      {
+        "sourceId": "gmail-thr-sc1112",
+        "title": "Point tunnel de commande – Studio Canut",
+        "author": "Julien Morel",
+        "at": "2026-11-12T11:02",
+        "text": "Hello Mélanie,\n\nPlutôt 16h si possible ?\n\nJulien"
+      },
+      {
+        "sourceId": "gmail-thr-sc1112",
+        "title": "Point tunnel de commande – Studio Canut",
+        "author": "Mélanie Roche",
+        "at": "2026-11-12T10:15",
+        "text": "Salut Julien,\n\nOn fait un point sur le nouveau tunnel de commande mardi prochain ? Mardi 15h ça te va ?\n\nMélanie\nStudio Canut – agence Shopify"
+      },
+      {
+        "sourceId": "gmail-thr-ec0909",
+        "title": "Visite de suivi en entreprise – Hugo Petit",
+        "author": "Julien Morel",
+        "at": "2026-11-09T17:45",
+        "text": "Bonjour Madame Delorme,\n\nLe mardi 17 nous convient. Nous sommes au 2e étage, sonnez à « Maison Verdier ».\n\nBien cordialement,\nJulien Morel\nResponsable technique – Maison Verdier"
+      },
+      {
+        "sourceId": "gmail-thr-ec0909",
+        "title": "Visite de suivi en entreprise – Hugo Petit",
+        "author": "Nathalie Delorme",
+        "at": "2026-11-09T14:00",
+        "text": "Bonjour Monsieur Morel,\n\nDans le cadre du suivi de l'alternance d'Hugo Petit, je vous propose une visite en entreprise le mardi 17 novembre. L'horaire vous sera confirmé plus tard, selon mes autres visites de la journée.\n\nCordialement,\nNathalie Delorme\nChargée de suivi alternance – Campus Numérique Lyon"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Point sur le bug de synchro avec Hugo le mardi 17 novembre à 10:00 (« demain » d'un mail du lundi 16).",
+        "poids": 2
+      },
+      {
+        "id": "f2",
+        "texte": "Point avec Studio Canut le mardi 17 novembre à 16:00 (le créneau retenu, pas 15:00).",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Appel avec StockPilot le mercredi 18 novembre à 18:00 heure de Paris (9:00 PT).",
+        "poids": 3
+      },
+      {
+        "id": "f4",
+        "texte": "Visite de suivi de l'alternance (Nathalie Delorme) le mardi 17 novembre, rendue sans heure puisque l'horaire n'est pas confirmé.",
+        "poids": 2
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Rendre la démo du tunnel de commande le vendredi 20 novembre (reportée au lundi 23, hors période)."
+      },
+      {
+        "id": "i2",
+        "texte": "Rendre la réunion tech hebdo du jeudi 19 novembre (annulée)."
+      },
+      {
+        "id": "i3",
+        "texte": "Donner une heure inventée à la visite de l'école."
+      },
+      {
+        "id": "i4",
+        "texte": "Rendre comme rendez-vous le live Boutik Academy, la maintenance du dimanche 22, l'échéance de l'API ou une notification GitHub, Sentry ou Zendesk."
+      },
+      {
+        "id": "i5",
+        "texte": "Rendre l'appel StockPilot à 09:00 (heure du Pacifique non convertie) ou le point Studio Canut à 15:00."
+      },
+      {
+        "id": "i6",
+        "texte": "Rendre l'entretien annuel du lundi 30 novembre (hors période)."
+      }
+    ],
+    "pieges": [
+      "Créneau négocié : « Mardi 15h ça te va ? » puis « Plutôt 16h si possible ? » ; seul 16h vaut, et « mardi prochain » est écrit un jeudi.",
+      "Heure non dite : la visite de l'école a une date sans heure (format AAAA-MM-JJ seul).",
+      "Fuseau : un fournisseur de San Francisco en anglais, 9:00 AM PT = 18:00 à Paris.",
+      "Déplacé hors période : la démo du vendredi 20 passe au lundi 23 ; plus rien à rendre. Annulé : la réunion tech du jeudi.",
+      "Bruit : 10 mails sur 25 ne sont que des notifications (GitHub, Sentry, Zendesk, hébergeur, Shopify), un live promotionnel et une lettre d'information ; un entretien hors période."
+    ],
+    "rdv": [
+      {
+        "n": 15,
+        "autresN": [
+          14
+        ],
+        "debut": "2026-11-17T10:00",
+        "titre": "Point bug de synchro des stocks",
+        "avec": "Hugo Petit"
+      },
+      {
+        "n": 6,
+        "autresN": [
+          23,
+          22
+        ],
+        "debut": "2026-11-17T16:00",
+        "titre": "Point tunnel de commande – Studio Canut",
+        "avec": "Mélanie Roche"
+      },
+      {
+        "n": 4,
+        "autresN": [
+          5
+        ],
+        "debut": "2026-11-18T18:00",
+        "titre": "Call StockPilot – webhook duplicates",
+        "avec": "Ryan Okafor"
+      },
+      {
+        "n": 25,
+        "autresN": [
+          24
+        ],
+        "debut": "2026-11-17",
+        "titre": "Visite de suivi de l'alternance d'Hugo Petit",
+        "avec": "Nathalie Delorme"
+      }
+    ]
+  }
+}

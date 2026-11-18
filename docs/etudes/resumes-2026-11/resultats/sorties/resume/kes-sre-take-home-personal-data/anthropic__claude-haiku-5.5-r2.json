@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:39:14.161Z",
+  "reponse": "## Où j'en suis\nMaya a fait construire un exercice SRE take-home de 3 heures, sans Kubernetes, avec Terraform et docker compose. Il contient une règle d'alerte cassée (métrique renommée), une fuite de connexions dans `flaky-svc` et une politique IAM trop large. Le compose build désormais l'image depuis les sources, sur arm64 comme sur amd64. La rubrique à 4 critères (notés 0 à 3, sans seuil) est faite, et Noa est le second relecteur. L'exercice est dans le dépôt privé `kestrel-analytics/sre-take-home`, et `hiring/` a été retiré de la copie de travail de la branche infra. Rien n'a été envoyé au candidat.\n\n- [en-cours] Retrait de `hiring/` de la copie de travail de `maya/sre-take-home` : non commité, la branche sera abandonnée plus tard.\n- [prochaine-étape] Appel avec le candidat jeudi 16h (heure de Tel Aviv), puis envoi de l'exercice par Maya elle-même (invitation au dépôt et README).\n- [essai-raté] Build multi-arch avec `--load` : échec, car le driver docker ne charge pas une image multi-plateforme dans le daemon local. Un build arm64 seul a servi aux tests locaux.\n- [essai-raté] `docker compose up` sur un Mac Apple Silicon : `exec format error`, car l'image `0.3` n'était construite que pour amd64. Résolu en construisant depuis les sources.\n- [décision] Exercice de 3 heures maximum, sans Kubernetes, Terraform et compose uniquement (source: t03)\n- [décision] Compose construit `flaky-svc` depuis les sources, sans image publiée (source: t06)\n- [décision] Pas de seuil de réussite : les scores alimentent la discussion du jury, Noa est second relecteur (source: t10)\n- [décision] Exercice dans son propre dépôt privé, hors de l'infra (source: t12)\n- [décision] `hiring/` retiré de la branche infra, sans PR (source: t14)\n- [décision] Maya envoie elle-même l'exercice après l'appel, rien n'est envoyé avant (source: t16)",
+  "rendu": "## Où j'en suis\nMaya a fait construire un exercice SRE take-home de 3 heures, sans Kubernetes, avec Terraform et docker compose. Il contient une règle d'alerte cassée (métrique renommée), une fuite de connexions dans `flaky-svc` et une politique IAM trop large. Le compose build désormais l'image depuis les sources, sur arm64 comme sur amd64. La rubrique à 4 critères (notés 0 à 3, sans seuil) est faite, et Noa est le second relecteur. L'exercice est dans le dépôt privé `kestrel-analytics/sre-take-home`, et `hiring/` a été retiré de la copie de travail de la branche infra. Rien n'a été envoyé au candidat.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Retrait de `hiring/` de la copie de travail de `maya/sre-take-home` : non commité, la branche sera abandonnée plus tard.\n- [prochaine-étape] Appel avec le candidat jeudi 16h (heure de Tel Aviv), puis envoi de l'exercice par Maya elle-même (invitation au dépôt et README).\n- [essai-raté] Build multi-arch avec `--load` : échec, car le driver docker ne charge pas une image multi-plateforme dans le daemon local. Un build arm64 seul a servi aux tests locaux.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1177,
+    "decisions": 0,
+    "decisionsRetirees": 6,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5097,
+    "sortie": 1478,
+    "reflexion": 700,
+    "cache": 0,
+    "cout": 0.0012487
+  },
+  "cout": 0.0012487,
+  "latenceMs": 6987,
+  "fournisseur": "Claude Platform on AWS"
+}

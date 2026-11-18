@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:17.800Z",
+  "reponse": "La commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT [1][2]. Livraison souhaitée au plus tard le 27 novembre au magasin [1] ; les articles sont emballés, avec enlèvement Rapid'Colis le 24/11 et livraison prévue le 25 [3]. Le paiement est à 60 jours fin de mois [1], et la facturation interviendra à la livraison, avec encaissement attendu fin janvier pour la trésorerie des soldes [4]. Livraison assurée par Rapid'Colis avant la fin de leur contrat le 30/11 [2].",
+  "rendu": "La commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT [1][2]. Livraison souhaitée au plus tard le 27 novembre au magasin [1] ; les articles sont emballés, avec enlèvement Rapid'Colis le 24/11 et livraison prévue le 25 [3]. Le paiement est à 60 jours fin de mois [1], et la facturation interviendra à la livraison, avec encaissement attendu fin janvier pour la trésorerie des soldes [4]. Livraison assurée par Rapid'Colis avant la fin de leur contrat le 30/11 [2].",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1111,
+    "sortie": 203,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.00021238
+  },
+  "cout": 0.00021238,
+  "latenceMs": 2359,
+  "fournisseur": "Cohere"
+}

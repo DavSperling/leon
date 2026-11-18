@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:06.512Z",
+  "reponse": "The first slice is Phase 1 — chart builder + saved views — and it's feature-complete behind the `dash_v2` flag by Dec 4, with the beta opening Wednesday Dec 9 [2][3]. Only 5 design partners get in at that point: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3][10]. Other customers can't try it before general availability, targeted for late January and explicitly not committed [3]; Priya asked the team not to promise access to anyone else, with a waitlist to open in January [10] — that includes Pinecrest, who asked during their evaluation and were told no before GA [10][11].",
+  "rendu": "The first slice is Phase 1 — chart builder + saved views — and it's feature-complete behind the `dash_v2` flag by Dec 4, with the beta opening Wednesday Dec 9 [2][3]. Only 5 design partners get in at that point: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3][10]. Other customers can't try it before general availability, targeted for late January and explicitly not committed [3]; Priya asked the team not to promise access to anyone else, with a waitlist to open in January [10] — that includes Pinecrest, who asked during their evaluation and were told no before GA [10][11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7395,
+    "sortie": 397,
+    "reflexion": 167,
+    "cache": 1664,
+    "cout": 0.002150038
+  },
+  "latenceMs": 2617,
+  "fournisseur": "Crusoe",
+  "trace": [
+    "chercher {\"requete\":\"dashboard beta customers first release date\"}",
+    "chercher {\"requete\":\"dashboards rollout GA early access timeline\"}"
+  ],
+  "cout": 0.002150038
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:28:23.394Z",
+  "reponse": "## Où j'en suis\nStaging analytics RDS is on PostgreSQL 17.2 since Nov 17, 14:20 UTC (blue/green switchover, 41 s of refused writes): pg_partman upgraded 4.7.4 → 5.1.0 with maintenance clean on events_raw and events_daily, dbt run passed (14 models, +3% runtime vs 16.4). Runbook updated with the rds.logical_replication + reboot prerequisite for prod. PR #57 is open (draft) with commits 7e3c9d4, b0f18a2. Production cutover is not scheduled: Maya will sign off after a full week of staging on 17, then the window is picked. (source: ses-pg-3, s3-06, s3-08, s3-10, src-pr57)\n\n- [en-cours] Soak week on staging 17.2 before prod sign-off; earliest sign-off Nov 24 (source: s3-10, src-linear-kes298)\n- [prochaine-étape] Pick the production window with Maya after sign-off, avoiding the 01:00–03:30 UTC dbt lock on events_daily (source: s3-09, src-linear-kes298)\n- [prochaine-étapse] Prod step 0: set rds.logical_replication = 1 and reboot (~2–3 min downtime) in its own window, before the blue/green deployment (source: s3-10)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6: 37 unrelated plan changes (S3 ACLs, aws_eip.vpc removal); provider pinned ~> 5.82 (source: s1-01, s1-02)\n- [essai-raté] First staging apply failed: blue/green requires rds.logical_replication = 1 in the source parameter group plus a reboot; fixed and reapplied (source: s3-04, s3-06)\n- [question] Exact production date and window still open (source: s3-09, src-linear-kes298)\n- [décision] No production date until Maya signs off; apply_immediately stays false (source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)",
+  "rendu": "## Où j'en suis\nStaging analytics RDS is on PostgreSQL 17.2 since Nov 17, 14:20 UTC (blue/green switchover, 41 s of refused writes): pg_partman upgraded 4.7.4 → 5.1.0 with maintenance clean on events_raw and events_daily, dbt run passed (14 models, +3% runtime vs 16.4). Runbook updated with the rds.logical_replication + reboot prerequisite for prod. PR #57 is open (draft) with commits 7e3c9d4, b0f18a2. Production cutover is not scheduled: Maya will sign off after a full week of staging on 17, then the window is picked. (de: équipe, agent; source: ses-pg-3, s3-06, s3-08, s3-10, src-pr57)\n\n- [en-cours] Soak week on staging 17.2 before prod sign-off; earliest sign-off Nov 24 (de: connecteur, agent; source: s3-10, src-linear-kes298)\n- [prochaine-étape] Pick the production window with Maya after sign-off, avoiding the 01:00–03:30 UTC dbt lock on events_daily (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6: 37 unrelated plan changes (S3 ACLs, aws_eip.vpc removal); provider pinned ~> 5.82 (de: toi, agent; source: s1-01, s1-02)\n- [essai-raté] First staging apply failed: blue/green requires rds.logical_replication = 1 in the source parameter group plus a reboot; fixed and reapplied (de: agent; source: s3-04, s3-06)\n- [question] Exact production date and window still open (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [décision] No production date until Maya signs off; apply_immediately stays false (de: toi; source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1601,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4593,
+    "sortie": 758,
+    "reflexion": 199,
+    "cache": 0,
+    "cout": 0.002657415
+  },
+  "cout": 0.002657415,
+  "latenceMs": 12306,
+  "fournisseur": "StreamLake"
+}

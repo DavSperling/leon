@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:27.345Z",
+  "reponse": "Le dossier de Peltier (Vertou) était non signé au 10/11 et à déposer [1]. Au 18/11, le devis était signé le 16/11, déposé le 17/11, avec accusé de réception, en instruction, travaux prévus le 27/11 [1]. Odile Peltier demande le 18/11 où en est son dossier et si elle peut commencer les travaux avant la réponse [2]. Un message Slack du 17/11 indique qu'après dépôt les travaux peuvent commencer, mais que la prime n'est versée qu'après la fin des travaux, sur facture [3]. HubSpot mentionne une PAC air/eau, un acompte reçu et une pose prévue le 27/11 [4].",
+  "rendu": "Le dossier de Peltier (Vertou) était non signé au 10/11 et à déposer [1]. Au 18/11, le devis était signé le 16/11, déposé le 17/11, avec accusé de réception, en instruction, travaux prévus le 27/11 [1]. Odile Peltier demande le 18/11 où en est son dossier et si elle peut commencer les travaux avant la réponse [2]. Un message Slack du 17/11 indique qu'après dépôt les travaux peuvent commencer, mais que la prime n'est versée qu'après la fin des travaux, sur facture [3]. HubSpot mentionne une PAC air/eau, un acompte reçu et une pose prévue le 27/11 [4].",
+  "mesures": {
+    "mots": 98,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1098,
+    "sortie": 1177,
+    "reflexion": 997,
+    "cache": 0,
+    "cout": 0.00090779
+  },
+  "cout": 0.00090779,
+  "latenceMs": 6408,
+  "fournisseur": "CoreWeave"
+}

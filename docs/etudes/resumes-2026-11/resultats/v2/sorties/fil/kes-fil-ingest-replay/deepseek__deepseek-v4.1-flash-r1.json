@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:15.401Z",
+  "reponse": "## Où j'en suis\nPR #233 is merged and the real replay of the 12/11 window is done: 18,442,107 events produced to `events.replay.v3`, 3,118 schema-v2 lines rejected to S3. The aggregator backfill for 2026-11-12 has been running since 08:57 UTC (~61% at 09:52, 14.9M rows in the incident window vs ~20.5M expected for the same weekday last week), so the counts are not matched yet and the incident stays open. (source: ses-rp-2, ses-rp-1)\n\n- [en-cours] Aggregator backfill `backfill-2026-11-12` reading `events.replay.v3`, hours 15–23 still to finish (source: ses-rp-2)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour (1% tolerance), then close the incident (source: ses-rp-2, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit, 3 restarts); 5k batches work, peak 310 MiB (source: ses-rp-1, src-sentry-oom)\n- [question] The customer ETA: Rachel needs the exact date for Fernhill and Orbitly, and the counts gap (14.9M vs 20.5M) is not yet explained (source: src-zendesk-orbitly, ses-rp-2)\n- [décision] Postmortem for 12/11: keep every event, replay into `events.replay.v3` (Lior owns it), Daniel adds a CI check on the dedup key length, Rachel owns customer comms, no other fix goes in (source: src-slack-incident)\n- [décision] Never produce to `events.v3` directly from the replay tool (source: r1-02)\n- [décision] Use 5k batches and do not touch the namespace memory limit (source: r1-04)\n- [décision] Ignore fork PR #241; Daniel's CI check is the agreed fix (source: r2-09)",
+  "rendu": "## Où j'en suis\nPR #233 is merged and the real replay of the 12/11 window is done: 18,442,107 events produced to `events.replay.v3`, 3,118 schema-v2 lines rejected to S3. The aggregator backfill for 2026-11-12 has been running since 08:57 UTC (~61% at 09:52, 14.9M rows in the incident window vs ~20.5M expected for the same weekday last week), so the counts are not matched yet and the incident stays open. (de: agent; source: ses-rp-2, ses-rp-1)\n\n- [en-cours] Aggregator backfill `backfill-2026-11-12` reading `events.replay.v3`, hours 15–23 still to finish (de: agent; source: ses-rp-2)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour (1% tolerance), then close the incident (de: agent; source: ses-rp-2, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit, 3 restarts); 5k batches work, peak 310 MiB (de: connecteur, agent; source: ses-rp-1, src-sentry-oom)\n- [question] The customer ETA: Rachel needs the exact date for Fernhill and Orbitly, and the counts gap (14.9M vs 20.5M) is not yet explained (de: connecteur, agent; source: src-zendesk-orbitly, ses-rp-2)\n- [décision] Postmortem for 12/11: keep every event, replay into `events.replay.v3` (Lior owns it), Daniel adds a CI check on the dedup key length, Rachel owns customer comms, no other fix goes in (de: connecteur; source: src-slack-incident)\n- [décision] Never produce to `events.v3` directly from the replay tool (de: toi; source: r1-02)\n- [décision] Use 5k batches and do not touch the namespace memory limit (de: toi; source: r1-04)\n- [décision] Ignore fork PR #241; Daniel's CI check is the agreed fix (de: toi; source: r2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1675,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3885,
+    "sortie": 1236,
+    "reflexion": 732,
+    "cache": 1024,
+    "cout": 0.001044475
+  },
+  "cout": 0.001044475,
+  "latenceMs": 6499,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:25:25.778Z",
+  "reponse": "Yes, we are still on track for the December 1 go-live [1][5]. \n\nWhat is left to do before it works:\n- Run the scheduled joint end-to-end test session with Fernhill Bank's IAM team on Wednesday, November 25 at 16:00 Tel Aviv time (14:00 London) [1].\n- Finalize the admin page copy for the SSO settings (currently awaiting Priya's review) [5].",
+  "rendu": "Yes, we are still on track for the December 1 go-live [1][5]. \n\nWhat is left to do before it works:\n- Run the scheduled joint end-to-end test session with Fernhill Bank's IAM team on Wednesday, November 25 at 16:00 Tel Aviv time (14:00 London) [1].\n- Finalize the admin page copy for the SSO settings (currently awaiting Priya's review) [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10523,
+    "sortie": 808,
+    "reflexion": 660,
+    "cache": 0,
+    "cout": 0.0051769
+  },
+  "latenceMs": 4600,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"bank log in company accounts December 1st support\"}",
+    "chercher {\"requete\":\"KES-412\"}"
+  ],
+  "cout": 0.0051769
+}

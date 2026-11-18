@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:18:51.008Z",
+  "reponse": "## What you did\n- Intégration TransAlp terminée de bout en bout en sandbox : étiquette créée quand une commande Shopify est prête à partir, numéro de suivi renvoyé dans Shopify avec e-mail au client ; validée sur la commande de dev #1042, PR #60 ouverte pour relecture de Julien [1].\n- Les 9 produits sans dimensions (#61) sont bloqués à l'expédition avec un message clair, plutôt que d'envoyer des mesures inventées [1].\n\n## What changed\n- Julien a demandé des changements sur la PR #60 : la clé sandbox en dur est désormais dans l'historique git — à passer en variable d'environnement et à faire régénérer par TransAlp [3].\n- Sur #61, Karim a saisi les dimensions de 8 produits dans les fiches logistiques ; il mesurera la Saône 180 jeudi à l'atelier [5].\n- Nouveau ticket #59 de Julien : tag « soldes » automatique sur les produits remisés, pour préparer les collections de janvier [4].\n\n## What is still open\n- Bascule TransAlp lundi 23/11 : essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001. L'intégration n'a encore tourné qu'en sandbox — le passage en production reste à valider [7][8].\n- Un mail « TransAlp Support » demande de renvoyer la clé de production par e-mail [6] ; or Mathilde Rey confirme qu'ils ne la communiquent jamais ainsi — Julien la reçoit via l'espace client. Ne réponds pas à ce mail [8].",
+  "rendu": "## What you did\n- Intégration TransAlp terminée de bout en bout en sandbox : étiquette créée quand une commande Shopify est prête à partir, numéro de suivi renvoyé dans Shopify avec e-mail au client ; validée sur la commande de dev #1042, PR #60 ouverte pour relecture de Julien [1].\n- Les 9 produits sans dimensions (#61) sont bloqués à l'expédition avec un message clair, plutôt que d'envoyer des mesures inventées [1].\n\n## What changed\n- Julien a demandé des changements sur la PR #60 : la clé sandbox en dur est désormais dans l'historique git — à passer en variable d'environnement et à faire régénérer par TransAlp [3].\n- Sur #61, Karim a saisi les dimensions de 8 produits dans les fiches logistiques ; il mesurera la Saône 180 jeudi à l'atelier [5].\n- Nouveau ticket #59 de Julien : tag « soldes » automatique sur les produits remisés, pour préparer les collections de janvier [4].\n\n## What is still open\n- Bascule TransAlp lundi 23/11 : essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001. L'intégration n'a encore tourné qu'en sandbox — le passage en production reste à valider [7][8].\n- Un mail « TransAlp Support » demande de renvoyer la clé de production par e-mail [6] ; or Mathilde Rey confirme qu'ils ne la communiquent jamais ainsi — Julien la reçoit via l'espace client. Ne réponds pas à ce mail [8].",
+  "mesures": {
+    "mots": 215,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4793,
+    "sortie": 2264,
+    "reflexion": 1892,
+    "cache": 0,
+    "cout": 0.00185095
+  },
+  "cout": 0.00185095,
+  "latenceMs": 11914,
+  "fournisseur": "Cohere"
+}

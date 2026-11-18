@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:03:59.188Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 28937,
+    "sortie": 2407,
+    "reflexion": 1792,
+    "cache": 16866,
+    "cout": 0.00257926
+  },
+  "latenceMs": 28919,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"bank staff company accounts log in December 1 support December 1st company account\",\"depuis\":\"2024-01-01\"}",
+    "chercher {\"requete\":\"Fernhill Bank support asked staff log in company accounts December 1\",\"outil\":\"Gmail\"}",
+    "chercher {\"requete\":\"KES-412 remaining tasks IdP initiated provisioning SAML Fernhill December 1\",\"outil\":\"Linear\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "chercher {\"requete\":\"Fernhill support asks staff login company accounts December 1 support question\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"KES-412 Fernhill SAML remaining just-in-time provisioning Require SSO test November 25\",\"outil\":\"Linear\"}",
+    "chercher {\"requete\":\"Fernhill RSA-SHA256 November 24 CAB SAML #eng-sso\",\"outil\":\"Slack\"}"
+  ],
+  "cout": 0.00257926
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:38.687Z",
+  "reponse": "## What you did\n- Made the flaky SAML ACS tests deterministic by freezing time instead of sleeping. `test_acs_rejects_expired_assertion` went from 7 failures in 50 runs to 0. [1]\n- Cleaned up `kestrel/auth` for ruff 0.8 and mypy, and split `saml_utils.py` into a `saml/` package. The full suite passed, and a missing Issuer or Subject now returns a 401 instead of a 500. [1]\n- Put that cleanup on its own branch as PR #423 and left #418 untouched. [1]\n\n## What changed\n- Maya approved and merged #418, signature verification for Fernhill's SAML assertions. It goes out with tonight's staging deploy. [3]\n- Tom took the Zest Grocers CSV export timeout (#424, Zendesk #8817) and is moving the export to the job queue. [5]\n\n## What is still open\n- Fernhill's end-to-end SSO walkthrough is Thursday 10am New York (16:00 Paris) on staging with their Okta tenant. Priya runs it and you need to be on the call. Signature validation had to be on staging by Wednesday EOD, which is tonight. [1][3]\n- Tom wants #423 split into two PRs, the module move separate from the lint fixes, and will approve both today. [4]\n- The assertion replay cache is per process. With several API pods, a replay can succeed on another pod, so it needs to move to Redis before production. You planned that for today. [1][2]",
+  "rendu": "## What you did\n- Made the flaky SAML ACS tests deterministic by freezing time instead of sleeping. `test_acs_rejects_expired_assertion` went from 7 failures in 50 runs to 0. [1]\n- Cleaned up `kestrel/auth` for ruff 0.8 and mypy, and split `saml_utils.py` into a `saml/` package. The full suite passed, and a missing Issuer or Subject now returns a 401 instead of a 500. [1]\n- Put that cleanup on its own branch as PR #423 and left #418 untouched. [1]\n\n## What changed\n- Maya approved and merged #418, signature verification for Fernhill's SAML assertions. It goes out with tonight's staging deploy. [3]\n- Tom took the Zest Grocers CSV export timeout (#424, Zendesk #8817) and is moving the export to the job queue. [5]\n\n## What is still open\n- Fernhill's end-to-end SSO walkthrough is Thursday 10am New York (16:00 Paris) on staging with their Okta tenant. Priya runs it and you need to be on the call. Signature validation had to be on staging by Wednesday EOD, which is tonight. [1][3]\n- Tom wants #423 split into two PRs, the module move separate from the lint fixes, and will approve both today. [4]\n- The assertion replay cache is per process. With several API pods, a replay can succeed on another pod, so it needs to move to Redis before production. You planned that for today. [1][2]",
+  "mesures": {
+    "mots": 218,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8091,
+    "sortie": 2568,
+    "reflexion": 2068,
+    "cache": 0,
+    "cout": 0.0020931
+  },
+  "cout": 0.0020931,
+  "latenceMs": 12960,
+  "fournisseur": "Claude Platform on AWS"
+}

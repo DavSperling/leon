@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:27:18.896Z",
+  "reponse": "## Où j'en suis\nThe real replay is done: PR #233 was merged by Daniel and job replay-1 produced all 18,442,107 events of the 12/11 window (14:10–17:40 UTC) into events.replay.v3, with 3,118 schema v2 rejects saved to S3. The aggregator backfill for 2026-11-12 is in progress (61% at last check, hours 00–14 done, ~14.9M rows in ClickHouse vs ~20.5M expected). The incident stays open until hour-by-hour counts match within 1%. (source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill 2026-11-12: job backfill-2026-11-12 at 61% at 09:52 UTC (source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, then compare ClickHouse counts hour by hour (1% tolerance) (source: ses-rp-2, r2-07, r2-10)\n- [prochaine-étape] Close the incident only once counts match; Rachel told Fernhill and Orbitly data is back by Thursday (source: ses-rp-2, r2-07, r2-10)\n- [essai-raté] Dry run with 50k batches OOMKilled (2 Gi limit, exit 137); fixed with 5k batches, memory limit untouched per Noa's namespace quota cap (source: ses-rp-1, r1-04, src-sentry-oom)\n- [question] Orbitly (Mark Tan) expects confirmation of the Nov 12 restoration date, promised by Wednesday Nov 18; Rachel to confirm the exact date with engineering (source: src-zendesk-orbitly)\n- [décision] Ignore PR #241 from the okafor-dev fork — Daniel's CI check (length test on the dedup key builder) is the official fix for this incident, no other fix goes in (source: r2-09, src-slack-incident)\n- [décision] Replay everything into events.replay.v3, never produce to events.v3 directly from this tool (source: r1-02)\n- [décision] Use 5k batches and do not touch the 2 Gi memory limit (Noa capped the namespace quota) (source: r1-04)",
+  "rendu": "## Où j'en suis\nThe real replay is done: PR #233 was merged by Daniel and job replay-1 produced all 18,442,107 events of the 12/11 window (14:10–17:40 UTC) into events.replay.v3, with 3,118 schema v2 rejects saved to S3. The aggregator backfill for 2026-11-12 is in progress (61% at last check, hours 00–14 done, ~14.9M rows in ClickHouse vs ~20.5M expected). The incident stays open until hour-by-hour counts match within 1%. (de: agent; source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill 2026-11-12: job backfill-2026-11-12 at 61% at 09:52 UTC (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, then compare ClickHouse counts hour by hour (1% tolerance) (de: toi, agent; source: ses-rp-2, r2-07, r2-10)\n- [prochaine-étape] Close the incident only once counts match; Rachel told Fernhill and Orbitly data is back by Thursday (de: toi, agent; source: ses-rp-2, r2-07, r2-10)\n- [essai-raté] Dry run with 50k batches OOMKilled (2 Gi limit, exit 137); fixed with 5k batches, memory limit untouched per Noa's namespace quota cap (de: toi, connecteur, agent; source: ses-rp-1, r1-04, src-sentry-oom)\n- [question] Orbitly (Mark Tan) expects confirmation of the Nov 12 restoration date, promised by Wednesday Nov 18; Rachel to confirm the exact date with engineering (de: connecteur; source: src-zendesk-orbitly)\n- [décision] Ignore PR #241 from the okafor-dev fork — Daniel's CI check (length test on the dedup key builder) is the official fix for this incident, no other fix goes in (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] Replay everything into events.replay.v3, never produce to events.v3 directly from this tool (de: toi; source: r1-02)\n- [décision] Use 5k batches and do not touch the 2 Gi memory limit (Noa capped the namespace quota) (de: toi; source: r1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1847,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3775,
+    "sortie": 547,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0034909375
+  },
+  "cout": 0.0034909375,
+  "latenceMs": 4745,
+  "fournisseur": "DeepInfra"
+}

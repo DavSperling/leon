@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:04.541Z",
+  "reponse": "## Où j'en suis\nStaging analytics RDS now runs PostgreSQL 17.2 after a blue/green switchover at 14:20 UTC on Nov 17 (41 s of refused writes); pg_partman was upgraded to 5.1.0 first, maintenance was green on events_raw and events_daily, and dbt passed 14/14 models on 17.2 (+3% runtime, within noise). PR #57 is open as draft with commits 7e3c9d4 (logical replication in the module) and b0f18a2 (staging engine 17.2); the runbook now lists rds.logical_replication=1 + reboot as prod step 0. No prod date: Maya wants a full incident-free week on staging first. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Full-week staging soak on 17.2 before Maya's sign-off; earliest sign-off Nov 24 (source: ses-pg-3, src-linear-kes298)\n- [en-cours] PR kestrel-analytics/infra#57 open (draft); prod still prepared but disabled behind pg17_enabled=false (source: src-pr57, ses-pg-1)\n- [prochaine-étape] Watch staging through the week; report anything off in #infra (source: src-slack-infra, ses-pg-3)\n- [prochaine-étape] After sign-off, book two prod windows outside the 01:00–03:30 UTC dbt lock: reboot for rds.logical_replication=1 (≈2–3 min downtime), then blue/green switchover (source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Enable prod (pg17_enabled=true) and execute runbooks/pg17-upgrade.md (source: ses-pg-1, ses-pg-3)\n- [essai-raté] First staging apply failed: blue/green requires logical replication — fixed with rds.logical_replication=1 (pending-reboot) in the pg16 parameter group plus a reboot (1m48s) (source: ses-pg-3)\n- [essai-raté] terraform init -upgrade selected AWS provider v6 (37 unrelated changes); pinned to ~> 5.82 instead (source: ses-pg-1)\n- [question] Prod cutover date and exact windows: unset, pending Maya's sign-off (source: ses-pg-3, src-linear-kes298)\n- [décision] No prod date until Maya signs off; apply_immediately stays false (source: s1-04, s3-09)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (source: s1-02)\n- [décision] Prod runbook step 0: set rds.logical_replication=1 and reboot (own window, ≈2–3 min prod downtime) before creating the blue/green deployment (source: s3-09)",
+  "rendu": "## Où j'en suis\nStaging analytics RDS now runs PostgreSQL 17.2 after a blue/green switchover at 14:20 UTC on Nov 17 (41 s of refused writes); pg_partman was upgraded to 5.1.0 first, maintenance was green on events_raw and events_daily, and dbt passed 14/14 models on 17.2 (+3% runtime, within noise). PR #57 is open as draft with commits 7e3c9d4 (logical replication in the module) and b0f18a2 (staging engine 17.2); the runbook now lists rds.logical_replication=1 + reboot as prod step 0. No prod date: Maya wants a full incident-free week on staging first. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] Full-week staging soak on 17.2 before Maya's sign-off; earliest sign-off Nov 24 (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [en-cours] PR kestrel-analytics/infra#57 open (draft); prod still prepared but disabled behind pg17_enabled=false (de: équipe, agent; source: src-pr57, ses-pg-1)\n- [prochaine-étape] Watch staging through the week; report anything off in #infra (de: connecteur, agent; source: src-slack-infra, ses-pg-3)\n- [prochaine-étape] After sign-off, book two prod windows outside the 01:00–03:30 UTC dbt lock: reboot for rds.logical_replication=1 (≈2–3 min downtime), then blue/green switchover (de: agent; source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Enable prod (pg17_enabled=true) and execute runbooks/pg17-upgrade.md (de: agent; source: ses-pg-1, ses-pg-3)\n- [essai-raté] First staging apply failed: blue/green requires logical replication — fixed with rds.logical_replication=1 (pending-reboot) in the pg16 parameter group plus a reboot (1m48s) (de: agent; source: ses-pg-3)\n- [essai-raté] terraform init -upgrade selected AWS provider v6 (37 unrelated changes); pinned to ~> 5.82 instead (de: agent; source: ses-pg-1)\n- [question] Prod cutover date and exact windows: unset, pending Maya's sign-off (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1950,
+    "lignesRetirees": 3,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4853,
+    "sortie": 5297,
+    "reflexion": 4579,
+    "cache": 0,
+    "cout": 0.00093348
+  },
+  "cout": 0.00093348,
+  "latenceMs": 51291,
+  "fournisseur": "Novita"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:42.001Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est codé et testé : règles de remise par collection, arrondi à 9, écriture en masse. La PR #94 est ouverte. L'application a été testée sur la boutique de dev, puis celle-ci a été remise à ses prix d'origine. L'application en production est programmée le mercredi 13 janvier 2027 à 08:00 (Europe/Paris). Le CSV pour la newsletter a été généré avec les prix du jour.\n\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre\n- [prochaine-étape] Vérifier la veille, le 12 janvier, sur la boutique de dev avec `pnpm soldes:repetition`\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Un appel API par produit : THROTTLED dès le produit 62, 73 produits non mis à jour, boutique de dev à moitié soldée. Remplacé par une opération en masse (JSONL) : 134 lignes, 0 rejet\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] Prix en 9 : arrondi à l'euro inférieur, puis au 9 juste en dessous (1 032 → 1 029) (source: t07)\n- [décision] Application en masse, et remise de la boutique de dev à ses prix d'origine avant relance (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 08:00, et non le 12 au soir (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est codé et testé : règles de remise par collection, arrondi à 9, écriture en masse. La PR #94 est ouverte. L'application a été testée sur la boutique de dev, puis celle-ci a été remise à ses prix d'origine. L'application en production est programmée le mercredi 13 janvier 2027 à 08:00 (Europe/Paris). Le CSV pour la newsletter a été généré avec les prix du jour.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, à faire en décembre\n- [prochaine-étape] Vérifier la veille, le 12 janvier, sur la boutique de dev avec `pnpm soldes:repetition`\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Un appel API par produit : THROTTLED dès le produit 62, 73 produits non mis à jour, boutique de dev à moitié soldée. Remplacé par une opération en masse (JSONL) : 134 lignes, 0 rejet\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] Prix en 9 : arrondi à l'euro inférieur, puis au 9 juste en dessous (1 032 → 1 029) (source: t07)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1262,
+    "decisions": 2,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5589,
+    "sortie": 1832,
+    "reflexion": 1244,
+    "cache": 0,
+    "cout": 0.0014749
+  },
+  "cout": 0.0014749,
+  "latenceMs": 8347,
+  "fournisseur": "Claude Platform on AWS"
+}

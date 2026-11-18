@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:13:19.454Z",
+  "reponse": "Oui, c’est réparé. Le bug est apparu après l’ajout de l’emplacement **Showroom** dans Shopify le 3 novembre : le script `sync-stock` ne mettait à jour que l’entrepôt de Vénissieux. Le showroom conservait donc d’anciennes quantités, et Shopify affichait la somme des deux emplacements, laissant croire que des meubles étaient encore disponibles [3][4][14].\n\nLe correctif **PR #87** synchronise désormais les deux emplacements à partir de l’export, avec trois tests supplémentaires. Il a été revu, fusionné et déployé le 13 novembre, puis tout le catalogue a été recalé ; **7 commandes** avaient été touchées entre le 3 et le 12 novembre [3][4][14]. Aucun nouveau cas n’était signalé au 17 novembre [4].\n\nUn contrôle quotidien des écarts entre Shopify et l’entrepôt est aussi en préparation (**PR #91**), mais il n’était pas encore en production au 17 novembre [4][15].",
+  "rendu": "Oui, c’est réparé. Le bug est apparu après l’ajout de l’emplacement **Showroom** dans Shopify le 3 novembre : le script `sync-stock` ne mettait à jour que l’entrepôt de Vénissieux. Le showroom conservait donc d’anciennes quantités, et Shopify affichait la somme des deux emplacements, laissant croire que des meubles étaient encore disponibles [3][4][14].\n\nLe correctif **PR #87** synchronise désormais les deux emplacements à partir de l’export, avec trois tests supplémentaires. Il a été revu, fusionné et déployé le 13 novembre, puis tout le catalogue a été recalé ; **7 commandes** avaient été touchées entre le 3 et le 12 novembre [3][4][14]. Aucun nouveau cas n’était signalé au 17 novembre [4].\n\nUn contrôle quotidien des écarts entre Shopify et l’entrepôt est aussi en préparation (**PR #91**), mais il n’était pas encore en production au 17 novembre [4][15].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18084,
+    "sortie": 679,
+    "reflexion": 143,
+    "cache": 6848,
+    "cout": 0.030631600000000002
+  },
+  "latenceMs": 13979,
+  "fournisseur": "Fireworks",
+  "trace": [
+    "chercher {\"requete\":\"clients acheter meubles plus disponibles stock indisponible bug commande\"}",
+    "chercher {\"requete\":\"meubles stock inventaire disponibilité commande incident correction\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}",
+    "chercher {\"outil\":\"github\",\"requete\":\"PR #87 sync-stock Showroom stock corrigé fusionné\"}"
+  ],
+  "cout": 0.030631600000000002
+}

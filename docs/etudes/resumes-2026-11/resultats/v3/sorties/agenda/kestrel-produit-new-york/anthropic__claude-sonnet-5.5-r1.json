@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:01:02.160Z",
+  "reponse": "Période : 16 au 22 novembre 2026. Les heures sont à convertir en heure de Paris (ET = Paris − 6 h).\n\n- Mail 1 : prep du dimanche 22 nov, 18:30–19:00 ET → 00:30–01:00 Paris le 23 nov. Hors période en heure de Paris, mais l'événement est le 22 à New York. La période se lit à l'heure de Paris, donc le 23 est hors période : exclu.\n- Mail 2 : 30 nov, hors période.\n- Mail 3 : démo SSO déplacée au vendredi 20 nov, 10:00–11:00 ET → 16:00–17:00 Paris.\n- Mail 5 : webinaire, exclu.\n- Mail 6 : annulé.\n- Mail 7 : entretien client jeudi 19 nov, 11:30 ET → 17:30 Paris, 45 min → 18:15.\n- Mail 9 : mercredi 18 nov, 15:00–15:45 EST → 21:00–21:45 Paris.\n- Mail 14 : le 17 nov, 11:00–12:00 ET → 17:00–18:00 Paris. Dans la période.\n- Mail 17 : café le 18 nov à 9:30 ET → 15:30 Paris. Pas de fin.\n- Mail 23 : dîner jeudi 19 nov, 19:30 à New York (Bleecker) → 01:30 Paris le 20 nov. Dans la période.\n\n{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Daniel Levi, Oliver Grant\"}\n{\"n\": 7, \"titre\": \"Customer interview avec Ana Ruiz\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 17, \"titre\": \"Coffee avec Lior\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 23, \"titre\": \"Dinner at Lark & Lantern\", \"debut\": \"2026-11-20T01:30\", \"avec\": \"Jonah Reyes\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Coffee avec Lior (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview avec Ana Ruiz (avec Ana Ruiz)\n2026-11-20T01:30 Dinner at Lark & Lantern (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4517,
+    "sortie": 951,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018544
+  },
+  "cout": 0.018544,
+  "latenceMs": 5976,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-photos-cloture",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:53.603Z",
+  "reponse": "## Où j'en suis\nLe sujet des photos de clôture a changé de solution en cours de route : la compression dans le navigateur (branche `lucas/photos-compression`, WIP Safari) a été abandonnée le 17/11 au profit d'un envoi en arrière-plan depuis le téléphone, avec un état « clôture en attente » et un redimensionnement côté serveur. La PR #224 est ouverte en brouillon, testée sur iPhone en mode avion et sur Android, en attente de la relecture de Lucas. La PR #221 (3 photos obligatoires avant clôture) est fusionnée, en prod. Une nouvelle demande de Franck (4 photos, dont le raccordement électrique) arrive après coup, pour le 8/12 (source: fs3, src-pr224, src-pr221, src-slack-franck)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente », branche `thomas/photos-envoi`, commits `9e41b07` et `d2c5a18`, en brouillon, relecteur @lucas-tessier (source: fs3, src-pr224)\n- [prochaine-étape] faire relire #224 par Lucas à son retour lundi, puis la sortir du brouillon (source: p3-11, p3-12)\n- [prochaine-étape] ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, avant le 8/12 (source: src-slack-franck)\n- [essai-raté] compression dans le navigateur : sur iPhone/Safari les HEIC donnent une image noire, `createImageBitmap` ne lit pas le HEIC ; le WebP 0,6 ne change rien, le problème est la lecture (source: p2-06, p2-08, p3-05)\n- [essai-raté] traiter le problème des caves par la seule compression : la cause est l'absence de réseau, même compressées les photos ne partiraient pas (source: p3-04)\n- [décision] trois photos obligatoires avant la clôture (unité extérieure, unité intérieure, plaque signalétique), PR #221 fusionnée (source: p1-03, src-pr221)\n- [décision] abandon de la compression navigateur au profit de l'envoi en arrière-plan, clôture enregistrée tout de suite et redimensionnement serveur (source: p3-05, src-pr224)\n- [décision] la clôture ne compte comme faite côté planif qu'à l'arrivée des photos obligatoires (source: p3-07)\n- [décision] ne pas supprimer la branche `lucas/photos-compression`, Lucas verra (source: p3-13)",
+  "rendu": "## Où j'en suis\nLe sujet des photos de clôture a changé de solution en cours de route : la compression dans le navigateur (branche `lucas/photos-compression`, WIP Safari) a été abandonnée le 17/11 au profit d'un envoi en arrière-plan depuis le téléphone, avec un état « clôture en attente » et un redimensionnement côté serveur. La PR #224 est ouverte en brouillon, testée sur iPhone en mode avion et sur Android, en attente de la relecture de Lucas. La PR #221 (3 photos obligatoires avant clôture) est fusionnée, en prod. Une nouvelle demande de Franck (4 photos, dont le raccordement électrique) arrive après coup, pour le 8/12 (de: équipe, connecteur, agent; source: fs3, src-pr224, src-pr221, src-slack-franck)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente », branche `thomas/photos-envoi`, commits `9e41b07` et `d2c5a18`, en brouillon, relecteur @lucas-tessier (de: équipe, agent; source: fs3, src-pr224)\n- [prochaine-étape] faire relire #224 par Lucas à son retour lundi, puis la sortir du brouillon (de: toi, agent; source: p3-11, p3-12)\n- [prochaine-étape] ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, avant le 8/12 (de: connecteur; source: src-slack-franck)\n- [essai-raté] compression dans le navigateur : sur iPhone/Safari les HEIC donnent une image noire, `createImageBitmap` ne lit pas le HEIC ; le WebP 0,6 ne change rien, le problème est la lecture (de: toi, agent; source: p2-06, p2-08, p3-05)\n- [essai-raté] traiter le problème des caves par la seule compression : la cause est l'absence de réseau, même compressées les photos ne partiraient pas (de: agent; source: p3-04)\n- [décision] trois photos obligatoires avant la clôture (unité extérieure, unité intérieure, plaque signalétique), PR #221 fusionnée (de: toi, équipe; source: p1-03, src-pr221)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1829,
+    "lignesRetirees": 3,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4999,
+    "sortie": 1051,
+    "reflexion": 395,
+    "cache": 0,
+    "cout": 0.0027609
+  },
+  "cout": 0.0027609,
+  "latenceMs": 3311,
+  "fournisseur": "CoreWeave"
+}

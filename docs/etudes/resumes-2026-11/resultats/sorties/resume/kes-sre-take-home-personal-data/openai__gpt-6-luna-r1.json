@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:24:48.088Z",
+  "reponse": "## Où j'en suis\nLe take-home SRE (3 heures, sans Kubernetes) et son rubric sont prêts dans le dépôt privé `kestrel-analytics/sre-take-home`. L’exercice comprend une alerte incorrecte, un service avec fuite de connexions et une politique IAM trop permissive. `hiring/` a été retiré de l’arbre de travail de la branche infra, sans commit ni PR.\n\n- [prochaine-étape] Après l’appel de jeudi à 16 h, envoyer soi-même l’exercice au candidat.\n- [décision] Ne pas ouvrir de PR dans infra ; la branche sera supprimée plus tard (source: t14)\n- [décision] Envoyer l’exercice soi-même après l’appel et ne contacter personne par courriel avant cela (source: t16)",
+  "rendu": "## Où j'en suis\nLe take-home SRE (3 heures, sans Kubernetes) et son rubric sont prêts dans le dépôt privé `kestrel-analytics/sre-take-home`. L’exercice comprend une alerte incorrecte, un service avec fuite de connexions et une politique IAM trop permissive. `hiring/` a été retiré de l’arbre de travail de la branche infra, sans commit ni PR.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Après l’appel de jeudi à 16 h, envoyer soi-même l’exercice au candidat.\n- [décision] Ne pas ouvrir de PR dans infra ; la branche sera supprimée plus tard (source: t14)\n- [décision] Envoyer l’exercice soi-même après l’appel et ne contacter personne par courriel avant cela (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 745,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3442,
+    "sortie": 317,
+    "reflexion": 140,
+    "cache": 0,
+    "cout": 0.000588675
+  },
+  "cout": 0.000588675,
+  "latenceMs": 3936,
+  "fournisseur": "OpenAI"
+}

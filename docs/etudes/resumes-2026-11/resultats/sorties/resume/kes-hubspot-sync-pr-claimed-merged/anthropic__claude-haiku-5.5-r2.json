@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:38:49.329Z",
+  "reponse": "## Où j'en suis\nLes webhooks HubSpot ont été abandonnés : un token d'application privée ne peut pas gérer les abonnements. La synchronisation par polling est en place (toutes les 15 min, pagination par fenêtres au-delà de 10 000 résultats, seulement les entreprises avec ARR > 0). La PR #409 est ouverte, pas fusionnée : le check e2e `test_admin_accounts.py::test_accounts_table_shows_owner` échoue (2 lignes au lieu de 3), ce qui bloque l'auto-merge. Le token doit encore être ajouté à Secrets Manager pour staging et prod.\n\n- [en-cours] Corriger le fixture e2e de `tests/e2e/test_admin_accounts.py` : l'entreprise d'essai avec propriétaire n'a plus d'ARR > 0 et est filtrée.\n- [prochaine-étape] Corriger le fixture ou l'attendu du test e2e, puis relancer les checks de #409 (l'auto-merge partira ensuite).\n- [prochaine-étape] Noa ajoute `HUBSPOT_TOKEN` dans Secrets Manager pour staging et prod.\n- [essai-raté] Abonnements webhook HubSpot : l'API refuse le token d'application privée (401, il faut une application publique). Abandonné au profit du polling.\n- [essai-raté] Recherche CRM sans fenêtre : HubSpot plafonne à 10 000 résultats par requête. Corrigé par pagination par fenêtres sur `hs_lastmodifieddate`.\n- [question] Les comptes d'essai qui ont déjà un propriétaire (import manuel ancien) gardent-ils leur propriétaire ? Rien n'a été effacé.\n- [décision] Synchronisation toutes les 15 minutes par polling, #405 fermée (source: t04)\n- [décision] Seules les entreprises avec ARR > 0 sont synchronisées, les essais sont exclus (source: t10)\n- [décision] Token HubSpot dans Secrets Manager pour staging et prod, PR ouverte avec auto-merge (source: t12)",
+  "rendu": "## Où j'en suis\nLes webhooks HubSpot ont été abandonnés : un token d'application privée ne peut pas gérer les abonnements. La synchronisation par polling est en place (toutes les 15 min, pagination par fenêtres au-delà de 10 000 résultats, seulement les entreprises avec ARR > 0). La PR #409 est ouverte, pas fusionnée : le check e2e `test_admin_accounts.py::test_accounts_table_shows_owner` échoue (2 lignes au lieu de 3), ce qui bloque l'auto-merge. Le token doit encore être ajouté à Secrets Manager pour staging et prod.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Corriger le fixture e2e de `tests/e2e/test_admin_accounts.py` : l'entreprise d'essai avec propriétaire n'a plus d'ARR > 0 et est filtrée.\n- [prochaine-étape] Corriger le fixture ou l'attendu du test e2e, puis relancer les checks de #409 (l'auto-merge partira ensuite).\n- [prochaine-étape] Noa ajoute `HUBSPOT_TOKEN` dans Secrets Manager pour staging et prod.\n- [essai-raté] Abonnements webhook HubSpot : l'API refuse le token d'application privée (401, il faut une application publique). Abandonné au profit du polling.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1241,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4964,
+    "sortie": 1229,
+    "reflexion": 486,
+    "cache": 0,
+    "cout": 0.0011109
+  },
+  "cout": 0.0011109,
+  "latenceMs": 6519,
+  "fournisseur": "Claude Platform on AWS"
+}

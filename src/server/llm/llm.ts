@@ -20,8 +20,8 @@ export type AgentEvent =
   // 'fini' : le modèle a répondu ; 'limite' : le nombre d'étapes (ou la longueur) est atteint ; 'refus' : le modèle a refusé.
   | { type: 'fin'; reason: 'fini' | 'limite' | 'refus' };
 
-// Le client réel (anthropic-llm.ts), le faux des tests et le faux de démonstration (fake-llm.ts) en sont les
-// trois implémentations.
+// Les clients réels (anthropic-llm.ts, openrouter-llm.ts), le faux des tests et le faux de démonstration
+// (fake-llm.ts) en sont les implémentations.
 //
 // Comment un flux se termine, et ce que l'appelant doit en faire (les deux fonctions ne le disent pas pareil) :
 // - streamText rend des morceaux de texte puis s'arrête. Un refus du modèle ou une réponse coupée (limite de

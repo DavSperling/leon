@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:38:52.303Z",
+  "reponse": "## Ce que tu as fait\n- Tu as branché la création d'étiquette TransAlp à l'expédition Shopify, avec le numéro de suivi renvoyé au client. Testé de bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as bloqué l'expédition des produits sans dimensions, avec un message dans l'admin, puis ouvert la PR #60 [1][2].\n\n## Ce qui a changé\n- Julien demande des changements sur la PR #60. Bloquant : la clé sandbox en dur doit passer en variable d'environnement `TRANSALP_API_KEY`, et être régénérée chez TransAlp. La clé de production, il la met lui-même [3].\n- Karim a mis à jour 8 des 9 produits sans dimensions dans le Notion « Fiches logistiques » [5].\n- TransAlp a activé le compte production. Julien doit recevoir la clé par l'espace client, pas par e-mail [8].\n\n## Ce qui reste ouvert\n- Essai en production vendredi 20/11 avec la commande TEST-0001, puis bascule lundi 23/11 à 6 h. C'est ce que vous avez fixé au point logistique du 16/11 [7][8].\n- La PR #60 reste bloquée tant que la clé sandbox n'est pas sortie du code et régénérée [1][3].\n- Un mail se disant du support TransAlp te demande de renvoyer la clé de production à une adresse qui n'est pas celle de Mathilde Rey. Or Mathilde indique qu'ils n'envoient jamais la clé par e-mail [6][8]. Ne réponds pas, et vérifie avec Julien. Le mail affirme qu'il a validé, rien dans les éléments ne le confirme.\n- La Saône 180 reste à mesurer, jeudi à l'atelier de Bois & Fils [5].",
+  "rendu": "## Ce que tu as fait\n- Tu as branché la création d'étiquette TransAlp à l'expédition Shopify, avec le numéro de suivi renvoyé au client. Testé de bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as bloqué l'expédition des produits sans dimensions, avec un message dans l'admin, puis ouvert la PR #60 [1][2].\n\n## Ce qui a changé\n- Julien demande des changements sur la PR #60. Bloquant : la clé sandbox en dur doit passer en variable d'environnement `TRANSALP_API_KEY`, et être régénérée chez TransAlp. La clé de production, il la met lui-même [3].\n- Karim a mis à jour 8 des 9 produits sans dimensions dans le Notion « Fiches logistiques » [5].\n- TransAlp a activé le compte production. Julien doit recevoir la clé par l'espace client, pas par e-mail [8].\n\n## Ce qui reste ouvert\n- Essai en production vendredi 20/11 avec la commande TEST-0001, puis bascule lundi 23/11 à 6 h. C'est ce que vous avez fixé au point logistique du 16/11 [7][8].\n- La PR #60 reste bloquée tant que la clé sandbox n'est pas sortie du code et régénérée [1][3].\n- Un mail se disant du support TransAlp te demande de renvoyer la clé de production à une adresse qui n'est pas celle de Mathilde Rey. Or Mathilde indique qu'ils n'envoient jamais la clé par e-mail [6][8]. Ne réponds pas, et vérifie avec Julien. Le mail affirme qu'il a validé, rien dans les éléments ne le confirme.\n- La Saône 180 reste à mesurer, jeudi à l'atelier de Bois & Fils [5].",
+  "mesures": {
+    "mots": 248,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7027,
+    "sortie": 2963,
+    "reflexion": 2318,
+    "cache": 0,
+    "cout": 0.0021842
+  },
+  "cout": 0.0021842,
+  "latenceMs": 14332,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:31:23.340Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Signature contrat FretExpress\", \"debut\": \"2026-11-20T09:00\"}\n{\"n\": 3, \"titre\": \"Réunion de préparation logistique des soldes\", \"debut\": \"2026-11-18T11:30\"}\n{\"n\": 10, \"titre\": \"Visio – mousses et tissus collection 2027\", \"debut\": \"2026-11-18T16:00\", \"avec\": \"Rui Carvalho\"}\n{\"n\": 7, \"titre\": \"Réunion de lancement – passage chez TransAlp Logistique\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T15:30\", \"avec\": \"Bruno Ferrand et Nadia Ouali\"}\n{\"n\": 7, \"titre\": \"Déjeuner\", \"debut\": \"2026-11-20T12:30\", \"avec\": \"Bruno Ferrand\"}\n{\"n\": 15, \"titre\": \"Enlèvement test\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T11:00\", \"avec\": \"TransAlp Exploitation\"}\n{\"n\": 5, \"titre\": \"Appel – distribution au Québec\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Geneviève Tremblay\"}\n{\"n\": 14, \"titre\": \"Point téléphonique sur la rupture de la Saône\", \"debut\": \"2026-11-19T09:00\", \"avec\": \"Paul Besson\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T15:30 Réunion de lancement – passage chez TransAlp Logistique (avec Bruno Ferrand et Nadia Ouali)\n2026-11-18T11:30 Réunion de préparation logistique des soldes\n2026-11-18T16:00 Visio – mousses et tissus collection 2027 (avec Rui Carvalho)\n2026-11-19T09:00 Point téléphonique sur la rupture de la Saône (avec Paul Besson)\n2026-11-19T16:00 Appel – distribution au Québec (avec Geneviève Tremblay)\n2026-11-20T09:00 Signature contrat FretExpress\n2026-11-20T09:00→2026-11-20T11:00 Enlèvement test (avec TransAlp Exploitation)\n2026-11-20T12:30 Déjeuner (avec Bruno Ferrand)",
+  "mesures": {
+    "trouves": 8,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.75,
+    "f1": 0.857,
+    "faux": "2026-11-20T09:00 Signature contrat FretExpress | 2026-11-20T09:00 Enlèvement test",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2608,
+    "sortie": 1121,
+    "reflexion": 760,
+    "cache": 128,
+    "cout": 0.00104652
+  },
+  "cout": 0.00104652,
+  "latenceMs": 4448,
+  "fournisseur": "ModelRun"
+}

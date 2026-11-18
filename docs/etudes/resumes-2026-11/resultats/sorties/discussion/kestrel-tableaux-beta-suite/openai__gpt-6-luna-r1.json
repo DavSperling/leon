@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:25:52.211Z",
+  "reponse": "The first part—chart builder and saved views—is expected to be feature-complete behind a flag by Dec 4, with the design-partner beta planned right after [15]. The earlier plan said “early December” and noted the exact beta date was still TBD [11].",
+  "rendu": "The first part—chart builder and saved views—is expected to be feature-complete behind a flag by Dec 4, with the design-partner beta planned right after [15]. The earlier plan said “early December” and noted the exact beta date was still TBD [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.333,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18705,
+    "sortie": 272,
+    "reflexion": 22,
+    "cache": 14387,
+    "cout": 0.0008192449999999999
+  },
+  "latenceMs": 6808,
+  "fournisseur": "OpenAI",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards first part customer try available date launch beta customer testing\",\"type\":\"conversation\"}",
+    "chercher {\"requete\":\"dashboards launch first phase customer access rollout date\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"dashboards first part customers try when beta\",\"outil\":\"notion\"}",
+    "chercher {\"requete\":\"new dashboards customer pilot release date first phase\",\"type\":\"reunion\"}",
+    "lire {\"sourceId\":\"notion-dashboards-redesign-spec\"}",
+    "lire {\"sourceId\":\"fathom-weekly-sync-1112\"}"
+  ],
+  "cout": 0.0008192449999999999
+}

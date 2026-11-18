@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:58.302Z",
+  "reponse": "## Où j'en suis\nSession sur la branche `maya/sre-take-home` : un SRE take-home a été construit (compose avec flaky-svc, Prometheus/Alertmanager, loadgen ; règle d'alerte cassée, fuite de connexions, politique IAM trop large ; time box 3 h, pas de Kubernetes). Image multi-arch impossible avec `--load` : le service est désormais buildé depuis la source dans compose. Rubric 0–12 sans seuil. Exercice déplacé dans le repo privé `kestrel-analytics/sre-take-home` via subtree split (dernier commit avant split : `1f6c0b4`) ; `hiring/` retiré de la branche infra, non commité, aucune PR ouverte en infra.\n\n- [prochaine-étape] Maya envoie elle-même l'exercice au candidat après l'appel de jeudi 16h heure de Tel Aviv\n- [essai-raté] build multi-arch avec `--load` : « docker exporter does not currently support exporting manifest lists »\n- [décision] pas de Kubernetes, 3 h max, Terraform + compose uniquement (source: t03)\n- [décision] compose build flaky-svc depuis la source, pas d'image pré-construite (source: t06)\n- [décision] pas de seuil de passage, les scores alimentent le panel (Maya + Noa) (source: t10)\n- [décision] exercice dans son propre repo privé (source: t12)\n- [décision] supprimer `hiring/` de la branche infra et ne pas ouvrir de PR (source: t14)\n- [décision] aucun e-mail envoyé par l'agent, Maya gère l'envoi (source: t16)",
+  "rendu": "## Où j'en suis\nSession sur la branche `maya/sre-take-home` : un SRE take-home a été construit (compose avec flaky-svc, Prometheus/Alertmanager, loadgen ; règle d'alerte cassée, fuite de connexions, politique IAM trop large ; time box 3 h, pas de Kubernetes). Image multi-arch impossible avec `--load` : le service est désormais buildé depuis la source dans compose. Rubric 0–12 sans seuil. Exercice déplacé dans le repo privé `kestrel-analytics/sre-take-home` via subtree split (dernier commit avant split : `1f6c0b4`) ; `hiring/` retiré de la branche infra, non commité, aucune PR ouverte en infra.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Maya envoie elle-même l'exercice au candidat après l'appel de jeudi 16h heure de Tel Aviv\n- [essai-raté] build multi-arch avec `--load` : « docker exporter does not currently support exporting manifest lists »\n- [décision] pas de Kubernetes, 3 h max, Terraform + compose uniquement (source: t03)\n- [décision] compose build flaky-svc depuis la source, pas d'image pré-construite (source: t06)\n- [décision] pas de seuil de passage, les scores alimentent le panel (Maya + Noa) (source: t10)\n- [décision] exercice dans son propre repo privé (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1268,
+    "decisions": 4,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3545,
+    "sortie": 518,
+    "reflexion": 112,
+    "cache": 0,
+    "cout": 0.00062062
+  },
+  "cout": 0.00062062,
+  "latenceMs": 6184,
+  "fournisseur": "Makora"
+}

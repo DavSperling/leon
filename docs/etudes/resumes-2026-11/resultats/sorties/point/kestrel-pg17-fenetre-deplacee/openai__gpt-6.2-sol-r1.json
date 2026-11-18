@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T14:30:05.289Z",
+  "reponse": "## What you did\n- You rehearsed the PG17 cutover on a production snapshot clone: writes were unavailable for 74 seconds, the API reconnected without restarts, and row counts matched on the 20 largest tables. You’ve since torn down the clone. [1]\n\n## What changed\n- Daniel Levi will cover the API on Sunday and asked you to ping him at switchover. Lior Ben-David needs 30 minutes’ notice to pause ingest consumers; the workers need no configuration changes. [7][9]\n\n## What is still open\n- **The production cutover moved to Sunday 22 November, 02:00–04:00 UTC** to avoid Fernhill’s batch. Maya Cohen approved #321 and confirmed it can now merge; the runbook still needs the new window. Your Terraform plan preserves the dashboards read replica, with zero destroys. [1][3][8]\n- The rollback rehearsal is still due Thursday 19 November on a fresh clone. You want to measure recovery time and data loss: the old primary stops receiving writes after switchover, so rollback isn’t a simple switch back. [1]",
+  "rendu": "## What you did\n- You rehearsed the PG17 cutover on a production snapshot clone: writes were unavailable for 74 seconds, the API reconnected without restarts, and row counts matched on the 20 largest tables. You’ve since torn down the clone. [1]\n\n## What changed\n- Daniel Levi will cover the API on Sunday and asked you to ping him at switchover. Lior Ben-David needs 30 minutes’ notice to pause ingest consumers; the workers need no configuration changes. [7][9]\n\n## What is still open\n- **The production cutover moved to Sunday 22 November, 02:00–04:00 UTC** to avoid Fernhill’s batch. Maya Cohen approved #321 and confirmed it can now merge; the runbook still needs the new window. Your Terraform plan preserves the dashboards read replica, with zero destroys. [1][3][8]\n- The rollback rehearsal is still due Thursday 19 November on a fresh clone. You want to measure recovery time and data loss: the old primary stops receiving writes after switchover, so rollback isn’t a simple switch back. [1]",
+  "mesures": {
+    "mots": 160,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4852,
+    "sortie": 291,
+    "reflexion": 48,
+    "cache": 1417,
+    "cout": 0.0116377
+  },
+  "cout": 0.0116377,
+  "latenceMs": 3694,
+  "fournisseur": "Azure"
+}

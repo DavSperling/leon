@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T17:55:54.109Z",
+  "reponse": "## What is still open\n\n- Update the runbook and merge PR #321: Maya approved it after confirming the cutover has moved to **Sunday 22 November, 02:00–04:00 UTC**, around Fernhill’s batch. [3][8]\n- Rehearse rollback on a fresh clone Thursday 19 November, measuring duration and data loss; the old blue instance diverges after switchover. The cutover rehearsal had 74 seconds of write downtime. [1]\n- Give Lior 30 minutes’ notice to pause ingest consumers, and ping Daniel when you start the switchover; he’ll be on call for the API. [9][7]",
+  "rendu": "## What is still open\n\n- Update the runbook and merge PR #321: Maya approved it after confirming the cutover has moved to **Sunday 22 November, 02:00–04:00 UTC**, around Fernhill’s batch. [3][8]\n- Rehearse rollback on a fresh clone Thursday 19 November, measuring duration and data loss; the old blue instance diverges after switchover. The cutover rehearsal had 74 seconds of write downtime. [1]\n- Give Lior 30 minutes’ notice to pause ingest consumers, and ping Daniel when you start the switchover; he’ll be on call for the API. [9][7]",
+  "mesures": {
+    "mots": 86,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4901,
+    "sortie": 390,
+    "reflexion": 242,
+    "cache": 1451,
+    "cout": 0.0063343
+  },
+  "cout": 0.0063343,
+  "latenceMs": 5181,
+  "fournisseur": "Azure"
+}

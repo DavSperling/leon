@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:04:55.465Z",
+  "reponse": "Cause : l'emplacement « Showroom » a été ajouté dans Shopify le 3/11 [2][8], mais le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux ». Le showroom gardait donc ses anciennes quantités, et comme Shopify additionne les emplacements, le site affichait du stock qui n'existait plus [2][8][9]. C'est ce qui a produit les annulations/commandes incomplètes côté clients (banc Rhône, buffet Croix-Rousse, chaises Fourvière) [3][4][7].\n\nRéparé : le correctif (PR #87) met à jour les deux emplacements à partir des onglets « Stock » et « Showroom » de l'export, avec 3 tests [2][9] ; il a été relu, testé, fusionné et déployé le 13/11, et tout le catalogue a été repassé avec les bonnes quantités [8][9]. Bilan : 7 commandes touchées entre le 3 et le 12/11 [8], et plus aucun nouveau cas signalé depuis (Lucie Fontaine, 17/11) [8].\n\nÀ noter : un contrôle quotidien comparant Shopify et l'export de l'entrepôt (PR #91) est en préparation, avec des retours à corriger — pas encore en production [8][10]. Et la possibilité de vendre sans stock reste volontairement active pour les précommandes de la table Saône [2].",
+  "rendu": "Cause : l'emplacement « Showroom » a été ajouté dans Shopify le 3/11 [2][8], mais le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux ». Le showroom gardait donc ses anciennes quantités, et comme Shopify additionne les emplacements, le site affichait du stock qui n'existait plus [2][8][9]. C'est ce qui a produit les annulations/commandes incomplètes côté clients (banc Rhône, buffet Croix-Rousse, chaises Fourvière) [3][4][7].\n\nRéparé : le correctif (PR #87) met à jour les deux emplacements à partir des onglets « Stock » et « Showroom » de l'export, avec 3 tests [2][9] ; il a été relu, testé, fusionné et déployé le 13/11, et tout le catalogue a été repassé avec les bonnes quantités [8][9]. Bilan : 7 commandes touchées entre le 3 et le 12/11 [8], et plus aucun nouveau cas signalé depuis (Lucie Fontaine, 17/11) [8].\n\nÀ noter : un contrôle quotidien comparant Shopify et l'export de l'entrepôt (PR #91) est en préparation, avec des retours à corriger — pas encore en production [8][10]. Et la possibilité de vendre sans stock reste volontairement active pour les précommandes de la table Saône [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 16358,
+    "sortie": 770,
+    "reflexion": 253,
+    "cache": 9728,
+    "cout": 0.001408684
+  },
+  "latenceMs": 11152,
+  "fournisseur": "Cohere",
+  "trace": [
+    "chercher {\"requete\":\"meuble indisponible achat stock rupture\"}",
+    "chercher {\"requete\":\"stock disponible checkout produit épuisé bug\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}"
+  ],
+  "cout": 0.001408684
+}

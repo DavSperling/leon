@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:54.203Z",
+  "reponse": "## Où j'en suis\nLe SAML SSO Fernhill fonctionne en réel sur staging : metadata IdP chargée, login bout en bout avec le RelayState court, JIT crée les utilisateurs en `viewer`. La #415 (JIT) est merged, la #421 (mapping des groupes vers les rôles + RelayState) est ouverte et passe la suite de tests (1301 passed). On attend le groups claim côté Fernhill IT avant la démo de jeudi 10h New York. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 ouverte, non fusionnée (source: ses-sso-3)\n- [prochaine-étape] obtenir la fusion de #421, puis demander à Fernhill IT d'ajouter le groups claim et créer un compte admin de test une fois le claim présent (source: src-linear-kes311, s3-10)\n- [prochaine-étape] démo Fernhill IT jeudi 19 nov. 10:00 ET (source: src-linear-kes311)\n- [essai-raté] RelayState = URL de retour complète (143 bytes) rejetée par leur ADFS (erreur MSIS7042, max 80 bytes) ; tronquer cassait les deep links (source: s3-02, s3-03)\n- [question] le message Slack Fernhill réclame `analyst` par défaut et IdP-initiated seul : tranché pour l'instant, à réexaminer après l'échange de Maya (source: src-slack-fernhill, s3-07)\n- [décision] RelayState : ID opaque de 16 bytes, URL stockée dans Redis avec TTL 10 min, supprimée à l'usage (source: s3-03)\n- [décision] `Fernhill-Kestrel-Admins` → `admin`, tout le reste `viewer` ; le mapping s'applique à chaque login, pas seulement à la création (source: s3-05)\n- [décision] `viewer` reste le rôle par défaut et le login SP-initiated reste activé pour ce tenant (source: s3-07, s3-08)\n- [décision] seuls les domaines vérifiés créent un compte en JIT, jamais un domaine non vérifié (source: s2-03, src-pr415)",
+  "rendu": "## Où j'en suis\nLe SAML SSO Fernhill fonctionne en réel sur staging : metadata IdP chargée, login bout en bout avec le RelayState court, JIT crée les utilisateurs en `viewer`. La #415 (JIT) est merged, la #421 (mapping des groupes vers les rôles + RelayState) est ouverte et passe la suite de tests (1301 passed). On attend le groups claim côté Fernhill IT avant la démo de jeudi 10h New York. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 ouverte, non fusionnée (de: agent; source: ses-sso-3)\n- [prochaine-étape] obtenir la fusion de #421, puis demander à Fernhill IT d'ajouter le groups claim et créer un compte admin de test une fois le claim présent (de: toi, connecteur; source: src-linear-kes311, s3-10)\n- [prochaine-étape] démo Fernhill IT jeudi 19 nov. 10:00 ET (de: connecteur; source: src-linear-kes311)\n- [essai-raté] RelayState = URL de retour complète (143 bytes) rejetée par leur ADFS (erreur MSIS7042, max 80 bytes) ; tronquer cassait les deep links (de: toi, agent; source: s3-02, s3-03)\n- [question] le message Slack Fernhill réclame `analyst` par défaut et IdP-initiated seul : tranché pour l'instant, à réexaminer après l'échange de Maya (de: toi, connecteur; source: src-slack-fernhill, s3-07)\n- [décision] RelayState : ID opaque de 16 bytes, URL stockée dans Redis avec TTL 10 min, supprimée à l'usage (de: toi; source: s3-03)\n- [décision] `Fernhill-Kestrel-Admins` → `admin`, tout le reste `viewer` ; le mapping s'applique à chaque login, pas seulement à la création (de: toi; source: s3-05)\n- [décision] `viewer` reste le rôle par défaut et le login SP-initiated reste activé pour ce tenant (de: toi, agent; source: s3-07, s3-08)\n- [décision] seuls les domaines vérifiés créent un compte en JIT, jamais un domaine non vérifié (de: toi, équipe; source: s2-03, src-pr415)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1849,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4960,
+    "sortie": 1119,
+    "reflexion": 540,
+    "cache": 896,
+    "cout": 0.0008847888
+  },
+  "cout": 0.0008847888,
+  "latenceMs": 12960,
+  "fournisseur": "Xiaomi"
+}

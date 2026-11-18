@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:44.211Z",
+  "reponse": "Les créneaux étaient décalés parce que l'export ICS et l'API mobile ajoutaient 2 h à l'heure UTC pour obtenir l'heure de Paris. Ce calcul devient faux après le passage à l'heure d'hiver du 25/10 [2]. La correction, dans #214, utilise désormais l'heure locale de Paris via zoneinfo [2]. L'hypothèse d'un serveur en UTC, évoquée au départ, n'est pas retenue, car les réglages du serveur étaient bons [1][2]. Les SMS de rappel annonçaient encore 9h le 17/11, et rien ne confirme qu'ils soient couverts par ce correctif [4].",
+  "rendu": "Les créneaux étaient décalés parce que l'export ICS et l'API mobile ajoutaient 2 h à l'heure UTC pour obtenir l'heure de Paris. Ce calcul devient faux après le passage à l'heure d'hiver du 25/10 [2]. La correction, dans #214, utilise désormais l'heure locale de Paris via zoneinfo [2]. L'hypothèse d'un serveur en UTC, évoquée au départ, n'est pas retenue, car les réglages du serveur étaient bons [1][2]. Les SMS de rappel annonçaient encore 9h le 17/11, et rien ne confirme qu'ils soient couverts par ce correctif [4].",
+  "mesures": {
+    "mots": 87,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1759,
+    "sortie": 841,
+    "reflexion": 601,
+    "cache": 0,
+    "cout": 0.0005964
+  },
+  "cout": 0.0005964,
+  "latenceMs": 4618,
+  "fournisseur": "Google"
+}

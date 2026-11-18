@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:53.004Z",
+  "reponse": "## Où j'en suis\nUn avenant n°1 (réception au 11 décembre, pas de pénalités entre le 4 et le 11, 1re année d'entretien offerte) a été signé par Hélène et envoyé à Gilles Marchand le 17/11. Le 18/11, Gilles répond que sa directrice a accordé 3 ans d'entretien offerts et demande un avenant corrigé. Camille n'a pas eu cet accord d'Hélène : l'avenant reste à 1 an en attendant sa confirmation, et une réponse d'attente a été envoyée à Gilles. (source: mc3, m3-03, m3-09, src-mail-gilles)\n\n- [en-cours] Confirmation d'Hélène à obtenir sur les 3 ans ; Camille doit la lui demander. Aucune modification de `marchand/avenant-1.docx` avant sa réponse. (source: m3-03)\n- [en-cours] Réponse d'attente envoyée à Gilles : l'avenant définitif lui est promis dans la journée du 18/11. (source: m3-08, m3-09)\n- [prochaine-étape] Selon la réponse d'Hélène : garder 1 an, ou passer l'article 2 à 3 ans, puis envoyer l'avenant définitif à Gilles. (source: m3-02, m3-03)\n- [question] Hélène a-t-elle accepté 3 ans (1 440 € HT) ? Au point du 17/11, elle avait dit « première année, pas plus », soit 480 € HT. (source: src-tldv, m3-04)\n- [question] La note « décision : 3 ans » vient de l'agent et s'appuie sur le seul mail de Gilles : elle ne vaut pas confirmation. (source: src-note, src-mail-gilles)\n- [décision] Rien n'est modifié dans l'avenant avant la réponse d'Hélène. (source: m3-03)\n- [décision] L'avenant proposé par Hélène : réception le 11/12, sans pénalités, première année d'entretien offerte seulement. (source: src-tldv)",
+  "rendu": "## Où j'en suis\nUn avenant n°1 (réception au 11 décembre, pas de pénalités entre le 4 et le 11, 1re année d'entretien offerte) a été signé par Hélène et envoyé à Gilles Marchand le 17/11. Le 18/11, Gilles répond que sa directrice a accordé 3 ans d'entretien offerts et demande un avenant corrigé. Camille n'a pas eu cet accord d'Hélène : l'avenant reste à 1 an en attendant sa confirmation, et une réponse d'attente a été envoyée à Gilles. (de: toi, connecteur, agent; source: mc3, m3-03, m3-09, src-mail-gilles)\n\n- [en-cours] Confirmation d'Hélène à obtenir sur les 3 ans ; Camille doit la lui demander. Aucune modification de `marchand/avenant-1.docx` avant sa réponse. (de: toi; source: m3-03)\n- [en-cours] Réponse d'attente envoyée à Gilles : l'avenant définitif lui est promis dans la journée du 18/11. (de: toi, agent; source: m3-08, m3-09)\n- [prochaine-étape] Selon la réponse d'Hélène : garder 1 an, ou passer l'article 2 à 3 ans, puis envoyer l'avenant définitif à Gilles. (de: toi, agent; source: m3-02, m3-03)\n- [question] Hélène a-t-elle accepté 3 ans (1 440 € HT) ? Au point du 17/11, elle avait dit « première année, pas plus », soit 480 € HT. (de: connecteur, agent; source: src-tldv, m3-04)\n- [question] La note « décision : 3 ans » vient de l'agent et s'appuie sur le seul mail de Gilles : elle ne vaut pas confirmation. (de: connecteur, agent; source: src-note, src-mail-gilles)\n- [décision] Rien n'est modifié dans l'avenant avant la réponse d'Hélène. (de: toi; source: m3-03)\n- [décision] L'avenant proposé par Hélène : réception le 11/12, sans pénalités, première année d'entretien offerte seulement. (de: connecteur; source: src-tldv)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1656,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5497,
+    "sortie": 712,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018114
+  },
+  "cout": 0.018114,
+  "latenceMs": 5253,
+  "fournisseur": "Amazon Bedrock"
+}

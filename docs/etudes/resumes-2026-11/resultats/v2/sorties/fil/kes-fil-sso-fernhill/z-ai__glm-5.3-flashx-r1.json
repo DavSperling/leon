@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:29:12.029Z",
+  "reponse": "## Où j'en suis\nFernhill SAML SSO on branch `daniel/saml-sso-fernhill` is demo-ready except for one external dependency: real SP-initiated login works end to end on staging after the short RelayState fix (Redis, 10-min TTL), JIT creates users as `viewer`, and per-tenant group-to-role mapping is implemented in open PR #421. PR #415 (JIT provisioning) is merged. Waiting on Fernhill IT to add the groups claim before the demo Thursday Nov 19, 10:00 ET; go-live Dec 1. (source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged; commits `6d0e2b8` (opaque RelayState) and `f4a91c7` (role mapping), 41 auth tests + full suite green (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emailing them), then create an admin test account alongside `kestrel.test1` before Thursday's demo (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 merged before the Dec 1 go-live (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] first real login failed: Fernhill's ADFS rejected RelayState over 80 bytes (MSIS7042) because we sent the full return URL; fixed by storing the URL server-side with a short opaque ID (source: ses-sso-3)\n- [question] nothing pending on the Fernhill IT Slack request: Daniel rejected switching default to `analyst` (no such role) and IdP-initiated-only (source: ses-sso-3, src-slack-fernhill)\n- [décision] JIT only creates users from verified email domains, never unverified ones (source: ses-sso-2, src-pr415)\n- [décision] SAML only, both login flows; default role is `viewer` (source: ses-sso-1, ses-sso-3)",
+  "rendu": "## Où j'en suis\nFernhill SAML SSO on branch `daniel/saml-sso-fernhill` is demo-ready except for one external dependency: real SP-initiated login works end to end on staging after the short RelayState fix (Redis, 10-min TTL), JIT creates users as `viewer`, and per-tenant group-to-role mapping is implemented in open PR #421. PR #415 (JIT provisioning) is merged. Waiting on Fernhill IT to add the groups claim before the demo Thursday Nov 19, 10:00 ET; go-live Dec 1. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged; commits `6d0e2b8` (opaque RelayState) and `f4a91c7` (role mapping), 41 auth tests + full suite green (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emailing them), then create an admin test account alongside `kestrel.test1` before Thursday's demo (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 merged before the Dec 1 go-live (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] first real login failed: Fernhill's ADFS rejected RelayState over 80 bytes (MSIS7042) because we sent the full return URL; fixed by storing the URL server-side with a short opaque ID (de: agent; source: ses-sso-3)\n- [question] nothing pending on the Fernhill IT Slack request: Daniel rejected switching default to `analyst` (no such role) and IdP-initiated-only (de: connecteur, agent; source: ses-sso-3, src-slack-fernhill)\n- [décision] JIT only creates users from verified email domains, never unverified ones (de: équipe, agent; source: ses-sso-2, src-pr415)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1676,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 554,
+    "reflexion": 63,
+    "cache": 960,
+    "cout": 0.00210094
+  },
+  "cout": 0.00210094,
+  "latenceMs": 4429,
+  "fournisseur": "Z.AI"
+}

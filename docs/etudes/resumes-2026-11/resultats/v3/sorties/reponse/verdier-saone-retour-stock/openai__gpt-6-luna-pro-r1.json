@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:27.535Z",
+  "reponse": "La table Saône est expédiable à partir du 3 décembre, après son arrivée à l’entrepôt le 1er et deux jours de montage et d’emballage. [2]",
+  "rendu": "La table Saône est expédiable à partir du 3 décembre, après son arrivée à l’entrepôt le 1er et deux jours de montage et d’emballage. [2]",
+  "mesures": {
+    "mots": 25,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4371,
+    "sortie": 272,
+    "reflexion": 159,
+    "cache": 0,
+    "cout": 0.0005731
+  },
+  "cout": 0.0005731,
+  "latenceMs": 4357,
+  "fournisseur": "Azure"
+}

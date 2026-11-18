@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-iso-auditnachweis",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:20.331Z",
+  "reponse": "## Où j'en suis\nDie Übersicht der 23 produktiven Releases seit November 2025 wurde mit den Jira-Change-Tickets abgeglichen (per CSV-Export, da der API-Token abgelaufen war). Das Dokument `docs/iso/aenderungsnachweis-2026.md` enthält die Abweichungen und Maßnahmen, das PDF ist erzeugt. Nichts ist committet; die Ablage in SharePoint steht noch aus.\n\n- [en-cours] PDF liegt nur lokal unter `docs/iso/`; Ablage in SharePoint QM/Nachweise steht aus.\n- [prochaine-étape] PDF bis Freitag, 20.11., an Anja Lindner schicken, damit der Auditor es vorab sieht.\n- [prochaine-étape] Auditor kommt schon am Dienstag, 24.11., in die IT (nicht am 25.11.).\n- [essai-raté] Nachträgliche Tickets mit Rückdatierung wurden verworfen; die Vorlage wurde gelöscht.\n- [décision] Die zwei Hotfixes ohne Ticket und die drei mit späterer Freigabe werden offen als Abweichung mit Notfall-Change-Prozess aufgenommen (source: a09)\n- [décision] Nichts committen, auch nicht die CSV; Ablage in SharePoint macht die Person selbst (source: a17)",
+  "rendu": "## Où j'en suis\nDie Übersicht der 23 produktiven Releases seit November 2025 wurde mit den Jira-Change-Tickets abgeglichen (per CSV-Export, da der API-Token abgelaufen war). Das Dokument `docs/iso/aenderungsnachweis-2026.md` enthält die Abweichungen und Maßnahmen, das PDF ist erzeugt. Nichts ist committet; die Ablage in SharePoint steht noch aus.\n\n- branche [[docs/iso-audit-2026]]\n- [en-cours] PDF liegt nur lokal unter `docs/iso/`; Ablage in SharePoint QM/Nachweise steht aus.\n- [prochaine-étape] PDF bis Freitag, 20.11., an Anja Lindner schicken, damit der Auditor es vorab sieht.\n- [prochaine-étape] Auditor kommt schon am Dienstag, 24.11., in die IT (nicht am 25.11.).\n- [essai-raté] Nachträgliche Tickets mit Rückdatierung wurden verworfen; die Vorlage wurde gelöscht.\n- [décision] Die zwei Hotfixes ohne Ticket und die drei mit späterer Freigabe werden offen als Abweichung mit Notfall-Change-Prozess aufgenommen (source: a09)\n- [décision] Nichts committen, auch nicht die CSV; Ablage in SharePoint macht die Person selbst (source: a17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1045,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5622,
+    "sortie": 494,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016184
+  },
+  "cout": 0.016184,
+  "latenceMs": 4018,
+  "fournisseur": "Amazon Bedrock"
+}

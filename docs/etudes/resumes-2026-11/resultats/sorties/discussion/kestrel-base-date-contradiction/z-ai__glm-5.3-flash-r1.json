@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:24.834Z",
+  "reponse": "The Nov 21 window was postponed in the Nov 12 sync; the Linear ticket is now the reference. Let me read the updated ticket to get the exact new window.\n\nThe upgrade moved. The Postgres 17 production cutover is now **Saturday, December 5, 02:00–05:00 UTC**, rescheduled at the Nov 12 sync (Maya didn't want the risk stacked before the Fernhill go-live on Dec 1) and confirmed Nov 16 in ticket KES-398, which Maya approved [4][2].\n\nFor the customer notice and support macro, the relevant dates from KES-398 (the reference for the window — the Notion runbook isn't updated yet) [2]:\n\n- **Customer notice** (status page + in-app banner): goes out **Saturday, Nov 28**\n- **Migration freeze**: from **Thursday, Dec 3**\n- **Staging rehearsal**: Friday, Nov 27\n\nNote that the runbook still lists the old plan (freeze from Nov 19) [1] — don't use it for dates; KES-398 is authoritative.",
+  "rendu": "The Nov 21 window was postponed in the Nov 12 sync; the Linear ticket is now the reference. Let me read the updated ticket to get the exact new window.\n\nThe upgrade moved. The Postgres 17 production cutover is now **Saturday, December 5, 02:00–05:00 UTC**, rescheduled at the Nov 12 sync (Maya didn't want the risk stacked before the Fernhill go-live on Dec 1) and confirmed Nov 16 in ticket KES-398, which Maya approved [4][2].\n\nFor the customer notice and support macro, the relevant dates from KES-398 (the reference for the window — the Notion runbook isn't updated yet) [2]:\n\n- **Customer notice** (status page + in-app banner): goes out **Saturday, Nov 28**\n- **Migration freeze**: from **Thursday, Dec 3**\n- **Staging rehearsal**: Friday, Nov 27\n\nNote that the runbook still lists the old plan (freeze from Nov 19) [1] — don't use it for dates; KES-398 is authoritative.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13361,
+    "sortie": 389,
+    "reflexion": 87,
+    "cache": 0,
+    "cout": 0.002129236
+  },
+  "latenceMs": 5580,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"\\\"maintenance window\\\" rescheduled date\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}"
+  ],
+  "cout": 0.002129236
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.675Z",
+  "reponse": "## What is still open\n- Reply to Maya on PR #247 (keying dedupe on `project_id:device_id:event_id` to stop `kestrel-ios/3.2.0` sequence-number drops) with the Orbitly count for Thursday's call—you found ~1.18M legitimate events dropped (~8.1% of iOS volume, plus 3,812 for Zest's pilot)—so she can approve and merge once CI passes [1][2].\n- Once PR #247 is deployed, replay landing data from 13/11 onward for Orbitly and Zest, and send your drafted note asking the iOS team to restore UUID `event_id`s in 3.2.1 [1].\n- Add an alert for when the ingest dead-letter queue exceeds 1,000 messages before Friday's (20/11) incident review [7].\n\n## What changed\n- Noa finalized the 12/11 postmortem (issue #233) and will present it at Friday's incident review [3][7].\n- Rachel is closing Zest's Zendesk ticket in `#support-escalations` [6].\n- Daniel merged PR #245, bumping Go to 1.23.4 in CI and the Dockerfile [4].",
+  "rendu": "## What is still open\n- Reply to Maya on PR #247 (keying dedupe on `project_id:device_id:event_id` to stop `kestrel-ios/3.2.0` sequence-number drops) with the Orbitly count for Thursday's call—you found ~1.18M legitimate events dropped (~8.1% of iOS volume, plus 3,812 for Zest's pilot)—so she can approve and merge once CI passes [1][2].\n- Once PR #247 is deployed, replay landing data from 13/11 onward for Orbitly and Zest, and send your drafted note asking the iOS team to restore UUID `event_id`s in 3.2.1 [1].\n- Add an alert for when the ingest dead-letter queue exceeds 1,000 messages before Friday's (20/11) incident review [7].\n\n## What changed\n- Noa finalized the 12/11 postmortem (issue #233) and will present it at Friday's incident review [3][7].\n- Rachel is closing Zest's Zendesk ticket in `#support-escalations` [6].\n- Daniel merged PR #245, bumping Go to 1.23.4 in CI and the Dockerfile [4].",
+  "mesures": {
+    "mots": 139,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5238,
+    "sortie": 3709,
+    "reflexion": 3406,
+    "cache": 0,
+    "cout": 0.0356745
+  },
+  "cout": 0.0356745,
+  "latenceMs": 23350,
+  "fournisseur": "Google"
+}

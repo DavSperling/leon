@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:21:55.019Z",
+  "reponse": "## What is still open\n\n- Les SMS de rappel J-1 partent toujours avec l'heure d'été : Lucas demande que `rappels/sms.py` soit corrigé dans #214 plutôt que d'attendre sa réécriture fin novembre [3]. C'est devenu urgent : les SMS envoyés annoncent 9h au lieu de 8h, Yannick exige que ce soit bon avant l'envoi de mercredi 18h [4], et Sandrine te demande quand ils seront fiables — trois clients ont déjà rappelé [7].\n- Une fois #214 fusionnée seulement, lancer `reprise_heure_hiver` sans `--dry-run` : 41 interventions corrigées à la main par Yannick sont décalées dans l'autre sens tant que le correctif n'est pas en prod [1].\n- Verrouiller toi-même le créneau de l'audit RGE (chantier Le Floch, 8/12, journée entière) pour Franck, avant vendredi [2].\n\n## What changed\n\n- #219 : Sandrine signale que le formulaire de devis du site refuse les numéros avec espaces, deux demandes perdues ; pas urgent [6].\n\n## What you did\n\n- Tu as trouvé l'origine du décalage d'une heure (heure de Paris calculée en +2 h fixes), corrigé l'export ICS, l'API mobile et le rapport hebdo de Franck en heure locale, ajouté les tests d'été/hiver et ouvert la PR #214 liée à #208 [1].\n- Tu as écrit la commande de reprise des interventions saisies de travers, vérifiée en `--dry-run` [1].\n- Tu as découpé les réglages en base/dev/prod sans toucher au `DJANGO_SETTINGS_MODULE` du serveur, avec HSTS un an et cookies sécurisés, sur une branche à part [2].\n- Tu as monté pillow en 11.0.0 pour la vulnérabilité connue, et fait passer ruff/black pour débloquer la CI [2][1].",
+  "rendu": "## What is still open\n\n- Les SMS de rappel J-1 partent toujours avec l'heure d'été : Lucas demande que `rappels/sms.py` soit corrigé dans #214 plutôt que d'attendre sa réécriture fin novembre [3]. C'est devenu urgent : les SMS envoyés annoncent 9h au lieu de 8h, Yannick exige que ce soit bon avant l'envoi de mercredi 18h [4], et Sandrine te demande quand ils seront fiables — trois clients ont déjà rappelé [7].\n- Une fois #214 fusionnée seulement, lancer `reprise_heure_hiver` sans `--dry-run` : 41 interventions corrigées à la main par Yannick sont décalées dans l'autre sens tant que le correctif n'est pas en prod [1].\n- Verrouiller toi-même le créneau de l'audit RGE (chantier Le Floch, 8/12, journée entière) pour Franck, avant vendredi [2].\n\n## What changed\n\n- #219 : Sandrine signale que le formulaire de devis du site refuse les numéros avec espaces, deux demandes perdues ; pas urgent [6].\n\n## What you did\n\n- Tu as trouvé l'origine du décalage d'une heure (heure de Paris calculée en +2 h fixes), corrigé l'export ICS, l'API mobile et le rapport hebdo de Franck en heure locale, ajouté les tests d'été/hiver et ouvert la PR #214 liée à #208 [1].\n- Tu as écrit la commande de reprise des interventions saisies de travers, vérifiée en `--dry-run` [1].\n- Tu as découpé les réglages en base/dev/prod sans toucher au `DJANGO_SETTINGS_MODULE` du serveur, avec HSTS un an et cookies sécurisés, sur une branche à part [2].\n- Tu as monté pillow en 11.0.0 pour la vulnérabilité connue, et fait passer ruff/black pour débloquer la CI [2][1].",
+  "mesures": {
+    "mots": 247,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6245,
+    "sortie": 1493,
+    "reflexion": 1023,
+    "cache": 0,
+    "cout": 0.0013178816
+  },
+  "cout": 0.0013178816,
+  "latenceMs": 11012,
+  "fournisseur": "PrimeIntellect"
+}

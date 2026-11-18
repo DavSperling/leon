@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:45:27.538Z",
+  "reponse": "Le dossier Peltier (Vertou) a progressé : le devis était encore non signé au 10 novembre, puis signé le 16, déposé le 17 et l'accusé de réception reçu le même jour ; il est en instruction, avec des travaux prévus le 27 [1]. La fiche HubSpot confirme l'étape gagnée, un acompte reçu, une PAC air/eau et une pose au 27/11 [4]. Odile Peltier demande si elle peut commencer les travaux sans attendre la réponse [2]. La règle rappelée sur Slack le 17 : une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture [3].",
+  "rendu": "Le dossier Peltier (Vertou) a progressé : le devis était encore non signé au 10 novembre, puis signé le 16, déposé le 17 et l'accusé de réception reçu le même jour ; il est en instruction, avec des travaux prévus le 27 [1]. La fiche HubSpot confirme l'étape gagnée, un acompte reçu, une PAC air/eau et une pose au 27/11 [4]. Odile Peltier demande si elle peut commencer les travaux sans attendre la réponse [2]. La règle rappelée sur Slack le 17 : une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture [3].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1098,
+    "sortie": 337,
+    "reflexion": 158,
+    "cache": 0,
+    "cout": 0.00044028
+  },
+  "cout": 0.00044028,
+  "latenceMs": 2130,
+  "fournisseur": "DigitalOcean"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:43:04.723Z",
+  "reponse": "Ça venait de la synchronisation du stock. Depuis ~1 semaine, des clients commandaient des produits en rupture : le script `sync-stock` (cron toutes les 15 min) n'envoyait qu'un seul emplacement Shopify (« Entrepôt Vénissieux »), alors que l'emplacement « Showroom » de la rue Auguste-Comte avait été ajouté le 3/11 [3]. Shopify additionnant les emplacements, le site affichait du stock qui n'existait plus [14]. Les tickets #4806 (banc Rhône) et #4812 (buffet Croix-Rousse) illustrent le problème côté clients : commandes affichées en stock puis annulées pour rupture [9][10].\n\nC'est réparé, oui :\n- Correctif déployé par Julien en PR #87 le vendredi 13/11 [14][4] ;\n- En complément, l'option recommandée (désactiver « continuer à vendre en cas de rupture » sur tout le catalogue et passer la synchro à 5 min) était discutée [3] ;\n- Un contrôle quotidien des écarts de stock Shopify/entrepôt est en préparation par Hugo (PR #91, en relecture — à reprendre avant fusion pour ignorer les précommandes Saône et ne poster que si l'écart dépasse 1 pièce) [16].\n\nLes clients concernés ont été remboursés intégralement, avec parfois un geste commercial (livraison offerte, code promo) [9][10].",
+  "rendu": "Ça venait de la synchronisation du stock. Depuis ~1 semaine, des clients commandaient des produits en rupture : le script `sync-stock` (cron toutes les 15 min) n'envoyait qu'un seul emplacement Shopify (« Entrepôt Vénissieux »), alors que l'emplacement « Showroom » de la rue Auguste-Comte avait été ajouté le 3/11 [3]. Shopify additionnant les emplacements, le site affichait du stock qui n'existait plus [14]. Les tickets #4806 (banc Rhône) et #4812 (buffet Croix-Rousse) illustrent le problème côté clients : commandes affichées en stock puis annulées pour rupture [9][10].\n\nC'est réparé, oui :\n- Correctif déployé par Julien en PR #87 le vendredi 13/11 [14][4] ;\n- En complément, l'option recommandée (désactiver « continuer à vendre en cas de rupture » sur tout le catalogue et passer la synchro à 5 min) était discutée [3] ;\n- Un contrôle quotidien des écarts de stock Shopify/entrepôt est en préparation par Hugo (PR #91, en relecture — à reprendre avant fusion pour ignorer les précommandes Saône et ne poster que si l'écart dépasse 1 pièce) [16].\n\nLes clients concernés ont été remboursés intégralement, avec parfois un geste commercial (livraison offerte, code promo) [9][10].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6735,
+    "sortie": 445,
+    "reflexion": 73,
+    "cache": 0,
+    "cout": 0.00112919
+  },
+  "latenceMs": 4609,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"meubles indisponibles achat stock clients\"}",
+    "chercher {\"requete\":\"produits vendus alors que plus disponibles inventaire\"}"
+  ],
+  "cout": 0.00112919
+}

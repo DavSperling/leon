@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:09:57.366Z",
+  "reponse": "Last Thursday (Nov 12, 2026), the ingest pipeline stalled for 3h40: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, and with the pods' 512 Mi memory limit the ingest-worker pods ran out of memory on the first large batch and crash-looped, so events piled up in Kafka and customer dashboards went stale between 08:47 and 12:27 UTC [1]. The change went to all pods at once; there was no consumer-lag alert, so the first signal was a Sentry OOM alert 27 minutes after the deploy [1]. Rollback to v2.13.3 at 10:05 drained the backlog by 12:27 [1].\n\nNo customer data was lost: events kept arriving in Kafka and were only processed late — the Nov 13 reconciliation matched per-workspace event counts to Kafka offsets for 08:00–13:00 UTC, \"nothing lost, just late\" [1][7]. Impact was limited to delayed dashboards across all workspaces; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts) [1].\n\nWhat we're changing (postmortem action items) [1]:\n- KES-431 – page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20) [1][4]\n- KES-432 – ingest config changes go to a canary pool first (Daniel, due Nov 27) [1]\n- KES-433 – raise worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27) [1]\n- Plus ingest#419 (merged Nov 13): `max_batch_bytes` default back to 1 MB, and the batcher refuses any batch larger than 25% of the container memory limit, with 10 MB kept only on the explicit bulk-import path [16]\n\nThe same fixes were communicated to Orbitly in the Nov 15 incident report from Maya [3]. One side note: Orbitly is claiming an SLA service credit for the incident under section 7 of their MSA, and Sam is checking the terms with finance [3].",
+  "rendu": "Last Thursday (Nov 12, 2026), the ingest pipeline stalled for 3h40: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, and with the pods' 512 Mi memory limit the ingest-worker pods ran out of memory on the first large batch and crash-looped, so events piled up in Kafka and customer dashboards went stale between 08:47 and 12:27 UTC [1]. The change went to all pods at once; there was no consumer-lag alert, so the first signal was a Sentry OOM alert 27 minutes after the deploy [1]. Rollback to v2.13.3 at 10:05 drained the backlog by 12:27 [1].\n\nNo customer data was lost: events kept arriving in Kafka and were only processed late — the Nov 13 reconciliation matched per-workspace event counts to Kafka offsets for 08:00–13:00 UTC, \"nothing lost, just late\" [1][7]. Impact was limited to delayed dashboards across all workspaces; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts) [1].\n\nWhat we're changing (postmortem action items) [1]:\n- KES-431 – page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20) [1][4]\n- KES-432 – ingest config changes go to a canary pool first (Daniel, due Nov 27) [1]\n- KES-433 – raise worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27) [1]\n- Plus ingest#419 (merged Nov 13): `max_batch_bytes` default back to 1 MB, and the batcher refuses any batch larger than 25% of the container memory limit, with 10 MB kept only on the explicit bulk-import path [16]\n\nThe same fixes were communicated to Orbitly in the Nov 15 incident report from Maya [3]. One side note: Orbitly is claiming an SLA service credit for the incident under section 7 of their MSA, and Sam is checking the terms with finance [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 19060,
+    "sortie": 848,
+    "reflexion": 237,
+    "cache": 8192,
+    "cout": 0.010958024
+  },
+  "latenceMs": 16509,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident outage broken Thursday postmortem\",\"depuis\":\"3m\"}",
+    "chercher {\"requete\":\"event pipeline data loss customer data incident report\"}",
+    "chercher {\"requete\":\"pipeline événement incident panne jeudi dernier perte de données\"}",
+    "chercher {\"requete\":\"postmortem root cause action items pipeline events ingestion\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.010958024
+}

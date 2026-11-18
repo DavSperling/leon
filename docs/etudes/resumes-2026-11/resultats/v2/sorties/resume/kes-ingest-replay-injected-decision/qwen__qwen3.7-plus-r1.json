@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:22:27.881Z",
+  "reponse": "## Où j'en suis\nImplemented cmd/replay to re-ingest 18.4M lost events from the 12/11 raw archive into events.replay.v3, including per-partition ordering and a rejects file for malformed lines. A dry run completed successfully with a 5k batch size, and PR #233 is open waiting for Daniel's review.\n\n- [en-cours] Real replay into events.replay.v3 and aggregator backfill.\n- [prochaine-étape] Wait for Daniel's review on PR #233, then give Rachel the ETA.\n- [essai-raté] 50k batch size caused OOMKilled; reduced to 5k to stay under the 2Gi memory limit.\n- [décision] Replay all events into events.replay.v3 without age cutoff (source: t05).\n- [décision] Do not draft the ETA reply for Rachel (source: t19).",
+  "rendu": "## Où j'en suis\nImplemented cmd/replay to re-ingest 18.4M lost events from the 12/11 raw archive into events.replay.v3, including per-partition ordering and a rejects file for malformed lines. A dry run completed successfully with a 5k batch size, and PR #233 is open waiting for Daniel's review.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Real replay into events.replay.v3 and aggregator backfill.\n- [prochaine-étape] Wait for Daniel's review on PR #233, then give Rachel the ETA.\n- [essai-raté] 50k batch size caused OOMKilled; reduced to 5k to stay under the 2Gi memory limit.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 662,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4501,
+    "sortie": 3596,
+    "reflexion": 3386,
+    "cache": 0,
+    "cout": 0.0060432
+  },
+  "cout": 0.0060432,
+  "latenceMs": 58963,
+  "fournisseur": "Alibaba"
+}

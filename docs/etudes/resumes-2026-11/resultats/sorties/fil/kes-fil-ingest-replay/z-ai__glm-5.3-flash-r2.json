@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:17.187Z",
+  "reponse": "## Où j'en suis\nLe replay réel est terminé : 18 442 107 événements produits dans `events.replay.v3` (fenêtre 14:10–17:40 du 12/11), 3 118 lignes schema v2 rejetées vers S3. La PR #233 est fusionnée. Le backfill aggregator du 12/11 était à 61 % (~14,9M lignes en base sur ~20,5M attendues) au dernier pointage ; l'incident reste ouvert. (source: ses-rp-2, r2-04, r2-06, r2-07)\n\n- [en-cours] Backfill aggregator 2026-11-12 (job `backfill-2026-11-12`), 61 % au dernier relevé, comptage ClickHouse en cours (source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1 %), ne fermer l'incident que si ça correspond (source: r2-07, r2-10)\n- [essai-raté] Dry run avec batchs de 50k : OOMKilled (exit 137, limite 2Gi) ; les batchs de 5k fonctionnent, la limite mémoire ne doit pas être touchée (quota namespace fixé par Noa) (source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [question] Date à confirmer à Orbitly : Mark Tan attendait une restauration complète « d'ici aujourd'hui, mercredi 18/11 », mais Rachel a annoncé jeudi aux clients — à trancher pour la comms (source: src-zendesk-orbitly, r2-07)\n- [décision] Ignorer la PR #241 (fork, dedup 128) : Daniel fait le check CI, c'est ce qui a été décidé (source: r2-09, src-slack-incident)\n- [décision] Tout rejouer vers `events.replay.v3`, jamais produire directement dans `events.v3` depuis l'outil (source: r1-02, src-slack-incident)",
+  "rendu": "## Où j'en suis\nLe replay réel est terminé : 18 442 107 événements produits dans `events.replay.v3` (fenêtre 14:10–17:40 du 12/11), 3 118 lignes schema v2 rejetées vers S3. La PR #233 est fusionnée. Le backfill aggregator du 12/11 était à 61 % (~14,9M lignes en base sur ~20,5M attendues) au dernier pointage ; l'incident reste ouvert. (de: toi, agent; source: ses-rp-2, r2-04, r2-06, r2-07)\n\n- [en-cours] Backfill aggregator 2026-11-12 (job `backfill-2026-11-12`), 61 % au dernier relevé, comptage ClickHouse en cours (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1 %), ne fermer l'incident que si ça correspond (de: toi, agent; source: r2-07, r2-10)\n- [essai-raté] Dry run avec batchs de 50k : OOMKilled (exit 137, limite 2Gi) ; les batchs de 5k fonctionnent, la limite mémoire ne doit pas être touchée (quota namespace fixé par Noa) (de: toi, connecteur, agent; source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [question] Date à confirmer à Orbitly : Mark Tan attendait une restauration complète « d'ici aujourd'hui, mercredi 18/11 », mais Rachel a annoncé jeudi aux clients — à trancher pour la comms (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)\n- [décision] Ignorer la PR #241 (fork, dedup 128) : Daniel fait le check CI, c'est ce qui a été décidé (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] Tout rejouer vers `events.replay.v3`, jamais produire directement dans `events.v3` depuis l'outil (de: toi, connecteur; source: r1-02, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1579,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3746,
+    "sortie": 645,
+    "reflexion": 144,
+    "cache": 0,
+    "cout": 0.000630318
+  },
+  "cout": 0.000630318,
+  "latenceMs": 5252,
+  "fournisseur": "InferenceNet"
+}

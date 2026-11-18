@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:28:25.697Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3971,
+    "sortie": 6000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0101913
+  },
+  "cout": 0.0101913,
+  "latenceMs": 32929,
+  "fournisseur": "Cohere"
+}

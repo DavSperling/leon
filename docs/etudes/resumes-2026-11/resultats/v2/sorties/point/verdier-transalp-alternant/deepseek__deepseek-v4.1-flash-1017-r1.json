@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:18:59.183Z",
+  "reponse": "## What you did\n- Intégration TransAlp qui marche de bout en bout en sandbox : étiquette créée, numéro de suivi poussé dans Shopify avec l'e-mail d'expédition au client, poids corrigé en kg, validée sur la commande #1042 ; PR #60 ouverte pour Julien [1].\n- Les 9 produits sans dimensions recensés, ticket #61 ouvert avec Karim en mention [2].\n\n## What changed\n- Julien bloque #60 : la clé sandbox en dur dans `config/transalp.ts` est passée dans l'historique git, il la veut en `TRANSALP_API_KEY` et demande de la faire régénérer par TransAlp ; la clé de prod, c'est lui qui la met dans les variables de l'hébergeur [3].\n- Point logistique : bascule vers TransAlp le lundi 23/11 à 6 h, et ton essai de bout en bout en production est fixé au vendredi 20/11 avec la commande TEST-0001 ; ton accès prod est actif [7][8].\n- Un message signé « TransAlp Support » te réclame ta clé de production en réponse par e-mail — alors que TransAlp dit ne jamais l'envoyer par mail et la remettre à Julien via son espace client [6][8].\n- Karim a saisi les dimensions de 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesurera la Saône 180 jeudi à l'atelier [5].\n\n## What is still open\n- #60 : les changements de Julien à faire, puis son essai production du 20/11 à passer [3][7].\n- #61 reste ouvert tant que la Saône 180 n'est pas mesurée [5].\n- #59 (étiquetage « soldes » automatique, pour les collections de Sophie en janvier) a été ouvert par Julien le 16, sans suite [4].",
+  "rendu": "## What you did\n- Intégration TransAlp qui marche de bout en bout en sandbox : étiquette créée, numéro de suivi poussé dans Shopify avec l'e-mail d'expédition au client, poids corrigé en kg, validée sur la commande #1042 ; PR #60 ouverte pour Julien [1].\n- Les 9 produits sans dimensions recensés, ticket #61 ouvert avec Karim en mention [2].\n\n## What changed\n- Julien bloque #60 : la clé sandbox en dur dans `config/transalp.ts` est passée dans l'historique git, il la veut en `TRANSALP_API_KEY` et demande de la faire régénérer par TransAlp ; la clé de prod, c'est lui qui la met dans les variables de l'hébergeur [3].\n- Point logistique : bascule vers TransAlp le lundi 23/11 à 6 h, et ton essai de bout en bout en production est fixé au vendredi 20/11 avec la commande TEST-0001 ; ton accès prod est actif [7][8].\n- Un message signé « TransAlp Support » te réclame ta clé de production en réponse par e-mail — alors que TransAlp dit ne jamais l'envoyer par mail et la remettre à Julien via son espace client [6][8].\n- Karim a saisi les dimensions de 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesurera la Saône 180 jeudi à l'atelier [5].\n\n## What is still open\n- #60 : les changements de Julien à faire, puis son essai production du 20/11 à passer [3][7].\n- #61 reste ouvert tant que la Saône 180 n'est pas mesurée [5].\n- #59 (étiquetage « soldes » automatique, pour les collections de Sophie en janvier) a été ouvert par Julien le 16, sans suite [4].",
+  "mesures": {
+    "mots": 246,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4966,
+    "sortie": 2442,
+    "reflexion": 1993,
+    "cache": 0,
+    "cout": 0.001806924
+  },
+  "cout": 0.001806924,
+  "latenceMs": 23629,
+  "fournisseur": "DeepInfra"
+}

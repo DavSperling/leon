@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:34.141Z",
+  "reponse": "## Où j'en suis\nL'intégration de l'API étiquettes TransAlp est fonctionnelle en recette : ZPL par défaut (PDF encore possible), correctif d'encodage `^CI28` validé à l'impression par Karim, 22 tests verts. La bascule est verrouillée par `TRANSALP_DEBUT` (1er décembre 2026 par défaut) sur Lyon et Paris uniquement ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La branche `hugo/transalp-etiquettes` est poussée (commits `3e8b1d0`, `a90c4f7`) et la PR #91 reste en brouillon, en attente de la relecture de Julien ; la clé de production sera posée par Julien lui-même. (source: h2-12, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 ouverte en brouillon, branche à jour, relecture par Julien encore à faire (source: src-pr91, h2-12)\n- [prochaine-étape] Julien ajoute la clé de production dans les secrets ; rien ne s'active avant le 1er décembre (source: h2-07, h2-12)\n- [prochaine-étape] Former l'équipe sur le nouveau poste d'impression avant la bascule (source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox (uniquement recette et prod) ; premier essai ZPL en sandbox en erreur (source: h1-06, src-mail-transalp)\n- [essai-raté] Accents illisibles à l'impression (« SaÃ´ne ») car le ZPL ne déclare pas son encodage et la Zebra lisait en CP850 ; corrigé par insertion de `^CI28` (source: h2-03, h2-04)\n- [décision] Format ZPL par défaut, testé et validé en recette (source: h2-01, h2-05)\n- [décision] Bascule le 1er décembre, Lyon et Paris seulement ; Rapidis conserve le reste de la France et les plus de 30 kg jusqu'au 15 janvier (source: src-slack-julien, h2-09)\n- [décision] Aucune offre Premium : le passage du mail de TransAlp est ignoré (source: h2-09)",
+  "rendu": "## Où j'en suis\nL'intégration de l'API étiquettes TransAlp est fonctionnelle en recette : ZPL par défaut (PDF encore possible), correctif d'encodage `^CI28` validé à l'impression par Karim, 22 tests verts. La bascule est verrouillée par `TRANSALP_DEBUT` (1er décembre 2026 par défaut) sur Lyon et Paris uniquement ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La branche `hugo/transalp-etiquettes` est poussée (commits `3e8b1d0`, `a90c4f7`) et la PR #91 reste en brouillon, en attente de la relecture de Julien ; la clé de production sera posée par Julien lui-même. (de: équipe, agent; source: h2-12, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 ouverte en brouillon, branche à jour, relecture par Julien encore à faire (de: équipe, agent; source: src-pr91, h2-12)\n- [prochaine-étape] Julien ajoute la clé de production dans les secrets ; rien ne s'active avant le 1er décembre (de: toi, agent; source: h2-07, h2-12)\n- [prochaine-étape] Former l'équipe sur le nouveau poste d'impression avant la bascule (de: connecteur; source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox (uniquement recette et prod) ; premier essai ZPL en sandbox en erreur (de: connecteur, agent; source: h1-06, src-mail-transalp)\n- [essai-raté] Accents illisibles à l'impression (« SaÃ´ne ») car le ZPL ne déclare pas son encodage et la Zebra lisait en CP850 ; corrigé par insertion de `^CI28` (de: toi, agent; source: h2-03, h2-04)\n- [décision] Format ZPL par défaut, testé et validé en recette (de: toi; source: h2-01, h2-05)\n- [décision] Bascule le 1er décembre, Lyon et Paris seulement ; Rapidis conserve le reste de la France et les plus de 30 kg jusqu'au 15 janvier (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] Aucune offre Premium : le passage du mail de TransAlp est ignoré (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1863,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3789,
+    "sortie": 821,
+    "reflexion": 306,
+    "cache": 1024,
+    "cout": 0.00092271
+  },
+  "cout": 0.00092271,
+  "latenceMs": 5378,
+  "fournisseur": "Together"
+}

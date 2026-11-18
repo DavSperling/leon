@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:22.403Z",
+  "reponse": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` contient le correctif des webhooks et de la synchro de nuit, fusionné via la PR #87, puis les reprises de synchro à 4 h et 6 h avec alerte mail à Karim,清淡 encore en relecture dans la PR #96 ouverte (commit `d7c2e41`). La synchro manuelle du 17/11 a corrigé 40 références sans erreur, et le script n'a pas été modifié pour la réservation de 2 tables Saône aux Galeries Brotteaux, comme demandé. (source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, Hugo designated relecteur, en attente de sa relecture (source: maison-verdier/boutique#96)\n- [prochaine-étape] Obtenir la relecture d'Hugo puis fusionner la PR #96 (source: u3-07, u3-08)\n- [prochaine-étape] Vérifier les passes de 4 h et 6 h en Europe/Paris lors des prochaines nuits (source: u3-04, d7c2e41)\n- [essai-raté] Premier `pnpm vitest run scripts/stock` en échec : « reprise à 4 h quand le CSV manque à 2 h » attendait 2 appels, 1 reçu — le cron lisait les heures en UTC, corrigé en fixant le fuseau `Europe/Paris` (source: u3-04)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : ne règle pas le double décrément, car `orders/create` et `orders/updated` ont des identifiants distincts et Shopify décrémente déjà (source: u1-01)\n- [question] Confirmation de la date de livraison des 2 tables Saône choke 180 réservées par les Galeries Brotteaux pour le réassort du 2 décembre (source: src-mail-brotteaux)\n- [décision] Les webhooks de commande ne touchent plus au stock ; Shopify décrémente, la synchro de nuit est le seul correcteur en valeur absolue (source: src-pr87)\n- [décision] Seuil d'alerte de stock bas fixé à 3 unités, mail quotidien à Karim et Sophie (source: u1-04)\n- [décision] Pas de précommande pour la table Saône : retour chez Bois & Fils le 2 décembre seulement (source: u1-06)\n- [décision] Ne pas modifier le script de synchro pour la réservation de 2 tables Saône aux Galeries Brotteaux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` contient le correctif des webhooks et de la synchro de nuit, fusionné via la PR #87, puis les reprises de synchro à 4 h et 6 h avec alerte mail à Karim,清淡 encore en relecture dans la PR #96 ouverte (commit `d7c2e41`). La synchro manuelle du 17/11 a corrigé 40 références sans erreur, et le script n'a pas été modifié pour la réservation de 2 tables Saône aux Galeries Brotteaux, comme demandé. (de: équipe, agent; source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, Hugo designated relecteur, en attente de sa relecture (de: équipe; source: maison-verdier/boutique#96)\n- [prochaine-étape] Obtenir la relecture d'Hugo puis fusionner la PR #96 (de: toi, agent; source: u3-07, u3-08)\n- [prochaine-étape] Vérifier les passes de 4 h et 6 h en Europe/Paris lors des prochaines nuits (de: équipe, agent; source: u3-04, d7c2e41)\n- [essai-raté] Premier `pnpm vitest run scripts/stock` en échec : « reprise à 4 h quand le CSV manque à 2 h » attendait 2 appels, 1 reçu — le cron lisait les heures en UTC, corrigé en fixant le fuseau `Europe/Paris` (de: agent; source: u3-04)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : ne règle pas le double décrément, car `orders/create` et `orders/updated` ont des identifiants distincts et Shopify décrémente déjà (de: agent; source: u1-01)\n- [question] Confirmation de la date de livraison des 2 tables Saône choke 180 réservées par les Galeries Brotteaux pour le réassort du 2 décembre (de: connecteur; source: src-mail-brotteaux)\n- [décision] Les webhooks de commande ne touchent plus au stock ; Shopify décrémente, la synchro de nuit est le seul correcteur en valeur absolue (de: équipe; source: src-pr87)\n- [décision] Seuil d'alerte de stock bas fixé à 3 unités, mail quotidien à Karim et Sophie (de: toi; source: u1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1911,
+    "lignesRetirees": 2,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4205,
+    "sortie": 830,
+    "reflexion": 213,
+    "cache": 1024,
+    "cout": 0.00099051
+  },
+  "cout": 0.00099051,
+  "latenceMs": 4853,
+  "fournisseur": "Together"
+}

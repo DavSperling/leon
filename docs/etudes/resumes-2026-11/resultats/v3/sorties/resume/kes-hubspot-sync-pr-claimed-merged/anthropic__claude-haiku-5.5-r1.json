@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:21.255Z",
+  "reponse": "## Où j'en suis\n\nThe HubSpot owner and ARR sync now polls CRM search every 15 minutes instead of using webhooks, which HubSpot private app tokens can't manage. PR #409 is still open, not merged: its e2e check `test_accounts_table_shows_owner` failed, so auto-merge did not fire. The fixture's trial company with an owner is now filtered out by the `arr > 0` rule, and the fixture hasn't been updated yet.\n\n- [en-cours] Fixing the e2e fixture in `tests/e2e/test_admin_accounts.py` so the owner test passes.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0, or expect 2 rows), then re-check #409 and confirm auto-merge fires.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging and prod.\n- [essai-raté] The webhook subscription call returned 401: webhook management requires a public app developer key, not a private app token.\n- [décision] Poll every 15 minutes and close #405 (source: t04).\n- [décision] Sync only companies with ARR > 0, skipping trials (source: t10).",
+  "rendu": "## Où j'en suis\nThe HubSpot owner and ARR sync now polls CRM search every 15 minutes instead of using webhooks, which HubSpot private app tokens can't manage. PR #409 is still open, not merged: its e2e check `test_accounts_table_shows_owner` failed, so auto-merge did not fire. The fixture's trial company with an owner is now filtered out by the `arr > 0` rule, and the fixture hasn't been updated yet.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fixing the e2e fixture in `tests/e2e/test_admin_accounts.py` so the owner test passes.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0, or expect 2 rows), then re-check #409 and confirm auto-merge fires.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging and prod.\n- [essai-raté] The webhook subscription call returned 401: webhook management requires a public app developer key, not a private app token.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1057,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5045,
+    "sortie": 1472,
+    "reflexion": 1064,
+    "cache": 0,
+    "cout": 0.0012405
+  },
+  "cout": 0.0012405,
+  "latenceMs": 8229,
+  "fournisseur": "Google"
+}

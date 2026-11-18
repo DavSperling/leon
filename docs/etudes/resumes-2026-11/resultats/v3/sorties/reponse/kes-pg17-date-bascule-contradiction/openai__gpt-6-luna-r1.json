@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:00:05.056Z",
+  "reponse": "La date actuelle du cutover PostgreSQL 17 est le samedi 28 novembre, de 02:00 à 06:00 UTC [2][6]. Une modification d’infrastructure reflète cette nouvelle date, mais elle est encore en attente de revue et n’a pas été appliquée [6].",
+  "rendu": "La date actuelle du cutover PostgreSQL 17 est le samedi 28 novembre, de 02:00 à 06:00 UTC [2][6]. Une modification d’infrastructure reflète cette nouvelle date, mais elle est encore en attente de revue et n’a pas été appliquée [6].",
+  "mesures": {
+    "mots": 39,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1091,
+    "sortie": 66,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001693
+  },
+  "cout": 0.0001693,
+  "latenceMs": 1872,
+  "fournisseur": "Azure"
+}

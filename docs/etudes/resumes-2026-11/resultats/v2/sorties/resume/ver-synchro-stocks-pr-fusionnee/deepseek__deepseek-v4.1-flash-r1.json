@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:20.532Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif de la Saône venait du webhook `orders/create` qui décrémentait une seconde fois un stock que Shopify gère déjà. Le décrément a été retiré des webhooks, la synchro de nuit passe en valeur absolue, le seuil d'alerte est à 3 et le stock de la Saône a été remis à 0 ; commits `c41d7a2`, `93be0f5` et `5e12aa8` sur la branche `julien/fix-synchro-stocks`, et la PR #87 est fusionnée. La config de l'app est déployée, il ne reste que le traitement commercial des commandes survendues.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044), toutes sur SAONE-CHENE-180\n- [décision] Plus aucun mouvement de stock dans les webhooks ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas ramené de 5 à 3 (source: t09)\n- [décision] Saône remise à 0, ni remise en vente ni précommande avant le retour de chez Bois & Fils le 2 décembre (source: t15)\n- [décision] Renommage `syncStock` → `synchroniserStocks` avec passage du lint (source: t11)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` ont des ids différents, retiré avec la table `webhooks_vus`",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif de la Saône venait du webhook `orders/create` qui décrémentait une seconde fois un stock que Shopify gère déjà. Le décrément a été retiré des webhooks, la synchro de nuit passe en valeur absolue, le seuil d'alerte est à 3 et le stock de la Saône a été remis à 0 ; commits `c41d7a2`, `93be0f5` et `5e12aa8` sur la branche `julien/fix-synchro-stocks`, et la PR #87 est fusionnée. La config de l'app est déployée, il ne reste que le traitement commercial des commandes survendues.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044), toutes sur SAONE-CHENE-180\n- [décision] Plus aucun mouvement de stock dans les webhooks ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas ramené de 5 à 3 (source: t09)\n- [décision] Saône remise à 0, ni remise en vente ni précommande avant le retour de chez Bois & Fils le 2 décembre (source: t15)\n- [décision] Renommage `syncStock` → `synchroniserStocks` avec passage du lint (source: t11)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` ont des ids différents, retiré avec la table `webhooks_vus`",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1368,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3902,
+    "sortie": 952,
+    "reflexion": 541,
+    "cache": 0,
+    "cout": 0.0009252
+  },
+  "cout": 0.0009252,
+  "latenceMs": 12994,
+  "fournisseur": "River"
+}

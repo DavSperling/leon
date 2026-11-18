@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:32.454Z",
+  "reponse": "The migration plan set production cutover for Saturday Nov 21, 02:00–06:00 UTC [1], with the same date in the tracking ticket and a customer maintenance notice for Nov 21 [4][3]. That date has since moved: after the Dec 11 ingest incident a second dry run was requested and the cutover was rescheduled to Saturday Nov 28, same window [2], and an infra PR moves the window to 2026-11-28, plan only, not applied [6]. So the latest evidence points to Nov 28 [2][6], contradicting the earlier Nov 21 date [1].",
+  "rendu": "The migration plan set production cutover for Saturday Nov 21, 02:00–06:00 UTC [1], with the same date in the tracking ticket and a customer maintenance notice for Nov 21 [4][3]. That date has since moved: after the Dec 11 ingest incident a second dry run was requested and the cutover was rescheduled to Saturday Nov 28, same window [2], and an infra PR moves the window to 2026-11-28, plan only, not applied [6]. So the latest evidence points to Nov 28 [2][6], contradicting the earlier Nov 21 date [1].",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1182,
+    "sortie": 202,
+    "reflexion": 67,
+    "cache": 0,
+    "cout": 0.0002388
+  },
+  "cout": 0.0002388,
+  "latenceMs": 3168,
+  "fournisseur": "River"
+}

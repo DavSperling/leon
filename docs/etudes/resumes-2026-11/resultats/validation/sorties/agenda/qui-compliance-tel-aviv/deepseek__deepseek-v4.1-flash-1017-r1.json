@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-compliance-tel-aviv",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:27.219Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 5,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-18T15:00 PCI DSS scoping walkthrough with Ardent | 2026-11-19T16:00 Corvane Bank annual oversight review | 2026-11-22T08:30 Audit & risk committee prep",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 2834,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.0034251
+  },
+  "cout": 0.0034251,
+  "latenceMs": 35298,
+  "fournisseur": "Cohere"
+}

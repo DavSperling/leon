@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:34.622Z",
+  "reponse": "## Où j'en suis\nReal SAML login works on staging with Fernhill's IdP: the short RelayState fix cleared their ADFS error, JIT provisioning is merged in #415, and the group-to-role mapping (f4a91c7) sits in PR #421, open. No coding work is left to start; everything now waits on Fernhill IT adding the groups claim ahead of Thursday's demo (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open, not merged (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emails them), then create an admin test account next to `kestrel.test1` (source: ses-sso-3, s3-08)\n- [prochaine-étape] demo with Fernhill IT Thursday Nov 19, 10:00 ET (source: src-linear-kes311, s3-10)\n- [essai-raté] full return URL as RelayState (143 bytes) failed with MSIS7042 at their ADFS; replaced by a short opaque id in Redis, TTL 600 s (source: s3-02, s3-03, s3-04)\n- [décision] default role stays `viewer` and SP-initiated login stays on, despite Fernhill IT asking for analyst / IdP-initiated only, until Maya talks to them (source: s3-07, s3-05)\n- [décision] SAML only for Fernhill, no OIDC (source: s1-03)",
+  "rendu": "## Où j'en suis\nReal SAML login works on staging with Fernhill's IdP: the short RelayState fix cleared their ADFS error, JIT provisioning is merged in #415, and the group-to-role mapping (f4a91c7) sits in PR #421, open. No coding work is left to start; everything now waits on Fernhill IT adding the groups claim ahead of Thursday's demo (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open, not merged (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emails them), then create an admin test account next to `kestrel.test1` (de: agent; source: ses-sso-3, s3-08)\n- [prochaine-étape] demo with Fernhill IT Thursday Nov 19, 10:00 ET (de: toi, connecteur; source: src-linear-kes311, s3-10)\n- [essai-raté] full return URL as RelayState (143 bytes) failed with MSIS7042 at their ADFS; replaced by a short opaque id in Redis, TTL 600 s (de: toi, agent; source: s3-02, s3-03, s3-04)\n- [décision] default role stays `viewer` and SP-initiated login stays on, despite Fernhill IT asking for analyst / IdP-initiated only, until Maya talks to them (de: toi; source: s3-07, s3-05)\n- [décision] SAML only for Fernhill, no OIDC (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1284,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4960,
+    "sortie": 1722,
+    "reflexion": 1327,
+    "cache": 0,
+    "cout": 0.00117656
+  },
+  "cout": 0.00117656,
+  "latenceMs": 26803,
+  "fournisseur": "Xiaomi"
+}

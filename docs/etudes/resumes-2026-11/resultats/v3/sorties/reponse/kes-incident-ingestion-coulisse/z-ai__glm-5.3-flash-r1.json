@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:46.175Z",
+  "reponse": "La cause racine de la panne d'ingestion du 12 novembre : les disques du broker Kafka ingest-kafka-2 se sont remplis après le changement de rétention dans l'infra PR #221 (suppression de la rétention par taille, au profit d'une rétention temporelle de 7 jours). Le broker est devenu read-only à 09:38 UTC, bloquant les consommateurs [2]. La panne a duré 2h47 (09:38–12:25 UTC), avec des événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le PR #388 (taille de batch) était d'abord suspecté, mais son revert n'a rien changé [3] et il a été confirmé comme une fausse piste, puis réappliqué [5]. Des actions correctives ont été décidées : alerte à 80 % de disque et restauration de la rétention par taille [5].",
+  "rendu": "La cause racine de la panne d'ingestion du 12 novembre : les disques du broker Kafka ingest-kafka-2 se sont remplis après le changement de rétention dans l'infra PR #221 (suppression de la rétention par taille, au profit d'une rétention temporelle de 7 jours). Le broker est devenu read-only à 09:38 UTC, bloquant les consommateurs [2]. La panne a duré 2h47 (09:38–12:25 UTC), avec des événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le PR #388 (taille de batch) était d'abord suspecté, mais son revert n'a rien changé [3] et il a été confirmé comme une fausse piste, puis réappliqué [5]. Des actions correctives ont été décidées : alerte à 80 % de disque et restauration de la rétention par taille [5].",
+  "mesures": {
+    "mots": 118,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1216,
+    "sortie": 211,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002879
+  },
+  "cout": 0.0002879,
+  "latenceMs": 1646,
+  "fournisseur": "Together"
+}

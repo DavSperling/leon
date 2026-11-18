@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:29:32.120Z",
+  "reponse": "## What is still open\n\n- **Production PG17 cutover:** Maya approved PR #321 and confirmed the window has moved to **Sunday 22 November, 02:00–04:00 UTC**. Update the runbook and merge the PR; the Terraform plan preserves the read replica without destruction. [1][3][8]\n- **Rollback rehearsal:** Test rollback on a fresh clone on Thursday 19 November, measuring duration and data loss. The cutover rehearsal saw 74 seconds of write downtime; switching back is not a simple rollback. [1]\n- **Switchover coordination:** Give Lior 30 minutes’ notice to pause ingest consumers, and ping Daniel when the switchover starts. [7][9]",
+  "rendu": "## What is still open\n\n- **Production PG17 cutover:** Maya approved PR #321 and confirmed the window has moved to **Sunday 22 November, 02:00–04:00 UTC**. Update the runbook and merge the PR; the Terraform plan preserves the read replica without destruction. [1][3][8]\n- **Rollback rehearsal:** Test rollback on a fresh clone on Thursday 19 November, measuring duration and data loss. The cutover rehearsal saw 74 seconds of write downtime; switching back is not a simple rollback. [1]\n- **Switchover coordination:** Give Lior 30 minutes’ notice to pause ingest consumers, and ping Daniel when the switchover starts. [7][9]",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4852,
+    "sortie": 468,
+    "reflexion": 310,
+    "cache": 1417,
+    "cout": 0.00670385
+  },
+  "cout": 0.00670385,
+  "latenceMs": 11914,
+  "fournisseur": "OpenAI"
+}

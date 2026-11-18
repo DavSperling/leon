@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:43.290Z",
+  "reponse": "## Où j'en suis\n\nFernhill SAML SSO works end to end on staging: real login with their IdP succeeds after the RelayState fix, JIT provisioning (PR #415, merged) creates users as viewer, and group-to-role mapping is in open PR #421. Waiting on Fernhill IT to add the groups claim before the demo, Thursday Nov 19 10:00 ET; go-live Dec 1. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR kestrel-analytics/platform#421 \"SAML: group to role mapping + short RelayState\" is open (commits 6d0e2b8, f4a91c7); full suite green (1301 passed, 3 skipped). (source: kestrel-analytics/platform#421, ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim to the assertion (task still a_faire); Daniel emails them today. Then create one admin test account for the demo. (source: ses-sso-3)\n- [essai-raté] Sending the full return URL (143 bytes) as RelayState was rejected by their ADFS (MSIS7042, 80-byte cap); replaced by a 22-char opaque ID with the URL in Redis, TTL 600 s. Earlier, JIT tests failed on email case vs lowercase domain list; domains normalized to lowercase. (source: ses-sso-3, ses-sso-2)\n- [question] Fernhill IT asked via Slack for IdP-initiated only, analyst as default role, and the groups claim only after the demo; you refused both for now, Maya is to talk to them, so this may come back. (source: src-slack-fernhill, ses-sso-3)\n- [décision] Viewer stays the default role (no analyst role exists) and SP-initiated login stays on for the fernhill tenant. (source: s3-07)\n- [décision] Per-tenant group mapping: Fernhill-Kestrel-Admins → admin, everything else viewer, applied on every login. (source: s3-05, kestrel-analytics/platform#421)\n- [décision] RelayState: short",
+  "rendu": "## Où j'en suis\nFernhill SAML SSO works end to end on staging: real login with their IdP succeeds after the RelayState fix, JIT provisioning (PR #415, merged) creates users as viewer, and group-to-role mapping is in open PR #421. Waiting on Fernhill IT to add the groups claim before the demo, Thursday Nov 19 10:00 ET; go-live Dec 1. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR kestrel-analytics/platform#421 \"SAML: group to role mapping + short RelayState\" is open (commits 6d0e2b8, f4a91c7); full suite green (1301 passed, 3 skipped). (de: équipe, agent; source: kestrel-analytics/platform#421, ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim to the assertion (task still a_faire); Daniel emails them today. Then create one admin test account for the demo. (de: agent; source: ses-sso-3)\n- [essai-raté] Sending the full return URL (143 bytes) as RelayState was rejected by their ADFS (MSIS7042, 80-byte cap); replaced by a 22-char opaque ID with the URL in Redis, TTL 600 s. Earlier, JIT tests failed on email case vs lowercase domain list; domains normalized to lowercase. (de: agent; source: ses-sso-3, ses-sso-2)\n- [question] Fernhill IT asked via Slack for IdP-initiated only, analyst as default role, and the groups claim only after the demo; you refused both for now, Maya is to talk to them, so this may come back. (de: connecteur, agent; source: src-slack-fernhill, ses-sso-3)\n- [décision] Viewer stays the default role (no analyst role exists) and SP-initiated login stays on for the fernhill tenant. (de: toi; source: s3-07)\n- [décision] Per-tenant group mapping: Fernhill-Kestrel-Admins → admin, everything else viewer, applied on every login. (de: toi, équipe; source: s3-05, kestrel-analytics/platform#421)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1793,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5246,
+    "sortie": 6000,
+    "reflexion": 5468,
+    "cache": 0,
+    "cout": 0.00104607
+  },
+  "cout": 0.00104607,
+  "latenceMs": 60190,
+  "fournisseur": "Novita"
+}

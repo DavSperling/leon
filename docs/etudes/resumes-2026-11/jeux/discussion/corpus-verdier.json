@@ -1,0 +1,1201 @@
+{
+  "entreprise": "Maison Verdier",
+  "utilisateur": "Inès Morin",
+  "maintenant": "2026-11-18T08:30:00Z",
+  "sources": [
+    {
+      "id": "gmail-boisetfils-saone-retard",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Commande BF-2611 – tables Saône – retard",
+      "url": null,
+      "auteurs": [
+        "Pascal Bois",
+        "Karim Haddad"
+      ],
+      "tours": [
+        {
+          "id": "gmail-boisetfils-saone-retard-1",
+          "role": "participant",
+          "auteur": "Pascal Bois",
+          "date": "2026-11-05T09:14:00Z",
+          "texte": "Bonjour Karim,\n\nMauvaise nouvelle pour les tables Saône (commande BF-2611, 30 pièces) : le chêne du dernier lot n'a pas fini de sécher, on ne peut pas raboter les plateaux avant. On vise une livraison des 30 tables à votre entrepôt de Vénissieux le vendredi 27 novembre au lieu du 13.\n\nDésolé pour ce contretemps.\n\nPascal Bois\nBois & Fils – Atelier de Saint-Genis"
+        },
+        {
+          "id": "gmail-boisetfils-saone-retard-2",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-05T10:02:00Z",
+          "texte": "Bonjour Pascal,\n\nC'est noté. On a déjà 23 précommandes sur la Saône, je compte sur vous pour le 27.\n\nKarim Haddad\nLogistique – Maison Verdier"
+        },
+        {
+          "id": "gmail-boisetfils-saone-retard-3",
+          "role": "participant",
+          "auteur": "Pascal Bois",
+          "date": "2026-11-13T15:48:00Z",
+          "texte": "Karim,\n\nPoint d'étape : le séchage est plus lent que prévu sur une partie du lot. On pourra vous livrer 18 tables le vendredi 27 novembre, et les 12 restantes le vendredi 11 décembre. Je préfère vous donner des dates sûres plutôt que de vous promettre les 30 pour le 27.\n\nPascal\n\n> Le 5 nov. 2026, Karim Haddad a écrit :\n> C'est noté. On a déjà 23 précommandes sur la Saône, je compte sur vous pour le 27."
+        },
+        {
+          "id": "gmail-boisetfils-saone-retard-4",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-13T16:30:00Z",
+          "texte": "Merci Pascal, va pour 18 tables le 27/11 et 12 le 11/12. Prévenez-moi au moindre glissement.\n\nKarim"
+        }
+      ]
+    },
+    {
+      "id": "slack-logistique-saone",
+      "kind": "slack",
+      "nature": "fil",
+      "titre": "#logistique",
+      "url": null,
+      "auteurs": [
+        "Karim Haddad",
+        "Sophie Garnier",
+        "Claire Verdier",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "slack-logistique-saone-1",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-16T08:05:00Z",
+          "texte": "Point Saône : Bois & Fils nous livre 18 tables le 27/11 et 12 le 11/12 (retard de séchage du chêne). On a 23 précommandes. Les 18 plus anciennes partent la semaine du 30/11 (premier enlèvement TransAlp le 1er/12), les 5 suivantes avec le lot du 11/12."
+        },
+        {
+          "id": "slack-logistique-saone-2",
+          "role": "participant",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-16T08:20:00Z",
+          "texte": "Je passe la fiche produit en « précommande – expédition à partir du 14 décembre » pour les nouvelles commandes ?"
+        },
+        {
+          "id": "slack-logistique-saone-3",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-16T08:24:00Z",
+          "texte": "Oui, le 14/12 c'est réaliste (lot du 11 + contrôle qualité). Il restera 7 tables pour les nouvelles commandes, après on repasse en rupture jusqu'en janvier."
+        },
+        {
+          "id": "slack-logistique-saone-4",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-16T08:40:00Z",
+          "texte": "Ok pour moi. Lucie, tu prépares une réponse type pour le SAV ?"
+        },
+        {
+          "id": "slack-logistique-saone-5",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-16T08:42:00Z",
+          "texte": "Oui, dans Notion d'ici midi."
+        }
+      ]
+    },
+    {
+      "id": "notion-reponses-types-saone",
+      "kind": "notion",
+      "nature": "page",
+      "titre": "Réponses types SAV – Table Saône (retard)",
+      "url": null,
+      "auteurs": [
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "notion-reponses-types-saone-1",
+          "role": "document",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-16T10:50:00Z",
+          "texte": "À utiliser jusqu'à nouvel ordre. Toujours vérifier la date de commande dans Shopify avant de répondre.\n\n1. Précommande passée jusqu'au 6 novembre inclus\n« Votre table Saône sera expédiée la semaine du 30 novembre. Vous recevrez le lien de suivi du transporteur au moment de l'expédition. »\n\n2. Précommande passée après le 6 novembre, ou nouvelle commande\n« Votre table Saône sera expédiée à partir du 14 décembre. Nous ne pouvons pas vous garantir une livraison avant Noël. »\n\nGeste commercial pour les précommandes retardées (validé par Claire le 16/11) : au choix du client, code SAONE10 (-10 % sur un prochain achat) ou remboursement intégral de la précommande. Pas de geste pour une nouvelle commande : la date est affichée sur la fiche produit.\n\nStock : 7 tables seulement pour les nouvelles commandes, ensuite rupture jusqu'en janvier."
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4861-saone-noel",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4861 Table Saône – livraison avant Noël ?",
+      "url": null,
+      "auteurs": [
+        "Élodie Marchal",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4861-saone-noel-1",
+          "role": "participant",
+          "auteur": "Élodie Marchal",
+          "date": "2026-11-17T18:12:00Z",
+          "texte": "Bonjour,\n\nJ'hésite à commander la table Saône 220 cm. On reçoit 12 personnes le 24 décembre : si je commande cette semaine, est-ce que je l'aurai à temps ?\n\nMerci,\nÉlodie Marchal"
+        },
+        {
+          "id": "zendesk-4861-saone-noel-2",
+          "role": "document",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-18T07:55:00Z",
+          "texte": "Note interne : Inès, tu peux prendre celui-ci ?"
+        }
+      ]
+    },
+    {
+      "id": "gmail-boisetfils-chene-fume",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Échantillons finition chêne fumé",
+      "url": null,
+      "auteurs": [
+        "Pascal Bois",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "gmail-boisetfils-chene-fume-1",
+          "role": "participant",
+          "auteur": "Pascal Bois",
+          "date": "2026-10-29T14:30:00Z",
+          "texte": "Bonjour Madame Verdier,\n\nComme convenu au téléphone, je vous envoie cette semaine trois échantillons de chêne fumé (clair, moyen, foncé) pour la collection 2027. Comptez 6 semaines de délai supplémentaire sur cette finition.\n\nBien cordialement,\nPascal Bois"
+        },
+        {
+          "id": "gmail-boisetfils-chene-fume-2",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-10-30T08:10:00Z",
+          "texte": "Merci Pascal, on regarde ça avec Sophie et je vous rappelle."
+        }
+      ]
+    },
+    {
+      "id": "notion-plan-fin-annee",
+      "kind": "notion",
+      "nature": "page",
+      "titre": "Plan commercial fin d'année 2026",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier"
+      ],
+      "tours": [
+        {
+          "id": "notion-plan-fin-annee-1",
+          "role": "document",
+          "auteur": "Sophie Garnier",
+          "date": "2026-10-30T09:00:00Z",
+          "texte": "Black Friday : du jeudi 26 au lundi 30 novembre\n- -15 % sur toute la collection, sauf la table Saône\n- Newsletter le 25 au soir, posts Instagram du 23 au 30\n- Objectif : +20 % de chiffre d'affaires par rapport au Black Friday 2025\n- Chiffres 2025 : à compléter (Antoine)\n\nRenfort SAV : un CDD au service client à partir du 9 novembre (Inès Morin), Karim en renfort l'après-midi pendant la semaine du Black Friday.\n\nSoldes d'hiver : à partir du mercredi 13 janvier 2027\n- Fins de série du showroom et coloris arrêtés\n- Pas de soldes sur la collection 2027 présentée au salon\n\nNoël : dernière commande garantie avant Noël le 14 décembre (hors précommandes et Saône)."
+        }
+      ]
+    },
+    {
+      "id": "tldv-point-marketing-1110",
+      "kind": "tldv",
+      "nature": "reunion",
+      "titre": "Point marketing hebdo",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "tldv-point-marketing-1110-1",
+          "role": "document",
+          "auteur": null,
+          "date": "2026-11-10T09:00:00Z",
+          "texte": "Résumé – mardi 10 novembre\nParticipants : Claire Verdier, Sophie Garnier, Lucie Fontaine\n\n- Black Friday : visuels validés, newsletter prête le 23. Code BF26 désactivé, la remise s'applique directement en caisse.\n- Chiffres 2025 : Sophie n'a pas de chiffres propres pour le Black Friday 2025, les rapports Shopify de l'an dernier ont disparu au changement d'abonnement. Antoine doit les ressortir de la compta.\n- Salon Maison&Objet : maquette du stand validée, impression des kakémonos à lancer.\n- Instagram : 3 posts par semaine jusqu'à Noël."
+        },
+        {
+          "id": "tldv-point-marketing-1110-2",
+          "role": "participant",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-10T09:12:00Z",
+          "texte": "Pour 2025 je n'ai rien de fiable, les rapports ont sauté quand on a changé d'abonnement Shopify. Il faut demander à Antoine, lui il a le chiffre d'affaires par semaine."
+        },
+        {
+          "id": "tldv-point-marketing-1110-3",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-10T09:13:00Z",
+          "texte": "Il me faut au moins le chiffre d'affaires et le nombre de commandes de la semaine du Black Friday pour dimensionner le SAV. Je lui écris."
+        }
+      ]
+    },
+    {
+      "id": "slack-sav-renfort-bf",
+      "kind": "slack",
+      "nature": "fil",
+      "titre": "#sav",
+      "url": null,
+      "auteurs": [
+        "Lucie Fontaine",
+        "Karim Haddad"
+      ],
+      "tours": [
+        {
+          "id": "slack-sav-renfort-bf-1",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-12T13:30:00Z",
+          "texte": "Pour le Black Friday on sera 3 au SAV : moi, Inès, et Karim l'après-midi. L'an dernier on avait été débordés, des tickets restaient 4 jours sans réponse."
+        },
+        {
+          "id": "slack-sav-renfort-bf-2",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-12T13:41:00Z",
+          "texte": "Je crois qu'on avait à peu près doublé les commandes sur la semaine, mais demande à Antoine pour les vrais chiffres."
+        },
+        {
+          "id": "slack-sav-renfort-bf-3",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-12T13:44:00Z",
+          "texte": "Ok. Inès, je te prépare la liste des macros Zendesk d'ici lundi."
+        }
+      ]
+    },
+    {
+      "id": "outlook-antoine-chiffres-bf-2025",
+      "kind": "outlook",
+      "nature": "fil",
+      "titre": "Chiffres Black Friday 2025",
+      "url": null,
+      "auteurs": [
+        "Claire Verdier",
+        "Antoine Roussel"
+      ],
+      "tours": [
+        {
+          "id": "outlook-antoine-chiffres-bf-2025-1",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-10T10:05:00Z",
+          "texte": "Bonjour Antoine,\n\nPouvez-vous me sortir le chiffre d'affaires et le nombre de commandes de la semaine du Black Friday 2025 ? On en a besoin pour préparer celui de cette année.\n\nMerci,\nClaire"
+        },
+        {
+          "id": "outlook-antoine-chiffres-bf-2025-2",
+          "role": "participant",
+          "auteur": "Antoine Roussel",
+          "date": "2026-11-16T16:20:00Z",
+          "texte": "Bonjour Claire,\n\nJe m'en occupe, mais il faut que je recoupe avec les relevés Shopify Payments, les ventes revendeurs sont mélangées dans le grand livre. Je vous envoie ça d'ici le mercredi 25 novembre.\n\nBien cordialement,\nAntoine Roussel\nCabinet Roussel & Associés – Expertise comptable"
+        }
+      ]
+    },
+    {
+      "id": "tldv-comite-logistique-1105",
+      "kind": "tldv",
+      "nature": "reunion",
+      "titre": "Comité logistique",
+      "url": null,
+      "auteurs": [
+        "Karim Haddad",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "tldv-comite-logistique-1105-1",
+          "role": "document",
+          "auteur": null,
+          "date": "2026-11-05T13:00:00Z",
+          "texte": "Résumé – jeudi 5 novembre\nParticipants : Claire Verdier, Karim Haddad, Julien Morel, Lucie Fontaine\n\nDécisions\n- On quitte Rhôna Messagerie pour TransAlp Logistique : 4,2 % de casse chez Rhôna sur les trois derniers mois (objectif sous 1,5 %), TransAlp 8 % moins cher sur les colis volumineux, livraison à deux personnes possible.\n- Date de bascule visée : lundi 23 novembre si le contrat est signé avant le 13, sinon mardi 1er décembre (pas de changement en plein Black Friday).\n\nÀ faire\n- Karim : signer le contrat TransAlp, résilier Rhôna (préavis de 10 jours)\n- Claire : prévenir les revendeurs (Galeries Brotteaux et les deux autres)\n- Julien : mettre le lien de suivi TransAlp dans les mails d'expédition Shopify\n- Lucie : mettre à jour la page Livraison & retours"
+        },
+        {
+          "id": "tldv-comite-logistique-1105-2",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-05T13:22:00Z",
+          "texte": "Si on signe avant le 13, on peut basculer le 23. Sinon ce sera le 1er décembre, je ne veux pas changer de transporteur au milieu du Black Friday."
+        },
+        {
+          "id": "tldv-comite-logistique-1105-3",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-05T13:24:00Z",
+          "texte": "D'accord. Les revendeurs, je m'en occupe moi-même, ils ont des créneaux de livraison particuliers."
+        }
+      ]
+    },
+    {
+      "id": "gmail-transalp-contrat",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Contrat TransAlp – démarrage",
+      "url": null,
+      "auteurs": [
+        "Nadia Benali",
+        "Karim Haddad"
+      ],
+      "tours": [
+        {
+          "id": "gmail-transalp-contrat-1",
+          "role": "participant",
+          "auteur": "Nadia Benali",
+          "date": "2026-11-10T08:00:00Z",
+          "texte": "Bonjour Monsieur Haddad,\n\nVous trouverez ci-joint le contrat de prestation et la grille tarifaire convenus. Dès réception du contrat signé, nous fixons ensemble la date du premier enlèvement.\n\nBien cordialement,\nNadia Benali\nResponsable commerciale – TransAlp Logistique"
+        },
+        {
+          "id": "gmail-transalp-contrat-2",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-16T14:20:00Z",
+          "texte": "Bonjour Nadia,\n\nVoici le contrat signé (désolé pour le délai, notre dirigeante était en déplacement). On part donc sur un démarrage le mardi 1er décembre, premier enlèvement à 14 h à notre entrepôt de Vénissieux.\n\nKarim Haddad"
+        },
+        {
+          "id": "gmail-transalp-contrat-3",
+          "role": "participant",
+          "auteur": "Nadia Benali",
+          "date": "2026-11-16T16:05:00Z",
+          "texte": "Parfait, bien reçu. Premier enlèvement confirmé le mardi 1er décembre à 14 h.\n\nDélais de livraison : 3 à 5 jours ouvrés en France métropolitaine ; livraison à deux personnes en option (29 € HT). Vos accès au portail de suivi arrivent cette semaine.\n\nNadia"
+        }
+      ]
+    },
+    {
+      "id": "slack-general-transporteur",
+      "kind": "slack",
+      "nature": "fil",
+      "titre": "#general",
+      "url": null,
+      "auteurs": [
+        "Karim Haddad",
+        "Lucie Fontaine",
+        "Julien Morel",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "slack-general-transporteur-1",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-17T07:30:00Z",
+          "texte": "📦 Changement de transporteur : à partir du mardi 1er décembre, toutes nos expéditions partent avec TransAlp Logistique. Dernier enlèvement Rhôna le vendredi 27 novembre. Le lundi 30, rien ne part (on prépare les colis du Black Friday pour TransAlp). Délais clients : 3 à 5 jours ouvrés. Le lien de suivi TransAlp sera dans le mail d'expédition."
+        },
+        {
+          "id": "slack-general-transporteur-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-17T07:45:00Z",
+          "texte": "Je mets à jour la page Livraison & retours cette semaine."
+        },
+        {
+          "id": "slack-general-transporteur-3",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-17T08:10:00Z",
+          "texte": "Le lien de suivi TransAlp sera en place dans les mails Shopify le 30/11 au soir."
+        },
+        {
+          "id": "slack-general-transporteur-4",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-17T08:30:00Z",
+          "texte": "Je préviens moi-même Galeries Brotteaux et les deux autres revendeurs cette semaine. Merci de ne pas leur écrire de votre côté."
+        }
+      ]
+    },
+    {
+      "id": "gmail-rhona-resiliation",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Résiliation du contrat – Maison Verdier",
+      "url": null,
+      "auteurs": [
+        "Karim Haddad",
+        "Service clients Rhôna Messagerie"
+      ],
+      "tours": [
+        {
+          "id": "gmail-rhona-resiliation-1",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-16T14:40:00Z",
+          "texte": "Bonjour,\n\nNous résilions notre contrat de messagerie avec un préavis de 10 jours. Le dernier enlèvement à notre entrepôt de Vénissieux sera le vendredi 27 novembre.\n\nMerci pour ces années de collaboration.\n\nKarim Haddad\nMaison Verdier"
+        },
+        {
+          "id": "gmail-rhona-resiliation-2",
+          "role": "participant",
+          "auteur": "Service clients Rhôna Messagerie",
+          "date": "2026-11-17T09:15:00Z",
+          "texte": "Bonjour,\n\nNous accusons réception de votre résiliation. Dernier enlèvement programmé le vendredi 27 novembre. La facture de clôture vous parviendra début décembre.\n\nLe service clients Rhôna Messagerie"
+        }
+      ]
+    },
+    {
+      "id": "outlook-antoine-transalp-factures",
+      "kind": "outlook",
+      "nature": "fil",
+      "titre": "TransAlp – facturation",
+      "url": null,
+      "auteurs": [
+        "Antoine Roussel",
+        "Karim Haddad"
+      ],
+      "tours": [
+        {
+          "id": "outlook-antoine-transalp-factures-1",
+          "role": "participant",
+          "auteur": "Antoine Roussel",
+          "date": "2026-11-17T10:30:00Z",
+          "texte": "Bonjour Karim, bonjour Claire,\n\nPour TransAlp, pouvez-vous me transmettre le contrat signé ? J'ai besoin des conditions de paiement (30 jours fin de mois si j'ai bien compris) et de l'éventuel engagement de volume pour le prévisionnel 2027.\n\nAntoine Roussel"
+        },
+        {
+          "id": "outlook-antoine-transalp-factures-2",
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-17T11:05:00Z",
+          "texte": "Bonjour Antoine, je vous l'envoie dans la journée. Pas d'engagement de volume, c'était une condition de notre côté."
+        }
+      ]
+    },
+    {
+      "id": "hubspot-galeries-brotteaux",
+      "kind": "hubspot",
+      "nature": "note",
+      "titre": "Galeries Brotteaux – compte revendeur",
+      "url": null,
+      "auteurs": [
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "hubspot-galeries-brotteaux-1",
+          "role": "document",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-09T17:00:00Z",
+          "texte": "Rendez-vous avec Isabelle Carré (acheteuse) au magasin.\n- Commande d'hiver confirmée : 6 buffets Croix-Rousse, 20 chaises Fourvière, 2 bancs Rhône.\n- Livraison en magasin habituellement par Rhôna, le jeudi matin avant 10 h (contrainte du centre commercial).\n- À prévenir du changement de transporteur (créneau du jeudi à faire valider par TransAlp).\n- Paiement à 45 jours, toujours à l'heure."
+        }
+      ]
+    },
+    {
+      "id": "gmail-galeries-brotteaux-commande",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Commande hiver – Galeries Brotteaux",
+      "url": null,
+      "auteurs": [
+        "Isabelle Carré",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "gmail-galeries-brotteaux-commande-1",
+          "role": "participant",
+          "auteur": "Isabelle Carré",
+          "date": "2026-11-10T13:20:00Z",
+          "texte": "Bonjour Claire,\n\nJe vous confirme notre commande d'hiver (bon de commande joint). Pouvez-vous nous livrer comme d'habitude un jeudi matin, idéalement le 3 décembre ?\n\nBelle journée,\nIsabelle Carré\nAcheteuse mobilier – Galeries Brotteaux"
+        },
+        {
+          "id": "gmail-galeries-brotteaux-commande-2",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-10T16:45:00Z",
+          "texte": "Bonjour Isabelle,\n\nMerci pour la commande. Je vous confirme la date de livraison dans la semaine prochaine, nous ajustons quelques points avec notre logistique.\n\nClaire Verdier"
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4806-banc-annule",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4806 Commande annulée – banc Rhône",
+      "url": null,
+      "auteurs": [
+        "Thomas Leclerc",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4806-banc-annule-1",
+          "role": "participant",
+          "auteur": "Thomas Leclerc",
+          "date": "2026-11-07T10:40:00Z",
+          "texte": "Bonjour, je viens de recevoir un mail qui annule ma commande du banc Rhône pour « rupture de stock ». Il était pourtant indiqué en stock hier soir. Que se passe-t-il ?"
+        },
+        {
+          "id": "zendesk-4806-banc-annule-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-09T08:30:00Z",
+          "texte": "Bonjour Monsieur Leclerc, toutes nos excuses : le site affichait un stock qui n'était plus disponible. Votre commande est intégralement remboursée. Le banc Rhône revient en stock mi-décembre, je peux vous prévenir à son retour si vous le souhaitez."
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4812-buffet-annule",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4812 Commande annulée – buffet Croix-Rousse",
+      "url": null,
+      "auteurs": [
+        "Paul Lemaire",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4812-buffet-annule-1",
+          "role": "participant",
+          "auteur": "Paul Lemaire",
+          "date": "2026-11-09T17:30:00Z",
+          "texte": "Bonjour, j'ai commandé samedi le buffet Croix-Rousse en noyer, affiché en stock, et je reçois un mail d'annulation pour rupture ?? C'est une blague ?"
+        },
+        {
+          "id": "zendesk-4812-buffet-annule-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-10T08:12:00Z",
+          "texte": "Bonjour Monsieur Lemaire, toutes nos excuses : le site affichait encore du stock alors que le dernier buffet était vendu. Votre commande est remboursée intégralement. Je vous offre la livraison sur votre prochaine commande."
+        },
+        {
+          "id": "zendesk-4812-buffet-annule-3",
+          "role": "document",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-10T08:15:00Z",
+          "texte": "Note interne : 2e cas en 3 jours (voir #4806). Remonté à Julien sur Slack."
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4825-chaises-fourviere",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4825 Chaises Fourvière – commande incomplète",
+      "url": null,
+      "auteurs": [
+        "Nadège Fournier",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4825-chaises-fourviere-1",
+          "role": "participant",
+          "auteur": "Nadège Fournier",
+          "date": "2026-11-12T09:05:00Z",
+          "texte": "Bonjour, j'avais commandé 6 chaises Fourvière, on m'annonce que seulement 2 peuvent partir. Le site en affichait pourtant 9 en stock. Je voulais un ensemble complet."
+        },
+        {
+          "id": "zendesk-4825-chaises-fourviere-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-12T10:20:00Z",
+          "texte": "Bonjour Madame Fournier, vous avez raison, notre site affichait un stock erroné. Je vous propose soit d'attendre le prochain arrivage (fin novembre) pour recevoir les 6 ensemble, soit l'annulation et le remboursement. Toutes nos excuses."
+        },
+        {
+          "id": "zendesk-4825-chaises-fourviere-3",
+          "role": "participant",
+          "auteur": "Nadège Fournier",
+          "date": "2026-11-12T11:02:00Z",
+          "texte": "J'attends l'arrivage, merci de me tenir au courant."
+        }
+      ]
+    },
+    {
+      "id": "slack-tech-synchro-stock",
+      "kind": "slack",
+      "nature": "fil",
+      "titre": "#tech",
+      "url": null,
+      "auteurs": [
+        "Lucie Fontaine",
+        "Julien Morel"
+      ],
+      "tours": [
+        {
+          "id": "slack-tech-synchro-stock-1",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-10T08:20:00Z",
+          "texte": "@Julien encore une commande annulée sur un article affiché en stock (buffet Croix-Rousse). Ça fait 2 en 3 jours."
+        },
+        {
+          "id": "slack-tech-synchro-stock-2",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-10T08:48:00Z",
+          "texte": "Je regarde. Je soupçonne la synchro du stock depuis qu'on a ajouté l'emplacement Showroom dans Shopify le 3/11."
+        },
+        {
+          "id": "slack-tech-synchro-stock-3",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T17:05:00Z",
+          "texte": "Trouvé : le script de synchro ne mettait à jour que l'emplacement « Entrepôt Vénissieux ». Le showroom gardait son ancien stock et Shopify additionne les emplacements, donc le site affichait du stock qui n'existait plus. Correctif en PR #87."
+        },
+        {
+          "id": "slack-tech-synchro-stock-4",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-13T18:40:00Z",
+          "texte": "#87 fusionnée et déployée. J'ai repassé tout le catalogue, les quantités sont bonnes. 7 commandes touchées entre le 3 et le 12/11, Lucie a la liste."
+        },
+        {
+          "id": "slack-tech-synchro-stock-5",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-17T09:00:00Z",
+          "texte": "Aucun nouveau cas depuis vendredi 👍"
+        },
+        {
+          "id": "slack-tech-synchro-stock-6",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-17T09:15:00Z",
+          "texte": "Super. Hugo prépare un contrôle quotidien qui compare Shopify et l'export de l'entrepôt et prévient sur Slack s'il y a un écart (PR #91). Pas encore en production."
+        }
+      ]
+    },
+    {
+      "id": "claude-code-julien-synchro-stock",
+      "kind": "claude_code",
+      "nature": "conversation",
+      "titre": "boutique : synchro du stock multi-emplacements",
+      "url": null,
+      "auteurs": [
+        "Julien Morel"
+      ],
+      "tours": [
+        {
+          "id": "claude-code-julien-synchro-stock-1",
+          "role": "user",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T15:02:00Z",
+          "texte": "des clients commandent des produits en rupture depuis ~1 semaine. le script sync-stock tourne toutes les 15 min via le cron. regarde scripts/sync-stock.ts et dis moi ce qui cloche"
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-2",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-12T15:04:00Z",
+          "texte": "Je lis scripts/sync-stock.ts et scripts/lib/shopify.ts.\n\nCe que fait le script :\n1. Télécharge l'export CSV de l'entrepôt (onglet « Stock »)\n2. Pour chaque SKU, appelle inventorySetQuantities avec un seul locationId : process.env.SHOPIFY_LOCATION_ID (« Entrepôt Vénissieux »)\n3. Ne touche jamais aux autres emplacements\n\nSi la boutique a plusieurs emplacements, Shopify affiche en ligne la somme des emplacements où la vente en ligne est activée. Est-ce qu'un emplacement a été ajouté récemment ?"
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-3",
+          "role": "user",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T15:06:00Z",
+          "texte": "oui on a ajouté Showroom le 3/11 (les pièces d'expo de la rue Auguste-Comte)"
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-4",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-12T15:09:00Z",
+          "texte": "Voilà la cause probable. Quand le showroom a été créé, Shopify y a copié les quantités du moment. Depuis, le script ne met à jour que l'entrepôt : quand l'entrepôt passe à 0, le showroom garde son ancien chiffre et le site continue d'afficher du stock.\n\nDeux options :\n1. Mettre à jour les deux emplacements à partir de l'export (l'export a déjà un onglet « Showroom »)\n2. Plus radical : désactiver « Continuer à vendre en cas de rupture » sur tout le catalogue et passer la synchro toutes les 5 minutes\n\nJe recommande l'option 2 pour être certain que plus rien ne se vende sans stock."
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-5",
+          "role": "user",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T15:11:00Z",
+          "texte": "non pas l'option 2, les précommandes Saône ont besoin de \"continuer à vendre\". fais l'option 1 et ajoute des tests"
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-6",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-12T15:28:00Z",
+          "texte": "C'est fait.\n\n- scripts/sync-stock.ts : lit les onglets « Stock » et « Showroom », un appel inventorySetQuantities par emplacement\n- scripts/lib/locations.ts : correspondance onglet → locationId (variables SHOPIFY_LOCATION_ENTREPOT et SHOPIFY_LOCATION_SHOWROOM)\n- tests/sync-stock.test.ts : 3 nouveaux tests (deux emplacements, SKU absent du showroom, quantité négative refusée)\n\nnpm test … 41 passés."
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-7",
+          "role": "user",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T15:30:00Z",
+          "texte": "ok. ajoute la variable SHOPIFY_LOCATION_SHOWROOM dans .env.example et ouvre la PR"
+        },
+        {
+          "id": "claude-code-julien-synchro-stock-8",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-12T15:33:00Z",
+          "texte": "Ajoutée dans .env.example. PR #87 ouverte : « Synchro stock : mettre à jour tous les emplacements Shopify »."
+        }
+      ]
+    },
+    {
+      "id": "github-boutique-pr-87",
+      "kind": "github",
+      "nature": "ticket",
+      "titre": "boutique#87 Synchro stock : mettre à jour tous les emplacements Shopify",
+      "url": "https://github.com/maison-verdier/boutique/pull/87",
+      "auteurs": [
+        "Julien Morel",
+        "Hugo Petit"
+      ],
+      "tours": [
+        {
+          "id": "github-boutique-pr-87-1",
+          "role": "document",
+          "auteur": "Julien Morel",
+          "date": "2026-11-12T15:33:00Z",
+          "texte": "Depuis l'ajout de l'emplacement Showroom (3/11), sync-stock ne mettait à jour que l'entrepôt : le site affichait la somme avec l'ancien stock du showroom.\n\n- mise à jour des deux emplacements à partir des onglets de l'export\n- 3 tests\n- nouvelle variable SHOPIFY_LOCATION_SHOWROOM"
+        },
+        {
+          "id": "github-boutique-pr-87-2",
+          "role": "participant",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-13T09:10:00Z",
+          "texte": "Relu, testé en local avec l'export d'hier, les quantités tombent juste."
+        },
+        {
+          "id": "github-boutique-pr-87-3",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-13T18:30:00Z",
+          "texte": "Fusionnée, déployée."
+        }
+      ]
+    },
+    {
+      "id": "github-boutique-pr-91",
+      "kind": "github",
+      "nature": "ticket",
+      "titre": "boutique#91 Contrôle quotidien des écarts de stock Shopify / entrepôt",
+      "url": "https://github.com/maison-verdier/boutique/pull/91",
+      "auteurs": [
+        "Hugo Petit",
+        "Julien Morel"
+      ],
+      "tours": [
+        {
+          "id": "github-boutique-pr-91-1",
+          "role": "document",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-16T15:00:00Z",
+          "texte": "Ajoute un script lancé chaque matin à 7 h : compare le stock Shopify (par emplacement) à l'export de l'entrepôt et poste les écarts dans #tech.\n\nBrouillon : il manque le cron et la gestion des SKU archivés."
+        },
+        {
+          "id": "github-boutique-pr-91-2",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-17T13:20:00Z",
+          "texte": "Bonne base. Deux retours : ignorer les produits en précommande (Saône) et ne poster que si l'écart dépasse 1 pièce. À reprendre avant fusion."
+        }
+      ]
+    },
+    {
+      "id": "cursor-hugo-controle-stock",
+      "kind": "cursor",
+      "nature": "conversation",
+      "titre": "boutique : script de contrôle des écarts de stock",
+      "url": null,
+      "auteurs": [
+        "Hugo Petit"
+      ],
+      "tours": [
+        {
+          "id": "cursor-hugo-controle-stock-1",
+          "role": "user",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-16T13:30:00Z",
+          "texte": "je dois faire un script qui compare le stock shopify et l'export entrepot tous les matins et poste sur slack les écarts. on a deja scripts/lib/shopify.ts et le webhook slack dans .env"
+        },
+        {
+          "id": "cursor-hugo-controle-stock-2",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-16T13:32:00Z",
+          "texte": "Je propose scripts/check-stock.ts :\n1. Lire l'export (mêmes fonctions que sync-stock)\n2. Lire les niveaux de stock Shopify par emplacement (inventoryLevels)\n3. Comparer SKU par SKU, emplacement par emplacement\n4. Si des écarts existent, poster un message Slack avec un tableau (SKU, emplacement, Shopify, entrepôt)\n\nJe commence par la comparaison, qui est la partie testable."
+        },
+        {
+          "id": "cursor-hugo-controle-stock-3",
+          "role": "user",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-16T13:33:00Z",
+          "texte": "ok vas y"
+        },
+        {
+          "id": "cursor-hugo-controle-stock-4",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-16T14:20:00Z",
+          "texte": "scripts/check-stock.ts et tests/check-stock.test.ts créés. npm test … 46 passés. Le message Slack est formaté en bloc de code pour rester lisible."
+        },
+        {
+          "id": "cursor-hugo-controle-stock-5",
+          "role": "user",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-16T14:58:00Z",
+          "texte": "merci, j'ouvre la pr en brouillon"
+        }
+      ]
+    },
+    {
+      "id": "tldv-point-equipe-1116",
+      "kind": "tldv",
+      "nature": "reunion",
+      "titre": "Point d'équipe du lundi",
+      "url": null,
+      "auteurs": [],
+      "tours": [
+        {
+          "id": "tldv-point-equipe-1116-1",
+          "role": "document",
+          "auteur": null,
+          "date": "2026-11-16T08:30:00Z",
+          "texte": "Résumé – lundi 16 novembre\nParticipants : Claire Verdier, Julien Morel, Sophie Garnier, Karim Haddad, Lucie Fontaine, Inès Morin, Hugo Petit\n\n- Bienvenue à Inès, arrivée la semaine dernière au service client.\n- Saône : 18 tables le 27/11, 12 le 11/12 ; la fiche passe en précommande avec expédition à partir du 14/12.\n- Transporteur : Karim signe le contrat TransAlp aujourd'hui, donc bascule le 1er décembre (trop tard pour le 23).\n- Synchro du stock : corrigée vendredi par Julien ; Hugo prépare un contrôle quotidien.\n- Black Friday : toujours en attente des chiffres 2025 d'Antoine.\n- Beaujolais nouveau jeudi soir au showroom."
+        }
+      ]
+    },
+    {
+      "id": "gmail-newsletter-tendances-deco",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Tendances Déco – l'hebdo #48",
+      "url": null,
+      "auteurs": [
+        "Tendances Déco"
+      ],
+      "tours": [
+        {
+          "id": "gmail-newsletter-tendances-deco-1",
+          "role": "participant",
+          "auteur": "Tendances Déco",
+          "date": "2026-11-12T05:00:00Z",
+          "texte": "Cette semaine : le retour du bois brut, 7 idées pour un salon cosy, et les couleurs de 2027 selon les fabricants de peinture.\n\nVous recevez cette lettre car vous êtes inscrit sur tendances-deco.example. Se désinscrire."
+        }
+      ]
+    },
+    {
+      "id": "gmail-offre-imprimerie",
+      "kind": "gmail",
+      "nature": "fil",
+      "titre": "Vos cartes de vœux 2027 : -30 % jusqu'au 30 novembre",
+      "url": null,
+      "auteurs": [
+        "Imprimerie Rapide Lyon"
+      ],
+      "tours": [
+        {
+          "id": "gmail-offre-imprimerie-1",
+          "role": "participant",
+          "auteur": "Imprimerie Rapide Lyon",
+          "date": "2026-11-03T07:30:00Z",
+          "texte": "Madame, Monsieur,\n\nProfitez de -30 % sur vos cartes de vœux personnalisées jusqu'au 30 novembre. Papier recyclé, livraison en 5 jours.\n\nImprimerie Rapide Lyon – contact@imprimerie-rapide.example"
+        }
+      ]
+    },
+    {
+      "id": "outlook-antoine-tva-octobre",
+      "kind": "outlook",
+      "nature": "fil",
+      "titre": "TVA d'octobre – à valider",
+      "url": null,
+      "auteurs": [
+        "Antoine Roussel",
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "outlook-antoine-tva-octobre-1",
+          "role": "participant",
+          "auteur": "Antoine Roussel",
+          "date": "2026-11-09T09:00:00Z",
+          "texte": "Bonjour Claire,\n\nLa déclaration de TVA d'octobre est prête dans l'espace client. Merci de la valider avant le 19 novembre.\n\nAntoine Roussel"
+        },
+        {
+          "id": "outlook-antoine-tva-octobre-2",
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-09T18:20:00Z",
+          "texte": "Validée, merci Antoine."
+        }
+      ]
+    },
+    {
+      "id": "outlook-antoine-inventaire",
+      "kind": "outlook",
+      "nature": "fil",
+      "titre": "Clôture 2026 – inventaire physique",
+      "url": null,
+      "auteurs": [
+        "Antoine Roussel"
+      ],
+      "tours": [
+        {
+          "id": "outlook-antoine-inventaire-1",
+          "role": "participant",
+          "auteur": "Antoine Roussel",
+          "date": "2026-11-04T10:00:00Z",
+          "texte": "Bonjour Claire, bonjour Karim,\n\nPour la clôture au 31 décembre, l'inventaire physique de l'entrepôt et du showroom est à faire le samedi 2 janvier. Je vous envoie le modèle de fichier.\n\nAntoine Roussel"
+        }
+      ]
+    },
+    {
+      "id": "slack-general-beaujolais",
+      "kind": "slack",
+      "nature": "fil",
+      "titre": "#general",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier",
+        "Hugo Petit"
+      ],
+      "tours": [
+        {
+          "id": "slack-general-beaujolais-1",
+          "role": "participant",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-13T14:00:00Z",
+          "texte": "🍷 Beaujolais nouveau jeudi 19 au showroom à 18 h ! Fromages et charcuterie fournis, venez avec vos proches."
+        },
+        {
+          "id": "slack-general-beaujolais-2",
+          "role": "participant",
+          "auteur": "Hugo Petit",
+          "date": "2026-11-13T14:12:00Z",
+          "texte": "Je ramène les chips 😄"
+        }
+      ]
+    },
+    {
+      "id": "hubspot-studio-ainay",
+      "kind": "hubspot",
+      "nature": "note",
+      "titre": "Studio Ainay – architecte d'intérieur",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier"
+      ],
+      "tours": [
+        {
+          "id": "hubspot-studio-ainay-1",
+          "role": "document",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-06T15:00:00Z",
+          "texte": "Prospect pro : Studio Ainay (architecte d'intérieur, 4 personnes). Demande le catalogue professionnel et la grille de remise pro. Envoyé le 6/11. Relance prévue fin novembre."
+        }
+      ]
+    },
+    {
+      "id": "notion-charte-instagram",
+      "kind": "notion",
+      "nature": "page",
+      "titre": "Charte éditoriale Instagram",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier"
+      ],
+      "tours": [
+        {
+          "id": "notion-charte-instagram-1",
+          "role": "document",
+          "auteur": "Sophie Garnier",
+          "date": "2026-10-23T10:00:00Z",
+          "texte": "Ton : chaleureux, jamais promotionnel en premier. Photos en lumière naturelle, pas de fond blanc. 3 publications par semaine, stories le jeudi (atelier, coulisses). Toujours créditer Bois & Fils quand on montre l'atelier."
+        }
+      ]
+    },
+    {
+      "id": "chatgpt-sophie-posts-hiver",
+      "kind": "chatgpt",
+      "nature": "conversation",
+      "titre": "Idées de posts pour la collection hiver",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier"
+      ],
+      "tours": [
+        {
+          "id": "chatgpt-sophie-posts-hiver-1",
+          "role": "user",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-02T13:00:00Z",
+          "texte": "donne moi 10 idées de posts instagram pour une marque de meubles en bois massif lyonnaise, collection hiver, ton chaleureux"
+        },
+        {
+          "id": "chatgpt-sophie-posts-hiver-2",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-02T13:00:00Z",
+          "texte": "Voici 10 idées :\n1. Le plaid et la table basse : une scène de dimanche après-midi\n2. Coulisses de l'atelier : le ponçage d'un plateau en chêne\n3. « Une pièce, trois ambiances » : le même buffet habillé de trois façons\n4. La table dressée pour un repas de fêtes\n5. Le carnet d'entretien : comment nourrir le bois en hiver\n6. Portrait d'un artisan\n7. Avant / après d'un salon client\n8. Le choix des essences : chêne, noyer, frêne\n9. Lumière du matin sur une chaise au coin de la fenêtre\n10. Jeu-concours : votre coin lecture idéal"
+        },
+        {
+          "id": "chatgpt-sophie-posts-hiver-3",
+          "role": "user",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-02T13:02:00Z",
+          "texte": "top, développe la 5 en 5 slides"
+        },
+        {
+          "id": "chatgpt-sophie-posts-hiver-4",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-11-02T13:03:00Z",
+          "texte": "Slide 1 : « Votre bois a soif en hiver ». Slide 2 : le chauffage assèche le bois. Slide 3 : une fois par saison, une huile ou une cire adaptée. Slide 4 : jamais de produit ménager. Slide 5 : « Une question ? Écrivez-nous »."
+        }
+      ]
+    },
+    {
+      "id": "chatgpt-claire-relance-paiement",
+      "kind": "chatgpt",
+      "nature": "conversation",
+      "titre": "Relance de paiement d'un revendeur",
+      "url": null,
+      "auteurs": [
+        "Claire Verdier"
+      ],
+      "tours": [
+        {
+          "id": "chatgpt-claire-relance-paiement-1",
+          "role": "user",
+          "auteur": "Claire Verdier",
+          "date": "2026-10-28T19:30:00Z",
+          "texte": "aide moi à écrire une relance polie mais ferme pour un revendeur qui a 30 jours de retard sur une facture de 4 800 €"
+        },
+        {
+          "id": "chatgpt-claire-relance-paiement-2",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-10-28T19:31:00Z",
+          "texte": "Objet : Facture n° … – relance\n\nBonjour,\n\nSauf erreur de notre part, la facture n° … d'un montant de 4 800 € TTC, échue depuis le …, reste impayée à ce jour. Nous vous remercions de bien vouloir procéder à son règlement sous huit jours.\n\nSi le paiement a été effectué entre-temps, merci de ne pas tenir compte de ce message.\n\nBien cordialement,"
+        },
+        {
+          "id": "chatgpt-claire-relance-paiement-3",
+          "role": "user",
+          "auteur": "Claire Verdier",
+          "date": "2026-10-28T19:33:00Z",
+          "texte": "parfait merci"
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4799-rayure",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4799 Rayure sur le plateau à la livraison",
+      "url": null,
+      "auteurs": [
+        "Camille Dumas",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4799-rayure-1",
+          "role": "participant",
+          "auteur": "Camille Dumas",
+          "date": "2026-10-30T16:00:00Z",
+          "texte": "Bonjour, ma table basse Fourvière est arrivée avec une rayure profonde sur le plateau, le carton était enfoncé. Photos jointes."
+        },
+        {
+          "id": "zendesk-4799-rayure-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-10-31T08:30:00Z",
+          "texte": "Bonjour Madame Dumas, désolée pour ce dommage de transport. Nous vous envoyons un plateau de remplacement sous 10 jours et ouvrons un litige avec le transporteur."
+        }
+      ]
+    },
+    {
+      "id": "zendesk-4840-adresse",
+      "kind": "zendesk",
+      "nature": "fil",
+      "titre": "#4840 Modifier l'adresse de livraison",
+      "url": null,
+      "auteurs": [
+        "Julie Berthier",
+        "Lucie Fontaine"
+      ],
+      "tours": [
+        {
+          "id": "zendesk-4840-adresse-1",
+          "role": "participant",
+          "auteur": "Julie Berthier",
+          "date": "2026-11-13T12:00:00Z",
+          "texte": "Bonjour, je déménage, est-ce possible de livrer ma commande à ma nouvelle adresse ?"
+        },
+        {
+          "id": "zendesk-4840-adresse-2",
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-13T13:10:00Z",
+          "texte": "Bonjour, c'est fait : la commande n'était pas encore expédiée, l'adresse est modifiée."
+        }
+      ]
+    },
+    {
+      "id": "cursor-hugo-galerie-photos",
+      "kind": "cursor",
+      "nature": "conversation",
+      "titre": "boutique : galerie photos de la fiche produit",
+      "url": null,
+      "auteurs": [
+        "Hugo Petit"
+      ],
+      "tours": [
+        {
+          "id": "cursor-hugo-galerie-photos-1",
+          "role": "user",
+          "auteur": "Hugo Petit",
+          "date": "2026-10-27T10:00:00Z",
+          "texte": "sur la fiche produit la galerie photos ne swipe pas sur mobile, regarde sections/product-gallery.liquid"
+        },
+        {
+          "id": "cursor-hugo-galerie-photos-2",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-10-27T10:03:00Z",
+          "texte": "Le conteneur a overflow: hidden et le script d'écoute des gestes n'est chargé que sur desktop (media query dans le tag script). Je charge le script partout et j'ajoute scroll-snap sur mobile."
+        },
+        {
+          "id": "cursor-hugo-galerie-photos-3",
+          "role": "user",
+          "auteur": "Hugo Petit",
+          "date": "2026-10-27T10:04:00Z",
+          "texte": "ok"
+        },
+        {
+          "id": "cursor-hugo-galerie-photos-4",
+          "role": "assistant",
+          "auteur": null,
+          "date": "2026-10-27T10:10:00Z",
+          "texte": "Modifié : sections/product-gallery.liquid et assets/gallery.js. Testé avec l'aperçu mobile du thème : le swipe fonctionne."
+        }
+      ]
+    },
+    {
+      "id": "github-boutique-pr-89",
+      "kind": "github",
+      "nature": "ticket",
+      "titre": "boutique#89 chore: mise à jour des dépendances",
+      "url": "https://github.com/maison-verdier/boutique/pull/89",
+      "auteurs": [
+        "renovate",
+        "Julien Morel"
+      ],
+      "tours": [
+        {
+          "id": "github-boutique-pr-89-1",
+          "role": "document",
+          "auteur": "renovate",
+          "date": "2026-11-09T04:00:00Z",
+          "texte": "Met à jour 6 dépendances de développement (vitest, typescript, eslint et 3 autres). Aucune dépendance de production."
+        },
+        {
+          "id": "github-boutique-pr-89-2",
+          "role": "participant",
+          "auteur": "Julien Morel",
+          "date": "2026-11-09T09:30:00Z",
+          "texte": "Tests verts, fusionnée."
+        }
+      ]
+    },
+    {
+      "id": "notion-salon-maison-objet",
+      "kind": "notion",
+      "nature": "page",
+      "titre": "Salon Maison&Objet – janvier 2027",
+      "url": null,
+      "auteurs": [
+        "Sophie Garnier"
+      ],
+      "tours": [
+        {
+          "id": "notion-salon-maison-objet-1",
+          "role": "document",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-03T11:00:00Z",
+          "texte": "Stand de 18 m², hall 6. Sur place : Claire, Sophie, Karim (montage).\nPièces exposées : table Saône (prototype en chêne fumé), buffet Croix-Rousse, 6 chaises Fourvière, banc Rhône.\nTransport aller-retour des pièces : à organiser avec le transporteur.\nKakémonos et catalogue 2027 : impression à lancer avant le 15 décembre.\nBadges : demandés le 3/11."
+        }
+      ]
+    }
+  ]
+}

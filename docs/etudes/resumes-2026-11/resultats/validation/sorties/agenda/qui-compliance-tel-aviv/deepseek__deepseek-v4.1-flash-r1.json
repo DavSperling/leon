@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-compliance-tel-aviv",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:27.897Z",
+  "reponse": "{\"n\": 15, \"titre\": \"Quillon PCI DSS scoping walkthrough\", \"debut\": \"2026-11-18T15:00\", \"fin\": \"2026-11-18T16:30\", \"avec\": \"Victor Lindqvist, Elad Navon, Avi Kessler\"}\n{\"n\": 6, \"titre\": \"Annual third-party oversight review: Quillon\", \"debut\": \"2026-11-19T16:00\", \"fin\": \"2026-11-19T17:00\", \"avec\": \"Monique Tran\"}\n{\"n\": 5, \"titre\": \"Audit & risk committee prep\", \"debut\": \"2026-11-22T09:30\", \"fin\": \"2026-11-22T10:30\", \"avec\": \"Gil Shamir, Avi Kessler\"}\n{\"n\": 12, \"titre\": \"1:1\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T14:30\", \"avec\": \"Avi Kessler\"}\n{\"n\": 13, \"titre\": \"Entretien avec Noga Elbaz\", \"debut\": \"2026-11-17T13:30\", \"fin\": \"2026-11-17T14:15\", \"avec\": \"Noga Elbaz\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T14:30 1:1 (avec Avi Kessler)\n2026-11-17T13:30→2026-11-17T14:15 Entretien avec Noga Elbaz (avec Noga Elbaz)\n2026-11-18T15:00→2026-11-18T16:30 Quillon PCI DSS scoping walkthrough (avec Victor Lindqvist, Elad Navon, Avi Kessler)\n2026-11-19T16:00→2026-11-19T17:00 Annual third-party oversight review: Quillon (avec Monique Tran)\n2026-11-22T09:30→2026-11-22T10:30 Audit & risk committee prep (avec Gil Shamir, Avi Kessler)",
+  "mesures": {
+    "trouves": 5,
+    "attendus": 5,
+    "justes": 2,
+    "rappel": 0.4,
+    "precision": 0.4,
+    "f1": 0.4,
+    "faux": "2026-11-16T14:00 1:1 | 2026-11-17T13:30 Entretien avec Noga Elbaz | 2026-11-22T09:30 Audit & risk committee prep",
+    "manques": "2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-22T08:30 Audit & risk committee prep",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2834,
+    "sortie": 3333,
+    "reflexion": 3024,
+    "cache": 0,
+    "cout": 0.00193992
+  },
+  "cout": 0.00193992,
+  "latenceMs": 25523,
+  "fournisseur": "River"
+}

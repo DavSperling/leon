@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:02:06.653Z",
+  "reponse": "{\"n\": 13, \"titre\": \"Réunion de lancement TransAlp\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T15:30\", \"avec\": \"Bruno Ferrand, Nadia Ouali\"}\n{\"n\": 9, \"titre\": \"Visio mousses et tissus collection 2027\", \"debut\": \"2026-11-18T16:00\", \"avec\": \"Rui Carvalho\"}\n{\"n\": 3, \"titre\": \"Réunion soldes d'hiver – logistique\", \"debut\": \"2026-11-18T11:30\", \"avec\": \"Claire Verdier, Sophie Garnier\"}\n{\"n\": 5, \"titre\": \"Appel distribution au Québec\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Geneviève Tremblay\"}\n{\"n\": 14, \"titre\": \"Rupture table Saône – point téléphonique\", \"debut\": \"2026-11-19T09:00\", \"avec\": \"Paul Besson\"}\n{\"n\": 15, \"titre\": \"Enlèvement test TransAlp, quai 2 Vénissieux\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T11:00\", \"avec\": \"TransAlp Logistique\"}\n{\"n\": 7, \"titre\": \"Déjeuner avec Bruno Ferrand\", \"debut\": \"2026-11-20T12:30\", \"avec\": \"Bruno Ferrand\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T15:30 Réunion de lancement TransAlp (avec Bruno Ferrand, Nadia Ouali)\n2026-11-18T11:30 Réunion soldes d'hiver – logistique (avec Claire Verdier, Sophie Garnier)\n2026-11-18T16:00 Visio mousses et tissus collection 2027 (avec Rui Carvalho)\n2026-11-19T09:00 Rupture table Saône – point téléphonique (avec Paul Besson)\n2026-11-19T16:00 Appel distribution au Québec (avec Geneviève Tremblay)\n2026-11-20T09:00→2026-11-20T11:00 Enlèvement test TransAlp, quai 2 Vénissieux (avec TransAlp Logistique)\n2026-11-20T12:30 Déjeuner avec Bruno Ferrand (avec Bruno Ferrand)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.857,
+    "f1": 0.923,
+    "faux": "2026-11-20T09:00 Enlèvement test TransAlp, quai 2 Vénissieux",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4109,
+    "sortie": 2263,
+    "reflexion": 1785,
+    "cache": 0,
+    "cout": 0.0015424
+  },
+  "cout": 0.0015424,
+  "latenceMs": 9624,
+  "fournisseur": "Google"
+}

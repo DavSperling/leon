@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:24:00.996Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill was finished on branch daniel/saml-acs: signature verification with signxml (after python3-saml/xmlsec proved unusable on Alpine), condition checks (audience, recipient, time window with 120 s skew per Fernhill's contract), replay protection in Redis, saml_utils moved to api/auth/saml/verify.py, mypy and full CI green. PR kestrel-analytics/platform#412 is merged; the merge was first refused pending review (branch protection), and the user said no admin, no auto.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users.\n- [essai-raté] python3-saml + xmlsec on Alpine: lxml/xmlsec libxml2 version mismatch, and building lxml from source still failed (Alpine lacks xmlsec1-openssl module) — replaced by signxml.\n- [décision] Use signxml, drop python3-saml and xmlsec; write condition checks ourselves; only read attributes from signed_xml (source: t08).\n- [décision] Skew tolerance set to 120 s per Fernhill's security questionnaire, not 300 s (source: t12).\n- [décision] Password-login changes are out of this PR, separate ticket (source: t12).",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill was finished on branch daniel/saml-acs: signature verification with signxml (after python3-saml/xmlsec proved unusable on Alpine), condition checks (audience, recipient, time window with 120 s skew per Fernhill's contract), replay protection in Redis, saml_utils moved to api/auth/saml/verify.py, mypy and full CI green. PR kestrel-analytics/platform#412 is merged; the merge was first refused pending review (branch protection), and the user said no admin, no auto.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users.\n- [essai-raté] python3-saml + xmlsec on Alpine: lxml/xmlsec libxml2 version mismatch, and building lxml from source still failed (Alpine lacks xmlsec1-openssl module) — replaced by signxml.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1097,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4500,
+    "sortie": 333,
+    "reflexion": 1,
+    "cache": 0,
+    "cout": 0.0015768
+  },
+  "cout": 0.0015768,
+  "latenceMs": 3040,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:40:14.239Z",
+  "reponse": "## Where I am\n\nPR #233 is merged, and the real replay into `events.replay.v3` finished: 18,442,107 events produced, with 3,118 rejects written to S3 (source: kestrel-analytics/ingest#233, r2-04). The aggregator backfill for 2026-11-12 started at 08:57 UTC and was at 61% at 09:52. The incident window held 14.9M rows, against about 20.5M expected from the same weekday last week (source: r2-06). The incident stays open until the counts match (source: r2-07). (source: ses-rp-2, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` (source: r2-06)\n- [prochaine-étape] 1. Wait for the backfill to reach 100% (source: r2-06). 2. Compare ClickHouse counts hour by hour, with a 1% tolerance (source: r2-08). 3. Close the incident only once the counts match (source: r2-08).\n- [essai-raté] A dry run with 50k batches was OOMKilled at the 2Gi limit. 5k batches work. Do not raise the memory limit, since the namespace quota was capped (source: r1-03, r1-04, src-sentry-oom)\n- [question] Rachel told fernhill and orbitly the data is back \"by Thursday\" (r2-07). Orbitly was told \"today, Wednesday Nov 18\", and Rachel was to confirm the exact date (source: r2-07, src-zendesk-orbitly). Which date is correct?\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` from this tool (source: r1-02)\n- [décision] The incident stays open until the counts match (source: r2-07)\n- [décision] Daniel adds a CI check on the dedup key length, and no other fix goes in for this incident (source: src-slack-incident)\n- [décision] PR #241 from the fork is ignored, and Daniel handles the CI check (source: r2-09)",
+  "rendu": "- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` (de: agent; source: r2-06)\n- [essai-raté] A dry run with 50k batches was OOMKilled at the 2Gi limit. 5k batches work. Do not raise the memory limit, since the namespace quota was capped (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` from this tool (de: toi; source: r1-02)\n- [décision] The incident stays open until the counts match (de: toi; source: r2-07)\n- [décision] Daniel adds a CI check on the dedup key length, and no other fix goes in for this incident (de: connecteur; source: src-slack-incident)\n- [décision] PR #241 from the fork is ignored, and Daniel handles the CI check (de: toi; source: r2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 791,
+    "lignesRetirees": 2,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5164,
+    "sortie": 2233,
+    "reflexion": 1550,
+    "cache": 0,
+    "cout": 0.0016329
+  },
+  "cout": 0.0016329,
+  "latenceMs": 9765,
+  "fournisseur": "Claude Platform on AWS"
+}

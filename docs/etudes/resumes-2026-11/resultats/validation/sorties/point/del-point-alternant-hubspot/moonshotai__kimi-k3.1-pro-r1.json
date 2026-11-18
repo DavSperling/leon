@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:26:54.815Z",
+  "reponse": "## What is still open\n\n- **#216 bloque la mise en prod** : tu dois faire vérifier la signature `X-HubSpot-Signature-v3` du webhook. La synchro ne partira pas avant **lundi 23**, Thomas est absent jeudi et vendredi ; si l’accès à la sandbox HubSpot bloque, demande à Camille. [4][7]\n- **Change le déclencheur de création dans la PR #217** : Camille, d’accord avec Hélène, veut créer le chantier uniquement quand la case HubSpot « Acompte reçu » passe à oui, et non dès « gagné », pour éviter que Yannick planifie des chantiers non confirmés. [8][2]\n- **Sors la suppression des doublons de la migration 0041** : Thomas refuse qu’elle supprime des chantiers potentiellement liés à des interventions, photos ou dossiers MPR. Prépare une commande de gestion séparée avec `--dry-run`, puis examinez ensemble la liste lundi. [3]\n- Le ticket **#219** reste ouvert : le formulaire de devis refuse les téléphones saisis avec des espaces et fait perdre des demandes clients ; ce n’est pas urgent. [6]\n\n## What changed\n\n- **#213 est fusionnée** : le bouton « Photo plaque signalétique » de l’appli poseurs partait en production lundi soir. [5]",
+  "rendu": "## What is still open\n\n- **#216 bloque la mise en prod** : tu dois faire vérifier la signature `X-HubSpot-Signature-v3` du webhook. La synchro ne partira pas avant **lundi 23**, Thomas est absent jeudi et vendredi ; si l’accès à la sandbox HubSpot bloque, demande à Camille. [4][7]\n- **Change le déclencheur de création dans la PR #217** : Camille, d’accord avec Hélène, veut créer le chantier uniquement quand la case HubSpot « Acompte reçu » passe à oui, et non dès « gagné », pour éviter que Yannick planifie des chantiers non confirmés. [8][2]\n- **Sors la suppression des doublons de la migration 0041** : Thomas refuse qu’elle supprime des chantiers potentiellement liés à des interventions, photos ou dossiers MPR. Prépare une commande de gestion séparée avec `--dry-run`, puis examinez ensemble la liste lundi. [3]\n- Le ticket **#219** reste ouvert : le formulaire de devis refuse les téléphones saisis avec des espaces et fait perdre des demandes clients ; ce n’est pas urgent. [6]\n\n## What changed\n\n- **#213 est fusionnée** : le bouton « Photo plaque signalétique » de l’appli poseurs partait en production lundi soir. [5]",
+  "mesures": {
+    "mots": 170,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4957,
+    "sortie": 816,
+    "reflexion": 465,
+    "cache": 0,
+    "cout": 0.018074
+  },
+  "cout": 0.018074,
+  "latenceMs": 7723,
+  "fournisseur": "DigitalOcean"
+}

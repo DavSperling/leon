@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T17:55:59.295Z",
+  "reponse": "## What is still open\n- Your production PG17 cutover moved to **Sunday, Nov 22, 02:00–04:00 UTC** to avoid Fernhill’s month-end batch. Maya approved PR #321 and confirmed you can update `runbooks/pg17-cutover.md` and merge it. [3][8]\n- Your rollback rehearsal is still due Thursday, Nov 19, on a fresh clone. Measure recovery time and data loss: the old primary stops receiving writes at switchover, so rollback isn’t a simple switch back. [1]\n- Lior asked you for 30 minutes’ notice so he can pause ingest consumers; Daniel is covering the API and asked you to ping him when switchover starts. [9][7]\n\n## What you did\n- You fixed the Terraform plan so the dashboards read replica follows the blue/green switchover instead of being replaced; the plan shows zero destroys. [1]\n- You rehearsed the forward cutover on a production snapshot clone: writes were unavailable for **74 seconds**, API pods reconnected without restarts, and row counts matched on the 20 largest tables. You then tore down the rehearsal environment. [1]",
+  "rendu": "## What is still open\n- Your production PG17 cutover moved to **Sunday, Nov 22, 02:00–04:00 UTC** to avoid Fernhill’s month-end batch. Maya approved PR #321 and confirmed you can update `runbooks/pg17-cutover.md` and merge it. [3][8]\n- Your rollback rehearsal is still due Thursday, Nov 19, on a fresh clone. Measure recovery time and data loss: the old primary stops receiving writes at switchover, so rollback isn’t a simple switch back. [1]\n- Lior asked you for 30 minutes’ notice so he can pause ingest consumers; Daniel is covering the API and asked you to ping him when switchover starts. [9][7]\n\n## What you did\n- You fixed the Terraform plan so the dashboards read replica follows the blue/green switchover instead of being replaced; the plan shows zero destroys. [1]\n- You rehearsed the forward cutover on a production snapshot clone: writes were unavailable for **74 seconds**, API pods reconnected without restarts, and row counts matched on the 20 largest tables. You then tore down the rehearsal environment. [1]",
+  "mesures": {
+    "mots": 162,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4901,
+    "sortie": 408,
+    "reflexion": 151,
+    "cache": 1451,
+    "cout": 0.0128486
+  },
+  "cout": 0.0128486,
+  "latenceMs": 3835,
+  "fournisseur": "Azure"
+}

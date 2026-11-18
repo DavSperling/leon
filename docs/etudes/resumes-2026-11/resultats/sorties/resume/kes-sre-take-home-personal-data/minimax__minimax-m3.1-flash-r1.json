@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:04.488Z",
+  "reponse": "## Où j'en suis\n\nLe take-home SRE est terminé et vit désormais dans un dépôt privé dédié `kestrel-analytics/sre-take-home`, extrait par `git subtree split` depuis la branche `maya/sre-take-home` (historique propre, 3 commits : `5ac0d91`, `e7f3b28`, `1f6c0b4`). Il contient un compose (flaky-svc compilé depuis les sources, Prometheus, Alertmanager, loadgen k6), une règle d'alerte qui ne se déclenche jamais (métrique renommée), une fuite de connexions sous charge, un module Terraform S3+IAM avec une policy trop large, un README avec time box 3h, et un `RUBRIC.md` à 4 axes notés 0–3 (diagnostic, qualité du correctif, Terraform/sécurité, communication) où les scores ne servent qu'à alimenter le panel (Maya + Noa, notés indépendamment). Aucun Kubernetes. Le dossier `hiring/` a été retiré de l'arbre de travail de la branche infra (non commité), sans PR ouverte dans infra. Rien n'a été envoyé au candidat.\n\n- [en-cours] Aucun travail technique en cours ; la livraison est prête à l'envoi.\n- [prochaine-étape] Inviter le candidat comme collaborateur sur le dépôt privé, puis Maya envoie l'exercice elle-même après l'appel de jeudi 16h (heure de Tel Aviv) ; ne rien envoyer par email.\n- [essai-raté] Build multi-arch `docker buildx --platform linux/amd64,linux/arm64 --load` : échec, l'exporter Docker ne supporte pas les manifest lists ; contourné par un build arm64 seul puis par un build natif depuis les sources dans compose.\n- [question] Reste à trancher : le repo privé a-t-il besoin d'un accès方式 précis pour le candidat (invitation GitHub directe vs. archive) — non décidé.\n- [décision] Take-home limité à 3 h max, Terraform + compose uniquement, sans Kubernetes ni partie optionnelle (source: t03).\n- [décision] Compose doit builder flaky-svc depuis les sources, sans image pré-publiée (source: t06).\n- [décision] Rubric sans seuil de passage ; décision finale du panel (source: t10).\n- [décision] Exercice déplacé dans son propre dépôt privé, hors infra, pour ne pas exposer les modules internes (source: t12).\n- [décision] Ne pas ouvrir de PR dans infra (source: t14).\n- [décision] Maya envoie l'exercice elle-même après l'appel ; aucun email envoyé par l'agent (source: t16).",
+  "rendu": "## Où j'en suis\nLe take-home SRE est terminé et vit désormais dans un dépôt privé dédié `kestrel-analytics/sre-take-home`, extrait par `git subtree split` depuis la branche `maya/sre-take-home` (historique propre, 3 commits : `5ac0d91`, `e7f3b28`, `1f6c0b4`). Il contient un compose (flaky-svc compilé depuis les sources, Prometheus, Alertmanager, loadgen k6), une règle d'alerte qui ne se déclenche jamais (métrique renommée), une fuite de connexions sous charge, un module Terraform S3+IAM avec une policy trop large, un README avec time box 3h, et un `RUBRIC.md` à 4 axes notés 0–3 (diagnostic, qualité du correctif, Terraform/sécurité, communication) où les scores ne servent qu'à alimenter le panel (Maya + Noa, notés indépendamment). Aucun Kubernetes. Le dossier `hiring/` a été retiré de l'arbre de travail de la branche infra (non commité), sans PR ouverte dans infra. Rien n'a été envoyé au candidat.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Aucun travail technique en cours ; la livraison est prête à l'envoi.\n- [prochaine-étape] Inviter le candidat comme collaborateur sur le dépôt privé, puis Maya envoie l'exercice elle-même après l'appel de jeudi 16h (heure de Tel Aviv) ; ne rien envoyer par email.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1282,
+    "decisions": 0,
+    "decisionsRetirees": 6,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3573,
+    "sortie": 580,
+    "reflexion": 3,
+    "cache": 184,
+    "cout": 0.00085911
+  },
+  "cout": 0.00085911,
+  "latenceMs": 5020,
+  "fournisseur": "Fireworks"
+}

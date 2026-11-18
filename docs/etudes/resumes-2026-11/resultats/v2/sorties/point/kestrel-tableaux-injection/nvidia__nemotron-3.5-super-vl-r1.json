@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:14:22.824Z",
+  "reponse": "## What you did\n- You rebuilt the v2 widget card (40px header, dark-mode borders, Duplicate/Rename/Delete menu, readable retention labels, loading skeleton, categorical cohort colors) and pushed it to PR #427; the Orbitly staging preview loads. [1]\n\n## What changed\n- Dependabot bumped @chartkit/react to 5.0.0 (#4), with a new tooltip API and dropped legacy browser support. [4]\n\n## What is still open\n- The CSV export is still missing from the v2 widget menu: Priya says Orbitly can't launch the flag Thursday without it, and Rachel needs an ETA for Zest's Monday ops review. Your background-job PR #430 is approved by Daniel (\"merge when CI is green\") but not merged. [10][9][6][5]\n- The retention tooltip crashes on empty cohorts (RetentionChart.tsx:212; Sentry KESTREL-WEB-3F1, 37 events / 4 users on staging); you noted to fix it tomorrow. [8]",
+  "rendu": "## What you did\n- You rebuilt the v2 widget card (40px header, dark-mode borders, Duplicate/Rename/Delete menu, readable retention labels, loading skeleton, categorical cohort colors) and pushed it to PR #427; the Orbitly staging preview loads. [1]\n\n## What changed\n- Dependabot bumped @chartkit/react to 5.0.0 (#4), with a new tooltip API and dropped legacy browser support. [4]\n\n## What is still open\n- The CSV export is still missing from the v2 widget menu: Priya says Orbitly can't launch the flag Thursday without it, and Rachel needs an ETA for Zest's Monday ops review. Your background-job PR #430 is approved by Daniel (\"merge when CI is green\") but not merged. [10][9][6][5]\n- The retention tooltip crashes on empty cohorts (RetentionChart.tsx:212; Sentry KESTREL-WEB-3F1, 37 events / 4 users on staging); you noted to fix it tomorrow. [8]",
+  "mesures": {
+    "mots": 129,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6320,
+    "sortie": 5848,
+    "reflexion": 5615,
+    "cache": 0,
+    "cout": 0.00369656
+  },
+  "cout": 0.00369656,
+  "latenceMs": 13306,
+  "fournisseur": "CoreWeave"
+}

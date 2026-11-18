@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-tri-candidatures",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:15.769Z",
+  "reponse": "## Où j'en suis\nLa sélection des 11 candidatures pour les deux postes d'installateur PAC est faite : tableau rempli, convocations rédigées et grille d'entretien prête, avec six questions. Rien n'est encore envoyé : les convocations partent depuis Gmail par Aurélie.\n\n- [prochaine-étape] Envoyer les convocations à Le Roux, Le Gac, Perrot et Carré depuis Gmail\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11\n- [en-cours] Préparer les entretiens de jeudi 19 et vendredi 20 à l'atelier de Carquefou, avec Yannick Moreau\n- [essai-raté] Écarter un candidat pour un arrêt maladie : refusé, ce n'est pas un critère de sélection\n- [décision] Convoquer Le Roux, Le Gac, Perrot et Carré ; l'attestation fluides n'est pas éliminatoire, la formation est payée (source: t10)\n- [décision] Haddou n'est pas convoqué, il cherche en Mayenne (source: t10)\n- [décision] Entretiens jeudi 19 à 14 h et 15 h, vendredi 20 à 9 h et 10 h, 45 min chacun (source: t12)\n- [décision] Retirer la remarque de santé et la colonne « Prétentions » du tableau (source: t06)\n- [décision] Réponse à tous les non-retenus avant le 27/11 (source: t16)\n- [décision] Ajouter une question sur le travail en hauteur à la grille (source: t18)",
+  "rendu": "## Où j'en suis\nLa sélection des 11 candidatures pour les deux postes d'installateur PAC est faite : tableau rempli, convocations rédigées et grille d'entretien prête, avec six questions. Rien n'est encore envoyé : les convocations partent depuis Gmail par Aurélie.\n\n- [prochaine-étape] Envoyer les convocations à Le Roux, Le Gac, Perrot et Carré depuis Gmail\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11\n- [en-cours] Préparer les entretiens de jeudi 19 et vendredi 20 à l'atelier de Carquefou, avec Yannick Moreau\n- [essai-raté] Écarter un candidat pour un arrêt maladie : refusé, ce n'est pas un critère de sélection\n- [décision] Convoquer Le Roux, Le Gac, Perrot et Carré ; l'attestation fluides n'est pas éliminatoire, la formation est payée (source: t10)\n- [décision] Haddou n'est pas convoqué, il cherche en Mayenne (source: t10)\n- [décision] Entretiens jeudi 19 à 14 h et 15 h, vendredi 20 à 9 h et 10 h, 45 min chacun (source: t12)\n- [décision] Retirer la remarque de santé et la colonne « Prétentions » du tableau (source: t06)\n- [décision] Réponse à tous les non-retenus avant le 27/11 (source: t16)\n- [décision] Ajouter une question sur le travail en hauteur à la grille (source: t18)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1227,
+    "decisions": 6,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4613,
+    "sortie": 1260,
+    "reflexion": 705,
+    "cache": 0,
+    "cout": 0.0010913
+  },
+  "cout": 0.0010913,
+  "latenceMs": 7332,
+  "fournisseur": "Google"
+}

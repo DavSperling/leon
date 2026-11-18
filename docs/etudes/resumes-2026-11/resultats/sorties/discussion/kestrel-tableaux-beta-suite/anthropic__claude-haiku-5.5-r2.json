@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:42:46.014Z",
+  "reponse": "The first part, the chart builder and saved views, opens as a design-partner beta on Wednesday, Dec 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [2]. Phase 1 was due to be feature-complete behind the flag by Dec 4 [4].\n\nOther customers won't get access before general availability, targeted for late January but not committed [2]. Priya asked the team not to promise access to anyone outside the list and said a waitlist would open in January [1]. Pinecrest has asked for beta access during their evaluation, and Sam said he'd check, but I found no confirmation that they're in [3][1].",
+  "rendu": "The first part, the chart builder and saved views, opens as a design-partner beta on Wednesday, Dec 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [2]. Phase 1 was due to be feature-complete behind the flag by Dec 4 [4].\n\nOther customers won't get access before general availability, targeted for late January but not committed [2]. Priya asked the team not to promise access to anyone outside the list and said a waitlist would open in January [1]. Pinecrest has asked for beta access during their evaluation, and Sam said he'd check, but I found no confirmation that they're in [3][1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10563,
+    "sortie": 620,
+    "reflexion": 286,
+    "cache": 0,
+    "cout": 0.0013663
+  },
+  "latenceMs": 4766,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"nouveaux dashboards première version clients accès beta\"}",
+    "chercher {\"requete\":\"dashboards release date customers preview\"}"
+  ],
+  "cout": 0.0013663
+}

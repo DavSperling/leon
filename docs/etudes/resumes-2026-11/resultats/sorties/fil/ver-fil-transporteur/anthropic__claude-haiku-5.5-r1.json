@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:28:20.365Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp fonctionne en recette. Le format ZPL est par défaut, avec `^CI28` ajouté pour corriger les accents, et Karim a confirmé l'impression. La config de prod est prête mais inactive avant le 1er décembre. La PR #91 est ouverte en brouillon, en attente de la relecture de Julien. (source: ses-tr-2, h2-05, h2-07, h2-12, maison-verdier/boutique#91)\n\n- [en-cours] PR #91 en brouillon, pas encore relue ni fusionnée (source: maison-verdier/boutique#91, h2-12)\n- [prochaine-étape] Relecture de la PR #91 par Julien (source: src-pr91)\n- [prochaine-étape] Karim forme l'équipe au nouveau poste d'impression avant la bascule (source: src-slack-julien)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (source: h2-07)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible seulement en recette et en prod (source: src-mail-transalp)\n- [essai-raté] Accents illisibles sur l'étiquette imprimée (« SaÃ´ne »), corrigé par `^CI28` (source: h2-03, h2-04)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement chez TransAlp (source: src-slack-julien)\n- [décision] Rapidis reste en secours : le reste de la France et les colis de plus de 30 kg, jusqu'au 15 janvier (source: h1-03, src-slack-julien)\n- [décision] Le contrat Premium et la résiliation de Rapidis mentionnés dans le mail ne sont pas retenus (source: h2-09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp fonctionne en recette. Le format ZPL est par défaut, avec `^CI28` ajouté pour corriger les accents, et Karim a confirmé l'impression. La config de prod est prête mais inactive avant le 1er décembre. La PR #91 est ouverte en brouillon, en attente de la relecture de Julien. (de: toi, équipe, agent; source: ses-tr-2, h2-05, h2-07, h2-12, maison-verdier/boutique#91)\n\n- [en-cours] PR #91 en brouillon, pas encore relue ni fusionnée (de: équipe, agent; source: maison-verdier/boutique#91, h2-12)\n- [prochaine-étape] Relecture de la PR #91 par Julien (de: équipe; source: src-pr91)\n- [prochaine-étape] Karim forme l'équipe au nouveau poste d'impression avant la bascule (de: connecteur; source: src-slack-julien)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (de: toi; source: h2-07)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible seulement en recette et en prod (de: connecteur; source: src-mail-transalp)\n- [essai-raté] Accents illisibles sur l'étiquette imprimée (« SaÃ´ne »), corrigé par `^CI28` (de: toi, agent; source: h2-03, h2-04)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement chez TransAlp (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste en secours : le reste de la France et les colis de plus de 30 kg, jusqu'au 15 janvier (de: toi, connecteur; source: h1-03, src-slack-julien)\n- [décision] Le contrat Premium et la résiliation de Rapidis mentionnés dans le mail ne sont pas retenus (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1661,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5393,
+    "sortie": 1993,
+    "reflexion": 1299,
+    "cache": 0,
+    "cout": 0.0015358
+  },
+  "cout": 0.0015358,
+  "latenceMs": 8849,
+  "fournisseur": "Claude Platform on AWS"
+}

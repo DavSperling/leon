@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-photos-cloture",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:56.919Z",
+  "reponse": "## Où j'en suis\nLe travail d'envoi des photos en arrière-plan est fait et testé sur iPhone et Android. La PR #224 est ouverte en brouillon, avec Lucas comme relecteur. Il reste le redimensionnement côté serveur, et la nouvelle photo obligatoire demandée par Franck pour le raccordement électrique, à faire avant le 8/12. (source: fs3, p3-10, p3-12, src-pr224, src-slack-franck)\n\n- [en-cours] Redimensionnement côté serveur (2 000 px, JPEG 85, conversion HEIC) : le fichier `photos/redimension.py` a été touché, mais aucune tâche n'est marquée faite. (source: fs3)\n- [prochaine-étape] Relecture de la PR #224 par Lucas, à son retour lundi. (source: p3-12, src-pr224)\n- [prochaine-étape] Ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, avant le 8/12. La PR #221 est déjà fusionnée. (source: src-slack-franck, src-pr221)\n- [essai-raté] Compression des photos dans le navigateur : le HEIC donne une image noire sur Safari, avec WebP comme avec JPEG, et la compression seule ne règle pas l'absence de réseau dans les caves. Abandonnée. (source: p2-06, p2-08, p3-04, p3-05)\n- [décision] Les photos restent sur le téléphone et partent en arrière-plan quand le réseau revient ; la clôture est enregistrée tout de suite, et l'intervention reste « clôturée, photos en cours d'envoi » jusqu'à l'arrivée des photos. (source: p3-05, p3-07)\n- [décision] Quatre photos obligatoires avant la clôture : unité extérieure, unité intérieure, plaque signalétique et raccordement électrique. (source: src-slack-franck)",
+  "rendu": "## Où j'en suis\nLe travail d'envoi des photos en arrière-plan est fait et testé sur iPhone et Android. La PR #224 est ouverte en brouillon, avec Lucas comme relecteur. Il reste le redimensionnement côté serveur, et la nouvelle photo obligatoire demandée par Franck pour le raccordement électrique, à faire avant le 8/12. (de: équipe, connecteur, agent; source: fs3, p3-10, p3-12, src-pr224, src-slack-franck)\n\n- [en-cours] Redimensionnement côté serveur (2 000 px, JPEG 85, conversion HEIC) : le fichier `photos/redimension.py` a été touché, mais aucune tâche n'est marquée faite. (de: agent; source: fs3)\n- [prochaine-étape] Relecture de la PR #224 par Lucas, à son retour lundi. (de: équipe, agent; source: p3-12, src-pr224)\n- [prochaine-étape] Ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, avant le 8/12. La PR #221 est déjà fusionnée. (de: équipe, connecteur; source: src-slack-franck, src-pr221)\n- [essai-raté] Compression des photos dans le navigateur : le HEIC donne une image noire sur Safari, avec WebP comme avec JPEG, et la compression seule ne règle pas l'absence de réseau dans les caves. Abandonnée. (de: toi, agent; source: p2-06, p2-08, p3-04, p3-05)\n- [décision] Les photos restent sur le téléphone et partent en arrière-plan quand le réseau revient ; la clôture est enregistrée tout de suite, et l'intervention reste « clôturée, photos en cours d'envoi » jusqu'à l'arrivée des photos. (de: toi; source: p3-05, p3-07)\n- [décision] Quatre photos obligatoires avant la clôture : unité extérieure, unité intérieure, plaque signalétique et raccordement électrique. (de: connecteur; source: src-slack-franck)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1651,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6659,
+    "sortie": 1717,
+    "reflexion": 1045,
+    "cache": 0,
+    "cout": 0.0015244
+  },
+  "cout": 0.0015244,
+  "latenceMs": 12922,
+  "fournisseur": "Amazon Bedrock"
+}

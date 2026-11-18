@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:17.836Z",
+  "reponse": "La Saône revient en stock avec une précommande ouverte par Sophie Garnier jeudi, mentioning \"expédition à partir du 3 décembre\" [2][5]. Les 25 premiers éléments arrivent à l'entrepôt le 1er décembre, après deux jours de montage et d'emballage [2]; ils sortent du séchoir cette semaine et les 15 suivants seront prêts mi-décembre, semaine du 14 [1]. Un ticket client mentionnait une rupture de la table Saône chêne clair depuis le 28/10, avec un retour estimé fin novembre à confirmer [3][4].",
+  "rendu": "La Saône revient en stock avec une précommande ouverte par Sophie Garnier jeudi, mentioning \"expédition à partir du 3 décembre\" [2][5]. Les 25 premiers éléments arrivent à l'entrepôt le 1er décembre, après deux jours de montage et d'emballage [2]; ils sortent du séchoir cette semaine et les 15 suivants seront prêts mi-décembre, semaine du 14 [1]. Un ticket client mentionnait une rupture de la table Saône chêne clair depuis le 28/10, avec un retour estimé fin novembre à confirmer [3][4].",
+  "mesures": {
+    "mots": 80,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1105,
+    "sortie": 178,
+    "reflexion": 54,
+    "cache": 128,
+    "cout": 0.00025527
+  },
+  "cout": 0.00025527,
+  "latenceMs": 1590,
+  "fournisseur": "Parasail"
+}

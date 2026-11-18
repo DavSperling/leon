@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:15.787Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif est corrigé : les webhooks ne décrémentent plus, seule la synchro de nuit écrit le stock, en valeur absolue. Seuil d'alerte passé à 3, `syncStock` renommée `synchroniserStocks`, Saône remise à 0 sur Shopify. La PR #87 est fusionnée et la config de l'app déployée (abonnement `orders/updated` retiré).\n\n- [en-cours] Traitement des 3 commandes survendues avec Lucie (#1041, #1043, #1044) — aucune action code en cours.\n- [prochaine-étape] Rendre la Saône indisponible jusqu'au retour du stock réel (2 décembre chez Bois & Fils), et vérifier après la synchro de nuit que les stocks convergent.\n- [décision] Plus de décrément dans les webhooks, seul le script de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône avant le bon de livraison de Bois & Fils (source: t17)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config de l'app (source: t19)",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif est corrigé : les webhooks ne décrémentent plus, seule la synchro de nuit écrit le stock, en valeur absolue. Seuil d'alerte passé à 3, `syncStock` renommée `synchroniserStocks`, Saône remise à 0 sur Shopify. La PR #87 est fusionnée et la config de l'app déployée (abonnement `orders/updated` retiré).\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traitement des 3 commandes survendues avec Lucie (#1041, #1043, #1044) — aucune action code en cours.\n- [prochaine-étape] Rendre la Saône indisponible jusqu'au retour du stock réel (2 décembre chez Bois & Fils), et vérifier après la synchro de nuit que les stocks convergent.\n- [décision] Plus de décrément dans les webhooks, seul le script de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône avant le bon de livraison de Bois & Fils (source: t17)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config de l'app (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1134,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4111,
+    "sortie": 371,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00067942
+  },
+  "cout": 0.00067942,
+  "latenceMs": 3357,
+  "fournisseur": "Xiaomi"
+}

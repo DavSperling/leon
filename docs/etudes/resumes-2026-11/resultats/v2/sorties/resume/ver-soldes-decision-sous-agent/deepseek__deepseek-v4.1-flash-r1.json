@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:42.840Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit et testé : règles de remise par collection (`regles.ts`), arrondi des prix, application en masse via `bulkOperationRunMutation` (`appliquer.ts`), export CSV et programmation dans `cron.ts` pour le mercredi 13 janvier 2027 à 8h00. Le dry run et l'application sur `dev-verdier` (boutique remise à ses prix d'origine avant) ont tourné sans rejet, et la PR #94 est ouverte ; il reste le script de retour aux prix d'origine.\n\n- [prochaine-étape] écrire le script de retour aux prix d'origine pour la fin des soldes (en décembre)\n- [prochaine-étape] vérifier sur `dev-verdier` la veille (`pnpm soldes:repetition`), et régénérer le CSV pour la newsletter si des prix changent avant le 6 janvier\n- [essai-raté] appliquer produit par produit : THROTTLED après 61 produits, boutique de dev à moitié soldée — remplacé par l'opération en masse\n- [décision] remises -20 % Rhône, -30 % Fins de série, rien sur Saône (source: t05)\n- [décision] programmer l'application le mercredi 13 janvier à 8h00, pas le 12 au soir (source: t15)\n- [décision] ouvrir la PR et noter le script de retour aux prix d'origine pour décembre (source: t19)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit et testé : règles de remise par collection (`regles.ts`), arrondi des prix, application en masse via `bulkOperationRunMutation` (`appliquer.ts`), export CSV et programmation dans `cron.ts` pour le mercredi 13 janvier 2027 à 8h00. Le dry run et l'application sur `dev-verdier` (boutique remise à ses prix d'origine avant) ont tourné sans rejet, et la PR #94 est ouverte ; il reste le script de retour aux prix d'origine.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] écrire le script de retour aux prix d'origine pour la fin des soldes (en décembre)\n- [prochaine-étape] vérifier sur `dev-verdier` la veille (`pnpm soldes:repetition`), et régénérer le CSV pour la newsletter si des prix changent avant le 6 janvier\n- [essai-raté] appliquer produit par produit : THROTTLED après 61 produits, boutique de dev à moitié soldée — remplacé par l'opération en masse\n- [décision] remises -20 % Rhône, -30 % Fins de série, rien sur Saône (source: t05)\n- [décision] programmer l'application le mercredi 13 janvier à 8h00, pas le 12 au soir (source: t15)\n- [décision] ouvrir la PR et noter le script de retour aux prix d'origine pour décembre (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1313,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4029,
+    "sortie": 1254,
+    "reflexion": 734,
+    "cache": 0,
+    "cout": 0.00111048
+  },
+  "cout": 0.00111048,
+  "latenceMs": 9568,
+  "fournisseur": "Relace"
+}

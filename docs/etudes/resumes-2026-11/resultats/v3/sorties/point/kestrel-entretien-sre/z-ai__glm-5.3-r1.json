@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T17:55:36.511Z",
+  "reponse": "## What is still open\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00 (panel: you + Noa, at Rothschild 22). The plan doc is ready but you still need to send it to Noa yourself. [1]\n- Eitan wants the SRE shortlist before Friday for Monday's board deck — a hiring update is expected in it. [4] That's also your moment to propose raising the SRE band to ₪42–48k to him at Monday's leadership sync. [1]\n- The pipeline is thin: Ilan is the only active candidate after Yoav (counter-offer) and Elena (comp) declined — compensation looks like the main risk. You've asked Dana for 3 more profiles by end of next week, ideally with US-customer on-call experience; her reply is pending. [1]\n\n## What changed\n- Noa confirmed Thursday 15:00 and is preparing the Terraform exercise (RDS parameter group bug) today. [3]\n\n## What you did\n- You built Ilan's 90-minute interview plan: Terraform with Noa, a live incident scenario based on the 12/11 ingest incident, plus on-call questions (TLV night coverage for NY customers, cutting Noa's ~30 pages/week) — packaged with the scoring rubric in one doc. [1]\n- You updated your hiring notes: pipeline status, the Talentbridge ask, and the band proposal to Eitan; candidate salary details were moved out to stay in the ATS only. [1]",
+  "rendu": "## What is still open\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00 (panel: you + Noa, at Rothschild 22). The plan doc is ready but you still need to send it to Noa yourself. [1]\n- Eitan wants the SRE shortlist before Friday for Monday's board deck — a hiring update is expected in it. [4] That's also your moment to propose raising the SRE band to ₪42–48k to him at Monday's leadership sync. [1]\n- The pipeline is thin: Ilan is the only active candidate after Yoav (counter-offer) and Elena (comp) declined — compensation looks like the main risk. You've asked Dana for 3 more profiles by end of next week, ideally with US-customer on-call experience; her reply is pending. [1]\n\n## What changed\n- Noa confirmed Thursday 15:00 and is preparing the Terraform exercise (RDS parameter group bug) today. [3]\n\n## What you did\n- You built Ilan's 90-minute interview plan: Terraform with Noa, a live incident scenario based on the 12/11 ingest incident, plus on-call questions (TLV night coverage for NY customers, cutting Noa's ~30 pages/week) — packaged with the scoring rubric in one doc. [1]\n- You updated your hiring notes: pipeline status, the Talentbridge ask, and the band proposal to Eitan; candidate salary details were moved out to stay in the ATS only. [1]",
+  "mesures": {
+    "mots": 209,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4026,
+    "sortie": 345,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.00465036
+  },
+  "cout": 0.00465036,
+  "latenceMs": 2613,
+  "fournisseur": "DigitalOcean"
+}

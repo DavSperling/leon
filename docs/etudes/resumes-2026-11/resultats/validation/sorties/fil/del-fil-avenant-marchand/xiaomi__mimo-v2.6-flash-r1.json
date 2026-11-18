@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:27:55.715Z",
+  "reponse": "## Où j'en suis\nL'avenant n°1 a été rédigé et signé par Hélène, envoyé à Gilles Marchand avec un mail ; Gilles a répondu le 18/11 en annonçant un accord avec la directrice sur 3 ans d'entretien offert et demandant l'avenant corrigé, mais Hélène n'a rien confirmé côté interne : l'avenant reste donc à 1 an et une réponse d'attente a été envoyée à Gilles (source: m2-02, m2-07, m3-01, m3-09)\n\n- [en-cours] avenant figé à 1 an d'entretien offert (480 € HT), en attente de la confirmation d'Hélène sur les 3 ans (1 440 € HT) avant tout modification (source: m3-03, m3-04)\n- [en-cours] réponse d'attente envoyée à Gilles Marchand : avenant définitif promis « dans la journée » du 18/11 (source: m3-07, m3-09)\n- [prochaine-étape] demander à Hélène si elle a bien accordé 3 ans d'entretien, puis corriger l'article 2 si oui (source: m3-03, src-tldv)\n- [prochaine-étape] envoyer l'avenant corrigé à Gilles pour signature avant le 4 décembre (source: m3-01, src-drive-contrat)\n- [question] 3 ans d'entretien offert : engageant ou pas ? seuls Gilles et la réunion du 17/11 en parlent, Hélène n'a rien dit (source: src-mail-gilles, src-tldv, m3-03)\n- [décision] ne rien changer à l'avenant tant qu'Hélène n'a pas confirmé les 3 ans (source: m3-03)\n- [décision] l'avenant prévoit réception au 11/12, renonciation aux pénalités jusqu'au 11, puis reprise normale des pénalités au-delà (source: m2-01, m2-04)",
+  "rendu": "## Où j'en suis\nL'avenant n°1 a été rédigé et signé par Hélène, envoyé à Gilles Marchand avec un mail ; Gilles a répondu le 18/11 en annonçant un accord avec la directrice sur 3 ans d'entretien offert et demandant l'avenant corrigé, mais Hélène n'a rien confirmé côté interne : l'avenant reste donc à 1 an et une réponse d'attente a été envoyée à Gilles (de: toi, agent; source: m2-02, m2-07, m3-01, m3-09)\n\n- [en-cours] avenant figé à 1 an d'entretien offert (480 € HT), en attente de la confirmation d'Hélène sur les 3 ans (1 440 € HT) avant tout modification (de: toi, agent; source: m3-03, m3-04)\n- [en-cours] réponse d'attente envoyée à Gilles Marchand : avenant définitif promis « dans la journée » du 18/11 (de: toi; source: m3-07, m3-09)\n- [prochaine-étape] demander à Hélène si elle a bien accordé 3 ans d'entretien, puis corriger l'article 2 si oui (de: toi, connecteur; source: m3-03, src-tldv)\n- [prochaine-étape] envoyer l'avenant corrigé à Gilles pour signature avant le 4 décembre (de: toi, connecteur; source: m3-01, src-drive-contrat)\n- [question] 3 ans d'entretien offert : engageant ou pas ? seuls Gilles et la réunion du 17/11 en parlent, Hélène n'a rien dit (de: toi, connecteur; source: src-mail-gilles, src-tldv, m3-03)\n- [décision] ne rien changer à l'avenant tant qu'Hélène n'a pas confirmé les 3 ans (de: toi; source: m3-03)\n- [décision] l'avenant prévoit réception au 11/12, renonciation aux pénalités jusqu'au 11, puis reprise normale des pénalités au-delà (de: toi, agent; source: m2-01, m2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1523,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4492,
+    "sortie": 701,
+    "reflexion": 168,
+    "cache": 0,
+    "cout": 0.00082516
+  },
+  "cout": 0.00082516,
+  "latenceMs": 19934,
+  "fournisseur": "DeepInfra"
+}

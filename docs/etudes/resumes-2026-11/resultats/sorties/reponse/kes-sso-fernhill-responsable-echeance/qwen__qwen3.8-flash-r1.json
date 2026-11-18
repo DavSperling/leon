@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:50.140Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [3][1]. Priya owns customer comms and the demo [3]. The Linear ticket is due Nov 27 [1]. That internal date leaves a buffer before Fernhill's contractual SSO go-live on Dec 1, 2026 [1][2]. SAML work is merged for staging and login works against Fernhill's test IdP [1][5]. Production is blocked on their IdP metadata, which Oliver says comes after their change board [1][6]. The change board meets on the 26th, so Daniel says the swap can happen the same day [6].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [3][1]. Priya owns customer comms and the demo [3]. The Linear ticket is due Nov 27 [1]. That internal date leaves a buffer before Fernhill's contractual SSO go-live on Dec 1, 2026 [1][2]. SAML work is merged for staging and login works against Fernhill's test IdP [1][5]. Production is blocked on their IdP metadata, which Oliver says comes after their change board [1][6]. The change board meets on the 26th, so Daniel says the swap can happen the same day [6].",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1333,
+    "sortie": 1030,
+    "reflexion": 890,
+    "cache": 0,
+    "cout": 0.00068405
+  },
+  "cout": 0.00068405,
+  "latenceMs": 13745,
+  "fournisseur": "Alibaba"
+}

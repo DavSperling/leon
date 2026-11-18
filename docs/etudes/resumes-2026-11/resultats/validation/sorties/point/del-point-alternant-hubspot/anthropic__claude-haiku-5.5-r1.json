@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:21:47.323Z",
+  "reponse": "## What is still open\n\n- Le webhook HubSpot n'exige toujours pas la signature (#216), et c'est bloquant : Thomas ne mettra pas la synchro en prod sans ce correctif, ni avant lundi 23 [4][7].\n- Thomas a demandé de retirer la migration 0041 de la PR #217, qui supprime des chantiers. Il veut une commande de gestion avec `--dry-run`, à relire ensemble lundi [3].\n- Camille veut créer le chantier seulement quand la case « Acompte reçu » est cochée dans HubSpot, et Hélène est d'accord. Ton code crée encore le chantier dès « gagné » [8][2].\n\n## What changed\n\n- Sandrine signale que le formulaire de devis refuse les numéros avec des espaces. Deux clients ont appelé, et des demandes se perdent (#219) [6].\n- Ta PR sur l'appli des poseurs (#213, bouton photo de la plaque signalétique) est fusionnée. Thomas la donne en prod ce soir [5].\n\n## What you did\n\n- Tu as normalisé la propriété `type_travaux` de HubSpot et ajouté sa table de correspondance. Sur 364 deals, 350 sont mappés et 14 passent en « à préciser ». Le tout est poussé dans la PR #217, et tu as renommé `sync/hubspot.py` en `sync/hubspot_deals.py` [2].",
+  "rendu": "## What is still open\n\n- Le webhook HubSpot n'exige toujours pas la signature (#216), et c'est bloquant : Thomas ne mettra pas la synchro en prod sans ce correctif, ni avant lundi 23 [4][7].\n- Thomas a demandé de retirer la migration 0041 de la PR #217, qui supprime des chantiers. Il veut une commande de gestion avec `--dry-run`, à relire ensemble lundi [3].\n- Camille veut créer le chantier seulement quand la case « Acompte reçu » est cochée dans HubSpot, et Hélène est d'accord. Ton code crée encore le chantier dès « gagné » [8][2].\n\n## What changed\n\n- Sandrine signale que le formulaire de devis refuse les numéros avec des espaces. Deux clients ont appelé, et des demandes se perdent (#219) [6].\n- Ta PR sur l'appli des poseurs (#213, bouton photo de la plaque signalétique) est fusionnée. Thomas la donne en prod ce soir [5].\n\n## What you did\n\n- Tu as normalisé la propriété `type_travaux` de HubSpot et ajouté sa table de correspondance. Sur 364 deals, 350 sont mappés et 14 passent en « à préciser ». Le tout est poussé dans la PR #217, et tu as renommé `sync/hubspot.py` en `sync/hubspot_deals.py` [2].",
+  "mesures": {
+    "mots": 183,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6588,
+    "sortie": 1778,
+    "reflexion": 1290,
+    "cache": 0,
+    "cout": 0.0015478
+  },
+  "cout": 0.0015478,
+  "latenceMs": 13466,
+  "fournisseur": "Amazon Bedrock"
+}

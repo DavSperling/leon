@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:03.150Z",
+  "reponse": "## Where I stand\nThe PostgreSQL 17 upgrade is done on staging. `analytics-staging` has run 17.2 since the blue/green switchover at 14:20 UTC on Nov 17, with 41 seconds of refused writes. The pg_partman 5.1.0 upgrade and the dbt run (14/14 models passing) are also done. Production is not started: it needs a reboot for `rds.logical_replication` before its own blue/green switchover, and no date is set until Maya signs off. (source: ses-pg-3, s3-06, s3-08, s3-02, src-slack-infra)\n\n- [en-cours] Staging has to run on 17 for a full week before production sign-off. Noa asked to be pinged if anything looks off this week. (source: s3-09, src-slack-infra, src-linear-kes298)\n- [prochaine-étape] Keep watching staging on 17.2 through the week. (source: s3-09, src-linear-kes298)\n- [prochaine-étape] Production step 0: set `rds.logical_replication = 1` and reboot, which needs its own window of about 2–3 minutes of downtime, before creating the blue/green deployment. The runbook already says so. (source: s3-10, s3-09)\n- [prochaine-étape] Once Maya signs off, pick the production window, outside the dbt lock at 01:00–03:30 UTC. (source: s1-05, s1-04, src-linear-kes298)\n- [essai-raté] Applying the staging plan failed at blue/green creation: the source parameter group needed `rds.logical_replication = 1` and a reboot. Fixed in commit 7e3c9d4. (source: s3-04, 7e3c9d4)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6.4.0, which produced 37 unrelated changes. Pinned back to 5.82. (source: s1-01, s1-02)\n- [question] The production cutover date is not decided. A note suggests Saturday Nov 28, 04:00 UTC, but no one has confirmed it. (source: src-note-cutover, src-linear-kes298)\n- [décision] No production date until Maya signs off. (source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR. (source: s1-02)\n- [décision] Production will get the logical replication reboot before the blue/green deployment. (source: s3-09)",
+  "rendu": "- [en-cours] Staging has to run on 17 for a full week before production sign-off. Noa asked to be pinged if anything looks off this week. (de: toi, connecteur; source: s3-09, src-slack-infra, src-linear-kes298)\n- [prochaine-étape] Keep watching staging on 17.2 through the week. (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [prochaine-étape] Production step 0: set `rds.logical_replication = 1` and reboot, which needs its own window of about 2–3 minutes of downtime, before creating the blue/green deployment. The runbook already says so. (de: toi, agent; source: s3-10, s3-09)\n- [prochaine-étape] Once Maya signs off, pick the production window, outside the dbt lock at 01:00–03:30 UTC. (de: toi, connecteur, agent; source: s1-05, s1-04, src-linear-kes298)\n- [essai-raté] Applying the staging plan failed at blue/green creation: the source parameter group needed `rds.logical_replication = 1` and a reboot. Fixed in commit 7e3c9d4. (de: équipe, agent; source: s3-04, 7e3c9d4)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6.4.0, which produced 37 unrelated changes. Pinned back to 5.82. (de: toi, agent; source: s1-01, s1-02)\n- [question] The production cutover date is not decided. A note suggests Saturday Nov 28, 04:00 UTC, but no one has confirmed it. (de: connecteur, agent; source: src-note-cutover, src-linear-kes298)\n- [décision] No production date until Maya signs off. (de: toi; source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR. (de: toi; source: s1-02)\n- [décision] Production will get the logical replication reboot before the blue/green deployment. (de: toi; source: s3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1642,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5896,
+    "sortie": 1727,
+    "reflexion": 921,
+    "cache": 0,
+    "cout": 0.0014531
+  },
+  "cout": 0.0014531,
+  "latenceMs": 9414,
+  "fournisseur": "Google"
+}

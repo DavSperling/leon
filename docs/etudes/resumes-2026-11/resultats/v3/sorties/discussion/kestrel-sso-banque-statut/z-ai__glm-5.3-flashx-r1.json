@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:03:49.314Z",
+  "reponse": "Mostly yes, but there's one open risk. Here's the picture for Fernhill Bank's SSO go-live of December 1 (KES-412, contractual date [3]):\n\n**Where we are**\n- SP-initiated flow merged behind the `saml_sso` flag, with assertion signature, audience and clock-skew checks [3]\n- Admin SSO settings page on staging (metadata upload, \"Require SSO\" toggle, test-login button) — copy still needs Priya's review [3]\n- Fernhill's metadata loaded on staging; IdP-initiated login works ✅ [5]\n- Fernhill sent their IdP metadata, signing certificate and a test user; a joint test session is proposed for Wednesday Nov 25, 16:00 Tel Aviv [1]\n\n**The risk**\n- SP-initiated login currently fails because Fernhill's IdP still signs with SHA-1 [5]. Maya decided not to accept SHA-1 even temporarily (pen-test/SOC 2 exposure), so we wait for Fernhill's change board on Nov 24 to switch to SHA-256 [5]. Maya also asked that Sam Ortiz tell Fernhill the same day that Dec 1 is at risk — \"no surprises for a bank\" [5].\n\n**Still to do before Dec 1**\n- Fernhill's change board approval to move to SHA-256 (Nov 24) [5]\n- Joint end-to-end test (proposed Nov 25) [1]\n- Review of the admin-page copy by Priya [3]\n- (Related: the Postgres 17 cutover was deliberately moved to Dec 5, after the bank's go-live, to avoid stacking risk [10][4])\n\nSo: on track only if the SHA-1 change goes through on the 24th; as of Nov 17, Dec 1 is flagged as at risk [5].",
+  "rendu": "Mostly yes, but there's one open risk. Here's the picture for Fernhill Bank's SSO go-live of December 1 (KES-412, contractual date [3]):\n\n**Where we are**\n- SP-initiated flow merged behind the `saml_sso` flag, with assertion signature, audience and clock-skew checks [3]\n- Admin SSO settings page on staging (metadata upload, \"Require SSO\" toggle, test-login button) — copy still needs Priya's review [3]\n- Fernhill's metadata loaded on staging; IdP-initiated login works ✅ [5]\n- Fernhill sent their IdP metadata, signing certificate and a test user; a joint test session is proposed for Wednesday Nov 25, 16:00 Tel Aviv [1]\n\n**The risk**\n- SP-initiated login currently fails because Fernhill's IdP still signs with SHA-1 [5]. Maya decided not to accept SHA-1 even temporarily (pen-test/SOC 2 exposure), so we wait for Fernhill's change board on Nov 24 to switch to SHA-256 [5]. Maya also asked that Sam Ortiz tell Fernhill the same day that Dec 1 is at risk — \"no surprises for a bank\" [5].\n\n**Still to do before Dec 1**\n- Fernhill's change board approval to move to SHA-256 (Nov 24) [5]\n- Joint end-to-end test (proposed Nov 25) [1]\n- Review of the admin-page copy by Priya [3]\n- (Related: the Postgres 17 cutover was deliberately moved to Dec 5, after the bank's go-live, to avoid stacking risk [10][4])\n\nSo: on track only if the SHA-1 change goes through on the 24th; as of Nov 17, Dec 1 is flagged as at risk [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7468,
+    "sortie": 445,
+    "reflexion": 11,
+    "cache": 3008,
+    "cout": 0.0024320500000000003
+  },
+  "latenceMs": 9869,
+  "fournisseur": "Z.AI",
+  "trace": [
+    "chercher {\"requete\":\"bank staff log in with company accounts December 1st SSO\"}",
+    "chercher {\"requete\":\"SSO bank deployment status\"}"
+  ],
+  "cout": 0.0024320500000000003
+}

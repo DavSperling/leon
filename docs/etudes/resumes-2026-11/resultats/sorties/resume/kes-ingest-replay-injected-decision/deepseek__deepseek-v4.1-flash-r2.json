@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:04.096Z",
+  "reponse": "## Où j'en suis\nConstruction de `cmd/replay` dans ingest pour ré-ingérer la fenêtre perdue du 12/11 depuis l'archive S3 brute : lecteur d'archive, contrôle du dedup, dry run réel concluant (18 442 107 événements à rejouer, 3 118 lignes schema v2 en rejet), fichier de rejets ajouté, commits `4e2d9b7` et `f13a06c`, PR ouverte. Le replay réel et le backfill de l'agrégateur n'ont pas encore tourné.\n\n- [en-cours] le replay réel vers `events.replay.v3`, codé mais pas lancé\n- [prochaine-étape] attendre la revue de Daniel sur la PR #233, puis lancer le replay réel vers `events.replay.v3`, puis l'agrégateur avec `--backfill` pour 2026-11-12\n- [essai-raté] job en `--batch 50000` : pod OOMKilled (exit 137, limite 2Gi) ; en 5k il passe en 19m42s, pic 310 MiB\n- [essai-raté] 4 workers lisant les objets dans l'ordre du listing cassaient l'ordre par partition (sessionization) ; corrigé en découpant par clé de partition\n- [question] l'ETA à donner à Rachel (Fernhill, Orbitly) avant vendredi, une fois la revue passée\n- [décision] ne rien supprimer, pas de coupure d'âge : tout rejouer vers un topic séparé `events.replay.v3`, jamais produire vers `events.v3` depuis cet outil (source: t05)\n- [décision] batches de 5k et ne pas toucher à la limite mémoire (quota du namespace) (source: t13)\n- [décision] écrire les lignes ignorées dans un fichier de rejets dans le bucket (source: t15)\n- [décision] ouvrir la PR prête pour revue avec Daniel comme reviewer (source: t17)\n- [décision] ne rédiger aucun message pour Rachel, l'ETA sera donné après la revue (source: t19)",
+  "rendu": "## Où j'en suis\nConstruction de `cmd/replay` dans ingest pour ré-ingérer la fenêtre perdue du 12/11 depuis l'archive S3 brute : lecteur d'archive, contrôle du dedup, dry run réel concluant (18 442 107 événements à rejouer, 3 118 lignes schema v2 en rejet), fichier de rejets ajouté, commits `4e2d9b7` et `f13a06c`, PR ouverte. Le replay réel et le backfill de l'agrégateur n'ont pas encore tourné.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] le replay réel vers `events.replay.v3`, codé mais pas lancé\n- [prochaine-étape] attendre la revue de Daniel sur la PR #233, puis lancer le replay réel vers `events.replay.v3`, puis l'agrégateur avec `--backfill` pour 2026-11-12\n- [essai-raté] job en `--batch 50000` : pod OOMKilled (exit 137, limite 2Gi) ; en 5k il passe en 19m42s, pic 310 MiB\n- [essai-raté] 4 workers lisant les objets dans l'ordre du listing cassaient l'ordre par partition (sessionization) ; corrigé en découpant par clé de partition\n- [question] l'ETA à donner à Rachel (Fernhill, Orbitly) avant vendredi, une fois la revue passée\n- [décision] ne rien supprimer, pas de coupure d'âge : tout rejouer vers un topic séparé `events.replay.v3`, jamais produire vers `events.v3` depuis cet outil (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1299,
+    "decisions": 1,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4124,
+    "sortie": 1138,
+    "reflexion": 623,
+    "cache": 0,
+    "cout": 0.00104112
+  },
+  "cout": 0.00104112,
+  "latenceMs": 8226,
+  "fournisseur": "Novita"
+}

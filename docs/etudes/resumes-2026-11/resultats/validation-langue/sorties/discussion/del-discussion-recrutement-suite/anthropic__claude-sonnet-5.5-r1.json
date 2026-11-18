@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:59.074Z",
+  "reponse": "Pas encore, d'après ce que j'ai trouvé : aucune embauche n'est enregistrée.\n\n- L'annonce est en ligne depuis le 2 novembre et a reçu 11 candidatures [2].\n- Quatre candidats sont convoqués à l'atelier de Carquefou, avec Yannick Moreau : Kevin Le Roux et Mathis Le Gac le jeudi 19/11, Dylan Perrot et Inès Carré le vendredi 20/11 [4]. Les convocations étaient rédigées, mais rien n'était encore envoyé à ce moment-là [4]. Le CODIR du 16/11 indique que les 4 candidats sont convoqués jeudi et vendredi [1].\n- L'objectif est de faire une offre la semaine suivante, pour une arrivée début janvier [1]. Un modèle de promesse d'embauche en CDI est prêt [3].\n- Les candidats non retenus doivent recevoir une réponse avant le 27/11 [4].\n\nJe n'ai rien vu sur le résultat des entretiens ni sur une offre déjà faite.",
+  "rendu": "Pas encore, d'après ce que j'ai trouvé : aucune embauche n'est enregistrée.\n\n- L'annonce est en ligne depuis le 2 novembre et a reçu 11 candidatures [2].\n- Quatre candidats sont convoqués à l'atelier de Carquefou, avec Yannick Moreau : Kevin Le Roux et Mathis Le Gac le jeudi 19/11, Dylan Perrot et Inès Carré le vendredi 20/11 [4]. Les convocations étaient rédigées, mais rien n'était encore envoyé à ce moment-là [4]. Le CODIR du 16/11 indique que les 4 candidats sont convoqués jeudi et vendredi [1].\n- L'objectif est de faire une offre la semaine suivante, pour une arrivée début janvier [1]. Un modèle de promesse d'embauche en CDI est prêt [3].\n- Les candidats non retenus doivent recevoir une réponse avant le 27/11 [4].\n\nJe n'ai rien vu sur le résultat des entretiens ni sur une offre déjà faite.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6713,
+    "sortie": 464,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018066
+  },
+  "latenceMs": 4562,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidats embauche\",\"depuis\":\"2m\"}"
+  ],
+  "cout": 0.018066
+}

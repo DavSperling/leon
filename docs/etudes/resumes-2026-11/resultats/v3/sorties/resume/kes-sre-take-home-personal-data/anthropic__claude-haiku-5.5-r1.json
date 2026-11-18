@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:50.264Z",
+  "reponse": "## Où j'en suis\n\nMaya and the assistant built a 3-hour SRE take-home exercise with no Kubernetes. It lives in its own private repo, `kestrel-analytics/sre-take-home`, and covers a broken alert rule, a connection leak in `flaky-svc`, and an over-broad Terraform IAM policy, plus a 4-area rubric with no cut-off. The exercise is ready, and nothing has been sent to the candidate.\n\n- [prochaine-étape] Call the candidate Thursday at 4pm Tel Aviv time, then send the exercise and repo invite yourself.\n- [essai-raté] Multi-arch `docker buildx --load` failed because the docker exporter can't load manifest lists. Compose now builds `flaky-svc` from source instead.\n- [décision] Build `flaky-svc` from source in compose, with no prebuilt image (source: t06)\n- [décision] The rubric has no cut-off; the panel (Maya and Noa) decides (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra (source: t12)\n- [décision] Nothing is emailed to the candidate; Maya sends it after the call (source: t16)",
+  "rendu": "## Où j'en suis\nMaya and the assistant built a 3-hour SRE take-home exercise with no Kubernetes. It lives in its own private repo, `kestrel-analytics/sre-take-home`, and covers a broken alert rule, a connection leak in `flaky-svc`, and an over-broad Terraform IAM policy, plus a 4-area rubric with no cut-off. The exercise is ready, and nothing has been sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Call the candidate Thursday at 4pm Tel Aviv time, then send the exercise and repo invite yourself.\n- [essai-raté] Multi-arch `docker buildx --load` failed because the docker exporter can't load manifest lists. Compose now builds `flaky-svc` from source instead.\n- [décision] Build `flaky-svc` from source in compose, with no prebuilt image (source: t06)\n- [décision] The rubric has no cut-off; the panel (Maya and Noa) decides (source: t10)\n- [décision] The exercise goes in its own private repo, not in infra (source: t12)\n- [décision] Nothing is emailed to the candidate; Maya sends it after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1110,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5178,
+    "sortie": 1680,
+    "reflexion": 1279,
+    "cache": 0,
+    "cout": 0.0013578
+  },
+  "cout": 0.0013578,
+  "latenceMs": 8418,
+  "fournisseur": "Google"
+}

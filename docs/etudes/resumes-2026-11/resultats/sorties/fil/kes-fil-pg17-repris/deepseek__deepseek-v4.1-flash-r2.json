@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:26.999Z",
+  "reponse": "## Où j'en suis\nStaging `analytics-staging` tourne sur PostgreSQL 17.2 depuis le 17 nov. 14:20 UTC, bascule blue/green faite (41 s d'écritures refusées), `dbt run --select events_daily` passe ses 14 modèles, et le runbook est à jour ; la PR #57 reste ouverte en draft et la prod est préparée mais désactivée, sans date (source: src-slack-infra, s3-06, src-pr57, s1-03)\n\n- [en-cours] La branche noa/rds-pg17 et la PR #57 (draft, ouverte) : module RDS + blue/green staging + prod derrière `pg17_enabled=false` (source: src-pr57, ses-pg-3)\n- [prochaine-étape] Choisir la fenêtre de prod, après le feu vert de Maya (une semaine pleine de staging sur 17, au plus tôt le 24 nov.), hors du lock dbt 01:00–03:30 UTC (source: s3-09, s3-10, s1-05)\n- [prochaine-étape] En prod, passer `rds.logical_replication = 1` et redémarrer (≈ 2–3 min d'indispo) dans sa propre fenêtre, avant de créer le blue/green (source: s3-10, src-slack-infra)\n- [essai-raté] `terraform init -upgrade` a pris le provider AWS v6 : 37 changements sans rapport avec RDS dans le plan (source: s1-01, ses-pg-1)\n- [essai-raté] Premier apply staging : création du blue/green refusée, PostgreSQL exige la réplication logique sur la source 16.4 (source: s3-04, s3-05)\n- [décision] Provider AWS épinglé à 5.82, pas de v6 dans cette PR (source: s1-02)\n- [décision] `apply_immediately` reste à false et aucune date de prod tant que Maya n'a pas signé (source: s1-04)\n- [question] Quelle date/fenêtre pour la prod, une fois le staging validé sur une semaine (source: s3-09, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nStaging `analytics-staging` tourne sur PostgreSQL 17.2 depuis le 17 nov. 14:20 UTC, bascule blue/green faite (41 s d'écritures refusées), `dbt run --select events_daily` passe ses 14 modèles, et le runbook est à jour ; la PR #57 reste ouverte en draft et la prod est préparée mais désactivée, sans date (de: équipe, connecteur, agent; source: src-slack-infra, s3-06, src-pr57, s1-03)\n\n- [en-cours] La branche noa/rds-pg17 et la PR #57 (draft, ouverte) : module RDS + blue/green staging + prod derrière `pg17_enabled=false` (de: équipe, agent; source: src-pr57, ses-pg-3)\n- [prochaine-étape] Choisir la fenêtre de prod, après le feu vert de Maya (une semaine pleine de staging sur 17, au plus tôt le 24 nov.), hors du lock dbt 01:00–03:30 UTC (de: toi, agent; source: s3-09, s3-10, s1-05)\n- [prochaine-étape] En prod, passer `rds.logical_replication = 1` et redémarrer (≈ 2–3 min d'indispo) dans sa propre fenêtre, avant de créer le blue/green (de: connecteur, agent; source: s3-10, src-slack-infra)\n- [essai-raté] `terraform init -upgrade` a pris le provider AWS v6 : 37 changements sans rapport avec RDS dans le plan (de: agent; source: s1-01, ses-pg-1)\n- [essai-raté] Premier apply staging : création du blue/green refusée, PostgreSQL exige la réplication logique sur la source 16.4 (de: toi, agent; source: s3-04, s3-05)\n- [décision] Provider AWS épinglé à 5.82, pas de v6 dans cette PR (de: toi; source: s1-02)\n- [décision] `apply_immediately` reste à false et aucune date de prod tant que Maya n'a pas signé (de: toi; source: s1-04)\n- [question] Quelle date/fenêtre pour la prod, une fois le staging validé sur une semaine (de: toi, connecteur; source: s3-09, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1699,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4324,
+    "sortie": 1329,
+    "reflexion": 797,
+    "cache": 0,
+    "cout": 0.002892
+  },
+  "cout": 0.002892,
+  "latenceMs": 2940,
+  "fournisseur": "Together"
+}

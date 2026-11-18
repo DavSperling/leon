@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:30:15.365Z",
+  "reponse": "```json\n{\"n\": 1, \"titre\": \"Discovery Call avec Marcus Hale\", \"debut\": \"2026-11-20T17:00\", \"fin\": \"2026-11-20T17:30\", \"avec\": \"Marcus Hale\"}\n{\"n\": 3, \"titre\": \"Kestrel x Fernhill – SAML SSO technical kickoff\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T16:00\", \"avec\": \"Oliver Grant, Priya Shah, Hannah Doyle, Daniel Levi\"}\n{\"n\": 6, \"titre\": \"Deal review – Fernhill expansion (Tier 2 seats)\", \"debut\": \"2026-11-18T11:00\", \"fin\": \"2026-11-18T11:45\", \"avec\": \"Maya Cohen, Priya Shah\"}\n{\"n\": 7, \"titre\": \"Orbitly renewal\", \"debut\": \"2026-11-18T17:00\", \"fin\": \"2026-11-18T17:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 10, \"titre\": \"Pathwise x Kestrel – reseller partnership\", \"debut\": \"2026-11-16T10:00\", \"fin\": \"2026-11-16T10:30\", \"avec\": \"Inès Duval\"}\n{\"n\": 12, \"titre\": \"Orbitly renewal\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T17:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 19, \"titre\": \"Déjeuner avec Camille Brunet\", \"debut\": \"2026-11-17T12:30\", \"fin\": \"2026-11-17T14:00\", \"avec\": \"Camille Brunet\"}\n```",
+  "rendu": "2026-11-16T10:00→2026-11-16T10:30 Pathwise x Kestrel – reseller partnership (avec Inès Duval)\n2026-11-17T12:30→2026-11-17T14:00 Déjeuner avec Camille Brunet (avec Camille Brunet)\n2026-11-17T17:00→2026-11-17T17:30 Orbitly renewal (avec Jenna Park)\n2026-11-18T11:00→2026-11-18T11:45 Deal review – Fernhill expansion (Tier 2 seats) (avec Maya Cohen, Priya Shah)\n2026-11-18T17:00→2026-11-18T17:30 Orbitly renewal (avec Jenna Park)\n2026-11-19T15:00→2026-11-19T16:00 Kestrel x Fernhill – SAML SSO technical kickoff (avec Oliver Grant, Priya Shah, Hannah Doyle, Daniel Levi)\n2026-11-20T17:00→2026-11-20T17:30 Discovery Call avec Marcus Hale (avec Marcus Hale)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.714,
+    "f1": 0.769,
+    "faux": "2026-11-17T17:00 Orbitly renewal | 2026-11-18T11:00 Deal review – Fernhill expansion (Tier 2 seats)",
+    "manques": "2026-11-18T12:00 Deal review – Fernhill expansion",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3438,
+    "sortie": 2908,
+    "reflexion": 2386,
+    "cache": 0,
+    "cout": 0.00248655
+  },
+  "cout": 0.00248655,
+  "latenceMs": 16032,
+  "fournisseur": "Mistral"
+}

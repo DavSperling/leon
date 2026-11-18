@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:28.928Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône venait du décrément fait à la fois par Shopify et par nos webhooks de commande, plus les doublons. Le décrément a été retiré des webhooks, la synchro de nuit est maintenant la seule à écrire le stock en valeur absolue, le seuil d'alerte est passé à 3, et la Saône est remise à 0. La PR #87 est ouverte, relue par Hugo, et n'est pas encore fusionnée : le code en production décrémente encore dans `orders/create`. Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie.\n\n- [en-cours] Traiter les commandes survendues #1041, #1043 et #1044 avec Lucie\n- [prochaine-étape] Relecture d'Hugo puis fusion de la PR #87\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : ne corrige rien, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémente déjà de son côté. Retiré ensuite.\n- [question] Quand la Saône revient-elle en vente ? Retour de chez Bois & Fils annoncé au 2 décembre, sans date ferme tant que le bon de livraison n'est pas reçu.\n- [décision] Pas de précommande sur la Saône, la Saône reste à 0 (source: t17)\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône venait du décrément fait à la fois par Shopify et par nos webhooks de commande, plus les doublons. Le décrément a été retiré des webhooks, la synchro de nuit est maintenant la seule à écrire le stock en valeur absolue, le seuil d'alerte est passé à 3, et la Saône est remise à 0. La PR #87 est ouverte, relue par Hugo, et n'est pas encore fusionnée : le code en production décrémente encore dans `orders/create`. Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traiter les commandes survendues #1041, #1043 et #1044 avec Lucie\n- [prochaine-étape] Relecture d'Hugo puis fusion de la PR #87\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : ne corrige rien, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémente déjà de son côté. Retiré ensuite.\n- [question] Quand la Saône revient-elle en vente ? Retour de chez Bois & Fils annoncé au 2 décembre, sans date ferme tant que le bon de livraison n'est pas reçu.\n- [décision] Pas de précommande sur la Saône, la Saône reste à 0 (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1275,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5340,
+    "sortie": 580,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000824
+  },
+  "cout": 0.000824,
+  "latenceMs": 2825,
+  "fournisseur": "Claude Platform on AWS"
+}

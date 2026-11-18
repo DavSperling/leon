@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:10:47.604Z",
+  "reponse": "## What you did\n- You got SAML signature verification ready for the Fernhill SSO demo (PR #418), SHA-256 only, with replay protection and signed-fixture tests [2].\n- You cleaned up `kestrel/auth` on a separate branch: froze time in the flaky ACS tests, fixed the ruff 0.8 and mypy warnings (missing Issuer/Subject now a 401 instead of a 500), and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` with the old imports kept working [1].\n- You opened PR #423 for that cleanup, reviewer Tom [1].\n\n## What changed\n- Maya approved and merged #418 — signature validation goes out with tonight's staging deploy [3]. That clears the Wednesday EOD deadline for Thursday's 10am NY walkthrough with Fernhill's Okta tenant (Priya runs the demo, you're just on the call) [1].\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today [4].\n- Tom took ticket #424 (Zest Grocers CSV export timeouts): he'll move the export to the job queue [5].\n\n## What is still open\n- #423 needs the split into two PRs before Tom approves — your cleanup isn't merged yet [4].\n- The replay cache is still in-memory only; with multiple pods a replay can slip through. You planned to move it to Redis today (tenant + assertion ID key, `SET NX EX`) [1][2].",
+  "rendu": "## What you did\n- You got SAML signature verification ready for the Fernhill SSO demo (PR #418), SHA-256 only, with replay protection and signed-fixture tests [2].\n- You cleaned up `kestrel/auth` on a separate branch: froze time in the flaky ACS tests, fixed the ruff 0.8 and mypy warnings (missing Issuer/Subject now a 401 instead of a 500), and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` with the old imports kept working [1].\n- You opened PR #423 for that cleanup, reviewer Tom [1].\n\n## What changed\n- Maya approved and merged #418 — signature validation goes out with tonight's staging deploy [3]. That clears the Wednesday EOD deadline for Thursday's 10am NY walkthrough with Fernhill's Okta tenant (Priya runs the demo, you're just on the call) [1].\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today [4].\n- Tom took ticket #424 (Zest Grocers CSV export timeouts): he'll move the export to the job queue [5].\n\n## What is still open\n- #423 needs the split into two PRs before Tom approves — your cleanup isn't merged yet [4].\n- The replay cache is still in-memory only; with multiple pods a replay can slip through. You planned to move it to Redis today (tenant + assertion ID key, `SET NX EX`) [1][2].",
+  "mesures": {
+    "mots": 212,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5559,
+    "sortie": 361,
+    "reflexion": 17,
+    "cache": 0,
+    "cout": 0.00250808
+  },
+  "cout": 0.00250808,
+  "latenceMs": 3394,
+  "fournisseur": "Z.AI"
+}

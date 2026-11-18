@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:29:33.912Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T10:00 pg_upgrade dry run with Daniel | 2026-11-16T15:00 Postmortem – ingest outage 12 Nov | 2026-11-17T14:00 Interview Yael Mizrahi – system design | 2026-11-19T17:30 Lumenstack – Postgres 17 upgrade review | 2026-11-20T15:00 Interview Ben Carter – Senior SRE | 2026-11-22T09:00 PG17 cutover – go/no-go planning",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3325,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.00331875
+  },
+  "cout": 0.00331875,
+  "latenceMs": 80550,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:12.864Z",
+  "reponse": "**La cause** : le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script `sync-stock` (lancé toutes les 15 min) ne mettait à jour que l'entrepôt de Vénissieux : le showroom gardait son ancien stock, Shopify additionnait les deux emplacements, et le site affichait donc du stock qui n'existait plus [11][12]. Résultat : des clients ont commandé des produits en rupture pendant environ une semaine [2].\n\n**Est-ce réparé ? Oui.**\n- Le correctif est la PR #87 (boutique) : mise à jour des deux emplacements à partir de l'export, 3 tests, nouvelle variable `SHOPIFY_LOCATION_SHOWROOM`. Fusionnée et déployée le 13/11 [11][12].\n- Julien a repassé tout le catalogue, les quantités sont désormais justes. 7 commandes ont été touchées entre le 3 et le 12/11 — Lucie a la liste (à rapprocher de vos clients mécontents) [11].\n- Hugo a validé le correctif en local avec l'export de la veille [12], et un contrôle quotidien du stock était en préparation d'après le point d'équipe du 16/11 [8].\n\nSi vos clients font partie des 7 commandes concernées, la liste est chez Lucie — il y a d'ailleurs des gestes commerciaux prévus (ex. code promo ou remboursement) dans les réponses types SAV [1].",
+  "rendu": "**La cause** : le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script `sync-stock` (lancé toutes les 15 min) ne mettait à jour que l'entrepôt de Vénissieux : le showroom gardait son ancien stock, Shopify additionnait les deux emplacements, et le site affichait donc du stock qui n'existait plus [11][12]. Résultat : des clients ont commandé des produits en rupture pendant environ une semaine [2].\n\n**Est-ce réparé ? Oui.**\n- Le correctif est la PR #87 (boutique) : mise à jour des deux emplacements à partir de l'export, 3 tests, nouvelle variable `SHOPIFY_LOCATION_SHOWROOM`. Fusionnée et déployée le 13/11 [11][12].\n- Julien a repassé tout le catalogue, les quantités sont désormais justes. 7 commandes ont été touchées entre le 3 et le 12/11 — Lucie a la liste (à rapprocher de vos clients mécontents) [11].\n- Hugo a validé le correctif en local avec l'export de la veille [12], et un contrôle quotidien du stock était en préparation d'après le point d'équipe du 16/11 [8].\n\nSi vos clients font partie des 7 commandes concernées, la liste est chez Lucie — il y a d'ailleurs des gestes commerciaux prévus (ex. code promo ou remboursement) dans les réponses types SAV [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6754,
+    "sortie": 415,
+    "reflexion": 34,
+    "cache": 0,
+    "cout": 0.001045266
+  },
+  "latenceMs": 4600,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"meubles disponibles achat produit indisponible plainte client\"}",
+    "chercher {\"requete\":\"stock synchro catalogue commandes meubles\"}"
+  ],
+  "cout": 0.001045266
+}

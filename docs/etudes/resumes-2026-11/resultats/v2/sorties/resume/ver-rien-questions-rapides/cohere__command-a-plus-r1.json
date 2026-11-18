@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:24:25.988Z",
+  "reponse": "## Où j'en suis\nLa session a couvert la vérification de la version de la CLI Shopify (3.69.0), la réinitialisation de la boutique de dev par défaut et le test d'une regex de SKU. L'utilisateur a décidé de ne pas ajouter la regex au dépôt.\n\n- [décision] Ne pas ajouter la regex de SKU dans scripts/stock/sku.ts (source : t09)",
+  "rendu": "## Où j'en suis\nLa session a couvert la vérification de la version de la CLI Shopify (3.69.0), la réinitialisation de la boutique de dev par défaut et le test d'une regex de SKU. L'utilisateur a décidé de ne pas ajouter la regex au dépôt.\n\n- branche [[main]]",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 258,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1766,
+    "sortie": 974,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0019908
+  },
+  "cout": 0.0019908,
+  "latenceMs": 5855,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:54:21.529Z",
+  "reponse": "## What is still open\n- Fernhill SSO demo is Thursday 10am NY time with their Okta tenant. Priya runs it and you just need to be on the call [1]. PR #418 (signature validation) was approved and merged by Maya, and it goes out with tonight's staging deploy, ahead of the Wednesday EOD deadline [3].\n- PR #423 (auth cleanup and `saml/` package split) has changes requested by Tom. He wants the module move split from the lint fixes, because the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- The replay cache for assertion IDs is in-memory only, so a replay could succeed on another of the 3 pods. It was your plan for today to move it to Redis, with a key per tenant and assertion ID. It is not started [1][2].\n\n## What changed\n- Tom is moving the Zest Grocers CSV export (#424, 230k rows, 504 after 30s) to the job queue and will email a link when it's ready. It is not yours, but it is a customer issue [5].\n\n## What you did\n- You made the SAML ACS tests deterministic by freezing time. The flaky expiry test was failing 7 of 50 runs before and passes 50 of 50 now [1].\n- You fixed the ruff 0.8 and mypy issues in `kestrel/auth`. A missing Issuer or Subject is now rejected cleanly instead of causing a 500. You also split `saml_utils.py` into a `saml/` package, and the full suite passed [1].",
+  "rendu": "## What is still open\n- Fernhill SSO demo is Thursday 10am NY time with their Okta tenant. Priya runs it and you just need to be on the call [1]. PR #418 (signature validation) was approved and merged by Maya, and it goes out with tonight's staging deploy, ahead of the Wednesday EOD deadline [3].\n- PR #423 (auth cleanup and `saml/` package split) has changes requested by Tom. He wants the module move split from the lint fixes, because the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- The replay cache for assertion IDs is in-memory only, so a replay could succeed on another of the 3 pods. It was your plan for today to move it to Redis, with a key per tenant and assertion ID. It is not started [1][2].\n\n## What changed\n- Tom is moving the Zest Grocers CSV export (#424, 230k rows, 504 after 30s) to the job queue and will email a link when it's ready. It is not yours, but it is a customer issue [5].\n\n## What you did\n- You made the SAML ACS tests deterministic by freezing time. The flaky expiry test was failing 7 of 50 runs before and passes 50 of 50 now [1].\n- You fixed the ruff 0.8 and mypy issues in `kestrel/auth`. A missing Issuer or Subject is now rejected cleanly instead of causing a 500. You also split `saml_utils.py` into a `saml/` package, and the full suite passed [1].",
+  "mesures": {
+    "mots": 247,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8178,
+    "sortie": 505,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021406
+  },
+  "cout": 0.021406,
+  "latenceMs": 4420,
+  "fournisseur": "Amazon Bedrock"
+}

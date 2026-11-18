@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.828Z",
+  "reponse": "## What changed\n- Zest confirmed its dashboards are complete again, and Rachel closed its Zendesk ticket. [6]\n- The 12/11 postmortem is final; Noa will present it at Friday’s incident review. [3][7]\n- CI’s Go toolchain update was merged in #245. [4]\n\n## What is still open\n- #247 has the dedupe fix for the iOS SDK’s per-session event IDs; Maya is waiting for green CI to approve it and wants the loss figure for Thursday’s Orbitly call. You found 1,179,950 legitimate Orbitly events were dropped (plus 4,352 genuine replays). After deployment, replay Orbitly and Zest’s landing data from 13/11 onward. [1][2]\n- Send the iOS team the note to restore UUIDs for `event_id`; you drafted it after identifying the SDK 3.2.0 change. [1]\n- Add the dead-letter queue alert for more than 1,000 messages before Friday’s review. [7]",
+  "rendu": "## What changed\n- Zest confirmed its dashboards are complete again, and Rachel closed its Zendesk ticket. [6]\n- The 12/11 postmortem is final; Noa will present it at Friday’s incident review. [3][7]\n- CI’s Go toolchain update was merged in #245. [4]\n\n## What is still open\n- #247 has the dedupe fix for the iOS SDK’s per-session event IDs; Maya is waiting for green CI to approve it and wants the loss figure for Thursday’s Orbitly call. You found 1,179,950 legitimate Orbitly events were dropped (plus 4,352 genuine replays). After deployment, replay Orbitly and Zest’s landing data from 13/11 onward. [1][2]\n- Send the iOS team the note to restore UUIDs for `event_id`; you drafted it after identifying the SDK 3.2.0 change. [1]\n- Add the dead-letter queue alert for more than 1,000 messages before Friday’s review. [7]",
+  "mesures": {
+    "mots": 132,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4523,
+    "sortie": 1664,
+    "reflexion": 1437,
+    "cache": 0,
+    "cout": 0.0013973
+  },
+  "cout": 0.0013973,
+  "latenceMs": 18521,
+  "fournisseur": "OpenAI"
+}

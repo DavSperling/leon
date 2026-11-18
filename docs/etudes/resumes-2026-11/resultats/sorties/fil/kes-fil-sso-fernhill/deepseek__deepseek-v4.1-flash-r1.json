@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:48.126Z",
+  "reponse": "## Où j'en suis\nÀ la fin de la session du 17 novembre, la connexion SAML réelle fonctionne de bout en bout sur staging avec l'IdP de Fernhill (correctif RelayState court, commit `6d0e2b8`) : le JIT de #415 crée l'utilisateur dans le tenant `fernhill` en `viewer`, le mapping groupes→rôles est codé et testé dans la PR #421, encore ouverte ; il reste à obtenir le claim `groups` côté Fernhill avant la démo de jeudi 19 novembre, 10h00 heure de New York (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » ouverte, 41 tests passés, en attente de revue et de fusion (source: ses-sso-3, f4a91c7)\n- [prochaine-étape] récupérer le claim `groups` ajouté par l'IT Fernhill (Daniel doit leur écrire), puis valider un compte de test admin en plus de `kestrel.test1` avant la démo (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] faire relire et fusionner #421 (source: ses-sso-3, f4a91c7)\n- [essai-raté] RelayState portant l'URL de retour complète (143 octets) : l'ADFS de Fernhill le refuse (`MSIS7042: The RelayState parameter is too long`, plafond 80 octets) (source: ses-sso-3, s3-02)\n- [décision] RelayState = identifiant opaque aléatoire de 16 octets, URL de retour stockée dans Redis (clé `saml:rs:<id>`, TTL 600 s, supprimée à l'usage) (source: s3-03, 6d0e2b8)\n- [décision] `viewer` reste le rôle par défaut et le flux SP-initiated reste activé pour Fernhill, sans changement suite à la demande d'`analyst` / IdP-initiated (source: s3-07)\n- [décision] le JIT n'accepte que les domaines vérifiés du tenant, jamais un domaine non vérifié même envoyé par l'IdP (source: s2-03)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC pour l'instant (source: s1-03)",
+  "rendu": "## Où j'en suis\nÀ la fin de la session du 17 novembre, la connexion SAML réelle fonctionne de bout en bout sur staging avec l'IdP de Fernhill (correctif RelayState court, commit `6d0e2b8`) : le JIT de #415 crée l'utilisateur dans le tenant `fernhill` en `viewer`, le mapping groupes→rôles est codé et testé dans la PR #421, encore ouverte ; il reste à obtenir le claim `groups` côté Fernhill avant la démo de jeudi 19 novembre, 10h00 heure de New York (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » ouverte, 41 tests passés, en attente de revue et de fusion (de: équipe, agent; source: ses-sso-3, f4a91c7)\n- [prochaine-étape] récupérer le claim `groups` ajouté par l'IT Fernhill (Daniel doit leur écrire), puis valider un compte de test admin en plus de `kestrel.test1` avant la démo (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] faire relire et fusionner #421 (de: équipe, agent; source: ses-sso-3, f4a91c7)\n- [essai-raté] RelayState portant l'URL de retour complète (143 octets) : l'ADFS de Fernhill le refuse (`MSIS7042: The RelayState parameter is too long`, plafond 80 octets) (de: agent; source: ses-sso-3, s3-02)\n- [décision] RelayState = identifiant opaque aléatoire de 16 octets, URL de retour stockée dans Redis (clé `saml:rs:<id>`, TTL 600 s, supprimée à l'usage) (de: toi, équipe; source: s3-03, 6d0e2b8)\n- [décision] `viewer` reste le rôle par défaut et le flux SP-initiated reste activé pour Fernhill, sans changement suite à la demande d'`analyst` / IdP-initiated (de: toi; source: s3-07)\n- [décision] le JIT n'accepte que les domaines vérifiés du tenant, jamais un domaine non vérifié même envoyé par l'IdP (de: toi; source: s2-03)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC pour l'instant (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1885,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4687,
+    "sortie": 1193,
+    "reflexion": 602,
+    "cache": 0,
+    "cout": 0.00085131
+  },
+  "cout": 0.00085131,
+  "latenceMs": 7345,
+  "fournisseur": "Alibaba"
+}

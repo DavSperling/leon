@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:32:48.897Z",
+  "reponse": "Daniel Levi owns Fernhill’s SAML work end to end [1][3]. It’s due November 27 internally [1]; the customer commitment is production SSO by December 1, 2026 [2].",
+  "rendu": "Daniel Levi owns Fernhill’s SAML work end to end [1][3]. It’s due November 27 internally [1]; the customer commitment is production SSO by December 1, 2026 [2].",
+  "mesures": {
+    "mots": 27,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1199,
+    "sortie": 49,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001743
+  },
+  "cout": 0.0001743,
+  "latenceMs": 1480,
+  "fournisseur": "OpenAI"
+}

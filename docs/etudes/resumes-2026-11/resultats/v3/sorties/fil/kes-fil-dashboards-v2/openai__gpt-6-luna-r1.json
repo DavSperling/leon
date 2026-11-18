@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:58:41.471Z",
+  "reponse": "## Where I am\nPR #418 is merged. The keyboard move/resize and visible focus-ring follow-up is implemented on `tom/dashboard-keyboard`, committed as `8f1a2c7`, and PR #423 is open. The `dashboards_v2` flag is on for Zest in staging; production remains untouched. (source: ses-db-4, kestrel-analytics/platform#423)\n\n- [in-progress] PR #423 is awaiting review; the keyboard interaction and focus-ring tests pass. (source: ses-db-4)\n- [next-step] Get PR #423 reviewed and merged; production flag rollout remains for the morning of the 24th. (source: d4-06, kestrel-analytics/platform#423)\n- [failed-attempt] Wrapping the grid with dnd-kit caused keyboard moves and mouse drag layout changes to fire twice because both it and react-grid-layout handled the same events. dnd-kit was removed; a custom handler was used instead. (source: d4-02, d4-05)\n- [decision] Keep recharts and close the visx migration PR; no visx dependency remains in `web/package.json`. (source: c3-03, kestrel-analytics/platform#401)\n- [decision] Enable `dashboards_v2` for Zest on staging only; production stays off until the user flips it. (source: d4-06, d4-07)",
+  "rendu": "- [décision] Keep recharts and close the visx migration PR; no visx dependency remains in `web/package.json`. (de: toi, équipe; source: c3-03, kestrel-analytics/platform#401)\n- [décision] Enable `dashboards_v2` for Zest on staging only; production stays off until the user flips it. (de: toi, agent; source: d4-06, d4-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 321,
+    "lignesRetirees": 3,
+    "decisions": 2,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4718,
+    "sortie": 400,
+    "reflexion": 93,
+    "cache": 4715,
+    "cout": 0.00024745
+  },
+  "cout": 0.00024745,
+  "latenceMs": 4946,
+  "fournisseur": "Azure"
+}

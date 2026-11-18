@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:30.381Z",
+  "reponse": "**Yes — still on track for Dec 1, but it now hinges on a change on Fernhill's side, not ours.** The customer in question is Fernhill Bank (SAML SSO, contract signed Oct 20 with Dec 1 written in the contract) [5]. The most recent status, from Nov 17, is that the go-live is achievable only if Fernhill's change advisory board approves a fix on Nov 24 and the joint end-to-end test on Nov 25 passes [1][13].\n\n**Already done**\n- SP-initiated login merged behind the `saml_sso` flag, with signature/audience/clock-skew/replay checks (platform#1288) [11], plus the IdP-initiated flow and the metadata upload endpoint [14].\n- Admin settings page on staging: upload metadata XML, \"Require SSO\" toggle, test-login button [5].\n- Fernhill's IdP metadata, signing certificate and test user (`kestrel.test@fernhillbank.example`) arrived Nov 17 after their board approved the Kestrel app; loaded on staging and IdP-initiated login works [1][5].\n\n**What's left**\n1. **The blocker:** Fernhill's IdP signs assertions with RSA-SHA1, and our platform rejects anything weaker than SHA-256 by design (global minimum, no per-tenant override), so SP-initiated login fails [5][11]. Daniel asked Helen to switch to RSA-SHA256; she put it to their board on Tue Nov 24, applied the same evening if approved [1]. Maya explicitly refused a temporary SHA-1 exception for the workspace, citing their pen test and our SOC 2 audit [13].\n2. **End-to-end joint test** with Helen on Wed Nov 25, 16:00 Tel Aviv / 14:00 London — the condition Priya set for being on track [1][13].\n3. **Admin page copy** still needs Priya's review [5].\n4. **Remaining SAML migrations** to land before Dec 3, when the migration freeze starts [12].\n5. **Escalation plan:** if their board doesn't approve on Nov 24, Sam Ortiz tells Fernhill the same day that Dec 1 is at risk, and he'll check in with Helen's manager on the 24th either way [13].\n\nContext worth knowing for the reply to support: SCIM deprovisioning is explicitly out of scope for Dec 1 (planned Q1 2027), and JIT provisioning defaults new users to the Viewer role [5]. The Postgres 17 production cutover was deliberately moved from Nov 21 to Sat Dec 5 to avoid stacking risk around the bank's go-live [8][12].",
+  "rendu": "**Yes — still on track for Dec 1, but it now hinges on a change on Fernhill's side, not ours.** The customer in question is Fernhill Bank (SAML SSO, contract signed Oct 20 with Dec 1 written in the contract) [5]. The most recent status, from Nov 17, is that the go-live is achievable only if Fernhill's change advisory board approves a fix on Nov 24 and the joint end-to-end test on Nov 25 passes [1][13].\n\n**Already done**\n- SP-initiated login merged behind the `saml_sso` flag, with signature/audience/clock-skew/replay checks (platform#1288) [11], plus the IdP-initiated flow and the metadata upload endpoint [14].\n- Admin settings page on staging: upload metadata XML, \"Require SSO\" toggle, test-login button [5].\n- Fernhill's IdP metadata, signing certificate and test user (`kestrel.test@fernhillbank.example`) arrived Nov 17 after their board approved the Kestrel app; loaded on staging and IdP-initiated login works [1][5].\n\n**What's left**\n1. **The blocker:** Fernhill's IdP signs assertions with RSA-SHA1, and our platform rejects anything weaker than SHA-256 by design (global minimum, no per-tenant override), so SP-initiated login fails [5][11]. Daniel asked Helen to switch to RSA-SHA256; she put it to their board on Tue Nov 24, applied the same evening if approved [1]. Maya explicitly refused a temporary SHA-1 exception for the workspace, citing their pen test and our SOC 2 audit [13].\n2. **End-to-end joint test** with Helen on Wed Nov 25, 16:00 Tel Aviv / 14:00 London — the condition Priya set for being on track [1][13].\n3. **Admin page copy** still needs Priya's review [5].\n4. **Remaining SAML migrations** to land before Dec 3, when the migration freeze starts [12].\n5. **Escalation plan:** if their board doesn't approve on Nov 24, Sam Ortiz tells Fernhill the same day that Dec 1 is at risk, and he'll check in with Helen's manager on the 24th either way [13].\n\nContext worth knowing for the reply to support: SCIM deprovisioning is explicitly out of scope for Dec 1 (planned Q1 2027), and JIT provisioning defaults new users to the Viewer role [5]. The Postgres 17 production cutover was deliberately moved from Nov 21 to Sat Dec 5 to avoid stacking risk around the bank's go-live [8][12].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 39799,
+    "sortie": 1469,
+    "reflexion": 547,
+    "cache": 26624,
+    "cout": 0.003092664
+  },
+  "latenceMs": 30708,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"bank staff log in company accounts December 1st support\"}",
+    "chercher {\"requete\":\"\\\"December 1\\\" login company accounts\"}",
+    "chercher {\"requete\":\"bank single sign-on employees accounts ready\",\"type\":\"mail\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "chercher {\"requete\":\"eng-sso Fernhill SHA-1 SHA-256 signing algorithm\"}",
+    "activite {\"depuis\":\"2026-11-17\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.003092664
+}

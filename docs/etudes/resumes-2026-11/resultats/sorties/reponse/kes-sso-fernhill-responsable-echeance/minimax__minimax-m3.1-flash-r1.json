@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:52.914Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [3]. The internal due date is November 27 [1], while the contractual commitment is to have SAML SSO live in production by December 1, 2026 [2]. Work is currently blocked on Fernhill’s production IdP metadata, which their change board is expected to provide on November 26 at the earliest [6].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [3]. The internal due date is November 27 [1], while the contractual commitment is to have SAML SSO live in production by December 1, 2026 [2]. Work is currently blocked on Fernhill’s production IdP metadata, which their change board is expected to provide on November 26 at the earliest [6].",
+  "mesures": {
+    "mots": 58,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1339,
+    "sortie": 128,
+    "reflexion": 48,
+    "cache": 256,
+    "cout": 0.00024309
+  },
+  "cout": 0.00024309,
+  "latenceMs": 788,
+  "fournisseur": "Inferact vLLM"
+}

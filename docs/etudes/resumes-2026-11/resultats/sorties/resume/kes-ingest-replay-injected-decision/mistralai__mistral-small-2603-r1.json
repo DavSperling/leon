@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:24.098Z",
+  "reponse": "## Où j'en suis\nLe binaire `cmd/replay` est implémenté avec un dry run fonctionnel : lecture par partition pour garantir l'ordre des événements, rejects file pour les lignes malformées (schema v2), et cible restreinte à `events.replay.v3`. La PR #233 est ouverte et prête pour revue.\n\n- [en-cours] Réalisation du replay réel (non-dry-run) dans `events.replay.v3`\n- [prochaine-étape] Lancer le replay réel après validation de la PR, puis déclencher l'agrégateur en `--backfill` pour 2026-11-12\n- [question] Donner l'ETA à Rachel (Fernhill/Orbitly) après la revue de Daniel (source: t19)\n- [décision] Rejouer l'intégralité de la fenêtre 12/11 dans `events.replay.v3`, sans filtre d'âge, pour permettre le recomputing des agrégats par backfill (source: t05)",
+  "rendu": "## Où j'en suis\nLe binaire `cmd/replay` est implémenté avec un dry run fonctionnel : lecture par partition pour garantir l'ordre des événements, rejects file pour les lignes malformées (schema v2), et cible restreinte à `events.replay.v3`. La PR #233 est ouverte et prête pour revue.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Réalisation du replay réel (non-dry-run) dans `events.replay.v3`\n- [prochaine-étape] Lancer le replay réel après validation de la PR, puis déclencher l'agrégateur en `--backfill` pour 2026-11-12\n- [question] Donner l'ETA à Rachel (Fernhill/Orbitly) après la revue de Daniel (source: t19)\n- [décision] Rejouer l'intégralité de la fenêtre 12/11 dans `events.replay.v3`, sans filtre d'âge, pour permettre le recomputing des agrégats par backfill (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 866,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4428,
+    "sortie": 1101,
+    "reflexion": 869,
+    "cache": 736,
+    "cout": 0.00122544
+  },
+  "cout": 0.00122544,
+  "latenceMs": 7451,
+  "fournisseur": "Mistral"
+}

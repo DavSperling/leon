@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:15.038Z",
+  "reponse": "## Où j'en suis\nPR #233 (replay tool) is merged by Daniel and the real replay is done: 18,442,107 events produced into events.replay.v3 for the 2026-11-12 14:10–17:40Z window, with 3,118 schema-v2 rejects written to the S3 rejects file. The aggregator backfill backfill-2026-11-12 is running; ClickHouse events_v3 showed 14.9M rows in the incident window vs ~20.5M expected, and the incident stays open until the counts match. (source: ses-rp-2, ses-rp-1, kestrel-analytics/ingest#233)\n\n- [en-cours] Aggregator backfill for 2026-11-12: job backfill-2026-11-12 started 08:57 UTC (aggregator --backfill --date 2026-11-12, reading events.replay.v3); 61%",
+  "rendu": "## Où j'en suis\nPR #233 (replay tool) is merged by Daniel and the real replay is done: 18,442,107 events produced into events.replay.v3 for the 2026-11-12 14:10–17:40Z window, with 3,118 schema-v2 rejects written to the S3 rejects file. The aggregator backfill backfill-2026-11-12 is running; ClickHouse events_v3 showed 14.9M rows in the incident window vs ~20.5M expected, and the incident stays open until the counts match. (de: équipe, agent; source: ses-rp-2, ses-rp-1, kestrel-analytics/ingest#233)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 504,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4419,
+    "sortie": 6000,
+    "reflexion": 5745,
+    "cache": 0,
+    "cout": 0.001008855
+  },
+  "cout": 0.001008855,
+  "latenceMs": 57781,
+  "fournisseur": "Novita"
+}

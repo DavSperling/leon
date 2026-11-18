@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:38:56.550Z",
+  "reponse": "## Où j'en suis\nL'approche webhook pour remonter l'AE owner + ARR HubSpot a été abandonnée (un token d'app privée ne peut pas gérer les souscriptions webhook), remplacée par un job de polling toutes les 15 min sur le CRM search, dans `daniel/hubspot-owner-sync` (commits 8b3e6f1, 2d90ac4, ae47c15). #405 est closed ; #409 est ouverte, auto-merge activé mais non déclenché car le check e2e échoue (test_accounts_table_shows_owner attend 3 lignes avec owner, en obtient 2). Session finie là-dessus.\n\n- [en-cours] PR #409 ouverte, bloquée par le check e2e requis en échec\n- [prochaine-étape] corriger le fixture de tests/e2e/test_admin_accounts.py (ARR > 0 sur la 3e entreprise, ou attendre 2 lignes), puis laisser l'auto-merge passer\n- [prochaine-étape] Noa ajoute HUBSPOT_TOKEN dans Secrets Manager pour staging/prod\n- [essai-raté] enregistrer la souscription webhook via l'API avec le token d'app privée : 401, non supporté ; polling retenu à la place\n- [décision] passer au polling toutes les 15 min et fermer #405 (source: t04)\n- [décision] ne synchroniser que les companies avec ARR > 0, ignorer les trials (source: t10)\n- [décision] ouvrir la PR avec auto-merge et confier le token à Noa (source: t12)",
+  "rendu": "## Où j'en suis\nL'approche webhook pour remonter l'AE owner + ARR HubSpot a été abandonnée (un token d'app privée ne peut pas gérer les souscriptions webhook), remplacée par un job de polling toutes les 15 min sur le CRM search, dans `daniel/hubspot-owner-sync` (commits 8b3e6f1, 2d90ac4, ae47c15). #405 est closed ; #409 est ouverte, auto-merge activé mais non déclenché car le check e2e échoue (test_accounts_table_shows_owner attend 3 lignes avec owner, en obtient 2). Session finie là-dessus.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 ouverte, bloquée par le check e2e requis en échec\n- [prochaine-étape] corriger le fixture de tests/e2e/test_admin_accounts.py (ARR > 0 sur la 3e entreprise, ou attendre 2 lignes), puis laisser l'auto-merge passer\n- [prochaine-étape] Noa ajoute HUBSPOT_TOKEN dans Secrets Manager pour staging/prod\n- [essai-raté] enregistrer la souscription webhook via l'API avec le token d'app privée : 401, non supporté ; polling retenu à la place\n- [décision] passer au polling toutes les 15 min et fermer #405 (source: t04)\n- [décision] ne synchroniser que les companies avec ARR > 0, ignorer les trials (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1306,
+    "decisions": 2,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3519,
+    "sortie": 1042,
+    "reflexion": 648,
+    "cache": 0,
+    "cout": 0.00092244
+  },
+  "cout": 0.00092244,
+  "latenceMs": 12521,
+  "fournisseur": "River"
+}

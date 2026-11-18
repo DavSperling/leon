@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:26:15.969Z",
+  "reponse": "Je ne sais pas. J’ai cherché dans les tickets et les fichiers depuis novembre 2023 avec les mots-clés « Black Friday commandes 2023 » et « Black Friday ventes 2023 » : rien n’est remonté.",
+  "rendu": "Je ne sais pas. J’ai cherché dans les tickets et les fichiers depuis novembre 2023 avec les mots-clés « Black Friday commandes 2023 » et « Black Friday ventes 2023 » : rien n’est remonté.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 2985,
+    "sortie": 387,
+    "reflexion": 245,
+    "cache": 2784,
+    "cout": 0.00030411
+  },
+  "latenceMs": 4129,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday commandes 2023\",\"type\":\"ticket\",\"depuis\":\"2023-11-01\"}",
+    "chercher {\"requete\":\"Black Friday ventes 2023\",\"type\":\"fichier\",\"depuis\":\"2023-11-01\"}"
+  ],
+  "cout": 0.00030411
+}

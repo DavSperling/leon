@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:28:24.777Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp et la gestion des étiquettes en ZPL par défaut avec encodage UTF-8 (`^CI28`) sont prêts et testés en recette, avec une bascule programmée pour le 1er décembre 2026. La branche `hugo/transalp-etiquettes` a été poussée et la PR #91 est ouverte en brouillon pour relecture par Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] relecture de la PR #91 par Julien (source: ses-tr-2)\n- [prochaine-étape] attente de la validation de la PR et de la mise en place de la clé de production par Julien pour le 1er décembre (source: ses-tr-2, src-slack-julien)\n- [décision] Rapidis reste en secours, conserve le reste de la France ainsi que les colis de plus de 30 kg, et est maintenu jusqu'au 15 janvier (source: h1-03, h2-09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp et la gestion des étiquettes en ZPL par défaut avec encodage UTF-8 (`^CI28`) sont prêts et testés en recette, avec une bascule programmée pour le 1er décembre 2026. La branche `hugo/transalp-etiquettes` a été poussée et la PR #91 est ouverte en brouillon pour relecture par Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] relecture de la PR #91 par Julien (de: agent; source: ses-tr-2)\n- [prochaine-étape] attente de la validation de la PR et de la mise en place de la clé de production par Julien pour le 1er décembre (de: connecteur, agent; source: ses-tr-2, src-slack-julien)\n- [décision] Rapidis reste en secours, conserve le reste de la France ainsi que les colis de plus de 30 kg, et est maintenu jusqu'au 15 janvier (de: toi; source: h1-03, h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 811,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4112,
+    "sortie": 247,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0018511
+  },
+  "cout": 0.0018511,
+  "latenceMs": 1620,
+  "fournisseur": "Google"
+}

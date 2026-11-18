@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:05.527Z",
+  "reponse": "## Où j'en sommes\n\nDraft PR #418 is open on branch tom/dashboard-grid-v2 with the full dashboards_v2 grid: react-grid-layout drag/resize, layout persisted via PUT /dashboards/:id/layout with a localStorage fallback, ResizeObserver-based widget sizing, DashboardTile renamed to WidgetCard, and the Storybook CSS build fixed. Work is code-complete pending review and rollout before the Zest demo.\n\n- [prochaine-étape] Priya's UX review of PR #418 on the iPad (iOS 15)\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin, before Tuesday the 24th\n- [essai-raté] Container queries for widget sizing — silently ignored by iOS 15 Safari, replaced by the ResizeObserver hook\n- [décision] Widget sizing goes through a ResizeObserver `data-size` hook, container queries dropped entirely (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January; nothing is removed now (source: t15)\n- [décision] Open the PR as a draft for Priya's UX review (source: t17)",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [prochaine-étape] Priya's UX review of PR #418 on the iPad (iOS 15)\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin, before Tuesday the 24th\n- [essai-raté] Container queries for widget sizing — silently ignored by iOS 15 Safari, replaced by the ResizeObserver hook\n- [décision] Widget sizing goes through a ResizeObserver `data-size` hook, container queries dropped entirely (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January; nothing is removed now (source: t15)\n- [décision] Open the PR as a draft for Priya's UX review (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 754,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3725,
+    "sortie": 663,
+    "reflexion": 393,
+    "cache": 0,
+    "cout": 0.00070714
+  },
+  "cout": 0.00070714,
+  "latenceMs": 2670,
+  "fournisseur": "Cohere"
+}

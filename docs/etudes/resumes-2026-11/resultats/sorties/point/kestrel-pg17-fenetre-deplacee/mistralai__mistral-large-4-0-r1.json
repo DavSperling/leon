@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T14:29:40.141Z",
+  "reponse": "## What you did\n- Prod PG17 cutover is prepped end to end: blue/green Terraform on `kestrel-prod-pg` (17.2, PG17 parameter group, `apply_immediately = false`), with the read replica following the green via `ignore_changes` instead of being replaced — plan shows 2 changes, 0 destroys — plus `runbooks/pg17-cutover.md`, all in PR #321 with Maya as reviewer [1].\n- Rehearsed the full blue/green on a restored prod snapshot clone: green ready in 52 min, switchover cost **74 s of write downtime** with replication lag under 1 s and no row-count mismatch on the 20 biggest tables; rehearsal instances deleted afterward [1].\n\n## What changed\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and already told the CSMs [8].\n- Maya approved #321 — her only condition (window confirmed with Fernhill before merging) is now met, so the merge is cleared [3][8].\n- Renovate opened #320: AWS provider 5.80 → 5.82, automerge disabled [4].\n\n## What is still open\n- Rollback rehearsal, still a TODO in the runbook: fresh clone **Thursday 19/11**, measure how long rollback takes and what data is lost — after switchover the old blue gets no writes and diverges, so rollback is not a switch-back [1].\n- Update the window in `runbooks/pg17-cutover.md` and on the Notion \"PG17 production cutover\" page (still showing Saturday 21/11) to Sunday 22/11 02:00–04:00 UTC, then merge #321 [1][8][10].\n- Sunday coordination: ping Daniel Levi when the switchover starts — he's on call for the API side [7]; and give Lior Ben-David 30 min notice before switchover so he can pause the ingest consumers (KES-530 — workers read `DATABASE_URL` from SSM, nothing to change on our side) [9].",
+  "rendu": "## What you did\n- Prod PG17 cutover is prepped end to end: blue/green Terraform on `kestrel-prod-pg` (17.2, PG17 parameter group, `apply_immediately = false`), with the read replica following the green via `ignore_changes` instead of being replaced — plan shows 2 changes, 0 destroys — plus `runbooks/pg17-cutover.md`, all in PR #321 with Maya as reviewer [1].\n- Rehearsed the full blue/green on a restored prod snapshot clone: green ready in 52 min, switchover cost **74 s of write downtime** with replication lag under 1 s and no row-count mismatch on the 20 biggest tables; rehearsal instances deleted afterward [1].\n\n## What changed\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and already told the CSMs [8].\n- Maya approved #321 — her only condition (window confirmed with Fernhill before merging) is now met, so the merge is cleared [3][8].\n- Renovate opened #320: AWS provider 5.80 → 5.82, automerge disabled [4].\n\n## What is still open\n- Rollback rehearsal, still a TODO in the runbook: fresh clone **Thursday 19/11**, measure how long rollback takes and what data is lost — after switchover the old blue gets no writes and diverges, so rollback is not a switch-back [1].\n- Update the window in `runbooks/pg17-cutover.md` and on the Notion \"PG17 production cutover\" page (still showing Saturday 21/11) to Sunday 22/11 02:00–04:00 UTC, then merge #321 [1][8][10].\n- Sunday coordination: ping Daniel Levi when the switchover starts — he's on call for the API side [7]; and give Lior Ben-David 30 min notice before switchover so he can pause the ingest consumers (KES-530 — workers read `DATABASE_URL` from SSM, nothing to change on our side) [9].",
+  "mesures": {
+    "mots": 269,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4909,
+    "sortie": 6719,
+    "reflexion": 6224,
+    "cache": 0,
+    "cout": 0.0175462
+  },
+  "cout": 0.0175462,
+  "latenceMs": 183572,
+  "fournisseur": "Mistral"
+}

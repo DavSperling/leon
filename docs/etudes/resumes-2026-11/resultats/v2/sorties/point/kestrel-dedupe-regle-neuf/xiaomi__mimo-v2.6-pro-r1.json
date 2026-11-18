@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:09:30.820Z",
+  "reponse": "## What you did\n\n- You root-caused Orbitly's ~8% iOS funnel drop: kestrel-ios 3.2.0 replaced globally unique `event_id`s with per-session counters, so #240's dedupe dropped ~1.18M legitimate Orbitly events since 13/11 (8.1% of their iOS volume); Zest lost 3,812 the same way on a pilot app [1].\n- You re-keyed the dedupe on `project_id:device_id:event_id`: cross-device collisions gone, same-device replays still dropped; all 412 tests and lint pass [1].\n- You opened PR #247 with Maya as reviewer, and drafted a note asking the iOS team to restore UUIDs in 3.2.1 [1].\n\n## What changed\n\n- Maya will approve #247 once CI is green, and wants the drop figures posted in the PR — she needs them for Thursday's call with Orbitly [2].\n- Zest confirmed their dashboards are complete and Rachel is closing their Zendesk ticket [6].\n\n## What is still open\n\n- Your action item from the incident-review prep: alert when the ingest dead-letter queue goes above 1,000 messages, due before Friday's review (20/11) [7].\n- Once #247 is deployed, replay Orbitly (~1.18M events) and Zest from landing for 13/11 onward, then check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- The iOS-team note on UUIDs is drafted but not sent [1].",
+  "rendu": "## What you did\n\n- You root-caused Orbitly's ~8% iOS funnel drop: kestrel-ios 3.2.0 replaced globally unique `event_id`s with per-session counters, so #240's dedupe dropped ~1.18M legitimate Orbitly events since 13/11 (8.1% of their iOS volume); Zest lost 3,812 the same way on a pilot app [1].\n- You re-keyed the dedupe on `project_id:device_id:event_id`: cross-device collisions gone, same-device replays still dropped; all 412 tests and lint pass [1].\n- You opened PR #247 with Maya as reviewer, and drafted a note asking the iOS team to restore UUIDs in 3.2.1 [1].\n\n## What changed\n\n- Maya will approve #247 once CI is green, and wants the drop figures posted in the PR — she needs them for Thursday's call with Orbitly [2].\n- Zest confirmed their dashboards are complete and Rachel is closing their Zendesk ticket [6].\n\n## What is still open\n\n- Your action item from the incident-review prep: alert when the ingest dead-letter queue goes above 1,000 messages, due before Friday's review (20/11) [7].\n- Once #247 is deployed, replay Orbitly (~1.18M events) and Zest from landing for 13/11 onward, then check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- The iOS-team note on UUIDs is drafted but not sent [1].",
+  "mesures": {
+    "mots": 189,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5200,
+    "sortie": 2700,
+    "reflexion": 2337,
+    "cache": 0,
+    "cout": 0.0041265
+  },
+  "cout": 0.0041265,
+  "latenceMs": 41302,
+  "fournisseur": "DeepInfra"
+}

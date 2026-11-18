@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:33.802Z",
+  "reponse": "On the Nov 12 sync, Martin flagged two things [1]:\n\n1. **Failing webhooks** — Ellen's team was fighting our webhook signature verification, roughly 1 in 20 events failing [1]. Jake took it, Ellen sent failing event IDs [1], and a fix was deployed on sandbox Nov 16 (a re-serialized-body signing bug) [2]. Ellen turned verification back on Nov 17: 300+ events since, all verifying ✅ [2]. Note the fix ships to production in release 2026.47 on Nov 24 [3].\n\n2. **Per-seller payout schedules** — their top ~200 sellers are on net-7 payouts, everyone else net-30, and Quillon only supports one platform-wide schedule; without per-seller schedules Tradewell would be downgrading their best sellers at go-live [1]. Owen said he'd come back with a clear answer from product/engineering by Friday Nov 20 [2]. Martin chased him on Nov 17 saying they need it for seller comms [2], and I don't see Owen's promised answer or any resolution since Nov 18 — so that one is still open.",
+  "rendu": "On the Nov 12 sync, Martin flagged two things [1]:\n\n1. **Failing webhooks** — Ellen's team was fighting our webhook signature verification, roughly 1 in 20 events failing [1]. Jake took it, Ellen sent failing event IDs [1], and a fix was deployed on sandbox Nov 16 (a re-serialized-body signing bug) [2]. Ellen turned verification back on Nov 17: 300+ events since, all verifying ✅ [2]. Note the fix ships to production in release 2026.47 on Nov 24 [3].\n\n2. **Per-seller payout schedules** — their top ~200 sellers are on net-7 payouts, everyone else net-30, and Quillon only supports one platform-wide schedule; without per-seller schedules Tradewell would be downgrading their best sellers at go-live [1]. Owen said he'd come back with a clear answer from product/engineering by Friday Nov 20 [2]. Martin chased him on Nov 17 saying they need it for seller comms [2], and I don't see Owen's promised answer or any resolution since Nov 18 — so that one is still open.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.6,
+    "sourcesAttenduesCitees": 0.4,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18698,
+    "sortie": 446,
+    "reflexion": 43,
+    "cache": 13504,
+    "cout": 0.00140722
+  },
+  "latenceMs": 6549,
+  "fournisseur": "Together",
+  "trace": [
+    "lire {\"sourceId\":\"3\"}",
+    "chercher {\"de\":\"Martin Kobayashi\",\"requete\":\"Tradewell sync Martin Kobayashi flagged\"}",
+    "chercher {\"outil\":\"slack\",\"requete\":\"\\\"payout schedules\\\" Tradewell per-seller\"}",
+    "chercher {\"outil\":\"slack\",\"requete\":\"Tradewell webhooks Ellen team\"}",
+    "chercher {\"depuis\":\"2026-11-18\",\"outil\":\"slack\",\"requete\":\"Tradewell payout schedules per-seller Owen\"}",
+    "lire {\"passageId\":\"gong-tradewell-1112-6\"}"
+  ],
+  "cout": 0.00140722
+}

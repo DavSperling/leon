@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:55:08.486Z",
+  "reponse": "## What is still open\n\n- **KES-512 (Priya) blocks Thursday's Orbitly rollout**: v2 dropped CSV export from the widget menu, and Orbitly asked for it. She wants it back on top of the new background export before the flag goes on [10][1]. Your own session had removed \"Export CSV\" because it called the v1 endpoint — now you need a v2 path to the new job [1].\n- **The retention chart tooltip crash is unfixed**: empty cohorts crash `RetentionChart.tsx:212` (Sentry KESTREL-WEB-3F1, 37 events, 4 users). You noted the fix — guard `point?.label`, show \"No data yet\", add a test — but haven't done it [8][1]. Needed for the \"solid by Wednesday\" bar [3].\n- **Zest is waiting on the CSV export**: Rachel is asking for an ETA this morning; their Monday ops review depends on it [9][6].\n\n## What changed\n\n- **PR #430 (background CSV export) is approved**: Daniel signed off on the streaming + 202 flow, merge when CI is green [5]. Rachel filed #424 for the Zest 504s and you pointed her to #430 [6].\n- **Maya answered your chartkit question on #427**: ship v2 behind the flag, but don't delete @chartkit/react until v1 is gone — no double migration. So the visx migration is off for now [7][1].\n\n## What you did\n\n- **Yesterday you polished v2 (PR #427)**: compact 40px widget header with design tokens, simplified widget menu, human-readable retention tooltip labels and categorical cohort colors, plus a loading skeleton that removed the layout shift (CLS 0.21 → 0.02) — then verified it on staging with Orbitly's workspace [1].\n- **You rebuilt the CSV export as a background job (PR #430)** for the Zest timeout: streaming cursor export, signed link by email, updated export button, with tests — pushed for Daniel's review [2].",
+  "rendu": "## What is still open\n\n- **KES-512 (Priya) blocks Thursday's Orbitly rollout**: v2 dropped CSV export from the widget menu, and Orbitly asked for it. She wants it back on top of the new background export before the flag goes on [10][1]. Your own session had removed \"Export CSV\" because it called the v1 endpoint — now you need a v2 path to the new job [1].\n- **The retention chart tooltip crash is unfixed**: empty cohorts crash `RetentionChart.tsx:212` (Sentry KESTREL-WEB-3F1, 37 events, 4 users). You noted the fix — guard `point?.label`, show \"No data yet\", add a test — but haven't done it [8][1]. Needed for the \"solid by Wednesday\" bar [3].\n- **Zest is waiting on the CSV export**: Rachel is asking for an ETA this morning; their Monday ops review depends on it [9][6].\n\n## What changed\n\n- **PR #430 (background CSV export) is approved**: Daniel signed off on the streaming + 202 flow, merge when CI is green [5]. Rachel filed #424 for the Zest 504s and you pointed her to #430 [6].\n- **Maya answered your chartkit question on #427**: ship v2 behind the flag, but don't delete @chartkit/react until v1 is gone — no double migration. So the visx migration is off for now [7][1].\n\n## What you did\n\n- **Yesterday you polished v2 (PR #427)**: compact 40px widget header with design tokens, simplified widget menu, human-readable retention tooltip labels and categorical cohort colors, plus a loading skeleton that removed the layout shift (CLS 0.21 → 0.02) — then verified it on staging with Orbitly's workspace [1].\n- **You rebuilt the CSV export as a background job (PR #430)** for the Zest timeout: streaming cursor export, signed link by email, updated export button, with tests — pushed for Daniel's review [2].",
+  "mesures": {
+    "mots": 279,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5751,
+    "sortie": 584,
+    "reflexion": 136,
+    "cache": 0,
+    "cout": 0.00092372
+  },
+  "cout": 0.00092372,
+  "latenceMs": 8735,
+  "fournisseur": "River"
+}

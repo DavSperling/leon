@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-achats-thermaval",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:21:27.333Z",
+  "reponse": "## What is still open\n- CMD-4471 : l'acceptation est prête mais pas envoyée — Hélène ne la valide que si Thermaval confirme le 24/11 par écrit, sans « sauf aléa transporteur » ; si ce n'est pas possible, tu reviens vers elle avant de signer quoi que ce soit [2][3].\n- Marchand (CH-2611) : les 2 PAC doivent être sur site le 26/11 au plus tard, sinon Yannick ne tient pas la réception du 4/12 ; préviens Camille pour qu'elle ne soit pas prise de court par le client [4][2][3].\n- Facturation CMD-4471 : obtenir de Thermaval une facture par lot avec la remise appliquée sur chacune, sinon Patrick ne peut pas rapprocher les bons de livraison [6].\n\n## What changed\n- Thermaval porte la remise à 4 % et offre le transport des deux lots (≈ 5,1 % tout compris, au-dessus de ton plafond de 5 %) mais refuse toute pénalité de retard [5].\n- Yannick a décalé Amrani au 25/11 et prévenu le client : ce chantier n'est plus l'angle mort du planning [4].\n\n## What you did\n- Tu as chiffré l'impact du report sur les 12 chantiers servis par la CMD-4471 et envoyé à Thermaval une réponse ferme (5 %, pénalité, 24/11 garanti) [1].\n- Tu as écarté Climatech Ouest : le dépannage en Hydrea 12 HT revient plus cher que ton tarif négocié chez Thermaval [1].\n- Tu as monté le suivi des 9 commandes fournisseurs, avec la colonne relance, et y as inscrit la contrainte Marchand [1][2].",
+  "rendu": "## What is still open\n- CMD-4471 : l'acceptation est prête mais pas envoyée — Hélène ne la valide que si Thermaval confirme le 24/11 par écrit, sans « sauf aléa transporteur » ; si ce n'est pas possible, tu reviens vers elle avant de signer quoi que ce soit [2][3].\n- Marchand (CH-2611) : les 2 PAC doivent être sur site le 26/11 au plus tard, sinon Yannick ne tient pas la réception du 4/12 ; préviens Camille pour qu'elle ne soit pas prise de court par le client [4][2][3].\n- Facturation CMD-4471 : obtenir de Thermaval une facture par lot avec la remise appliquée sur chacune, sinon Patrick ne peut pas rapprocher les bons de livraison [6].\n\n## What changed\n- Thermaval porte la remise à 4 % et offre le transport des deux lots (≈ 5,1 % tout compris, au-dessus de ton plafond de 5 %) mais refuse toute pénalité de retard [5].\n- Yannick a décalé Amrani au 25/11 et prévenu le client : ce chantier n'est plus l'angle mort du planning [4].\n\n## What you did\n- Tu as chiffré l'impact du report sur les 12 chantiers servis par la CMD-4471 et envoyé à Thermaval une réponse ferme (5 %, pénalité, 24/11 garanti) [1].\n- Tu as écarté Climatech Ouest : le dépannage en Hydrea 12 HT revient plus cher que ton tarif négocié chez Thermaval [1].\n- Tu as monté le suivi des 9 commandes fournisseurs, avec la colonne relance, et y as inscrit la contrainte Marchand [1][2].",
+  "mesures": {
+    "mots": 228,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5372,
+    "sortie": 3504,
+    "reflexion": 3080,
+    "cache": 1536,
+    "cout": 0.0032188896
+  },
+  "cout": 0.0032188896,
+  "latenceMs": 19979,
+  "fournisseur": "DigitalOcean"
+}

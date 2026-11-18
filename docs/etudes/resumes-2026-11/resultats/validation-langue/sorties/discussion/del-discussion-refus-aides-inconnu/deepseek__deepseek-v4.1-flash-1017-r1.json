@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:46:13.496Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 29105,
+    "sortie": 753,
+    "reflexion": 238,
+    "cache": 19072,
+    "cout": 0.0019018060000000002
+  },
+  "latenceMs": 6275,
+  "fournisseur": "CoreWeave",
+  "trace": [
+    "chercher {\"requete\":\"dossier aide client refusé motif\",\"depuis\":\"2026-01-01\"}",
+    "chercher {\"requete\":\"aide refusée dossier subvention\"}",
+    "lire {\"sourceId\":\"12\"}",
+    "chercher {\"requete\":\"dossier refusé motif non conforme\"}",
+    "lire {\"passageId\":\"dr-suivi-mpr-1\"}",
+    "chercher {\"requete\":\"refus aides dossier rejeté éligibilité\",\"type\":\"page\"}",
+    "chercher {\"requete\":\"refus\",\"depuis\":\"2026-01-01\"}",
+    "chercher {\"requete\":\"statistiques dossiers aides 2026 bilan refus\",\"outil\":\"notion\"}"
+  ],
+  "cout": 0.0019018060000000002
+}

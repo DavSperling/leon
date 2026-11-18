@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:48.597Z",
+  "reponse": "## Ce que tu as fait\n- Tu as structuré le plan de l'entretien d'Ilan Barak et mis à jour le suivi du recrutement SRE [1].\n\n## Ce qui a bougé\n- Eitan te demande de lui transmettre la liste des candidats SRE avant vendredi pour l'intégrer dans le rapport du conseil d'administration [4].\n- Noa a confirmé sa présence à l'entretien de jeudi et la préparation de l'exercice Terraform [3].\n\n## Ce qui reste ouvert\n- L'entretien technique d'Ilan Barak a lieu ce jeudi 19/11 à 15h, avec un besoin urgent de profils supplémentaires [1].\n- Tu prévois de proposer à Eitan une revalorisation de la fourchette salariale SRE à 42-48k ₪ pour élargir les candidatures [1].",
+  "rendu": "## Ce que tu as fait\n- Tu as structuré le plan de l'entretien d'Ilan Barak et mis à jour le suivi du recrutement SRE [1].\n\n## Ce qui a bougé\n- Eitan te demande de lui transmettre la liste des candidats SRE avant vendredi pour l'intégrer dans le rapport du conseil d'administration [4].\n- Noa a confirmé sa présence à l'entretien de jeudi et la préparation de l'exercice Terraform [3].\n\n## Ce qui reste ouvert\n- L'entretien technique d'Ilan Barak a lieu ce jeudi 19/11 à 15h, avec un besoin urgent de profils supplémentaires [1].\n- Tu prévois de proposer à Eitan une revalorisation de la fourchette salariale SRE à 42-48k ₪ pour élargir les candidatures [1].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4271,
+    "sortie": 1926,
+    "reflexion": 1738,
+    "cache": 0,
+    "cout": 0.0060963
+  },
+  "cout": 0.0060963,
+  "latenceMs": 7520,
+  "fournisseur": "Google"
+}

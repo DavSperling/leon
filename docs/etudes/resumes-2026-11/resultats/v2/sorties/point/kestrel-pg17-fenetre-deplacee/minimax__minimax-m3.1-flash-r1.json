@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:12:54.898Z",
+  "reponse": "## What you did\n\n- Prepared the prod PG17 cutover in Terraform with RDS blue/green, with the read replica following the deployment instead of being replaced; the plan shows 2 changes and 0 destroys. [1]\n- Ran the full cutover on a snapshot clone: 74 s of write unavailability, API pods reconnected via pgbouncer without restarts, and no row-count mismatch on the 20 largest tables. PR #321 was opened with Maya as reviewer. [1][3]\n\n## What changed\n\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has informed the CSMs and authorized merging #321. [8]\n- Maya's approval of #321 was conditional on the window being confirmed — that condition is now met. [3][8]\n- Renovate's PR #320 bumps the AWS provider from 5.80 to 5.82 with automerge disabled. [4]\n\n## What is still open\n\n- Update `runbooks/pg17-cutover.md` and the Notion page (still showing Saturday 21/11), then merge #321. [8][10]\n- Rehearse rollback on a fresh clone on Thursday 19/11: measure its duration and data loss — rollback is not a switch-back, since blue diverges immediately after switchover. [1]\n- Give Lior Ben-David 30 minutes' notice before the switchover so the ingest consumers can be paused cleanly; no worker changes are needed on his side. [9]\n- Daniel Levi is on call for the API side on Sunday: ping him when you start the switchover. [7]",
+  "rendu": "## What you did\n\n- Prepared the prod PG17 cutover in Terraform with RDS blue/green, with the read replica following the deployment instead of being replaced; the plan shows 2 changes and 0 destroys. [1]\n- Ran the full cutover on a snapshot clone: 74 s of write unavailability, API pods reconnected via pgbouncer without restarts, and no row-count mismatch on the 20 largest tables. PR #321 was opened with Maya as reviewer. [1][3]\n\n## What changed\n\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has informed the CSMs and authorized merging #321. [8]\n- Maya's approval of #321 was conditional on the window being confirmed — that condition is now met. [3][8]\n- Renovate's PR #320 bumps the AWS provider from 5.80 to 5.82 with automerge disabled. [4]\n\n## What is still open\n\n- Update `runbooks/pg17-cutover.md` and the Notion page (still showing Saturday 21/11), then merge #321. [8][10]\n- Rehearse rollback on a fresh clone on Thursday 19/11: measure its duration and data loss — rollback is not a switch-back, since blue diverges immediately after switchover. [1]\n- Give Lior Ben-David 30 minutes' notice before the switchover so the ingest consumers can be paused cleanly; no worker changes are needed on his side. [9]\n- Daniel Levi is on call for the API side on Sunday: ping him when you start the switchover. [7]",
+  "mesures": {
+    "mots": 222,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4989,
+    "sortie": 1566,
+    "reflexion": 1200,
+    "cache": 1536,
+    "cout": 0.00148059
+  },
+  "cout": 0.00148059,
+  "latenceMs": 8851,
+  "fournisseur": "Together"
+}

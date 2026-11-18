@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:04:14.121Z",
+  "reponse": "The first part goes to a limited beta on **Wednesday, December 9**, for five design partners: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3][4]. Phase 1 needed to be feature-complete behind the flag by December 4, with the beta right after [1]. Other customers won't get access before general availability, targeted for late January [3]. Priya has asked the team not to promise access to customers outside that list; a waitlist opens in January [4].",
+  "rendu": "The first part goes to a limited beta on **Wednesday, December 9**, for five design partners: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3][4]. Phase 1 needed to be feature-complete behind the flag by December 4, with the beta right after [1]. Other customers won't get access before general availability, targeted for late January [3]. Priya has asked the team not to promise access to customers outside that list; a waitlist opens in January [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10305,
+    "sortie": 526,
+    "reflexion": 244,
+    "cache": 0,
+    "cout": 0.0012935
+  },
+  "latenceMs": 3974,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"nouveaux dashboards premiere partie clients beta date de sortie\"}",
+    "chercher {\"requete\":\"new dashboards beta customers release date\"}"
+  ],
+  "cout": 0.0012935
+}

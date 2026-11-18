@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:25:37.924Z",
+  "reponse": "## Où j'en suis\nCause du stock négatif de la Saône trouvée et corrigée sur `julien/fix-synchro-stocks` : les webhooks commande décrémentaient le stock déjà décrémenté par Shopify, et la synchro de nuit écrivait un delta. Le décrément et l'abonnement `orders/updated` ont été retirés (déploiement fait), la synchro écrit désormais en valeur absolue, le seuil d'alerte est passé à 3, la Saône remise à 0 sur Shopify. La PR #87 est fusionnée, le travail se poursuit côté commandes survendues.\n\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044, SKU SAONE-CHENE-180)\n- [prochaine-étape] Ne pas remettre la Saône en vente avant le retour chez bois & fils le 2 décembre\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige, en valeur absolue et sans dédoublonnage (source: t05)\n- [décision] Seuil d'alerte stock bas abaissé de 5 à 3 (source: t09)\n- [décision] Pas de précommande sur la Saône, malgré la proposition de l'agent (source: t17)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : insuffisant, car `orders/create` et `orders/updated` ont des id différents et Shopify décrémente déjà",
+  "rendu": "## Où j'en suis\nCause du stock négatif de la Saône trouvée et corrigée sur `julien/fix-synchro-stocks` : les webhooks commande décrémentaient le stock déjà décrémenté par Shopify, et la synchro de nuit écrivait un delta. Le décrément et l'abonnement `orders/updated` ont été retirés (déploiement fait), la synchro écrit désormais en valeur absolue, le seuil d'alerte est passé à 3, la Saône remise à 0 sur Shopify. La PR #87 est fusionnée, le travail se poursuit côté commandes survendues.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044, SKU SAONE-CHENE-180)\n- [prochaine-étape] Ne pas remettre la Saône en vente avant le retour chez bois & fils le 2 décembre\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige, en valeur absolue et sans dédoublonnage (source: t05)\n- [décision] Seuil d'alerte stock bas abaissé de 5 à 3 (source: t09)\n- [décision] Pas de précommande sur la Saône, malgré la proposition de l'agent (source: t17)\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : insuffisant, car `orders/create` et `orders/updated` ont des id différents et Shopify décrémente déjà",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1315,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3794,
+    "sortie": 405,
+    "reflexion": 21,
+    "cache": 768,
+    "cout": 0.00168347
+  },
+  "cout": 0.00168347,
+  "latenceMs": 3409,
+  "fournisseur": "Z.AI"
+}

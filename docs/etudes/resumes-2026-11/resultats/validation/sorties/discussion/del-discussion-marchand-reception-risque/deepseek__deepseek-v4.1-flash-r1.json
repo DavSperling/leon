@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-marchand-reception-risque",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:58.935Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24626,
+    "sortie": 1002,
+    "reflexion": 574,
+    "cache": 19012,
+    "cout": 0.0021004704
+  },
+  "latenceMs": 8306,
+  "fournisseur": "Fireworks",
+  "trace": [
+    "chercher {\"requete\":\"conserverie date de fin de chantier\"}",
+    "chercher {\"requete\":\"conserverie retard pénalité coût\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"dr-contrat-marchand-1\"}",
+    "lire {\"passageId\":\"ol-avenant-marchand-1\"}",
+    "lire {\"passageId\":\"ol-thermaval-report-3\"}",
+    "chercher {\"requete\":\"conserverie Marchand planning pose décembre\",\"outil\":\"tl;dv\"}"
+  ],
+  "cout": 0.0021004704
+}

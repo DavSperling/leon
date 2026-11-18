@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:46.087Z",
+  "reponse": "## Where I am\n\nThe SRE take-home exercise is finished and lives in its own private repo `kestrel-analytics/sre-take-home`, pushed as a subtree split so only the exercise commits are in its history. It contains a docker-compose stack (flaky-svc built from source, Prometheus, Alertmanager, loadgen), a deliberately broken alert rule, a connection leak under load, and an over-broad IAM policy in Terraform, all with a 3-hour time box and no Kubernetes. A rubric scores four areas 0–3 with no cut-off; Noa is the second reviewer. The `hiring/` folder was removed from the infra branch working tree, and no PR was opened in infra.\n\n- [next-step] Send the exercise to the candidate yourself after the Thursday 4pm Tel Aviv call; add him as a repo collaborator when ready.\n- [decision] No Kubernetes at all — 3 hours max, Terraform + compose only (source: t03)\n- [decision] Compose must build flaky-svc from source; no prebuilt image (source: t06)\n- [decision] Rubric has no pass threshold; panel (Maya + Noa) decides (source: t10)\n- [decision] Exercise goes in its own private repo, not the infra repo (source: t12)\n- [decision] Do not email the candidate; Maya sends it herself (source: t16)\n- [trial-failed] Multi-arch `docker buildx --load` fails (\"docker exporter does not currently support exporting manifest lists\"); arm64-only build worked for local testing, resolved by building from source in compose.",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] No Kubernetes at all — 3 hours max, Terraform + compose only (source: t03)\n- [décision] Compose must build flaky-svc from source; no prebuilt image (source: t06)\n- [décision] Rubric has no pass threshold; panel (Maya + Noa) decides (source: t10)\n- [décision] Exercise goes in its own private repo, not the infra repo (source: t12)\n- [décision] Do not email the candidate; Maya sends it herself (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 516,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3622,
+    "sortie": 344,
+    "reflexion": 7,
+    "cache": 896,
+    "cout": 0.00062874
+  },
+  "cout": 0.00062874,
+  "latenceMs": 2071,
+  "fournisseur": "Parasail"
+}

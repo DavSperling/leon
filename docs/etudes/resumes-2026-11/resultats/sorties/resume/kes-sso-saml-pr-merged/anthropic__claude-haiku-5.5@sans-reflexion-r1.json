@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:25:18.417Z",
+  "reponse": "## Où j'en suis\nLe endpoint SAML ACS de Fernhill est vérifié : la signature XML est contrôlée avec signxml, les conditions (fenêtre de validité avec 120 s de tolérance, audience, destinataire, anti-rejeu) sont couvertes, et les tests passent. La PR #412 est fusionnée (squash) : elle est dans `main`. Restent le chargement des métadonnées IdP de Fernhill et l'envoi de nos métadonnées SP, à faire avant mercredi soir pour la démo de jeudi 10 h (New York).\n\n- [prochaine-étape] Charger les métadonnées IdP staging de Fernhill et envoyer les métadonnées SP staging de Kestrel à leur équipe IT, avant mercredi fin de journée (démo jeudi 10 h NY)\n- [prochaine-étape] Créer le ticket séparé pour imposer le SSO et désactiver la connexion par mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur l'image Alpine : conflit lxml / xmlsec (libxml2 et bibliothèque crypto), la compilation depuis les sources a aussi échoué et rallongé le build de 1 min 50 à 9 min ; abandonné au profit de signxml\n- [décision] Utiliser signxml à la place de python3-saml et retirer xmlsec de l'image (source: t08)\n- [décision] Tolérance d'horloge de 120 s, selon le questionnaire de sécurité Fernhill (source: t12)\n- [décision] Ne pas toucher à la connexion par mot de passe dans cette PR (source: t12)",
+  "rendu": "## Où j'en suis\nLe endpoint SAML ACS de Fernhill est vérifié : la signature XML est contrôlée avec signxml, les conditions (fenêtre de validité avec 120 s de tolérance, audience, destinataire, anti-rejeu) sont couvertes, et les tests passent. La PR #412 est fusionnée (squash) : elle est dans `main`. Restent le chargement des métadonnées IdP de Fernhill et l'envoi de nos métadonnées SP, à faire avant mercredi soir pour la démo de jeudi 10 h (New York).\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées IdP staging de Fernhill et envoyer les métadonnées SP staging de Kestrel à leur équipe IT, avant mercredi fin de journée (démo jeudi 10 h NY)\n- [prochaine-étape] Créer le ticket séparé pour imposer le SSO et désactiver la connexion par mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur l'image Alpine : conflit lxml / xmlsec (libxml2 et bibliothèque crypto), la compilation depuis les sources a aussi échoué et rallongé le build de 1 min 50 à 9 min ; abandonné au profit de signxml\n- [décision] Utiliser signxml à la place de python3-saml et retirer xmlsec de l'image (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1241,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6478,
+    "sortie": 574,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009348
+  },
+  "cout": 0.0009348,
+  "latenceMs": 3651,
+  "fournisseur": "Claude Platform on AWS"
+}

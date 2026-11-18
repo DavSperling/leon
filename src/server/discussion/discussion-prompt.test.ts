@@ -112,3 +112,34 @@ describe('buildDiscussionMessages', () => {
     expect(DISCUSSION_SYSTEM).not.toContain('Call ACME');
   });
 });
+
+describe('buildDiscussionMessages : la langue', () => {
+  it('dit en tête de la question la langue de son dernier message, avant les résultats joints', () => {
+    const [message] = buildDiscussionMessages(
+      [{ role: 'user', content: 'when is the go-live and who is in charge of the cutover?' }],
+      [SEED],
+    );
+    const content = message?.content ?? '';
+
+    expect(
+      content.startsWith(
+        "Écris ta réponse en anglais : c'est la langue de ses messages.\nwhen is the go-live",
+      ),
+    ).toBe(true);
+    expect(content.indexOf('Écris ta réponse')).toBeLessThan(content.indexOf(DATA_GUARD_LINE));
+  });
+
+  it('à défaut, prend la langue de ses messages précédents ; rien quand elle ne se devine pas', () => {
+    const history: ChatMessage[] = [
+      { role: 'user', content: "c'est quoi le statut de la migration, et qui s'en occupe ?" },
+      { role: 'assistant', content: 'Elle est en cours [1].' },
+      { role: 'user', content: 'PG17 ?' },
+    ];
+    expect(buildDiscussionMessages(history, []).at(-1)?.content).toBe(
+      "Écris ta réponse en français : c'est la langue de ses messages.\nPG17 ?",
+    );
+    expect(buildDiscussionMessages([{ role: 'user', content: 'PG17 ?' }], []).at(-1)?.content).toBe(
+      'PG17 ?',
+    );
+  });
+});

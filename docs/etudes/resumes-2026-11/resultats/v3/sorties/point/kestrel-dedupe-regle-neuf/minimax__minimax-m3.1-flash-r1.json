@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.679Z",
+  "reponse": "## What is still open\n- PR #247 fixes the Orbitly/iOS event loss but isn't merged: CI must go green and Maya must approve. She wants the Orbitly drop count for Thursday's call — about **1.18M legitimate events (8.1% of iOS volume)** [1][2]\n- Once #247 is merged and deployed, replay Orbitly (`prj_0rb1`) and Zest (`prj_z3st`) from landing for 13/11 onward (~40 min for Orbitly), then confirm the dedupe counter stays near zero [1][2]\n- Add an ingest dead-letter queue alert above 1,000 messages before Friday's incident review on 20/11 [7]\n- The note asking the iOS team to restore UUID `event_id`s in kestrel-ios 3.2.1 is drafted but still needs to go out [1]\n\n## What changed\n- Zest's dashboards are complete again after the backfill, and their Zendesk ticket is closed [6]\n- The 12/11 postmortem is final; Noa presents it at Friday's incident review [3][7]\n- CI and Dockerfile moved to Go 1.23.4 (#245, merged) [4]\n\n## What you did\n- Traced the ~8% Orbitly iOS funnel drop to the dedupe introduced by #240 keying on `event_id`, while kestrel-ios 3.2.0 sends per-session counters instead of the UUIDs the ingest contract requires. You re-keyed dedupe on project/device/event, kept replay protection, added tests, and opened #247 with Maya as reviewer [1]\n- Scoped the blast radius: Orbitly accounts for 99% of drops, Zest is marginally hit on a pilot store app (3,812 events, 0.4% of its traffic); all other projects are unaffected [1]",
+  "rendu": "## What is still open\n- PR #247 fixes the Orbitly/iOS event loss but isn't merged: CI must go green and Maya must approve. She wants the Orbitly drop count for Thursday's call — about **1.18M legitimate events (8.1% of iOS volume)** [1][2]\n- Once #247 is merged and deployed, replay Orbitly (`prj_0rb1`) and Zest (`prj_z3st`) from landing for 13/11 onward (~40 min for Orbitly), then confirm the dedupe counter stays near zero [1][2]\n- Add an ingest dead-letter queue alert above 1,000 messages before Friday's incident review on 20/11 [7]\n- The note asking the iOS team to restore UUID `event_id`s in kestrel-ios 3.2.1 is drafted but still needs to go out [1]\n\n## What changed\n- Zest's dashboards are complete again after the backfill, and their Zendesk ticket is closed [6]\n- The 12/11 postmortem is final; Noa presents it at Friday's incident review [3][7]\n- CI and Dockerfile moved to Go 1.23.4 (#245, merged) [4]\n\n## What you did\n- Traced the ~8% Orbitly iOS funnel drop to the dedupe introduced by #240 keying on `event_id`, while kestrel-ios 3.2.0 sends per-session counters instead of the UUIDs the ingest contract requires. You re-keyed dedupe on project/device/event, kept replay protection, added tests, and opened #247 with Maya as reviewer [1]\n- Scoped the blast radius: Orbitly accounts for 99% of drops, Zest is marginally hit on a pilot store app (3,812 events, 0.4% of its traffic); all other projects are unaffected [1]",
+  "mesures": {
+    "mots": 230,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4678,
+    "sortie": 1775,
+    "reflexion": 1371,
+    "cache": 0,
+    "cout": 0.0017667
+  },
+  "cout": 0.0017667,
+  "latenceMs": 10761,
+  "fournisseur": "Together"
+}

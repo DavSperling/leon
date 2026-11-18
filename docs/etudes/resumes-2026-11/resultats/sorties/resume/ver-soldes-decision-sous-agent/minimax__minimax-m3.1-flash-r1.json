@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:56.175Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est codé sur la branche `julien/script-soldes-hiver` : règles par collection, application en masse via `bulkOperationRunMutation`, export CSV et programmation cron. Tests passés, exécution complète validée sur `dev-verdier` (134 produits / 512 variantes, 0 rejet) après remise à zéro de la boutique. La PR maison-verdier/boutique#94 est ouverte. Attention : son résumé indique -30 % Rhône / -40 % fins de série, ce qui contredit les taux réellement retenus et codés ; il faut le corriger avant merge.\n\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes (prévu en décembre par la personne).\n- [prochaine-étape] Corriger le résumé de la PR #94 avec les bons taux, puis merge.\n- [prochaine-étape] Vérifier l'application programmée sur `dev-verdier` la veille du 13 janvier via `pnpm soldes:repetition`.\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` (nom, prix avant, prix après, remise) avant la newsletter du 6 janvier si les prix changent.\n- [essai-raté] Application variante par variante sur `dev-verdier` : échec par throttling API (73 produits non mis à jour, boutique à moitié soldée) ; corrigé par le passage en bulk.\n- [question] Aucun arbitrage en attente, sauf la correction du résumé de PR à faire.\n- [décision] Remises : -20 % sur Rhône, -30 % sur fins de série, Saône exclue ; prix finissant en 9 après arrondi à l'euro inférieur, produits sous 20 € non touchés (source: t05, t07).\n- [décision] Programmation le mercredi 13 janvier 2027 à 08:00 (Europe/Paris), sans prix barrés visibles avant l'ouverture (source: t15).\n- [décision] Utiliser l'opération en masse et remettre la boutique de dev propre avant application (source: t11).",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est codé sur la branche `julien/script-soldes-hiver` : règles par collection, application en masse via `bulkOperationRunMutation`, export CSV et programmation cron. Tests passés, exécution complète validée sur `dev-verdier` (134 produits / 512 variantes, 0 rejet) après remise à zéro de la boutique. La PR maison-verdier/boutique#94 est ouverte. Attention : son résumé indique -30 % Rhône / -40 % fins de série, ce qui contredit les taux réellement retenus et codés ; il faut le corriger avant merge.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes (prévu en décembre par la personne).\n- [prochaine-étape] Corriger le résumé de la PR #94 avec les bons taux, puis merge.\n- [prochaine-étape] Vérifier l'application programmée sur `dev-verdier` la veille du 13 janvier via `pnpm soldes:repetition`.\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` (nom, prix avant, prix après, remise) avant la newsletter du 6 janvier si les prix changent.\n- [essai-raté] Application variante par variante sur `dev-verdier` : échec par throttling API (73 produits non mis à jour, boutique à moitié soldée) ; corrigé par le passage en bulk.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1334,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3788,
+    "sortie": 493,
+    "reflexion": 29,
+    "cache": 512,
+    "cout": 0.00079488
+  },
+  "cout": 0.00079488,
+  "latenceMs": 2069,
+  "fournisseur": "Inferact vLLM"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "del-agenda-direction",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:29:03.397Z",
+  "reponse": "{\"n\": 14, \"titre\": \"CODIR\", \"debut\": \"2026-11-16T08:00\"}\n{\"n\": 1, \"titre\": \"Visite technique chez la SCI Les Tilleuls\", \"debut\": \"2026-11-18T17:00\", \"avec\": \"Camille Ferrand, M. Lebreton\"}\n{\"n\": 5, \"titre\": \"Réunion de chantier chez Conserverie Marchand\", \"debut\": \"2026-11-18T09:00\", \"avec\": \"Gilles Marchand, Camille Ferrand, Yannick\"}\n{\"n\": 9, \"titre\": \"Démo onduleurs hybrides HN-6\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Marc-André Tremblay\"}\n{\"n\": 17, \"titre\": \"Rendez-vous pour l'avance sur primes\", \"debut\": \"2026-11-19T14:30\", \"avec\": \"Bertrand Josse, Patrick Hamon\"}\n{\"n\": 2, \"titre\": \"Entretien avec Dylan Perrot\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T09:45\", \"avec\": \"Dylan Perrot, Yannick\"}\n{\"n\": 15, \"titre\": \"Préparation audit RGE\", \"debut\": \"2026-11-20T11:00\", \"fin\": \"2026-11-20T11:45\", \"avec\": \"Laure Bihan, Jean-Marc Ollivier, Franck Le Gall\"}",
+  "rendu": "2026-11-16T08:00 CODIR\n2026-11-18T09:00 Réunion de chantier chez Conserverie Marchand (avec Gilles Marchand, Camille Ferrand, Yannick)\n2026-11-18T17:00 Visite technique chez la SCI Les Tilleuls (avec Camille Ferrand, M. Lebreton)\n2026-11-19T14:30 Rendez-vous pour l'avance sur primes (avec Bertrand Josse, Patrick Hamon)\n2026-11-19T16:00 Démo onduleurs hybrides HN-6 (avec Marc-André Tremblay)\n2026-11-20T09:00→2026-11-20T09:45 Entretien avec Dylan Perrot (avec Dylan Perrot, Yannick)\n2026-11-20T11:00→2026-11-20T11:45 Préparation audit RGE (avec Laure Bihan, Jean-Marc Ollivier, Franck Le Gall)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 7,
+    "justes": 7,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2665,
+    "sortie": 701,
+    "reflexion": 337,
+    "cache": 0,
+    "cout": 0.00068355
+  },
+  "cout": 0.00068355,
+  "latenceMs": 8747,
+  "fournisseur": "Azure"
+}

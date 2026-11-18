@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:49.340Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit, testé, ouvert en PR #94 : règles -20 % Rhône / -30 % fins de série, Saône exclue, arrondi finissant en 9, exécution en masse via bulkOperation, application programmée le 13 janvier 2027 à 08:00, CSV exporté pour la newsletter.\n\n- [en-cours] Script de retour aux prix d'origine non commencé\n- [prochaine-étape] Écrire le script de retour aux prix d'origine en décembre, avant la fin des soldes\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Application produit par produit : THROTTLED après 61 produits (budget API), remplacée par bulkOperationRunMutation — commit 1c7d2f8\n- [essai-raté] Programmation du mardi 12 janvier 21:00 : abandonnée, les prix barrés ne doivent pas être visibles avant l'ouverture\n- [décision] -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (source: t05)\n- [décision] Prix finissent en 9 : arrondi au-dessous puis 9 (source: t07)\n- [décision] Application le mercredi 13 janvier 2027 à 08:00, vérification sur dev la veille via `pnpm soldes:repetition` (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit, testé, ouvert en PR #94 : règles -20 % Rhône / -30 % fins de série, Saône exclue, arrondi finissant en 9, exécution en masse via bulkOperation, application programmée le 13 janvier 2027 à 08:00, CSV exporté pour la newsletter.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine non commencé\n- [prochaine-étape] Écrire le script de retour aux prix d'origine en décembre, avant la fin des soldes\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Application produit par produit : THROTTLED après 61 produits (budget API), remplacée par bulkOperationRunMutation — commit 1c7d2f8\n- [essai-raté] Programmation du mardi 12 janvier 21:00 : abandonnée, les prix barrés ne doivent pas être visibles avant l'ouverture\n- [décision] -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (source: t05)\n- [décision] Prix finissent en 9 : arrondi au-dessous puis 9 (source: t07)\n- [décision] Application le mercredi 13 janvier 2027 à 08:00, vérification sur dev la veille via `pnpm soldes:repetition` (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1272,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4263,
+    "sortie": 424,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00071554
+  },
+  "cout": 0.00071554,
+  "latenceMs": 13396,
+  "fournisseur": "Xiaomi"
+}

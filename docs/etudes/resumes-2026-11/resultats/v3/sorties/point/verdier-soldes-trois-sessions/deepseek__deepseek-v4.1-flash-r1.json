@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:55:55.281Z",
+  "reponse": "## What is still open\n- La Saône doit sortir des soldes : Claire s'y oppose (rupture jusqu'à mi-janvier, précommandes au plein prix) [10] — c'est le point à trancher sur la PR #63, qu'Hugo a testée et jugée fonctionnelle sur la boutique de dev [4].\n- Sophie a décalé le shooting au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11 [11].\n- Le flux Google Shopping devra être relancé juste après le script, pour afficher les prix soldés dès le 6 janvier [5].\n- La bannière « Soldes d'hiver » masque le bouton d'achat sur mobile, à corriger avant le shooting [6].\n\n## What changed\n- #59 (étiquette « soldes » automatique sur les produits remisés) relue et fusionnée [7].\n- Le widget d'aide Zendesk (PR #52) est fusionné et déjà utilisé par les clients [9].\n\n## What you did\n- Mis en place tout le dispositif de soldes de Sophie : script depuis la grille, double tâche planifiée (application le 6 janvier, restauration le 3 février), arrondis des prix à l'euro inférieur, exclusion des lignes sans produit actif, et dry-run sur la prod — PR #63 ouverte pour relecture [1].",
+  "rendu": "## What is still open\n- La Saône doit sortir des soldes : Claire s'y oppose (rupture jusqu'à mi-janvier, précommandes au plein prix) [10] — c'est le point à trancher sur la PR #63, qu'Hugo a testée et jugée fonctionnelle sur la boutique de dev [4].\n- Sophie a décalé le shooting au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11 [11].\n- Le flux Google Shopping devra être relancé juste après le script, pour afficher les prix soldés dès le 6 janvier [5].\n- La bannière « Soldes d'hiver » masque le bouton d'achat sur mobile, à corriger avant le shooting [6].\n\n## What changed\n- #59 (étiquette « soldes » automatique sur les produits remisés) relue et fusionnée [7].\n- Le widget d'aide Zendesk (PR #52) est fusionné et déjà utilisé par les clients [9].\n\n## What you did\n- Mis en place tout le dispositif de soldes de Sophie : script depuis la grille, double tâche planifiée (application le 6 janvier, restauration le 3 février), arrondis des prix à l'euro inférieur, exclusion des lignes sans produit actif, et dry-run sur la prod — PR #63 ouverte pour relecture [1].",
+  "mesures": {
+    "mots": 179,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4916,
+    "sortie": 2254,
+    "reflexion": 1940,
+    "cache": 1536,
+    "cout": 0.002798316
+  },
+  "cout": 0.002798316,
+  "latenceMs": 13373,
+  "fournisseur": "DigitalOcean"
+}

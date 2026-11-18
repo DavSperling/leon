@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:23:59.994Z",
+  "reponse": "## Où j'en suis\nSAML ACS signature and conditions verification is complete on branch daniel/saml-acs. PR kestrel-analytics/platform#412 is merged with commits 3f9c2a1, b71e04d and e0a5c93: signxml replaced python3-saml, clock skew is 120 s, and saml_utils was moved to api/auth/saml/verify.py. The test suite, lint, mypy and docker build are all green.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the Thursday 10:00 New York demo.\n- [essai-raté] python3-saml with xmlsec on Alpine failed due to lxml/libxml2 version mismatch and missing xmlsec1-openssl; forcing lxml from source still failed.\n- [décision] Switch to signxml, implement SAML condition checks in-house, and read attributes only from signed_xml (source: t08).\n- [décision] Set SAML_CLOCK_SKEW_SECONDS to 120 per the Fernhill questionnaire, and keep password login out of this PR (source: t12).\n- [décision] Do not use --admin or --auto to merge PR #412; ping Maya for review personally (source: t21).",
+  "rendu": "## Où j'en suis\nSAML ACS signature and conditions verification is complete on branch daniel/saml-acs. PR kestrel-analytics/platform#412 is merged with commits 3f9c2a1, b71e04d and e0a5c93: signxml replaced python3-saml, clock skew is 120 s, and saml_utils was moved to api/auth/saml/verify.py. The test suite, lint, mypy and docker build are all green.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the Thursday 10:00 New York demo.\n- [essai-raté] python3-saml with xmlsec on Alpine failed due to lxml/libxml2 version mismatch and missing xmlsec1-openssl; forcing lxml from source still failed.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 804,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4836,
+    "sortie": 2441,
+    "reflexion": 2133,
+    "cache": 0,
+    "cout": 0.0021877
+  },
+  "cout": 0.0021877,
+  "latenceMs": 4943,
+  "fournisseur": "Venice"
+}

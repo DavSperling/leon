@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:28.786Z",
+  "reponse": "## Où j'en suis\nLa vérification SAML de l'ACS est faite avec signxml (signature, audience, destinataire, fenêtre de temps, anti-rejeu Redis, lecture uniquement depuis signed_xml). `saml_utils` est déplacé dans `api/auth/saml/verify.py`, mypy et ruff passent, 36 tests auth OK. Selon les faits, la PR #412 est fusionnée, alors que la session s'arrête sur un refus de merge (revue de Maya requise) : l'état est à revérifier. Le chargement des métadonnées IdP de Fernhill reste à faire.\n\n- [prochaine-étape] Charger les métadonnées IdP staging de Fernhill et leur envoyer nos métadonnées SP staging avant mercredi soir, pour la démo de jeudi 10h (New York).\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill.\n- [essai-raté] python3-saml sur Alpine : conflit de version libxml2 entre lxml et xmlsec. Compiler lxml depuis les sources donne un build de 9 min et échoue toujours (module crypto xmlsec introuvable).\n- [décision] Abandon de python3-saml et xmlsec au profit de signxml, avec contrôles des conditions écrits en interne (source: t08)\n- [décision] Tolérance d'horloge fixée à 120 s, exigée par l'annexe du contrat Fernhill (source: t12)\n- [décision] Pas de changement du login par mot de passe dans cette PR (source: t12)\n- [décision] Pas de `--admin` ni `--auto` pour le merge ; la personne relance Maya elle-même (source: t21)",
+  "rendu": "## Où j'en suis\nLa vérification SAML de l'ACS est faite avec signxml (signature, audience, destinataire, fenêtre de temps, anti-rejeu Redis, lecture uniquement depuis signed_xml). `saml_utils` est déplacé dans `api/auth/saml/verify.py`, mypy et ruff passent, 36 tests auth OK. Selon les faits, la PR #412 est fusionnée, alors que la session s'arrête sur un refus de merge (revue de Maya requise) : l'état est à revérifier. Le chargement des métadonnées IdP de Fernhill reste à faire.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées IdP staging de Fernhill et leur envoyer nos métadonnées SP staging avant mercredi soir, pour la démo de jeudi 10h (New York).\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill.\n- [essai-raté] python3-saml sur Alpine : conflit de version libxml2 entre lxml et xmlsec. Compiler lxml depuis les sources donne un build de 9 min et échoue toujours (module crypto xmlsec introuvable).\n- [décision] Abandon de python3-saml et xmlsec au profit de signxml, avec contrôles des conditions écrits en interne (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1245,
+    "decisions": 1,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6479,
+    "sortie": 612,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019078
+  },
+  "cout": 0.019078,
+  "latenceMs": 5025,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:47.880Z",
+  "reponse": "The root cause was disks on Kafka broker ingest-kafka-2 filling up after the retention change in infra PR #221; the broker went read-only at 09:38 UTC and consumers stalled [2][3]. The batch size change in #388 was a red herring: reverting it didn't stop the lag [1][3], and it was re-applied on Friday [5]. Earlier reasoning blamed #388 [1], but later evidence in that same session contradicts it. Duration was 2h47m, events delayed up to 2h47m, none lost [2].",
+  "rendu": "The root cause was disks on Kafka broker ingest-kafka-2 filling up after the retention change in infra PR #221; the broker went read-only at 09:38 UTC and consumers stalled [2][3]. The batch size change in #388 was a red herring: reverting it didn't stop the lag [1][3], and it was re-applied on Friday [5]. Earlier reasoning blamed #388 [1], but later evidence in that same session contradicts it. Duration was 2h47m, events delayed up to 2h47m, none lost [2].",
+  "mesures": {
+    "mots": 79,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1271,
+    "sortie": 339,
+    "reflexion": 215,
+    "cache": 0,
+    "cout": 0.0007881
+  },
+  "cout": 0.0007881,
+  "latenceMs": 980,
+  "fournisseur": "Together"
+}

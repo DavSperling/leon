@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:26.340Z",
+  "reponse": "L’expédition de la table Saône devrait être possible à partir du jeudi 3 décembre [2][5]. Les 25 premiers plateaux arrivent à l’entrepôt le 1er décembre [1][2]. En revanche, pour la finition chêne clair, le service client annonce une livraison sous environ six semaines [3], ce qui contredit le retour estimé fin novembre mentionné le 10 novembre [4].",
+  "rendu": "L’expédition de la table Saône devrait être possible à partir du jeudi 3 décembre [2][5]. Les 25 premiers plateaux arrivent à l’entrepôt le 1er décembre [1][2]. En revanche, pour la finition chêne clair, le service client annonce une livraison sous environ six semaines [3], ce qui contredit le retour estimé fin novembre mentionné le 10 novembre [4].",
+  "mesures": {
+    "mots": 57,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1104,
+    "sortie": 158,
+    "reflexion": 71,
+    "cache": 0,
+    "cout": 0.0002604
+  },
+  "cout": 0.0002604,
+  "latenceMs": 1190,
+  "fournisseur": "Together"
+}

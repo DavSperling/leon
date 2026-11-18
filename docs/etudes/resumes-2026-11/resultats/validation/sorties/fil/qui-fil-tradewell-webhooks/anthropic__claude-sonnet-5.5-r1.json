@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:33.769Z",
+  "reponse": "## Où j'en suis\nOn `jake/tradewell-webhook-cert`, WH-17 is fixed and committed (c41f9a2e: `failure_code` and `failure_message` on payout.failed). WH-31 (signing each attempt at send time) is written in `delivery.rs` with unit tests green, but not committed. The retry integration test in `tests/retry.rs` still needs rewriting. The cert re-run is blocked by an expired sandbox API key. PR #1468 is merged, so the branch can be opened against main. The first cert run scored 46/48, and a passing run is needed by Fri Nov 20 (QPAY-2310). (source: ses-tw-3, src-pr1468, src-jira-2310)\n\n- [en-cours] WH-31: signing moved to send time, `retry_signs_with_fresh_timestamp` replaces `retry_reuses_signature`; uncommitted, and the `signature_header` column is left in place (dropping it needs a migration) (source: ses-tw-3, w3-06)\n- [prochaine-étape] Jake rewrites the integration test in `tests/retry.rs` tomorrow morning, then commits and pushes (source: w3-11)\n- [prochaine-étape] Get the sandbox key reissued (Jake is asking Ellen), then re-run `./scripts/tradewell-cert.sh --env sandbox` for a green run before Friday (source: w3-09, w3-08)\n- [prochaine-étape] Open the PR against main only once Jake says so (source: w3-11)\n- [question] Ellen says mTLS and `payout.updated` were \"agreed\" for go-live. Jake doesn't recall agreeing to them and they are not in the spec. Check with Sofia first; build nothing until then (source: w3-09, src-slack-tradewell)\n- [décision] WH-31 is fixed by re-signing every attempt with a fresh timestamp. Tradewell is not asked to change the 300 s tolerance (source: w3-05)\n- [décision] New branch for these fixes; nothing more goes onto #1468 (source: w3-03)",
+  "rendu": "## Où j'en suis\nOn `jake/tradewell-webhook-cert`, WH-17 is fixed and committed (c41f9a2e: `failure_code` and `failure_message` on payout.failed). WH-31 (signing each attempt at send time) is written in `delivery.rs` with unit tests green, but not committed. The retry integration test in `tests/retry.rs` still needs rewriting. The cert re-run is blocked by an expired sandbox API key. PR #1468 is merged, so the branch can be opened against main. The first cert run scored 46/48, and a passing run is needed by Fri Nov 20 (QPAY-2310). (de: équipe, connecteur, agent; source: ses-tw-3, src-pr1468, src-jira-2310)\n\n- [en-cours] WH-31: signing moved to send time, `retry_signs_with_fresh_timestamp` replaces `retry_reuses_signature`; uncommitted, and the `signature_header` column is left in place (dropping it needs a migration) (de: agent; source: ses-tw-3, w3-06)\n- [prochaine-étape] Jake rewrites the integration test in `tests/retry.rs` tomorrow morning, then commits and pushes (de: toi; source: w3-11)\n- [prochaine-étape] Get the sandbox key reissued (Jake is asking Ellen), then re-run `./scripts/tradewell-cert.sh --env sandbox` for a green run before Friday (de: toi, agent; source: w3-09, w3-08)\n- [prochaine-étape] Open the PR against main only once Jake says so (de: toi; source: w3-11)\n- [question] Ellen says mTLS and `payout.updated` were \"agreed\" for go-live. Jake doesn't recall agreeing to them and they are not in the spec. Check with Sofia first; build nothing until then (de: toi, connecteur; source: w3-09, src-slack-tradewell)\n- [décision] WH-31 is fixed by re-signing every attempt with a fresh timestamp. Tradewell is not asked to change the 300 s tolerance (de: toi; source: w3-05)\n- [décision] New branch for these fixes; nothing more goes onto #1468 (de: toi; source: w3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1801,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8110,
+    "sortie": 699,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02321
+  },
+  "cout": 0.02321,
+  "latenceMs": 5140,
+  "fournisseur": "Amazon Bedrock"
+}

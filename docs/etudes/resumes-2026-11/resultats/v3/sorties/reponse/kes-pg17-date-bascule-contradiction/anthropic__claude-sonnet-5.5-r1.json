@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:06.583Z",
+  "reponse": "La date de bascule en production a été déplacée du samedi 21 novembre au samedi 28 novembre 2026, avec la même fenêtre de 02:00 à 06:00 UTC. Le déplacement est annoncé dans #infra le 16 novembre, après l'incident d'ingestion, car Maya veut un second test à blanc sur des données de taille production [2]. Une PR du 17 novembre modifie la date et la page de statut, mais elle est encore ouverte et attend la relecture de Daniel [6]. Le plan initial et l'avis client du 9 novembre indiquaient encore le 21 novembre [1][3]. Le ticket KES-509 affiche toujours le 21 novembre comme échéance [4].",
+  "rendu": "La date de bascule en production a été déplacée du samedi 21 novembre au samedi 28 novembre 2026, avec la même fenêtre de 02:00 à 06:00 UTC. Le déplacement est annoncé dans #infra le 16 novembre, après l'incident d'ingestion, car Maya veut un second test à blanc sur des données de taille production [2]. Une PR du 17 novembre modifie la date et la page de statut, mais elle est encore ouverte et attend la relecture de Daniel [6]. Le plan initial et l'avis client du 9 novembre indiquaient encore le 21 novembre [1][3]. Le ticket KES-509 affiche toujours le 21 novembre comme échéance [4].",
+  "mesures": {
+    "mots": 105,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1679,
+    "sortie": 246,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005818
+  },
+  "cout": 0.005818,
+  "latenceMs": 4795,
+  "fournisseur": "Amazon Bedrock"
+}

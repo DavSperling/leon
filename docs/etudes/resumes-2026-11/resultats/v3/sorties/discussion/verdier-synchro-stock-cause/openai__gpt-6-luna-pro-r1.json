@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:05:03.307Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 39641,
+    "sortie": 1939,
+    "reflexion": 1361,
+    "cache": 26606,
+    "cout": 0.0027026100000000003
+  },
+  "latenceMs": 26403,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"clients acheté meubles indisponibles stock survente rupture stock\"}",
+    "chercher {\"requete\":\"meubles inventory available out of stock orders oversell fix bug\"}",
+    "chercher {\"requete\":\"mobilier stock commande disponibilité bug corrigé\"}",
+    "lire {\"sourceId\":\"13\"}",
+    "lire {\"sourceId\":\"14\"}",
+    "lire {\"sourceId\":\"12\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"passageId\":\"github-boutique-pr-87-1\"}"
+  ],
+  "cout": 0.0027026100000000003
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:29.941Z",
+  "reponse": "## Où j'en suis\nReal SAML login works on staging with Fernhill's IdP. The RelayState fix (a short opaque ID stored in Redis) is in 6d0e2b8, and JIT provisioning creates users in the `fernhill` tenant with the viewer role. Group-to-role mapping is in f4a91c7, in PR #421, which is still open. PR #415 (JIT provisioning) is merged. The remaining blocker is Fernhill IT adding the groups claim before the demo on Thursday 19 Nov, 10:00 ET. (source: ses-sso-3, s3-11, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 (group-to-role mapping and short RelayState) is open, and the mapping applies on every login, not only at creation. (source: s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Get Fernhill IT to add the groups claim, which is still pending. (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test `kestrel.test1` and one admin test account on staging, then run the demo Thursday 10:00 ET. (source: s3-08, s3-10)\n- [essai-raté] SP-initiated login failed on Fernhill's ADFS: the 143-byte RelayState exceeds its 80-byte limit (MSIS7042). A short opaque ID fixed it. (source: s3-02, s3-04)\n- [essai-raté] A JIT test failed on email case mismatch; the domain is now normalized to lowercase. (source: s2-02)\n- [question] Fernhill's Slack message says the groups claim comes after the demo, but the checklist expects it before. Its message also asks for IdP-only login and an analyst default, which the decisions below contradict. (source: src-slack-fernhill, src-linear-kes311)\n- [décision] SAML only, no OIDC for now. (source: s1-03)\n- [décision] New users get the viewer role by default. (source: s1-05)\n- [décision] JIT creates users only from verified domains. (source: s2-03)\n- [décision] Viewer stays the default role, and SP-initiated login stays on. (source: s3-07)\n- [décision] Members of Fernhill-Kestrel-Admins map to admin, everyone else to viewer. (source: s3-05)",
+  "rendu": "## Où j'en suis\nReal SAML login works on staging with Fernhill's IdP. The RelayState fix (a short opaque ID stored in Redis) is in 6d0e2b8, and JIT provisioning creates users in the `fernhill` tenant with the viewer role. Group-to-role mapping is in f4a91c7, in PR #421, which is still open. PR #415 (JIT provisioning) is merged. The remaining blocker is Fernhill IT adding the groups claim before the demo on Thursday 19 Nov, 10:00 ET. (de: équipe, connecteur, agent; source: ses-sso-3, s3-11, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 (group-to-role mapping and short RelayState) is open, and the mapping applies on every login, not only at creation. (de: équipe, agent; source: s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Get Fernhill IT to add the groups claim, which is still pending. (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test `kestrel.test1` and one admin test account on staging, then run the demo Thursday 10:00 ET. (de: toi, agent; source: s3-08, s3-10)\n- [essai-raté] SP-initiated login failed on Fernhill's ADFS: the 143-byte RelayState exceeds its 80-byte limit (MSIS7042). A short opaque ID fixed it. (de: agent; source: s3-02, s3-04)\n- [essai-raté] A JIT test failed on email case mismatch; the domain is now normalized to lowercase. (de: agent; source: s2-02)\n- [question] Fernhill's Slack message says the groups claim comes after the demo, but the checklist expects it before. Its message also asks for IdP-only login and an analyst default, which the decisions below contradict. (de: connecteur; source: src-slack-fernhill, src-linear-kes311)\n- [décision] SAML only, no OIDC for now. (de: toi; source: s1-03)\n- [décision] New users get the viewer role by default. (de: toi; source: s1-05)\n- [décision] JIT creates users only from verified domains. (de: toi; source: s2-03)\n- [décision] Viewer stays the default role, and SP-initiated login stays on. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1979,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6362,
+    "sortie": 3006,
+    "reflexion": 2215,
+    "cache": 0,
+    "cout": 0.0021392
+  },
+  "cout": 0.0021392,
+  "latenceMs": 13291,
+  "fournisseur": "Claude Platform on AWS"
+}

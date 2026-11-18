@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:33:26.876Z",
+  "reponse": "Il y a deux causes possibles. Le double décrément venait de webhooks `inventory_levels/update` reçus deux fois quand un produit a deux emplacements, corrigé par la PR #87 [1][2]. Mais pour la variante SAO-180-CC, à -2, un message plus récent dit que la cause n'est pas #87 : c'est l'import nocturne du CSV de Bois & Fils, qui a écrasé le stock avant deux commandes [5][3]. Un client s'est plaint du stock affiché faux sur la table Saône [4].",
+  "rendu": "Il y a deux causes possibles. Le double décrément venait de webhooks `inventory_levels/update` reçus deux fois quand un produit a deux emplacements, corrigé par la PR #87 [1][2]. Mais pour la variante SAO-180-CC, à -2, un message plus récent dit que la cause n'est pas #87 : c'est l'import nocturne du CSV de Bois & Fils, qui a écrasé le stock avant deux commandes [5][3]. Un client s'est plaint du stock affiché faux sur la table Saône [4].",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1605,
+    "sortie": 666,
+    "reflexion": 477,
+    "cache": 0,
+    "cout": 0.0004935
+  },
+  "cout": 0.0004935,
+  "latenceMs": 4151,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:38.837Z",
+  "reponse": "## Où j'en suis\n\nLa branche `noa/rds-pg17` prépare l'upgrade PostgreSQL 16.4 → 17.2 sur l'analytics RDS en blue/green, avec staging en premier. Les commits `9d41c0e`, `a2b7f55` et `c58e1fa` ajoutent le paramètre group PostgreSQL 17, activent le blue/green sur staging, pinent l'AWS provider à 5.82.0 et corrigent les alertes tflint. Une PR draft #57 est ouverte.\n\n- [en-cours] PR #57 (draft) : staging prêt pour le plan (1 à ajouter, 1 à modifier), prod préparé mais désactivé (`pg17_enabled = false`)\n- [prochaine-étape] Upgrader pg_partman 4.7.4 → 5.1.0 sur staging (16.4) et vérifier `run_maintenance_proc()` sur `events_raw`/`events_daily` avant le switchover ; valider la fenêtre de prod avec Maya (éviter 01:00–03:30 UTC dbt lock)\n- [essai-raté] Tentative d'upgrade AWS provider v6 → cassé (changements S3 ACL, EIP) → reverted à 5.82.0 (source: t04)\n- [question] Fenêtre de prod à confirmer avec Maya (source: t14)\n- [décision] apply_immediately=false sur prod (reverted) (source: t15)",
+  "rendu": "## Où j'en suis\nLa branche `noa/rds-pg17` prépare l'upgrade PostgreSQL 16.4 → 17.2 sur l'analytics RDS en blue/green, avec staging en premier. Les commits `9d41c0e`, `a2b7f55` et `c58e1fa` ajoutent le paramètre group PostgreSQL 17, activent le blue/green sur staging, pinent l'AWS provider à 5.82.0 et corrigent les alertes tflint. Une PR draft #57 est ouverte.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] PR #57 (draft) : staging prêt pour le plan (1 à ajouter, 1 à modifier), prod préparé mais désactivé (`pg17_enabled = false`)\n- [prochaine-étape] Upgrader pg_partman 4.7.4 → 5.1.0 sur staging (16.4) et vérifier `run_maintenance_proc()` sur `events_raw`/`events_daily` avant le switchover ; valider la fenêtre de prod avec Maya (éviter 01:00–03:30 UTC dbt lock)\n- [essai-raté] Tentative d'upgrade AWS provider v6 → cassé (changements S3 ACL, EIP) → reverted à 5.82.0 (source: t04)\n- [question] Fenêtre de prod à confirmer avec Maya (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1045,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4105,
+    "sortie": 930,
+    "reflexion": 568,
+    "cache": 736,
+    "cout": 0.00107439
+  },
+  "cout": 0.00107439,
+  "latenceMs": 6186,
+  "fournisseur": "Mistral"
+}

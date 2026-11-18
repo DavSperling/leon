@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:24:52.410Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est codé sur la branche julien/script-soldes-hiver : règles de remise, application en masse et lancement programmé. La PR maison-verdier/boutique#94 est ouverte avec trois commits. Il reste le script de retour aux prix d'origine pour décembre et la régénération éventuelle du CSV de Sophie.\n\n- [prochaine-étape] Régénérer le CSV de Sophie avant le 6 janvier si les prix changent.\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (fin des soldes, décembre).\n- [essai-raté] Lancement direct sur dev-verdier échoué : API Shopify throttled, 73 produits non mis à jour.\n- [décision] Remises : -20 % Rhône, -30 % Fins de série, Saône exclue. (source: t05)\n- [décision] Arrondi : euro inférieur puis prix finissant par 9, sous 20 € non touché. (source: t07)\n- [décision] Lancement : mercredi 13 janvier 2027 à 08:00 Europe/Paris. (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est codé sur la branche julien/script-soldes-hiver : règles de remise, application en masse et lancement programmé. La PR maison-verdier/boutique#94 est ouverte avec trois commits. Il reste le script de retour aux prix d'origine pour décembre et la régénération éventuelle du CSV de Sophie.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Régénérer le CSV de Sophie avant le 6 janvier si les prix changent.\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (fin des soldes, décembre).\n- [essai-raté] Lancement direct sur dev-verdier échoué : API Shopify throttled, 73 produits non mis à jour.\n- [décision] Remises : -20 % Rhône, -30 % Fins de série, Saône exclue. (source: t05)\n- [décision] Arrondi : euro inférieur puis prix finissant par 9, sous 20 € non touché. (source: t07)\n- [décision] Lancement : mercredi 13 janvier 2027 à 08:00 Europe/Paris. (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1038,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4117,
+    "sortie": 3827,
+    "reflexion": 3548,
+    "cache": 0,
+    "cout": 0.0027369
+  },
+  "cout": 0.0027369,
+  "latenceMs": 8856,
+  "fournisseur": "Venice"
+}

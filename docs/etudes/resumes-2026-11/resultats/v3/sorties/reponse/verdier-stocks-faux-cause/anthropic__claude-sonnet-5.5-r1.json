@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:37.554Z",
+  "reponse": "Deux causes ressortent. D'abord, quand un produit a deux emplacements, Shopify envoie un webhook inventory_levels/update par emplacement et le script de synchro décrémentait le stock deux fois [1][2]. Une déduplication a été fusionnée le 17 novembre [1]. Ensuite, pour la variante Saône chêne clair affichée à -2 le 18 novembre, un message Slack écarte la PR #87 : l'import nocturne a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5]. La question d'un lien avec #87 avait été posée dans le ticket #91 [3]. Un client s'est plaint d'un stock affiché faux sur cette table [4].",
+  "rendu": "Deux causes ressortent. D'abord, quand un produit a deux emplacements, Shopify envoie un webhook inventory_levels/update par emplacement et le script de synchro décrémentait le stock deux fois [1][2]. Une déduplication a été fusionnée le 17 novembre [1]. Ensuite, pour la variante Saône chêne clair affichée à -2 le 18 novembre, un message Slack écarte la PR #87 : l'import nocturne a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5]. La question d'un lien avec #87 avait été posée dans le ticket #91 [3]. Un client s'est plaint d'un stock affiché faux sur cette table [4].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1622,
+    "sortie": 254,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005784
+  },
+  "cout": 0.005784,
+  "latenceMs": 2253,
+  "fournisseur": "Amazon Bedrock"
+}

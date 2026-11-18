@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:16.550Z",
+  "reponse": "The root cause was a full disk on Kafka broker ingest-kafka-2, which went read-only at 09:38 UTC after infra PR #221 removed size-based retention (7-day time-based only) [2]. The consumers stalled, and the outage lasted 2h47m with events delayed but none lost [2]. Slack confirms the disk was at 100% and the broker read-only [3].\n\nThe first hypothesis, the batch size increase in PR #388, was wrong. The agent suspected it [1], but the lag kept climbing after the revert [1][3]. The postmortem calls #388 a red herring, and the change was re-applied [5].",
+  "rendu": "The root cause was a full disk on Kafka broker ingest-kafka-2, which went read-only at 09:38 UTC after infra PR #221 removed size-based retention (7-day time-based only) [2]. The consumers stalled, and the outage lasted 2h47m with events delayed but none lost [2]. Slack confirms the disk was at 100% and the broker read-only [3].\n\nThe first hypothesis, the batch size increase in PR #388, was wrong. The agent suspected it [1], but the lag kept climbing after the revert [1][3]. The postmortem calls #388 a red herring, and the change was re-applied [5].",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1777,
+    "sortie": 208,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005634
+  },
+  "cout": 0.005634,
+  "latenceMs": 1973,
+  "fournisseur": "Claude Platform on AWS"
+}

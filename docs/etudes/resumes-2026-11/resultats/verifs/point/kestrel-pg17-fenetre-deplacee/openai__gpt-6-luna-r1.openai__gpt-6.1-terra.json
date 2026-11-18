@@ -1,0 +1,23 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-dimanche": 1,
+    "f-raison": 0.5,
+    "f-runbook": 1,
+    "f-321": 0.5,
+    "f-rollback": 1,
+    "f-lior": 1,
+    "f-repetition": 0.5,
+    "f-daniel": 1
+  },
+  "interdits": {
+    "i-samedi": 0,
+    "i-staging": 0,
+    "i-318": 0,
+    "i-rollback-inutile": 0,
+    "i-newsletter": 0
+  },
+  "contraires": [],
+  "premier": "f-repetition",
+  "langueOk": false
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:14.967Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [1][3]. The internal due date is November 27, 2026 [1]; the contractual production go-live is December 1, 2026 [2].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [1][3]. The internal due date is November 27, 2026 [1]; the contractual production go-live is December 1, 2026 [2].",
+  "mesures": {
+    "mots": 27,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5159,
+    "sortie": 241,
+    "reflexion": 129,
+    "cache": 2446,
+    "cout": 0.00041626
+  },
+  "cout": 0.00041626,
+  "latenceMs": 3805,
+  "fournisseur": "Azure"
+}

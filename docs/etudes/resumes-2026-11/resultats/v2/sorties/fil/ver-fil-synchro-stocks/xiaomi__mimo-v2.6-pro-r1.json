@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:29:50.515Z",
+  "reponse": "## Où j'en suis\nLe 17/11, la synchro de nuit n'a rien écrit car TransAlp a déposé son CSV 47 min après le passage du script : une quarantaine de références sont restées fausses toute la journée du 16. Des reprises à 4 h et 6 h avec mail à Karim si le CSV manque encore ont été ajoutées (commit d7c2e41), la synchro du 17 a été relancée à la main (40 références corrigées) et la PR #96 est ouverte en attente de la relecture d'Hugo. (source: ses-st-3, u3-02, u3-06, u3-08)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » ouverte sur julien/fix-synchro-stocks, relecture d'Hugo attendue (source: maison-verdier/boutique#96, u3-07)\n- [prochaine-étape] fusionner la PR #96 après la relecture d'Hugo (source: maison-verdier/boutique#96, u3-10)\n- [prochaine-étape] traiter avec Lucie les commandes de Saône survendues : #1041 annulée, bon d'achat de 50 € proposé, retour de la table attendu (source: src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents et Shopify a déjà décrémenté (source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé, 15 tests passent (source: u3-04)\n- [question] verrou advisory Postgres contre deux exécutions simultanées de la synchro : rien ne l'acte pour l'instant (source: src-note-advisory)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige et en valeur absolue (source: u1-02)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)\n- [décision] pas de précommande pour la table Saône avant son retour le 2 décembre (source: u1-06)\n- [décision] pas de réservation Galeries Brotteaux dans le script, Claire voit cela avec eux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLe 17/11, la synchro de nuit n'a rien écrit car TransAlp a déposé son CSV 47 min après le passage du script : une quarantaine de références sont restées fausses toute la journée du 16. Des reprises à 4 h et 6 h avec mail à Karim si le CSV manque encore ont été ajoutées (commit d7c2e41), la synchro du 17 a été relancée à la main (40 références corrigées) et la PR #96 est ouverte en attente de la relecture d'Hugo. (de: agent; source: ses-st-3, u3-02, u3-06, u3-08)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » ouverte sur julien/fix-synchro-stocks, relecture d'Hugo attendue (de: toi, équipe; source: maison-verdier/boutique#96, u3-07)\n- [prochaine-étape] fusionner la PR #96 après la relecture d'Hugo (de: équipe, agent; source: maison-verdier/boutique#96, u3-10)\n- [prochaine-étape] traiter avec Lucie les commandes de Saône survendues : #1041 annulée, bon d'achat de 50 € proposé, retour de la table attendu (de: connecteur; source: src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents et Shopify a déjà décrémenté (de: agent; source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé, 15 tests passent (de: agent; source: u3-04)\n- [question] verrou advisory Postgres contre deux exécutions simultanées de la synchro : rien ne l'acte pour l'instant (de: agent; source: src-note-advisory)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige et en valeur absolue (de: toi; source: u1-02)\n- [décision] seuil d'alerte stock bas à 3 (de: toi; source: u1-04)\n- [décision] pas de précommande pour la table Saône avant son retour le 2 décembre (de: toi; source: u1-06)\n- [décision] pas de réservation Galeries Brotteaux dans le script, Claire voit cela avec eux (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1951,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4754,
+    "sortie": 4948,
+    "reflexion": 4301,
+    "cache": 896,
+    "cout": 0.0059862156
+  },
+  "cout": 0.0059862156,
+  "latenceMs": 93821,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:35:17.906Z",
+  "reponse": "## Ce que tu as fait\n\n- Tu as livré le mécanisme des soldes : script d'application de la grille de Sophie (arrondi à l'euro inférieur) le 6 janvier et de restauration des prix le 3 février, via deux tâches planifiées ; dry-run sur la prod (212 variantes, 57 produits), les 3 variantes déjà en promo laissées de côté, les 7 lignes de grille sans produit signalées — et PR #63 ouverte avec Hugo en relecteur [1].\n- Tu as validé les deux déclenchements planifiés sur la boutique de dev avec des dates de test [1].\n\n## Ce qui a changé\n\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 au lieu de vendredi [11].\n- Le tag automatique `soldes` sur les produits remisés (#59) est relu et fusionné par Hugo, les collections de Sophie sont prêtes pour janvier [7].\n- Le widget Zendesk (#52) est en production : Lucie signale 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## Ce qui reste ouvert\n\n- La Saône bloque la PR #63 : Hugo l'a testée avec succès sur la dev mais demande si ses -20 % sont voulus — Claire a tranché dans #direction : pas de Saône en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix), la grille est à corriger avant fusion [4][10].\n- #65 : Sophie demande que le flux Google Shopping soit régénéré juste après le script des soldes le 6 janvier, sinon les annonces seront refusées ; à répondre [5].\n- #64 : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].",
+  "rendu": "## Ce que tu as fait\n\n- Tu as livré le mécanisme des soldes : script d'application de la grille de Sophie (arrondi à l'euro inférieur) le 6 janvier et de restauration des prix le 3 février, via deux tâches planifiées ; dry-run sur la prod (212 variantes, 57 produits), les 3 variantes déjà en promo laissées de côté, les 7 lignes de grille sans produit signalées — et PR #63 ouverte avec Hugo en relecteur [1].\n- Tu as validé les deux déclenchements planifiés sur la boutique de dev avec des dates de test [1].\n\n## Ce qui a changé\n\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 au lieu de vendredi [11].\n- Le tag automatique `soldes` sur les produits remisés (#59) est relu et fusionné par Hugo, les collections de Sophie sont prêtes pour janvier [7].\n- Le widget Zendesk (#52) est en production : Lucie signale 23 conversations ouvertes depuis les pages produit cette semaine [9].\n\n## Ce qui reste ouvert\n\n- La Saône bloque la PR #63 : Hugo l'a testée avec succès sur la dev mais demande si ses -20 % sont voulus — Claire a tranché dans #direction : pas de Saône en soldes (rupture jusqu'à mi-janvier, précommandes au plein prix), la grille est à corriger avant fusion [4][10].\n- #65 : Sophie demande que le flux Google Shopping soit régénéré juste après le script des soldes le 6 janvier, sinon les annonces seront refusées ; à répondre [5].\n- #64 : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].",
+  "mesures": {
+    "mots": 258,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4692,
+    "sortie": 1791,
+    "reflexion": 1369,
+    "cache": 0,
+    "cout": 0.0015993
+  },
+  "cout": 0.0015993,
+  "latenceMs": 8406,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:04:26.622Z",
+  "reponse": "## What is still open\n\n- **PR #60 bloquée** : Julien te demande de passer la clé sandbox en variable d’environnement et de demander sa régénération, car elle figure dans l’historique Git. Un courriel réclame aussi la clé de production en réponse ; ne l’envoie pas : TransAlp indique que Julien la recevra par l’espace client. [3][6][8]\n- **Bascule TransAlp** : tu dois faire l’essai de bout en bout en production vendredi 20 novembre avec la commande TEST-0001, avant la bascule du lundi 23 à 6 h. Le parcours a déjà fonctionné en sandbox. [1][7][8]\n- **Dimensions #61** : Karim a renseigné huit produits dans Notion et doit mesurer la Saône 180 jeudi 19 novembre. Les expéditions restent bloquées pour les produits sans dimensions. [1][5]",
+  "rendu": "## What is still open\n\n- **PR #60 bloquée** : Julien te demande de passer la clé sandbox en variable d’environnement et de demander sa régénération, car elle figure dans l’historique Git. Un courriel réclame aussi la clé de production en réponse ; ne l’envoie pas : TransAlp indique que Julien la recevra par l’espace client. [3][6][8]\n- **Bascule TransAlp** : tu dois faire l’essai de bout en bout en production vendredi 20 novembre avec la commande TEST-0001, avant la bascule du lundi 23 à 6 h. Le parcours a déjà fonctionné en sandbox. [1][7][8]\n- **Dimensions #61** : Karim a renseigné huit produits dans Notion et doit mesurer la Saône 180 jeudi 19 novembre. Les expéditions restent bloquées pour les produits sans dimensions. [1][5]",
+  "mesures": {
+    "mots": 116,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4530,
+    "sortie": 580,
+    "reflexion": 379,
+    "cache": 1451,
+    "cout": 0.00682055
+  },
+  "cout": 0.00682055,
+  "latenceMs": 6854,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:02.882Z",
+  "reponse": "## What you did\n- Root-caused the flaky `test_acs_rejects_expired_assertion` (a 2.1 s sleep against a 3 s clock skew): froze time with freezegun, converted the two other sleeping tests the same way, and the ACS file now passes 50/50 on repeat, ~2 s faster [1].\n- Cleared `ruff` 0.8 and the two mypy errors it hid in `kestrel/auth` — a missing Issuer/Subject is now a 401 instead of a 500 — and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` behind a shim, full suite green [1].\n\n## What changed\n- Maya approved and merged #418: signature verification goes out with tonight's staging deploy, so it will be on staging ahead of Fernhill IT's end-to-end SSO walkthrough Thursday 10am NY on their Okta tenant (Priya runs the demo, you're on the call) [3][1].\n- Tom requested changes on #423: he can't read the real changes inside a 1,900-line diff, wants the module move and the lint fixes in two separate PRs, and says he'll approve both today [4].\n\n## What is still open\n- #423 to split in two before Tom's review, keeping #418 untouched [4][1].\n- The replay cache is still process-local, so a replay can hit another pod; moving it to Redis (keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew, client already in `kestrel/cache.py`) is the work you lined up for today [1].\n- A non-blocking nit from Maya on the #418 error message wording [3].",
+  "rendu": "## What you did\n- Root-caused the flaky `test_acs_rejects_expired_assertion` (a 2.1 s sleep against a 3 s clock skew): froze time with freezegun, converted the two other sleeping tests the same way, and the ACS file now passes 50/50 on repeat, ~2 s faster [1].\n- Cleared `ruff` 0.8 and the two mypy errors it hid in `kestrel/auth` — a missing Issuer/Subject is now a 401 instead of a 500 — and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` behind a shim, full suite green [1].\n\n## What changed\n- Maya approved and merged #418: signature verification goes out with tonight's staging deploy, so it will be on staging ahead of Fernhill IT's end-to-end SSO walkthrough Thursday 10am NY on their Okta tenant (Priya runs the demo, you're on the call) [3][1].\n- Tom requested changes on #423: he can't read the real changes inside a 1,900-line diff, wants the module move and the lint fixes in two separate PRs, and says he'll approve both today [4].\n\n## What is still open\n- #423 to split in two before Tom's review, keeping #418 untouched [4][1].\n- The replay cache is still process-local, so a replay can hit another pod; moving it to Redis (keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew, client already in `kestrel/cache.py`) is the work you lined up for today [1].\n- A non-blocking nit from Maya on the #418 error message wording [3].",
+  "mesures": {
+    "mots": 224,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5689,
+    "sortie": 1411,
+    "reflexion": 1026,
+    "cache": 0,
+    "cout": 0.00334301
+  },
+  "cout": 0.00334301,
+  "latenceMs": 7442,
+  "fournisseur": "Crusoe"
+}

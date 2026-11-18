@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:10.785Z",
+  "reponse": "Le stock affiché est faux pour deux raisons distinctes. Le double décrément dû aux webhooks à deux emplacements a été corrigé par la PR #87, mergée sur main [1][2]. Le cas de la variante SAO-180-CC à -2 n'est pas lié à cette PR : l'import nocturne a écrasé le stock avec le CSV de la veille, avant deux commandes [3][5]. Un client se plaint aussi d'un stock affiché à tort [4].",
+  "rendu": "Le stock affiché est faux pour deux raisons distinctes. Le double décrément dû aux webhooks à deux emplacements a été corrigé par la PR #87, mergée sur main [1][2]. Le cas de la variante SAO-180-CC à -2 n'est pas lié à cette PR : l'import nocturne a écrasé le stock avec le CSV de la veille, avant deux commandes [3][5]. Un client se plaint aussi d'un stock affiché à tort [4].",
+  "mesures": {
+    "mots": 70,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1604,
+    "sortie": 166,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002434
+  },
+  "cout": 0.0002434,
+  "latenceMs": 1465,
+  "fournisseur": "Claude Platform on AWS"
+}

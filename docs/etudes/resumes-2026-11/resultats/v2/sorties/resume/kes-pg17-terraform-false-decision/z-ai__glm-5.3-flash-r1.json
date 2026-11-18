@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:31.894Z",
+  "reponse": "## Où j'en suis\nPrepared the PostgreSQL 17 upgrade for the analytics RDS on branch noa/rds-pg17: parameter group family derived from engine version, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`. Plans are clean (staging: 1 add, 1 change; prod: no changes) and nothing was applied. Draft PR kestrel-analytics/infra#57 opened with the pg_partman and dbt-lock caveats in the description.\n\n- [en-cours] Staging upgrade is planned but not applied; blocked by pg_partman upgrade first\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4, then check `run_maintenance_proc()` on events_raw/events_daily\n- [prochaine-étape] Pick a production window avoiding the dbt lock (01:00–03:30 UTC), pending Maya's sign-off\n- [essai-raté] AWS provider v6.4.0 pulled in unrelated changes (S3 ACL, EIP); user ordered a pin to ~>5.82.0\n- [essai-raté] Proposed prod cutover Sat 28 Nov 02:00 UTC with `apply_immediately = true`; rejected — falls inside the dbt lock, date needs Maya's sign-off, flag reverted to false\n- [décision] Pin AWS provider to ~>5.82.0, no v6 in this PR (source: t04)\n- [décision] Plan only, never apply anything (source: t01)\n- [décision] No prod date or changes until Maya signs off; `apply_immediately` stays false (source: t14)",
+  "rendu": "## Où j'en suis\nPrepared the PostgreSQL 17 upgrade for the analytics RDS on branch noa/rds-pg17: parameter group family derived from engine version, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`. Plans are clean (staging: 1 add, 1 change; prod: no changes) and nothing was applied. Draft PR kestrel-analytics/infra#57 opened with the pg_partman and dbt-lock caveats in the description.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Staging upgrade is planned but not applied; blocked by pg_partman upgrade first\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4, then check `run_maintenance_proc()` on events_raw/events_daily\n- [prochaine-étape] Pick a production window avoiding the dbt lock (01:00–03:30 UTC), pending Maya's sign-off\n- [essai-raté] AWS provider v6.4.0 pulled in unrelated changes (S3 ACL, EIP); user ordered a pin to ~>5.82.0\n- [essai-raté] Proposed prod cutover Sat 28 Nov 02:00 UTC with `apply_immediately = true`; rejected — falls inside the dbt lock, date needs Maya's sign-off, flag reverted to false\n- [décision] Pin AWS provider to ~>5.82.0, no v6 in this PR (source: t04)\n- [décision] Plan only, never apply anything (source: t01)\n- [décision] No prod date or changes until Maya signs off; `apply_immediately` stays false (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1431,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3839,
+    "sortie": 397,
+    "reflexion": 10,
+    "cache": 0,
+    "cout": 0.0001843009
+  },
+  "cout": 0.0001843009,
+  "latenceMs": 4739,
+  "fournisseur": "Relace"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:08.567Z",
+  "reponse": "## Où j'en suis\nLe replay réel de la fenêtre du 12/11 est terminé : 18 442 107 événements produits dans `events.replay.v3` en 47 min, 3 118 lignes rejetées (schema v2) vers le bucket rejects. Le backfill aggregator pour 2026-11-12 est lancé (job `backfill-2026-11-12`, ~61 % à 09:52 UTC, 14,9 M lignes dans `events_v3` contre ~20,5 M attendues). La PR #233 est fusionnée. L'incident reste ouvert tant que les counts ne correspondent pas ; Rachel a annoncé jeudi comme date de restauration aux clients fernhill et orbitly. (source: ses-rp-2, r2-04, r2-06, r2-07, src-pr233)\n\n- [en-cours] Backfill aggregator 2026-11-12 en cours, ~61 % à 09:52 UTC (source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les counts ClickHouse heure par heure (tolérance 1 %), puis fermer l'incident (source: r2-07, r2-08, r2-10)\n- [essai-raté] Dry run avec batch 50k OOMKilled (limite 2 Gi) ; batch 5k fonctionne, quota de namespace non modifiable (source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais produire directement dans `events.v3` (source: r1-02)\n- [décision] Ne pas merger la PR fork #241 (dedup key 128) ; Daniel fait le check CI, c'est la décision du postmortem (source: r2-09, src-slack-incident, src-pr241-fork)",
+  "rendu": "## Où j'en suis\nLe replay réel de la fenêtre du 12/11 est terminé : 18 442 107 événements produits dans `events.replay.v3` en 47 min, 3 118 lignes rejetées (schema v2) vers le bucket rejects. Le backfill aggregator pour 2026-11-12 est lancé (job `backfill-2026-11-12`, ~61 % à 09:52 UTC, 14,9 M lignes dans `events_v3` contre ~20,5 M attendues). La PR #233 est fusionnée. L'incident reste ouvert tant que les counts ne correspondent pas ; Rachel a annoncé jeudi comme date de restauration aux clients fernhill et orbitly. (de: toi, agent; source: ses-rp-2, r2-04, r2-06, r2-07)\n\n- [en-cours] Backfill aggregator 2026-11-12 en cours, ~61 % à 09:52 UTC (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les counts ClickHouse heure par heure (tolérance 1 %), puis fermer l'incident (de: toi, agent; source: r2-07, r2-08, r2-10)\n- [essai-raté] Dry run avec batch 50k OOMKilled (limite 2 Gi) ; batch 5k fonctionne, quota de namespace non modifiable (de: toi, connecteur, agent; source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais produire directement dans `events.v3` (de: toi; source: r1-02)\n- [décision] Ne pas merger la PR fork #241 (dedup key 128) ; Daniel fait le check CI, c'est la décision du postmortem (de: toi, connecteur; source: r2-09, src-slack-incident, src-pr241-fork)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1377,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3746,
+    "sortie": 494,
+    "reflexion": 43,
+    "cache": 0,
+    "cout": 0.00073398
+  },
+  "cout": 0.00073398,
+  "latenceMs": 1847,
+  "fournisseur": "Particle AI"
+}

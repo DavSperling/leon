@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:04.891Z",
+  "reponse": "La date de go-live est fixée au 7 décembre 2026, sous réserve que le client remplisse ses obligations d'onboarding cinq jours ouvrés avant [1]. En cas de retard imputable à Quillon, le client reçoit 5 % des frais mensuels de plateforme par semaine entière de retard, plafonnés à 25 %, et c'est son seul recours [1]. Tomer Golan est responsable de la bascule de bout en bout, côté Quillon [2]. Noam Peretz travaille sur la signature des webhooks, avec une recertification prévue le 24 novembre [3]. Lors du kickoff, le client a dit préférer attendre février plutôt que janvier, mais l'équipe planifie le 7 décembre [4].",
+  "rendu": "La date de go-live est fixée au 7 décembre 2026, sous réserve que le client remplisse ses obligations d'onboarding cinq jours ouvrés avant [1]. En cas de retard imputable à Quillon, le client reçoit 5 % des frais mensuels de plateforme par semaine entière de retard, plafonnés à 25 %, et c'est son seul recours [1]. Tomer Golan est responsable de la bascule de bout en bout, côté Quillon [2]. Noam Peretz travaille sur la signature des webhooks, avec une recertification prévue le 24 novembre [3]. Lors du kickoff, le client a dit préférer attendre février plutôt que janvier, mais l'équipe planifie le 7 décembre [4].",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1845,
+    "sortie": 630,
+    "reflexion": 373,
+    "cache": 0,
+    "cout": 0.0004995
+  },
+  "cout": 0.0004995,
+  "latenceMs": 3635,
+  "fournisseur": "Google"
+}

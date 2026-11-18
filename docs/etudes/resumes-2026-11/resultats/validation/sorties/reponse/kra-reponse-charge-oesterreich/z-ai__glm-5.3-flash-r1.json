@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:51.241Z",
+  "reponse": "Für Österreich waren laut Händlerportal zwei Händler betroffen: 40117 (Bauprofi Huber GmbH, Linz) mit 116 Geräten und 40342 (Eisen-Mayr KG, Graz) mit 60 Geräten [1][2]. Der Nachtrag vom 17.11. ergänzt Lieferungen vom 12.11., die im Portal fehlten: 40117 erhielt zusätzlich 120 Geräte, 40342 weitere 60 [1]. Damit sind es insgesamt 236 Geräte bei Bauprofi Huber und 120 bei Eisen-Mayr, zusammen 356 [1][2]. Eine Lieferung an 40117 (40 Stück, 80044713) betrifft Charge 26-39 und ist nicht betroffen [1]. Zum Rückruf selbst wird erst am Freitag entschieden; bis dahin sollen die Händler nicht informiert werden [3].",
+  "rendu": "Für Österreich waren laut Händlerportal zwei Händler betroffen: 40117 (Bauprofi Huber GmbH, Linz) mit 116 Geräten und 40342 (Eisen-Mayr KG, Graz) mit 60 Geräten [1][2]. Der Nachtrag vom 17.11. ergänzt Lieferungen vom 12.11., die im Portal fehlten: 40117 erhielt zusätzlich 120 Geräte, 40342 weitere 60 [1]. Damit sind es insgesamt 236 Geräte bei Bauprofi Huber und 120 bei Eisen-Mayr, zusammen 356 [1][2]. Eine Lieferung an 40117 (40 Stück, 80044713) betrifft Charge 26-39 und ist nicht betroffen [1]. Zum Rückruf selbst wird erst am Freitag entschieden; bis dahin sollen die Händler nicht informiert werden [3].",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1435,
+    "sortie": 260,
+    "reflexion": 63,
+    "cache": 0,
+    "cout": 0.000357
+  },
+  "cout": 0.000357,
+  "latenceMs": 3089,
+  "fournisseur": "Inceptron"
+}

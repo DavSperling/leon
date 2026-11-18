@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:54:10.412Z",
+  "reponse": "## What is still open\n- Tom asked you to split PR #423’s module move from the lint fixes into two PRs; he’ll approve both today. Your test, lint/type, and SAML module cleanup is currently in #423. [1][4]\n- Attend Fernhill IT’s SSO walkthrough Thursday at 10 a.m. New York time; Priya is running the demo. Signature validation is merged and scheduled for tonight’s staging deploy, ahead of the Wednesday EOD target. [1][3]\n- Move assertion replay protection from the in-memory cache to Redis before multi-pod use; you flagged this as tomorrow’s task. [1]",
+  "rendu": "## What is still open\n- Tom asked you to split PR #423’s module move from the lint fixes into two PRs; he’ll approve both today. Your test, lint/type, and SAML module cleanup is currently in #423. [1][4]\n- Attend Fernhill IT’s SSO walkthrough Thursday at 10 a.m. New York time; Priya is running the demo. Signature validation is merged and scheduled for tonight’s staging deploy, ahead of the Wednesday EOD target. [1][3]\n- Move assertion replay protection from the in-memory cache to Redis before multi-pod use; you flagged this as tomorrow’s task. [1]",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5398,
+    "sortie": 1557,
+    "reflexion": 1415,
+    "cache": 1451,
+    "cout": 0.00128631
+  },
+  "cout": 0.00128631,
+  "latenceMs": 22169,
+  "fournisseur": "Azure"
+}

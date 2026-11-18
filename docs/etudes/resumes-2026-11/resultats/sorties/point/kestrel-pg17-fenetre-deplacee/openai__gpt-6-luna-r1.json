@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:28:45.108Z",
+  "reponse": "## Ce que tu as fait\n- Tu as préparé le cutover de production vers PostgreSQL 17 avec RDS blue/green, vérifié un plan sans destruction et mesuré 74 secondes d’indisponibilité en répétition; le clone a été supprimé. [1]\n\n## Ce qui a changé\n- Maya a confirmé avec Sam que le batch Fernhill empêche le cutover samedi : la fenêtre est déplacée au dimanche 22/11, de 02:00 à 04:00 UTC. [8]\n- Daniel sera d’astreinte côté API dimanche; préviens-le au démarrage du switchover. [7]\n\n## Ce qui reste ouvert\n- La PR #321 est approuvée, mais le runbook indique encore samedi : corrige la fenêtre, puis tu peux fusionner la PR. Répète aussi le rollback sur un clone frais jeudi 19/11; Lior demande 30 minutes de préavis pour mettre les consommateurs en pause. [3][8][9]",
+  "rendu": "## Ce que tu as fait\n- Tu as préparé le cutover de production vers PostgreSQL 17 avec RDS blue/green, vérifié un plan sans destruction et mesuré 74 secondes d’indisponibilité en répétition; le clone a été supprimé. [1]\n\n## Ce qui a changé\n- Maya a confirmé avec Sam que le batch Fernhill empêche le cutover samedi : la fenêtre est déplacée au dimanche 22/11, de 02:00 à 04:00 UTC. [8]\n- Daniel sera d’astreinte côté API dimanche; préviens-le au démarrage du switchover. [7]\n\n## Ce qui reste ouvert\n- La PR #321 est approuvée, mais le runbook indique encore samedi : corrige la fenêtre, puis tu peux fusionner la PR. Répète aussi le rollback sur un clone frais jeudi 19/11; Lior demande 30 minutes de préavis pour mettre les consommateurs en pause. [3][8][9]",
+  "mesures": {
+    "mots": 125,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4852,
+    "sortie": 735,
+    "reflexion": 516,
+    "cache": 1417,
+    "cout": 0.00081097
+  },
+  "cout": 0.00081097,
+  "latenceMs": 8642,
+  "fournisseur": "OpenAI"
+}

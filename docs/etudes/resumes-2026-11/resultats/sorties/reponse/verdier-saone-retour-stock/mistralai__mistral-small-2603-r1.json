@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:33:15.271Z",
+  "reponse": "Les 25 premières tables Saône reviennent en stock à l'entrepôt le 1er décembre, avec une expédition possible à partir du 3 décembre [1][2]. Une partie du stock est attendue mi-décembre [1].",
+  "rendu": "Les 25 premières tables Saône reviennent en stock à l'entrepôt le 1er décembre, avec une expédition possible à partir du 3 décembre [1][2]. Une partie du stock est attendue mi-décembre [1].",
+  "mesures": {
+    "mots": 31,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1014,
+    "sortie": 462,
+    "reflexion": 407,
+    "cache": 384,
+    "cout": 0.000415206
+  },
+  "cout": 0.000415206,
+  "latenceMs": 3129,
+  "fournisseur": "Mistral"
+}

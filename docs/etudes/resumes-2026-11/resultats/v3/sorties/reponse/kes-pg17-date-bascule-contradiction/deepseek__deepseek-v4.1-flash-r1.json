@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:02.505Z",
+  "reponse": "The production cutover was first planned for Saturday Nov 21, 02:00–06:00 UTC, per the migration plan [1], the customer maintenance notice [3] and ticket KES-509 [4]. It has since moved to Saturday Nov 28, same window: Slack announced the change after a 12/11 ingest incident prompted a second prod-sized dry run [2], and infra PR #233 moves the Terraform cutover date and status page entry to 2026-11-28, plan only, still awaiting review [6]. The sources contradict each other; the Nov 28 date is the more recent [2][6].",
+  "rendu": "The production cutover was first planned for Saturday Nov 21, 02:00–06:00 UTC, per the migration plan [1], the customer maintenance notice [3] and ticket KES-509 [4]. It has since moved to Saturday Nov 28, same window: Slack announced the change after a 12/11 ingest incident prompted a second prod-sized dry run [2], and infra PR #233 moves the Terraform cutover date and status page entry to 2026-11-28, plan only, still awaiting review [6]. The sources contradict each other; the Nov 28 date is the more recent [2][6].",
+  "mesures": {
+    "mots": 87,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1195,
+    "sortie": 206,
+    "reflexion": 69,
+    "cache": 0,
+    "cout": 0.00090855
+  },
+  "cout": 0.00090855,
+  "latenceMs": 1455,
+  "fournisseur": "Fireworks"
+}

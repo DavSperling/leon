@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:07.724Z",
+  "reponse": "## Où j'en suis\nLe chantier « Dashboards v2 » est arrivé au suivi de la revue de Priya sur #418 : la branche tom/dashboard-keyboard porte le déplacement/redimensionnement au clavier et l'anneau de focus, PR #423 ouverte et Priya demandée en relecture. Le flag dashboards_v2 est allumé sur staging pour le workspace zest-grocers seulement, en vue de la démo du mardi 24, que Tom a clôturée pour la journée (source: ses-db-4, d4-05, d4-06)\n\n- [en-cours] PR #423 « Dashboards v2: keyboard move/resize + focus ring » ouverte, commit 8f1a2c7, Priya demandée en relecture (source: ses-db-4, d4-05)\n- [prochaine-étape] relecture de #423 par Priya, puis répétition de la démo sur staging (source: d4-05, d4-06)\n- [prochaine-étape] Tom allume lui-même le flag dashboards_v2 en prod le matin du 24 (source: d4-06)\n- [essai-raté] envelopper les items de grille avec le KeyboardSensor de dnd-kit : les deux bibliothèques écoutent les mêmes événements, chaque déplacement est appliqué deux fois et le drag souris déclenche deux changements de layout (source: d4-02)\n- [essai-raté] les container queries CSS sur les iPads de Zest (iOS 15, Safari < 16) : les règles @container sont ignorées, tout reste en petit layout (source: b2-01)\n- [décision] écrire son propre gestionnaire clavier au-dessus de l'état de layout, sans dnd-kit (source: d4-04)\n- [décision] garder recharts et fermer #401 définitivement, pas de migration visx (source: c3-03, src-pr401)\n- [décision] ResizeObserver via useWidgetSize() au lieu des container queries (source: b2-02)\n- [décision] flag dashboards_v2 allumé uniquement pour le workspace Zest pour la démo du 24 (source: b2-04)\n- [décision] les anciens dashboards v1 restent disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: b2-04)\n- [décision] #418 fusionnée en squash (source: src-pr418)\n- [question] quand et comment retirer les dashboards v1 : une note d'agent parle du 5 janvier, mais aucune décision de l'équipe ne le confirme (source: src-note-v1)",
+  "rendu": "## Où j'en suis\nLe chantier « Dashboards v2 » est arrivé au suivi de la revue de Priya sur #418 : la branche tom/dashboard-keyboard porte le déplacement/redimensionnement au clavier et l'anneau de focus, PR #423 ouverte et Priya demandée en relecture. Le flag dashboards_v2 est allumé sur staging pour le workspace zest-grocers seulement, en vue de la démo du mardi 24, que Tom a clôturée pour la journée (de: toi, agent; source: ses-db-4, d4-05, d4-06)\n\n- [en-cours] PR #423 « Dashboards v2: keyboard move/resize + focus ring » ouverte, commit 8f1a2c7, Priya demandée en relecture (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] relecture de #423 par Priya, puis répétition de la démo sur staging (de: toi, agent; source: d4-05, d4-06)\n- [prochaine-étape] Tom allume lui-même le flag dashboards_v2 en prod le matin du 24 (de: toi; source: d4-06)\n- [essai-raté] envelopper les items de grille avec le KeyboardSensor de dnd-kit : les deux bibliothèques écoutent les mêmes événements, chaque déplacement est appliqué deux fois et le drag souris déclenche deux changements de layout (de: agent; source: d4-02)\n- [essai-raté] les container queries CSS sur les iPads de Zest (iOS 15, Safari < 16) : les règles @container sont ignorées, tout reste en petit layout (de: agent; source: b2-01)\n- [décision] écrire son propre gestionnaire clavier au-dessus de l'état de layout, sans dnd-kit (de: toi; source: d4-04)\n- [décision] garder recharts et fermer #401 définitivement, pas de migration visx (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] ResizeObserver via useWidgetSize() au lieu des container queries (de: toi; source: b2-02)\n- [décision] flag dashboards_v2 allumé uniquement pour le workspace Zest pour la démo du 24 (de: toi; source: b2-04)\n- [décision] les anciens dashboards v1 restent disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (de: toi; source: b2-04)\n- [décision] #418 fusionnée en squash (de: équipe; source: src-pr418)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1980,
+    "lignesRetirees": 1,
+    "decisions": 6,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5034,
+    "sortie": 1697,
+    "reflexion": 1062,
+    "cache": 1024,
+    "cout": 0.00324708
+  },
+  "cout": 0.00324708,
+  "latenceMs": 9462,
+  "fournisseur": "Venice"
+}

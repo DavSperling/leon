@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:11.063Z",
+  "reponse": "Je ne sais pas exactement combien il y a eu de commandes l'an dernier : les rapports Shopify ont sauté lors d'un changement d'abonnement et Antoine Roussel (l'expert-comptable) doit encore recouper les relevés Shopify Payments pour isoler les ventes revendeurs (réponse attendue pour le 25 novembre) [1][2]. \n\nCependant, Karim Haddad estime qu'ils avaient à peu près doublé les commandes sur la semaine, et l'équipe a été complètement débordée (avec des tickets restés 4 jours sans réponse) [4].",
+  "rendu": "Je ne sais pas exactement combien il y a eu de commandes l'an dernier : les rapports Shopify ont sauté lors d'un changement d'abonnement et Antoine Roussel (l'expert-comptable) doit encore recouper les relevés Shopify Payments pour isoler les ventes revendeurs (réponse attendue pour le 25 novembre) [1][2]. \n\nCependant, Karim Haddad estime qu'ils avaient à peu près doublé les commandes sur la semaine, et l'équipe a été complètement débordée (avec des tickets restés 4 jours sans réponse) [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 9985,
+    "sortie": 673,
+    "reflexion": 493,
+    "cache": 0,
+    "cout": 0.004678
+  },
+  "latenceMs": 4903,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday commandes 2023 volume total\"}",
+    "chercher {\"requete\":\"\\\"commandes\\\" \\\"Black Friday\\\" 2025\"}"
+  ],
+  "cout": 0.004678
+}

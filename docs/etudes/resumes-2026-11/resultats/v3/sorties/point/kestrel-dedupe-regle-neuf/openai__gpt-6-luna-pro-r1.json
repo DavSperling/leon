@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:53:57.307Z",
+  "reponse": "## What is still open\n- You traced Orbitly’s drop to `kestrel-ios/3.2.0` reusing per-session event IDs, and changed dedupe to include project and device; tests pass. PR #247 still needs green CI and Maya’s approval. Maya also needs the loss figure for Thursday’s call: 1,179,950 legitimate Orbitly events (about 8.1% of its iOS volume) and 3,812 Zest events were dropped. After deployment, replay both projects’ data from Nov 13 onward. [1][2]\n- Add the dead-letter-queue alert for over 1,000 messages before Friday’s incident review. [7]\n\n## What changed\n- Zest confirmed its dashboards were restored after the backfill and closed its Zendesk ticket. [6]\n- The final #233 postmortem is ready; Noa will present it at Friday’s incident review. [3]",
+  "rendu": "## What is still open\n- You traced Orbitly’s drop to `kestrel-ios/3.2.0` reusing per-session event IDs, and changed dedupe to include project and device; tests pass. PR #247 still needs green CI and Maya’s approval. Maya also needs the loss figure for Thursday’s call: 1,179,950 legitimate Orbitly events (about 8.1% of its iOS volume) and 3,812 Zest events were dropped. After deployment, replay both projects’ data from Nov 13 onward. [1][2]\n- Add the dead-letter-queue alert for over 1,000 messages before Friday’s incident review. [7]\n\n## What changed\n- Zest confirmed its dashboards were restored after the backfill and closed its Zendesk ticket. [6]\n- The final #233 postmortem is ready; Noa will present it at Friday’s incident review. [3]",
+  "mesures": {
+    "mots": 114,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 18136,
+    "sortie": 4231,
+    "reflexion": 3866,
+    "cache": 9138,
+    "cout": 0.00310668
+  },
+  "cout": 0.00310668,
+  "latenceMs": 32829,
+  "fournisseur": "Azure"
+}

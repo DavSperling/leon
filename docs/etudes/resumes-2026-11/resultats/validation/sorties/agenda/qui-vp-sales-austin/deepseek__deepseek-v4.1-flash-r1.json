@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-vp-sales-austin",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:36.113Z",
+  "reponse": "{\"n\": 7, \"titre\": \"Harborline deal review\", \"debut\": \"2026-11-17T00:30\", \"fin\": \"2026-11-17T01:00\", \"avec\": \"Owen Park\"}\n{\"n\": 8, \"titre\": \"Lunch avec Gearloft\", \"debut\": \"2026-11-17T19:30\", \"avec\": \"Nate Holloway\"}\n{\"n\": 15, \"titre\": \"Entretien Bianca Ferreira – Account Executive\", \"debut\": \"2026-11-16T17:00\", \"fin\": \"2026-11-16T17:45\", \"avec\": \"Bianca Ferreira\"}\n{\"n\": 11, \"titre\": \"Lock Q1 pricing tiers\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:45\", \"avec\": \"Marcus\"}\n{\"n\": 18, \"titre\": \"Tradewell x Quillon – go-live readiness review\", \"debut\": \"2026-11-19T17:00\", \"fin\": \"2026-11-19T18:00\", \"avec\": \"Martin Kobayashi, Ellen Vance, Tomer Golan, Sofia Alvarez\"}\n{\"n\": 9, \"titre\": \"Loomly – payout incident follow-up\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T16:45\", \"avec\": \"Hannah Brooke, Carla Reyes\"}",
+  "rendu": "2026-11-16T17:00→2026-11-16T17:45 Entretien Bianca Ferreira – Account Executive (avec Bianca Ferreira)\n2026-11-17T00:30→2026-11-17T01:00 Harborline deal review (avec Owen Park)\n2026-11-17T19:30 Lunch avec Gearloft (avec Nate Holloway)\n2026-11-18T16:00→2026-11-18T16:45 Lock Q1 pricing tiers (avec Marcus)\n2026-11-19T17:00→2026-11-19T18:00 Tradewell x Quillon – go-live readiness review (avec Martin Kobayashi, Ellen Vance, Tomer Golan, Sofia Alvarez)\n2026-11-20T16:00→2026-11-20T16:45 Loomly – payout incident follow-up (avec Hannah Brooke, Carla Reyes)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3384,
+    "sortie": 2478,
+    "reflexion": 2126,
+    "cache": 512,
+    "cout": 0.001786712
+  },
+  "cout": 0.001786712,
+  "latenceMs": 14385,
+  "fournisseur": "InferenceNet"
+}

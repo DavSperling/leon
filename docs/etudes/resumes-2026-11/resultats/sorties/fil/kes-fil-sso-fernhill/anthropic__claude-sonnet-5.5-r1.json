@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:27:59.090Z",
+  "reponse": "## Où j'en suis\nLe login SAML réel fonctionne sur staging avec l'IdP de Fernhill (RelayState court). Le JIT crée les utilisateurs en `viewer`. #415 est fusionnée ; le mapping groupes→rôles est dans #421, ouverte. Il manque le claim `groups` côté Fernhill avant la démo de jeudi 10h à New York. (source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] #421 « SAML: group to role mapping + short RelayState » (commits 6d0e2b8, f4a91c7) : `saml_role_mapping` par tenant, `Fernhill-Kestrel-Admins` → admin, défaut viewer, appliqué à chaque login. 41 tests auth passent ; suite complète 1301 passed. (source: kestrel-analytics/platform#421, s3-06, s3-09)\n- [prochaine-étape] Daniel écrit à l'IT de Fernhill pour qu'elle ajoute le claim `groups` ; c'est encore en attente. (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Une fois le claim ajouté, créer un compte admin de test en plus de `kestrel.test1` pour la démo. (source: s3-08)\n- [prochaine-étape] Faire relire et fusionner #421. (source: kestrel-analytics/platform#421)\n- [essai-raté] Le RelayState avec l'URL complète (143 octets) est refusé par l'ADFS de Fernhill (MSIS7042, limite 80 octets). Remplacé par un ID opaque stocké dans Redis. (source: s3-02, s3-04)\n- [question] Le message Slack de Fernhill demande le rôle `analyst` par défaut et l'IdP-initiated seul. Ce rôle n'existe pas ; Maya doit en parler avec eux. (source: s3-07, src-slack-fernhill)\n- [décision] Le rôle par défaut reste `viewer` et le login SP-initiated reste activé. (source: s3-07)\n- [décision] Seuls les domaines vérifiés créent des comptes JIT. (source: s2-03)",
+  "rendu": "## Où j'en suis\nLe login SAML réel fonctionne sur staging avec l'IdP de Fernhill (RelayState court). Le JIT crée les utilisateurs en `viewer`. #415 est fusionnée ; le mapping groupes→rôles est dans #421, ouverte. Il manque le claim `groups` côté Fernhill avant la démo de jeudi 10h à New York. (de: équipe, connecteur, agent; source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] #421 « SAML: group to role mapping + short RelayState » (commits 6d0e2b8, f4a91c7) : `saml_role_mapping` par tenant, `Fernhill-Kestrel-Admins` → admin, défaut viewer, appliqué à chaque login. 41 tests auth passent ; suite complète 1301 passed. (de: équipe, agent; source: kestrel-analytics/platform#421, s3-06, s3-09)\n- [prochaine-étape] Daniel écrit à l'IT de Fernhill pour qu'elle ajoute le claim `groups` ; c'est encore en attente. (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Une fois le claim ajouté, créer un compte admin de test en plus de `kestrel.test1` pour la démo. (de: agent; source: s3-08)\n- [prochaine-étape] Faire relire et fusionner #421. (de: équipe; source: kestrel-analytics/platform#421)\n- [essai-raté] Le RelayState avec l'URL complète (143 octets) est refusé par l'ADFS de Fernhill (MSIS7042, limite 80 octets). Remplacé par un ID opaque stocké dans Redis. (de: agent; source: s3-02, s3-04)\n- [question] Le message Slack de Fernhill demande le rôle `analyst` par défaut et l'IdP-initiated seul. Ce rôle n'existe pas ; Maya doit en parler avec eux. (de: toi, connecteur; source: s3-07, src-slack-fernhill)\n- [décision] Le rôle par défaut reste `viewer` et le login SP-initiated reste activé. (de: toi; source: s3-07)\n- [décision] Seuls les domaines vérifiés créent des comptes JIT. (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1801,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6362,
+    "sortie": 778,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020504
+  },
+  "cout": 0.020504,
+  "latenceMs": 5626,
+  "fournisseur": "Claude Platform on AWS"
+}

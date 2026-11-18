@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:11:50.531Z",
+  "reponse": "## What you did\n- Two of the last four SRE candidates dropped out (Yoav Mizrahi took a counter-offer, Elena Petrova found the ₪38–42k band too low), leaving Ilan Barak as the only active candidate: technical interview tomorrow, Thursday 19/11 at 15:00 at the office, panel you + Noa [1].\n- You designed his 90-minute interview plan: Terraform module exercise with Noa, a live incident-response scenario based on the 12/11 ingest incident, on-call coverage for TLV nights serving NY customers, and cutting the PagerDuty load (~30 pages/week) — plus a 4-criterion scoring rubric, exported as `ilan-barak-interview-plan.md` [1].\n- Comp now looks like the main risk to closing this hire (2 of 4 declines), and Ilan sits above the top of the band [1].\n\n## What changed\n- Noa confirmed Thursday 15:00 and will prepare the Terraform exercise (the RDS parameter group one) today [3].\n- Eitan asked for the SRE shortlist before Friday: the board deck goes out Monday and he wants a hiring update in it [4].\n\n## What is still open\n- Send the interview plan and rubric to Noa yourself — it's written but not shared [1].\n- Confirm the reply to Dana went out: Thursday confirmed, panel named, and 3 more profiles by end of next week, ideally with on-call experience for US customers [1].\n- Raise the SRE band to ₪42–48k/month with Eitan at Monday's leadership sync (it's in your notes); candidate salary figures were removed from the notes and stay in the ATS [1].",
+  "rendu": "## What you did\n- Two of the last four SRE candidates dropped out (Yoav Mizrahi took a counter-offer, Elena Petrova found the ₪38–42k band too low), leaving Ilan Barak as the only active candidate: technical interview tomorrow, Thursday 19/11 at 15:00 at the office, panel you + Noa [1].\n- You designed his 90-minute interview plan: Terraform module exercise with Noa, a live incident-response scenario based on the 12/11 ingest incident, on-call coverage for TLV nights serving NY customers, and cutting the PagerDuty load (~30 pages/week) — plus a 4-criterion scoring rubric, exported as `ilan-barak-interview-plan.md` [1].\n- Comp now looks like the main risk to closing this hire (2 of 4 declines), and Ilan sits above the top of the band [1].\n\n## What changed\n- Noa confirmed Thursday 15:00 and will prepare the Terraform exercise (the RDS parameter group one) today [3].\n- Eitan asked for the SRE shortlist before Friday: the board deck goes out Monday and he wants a hiring update in it [4].\n\n## What is still open\n- Send the interview plan and rubric to Noa yourself — it's written but not shared [1].\n- Confirm the reply to Dana went out: Thursday confirmed, panel named, and 3 more profiles by end of next week, ideally with on-call experience for US customers [1].\n- Raise the SRE band to ₪42–48k/month with Eitan at Monday's leadership sync (it's in your notes); candidate salary figures were removed from the notes and stay in the ATS [1].",
+  "mesures": {
+    "mots": 236,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4354,
+    "sortie": 1850,
+    "reflexion": 1466,
+    "cache": 0,
+    "cout": 0.00350349
+  },
+  "cout": 0.00350349,
+  "latenceMs": 40490,
+  "fournisseur": "Xiaomi"
+}

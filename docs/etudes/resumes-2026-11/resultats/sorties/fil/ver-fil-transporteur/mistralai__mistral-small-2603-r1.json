@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:28:32.835Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est prête pour la production : le client TransAlp (OAuth2) génère des étiquettes ZPL par défaut avec gestion correcte de l'UTF-8 via `^CI28`, et `choix.ts` route Lyon/Paris vers TransAlp à partir du 1er décembre, tout en gardant Rapidis pour le reste de la France et les colis >30 kg jusqu'au 15 janvier. La PR #91 reste en brouillon, relue par Julien, et la clé de production doit encore être injectée par Julien dans les secrets avant activation.\n\n- [en-cours] PR #91 en brouillon, relecture terminée mais non mergée (source: src-pr91, ses-tr-2)\n- [prochaine-étape] Injecter la clé de production dans les secrets et activer la configuration après le 1er décembre (source: h2-07)\n- [essai-raté] ZPL refusé en sandbox (raison : TransAlp ne propose ZPL qu'en recette/prod) (source: src-mail-transalp)\n- [question] Aucune question ouverte : tout est tranché (source: h2-09, src-slack-julien)\n- [décision] Bascule au 1er décembre (pas le 23 novembre), Rapidis reste jusqu'au 15 janvier pour le reste de la France et >30 kg, ZPL par défaut avec ^CI28 (source: src-slack-julien, h2-04)",
+  "rendu": "- [en-cours] PR #91 en brouillon, relecture terminée mais non mergée (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] Injecter la clé de production dans les secrets et activer la configuration après le 1er décembre (de: toi; source: h2-07)\n- [essai-raté] ZPL refusé en sandbox (raison : TransAlp ne propose ZPL qu'en recette/prod) (de: connecteur; source: src-mail-transalp)\n- [question] Aucune question ouverte : tout est tranché (de: toi, connecteur; source: h2-09, src-slack-julien)\n- [décision] Bascule au 1er décembre (pas le 23 novembre), Rapidis reste jusqu'au 15 janvier pour le reste de la France et >30 kg, ZPL par défaut avec ^CI28 (de: connecteur, agent; source: src-slack-julien, h2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 718,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4080,
+    "sortie": 1092,
+    "reflexion": 739,
+    "cache": 928,
+    "cout": 0.00114192
+  },
+  "cout": 0.00114192,
+  "latenceMs": 6882,
+  "fournisseur": "Mistral"
+}

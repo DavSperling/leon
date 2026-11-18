@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:12:59.434Z",
+  "reponse": "## What you did\n- You got the prod PG15→PG17 cutover fully prepped and opened PR #321 with Maya as reviewer: RDS blue/green Terraform — the read replica now follows the deployment instead of being destroyed and recreated — plus `runbooks/pg17-cutover.md`. Plan: 2 to change, 0 to destroy [1].\n- You rehearsed the whole switchover on a snapshot clone: green ready in 52 min, 74 s of write unavailability, no data mismatch on the 20 biggest tables; the clone is torn down [1].\n\n## What changed\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC** — Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya approved #321 and cleared you to merge, but the runbook and the Notion cutover page still say Saturday 21/11: update both before merging [3][8][10].\n- Renovate's PR #320 (AWS provider 5.80 → 5.82) is open and unreviewed; the blue/green work needs only 5.80+, so it does not block [4][1].\n- Daniel reports staging on PG17 has been smooth since Thursday, with dashboards p95 slightly better than on PG15 [5].\n\n## What is still open\n- Rollback rehearsal on a fresh clone is tomorrow, Thursday 19/11: you insisted rollback is not \"switching back\" (the old instance is renamed and diverges from the start), so measure how long it takes and what data is lost, and record it in the runbook [1].\n- Window coordination: give Lior 30 min notice before the switchover so he pauses the ingest consumers (they read `DATABASE_URL` from SSM, nothing to change there), and ping Daniel when you start — he is on call for the API side on Sunday [7][9].",
+  "rendu": "## What you did\n- You got the prod PG15→PG17 cutover fully prepped and opened PR #321 with Maya as reviewer: RDS blue/green Terraform — the read replica now follows the deployment instead of being destroyed and recreated — plus `runbooks/pg17-cutover.md`. Plan: 2 to change, 0 to destroy [1].\n- You rehearsed the whole switchover on a snapshot clone: green ready in 52 min, 74 s of write unavailability, no data mismatch on the 20 biggest tables; the clone is torn down [1].\n\n## What changed\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC** — Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya approved #321 and cleared you to merge, but the runbook and the Notion cutover page still say Saturday 21/11: update both before merging [3][8][10].\n- Renovate's PR #320 (AWS provider 5.80 → 5.82) is open and unreviewed; the blue/green work needs only 5.80+, so it does not block [4][1].\n- Daniel reports staging on PG17 has been smooth since Thursday, with dashboards p95 slightly better than on PG15 [5].\n\n## What is still open\n- Rollback rehearsal on a fresh clone is tomorrow, Thursday 19/11: you insisted rollback is not \"switching back\" (the old instance is renamed and diverges from the start), so measure how long it takes and what data is lost, and record it in the runbook [1].\n- Window coordination: give Lior 30 min notice before the switchover so he pauses the ingest consumers (they read `DATABASE_URL` from SSM, nothing to change there), and ping Daniel when you start — he is on call for the API side on Sunday [7][9].",
+  "mesures": {
+    "mots": 255,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5615,
+    "sortie": 5914,
+    "reflexion": 5464,
+    "cache": 1536,
+    "cout": 0.0069250746
+  },
+  "cout": 0.0069250746,
+  "latenceMs": 146171,
+  "fournisseur": "Xiaomi"
+}

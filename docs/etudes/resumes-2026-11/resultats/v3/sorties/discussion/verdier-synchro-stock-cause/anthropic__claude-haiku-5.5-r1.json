@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:05:03.514Z",
+  "reponse": "**D'où ça venait :** le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script de synchro du stock ne mettait à jour que l'entrepôt de Vénissieux. Le showroom gardait donc son ancien stock, et Shopify additionnait les deux emplacements, ce qui affichait sur le site du stock qui n'existait plus [7][2][13].\n\n**Est-ce réparé ?** Oui, en grande partie. La correction (PR #87) met à jour les deux emplacements à partir de l'export. Elle a été fusionnée et déployée le 13 novembre [13], et l'équipe confirme en réunion qu'elle a été corrigée le vendredi [17]. Je n'ai trouvé aucune commande annulée pour rupture après cette date, mais ce n'est pas une preuve absolue.\n\n**Ce qui reste ouvert :**\n- Le contrôle quotidien des écarts de stock (PR #91, Hugo) est encore en brouillon au 17 novembre. Julien demande de ne pas compter les précommandes Saône et de ne poster que les écarts d'plus d'une pièce avant fusion [5].\n- Les clients touchés par les annulations ont été remboursés, et certains ont reçu une attention commerciale [3][4]. Un client de la chaise Fourvière attend l'arrivage de fin novembre [6].\n- Les tables Saône sont un cas différent : il ne s'agit pas d'un bug de stock, mais d'un retard de séchage. Seules 18 tables partent le 27 novembre et 12 le 11 décembre, et la fiche passe en précommande [8][12][17].",
+  "rendu": "**D'où ça venait :** le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script de synchro du stock ne mettait à jour que l'entrepôt de Vénissieux. Le showroom gardait donc son ancien stock, et Shopify additionnait les deux emplacements, ce qui affichait sur le site du stock qui n'existait plus [7][2][13].\n\n**Est-ce réparé ?** Oui, en grande partie. La correction (PR #87) met à jour les deux emplacements à partir de l'export. Elle a été fusionnée et déployée le 13 novembre [13], et l'équipe confirme en réunion qu'elle a été corrigée le vendredi [17]. Je n'ai trouvé aucune commande annulée pour rupture après cette date, mais ce n'est pas une preuve absolue.\n\n**Ce qui reste ouvert :**\n- Le contrôle quotidien des écarts de stock (PR #91, Hugo) est encore en brouillon au 17 novembre. Julien demande de ne pas compter les précommandes Saône et de ne poster que les écarts d'plus d'une pièce avant fusion [5].\n- Les clients touchés par les annulations ont été remboursés, et certains ont reçu une attention commerciale [3][4]. Un client de la chaise Fourvière attend l'arrivage de fin novembre [6].\n- Les tables Saône sont un cas différent : il ne s'agit pas d'un bug de stock, mais d'un retard de séchage. Seules 18 tables partent le 27 novembre et 12 le 11 décembre, et la fiche passe en précommande [8][12][17].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35842,
+    "sortie": 1620,
+    "reflexion": 771,
+    "cache": 0,
+    "cout": 0.0043942
+  },
+  "latenceMs": 11966,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"produit en rupture acheté stock indisponible commande\"}",
+    "chercher {\"requete\":\"stock disponibilité bug vente meuble plus disponible\"}",
+    "chercher {\"requete\":\"commande annulée rupture stock affiché\",\"depuis\":\"2026-11-13\"}",
+    "lire {\"sourceId\":\"tldv-point-equipe-1116\"}"
+  ],
+  "cout": 0.0043942
+}

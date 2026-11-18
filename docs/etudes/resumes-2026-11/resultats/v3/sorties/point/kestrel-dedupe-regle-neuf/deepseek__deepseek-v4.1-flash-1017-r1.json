@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.678Z",
+  "reponse": "## What is still open\n- PR #247 is waiting on Maya: she approves once CI is green, and wants the number of Orbitly events dropped since #240 for Thursday's call with Orbitly — your analysis gives ~1.18M, ≈8.1% of their iOS volume [2][1]\n- The replay from landing for Orbitly (and Zest) from 13/11 must run only after #247 is deployed, ~40 minutes; you asked to be reminded of it [1]\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday's incident review [7]\n\n## What changed\n- Noa posted the final 12/11 postmortem and will present it at Friday's review; she credits your root-cause section [3]\n- Rachel closed Zest's Zendesk ticket — their dashboards are complete again after the backfill [6]\n\n## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's event_id-only dedupe colliding with kestrel-ios 3.2.0's per-session counter; Zest's pilot app lost 3,812 events the same way [1]\n- Re-keyed the dedupe on project:device:event_id with tests, opened #247, and drafted the note asking the iOS team to restore UUIDs in 3.2.1 [1]",
+  "rendu": "## What is still open\n- PR #247 is waiting on Maya: she approves once CI is green, and wants the number of Orbitly events dropped since #240 for Thursday's call with Orbitly — your analysis gives ~1.18M, ≈8.1% of their iOS volume [2][1]\n- The replay from landing for Orbitly (and Zest) from 13/11 must run only after #247 is deployed, ~40 minutes; you asked to be reminded of it [1]\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday's incident review [7]\n\n## What changed\n- Noa posted the final 12/11 postmortem and will present it at Friday's review; she credits your root-cause section [3]\n- Rachel closed Zest's Zendesk ticket — their dashboards are complete again after the backfill [6]\n\n## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's event_id-only dedupe colliding with kestrel-ios 3.2.0's per-session counter; Zest's pilot app lost 3,812 events the same way [1]\n- Re-keyed the dedupe on project:device:event_id with tests, opened #247, and drafted the note asking the iOS team to restore UUIDs in 3.2.1 [1]",
+  "mesures": {
+    "mots": 172,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4834,
+    "sortie": 1174,
+    "reflexion": 874,
+    "cache": 0,
+    "cout": 0.0011436
+  },
+  "cout": 0.0011436,
+  "latenceMs": 7612,
+  "fournisseur": "Novita"
+}

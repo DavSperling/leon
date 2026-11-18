@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:08.826Z",
+  "reponse": "## Où j'en suis\nLa PR kestrel-analytics/ingest#233 est fusionnée et le replay réel a produit 18 442 107 événements dans `events.replay.v3` sur la fenêtre du 12 novembre. Le backfill de l’agrégateur pour le 12 novembre est toujours en cours, à 61 % lors du dernier suivi, avec 14,9 M lignes dans ClickHouse contre environ 20,5 M attendues. L’incident reste ouvert jusqu’à validation des comptes horaires. (source: ses-rp-2, ses-rp-1, kestrel-analytics/ingest#233)\n\n- [en-cours] Backfill aggregator `backfill-2026-11-12` lancé depuis `events.replay.v3`; dernière progression connue à 61 %, avec 14,9 M lignes contre environ 20,5 M attendues. (source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes ClickHouse heure par heure avec une tolérance de 1 %, puis seulement clôturer l’incident. (source: ses-rp-2, r2-08)\n- [essai-raté] Le dry run avec des lots de 50 000 a été OOMKilled à la limite de 2 Gio; des lots de 5 000 ont fonctionné avec un pic mémoire de 310 Mio, sans modifier le quota mémoire. (source: ses-rp-1, r1-03, r1-04, r1-05)\n- [décision] Rejouer tous les événements dans `events.replay.v3` et faire lire ce topic par l’agrégateur avec `--backfill`, sans production directe vers `events.v3`. (source: r1-02)\n- [décision] Daniel doit réaliser le contrôle CI de troncature de la clé de déduplication; la PR externe kestrel-analytics/ingest#241 doit être ignorée pour cet incident. (source: src-slack-incident, r2-09)\n- [décision] L’incident ne doit pas être clôturé tant que les comptes ne concordent pas. (source: r2-07)",
+  "rendu": "## Où j'en suis\nLa PR kestrel-analytics/ingest#233 est fusionnée et le replay réel a produit 18 442 107 événements dans `events.replay.v3` sur la fenêtre du 12 novembre. Le backfill de l’agrégateur pour le 12 novembre est toujours en cours, à 61 % lors du dernier suivi, avec 14,9 M lignes dans ClickHouse contre environ 20,5 M attendues. L’incident reste ouvert jusqu’à validation des comptes horaires. (de: équipe, agent; source: ses-rp-2, ses-rp-1, kestrel-analytics/ingest#233)\n\n- [en-cours] Backfill aggregator `backfill-2026-11-12` lancé depuis `events.replay.v3`; dernière progression connue à 61 %, avec 14,9 M lignes contre environ 20,5 M attendues. (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes ClickHouse heure par heure avec une tolérance de 1 %, puis seulement clôturer l’incident. (de: agent; source: ses-rp-2, r2-08)\n- [essai-raté] Le dry run avec des lots de 50 000 a été OOMKilled à la limite de 2 Gio; des lots de 5 000 ont fonctionné avec un pic mémoire de 310 Mio, sans modifier le quota mémoire. (de: toi, agent; source: ses-rp-1, r1-03, r1-04, r1-05)\n- [décision] Rejouer tous les événements dans `events.replay.v3` et faire lire ce topic par l’agrégateur avec `--backfill`, sans production directe vers `events.v3`. (de: toi; source: r1-02)\n- [décision] Daniel doit réaliser le contrôle CI de troncature de la clé de déduplication; la PR externe kestrel-analytics/ingest#241 doit être ignorée pour cet incident. (de: toi, connecteur; source: src-slack-incident, r2-09)\n- [décision] L’incident ne doit pas être clôturé tant que les comptes ne concordent pas. (de: toi; source: r2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1666,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3801,
+    "sortie": 835,
+    "reflexion": 351,
+    "cache": 0,
+    "cout": 0.000964035
+  },
+  "cout": 0.000964035,
+  "latenceMs": 5608,
+  "fournisseur": "StreamLake"
+}

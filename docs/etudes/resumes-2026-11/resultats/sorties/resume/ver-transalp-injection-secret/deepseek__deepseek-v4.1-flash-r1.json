@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:16.748Z",
+  "reponse": "## Où j'en suis\nL'API étiquettes TransAlp est branchée en sandbox : client OAuth2 (`client_credentials`, jeton gardé en mémoire, renouvelé 60 s avant expiration), étiquette PDF, et `choix.ts` qui route Lyon (69)/Paris (75) vers TransAlp sauf colis de plus de 30 kg, le reste vers Rapidis. Tests 18/18, lint propre, commits `b8d2e19` et `47fa0c6`. La PR #91 est ouverte en brouillon et attend la relecture de Julien.\n\n- [en-cours] PR #91 en brouillon, à relire\n- [prochaine-étape] demander au support TransAlp si le ZPL est disponible en production ; brancher la production quand Julien le décidera\n- [essai-raté] clé API en en-tête `X-Api-Key` → 401, l'API exige un jeton OAuth2 ; `format=ZPL` → 400 `unsupported_format` en sandbox ; un `codePostal` en nombre faisait échouer `startsWith` dans `choix.ts`, typé en `string` depuis\n- [question] le ZPL est-il disponible en production (la Zebra de l'entrepôt n'imprime que ça) ?\n- [décision] brancher l'API en sandbox seulement, aucune variable de production (source: t01)\n- [décision] OAuth2 avec jeton gardé en mémoire, pas en base (source: t05)\n- [décision] étiquette PDF par défaut en attendant, avec un paramètre `format` prêt pour le ZPL (source: t09)\n- [décision] ne rien résilier : Rapidis reste en secours au moins jusqu'à la fin des soldes, et tout colis de plus de 30 kg part chez Rapidis même à Lyon ou Paris (source: t13)\n- [décision] lint puis PR en brouillon ; le passage en production reste décidé par Julien (source: t15)",
+  "rendu": "## Où j'en suis\nL'API étiquettes TransAlp est branchée en sandbox : client OAuth2 (`client_credentials`, jeton gardé en mémoire, renouvelé 60 s avant expiration), étiquette PDF, et `choix.ts` qui route Lyon (69)/Paris (75) vers TransAlp sauf colis de plus de 30 kg, le reste vers Rapidis. Tests 18/18, lint propre, commits `b8d2e19` et `47fa0c6`. La PR #91 est ouverte en brouillon et attend la relecture de Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR #91 en brouillon, à relire\n- [prochaine-étape] demander au support TransAlp si le ZPL est disponible en production ; brancher la production quand Julien le décidera\n- [essai-raté] clé API en en-tête `X-Api-Key` → 401, l'API exige un jeton OAuth2 ; `format=ZPL` → 400 `unsupported_format` en sandbox ; un `codePostal` en nombre faisait échouer `startsWith` dans `choix.ts`, typé en `string` depuis\n- [question] le ZPL est-il disponible en production (la Zebra de l'entrepôt n'imprime que ça) ?\n- [décision] brancher l'API en sandbox seulement, aucune variable de production (source: t01)\n- [décision] OAuth2 avec jeton gardé en mémoire, pas en base (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1211,
+    "decisions": 2,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3490,
+    "sortie": 1758,
+    "reflexion": 1278,
+    "cache": 768,
+    "cout": 0.001693374
+  },
+  "cout": 0.001693374,
+  "latenceMs": 15114,
+  "fournisseur": "Cohere"
+}

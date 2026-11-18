@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:31:35.642Z",
+  "reponse": "```json\n{\"n\": 4, \"titre\": \"Debugging session webhooks\", \"debut\": \"2026-11-18T18:00\", \"fin\": \"2026-11-18T19:00\", \"avec\": \"Ryan Okafor\"}\n{\"n\": 6, \"titre\": \"Point tunnel de commande\", \"debut\": \"2026-11-17T16:00\", \"fin\": \"2026-11-17T16:30\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 14, \"titre\": \"Point bug synchro\", \"debut\": \"2026-11-17T10:00\", \"fin\": \"2026-11-17T11:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 21, \"titre\": \"Démo tunnel de commande\", \"debut\": \"2026-11-20T14:00\", \"fin\": \"2026-11-20T14:30\"}\n```",
+  "rendu": "2026-11-17T10:00→2026-11-17T11:00 Point bug synchro (avec Hugo Petit)\n2026-11-17T16:00→2026-11-17T16:30 Point tunnel de commande (avec Mélanie Roche)\n2026-11-18T18:00→2026-11-18T19:00 Debugging session webhooks (avec Ryan Okafor)\n2026-11-20T14:00→2026-11-20T14:30 Démo tunnel de commande",
+  "mesures": {
+    "trouves": 4,
+    "attendus": 4,
+    "justes": 3,
+    "rappel": 0.75,
+    "precision": 0.75,
+    "f1": 0.75,
+    "faux": "2026-11-20T14:00 Démo tunnel de commande",
+    "manques": "2026-11-17 Visite de suivi de l'alternance d'Hugo Petit",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3179,
+    "sortie": 2719,
+    "reflexion": 2445,
+    "cache": 512,
+    "cout": 0.002243043
+  },
+  "cout": 0.002243043,
+  "latenceMs": 17113,
+  "fournisseur": "Mistral"
+}

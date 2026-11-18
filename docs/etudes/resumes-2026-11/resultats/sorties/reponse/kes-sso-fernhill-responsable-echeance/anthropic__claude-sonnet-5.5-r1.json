@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:53.704Z",
+  "reponse": "Daniel Levi est responsable de SAML pour Fernhill de bout en bout [3], et c'est lui qui est assigné au ticket KES-430 [1]. La date interne est le 27 novembre, ce qui laisse une marge avant l'échéance contractuelle [1]. Cette échéance est la mise en production du SSO au 1er décembre 2026, faute de quoi Fernhill obtient un crédit de 10 % sur la facture du T1 [2]. Le ticket est bloqué en attendant les métadonnées de production de leur IdP [1]. Elles ne seront disponibles que le 26 au plus tôt, après leur comité de changement [6]. Daniel indique que le basculement se fait par simple configuration, le jour même [6].",
+  "rendu": "Daniel Levi est responsable de SAML pour Fernhill de bout en bout [3], et c'est lui qui est assigné au ticket KES-430 [1]. La date interne est le 27 novembre, ce qui laisse une marge avant l'échéance contractuelle [1]. Cette échéance est la mise en production du SSO au 1er décembre 2026, faute de quoi Fernhill obtient un crédit de 10 % sur la facture du T1 [2]. Le ticket est bloqué en attendant les métadonnées de production de leur IdP [1]. Elles ne seront disponibles que le 26 au plus tôt, après leur comité de changement [6]. Daniel indique que le basculement se fait par simple configuration, le jour même [6].",
+  "mesures": {
+    "mots": 111,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1871,
+    "sortie": 255,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.006292
+  },
+  "cout": 0.006292,
+  "latenceMs": 2494,
+  "fournisseur": "Claude Platform on AWS"
+}

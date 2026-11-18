@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:13:02.164Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4760,
+    "sortie": 8000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.013428
+  },
+  "cout": 0.013428,
+  "latenceMs": 33636,
+  "fournisseur": "Cohere"
+}

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { parseNote } from '@/capture/passation-format';
+import { type PassationType, parseNote } from '@/capture/passation-format';
 import { type SessionFacts, SessionFactsSchema } from '@/capture/session-facts';
 import { CODE_SESSION_KINDS, type TurnRole } from '@/capture/turn';
 import { resolveTenantContext, type TenantContext } from '@/server/auth/tenant-context';
@@ -71,8 +71,10 @@ import { enqueueFilMaj } from './threads-queue';
 // coût sans rien arrêter ; plafonner par auteur sur 24 h le jour où l'étape `resume` y dépasse 5 $ par jour.
 
 export const RESUME_MIN_ECHANGES = 6;
-const RESUME_MAX_CHARS = 1200;
-// Borne le texte ET la réflexion du modèle (llm.ts) : 1 200 caractères en prennent environ 400, l'effort low peu.
+// Le prompt demande 1 200 caractères ; les modèles en écrivent environ 1 450 (étude docs/etudes/resumes-2026-11). La
+// borne laisse cette marge et tient encore dans un seul passage de la recherche (1 600 caractères au plus).
+const RESUME_MAX_CHARS = 1500;
+// Borne le texte ET la réflexion du modèle (llm.ts) : 1 500 caractères en prennent environ 500, l'effort low peu.
 const RESUME_MAX_TOKENS = 4000;
 const RESUME_TIMEOUT_MS = 60_000;
 const RESUME_CONCURRENCY = 2;
@@ -192,8 +194,19 @@ const SOURCE = /\(source:\s*([^()\s]+)\)\s*$/;
 // « [secret masqué] ») qui en sortirait n'est pas écrite.
 const SAFE_TARGET = /^[^\s[\]]{1,200}$/;
 
+// Quand la place manque, ce qui se garde d'abord : les décisions (vérifiées, et que la suite ne retrouve nulle part
+// ailleurs ; écrites en dernier, la borne les coupait presque toutes), puis ce qui est en cours et la suite.
+const KEEP_FIRST: PassationType[] = [
+  'decision',
+  'en_cours',
+  'prochaine_etape',
+  'question',
+  'essai_rate',
+];
+
 // La liste blanche (D8 amendée, D23) : le paragraphe « ## Où j'en suis » et les lignes des types de la passation, en
-// RESUME_MAX_CHARS caractères ; une `[décision]` seulement si elle cite un id du condensé qui peut la prouver. Tout le
+// RESUME_MAX_CHARS caractères, choisies dans l'ordre de KEEP_FIRST et rendues dans l'ordre du modèle ; une
+// `[décision]` seulement si elle cite un id du condensé qui peut la prouver. Tout le
 // reste est retiré : les autres types (dont `[consigne]`), les titres, les relations écrites par le modèle. Le serveur
 // ajoute les relations tirées des faits, après le paragraphe, au niveau de la note (passation-format.ts). Rend null
 // quand rien n'est gardé.
@@ -206,14 +219,18 @@ export function filterResume(
   const paragraph = note.resume?.slice(0, RESUME_MAX_CHARS - HEADING.length - 2).toWellFormed();
   const head = paragraph === undefined ? [] : [HEADING, paragraph, ''];
   let used = head.join('\n').length;
-  const items: string[] = [];
-  for (const item of note.items) {
-    if (item.type === 'decision' && !preuves.has(SOURCE.exec(item.texte)?.[1] ?? '')) continue;
-    const line = `- [${TAGS[item.type]}] ${item.texte}`;
-    if (used + line.length + 1 > RESUME_MAX_CHARS) break;
-    items.push(line);
-    used += line.length + 1;
+  const lines = note.items
+    .filter((item) => item.type !== 'decision' || preuves.has(SOURCE.exec(item.texte)?.[1] ?? ''))
+    .map((item) => ({ type: item.type, line: `- [${TAGS[item.type]}] ${item.texte}` }));
+  const kept = new Set<number>();
+  for (const type of KEEP_FIRST) {
+    lines.forEach((entry, index) => {
+      if (entry.type !== type || used + entry.line.length + 1 > RESUME_MAX_CHARS) return;
+      kept.add(index);
+      used += entry.line.length + 1;
+    });
   }
+  const items = lines.filter((_, index) => kept.has(index)).map((entry) => entry.line);
   if (head.length === 0 && items.length === 0) return null;
   const relations = [
     ...faits.prs.map((pr) => `- pr [[${pr.repo}#${pr.numero}]]`),

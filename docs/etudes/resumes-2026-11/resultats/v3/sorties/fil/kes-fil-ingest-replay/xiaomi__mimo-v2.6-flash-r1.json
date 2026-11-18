@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:49.974Z",
+  "reponse": "## Où j'en suis\nThe real replay is done: PR #233 is merged, job `replay-1` finished in 47m with 18,442,107 events produced to `events.replay.v3` and 3,118 rejects in S3. The aggregator backfill `backfill-2026-11-12` started 08:57 UTC and was at 61% at ~09:52 (hours 00–14 done); ClickHouse `events_v3` showed 14.9M rows in the incident window against ~20.5M expected, so counts do not match yet and the incident stays open. (source: r2-03, r2-06, src-zendesk-orbitly)\n\n- [en-cours] Backfill `backfill-2026-11-12` running, ~61% at last check, hours 15–23 in progress (source: r2-06)\n- [prochaine-étape] Wait for backfill at 100%, then compare ClickHouse counts hour by hour (1% tolerance) and close the incident only if they match (source: r2-05, r2-07, r2-08)\n- [prochaine-étape] Confirm the restored-data date with Rachel for Fernhill and Orbitly, who expect Thursday (source: r2-07, src-zendesk-orbitly)\n- [essai-raté] Dry run with 50k batches was OOMKilled at the 2Gi limit; 5k batches work and the memory limit must not be raised (source: r1-03, r1-04, src-sentry-oom)\n- [décision] Replay everything into `events.replay.v3` with `--backfill`, never produce to `events.v3` from this tool (source: r1-02, src-slack-incident)\n- [décision] PR #241 from the fork is ignored; Daniel's CI check is the fix, no other fix goes in for this incident (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nThe real replay is done: PR #233 is merged, job `replay-1` finished in 47m with 18,442,107 events produced to `events.replay.v3` and 3,118 rejects in S3. The aggregator backfill `backfill-2026-11-12` started 08:57 UTC and was at 61% at ~09:52 (hours 00–14 done); ClickHouse `events_v3` showed 14.9M rows in the incident window against ~20.5M expected, so counts do not match yet and the incident stays open. (de: connecteur, agent; source: r2-03, r2-06, src-zendesk-orbitly)\n\n- [en-cours] Backfill `backfill-2026-11-12` running, ~61% at last check, hours 15–23 in progress (de: agent; source: r2-06)\n- [prochaine-étape] Wait for backfill at 100%, then compare ClickHouse counts hour by hour (1% tolerance) and close the incident only if they match (de: toi, agent; source: r2-05, r2-07, r2-08)\n- [prochaine-étape] Confirm the restored-data date with Rachel for Fernhill and Orbitly, who expect Thursday (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [essai-raté] Dry run with 50k batches was OOMKilled at the 2Gi limit; 5k batches work and the memory limit must not be raised (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [décision] Replay everything into `events.replay.v3` with `--backfill`, never produce to `events.v3` from this tool (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] PR #241 from the fork is ignored; Daniel's CI check is the fix, no other fix goes in for this incident (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1519,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4231,
+    "sortie": 716,
+    "reflexion": 218,
+    "cache": 0,
+    "cout": 0.00079282
+  },
+  "cout": 0.00079282,
+  "latenceMs": 3589,
+  "fournisseur": "Cohere"
+}

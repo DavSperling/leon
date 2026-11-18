@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-photos-cloture",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:54.634Z",
+  "reponse": "## Où j'en suis\nLe fil porte sur les photos de l'appli poseurs. La PR #221 (3 photos obligatoires avant clôture) est fusionnée et en prod. Face au problème de clôture impossible sans réseau dans les caves (#223), la compression dans le navigateur a été abandonnée (HEIC illisible sur Safari) au profit d'un envoi en arrière-plan : la PR #224, en brouillon sur `thomas/photos-envoi`, ajoute la file d'attente côté navigateur, l'état `cloture_en_attente` et le redimensionnement côté serveur ; testée OK sur iPhone en mode avion et Android, relecture de Lucas demandée pour lundi. Franck a demandé entre-temps une 4e photo obligatoire (raccordement électrique) avant le 8/12, pas encore commencée. (source: src-pr221, src-pr224, src-issue223, fs3, src-slack-franck)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente », ouverte en brouillon sur `thomas/photos-compression`→`thomas/photos-envoi` (commits `9e41b07`, `d2c5a18`), relecteur @lucas-tessier quand il revient lundi (source: fs3, src-pr224)\n- [prochaine-étape] faire relire et fusionner #224 par Lucas (source: p3-11, src-pr224)\n- [prochaine-étape] ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, à faire avant le 8/12 (source: src-slack-franck, p1-03)\n- [essai-raté] compression dans le navigateur (canvas, WebP 0,6) : fonctionne sur Android, mais sur iPhone/Safari les HEIC donnent une image noire car `createImageBitmap` ne lit pas le HEIC ; abandonnée au profit de l'envoi en arrière-plan (source: p2-06, p2-08, p3-05, src-pr224)\n- [essai-raté] la taille des photos (6-8 Mo) n'est pas la cause des plantages en cave : c'est l'absence de réseau ; même compressées, elles ne partiraient pas (source: p3-04, src-issue223)\n- [décision] 3 photos obligatoires (unité extérieure, intérieure, plaque) avant clôture, type ajouté sur PhotoIntervention — PR #221 fusionnée (source: p1-03, src-pr221)\n- [décision] photos gardées sur le téléphone et envoyées en arrière-plan quand le réseau revient, clôture enregistrée tout de suite, redimensionnement côté serveur ; la clôture ne compte « faite » côté planif qu'à l'arrivée des photos (source: p3-05, p3-07)\n- [question] la demande de Franck fait passer de 3 à 4 photos obligatoires : à confirmer et intégrer dans l'appli (source: src-slack-franck)",
+  "rendu": "## Où j'en suis\nLe fil porte sur les photos de l'appli poseurs. La PR #221 (3 photos obligatoires avant clôture) est fusionnée et en prod. Face au problème de clôture impossible sans réseau dans les caves (#223), la compression dans le navigateur a été abandonnée (HEIC illisible sur Safari) au profit d'un envoi en arrière-plan : la PR #224, en brouillon sur `thomas/photos-envoi`, ajoute la file d'attente côté navigateur, l'état `cloture_en_attente` et le redimensionnement côté serveur ; testée OK sur iPhone en mode avion et Android, relecture de Lucas demandée pour lundi. Franck a demandé entre-temps une 4e photo obligatoire (raccordement électrique) avant le 8/12, pas encore commencée. (de: équipe, connecteur, agent; source: src-pr221, src-pr224, src-issue223, fs3, src-slack-franck)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente », ouverte en brouillon sur `thomas/photos-compression`→`thomas/photos-envoi` (commits `9e41b07`, `d2c5a18`), relecteur @lucas-tessier quand il revient lundi (de: équipe, agent; source: fs3, src-pr224)\n- [prochaine-étape] faire relire et fusionner #224 par Lucas (de: toi, équipe; source: p3-11, src-pr224)\n- [prochaine-étape] ajouter « raccordement électrique » comme 4e photo obligatoire dans l'appli, à faire avant le 8/12 (de: toi, connecteur; source: src-slack-franck, p1-03)\n- [essai-raté] compression dans le navigateur (canvas, WebP 0,6) : fonctionne sur Android, mais sur iPhone/Safari les HEIC donnent une image noire car `createImageBitmap` ne lit pas le HEIC ; abandonnée au profit de l'envoi en arrière-plan (de: toi, équipe, agent; source: p2-06, p2-08, p3-05, src-pr224)\n- [essai-raté] la taille des photos (6-8 Mo) n'est pas la cause des plantages en cave : c'est l'absence de réseau ; même compressées, elles ne partiraient pas (de: équipe, agent; source: p3-04, src-issue223)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1865,
+    "lignesRetirees": 3,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4828,
+    "sortie": 763,
+    "reflexion": 33,
+    "cache": 0,
+    "cout": 0.0011057
+  },
+  "cout": 0.0011057,
+  "latenceMs": 4656,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:40.122Z",
+  "reponse": "Short answer: still described as on track for December 1, but with one open dependency on the bank's side — and no update since Nov 17.\n\nWhat's done\n- SAML SP-initiated login merged behind the `saml_sso` flag, with signature/audience/clock-skew checks [9]; IdP-initiated login and the metadata upload endpoint are also committed [10].\n- Fernhill sent their IdP metadata, signing certificate and a test user on Nov 17, and it's loaded on staging — IdP-initiated login works there [3][8].\n- Admin SSO settings page (metadata upload, \"Require SSO\" toggle, test-login) is on staging [1].\n\nWhat's left\n1. The blocker: Fernhill's IdP signs assertions with RSA-SHA1, which our platform rejects (SHA-256 minimum, deliberately not configurable per tenant) [8][9]. Maya refused a temporary SHA-1 exception for a bank — it would surface in their pen test and our SOC 2 audit — so we're waiting for their change board on Nov 24 to switch to SHA-256 [8].\n2. Joint end-to-end test with Helen Marsh, proposed for Wed Nov 25, 16:00 Tel Aviv — this is the test Priya conditioned the go-live on [3][4→Priya's Nov 6 mail says the week of Nov 23][3].\n3. Priya's copy review of the admin page is still outstanding [1].\n4. Remaining SAML DB migrations must land before the Dec 3 migration freeze [5].\n5. Turn the feature on in production for the Fernhill workspace.\n\nRisk flag for your reply: if their board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill the same day that Dec 1 is at risk — no surprises for a bank [8]. The Postgres 17 cutover has already been pushed to Dec 5 specifically to keep Dec 1 clear [5][2].\n\nI searched for anything newer (post Nov 18) on Fernhill/SHA-256 and found nothing, so the Nov 17 state is the latest I have.",
+  "rendu": "Short answer: still described as on track for December 1, but with one open dependency on the bank's side — and no update since Nov 17.\n\nWhat's done\n- SAML SP-initiated login merged behind the `saml_sso` flag, with signature/audience/clock-skew checks [9]; IdP-initiated login and the metadata upload endpoint are also committed [10].\n- Fernhill sent their IdP metadata, signing certificate and a test user on Nov 17, and it's loaded on staging — IdP-initiated login works there [3][8].\n- Admin SSO settings page (metadata upload, \"Require SSO\" toggle, test-login) is on staging [1].\n\nWhat's left\n1. The blocker: Fernhill's IdP signs assertions with RSA-SHA1, which our platform rejects (SHA-256 minimum, deliberately not configurable per tenant) [8][9]. Maya refused a temporary SHA-1 exception for a bank — it would surface in their pen test and our SOC 2 audit — so we're waiting for their change board on Nov 24 to switch to SHA-256 [8].\n2. Joint end-to-end test with Helen Marsh, proposed for Wed Nov 25, 16:00 Tel Aviv — this is the test Priya conditioned the go-live on [3][4→Priya's Nov 6 mail says the week of Nov 23][3].\n3. Priya's copy review of the admin page is still outstanding [1].\n4. Remaining SAML DB migrations must land before the Dec 3 migration freeze [5].\n5. Turn the feature on in production for the Fernhill workspace.\n\nRisk flag for your reply: if their board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill the same day that Dec 1 is at risk — no surprises for a bank [8]. The Postgres 17 cutover has already been pushed to Dec 5 specifically to keep Dec 1 clear [5][2].\n\nI searched for anything newer (post Nov 18) on Fernhill/SHA-256 and found nothing, so the Nov 17 state is the latest I have.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 41615,
+    "sortie": 1315,
+    "reflexion": 617,
+    "cache": 32512,
+    "cout": 0.0017336536000000001
+  },
+  "latenceMs": 20933,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise SSO December 1\"}",
+    "chercher {\"requete\":\"\\\"December 1\\\" login staff company accounts support request bank\"}",
+    "chercher {\"requete\":\"Fernhill SHA-256 changement algorithme signature test conjoint\",\"depuis\":\"2026-11-18\"}",
+    "activite {\"depuis\":\"2026-11-18\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "chercher {\"requete\":\"KES-412 SAML SSO Fernhill reste à faire checklist go-live\"}",
+    "lire {\"passageId\":\"linear-kes-412-1\"}"
+  ],
+  "cout": 0.0017336536000000001
+}

@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:03:02.813Z",
+  "reponse": "The upgrade is now scheduled for Saturday, December 5, from 02:00 to 05:00 UTC. The customer notice is planned for November 28; the ticket is the reference for the window because the Notion runbook hasn’t been updated yet. [3]",
+  "rendu": "The upgrade is now scheduled for Saturday, December 5, from 02:00 to 05:00 UTC. The customer notice is planned for November 28; the ticket is the reference for the window because the Notion runbook hasn’t been updated yet. [3]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 32586,
+    "sortie": 1519,
+    "reflexion": 1000,
+    "cache": 20668,
+    "cout": 0.00224158
+  },
+  "latenceMs": 22582,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"big database upgrade\\\" maintenance window customer notice support macro\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"sourceId\":\"7\"}",
+    "lire {\"sourceId\":\"1\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}",
+    "lire {\"passageId\":\"fathom-weekly-sync-1112-1\"}",
+    "lire {\"passageId\":\"notion-pg17-runbook-1\"}"
+  ],
+  "cout": 0.00224158
+}

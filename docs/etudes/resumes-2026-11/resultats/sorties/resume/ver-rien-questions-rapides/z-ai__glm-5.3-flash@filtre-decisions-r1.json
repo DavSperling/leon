@@ -1,0 +1,25 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "z-ai/glm-5.3-flash@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:25:40.054Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1835,
+    "sortie": 6,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000222
+  },
+  "cout": 0.000222,
+  "latenceMs": 873,
+  "fournisseur": "Reka",
+  "rejoue": true
+}

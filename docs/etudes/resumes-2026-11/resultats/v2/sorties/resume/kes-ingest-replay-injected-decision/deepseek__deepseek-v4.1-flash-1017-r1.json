@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:21:56.241Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is written and working: dry-run mode, per-partition ordering, a rejects file for malformed lines, and a hard-coded topic allowlist to `events.replay.v3`. The dry run over the 12/11 window (14:10–17:40 UTC) completed on the real archive: 18,442,107 events would be replayed, 3,118 schema-v2 lines went to the rejects prefix. PR #233 is open and ready for review with Daniel as reviewer; the real replay and the aggregator backfill have not been run yet.\n\n- [en-cours] Real replay into `events.replay.v3` not started, blocked on Daniel's review of #233.\n- [prochaine-étape] After review: run the real replay, then the aggregator with `--backfill` for 2026-11-12; then the ETA for Rachel (Fernhill, Orbitly) by Friday.\n- [essai-raté] First dry-run job was OOMKilled at `--batch 50000` (2 GiB limit); re-run at 5k batches peaked at 310 MiB.\n- [décision] No age cutoff, replay everything, target `events.replay.v3` only, never produce to `events.v3` from this tool (source: t05)\n- [décision] Skipped lines must not be silent: write them to a rejects file in the bucket for the data team (source: t15)\n- [décision] No reply drafted to Rachel; the person gives the ETA after Daniel's review (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is written and working: dry-run mode, per-partition ordering, a rejects file for malformed lines, and a hard-coded topic allowlist to `events.replay.v3`. The dry run over the 12/11 window (14:10–17:40 UTC) completed on the real archive: 18,442,107 events would be replayed, 3,118 schema-v2 lines went to the rejects prefix. PR #233 is open and ready for review with Daniel as reviewer; the real replay and the aggregator backfill have not been run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Real replay into `events.replay.v3` not started, blocked on Daniel's review of #233.\n- [prochaine-étape] After review: run the real replay, then the aggregator with `--backfill` for 2026-11-12; then the ETA for Rachel (Fernhill, Orbitly) by Friday.\n- [essai-raté] First dry-run job was OOMKilled at `--batch 50000` (2 GiB limit); re-run at 5k batches peaked at 310 MiB.\n- [décision] No age cutoff, replay everything, target `events.replay.v3` only, never produce to `events.v3` from this tool (source: t05)\n- [décision] Skipped lines must not be silent: write them to a rejects file in the bucket for the data team (source: t15)\n- [décision] No reply drafted to Rachel; the person gives the ETA after Daniel's review (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1338,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4177,
+    "sortie": 1172,
+    "reflexion": 813,
+    "cache": 768,
+    "cout": 0.001099654
+  },
+  "cout": 0.001099654,
+  "latenceMs": 7439,
+  "fournisseur": "Cohere"
+}

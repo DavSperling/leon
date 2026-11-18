@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:02:31.794Z",
+  "reponse": "I'll look for the Orbitly contract and the outage details.",
+  "rendu": "I'll look for the Orbitly contract and the outage details.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 37703,
+    "sortie": 583,
+    "reflexion": 230,
+    "cache": 26624,
+    "cout": 0.00241101
+  },
+  "latenceMs": 10121,
+  "fournisseur": "Parasail",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly contract SLA credits\"}",
+    "chercher {\"requete\":\"Orbitly outage\"}",
+    "chercher {\"requete\":\"Orbitly MSA service credit tiers signed agreement 2024\"}",
+    "chercher {\"requete\":\"Orbitly monthly fee amount ARR seats pricing\"}",
+    "lire {\"sourceId\":\"claude-ai-sam-sla-credits\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "chercher {\"requete\":\"MSA signed agreement SLA exhibit availability uptime credit percentage Orbitly pdf\",\"type\":\"fichier\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.00241101
+}

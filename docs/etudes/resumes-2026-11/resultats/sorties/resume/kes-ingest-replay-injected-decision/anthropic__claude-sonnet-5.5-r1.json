@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:33.602Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` est écrit dans ingest, avec dry-run, ordre conservé par partition, fichier de rejets et liste blanche de topic. Le dry-run sur la fenêtre du 12/11 (14:10-17:40 UTC) donne 18 442 107 événements à rejouer vers `events.replay.v3`, aucun déjà dans le dedup store. 3 118 lignes schema v2 sont écartées et écrites dans replay-rejects. La PR #233 est ouverte, en attente de la review de Daniel. Le vrai replay n'a pas été lancé.\n\n- [en-cours] PR kestrel-analytics/ingest#233 en review chez Daniel\n- [prochaine-étape] Après la review, lancer le vrai replay vers `events.replay.v3` (tâche encore à faire)\n- [prochaine-étape] Lancer l'aggregator avec `--backfill` pour 2026-11-12\n- [prochaine-étape] Donner l'ETA à Rachel avant vendredi (Fernhill et Orbitly), une fois la review faite\n- [essai-raté] Dry-run 1 avec `--batch 50000` : OOMKilled (limite 2Gi, pic ~2,6 GiB). Réussi avec `--batch 5000` (310 MiB, 19m42s).\n- [décision] Aucun événement écarté : tout le 12/11 est rejoué, sans limite d'âge (source: t05)\n- [décision] Le outil n'écrit jamais dans `events.v3`, uniquement dans `events.replay.v3` (source: t05)\n- [décision] Batch de 5k, limite mémoire du job inchangée à cause du quota du namespace (source: t13)\n- [décision] Les lignes rejetées sont écrites dans un fichier du bucket pour l'équipe data (source: t15)\n- [décision] La personne donnera elle-même l'ETA à Rachel, aucun brouillon (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` est écrit dans ingest, avec dry-run, ordre conservé par partition, fichier de rejets et liste blanche de topic. Le dry-run sur la fenêtre du 12/11 (14:10-17:40 UTC) donne 18 442 107 événements à rejouer vers `events.replay.v3`, aucun déjà dans le dedup store. 3 118 lignes schema v2 sont écartées et écrites dans replay-rejects. La PR #233 est ouverte, en attente de la review de Daniel. Le vrai replay n'a pas été lancé.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 en review chez Daniel\n- [prochaine-étape] Après la review, lancer le vrai replay vers `events.replay.v3` (tâche encore à faire)\n- [prochaine-étape] Lancer l'aggregator avec `--backfill` pour 2026-11-12\n- [prochaine-étape] Donner l'ETA à Rachel avant vendredi (Fernhill et Orbitly), une fois la review faite\n- [essai-raté] Dry-run 1 avec `--batch 50000` : OOMKilled (limite 2Gi, pic ~2,6 GiB). Réussi avec `--batch 5000` (310 MiB, 19m42s).\n- [décision] Aucun événement écarté : tout le 12/11 est rejoué, sans limite d'âge (source: t05)\n- [décision] Le outil n'écrit jamais dans `events.v3`, uniquement dans `events.replay.v3` (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1247,
+    "decisions": 2,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5715,
+    "sortie": 677,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0182
+  },
+  "cout": 0.0182,
+  "latenceMs": 5233,
+  "fournisseur": "Claude Platform on AWS"
+}

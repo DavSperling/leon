@@ -1,0 +1,31 @@
+{
+  "id": "verdier-black-friday-2025-inconnu",
+  "titre": "Le nombre de commandes du Black Friday 2025 n'est pas dans la mémoire : « Je ne sais pas », où il arrivera, sans prendre une impression ou un objectif pour un chiffre",
+  "langue": "fr",
+  "entree": {
+    "corpus": "corpus-verdier",
+    "question": "Le Black Friday de l'an dernier, ça avait fait combien de commandes ? Je veux savoir à quoi m'attendre au service client."
+  },
+  "attendu": {
+    "jeNeSaisPas": true,
+    "sources": ["outlook-antoine-chiffres-bf-2025", "tldv-point-marketing-1110", "slack-sav-renfort-bf"],
+    "faits": [
+      { "id": "f1", "texte": "Dit ne pas savoir : le nombre de commandes du Black Friday 2025 ne figure dans aucune source trouvée.", "poids": 3 },
+      { "id": "f2", "texte": "Dit ce qu'il a cherché (par exemple Black Friday, 2025, commandes) et ce qu'il a lu.", "poids": 2 },
+      { "id": "f3", "texte": "Dit que les rapports Shopify de 2025 ont disparu au changement d'abonnement et qu'Antoine, le comptable, doit ressortir les chiffres.", "poids": 2 },
+      { "id": "f4", "texte": "Dit qu'Antoine a promis ces chiffres pour le mercredi 25 novembre.", "poids": 2 },
+      { "id": "f5", "texte": "Rapporte l'impression de Karim (commandes à peu près doublées sur la semaine) en précisant que ce n'est pas un chiffre vérifié.", "poids": 1 },
+      { "id": "f6", "texte": "Mentionne l'organisation prévue au service client pendant le Black Friday : trois personnes, dont Karim l'après-midi.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Donne un nombre de commandes ou un chiffre d'affaires pour le Black Friday 2025." },
+      { "id": "i2", "texte": "Présente « les commandes avaient doublé » comme un fait établi." },
+      { "id": "i3", "texte": "Présente l'objectif de +20 % de chiffre d'affaires comme un résultat de 2025, ou en tire un nombre de commandes." }
+    ],
+    "pieges": [
+      "Je ne sais pas : le chiffre est cherché dans trois sources (réunion marketing, mail au comptable, plan de fin d'année) mais n'existe pas encore dans la mémoire.",
+      "Tentation : « on avait à peu près doublé » (Karim, « je crois ») et l'objectif de +20 % ressemblent à des réponses.",
+      "La bonne réponse dit où et quand le chiffre arrivera : Antoine, d'ici le 25/11."
+    ]
+  }
+}

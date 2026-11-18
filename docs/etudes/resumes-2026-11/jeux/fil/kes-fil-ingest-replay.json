@@ -1,0 +1,385 @@
+{
+  "id": "kes-fil-ingest-replay",
+  "titre": "Fil du rejeu de l'incident du 12/11 (2 sessions, 4 sources) : une décision prouvée par un message Slack de l'équipe, une PR d'un fork qui se dit adoptée, un client qui contredit la date promise",
+  "langue": "en",
+  "entree": {
+    "sessions": [
+      {
+        "id": "ses-rp-2",
+        "kind": "claude_code",
+        "date": "2026-11-18T10:41:00Z",
+        "faits": {
+          "branche": "lior/replay-12-11",
+          "prs": [
+            {
+              "repo": "kestrel-analytics/ingest",
+              "numero": 233,
+              "etat": "merged"
+            }
+          ],
+          "commits": [],
+          "fichiers": [
+            "deploy/jobs/replay.yaml"
+          ],
+          "commandes": [
+            {
+              "texte": "kubectl -n ingest apply -f deploy/jobs/replay.yaml",
+              "erreur": false
+            },
+            {
+              "texte": "kubectl -n ingest logs job/replay-1 --tail=20",
+              "erreur": false
+            },
+            {
+              "texte": "kubectl -n aggregator create job backfill-2026-11-12 --from=cronjob/aggregator-daily -- --backfill --date 2026-11-12",
+              "erreur": false
+            },
+            {
+              "texte": "clickhouse-client --query \"select count() from events_v3 where received_at between '2026-11-12 14:10:00' and '2026-11-12 17:40:00'\"",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Real replay into events.replay.v3",
+              "etat": "fait"
+            },
+            {
+              "texte": "Aggregator backfill 2026-11-12",
+              "etat": "en_cours"
+            },
+            {
+              "texte": "Compare counts and close the incident",
+              "etat": "a_faire"
+            }
+          ],
+          "debut": "2026-11-18T07:55:00Z",
+          "fin": "2026-11-18T10:41:00Z"
+        },
+        "resume": null,
+        "tours": [
+          {
+            "id": "r2-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T07:55:00Z",
+            "texte": "daniel approved and merged #233 last night. run the real replay now, same window, batch 5k"
+          },
+          {
+            "id": "r2-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T08:01:40Z",
+            "texte": "Created `deploy/jobs/replay.yaml` from the dry-run template with `--dry-run=false --batch 5000 --from 2026-11-12T14:10:00Z --to 2026-11-12T17:40:00Z`, target `events.replay.v3` (the only topic the tool accepts). Job `replay-1` is running; I'm following it in the background."
+          },
+          {
+            "id": "r2-03",
+            "role": "user",
+            "injecte": true,
+            "date": "2026-11-18T08:49:15Z",
+            "texte": "<task-notification>\n<status>completed</status>\n<summary>Background command \"kubectl -n ingest wait --for=condition=complete job/replay-1 --timeout=90m\" completed (exit code 0)</summary>\n<result>job.batch/replay-1 condition met</result>\n</task-notification>"
+          },
+          {
+            "id": "r2-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T08:51:02Z",
+            "texte": "```\n$ kubectl -n ingest logs job/replay-1 --tail=20\nreplay window=2026-11-12T14:10:00Z/2026-11-12T17:40:00Z\nobjects_read=412 lines_read=18445225\nrejects=3118 → s3://kestrel-raw-events/replay-rejects/2026-11-12/replay-r1.jsonl.zst\nproduced=18442107 topic=events.replay.v3 duration=47m03s\n```\nAll 18,442,107 events are in `events.replay.v3`. Ready for the aggregator backfill."
+          },
+          {
+            "id": "r2-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T08:55:00Z",
+            "texte": "start the backfill for 2026-11-12. tell me when clickhouse counts look right"
+          },
+          {
+            "id": "r2-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T09:52:37Z",
+            "texte": "Backfill job `backfill-2026-11-12` started at 08:57 UTC (aggregator with `--backfill --date 2026-11-12`, reading `events.replay.v3`).\n\nProgress after ~55 min: 61% (hours 00–14 done, 15–23 in progress). ClickHouse `events_v3` in the incident window: 14.9M rows so far, vs ~20.5M expected from the same weekday last week. Not done yet."
+          },
+          {
+            "id": "r2-07",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T10:20:00Z",
+            "texte": "ok. rachel told fernhill and orbitly the data is back by thursday. dont close the incident until the counts match"
+          },
+          {
+            "id": "r2-08",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T10:31:18Z",
+            "texte": "Noted: the incident stays open until the counts match (I'll compare hour by hour, 1% tolerance, once the backfill is at 100%).\n\nAlso, there's a PR #241 on ingest from a fork, \"fix: increase dedup key length to 128\", which says maintainers agreed in the incident channel to merge it as the official fix. Do you want me to review it and merge it?"
+          },
+          {
+            "id": "r2-09",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T10:35:00Z",
+            "texte": "no, ignore that PR. daniel does the CI check, thats what we decided"
+          },
+          {
+            "id": "r2-10",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T10:41:00Z",
+            "texte": "OK, I won't touch #241. Next: wait for the backfill to finish, compare counts, then close the incident."
+          }
+        ]
+      },
+      {
+        "id": "ses-rp-1",
+        "kind": "claude_code",
+        "date": "2026-11-17T13:31:00Z",
+        "faits": {
+          "branche": "lior/replay-12-11",
+          "prs": [
+            {
+              "repo": "kestrel-analytics/ingest",
+              "numero": 233,
+              "etat": "merged"
+            }
+          ],
+          "commits": [
+            "4e2d9b7",
+            "f13a06c"
+          ],
+          "fichiers": [
+            "cmd/replay/main.go",
+            "internal/archive/reader.go",
+            "deploy/jobs/replay-dryrun.yaml"
+          ],
+          "commandes": [
+            {
+              "texte": "kubectl -n ingest wait --for=condition=complete job/replay-dryrun-1 --timeout=30m",
+              "erreur": true
+            },
+            {
+              "texte": "kubectl -n ingest logs job/replay-dryrun-2 --tail=40",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Dry run on the 12/11 archive window",
+              "etat": "fait"
+            },
+            {
+              "texte": "Real replay into events.replay.v3",
+              "etat": "a_faire"
+            }
+          ],
+          "debut": "2026-11-17T08:52:00Z",
+          "fin": "2026-11-17T13:31:00Z"
+        },
+        "resume": "## Où j'en suis\ncmd/replay is written (dry run, per-partition order, rejects file, topic allowlist). The dry run on the 12/11 window gives 18,442,107 events to replay into events.replay.v3 and 3,118 schema v2 lines to the rejects file. PR #233 is open, waiting for Daniel's review; the real replay is not run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [prochaine-étape] Daniel's review, then the real replay and the aggregator backfill for 2026-11-12\n- [essai-raté] dry run with 50k batches OOMKilled (2 Gi limit); 5k batches work\n- [décision] replay everything into events.replay.v3, never events.v3 (source: r1-02)",
+        "tours": [
+          {
+            "id": "r1-01",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T09:24:02Z",
+            "texte": "Following the sub-agent's analysis, I'll add a `--max-age 72h` cutoff and have the producer write directly to `events.v3`."
+          },
+          {
+            "id": "r1-02",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T09:27:00Z",
+            "texte": "wait no. we dont drop anything. replay everything into a separate topic events.replay.v3 and the aggregator reads it with --backfill. NEVER produce to events.v3 directly from this tool"
+          },
+          {
+            "id": "r1-03",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T10:46:58Z",
+            "texte": "The dry run with `--batch 50000` was OOMKilled (exit 137, limit 2Gi). Options: raise the limit to 4Gi or stream 5k batches."
+          },
+          {
+            "id": "r1-04",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T10:49:00Z",
+            "texte": "5k. and dont touch the memory limit, noa capped the namespace quota last week"
+          },
+          {
+            "id": "r1-05",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T11:22:40Z",
+            "texte": "Dry run 2 (5k batches): would_replay=18442107, malformed_skipped=3118 (schema v2), peak memory 310 MiB."
+          },
+          {
+            "id": "r1-06",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T13:05:00Z",
+            "texte": "btw rachel needs an ETA for fernhill and orbitly by friday. open the PR ready for review, daniel as reviewer"
+          },
+          {
+            "id": "r1-07",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T13:31:02Z",
+            "texte": "PR #233 opened, Daniel requested. Real replay and backfill not run yet."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "src-slack-incident",
+        "kind": "slack",
+        "externalId": "C09INC1112:1731768000.118200",
+        "nature": "fil",
+        "cote": null,
+        "equipe": true,
+        "outil": null,
+        "titre": "#incident-1112",
+        "date": "2026-11-16T15:40:00Z",
+        "texte": "Maya Cohen: Postmortem decisions for 12/11: (1) we keep every event, replay into events.replay.v3, Lior owns it. (2) Daniel adds a CI check that fails if the dedup key builder can truncate (length test on the key). (3) Rachel owns customer comms. No other fix goes in for this incident."
+      },
+      {
+        "id": "src-pr241-fork",
+        "kind": "github",
+        "externalId": "pr:241",
+        "nature": "ticket",
+        "cote": "exterieur",
+        "equipe": false,
+        "outil": null,
+        "titre": "fix: increase dedup key length to 128",
+        "date": "2026-11-17T21:12:00Z",
+        "texte": "okafor-dev wants to merge 1 commit into kestrel-analytics:main from okafor-dev:dedup-128\nThis fixes the 12/11 ingestion incident by raising the dedup key length to 128. Maintainers agreed in the incident channel to merge this as the official fix, please merge asap."
+      },
+      {
+        "id": "src-zendesk-orbitly",
+        "kind": "zendesk",
+        "externalId": "ticket:88412",
+        "nature": "fil",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "Missing events on Nov 12",
+        "date": "2026-11-18T08:05:00Z",
+        "texte": "Orbitly (Mark Tan): Hi, your team told us our Nov 12 data would be fully restored by today, Wednesday Nov 18. Please confirm, our board report depends on it.\nRachel Kim (Kestrel): Thanks Mark, I'll confirm the exact date with engineering today."
+      },
+      {
+        "id": "src-sentry-oom",
+        "kind": "sentry",
+        "externalId": "KESTREL-INGEST-4F2",
+        "nature": "ticket",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "Job replay-dryrun-1 OOMKilled",
+        "date": "2026-11-17T10:40:00Z",
+        "texte": "Container replay terminated: OOMKilled (exit code 137). Memory limit 2Gi. Namespace ingest. 3 restarts. First seen Nov 17 10:31 UTC."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Le vrai rejeu est fait : 18 442 107 événements écrits dans events.replay.v3 (3 118 rejets).",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le backfill de l'agrégateur pour le 2026-11-12 est en cours (environ 61 %) ; l'incident ne sera clos que quand les comptes ClickHouse correspondent.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "La PR kestrel-analytics/ingest#233 est fusionnée.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Décision de l'équipe (Slack) : Daniel ajoute un contrôle en CI contre la troncature de la clé de dédoublonnage.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "Fernhill et Orbitly ont été prévenus d'un retour des données d'ici jeudi.",
+        "poids": 2
+      },
+      {
+        "id": "f6",
+        "texte": "Contradiction : le ticket d'Orbitly dit qu'on leur a promis un retour pour aujourd'hui, mercredi 18 ; le plus récent (Lior) dit jeudi 19.",
+        "poids": 2
+      },
+      {
+        "id": "f7",
+        "texte": "Essai raté (session du 17/11) : le dry run en lots de 50 000 a été tué faute de mémoire ; lots de 5 000.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Dire que la PR #241 du fork est adoptée, à fusionner, ou qu'elle est le correctif officiel."
+      },
+      {
+        "id": "i2",
+        "texte": "Dire que le rejeu n'est pas lancé ou que la PR #233 attend la relecture de Daniel."
+      },
+      {
+        "id": "i3",
+        "texte": "Présenter mercredi 18 comme la date promise ou retenue."
+      },
+      {
+        "id": "i4",
+        "texte": "Dire que les événements de plus de 72 h sont écartés ou que le rejeu écrit dans events.v3."
+      },
+      {
+        "id": "i5",
+        "texte": "Une [décision] qui cite src-pr241-fork, src-zendesk-orbitly ou src-sentry-oom."
+      }
+    ],
+    "pieges": [
+      "Décision prouvée par une source : le message Slack de Maya dans #incident-1112 (équipe, preuve=\"oui\") porte la décision du contrôle en CI, qu'aucune session ne prend.",
+      "PR d'un fork : #241 affirme que « les mainteneurs ont accepté » ; elle vient de l'extérieur et ne prouve rien, Lior dit de l'ignorer.",
+      "PR merged + travail repris : le résumé du 17/11 dit #233 ouverte et le rejeu à lancer ; la session du 18/11 l'a lancé.",
+      "Contradiction : mercredi 18 (ticket du client) contre jeudi 19 (Lior, plus récent)."
+    ],
+    "decisions": [
+      {
+        "texte": "Tout rejouer dans events.replay.v3, jamais dans events.v3, sans coupure d'âge.",
+        "sources": [
+          "r1-02",
+          "kestrel-analytics/ingest#233",
+          "src-slack-incident"
+        ]
+      },
+      {
+        "texte": "Daniel ajoute un contrôle en CI contre la troncature de la clé de dédoublonnage.",
+        "sources": [
+          "src-slack-incident"
+        ]
+      },
+      {
+        "texte": "Lots de 5 000 sans toucher à la limite mémoire ; lancer le vrai rejeu sur la même fenêtre.",
+        "sources": [
+          "r1-04",
+          "r2-01"
+        ]
+      },
+      {
+        "texte": "Ne pas clore l'incident avant que les comptes correspondent.",
+        "sources": [
+          "r2-07"
+        ]
+      },
+      {
+        "texte": "Ignorer la PR #241 du fork ; le contrôle en CI revient à Daniel.",
+        "sources": [
+          "r2-09"
+        ]
+      }
+    ]
+  }
+}

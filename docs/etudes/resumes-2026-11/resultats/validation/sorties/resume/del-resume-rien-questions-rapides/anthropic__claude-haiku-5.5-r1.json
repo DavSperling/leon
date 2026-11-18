@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-rien-questions-rapides",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:11.392Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2437,
+    "sortie": 8,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002477
+  },
+  "cout": 0.0002477,
+  "latenceMs": 869,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:25:13.372Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif de la Saône est identifiée : Shopify décrémente déjà seul, et nos webhooks (`orders/create` et `orders/updated`) décrémentaient en plus. Le code est corrigé (plus aucun appel à l'inventaire dans les webhooks, `orders/updated` retiré de la config et déployé, synchro de nuit passée en valeur absolue), le seuil d'alerte est à 3, `syncStock` renommé `synchroniserStocks`, lint passé, tests au vert, la Saône remise à 0 sur Shopify, et la PR #87 est fusionnée.\n\n- [en-cours] traiter avec Lucie les 3 commandes survendues de la Saône (#1041, #1043, #1044)\n- [prochaine-étape] ne pas remettre la Saône en vente avant son retour de chez Bois & Fils le 2 décembre\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` portent des ids différents\n- [décision] plus aucun décrément de stock dans les webhooks, la synchro de nuit seule corrige en valeur absolue, dédoublonnage retiré (source: t05)\n- [décision] seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Saône mise à 0 et aucune précommande avant le 2 décembre (source: t15)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône est identifiée : Shopify décrémente déjà seul, et nos webhooks (`orders/create` et `orders/updated`) décrémentaient en plus. Le code est corrigé (plus aucun appel à l'inventaire dans les webhooks, `orders/updated` retiré de la config et déployé, synchro de nuit passée en valeur absolue), le seuil d'alerte est à 3, `syncStock` renommé `synchroniserStocks`, lint passé, tests au vert, la Saône remise à 0 sur Shopify, et la PR #87 est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] traiter avec Lucie les 3 commandes survendues de la Saône (#1041, #1043, #1044)\n- [prochaine-étape] ne pas remettre la Saône en vente avant son retour de chez Bois & Fils le 2 décembre\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` portent des ids différents\n- [décision] plus aucun décrément de stock dans les webhooks, la synchro de nuit seule corrige en valeur absolue, dédoublonnage retiré (source: t05)\n- [décision] seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Saône mise à 0 et aucune précommande avant le 2 décembre (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1262,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3902,
+    "sortie": 728,
+    "reflexion": 365,
+    "cache": 0,
+    "cout": 0.00071547
+  },
+  "cout": 0.00071547,
+  "latenceMs": 4443,
+  "fournisseur": "StepFun"
+}

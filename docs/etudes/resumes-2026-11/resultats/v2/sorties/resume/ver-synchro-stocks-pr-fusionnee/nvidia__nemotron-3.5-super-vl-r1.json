@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:25:26.941Z",
+  "reponse": "## Où j'en suis\n\nLa cause du stock négatif de la Saône est corrigée : Shopify décrémente déjà l'inventaire, les webhooks de commande n'y touchent plus, et la synchro de nuit écrit désormais la valeur absolue (`physique - reserve`) avec `inventorySetQuantities`. Le seuil d'alerte passe à 3, la Saône est remise à 0 sur Shopify sans précommande, et la PR maison-verdier/boutique#87 est mergée après déploiement de la config retirant `orders/updated`.\n\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044).\n- [essai-raté] `pnpm vitest run scripts/stock app/webhooks` a échoué deux fois : le décrément webhook s'ajoutait à celui de Shopify.\n- [décision] Retirer le décrément de stock des webhooks (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône avant le bon de livraison (source: t17)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône est corrigée : Shopify décrémente déjà l'inventaire, les webhooks de commande n'y touchent plus, et la synchro de nuit écrit désormais la valeur absolue (`physique - reserve`) avec `inventorySetQuantities`. Le seuil d'alerte passe à 3, la Saône est remise à 0 sur Shopify sans précommande, et la PR maison-verdier/boutique#87 est mergée après déploiement de la config retirant `orders/updated`.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044).\n- [essai-raté] `pnpm vitest run scripts/stock app/webhooks` a échoué deux fois : le décrément webhook s'ajoutait à celui de Shopify.\n- [décision] Retirer le décrément de stock des webhooks (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône avant le bon de livraison (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1022,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3973,
+    "sortie": 3574,
+    "reflexion": 3297,
+    "cache": 0,
+    "cout": 0.00227573
+  },
+  "cout": 0.00227573,
+  "latenceMs": 7311,
+  "fournisseur": "CoreWeave"
+}

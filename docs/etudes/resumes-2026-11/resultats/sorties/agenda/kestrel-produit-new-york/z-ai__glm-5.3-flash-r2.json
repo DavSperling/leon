@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:22.705Z",
+  "reponse": "{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Daniel Levi, Oliver Grant\"}\n{\"n\": 7, \"titre\": \"Customer interview – Orbitly\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 17, \"titre\": \"Café avec Lior\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 23, \"titre\": \"Dîner chez Lark & Lantern\", \"debut\": \"2026-11-19T19:30\", \"avec\": \"Jonah Reyes\"}\n{\"n\": 1, \"titre\": \"Fernhill dashboards review – prep\", \"debut\": \"2026-11-22T18:30\", \"fin\": \"2026-11-22T19:00\", \"avec\": \"Ethan Brooks\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Café avec Lior (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview – Orbitly (avec Ana Ruiz)\n2026-11-19T19:30 Dîner chez Lark & Lantern (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant)\n2026-11-22T18:30→2026-11-22T19:00 Fernhill dashboards review – prep (avec Ethan Brooks)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.714,
+    "f1": 0.769,
+    "faux": "2026-11-19T19:30 Dîner chez Lark & Lantern | 2026-11-22T18:30 Fernhill dashboards review – prep",
+    "manques": "2026-11-20T01:30 Dinner with Northfold Studio",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2931,
+    "sortie": 882,
+    "reflexion": 350,
+    "cache": 0,
+    "cout": 0.0001860957
+  },
+  "cout": 0.0001860957,
+  "latenceMs": 12338,
+  "fournisseur": "Relace"
+}

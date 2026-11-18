@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:07.990Z",
+  "reponse": "## Où j'en sommes\n\nLe script des soldes d'hiver est écrit, testé et appliqué avec succès sur la boutique de dev via une opération en masse, puis la branche a été poussée en PR ouverte. L'application en production est programmée, un CSV de prix a été exporté pour la newsletter, et il reste à écrire le script de retour aux prix d'origine.\n\n- [prochaine-étape] Écrire le script de retour aux prix d'origine pour la fin des soldes (décembre)\n- [prochaine-étape] Régénérer le CSV des prix pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (source: t05)\n- [décision] Prix arrondis à l'euro puis finissant par 9 (source: t07)\n- [décision] Écriture par opération en masse (bulk), pas d'appels unitaires (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 8h00, vérification sur dev la veille (source: t15)",
+  "rendu": "- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Écrire le script de retour aux prix d'origine pour la fin des soldes (décembre)\n- [prochaine-étape] Régénérer le CSV des prix pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, rien sur la Saône (source: t05)\n- [décision] Prix arrondis à l'euro puis finissant par 9 (source: t07)\n- [décision] Écriture par opération en masse (bulk), pas d'appels unitaires (source: t11)\n- [décision] Application le mercredi 13 janvier 2027 à 8h00, vérification sur dev la veille (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 719,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4317,
+    "sortie": 798,
+    "reflexion": 503,
+    "cache": 0,
+    "cout": 0.0011427
+  },
+  "cout": 0.0011427,
+  "latenceMs": 24567,
+  "fournisseur": "Makora"
+}

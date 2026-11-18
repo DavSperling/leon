@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:35:20.437Z",
+  "reponse": "## Ce que tu as fait\n- La grille de soldes de Sophie est automatisée : prix barré = prix actuel, prix remisé arrondi à l'euro inférieur le 6 janvier à 8 h, restauration automatique le 3 février depuis une sauvegarde, et 3 variantes déjà en promo laissées de côté. Dry-run prod : 212 variantes, 57 produits. PR #63 ouverte, Hugo en relecture. [1][4]\n- Le tag `soldes` automatique sur les produits remisés (retiré en fin de soldes) est fusionné : les collections de janvier sont prêtes. [7]\n\n## Ce qui a changé\n- Hugo a testé la PR sur la boutique de dev et a validé que les deux déclenchements fonctionnent. [4]\n- Le widget Zendesk sur les pages produit est fusionné et déjà utilisé par les clients (23 conversations ouvertes cette semaine). [3][9]\n- Dependabot propose un bump de `@shopify/shopify-api` de 11.4.0 à 11.6.1. [8]\n\n## Ce qui reste ouvert\n- La Saône ne doit pas être en soldes : Claire refuse, car rupture jusqu'à mi-janvier et précommandes au prix plein. Réponds à Hugo, qui pose la même question, et retire la Saône de la grille avant fusion. [4][10]\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 (shooting décalé au 2 décembre), pas seulement le 6 janvier : il faut avancer l'application ou faire une passe manuelle. [1][11]\n- Le flux Google Shopping doit être régénéré juste après l'application des prix, sinon les annonces sont refusées pour écart avec le site ; il ne tourne aujourd'hui qu'une fois par nuit. Sophie t'a tagging sur le ticket #65. [5]\n- La bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting. [6]\n- 7 lignes de la grille ne correspondent à aucun produit actif : Sophie doit nettoyer la grille. [1]",
+  "rendu": "## Ce que tu as fait\n- La grille de soldes de Sophie est automatisée : prix barré = prix actuel, prix remisé arrondi à l'euro inférieur le 6 janvier à 8 h, restauration automatique le 3 février depuis une sauvegarde, et 3 variantes déjà en promo laissées de côté. Dry-run prod : 212 variantes, 57 produits. PR #63 ouverte, Hugo en relecture. [1][4]\n- Le tag `soldes` automatique sur les produits remisés (retiré en fin de soldes) est fusionné : les collections de janvier sont prêtes. [7]\n\n## Ce qui a changé\n- Hugo a testé la PR sur la boutique de dev et a validé que les deux déclenchements fonctionnent. [4]\n- Le widget Zendesk sur les pages produit est fusionné et déjà utilisé par les clients (23 conversations ouvertes cette semaine). [3][9]\n- Dependabot propose un bump de `@shopify/shopify-api` de 11.4.0 à 11.6.1. [8]\n\n## Ce qui reste ouvert\n- La Saône ne doit pas être en soldes : Claire refuse, car rupture jusqu'à mi-janvier et précommandes au prix plein. Réponds à Hugo, qui pose la même question, et retire la Saône de la grille avant fusion. [4][10]\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30/11 (shooting décalé au 2 décembre), pas seulement le 6 janvier : il faut avancer l'application ou faire une passe manuelle. [1][11]\n- Le flux Google Shopping doit être régénéré juste après l'application des prix, sinon les annonces sont refusées pour écart avec le site ; il ne tourne aujourd'hui qu'une fois par nuit. Sophie t'a tagging sur le ticket #65. [5]\n- La bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting. [6]\n- 7 lignes de la grille ne correspondent à aucun produit actif : Sophie doit nettoyer la grille. [1]",
+  "mesures": {
+    "mots": 282,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4557,
+    "sortie": 1498,
+    "reflexion": 1050,
+    "cache": 1280,
+    "cout": 0.00140955
+  },
+  "cout": 0.00140955,
+  "latenceMs": 4478,
+  "fournisseur": "Inferact vLLM"
+}

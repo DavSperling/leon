@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:30.384Z",
+  "reponse": "La bascule de production vers PostgreSQL 17 est prévue le samedi 28 novembre, de 02:00 à 06:00 UTC [2][6]. Elle était d'abord fixée au 21 novembre [1][4]. Le changement est une PR encore ouverte, qui attend la relecture de Daniel Levi, et rien n'est appliqué pour l'instant [6]. Un e-mail client annonçait le 21 novembre [3], et les résultats ne confirment pas la mise à jour de l'avis client promise dans #infra [2].",
+  "rendu": "La bascule de production vers PostgreSQL 17 est prévue le samedi 28 novembre, de 02:00 à 06:00 UTC [2][6]. Elle était d'abord fixée au 21 novembre [1][4]. Le changement est une PR encore ouverte, qui attend la relecture de Daniel Levi, et rien n'est appliqué pour l'instant [6]. Un e-mail client annonçait le 21 novembre [3], et les résultats ne confirment pas la mise à jour de l'avis client promise dans #infra [2].",
+  "mesures": {
+    "mots": 73,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1662,
+    "sortie": 830,
+    "reflexion": 643,
+    "cache": 0,
+    "cout": 0.0005812
+  },
+  "cout": 0.0005812,
+  "latenceMs": 4360,
+  "fournisseur": "Claude Platform on AWS"
+}

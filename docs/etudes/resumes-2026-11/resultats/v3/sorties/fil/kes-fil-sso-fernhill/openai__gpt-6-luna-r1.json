@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:59:12.567Z",
+  "reponse": "## Où j'en suis\nReal SAML login with Fernhill’s IdP works on staging. JIT provisioning from merged PR #415 creates users with the `viewer` role; PR #421 is open with short RelayState storage and per-tenant group-to-role mapping. The full test suite passed (1,301 passed, 3 skipped). The Fernhill groups claim is still pending, ahead of the Thursday, Nov 19, 10:00 ET demo. (source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 is open; group mapping cannot be validated until Fernhill adds the `groups` claim. (source: ses-sso-3, kestrel-analytics/platform#421)\n- [prochaine-étape] Get Fernhill IT to add the groups claim; then verify the admin mapping and prepare an admin test account for the demo. (source: ses-sso-3, src-linear-kes311)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled; do not adopt the Slack request for `analyst` by default or IdP-initiated-only login. (source: s3-07)",
+  "rendu": "## Où j'en suis\nReal SAML login with Fernhill’s IdP works on staging. JIT provisioning from merged PR #415 creates users with the `viewer` role; PR #421 is open with short RelayState storage and per-tenant group-to-role mapping. The full test suite passed (1,301 passed, 3 skipped). The Fernhill groups claim is still pending, ahead of the Thursday, Nov 19, 10:00 ET demo. (de: équipe, connecteur, agent; source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 is open; group mapping cannot be validated until Fernhill adds the `groups` claim. (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#421)\n- [prochaine-étape] Get Fernhill IT to add the groups claim; then verify the admin mapping and prepare an admin test account for the demo. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled; do not adopt the Slack request for `analyst` by default or IdP-initiated-only login. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1078,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4453,
+    "sortie": 276,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00069455
+  },
+  "cout": 0.00069455,
+  "latenceMs": 3583,
+  "fournisseur": "Azure"
+}

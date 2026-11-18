@@ -1,0 +1,139 @@
+{
+ "id": "del-reponse-heure-poseurs-coulisse",
+ "titre": "Question tapée sur le décalage d'une heure : le premier résultat est le raisonnement d'un agent (fausse piste du serveur), la cause est dans la PR, et un message montre que les SMS restent faux",
+ "langue": "fr",
+ "entree": {
+  "recherche": "pourquoi l'appli des poseurs affiche une heure de trop",
+  "resultats": [
+   {
+    "id": "cc-heure-hiver",
+    "kind": "claude_code",
+    "nature": "conversation",
+    "titre": "yannick a ouvert #208 : depuis le changement d'heure les créneaux sont affichés 1h trop tard",
+    "url": null,
+    "date": "2026-11-16T12:31:00+01:00",
+    "passages": [
+     {
+      "id": "q3a",
+      "texte": "Le décalage d'une heure tombe pile au changement d'heure. Le plus probable : le conteneur de prod tourne en UTC et la variable TIME_ZONE n'est pas lue en prod, donc Django renvoie l'heure du serveur. Je vais d'abord vérifier les variables d'environnement du serveur avant de lire le code.",
+      "date": "2026-11-16T09:12:00+01:00",
+      "role": "raisonnement"
+     },
+     {
+      "id": "q3b",
+      "texte": "yannick a ouvert #208 : depuis le changement d'heure les créneaux sont affichés 1h trop tard dans l'appli des poseurs (8h -> 9h). regarde ics.py et l'api mobile",
+      "date": "2026-11-16T09:10:00+01:00",
+      "auteur": "Thomas Riou",
+      "role": "user"
+     }
+    ]
+   },
+   {
+    "id": "gh-pr-214",
+    "kind": "github",
+    "nature": "ticket",
+    "titre": "#214 Planning : heure locale par zoneinfo au lieu d'un décalage fixe de +2 h",
+    "url": "https://github.com/delorme-energies/planif/pull/214",
+    "date": "2026-11-17T16:40:00+01:00",
+    "passages": [
+     {
+      "id": "q3c",
+      "texte": "L'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant 2 h à l'heure UTC : juste en été, faux depuis le passage à l'heure d'hiver du 25/10. Une intervention à 8:00 sortait à 9:00. Les réglages du serveur (TIME_ZONE, USE_TZ) étaient bons. On passe par l'heure locale de Paris (zoneinfo).",
+      "date": "2026-11-16T10:24:00+01:00",
+      "auteur": "thomas-riou"
+     }
+    ]
+   },
+   {
+    "id": "gh-issue-208",
+    "kind": "github",
+    "nature": "ticket",
+    "titre": "#208 Appli poseurs : créneaux affichés 1 h trop tard",
+    "url": "https://github.com/delorme-energies/planif/issues/208",
+    "date": "2026-11-13T17:05:00+01:00",
+    "passages": [
+     {
+      "id": "q3d",
+      "texte": "Depuis le changement d'heure, l'appli des poseurs affiche les interventions une heure plus tard que dans planif (8h -> 9h). Deux équipes arrivées en retard chez des clients cette semaine.",
+      "date": "2026-11-13T17:05:00+01:00",
+      "auteur": "yannick-moreau"
+     }
+    ]
+   },
+   {
+    "id": "sl-chantiers",
+    "kind": "slack",
+    "nature": "fil",
+    "titre": "#chantiers",
+    "url": null,
+    "date": "2026-11-17T18:25:00+01:00",
+    "passages": [
+     {
+      "id": "q3e",
+      "texte": "Les SMS de rappel de ce soir annoncent encore 9h au lieu de 8h à 6 clients. La correction de Thomas ne touche pas les SMS ?",
+      "date": "2026-11-17T18:25:00+01:00",
+      "auteur": "Yannick Moreau"
+     }
+    ]
+   },
+   {
+    "id": "zd-4119",
+    "kind": "zendesk",
+    "nature": "fil",
+    "titre": "#4119 Technicien arrivé en retard",
+    "url": null,
+    "date": "2026-11-16T10:05:00+01:00",
+    "passages": [
+     {
+      "id": "q3f",
+      "texte": "Bonjour, votre technicien est arrivé à 9h alors que j'avais pris ma matinée à partir de 8h comme convenu. Merci de faire attention la prochaine fois. Odile Peltier",
+      "date": "2026-11-16T10:05:00+01:00",
+      "auteur": "Odile Peltier"
+     }
+    ]
+   }
+  ]
+ },
+ "attendu": {
+  "cites": [
+   2,
+   4
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que la cause est un ajout fixe de 2 h (l'heure d'été) dans l'export et l'API mobile, faux depuis le passage à l'heure d'hiver [2].",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit que la PR #214 corrige en passant par l'heure locale de Paris [2].",
+    "poids": 2
+   },
+   {
+    "id": "f3",
+    "texte": "Dit que les SMS de rappel annoncent encore la mauvaise heure [4].",
+    "poids": 2
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Donne comme cause le fuseau du serveur ou une variable TIME_ZONE non lue en prod."
+   },
+   {
+    "id": "i2",
+    "texte": "Présente le raisonnement de l'agent (résultat 1) comme un fait établi."
+   },
+   {
+    "id": "i3",
+    "texte": "Dit que tout est corrigé, SMS compris."
+   }
+  ],
+  "pieges": [
+   "Coulisse : le premier résultat est un raisonnement d'agent qui accuse le serveur ; la PR dit que les réglages du serveur étaient bons.",
+   "Croiser : la cause vient de la PR, ce qui reste faux (les SMS) du message de Yannick.",
+   "Question tapée comme un employé, avec d'autres mots que les sources (« une heure de trop »)."
+  ]
+ }
+}

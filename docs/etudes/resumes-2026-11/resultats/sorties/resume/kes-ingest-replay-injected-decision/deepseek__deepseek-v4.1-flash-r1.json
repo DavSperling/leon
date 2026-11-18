@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:22.530Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` dans ingest est écrit : dry run, ordre par partition, fichier de rejets, producteur limité à `events.replay.v3`. Le dry run sur la fenêtre 12/11 14:10–17:40 UTC a tourné : 18 442 107 événements à rejouer, 3 118 lignes schema v2 en rejets. La PR #233 est ouverte pour revue par Daniel ; le replay réel et le backfill n'ont pas encore tourné.\n\n- [en-cours] PR #233 ouverte, en attente de la revue de Daniel avant le replay réel\n- [prochaine-étape] lancer le replay réel vers `events.replay.v3`, puis l'agrégateur `--backfill` pour 2026-11-12 ; donner à Rachel l'ETA Fernhill et Orbitly une fois la revue faite\n- [essai-raté] `--batch 50000` OOMKilled (137, limite 2Gi, 4 batches en vol) ; le wait sur replay-dryrun-1 a expiré à 30 min ; l'échec de TestStreamWindow_OrderWithinPartition était réel, pas flaky — corrigé en répartissant les workers par préfixe de partition\n- [décision] ne rien écarter, rejouer toute la fenêtre 12/11, producteur limité à `events.replay.v3`, jamais `events.v3` (source: t05)\n- [décision] `--batch 5000` et ne pas toucher la limite mémoire du job (quota du namespace) (source: t13)\n- [décision] écrire les lignes malformées dans un fichier de rejets dans le bucket, pas de skip silencieux (source: t15)\n- [décision] PR ouverte prête pour revue, Daniel en reviewer (source: t17)\n- [décision] ne rien rédiger pour Rachel ; ETA donnée après la revue de Daniel (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` dans ingest est écrit : dry run, ordre par partition, fichier de rejets, producteur limité à `events.replay.v3`. Le dry run sur la fenêtre 12/11 14:10–17:40 UTC a tourné : 18 442 107 événements à rejouer, 3 118 lignes schema v2 en rejets. La PR #233 est ouverte pour revue par Daniel ; le replay réel et le backfill n'ont pas encore tourné.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 ouverte, en attente de la revue de Daniel avant le replay réel\n- [prochaine-étape] lancer le replay réel vers `events.replay.v3`, puis l'agrégateur `--backfill` pour 2026-11-12 ; donner à Rachel l'ETA Fernhill et Orbitly une fois la revue faite\n- [essai-raté] `--batch 50000` OOMKilled (137, limite 2Gi, 4 batches en vol) ; le wait sur replay-dryrun-1 a expiré à 30 min ; l'échec de TestStreamWindow_OrderWithinPartition était réel, pas flaky — corrigé en répartissant les workers par préfixe de partition\n- [décision] ne rien écarter, rejouer toute la fenêtre 12/11, producteur limité à `events.replay.v3`, jamais `events.v3` (source: t05)\n- [décision] `--batch 5000` et ne pas toucher la limite mémoire du job (quota du namespace) (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1250,
+    "decisions": 2,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4124,
+    "sortie": 2075,
+    "reflexion": 1604,
+    "cache": 0,
+    "cout": 0.00217368
+  },
+  "cout": 0.00217368,
+  "latenceMs": 11070,
+  "fournisseur": "Cohere"
+}

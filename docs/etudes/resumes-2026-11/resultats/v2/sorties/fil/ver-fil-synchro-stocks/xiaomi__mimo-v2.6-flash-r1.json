@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:29.050Z",
+  "reponse": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` porte la PR #87 (fusionnée : webhooks hors stock, synchro en valeur absolue) et la PR #96, ouverte et en attente de la relecture d'Hugo : reprises de synchro à 4 h et 6 h, alerte mail à Karim si le CSV TransAlp manque toujours à 6 h, fuseau `Europe/Paris` corrigé, 15 tests passent, commit `d7c2e41`. La synchro du 17/11 a été relancée à la main : 40 références corrigées, 0 erreur. (source: ses-st-3, u3-06, u3-08)\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (source: u3-08, u3-10)\n- [prochaine-étape] après relecture, fusionner la PR #96 (source: u3-10)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris → fuseau `Europe/Paris` fixé (source: u3-04)\n- [décision] rien n'est ajouté au script pour la réservation des 2 tables Saône des Galeries Brotteaux ; Claire voit cela avec eux (source: u3-09)\n- [décision] la synchro de nuit est le seul à corriger le stock, en valeur absolue, les webhooks ne y touchent plus (source: u1-02, src-pr87)",
+  "rendu": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` porte la PR #87 (fusionnée : webhooks hors stock, synchro en valeur absolue) et la PR #96, ouverte et en attente de la relecture d'Hugo : reprises de synchro à 4 h et 6 h, alerte mail à Karim si le CSV TransAlp manque toujours à 6 h, fuseau `Europe/Paris` corrigé, 15 tests passent, commit `d7c2e41`. La synchro du 17/11 a été relancée à la main : 40 références corrigées, 0 erreur. (de: agent; source: ses-st-3, u3-06, u3-08)\n\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (de: agent; source: u3-08, u3-10)\n- [prochaine-étape] après relecture, fusionner la PR #96 (de: agent; source: u3-10)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris → fuseau `Europe/Paris` fixé (de: agent; source: u3-04)\n- [décision] rien n'est ajouté au script pour la réservation des 2 tables Saône des Galeries Brotteaux ; Claire voit cela avec eux (de: toi; source: u3-09)\n- [décision] la synchro de nuit est le seul à corriger le stock, en valeur absolue, les webhooks ne y touchent plus (de: toi, équipe; source: u1-02, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1119,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4754,
+    "sortie": 407,
+    "reflexion": 9,
+    "cache": 0,
+    "cout": 0.00077952
+  },
+  "cout": 0.00077952,
+  "latenceMs": 6396,
+  "fournisseur": "Xiaomi"
+}

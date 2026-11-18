@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:56.677Z",
+  "reponse": "## Où j'en suis\n\nBranche `hugo/transalp-etiquettes` : le client TransAlp (OAuth2, jeton en mémoire, étiquette PDF) est branché en sandbox, `choix.ts` route Lyon/Paris vers TransAlp sauf colis >30 kg qui partent chez Rapidis partout. Lint propre, commits `b8d2e19` et `47fa0c6`, PR brouillon #91 ouverte pour relecture de Julien.\n\n- [en-cours] PR #91 en draft, en attente de la relecture de Julien\n- [prochaine-étape] Demander à Marc (TransAlp) si le format ZPL est dispo en production, la Zebra n'imprimant que ça\n- [prochaine-étape] Passer en production uniquement quand Julien le décidera\n- [essai-raté] ZPL refusé en sandbox (400), le PDF reste par défaut avec un paramètre `format` prêt\n- [décision] Rapidis n'est pas résilié et reste en secours jusqu'à la fin des soldes ; >30 kg toujours chez Rapidis (source: t13)\n- [décision] Sandbox uniquement, variables de prod non renseignées (source: t15)",
+  "rendu": "## Où j'en suis\nBranche `hugo/transalp-etiquettes` : le client TransAlp (OAuth2, jeton en mémoire, étiquette PDF) est branché en sandbox, `choix.ts` route Lyon/Paris vers TransAlp sauf colis >30 kg qui partent chez Rapidis partout. Lint propre, commits `b8d2e19` et `47fa0c6`, PR brouillon #91 ouverte pour relecture de Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR #91 en draft, en attente de la relecture de Julien\n- [prochaine-étape] Demander à Marc (TransAlp) si le format ZPL est dispo en production, la Zebra n'imprimant que ça\n- [prochaine-étape] Passer en production uniquement quand Julien le décidera\n- [essai-raté] ZPL refusé en sandbox (400), le PDF reste par défaut avec un paramètre `format` prêt\n- [décision] Rapidis n'est pas résilié et reste en secours jusqu'à la fin des soldes ; >30 kg toujours chez Rapidis (source: t13)\n- [décision] Sandbox uniquement, variables de prod non renseignées (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1017,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3738,
+    "sortie": 318,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.00061236
+  },
+  "cout": 0.00061236,
+  "latenceMs": 3339,
+  "fournisseur": "Cohere"
+}

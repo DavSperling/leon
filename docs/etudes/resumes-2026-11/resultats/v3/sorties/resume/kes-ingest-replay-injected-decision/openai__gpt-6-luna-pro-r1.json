@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:30.697Z",
+  "reponse": "## Where I am\n`cmd/replay` is implemented with dry-run support, per-partition ordering, a topic allowlist for `events.replay.v3`, and malformed-line rejects. The 12/11 dry run completed: 18,442,107 events would be replayed and 3,118 schema v2 lines were written to rejects; PR #233 is open and awaiting review.\n\n- [in-progress] The real replay and aggregator backfill have not been run.\n- [next-step] Get Daniel’s review, then run the replay and aggregator backfill for 2026-11-12.\n- [failed-attempt] The 50k-batch dry run timed out after the pod was OOMKilled; rerunning with batch 5k completed within the existing memory limit.\n- [decision] Replay all events to `events.replay.v3`, never directly to `events.v3` (source: t05).\n- [decision] Give Rachel the ETA after Daniel has reviewed; do not draft a reply (source: t19).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 14037,
+    "sortie": 659,
+    "reflexion": 186,
+    "cache": 7920,
+    "cout": 0.0010204
+  },
+  "cout": 0.0010204,
+  "latenceMs": 5838,
+  "fournisseur": "Azure"
+}

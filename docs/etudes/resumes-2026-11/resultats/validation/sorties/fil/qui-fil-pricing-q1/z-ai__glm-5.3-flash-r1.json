@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:24.972Z",
+  "reponse": "## Où j'en suis\nThe Q1 2027 tiered pricing work is ready for Gil's review on Friday Nov 20 at 10am Austin (with Rachel): exceptions are locked in `model/exceptions.csv`, the per-customer impact reruns at +$351k annualized with 5 customers above +10% on Jan 1 (down from +$412k / 7 without exceptions), and the customer notice `notice/q1-pricing-notice.md` covers only the tiered rate and the unchanged $0.25 fee — the instant-payout line was removed pending Hartley & Moss's MSA reading due Monday. 38 notices are planned (36 standard, Loomly + Pinecrest Rentals variant), to be sent from Salesforce before Dec 1; nothing has been sent. (source: ses-px-3, p3-09, p3-10, src-slack-gil)\n\n- [en-cours] Notice draft awaiting Gil's Friday review with Rachel, then Salesforce send to the 38 billing contacts before Dec 1 (source: p3-09, p3-10, src-slack-gil)\n- [prochaine-étape] After Gil's review: send notices from Salesforce by Dec 1; Rachel calls Loomly before the notice lands (source: p3-01, p3-09, p3-10)\n- [prochaine-étape] Hartley & Moss answer Monday on whether the +1% instant payout surcharge can apply to existing contracts under the MSA; only then does anything about instant payouts go out (source: p3-05, p2-05)\n- [essai-raté] The Salesforce export (`model/volumes_oct.csv`) had no October volume for 5 customers (KeyError on Pinecrest Rentals); the dashboard billing CSV (`billing_2026-10.csv`) was used for everyone instead (source: p2-02, p2-03)\n- [question] Loomly's CFO Nadia Brennan wrote that Loomly stays on the current 0.50% + $0.25 rate \"for the whole of 2027\", while the agreed exception runs only to March 31 2027 with new tiers from April 1 — the gap needs reconciling before the notice lands (source: src-mail-loomly, p3-01)\n- [question] Whether the +1% instant payout surcharge can be applied to existing contracts under the MSA (source: p2-05, p3-05)\n- [décision] Tiered pricing over flat: tiers at 0.55% under $5M monthly payout volume, 0.45% from $5M to $25M, 0.35% above, $0.25 per payout unchanged (source: p2-03, p1-05)\n- [décision] Exceptions per Rachel's and the user's Nov 18 call notes: Loomly and Pinecrest Rentals keep 0.50% + $0.25 until March 31 2027 then move to tiers; Tradewell excluded (contract fixes pricing 12 months from go-live); everyone else on new tiers Jan 1 (source: p3-01)",
+  "rendu": "## Où j'en suis\nThe Q1 2027 tiered pricing work is ready for Gil's review on Friday Nov 20 at 10am Austin (with Rachel): exceptions are locked in `model/exceptions.csv`, the per-customer impact reruns at +$351k annualized with 5 customers above +10% on Jan 1 (down from +$412k / 7 without exceptions), and the customer notice `notice/q1-pricing-notice.md` covers only the tiered rate and the unchanged $0.25 fee — the instant-payout line was removed pending Hartley & Moss's MSA reading due Monday. 38 notices are planned (36 standard, Loomly + Pinecrest Rentals variant), to be sent from Salesforce before Dec 1; nothing has been sent. (de: toi, connecteur, agent; source: ses-px-3, p3-09, p3-10, src-slack-gil)\n\n- [en-cours] Notice draft awaiting Gil's Friday review with Rachel, then Salesforce send to the 38 billing contacts before Dec 1 (de: toi, connecteur, agent; source: p3-09, p3-10, src-slack-gil)\n- [prochaine-étape] After Gil's review: send notices from Salesforce by Dec 1; Rachel calls Loomly before the notice lands (de: toi, agent; source: p3-01, p3-09, p3-10)\n- [prochaine-étape] Hartley & Moss answer Monday on whether the +1% instant payout surcharge can apply to existing contracts under the MSA; only then does anything about instant payouts go out (de: toi; source: p3-05, p2-05)\n- [essai-raté] The Salesforce export (`model/volumes_oct.csv`) had no October volume for 5 customers (KeyError on Pinecrest Rentals); the dashboard billing CSV (`billing_2026-10.csv`) was used for everyone instead (de: toi, agent; source: p2-02, p2-03)\n- [question] Loomly's CFO Nadia Brennan wrote that Loomly stays on the current 0.50% + $0.25 rate \"for the whole of 2027\", while the agreed exception runs only to March 31 2027 with new tiers from April 1 — the gap needs reconciling before the notice lands (de: toi, connecteur; source: src-mail-loomly, p3-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1866,
+    "lignesRetirees": 3,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4586,
+    "sortie": 787,
+    "reflexion": 101,
+    "cache": 0,
+    "cout": 0.00086512
+  },
+  "cout": 0.00086512,
+  "latenceMs": 8793,
+  "fournisseur": "River"
+}

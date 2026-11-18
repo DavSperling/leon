@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:26.444Z",
+  "reponse": "I don't know — there's no agreed per-payout price from Corvane for next year in what I found.\n\nWhat I can say: Corvane bills us a **per-item ACH fee**, not a per-payout one, and the Q1 2027 pricing memo assumes it \"stays at $0.08 in 2027\" (the current agreement runs to March 31, 2027) [2]. That's an internal assumption, not a quote from Corvane.\n\nThe renewal is still open: the call with our RM Paula Brandt slipped to the week of Nov 23, she \"hinted they want to raise the per-item fee after the Nov 10 reject mess\", and there's \"nothing on paper yet\" [8]. The memo only sets a threshold: if the fee goes above $0.10, the bottom tier gets revisited [2]. For context, October's Corvane invoice was $14,212.40 on 177,655 ACH items [13].\n\nI searched for \"Corvane\" and \"Corvane per payout pricing next year\", and read the Q1 2027 pricing memo and the #finance thread. If a number comes out of the renewal call, it probably lands in #finance or in Marcus's renewal notes — not here yet.",
+  "rendu": "I don't know — there's no agreed per-payout price from Corvane for next year in what I found.\n\nWhat I can say: Corvane bills us a **per-item ACH fee**, not a per-payout one, and the Q1 2027 pricing memo assumes it \"stays at $0.08 in 2027\" (the current agreement runs to March 31, 2027) [2]. That's an internal assumption, not a quote from Corvane.\n\nThe renewal is still open: the call with our RM Paula Brandt slipped to the week of Nov 23, she \"hinted they want to raise the per-item fee after the Nov 10 reject mess\", and there's \"nothing on paper yet\" [8]. The memo only sets a threshold: if the fee goes above $0.10, the bottom tier gets revisited [2]. For context, October's Corvane invoice was $14,212.40 on 177,655 ACH items [13].\n\nI searched for \"Corvane\" and \"Corvane per payout pricing next year\", and read the Q1 2027 pricing memo and the #finance thread. If a number comes out of the renewal call, it probably lands in #finance or in Marcus's renewal notes — not here yet.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 14553,
+    "sortie": 626,
+    "reflexion": 186,
+    "cache": 4992,
+    "cout": 0.003558834
+  },
+  "latenceMs": 4458,
+  "fournisseur": "Crusoe",
+  "trace": [
+    "chercher {\"requete\":\"Corvane per payout pricing next year\"}",
+    "chercher {\"requete\":\"Corvane\"}",
+    "lire {\"passageId\":\"drive-q1-pricing-memo-1\"}",
+    "lire {\"passageId\":\"slack-finance-corvane-1\"}"
+  ],
+  "cout": 0.003558834
+}

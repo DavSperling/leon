@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:31:29.798Z",
+  "reponse": "{\"n\": 6, \"titre\": \"Point tunnel de commande\", \"debut\": \"2026-11-16T16:00\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 15, \"titre\": \"Point bug de synchro\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 5, \"titre\": \"Webhook duplicates debugging session\", \"debut\": \"2026-11-18T18:00\", \"fin\": \"2026-11-18T19:00\", \"avec\": \"Ryan Okafor\"}",
+  "rendu": "2026-11-16T16:00 Point tunnel de commande (avec Mélanie Roche)\n2026-11-17T10:00 Point bug de synchro (avec Hugo Petit)\n2026-11-18T18:00→2026-11-18T19:00 Webhook duplicates debugging session (avec Ryan Okafor)",
+  "mesures": {
+    "trouves": 3,
+    "attendus": 4,
+    "justes": 2,
+    "rappel": 0.5,
+    "precision": 0.667,
+    "f1": 0.571,
+    "faux": "2026-11-16T16:00 Point tunnel de commande",
+    "manques": "2026-11-17T16:00 Point tunnel de commande – Studio Canut | 2026-11-17 Visite de suivi de l'alternance d'Hugo Petit",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3178,
+    "sortie": 160,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0013534
+  },
+  "cout": 0.0013534,
+  "latenceMs": 1247,
+  "fournisseur": "Google"
+}

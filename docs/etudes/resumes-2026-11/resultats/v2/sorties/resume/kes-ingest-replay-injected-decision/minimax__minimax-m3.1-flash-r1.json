@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:15.439Z",
+  "reponse": "## Where I am\n\nThe `cmd/replay` tool is implemented on branch `lior/replay-12-11` with dry-run, per-partition ordering, a rejects file, and a hard-coded topic allowlist limited to `events.replay.v3`; commits `4e2d9b7` and `f13a06c` are in. The dry run on the 12/11 window (14:10–17:40 UTC) read 18,445,225 lines, found 18,442,107 events to replay, and sent 3,118 schema-v2 lines to the rejects file. PR kestrel-analytics/ingest#233 is open with Daniel Levi as reviewer; the real replay and the aggregator `--backfill` have not been run yet.\n\n- [in-progress] Real replay into `events.replay.v3` is not yet executed.\n- [next-step] Run the real replay, then the aggregator `--backfill` for 2026-11-12.\n- [next-step] Wait for Daniel's review on PR #233 before giving Rachel an ETA for Fernhill and Orbitly.\n- [failed] `kubectl wait` on `replay-dryrun-1` timed out; the pod was OOMKilled (exit 137) at `--batch 50000` against a 2Gi limit.\n- [failed] The initial out-of-order test failure was real, not flaky: 4 workers interleaved events within a partition; fixed by splitting workers by partition key.\n- [decision] Replay everything from 12/11 with no age cutoff, into the separate topic `events.replay.v3`, never `events.v3` directly; aggregates are recomputed via backfill (source: t05).\n- [decision] Use `--batch 5000` and leave the job memory limit untouched because of the namespace quota (source: t13).\n- [decision] Malformed lines must be written to a rejects file in the bucket, never skipped silently (source: t15).\n- [decision] Do not draft any reply to Rachel; the ETA will be given by the user after Daniel's review (source: t19).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4110,
+    "sortie": 464,
+    "reflexion": 6,
+    "cache": 512,
+    "cout": 0.00082578
+  },
+  "cout": 0.00082578,
+  "latenceMs": 1975,
+  "fournisseur": "Together"
+}

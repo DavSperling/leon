@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:42.246Z",
+  "reponse": "Thursday Nov 12, 08:47–12:27 UTC (3h40), a SEV2: customer dashboards showed stale data [1].\n\n**What broke:** deploy of ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the 512 Mi memory limit, ingest-worker pods OOM'd on the first large batch and crash-looped — and the change went to all pods at once [1]. Detection was slow: no consumer-lag alert, first signal was a Sentry OOM alert at 09:14, 27 min after deploy [1]. Rolled back to v2.13.3 at 10:05, lag drained by 12:27 [1].\n\n**Customer data:** none lost. Events kept arriving in Kafka and were processed late; Lior's reconciliation on Nov 13 confirmed per-workspace event counts match Kafka offsets for 08:00–13:00 UTC [1][4]. All workspaces had delayed dashboards; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts) [1].\n\n**Changes so it doesn't happen again:**\n- KES-431: page the on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20) [1]\n- KES-432: ingest config changes go to the canary pool first (Daniel, due Nov 27) [1]\n- KES-433: raise worker memory to 1 Gi + load test on batch sizes (Lior, due Nov 27) [1]\n- Merged Nov 13: ingest#419 reverted the default to 1 MB and added a guard refusing batches >25% of the container memory limit [8]\n\nNote: Orbitly has claimed an SLA service credit under section 7 of their MSA, with Sam handling it in the renewal [3][7].",
+  "rendu": "Thursday Nov 12, 08:47–12:27 UTC (3h40), a SEV2: customer dashboards showed stale data [1].\n\n**What broke:** deploy of ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the 512 Mi memory limit, ingest-worker pods OOM'd on the first large batch and crash-looped — and the change went to all pods at once [1]. Detection was slow: no consumer-lag alert, first signal was a Sentry OOM alert at 09:14, 27 min after deploy [1]. Rolled back to v2.13.3 at 10:05, lag drained by 12:27 [1].\n\n**Customer data:** none lost. Events kept arriving in Kafka and were processed late; Lior's reconciliation on Nov 13 confirmed per-workspace event counts match Kafka offsets for 08:00–13:00 UTC [1][4]. All workspaces had delayed dashboards; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts) [1].\n\n**Changes so it doesn't happen again:**\n- KES-431: page the on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20) [1]\n- KES-432: ingest config changes go to the canary pool first (Daniel, due Nov 27) [1]\n- KES-433: raise worker memory to 1 Gi + load test on batch sizes (Lior, due Nov 27) [1]\n- Merged Nov 13: ingest#419 reverted the default to 1 MB and added a guard refusing batches >25% of the container memory limit [8]\n\nNote: Orbitly has claimed an SLA service credit under section 7 of their MSA, with Sam handling it in the renewal [3][7].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14382,
+    "sortie": 663,
+    "reflexion": 115,
+    "cache": 7296,
+    "cout": 0.0011981087999999999
+  },
+  "latenceMs": 31248,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident breakage data loss\"}",
+    "chercher {\"requete\":\"\\\"event pipeline\\\" outage Thursday\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.0011981087999999999
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:10.199Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet. She was strong on system design (3.5/4) and moved to the final round with Maya Cohen [3], and the team agreed to wait until after the finals before discussing numbers [4]. She only said she expects something \"competitive with big tech,\" without giving a figure [4]. The relevant band for the Senior SRE (L5) role is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet. She was strong on system design (3.5/4) and moved to the final round with Maya Cohen [3], and the team agreed to wait until after the finals before discussing numbers [4]. She only said she expects something \"competitive with big tech,\" without giving a figure [4]. The relevant band for the Senior SRE (L5) role is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "mesures": {
+    "mots": 77,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 998,
+    "sortie": 112,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002057
+  },
+  "cout": 0.0002057,
+  "latenceMs": 1413,
+  "fournisseur": "Friendli"
+}

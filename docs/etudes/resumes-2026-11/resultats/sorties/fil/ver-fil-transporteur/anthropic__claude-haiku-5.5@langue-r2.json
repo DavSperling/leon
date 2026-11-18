@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:40:51.099Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp est en place sur `hugo/transalp-etiquettes`. La PR #91 est poussée et reste en brouillon. Les étiquettes sortent en ZPL par défaut, avec l'encodage corrigé (`^CI28`), et Karim confirme l'impression. TransAlp ne sera choisi pour Lyon et Paris qu'à partir de `TRANSALP_DEBUT` (1er décembre). La clé de production n'est pas encore en place. (source: ses-tr-2, maison-verdier/boutique#91, 3e8b1d0, a90c4f7)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien. (source: maison-verdier/boutique#91, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets. Rien ne s'active avant le 1er décembre. (source: h2-07)\n- [prochaine-étape] Après la relecture de Julien, sortir la PR du brouillon. (source: src-pr91)\n- [essai-raté] Clé envoyée dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2. (source: ses-tr-1)\n- [essai-raté] ZPL sans `^CI28` : accents en bouillie à l'impression, corrigé en insérant `^CI28`. (source: h2-03, h2-04)\n- [essai-raté] Le ZPL n'est pas disponible en sandbox, seulement en recette et en production. (source: h2-01, ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, pas le 23 novembre. (source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. Rien n'est résilié et aucun tarif Premium n'est retenu. (source: src-slack-julien, h2-09)\n- [décision] Rapidis reste en secours et prend tout colis de plus de 30 kg, y compris à Lyon et Paris. (source: h1-03)\n- [question] Que devient Rapidis après le 15 janvier ? Le point est prévu après les soldes. (source: src-slack-julien)",
+  "rendu": "## Où j'en suis\nLe client TransAlp est en place sur `hugo/transalp-etiquettes`. La PR #91 est poussée et reste en brouillon. Les étiquettes sortent en ZPL par défaut, avec l'encodage corrigé (`^CI28`), et Karim confirme l'impression. TransAlp ne sera choisi pour Lyon et Paris qu'à partir de `TRANSALP_DEBUT` (1er décembre). La clé de production n'est pas encore en place. (de: équipe, agent; source: ses-tr-2, maison-verdier/boutique#91, 3e8b1d0, a90c4f7)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien. (de: équipe; source: maison-verdier/boutique#91, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets. Rien ne s'active avant le 1er décembre. (de: toi; source: h2-07)\n- [prochaine-étape] Après la relecture de Julien, sortir la PR du brouillon. (de: équipe; source: src-pr91)\n- [essai-raté] Clé envoyée dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2. (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL sans `^CI28` : accents en bouillie à l'impression, corrigé en insérant `^CI28`. (de: toi, agent; source: h2-03, h2-04)\n- [essai-raté] Le ZPL n'est pas disponible en sandbox, seulement en recette et en production. (de: toi, agent; source: h2-01, ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, pas le 23 novembre. (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. Rien n'est résilié et aucun tarif Premium n'est retenu. (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] Rapidis reste en secours et prend tout colis de plus de 30 kg, y compris à Lyon et Paris. (de: toi; source: h1-03)\n- [question] Que devient Rapidis après le 15 janvier ? Le point est prévu après les soldes. (de: connecteur; source: src-slack-julien)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1837,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5417,
+    "sortie": 3005,
+    "reflexion": 2215,
+    "cache": 0,
+    "cout": 0.0020442
+  },
+  "cout": 0.0020442,
+  "latenceMs": 13320,
+  "fournisseur": "Claude Platform on AWS"
+}

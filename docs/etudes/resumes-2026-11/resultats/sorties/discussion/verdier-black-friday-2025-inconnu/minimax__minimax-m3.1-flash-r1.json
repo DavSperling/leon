@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:24.001Z",
+  "reponse": "Je n'ai pas le chiffre exact : les rapports Shopify 2025 ont disparu au changement d'abonnement et personne n'a encore retrouvé le nombre de commandes [1]. Antoine (compta) doit recouper les relevés Shopify Payments et les ventes revendeurs, et a promis d'envoyer CA + nombre de commandes d'ici le 25 novembre [2].\n\nCe qu'on sait pour le service client :\n- Karim estime qu'on avait « à peu près doublé les commandes sur la semaine » l'an dernier, sans chiffre précis [4].\n- L'équipe SAV avait été débordée : des tickets restaient 4 jours sans réponse [4].\n- Cette année, le SAV est renforcé à 3 personnes (Lucie, Inès, et Karim l'après-midi) [4].\n\nPoint d'attention pour l.anticipation : l'objectif 2026 est +20 % de CA vs Black Friday 2025, pas +20 % de commandes [5]. Le facteur de charge du SAV dépendra surtout des commandes Saône en précommande (23 à date, avec expéditions échelonnées), qui génèrent mécaniquement des tickets de retard [8][9].",
+  "rendu": "Je n'ai pas le chiffre exact : les rapports Shopify 2025 ont disparu au changement d'abonnement et personne n'a encore retrouvé le nombre de commandes [1]. Antoine (compta) doit recouper les relevés Shopify Payments et les ventes revendeurs, et a promis d'envoyer CA + nombre de commandes d'ici le 25 novembre [2].\n\nCe qu'on sait pour le service client :\n- Karim estime qu'on avait « à peu près doublé les commandes sur la semaine » l'an dernier, sans chiffre précis [4].\n- L'équipe SAV avait été débordée : des tickets restaient 4 jours sans réponse [4].\n- Cette année, le SAV est renforcé à 3 personnes (Lucie, Inès, et Karim l'après-midi) [4].\n\nPoint d'attention pour l.anticipation : l'objectif 2026 est +20 % de CA vs Black Friday 2025, pas +20 % de commandes [5]. Le facteur de charge du SAV dépendra surtout des commandes Saône en précommande (23 à date, avec expéditions échelonnées), qui génèrent mécaniquement des tickets de retard [8][9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23638,
+    "sortie": 687,
+    "reflexion": 243,
+    "cache": 13312,
+    "cout": 0.00216078
+  },
+  "latenceMs": 6196,
+  "fournisseur": "ModelRun",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday nombre de commandes\"}",
+    "chercher {\"requete\":\"Black Friday support client volume commandes\"}",
+    "lire {\"sourceId\":\"slack-sav-renfort-bf\"}",
+    "lire {\"sourceId\":\"outlook-antoine-chiffres-bf-2025\"}",
+    "lire {\"sourceId\":\"tldv-point-marketing-1110\"}",
+    "chercher {\"requete\":\"commandes Shopify semaine Black Friday 2025 nombre commandes novembre\"}",
+    "chercher {\"requete\":\"\\\"nombre de commandes\\\" 2025 Black Friday chiffre orders\"}"
+  ],
+  "cout": 0.00216078
+}

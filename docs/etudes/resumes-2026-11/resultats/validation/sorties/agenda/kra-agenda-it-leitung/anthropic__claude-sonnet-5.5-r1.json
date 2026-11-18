@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kra-agenda-it-leitung",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:25.373Z",
+  "reponse": "Période : 16 au 22 novembre 2026.\n\nAnalyse :\n- Mail 1 : déjeuner le 18.11 à 12:15 avec Jonas Hartmann et Can. Retenu.\n- Mail 2 : Pfeiffer déplacé au 23.11, hors période. Préparation avec Mme Kranich le vendredi 20.11, 14:00-15:00. Retenu.\n- Mail 3 : livraison, exclue. Mail 4 : webinaire, exclu. Mail 5 : traitement technique, pas un rendez-vous.\n- Mail 6 : jour fixe annulé, exclu.\n- Mail 7 : l'appel avec Rainer Kolb est déplacé au 17.11 à 13:30, durée 30 minutes, donc fin 14:00.\n- Mail 8 : roundtable promotionnel, exclu (événement).\n- Mails 9 et 11 : entretien avec Daniel Okafor le 16.11 à 11:00, durée environ une heure. Rendu une seule fois, sur le mail 11 (ou 9). Je prends le mail 11.\n- Mail 10 : hors période.\n- Mail 12 : le 19.11 Pfeiffer est annulé et déplacé au 23.11, hors période.\n- Mail 13 : démo le 18.11 à 10:00 heure de New York, soit 16:00 à Paris, 45 minutes, fin 16:45.\n- Mail 14 : audit les 24 et 25.11, hors période.\n- Mail 16 : réunion du 19.11 de 14:00 à 15:30. Retenu.\n\n{\"n\": 1, \"titre\": \"Mittagessen beim Italiener\", \"debut\": \"2026-11-18T12:15\", \"avec\": \"Jonas Hartmann, Can\"}\n{\"n\": 2, \"titre\": \"Vorbereitung Pfeiffer-Gespräch\", \"debut\": \"2026-11-20T14:00\", \"fin\": \"2026-11-20T15:00\", \"avec\": \"Sabine Kranich\"}\n{\"n\": 7, \"titre\": \"Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD\", \"debut\": \"2026-11-17T13:30\", \"fin\": \"2026-11-17T14:00\", \"avec\": \"Rainer Kolb\"}\n{\"n\": 11, \"titre\": \"Vorstellungsgespräch Java-Entwickler\", \"debut\": \"2026-11-16T11:00\", \"fin\": \"2026-11-16T12:00\", \"avec\": \"Daniel Okafor, Jonas Hartmann, Lena Roth\"}\n{\"n\": 13, \"titre\": \"Demo Ironbridge SAP Connector\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:45\", \"avec\": \"Megan Fairfax, Raj Patel\"}\n{\"n\": 16, \"titre\": \"ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:30\", \"avec\": \"Anja Lindner, Jonas Hartmann\"}",
+  "rendu": "2026-11-16T11:00→2026-11-16T12:00 Vorstellungsgespräch Java-Entwickler (avec Daniel Okafor, Jonas Hartmann, Lena Roth)\n2026-11-17T13:30→2026-11-17T14:00 Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD (avec Rainer Kolb)\n2026-11-18T12:15 Mittagessen beim Italiener (avec Jonas Hartmann, Can)\n2026-11-18T16:00→2026-11-18T16:45 Demo Ironbridge SAP Connector (avec Megan Fairfax, Raj Patel)\n2026-11-19T14:00→2026-11-19T15:30 ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse (avec Anja Lindner, Jonas Hartmann)\n2026-11-20T14:00→2026-11-20T15:00 Vorbereitung Pfeiffer-Gespräch (avec Sabine Kranich)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4314,
+    "sortie": 1065,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019278
+  },
+  "cout": 0.019278,
+  "latenceMs": 6558,
+  "fournisseur": "Amazon Bedrock"
+}

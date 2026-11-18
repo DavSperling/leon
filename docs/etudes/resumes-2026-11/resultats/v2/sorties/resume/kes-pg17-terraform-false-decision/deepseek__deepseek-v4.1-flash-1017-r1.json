@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:22:35.602Z",
+  "reponse": "## Où j'en suis\nThe pg17 blue/green Terraform work for the analytics RDS is done for staging: parameter group family derived from the major version, `blue_green_update` on the instance, staging moved to 17.2, prod prepared behind `pg17_enabled = false`. AWS provider pinned to `~> 5.82.0`, tflint clean, plan-only (staging: 1 to add, 1 to change; prod: no changes), and draft PR #57 is open with the pg_partman and dbt-lock caveats in the description. Nothing has been applied to any database.\n\n- [en-cours] Draft PR #57 (kestrel-analytics/infra) on branch `noa/rds-pg17`, awaiting review\n- [prochaine-étape] On staging 16.4, run `ALTER EXTENSION pg_partman UPDATE TO '5.1.0'` and check `run_maintenance_proc()` on `events_raw` / `events_daily` before any switchover\n- [prochaine-étape] Get Maya's sign-off, then pick a prod window outside the 01:00–03:30 UTC dbt lock on `events_daily` (candidates: Sat or Sun 04:00–06:00 UTC)\n- [essai-raté] `terraform init -upgrade` pulled provider v6, whose breaking changes (S3 ACL, `aws_eip.vpc`) exploded the plan to 37 changes; reverted to 5.82\n- [décision] AWS provider stays pinned to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade is a separate todo, nothing run against the DB (source: t10)\n- [décision] No prod date and `apply_immediately = false` until Maya signs off (source: t14)",
+  "rendu": "## Où j'en suis\nThe pg17 blue/green Terraform work for the analytics RDS is done for staging: parameter group family derived from the major version, `blue_green_update` on the instance, staging moved to 17.2, prod prepared behind `pg17_enabled = false`. AWS provider pinned to `~> 5.82.0`, tflint clean, plan-only (staging: 1 to add, 1 to change; prod: no changes), and draft PR #57 is open with the pg_partman and dbt-lock caveats in the description. Nothing has been applied to any database.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR #57 (kestrel-analytics/infra) on branch `noa/rds-pg17`, awaiting review\n- [prochaine-étape] On staging 16.4, run `ALTER EXTENSION pg_partman UPDATE TO '5.1.0'` and check `run_maintenance_proc()` on `events_raw` / `events_daily` before any switchover\n- [prochaine-étape] Get Maya's sign-off, then pick a prod window outside the 01:00–03:30 UTC dbt lock on `events_daily` (candidates: Sat or Sun 04:00–06:00 UTC)\n- [essai-raté] `terraform init -upgrade` pulled provider v6, whose breaking changes (S3 ACL, `aws_eip.vpc`) exploded the plan to 37 changes; reverted to 5.82\n- [décision] AWS provider stays pinned to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade is a separate todo, nothing run against the DB (source: t10)\n- [décision] No prod date and `apply_immediately = false` until Maya signs off (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1483,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4023,
+    "sortie": 653,
+    "reflexion": 230,
+    "cache": 0,
+    "cout": 0.00124969
+  },
+  "cout": 0.00124969,
+  "latenceMs": 3645,
+  "fournisseur": "Ionstream"
+}

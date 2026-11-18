@@ -1,5 +1,6 @@
 import type { SessionFacts } from '@/capture/session-facts';
 import type { TurnRole } from '@/capture/turn';
+import { detectLanguage } from '@/server/llm/language';
 import { dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { oneLine } from '@/server/memory/labels';
 
@@ -38,7 +39,23 @@ export type CondenseTurn = {
 // D'où vient un élément du condensé (D23) : la personne, l'agent (et tout ce qui n'est pas sûrement elle), l'équipe (une
 // PR, un commit), ou un connecteur.
 export type Provenance = 'toi' | 'agent' | 'équipe' | 'connecteur';
-export type Condense = { texte: string; preuves: Set<string>; ids: Map<string, Provenance> };
+// `langue` : celle de la personne, reconnue par le code (language.ts), que le prompt dit au modèle ; null si elle ne se
+// reconnaît pas.
+export type Condense = {
+  texte: string;
+  preuves: Set<string>;
+  ids: Map<string, Provenance>;
+  langue?: string | null;
+};
+
+// La langue de la personne : celle de ses tours tapés, à défaut celle des tours `user` captés avant la marque (T43).
+// Jamais celle d'un tour injecté : un rapport de sous-agent ou une notification est souvent en anglais.
+export function turnsLanguage(turns: readonly CondenseTurn[]): string | null {
+  const user = turns.filter((turn) => turn.role === 'user');
+  const typed = user.filter((turn) => turn.injecte === false);
+  const read = typed.length > 0 ? typed : user.filter((turn) => turn.injecte === null);
+  return detectLanguage(read.map((turn) => turn.text));
+}
 
 // Une coupe ne laisse jamais un demi-emoji : l'API du modèle refuse un corps qui en porte. toWellFormed garde la
 // longueur, donc la borne.
@@ -120,5 +137,10 @@ export function condenseSession(
     if (body.length > room) break;
   }
 
-  return { texte: [...facts, ...kept].join('\n'), preuves, ids };
+  return {
+    texte: [...facts, ...kept].join('\n'),
+    preuves,
+    ids,
+    langue: turnsLanguage(input.turns),
+  };
 }

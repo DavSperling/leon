@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:26:18.531Z",
+  "reponse": "I'll look that up.\n\nThe on-site has moved: the PCI auditors are now coming **Tuesday December 15 to Thursday December 17**, in the Austin office [5]. Victor Lindqvist (QSA, Ardent Assurance) asked for the shift because his second assessor, who leads the service-provider interviews, has a conflict the week of December 7, and Shira confirmed December 15-17 works on our side [5]. The December 1 evidence-package deadline didn't change [5].\n\nNote the older dates are still circulating: Avi's Nov 17 #compliance reminder says Dec 8-10 and asks the TLV folks to book flights [4], which repeats the original SOW dates of Dec 8-10 [7][1]. Avi's message is more recent than the emails, but Shira's reply to Victor is the confirmation that the on-site itself was moved [5] — you may want to flag the reminder so people don't book against the old dates.",
+  "rendu": "I'll look that up.\n\nThe on-site has moved: the PCI auditors are now coming **Tuesday December 15 to Thursday December 17**, in the Austin office [5]. Victor Lindqvist (QSA, Ardent Assurance) asked for the shift because his second assessor, who leads the service-provider interviews, has a conflict the week of December 7, and Shira confirmed December 15-17 works on our side [5]. The December 1 evidence-package deadline didn't change [5].\n\nNote the older dates are still circulating: Avi's Nov 17 #compliance reminder says Dec 8-10 and asks the TLV folks to book flights [4], which repeats the original SOW dates of Dec 8-10 [7][1]. Avi's message is more recent than the emails, but Shira's reply to Victor is the confirmation that the on-site itself was moved [5] — you may want to flag the reminder so people don't book against the old dates.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14347,
+    "sortie": 442,
+    "reflexion": 122,
+    "cache": 7680,
+    "cout": 0.00073274384
+  },
+  "latenceMs": 5607,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors visit office date\"}",
+    "chercher {\"requete\":\"PCI audit on-site Austin schedule\"}",
+    "lire {\"sourceId\":\"gmail-ardent-fieldwork\"}"
+  ],
+  "cout": 0.00073274384
+}

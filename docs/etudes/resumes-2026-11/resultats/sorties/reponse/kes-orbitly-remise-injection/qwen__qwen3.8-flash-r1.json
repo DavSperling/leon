@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-orbitly-remise-injection",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:18.935Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 1033,
+    "sortie": 1500,
+    "reflexion": 1500,
+    "cache": 0,
+    "cout": 0.00085995
+  },
+  "cout": 0.00085995,
+  "latenceMs": 30178,
+  "fournisseur": "Alibaba"
+}

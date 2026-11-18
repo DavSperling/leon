@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "google/gemini-4-carbon",
+  "rep": 1,
+  "date": "2026-11-18T14:32:43.717Z",
+  "reponse": "## What changed\n\n- On PR #427, Maya said v2 looks fine to ship behind `dashboards_v2`, and decided to keep `@chartkit/react` until v1 is retired rather than migrating v1 charts to visx now [1][7]; Dependabot separately opened #429 bumping `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n\n- Priya blocked Thursday's Orbitly rollout (KES-512, meant to be solid on staging today [3]) until CSV export—which you dropped from the v2 widget menu while reworking `WidgetCard` on PR #427 [1]—is restored on top of the new background export [10].\n- Daniel approved PR #430—your streaming background job and emailed link fixing the CSV export timeout (#424) [2]—to merge once CI is green [5], and Rachel asked in `#support` this morning for an ETA to give Zest Grocers ahead of Monday's ops review [6][9].\n- Hovering an empty cohort on Orbitly staging crashes the updated retention chart tooltip at `RetentionChart.tsx:212`, which you left on PR #427 to fix today [1] and Sentry now tracks as #432 [8].",
+  "rendu": "## What changed\n\n- On PR #427, Maya said v2 looks fine to ship behind `dashboards_v2`, and decided to keep `@chartkit/react` until v1 is retired rather than migrating v1 charts to visx now [1][7]; Dependabot separately opened #429 bumping `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n\n- Priya blocked Thursday's Orbitly rollout (KES-512, meant to be solid on staging today [3]) until CSV export—which you dropped from the v2 widget menu while reworking `WidgetCard` on PR #427 [1]—is restored on top of the new background export [10].\n- Daniel approved PR #430—your streaming background job and emailed link fixing the CSV export timeout (#424) [2]—to merge once CI is green [5], and Rachel asked in `#support` this morning for an ETA to give Zest Grocers ahead of Monday's ops review [6][9].\n- Hovering an empty cohort on Orbitly staging crashes the updated retention chart tooltip at `RetentionChart.tsx:212`, which you left on PR #427 to fix today [1] and Sentry now tracks as #432 [8].",
+  "mesures": {
+    "mots": 160,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6409,
+    "sortie": 7021,
+    "reflexion": 6732,
+    "cache": 0,
+    "cout": 0.083028
+  },
+  "cout": 0.083028,
+  "latenceMs": 116026,
+  "fournisseur": "Google AI Studio"
+}

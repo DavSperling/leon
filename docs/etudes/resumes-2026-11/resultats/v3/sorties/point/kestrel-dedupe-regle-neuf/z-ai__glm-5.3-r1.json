@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.975Z",
+  "reponse": "## What is still open\n- Maya is waiting on the exact number of Orbitly events dropped since #240 for Thursday's call with Orbitly — you have it (~1.18M, ≈8.1% of their iOS volume, plus 3,812 for Zest). Reply to her on #247. [1][2]\n- Once #247 is merged and deployed, run the replay from landing for Orbitly and Zest from 13/11 09:40, then check the dedupe counter stays near zero — you asked to be reminded. [1]\n- You owe a DLQ alert (dead-letter queue > 1,000 messages) before Friday's incident review (20/11). [7]\n- Send the note to the iOS team asking for event_id UUIDs back in SDK 3.2.1 — it was only drafted. [1]\n\n## What changed\n- Maya reviewed #247; she'll approve once CI is green but wants the drop count first. [2]\n- Noa closed postmortem #233 and will present it Friday; Zest confirmed their data is restored and Rachel closed their ticket. [3][6]\n- Rachel's escalation is explained: your own iOS SDK 3.2.0 switched event_id to per-session counters, so #240's dedupe dropped ~1.18M real Orbitly events — not replays. [1]\n\n## What you did\n- Diagnosed the Orbitly iOS funnel drop and fixed the dedupe key to (project, device, event_id) in PR #247, tested and lint-clean. [1]\n- Verified Zest is marginally affected too, and that replaying from landing will restore the lost events once #247 is deployed. [1]",
+  "rendu": "## What is still open\n- Maya is waiting on the exact number of Orbitly events dropped since #240 for Thursday's call with Orbitly — you have it (~1.18M, ≈8.1% of their iOS volume, plus 3,812 for Zest). Reply to her on #247. [1][2]\n- Once #247 is merged and deployed, run the replay from landing for Orbitly and Zest from 13/11 09:40, then check the dedupe counter stays near zero — you asked to be reminded. [1]\n- You owe a DLQ alert (dead-letter queue > 1,000 messages) before Friday's incident review (20/11). [7]\n- Send the note to the iOS team asking for event_id UUIDs back in SDK 3.2.1 — it was only drafted. [1]\n\n## What changed\n- Maya reviewed #247; she'll approve once CI is green but wants the drop count first. [2]\n- Noa closed postmortem #233 and will present it Friday; Zest confirmed their data is restored and Rachel closed their ticket. [3][6]\n- Rachel's escalation is explained: your own iOS SDK 3.2.0 switched event_id to per-session counters, so #240's dedupe dropped ~1.18M real Orbitly events — not replays. [1]\n\n## What you did\n- Diagnosed the Orbitly iOS funnel drop and fixed the dedupe key to (project, device, event_id) in PR #247, tested and lint-clean. [1]\n- Verified Zest is marginally affected too, and that replaying from landing will restore the lost events once #247 is deployed. [1]",
+  "mesures": {
+    "mots": 218,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4714,
+    "sortie": 374,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00535938
+  },
+  "cout": 0.00535938,
+  "latenceMs": 3666,
+  "fournisseur": "DigitalOcean"
+}

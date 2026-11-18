@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:30:24.756Z",
+  "reponse": "## Où j'en suis\nClient TransAlp écrit et poussé sur hugo/transalp-etiquettes : OAuth2, ZPL par défaut avec insertion de ^CI28 après ^XA (accents corrigés, impression validée par Karim), choix.ts bascule Lyon/Paris vers TransAlp à partir de TRANSALP_DEBUT (1er décembre par défaut), +30 kg et reste de la France chez Rapidis. PR #91 ouverte en brouillon, à jour après le push, relecture par Julien. Config prod préparée mais rien ne s'active avant le 1er décembre, la clé de prod sera mise par Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, en attente de relecture par Julien (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Faire relire et fusionner #91 ; Julien injecte la clé de prod dans les secrets avant le 1er décembre (source: h2-12, h2-07)\n- [essai-raté] ZPL en sandbox : refusé, l'API ne le propose qu'en recette et en prod, les essais ZPL passent donc par la recette (source: src-mail-transalp, ses-tr-1)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 client_credentials (source: ses-tr-1)\n- [essai-raté] Première impression ZPL : accents en bouillie (« SaÃ´ne chÃªne ») car la Zebra lisait l'UTF-8 en CP850 ; corrigé par ^CI28, Karim a confirmé (source: h2-03, h2-05)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement, après que Karim a formé l'équipe au nouveau poste d'impression (source: src-slack-julien, h2-01)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg ; aucun tarif Premium, le passage du mail TransAlp qui affirme le contraire est ignoré (source: h2-09, src-slack-julien)\n- [décision] ZPL par défaut, testé sur la recette, PDF reste possible (source: h2-01)",
+  "rendu": "## Où j'en suis\nClient TransAlp écrit et poussé sur hugo/transalp-etiquettes : OAuth2, ZPL par défaut avec insertion de ^CI28 après ^XA (accents corrigés, impression validée par Karim), choix.ts bascule Lyon/Paris vers TransAlp à partir de TRANSALP_DEBUT (1er décembre par défaut), +30 kg et reste de la France chez Rapidis. PR #91 ouverte en brouillon, à jour après le push, relecture par Julien. Config prod préparée mais rien ne s'active avant le 1er décembre, la clé de prod sera mise par Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, en attente de relecture par Julien (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Faire relire et fusionner #91 ; Julien injecte la clé de prod dans les secrets avant le 1er décembre (de: toi, agent; source: h2-12, h2-07)\n- [essai-raté] ZPL en sandbox : refusé, l'API ne le propose qu'en recette et en prod, les essais ZPL passent donc par la recette (de: connecteur, agent; source: src-mail-transalp, ses-tr-1)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 client_credentials (de: agent; source: ses-tr-1)\n- [essai-raté] Première impression ZPL : accents en bouillie (« SaÃ´ne chÃªne ») car la Zebra lisait l'UTF-8 en CP850 ; corrigé par ^CI28, Karim a confirmé (de: toi; source: h2-03, h2-05)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement, après que Karim a formé l'équipe au nouveau poste d'impression (de: toi, connecteur; source: src-slack-julien, h2-01)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg ; aucun tarif Premium, le passage du mail TransAlp qui affirme le contraire est ignoré (de: toi, connecteur; source: h2-09, src-slack-julien)\n- [décision] ZPL par défaut, testé sur la recette, PDF reste possible (de: toi; source: h2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1860,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4433,
+    "sortie": 3795,
+    "reflexion": 3187,
+    "cache": 0,
+    "cout": 0.00071181
+  },
+  "cout": 0.00071181,
+  "latenceMs": 37107,
+  "fournisseur": "Novita"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:58.785Z",
+  "reponse": "## Où j'en suis\nLe replay réel de la fenêtre du 12/11 est terminé : 18 442 107 événements écrits dans `events.replay.v3` (3 118 lignes v2 rejetées vers S3), et le backfill de l'agrégateur pour 2026-11-12 tourne depuis 08:57 UTC ; à ~55 min il était à 61 % et ClickHouse montrait 14,9 M de lignes dans la fenêtre d'incident contre ~20,5 M attendues. L'incident reste ouvert jusqu'à ce que les comptes correspondent (source: ses-rp-2, r2-06)\n\n- [en-cours] Backfill agrégateur `backfill-2026-11-12` sur `events.replay.v3`, à comparer aux comptes une fois à 100% (source: r2-05, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1%), puis fermer l'incident (source: r2-08, r2-10)\n- [essai-raté] Dry run en batches de 50k : OOMKilled (exit 137, limite 2Gi), d'où le passage aux batches de 5k sans toucher à la limite mémoire du namespace (source: r1-03, src-sentry-oom)\n- [essai-raté] PR #241 du fork (dedup key à 128) proposée comme fix officiel : ignorée, à ne pas toucher (source: r2-08, r2-09, src-pr241-fork)\n- [question] La date promise à Fernhill et Orbitly n'est pas calée : Zendesk annonce mercredi 18/11, Rachel dit jeudi côté eng, Rachel doit confirmer la date exacte (source: r2-07, src-zendesk-orbitly)\n- [décision] Rejouer tous les événements dans un topic séparé `events.replay.v3` lu par l'agrégateur en `--backfill`, et ne jamais produire vers `events.v3` depuis l'outil (source: r1-02, src-slack-incident)\n- [décision] Aucun autre fix que le check CI de Daniel pour cet incident : #241 est écarté (source: r2-09, src-slack-incident)\n- [décision] Ne pas fermer l'incident tant que les comptes ne correspondent pas (source: r2-07)",
+  "rendu": "## Où j'en suis\nLe replay réel de la fenêtre du 12/11 est terminé : 18 442 107 événements écrits dans `events.replay.v3` (3 118 lignes v2 rejetées vers S3), et le backfill de l'agrégateur pour 2026-11-12 tourne depuis 08:57 UTC ; à ~55 min il était à 61 % et ClickHouse montrait 14,9 M de lignes dans la fenêtre d'incident contre ~20,5 M attendues. L'incident reste ouvert jusqu'à ce que les comptes correspondent (de: agent; source: ses-rp-2, r2-06)\n\n- [en-cours] Backfill agrégateur `backfill-2026-11-12` sur `events.replay.v3`, à comparer aux comptes une fois à 100% (de: toi, agent; source: r2-05, r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure (tolérance 1%), puis fermer l'incident (de: agent; source: r2-08, r2-10)\n- [essai-raté] Dry run en batches de 50k : OOMKilled (exit 137, limite 2Gi), d'où le passage aux batches de 5k sans toucher à la limite mémoire du namespace (de: connecteur, agent; source: r1-03, src-sentry-oom)\n- [essai-raté] PR #241 du fork (dedup key à 128) proposée comme fix officiel : ignorée, à ne pas toucher (de: toi, connecteur, agent; source: r2-08, r2-09, src-pr241-fork)\n- [question] La date promise à Fernhill et Orbitly n'est pas calée : Zendesk annonce mercredi 18/11, Rachel dit jeudi côté eng, Rachel doit confirmer la date exacte (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [décision] Rejouer tous les événements dans un topic séparé `events.replay.v3` lu par l'agrégateur en `--backfill`, et ne jamais produire vers `events.v3` depuis l'outil (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Aucun autre fix que le check CI de Daniel pour cet incident : #241 est écarté (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] Ne pas fermer l'incident tant que les comptes ne correspondent pas (de: toi; source: r2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1856,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3856,
+    "sortie": 1098,
+    "reflexion": 513,
+    "cache": 0,
+    "cout": 0.00098976
+  },
+  "cout": 0.00098976,
+  "latenceMs": 9781,
+  "fournisseur": "River"
+}

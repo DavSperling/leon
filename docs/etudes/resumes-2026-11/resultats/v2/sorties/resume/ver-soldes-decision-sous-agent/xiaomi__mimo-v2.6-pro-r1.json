@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:25:02.674Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur `julien/script-soldes-hiver` : règles de remise par collection, application en masse Shopify (JSONL + `bulkOperationRunMutation`), programmation dans `scripts/cron.ts`, export CSV pour la newsletter et tests verts ; la PR maison-verdier/boutique#94 est ouverte. La boutique de dev a été soldée puis remise à ses prix d'origine, et le reste du travail est noté ci-dessous.\n\n- [essai-raté] l'écriture produit par produit a échoué en THROTTLED (budget API épuisé à mi-parcours, dev à moitié soldée) : remplacée par une opération en masse\n- [prochaine-étape] script de retour aux prix d'origine pour la fin des soldes, prévu en décembre\n- [prochaine-étape] régénérer le CSV des prix pour Sophie avant la newsletter du 6 janvier si des prix ont changé\n- [décision] remises : -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] prix arrondis à l'euro sous le calcul puis ramenés au nombre finissant par 9 (source: t07)\n- [décision] application le mercredi 13 janvier 2027 à 08:00, avec vérification la veille sur dev (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur `julien/script-soldes-hiver` : règles de remise par collection, application en masse Shopify (JSONL + `bulkOperationRunMutation`), programmation dans `scripts/cron.ts`, export CSV pour la newsletter et tests verts ; la PR maison-verdier/boutique#94 est ouverte. La boutique de dev a été soldée puis remise à ses prix d'origine, et le reste du travail est noté ci-dessous.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [essai-raté] l'écriture produit par produit a échoué en THROTTLED (budget API épuisé à mi-parcours, dev à moitié soldée) : remplacée par une opération en masse\n- [prochaine-étape] script de retour aux prix d'origine pour la fin des soldes, prévu en décembre\n- [prochaine-étape] régénérer le CSV des prix pour Sophie avant la newsletter du 6 janvier si des prix ont changé\n- [décision] remises : -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] prix arrondis à l'euro sous le calcul puis ramenés au nombre finissant par 9 (source: t07)\n- [décision] application le mercredi 13 janvier 2027 à 08:00, avec vérification la veille sur dev (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1256,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4317,
+    "sortie": 1338,
+    "reflexion": 982,
+    "cache": 0,
+    "cout": 0.003041955
+  },
+  "cout": 0.003041955,
+  "latenceMs": 32376,
+  "fournisseur": "StreamLake"
+}

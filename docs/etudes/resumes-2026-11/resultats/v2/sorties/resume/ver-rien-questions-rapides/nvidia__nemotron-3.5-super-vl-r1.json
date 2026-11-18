@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:24:23.060Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1975,
+    "sortie": 1080,
+    "reflexion": 1076,
+    "cache": 0,
+    "cout": 0.000935
+  },
+  "cout": 0.000935,
+  "latenceMs": 2861,
+  "fournisseur": "Venice"
+}

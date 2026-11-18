@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:08.366Z",
+  "reponse": "## Where I am\n\nDrag-and-resize dashboards are implemented on branch `tom/dashboard-grid-v2` (PR #418, draft). Widgets persist via `PUT /dashboards/:id/layout` with a localStorage fallback. Container queries were dropped for ResizeObserver sizing, which works on iOS 15. Storybook builds again, the rename and lint are done, and v1 dashboards stay untouched behind the `dashboards_v2` flag. Remaining: Priya's UX review on iPad, then enabling the flag for the Zest workspace before the demo on Tuesday 24th.\n\n- [en-cours] Draft PR #418 awaiting Priya's UX review on iPad (Safari, iOS 15)\n- [prochaine-étape] Priya reviews the UX and the iPad behaviour\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin (no code change)\n- [prochaine-étape] Zest demo on Tuesday 24th\n- [essai-raté] Container queries: iOS 15 Safari ignores `@container` rules silently, so they were removed in favour of ResizeObserver (`useWidgetSize`, `data-size`)\n- [décision] Drop container queries and use a single ResizeObserver sizing system (source: t09)\n- [décision] Keep v1 dashboards available behind the flag until January; nothing is removed now (source: t15)",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR #418 awaiting Priya's UX review on iPad (Safari, iOS 15)\n- [prochaine-étape] Priya reviews the UX and the iPad behaviour\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin (no code change)\n- [prochaine-étape] Zest demo on Tuesday 24th\n- [essai-raté] Container queries: iOS 15 Safari ignores `@container` rules silently, so they were removed in favour of ResizeObserver (`useWidgetSize`, `data-size`)\n- [décision] Drop container queries and use a single ResizeObserver sizing system (source: t09)\n- [décision] Keep v1 dashboards available behind the flag until January; nothing is removed now (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 806,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5124,
+    "sortie": 483,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007539
+  },
+  "cout": 0.0007539,
+  "latenceMs": 3097,
+  "fournisseur": "Claude Platform on AWS"
+}

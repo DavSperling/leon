@@ -1,0 +1,139 @@
+{
+ "id": "del-reponse-dossier-peltier",
+ "titre": "Recherche sur un dossier de prime : le suivi a une ligne récente et une ligne périmée, la cliente pose une question, la règle est dans un message Slack ; bruit d'une conversation ChatGPT générique",
+ "langue": "fr",
+ "entree": {
+  "recherche": "dossier mpr peltier",
+  "resultats": [
+   {
+    "id": "dr-suivi-mpr",
+    "kind": "drive",
+    "nature": "page",
+    "titre": "Suivi dossiers MPR – novembre 2026.xlsx",
+    "url": null,
+    "date": "2026-11-18T08:30:00+01:00",
+    "passages": [
+     {
+      "id": "q5a",
+      "texte": "Peltier (Vertou) | devis signé le 16/11 | déposé le 17/11 | accusé de réception reçu le 17/11 | en instruction | travaux prévus le 27/11",
+      "date": "2026-11-18T08:30:00+01:00",
+      "auteur": "Manon Pichon"
+     },
+     {
+      "id": "q5b",
+      "texte": "Peltier (Vertou) | devis non signé | à déposer | relancer Camille pour la signature",
+      "date": "2026-11-10T17:00:00+01:00",
+      "auteur": "Manon Pichon"
+     }
+    ]
+   },
+   {
+    "id": "zd-4131",
+    "kind": "zendesk",
+    "nature": "fil",
+    "titre": "#4131 Où en est mon dossier d'aide ?",
+    "url": null,
+    "date": "2026-11-18T08:05:00+01:00",
+    "passages": [
+     {
+      "id": "q5c",
+      "texte": "Bonjour, où en est mon dossier d'aide ? Les travaux sont prévus le 27/11, est-ce que je peux les commencer sans attendre la réponse ? Odile Peltier",
+      "date": "2026-11-18T08:05:00+01:00",
+      "auteur": "Odile Peltier"
+     }
+    ]
+   },
+   {
+    "id": "sl-aides",
+    "kind": "slack",
+    "nature": "fil",
+    "titre": "#aides",
+    "url": null,
+    "date": "2026-11-17T11:50:00+01:00",
+    "passages": [
+     {
+      "id": "q5d",
+      "texte": "Peltier déposé ce matin, accusé de réception reçu. Rappel pour tout le monde : une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture.",
+      "date": "2026-11-17T11:50:00+01:00",
+      "auteur": "Manon Pichon"
+     }
+    ]
+   },
+   {
+    "id": "hs-peltier",
+    "kind": "hubspot",
+    "nature": "note",
+    "titre": "Peltier – PAC Aéro 11",
+    "url": null,
+    "date": "2026-11-16T19:30:00+01:00",
+    "passages": [
+     {
+      "id": "q5e",
+      "texte": "Étape : Gagné – acompte reçu. Type de travaux : PAC air/eau. Propriétaire : Camille Ferrand. Pose prévue : 27/11.",
+      "date": "2026-11-16T19:30:00+01:00",
+      "auteur": "Camille Ferrand"
+     }
+    ]
+   },
+   {
+    "id": "gpt-mpr",
+    "kind": "chatgpt",
+    "nature": "conversation",
+    "titre": "Expliquer MaPrimeRénov simplement",
+    "url": null,
+    "date": "2026-11-05T15:10:00+01:00",
+    "passages": [
+     {
+      "id": "q5f",
+      "texte": "MaPrimeRénov' est une aide de l'État pour les travaux de rénovation énergétique. Son montant dépend des revenus du foyer et des travaux. Le dossier se dépose en ligne, et l'aide est versée une fois les travaux terminés.",
+      "date": "2026-11-05T15:10:00+01:00",
+      "role": "assistant"
+     }
+    ]
+   }
+  ]
+ },
+ "attendu": {
+  "cites": [
+   1,
+   3,
+   2
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que le dossier de Mme Peltier a été déposé le 17/11 (devis signé le 16/11) et qu'il est en instruction, accusé de réception reçu [1][3].",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit que Mme Peltier demande si elle peut commencer ses travaux prévus le 27/11 [2].",
+    "poids": 2
+   },
+   {
+    "id": "f3",
+    "texte": "Dit que, selon Manon, les travaux peuvent commencer une fois le dossier déposé, la prime n'étant versée qu'après les travaux, sur facture [3].",
+    "poids": 2
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que le devis n'est pas signé ou que le dossier reste à déposer (ligne périmée du 10/11)."
+   },
+   {
+    "id": "i2",
+    "texte": "Annonce un montant de prime pour Mme Peltier."
+   },
+   {
+    "id": "i3",
+    "texte": "Dit que la prime est versée avant les travaux."
+   }
+  ],
+  "pieges": [
+   "Périmé : le suivi a deux lignes pour Peltier ; celle du 10/11 (« devis non signé, à déposer ») est dépassée.",
+   "Croiser : l'état vient du suivi et de #aides, la question de la cliente du ticket, la règle de #aides.",
+   "Bruit : une conversation ChatGPT générique et l'affaire HubSpot (montant de l'affaire, pas de la prime)."
+  ]
+ }
+}

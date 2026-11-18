@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:14.668Z",
+  "reponse": "La table Saône n'a pas de date de retour unique. Le fournisseur annonce 25 plateaux livrables le 1er décembre, et 15 autres la semaine du 14 [1]. En interne, ces 25 arrivent à l'entrepôt le 1er décembre et seraient expédiables à partir du 3 décembre, après montage et emballage [2], date reprise pour la précommande [5]. La fiche de ruptures, plus ancienne, donnait une estimation fin novembre à confirmer [4]. Une cliente s'est vu annoncer environ 6 semaines [3].",
+  "rendu": "La table Saône n'a pas de date de retour unique. Le fournisseur annonce 25 plateaux livrables le 1er décembre, et 15 autres la semaine du 14 [1]. En interne, ces 25 arrivent à l'entrepôt le 1er décembre et seraient expédiables à partir du 3 décembre, après montage et emballage [2], date reprise pour la précommande [5]. La fiche de ruptures, plus ancienne, donnait une estimation fin novembre à confirmer [4]. Une cliente s'est vu annoncer environ 6 semaines [3].",
+  "mesures": {
+    "mots": 79,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1083,
+    "sortie": 212,
+    "reflexion": 76,
+    "cache": 0,
+    "cout": 0.00027859
+  },
+  "cout": 0.00027859,
+  "latenceMs": 2094,
+  "fournisseur": "CoreWeave"
+}

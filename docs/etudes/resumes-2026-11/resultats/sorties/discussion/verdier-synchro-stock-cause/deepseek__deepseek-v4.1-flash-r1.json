@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:02.013Z",
+  "reponse": "**D'où ça venait.** L'emplacement « Showroom » a été ajouté dans Shopify le 3/11 (pièces d'expo rue Auguste-Comte) [1][3]. Or le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux » : le showroom gardait son ancien stock, et comme Shopify additionne les emplacements pour l'affichage en ligne, le site montrait du stock qui n'existait plus [3][10][1]. C'est ce qui explique les commandes annulées ou incomplètes côté clients, par exemple le banc Rhône [2], le buffet Croix-Rousse [4] et les chaises Fourvière (9 affichées, 2 disponibles) [9].\n\n**Est-ce réparé.** Oui : le correctif est la PR #87, qui met à jour les deux emplacements à partir des onglets de l'export ; elle a été relue/testée [10], puis fusionnée et déployée le 13/11 [10]. Le point d'équipe du 16/11 le confirme : « Synchro du stock : corrigée vendredi par Julien » [13].\n\n**Suite.** Un contrôle quotidien des écarts Shopify / entrepôt est en préparation (PR #91, script lancé chaque matin à 7 h qui poste les écarts dans #tech) [11][12] : au 17/11 elle n'était pas encore fusionnée, Julien demandait de reprendre le script (ignorer les précommandes Saône, ne poster qu'au-delà de 1 pièce d'écart) [11].",
+  "rendu": "**D'où ça venait.** L'emplacement « Showroom » a été ajouté dans Shopify le 3/11 (pièces d'expo rue Auguste-Comte) [1][3]. Or le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux » : le showroom gardait son ancien stock, et comme Shopify additionne les emplacements pour l'affichage en ligne, le site montrait du stock qui n'existait plus [3][10][1]. C'est ce qui explique les commandes annulées ou incomplètes côté clients, par exemple le banc Rhône [2], le buffet Croix-Rousse [4] et les chaises Fourvière (9 affichées, 2 disponibles) [9].\n\n**Est-ce réparé.** Oui : le correctif est la PR #87, qui met à jour les deux emplacements à partir des onglets de l'export ; elle a été relue/testée [10], puis fusionnée et déployée le 13/11 [10]. Le point d'équipe du 16/11 le confirme : « Synchro du stock : corrigée vendredi par Julien » [13].\n\n**Suite.** Un contrôle quotidien des écarts Shopify / entrepôt est en préparation (PR #91, script lancé chaque matin à 7 h qui poste les écarts dans #tech) [11][12] : au 17/11 elle n'était pas encore fusionnée, Julien demandait de reprendre le script (ignorer les précommandes Saône, ne poster qu'au-delà de 1 pièce d'écart) [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8370,
+    "sortie": 610,
+    "reflexion": 148,
+    "cache": 1664,
+    "cout": 0.00107003
+  },
+  "latenceMs": 4875,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"acheter meubles plus disponibles stock rupture\"}",
+    "chercher {\"requete\":\"bug stock disponibilité panier achat impossible\"}"
+  ],
+  "cout": 0.00107003
+}

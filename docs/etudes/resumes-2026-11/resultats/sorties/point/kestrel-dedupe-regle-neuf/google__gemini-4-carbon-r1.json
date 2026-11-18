@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "google/gemini-4-carbon",
+  "rep": 1,
+  "date": "2026-11-18T14:24:37.433Z",
+  "reponse": "## What changed\n- Rachel closed Zest Grocers' Zendesk ticket for the 12/11 incident after their confirmation [6].\n- Noa and Daniel merged PR #245, bumping Go to 1.23.4 in CI and the Dockerfile [4].\n\n## What is still open\n- **PR #247 and 13/11 replay (Orbitly & Zest):** You traced Orbitly's ~8% iOS funnel drop to `kestrel-ios/3.2.0` sending per-session sequence numbers as `event_id`, which caused #240's dedupe to drop 1,179,950 legitimate Orbitly events and 3,812 Zest pilot events since 13/11, and opened PR #247 to key on `(project_id, device_id, event_id)` [1]. Maya will approve once CI is green and asks before merging for that Orbitly drop count ahead of Thursday's customer call [2]; once #247 is deployed, replay landing data from `2026-11-13T09:40:00Z` for `prj_0rb1` and `prj_z3st` [1].\n- **Ingest DLQ alert due before Friday (20/11):** Noa finalized the 12/11 postmortem in #233 for Friday's incident review [3], and the prep meeting assigned you an action item before the review to add an alert when the ingest dead-letter queue exceeds 1,000 messages [7].\n- **iOS SDK 3.2.1 UUID revert:** `kestrel-ios` still needs to restore UUID `event_id`s in 3.2.1 for other consumers relying on global uniqueness; you have a draft note ready for the iOS team [1].",
+  "rendu": "## What changed\n- Rachel closed Zest Grocers' Zendesk ticket for the 12/11 incident after their confirmation [6].\n- Noa and Daniel merged PR #245, bumping Go to 1.23.4 in CI and the Dockerfile [4].\n\n## What is still open\n- **PR #247 and 13/11 replay (Orbitly & Zest):** You traced Orbitly's ~8% iOS funnel drop to `kestrel-ios/3.2.0` sending per-session sequence numbers as `event_id`, which caused #240's dedupe to drop 1,179,950 legitimate Orbitly events and 3,812 Zest pilot events since 13/11, and opened PR #247 to key on `(project_id, device_id, event_id)` [1]. Maya will approve once CI is green and asks before merging for that Orbitly drop count ahead of Thursday's customer call [2]; once #247 is deployed, replay landing data from `2026-11-13T09:40:00Z` for `prj_0rb1` and `prj_z3st` [1].\n- **Ingest DLQ alert due before Friday (20/11):** Noa finalized the 12/11 postmortem in #233 for Friday's incident review [3], and the prep meeting assigned you an action item before the review to add an alert when the ingest dead-letter queue exceeds 1,000 messages [7].\n- **iOS SDK 3.2.1 UUID revert:** `kestrel-ios` still needs to restore UUID `event_id`s in 3.2.1 for other consumers relying on global uniqueness; you have a draft note ready for the iOS team [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5185,
+    "sortie": 6771,
+    "reflexion": 6348,
+    "cache": 0,
+    "cout": 0.07808
+  },
+  "cout": 0.07808,
+  "latenceMs": 93141,
+  "fournisseur": "Google AI Studio"
+}

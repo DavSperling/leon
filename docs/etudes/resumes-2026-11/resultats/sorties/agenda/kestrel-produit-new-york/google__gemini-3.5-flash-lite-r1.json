@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:28:44.809Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Fernhill dashboards review \\u2013 prep\", \"debut\": \"2026-11-22T18:30\", \"fin\": \"2026-11-22T19:00\", \"avec\": \"Ethan Brooks, Priya Shah\"}\n{\"n\": 3, \"titre\": \"Fernhill \\u2013 SSO demo\", \"debut\": \"2026-11-20T10:00\", \"fin\": \"2026-11-20T11:00\", \"avec\": \"Maya Cohen, Daniel Levi, Oliver Grant\"}\n{\"n\": 7, \"titre\": \"Customer interview\", \"debut\": \"2026-11-19T11:30\", \"fin\": \"2026-11-19T12:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback \\u2013 Zest\", \"debut\": \"2026-11-18T15:00\", \"fin\": \"2026-11-18T15:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 14, \"titre\": \"Dashboards redesign \\u2013 design review\", \"debut\": \"2026-11-17T11:00\", \"fin\": \"2026-11-17T12:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 17, \"titre\": \"Coffee\", \"debut\": \"2026-11-18T09:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 23, \"titre\": \"Dinner\", \"debut\": \"2026-11-19T19:30\", \"avec\": \"Jonah Reyes\"}",
+  "rendu": "2026-11-17T11:00→2026-11-17T12:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T09:30 Coffee (avec Lior Ben-David)\n2026-11-18T15:00→2026-11-18T15:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T11:30→2026-11-19T12:15 Customer interview (avec Ana Ruiz)\n2026-11-19T19:30 Dinner (avec Jonah Reyes)\n2026-11-20T10:00→2026-11-20T11:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant)\n2026-11-22T18:30→2026-11-22T19:00 Fernhill dashboards review – prep (avec Ethan Brooks, Priya Shah)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "2026-11-17T11:00 Dashboards redesign – design review | 2026-11-18T09:30 Coffee | 2026-11-18T15:00 Kestrel dashboards feedback – Zest | 2026-11-19T11:30 Customer interview | 2026-11-19T19:30 Dinner | 2026-11-20T10:00 Fernhill – SSO demo | 2026-11-22T18:30 Fernhill dashboards review – prep",
+    "manques": "2026-11-17T17:00 Dashboards redesign – design review | 2026-11-18T15:30 Coffee with Lior | 2026-11-18T21:00 Zest Grocers – dashboards feedback interview | 2026-11-19T17:30 Customer interview – Ana Ruiz (Orbitly) | 2026-11-20T01:30 Dinner with Northfold Studio | 2026-11-20T16:00 Fernhill – SSO demo",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3222,
+    "sortie": 464,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0021266
+  },
+  "cout": 0.0021266,
+  "latenceMs": 1844,
+  "fournisseur": "Google"
+}

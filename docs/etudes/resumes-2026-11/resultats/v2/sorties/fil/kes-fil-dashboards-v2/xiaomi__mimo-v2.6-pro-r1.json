@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:26:56.234Z",
+  "reponse": "## Où j'en suis\nFollow-up work on branch `tom/dashboard-keyboard` is done: keyboard move/resize for widgets plus a visible focus ring, committed as `8f1a2c7`, opened as PR #423 with Priya requested. The `dashboards_v2` flag is on for workspace zest-grocers on staging so Priya can rehearse the demo; production is untouched. The visx migration is settled: #401 closed, recharts is the only chart library. Tom ended the day there — #423 is still open, awaiting Priya's review. (source: ses-db-4, d4-05, d4-07, d4-10)\n\n- [en-cours] PR #423 open (\"Dashboards v2: keyboard move/resize + focus ring\"), waiting on Priya's review; 11 new tests for `useGridKeyboard` plus the mouse drag test are green (source: d4-05, ses-db-4)\n- [prochaine-étape] Tom flips the production `dashboards_v2` flag himself on the morning of the 24th for the Zest demo (source: d4-06)\n- [prochaine-étape] Old (v1) dashboards stay available behind the flag until January; nothing is removed now (source: b2-04)\n- [essai-raté] Wrapping grid items with dnd-kit's `KeyboardSensor`: both libraries applied every move twice and mouse drags fired two `onLayoutChange` calls; making them cooperate would mean disabling react-grid-layout's own drag, so `@dnd-kit/core` was removed in favour of an own handler on the layout state (source: d4-02, d4-04, d4-05)\n- [essai-raté] CSS container queries for widget sizing: iOS 15 on Zest's iPads ignores `@container` rules, replaced entirely by a `useWidgetSize()` hook with ResizeObserver (source: b2-01, b2-02)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (source: d4-04)\n- [décision] ResizeObserver instead of container queries, drop container queries completely (source: b2-02)\n- [décision] Keep recharts, close the visx migration (#401) for good; no two chart libraries and no rewrite of the 9 remaining charts (source: c3-03)\n- [décision] Squash-merge #418; Priya's two remaining comments go into a follow-up PR (source: c3-05)\n- [décision] Flag on only for the Zest workspace at first; production flag flipped by Tom on the 24th (source: b2-04, d4-06)",
+  "rendu": "## Où j'en suis\nFollow-up work on branch `tom/dashboard-keyboard` is done: keyboard move/resize for widgets plus a visible focus ring, committed as `8f1a2c7`, opened as PR #423 with Priya requested. The `dashboards_v2` flag is on for workspace zest-grocers on staging so Priya can rehearse the demo; production is untouched. The visx migration is settled: #401 closed, recharts is the only chart library. Tom ended the day there — #423 is still open, awaiting Priya's review. (de: toi, agent; source: ses-db-4, d4-05, d4-07, d4-10)\n\n- [en-cours] PR #423 open (\"Dashboards v2: keyboard move/resize + focus ring\"), waiting on Priya's review; 11 new tests for `useGridKeyboard` plus the mouse drag test are green (de: agent; source: d4-05, ses-db-4)\n- [prochaine-étape] Tom flips the production `dashboards_v2` flag himself on the morning of the 24th for the Zest demo (de: toi; source: d4-06)\n- [prochaine-étape] Old (v1) dashboards stay available behind the flag until January; nothing is removed now (de: toi; source: b2-04)\n- [essai-raté] Wrapping grid items with dnd-kit's `KeyboardSensor`: both libraries applied every move twice and mouse drags fired two `onLayoutChange` calls; making them cooperate would mean disabling react-grid-layout's own drag, so `@dnd-kit/core` was removed in favour of an own handler on the layout state (de: toi, agent; source: d4-02, d4-04, d4-05)\n- [essai-raté] CSS container queries for widget sizing: iOS 15 on Zest's iPads ignores `@container` rules, replaced entirely by a `useWidgetSize()` hook with ResizeObserver (de: toi, agent; source: b2-01, b2-02)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] ResizeObserver instead of container queries, drop container queries completely (de: toi; source: b2-02)\n- [décision] Keep recharts, close the visx migration (#401) for good; no two chart libraries and no rewrite of the 9 remaining charts (de: toi; source: c3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1966,
+    "lignesRetirees": 2,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5328,
+    "sortie": 1196,
+    "reflexion": 561,
+    "cache": 0,
+    "cout": 0.0033582
+  },
+  "cout": 0.0033582,
+  "latenceMs": 22658,
+  "fournisseur": "Xiaomi"
+}

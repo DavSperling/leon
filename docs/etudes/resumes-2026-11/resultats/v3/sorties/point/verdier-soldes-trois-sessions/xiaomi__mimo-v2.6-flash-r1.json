@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:56:03.964Z",
+  "reponse": "## What is still open\n- Ta PR #63 attend la relecture d'Hugo, qui s'interroge sur la Saône à -20 % ; Claire a tranché dans #direction : pas de Saône en soldes, elle est en rupture et les précommandes sont au plein prix [4][10]\n- #65 : le flux Google Shopping doit être relancé juste après le script du 6 janvier, sinon les annonces seront refusées pour prix différent du site [5]\n- #64 : la bannière soldes masque le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6]\n\n## What changed\n- Sophie décale le shooting soldes au 2 décembre : elle a besoin des prix dans Shopify lundi 30 novembre, plus de vendredi [11]\n- #59 (étiquette « soldes » automatique sur les produits remisés) est relue et fusionnée par Hugo [7]\n- #52 est fusionnée : Lucie signale 23 conversations Zendesk ouvertes depuis les pages produit cette semaine [9]\n- Dependabot propose la montée de @shopify/shopify-api 11.4.0 → 11.6.1 (#66) [8]\n\n## What you did\n- Écrit `scripts/prix-soldes.ts` : applique la grille le 6 janvier à 8 h (prix barré = prix actuel, prix arrondi à l'euro inférieur) et restaure les prix le 3 février, via deux tâches planifiées [1]\n- Dry-run en lecture seule sur la prod : 212 variantes de 57 produits ; 3 variantes déjà en promo laissées de côté, 7 lignes de la grille sans produit actif [1]\n- Les deux déclenchements ont été éprouvés sur la boutique de dev, appliquer et restaurer fonctionnent [1]",
+  "rendu": "## What is still open\n- Ta PR #63 attend la relecture d'Hugo, qui s'interroge sur la Saône à -20 % ; Claire a tranché dans #direction : pas de Saône en soldes, elle est en rupture et les précommandes sont au plein prix [4][10]\n- #65 : le flux Google Shopping doit être relancé juste après le script du 6 janvier, sinon les annonces seront refusées pour prix différent du site [5]\n- #64 : la bannière soldes masque le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6]\n\n## What changed\n- Sophie décale le shooting soldes au 2 décembre : elle a besoin des prix dans Shopify lundi 30 novembre, plus de vendredi [11]\n- #59 (étiquette « soldes » automatique sur les produits remisés) est relue et fusionnée par Hugo [7]\n- #52 est fusionnée : Lucie signale 23 conversations Zendesk ouvertes depuis les pages produit cette semaine [9]\n- Dependabot propose la montée de @shopify/shopify-api 11.4.0 → 11.6.1 (#66) [8]\n\n## What you did\n- Écrit `scripts/prix-soldes.ts` : applique la grille le 6 janvier à 8 h (prix barré = prix actuel, prix arrondi à l'euro inférieur) et restaure les prix le 3 février, via deux tâches planifiées [1]\n- Dry-run en lecture seule sur la prod : 212 variantes de 57 produits ; 3 variantes déjà en promo laissées de côté, 7 lignes de la grille sans produit actif [1]\n- Les deux déclenchements ont été éprouvés sur la boutique de dev, appliquer et restaurer fonctionnent [1]",
+  "mesures": {
+    "mots": 229,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5266,
+    "sortie": 1497,
+    "reflexion": 1058,
+    "cache": 1536,
+    "cout": 0.00128531
+  },
+  "cout": 0.00128531,
+  "latenceMs": 18414,
+  "fournisseur": "Makora"
+}

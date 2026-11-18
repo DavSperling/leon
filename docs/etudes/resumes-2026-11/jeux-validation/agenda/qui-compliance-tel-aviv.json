@@ -1,0 +1,174 @@
+{
+  "id": "qui-compliance-tel-aviv",
+  "titre": "Boîte de la responsable conformité de Quillon à Tel-Aviv : audit PCI à l'heure de New York, banque à l'heure Central, semaine israélienne (mails du dimanche, réunion déplacée au dimanche 22), reports, une annulation, des échéances et du bruit",
+  "langue": "en",
+  "entree": {
+    "periode": { "first": "2026-11-16", "last": "2026-11-22" },
+    "mails": [
+      {
+        "sourceId": "gm-sb-dpa-cancel",
+        "title": "Re: DPA Tradewell: meeting Thursday",
+        "author": "Ruth Galili",
+        "at": "2026-11-18T10:40",
+        "text": "Shira,\n\nGood news: Tradewell's counsel accepted our comments on the DPA (sub-processor list and the 72h breach notice), so no need to meet on Thursday. I'm cancelling. I'll send the clean version for signature by email today.\n\nBest,\nRuth\n\nRuth Galili, Adv. | Partner | Galili & Shoham Law Offices\nTel Aviv"
+      },
+      {
+        "sourceId": "gm-sb-ardent-today",
+        "title": "Re: Quillon PCI DSS scoping walkthrough",
+        "author": "Victor Lindqvist",
+        "at": "2026-11-18T08:30",
+        "text": "Hi Shira,\n\nSee you today at 9 ET. Agenda:\n1. CDE boundaries and segmentation (Elad)\n2. Card data flow: tokenization vault, the dashboard's hosted fields\n3. Third-party service providers and their AOCs\n\nPlease have the updated data flow diagram on screen. Reminder that the evidence request list is due Tuesday Dec 1.\n\nVictor Lindqvist, QSA\nArdent Assurance"
+      },
+      {
+        "sourceId": "gm-sb-loomly-legal",
+        "title": "Incident report request: payout delay of 10 November",
+        "author": "Paul Ingram",
+        "at": "2026-11-18T06:50",
+        "text": "Dear Ms. Ben-Ami,\n\nUnder section 9.3 of our services agreement, Loomly requests a written incident report on the payout delay of 10-11 November, including root cause and remediation, by Monday 23 November.\n\nKind regards,\nPaul Ingram\nGeneral Counsel, Loomly"
+      },
+      {
+        "sourceId": "gm-sb-tessera-trial",
+        "title": "Your Tessera trial ends in 3 days",
+        "author": "Tessera Compliance",
+        "at": "2026-11-17T20:10",
+        "text": "Hi Shira,\n\nYour Tessera Compliance trial ends on Friday. Teams preparing for PCI DSS v4.0.1 save 40% of evidence collection time with our automated connectors.\n\nBook a 30-min demo with our team, slots available Thursday and Friday.\n\nThe Tessera team\nUnsubscribe"
+      },
+      {
+        "sourceId": "gm-sb-committee-moved",
+        "title": "Audit & risk committee prep: moved to Sunday",
+        "author": "Gil Shamir",
+        "at": "2026-11-17T16:30",
+        "text": "Shira, Avi,\n\nFriday doesn't work after all (I'm flying back from Austin). Let's move the audit & risk committee prep to Sunday 22/11 at 09:30, same room at the office, one hour. Same agenda: PCI readiness, the payout incident write-up, and the Corvane oversight findings.\n\nGil"
+      },
+      {
+        "sourceId": "gm-sb-corvane-earlier",
+        "title": "Re: Annual third-party oversight review: Quillon",
+        "author": "Monique Tran",
+        "at": "2026-11-17T09:00",
+        "text": "Hi Shira,\n\nApologies, we need to move Thursday's call one hour earlier, to 9am CT, because of a conflict with our exam team. Same dial-in. Marcus is welcome to join for the reserve account part.\n\nThanks,\nMonique\n\nMonique Tran | Third-Party Risk Management | Corvane Bank"
+      },
+      {
+        "sourceId": "gm-sb-jira-2318",
+        "title": "[JIRA] (QPAY-2318) Evidence: quarterly ASV scan reports",
+        "author": "Jira",
+        "at": "2026-11-17T07:45",
+        "text": "Elad Navon changed the due date of QPAY-2318.\n\nQPAY-2318 Evidence: quarterly ASV scan reports (Q1-Q4 2026)\nDue date: 25/Nov/26 (was 20/Nov/26)\nAssignee: Elad Navon\nReporter: Shira Ben-Ami\nComment: Q4 rescan scheduled, passing report expected Monday.\n\nView issue · Turn off notifications"
+      },
+      {
+        "sourceId": "gm-sb-corvane-review",
+        "title": "Annual third-party oversight review: Quillon",
+        "author": "Monique Tran",
+        "at": "2026-11-16T14:20",
+        "text": "Hi Shira,\n\nAs part of our annual oversight of program managers, we've scheduled the review call for Thursday, November 19 at 10:00 AM CT (60 minutes, Teams). Topics: complaints log, OFAC screening, the 10 November payout exception, and your PCI status.\n\nPlease send your SOC 2 bridge letter and the latest complaints log by Wednesday EOD.\n\nThanks,\nMonique Tran\nCorvane Bank"
+      },
+      {
+        "sourceId": "gm-sb-cardsec-webinar",
+        "title": "Live webinar: what changes in PCI DSS v4.0.1 for service providers",
+        "author": "CardSec Academy",
+        "at": "2026-11-16T11:00",
+        "text": "Join our experts for a 45-minute live session on Thursday 19 November, 15:00 GMT.\n• Targeted risk analyses that assessors actually accept\n• Requirement 12.5.2 scoping reviews\n• Live Q&A\n\nReserve your seat →\n\nCardSec Academy · You are receiving this because you attended a previous session. Unsubscribe"
+      },
+      {
+        "sourceId": "gm-sb-dpa-meet",
+        "title": "DPA Tradewell: meet Thursday?",
+        "author": "Ruth Galili",
+        "at": "2026-11-16T09:30",
+        "text": "Shira,\n\nTradewell's counsel sent back the DPA with comments on the sub-processor list and the breach-notification window. Can we meet at our office on Thursday 19th at 12:00 to go through them? One hour should do.\n\nRuth"
+      },
+      {
+        "sourceId": "gm-sb-elad-walkthrough",
+        "title": "Re: Quillon PCI DSS scoping walkthrough",
+        "author": "Elad Navon",
+        "at": "2026-11-16T08:05",
+        "text": "I'll join Wednesday 16:00-17:30 our time. I'll present the segmentation (the CDE VPC, the vault, the bastion) and share the network diagram v7. Avi said he'll join for the first half hour only.\n\nElad"
+      },
+      {
+        "sourceId": "gm-sb-avi-1on1",
+        "title": "1:1 this week",
+        "author": "Avi Kessler",
+        "at": "2026-11-15T19:10",
+        "text": "Shira, can we do our 1:1 tomorrow at 14:00 instead of Tuesday? Tuesday I'm with Tradewell all day. 30 min, my office. I want to go over the evidence tracker before Wednesday's walkthrough.\n\nAvi"
+      },
+      {
+        "sourceId": "gm-sb-hadas-noga",
+        "title": "Compliance analyst: interview with Noga Elbaz",
+        "author": "Hadas Levin",
+        "at": "2026-11-15T09:00",
+        "text": "Hi Shira,\n\nNoga Elbaz confirmed for Tuesday at 13:30, at the office (meeting room Jaffa, 3rd floor), 45 minutes. I'll do the intro and leave you the case study (the evidence-request exercise).\n\nHer CV is in Greenhouse. She's currently at a bank in Ramat Gan and has a 60-day notice period.\n\nHadas"
+      },
+      {
+        "sourceId": "gm-sb-tripdesk",
+        "title": "Booking confirmed: TLV → AUS, Saturday 5 December",
+        "author": "TripDesk",
+        "at": "2026-11-14T11:00",
+        "text": "Your trip is confirmed.\n\nShira Ben-Ami\nSat 5 Dec 2026 · TLV 23:55 → JFK 05:20 (+1)\nSun 6 Dec 2026 · JFK 08:40 → AUS 11:55\nReturn: Fri 11 Dec 2026 · AUS 17:10 → TLV\n\nPurpose: PCI DSS on-site fieldwork, Austin, 8-10 Dec.\nBooking ref: QX7K2M"
+      },
+      {
+        "sourceId": "gm-sb-ardent-updated",
+        "title": "Updated invitation: Quillon PCI DSS scoping walkthrough @ Wed Nov 18, 2026 9am - 10:30am (EST) (shira@quillon.example)",
+        "author": "Victor Lindqvist",
+        "at": "2026-11-13T18:05",
+        "text": "This event has been changed.\n\nQuillon PCI DSS scoping walkthrough\nChanged: Wednesday Nov 18, 2026 ⋅ 9am – 10:30am (Eastern Time - New York)\nWas: Tuesday Nov 17, 2026 ⋅ 9am – 10:30am (Eastern Time - New York)\nJoining info: teams.example/l/meetup-join/ardent-qpay\n\nGuests: Victor Lindqvist (organizer), Shira Ben-Ami, Elad Navon, Avi Kessler\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gm-sb-ardent-move",
+        "title": "Re: PCI DSS assessment: pre-assessment schedule",
+        "author": "Victor Lindqvist",
+        "at": "2026-11-13T17:40",
+        "text": "Shira,\n\nChange of plans on our side: our lead assessor was pulled into another client on Tuesday. Could we move the scoping walkthrough to Wednesday 18th, same time? I'll update the invite. Everything else stays: ERL due Dec 1, fieldwork in Austin Dec 8-10.\n\nVictor"
+      },
+      {
+        "sourceId": "gm-sb-committee-invite",
+        "title": "Invitation: Audit & risk committee prep @ Fri Nov 20, 2026 10am - 11am (Israel Time) (shira@quillon.example)",
+        "author": "Gil Shamir",
+        "at": "2026-11-12T13:00",
+        "text": "Gil Shamir has invited you to a meeting.\n\nAudit & risk committee prep\nFriday Nov 20, 2026 ⋅ 10:00 – 11:00 (Israel Time)\nWhere: Tel Aviv office, room Neve Tzedek\n\nGuests: Gil Shamir, Avi Kessler, Shira Ben-Ami\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gm-sb-avi-gaps",
+        "title": "PCI gaps: quick sync",
+        "author": "Avi Kessler",
+        "at": "2026-11-11T12:30",
+        "text": "Shira, let's take 30 min tomorrow at 11:00 to go over the gaps list before we send anything to Ardent. My office.\n\nAvi"
+      },
+      {
+        "sourceId": "gm-sb-ardent-schedule",
+        "title": "PCI DSS assessment: pre-assessment schedule",
+        "author": "Victor Lindqvist",
+        "at": "2026-11-10T10:15",
+        "text": "Hi Shira,\n\nThanks for the call. Proposed schedule for Quillon's PCI DSS v4.0.1 assessment (service provider, level 1):\n- Scoping walkthrough: Tuesday Nov 17, 9:00-10:30 ET (remote)\n- Evidence request list (ERL) returned: Tuesday Dec 1\n- On-site fieldwork, Austin: Dec 8-10\n- Draft ROC: by Jan 15\n\nLet me know if the walkthrough slot works for Elad and Avi.\n\nBest,\nVictor Lindqvist, QSA\nArdent Assurance"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      { "id": "f1", "texte": "Lists the PCI DSS scoping walkthrough with Ardent (Victor Lindqvist) on Wednesday 18 November at 15:00 Paris time (9:00 ET), once, at its new date.", "poids": 3 },
+      { "id": "f2", "texte": "Lists the Corvane Bank oversight review call on Thursday 19 November at 16:00 Paris time (9:00 CT, moved one hour earlier).", "poids": 3 },
+      { "id": "f3", "texte": "Lists the audit & risk committee prep on Sunday 22 November at 08:30 Paris time (09:30 Israel, moved from Friday).", "poids": 3 },
+      { "id": "f4", "texte": "Lists the interview with Noga Elbaz (compliance analyst) on Tuesday 17 November at 12:30 Paris time (13:30 Israel, \"Tuesday\" read from Sunday's mail).", "poids": 2 },
+      { "id": "f5", "texte": "Lists the 1:1 with Avi Kessler on Monday 16 November at 13:00 Paris time (\"tomorrow at 14:00\" from Sunday's mail).", "poids": 2 }
+    ],
+    "interdits": [
+      { "id": "x1", "texte": "Lists the scoping walkthrough on Tuesday 17 November (old date), or at 9:00 or 16:00 Paris time (time not converted)." },
+      { "id": "x2", "texte": "Lists the Corvane call at 17:00 Paris time (old time), or twice." },
+      { "id": "x3", "texte": "Lists the committee prep on Friday 20 November (old date)." },
+      { "id": "x4", "texte": "Lists the meeting with Ruth Galili on Thursday 19 November (cancelled)." },
+      { "id": "x5", "texte": "Lists the CardSec webinar of Thursday 19 November or a Tessera demo as meetings." },
+      { "id": "x6", "texte": "Lists a deadline as a meeting: SOC 2 bridge letter (Wednesday), ASV reports (25 November), Loomly incident report (23 November) or ERL (1 December)." },
+      { "id": "x7", "texte": "Lists something out of period: Avi's gaps sync of Thursday 12 November, the flight of 5 December or the Austin fieldwork of 8-10 December." }
+    ],
+    "pieges": [
+      "Fuseaux : Tel-Aviv (-1 h pour Paris), New York (+6 h), Central (+7 h) ; la visite d'Ardent est écrite en heure de New York par le QSA et en heure d'Israël par Elad.",
+      "Semaine israélienne : deux mails du dimanche (« tomorrow », « Tuesday ») ; la préparation du comité passe du vendredi au dimanche 22, qui reste dans la période.",
+      "Déplacés et annulé : la visite d'Ardent passe du mardi au mercredi (cinq mails en parlent, rendue une fois) ; l'appel Corvane avance d'une heure ; la réunion avec l'avocate est annulée.",
+      "Pas des rendez-vous : webinaire, démo d'un essai, échéances (lettre SOC 2, rapports ASV, rapport d'incident, ERL), vol ; « tomorrow » écrit le 11 tombe le 12, hors période."
+    ],
+    "rdv": [
+      { "n": 12, "debut": "2026-11-16T13:00", "fin": "2026-11-16T13:30", "titre": "1:1 with Avi", "avec": "Avi Kessler" },
+      { "n": 13, "debut": "2026-11-17T12:30", "fin": "2026-11-17T13:15", "titre": "Interview: Noga Elbaz, compliance analyst", "avec": "Noga Elbaz, Hadas Levin" },
+      { "n": 15, "autresN": [16, 11, 2, 19], "debut": "2026-11-18T15:00", "fin": "2026-11-18T16:30", "titre": "PCI DSS scoping walkthrough with Ardent", "avec": "Victor Lindqvist, Elad Navon, Avi Kessler" },
+      { "n": 6, "autresN": [8], "debut": "2026-11-19T16:00", "fin": "2026-11-19T17:00", "titre": "Corvane Bank annual oversight review", "avec": "Monique Tran" },
+      { "n": 5, "autresN": [17], "debut": "2026-11-22T08:30", "fin": "2026-11-22T09:30", "titre": "Audit & risk committee prep", "avec": "Gil Shamir, Avi Kessler" }
+    ]
+  }
+}

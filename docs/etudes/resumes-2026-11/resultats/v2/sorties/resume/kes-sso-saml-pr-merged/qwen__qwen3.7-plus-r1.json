@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:24:11.975Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint signature and condition verification were implemented on `daniel/saml-acs` using `signxml` to avoid Docker image bloat, with a 120s clock skew tolerance per the Fernhill contract. PR #412 was successfully merged into main.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them the staging SP metadata by Wednesday EOD, then create a separate ticket to enforce SSO for Fernhill users.\n- [essai-raté] Using `python3-saml` with `xmlsec` failed due to `lxml` and Alpine's `libxml2` version mismatch, and building `lxml` from source failed with a crypto library error.\n- [décision] Use `signxml` instead of `python3-saml` to keep the Docker image size small and write custom SAML condition checks (source: t08).\n- [décision] Set the SAML clock skew tolerance to 120 seconds as required by the Fernhill security questionnaire (source: t12).",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint signature and condition verification were implemented on `daniel/saml-acs` using `signxml` to avoid Docker image bloat, with a 120s clock skew tolerance per the Fernhill contract. PR #412 was successfully merged into main.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them the staging SP metadata by Wednesday EOD, then create a separate ticket to enforce SSO for Fernhill users.\n- [essai-raté] Using `python3-saml` with `xmlsec` failed due to `lxml` and Alpine's `libxml2` version mismatch, and building `lxml` from source failed with a crypto library error.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 752,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4875,
+    "sortie": 3072,
+    "reflexion": 2834,
+    "cache": 512,
+    "cout": 0.005361088
+  },
+  "cout": 0.005361088,
+  "latenceMs": 50985,
+  "fournisseur": "Alibaba"
+}

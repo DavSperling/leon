@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:39.573Z",
+  "reponse": "La date de démarrage de TransAlp est contradictoire selon les sources. Le message le plus récent, de TransAlp le 17 novembre, confirme le début des enlèvements réguliers le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber les volumes avant [2]. Auparavant, le 16 novembre, le 1er décembre était jugé impératif car Rapid'Colis s'arrête le 30 [4], une bascule au 1er décembre était confirmée le 13 [3] et prévue dans le plan du 10 novembre [1]. Le contrat Rapid'Colis prend fin le 30 novembre [5].",
+  "rendu": "La date de démarrage de TransAlp est contradictoire selon les sources. Le message le plus récent, de TransAlp le 17 novembre, confirme le début des enlèvements réguliers le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber les volumes avant [2]. Auparavant, le 16 novembre, le 1er décembre était jugé impératif car Rapid'Colis s'arrête le 30 [4], une bascule au 1er décembre était confirmée le 13 [3] et prévue dans le plan du 10 novembre [1]. Le contrat Rapid'Colis prend fin le 30 novembre [5].",
+  "mesures": {
+    "mots": 85,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1094,
+    "sortie": 278,
+    "reflexion": 125,
+    "cache": 0,
+    "cout": 0.00026472
+  },
+  "cout": 0.00026472,
+  "latenceMs": 1594,
+  "fournisseur": "River"
+}

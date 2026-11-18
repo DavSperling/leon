@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:25:10.011Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône vient des webhooks de commande, qui décrémentaient le stock en plus de Shopify. Le décrément a été retiré des webhooks, la synchro de nuit écrit désormais des valeurs absolues, le seuil d'alerte est passé à 3 et la Saône est remise à 0. La PR #87 est fusionnée. Il reste à traiter les trois commandes survendues avec Lucie.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues de la Saône (#1041, #1043, #1044).\n- [essai-raté] Le dédoublonnage des webhooks ne réglait rien, car `orders/create` et `orders/updated` ont des identifiants différents ; il a été retiré.\n- [décision] Remettre le stock de la Saône à 0 dans Shopify (source: t15)\n- [décision] Pas de précommande sur la Saône avant le retour de chez Bois & Fils le 2 décembre (source: t17)\n- [décision] Ne plus toucher au stock dans les webhooks : la synchro de nuit corrige seule, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 unités (source: t09)",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône vient des webhooks de commande, qui décrémentaient le stock en plus de Shopify. Le décrément a été retiré des webhooks, la synchro de nuit écrit désormais des valeurs absolues, le seuil d'alerte est passé à 3 et la Saône est remise à 0. La PR #87 est fusionnée. Il reste à traiter les trois commandes survendues avec Lucie.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues de la Saône (#1041, #1043, #1044).\n- [essai-raté] Le dédoublonnage des webhooks ne réglait rien, car `orders/create` et `orders/updated` ont des identifiants différents ; il a été retiré.\n- [décision] Remettre le stock de la Saône à 0 dans Shopify (source: t15)\n- [décision] Pas de précommande sur la Saône avant le retour de chez Bois & Fils le 2 décembre (source: t17)\n- [décision] Ne plus toucher au stock dans les webhooks : la synchro de nuit corrige seule, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 unités (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1132,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5420,
+    "sortie": 1427,
+    "reflexion": 992,
+    "cache": 0,
+    "cout": 0.0012555
+  },
+  "cout": 0.0012555,
+  "latenceMs": 7096,
+  "fournisseur": "Claude Platform on AWS"
+}

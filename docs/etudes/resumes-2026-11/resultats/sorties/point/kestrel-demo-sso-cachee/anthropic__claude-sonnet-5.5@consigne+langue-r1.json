@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@consigne+langue",
+  "rep": 1,
+  "date": "2026-11-18T14:40:53.978Z",
+  "reponse": "## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and did the same for two similar tests. You also cleaned up the lint and mypy warnings in `kestrel/auth` and split `saml_utils.py` into a `saml/` package, with the old imports still working. A missing Issuer or Subject now returns a 401 instead of a 500 [1][4].\n\n## What changed\n- PR #418 (signature validation) was approved and merged by Maya, so it ships with tonight's staging deploy. That meets the Wednesday EOD need for Thursday's Fernhill SSO walkthrough [3][1].\n- Tom requests changes on #423: he wants the module move split from the lint fixes, since the diff is about 1,900 lines. He will approve both PRs today if you split them [4].\n- #424: Zest Grocers' CSV export times out above 200k rows (Zendesk #8817). Tom is taking it by moving the export to the job queue and emailing a link [5].\n\n## What is still open\n- Split #423 into two PRs (module move, and lint/mypy/test fixes) so Tom can approve [4].\n- Add the Redis-backed replay cache for assertion IDs. It is in-memory only today, so a replay could succeed on another pod with 3 API pods [1].\n- Fernhill's walkthrough is Thursday at 10am NY time, on their Okta tenant. Priya runs the demo and you only need to be on the call [1].\n- The Dependabot bump of `cryptography` to 43.0.3 (#426) is still open [6].",
+  "rendu": "## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and did the same for two similar tests. You also cleaned up the lint and mypy warnings in `kestrel/auth` and split `saml_utils.py` into a `saml/` package, with the old imports still working. A missing Issuer or Subject now returns a 401 instead of a 500 [1][4].\n\n## What changed\n- PR #418 (signature validation) was approved and merged by Maya, so it ships with tonight's staging deploy. That meets the Wednesday EOD need for Thursday's Fernhill SSO walkthrough [3][1].\n- Tom requests changes on #423: he wants the module move split from the lint fixes, since the diff is about 1,900 lines. He will approve both PRs today if you split them [4].\n- #424: Zest Grocers' CSV export times out above 200k rows (Zendesk #8817). Tom is taking it by moving the export to the job queue and emailing a link [5].\n\n## What is still open\n- Split #423 into two PRs (module move, and lint/mypy/test fixes) so Tom can approve [4].\n- Add the Redis-backed replay cache for assertion IDs. It is in-memory only today, so a replay could succeed on another pod with 3 API pods [1].\n- Fernhill's walkthrough is Thursday at 10am NY time, on their Okta tenant. Priya runs the demo and you only need to be on the call [1].\n- The Dependabot bump of `cryptography` to 43.0.3 (#426) is still open [6].",
+  "mesures": {
+    "mots": 236,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8131,
+    "sortie": 531,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021572
+  },
+  "cout": 0.021572,
+  "latenceMs": 4699,
+  "fournisseur": "Claude Platform on AWS"
+}

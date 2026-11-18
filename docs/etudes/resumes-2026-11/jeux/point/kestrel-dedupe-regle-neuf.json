@@ -1,0 +1,323 @@
+{
+  "id": "kestrel-dedupe-regle-neuf",
+  "titre": "Trois sujets déjà réglés : un seul a vraiment du neuf (#240 fait perdre des événements à Orbitly), les deux autres reviennent sans rien de nouveau",
+  "langue": "en",
+  "entree": {
+    "maintenant": "2026-11-18T06:50:00Z",
+    "projet": "github.com/kestrel-analytics/ingest",
+    "depuis": "2026-11-17T13:10:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [
+      "PR #240 is merged and deployed: replayed batches are now deduplicated by event_id.",
+      "The 12/11 backfill is finished; Orbitly and Zest Grocers have complete data again.",
+      "Your root-cause section of the 12/11 postmortem is in issue #233."
+    ],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-orbitly",
+          "kind": "codex",
+          "nature": "conversation",
+          "titre": "rachel in #support-escalations: Orbitly says their iOS funnel numbers dropped",
+          "url": null,
+          "date": "2026-11-17T17:46:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T13:10:00Z",
+            "texte": "rachel in #support-escalations: \"Orbitly says their iOS funnel numbers dropped ~8% since last Friday, their PM asks if it's related to the incident\". friday = when 240 went out. check if the dedupe drops real events. orbitly project_id = prj_0rb1"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:12:20Z",
+            "texte": "I'll compare what #240's dedupe dropped for `prj_0rb1` since it was deployed (2026-11-13 09:40 UTC) with the rest of the projects.\n\nThe dedupe in `internal/dedupe/dedupe.go` keys on `event_id` only, with a 72h window in Redis. Drops are logged at debug level, which is off in prod, so I'll use the Prometheus counter `ingest_dedupe_dropped_total` instead."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:19:05Z",
+            "texte": "`ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` since 13/11 09:40: **1,184,302** drops. All other projects together: 9,870. Orbitly alone is 99% of the drops. A replay after a Kafka rebalance (the 12/11 case) would hit every project roughly in proportion to its volume, so this doesn't look like replays."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T13:20:40Z",
+            "texte": "sample 20 dropped ones and the event they were deduped against"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:31:15Z",
+            "texte": "Sampled 20 dropped events from the landing bucket and the kept event with the same `event_id`:\n\n```\nevent_id  kept (device, ts, name)            dropped (device, ts, name)\n17        d-8f2c 13/11 09:14 screen_view     d-a91e 13/11 11:02 add_to_cart\n17        d-8f2c 13/11 09:14 screen_view     d-03bd 14/11 18:40 checkout_start\n4         d-55e0 15/11 07:01 app_open        d-c7a2 15/11 21:13 app_open…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:38:50Z",
+            "texte": "Found the cause. Every dropped event carries `sdk: kestrel-ios/3.2.0`, and its `event_id` is a small integer. Our own iOS SDK 3.2.0 changelog says: \"event_id is now a per-session sequence number (smaller payloads)\". It used to be a UUID. Our ingest contract says event_id is globally unique, so #240's dedupe treats event 17 of one session as a duplicate of event 17 of any other session within 72h."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T13:41:30Z",
+            "texte": "ugh. so it's our own sdk. key the dedupe on (project_id, device_id, event_id) then. is device_id always there?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:47:10Z",
+            "texte": "`device_id` is required by the ingest schema since v2 (`schema/event.go:41`, validation rejects events without it), and the landing data agrees: 0 events without `device_id` across all projects since 01/11. I'll change `dedupe.Key()` to `project_id:device_id:event_id` and keep the 72h window."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:20:35Z",
+            "texte": "Done. Changed `dedupe.Key()` and added tests:\n- same `event_id`, different devices → both kept\n- same `event_id`, same device, replayed batch → dropped (the 12/11 replay case is still covered by `TestDedupeDropsReplayedBatch`)\n- key includes project, so two customers can't collide\n\n`go test ./internal/dedupe/...` ok, `go test ./...` ok (412 tests), `golangci-lint run` clean."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:24:00Z",
+            "texte": "how many real events did we actually lose for orbitly. exclude genuine replays"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:52:40Z",
+            "texte": "Re-ran the dedupe over the raw landing data for `prj_0rb1` from 13/11 09:40 to now, with the new key. Of the 1,184,302 drops, 1,179,950 would be kept by the new key and 4,352 are genuine replays. So about **1.18 million legitimate Orbitly events were dropped**, ≈8.1% of their iOS volume over the period — which matches the drop their PM sees in the funnels."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:55:10Z",
+            "texte": "anyone else on ios 3.2?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T15:03:25Z",
+            "texte": "Projects sending `kestrel-ios/3.2.0` since 13/11: `prj_0rb1` (Orbitly) and `prj_z3st` (Zest Grocers, which has 3.2.0 on a pilot store app only: 0.4% of their traffic). Zest lost 3,812 events the same way. Everyone else is on 3.1.x or Android. So Zest is marginally affected too."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T15:06:00Z",
+            "texte": "ok. open the PR, maya reviews. and write a note for the ios team: the sdk has to go back to uuids for event_id, this will bite again"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T17:40:30Z",
+            "texte": "Opened PR #247 \"dedupe: key on (project, device, event_id), stop dropping Orbitly iOS events\" with @maya-cohen as reviewer. Draft note for the iOS team:\n\n> kestrel-ios 3.2.0 sends `event_id` as a per-session counter. Ingest dedupes on it (with device since #247), but the contract says event_id is a UUID and other consumers rely on that. Please restore UUIDs in 3.2.1. Affected: Orbitly, Zest pilot…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T17:42:00Z",
+            "texte": "the orbitly rebackfill: can we replay from landing for 13/11 onward once 247 is merged"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T17:44:15Z",
+            "texte": "Yes. Landing keeps 30 days, so 13/11 onward is still there. `go run ./cmd/replay --project prj_0rb1 --from 2026-11-13T09:40:00Z --to <deploy time of #247>` with the new key reinserts the ~1.18M events and skips the 4,352 genuine replays; about 40 minutes. It must run only **after #247 is deployed**, otherwise the old key drops them again. Same command for `prj_z3st`, a few seconds."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T17:45:20Z",
+            "texte": "yep after deploy. remind me"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T17:46:00Z",
+            "texte": "Will do: once #247 is merged and deployed, run the replay for Orbitly (and Zest) from 13/11, then check that `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero."
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-247",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#247 dedupe: key on (project, device, event_id), stop dropping Orbitly iOS events",
+          "url": "https://github.com/kestrel-analytics/ingest/pull/247",
+          "date": "2026-11-17T20:15:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "lior-bd",
+            "date": "2026-11-17T17:40:00Z",
+            "texte": "kestrel-ios 3.2.0 sends event_id as a per-session counter, so the event_id-only dedupe from #240 drops distinct events from different devices. This keys the dedupe on project_id:device_id:event_id. Replays of the same batch are still dropped (test kept). Orbitly events dropped since 13/11 need a replay from landing after this is deployed."
+          },
+          {
+            "role": "participant",
+            "auteur": "maya-cohen",
+            "date": "2026-11-17T20:15:00Z",
+            "texte": "Logic looks right, I'll approve once CI is green. Before we merge: how many Orbitly events did we drop since #240? I want the number for Thursday's call with Orbitly. @lior-bd"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "issue-233",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#233 Postmortem: ingestion gap of 12/11",
+          "url": "https://github.com/kestrel-analytics/ingest/issues/233",
+          "date": "2026-11-17T15:05:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "auteur": "lior-bd",
+            "date": "2026-11-14T16:20:00Z",
+            "texte": "Root cause section added: during the 12/11 Kafka rebalance the consumer group re-read ~40 minutes of batches, which were re-ingested without any dedupe. Fixed by #240 (dedupe by event_id). Backfill done for Orbitly and Zest."
+          },
+          {
+            "role": "participant",
+            "auteur": "noa-friedman",
+            "date": "2026-11-17T15:05:00Z",
+            "texte": "Final version is up, thanks all. Lior's root cause section made this easy. I'll present it at Friday's incident review; action items are in the Fathom notes."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-245",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#245 ci: bump Go to 1.23.4",
+          "url": "https://github.com/kestrel-analytics/ingest/pull/245",
+          "date": "2026-11-17T14:02:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "noa-friedman",
+            "date": "2026-11-17T13:30:00Z",
+            "texte": "Bumps the Go toolchain in CI and the Dockerfile from 1.23.2 to 1.23.4. No code change."
+          },
+          {
+            "role": "participant",
+            "auteur": "daniel-levi",
+            "date": "2026-11-17T14:02:00Z",
+            "texte": "LGTM, merged."
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "mail-sentry",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "Weekly Report for kestrel-analytics: Nov 10 – Nov 16",
+          "url": null,
+          "date": "2026-11-18T05:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Sentry",
+          "date": "2026-11-18T05:00:00Z",
+          "texte": "Weekly Report for kestrel-analytics (Nov 10 – Nov 16)\n\nEvents: 48.2k (+12%) · New issues: 14 · Resolved: 9\nMost frequent: ConnectionResetError in kestrel-ingest (2.1k events)\n\nView your full report in Sentry.\n\nThis email was sent to lior@kestrel-analytics.example. You are receiving it because you are a member of kestrel-analytics. Manage your notification settings."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-support",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#support-escalations, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T16:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Rachel Kim",
+          "date": "2026-11-17T16:30:00Z",
+          "texte": "@lior Zest confirmed their dashboards are complete again after the backfill 🙏 closing their Zendesk ticket"
+        }
+      },
+      {
+        "source": {
+          "id": "fathom-review",
+          "kind": "fathom",
+          "nature": "reunion",
+          "titre": "Incident review prep — 12/11 ingestion gap",
+          "url": null,
+          "date": "2026-11-17T14:45:00Z"
+        },
+        "tour": {
+          "role": "document",
+          "auteur": "Fathom",
+          "date": "2026-11-17T14:45:00Z",
+          "texte": "Summary: the team reviewed the 12/11 postmortem draft. Root cause and backfill are covered.\n\nAction items:\n- Noa Friedman: present the final postmortem at Friday's incident review (20/11)\n- Lior Ben-David (lior@kestrel-analytics.example): add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday's review\n- Daniel Levi: document the consumer group settings"
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-perte",
+    "faits": [
+      {
+        "id": "f-perte",
+        "texte": "Says the event_id-only dedupe from #240 has been dropping legitimate Orbitly iOS events since 13/11.",
+        "poids": 3
+      },
+      {
+        "id": "f-cause",
+        "texte": "Gives the cause: Kestrel's own iOS SDK 3.2.0 sends event_id as a per-session counter instead of a UUID.",
+        "poids": 2
+      },
+      {
+        "id": "f-247",
+        "texte": "Says his fix PR #247 (dedupe keyed on project, device and event_id) is open, waiting for Maya's approval.",
+        "poids": 2
+      },
+      {
+        "id": "f-maya",
+        "texte": "Says Maya wants the number of dropped Orbitly events before Thursday's call with Orbitly.",
+        "poids": 3
+      },
+      {
+        "id": "f-nombre",
+        "texte": "Gives that number: about 1.18 million events (≈8% of Orbitly's iOS volume).",
+        "poids": 2
+      },
+      {
+        "id": "f-replay",
+        "texte": "Says the Orbitly replay from landing (from 13/11) is still to run, only after #247 is deployed.",
+        "poids": 2
+      },
+      {
+        "id": "f-dlq",
+        "texte": "Says he has an action item: an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's incident review (20/11).",
+        "poids": 2
+      },
+      {
+        "id": "f-zest",
+        "texte": "Says Zest Grocers is marginally affected too (3,812 events, pilot app on SDK 3.2.0).",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-240-nouvelle",
+        "texte": "Reports as news that #240 is merged or deployed (already settled), instead of only what is new about it."
+      },
+      {
+        "id": "i-backfill",
+        "texte": "Says the 12/11 backfill is finished or that Zest confirmed its dashboards are complete again."
+      },
+      {
+        "id": "i-postmortem",
+        "texte": "Reports his root-cause section of the postmortem, or Noa's thanks for it, as something that changed."
+      },
+      {
+        "id": "i-replay-fait",
+        "texte": "Says the Orbitly replay or re-backfill has already been run."
+      },
+      {
+        "id": "i-sentry",
+        "texte": "Mentions the Sentry weekly report."
+      }
+    ],
+    "pieges": [
+      "Déjà réglé avec vrai neuf : #240 est réglée, mais la session montre qu'elle fait perdre des événements à Orbitly ; seul ce neuf doit sortir.",
+      "Déjà réglé sans neuf : le message de Rachel (Zest complet après le rattrapage) et le commentaire de Noa sur le postmortem redisent des lignes retirées.",
+      "Croiser : la question de Maya sur #247 (combien d'événements perdus) a déjà sa réponse dans la session (≈1,18 million).",
+      "Bruit : le rapport hebdomadaire automatique de Sentry."
+    ]
+  }
+}

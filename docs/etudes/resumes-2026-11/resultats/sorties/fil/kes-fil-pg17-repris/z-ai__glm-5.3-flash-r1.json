@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:31.105Z",
+  "reponse": "## Où j'en suis\nLa branche `noa/rds-pg17` prépare la montée en PostgreSQL 17 d'analytics RDS via la draft PR kestrel-analytics/infra#57 (toujours open). Le 17 novembre, pg_partman a été migré de 4.7.4 à 5.1.0 sur staging, avec maintenance verte sur events_raw et events_daily. Le premier apply staging a échoué (logical replication requis), corrigé en activant `rds.logical_replication = 1` + reboot (1m48s), puis blue/green appliqué avec switchover à 14:20 UTC (41 s de refus d'écriture) : analytics-staging tourne sur PostgreSQL 17.2. dbt events_daily passe (14 modèles, +3 % de temps, dans le bruit). Commits 7e3c9d4 (logical replication module) et b0f18a2 (staging 17.2) poussés sur la PR ; runbook `runbooks/pg17-upgrade.md` mis à jour avec l'étape reboot. Noa a posté dans #infra ; Maya signera le prod après une semaine complète de staging sur 17. (source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [prochaine-étape] surveiller staging sur 17 pendant une semaine (incidents → ping Noa), puis sign-off de Maya et choix de la fenêtre prod (source: src-slack-infra, src-linear-kes298, s3-09)\n- [prochaine-étape] prod : étape 0 = `rds.logical_replication = 1` + reboot (~2–3 min de downtime, fenêtre dédiée), puis blue/green ; fenêtre à éviter : lock dbt 01:00–03:30 UTC, slots basse trafic samedi/dimanche 04:00–06:00 UTC (source: s3-10, s1-05, s3-04)\n- [essai-raté] `terraform apply` staging : refus AWS, blue/green PostgreSQL exige `rds.logical_replication = 1` dans le parameter group source + reboot (source: s3-04)\n- [essai-raté] `terraform init -upgrade` : provider AWS v6.4.0, 37 changements hors périmètre RDS (source: s1-01)\n- [question] date de la fenêtre prod, à trancher après le sign-off de Maya (source: src-linear-kes298, s3-09)\n- [décision] provider AWS épinglé à 5.82, pas de v6 dans cette PR (source: s1-02)\n- [décision] pas de date prod avant sign-off de Maya ; `apply_immediately` reste false (source: s1-04, src-pr57)",
+  "rendu": "## Où j'en suis\nLa branche `noa/rds-pg17` prépare la montée en PostgreSQL 17 d'analytics RDS via la draft PR kestrel-analytics/infra#57 (toujours open). Le 17 novembre, pg_partman a été migré de 4.7.4 à 5.1.0 sur staging, avec maintenance verte sur events_raw et events_daily. Le premier apply staging a échoué (logical replication requis), corrigé en activant `rds.logical_replication = 1` + reboot (1m48s), puis blue/green appliqué avec switchover à 14:20 UTC (41 s de refus d'écriture) : analytics-staging tourne sur PostgreSQL 17.2. dbt events_daily passe (14 modèles, +3 % de temps, dans le bruit). Commits 7e3c9d4 (logical replication module) et b0f18a2 (staging 17.2) poussés sur la PR ; runbook `runbooks/pg17-upgrade.md` mis à jour avec l'étape reboot. Noa a posté dans #infra ; Maya signera le prod après une semaine complète de staging sur 17. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [prochaine-étape] surveiller staging sur 17 pendant une semaine (incidents → ping Noa), puis sign-off de Maya et choix de la fenêtre prod (de: toi, connecteur; source: src-slack-infra, src-linear-kes298, s3-09)\n- [prochaine-étape] prod : étape 0 = `rds.logical_replication = 1` + reboot (~2–3 min de downtime, fenêtre dédiée), puis blue/green ; fenêtre à éviter : lock dbt 01:00–03:30 UTC, slots basse trafic samedi/dimanche 04:00–06:00 UTC (de: agent; source: s3-10, s1-05, s3-04)\n- [essai-raté] `terraform apply` staging : refus AWS, blue/green PostgreSQL exige `rds.logical_replication = 1` dans le parameter group source + reboot (de: agent; source: s3-04)\n- [essai-raté] `terraform init -upgrade` : provider AWS v6.4.0, 37 changements hors périmètre RDS (de: agent; source: s1-01)\n- [question] date de la fenêtre prod, à trancher après le sign-off de Maya (de: toi, connecteur; source: src-linear-kes298, s3-09)\n- [décision] provider AWS épinglé à 5.82, pas de v6 dans cette PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1961,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4147,
+    "sortie": 647,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.001042755
+  },
+  "cout": 0.001042755,
+  "latenceMs": 10028,
+  "fournisseur": "Inceptron"
+}

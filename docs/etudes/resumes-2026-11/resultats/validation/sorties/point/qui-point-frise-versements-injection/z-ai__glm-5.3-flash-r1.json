@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:22:30.389Z",
+  "reponse": "## What is still open\n\n- **Staging by Thursday EOD for the Friday demo**: Sofia wants the payout timeline live for Loomly's ops call Friday 20/11 at 4pm CT; a mocked returned state is acceptable, she'll flag it on the call [2].\n- **Real data slips to Monday 23/11**: Jake says the events endpoint (core#1430) won't ship Thursday as hoped — the return-code → reason mapping isn't done, so you'll demo on mocks longer than planned [6][1].\n- **Returned step shows only the raw code** (e.g. \"Returned (R02)\") until core sends a readable reason; Jake doesn't want to ship codes without text [1][6].\n\n## What changed\n\n- Sofia responded on your draft PR #402: she loves it, but set the staging deadline and demo expectation above [2].\n- Carla flagged in #support that 23 Loomly tickets this week are \"where is my payout\" — your expected-date feature would halve them [5].\n\n## What you did\n\n- Built the payout timeline for the seller payouts page behind `payout_timeline`: stepper component matching Sofia's spec, mocked events, expected-by dates (Corvane next-business-day 9am CT, Fed holidays handled), a11y announcements, 48 tests passing, and draft PR #402 [1].\n- Agreed with Jake to keep the R-code mapping in core rather than on the dashboard side [1].",
+  "rendu": "## What is still open\n\n- **Staging by Thursday EOD for the Friday demo**: Sofia wants the payout timeline live for Loomly's ops call Friday 20/11 at 4pm CT; a mocked returned state is acceptable, she'll flag it on the call [2].\n- **Real data slips to Monday 23/11**: Jake says the events endpoint (core#1430) won't ship Thursday as hoped — the return-code → reason mapping isn't done, so you'll demo on mocks longer than planned [6][1].\n- **Returned step shows only the raw code** (e.g. \"Returned (R02)\") until core sends a readable reason; Jake doesn't want to ship codes without text [1][6].\n\n## What changed\n\n- Sofia responded on your draft PR #402: she loves it, but set the staging deadline and demo expectation above [2].\n- Carla flagged in #support that 23 Loomly tickets this week are \"where is my payout\" — your expected-date feature would halve them [5].\n\n## What you did\n\n- Built the payout timeline for the seller payouts page behind `payout_timeline`: stepper component matching Sofia's spec, mocked events, expected-by dates (Corvane next-business-day 9am CT, Fed holidays handled), a11y announcements, 48 tests passing, and draft PR #402 [1].\n- Agreed with Jake to keep the R-code mapping in core rather than on the dashboard side [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4217,
+    "sortie": 354,
+    "reflexion": 41,
+    "cache": 0,
+    "cout": 0.00080955
+  },
+  "cout": 0.00080955,
+  "latenceMs": 2908,
+  "fournisseur": "Mistral"
+}

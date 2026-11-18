@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:18.226Z",
+  "reponse": "## Où j'en suis\nThe replay itself is done: PR #233 merged, job replay-1 pushed all 18,442,107 events (3,118 rejects to the rejects file) into events.replay.v3, and the aggregator backfill `backfill-2026-11-12` is running — ~61% after ~55 min, ClickHouse `events_v3` at 14.9M rows vs ~20.5M expected for that window. The incident is still open pending matching counts. (source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12, hours 15–23 in progress (source: r2-06, ses-rp-2)\n- [prochaine-étape] Wait for the backfill to reach 100%, then compare ClickHouse counts hour by hour against last week's same weekday with 1% tolerance (source: r2-06, r2-08)\n- [prochaine-étape] Close the incident only once the counts match (source: r2-07, r2-10)\n- [décision] The incident stays open until the counts match; no closing before that (source: r2-07)\n- [décision] Ignore PR #241; no other fix goes in for this incident — Daniel's CI check on the dedup key is the official fix (source: r2-09, src-slack-incident)\n- [question] Rachel committed the data back by Thursday, but Orbitly's ticket says they were told today, Wed Nov 18 — which date to confirm with engineering (source: r2-07, src-zendesk-orbitly)",
+  "rendu": "## Où j'en suis\nThe replay itself is done: PR #233 merged, job replay-1 pushed all 18,442,107 events (3,118 rejects to the rejects file) into events.replay.v3, and the aggregator backfill `backfill-2026-11-12` is running — ~61% after ~55 min, ClickHouse `events_v3` at 14.9M rows vs ~20.5M expected for that window. The incident is still open pending matching counts. (de: agent; source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12, hours 15–23 in progress (de: agent; source: r2-06, ses-rp-2)\n- [prochaine-étape] Wait for the backfill to reach 100%, then compare ClickHouse counts hour by hour against last week's same weekday with 1% tolerance (de: agent; source: r2-06, r2-08)\n- [prochaine-étape] Close the incident only once the counts match (de: toi, agent; source: r2-07, r2-10)\n- [décision] The incident stays open until the counts match; no closing before that (de: toi; source: r2-07)\n- [décision] Ignore PR #241; no other fix goes in for this incident — Daniel's CI check on the dedup key is the official fix (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [question] Rachel committed the data back by Thursday, but Orbitly's ticket says they were told today, Wed Nov 18 — which date to confirm with engineering (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1319,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4201,
+    "sortie": 1062,
+    "reflexion": 648,
+    "cache": 0,
+    "cout": 0.0012119
+  },
+  "cout": 0.0012119,
+  "latenceMs": 11849,
+  "fournisseur": "Makora"
+}

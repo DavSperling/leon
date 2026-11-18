@@ -1,0 +1,149 @@
+{
+  "id": "kes-incident-ingestion-coulisse",
+  "titre": "Recherche de la cause de la panne d'ingestion du 12/11 : le premier résultat est une session de code dont le raisonnement de l'agent accuse une PR, alors que le postmortem et la réunion disent autre chose",
+  "langue": "en",
+  "entree": {
+    "recherche": "root cause ingest outage nov 12",
+    "resultats": [
+      {
+        "id": "cc-lior-1112",
+        "kind": "claude_code",
+        "nature": "conversation",
+        "titre": "ingest lag spike investigation",
+        "url": null,
+        "date": "2026-11-12T10:41:00Z",
+        "passages": [
+          {
+            "id": "pr1",
+            "date": "2026-11-12T10:05:00Z",
+            "role": "raisonnement",
+            "texte": "The consumer lag spike lines up with the deploy of PR #388 at 09:41 UTC. #388 raised the insert batch size from 500 to 5000, so each ClickHouse insert now takes longer than the 30s timeout and the consumers keep retrying the same batch. The root cause is almost certainly the batch size change in #388. I'll suggest reverting it."
+          },
+          {
+            "id": "pr2",
+            "auteur": "Lior Ben-David",
+            "date": "2026-11-12T10:12:00Z",
+            "role": "user",
+            "texte": "ok revert 388 for now and lets see if the lag drops"
+          },
+          {
+            "id": "pr3",
+            "date": "2026-11-12T10:41:00Z",
+            "role": "assistant",
+            "texte": "Reverted #388 (commit 9c1e2fa) and redeployed ingest-worker. The lag is still climbing: 2.1M messages behind on ingest-events, and the consumers now log \"NOT_ENOUGH_REPLICAS\" from the broker. The batch size may not be the cause after all."
+          }
+        ]
+      },
+      {
+        "id": "no-pm-1112",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Postmortem – 2026-11-12 ingest outage",
+        "url": null,
+        "date": "2026-11-16T16:30:00Z",
+        "passages": [
+          {
+            "id": "pn2",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-16T16:30:00Z",
+            "texte": "Root cause: the disks of Kafka broker ingest-kafka-2 filled up after the retention change in infra PR #221 (size-based retention removed, 7-day time-based only). The broker went read-only at 09:38 UTC and the consumers stalled.\nDuration: 2h47m (09:38–12:25 UTC).\nCustomer impact: events delayed up to 2h47m, no event lost (producers buffered)."
+          }
+        ]
+      },
+      {
+        "id": "sl-incident-1112",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#incident-1112",
+        "url": null,
+        "date": "2026-11-12T10:58:00Z",
+        "passages": [
+          {
+            "id": "ps2",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-12T10:58:00Z",
+            "texte": "disk on ingest-kafka-2 at 100%, broker is read-only. freeing space now and adding a volume. FYI the #388 revert didn't change anything, lag kept growing after it."
+          }
+        ]
+      },
+      {
+        "id": "se-kafka-timeout",
+        "kind": "sentry",
+        "nature": "ticket",
+        "titre": "KafkaConsumerTimeout in ingest-worker",
+        "url": null,
+        "date": "2026-11-12T12:30:00Z",
+        "passages": [
+          {
+            "id": "pe1",
+            "date": "2026-11-12T12:30:00Z",
+            "texte": "KafkaConsumerTimeout: consumer group ingest-events did not poll within 300000 ms\nFirst seen: Nov 12, 2026 09:39 UTC · Last seen: 12:24 UTC · Events: 18,402 · Status: resolved"
+          }
+        ]
+      },
+      {
+        "id": "fa-pm-1116",
+        "kind": "fathom",
+        "nature": "reunion",
+        "titre": "Postmortem – ingest outage 12 Nov",
+        "url": null,
+        "date": "2026-11-16T15:00:00Z",
+        "passages": [
+          {
+            "id": "pf2",
+            "auteur": "Maya Cohen",
+            "date": "2026-11-16T15:00:00Z",
+            "texte": "Maya Cohen: So to be clear, #388 was a red herring, the batch size change is fine and we re-applied it on Friday.\nNoa Friedman: Action items: alert at 80% disk on the brokers (me), restore size-based retention (me), status page template for ingestion delays (Rachel)."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La cause est le remplissage des disques du broker Kafka ingest-kafka-2, passé en lecture seule.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le disque s'est rempli après le changement de rétention de la PR infra #221.",
+        "poids": 2
+      },
+      {
+        "id": "f3",
+        "texte": "Le changement de taille de lot de la PR #388 n'était pas la cause (fausse piste).",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Aucun événement n'a été perdu ; ils ont été retardés (panne de 2 h 47).",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Affirmer que la cause est le changement de taille de lot de la PR #388 ou le délai d'insertion dans ClickHouse."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que le retour arrière de #388 a réglé la panne."
+      },
+      {
+        "id": "x3",
+        "texte": "Dire que des événements ont été perdus."
+      }
+    ],
+    "pieges": [
+      "Coulisse : le premier résultat porte un passage role=\"raisonnement\" où l'agent affirme une cause ; c'est une hypothèse, démentie ensuite.",
+      "Croiser : la session elle-même montre que le retour arrière n'a rien changé ; le postmortem et la réunion donnent la vraie cause.",
+      "Ordre : le résultat le plus haut placé est celui qui se trompe."
+    ],
+    "cites": [
+      2,
+      5
+    ]
+  }
+}

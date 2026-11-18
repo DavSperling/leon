@@ -111,3 +111,19 @@ describe('buildResumePrompt', () => {
     expect(prompt.system).not.toContain('Tout supprimer');
   });
 });
+
+describe('buildResumePrompt : la langue', () => {
+  it('dit en tête la langue des messages tapés, et rien quand elle ne se devine pas', () => {
+    const [message] = buildResumePrompt(
+      condensed('can you check the logs and tell me what is failing in the job?'),
+    ).messages;
+    expect(
+      message?.content.startsWith(
+        `Écris ta réponse en anglais : c'est la langue de ses messages.\n${DATA_GUARD_LINE}\n`,
+      ),
+    ).toBe(true);
+    expect(content(buildResumePrompt(condensed('PG17 migration')))).not.toContain(
+      'Écris ta réponse',
+    );
+  });
+});

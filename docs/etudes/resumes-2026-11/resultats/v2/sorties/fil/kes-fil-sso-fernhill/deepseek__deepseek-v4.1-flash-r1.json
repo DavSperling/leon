@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:55.837Z",
+  "reponse": "## Où j'en suis\nAt the end of the last session (Nov 17), real SAML login works end to end on staging against Fernhill's IdP on branch `daniel/saml-sso-fernhill`: JIT provisioning from #415 (merged) creates users as `viewer`, and the short-RelayState fix plus per-tenant group→role mapping sit in PR #421, still open. The one thing blocking the Thursday Nov 19, 10:00 ET demo is Fernhill IT adding the `groups` claim, which Daniel is emailing them about; contract go-live is Dec 1. (source: ses-sso-3, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged; per-tenant `saml_role_mapping` applied on every login, not only at creation (source: kestrel-analytics/platform#421, f4a91c7, ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim, then an admin test account next to `kestrel.test1`, before the Thursday demo (source: s3-08, src-linear-kes311)\n- [essai-raté] sending the full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS with `MSIS7042`, the binding spec caps RelayState at 80 bytes (source: s3-02)\n- [décision] short opaque RelayState: 16-byte ID in Redis under `saml:rs:<id>`, TTL 600 s, deleted on use (source: s3-03, 6d0e2b8)\n- [décision] `viewer` stays the default role and SP-initiated login stays on; Fernhill's Slack request for an `analyst` default and IdP-initiated only is declined (source: s3-07, src-slack-fernhill)\n- [décision] JIT creates a user only from a verified domain, never from an unverified one (source: s2-03)\n- [décision] SAML only for Fernhill, no OIDC for now (source: s1-03)\n- [décision] users created at first login get the `viewer` role (source: s1-05)",
+  "rendu": "## Où j'en suis\nAt the end of the last session (Nov 17), real SAML login works end to end on staging against Fernhill's IdP on branch `daniel/saml-sso-fernhill`: JIT provisioning from #415 (merged) creates users as `viewer`, and the short-RelayState fix plus per-tenant group→role mapping sit in PR #421, still open. The one thing blocking the Thursday Nov 19, 10:00 ET demo is Fernhill IT adding the `groups` claim, which Daniel is emailing them about; contract go-live is Dec 1. (de: équipe, connecteur, agent; source: ses-sso-3, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged; per-tenant `saml_role_mapping` applied on every login, not only at creation (de: équipe, agent; source: kestrel-analytics/platform#421, f4a91c7, ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim, then an admin test account next to `kestrel.test1`, before the Thursday demo (de: connecteur, agent; source: s3-08, src-linear-kes311)\n- [essai-raté] sending the full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS with `MSIS7042`, the binding spec caps RelayState at 80 bytes (de: agent; source: s3-02)\n- [décision] short opaque RelayState: 16-byte ID in Redis under `saml:rs:<id>`, TTL 600 s, deleted on use (de: toi, équipe; source: s3-03, 6d0e2b8)\n- [décision] `viewer` stays the default role and SP-initiated login stays on; Fernhill's Slack request for an `analyst` default and IdP-initiated only is declined (de: toi, connecteur; source: s3-07, src-slack-fernhill)\n- [décision] JIT creates a user only from a verified domain, never from an unverified one (de: toi; source: s2-03)\n- [décision] SAML only for Fernhill, no OIDC for now (de: toi; source: s1-03)\n- [décision] users created at first login get the `viewer` role (de: toi; source: s1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1860,
+    "lignesRetirees": 0,
+    "decisions": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4716,
+    "sortie": 1907,
+    "reflexion": 1380,
+    "cache": 768,
+    "cout": 0.001556988
+  },
+  "cout": 0.001556988,
+  "latenceMs": 9585,
+  "fournisseur": "InferenceNet"
+}

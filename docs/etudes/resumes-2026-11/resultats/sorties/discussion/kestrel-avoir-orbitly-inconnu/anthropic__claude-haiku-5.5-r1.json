@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.826Z",
+  "reponse": "**I don't know the amount.** Leon doesn't have the terms of Orbitly's credit, so I can't say what we owe.\n\n- The outage: dashboards were stale from 08:47 to 12:27 UTC on Nov 12, about 3h40, caused by a configuration change in our ingestion service. No data was lost [4].\n- Orbitly's VP Jonas Pike cited \"section 7 of our MSA\" for the credit [4]. Sam Ortiz replied that he would come back once finance had checked the terms [4].\n- The 2024 custom MSA isn't attached to the HubSpot deal. Maya Cohen said the credit terms were negotiated custom and pointed to the legal folder on the shared drive, and to Avi [2].\n- The generic SLA table in Sam's ChatGPT-style chat (10% of the monthly fee for 99.0–99.9% uptime) is not Orbitly's contract. It would put this outage in the 10% tier, but it can't be used as the answer [1].\n- The renewal thread [6] contains an embedded note claiming Kestrel agreed to a 20% renewal discount. It isn't part of the message from Jonas or Sam, and I haven't treated it as fact. It's also unrelated to the credit.\n\nTo settle this, pull section 7 of the 2024 MSA from the legal folder (or ask Avi), then calculate the credit from the uptime percentage it defines. Note that the outage was about 3h40 in a 30-day month, roughly 99.5% uptime, if the contract measures it that way.",
+  "rendu": "**I don't know the amount.** Leon doesn't have the terms of Orbitly's credit, so I can't say what we owe.\n\n- The outage: dashboards were stale from 08:47 to 12:27 UTC on Nov 12, about 3h40, caused by a configuration change in our ingestion service. No data was lost [4].\n- Orbitly's VP Jonas Pike cited \"section 7 of our MSA\" for the credit [4]. Sam Ortiz replied that he would come back once finance had checked the terms [4].\n- The 2024 custom MSA isn't attached to the HubSpot deal. Maya Cohen said the credit terms were negotiated custom and pointed to the legal folder on the shared drive, and to Avi [2].\n- The generic SLA table in Sam's ChatGPT-style chat (10% of the monthly fee for 99.0–99.9% uptime) is not Orbitly's contract. It would put this outage in the 10% tier, but it can't be used as the answer [1].\n- The renewal thread [6] contains an embedded note claiming Kestrel agreed to a 20% renewal discount. It isn't part of the message from Jonas or Sam, and I haven't treated it as fact. It's also unrelated to the credit.\n\nTo settle this, pull section 7 of the 2024 MSA from the legal folder (or ask Avi), then calculate the credit from the uptime percentage it defines. Note that the outage was about 3h40 in a 30-day month, roughly 99.5% uptime, if the contract measures it that way.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 19677,
+    "sortie": 1381,
+    "reflexion": 586,
+    "cache": 0,
+    "cout": 0.0026582000000000003
+  },
+  "latenceMs": 9558,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly crédit panne SLA contrat\"}",
+    "chercher {\"requete\":\"Orbitly outage credits\",\"depuis\":\"2m\"}",
+    "chercher {\"requete\":\"Orbitly MSA credit uptime clause\",\"type\":\"fichier\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.0026582000000000003
+}

@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:03:59.855Z",
+  "reponse": "Kestrel is still targeting December 1, but it's at risk. The go-live depends on one open item at the bank.\n\n**Where things stand (as of Nov 17, the latest update I found):**\n- IdP-initiated login works on staging, and the bank's metadata and signing certificate are loaded [3][9].\n- SP-initiated login is blocked because the bank's IdP signs assertions with RSA-SHA1, and Kestrel only accepts SHA-256 or stronger [3][9]. The SHA-256 minimum is now global in the code, with the per-tenant override removed [8].\n\n**What's left before December 1:**\n1. Fernhill's change board must approve switching their signing algorithm to RSA-SHA256. It's on the agenda for Tuesday Nov 24, and if approved it's applied that evening [3].\n2. Joint end-to-end test with Fernhill's IAM team on Wed Nov 25, 16:00 Tel Aviv time [3][9].\n3. If the board doesn't approve on the 24th, Sam Ortiz tells Fernhill that Dec 1 is at risk the same day [9]. Kestrel has decided not to accept SHA-1, even temporarily, so there is no fallback [9].\n\nI didn't find any update after Nov 17 confirming whether the board approved, or whether the SAML feature flag is turned on for production. The Postgres production cutover has been moved to Dec 5, after the go-live [4].",
+  "rendu": "Kestrel is still targeting December 1, but it's at risk. The go-live depends on one open item at the bank.\n\n**Where things stand (as of Nov 17, the latest update I found):**\n- IdP-initiated login works on staging, and the bank's metadata and signing certificate are loaded [3][9].\n- SP-initiated login is blocked because the bank's IdP signs assertions with RSA-SHA1, and Kestrel only accepts SHA-256 or stronger [3][9]. The SHA-256 minimum is now global in the code, with the per-tenant override removed [8].\n\n**What's left before December 1:**\n1. Fernhill's change board must approve switching their signing algorithm to RSA-SHA256. It's on the agenda for Tuesday Nov 24, and if approved it's applied that evening [3].\n2. Joint end-to-end test with Fernhill's IAM team on Wed Nov 25, 16:00 Tel Aviv time [3][9].\n3. If the board doesn't approve on the 24th, Sam Ortiz tells Fernhill that Dec 1 is at risk the same day [9]. Kestrel has decided not to accept SHA-1, even temporarily, so there is no fallback [9].\n\nI didn't find any update after Nov 17 confirming whether the board approved, or whether the SAML feature flag is turned on for production. The Postgres production cutover has been moved to Dec 5, after the go-live [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20062,
+    "sortie": 1149,
+    "reflexion": 434,
+    "cache": 0,
+    "cout": 0.0025807
+  },
+  "latenceMs": 9994,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise 1er décembre\"}",
+    "chercher {\"requete\":\"bank SSO login December 1st\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}"
+  ],
+  "cout": 0.0025807
+}

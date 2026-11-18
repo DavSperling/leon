@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.678Z",
+  "reponse": "## What is still open\n- Maya will approve #247 once CI is green, but first wants the Orbitly drop count since #240 for Thursday's call with Orbitly — you have it: ≈1.18M events, ≈8.1% of their iOS volume [2][1].\n- The replay that recovers those events for Orbitly (and Zest's pilot) must run from landing for 13/11 onward, only after #247 is deployed; you asked to be reminded [1].\n- The note telling the iOS team to restore UUID `event_id`s in 3.2.1 still needs sending [1].\n- From the incident-review prep: you owe an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review (20/11) [7].\n\n## What changed\n- Noa finalised #233 and will present the 12/11 postmortem at Friday's incident review [3].\n- Zest Grocers confirmed their dashboards are complete again after the backfill; their Zendesk ticket is closed [6].\n- #245, the CI Go bump to 1.23.4, was merged [4].\n\n## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's `event_id`-only dedupe: kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so events from different devices collided; Zest's pilot app was hit the same way [1].\n- Rewrote the dedupe key to `project_id:device_id:event_id` with tests that still catch genuine replays, and opened PR #247 [1][2].\n- Drafted the iOS team note and the post-deploy replay plan for Orbitly and Zest [1].",
+  "rendu": "## What is still open\n- Maya will approve #247 once CI is green, but first wants the Orbitly drop count since #240 for Thursday's call with Orbitly — you have it: ≈1.18M events, ≈8.1% of their iOS volume [2][1].\n- The replay that recovers those events for Orbitly (and Zest's pilot) must run from landing for 13/11 onward, only after #247 is deployed; you asked to be reminded [1].\n- The note telling the iOS team to restore UUID `event_id`s in 3.2.1 still needs sending [1].\n- From the incident-review prep: you owe an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review (20/11) [7].\n\n## What changed\n- Noa finalised #233 and will present the 12/11 postmortem at Friday's incident review [3].\n- Zest Grocers confirmed their dashboards are complete again after the backfill; their Zendesk ticket is closed [6].\n- #245, the CI Go bump to 1.23.4, was merged [4].\n\n## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's `event_id`-only dedupe: kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so events from different devices collided; Zest's pilot app was hit the same way [1].\n- Rewrote the dedupe key to `project_id:device_id:event_id` with tests that still catch genuine replays, and opened PR #247 [1][2].\n- Drafted the iOS team note and the post-deploy replay plan for Orbitly and Zest [1].",
+  "mesures": {
+    "mots": 215,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4834,
+    "sortie": 1708,
+    "reflexion": 1324,
+    "cache": 0,
+    "cout": 0.0034998
+  },
+  "cout": 0.0034998,
+  "latenceMs": 12479,
+  "fournisseur": "Parasail"
+}

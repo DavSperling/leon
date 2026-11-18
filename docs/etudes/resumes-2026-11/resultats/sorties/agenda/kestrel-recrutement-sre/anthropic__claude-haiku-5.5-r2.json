@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:22.705Z",
+  "reponse": "{\"n\": 20, \"titre\": \"Dry run pg_upgrade\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"Daniel Levi\"}\n{\"n\": 10, \"titre\": \"Postmortem – ingest outage 12 Nov\", \"debut\": \"2026-11-16T15:00\", \"fin\": \"2026-11-16T16:00\", \"avec\": \"Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim\"}\n{\"n\": 15, \"titre\": \"System design interview – Yael Mizrahi\", \"debut\": \"2026-11-17T14:00\", \"fin\": \"2026-11-17T15:00\", \"avec\": \"Yael Mizrahi, Daniel Levi\"}\n{\"n\": 12, \"titre\": \"Lumenstack x Kestrel – PG17 upgrade review\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Grace Whitfield, Daniel Levi\"}\n{\"n\": 5, \"titre\": \"Senior SRE interview – Ben Carter\", \"debut\": \"2026-11-20T15:00\", \"fin\": \"2026-11-20T16:00\", \"avec\": \"Ben Carter\"}\n{\"n\": 4, \"titre\": \"PG17 cutover – go/no-go planning\", \"debut\": \"2026-11-22T09:00\", \"fin\": \"2026-11-22T10:00\", \"avec\": \"Maya Cohen, Daniel Levi, Lior Ben-David\"}",
+  "rendu": "2026-11-16T10:00 Dry run pg_upgrade (avec Daniel Levi)\n2026-11-16T15:00→2026-11-16T16:00 Postmortem – ingest outage 12 Nov (avec Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim)\n2026-11-17T14:00→2026-11-17T15:00 System design interview – Yael Mizrahi (avec Yael Mizrahi, Daniel Levi)\n2026-11-19T17:30→2026-11-19T18:15 Lumenstack x Kestrel – PG17 upgrade review (avec Grace Whitfield, Daniel Levi)\n2026-11-20T15:00→2026-11-20T16:00 Senior SRE interview – Ben Carter (avec Ben Carter)\n2026-11-22T09:00→2026-11-22T10:00 PG17 cutover – go/no-go planning (avec Maya Cohen, Daniel Levi, Lior Ben-David)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4564,
+    "sortie": 2939,
+    "reflexion": 2440,
+    "cache": 0,
+    "cout": 0.0019259
+  },
+  "cout": 0.0019259,
+  "latenceMs": 12301,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:32.106Z",
+  "reponse": "Je ne sais pas encore. J'ai cherché les échanges récents sur Fernhill Bank et le SSO pour le 1er décembre.\n\nCe que j'ai trouvé :\n- Le SSO SAML 2.0 pour Fernhill est prévu pour le 1er décembre 2026, avec IdP-initiated et SP-initiated login, assertions signées SHA-256 minimum, et provisioning à la volée [2][1].\n- La page d'administration SSO est en staging et permet d'uploader le metadata XML et d'activer \"Require SSO\", mais le bouton de test de login est bloqué par l'absence de metadata et de certificat côté Fernhill [2][5].\n- Fernhill a chargé notre metadata côté staging et l'IdP-initiated fonctionne, mais leurs assertions sont signées en RSA-SHA1, ce que notre plateforme refuse (seulement RSA-SHA256 ou plus fort). Fernhill doit changer l'algorithme de signature pour que le SP-initiated fonctionne [1][11].\n- Une réunion de changement (change board) est prévue le 24 novembre pour valider ce changement. Si Fernhill n'obtient pas l'approbation, @Sam Ortiz doit les prévenir le 24 que le 1er décembre est à risque [11].\n\nCe qui reste à faire avant le 1er décembre :\n1. Fernhill doit passer leurs assertions de RSA-SHA1 à RSA-SHA256 et nous fournir le nouveau certificat [1][11].\n2. Valider l'approbation en board le 24 novembre pour éviter un risque sur la date [11].\n3. Tester end-to-end la semaine du 23 novembre avec Fernhill [1].\n\nRecherches faites : \"bank staff company accounts login December 1st\" et \"Fernhill Bank SSO login December 1 staff company accounts\" depuis 2024-10-01.",
+  "rendu": "Je ne sais pas encore. J'ai cherché les échanges récents sur Fernhill Bank et le SSO pour le 1er décembre.\n\nCe que j'ai trouvé :\n- Le SSO SAML 2.0 pour Fernhill est prévu pour le 1er décembre 2026, avec IdP-initiated et SP-initiated login, assertions signées SHA-256 minimum, et provisioning à la volée [2][1].\n- La page d'administration SSO est en staging et permet d'uploader le metadata XML et d'activer \"Require SSO\", mais le bouton de test de login est bloqué par l'absence de metadata et de certificat côté Fernhill [2][5].\n- Fernhill a chargé notre metadata côté staging et l'IdP-initiated fonctionne, mais leurs assertions sont signées en RSA-SHA1, ce que notre plateforme refuse (seulement RSA-SHA256 ou plus fort). Fernhill doit changer l'algorithme de signature pour que le SP-initiated fonctionne [1][11].\n- Une réunion de changement (change board) est prévue le 24 novembre pour valider ce changement. Si Fernhill n'obtient pas l'approbation, @Sam Ortiz doit les prévenir le 24 que le 1er décembre est à risque [11].\n\nCe qui reste à faire avant le 1er décembre :\n1. Fernhill doit passer leurs assertions de RSA-SHA1 à RSA-SHA256 et nous fournir le nouveau certificat [1][11].\n2. Valider l'approbation en board le 24 novembre pour éviter un risque sur la date [11].\n3. Tester end-to-end la semaine du 23 novembre avec Fernhill [1].\n\nRecherches faites : \"bank staff company accounts login December 1st\" et \"Fernhill Bank SSO login December 1 staff company accounts\" depuis 2024-10-01.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 11824,
+    "sortie": 776,
+    "reflexion": 276,
+    "cache": 4224,
+    "cout": 0.00166896
+  },
+  "latenceMs": 7252,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"bank staff company accounts login December 1st\",\"depuis\":\"2024-10-01\"}",
+    "chercher {\"requete\":\"Fernhill Bank SSO login December 1 staff company accounts\",\"depuis\":\"2024-10-01\"}"
+  ],
+  "cout": 0.00166896
+}

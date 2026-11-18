@@ -1,0 +1,139 @@
+{
+  "id": "qui-resume-rien-formule-tableur",
+  "titre": "Session ChatGPT d'une comptable : questions de tableur vite réglées, rien à reprendre (7 tours tapés, donc le modèle est bien appelé)",
+  "langue": "en",
+  "entree": {
+    "faits": {
+      "branche": null,
+      "prs": [],
+      "commits": [],
+      "fichiers": [],
+      "commandes": [],
+      "taches": [],
+      "debut": "2026-11-17T16:00:00Z",
+      "fin": "2026-11-17T16:25:00Z"
+    },
+    "tours": [
+      {
+        "id": "t01",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:00:00Z",
+        "texte": "excel question. sheet 'Vendors' has vendor name in A and vendor id in B. sheet 'Oct AP' has vendor names in C, i want the vendor id in D. xlookup?"
+      },
+      {
+        "id": "t02",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:00:30Z",
+        "texte": "Yes. In `'Oct AP'!D2`:\n```\n=XLOOKUP(C2, Vendors!A:A, Vendors!B:B, \"not found\")\n```\nThen fill down. The 4th argument is what shows when there's no match."
+      },
+      {
+        "id": "t03",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:04:00Z",
+        "texte": "returns not found for like half of them, the names look identical"
+      },
+      {
+        "id": "t04",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:04:50Z",
+        "texte": "That's usually invisible characters: trailing spaces, or non-breaking spaces (CHAR(160)) when the list was pasted from a PDF or a web page. Try:\n```\n=XLOOKUP(TRIM(SUBSTITUTE(C2,CHAR(160),\" \")), Vendors!A:A, Vendors!B:B, \"not found\")\n```\nIf the Vendors sheet has the same problem, clean that side too."
+      },
+      {
+        "id": "t05",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:09:00Z",
+        "texte": "=XLOOKUP(TRIM(C2), TRIM(Vendors!A:A), Vendors!B:B) gives #VALUE"
+      },
+      {
+        "id": "t06",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:09:40Z",
+        "texte": "TRIM on a whole column (A:A) makes Excel build a million-row array, which often fails. Either bound the range (`TRIM(Vendors!A2:A500)`) or, simpler, add a helper column in Vendors: `C2 = TRIM(SUBSTITUTE(A2,CHAR(160),\" \"))`, and look up in that column."
+      },
+      {
+        "id": "t07",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:16:00Z",
+        "texte": "helper column worked. 3 still not found: 'Northpeak Talent Inc.' vs 'Northpeak Talent', 'AWS Marketplace' vs 'Amazon Web Services'. just fix those by hand?"
+      },
+      {
+        "id": "t08",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:16:40Z",
+        "texte": "For 3 rows, fixing them by hand is the simplest. If it happens every month, I could build you an alias table (one sheet mapping each variant to the canonical name) and a formula that checks it first. Want me to?"
+      },
+      {
+        "id": "t09",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:18:00Z",
+        "texte": "no thats fine, by hand"
+      },
+      {
+        "id": "t10",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:18:10Z",
+        "texte": "OK."
+      },
+      {
+        "id": "t11",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:22:00Z",
+        "texte": "also how do i freeze the top row"
+      },
+      {
+        "id": "t12",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T16:22:20Z",
+        "texte": "View → Freeze Panes → Freeze Top Row."
+      },
+      {
+        "id": "t13",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T16:25:00Z",
+        "texte": "ok thx"
+      }
+    ]
+  },
+  "attendu": {
+    "rien": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "The output is exactly \"rien à retenir\".",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Writes a [décision] (e.g. \"fix the 3 vendor names by hand\", \"no alias table\")."
+      },
+      {
+        "id": "i2",
+        "texte": "Writes a [prochaine-étape] or [en-cours]: build an alias table, fix the Northpeak and AWS rows, add the helper column."
+      },
+      {
+        "id": "i3",
+        "texte": "Writes a \"## Où j'en suis\" summary of the session."
+      }
+    ],
+    "pieges": [
+      "Rien à dire : des questions de tableur réglées sur le moment, sans fichier, sans suite ; 7 tours tapés, donc Leon appelle bien le modèle.",
+      "Fausse suite : l'assistant propose une table d'alias ; Jenna dit non. Les noms de fournisseurs (Northpeak, AWS) tentent d'en faire un sujet de clôture."
+    ],
+    "decisions": []
+  }
+}

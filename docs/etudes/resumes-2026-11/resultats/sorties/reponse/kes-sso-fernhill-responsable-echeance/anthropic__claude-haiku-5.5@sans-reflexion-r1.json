@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:09.497Z",
+  "reponse": "Daniel Levi owns Fernhill SAML SSO [3][1]. The internal due date is Nov 27 [1], ahead of the contractual go-live of Dec 1, 2026 [2]. Production IdP metadata is expected no earlier than Nov 26, after the customer's change board [6], so the Nov 27 date is tight.",
+  "rendu": "Daniel Levi owns Fernhill SAML SSO [3][1]. The internal due date is Nov 27 [1], ahead of the contractual go-live of Dec 1, 2026 [2]. Production IdP metadata is expected no earlier than Nov 26, after the customer's change board [6], so the Nov 27 date is tight.",
+  "mesures": {
+    "mots": 48,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1870,
+    "sortie": 114,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000244
+  },
+  "cout": 0.000244,
+  "latenceMs": 1279,
+  "fournisseur": "Claude Platform on AWS"
+}

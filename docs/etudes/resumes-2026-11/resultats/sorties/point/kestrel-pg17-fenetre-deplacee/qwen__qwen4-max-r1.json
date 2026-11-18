@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:29:44.037Z",
+  "reponse": "## What changed\n- The cutover moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00. Maya confirmed with Sam, told the CSMs, and cleared you to update the runbook and merge #321 — the Notion page still says Saturday. [8][10]\n- Maya approved #321, Terraform and the replica fix included; her only hold was the window confirmation. [3]\n- Lior needs 30 minutes' notice before switchover to pause consumers cleanly; ingest workers read `DATABASE_URL` from SSM, so nothing changes on their side. [9]\n- Daniel is on call for the API on Sunday and wants a ping when you start the switchover. [7]\n\n## What you did\n- Prod blue/green is ready and rehearsed on a snapshot clone: **74 s of write downtime**, no data mismatch, API pods reconnected through pgbouncer; the read replica now follows the blue/green instead of being destroyed and recreated. Rehearsal instances are deleted. [1]\n\n## What is still open\n- Rollback rehearsal on a fresh clone **Thursday 19/11**, still a TODO in the runbook: after switchover blue is renamed and takes no writes, so measure how long a rollback takes and what data is lost. [1]",
+  "rendu": "## What changed\n- The cutover moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00. Maya confirmed with Sam, told the CSMs, and cleared you to update the runbook and merge #321 — the Notion page still says Saturday. [8][10]\n- Maya approved #321, Terraform and the replica fix included; her only hold was the window confirmation. [3]\n- Lior needs 30 minutes' notice before switchover to pause consumers cleanly; ingest workers read `DATABASE_URL` from SSM, so nothing changes on their side. [9]\n- Daniel is on call for the API on Sunday and wants a ping when you start the switchover. [7]\n\n## What you did\n- Prod blue/green is ready and rehearsed on a snapshot clone: **74 s of write downtime**, no data mismatch, API pods reconnected through pgbouncer; the read replica now follows the blue/green instead of being destroyed and recreated. Rehearsal instances are deleted. [1]\n\n## What is still open\n- Rollback rehearsal on a fresh clone **Thursday 19/11**, still a TODO in the runbook: after switchover blue is renamed and takes no writes, so measure how long a rollback takes and what data is lost. [1]",
+  "mesures": {
+    "mots": 186,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5513,
+    "sortie": 1603,
+    "reflexion": 1283,
+    "cache": 1280,
+    "cout": 0.01297605
+  },
+  "cout": 0.01297605,
+  "latenceMs": 33939,
+  "fournisseur": "Alibaba"
+}

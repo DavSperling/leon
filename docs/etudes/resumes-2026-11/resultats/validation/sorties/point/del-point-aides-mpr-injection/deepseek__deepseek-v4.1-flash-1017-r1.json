@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:21:27.341Z",
+  "reponse": "## What is still open\n- Tanguy : son avis d'imposition est arrivé le 17, mais le dossier doit être déposé avant lundi 23 (début des travaux) sinon elle perd la prime ; elle demande confirmation que les travaux commencent toujours lundi — à lui répondre [1][3].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés (client, date de dépôt, montant de prime attendu) pour l'avance de trésorerie du Crédit Ligérien [5].\n- Peltier : le devis est signé et déposé dans le Drive par Camille, tu peux déposer le dossier [4].\n- Guillou : RIB toujours manquant, relance à faire ; pour Morvan, l'attestation RGE couvre les travaux du 7/12, mais son renouvellement dépend de l'audit de décembre pour les chantiers 2027 [1].\n\n## What changed\n- Les dépôts MaPrimeRénov' passent temporairement par courriel : les dossiers complets doivent être envoyés à l'adresse dédiée avant le 20/11, faute de quoi ils ne seront pas instruits cette année [2].\n\n## What you did\n- Fait le point sur les 5 dossiers du mois : Bréhier était complet et a été déposé le 16/11, et un récapitulatif des statuts a été préparé pour Hélène [1].\n- Rédigé une relance à la fois aimable et ferme pour Mme Tanguy, rappelant l'échéance du 23 [1].\n- Rangé les pièces des 5 dossiers en les renommant au format nom_piece_date, avec la table de correspondance conservée [1].",
+  "rendu": "## What is still open\n- Tanguy : son avis d'imposition est arrivé le 17, mais le dossier doit être déposé avant lundi 23 (début des travaux) sinon elle perd la prime ; elle demande confirmation que les travaux commencent toujours lundi — à lui répondre [1][3].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés (client, date de dépôt, montant de prime attendu) pour l'avance de trésorerie du Crédit Ligérien [5].\n- Peltier : le devis est signé et déposé dans le Drive par Camille, tu peux déposer le dossier [4].\n- Guillou : RIB toujours manquant, relance à faire ; pour Morvan, l'attestation RGE couvre les travaux du 7/12, mais son renouvellement dépend de l'audit de décembre pour les chantiers 2027 [1].\n\n## What changed\n- Les dépôts MaPrimeRénov' passent temporairement par courriel : les dossiers complets doivent être envoyés à l'adresse dédiée avant le 20/11, faute de quoi ils ne seront pas instruits cette année [2].\n\n## What you did\n- Fait le point sur les 5 dossiers du mois : Bréhier était complet et a été déposé le 16/11, et un récapitulatif des statuts a été préparé pour Hélène [1].\n- Rédigé une relance à la fois aimable et ferme pour Mme Tanguy, rappelant l'échéance du 23 [1].\n- Rangé les pièces des 5 dossiers en les renommant au format nom_piece_date, avec la table de correspondance conservée [1].",
+  "mesures": {
+    "mots": 216,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3823,
+    "sortie": 2051,
+    "reflexion": 1641,
+    "cache": 512,
+    "cout": 0.001264429
+  },
+  "cout": 0.001264429,
+  "latenceMs": 16682,
+  "fournisseur": "Morph"
+}

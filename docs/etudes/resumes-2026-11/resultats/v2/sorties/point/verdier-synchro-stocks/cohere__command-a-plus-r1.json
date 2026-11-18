@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:18:38.718Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4703,
+    "sortie": 8000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0134109
+  },
+  "cout": 0.0134109,
+  "latenceMs": 34197,
+  "fournisseur": "Cohere"
+}

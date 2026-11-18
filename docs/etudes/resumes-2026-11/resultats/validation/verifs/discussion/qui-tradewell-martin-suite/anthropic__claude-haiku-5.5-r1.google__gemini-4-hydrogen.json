@@ -1,0 +1,24 @@
+{
+  "verificateur": "google/gemini-4-hydrogen",
+  "faits": {
+    "f1": 1,
+    "f2": 0,
+    "f3": 0,
+    "f4": 0,
+    "f5": 1,
+    "f6": 1,
+    "f7": 0.5
+  },
+  "interdits": {
+    "i1": 0,
+    "i2": 0,
+    "i3": 0,
+    "i4": 0,
+    "i5": 0
+  },
+  "contraires": [
+    "f2"
+  ],
+  "premier": null,
+  "langueOk": true
+}

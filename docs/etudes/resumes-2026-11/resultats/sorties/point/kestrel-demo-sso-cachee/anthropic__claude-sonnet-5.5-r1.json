@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:26:30.082Z",
+  "reponse": "## What you did\n\n- Tu as nettoyé le code d'auth : le test flaky `test_acs_rejects_expired_assertion` est stabilisé en figeant le temps, les erreurs ruff et mypy sont corrigées, et `saml_utils.py` est découpé en package `saml/`. Un assertion sans Issuer ou Subject renvoie maintenant une 401 au lieu d'une 500 [1].\n\n## What changed\n\n- #418 (signature des assertions, SSO Fernhill) est approuvé et fusionné par Maya, et part avec le déploiement staging de ce soir. La validation de signature sera donc sur staging pour la démo de jeudi 10h NY avec l'Okta de Fernhill [3][1].\n- #423 : Tom demande des changements. Il veut deux PR séparées, le déplacement de module d'un côté et les corrections de lint de l'autre, et promet d'approuver les deux aujourd'hui [4].\n- #424 : l'export CSV de Zest Grocers expire (504, ~230k lignes). Tom le prend en charge et le passera en tâche asynchrone avec envoi d'un lien par email [5].\n\n## What is still open\n\n- Scinder #423 en deux PR pour répondre à Tom [4].\n- Cache anti-rejeu des identifiants d'assertion : il est en mémoire par processus, donc insuffisant avec 3 pods. Tu comptais le passer sur Redis aujourd'hui (`SET NX EX`, clé tenant + ID), avec le client de `kestrel/cache.py` [1][2].\n- Jeudi 10h NY : tu dois être présent à la démo SSO de bout en bout pour Fernhill, que Priya anime [1].",
+  "rendu": "## What you did\n\n- Tu as nettoyé le code d'auth : le test flaky `test_acs_rejects_expired_assertion` est stabilisé en figeant le temps, les erreurs ruff et mypy sont corrigées, et `saml_utils.py` est découpé en package `saml/`. Un assertion sans Issuer ou Subject renvoie maintenant une 401 au lieu d'une 500 [1].\n\n## What changed\n\n- #418 (signature des assertions, SSO Fernhill) est approuvé et fusionné par Maya, et part avec le déploiement staging de ce soir. La validation de signature sera donc sur staging pour la démo de jeudi 10h NY avec l'Okta de Fernhill [3][1].\n- #423 : Tom demande des changements. Il veut deux PR séparées, le déplacement de module d'un côté et les corrections de lint de l'autre, et promet d'approuver les deux aujourd'hui [4].\n- #424 : l'export CSV de Zest Grocers expire (504, ~230k lignes). Tom le prend en charge et le passera en tâche asynchrone avec envoi d'un lien par email [5].\n\n## What is still open\n\n- Scinder #423 en deux PR pour répondre à Tom [4].\n- Cache anti-rejeu des identifiants d'assertion : il est en mémoire par processus, donc insuffisant avec 3 pods. Tu comptais le passer sur Redis aujourd'hui (`SET NX EX`, clé tenant + ID), avec le client de `kestrel/cache.py` [1][2].\n- Jeudi 10h NY : tu dois être présent à la démo SSO de bout en bout pour Fernhill, que Priya anime [1].",
+  "mesures": {
+    "mots": 219,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8091,
+    "sortie": 584,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.022022
+  },
+  "cout": 0.022022,
+  "latenceMs": 5129,
+  "fournisseur": "Claude Platform on AWS"
+}

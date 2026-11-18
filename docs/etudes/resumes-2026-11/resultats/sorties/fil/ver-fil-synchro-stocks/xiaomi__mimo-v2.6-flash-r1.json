@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:14.542Z",
+  "reponse": "## Où j'en suis\nLa synchro des stocks est fiabilisée : #87 fusionnée (webhooks hors inventaire, valeur absolue, arrêt si CSV absent), puis reprises à 4 h et 6 h avec alerte mail à Karim ajoutées après l'incident du 16/11 où TransAlp avait déposé son CSV 47 min trop tard ; le manuel du 17/17 a corrigé les 40 références. La PR #96 est ouverte et attend la relecture d'Hugo. (source: u3-02, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, en attente de la relecture d'Hugo (source: u3-08, u3-10)\n- [prochaine-étape] relecture de la PR #96 par Hugo, puis fusion (source: u3-07, u3-08)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé (source: u3-04)\n- [décision] rien dans le script pour la réservation des 2 tables Saône pour les Galeries Brotteaux : Claire voit ça avec eux (source: u3-09)\n- [décision] pas de précommande pour la Saône, retour de Bois & Fils le 2 décembre (source: u1-06)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)",
+  "rendu": "## Où j'en suis\nLa synchro des stocks est fiabilisée : #87 fusionnée (webhooks hors inventaire, valeur absolue, arrêt si CSV absent), puis reprises à 4 h et 6 h avec alerte mail à Karim ajoutées après l'incident du 16/11 où TransAlp avait déposé son CSV 47 min trop tard ; le manuel du 17/17 a corrigé les 40 références. La PR #96 est ouverte et attend la relecture d'Hugo. (de: agent; source: u3-02, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, en attente de la relecture d'Hugo (de: agent; source: u3-08, u3-10)\n- [prochaine-étape] relecture de la PR #96 par Hugo, puis fusion (de: toi, agent; source: u3-07, u3-08)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé (de: agent; source: u3-04)\n- [décision] rien dans le script pour la réservation des 2 tables Saône pour les Galeries Brotteaux : Claire voit ça avec eux (de: toi; source: u3-09)\n- [décision] pas de précommande pour la Saône, retour de Bois & Fils le 2 décembre (de: toi; source: u1-06)\n- [décision] seuil d'alerte stock bas à 3 (de: toi; source: u1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1097,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4724,
+    "sortie": 390,
+    "reflexion": 8,
+    "cache": 896,
+    "cout": 0.0006476288
+  },
+  "cout": 0.0006476288,
+  "latenceMs": 5820,
+  "fournisseur": "Xiaomi"
+}

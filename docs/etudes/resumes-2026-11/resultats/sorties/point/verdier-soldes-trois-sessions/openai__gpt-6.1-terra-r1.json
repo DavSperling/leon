@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:35:26.314Z",
+  "reponse": "## Ce qui a changé\n\n- Le tag automatique `soldes` a été relu et fusionné dans la PR #59. [7]\n- Le widget Zendesk est utilisé : Lucie compte 23 conversations ouvertes depuis les pages produit cette semaine. [9]\n\n## Ce qui reste ouvert\n\n- **PR #63 : pas de Saône en soldes.** Claire l’a explicitement exclue ; Hugo demande si sa présence à −20 % dans la grille est voulue. Les deux déclenchements ont fonctionné en dev. Trois variantes déjà en promotion sont laissées de côté et sept lignes ne correspondent à aucun produit actif. [10][4][1]\n- Sophie a besoin des prix soldés dans Shopify pour le **30 novembre**, avant le shooting du 2 décembre ; l’application automatique est prévue le 6 janvier. [11][1]\n- Sophie demande si le flux Google Shopping peut être relancé juste après l’application des soldes, pour éviter un décalage de prix avec le site. Ticket #65. [5]\n- La bannière soldes masque le bouton d’ajout au panier sur petit téléphone : correction demandée avant le shooting, ticket #64. [6][11]",
+  "rendu": "## Ce qui a changé\n\n- Le tag automatique `soldes` a été relu et fusionné dans la PR #59. [7]\n- Le widget Zendesk est utilisé : Lucie compte 23 conversations ouvertes depuis les pages produit cette semaine. [9]\n\n## Ce qui reste ouvert\n\n- **PR #63 : pas de Saône en soldes.** Claire l’a explicitement exclue ; Hugo demande si sa présence à −20 % dans la grille est voulue. Les deux déclenchements ont fonctionné en dev. Trois variantes déjà en promotion sont laissées de côté et sept lignes ne correspondent à aucun produit actif. [10][4][1]\n- Sophie a besoin des prix soldés dans Shopify pour le **30 novembre**, avant le shooting du 2 décembre ; l’application automatique est prévue le 6 janvier. [11][1]\n- Sophie demande si le flux Google Shopping peut être relancé juste après l’application des soldes, pour éviter un décalage de prix avec le site. Ticket #65. [5]\n- La bannière soldes masque le bouton d’ajout au panier sur petit téléphone : correction demandée avant le shooting, ticket #64. [6][11]",
+  "mesures": {
+    "mots": 161,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4448,
+    "sortie": 636,
+    "reflexion": 380,
+    "cache": 1417,
+    "cout": 0.00703885
+  },
+  "cout": 0.00703885,
+  "latenceMs": 17239,
+  "fournisseur": "OpenAI"
+}

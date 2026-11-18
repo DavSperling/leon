@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:13.803Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône est corrigé : les webhooks de commande ne touchent plus à l'inventaire (seule la synchro de nuit écrit, en valeur absolue et non en delta), le dédoublonnage a été retiré, le seuil d'alerte stock bas est passé à 3 et `syncStock` renommé `synchroniserStocks`. La config de l'app a été redéployée sans l'abonnement `orders/updated`, la Saône remise à 0 sur Shopify, et la PR #87 est fusionnée (Hugo en relecteur) — contrairement à ce que disait le dernier message de l'agent, qui la croyait en attente.\n\n- [prochaine-étape] traiter avec Lucie les 3 commandes survendues de la Saône\n- [prochaine-étape] vérifier la première synchro de nuit après fusion (lecture du CSV TransAlp)\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` ont des ids différents et Shopify décrémente déjà\n- [décision] plus aucun décrément dans les webhooks, synchro de nuit seule et en valeur absolue, dédoublonnage supprimé (source: t05)\n- [décision] seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Saône à 0 et aucune précommande avant son retour, le 2 décembre (source: t17)",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône est corrigé : les webhooks de commande ne touchent plus à l'inventaire (seule la synchro de nuit écrit, en valeur absolue et non en delta), le dédoublonnage a été retiré, le seuil d'alerte stock bas est passé à 3 et `syncStock` renommé `synchroniserStocks`. La config de l'app a été redéployée sans l'abonnement `orders/updated`, la Saône remise à 0 sur Shopify, et la PR #87 est fusionnée (Hugo en relecteur) — contrairement à ce que disait le dernier message de l'agent, qui la croyait en attente.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] traiter avec Lucie les 3 commandes survendues de la Saône\n- [prochaine-étape] vérifier la première synchro de nuit après fusion (lecture du CSV TransAlp)\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : inutile, `orders/create` et `orders/updated` ont des ids différents et Shopify décrémente déjà\n- [décision] plus aucun décrément dans les webhooks, synchro de nuit seule et en valeur absolue, dédoublonnage supprimé (source: t05)\n- [décision] seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Saône à 0 et aucune précommande avant son retour, le 2 décembre (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1292,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3902,
+    "sortie": 978,
+    "reflexion": 606,
+    "cache": 0,
+    "cout": 0.00230518
+  },
+  "cout": 0.00230518,
+  "latenceMs": 4297,
+  "fournisseur": "Crusoe"
+}

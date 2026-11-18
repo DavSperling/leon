@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:11.517Z",
+  "reponse": "Personne n'est encore embauché d'après ce que j'ai trouvé. Le 17/11, il y avait 11 candidatures [5]. Quatre entretiens sont prévus les 19 et 20/11 à l'atelier de Carquefou, avec Yannick Moreau : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [5]. Les convocations étaient rédigées mais, selon cette même source, rien n'était encore envoyé. Le compte rendu du CODIR du 16/11 parlait pourtant de candidats « convoqués » [6], donc il faut vérifier leur envoi.\n\nUne offre est visée la semaine suivante pour une arrivée début janvier [6]. Un modèle de promesse d'embauche en CDI existe, mais sans nom ni montant [4]. La rémunération doit être tranchée au CODIR du 23, après comparaison avec les deux concurrents nantais [6].",
+  "rendu": "Personne n'est encore embauché d'après ce que j'ai trouvé. Le 17/11, il y avait 11 candidatures [5]. Quatre entretiens sont prévus les 19 et 20/11 à l'atelier de Carquefou, avec Yannick Moreau : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [5]. Les convocations étaient rédigées mais, selon cette même source, rien n'était encore envoyé. Le compte rendu du CODIR du 16/11 parlait pourtant de candidats « convoqués » [6], donc il faut vérifier leur envoi.\n\nUne offre est visée la semaine suivante pour une arrivée début janvier [6]. Un modèle de promesse d'embauche en CDI existe, mais sans nom ni montant [4]. La rémunération doit être tranchée au CODIR du 23, après comparaison avec les deux concurrents nantais [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8166,
+    "sortie": 816,
+    "reflexion": 320,
+    "cache": 0,
+    "cout": 0.0012246
+  },
+  "latenceMs": 7808,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"recrutement deux installateurs candidat embauché\",\"depuis\":\"3m\"}",
+    "chercher {\"requete\":\"installateur recrutement entretien offre\",\"type\":\"reunion\"}"
+  ],
+  "cout": 0.0012246
+}

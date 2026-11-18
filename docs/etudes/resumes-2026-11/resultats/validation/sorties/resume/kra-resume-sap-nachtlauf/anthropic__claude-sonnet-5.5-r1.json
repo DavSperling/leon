@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-sap-nachtlauf",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:26.899Z",
+  "reponse": "## Où j'en suis\nDie Ursache der Nachtlauf-Abbrüche ist gefunden: Das SAP-Wartungsfenster liegt seit dem 09.11. bei 02:00–02:45, der Job startet um 02:15. Der Export ist jetzt über die Portal-Bestellnummer (BSTKD) idempotent, mit Retry pro Auftrag und Exportstatus pro Auftrag (V57). Die Tests sind grün (421). Draft-PR #221 ist offen und wartet auf das Review von Matthias.\n\n- [en-cours] Draft-PR #221 (open) wartet auf das Review von Matthias.\n- [prochaine-étape] Frau Brandt nach dem Mittag informieren, damit der Vertriebsinnendienst die 4 doppelten SAP-Aufträge storniert.\n- [prochaine-étape] Bei den beiden Pfeiffer-Aufträgen nur den zweiten SAP-Auftrag stornieren, da sie teilgeliefert sind.\n- [question] Neue Startzeit des Jobs: Matthias klärt sie mit dem Basis-Team, das Fenster könnte auch verschoben werden.\n- [essai-raté] Retry pro Auftrag allein: Der Test `abbruchNachAnlage` schlug fehl, weil SAP trotz Timeout schon angelegt haben kann.\n- [décision] Die Startzeit (application-prod.yml) bleibt unverändert und das Retry-Limit wird nicht erhöht; erst die Duplikate beheben. (source: t07)",
+  "rendu": "## Où j'en suis\nDie Ursache der Nachtlauf-Abbrüche ist gefunden: Das SAP-Wartungsfenster liegt seit dem 09.11. bei 02:00–02:45, der Job startet um 02:15. Der Export ist jetzt über die Portal-Bestellnummer (BSTKD) idempotent, mit Retry pro Auftrag und Exportstatus pro Auftrag (V57). Die Tests sind grün (421). Draft-PR #221 ist offen und wartet auf das Review von Matthias.\n\n- pr [[kranich/haendlerportal#221]]\n- branche [[fix/sap-nachtlauf-idempotenz]]\n- commit [[4c1e9a7]]\n- commit [[b07d3f2]]\n- commit [[e95a610]]\n- [en-cours] Draft-PR #221 (open) wartet auf das Review von Matthias.\n- [prochaine-étape] Frau Brandt nach dem Mittag informieren, damit der Vertriebsinnendienst die 4 doppelten SAP-Aufträge storniert.\n- [prochaine-étape] Bei den beiden Pfeiffer-Aufträgen nur den zweiten SAP-Auftrag stornieren, da sie teilgeliefert sind.\n- [question] Neue Startzeit des Jobs: Matthias klärt sie mit dem Basis-Team, das Fenster könnte auch verschoben werden.\n- [essai-raté] Retry pro Auftrag allein: Der Test `abbruchNachAnlage` schlug fehl, weil SAP trotz Timeout schon angelegt haben kann.\n- [décision] Die Startzeit (application-prod.yml) bleibt unverändert und das Retry-Limit wird nicht erhöht; erst die Duplikate beheben. (source: t07)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1242,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7658,
+    "sortie": 548,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020796
+  },
+  "cout": 0.020796,
+  "latenceMs": 5115,
+  "fournisseur": "Amazon Bedrock"
+}

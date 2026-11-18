@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:39:22.537Z",
+  "reponse": "## Où j'en suis\n\nLe endpoint ACS de Fernhill vérifie maintenant la signature XML et les conditions de l'assertion SAML, avec signxml à la place de python3-saml. La skew est fixée à 120 s, la vérification des conditions et la protection contre le rejeu sont en place, et les 36 tests de `tests/auth` passent. Les commits sont `3f9c2a1`, `b71e04d` et `e0a5c93`. La PR #412 est ouverte, CI verte. Les faits la donnent comme fusionnée, mais le dernier échange dit que la fusion a été refusée en attente de la review de Maya : à vérifier.\n\n- [en-cours] Vérifier l'état réel de la PR #412 (fusionnée d'après les faits, bloquée d'après la session) et relancer la review de Maya si nécessaire\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill\n- [prochaine-étape] Envoyer les métadonnées SP de staging à Fernhill avant mercredi 18h (démo jeudi 10h, New York)\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur la base Alpine : xmlsec et lxml compilé depuis les sources échouent (mismatch libxml2, puis absence de la bibliothèque crypto), build 9 min sans succès\n- [question] La PR #412 est-elle fusionnée ? Les faits disent merged, le tour t20 dit que la fusion a été refusée\n- [décision] Passer à signxml, retirer python3-saml et xmlsec, n'lire les attributs que depuis signed_xml (source: t08)\n- [décision] Skew d'horloge à 120 s, selon le questionnaire sécurité Fernhill ; ne pas toucher au login par mot de passe dans cette PR (source: t12)\n- [décision] Déplacer saml_utils dans api/auth/saml/verify.py (source: t14)\n- [décision] Pas d'admin ni d'auto-merge : Maya relit d'abord, la personne la relancera elle-même (source: t21)",
+  "rendu": "## Où j'en suis\nLe endpoint ACS de Fernhill vérifie maintenant la signature XML et les conditions de l'assertion SAML, avec signxml à la place de python3-saml. La skew est fixée à 120 s, la vérification des conditions et la protection contre le rejeu sont en place, et les 36 tests de `tests/auth` passent. Les commits sont `3f9c2a1`, `b71e04d` et `e0a5c93`. La PR #412 est ouverte, CI verte. Les faits la donnent comme fusionnée, mais le dernier échange dit que la fusion a été refusée en attente de la review de Maya : à vérifier.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Vérifier l'état réel de la PR #412 (fusionnée d'après les faits, bloquée d'après la session) et relancer la review de Maya si nécessaire\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill\n- [prochaine-étape] Envoyer les métadonnées SP de staging à Fernhill avant mercredi 18h (démo jeudi 10h, New York)\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill\n- [essai-raté] python3-saml sur la base Alpine : xmlsec et lxml compilé depuis les sources échouent (mismatch libxml2, puis absence de la bibliothèque crypto), build 9 min sans succès",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1310,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6479,
+    "sortie": 1499,
+    "reflexion": 733,
+    "cache": 0,
+    "cout": 0.0013974
+  },
+  "cout": 0.0013974,
+  "latenceMs": 7580,
+  "fournisseur": "Claude Platform on AWS"
+}

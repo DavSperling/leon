@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:32:50.379Z",
+  "reponse": "Fernhill SAML est détenu par Daniel Levi [3][1]. La date limite interne est le 27 novembre 2026 [1], tandis que la date contractuelle de livraison en production est le 1er décembre 2026 [2].",
+  "rendu": "Fernhill SAML est détenu par Daniel Levi [3][1]. La date limite interne est le 27 novembre 2026 [1], tandis que la date contractuelle de livraison en production est le 1er décembre 2026 [2].",
+  "mesures": {
+    "mots": 33,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1292,
+    "sortie": 314,
+    "reflexion": 252,
+    "cache": 464,
+    "cout": 0.00031956
+  },
+  "cout": 0.00031956,
+  "latenceMs": 2532,
+  "fournisseur": "Mistral"
+}

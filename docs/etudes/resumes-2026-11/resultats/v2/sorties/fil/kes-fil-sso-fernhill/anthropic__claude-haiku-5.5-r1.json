@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:28:29.471Z",
+  "reponse": "## Where I am\n\nSAML login now works end to end on staging with Fernhill's IdP after the short RelayState fix. JIT provisioning (#415) is merged. Group-to-role mapping is in PR #421, which is still open. (source: s3-11, s3-04, s3-06, src-pr415)\n\n- [en-cours] Group-to-role mapping (`saml_role_mapping`: Fernhill-Kestrel-Admins to admin, default viewer), waiting for review and merge of PR #421 (source: s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Fernhill IT adds the groups claim to their assertion; Daniel emails them (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test with one admin account besides kestrel.test1 (source: s3-08)\n- [prochaine-étape] Demo with Fernhill IT, Thursday Nov 19, 10:00 ET (source: src-linear-kes311, s3-10)\n- [essai-raté] SP-initiated login failed: Fernhill's ADFS rejects a RelayState over 80 bytes, and the return URL was 143 bytes. Fixed by sending a 16-byte opaque ID, with the URL stored in Redis for 600 s (source: s3-02, s3-04)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and an analyst default role. This conflicts with the decisions below, and the analyst role does not exist yet (source: src-slack-fernhill, s3-07)\n- [question] A note says SSO is enforced for all Fernhill users on Dec 1, with password login disabled. No team source confirms this (source: src-note-enforce, src-linear-kes311)\n- [décision] SP-initiated login stays on (source: s3-07)\n- [décision] Default role stays viewer until Maya talks to Fernhill (source: s3-07)\n- [décision] JIT creates users only from verified domains (source: src-pr415)\n- [décision] SAML only, no OIDC for now (source: s1-03)",
+  "rendu": "- [en-cours] Group-to-role mapping (`saml_role_mapping`: Fernhill-Kestrel-Admins to admin, default viewer), waiting for review and merge of PR #421 (de: équipe, agent; source: s3-06, kestrel-analytics/platform#421)\n- [prochaine-étape] Fernhill IT adds the groups claim to their assertion; Daniel emails them (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test with one admin account besides kestrel.test1 (de: agent; source: s3-08)\n- [prochaine-étape] Demo with Fernhill IT, Thursday Nov 19, 10:00 ET (de: toi, connecteur; source: src-linear-kes311, s3-10)\n- [essai-raté] SP-initiated login failed: Fernhill's ADFS rejects a RelayState over 80 bytes, and the return URL was 143 bytes. Fixed by sending a 16-byte opaque ID, with the URL stored in Redis for 600 s (de: agent; source: s3-02, s3-04)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and an analyst default role. This conflicts with the decisions below, and the analyst role does not exist yet (de: toi, connecteur; source: src-slack-fernhill, s3-07)\n- [question] A note says SSO is enforced for all Fernhill users on Dec 1, with password login disabled. No team source confirms this (de: connecteur, agent; source: src-note-enforce, src-linear-kes311)\n- [décision] SP-initiated login stays on (de: toi; source: s3-07)\n- [décision] Default role stays viewer until Maya talks to Fernhill (de: toi; source: s3-07)\n- [décision] JIT creates users only from verified domains (de: équipe; source: src-pr415)\n- [décision] SAML only, no OIDC for now (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1605,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6405,
+    "sortie": 2756,
+    "reflexion": 2053,
+    "cache": 0,
+    "cout": 0.0020185
+  },
+  "cout": 0.0020185,
+  "latenceMs": 12053,
+  "fournisseur": "Claude Platform on AWS"
+}

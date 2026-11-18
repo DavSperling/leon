@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:38:58.203Z",
+  "reponse": "## Où j'en suis\n\nThe `cmd/replay` tool is written and committed (`4e2d9b7`, `f13a06c`), and PR #233 is open for review with Daniel as reviewer. The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay into `events.replay.v3`, none already in the dedup store, and 3,118 schema v2 lines written to the rejects file. The real replay and the aggregator backfill have not run.\n\n- [en-cours] Waiting for Daniel's review of PR #233 before the real replay.\n- [prochaine-étape] Get PR #233 reviewed and merged. Run the real replay into `events.replay.v3` with `--dry-run=false`. Run the aggregator with `--backfill` for 2026-11-12. Give Rachel the ETA for Fernhill and Orbitly by Friday.\n- [essai-raté] The dry run `replay-dryrun-1` was OOMKilled at `--batch 50000` (about 2.6 GiB peak against a 2 GiB limit). `replay-dryrun-2` at `--batch 5000` completed in 19m42s with 310 MiB peak.\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed because 4 workers read the same hour concurrently and broke per-partition order. Fixed by assigning each partition to one worker.\n- [question] The ETA for Rachel (Fernhill and Orbitly, by Friday) is still open. You will give it yourself after Daniel's review.\n- [décision] Replay everything into `events.replay.v3`, never into `events.v3`, with no age cutoff, and let the aggregator recompute 12/11 with `--backfill` (source: t05)\n- [décision] Use a 5k batch and leave the namespace memory limit untouched (source: t13)\n- [décision] Write the malformed lines to a rejects file in the bucket and do not skip them silently (source: t15)\n- [décision] Do not draft a reply to Rachel; you will send the ETA after Daniel's review (source: t19)",
+  "rendu": "## Où j'en suis\nThe `cmd/replay` tool is written and committed (`4e2d9b7`, `f13a06c`), and PR #233 is open for review with Daniel as reviewer. The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay into `events.replay.v3`, none already in the dedup store, and 3,118 schema v2 lines written to the rejects file. The real replay and the aggregator backfill have not run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Waiting for Daniel's review of PR #233 before the real replay.\n- [prochaine-étape] Get PR #233 reviewed and merged. Run the real replay into `events.replay.v3` with `--dry-run=false`. Run the aggregator with `--backfill` for 2026-11-12. Give Rachel the ETA for Fernhill and Orbitly by Friday.\n- [essai-raté] The dry run `replay-dryrun-1` was OOMKilled at `--batch 50000` (about 2.6 GiB peak against a 2 GiB limit). `replay-dryrun-2` at `--batch 5000` completed in 19m42s with 310 MiB peak.\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed because 4 workers read the same hour concurrently and broke per-partition order. Fixed by assigning each partition to one worker.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1205,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5715,
+    "sortie": 1234,
+    "reflexion": 535,
+    "cache": 0,
+    "cout": 0.0011885
+  },
+  "cout": 0.0011885,
+  "latenceMs": 5729,
+  "fournisseur": "Claude Platform on AWS"
+}

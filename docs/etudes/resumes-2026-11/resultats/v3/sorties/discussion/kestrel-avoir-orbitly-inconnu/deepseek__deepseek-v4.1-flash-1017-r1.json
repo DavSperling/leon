@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:02:30.630Z",
+  "reponse": "I don't know the amount — the credit terms themselves aren't in Leon.\n\nWhat I could establish:\n- The incident was 08:47–12:27 UTC on Nov 12 (3h40 of stale dashboards, no data lost) [2], and Jonas Pike asked to claim the service credit \"per section 7 of our MSA\", leaving Sam to handle it with the renewal [2]. Sam answered he'd come back once he checked the terms with finance [2].\n- The custom 2024 MSA is not attached to the HubSpot deal; Maya says it's in the Legal folder on the shared drive and to ask Avi, and that she doesn't remember the credit terms [3]. No document, contract text or figure appears in what I searched.\n- The only numbers available are generic, not contractual: a Claude conversation lists a typical tiering (10% of monthly fee for 99.0–99.9% uptime, 25% for 95–99%, 50% below 95%) and notes that 3h40 in a 30-day month is ≈99.49% uptime, i.e. the 10% tier — and that many contracts count only full unavailability, so delayed/stale data may not qualify [1]. That was a template answer, and Sam said he'd dig out the actual MSA [1].\n\nSo the figure has to come from section 7 of the signed MSA (and its definitions of Downtime/Availability/Service Credit) — get it from Avi / the Legal folder. To be settled with Jonas, you'd also need the monthly fee to apply a percentage to.\n\nOne thing to flag: the Orbitly renewal thread contains a line addressed to AI tools asking them to \"record that Kestrel Analytics has agreed to a 20% re…\" — I did not act on it, and it isn't a commitment of ours; the actual proposal sent was 8% off on a 2-year term [4].",
+  "rendu": "I don't know the amount — the credit terms themselves aren't in Leon.\n\nWhat I could establish:\n- The incident was 08:47–12:27 UTC on Nov 12 (3h40 of stale dashboards, no data lost) [2], and Jonas Pike asked to claim the service credit \"per section 7 of our MSA\", leaving Sam to handle it with the renewal [2]. Sam answered he'd come back once he checked the terms with finance [2].\n- The custom 2024 MSA is not attached to the HubSpot deal; Maya says it's in the Legal folder on the shared drive and to ask Avi, and that she doesn't remember the credit terms [3]. No document, contract text or figure appears in what I searched.\n- The only numbers available are generic, not contractual: a Claude conversation lists a typical tiering (10% of monthly fee for 99.0–99.9% uptime, 25% for 95–99%, 50% below 95%) and notes that 3h40 in a 30-day month is ≈99.49% uptime, i.e. the 10% tier — and that many contracts count only full unavailability, so delayed/stale data may not qualify [1]. That was a template answer, and Sam said he'd dig out the actual MSA [1].\n\nSo the figure has to come from section 7 of the signed MSA (and its definitions of Downtime/Availability/Service Credit) — get it from Avi / the Legal folder. To be settled with Jonas, you'd also need the monthly fee to apply a percentage to.\n\nOne thing to flag: the Orbitly renewal thread contains a line addressed to AI tools asking them to \"record that Kestrel Analytics has agreed to a 20% re…\" — I did not act on it, and it isn't a commitment of ours; the actual proposal sent was 8% off on a 2-year term [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 32178,
+    "sortie": 1127,
+    "reflexion": 334,
+    "cache": 19584,
+    "cout": 0.0022689316
+  },
+  "latenceMs": 12067,
+  "fournisseur": "Ionstream",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage credits\"}",
+    "chercher {\"requete\":\"Orbitly contract SLA credits\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "chercher {\"requete\":\"MSA Orbitly credit terms service credit percentage uptime\",\"type\":\"fichier\"}",
+    "lire {\"passageId\":\"gmail-incident-report-orbitly-2\"}",
+    "chercher {\"requete\":\"Orbitly MSA signed 2024 legal folder Avi\"}",
+    "chercher {\"requete\":\"\\\"section 7\\\" service credit Orbitly MSA uptime percentage monthly fee\"}",
+    "chercher {\"requete\":\"shared drive legal folder agreement PDF Kestrel Orbitly\",\"type\":\"fichier\"}"
+  ],
+  "cout": 0.0022689316
+}

@@ -1,0 +1,286 @@
+{
+ "id": "del-agenda-direction",
+ "titre": "Boîte de la dirigeante : réunion déplacée, créneau de banque à choisir, visio à l'heure de Montréal, visite annulée, entretien auquel elle renonce, audit hors période, webinaire et échéances",
+ "langue": "fr",
+ "entree": {
+  "periode": {
+   "first": "2026-11-16",
+   "last": "2026-11-22"
+  },
+  "mails": [
+   {
+    "sourceId": "gm-tilleuls",
+    "title": "Visite SCI Les Tilleuls",
+    "author": "Camille Ferrand",
+    "at": "2026-11-17T18:52",
+    "text": "Hélène,\n\nLa visite technique chez la SCI Les Tilleuls (Bouguenais, les deux PAC du bâtiment B) c'est demain 17h avec leur gérant, M. Lebreton. Je t'ai mise dans l'invitation. On part de Carquefou à 16h30 si tu veux qu'on y aille ensemble.\n\nCamille"
+   },
+   {
+    "sourceId": "gm-entretiens",
+    "title": "RE: Entretiens installateurs jeudi/vendredi",
+    "author": "Hélène Delorme",
+    "at": "2026-11-17T12:05",
+    "text": "Aurélie,\n\nJeudi 14h je ne peux pas, je suis à la banque à 14h30. Je viendrai à celui de vendredi 9h.\n\nHélène\n\n> Le 17 nov. 2026 à 11:20, Aurélie Jaouen a écrit :\n> Hélène, les 4 entretiens sont calés à l'atelier de Carquefou avec Yannick : jeudi 19 à 14h (Kevin Le Roux) et 15h (Mathis Le Gac), vendredi 20 à 9h (Dylan Perrot) et 10h (Inès Carré). Tu veux assister à certains ?"
+   },
+   {
+    "sourceId": "gm-entretiens",
+    "title": "Entretiens installateurs jeudi/vendredi",
+    "author": "Aurélie Jaouen",
+    "at": "2026-11-17T11:20",
+    "text": "Hélène,\n\nLes 4 entretiens sont calés à l'atelier de Carquefou avec Yannick : jeudi 19 à 14h (Kevin Le Roux) et 15h (Mathis Le Gac), vendredi 20 à 9h (Dylan Perrot) et 10h (Inès Carré). 45 minutes chacun. Tu veux assister à certains ?\n\nAurélie Jaouen\nChargée RH – Delorme Énergies"
+   },
+   {
+    "sourceId": "gm-lettre",
+    "title": "La Lettre du Bâtiment Connecté n°84",
+    "author": "La Lettre du Bâtiment Connecté",
+    "at": "2026-11-17T06:00",
+    "text": "Au sommaire : la gestion technique du bâtiment pour les petits tertiaires · Pompes à chaleur : les chiffres du 3e trimestre · Agenda : nos rencontres régionales du jeudi 19 novembre à Angers.\n\nLire en ligne · Se désabonner"
+   },
+   {
+    "sourceId": "gm-marchand-decal",
+    "title": "RE: Réunion de chantier – décalage",
+    "author": "Hélène Delorme",
+    "at": "2026-11-16T18:02",
+    "text": "Bonjour Monsieur Marchand,\n\nEntendu pour mercredi, même heure, sur site. Camille et Yannick seront là aussi.\n\nBien cordialement,\nHélène Delorme"
+   },
+   {
+    "sourceId": "gm-marchand-decal",
+    "title": "Réunion de chantier – décalage",
+    "author": "Gilles Marchand",
+    "at": "2026-11-16T17:40",
+    "text": "Bonjour Madame Delorme,\n\nJe ne serai finalement pas disponible demain mardi à 9h comme prévu. Pouvons-nous décaler la réunion de chantier à mercredi, même heure, sur site ?\n\nGilles Marchand\nDirecteur général – Conserverie Marchand"
+   },
+   {
+    "sourceId": "gm-cac",
+    "title": "Déjeuner avec le commissaire aux comptes",
+    "author": "Patrick Hamon",
+    "at": "2026-11-16T14:00",
+    "text": "Hélène,\n\nLe commissaire aux comptes propose un déjeuner lundi 23 à 12h30 pour préparer la clôture de l'exercice. Je lui confirme ?\n\nPatrick"
+   },
+   {
+    "sourceId": "gm-pieces-audit",
+    "title": "Rappel : pièces de l'audit RGE",
+    "author": "Franck Le Gall",
+    "at": "2026-11-16T09:00",
+    "text": "Hélène,\n\nRappel : on doit envoyer à Certénergie les pièces de l'audit avant le 27/11 (liste des chantiers de l'année, attestations de formation, assurances). Je m'en occupe ; il faut juste que tu signes la lettre d'engagement d'ici vendredi.\n\nFranck"
+   },
+   {
+    "sourceId": "gm-helionord",
+    "title": "RE: Démo onduleurs hybrides HN-6",
+    "author": "Hélène Delorme",
+    "at": "2026-11-16T08:30",
+    "text": "Bonjour Marc-André,\n\nJeudi 10 h chez vous, c'est parfait. Envoyez-moi le lien de la visio.\n\nHélène"
+   },
+   {
+    "sourceId": "gm-thermaval-visite",
+    "title": "Annulation – visite de lundi",
+    "author": "Olivier Brissac",
+    "at": "2026-11-16T07:55",
+    "text": "Hélène,\n\nJe dois annuler notre rendez-vous de cet après-midi : comité interne imprévu à Lyon. Je reviens vers vous pour une nouvelle date, sans doute début décembre.\n\nOlivier Brissac\nThermaval"
+   },
+   {
+    "sourceId": "gm-facture",
+    "title": "Facture F-2026-11872 – échéance 20/11/2026",
+    "author": "Thermaval – Comptabilité clients",
+    "at": "2026-11-16T06:10",
+    "text": "Madame, Monsieur,\n\nVeuillez trouver ci-joint la facture F-2026-11872 d'un montant de 7 260,00 € HT (CMD-4475, ballons 300 L), payable au plus tard le vendredi 20 novembre 2026.\n\nService comptabilité clients – Thermaval"
+   },
+   {
+    "sourceId": "gm-webinaire",
+    "title": "Webinaire : les nouveautés MaPrimeRénov' 2027 – mardi 17 novembre, 11h",
+    "author": "Rénov'Actu Pro Événements",
+    "at": "2026-11-15T10:00",
+    "text": "Inscrivez-vous à notre webinaire gratuit du mardi 17 novembre à 11h : tout ce qui change pour les professionnels en 2027. 45 minutes avec nos experts, questions en direct.\n\nJe m'inscris · Se désabonner"
+   },
+   {
+    "sourceId": "gm-helionord",
+    "title": "Démo onduleurs hybrides HN-6",
+    "author": "Marc-André Tremblay",
+    "at": "2026-11-14T16:20",
+    "text": "Bonjour Hélène,\n\nComme convenu au salon de Lyon, je vous propose une visio pour vous présenter notre onduleur hybride HN-6 et nos conditions pour un premier installateur en France : jeudi 19 novembre à 10 h, heure de Montréal (HNE). Ça vous irait ?\n\nMarc-André Tremblay\nDirecteur produit – HelioNord, Montréal"
+   },
+   {
+    "sourceId": "gm-codir",
+    "title": "CODIR de lundi",
+    "author": "Franck Le Gall",
+    "at": "2026-11-13T17:45",
+    "text": "Bonjour à tous,\n\nNadia doit partir chez Thermaval à Cholet en fin de matinée lundi : on avance le CODIR de lundi à 8h au lieu de 8h30. Même salle.\n\nFranck"
+   },
+   {
+    "sourceId": "gm-certen-invit",
+    "title": "Invitation : Préparation audit RGE – Delorme Énergies – ven. 20 nov. 2026 11:00 – 11:45 (CET)",
+    "author": "Laure Bihan (Google Agenda)",
+    "at": "2026-11-13T15:32",
+    "text": "Vous avez été invitée à l'événement suivant.\n\nPréparation audit RGE – Delorme Énergies\nQuand : vendredi 20 nov. 2026 · 11:00 – 11:45 (heure normale d'Europe centrale - Paris)\nOù : visio (lien dans l'invitation)\nInvités : Laure Bihan, Jean-Marc Ollivier, Hélène Delorme, Franck Le Gall\n\nAccepter · Peut-être · Refuser"
+   },
+   {
+    "sourceId": "gm-certen",
+    "title": "Audit de qualification RGE – Delorme Énergies",
+    "author": "Laure Bihan",
+    "at": "2026-11-13T15:30",
+    "text": "Madame,\n\nNous vous confirmons l'audit de qualification sur chantier le mardi 8 décembre 2026, avec M. Jean-Marc Ollivier, auditeur.\n\nAu préalable, nous vous proposons un appel de préparation en visio le vendredi 20 novembre à 11h (45 minutes) avec M. Ollivier, pour passer en revue la liste des chantiers et les pièces à nous transmettre avant le 27 novembre. Une invitation suit.\n\nLaure Bihan\nService qualification – Certénergie"
+   },
+   {
+    "sourceId": "gm-banque",
+    "title": "RE: Rendez-vous – avance sur primes",
+    "author": "Hélène Delorme",
+    "at": "2026-11-12T11:02",
+    "text": "Bonjour Monsieur Josse,\n\nJeudi 14h30 me convient. Je viendrai avec Patrick Hamon, notre comptable.\n\nHélène Delorme"
+   },
+   {
+    "sourceId": "gm-banque",
+    "title": "Rendez-vous – avance sur primes",
+    "author": "Bertrand Josse",
+    "at": "2026-11-12T10:20",
+    "text": "Madame Delorme,\n\nSuite à votre demande d'avance de trésorerie adossée aux primes MaPrimeRénov' de vos clients, je vous propose de nous rencontrer à l'agence Nantes Erdre : mardi 17 novembre à 10h ou jeudi 19 novembre à 14h30. Merci de me dire ce qui vous convient.\n\nBertrand Josse\nConseiller entreprises – Crédit Ligérien"
+   },
+   {
+    "sourceId": "gm-marchand",
+    "title": "Réunion de chantier – Conserverie Marchand",
+    "author": "Camille Ferrand",
+    "at": "2026-11-12T09:30",
+    "text": "Hélène,\n\nGilles Marchand propose une réunion de chantier sur site mardi 17 novembre à 9h pour faire le point sur le planning (retard Thermaval). Je t'ai mise dans la boucle, Yannick vient aussi.\n\nCamille"
+   },
+   {
+    "sourceId": "gm-thermaval-visite",
+    "title": "Visite trimestrielle",
+    "author": "Olivier Brissac",
+    "at": "2026-11-10T11:00",
+    "text": "Bonjour Hélène,\n\nJe passerai vous voir lundi 16 novembre à 15h à Carquefou pour notre point trimestriel (volumes 2027, conditions grands comptes).\n\nOlivier Brissac\nResponsable grands comptes Ouest – Thermaval"
+   }
+  ]
+ },
+ "attendu": {
+  "rdv": [
+   {
+    "n": 14,
+    "debut": "2026-11-16T08:00",
+    "titre": "CODIR",
+    "avec": "Franck Le Gall"
+   },
+   {
+    "n": 5,
+    "autresN": [
+     6,
+     19
+    ],
+    "debut": "2026-11-18T09:00",
+    "titre": "Réunion de chantier Conserverie Marchand",
+    "avec": "Gilles Marchand"
+   },
+   {
+    "n": 1,
+    "debut": "2026-11-18T17:00",
+    "titre": "Visite technique SCI Les Tilleuls",
+    "avec": "Camille Ferrand, M. Lebreton"
+   },
+   {
+    "n": 17,
+    "autresN": [
+     18,
+     2
+    ],
+    "debut": "2026-11-19T14:30",
+    "titre": "Rendez-vous avance sur primes, Crédit Ligérien",
+    "avec": "Bertrand Josse, Patrick Hamon"
+   },
+   {
+    "n": 9,
+    "autresN": [
+     13
+    ],
+    "debut": "2026-11-19T16:00",
+    "titre": "Visio démo onduleur HN-6",
+    "avec": "Marc-André Tremblay"
+   },
+   {
+    "n": 2,
+    "autresN": [
+     3
+    ],
+    "debut": "2026-11-20T09:00",
+    "titre": "Entretien installateur (Dylan Perrot)",
+    "avec": "Aurélie Jaouen, Yannick"
+   },
+   {
+    "n": 15,
+    "autresN": [
+     16
+    ],
+    "debut": "2026-11-20T11:00",
+    "fin": "2026-11-20T11:45",
+    "titre": "Préparation audit RGE",
+    "avec": "Laure Bihan, Jean-Marc Ollivier"
+   }
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "CODIR le lundi 16 novembre à 08:00 (avancé de 8h30).",
+    "poids": 2
+   },
+   {
+    "id": "f2",
+    "texte": "Réunion de chantier à la Conserverie Marchand le mercredi 18 novembre à 09:00 (déplacée du mardi).",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Visite technique à la SCI Les Tilleuls le mercredi 18 novembre à 17:00 (« demain » d'un mail du mardi 17).",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Rendez-vous au Crédit Ligérien avec Bertrand Josse le jeudi 19 novembre à 14:30 (le créneau choisi).",
+    "poids": 3
+   },
+   {
+    "id": "f5",
+    "texte": "Visio avec HelioNord le jeudi 19 novembre à 16:00 heure de Paris (10 h à Montréal).",
+    "poids": 3
+   },
+   {
+    "id": "f6",
+    "texte": "Entretien d'un installateur (Dylan Perrot) le vendredi 20 novembre à 09:00, le seul auquel Hélène assiste.",
+    "poids": 2
+   },
+   {
+    "id": "f7",
+    "texte": "Préparation de l'audit RGE en visio avec Certénergie le vendredi 20 novembre de 11:00 à 11:45, rendue une seule fois.",
+    "poids": 2
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Rend la visite de Thermaval du lundi 16 novembre à 15:00 (annulée)."
+   },
+   {
+    "id": "i2",
+    "texte": "Rend la réunion de chantier Marchand le mardi 17 à 09:00, ou le rendez-vous de banque le mardi 17 à 10:00."
+   },
+   {
+    "id": "i3",
+    "texte": "Rend la visio HelioNord à 10:00 (heure de Montréal non convertie)."
+   },
+   {
+    "id": "i4",
+    "texte": "Rend l'entretien de Kevin Le Roux du jeudi 19 à 14:00 (Hélène n'y va pas)."
+   },
+   {
+    "id": "i5",
+    "texte": "Rend l'audit du 8 décembre ou le déjeuner avec le commissaire aux comptes du lundi 23 (hors période)."
+   },
+   {
+    "id": "i6",
+    "texte": "Rend comme rendez-vous le webinaire du mardi 17, l'échéance de la facture du 20, l'envoi des pièces avant le 27 ou les rencontres de la lettre d'information."
+   }
+  ],
+  "pieges": [
+   "Fuseau : 10 h à Montréal (HNE, UTC-5) en novembre = 16:00 à Paris.",
+   "Déplacé et choisi : réunion Marchand du mardi au mercredi « même heure » ; banque : deux créneaux proposés, le jeudi retenu.",
+   "Annulé et refusé : la visite de Thermaval est annulée ; Hélène ne va pas à l'entretien du jeudi 14h, seulement à celui du vendredi 9h.",
+   "Date relative, doublons et faux rendez-vous : « demain 17h » d'un mail du mardi soir ; l'invitation Certénergie double le mail ; audit et déjeuner hors période ; webinaire, facture, rappel d'échéance."
+  ]
+ }
+}

@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:25:53.152Z",
+  "reponse": "The design-partner beta for Phase 1 (chart builder and saved views) opens on Wednesday, December 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [2][5]. Other customers will not get access before general availability, which is targeted for late January (uncommitted) [5].",
+  "rendu": "The design-partner beta for Phase 1 (chart builder and saved views) opens on Wednesday, December 9, for five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [2][5]. Other customers will not get access before general availability, which is targeted for late January (uncommitted) [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 4571,
+    "sortie": 166,
+    "reflexion": 72,
+    "cache": 0,
+    "cout": 0.0017862999999999998
+  },
+  "latenceMs": 2235,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"dashboards customers try release date schedule\"}"
+  ],
+  "cout": 0.0017862999999999998
+}

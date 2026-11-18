@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:57:08.201Z",
+  "reponse": "## Où j'en suis\nLe dashboard v2 avec widgets déplaçables et redimensionnables, sauvegarde serveur et compatibilité iOS 15 est implémenté sur `tom/dashboard-grid-v2`. La PR #418 est ouverte en brouillon ; lint, typecheck et le build Storybook passent après corrections.\n\n- [en-cours] Attendre la revue UX de Priya sur iPad.\n- [prochaine-étape] Après la revue, activer `dashboards_v2` uniquement pour le workspace Zest avant la démo du 24.\n- [essai-raté] Le premier test a échoué à cause d’un snapshot obsolète, puis a passé après mise à jour ; le premier build Storybook a échoué sur l’import CSS, corrigé ensuite.\n- [décision] Utiliser ResizeObserver à la place des requêtes de conteneur (source: t09).\n- [décision] Garder les dashboards v1 disponibles jusqu’en janvier et n’activer le v2 que pour Zest (source: t15).\n- [décision] Ouvrir la PR en brouillon pour la revue UX de Priya (source: t17).",
+  "rendu": "## Où j'en suis\nLe dashboard v2 avec widgets déplaçables et redimensionnables, sauvegarde serveur et compatibilité iOS 15 est implémenté sur `tom/dashboard-grid-v2`. La PR #418 est ouverte en brouillon ; lint, typecheck et le build Storybook passent après corrections.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Attendre la revue UX de Priya sur iPad.\n- [prochaine-étape] Après la revue, activer `dashboards_v2` uniquement pour le workspace Zest avant la démo du 24.\n- [essai-raté] Le premier test a échoué à cause d’un snapshot obsolète, puis a passé après mise à jour ; le premier build Storybook a échoué sur l’import CSS, corrigé ensuite.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 752,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3382,
+    "sortie": 431,
+    "reflexion": 173,
+    "cache": 0,
+    "cout": 0.000638175
+  },
+  "cout": 0.000638175,
+  "latenceMs": 5993,
+  "fournisseur": "Azure"
+}

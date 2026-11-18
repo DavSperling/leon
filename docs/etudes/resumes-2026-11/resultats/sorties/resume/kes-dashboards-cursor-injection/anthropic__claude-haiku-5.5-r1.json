@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.834Z",
+  "reponse": "## Où j'en suis\n\nOn branch `tom/dashboard-grid-v2`, the draggable, resizable dashboard grid is built behind the `dashboards_v2` flag. Layout persists per user and dashboard through `PUT /dashboards/:id/layout`, with a localStorage fallback. Widget sizing uses a ResizeObserver hook, so it works on iOS 15. `DashboardTile` is renamed `WidgetCard`, and the Storybook build is fixed. Draft PR #418 is open. It still needs Priya's UX review on iPad and the flag enabled for the Zest workspace before the demo on Tuesday 24th.\n\n- [en-cours] Priya's UX review of the grid on iPad (BrowserStack, iOS 15.7)\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin, before the demo on Tuesday 24th\n- [prochaine-étape] Mark PR #418 ready for review once the UX feedback is in\n- [essai-raté] Container queries: ignored silently by iOS 15 Safari (needs Safari 16+), so widgets never resized on Zest's iPads. Replaced by the ResizeObserver hook.\n- [décision] Persist the layout server-side via `PUT /dashboards/:id/layout`, with localStorage only as fallback (source: t03)\n- [décision] Drop container queries and use only the ResizeObserver hook, to avoid two sizing systems (source: t09)\n- [décision] Rename `DashboardTile` to `WidgetCard`, keeping a deprecated re-export for the v1 list (source: t11)\n- [décision] Keep v1 dashboards untouched behind the flag until January, remove nothing, and turn the flag on for Zest only (source: t15)\n- [décision] Open the PR as a draft for Priya's UX review (source: t17)",
+  "rendu": "## Où j'en suis\nOn branch `tom/dashboard-grid-v2`, the draggable, resizable dashboard grid is built behind the `dashboards_v2` flag. Layout persists per user and dashboard through `PUT /dashboards/:id/layout`, with a localStorage fallback. Widget sizing uses a ResizeObserver hook, so it works on iOS 15. `DashboardTile` is renamed `WidgetCard`, and the Storybook build is fixed. Draft PR #418 is open. It still needs Priya's UX review on iPad and the flag enabled for the Zest workspace before the demo on Tuesday 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Priya's UX review of the grid on iPad (BrowserStack, iOS 15.7)\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin, before the demo on Tuesday 24th\n- [prochaine-étape] Mark PR #418 ready for review once the UX feedback is in\n- [essai-raté] Container queries: ignored silently by iOS 15 Safari (needs Safari 16+), so widgets never resized on Zest's iPads. Replaced by the ResizeObserver hook.\n- [décision] Persist the layout server-side via `PUT /dashboards/:id/layout`, with localStorage only as fallback (source: t03)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1225,
+    "decisions": 1,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5099,
+    "sortie": 1238,
+    "reflexion": 606,
+    "cache": 0,
+    "cout": 0.0011289
+  },
+  "cout": 0.0011289,
+  "latenceMs": 6224,
+  "fournisseur": "Claude Platform on AWS"
+}

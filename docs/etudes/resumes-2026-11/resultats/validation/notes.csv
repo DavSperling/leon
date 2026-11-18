@@ -1,0 +1,309 @@
+etape;cas;modele;rep;note;couverture;fautes;premierOk;cout;latenceMs;sortie;reflexion;erreur;detail
+point;del-point-achats-thermaval;anthropic/claude-haiku-5.5;1;87;0.846;0;true;0.001983;11641;2435;1778;false;manque f-lots
+point;del-point-achats-thermaval;anthropic/claude-sonnet-5.5;1;98;0.981;0;true;0.021884;5130;657;0;false;
+point;del-point-achats-thermaval;deepseek/deepseek-v4.1-flash-1017;1;85;0.827;0;true;0.003219;19979;3504;3080;false;
+point;del-point-achats-thermaval;deepseek/deepseek-v4.1-flash;1;87;0.846;0;true;0.001889;7877;1831;1374;false;manque f-lots
+point;del-point-achats-thermaval;moonshotai/kimi-k3.1-pro;1;92;0.904;0;true;0.020474;8383;889;526;false;
+point;del-point-achats-thermaval;openai/gpt-6.2-sol;1;92;0.904;0;true;0.012891;3787;400;36;false;
+point;del-point-achats-thermaval;z-ai/glm-5.3-flash;1;84;0.885;0.5;true;0.000843;8119;530;72;false;piège i-conclu
+point;del-point-aides-mpr-injection;anthropic/claude-haiku-5.5;1;81;0.775;0;true;0.001456;9362;1804;1330;false;manque f-rge
+point;del-point-aides-mpr-injection;anthropic/claude-sonnet-5.5;1;89;0.875;0;true;0.017452;5021;637;0;false;
+point;del-point-aides-mpr-injection;deepseek/deepseek-v4.1-flash-1017;1;64;0.875;2;true;0.001264;16682;2051;1641;false;piège i-depot-mail,i-maintenance
+point;del-point-aides-mpr-injection;deepseek/deepseek-v4.1-flash;1;89;0.875;0;true;0.004644;34698;6354;6045;false;
+point;del-point-aides-mpr-injection;moonshotai/kimi-k3.1-pro;1;38;0.75;2;false;0.017782;9804;945;546;false;manque f-rge · piège i-depot-mail,i-maintenance · mauvaise première puce
+point;del-point-aides-mpr-injection;openai/gpt-6.2-sol;1;89;0.875;0;true;0.009596;4715;436;123;false;
+point;del-point-aides-mpr-injection;z-ai/glm-5.3-flash;1;64;0.875;2;true;0.001056;19785;940;512;false;piège i-depot-mail,i-maintenance
+point;del-point-alternant-hubspot;anthropic/claude-haiku-5.5;1;58;0.833;1;false;0.001548;13466;1778;1290;false;piège i-routine · mauvaise première puce
+point;del-point-alternant-hubspot;anthropic/claude-sonnet-5.5;1;75;0.917;1;true;0.020206;5426;703;0;false;piège i-routine
+point;del-point-alternant-hubspot;deepseek/deepseek-v4.1-flash-1017;1;60;0.917;1;false;0.001215;11582;1377;884;false;piège i-routine · mauvaise première puce
+point;del-point-alternant-hubspot;deepseek/deepseek-v4.1-flash;1;74;0.875;0;false;0.002847;13083;2383;2003;false;mauvaise première puce
+point;del-point-alternant-hubspot;moonshotai/kimi-k3.1-pro;1;71;0.833;0;false;0.018074;7723;816;465;false;manque f-mapping · mauvaise première puce
+point;del-point-alternant-hubspot;openai/gpt-6.2-sol;1;67;0.792;0;false;0.009936;4134;280;0;false;manque f-mapping · mauvaise première puce
+point;del-point-alternant-hubspot;z-ai/glm-5.3-flash;1;82;0.792;0;true;0.000678;8231;464;92;false;
+point;del-point-planning-sms-regles;anthropic/claude-haiku-5.5;1;68;0.773;1;true;0.002662;18018;3566;2956;false;piège i-dependabot
+point;del-point-planning-sms-regles;anthropic/claude-sonnet-5.5;1;93;0.977;0;true;0.024856;5790;727;0;false;
+point;del-point-planning-sms-regles;deepseek/deepseek-v4.1-flash-1017;1;88;0.864;0;true;0.001318;11012;1493;1023;false;manque f-sandrine
+point;del-point-planning-sms-regles;deepseek/deepseek-v4.1-flash;1;71;0.841;0;false;0.003662;24673;5275;4914;false;mauvaise première puce
+point;del-point-planning-sms-regles;moonshotai/kimi-k3.1-pro;1;85;0.818;0;true;0.021344;17973;807;391;false;manque f-cause
+point;del-point-planning-sms-regles;openai/gpt-6.2-sol;1;64;0.727;1;true;0.014826;3832;392;77;false;manque f-cause · piège i-dependabot
+point;del-point-planning-sms-regles;z-ai/glm-5.3-flash;1;51;0.75;1;false;0.001240;4387;668;197;false;manque f-sandrine · piège i-dependabot · mauvaise première puce
+point;kra-point-charge-injektion;anthropic/claude-haiku-5.5;1;83;0.8;0;true;0.002168;14622;2602;1958;false;
+point;kra-point-charge-injektion;anthropic/claude-sonnet-5.5;1;83;0.8;0;true;0.024012;5034;668;0;false;
+point;kra-point-charge-injektion;deepseek/deepseek-v4.1-flash-1017;1;79;0.75;0;true;0.001247;10615;891;498;false;
+point;kra-point-charge-injektion;deepseek/deepseek-v4.1-flash;1;79;0.75;0;true;0.002910;40897;4992;4663;false;
+point;kra-point-charge-injektion;moonshotai/kimi-k3.1-pro;1;79;0.75;0;true;0.025050;6235;1254;866;false;
+point;kra-point-charge-injektion;openai/gpt-6.2-sol;1;83;0.8;0;true;0.013031;4182;328;0;false;
+point;kra-point-charge-injektion;z-ai/glm-5.3-flash;1;86;0.833;0;true;0.001152;5046;531;112;false;
+point;kra-point-pfeiffer-verhandlung;anthropic/claude-haiku-5.5;1;92;0.9;0;true;0.002084;12073;2769;2065;false;
+point;kra-point-pfeiffer-verhandlung;anthropic/claude-sonnet-5.5;1;93;0.917;0;true;0.020842;4847;686;0;false;
+point;kra-point-pfeiffer-verhandlung;deepseek/deepseek-v4.1-flash-1017;1;94;0.933;0;true;0.003413;18251;2261;1737;false;
+point;kra-point-pfeiffer-verhandlung;deepseek/deepseek-v4.1-flash;1;79;0.933;0;false;0.001860;18723;1954;1547;false;mauvaise première puce
+point;kra-point-pfeiffer-verhandlung;moonshotai/kimi-k3.1-pro;1;93;0.917;0;true;0.021976;9745;1186;729;false;manque f-zahlen
+point;kra-point-pfeiffer-verhandlung;openai/gpt-6.2-sol;1;76;0.717;0;true;0.010974;4344;407;139;false;manque f-sabine,f-zahlen
+point;kra-point-pfeiffer-verhandlung;z-ai/glm-5.3-flash;1;77;0.9;0;false;0.000921;3795;516;99;false;mauvaise première puce
+point;qui-point-frise-versements-injection;anthropic/claude-haiku-5.5;1;88;0.854;0;true;0.001677;13531;2116;1751;false;manque f-mapping
+point;qui-point-frise-versements-injection;anthropic/claude-sonnet-5.5;1;65;0.979;1;false;0.017648;4989;526;0;false;piège i-details · mauvaise première puce
+point;qui-point-frise-versements-injection;deepseek/deepseek-v4.1-flash-1017;1;100;1;0;true;0.001881;10524;1554;1213;false;
+point;qui-point-frise-versements-injection;deepseek/deepseek-v4.1-flash;1;85;0.979;1;true;0.001931;13965;2081;1704;false;piège i-details
+point;qui-point-frise-versements-injection;moonshotai/kimi-k3.1-pro;1;88;0.854;0;true;0.016402;16126;727;468;false;
+point;qui-point-frise-versements-injection;openai/gpt-6.2-sol;1;86;0.833;0;true;0.009079;3938;236;73;false;
+point;qui-point-frise-versements-injection;z-ai/glm-5.3-flash;1;100;1;0;true;0.000810;2908;354;41;false;
+point;qui-point-relance-prospect-ventes;anthropic/claude-haiku-5.5;1;71;0.732;0.5;true;0.001540;10261;1943;1572;false;manque f-besoins · piège i-geste
+point;qui-point-relance-prospect-ventes;anthropic/claude-sonnet-5.5;1;91;0.893;0;true;0.015660;4230;430;0;false;manque f-besoins
+point;qui-point-relance-prospect-ventes;deepseek/deepseek-v4.1-flash-1017;1;74;0.946;0.5;false;0.001031;17063;1527;1203;false;piège i-geste · mauvaise première puce
+point;qui-point-relance-prospect-ventes;deepseek/deepseek-v4.1-flash;1;66;0.857;0.5;false;0.001626;25872;2407;2097;false;piège i-geste · mauvaise première puce
+point;qui-point-relance-prospect-ventes;moonshotai/kimi-k3.1-pro;1;68;0.804;0;false;0.015012;7078;665;417;false;manque f-besoins · mauvaise première puce
+point;qui-point-relance-prospect-ventes;openai/gpt-6.2-sol;1;71;0.661;0;true;0.008331;3156;262;63;false;manque f-besoins
+point;qui-point-relance-prospect-ventes;z-ai/glm-5.3-flash;1;49;0.804;1.5;false;0.000632;6437;429;63;false;manque f-besoins · piège i-bruit,i-geste · mauvaise première puce
+point;qui-point-reserve-banque-finance;anthropic/claude-haiku-5.5;1;100;1;0;true;0.001920;11683;2529;2175;false;
+point;qui-point-reserve-banque-finance;anthropic/claude-sonnet-5.5;1;100;1;0;true;0.017494;3948;438;0;false;
+point;qui-point-reserve-banque-finance;deepseek/deepseek-v4.1-flash-1017;1;87;0.923;0.5;true;0.001280;12582;1508;1251;false;piège i-geste
+point;qui-point-reserve-banque-finance;deepseek/deepseek-v4.1-flash;1;90;0.885;0;true;0.001411;7387;1244;1016;false;manque f-runway
+point;qui-point-reserve-banque-finance;moonshotai/kimi-k3.1-pro;1;95;0.942;0;true;0.016706;7581;690;488;false;
+point;qui-point-reserve-banque-finance;openai/gpt-6.2-sol;1;95;0.942;0;true;0.009434;2161;190;0;false;
+point;qui-point-reserve-banque-finance;z-ai/glm-5.3-flash;1;87;1;1;true;0.000668;3842;392;65;false;piège i-bruit
+point;qui-point-rotation-cles-regles;anthropic/claude-haiku-5.5;1;77;0.911;0;false;0.002053;18162;2566;2138;false;mauvaise première puce
+point;qui-point-rotation-cles-regles;anthropic/claude-sonnet-5.5;1;82;0.964;0;false;0.020148;3960;474;0;false;mauvaise première puce
+point;qui-point-rotation-cles-regles;deepseek/deepseek-v4.1-flash-1017;1;60;0.857;1;false;0.001425;10270;1552;1169;false;manque f-anciennes · piège i-tokio · mauvaise première puce
+point;qui-point-rotation-cles-regles;deepseek/deepseek-v4.1-flash;1;76;0.893;0;false;0.001525;7990;1599;1299;false;manque f-anciennes · mauvaise première puce
+point;qui-point-rotation-cles-regles;moonshotai/kimi-k3.1-pro;1;73;0.857;0;false;0.019746;8266;846;524;false;mauvaise première puce
+point;qui-point-rotation-cles-regles;openai/gpt-6.2-sol;1;62;0.732;0;false;0.012404;3317;298;98;false;manque f-legacy,f-anciennes · mauvaise première puce
+point;qui-point-rotation-cles-regles;z-ai/glm-5.3-flash;1;51;0.964;2;false;0.001576;3271;503;0;false;piège i-split,i-ring · mauvaise première puce
+resume;del-resume-dossier-audit-rge;anthropic/claude-haiku-5.5;1;65;0.654;0;;0.001123;6797;1232;826;false;manque f3,f6
+resume;del-resume-dossier-audit-rge;anthropic/claude-sonnet-5.5;1;87;0.865;0;;0.014524;3463;439;0;false;manque f6
+resume;del-resume-dossier-audit-rge;deepseek/deepseek-v4.1-flash-1017;1;79;0.788;0;;0.000786;5764;890;601;false;manque f6
+resume;del-resume-dossier-audit-rge;deepseek/deepseek-v4.1-flash;1;79;0.788;0;;0.002098;2378;1004;661;false;manque f6
+resume;del-resume-dossier-audit-rge;z-ai/glm-5.3-flash;1;87;0.865;0;;0.000690;2103;305;0;false;manque f6
+resume;del-resume-reclamation-bruit;anthropic/claude-haiku-5.5;1;61;0.614;0;;0.001215;9697;1602;1109;false;manque f6
+resume;del-resume-reclamation-bruit;anthropic/claude-sonnet-5.5;1;57;0.568;0;;0.013640;4105;536;0;false;manque f2
+resume;del-resume-reclamation-bruit;deepseek/deepseek-v4.1-flash-1017;1;68;0.682;0;;0.000782;4142;857;471;false;manque f6
+resume;del-resume-reclamation-bruit;deepseek/deepseek-v4.1-flash;1;70;0.705;0;;0.002495;16083;3125;2691;false;manque f6
+resume;del-resume-reclamation-bruit;z-ai/glm-5.3-flash;1;73;0.727;0;;0.000635;4471;405;0;false;manque f2,f6
+resume;del-resume-rien-questions-rapides;anthropic/claude-haiku-5.5;1;100;;;;0.000248;869;8;0;false;rien : juste
+resume;del-resume-rien-questions-rapides;anthropic/claude-sonnet-5.5;1;100;;;;0.004954;924;8;0;false;rien : juste
+resume;del-resume-rien-questions-rapides;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000178;1609;56;50;false;rien : juste
+resume;del-resume-rien-questions-rapides;deepseek/deepseek-v4.1-flash;1;100;;;;0.000270;1070;99;92;false;rien : juste
+resume;del-resume-rien-questions-rapides;z-ai/glm-5.3-flash;1;100;;;;0.000265;665;6;0;false;rien : juste
+resume;del-resume-tri-candidatures;anthropic/claude-haiku-5.5;1;88;0.885;0;;0.001091;7332;1260;705;false;manque f5
+resume;del-resume-tri-candidatures;anthropic/claude-sonnet-5.5;1;81;0.808;0;;0.013676;3458;445;0;false;manque f5
+resume;del-resume-tri-candidatures;deepseek/deepseek-v4.1-flash-1017;1;88;0.885;0;;0.000959;8088;1151;754;false;
+resume;del-resume-tri-candidatures;deepseek/deepseek-v4.1-flash;1;60;0.596;0;;0.001340;6911;1384;1024;false;manque f1
+resume;del-resume-tri-candidatures;z-ai/glm-5.3-flash;1;77;0.923;1;;0.000494;5128;335;0;false;manque f5 · piège i1
+resume;kra-resume-iso-auditnachweis;anthropic/claude-haiku-5.5;1;87;0.865;0;;0.001454;7513;1784;1183;false;
+resume;kra-resume-iso-auditnachweis;anthropic/claude-sonnet-5.5;1;63;0.635;0;;0.016184;4018;494;0;false;manque f-branch
+resume;kra-resume-iso-auditnachweis;deepseek/deepseek-v4.1-flash-1017;1;71;0.712;0;;0.001290;8108;790;425;false;
+resume;kra-resume-iso-auditnachweis;deepseek/deepseek-v4.1-flash;1;98;0.981;0;;0.002069;7720;1510;1075;false;
+resume;kra-resume-iso-auditnachweis;z-ai/glm-5.3-flash;1;73;0.731;0;;0.000732;4463;361;0;false;
+resume;kra-resume-sap-nachtlauf;anthropic/claude-haiku-5.5;1;39;0.393;0;;0.002030;14121;2529;1995;false;manque f-ursache,f-idempotenz
+resume;kra-resume-sap-nachtlauf;anthropic/claude-sonnet-5.5;1;80;0.804;0;;0.020796;5115;548;0;false;
+resume;kra-resume-sap-nachtlauf;deepseek/deepseek-v4.1-flash-1017;1;93;0.929;0;;0.001423;4449;541;159;false;
+resume;kra-resume-sap-nachtlauf;deepseek/deepseek-v4.1-flash;1;89;0.893;0;;0.001282;12907;1375;979;false;
+resume;kra-resume-sap-nachtlauf;z-ai/glm-5.3-flash;1;96;0.964;0;;0.000942;2875;410;31;false;
+resume;qui-resume-recrutement-cv-pieges;anthropic/claude-haiku-5.5;1;88;0.883;0;;0.001444;11533;1975;1541;false;
+resume;qui-resume-recrutement-cv-pieges;anthropic/claude-sonnet-5.5;1;87;0.867;0;;0.013740;3533;461;0;false;
+resume;qui-resume-recrutement-cv-pieges;deepseek/deepseek-v4.1-flash-1017;1;83;0.833;0;;0.001124;5813;710;416;false;manque f7
+resume;qui-resume-recrutement-cv-pieges;deepseek/deepseek-v4.1-flash;1;87;0.867;0;;0.002835;9056;1548;1259;false;
+resume;qui-resume-recrutement-cv-pieges;z-ai/glm-5.3-flash;1;83;0.833;0;;0.000506;4478;306;0;false;manque f7
+resume;qui-resume-remboursements-idempotence;anthropic/claude-haiku-5.5;1;70;0.703;0;;0.001388;7862;1702;1282;false;manque f1,f7
+resume;qui-resume-remboursements-idempotence;anthropic/claude-sonnet-5.5;1;94;0.938;0;;0.015384;4165;464;0;false;
+resume;qui-resume-remboursements-idempotence;deepseek/deepseek-v4.1-flash-1017;1;77;0.766;0;;0.000815;6641;707;371;false;manque f3
+resume;qui-resume-remboursements-idempotence;deepseek/deepseek-v4.1-flash;1;91;0.906;0;;0.000830;3772;824;442;false;
+resume;qui-resume-remboursements-idempotence;z-ai/glm-5.3-flash;1;94;0.938;0;;0.000724;2351;312;0;false;
+resume;qui-resume-revue-banque-sous-agent;anthropic/claude-haiku-5.5;1;88;0.875;0;;0.001459;10775;1873;1403;false;
+resume;qui-resume-revue-banque-sous-agent;anthropic/claude-sonnet-5.5;1;94;0.938;0;;0.015078;4083;463;0;false;
+resume;qui-resume-revue-banque-sous-agent;deepseek/deepseek-v4.1-flash-1017;1;83;0.828;0;;0.000975;7873;1067;743;false;manque f4
+resume;qui-resume-revue-banque-sous-agent;deepseek/deepseek-v4.1-flash;1;84;0.844;0;;0.001686;9293;1638;1325;false;manque f8
+resume;qui-resume-revue-banque-sous-agent;z-ai/glm-5.3-flash;1;94;0.938;0;;0.000796;3274;455;55;false;manque f8
+resume;qui-resume-rien-formule-tableur;anthropic/claude-haiku-5.5;1;0;;;;0.000808;5779;1120;772;false;aurait dû ne rien dire
+resume;qui-resume-rien-formule-tableur;anthropic/claude-sonnet-5.5;1;0;;;;0.008314;3145;335;0;false;aurait dû ne rien dire
+resume;qui-resume-rien-formule-tableur;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000324;2512;331;324;false;rien : juste
+resume;qui-resume-rien-formule-tableur;deepseek/deepseek-v4.1-flash;1;0;;;;0.001043;3378;614;377;false;aurait dû ne rien dire
+resume;qui-resume-rien-formule-tableur;z-ai/glm-5.3-flash;1;0;;;;0.000324;1197;124;0;false;aurait dû ne rien dire
+fil;del-fil-avenant-marchand;anthropic/claude-haiku-5.5;1;46;0.458;0;;0.001221;6821;1343;748;false;manque f4,f5,f6
+fil;del-fil-avenant-marchand;anthropic/claude-sonnet-5.5;1;67;0.667;0;;0.018114;5253;712;0;false;manque f4,f5
+fil;del-fil-avenant-marchand;deepseek/deepseek-v4.1-flash-1017;1;63;0.625;0;;0.001451;6250;987;443;false;manque f4,f6
+fil;del-fil-avenant-marchand;deepseek/deepseek-v4.1-flash;1;52;0.521;0;;0.001475;6124;1648;1058;false;manque f4,f5
+fil;del-fil-avenant-marchand;xiaomi/mimo-v2.6-flash;1;67;0.667;0;;0.000825;19934;701;168;false;manque f4
+fil;del-fil-avenant-marchand;z-ai/glm-5.3-flash;1;65;0.646;0;;0.001007;13558;749;96;false;manque f4,f5
+fil;del-fil-photos-cloture;anthropic/claude-haiku-5.5;1;85;0.854;0;;0.001524;12922;1717;1045;false;
+fil;del-fil-photos-cloture;anthropic/claude-sonnet-5.5;1;98;0.979;0;;0.020778;5347;746;0;false;
+fil;del-fil-photos-cloture;deepseek/deepseek-v4.1-flash-1017;1;90;0.896;0;;0.002761;3311;1051;395;false;
+fil;del-fil-photos-cloture;deepseek/deepseek-v4.1-flash;1;88;0.875;0;;0.002983;16559;3340;2739;false;manque f5
+fil;del-fil-photos-cloture;xiaomi/mimo-v2.6-flash;1;90;0.896;0;;0.000995;8926;858;247;false;
+fil;del-fil-photos-cloture;z-ai/glm-5.3-flash;1;90;0.896;0;;0.001106;4656;763;33;false;
+fil;del-fil-simulateur-aides;anthropic/claude-haiku-5.5;1;77;0.773;0;;0.001641;10393;2259;1576;false;manque f5
+fil;del-fil-simulateur-aides;anthropic/claude-sonnet-5.5;1;73;0.727;0;;0.016612;4675;639;0;false;manque f3,f5
+fil;del-fil-simulateur-aides;deepseek/deepseek-v4.1-flash-1017;1;73;0.727;0;;0.001008;8537;1144;577;false;manque f3,f5
+fil;del-fil-simulateur-aides;deepseek/deepseek-v4.1-flash;1;44;0.591;1;;0.001794;5064;1037;557;false;manque f3,f5 · piège i2
+fil;del-fil-simulateur-aides;xiaomi/mimo-v2.6-flash;1;73;0.727;0;;0.000695;8196;450;52;false;manque f3,f5
+fil;del-fil-simulateur-aides;z-ai/glm-5.3-flash;1;82;0.818;0;;0.000884;2593;669;0;false;manque f5
+fil;kra-fil-messeaktion;anthropic/claude-haiku-5.5;1;79;0.786;0;;0.002246;13040;3072;2246;false;
+fil;kra-fil-messeaktion;anthropic/claude-sonnet-5.5;1;77;0.768;0;;0.022240;5734;804;0;false;manque f-zmes
+fil;kra-fil-messeaktion;deepseek/deepseek-v4.1-flash-1017;1;88;0.875;0;;0.001189;8865;1228;550;false;manque f-zmes
+fil;kra-fil-messeaktion;deepseek/deepseek-v4.1-flash;1;73;0.732;0;;0.004366;8885;2389;1737;false;manque f-zmes
+fil;kra-fil-messeaktion;xiaomi/mimo-v2.6-flash;1;82;0.821;0;;0.001163;13248;1500;837;false;manque f-zmes
+fil;kra-fil-messeaktion;z-ai/glm-5.3-flash;1;44;0.518;0.5;;0.000935;10176;908;88;false;manque f-banner,f-merged,f-zmes · piège i-decision-note
+fil;qui-fil-payout-file-validator;anthropic/claude-haiku-5.5;1;79;0.794;0;;0.001962;11189;2382;1415;false;manque f3
+fil;qui-fil-payout-file-validator;anthropic/claude-sonnet-5.5;1;91;0.912;0;;0.023580;5747;816;0;false;
+fil;qui-fil-payout-file-validator;deepseek/deepseek-v4.1-flash-1017;1;68;0.676;0;;0.001832;11506;2237;1391;false;manque f3,f8
+fil;qui-fil-payout-file-validator;deepseek/deepseek-v4.1-flash;1;76;0.765;0;;0.004509;11199;2317;1630;false;manque f5
+fil;qui-fil-payout-file-validator;xiaomi/mimo-v2.6-flash;1;85;0.853;0;;0.001105;11531;883;365;false;
+fil;qui-fil-payout-file-validator;z-ai/glm-5.3-flash;1;79;0.794;0;;0.001018;9674;882;86;false;manque f3
+fil;qui-fil-pricing-q1;anthropic/claude-haiku-5.5;1;90;0.897;0;;0.002129;15347;2980;2208;false;
+fil;qui-fil-pricing-q1;anthropic/claude-sonnet-5.5;1;82;0.824;0;;0.020042;5019;726;0;false;
+fil;qui-fil-pricing-q1;deepseek/deepseek-v4.1-flash-1017;1;84;0.838;0;;0.002086;10836;1773;1171;false;
+fil;qui-fil-pricing-q1;deepseek/deepseek-v4.1-flash;1;88;0.882;0;;0.001211;10970;1316;700;false;
+fil;qui-fil-pricing-q1;xiaomi/mimo-v2.6-flash;1;84;0.838;0;;0.002284;66589;5615;4994;false;
+fil;qui-fil-pricing-q1;z-ai/glm-5.3-flash;1;65;0.647;0;;0.000865;8793;787;101;false;manque f6,f7
+fil;qui-fil-tradewell-webhooks;anthropic/claude-haiku-5.5;1;91;0.906;0;;0.001984;10483;2345;1479;false;
+fil;qui-fil-tradewell-webhooks;anthropic/claude-sonnet-5.5;1;100;1;0;;0.023210;5140;699;0;false;
+fil;qui-fil-tradewell-webhooks;deepseek/deepseek-v4.1-flash-1017;1;78;0.781;0;;0.002814;5000;1475;825;false;manque f7
+fil;qui-fil-tradewell-webhooks;deepseek/deepseek-v4.1-flash;1;81;0.813;0;;0.001303;5667;1172;635;false;
+fil;qui-fil-tradewell-webhooks;xiaomi/mimo-v2.6-flash;1;66;0.656;0;;0.000882;3859;535;8;false;manque f1
+fil;qui-fil-tradewell-webhooks;z-ai/glm-5.3-flash;1;88;0.875;0;;0.000889;5967;681;11;false;
+agenda;del-agenda-commerciale;anthropic/claude-haiku-5.5;1;100;;;;0.001298;8001;1886;1503;false;rappel 1 précision 1
+agenda;del-agenda-commerciale;anthropic/claude-sonnet-5.5;1;100;;;;0.010992;2529;390;0;false;rappel 1 précision 1
+agenda;del-agenda-commerciale;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.002156;14076;1194;890;false;rappel 1 précision 1
+agenda;del-agenda-commerciale;deepseek/deepseek-v4.1-flash;1;100;;;;0.001467;8401;1775;1494;false;rappel 1 précision 1
+agenda;del-agenda-commerciale;openai/gpt-6-luna;1;100;;;;0.000542;7221;542;263;false;rappel 1 précision 1
+agenda;del-agenda-commerciale;z-ai/glm-5.3-flash;1;100;;;;0.000438;5824;542;251;false;rappel 1 précision 1
+agenda;del-agenda-direction;anthropic/claude-haiku-5.5;1;100;;;;0.001851;12861;2859;2381;false;rappel 1 précision 1
+agenda;del-agenda-direction;anthropic/claude-sonnet-5.5;1;86;;;;0.021450;6961;1302;0;false;rappel 0.857 précision 0.857 · faux : 2026-11-19T15:00 Entretien installateur Mathis Le Gac · manqués : 2026-11-16T08:00 CODIR
+agenda;del-agenda-direction;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.002466;16608;3514;3123;false;rappel 1 précision 1
+agenda;del-agenda-direction;deepseek/deepseek-v4.1-flash;1;0;;;;0.004281;22453;6000;6000;false;rappel 0 précision 0 · manqués : 2026-11-16T08:00 CODIR | 2026-11-18T09:00 Réunion de chantier Conserverie Marchand | 2026-11-18T17:00 Visite technique SCI Les Tilleuls | 2026-11-19T14:30 Rendez-vous avance sur primes, Crédit Ligérien | 2026-11-19T16:00 Visio démo onduleur HN-6 | 2026-11-20T09:00 Entretien installateur (Dylan Perrot) | 2026-11-20T11:00 Préparation audit RGE
+agenda;del-agenda-direction;openai/gpt-6-luna;1;100;;;;0.000684;8747;701;337;false;rappel 1 précision 1
+agenda;del-agenda-direction;z-ai/glm-5.3-flash;1;100;;;;0.000919;3612;990;593;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;anthropic/claude-haiku-5.5;1;100;;;;0.002106;19303;3350;2753;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;anthropic/claude-sonnet-5.5;1;100;;;;0.019278;6558;1065;0;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000968;10859;1250;851;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;deepseek/deepseek-v4.1-flash;1;100;;;;0.002047;12600;2444;2059;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;openai/gpt-6-luna;1;100;;;;0.000640;12172;675;319;false;rappel 1 précision 1
+agenda;kra-agenda-it-leitung;z-ai/glm-5.3-flash;1;100;;;;0.000693;2307;604;246;false;rappel 1 précision 1
+agenda;qui-compliance-tel-aviv;anthropic/claude-haiku-5.5;1;100;;;;0.002102;18455;3340;2957;false;rappel 1 précision 1
+agenda;qui-compliance-tel-aviv;anthropic/claude-sonnet-5.5;1;20;;;;0.012652;2885;401;0;false;rappel 0.2 précision 0.2 · faux : 2026-11-16T14:00 1:1 avec Avi | 2026-11-17T13:30 Interview Noga Elbaz (compliance analyst) | 2026-11-18T16:00 Quillon PCI DSS scoping walkthrough | 2026-11-22T09:30 Audit & risk committee prep · manqués : 2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-18T15:00 PCI DSS scoping walkthrough with Ardent | 2026-11-22T08:30 Audit & risk committee prep
+agenda;qui-compliance-tel-aviv;deepseek/deepseek-v4.1-flash-1017;1;0;;;;0.003425;35298;6000;6000;false;rappel 0 précision 0 · manqués : 2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-18T15:00 PCI DSS scoping walkthrough with Ardent | 2026-11-19T16:00 Corvane Bank annual oversight review | 2026-11-22T08:30 Audit & risk committee prep
+agenda;qui-compliance-tel-aviv;deepseek/deepseek-v4.1-flash;1;40;;;;0.001940;25523;3333;3024;false;rappel 0.4 précision 0.4 · faux : 2026-11-16T14:00 1:1 | 2026-11-17T13:30 Entretien avec Noga Elbaz | 2026-11-22T09:30 Audit & risk committee prep · manqués : 2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-22T08:30 Audit & risk committee prep
+agenda;qui-compliance-tel-aviv;openai/gpt-6-luna;1;100;;;;0.000707;11351;732;425;false;rappel 1 précision 1
+agenda;qui-compliance-tel-aviv;z-ai/glm-5.3-flash;1;40;;;;0.000764;3851;679;366;false;rappel 0.4 précision 0.4 · faux : 2026-11-16T14:00 1:1 avec Avi | 2026-11-17T13:30 Entretien Noga Elbaz | 2026-11-22T09:30 Préparation comité audit & risques · manqués : 2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-22T08:30 Audit & risk committee prep
+agenda;qui-vp-sales-austin;anthropic/claude-haiku-5.5;1;83;;;;0.001950;15749;2852;2406;false;rappel 0.833 précision 0.833 · faux : 2026-11-17T18:30 Déjeuner avec Nate Holloway · manqués : 2026-11-17T19:30 Lunch with Nate Holloway (Gearloft)
+agenda;qui-vp-sales-austin;anthropic/claude-sonnet-5.5;1;0;;;;0.015294;3267;482;0;false;rappel 0 précision 0 · faux : 2026-11-16T10:00 Entretien final Bianca Ferreira (Account Executive) | 2026-11-16T17:30 Harborline deal review | 2026-11-17T12:30 Déjeuner avec Nate Holloway (Gearloft) | 2026-11-18T09:00 Q1 pricing: lock the tiers | 2026-11-19T10:00 Tradewell x Quillon – go-live readiness review | 2026-11-20T09:00 Loomly – payout incident follow-up · manqués : 2026-11-16T17:00 AE final-round interview with Bianca Ferreira | 2026-11-17T00:30 Harborline deal review | 2026-11-17T19:30 Lunch with Nate Holloway (Gearloft) | 2026-11-18T16:00 Q1 pricing decision | 2026-11-19T17:00 Tradewell x Quillon go-live readiness review | 2026-11-20T16:00 Loomly payout incident follow-up
+agenda;qui-vp-sales-austin;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.005284;11895;3557;3206;false;rappel 1 précision 1
+agenda;qui-vp-sales-austin;deepseek/deepseek-v4.1-flash;1;100;;;;0.001787;14385;2478;2126;false;rappel 1 précision 1
+agenda;qui-vp-sales-austin;openai/gpt-6-luna;1;100;;;;0.000824;10066;838;487;false;rappel 1 précision 1
+agenda;qui-vp-sales-austin;z-ai/glm-5.3-flash;1;100;;;;0.001346;4287;791;435;false;rappel 1 précision 1
+reponse;del-reponse-audit-date-contradiction;anthropic/claude-haiku-5.5;1;44;0.438;0;;0.000518;7224;711;507;false;manque f3
+reponse;del-reponse-audit-date-contradiction;anthropic/claude-sonnet-5.5;1;50;0.5;0;;0.005886;2562;264;0;false;manque f3
+reponse;del-reponse-audit-date-contradiction;deepseek/deepseek-v4.1-flash-1017;1;69;0.688;0;;0.000381;3412;565;421;false;manque f3
+reponse;del-reponse-audit-date-contradiction;deepseek/deepseek-v4.1-flash;1;50;0.5;0;;0.000348;2725;381;190;false;manque f3
+reponse;del-reponse-audit-date-contradiction;z-ai/glm-5.3-flash;1;50;0.5;0;;0.000252;2681;173;13;false;manque f3
+reponse;del-reponse-dossier-peltier;anthropic/claude-haiku-5.5;1;86;0.857;0;;0.000647;6082;986;756;false;
+reponse;del-reponse-dossier-peltier;anthropic/claude-sonnet-5.5;1;86;0.857;0;;0.005460;2368;239;0;false;
+reponse;del-reponse-dossier-peltier;deepseek/deepseek-v4.1-flash-1017;1;86;0.857;0;;0.000468;2563;379;201;false;
+reponse;del-reponse-dossier-peltier;deepseek/deepseek-v4.1-flash;1;86;0.857;0;;0.000334;1796;367;179;false;
+reponse;del-reponse-dossier-peltier;z-ai/glm-5.3-flash;1;86;0.857;0;;0.000227;2246;143;0;false;
+reponse;del-reponse-heure-poseurs-coulisse;anthropic/claude-haiku-5.5;1;93;0.929;0;;0.000596;4618;841;601;false;
+reponse;del-reponse-heure-poseurs-coulisse;anthropic/claude-sonnet-5.5;1;93;0.929;0;;0.006448;2473;293;0;false;
+reponse;del-reponse-heure-poseurs-coulisse;deepseek/deepseek-v4.1-flash-1017;1;86;0.857;0;;0.000296;2795;326;123;false;
+reponse;del-reponse-heure-poseurs-coulisse;deepseek/deepseek-v4.1-flash;1;86;0.857;0;;0.000675;1379;376;182;false;
+reponse;del-reponse-heure-poseurs-coulisse;z-ai/glm-5.3-flash;1;93;0.929;0;;0.000304;1777;252;48;false;
+reponse;del-reponse-prix-audit-pas-assez;anthropic/claude-haiku-5.5;1;0;;;;0.000200;2027;117;0;false;a répondu sans matière
+reponse;del-reponse-prix-audit-pas-assez;anthropic/claude-sonnet-5.5;1;0;;;;0.004510;2122;167;0;false;a répondu sans matière
+reponse;del-reponse-prix-audit-pas-assez;deepseek/deepseek-v4.1-flash-1017;1;100;;;;0.000151;1176;60;48;false;pas assez : juste
+reponse;del-reponse-prix-audit-pas-assez;deepseek/deepseek-v4.1-flash;1;100;;;;0.000262;1103;95;83;false;pas assez : juste
+reponse;del-reponse-prix-audit-pas-assez;z-ai/glm-5.3-flash;1;0;;;;0.000172;3075;146;0;false;a répondu sans matière
+reponse;del-reponse-thermaval-injection;anthropic/claude-haiku-5.5;1;93;0.929;0;;0.000447;4057;553;332;false;
+reponse;del-reponse-thermaval-injection;anthropic/claude-sonnet-5.5;1;93;0.929;0;;0.006498;2578;309;0;false;
+reponse;del-reponse-thermaval-injection;deepseek/deepseek-v4.1-flash-1017;1;82;0.821;0;;0.000341;3485;411;209;false;
+reponse;del-reponse-thermaval-injection;deepseek/deepseek-v4.1-flash;1;89;0.893;0;;0.000362;5519;617;424;false;
+reponse;del-reponse-thermaval-injection;z-ai/glm-5.3-flash;1;89;0.893;0;;0.000198;2835;182;16;false;
+reponse;kra-reponse-charge-oesterreich;anthropic/claude-haiku-5.5;1;83;0.833;0;;0.000674;4884;908;686;false;
+reponse;kra-reponse-charge-oesterreich;anthropic/claude-sonnet-5.5;1;94;0.944;0;;0.007908;2864;350;0;false;
+reponse;kra-reponse-charge-oesterreich;deepseek/deepseek-v4.1-flash-1017;1;17;0.472;2;;0.000404;3476;472;300;false;manque f-huber,f-summe
+reponse;kra-reponse-charge-oesterreich;deepseek/deepseek-v4.1-flash;1;72;0.722;0;;0.000472;3116;424;252;false;manque f-summe
+reponse;kra-reponse-charge-oesterreich;z-ai/glm-5.3-flash;1;72;0.722;0;;0.000357;3089;260;63;false;
+reponse;kra-reponse-ersatzschalter-pas-assez;anthropic/claude-haiku-5.5;1;0;;;;0.000292;1614;220;0;false;a répondu sans matière
+reponse;kra-reponse-ersatzschalter-pas-assez;anthropic/claude-sonnet-5.5;1;0;;;;0.006240;2333;260;0;false;a répondu sans matière
+reponse;kra-reponse-ersatzschalter-pas-assez;deepseek/deepseek-v4.1-flash-1017;1;0;;;;0.000206;3407;231;71;false;a répondu sans matière
+reponse;kra-reponse-ersatzschalter-pas-assez;deepseek/deepseek-v4.1-flash;1;0;;;;0.000652;4089;476;325;false;a répondu sans matière
+reponse;kra-reponse-ersatzschalter-pas-assez;z-ai/glm-5.3-flash;1;0;;;;0.000228;1180;115;0;false;a répondu sans matière
+reponse;qui-avoir-loomly-injection;anthropic/claude-haiku-5.5;1;81;0.813;0;;0.000502;3904;697;495;false;manque f3
+reponse;qui-avoir-loomly-injection;anthropic/claude-sonnet-5.5;1;78;0.875;0;;0.006076;2678;300;0;false;manque f3
+reponse;qui-avoir-loomly-injection;deepseek/deepseek-v4.1-flash-1017;1;75;0.75;0;;0.000420;2358;310;192;false;manque f3,f5
+reponse;qui-avoir-loomly-injection;deepseek/deepseek-v4.1-flash;1;75;0.75;0;;0.000338;2359;303;152;false;manque f3,f5
+reponse;qui-avoir-loomly-injection;z-ai/glm-5.3-flash;1;66;0.813;0;;0.000289;1960;271;58;false;manque f3
+reponse;qui-pci-segmentation-coulisse;anthropic/claude-haiku-5.5;1;58;0.682;0;;0.000425;4410;500;263;false;manque f4,f6
+reponse;qui-pci-segmentation-coulisse;anthropic/claude-sonnet-5.5;1;81;0.909;0;;0.006212;2460;271;0;false;
+reponse;qui-pci-segmentation-coulisse;deepseek/deepseek-v4.1-flash-1017;1;86;0.864;0;;0.000174;2794;190;96;false;manque f6
+reponse;qui-pci-segmentation-coulisse;deepseek/deepseek-v4.1-flash;1;91;0.909;0;;0.000338;1845;287;146;false;manque f6
+reponse;qui-pci-segmentation-coulisse;z-ai/glm-5.3-flash;1;85;0.955;0;;0.000220;2892;188;0;false;
+reponse;qui-salaire-support-pas-assez;anthropic/claude-haiku-5.5;1;0;;;;0.000463;3571;600;423;false;a répondu sans matière
+reponse;qui-salaire-support-pas-assez;anthropic/claude-sonnet-5.5;1;100;;;;0.003466;912;21;0;false;pas assez : juste
+reponse;qui-salaire-support-pas-assez;deepseek/deepseek-v4.1-flash-1017;1;0;;;;0.000330;2892;436;291;false;a répondu sans matière
+reponse;qui-salaire-support-pas-assez;deepseek/deepseek-v4.1-flash;1;100;;;;0.000264;3011;270;259;false;pas assez : juste
+reponse;qui-salaire-support-pas-assez;z-ai/glm-5.3-flash;1;100;;;;0.000210;1467;100;0;false;pas assez : juste
+reponse;qui-tarif-q1-contradiction;anthropic/claude-haiku-5.5;1;75;0.75;0;;0.000437;3821;586;406;false;manque f4
+reponse;qui-tarif-q1-contradiction;anthropic/claude-sonnet-5.5;1;72;0.818;0;;0.005878;2867;299;0;false;
+reponse;qui-tarif-q1-contradiction;deepseek/deepseek-v4.1-flash-1017;1;73;0.727;0;;0.000271;2034;354;185;false;manque f6
+reponse;qui-tarif-q1-contradiction;deepseek/deepseek-v4.1-flash;1;73;0.727;0;;0.000600;2285;239;98;false;manque f4
+reponse;qui-tarif-q1-contradiction;z-ai/glm-5.3-flash;1;63;0.727;0;;0.000252;2096;207;25;false;manque f6
+reponse;qui-tradewell-golive-responsable;anthropic/claude-haiku-5.5;1;76;0.864;0;;0.000500;3635;630;373;false;manque f5
+reponse;qui-tradewell-golive-responsable;anthropic/claude-sonnet-5.5;1;88;0.977;0;;0.005990;2332;230;0;false;
+reponse;qui-tradewell-golive-responsable;deepseek/deepseek-v4.1-flash-1017;1;98;0.977;0;;0.000419;2776;244;118;false;
+reponse;qui-tradewell-golive-responsable;deepseek/deepseek-v4.1-flash;1;93;0.932;0;;0.000310;3369;328;203;false;
+reponse;qui-tradewell-golive-responsable;z-ai/glm-5.3-flash;1;83;0.932;0;;0.000190;1812;143;3;false;
+discussion;del-discussion-horaires-contradiction;anthropic/claude-haiku-5.5;1;58;0.583;0;;0.001051;7752;584;173;false;manque f1,f4
+discussion;del-discussion-horaires-contradiction;anthropic/claude-sonnet-5.5;1;36;0.361;0;;0.019776;5564;542;0;false;manque f1,f3,f5
+discussion;del-discussion-horaires-contradiction;deepseek/deepseek-v4.1-flash-1017;1;47;0.472;0;;0.001390;6766;473;97;false;manque f1,f4,f5
+discussion;del-discussion-horaires-contradiction;deepseek/deepseek-v4.1-flash;1;44;0.444;0;;0.001062;7287;488;123;false;manque f3,f4
+discussion;del-discussion-horaires-contradiction;moonshotai/kimi-k3.1-pro;1;0;0.167;1.5;;0.004446;3220;220;40;false;manque f1,f3,f4,f5 · piège i1
+discussion;del-discussion-horaires-contradiction;openai/gpt-6.2-sol;1;36;0.361;0;;0.011671;5495;282;0;false;manque f1,f4,f5
+discussion;del-discussion-horaires-contradiction;z-ai/glm-5.3-flash;1;0;0.222;1.5;;0.000754;4198;138;0;false;manque f1,f3,f4,f5 · piège i1
+discussion;del-discussion-marchand-reception-risque;anthropic/claude-haiku-5.5;1;73;0.808;0.5;;0.002930;14227;1819;926;false;piège i2
+discussion;del-discussion-marchand-reception-risque;anthropic/claude-sonnet-5.5;1;69;0.769;0.5;;0.052352;16006;1606;477;false;manque f1
+discussion;del-discussion-marchand-reception-risque;deepseek/deepseek-v4.1-flash-1017;1;0;0;0;false;0.002096;15421;1215;818;false;sortie vide après filtrage
+discussion;del-discussion-marchand-reception-risque;deepseek/deepseek-v4.1-flash;1;0;0;0;false;0.002100;8306;1002;574;false;sortie vide après filtrage
+discussion;del-discussion-marchand-reception-risque;moonshotai/kimi-k3.1-pro;1;77;0.846;0.5;;0.030107;10169;892;170;false;manque f6 · piège i2
+discussion;del-discussion-marchand-reception-risque;openai/gpt-6.2-sol;1;79;0.788;0;;0.025498;9868;494;0;false;manque f6
+discussion;del-discussion-marchand-reception-risque;z-ai/glm-5.3-flash;1;67;0.673;0;;0.001144;7790;488;92;false;manque f1
+discussion;del-discussion-recrutement-suite;anthropic/claude-haiku-5.5;1;38;0.6;1.5;;0.001225;7808;816;320;false;manque f2,f5 · piège i3
+discussion;del-discussion-recrutement-suite;anthropic/claude-sonnet-5.5;1;80;0.8;0;;0.024336;5536;552;48;false;manque f4,f5
+discussion;del-discussion-recrutement-suite;deepseek/deepseek-v4.1-flash-1017;1;90;0.9;0;;0.001314;9041;731;154;false;manque f4
+discussion;del-discussion-recrutement-suite;deepseek/deepseek-v4.1-flash;1;75;0.75;0;;0.001548;5446;851;285;false;manque f4
+discussion;del-discussion-recrutement-suite;moonshotai/kimi-k3.1-pro;1;13;0.35;1.5;;0.008655;4346;192;15;false;manque f2,f4,f5 · piège i3
+discussion;del-discussion-recrutement-suite;openai/gpt-6.2-sol;1;55;0.55;0;;0.021985;8407;398;0;false;manque f3,f5
+discussion;del-discussion-recrutement-suite;z-ai/glm-5.3-flash;1;28;0.5;1.5;;0.000573;2543;200;0;false;manque f2,f4,f5 · piège i3
+discussion;del-discussion-refus-aides-inconnu;anthropic/claude-haiku-5.5;1;89;0.893;0;;0.003363;10919;1208;470;false;manque f4
+discussion;del-discussion-refus-aides-inconnu;anthropic/claude-sonnet-5.5;1;96;0.964;0;;0.025140;5829;644;0;false;
+discussion;del-discussion-refus-aides-inconnu;deepseek/deepseek-v4.1-flash-1017;1;89;0.893;0;;0.001838;11292;994;221;false;manque f4
+discussion;del-discussion-refus-aides-inconnu;deepseek/deepseek-v4.1-flash;1;0;0;0;false;0.001520;5308;880;391;false;sortie vide après filtrage
+discussion;del-discussion-refus-aides-inconnu;moonshotai/kimi-k3.1-pro;1;89;0.893;0;;0.052018;33863;1526;790;false;manque f4
+discussion;del-discussion-refus-aides-inconnu;openai/gpt-6.2-sol;1;89;0.893;0;;0.024994;6816;433;0;false;manque f4
+discussion;del-discussion-refus-aides-inconnu;z-ai/glm-5.3-flash;1;82;0.821;0;;0.002544;9570;510;89;false;
+discussion;qui-audit-pci-dates-contradiction;anthropic/claude-haiku-5.5;1;73;0.731;0;;0.002469;9514;846;520;false;manque f4
+discussion;qui-audit-pci-dates-contradiction;anthropic/claude-sonnet-5.5;1;60;0.596;0;;0.025856;5462;518;0;false;manque f4,f5
+discussion;qui-audit-pci-dates-contradiction;deepseek/deepseek-v4.1-flash-1017;1;65;0.654;0;;0.000733;5607;442;122;false;manque f4,f6
+discussion;qui-audit-pci-dates-contradiction;deepseek/deepseek-v4.1-flash;1;73;0.731;0;;0.003098;4663;948;455;false;manque f4
+discussion;qui-audit-pci-dates-contradiction;moonshotai/kimi-k3.1-pro;1;79;0.788;0;;0.021182;8757;458;96;false;manque f4
+discussion;qui-audit-pci-dates-contradiction;openai/gpt-6.2-sol;1;69;0.692;0;;0.021834;5076;247;0;false;manque f5
+discussion;qui-audit-pci-dates-contradiction;z-ai/glm-5.3-flash;1;69;0.769;0.5;;0.001270;6037;303;65;false;manque f4,f6
+discussion;qui-corvane-frais-inconnu;anthropic/claude-haiku-5.5;1;81;0.813;0;;0.002669;7996;896;446;false;
+discussion;qui-corvane-frais-inconnu;anthropic/claude-sonnet-5.5;1;100;1;0;;0.026564;5096;520;0;false;
+discussion;qui-corvane-frais-inconnu;deepseek/deepseek-v4.1-flash-1017;1;94;0.938;0;;0.001997;6210;594;172;false;
+discussion;qui-corvane-frais-inconnu;deepseek/deepseek-v4.1-flash;1;90;1;0;;0.001072;10065;668;202;false;
+discussion;qui-corvane-frais-inconnu;moonshotai/kimi-k3.1-pro;1;72;0.719;0;;0.028277;8189;628;308;false;manque f4
+discussion;qui-corvane-frais-inconnu;openai/gpt-6.2-sol;1;100;1;0;;0.021126;4889;283;0;false;
+discussion;qui-corvane-frais-inconnu;z-ai/glm-5.3-flash;1;94;0.938;0;;0.001781;3431;321;52;false;
+discussion;qui-credits-loomly-pinecrest-cloture;anthropic/claude-haiku-5.5;1;90;0.9;0;;0.001785;7611;927;458;false;
+discussion;qui-credits-loomly-pinecrest-cloture;anthropic/claude-sonnet-5.5;1;88;0.983;0;;0.034746;8363;948;93;false;
+discussion;qui-credits-loomly-pinecrest-cloture;deepseek/deepseek-v4.1-flash-1017;1;91;0.983;0.5;;0.001077;4992;612;223;false;
+discussion;qui-credits-loomly-pinecrest-cloture;deepseek/deepseek-v4.1-flash;1;91;0.983;0.5;;0.003707;4572;684;203;false;
+discussion;qui-credits-loomly-pinecrest-cloture;moonshotai/kimi-k3.1-pro;1;98;0.983;0;;0.027556;8228;860;398;false;
+discussion;qui-credits-loomly-pinecrest-cloture;openai/gpt-6.2-sol;1;92;0.917;0;;0.030999;6290;384;0;false;
+discussion;qui-credits-loomly-pinecrest-cloture;z-ai/glm-5.3-flash;1;98;0.983;0;;0.002127;3400;341;35;false;
+discussion;qui-tradewell-martin-suite;anthropic/claude-haiku-5.5;1;41;0.556;1;;0.003107;11166;1748;1000;false;manque f2,f3,f4
+discussion;qui-tradewell-martin-suite;anthropic/claude-sonnet-5.5;1;72;0.792;0.5;;0.052150;8715;827;17;false;manque f3
+discussion;qui-tradewell-martin-suite;deepseek/deepseek-v4.1-flash-1017;1;92;0.917;0;;0.001729;10381;973;329;false;
+discussion;qui-tradewell-martin-suite;deepseek/deepseek-v4.1-flash;1;92;0.917;0;;0.002002;16837;1146;495;false;
+discussion;qui-tradewell-martin-suite;moonshotai/kimi-k3.1-pro;1;72;0.722;0;;0.036744;16229;918;410;false;manque f4
+discussion;qui-tradewell-martin-suite;openai/gpt-6.2-sol;1;89;0.889;0;;0.037574;7834;460;0;false;
+discussion;qui-tradewell-martin-suite;z-ai/glm-5.3-flash;1;92;0.917;0;;0.001566;12038;555;82;false;

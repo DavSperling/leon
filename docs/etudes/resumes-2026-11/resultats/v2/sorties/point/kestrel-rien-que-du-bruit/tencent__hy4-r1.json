@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:13:50.429Z",
+  "reponse": "Rien à signaler.",
+  "rendu": "Rien à signaler.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2644,
+    "sortie": 2899,
+    "reflexion": 2891,
+    "cache": 0,
+    "cout": 0.0047277475
+  },
+  "cout": 0.0047277475,
+  "latenceMs": 27422,
+  "fournisseur": "Tencent"
+}

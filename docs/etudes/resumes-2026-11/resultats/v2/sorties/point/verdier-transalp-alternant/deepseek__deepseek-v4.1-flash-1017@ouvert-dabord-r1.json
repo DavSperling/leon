@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "deepseek/deepseek-v4.1-flash-1017@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:20:24.083Z",
+  "reponse": "## What is still open\n\n- L'essai de bout en bout en production est calé vendredi 20/11 avec la commande TEST-0001, avant la bascule complète lundi 23/11 à 6 h [7][8]. La clé de prod, c'est Julien qui la pose dans les variables de l'hébergeur [3][7].\n- La PR #60 est bloquée sur la clé sandbox laissée en dur dans `config/transalp.ts` : Julien demande de la passer en `TRANSALP_API_KEY` et de la faire régénérer, puisqu'elle est désormais dans l'historique git ; le reste du travail est validé [3].\n- Un mail « TransAlp Support » te demande de renvoyer ta clé de production en réponse — alors que Mathilde Rey écrit que la clé ne transite jamais par e-mail mais arrive par l'espace client [6][8].\n- Sur le ticket #61, Karim a relevé les dimensions de 8 produits dans le Notion « Fiches logistiques » ; il reste la Saône 180, qu'il mesure jeudi à l'atelier [5].\n\n## What changed\n\n- Nouveau ticket #59 de Julien : ajouter et retirer automatiquement le tag « soldes » sur les produits remisés, en préparation des collections de janvier de Sophie [4].\n\n## What you did\n\n- L'intégration TransAlp fonctionne de bout en bout en sandbox : étiquette créée à l'expédition, poids converti en kilos, numéro de suivi et e-mail d'expédition remontés dans Shopify, testé sur la commande #1042 [1].\n- Les 9 produits sans dimensions sont bloqués avec un message clair dans l'admin plutôt qu'envoyés avec des dimensions inventées, et le ticket #61 les recense pour Karim [1][2].",
+  "rendu": "## What is still open\n\n- L'essai de bout en bout en production est calé vendredi 20/11 avec la commande TEST-0001, avant la bascule complète lundi 23/11 à 6 h [7][8]. La clé de prod, c'est Julien qui la pose dans les variables de l'hébergeur [3][7].\n- La PR #60 est bloquée sur la clé sandbox laissée en dur dans `config/transalp.ts` : Julien demande de la passer en `TRANSALP_API_KEY` et de la faire régénérer, puisqu'elle est désormais dans l'historique git ; le reste du travail est validé [3].\n- Un mail « TransAlp Support » te demande de renvoyer ta clé de production en réponse — alors que Mathilde Rey écrit que la clé ne transite jamais par e-mail mais arrive par l'espace client [6][8].\n- Sur le ticket #61, Karim a relevé les dimensions de 8 produits dans le Notion « Fiches logistiques » ; il reste la Saône 180, qu'il mesure jeudi à l'atelier [5].\n\n## What changed\n\n- Nouveau ticket #59 de Julien : ajouter et retirer automatiquement le tag « soldes » sur les produits remisés, en préparation des collections de janvier de Sophie [4].\n\n## What you did\n\n- L'intégration TransAlp fonctionne de bout en bout en sandbox : étiquette créée à l'expédition, poids converti en kilos, numéro de suivi et e-mail d'expédition remontés dans Shopify, testé sur la commande #1042 [1].\n- Les 9 produits sans dimensions sont bloqués avec un message clair dans l'admin plutôt qu'envoyés avec des dimensions inventées, et le ticket #61 les recense pour Karim [1][2].",
+  "mesures": {
+    "mots": 234,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4966,
+    "sortie": 2535,
+    "reflexion": 2107,
+    "cache": 0,
+    "cout": 0.00158613
+  },
+  "cout": 0.00158613,
+  "latenceMs": 16375,
+  "fournisseur": "StepFun"
+}

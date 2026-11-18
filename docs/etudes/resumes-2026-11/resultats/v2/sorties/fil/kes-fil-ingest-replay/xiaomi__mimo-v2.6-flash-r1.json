@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:12.218Z",
+  "reponse": "## Où j'en suis\nPR #233 is merged and the real replay finished: all 18,442,107 events went into `events.replay.v3` (3,118 rejects archived). The aggregator backfill for 2026-11-12 is running (~61% after ~55 min), so the incident stays open until ClickHouse counts match. (source: r2-01, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill job `backfill-2026-11-12`, at ~61%, hours 15–23 in progress (source: r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour against the same weekday last week with 1% tolerance, then close the incident (source: r2-06, r2-08, r2-10)\n- [essai-raté] Dry run with `--batch 50000` was OOMKilled at the 2 Gi limit; 5k batches work and the memory limit must not be touched (Noa's namespace quota) (source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly asks engineering to confirm the restoration date for their board report (source: src-zendesk-orbitly)\n- [décision] Replay everything into `events.replay.v3` and never produce to `events.v3` directly; no other fix goes in for this incident (source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 from the fork: Daniel's CI check is the fix that was decided, not a dedup key length change (source: r2-09, src-slack-incident)\n- [décision] The incident stays open until the counts match; Rachel told Fernhill and Orbitly the data is back by Thursday (source: r2-07)",
+  "rendu": "## Où j'en suis\nPR #233 is merged and the real replay finished: all 18,442,107 events went into `events.replay.v3` (3,118 rejects archived). The aggregator backfill for 2026-11-12 is running (~61% after ~55 min), so the incident stays open until ClickHouse counts match. (de: toi, agent; source: r2-01, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill job `backfill-2026-11-12`, at ~61%, hours 15–23 in progress (de: agent; source: r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour against the same weekday last week with 1% tolerance, then close the incident (de: agent; source: r2-06, r2-08, r2-10)\n- [essai-raté] Dry run with `--batch 50000` was OOMKilled at the 2 Gi limit; 5k batches work and the memory limit must not be touched (Noa's namespace quota) (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly asks engineering to confirm the restoration date for their board report (de: connecteur; source: src-zendesk-orbitly)\n- [décision] Replay everything into `events.replay.v3` and never produce to `events.v3` directly; no other fix goes in for this incident (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 from the fork: Daniel's CI check is the fix that was decided, not a dedup key length change (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] The incident stays open until the counts match; Rachel told Fernhill and Orbitly the data is back by Thursday (de: toi; source: r2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1542,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4231,
+    "sortie": 894,
+    "reflexion": 422,
+    "cache": 0,
+    "cout": 0.0011591
+  },
+  "cout": 0.0011591,
+  "latenceMs": 3178,
+  "fournisseur": "Makora"
+}

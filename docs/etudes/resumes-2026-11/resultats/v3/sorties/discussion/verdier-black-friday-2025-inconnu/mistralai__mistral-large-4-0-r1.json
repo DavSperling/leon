@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:12:34.159Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17723,
+    "sortie": 760,
+    "reflexion": 267,
+    "cache": 1280,
+    "cout": 0.013195700000000001
+  },
+  "latenceMs": 18787,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday nombre de commandes l'an dernier\",\"type\":\"reunion\"}",
+    "chercher {\"requete\":\"Black Friday commandes volume pic service client\",\"depuis\":\"2024-01-01\"}",
+    "chercher {\"requete\":\"Black Friday 2024 bilan chiffres commandes livraisons retours\",\"depuis\":\"2024-11-01\"}",
+    "chercher {\"depuis\":\"2025-11-01\",\"requete\":\"rapport Black Friday 2025 chiffres commandes semaine 46 chiffre d'affaires bilan rétrospective post-mortem\",\"type\":\"page\"}",
+    "chercher {\"depuis\":\"2025-11-20\",\"requete\":\"nombre de commandes Black Friday semaine du 24 novembre 2025 Shopify rapport ventes Antoine\"}",
+    "chercher {\"depuis\":\"2025-12-01\",\"requete\":\"bilan décembre 2025 Black Friday SAV tickets volume de demandes retours livraisons retard nombre de commandes\",\"outil\":\"zendesk\"}",
+    "chercher {\"depuis\":\"2025-11-20\",\"requete\":\"combien de commandes Black Friday 2025 chiffres définitifs envoyés par Antoine Roussel mail récapitulatif\"}",
+    "chercher {\"depuis\":\"2025-11-20\",\"requete\":\"rétrospective rétro Black Friday 2025 ce qu'il s'est passé leçons apprises semaine du 24 novembre 2025 commandes SAV débordés\"}"
+  ],
+  "cout": 0.013195700000000001
+}

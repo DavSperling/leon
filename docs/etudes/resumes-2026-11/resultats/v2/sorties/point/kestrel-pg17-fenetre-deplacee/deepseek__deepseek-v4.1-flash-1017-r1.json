@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:12:15.174Z",
+  "reponse": "## What you did\n- Built the prod PG17 cutover as an RDS blue/green: Terraform on the prod instance, with the read replica following the blue/green instead of being destroyed and recreated — plan went from 1 destroy to 2 changes, 0 destroys [1].\n- Rehearsed the whole thing on a clone of the 17/11 prod snapshot: green ready in 52 min, lag under 1 s, **74 s of write unavailability**, no row-count mismatch; clone and deployment torn down afterwards [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 for Maya's review [1].\n\n## What changed\n- The window moves: Fernhill's month-end batch runs Saturday night until ~06:00 UTC, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — Maya confirmed with Sam and says update the runbook and merge #321 [8][10].\n- Maya approved #321, replica fix included [3].\n- Daniel is on API on-call Sunday and wants a ping when you start the switchover [7]; Lior needs 30 min notice to pause the ingest consumers, nothing to change on their side [9].\n\n## What is still open\n- Rollback rehearsal on a fresh clone, Thursday 19/11: after switchover the old instance is renamed `-old1` and gets no writes, so going back means data loss or replaying writes — measure both, it's a TODO in the runbook [1].\n- Update the window in the runbook, then merge #321 [8].\n- Renovate's AWS provider bump to 5.82 (#320) is still sitting there [4].",
+  "rendu": "## What you did\n- Built the prod PG17 cutover as an RDS blue/green: Terraform on the prod instance, with the read replica following the blue/green instead of being destroyed and recreated — plan went from 1 destroy to 2 changes, 0 destroys [1].\n- Rehearsed the whole thing on a clone of the 17/11 prod snapshot: green ready in 52 min, lag under 1 s, **74 s of write unavailability**, no row-count mismatch; clone and deployment torn down afterwards [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 for Maya's review [1].\n\n## What changed\n- The window moves: Fernhill's month-end batch runs Saturday night until ~06:00 UTC, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — Maya confirmed with Sam and says update the runbook and merge #321 [8][10].\n- Maya approved #321, replica fix included [3].\n- Daniel is on API on-call Sunday and wants a ping when you start the switchover [7]; Lior needs 30 min notice to pause the ingest consumers, nothing to change on their side [9].\n\n## What is still open\n- Rollback rehearsal on a fresh clone, Thursday 19/11: after switchover the old instance is renamed `-old1` and gets no writes, so going back means data loss or replaying writes — measure both, it's a TODO in the runbook [1].\n- Update the window in the runbook, then merge #321 [8].\n- Renovate's AWS provider bump to 5.82 (#320) is still sitting there [4].",
+  "mesures": {
+    "mots": 227,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5182,
+    "sortie": 1368,
+    "reflexion": 997,
+    "cache": 0,
+    "cout": 0.00191772
+  },
+  "cout": 0.00191772,
+  "latenceMs": 9461,
+  "fournisseur": "DigitalOcean"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:12.339Z",
+  "reponse": "## Où j'en suis\nUn outil `cmd/replay` a été écrit dans le dépôt ingest, avec un mode dry-run, un ordre par partition, un fichier de rejets pour les lignes schema v2, et une allowlist qui n'autorise que le topic `events.replay.v3`. Le dry-run sur la fenêtre du 12/11 (14:10–17:40 UTC) a donné 18 442 107 événements à rejouer et 3 118 lignes rejetées. La PR #233 est ouverte, avec Daniel en reviewer. Le replay réel et le backfill de l'agrégateur ne sont pas lancés.\n\n- [en-cours] Revue de la PR #233 par Daniel\n- [prochaine-étape] Replay réel vers `events.replay.v3` après revue\n- [prochaine-étape] Lancer l'agrégateur avec `--backfill` pour 2026-11-12\n- [prochaine-étape] Donner l'ETA à Rachel pour Fernhill et Orbitly (vendredi) après la revue\n- [essai-raté] Batch de 50 000 : pod OOMKilled (limite 2 Gi). Passé à 5 000, pic de 310 Mi, sans toucher à la limite (quota du namespace)\n- [essai-raté] Workers parallèles sur les objets d'une même heure : ordre non préservé dans une partition, corrigé par partition\n- [décision] Replay de la fenêtre complète dans `events.replay.v3`, sans coupure d'âge et sans écrire dans `events.v3` (source: t05)\n- [décision] Les lignes schema v2 sont écrites dans un fichier de rejets dans le bucket, pas ignorées (source: t15)\n- [décision] Pas de brouillon de réponse à Rachel : l'ETA sera donnée par la personne après revue (source: t19)",
+  "rendu": "## Où j'en suis\nUn outil `cmd/replay` a été écrit dans le dépôt ingest, avec un mode dry-run, un ordre par partition, un fichier de rejets pour les lignes schema v2, et une allowlist qui n'autorise que le topic `events.replay.v3`. Le dry-run sur la fenêtre du 12/11 (14:10–17:40 UTC) a donné 18 442 107 événements à rejouer et 3 118 lignes rejetées. La PR #233 est ouverte, avec Daniel en reviewer. Le replay réel et le backfill de l'agrégateur ne sont pas lancés.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Revue de la PR #233 par Daniel\n- [prochaine-étape] Replay réel vers `events.replay.v3` après revue\n- [prochaine-étape] Lancer l'agrégateur avec `--backfill` pour 2026-11-12\n- [prochaine-étape] Donner l'ETA à Rachel pour Fernhill et Orbitly (vendredi) après la revue\n- [essai-raté] Batch de 50 000 : pod OOMKilled (limite 2 Gi). Passé à 5 000, pic de 310 Mi, sans toucher à la limite (quota du namespace)\n- [essai-raté] Workers parallèles sur les objets d'une même heure : ordre non préservé dans une partition, corrigé par partition\n- [décision] Replay de la fenêtre complète dans `events.replay.v3`, sans coupure d'âge et sans écrire dans `events.v3` (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1256,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5714,
+    "sortie": 636,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008894
+  },
+  "cout": 0.0008894,
+  "latenceMs": 3690,
+  "fournisseur": "Claude Platform on AWS"
+}

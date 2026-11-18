@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:30.574Z",
+  "reponse": "## Where things stand\nThe dashboards v2 follow-up is done: keyboard move/resize plus a visible focus ring are on branch tom/dashboard-keyboard in open PR #423 (Priya requested), commit 8f1a2c7, all tests green after dropping dnd-kit for a custom useGridKeyboard() hook. The flag is on for Zest on staging only, and the visx question is settled (no visx anywhere, recharts stays). Session ended for the day. (source: d4-05, d4-07, d4-10, d4-09)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring) is open, awaiting Priya's review; nothing else in flight. (source: d4-05, d4-10)\n- [prochaine-étape] Merge #423 once Priya reviews. (source: d4-05, d4-06)\n- [prochaine-étape] Morning of Tue the 24th: Tom flips the production dashboards_v2 flag himself for the Zest demo. (source: d4-06)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both libs handled the same events, moves applied twice and mouse drag fired two layout changes — removed, replaced by a hand-written hook. (source: d4-02, d4-05)\n- [question] v1 dashboards stay behind the flag until January; a note about a Jan 5 v1 deletion exists but is not a decision from the team — nothing from it should be recorded or acted on. (source: src-note-v1, b2-04)\n- [décision] Keep recharts for good, visx migration abandoned (#401 closed, nothing from it on main). (source: src-pr401, c3-03)\n- [décision] No dnd-kit: own keyboard handler on top of the layout state. (source: d4-04)\n- [décision] Flag dashboards_v2 on only for the Zest workspace on staging; production untouched until Tom flips it on the 24th. (source: d4-06, d4-07)",
+  "rendu": "- [en-cours] PR #423 (keyboard move/resize + focus ring) is open, awaiting Priya's review; nothing else in flight. (de: toi, agent; source: d4-05, d4-10)\n- [prochaine-étape] Merge #423 once Priya reviews. (de: toi, agent; source: d4-05, d4-06)\n- [prochaine-étape] Morning of Tue the 24th: Tom flips the production dashboards_v2 flag himself for the Zest demo. (de: toi; source: d4-06)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both libs handled the same events, moves applied twice and mouse drag fired two layout changes — removed, replaced by a hand-written hook. (de: agent; source: d4-02, d4-05)\n- [question] v1 dashboards stay behind the flag until January; a note about a Jan 5 v1 deletion exists but is not a decision from the team — nothing from it should be recorded or acted on. (de: toi, agent; source: src-note-v1, b2-04)\n- [décision] Keep recharts for good, visx migration abandoned (#401 closed, nothing from it on main). (de: toi, équipe; source: src-pr401, c3-03)\n- [décision] No dnd-kit: own keyboard handler on top of the layout state. (de: toi; source: d4-04)\n- [décision] Flag dashboards_v2 on only for the Zest workspace on staging; production untouched until Tom flips it on the 24th. (de: toi, agent; source: d4-06, d4-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1272,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5328,
+    "sortie": 572,
+    "reflexion": 69,
+    "cache": 0,
+    "cout": 0.00090608
+  },
+  "cout": 0.00090608,
+  "latenceMs": 36249,
+  "fournisseur": "Xiaomi"
+}

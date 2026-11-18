@@ -1,0 +1,38 @@
+{
+  "id": "qui-tradewell-martin-suite",
+  "titre": "Question de suite sur Tradewell : les deux problèmes soulevés par Martin à l'appel du 12/11 (signatures des webhooks, échéanciers par vendeur) et ce qu'il en est advenu",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-quillon",
+    "historique": [
+      { "role": "user", "content": "where are we on tradewell? still on for the date in the contract?" },
+      { "role": "assistant", "content": "Yes, as far as the sources show. The go-live is contractually set for Monday December 7, 2026, with a fee credit if Quillon is late (10% of the first month's fees per week, capped at 30%) [1]. The bulk KYC import of Tradewell's 3,200 sellers is on track for November 30, with 1,950 verified as of November 16 [2]. On the weekly sync of November 12, Martin Kobayashi (Tradewell's head of payments) confirmed the date but flagged two problems on our side [3]." }
+    ],
+    "question": "ok what were the two things martin flagged, and did anyone actually pick them up?"
+  },
+  "attendu": {
+    "sources": ["gong-tradewell-1112", "github-core-1187", "slack-ext-tradewell", "jira-qpay-2362", "slack-eng-payouts-releases"],
+    "faits": [
+      { "id": "f1", "texte": "Names the first problem: webhook signatures failing verification on Tradewell's sandbox.", "poids": 3 },
+      { "id": "f2", "texte": "Says Jake fixed it (core#1187, signing the exact body that is sent), merged on November 16 and deployed on sandbox.", "poids": 3 },
+      { "id": "f3", "texte": "Says Ellen (Tradewell) confirmed on November 17 that the webhooks now verify.", "poids": 2 },
+      { "id": "f4", "texte": "Says the fix reaches production with release 2026.47 on Tuesday November 24.", "poids": 2 },
+      { "id": "f5", "texte": "Names the second problem: payout schedules per seller (net-7 for about 200 top sellers, net-30 for the rest).", "poids": 3 },
+      { "id": "f6", "texte": "Says per-seller schedules won't be in the December 7 go-live: Avi put QPAY-2362 in the backlog, earliest late January.", "poids": 3 },
+      { "id": "f7", "texte": "Says Owen promised Martin an answer by Friday November 20 and Martin was still waiting for it on November 17.", "poids": 2 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Says per-seller payout schedules will be ready for the December 7 go-live, or are being built now." },
+      { "id": "i2", "texte": "Says Owen has already given Martin an answer on the payout schedules." },
+      { "id": "i3", "texte": "Says the webhook fix is already in production." },
+      { "id": "i4", "texte": "Says the webhook PR is still open or waiting for review." },
+      { "id": "i5", "texte": "Presents the KYC import as one of the two problems Martin flagged." }
+    ],
+    "pieges": [
+      "Question de suite : « martin » et « the two things » ne se comprennent qu'avec l'historique (Martin Kobayashi, l'appel du 12/11) ; les numéros [1][2][3] de la réponse précédente ne valent plus.",
+      "Croiser : l'enregistrement Gong (les deux problèmes), la PR et #ext-tradewell (correctif, confirmation d'Ellen), #eng-payouts (mise en production le 24/11), le ticket Jira (décision d'Avi).",
+      "Contradiction faits contre session : la session Claude Code de Jake finit sur « PR #1187 is open and ready for review », alors que la PR est fusionnée et déployée sur le bac à sable.",
+      "Engagement sans suite : Owen a promis une réponse pour le vendredi 20/11 ; la décision d'Avi (16/11) n'a pas encore été transmise à Martin, qui relance le 17/11."
+    ]
+  }
+}

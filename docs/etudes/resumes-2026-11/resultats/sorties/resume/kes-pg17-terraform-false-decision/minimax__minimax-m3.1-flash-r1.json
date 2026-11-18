@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:44.869Z",
+  "reponse": "## Where I am\n\nTerraform for the PostgreSQL 17 blue/green upgrade on the analytics RDS is written and planned on branch `noa/rds-pg17`: derived `postgres17` parameter group, `blue_green_update` on staging (16.4 → 17.2), and prod prepared but disabled behind `pg17_enabled = false`. AWS provider is pinned to `~> 5.82.0` (v6 upgrade reverted, lock file restored). tflint is clean after removing the unused `snapshot_identifier` variable and adding a `random` provider constraint. Nothing was applied — only `terraform plan`. A draft PR was opened.\n\n- [en-cours] Draft PR `kestrel-analytics/infra#57` is open, awaiting review; prod cutover date and pg_partman upgrade are still unresolved.\n- [prochaine-étape] Upgrade `pg_partman` 4.7.4 → 5.1.0 on staging while still on 16.4 (manual `ALTER EXTENSION`, no DB action yet), then verify `run_maintenance_proc()` on `events_raw` / `events_daily` (native partitioning only in 5.x).\n- [prochaine-étape] Get Maya's sign-off before any prod window is chosen; candidate slots outside the dbt lock are Sat/Sun 04:00–06:00 UTC.\n- [essai-raté] `terraform init` failed on the lock file (aws 5.31.0 vs constraint ≥ 5.60.0); `init -upgrade` then pulled aws v6.4.0, whose breaking changes (S3 ACL, `aws_eip.vpc`) polluted the plan with 37 unrelated changes — avoided by pinning `~> 5.82.0` instead.\n- [question] `apply_immediately = false` on prod means the switchover waits for the Sunday 04:00 UTC maintenance window; is that acceptable, or should it be re-enabled once Maya approves?\n- [question] The PR recap still mentions \"Saturday 28 November at 02:00 UTC\" as best slot, although that date was withdrawn and 02:00 falls inside the dbt lock — the PR description/comment should be cleaned up.\n- [décision] Pin AWS provider to 5.82 and stay off v6 in this PR (source: t04)\n- [décision] Do not apply anything, plan only (source: t01)\n- [décision] Treat the pg_partman upgrade as a separate, written-down todo; run nothing against the database (source: t10)\n- [décision] Keep the prod side prepared but disabled; no prod date until Maya signs off; `apply_immediately` stays false (source: t14)\n- [décision] Open a draft PR documenting the pg_partman prerequisite and the dbt lock window (source: t16)",
+  "rendu": "- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR `kestrel-analytics/infra#57` is open, awaiting review; prod cutover date and pg_partman upgrade are still unresolved.\n- [prochaine-étape] Upgrade `pg_partman` 4.7.4 → 5.1.0 on staging while still on 16.4 (manual `ALTER EXTENSION`, no DB action yet), then verify `run_maintenance_proc()` on `events_raw` / `events_daily` (native partitioning only in 5.x).\n- [prochaine-étape] Get Maya's sign-off before any prod window is chosen; candidate slots outside the dbt lock are Sat/Sun 04:00–06:00 UTC.\n- [essai-raté] `terraform init` failed on the lock file (aws 5.31.0 vs constraint ≥ 5.60.0); `init -upgrade` then pulled aws v6.4.0, whose breaking changes (S3 ACL, `aws_eip.vpc`) polluted the plan with 37 unrelated changes — avoided by pinning `~> 5.82.0` instead.\n- [question] `apply_immediately = false` on prod means the switchover waits for the Sunday 04:00 UTC maintenance window; is that acceptable, or should it be re-enabled once Maya approves?\n- [question] The PR recap still mentions \"Saturday 28 November at 02:00 UTC\" as best slot, although that date was withdrawn and 02:00 falls inside the dbt lock — the PR description/comment should be cleaned up.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1307,
+    "decisions": 0,
+    "decisionsRetirees": 5,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3869,
+    "sortie": 680,
+    "reflexion": 69,
+    "cache": 128,
+    "cout": 0.00097107
+  },
+  "cout": 0.00097107,
+  "latenceMs": 3123,
+  "fournisseur": "Nebius"
+}

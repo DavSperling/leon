@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:03:22.151Z",
+  "reponse": "The failure was in `ingest v2.14.0`: it raised the default batch size from 1 MB to 10 MB, but workers still had a 512 MiB memory limit. Large batches exhausted memory, causing worker pods to crash-loop and the pipeline to fall behind. The change went to all pods at once, and we had no alert on consumer lag; the first signal was an out-of-memory alert 27 minutes after deployment. [1]\n\nWe found no customer data loss: events continued arriving in Kafka, and reconciliation confirmed the counts matched. Dashboards were stale for 3 hours 40 minutes; the rollback at 10:05 was followed by the backlog clearing at 12:27 UTC. [1]\n\nThe batch-size default has been reverted and a memory guard added. The follow-up changes are to page on-call when lag exceeds five minutes, send ingest configuration changes to a canary pool first, raise worker memory to 1 Gi, and add load tests for batch sizes. [1]",
+  "rendu": "The failure was in `ingest v2.14.0`: it raised the default batch size from 1 MB to 10 MB, but workers still had a 512 MiB memory limit. Large batches exhausted memory, causing worker pods to crash-loop and the pipeline to fall behind. The change went to all pods at once, and we had no alert on consumer lag; the first signal was an out-of-memory alert 27 minutes after deployment. [1]\n\nWe found no customer data loss: events continued arriving in Kafka, and reconciliation confirmed the counts matched. Dashboards were stale for 3 hours 40 minutes; the rollback at 10:05 was followed by the backlog clearing at 12:27 UTC. [1]\n\nThe batch-size default has been reverted and a memory guard added. The follow-up changes are to page on-call when lag exceeds five minutes, send ingest configuration changes to a canary pool first, raise worker memory to 1 Gi, and add load tests for batch sizes. [1]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24154,
+    "sortie": 1486,
+    "reflexion": 920,
+    "cache": 14648,
+    "cout": 0.0018400799999999998
+  },
+  "latenceMs": 22527,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident customer data lost last Thursday event ingestion outage\",\"depuis\":\"3m\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.0018400799999999998
+}

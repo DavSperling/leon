@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:59:44.968Z",
+  "reponse": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page. [2][3] `FEATURE_FLAGS` in `.env.local` is ignored. [2]",
+  "rendu": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page. [2][3] `FEATURE_FLAGS` in `.env.local` is ignored. [2]",
+  "mesures": {
+    "mots": 19,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4767,
+    "sortie": 246,
+    "reflexion": 112,
+    "cache": 2174,
+    "cout": 0.00040404
+  },
+  "cout": 0.00040404,
+  "latenceMs": 3273,
+  "fournisseur": "Azure"
+}

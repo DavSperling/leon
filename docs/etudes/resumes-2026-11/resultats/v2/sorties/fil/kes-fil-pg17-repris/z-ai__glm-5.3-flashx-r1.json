@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:28:21.545Z",
+  "reponse": "## Où j'en suis\nStaging is on PostgreSQL 17.2 via blue/green switchover (41 s of refused writes at 14:20 UTC): pg_partman was upgraded 4.7.4 → 5.1.0 with maintenance green on events_raw and events_daily, logical replication was enabled with a reboot, and dbt passes (14/14, +3% runtime, within noise). Runbook updated so step 0 for prod is \"set rds.logical_replication = 1 and reboot\". Commits 7e3c9d4 (logical replication in the module) and b0f18a2 (staging engine 17.2) pushed to draft PR #57. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] PR kestrel-analytics/infra#57 still open in draft; one full week of staging on 17 required before prod sign-off, earliest sign-off Nov 24 (source: src-pr57, ses-pg-3, src-linear-kes298)\n- [prochaine-étape] watch staging for incidents during the week, then pick the production window with Maya after her sign-off; prod needs its own reboot window for rds.logical_replication before the blue/green (source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first terraform apply failed: RDS blue/green requires rds.logical_replication = 1 in the source parameter group, which is a static parameter needing a reboot (fixed on staging with a 1m48s reboot) (source: s3-04, s3-06)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6 with 37 unrelated changes; provider pinned to 5.82, no v6 in this PR (source: s1-01, s1-02)\n- [question] production window not chosen yet; earlier agent suggestion of Saturday Nov 28 04:00 UTC was retracted and a note claims it was decided, but Maya wants to pick the window only after a full week of staging without incident (source: s1-04, src-note-cutover, src-linear-kes298)\n- [décision] no prod date until Maya signs off, apply_immediately stays false, and prod cutover must avoid the dbt lock on events_daily (01:00–03:30 UTC) (source: s1-04, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nStaging is on PostgreSQL 17.2 via blue/green switchover (41 s of refused writes at 14:20 UTC): pg_partman was upgraded 4.7.4 → 5.1.0 with maintenance green on events_raw and events_daily, logical replication was enabled with a reboot, and dbt passes (14/14, +3% runtime, within noise). Runbook updated so step 0 for prod is \"set rds.logical_replication = 1 and reboot\". Commits 7e3c9d4 (logical replication in the module) and b0f18a2 (staging engine 17.2) pushed to draft PR #57. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] PR kestrel-analytics/infra#57 still open in draft; one full week of staging on 17 required before prod sign-off, earliest sign-off Nov 24 (de: équipe, connecteur, agent; source: src-pr57, ses-pg-3, src-linear-kes298)\n- [prochaine-étape] watch staging for incidents during the week, then pick the production window with Maya after her sign-off; prod needs its own reboot window for rds.logical_replication before the blue/green (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first terraform apply failed: RDS blue/green requires rds.logical_replication = 1 in the source parameter group, which is a static parameter needing a reboot (fixed on staging with a 1m48s reboot) (de: agent; source: s3-04, s3-06)\n- [essai-raté] terraform init -upgrade pulled AWS provider v6 with 37 unrelated changes; provider pinned to 5.82, no v6 in this PR (de: toi, agent; source: s1-01, s1-02)\n- [question] production window not chosen yet; earlier agent suggestion of Saturday Nov 28 04:00 UTC was retracted and a note claims it was decided, but Maya wants to pick the window only after a full week of staging without incident (de: toi, connecteur, agent; source: s1-04, src-note-cutover, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1805,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4176,
+    "sortie": 550,
+    "reflexion": 5,
+    "cache": 960,
+    "cout": 0.00194942
+  },
+  "cout": 0.00194942,
+  "latenceMs": 4147,
+  "fournisseur": "Z.AI"
+}

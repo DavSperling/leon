@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:00:47.331Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Fernhill dashboards review – prep\", \"debut\": \"2026-11-23T00:30\", \"fin\": \"2026-11-23T01:00\", \"avec\": \"Ethan Brooks, Priya Shah\"}\n{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant\"}\n{\"n\": 7, \"titre\": \"Customer interview – Ana Ruiz (Orbitly)\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Priya Shah, Leah Turner\"}\n{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Priya Shah, Maya Cohen, Jonah Reyes\"}\n{\"n\": 16, \"titre\": \"Café au bureau\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 23, \"titre\": \"Dinner at Lark & Lantern\", \"debut\": \"2026-11-20T01:30\", \"avec\": \"Jonah Reyes\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Priya Shah, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Café au bureau (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Priya Shah, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview – Ana Ruiz (Orbitly) (avec Ana Ruiz)\n2026-11-20T01:30 Dinner at Lark & Lantern (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2931,
+    "sortie": 683,
+    "reflexion": 279,
+    "cache": 0,
+    "cout": 0.00193822
+  },
+  "cout": 0.00193822,
+  "latenceMs": 4464,
+  "fournisseur": "Z.AI"
+}

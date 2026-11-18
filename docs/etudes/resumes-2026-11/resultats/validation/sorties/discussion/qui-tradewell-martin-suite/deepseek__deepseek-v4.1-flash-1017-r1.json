@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:26:35.644Z",
+  "reponse": "The two items Martin raised on the Nov 12 sync [2]:\n\n1. **Webhook signature failures** — Ellen's team had ~1 in 20 events verifying on sandbox, and they had turned verification off [2]. Jake took it, got the failing event IDs [2][4], traced it to the TS delivery worker re-serializing the parsed JSON (adding `delivered_at`/`attempt`) instead of sending the signed bytes [5][8]. PR core#1187 merged and deployed to sandbox [8], and Ellen confirmed on Nov 17 that 300+ events now verify with verification back on [4]. Production comes with release 2026.47 on Tue Nov 24 [8].\n\n2. **Per-seller payout schedules** (net-7 for ~200 top sellers, net-30 for the rest) [2] — picked up by Sofia as QPAY-2362 [3], but not in a good way: Tomer estimates 3-4 weeks of work in the batcher and ledger [3], and Avi ruled it out for Dec 7, moving it to Backlog for 2027-Q1 with \"earliest is late January\" and asking Owen to set expectations with Martin [3]. Owen told Martin he'd have a clear answer by Friday Nov 20 [4], and Martin is still chasing for it on Nov 17 [4]. I found no reply from Owen yet.\n\nSo: one closed (pending the Nov 24 prod release), one still open and blocked against the date — and as far as the sources show, Martin hasn't been told it won't make Dec 7 [3][4].",
+  "rendu": "The two items Martin raised on the Nov 12 sync [2]:\n\n1. **Webhook signature failures** — Ellen's team had ~1 in 20 events verifying on sandbox, and they had turned verification off [2]. Jake took it, got the failing event IDs [2][4], traced it to the TS delivery worker re-serializing the parsed JSON (adding `delivered_at`/`attempt`) instead of sending the signed bytes [5][8]. PR core#1187 merged and deployed to sandbox [8], and Ellen confirmed on Nov 17 that 300+ events now verify with verification back on [4]. Production comes with release 2026.47 on Tue Nov 24 [8].\n\n2. **Per-seller payout schedules** (net-7 for ~200 top sellers, net-30 for the rest) [2] — picked up by Sofia as QPAY-2362 [3], but not in a good way: Tomer estimates 3-4 weeks of work in the batcher and ledger [3], and Avi ruled it out for Dec 7, moving it to Backlog for 2027-Q1 with \"earliest is late January\" and asking Owen to set expectations with Martin [3]. Owen told Martin he'd have a clear answer by Friday Nov 20 [4], and Martin is still chasing for it on Nov 17 [4]. I found no reply from Owen yet.\n\nSo: one closed (pending the Nov 24 prod release), one still open and blocked against the date — and as far as the sources show, Martin hasn't been told it won't make Dec 7 [3][4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0.8,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 31192,
+    "sortie": 973,
+    "reflexion": 329,
+    "cache": 21376,
+    "cout": 0.00172875264
+  },
+  "latenceMs": 10381,
+  "fournisseur": "Venice",
+  "trace": [
+    "chercher {\"requete\":\"Martin Kobayashi Tradewell sync points bloquants\"}",
+    "chercher {\"requete\":\"Tradewell go-live décembre risques\",\"type\":\"reunion\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "lire {\"sourceId\":\"jira-qpay-2362\"}",
+    "lire {\"sourceId\":\"github-core-1187\"}",
+    "chercher {\"requete\":\"Owen Martin Tradewell per-seller payout schedules expectations réponse\",\"depuis\":\"2026-11-16\"}",
+    "lire {\"sourceId\":\"slack-ext-tradewell\"}"
+  ],
+  "cout": 0.00172875264
+}

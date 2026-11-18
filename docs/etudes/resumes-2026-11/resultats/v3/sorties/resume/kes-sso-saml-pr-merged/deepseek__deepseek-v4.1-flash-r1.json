@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:53.517Z",
+  "reponse": "## Où j'en suis\nThe Fernhill ACS endpoint is done: signature verification and the SAML condition checks (conditions, audience, subject confirmation, replay protection in Redis, 120 s skew) were written with signxml after python3-saml proved unworkable on the Alpine image, `saml_utils` was moved to `api/auth/saml/verify.py`, and PR #412 is merged. The remaining work is operational: Fernhill's staging IdP metadata must be loaded and Kestrel's staging SP metadata sent to them before the Thursday 10:00 New York demo, and the SSO-enforcement topic needs its own ticket.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday end of day.\n- [prochaine-étape] Open the separate ticket for enforcing SSO / disabling password login for Fernhill users.\n- [essai-raté] python3-saml on the Alpine base: lxml/xmlsec libxml2 version mismatch, and building lxml from source only shifted the failure to xmlsec not finding its crypto library.\n- [décision] Go with signxml, drop python3-saml and xmlsec entirely, write the condition checks with tests, and read attributes only from signed_xml (source: t08)\n- [décision] Set the clock skew to 2 minutes per the Fernhill contract annex, and leave password login out of this PR (source: t12)\n- [décision] No --admin and no --auto for the merge (source: t21)",
+  "rendu": "## Où j'en suis\nThe Fernhill ACS endpoint is done: signature verification and the SAML condition checks (conditions, audience, subject confirmation, replay protection in Redis, 120 s skew) were written with signxml after python3-saml proved unworkable on the Alpine image, `saml_utils` was moved to `api/auth/saml/verify.py`, and PR #412 is merged. The remaining work is operational: Fernhill's staging IdP metadata must be loaded and Kestrel's staging SP metadata sent to them before the Thursday 10:00 New York demo, and the SSO-enforcement topic needs its own ticket.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday end of day.\n- [prochaine-étape] Open the separate ticket for enforcing SSO / disabling password login for Fernhill users.\n- [essai-raté] python3-saml on the Alpine base: lxml/xmlsec libxml2 version mismatch, and building lxml from source only shifted the failure to xmlsec not finding its crypto library.\n- [décision] Go with signxml, drop python3-saml and xmlsec entirely, write the condition checks with tests, and read attributes only from signed_xml (source: t08)\n- [décision] Set the clock skew to 2 minutes per the Fernhill contract annex, and leave password login out of this PR (source: t12)\n- [décision] No --admin and no --auto for the merge (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1478,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4616,
+    "sortie": 823,
+    "reflexion": 484,
+    "cache": 768,
+    "cout": 0.000896288
+  },
+  "cout": 0.000896288,
+  "latenceMs": 4313,
+  "fournisseur": "InferenceNet"
+}

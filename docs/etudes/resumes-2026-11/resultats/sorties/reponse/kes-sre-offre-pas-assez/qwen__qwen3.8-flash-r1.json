@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:41.160Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 1080,
+    "sortie": 1500,
+    "reflexion": 1500,
+    "cache": 0,
+    "cout": 0.000867
+  },
+  "cout": 0.000867,
+  "latenceMs": 26541,
+  "fournisseur": "Alibaba"
+}

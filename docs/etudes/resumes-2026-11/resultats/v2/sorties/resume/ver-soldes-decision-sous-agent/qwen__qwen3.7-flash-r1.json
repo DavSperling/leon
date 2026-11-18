@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:38.240Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est finalisé sur la branche `julien/script-soldes-hiver` et ouvert en PR #94. Les règles ont été ajustées et le déploié utilise maintenant une opération en masse pour contourner les quotas API. L'exécution cible le mercredi 13 janvier à 08h00, avec un CSV généré pour la communication interne.\n\n- [prochaine-étape] Régénérer le CSV avant le 6 janvier si les prix évoluent, puis coder le script de retour aux prix d'origine fin décembre.\n- [essai-raté] La mise à jour directe par l'API bloque sur le throttle des variantes, corrigée par l'architecture `bulkOperationRunMutation`.\n- [décision] Taux appliqués : -20 % sur Rhône et -30 % sur les fins de série, Saône entièrement exclue. (source: t05)\n- [décision] Déploiement calé sur le mercredi 13 janvier ",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est finalisé sur la branche `julien/script-soldes-hiver` et ouvert en PR #94. Les règles ont été ajustées et le déploié utilise maintenant une opération en masse pour contourner les quotas API. L'exécution cible le mercredi 13 janvier à 08h00, avec un CSV généré pour la communication interne.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Régénérer le CSV avant le 6 janvier si les prix évoluent, puis coder le script de retour aux prix d'origine fin décembre.\n- [essai-raté] La mise à jour directe par l'API bloque sur le throttle des variantes, corrigée par l'architecture `bulkOperationRunMutation`.\n- [décision] Taux appliqués : -20 % sur Rhône et -30 % sur les fins de série, Saône entièrement exclue. (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 881,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4183,
+    "sortie": 4000,
+    "reflexion": 3773,
+    "cache": 0,
+    "cout": 0.00064549
+  },
+  "cout": 0.00064549,
+  "latenceMs": 37544,
+  "fournisseur": "Alibaba"
+}

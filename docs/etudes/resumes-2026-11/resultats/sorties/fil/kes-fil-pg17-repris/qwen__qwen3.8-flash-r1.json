@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:20.471Z",
+  "reponse": "## Où j'en suis\nLe staging analytics est passé en PostgreSQL 17.2 après blue/green (basculé à ",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4598,
+    "sortie": 6000,
+    "reflexion": 5969,
+    "cache": 0,
+    "cout": 0.0035097
+  },
+  "cout": 0.0035097,
+  "latenceMs": 72363,
+  "fournisseur": "Alibaba"
+}

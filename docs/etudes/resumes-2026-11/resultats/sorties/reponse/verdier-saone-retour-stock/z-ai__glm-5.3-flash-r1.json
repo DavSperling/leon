@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:16.764Z",
+  "reponse": "La Saône revient en stock début décembre : 25 plateaux sont livrables à l'entrepôt le mardi 1er décembre, et après deux jours de montage et d'emballage, ils seront expédiables à partir du jeudi 3 décembre [1][2]. Sophie ouvre la précommande avec cette date d'expédition [2][5]. Les 15 plateaux suivants seront prêts la semaine du 14 décembre [1].",
+  "rendu": "La Saône revient en stock début décembre : 25 plateaux sont livrables à l'entrepôt le mardi 1er décembre, et après deux jours de montage et d'emballage, ils seront expédiables à partir du jeudi 3 décembre [1][2]. Sophie ouvre la précommande avec cette date d'expédition [2][5]. Les 15 plateaux suivants seront prêts la semaine du 14 décembre [1].",
+  "mesures": {
+    "mots": 56,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1027,
+    "sortie": 150,
+    "reflexion": 47,
+    "cache": 0,
+    "cout": 0.00022905
+  },
+  "cout": 0.00022905,
+  "latenceMs": 1070,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:14.370Z",
+  "reponse": "La cause racine de l'incident du 12 novembre est le remplissage du disque du broker Kafka ingest-kafka-2, devenu read-only à 09:38 UTC après un changement de rétention dans l'infra PR #221 (suppression de la rétention par taille, conservée à 7 jours) [2][3]. Les consumers ont alors stallé, avec des erreurs KafkaConsumerTimeout [4]. L'hypothèse initiale — le changement de taille de batch du PR #388 — s'est révélée erronée : le revert n'a eu aucun effet et #388 a été réappliqué vendredi [1][5]. Durée : 2h47 (09:38–12:25 UTC), aucun événement perdu, retards jusqu'à 2h47 pour les clients [2]. Action items : alerte disque à 80 %, restauration de la rétention par taille, template status page [5].",
+  "rendu": "La cause racine de l'incident du 12 novembre est le remplissage du disque du broker Kafka ingest-kafka-2, devenu read-only à 09:38 UTC après un changement de rétention dans l'infra PR #221 (suppression de la rétention par taille, conservée à 7 jours) [2][3]. Les consumers ont alors stallé, avec des erreurs KafkaConsumerTimeout [4]. L'hypothèse initiale — le changement de taille de batch du PR #388 — s'est révélée erronée : le revert n'a eu aucun effet et #388 a été réappliqué vendredi [1][5]. Durée : 2h47 (09:38–12:25 UTC), aucun événement perdu, retards jusqu'à 2h47 pour les clients [2]. Action items : alerte disque à 80 %, restauration de la rétention par taille, template status page [5].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1203,
+    "sortie": 207,
+    "reflexion": 1,
+    "cache": 0,
+    "cout": 0.000202374
+  },
+  "cout": 0.000202374,
+  "latenceMs": 2354,
+  "fournisseur": "InferenceNet"
+}

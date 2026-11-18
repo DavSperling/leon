@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:09.311Z",
+  "reponse": "Aucune offre n'a été faite à Yael Mizrahi : la discussion sur les salaires est repoussée après le tour final [3][4]. La fourchette prévue pour le poste de Senior SRE à Tel Aviv est de 520 à 600k ILS de base [2]. Elle n'est pas encore sa proposition, qui n'a pas été décidée.",
+  "rendu": "Aucune offre n'a été faite à Yael Mizrahi : la discussion sur les salaires est repoussée après le tour final [3][4]. La fourchette prévue pour le poste de Senior SRE à Tel Aviv est de 520 à 600k ILS de base [2]. Elle n'est pas encore sa proposition, qui n'a pas été décidée.",
+  "mesures": {
+    "mots": 52,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1500,
+    "sortie": 125,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002125
+  },
+  "cout": 0.0002125,
+  "latenceMs": 1294,
+  "fournisseur": "Claude Platform on AWS"
+}

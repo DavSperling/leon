@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:46:23.065Z",
+  "reponse": "Nothing is confirmed yet. The planning assumption is **$0.08 per ACH item** for 2027, but Corvane may raise it.\n\n- The Q1 2027 pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. It says to revisit the pricing if the fee goes above $0.10. The current Corvane agreement runs until March 31, 2027, and renewal talks were to open in November [1].\n- The October invoice fits that rate: $14,212.40 for 177,655 ACH items [5].\n- Marcus Oyelaran says Corvane's relationship manager hinted they want to raise the per-item fee after the November 10 rejected file, but \"nothing on paper yet.\" The renewal call moved to the week of November 23 [6].\n\nSo the $0.08 is the working assumption, and the real 2027 rate depends on the renewal negotiation.",
+  "rendu": "Nothing is confirmed yet. The planning assumption is **$0.08 per ACH item** for 2027, but Corvane may raise it.\n\n- The Q1 2027 pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. It says to revisit the pricing if the fee goes above $0.10. The current Corvane agreement runs until March 31, 2027, and renewal talks were to open in November [1].\n- The October invoice fits that rate: $14,212.40 for 177,655 ACH items [5].\n- Marcus Oyelaran says Corvane's relationship manager hinted they want to raise the per-item fee after the November 10 rejected file, but \"nothing on paper yet.\" The renewal call moved to the week of November 23 [6].\n\nSo the $0.08 is the working assumption, and the real 2027 rate depends on the renewal negotiation.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21429,
+    "sortie": 889,
+    "reflexion": 419,
+    "cache": 0,
+    "cout": 0.0025874
+  },
+  "latenceMs": 10123,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Corvane payout fee pricing next year\"}",
+    "chercher {\"requete\":\"Corvane tarif par payout\"}",
+    "lire {\"sourceId\":\"drive-q1-pricing-memo\"}"
+  ],
+  "cout": 0.0025874
+}

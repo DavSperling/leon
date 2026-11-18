@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-saone-avant-noel",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:30.202Z",
+  "reponse": "Non, on ne peut pas lui promettre avec certitude : pour toute nouvelle commande passée cette semaine, la table Saône est en précommande avec une expédition à partir du 14 décembre [1][3][7]. Avec les délais de livraison du transporteur (3 à 5 jours ouvrés), elle risque de la recevoir de justesse ou après le 24 décembre [3][10].",
+  "rendu": "Non, on ne peut pas lui promettre avec certitude : pour toute nouvelle commande passée cette semaine, la table Saône est en précommande avec une expédition à partir du 14 décembre [1][3][7]. Avec les délais de livraison du transporteur (3 à 5 jours ouvrés), elle risque de la recevoir de justesse ou après le 24 décembre [3][10].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 5081,
+    "sortie": 235,
+    "reflexion": 127,
+    "cache": 0,
+    "cout": 0.0021118
+  },
+  "latenceMs": 2811,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"table Saone stock livraison decembre\"}"
+  ],
+  "cout": 0.0021118
+}

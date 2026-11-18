@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:54:55.663Z",
+  "reponse": "## What is still open\n- Fernhill’s batch moves the PG17 production window to Sunday, Nov 22, 02:00–04:00 UTC. Update the runbook and merge approved PR #321; Daniel will be on call, and Lior needs 30 minutes’ notice before the switchover. [8][3][7][9]\n- Rehearse rollback on a fresh clone Thursday, Nov 19, and measure the duration and data loss; the old blue instance diverges after switchover, so rollback is not a simple switchback. [1]\n\n## What changed\n- Renovate opened PR #320 to update the AWS provider from 5.80 to 5.82; automerge is disabled. [4]\n\n## What you did\n- Rehearsed the upgrade on a production snapshot clone: the green environment was ready in 52 minutes, switchover caused 74 seconds of write unavailability, and the largest tables’ row counts matched. You then removed the rehearsal resources. [1]",
+  "rendu": "## What is still open\n- Fernhill’s batch moves the PG17 production window to Sunday, Nov 22, 02:00–04:00 UTC. Update the runbook and merge approved PR #321; Daniel will be on call, and Lior needs 30 minutes’ notice before the switchover. [8][3][7][9]\n- Rehearse rollback on a fresh clone Thursday, Nov 19, and measure the duration and data loss; the old blue instance diverges after switchover, so rollback is not a simple switchback. [1]\n\n## What changed\n- Renovate opened PR #320 to update the AWS provider from 5.80 to 5.82; automerge is disabled. [4]\n\n## What you did\n- Rehearsed the upgrade on a production snapshot clone: the green environment was ready in 52 minutes, switchover caused 74 seconds of write unavailability, and the largest tables’ row counts matched. You then removed the rehearsal resources. [1]",
+  "mesures": {
+    "mots": 130,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 18427,
+    "sortie": 2962,
+    "reflexion": 2562,
+    "cache": 9796,
+    "cout": 0.00244206
+  },
+  "cout": 0.00244206,
+  "latenceMs": 25090,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:22:17.417Z",
+  "reponse": "## Où j'en suis\nBuilt `cmd/replay` in `kestrel-analytics/ingest` on branch lior/replay-12-11 to re-ingest the 12/11 lost events from the S3 raw archive. Dry run validated: 18,442,107 events to replay, 3,118 schema v2 lines written to a rejects file. PR #233 is open with Daniel as reviewer; the real replay and backfill have not been run yet.\n\n- [en-cours] PR #233 waiting on Daniel's review\n- [prochaine-étape] Run the real replay into `events.replay.v3` (batch 5000), then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] User gives Rachel the ETA for Fernhill and Orbitly after review (agent must not draft anything)\n- [essai-raté] Dry run job 1 OOMKilled at 2 GiB with batch 50k; fixed by batch 5000 (~310 MiB), memory limit untouched (source: t13)\n- [essai-raté] Out-of-order test failure from 4 parallel workers; fixed by splitting workers per partition key (commit 4e2d9b7)\n- [décision] Replay everything, no age cutoff, into a dedicated topic `events.replay.v3` with a hard-coded topic allowlist, never to `events.v3` directly (source: t05)\n- [décision] Malformed lines are written to a rejects file in the bucket instead of being skipped silently (source: t15)",
+  "rendu": "## Où j'en suis\nBuilt `cmd/replay` in `kestrel-analytics/ingest` on branch lior/replay-12-11 to re-ingest the 12/11 lost events from the S3 raw archive. Dry run validated: 18,442,107 events to replay, 3,118 schema v2 lines written to a rejects file. PR #233 is open with Daniel as reviewer; the real replay and backfill have not been run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 waiting on Daniel's review\n- [prochaine-étape] Run the real replay into `events.replay.v3` (batch 5000), then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] User gives Rachel the ETA for Fernhill and Orbitly after review (agent must not draft anything)\n- [essai-raté] Dry run job 1 OOMKilled at 2 GiB with batch 50k; fixed by batch 5000 (~310 MiB), memory limit untouched (source: t13)\n- [essai-raté] Out-of-order test failure from 4 parallel workers; fixed by splitting workers per partition key (commit 4e2d9b7)\n- [décision] Replay everything, no age cutoff, into a dedicated topic `events.replay.v3` with a hard-coded topic allowlist, never to `events.v3` directly (source: t05)\n- [décision] Malformed lines are written to a rejects file in the bucket instead of being skipped silently (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1291,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4072,
+    "sortie": 352,
+    "reflexion": 0,
+    "cache": 832,
+    "cout": 0.0017012
+  },
+  "cout": 0.0017012,
+  "latenceMs": 3101,
+  "fournisseur": "Z.AI"
+}

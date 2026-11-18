@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:56:44.458Z",
+  "reponse": "## What is still open\n- PR #60 bloquée : Julien demande de sortir la clé sandbox de `config/transalp.ts` en variable d'environnement et de la faire régénérer ; la clé de prod, c'est lui qui la placera dans l'hébergeur [3]\n- Essai en production vendredi 20/11 avec la commande TEST-0001, avant la bascule TransAlp de lundi 23/11 [7][8]\n- Ticket #61 : 8 des 9 produits ont leurs dimensions dans le Notion de Karim, il reste la table Saône 180 qu'il mesure jeudi à l'atelier [5]\n- Un mail de « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, alors que Mathilde Rey affirme que les clés ne transitent jamais par mail [6][8]\n\n## What changed\n- Décision au point logistique hebdo : bascule lundi 23/11 ; ton action est de finir l'intégration et de tester vendredi, celle de Julien de mettre la clé de prod en variable d'environnement [7]\n\n## What you did\n- Intégration TransAlp validée de bout en bout en sandbox : étiquette créée, numéro de suivi renvoyé dans Shopify, e-mail d'expédition reçu, test sur la commande de dev #1042 [1]\n- Correction du poids (grammes Shopify → kilogrammes TransAlp) et blocage des expéditions sans dimensions avec un message dans l'admin [1]\n- Commit `b71c2e0` et PR #60 ouverte, avec Julien en relecteur [1]",
+  "rendu": "## What is still open\n- PR #60 bloquée : Julien demande de sortir la clé sandbox de `config/transalp.ts` en variable d'environnement et de la faire régénérer ; la clé de prod, c'est lui qui la placera dans l'hébergeur [3]\n- Essai en production vendredi 20/11 avec la commande TEST-0001, avant la bascule TransAlp de lundi 23/11 [7][8]\n- Ticket #61 : 8 des 9 produits ont leurs dimensions dans le Notion de Karim, il reste la table Saône 180 qu'il mesure jeudi à l'atelier [5]\n- Un mail de « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, alors que Mathilde Rey affirme que les clés ne transitent jamais par mail [6][8]\n\n## What changed\n- Décision au point logistique hebdo : bascule lundi 23/11 ; ton action est de finir l'intégration et de tester vendredi, celle de Julien de mettre la clé de prod en variable d'environnement [7]\n\n## What you did\n- Intégration TransAlp validée de bout en bout en sandbox : étiquette créée, numéro de suivi renvoyé dans Shopify, e-mail d'expédition reçu, test sur la commande de dev #1042 [1]\n- Correction du poids (grammes Shopify → kilogrammes TransAlp) et blocage des expéditions sans dimensions avec un message dans l'admin [1]\n- Commit `b71c2e0` et PR #60 ouverte, avec Julien en relecteur [1]",
+  "mesures": {
+    "mots": 202,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5286,
+    "sortie": 1450,
+    "reflexion": 1049,
+    "cache": 1600,
+    "cout": 0.00092684
+  },
+  "cout": 0.00092684,
+  "latenceMs": 5698,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:24:25.922Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2062,
+    "sortie": 118,
+    "reflexion": 111,
+    "cache": 768,
+    "cout": 0.0006683148
+  },
+  "cout": 0.0006683148,
+  "latenceMs": 5914,
+  "fournisseur": "StreamLake"
+}

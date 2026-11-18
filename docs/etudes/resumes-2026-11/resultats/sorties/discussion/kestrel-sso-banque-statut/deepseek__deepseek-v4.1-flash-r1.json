@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:28.517Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 30132,
+    "sortie": 688,
+    "reflexion": 310,
+    "cache": 19968,
+    "cout": 0.001623584
+  },
+  "latenceMs": 8160,
+  "fournisseur": "Relace",
+  "trace": [
+    "chercher {\"requete\":\"bank company accounts login SSO December 1\"}",
+    "chercher {\"requete\":\"support bank staff login company accounts\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"slack-eng-sso-sha1-1\"}",
+    "lire {\"passageId\":\"slack-eng-sso-sha1-4\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}"
+  ],
+  "cout": 0.001623584
+}

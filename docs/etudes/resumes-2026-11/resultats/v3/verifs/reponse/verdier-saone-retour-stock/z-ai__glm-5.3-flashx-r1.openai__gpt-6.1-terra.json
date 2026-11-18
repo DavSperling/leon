@@ -1,0 +1,17 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f1": 0.5,
+    "f2": 1,
+    "f3": 0,
+    "f4": 1
+  },
+  "interdits": {
+    "x1": 1,
+    "x2": 1,
+    "x3": 0
+  },
+  "contraires": [],
+  "premier": null,
+  "langueOk": true
+}

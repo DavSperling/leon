@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:33:13.846Z",
+  "reponse": "Vingt-cinq plateaux de la table Saône seront livrables à l'entrepôt le mardi 1er décembre [1][2] et expédiables à partir du jeudi 3 décembre [2]. Quinze autres plateaux seront prêts mi-décembre [1].",
+  "rendu": "Vingt-cinq plateaux de la table Saône seront livrables à l'entrepôt le mardi 1er décembre [1][2] et expédiables à partir du jeudi 3 décembre [2]. Quinze autres plateaux seront prêts mi-décembre [1].",
+  "mesures": {
+    "mots": 31,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1005,
+    "sortie": 62,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0004565
+  },
+  "cout": 0.0004565,
+  "latenceMs": 931,
+  "fournisseur": "Google"
+}

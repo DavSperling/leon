@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:20:04.279Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5278,
+    "sortie": 8000,
+    "reflexion": 8002,
+    "cache": 1536,
+    "cout": 0.0085932996
+  },
+  "cout": 0.0085932996,
+  "latenceMs": 183386,
+  "fournisseur": "Xiaomi"
+}

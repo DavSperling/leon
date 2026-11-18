@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:23.261Z",
+  "reponse": "Le cutover est reprogrammé : **samedi 5 décembre, 02:00–05:00 UTC** (approuvé par Maya), après le go-live Fernhill du 1er décembre [2].\n\nDétails pour ta communication :\n- **Fenêtre de maintenance à mettre dans l'annonce/support macro** : samedi 5 décembre 02:00–05:00 UTC [2]\n- **Avis client (status page + bannière in-app)** : à publier samedi 28 novembre [2]\n- **Freeze de migration** : à partir du jeudi 3 décembre [2]\n- **Rehearsal sur staging** : vendredi 27 novembre [2]\n\nÀ noter : l'annonce Slack du 3 novembre annonçait le 21 novembre 02:00–05:00 UTC [4], mais elle a été repoussée lors du sync du 12 novembre [3]. Le ticket KES-398 est explicitement la référence à jour — la runbook Notion n'est pas encore mise à jour [2].",
+  "rendu": "Le cutover est reprogrammé : **samedi 5 décembre, 02:00–05:00 UTC** (approuvé par Maya), après le go-live Fernhill du 1er décembre [2].\n\nDétails pour ta communication :\n- **Fenêtre de maintenance à mettre dans l'annonce/support macro** : samedi 5 décembre 02:00–05:00 UTC [2]\n- **Avis client (status page + bannière in-app)** : à publier samedi 28 novembre [2]\n- **Freeze de migration** : à partir du jeudi 3 décembre [2]\n- **Rehearsal sur staging** : vendredi 27 novembre [2]\n\nÀ noter : l'annonce Slack du 3 novembre annonçait le 21 novembre 02:00–05:00 UTC [4], mais elle a été repoussée lors du sync du 12 novembre [3]. Le ticket KES-398 est explicitement la référence à jour — la runbook Notion n'est pas encore mise à jour [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15364,
+    "sortie": 811,
+    "reflexion": 465,
+    "cache": 10240,
+    "cout": 0.000973112
+  },
+  "latenceMs": 27737,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"upgrade base de données fenêtre de maintenance\"}",
+    "chercher {\"requete\":\"database upgrade maintenance window customer notice\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}"
+  ],
+  "cout": 0.000973112
+}

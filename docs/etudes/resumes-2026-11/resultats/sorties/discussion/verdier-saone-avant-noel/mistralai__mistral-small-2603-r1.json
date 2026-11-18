@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-saone-avant-noel",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:26:36.144Z",
+  "reponse": "Je ne sais pas. Ce que j’ai trouvé :\n\n- Les tables Saône ont subi un retard de séchage : 18 tables livrées le 27/11, 12 le 11/12 [2][5][7].\n- Les nouvelles commandes sont passées en « précommande – expédition à partir du 14/12 » ; il ne reste que 7 tables après les précommandes [5][7].\n- Le transporteur TransAlp démarre le 1er/12, avec des délais de 3 à 5 jours ouvrés [10].\n\nCe que j’ai cherché : grande table Saône 24 décembre.",
+  "rendu": "Je ne sais pas. Ce que j’ai trouvé :\n\n- Les tables Saône ont subi un retard de séchage : 18 tables livrées le 27/11, 12 le 11/12 [2][5][7].\n- Les nouvelles commandes sont passées en « précommande – expédition à partir du 14/12 » ; il ne reste que 7 tables après les précommandes [5][7].\n- Le transporteur TransAlp démarre le 1er/12, avec des délais de 3 à 5 jours ouvrés [10].\n\nCe que j’ai cherché : grande table Saône 24 décembre.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 5323,
+    "sortie": 543,
+    "reflexion": 371,
+    "cache": 2784,
+    "cout": 0.000823251
+  },
+  "latenceMs": 4454,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"grande table Saône 24 décembre\"}"
+  ],
+  "cout": 0.000823251
+}

@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:11:07.047Z",
+  "reponse": "**December 1 is still the contractual go-live date for Fernhill Bank’s company-account sign-in, but it isn’t confirmed yet.** On staging, sign-in from the bank’s identity provider works; sign-in starting from Kestrel fails because Fernhill signs its SAML assertions with RSA-SHA1. Kestrel requires SHA-256 or stronger and won’t make a temporary exception [2][8].\n\n1. **Nov 24:** Fernhill’s change board needs to approve the switch to RSA-SHA256. If approved, Helen Marsh says it will be applied that evening. If approval doesn’t come through, Sam Ortiz will tell Fernhill that day that December 1 is at risk [1][8].\n2. **Nov 25, 14:00 London / 16:00 Tel Aviv:** Daniel and Helen are scheduled to test sign-in end to end, covering both the bank-started and Kestrel-started flows [1][2][8].\n\nFor Support, I’d say **“December 1 is still the target”**, not **“staff will definitely be able to sign in on December 1,”** until the change is in place and the test passes [1][2][8].",
+  "rendu": "**December 1 is still the contractual go-live date for Fernhill Bank’s company-account sign-in, but it isn’t confirmed yet.** On staging, sign-in from the bank’s identity provider works; sign-in starting from Kestrel fails because Fernhill signs its SAML assertions with RSA-SHA1. Kestrel requires SHA-256 or stronger and won’t make a temporary exception [2][8].\n\n1. **Nov 24:** Fernhill’s change board needs to approve the switch to RSA-SHA256. If approved, Helen Marsh says it will be applied that evening. If approval doesn’t come through, Sam Ortiz will tell Fernhill that day that December 1 is at risk [1][8].\n2. **Nov 25, 14:00 London / 16:00 Tel Aviv:** Daniel and Helen are scheduled to test sign-in end to end, covering both the bank-started and Kestrel-started flows [1][2][8].\n\nFor Support, I’d say **“December 1 is still the target”**, not **“staff will definitely be able to sign in on December 1,”** until the change is in place and the test passes [1][2][8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35208,
+    "sortie": 501,
+    "reflexion": 0,
+    "cache": 22147,
+    "cout": 0.039871199999999996
+  },
+  "latenceMs": 8452,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"bank support \\\"December 1\\\" SSO company accounts login\"}",
+    "chercher {\"requete\":\"banque \\\"1er décembre\\\" connexion comptes entreprise SSO support\"}",
+    "chercher {\"requete\":\"bank SSO Entra ID rollout December login support deadline\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "chercher {\"requete\":\"Fernhill Bank support ticket December 1 staff log in company accounts Zendesk\"}",
+    "chercher {\"requete\":\"\\\"Fernhill\\\" SSO enable production rollout checklist go live support provisioning Nov 25\"}"
+  ],
+  "cout": 0.039871199999999996
+}

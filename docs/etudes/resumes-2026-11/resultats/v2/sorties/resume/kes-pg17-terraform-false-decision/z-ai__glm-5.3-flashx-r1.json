@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:22:54.257Z",
+  "reponse": "## Où j'en suis\nTerraform for the PostgreSQL 17 blue/green upgrade on the analytics RDS is ready as draft PR kestrel-analytics/infra#57: parameter group family now derived from the major version, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`. Plans are clean, nothing was applied, and commits 9d41c0e, a2b7f55, c58e1fa cover the module, staging, and lint fixes.\n\n- [en-cours] Staging pg_partman 4.7.4 → 5.1.0 upgrade on 16.4 (ALTER EXTENSION + check run_maintenance_proc on events_raw/events_daily) before the blue/green switchover — recorded as todo, nothing run against the DB\n- [prochaine-étape] Get Maya's sign-off on the whole upgrade\n- [prochaine-étape] After sign-off, apply staging (plan already saved as pg17.plan), then pick a prod window avoiding the dbt lock (01:00–03:30 UTC); candidate slots: Sat/Sun 04:00–06:00 UTC\n- [essai-raté] Initial `terraform init` failed (lock file vs new constraint); `init -upgrade` pulled aws v6.4.0, whose breaking changes polluted the plan with 37 unrelated changes\n- [question] Prod cutover date still undecided, pending Maya's approval\n- [décision] Plan only, no apply of anything (source: t01)\n- [décision] Pin AWS provider to ~> 5.82.0, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade is a separate todo, don't run anything against the DB (source: t10)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false and was reverted (source: t14)",
+  "rendu": "## Où j'en suis\nTerraform for the PostgreSQL 17 blue/green upgrade on the analytics RDS is ready as draft PR kestrel-analytics/infra#57: parameter group family now derived from the major version, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`. Plans are clean, nothing was applied, and commits 9d41c0e, a2b7f55, c58e1fa cover the module, staging, and lint fixes.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Staging pg_partman 4.7.4 → 5.1.0 upgrade on 16.4 (ALTER EXTENSION + check run_maintenance_proc on events_raw/events_daily) before the blue/green switchover — recorded as todo, nothing run against the DB\n- [prochaine-étape] Get Maya's sign-off on the whole upgrade\n- [prochaine-étape] After sign-off, apply staging (plan already saved as pg17.plan), then pick a prod window avoiding the dbt lock (01:00–03:30 UTC); candidate slots: Sat/Sun 04:00–06:00 UTC\n- [essai-raté] Initial `terraform init` failed (lock file vs new constraint); `init -upgrade` pulled aws v6.4.0, whose breaking changes polluted the plan with 37 unrelated changes\n- [question] Prod cutover date still undecided, pending Maya's approval\n- [décision] Plan only, no apply of anything (source: t01)\n- [décision] Pin AWS provider to ~> 5.82.0, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade is a separate todo, don't run anything against the DB (source: t10)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false and was reverted (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1609,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3839,
+    "sortie": 503,
+    "reflexion": 69,
+    "cache": 832,
+    "cout": 0.00180374
+  },
+  "cout": 0.00180374,
+  "latenceMs": 4295,
+  "fournisseur": "Z.AI"
+}

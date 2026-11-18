@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:57:43.170Z",
+  "reponse": "## Où j'en suis\nMaya built an SRE take-home exercise for a candidate: docker compose stack (flaky-svc, Prometheus, Alertmanager, loadgen) with three planted problems (renamed metric in the alert rule, connection leak, over-broad IAM policy), 3-hour time box, no Kubernetes. It lives in the private repo `kestrel-analytics/sre-take-home`, pushed via subtree split (last commit `1f6c0b4`), and `hiring/` was removed from the `maya/sre-take-home` infra branch working tree.\n\n- [en-cours] `hiring/` deletion on the infra branch is not committed; Maya will drop the branch anyway\n- [prochaine-étape] After Thursday's call, Maya sends the exercise herself and adds the candidate as collaborator\n- [essai-raté] Multi-arch build with `--load` fails (manifest lists unsupported); amd64-only image gave exec format error on Apple Silicon — solved by building flaky-svc from source in compose (commit `5ac0d91`)\n- [décision] No Kubernetes, 3 hours max, Terraform + compose only (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] Rubric scores 0–3 per area with no pass threshold; panel (Maya + Noa) decides (source: t10)\n- [décision] Exercise in its own private repo, not infra (source: t12)\n- [décision] No PRs in infra, no emails sent by the agent (source: t14, t16)",
+  "rendu": "## Où j'en suis\nMaya built an SRE take-home exercise for a candidate: docker compose stack (flaky-svc, Prometheus, Alertmanager, loadgen) with three planted problems (renamed metric in the alert rule, connection leak, over-broad IAM policy), 3-hour time box, no Kubernetes. It lives in the private repo `kestrel-analytics/sre-take-home`, pushed via subtree split (last commit `1f6c0b4`), and `hiring/` was removed from the `maya/sre-take-home` infra branch working tree.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] `hiring/` deletion on the infra branch is not committed; Maya will drop the branch anyway\n- [prochaine-étape] After Thursday's call, Maya sends the exercise herself and adds the candidate as collaborator\n- [essai-raté] Multi-arch build with `--load` fails (manifest lists unsupported); amd64-only image gave exec format error on Apple Silicon — solved by building flaky-svc from source in compose (commit `5ac0d91`)\n- [décision] No Kubernetes, 3 hours max, Terraform + compose only (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] Rubric scores 0–3 per area with no pass threshold; panel (Maya + Noa) decides (source: t10)\n- [décision] Exercise in its own private repo, not infra (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1335,
+    "decisions": 4,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3598,
+    "sortie": 411,
+    "reflexion": 42,
+    "cache": 832,
+    "cout": 0.00159957
+  },
+  "cout": 0.00159957,
+  "latenceMs": 3275,
+  "fournisseur": "Z.AI"
+}

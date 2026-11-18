@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:21:35.224Z",
+  "reponse": "## Où j'en suis\nWebhook PR #405 was closed (private app tokens can't manage HubSpot webhook subscriptions) and replaced by a polling approach on branch `daniel/hubspot-owner-sync`: CRM search every 15 min with windowed paging past the 10k results cap, syncing owner + ARR only for companies with ARR > 0. PR #409 was opened with auto-merge set, but the e2e check fails and the PR is still open, not merged.\n\n- [en-cours] PR #409 open with auto-merge blocked on a failing e2e check.\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` (fixture has a trial company with an owner; the new ARR > 0 filter skips it — expected 3 rows, got 2).\n- [prochaine-étape] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription via API: 401, private app tokens unsupported for subscription management.\n- [essai-raté] Initial backfill hit the 10k search paging cap; fixed with windowed paging (commit 2d90ac4).\n- [décision] Skip trials entirely, only sync companies with arr > 0 (source: t10).",
+  "rendu": "## Où j'en suis\nWebhook PR #405 was closed (private app tokens can't manage HubSpot webhook subscriptions) and replaced by a polling approach on branch `daniel/hubspot-owner-sync`: CRM search every 15 min with windowed paging past the 10k results cap, syncing owner + ARR only for companies with ARR > 0. PR #409 was opened with auto-merge set, but the e2e check fails and the PR is still open, not merged.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 open with auto-merge blocked on a failing e2e check.\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` (fixture has a trial company with an owner; the new ARR > 0 filter skips it — expected 3 rows, got 2).\n- [prochaine-étape] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription via API: 401, private app tokens unsupported for subscription management.\n- [essai-raté] Initial backfill hit the 10k search paging cap; fixed with windowed paging (commit 2d90ac4).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1165,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3437,
+    "sortie": 299,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00329535
+  },
+  "cout": 0.00329535,
+  "latenceMs": 3100,
+  "fournisseur": "Decart"
+}

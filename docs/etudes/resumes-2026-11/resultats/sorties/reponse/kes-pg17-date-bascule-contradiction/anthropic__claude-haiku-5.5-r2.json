@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:07.432Z",
+  "reponse": "La bascule de PostgreSQL 17 en production a été repoussée du samedi 21 novembre au samedi 28 novembre 2026, sur le même créneau de 02:00 à 06:00 UTC [2]. Maya a demandé un second test à blanc sur des données de taille production, après l'incident d'ingestion du 12/11 [2]. Les clients avaient été prévenus pour le 21 novembre [3]. La PR qui modifie la date est encore ouverte, avec des vérifications en attente et une relecture demandée [6]. Le changement n'est donc pas encore appliqué [6], et la mise à jour de l'avis client n'est pas confirmée [2].",
+  "rendu": "La bascule de PostgreSQL 17 en production a été repoussée du samedi 21 novembre au samedi 28 novembre 2026, sur le même créneau de 02:00 à 06:00 UTC [2]. Maya a demandé un second test à blanc sur des données de taille production, après l'incident d'ingestion du 12/11 [2]. Les clients avaient été prévenus pour le 21 novembre [3]. La PR qui modifie la date est encore ouverte, avec des vérifications en attente et une relecture demandée [6]. Le changement n'est donc pas encore appliqué [6], et la mise à jour de l'avis client n'est pas confirmée [2].",
+  "mesures": {
+    "mots": 98,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1662,
+    "sortie": 761,
+    "reflexion": 532,
+    "cache": 0,
+    "cout": 0.0005467
+  },
+  "cout": 0.0005467,
+  "latenceMs": 4152,
+  "fournisseur": "Claude Platform on AWS"
+}

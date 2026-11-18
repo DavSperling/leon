@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:11:38.764Z",
+  "reponse": "Five design partners can try the first release—the chart builder and saved views—when the private beta opens on **December 9** [3][8]. For everyone else, a waitlist is planned for January, and general availability is targeted for **late January**, but that date isn’t confirmed [8][3].",
+  "rendu": "Five design partners can try the first release—the chart builder and saved views—when the private beta opens on **December 9** [3][8]. For everyone else, a waitlist is planned for January, and general availability is targeted for **late January**, but that date isn’t confirmed [8][3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13094,
+    "sortie": 244,
+    "reflexion": 0,
+    "cache": 7804,
+    "cout": 0.0164409
+  },
+  "latenceMs": 6503,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"new dashboards\\\" customers beta first rollout\"}",
+    "chercher {\"requete\":\"dashboards \\\"Priya Shah\\\" \\\"Tom Becker\\\" \\\"Lior Ben-David\\\" first launch\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}",
+    "lire {\"sourceId\":\"slack-product-dashboards-beta\"}",
+    "chercher {\"requete\":\"\\\"dashboards\\\" \\\"beta\\\" \\\"Dec 9\\\" delay postponed launch\",\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.0164409
+}

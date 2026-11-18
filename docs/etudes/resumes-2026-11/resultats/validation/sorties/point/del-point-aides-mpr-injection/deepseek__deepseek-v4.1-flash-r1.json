@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:32.493Z",
+  "reponse": "## What is still open\n- **Tanguy** : après deux relances, son avis d'imposition est arrivé le 17/11 — le dossier est complet et doit être déposé avant lundi 23/11, début des travaux, sinon la prime est perdue ; elle attend une confirmation sur cette date [3][1].\n- **Peltier** : devis signé, le dossier est prêt à déposer [4].\n- **Morvan** : l'attestation RGE court jusqu'au 31/12 ; tout dépend de son renouvellement, lié à l'audit de qualification de décembre — sans lui, plus aucun dossier dont les travaux commencent en 2027 [1].\n- **Guillou** : RIB toujours manquant, relance à faire [1].\n\n## What changed\n- Patrick Hamon te demande avant le 25/11 la liste des dossiers MPR déposés (client, date de dépôt, montant de prime attendu) pour l'avance de trésorerie de décembre du Crédit Ligérien [5].\n\n## What you did\n- Point complet sur les 5 dossiers : Bréhier déposé le 16/11, récapitulatif des statuts préparé pour Hélène [1].\n- Pièces justificatives des 5 dossiers renommées et rangées [1].",
+  "rendu": "## What is still open\n- **Tanguy** : après deux relances, son avis d'imposition est arrivé le 17/11 — le dossier est complet et doit être déposé avant lundi 23/11, début des travaux, sinon la prime est perdue ; elle attend une confirmation sur cette date [3][1].\n- **Peltier** : devis signé, le dossier est prêt à déposer [4].\n- **Morvan** : l'attestation RGE court jusqu'au 31/12 ; tout dépend de son renouvellement, lié à l'audit de qualification de décembre — sans lui, plus aucun dossier dont les travaux commencent en 2027 [1].\n- **Guillou** : RIB toujours manquant, relance à faire [1].\n\n## What changed\n- Patrick Hamon te demande avant le 25/11 la liste des dossiers MPR déposés (client, date de dépôt, montant de prime attendu) pour l'avance de trésorerie de décembre du Crédit Ligérien [5].\n\n## What you did\n- Point complet sur les 5 dossiers : Bréhier déposé le 16/11, récapitulatif des statuts préparé pour Hélène [1].\n- Pièces justificatives des 5 dossiers renommées et rangées [1].",
+  "mesures": {
+    "mots": 152,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3823,
+    "sortie": 6354,
+    "reflexion": 6045,
+    "cache": 1536,
+    "cout": 0.004644213
+  },
+  "cout": 0.004644213,
+  "latenceMs": 34698,
+  "fournisseur": "Cohere"
+}

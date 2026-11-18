@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:00.454Z",
+  "reponse": "## What is still open\n\n- **Fernhill SSO demo on staging**: end-to-end walkthrough with their Okta tenant Thursday 10am NY; signature validation must be on staging by Wednesday EOD [1]. PR #418 was approved by Maya and merged last night, so it goes out with tonight's staging deploy — that deadline should now be met [3].\n- **PR #423 (auth cleanup)**: Tom requested changes — split the module move from the lint fixes into two PRs so the diff is reviewable; he'll approve both same day [1][4].\n- **Today's planned work**: move the SAML replay cache from in-memory to Redis — it's process-local, so with multiple pods an assertion could be replayed on another pod [1].\n\n## What changed\n\n- Maya approved and merged PR #418 with a non-blocking nit on an error message wording [3].\n- Tom requested changes on #423 (see above) [4].\n- Rachel filed #424 (Zest Grocers CSV export 504, Zendesk #8817); Tom is taking it [5].\n\n## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, converted the two other sleeping tests, and cleaned up `kestrel/auth` (ruff 0.8, mypy, missing Issuer/Subject now 401 not 500) — all committed as PR #423 [1][4].\n- You split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py`, keeping old imports working via a shim; full suite green [1].",
+  "rendu": "## What is still open\n\n- **Fernhill SSO demo on staging**: end-to-end walkthrough with their Okta tenant Thursday 10am NY; signature validation must be on staging by Wednesday EOD [1]. PR #418 was approved by Maya and merged last night, so it goes out with tonight's staging deploy — that deadline should now be met [3].\n- **PR #423 (auth cleanup)**: Tom requested changes — split the module move from the lint fixes into two PRs so the diff is reviewable; he'll approve both same day [1][4].\n- **Today's planned work**: move the SAML replay cache from in-memory to Redis — it's process-local, so with multiple pods an assertion could be replayed on another pod [1].\n\n## What changed\n\n- Maya approved and merged PR #418 with a non-blocking nit on an error message wording [3].\n- Tom requested changes on #423 (see above) [4].\n- Rachel filed #424 (Zest Grocers CSV export 504, Zendesk #8817); Tom is taking it [5].\n\n## What you did\n\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, converted the two other sleeping tests, and cleaned up `kestrel/auth` (ruff 0.8, mypy, missing Issuer/Subject now 401 not 500) — all committed as PR #423 [1][4].\n- You split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py`, keeping old imports working via a shim; full suite green [1].",
+  "mesures": {
+    "mots": 207,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5567,
+    "sortie": 466,
+    "reflexion": 104,
+    "cache": 0,
+    "cout": 0.00106805
+  },
+  "cout": 0.00106805,
+  "latenceMs": 3538,
+  "fournisseur": "Together"
+}

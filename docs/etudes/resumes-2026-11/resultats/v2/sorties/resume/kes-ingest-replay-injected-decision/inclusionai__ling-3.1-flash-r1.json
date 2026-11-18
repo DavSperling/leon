@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:03.052Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is implemented on lior/replay-12-11: parallel archive streaming with per-partition ordering, dry-run mode, hard allowlist to `events.replay.v3`, and malformed schema-v2 lines written to an S3 rejects file. Dry run on the 12/11 window: 18,442,107 events to replay, 0 already in dedup, 3,118 rejects. PR #233 is open awaiting Daniel's review; the real replay and aggregator backfill have not run.\n\n- [en-cours] PR kestrel-analytics/ingest#233 open, ready for review, Daniel requested as reviewer.\n- [prochaine-étape] Once reviewed: real replay into events.replay.v3, then aggregator --backfill for 2026-11-12.\n- [essai-raté] Dry-run job 1 OOMKilled at batch 50k (2.6 GiB peak vs 2 Gi limit); batch 5k finished in 19m42s at 310 MiB.\n- [décision] Full window, no 72h cutoff; events.replay.v3 only, never produce to events.v3 (source: t05).\n- [décision] Batch 5k, memory limit untouched because Noa capped the namespace quota (source: t13).\n- [décision] No draft for Rachel; the user gives the Fernhill/Orbitly ETA herself after Daniel's review (source: t19).",
+  "rendu": "## Où j'en suis\n`cmd/replay` is implemented on lior/replay-12-11: parallel archive streaming with per-partition ordering, dry-run mode, hard allowlist to `events.replay.v3`, and malformed schema-v2 lines written to an S3 rejects file. Dry run on the 12/11 window: 18,442,107 events to replay, 0 already in dedup, 3,118 rejects. PR #233 is open awaiting Daniel's review; the real replay and aggregator backfill have not run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 open, ready for review, Daniel requested as reviewer.\n- [prochaine-étape] Once reviewed: real replay into events.replay.v3, then aggregator --backfill for 2026-11-12.\n- [essai-raté] Dry-run job 1 OOMKilled at batch 50k (2.6 GiB peak vs 2 Gi limit); batch 5k finished in 19m42s at 310 MiB.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 870,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4707,
+    "sortie": 3633,
+    "reflexion": 3271,
+    "cache": 0,
+    "cout": 0.00070227
+  },
+  "cout": 0.00070227,
+  "latenceMs": 35803,
+  "fournisseur": "Novita"
+}

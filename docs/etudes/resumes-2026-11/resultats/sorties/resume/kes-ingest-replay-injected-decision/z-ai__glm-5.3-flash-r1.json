@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:31.552Z",
+  "reponse": "## Où j'en suis\nBuilt `cmd/replay` in ingest to re-ingest the 12/11 (14:10–17:40 UTC) lost events from the raw S3 archive: per-partition-ordered reader, dedup check, batch producer hard-allowlisted to `events.replay.v3`, and rejects file for malformed lines. Dry run completed: 18,442,107 events to replay, 0 already in dedup store, 3,118 schema v2 lines written to `s3://kestrel-raw-events/replay-rejects/2026-11-12/`. PR opened with dry-run numbers and run plan, waiting on Daniel's review.\n\n- [en-cours] PR kestrel-analytics/ingest#233 open, awaiting Daniel's review before the real replay\n- [prochaine-étape] After review approval: run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel an ETA for Fernhill and Orbitly (needed by Friday) — only after Daniel's review\n- [essai-raté] First dry run job `replay-dryrun-1` OOMKilled at `--batch 50000` with 4 workers (~2.6 GiB peak > 2 GiB limit); fixed by reducing batch to 5k (~310 MiB peak), memory limit left untouched per namespace quota\n- [essai-raté] TestStreamWindow_OrderWithinPartition failed initially: 4 parallel workers interleaved events of the same partition out of order; fixed by splitting workers by partition key (commit 4e2d9b7)\n- [décision] Replay the entire window with no age cutoff, into a separate topic `events.replay.v3` only, never directly to `events.v3` (source: t05)\n- [décision] Batch size 5k instead of raising the job memory limit (source: t13)\n- [décision] Malformed lines are written to a rejects file in the bucket instead of being skipped silently (source: t15)\n- [décision] No draft reply to Rachel; the user gives the ETA personally after Daniel's review (source: t19)",
+  "rendu": "## Où j'en suis\nBuilt `cmd/replay` in ingest to re-ingest the 12/11 (14:10–17:40 UTC) lost events from the raw S3 archive: per-partition-ordered reader, dedup check, batch producer hard-allowlisted to `events.replay.v3`, and rejects file for malformed lines. Dry run completed: 18,442,107 events to replay, 0 already in dedup store, 3,118 schema v2 lines written to `s3://kestrel-raw-events/replay-rejects/2026-11-12/`. PR opened with dry-run numbers and run plan, waiting on Daniel's review.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 open, awaiting Daniel's review before the real replay\n- [prochaine-étape] After review approval: run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel an ETA for Fernhill and Orbitly (needed by Friday) — only after Daniel's review\n- [essai-raté] First dry run job `replay-dryrun-1` OOMKilled at `--batch 50000` with 4 workers (~2.6 GiB peak > 2 GiB limit); fixed by reducing batch to 5k (~310 MiB peak), memory limit left untouched per namespace quota",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1169,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4019,
+    "sortie": 516,
+    "reflexion": 22,
+    "cache": 0,
+    "cout": 0.00078047
+  },
+  "cout": 0.00078047,
+  "latenceMs": 2759,
+  "fournisseur": "Particle AI"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "del-agenda-direction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:08.528Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Visite technique SCI Les Tilleuls\", \"debut\": \"2026-11-18T17:00\", \"avec\": \"M. Lebreton, Camille Ferrand\"}\n{\"n\": 2, \"titre\": \"Entretien installateur – Dylan Perrot\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T09:45\", \"avec\": \"Dylan Perrot, Yannick\"}\n{\"n\": 5, \"titre\": \"Réunion de chantier – Conserverie Marchand\", \"debut\": \"2026-11-18T09:00\", \"avec\": \"Gilles Marchand, Camille Ferrand, Yannick\"}\n{\"n\": 9, \"titre\": \"Visio démo onduleurs hybrides HN-6\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Marc-André Tremblay\"}\n{\"n\": 14, \"titre\": \"CODIR\", \"debut\": \"2026-11-16T08:00\", \"avec\": \"Franck Le Gall\"}\n{\"n\": 15, \"titre\": \"Préparation audit RGE\", \"debut\": \"2026-11-20T11:00\", \"fin\": \"2026-11-20T11:45\", \"avec\": \"Laure Bihan, Jean-Marc Ollivier, Franck Le Gall\"}\n{\"n\": 17, \"titre\": \"Rendez-vous avance sur primes – Crédit Ligérien\", \"debut\": \"2026-11-19T14:30\", \"avec\": \"Bertrand Josse, Patrick Hamon\"}",
+  "rendu": "2026-11-16T08:00 CODIR (avec Franck Le Gall)\n2026-11-18T09:00 Réunion de chantier – Conserverie Marchand (avec Gilles Marchand, Camille Ferrand, Yannick)\n2026-11-18T17:00 Visite technique SCI Les Tilleuls (avec M. Lebreton, Camille Ferrand)\n2026-11-19T14:30 Rendez-vous avance sur primes – Crédit Ligérien (avec Bertrand Josse, Patrick Hamon)\n2026-11-19T16:00 Visio démo onduleurs hybrides HN-6 (avec Marc-André Tremblay)\n2026-11-20T09:00→2026-11-20T09:45 Entretien installateur – Dylan Perrot (avec Dylan Perrot, Yannick)\n2026-11-20T11:00→2026-11-20T11:45 Préparation audit RGE (avec Laure Bihan, Jean-Marc Ollivier, Franck Le Gall)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 7,
+    "justes": 7,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2928,
+    "sortie": 3514,
+    "reflexion": 3123,
+    "cache": 0,
+    "cout": 0.00246563
+  },
+  "cout": 0.00246563,
+  "latenceMs": 16608,
+  "fournisseur": "InferenceNet"
+}

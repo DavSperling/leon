@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:26:56.628Z",
+  "reponse": "La cause était la synchro multi-emplacements : après l’ajout du showroom dans Shopify, le script ne mettait à jour que le stock de l’entrepôt. Shopify additionnait aussi les anciennes quantités du showroom, ce qui faisait afficher des meubles disponibles alors qu’ils ne l’étaient plus. [2][11]\n\nOui, le correctif a été fusionné et déployé le 13 novembre : la synchro met désormais à jour les deux emplacements à partir de l’export. [11] Un contrôle quotidien des écarts était encore en préparation au 17 novembre, donc ce filet de vérification n’était pas encore finalisé. [12]",
+  "rendu": "La cause était la synchro multi-emplacements : après l’ajout du showroom dans Shopify, le script ne mettait à jour que le stock de l’entrepôt. Shopify additionnait aussi les anciennes quantités du showroom, ce qui faisait afficher des meubles disponibles alors qu’ils ne l’étaient plus. [2][11]\n\nOui, le correctif a été fusionné et déployé le 13 novembre : la synchro met désormais à jour les deux emplacements à partir de l’export. [11] Un contrôle quotidien des écarts était encore en préparation au 17 novembre, donc ce filet de vérification n’était pas encore finalisé. [12]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35222,
+    "sortie": 318,
+    "reflexion": 0,
+    "cache": 27305,
+    "cout": 0.0014213
+  },
+  "latenceMs": 8017,
+  "fournisseur": "OpenAI",
+  "trace": [
+    "chercher {\"requete\":\"clients acheter meubles indisponibles stock rupture commande inventaire disponibilité bug\"}",
+    "chercher {\"requete\":\"meubles vendus alors que épuisés stock problème corrigé\"}",
+    "chercher {\"requete\":\"overselling furniture inventory out of stock customers purchased fix\"}",
+    "lire {\"sourceId\":\"11\"}",
+    "lire {\"passageId\":\"claude-code-julien-synchro-stock-2\"}",
+    "lire {\"passageId\":\"github-boutique-pr-87-1\"}"
+  ],
+  "cout": 0.0014213
+}

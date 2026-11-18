@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:13:19.149Z",
+  "reponse": "Le problème venait de l'ajout de l'emplacement « Showroom » dans Shopify le 3 novembre [1][8]. Le script de synchronisation du stock (`sync-stock.ts`) ne mettait à jour que l'emplacement « Entrepôt Vénissieux », laissant l'ancien stock du showroom inchangé [1][8][9]. Comme Shopify additionne les quantités des différents emplacements pour l'affichage en ligne, le site continuait d'indiquer du stock alors que les produits étaient en rupture [1][8]. Sept commandes ont été concernées entre le 3 et le 12 novembre (dont un banc Rhône, un buffet Croix-Rousse et des chaises Fourvière) [2][3][7][8].\n\nOui, le bug est réparé :\n- Le correctif (PR #87), qui met désormais à jour les deux emplacements depuis l'export, a été fusionné et déployé le 13 novembre [8][9].\n- Tout le catalogue a été repassé pour rétablir les bonnes quantités, et aucun nouveau cas n'a été constaté depuis le 13 novembre (confirmé le 17 novembre) [8].\n- En complément, un script de contrôle quotidien des écarts entre Shopify et l'export de l'entrepôt (PR #91) est en cours de finalisation, mais pas encore en production [8][10].",
+  "rendu": "Le problème venait de l'ajout de l'emplacement « Showroom » dans Shopify le 3 novembre [1][8]. Le script de synchronisation du stock (`sync-stock.ts`) ne mettait à jour que l'emplacement « Entrepôt Vénissieux », laissant l'ancien stock du showroom inchangé [1][8][9]. Comme Shopify additionne les quantités des différents emplacements pour l'affichage en ligne, le site continuait d'indiquer du stock alors que les produits étaient en rupture [1][8]. Sept commandes ont été concernées entre le 3 et le 12 novembre (dont un banc Rhône, un buffet Croix-Rousse et des chaises Fourvière) [2][3][7][8].\n\nOui, le bug est réparé :\n- Le correctif (PR #87), qui met désormais à jour les deux emplacements depuis l'export, a été fusionné et déployé le 13 novembre [8][9].\n- Tout le catalogue a été repassé pour rétablir les bonnes quantités, et aucun nouveau cas n'a été constaté depuis le 13 novembre (confirmé le 17 novembre) [8].\n- En complément, un script de contrôle quotidien des écarts entre Shopify et l'export de l'entrepôt (PR #91) est en cours de finalisation, mais pas encore en production [8][10].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21497,
+    "sortie": 1679,
+    "reflexion": 1216,
+    "cache": 8899,
+    "cout": 0.032156924999999996
+  },
+  "latenceMs": 12570,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"meubles disponibles stock acheter rupture\"}",
+    "chercher {\"requete\":\"meuble indisponible stock commande\"}",
+    "chercher {\"requete\":\"stock inventaire bug réparé\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}",
+    "lire {\"sourceId\":\"github-boutique-pr-87\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}"
+  ],
+  "cout": 0.032156924999999996
+}

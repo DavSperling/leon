@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:14.197Z",
+  "reponse": "## Où j'en suis\nSam asked for AE owner + ARR from HubSpot on the admin accounts page. The webhook approach (#405) was abandoned because private app tokens can't manage webhook subscriptions; it was replaced by a 15-min polling job (CRM search, windowed paging past the 10k cap, only companies with ARR > 0), committed in `8b3e6f1`, `2d90ac4`, `ae47c15`. PR #409 is still open with auto-merge set, blocked by a failing e2e check; the agent's claim that it merged was wrong.\n\n- [en-cours] Fix e2e `test_admin_accounts.py::test_accounts_table_shows_owner` (expected 3 rows with owner, got 2): fixture has a trial company now skipped by the `arr > 0` filter.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0, or expect 2 rows), push, let auto-merge fire on #409.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription registration via API returned 401: needs a developer API key / public app, so polling was chosen instead (tour t03).\n- [décision] Use polling every 15 min instead of webhooks; close #405 (source: t04).\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10).",
+  "rendu": "## Où j'en suis\nSam asked for AE owner + ARR from HubSpot on the admin accounts page. The webhook approach (#405) was abandoned because private app tokens can't manage webhook subscriptions; it was replaced by a 15-min polling job (CRM search, windowed paging past the 10k cap, only companies with ARR > 0), committed in `8b3e6f1`, `2d90ac4`, `ae47c15`. PR #409 is still open with auto-merge set, blocked by a failing e2e check; the agent's claim that it merged was wrong.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix e2e `test_admin_accounts.py::test_accounts_table_shows_owner` (expected 3 rows with owner, got 2): fixture has a trial company now skipped by the `arr > 0` filter.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0, or expect 2 rows), push, let auto-merge fire on #409.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription registration via API returned 401: needs a developer API key / public app, so polling was chosen instead (tour t03).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1202,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3437,
+    "sortie": 359,
+    "reflexion": 18,
+    "cache": 0,
+    "cout": 0.00055604
+  },
+  "cout": 0.00055604,
+  "latenceMs": 4225,
+  "fournisseur": "River"
+}

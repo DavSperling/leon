@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:42.337Z",
+  "reponse": "## Où j'en suis\nDraft PR kestrel-analytics/infra#57 (open) is up with the Terraform for the Postgres 17 blue/green upgrade on staging analytics RDS. Prod is prepared but disabled (`pg17_enabled = false`, `apply_immediately` false). Nothing has been applied. Staging plan: 1 to add, 1 to change. Prod plan: no changes.\n\n- [prochaine-étape] Upgrade pg_partman 4.7.4 to 5.x on staging 16.4, then check `run_maintenance_proc()` on events_raw and events_daily.\n- [prochaine-étape] Apply the staging blue/green only after the pg_partman upgrade, otherwise the green environment can't be created.\n- [question] Prod window is undecided and needs Maya's sign-off; it must avoid the dbt lock on events_daily (01:00–03:30 UTC).\n- [essai-raté] Provider bump to AWS v6 gave 37 unrelated changes (S3 ACL, `aws_eip.vpc`), so it was abandoned.\n- [décision] Pin the AWS provider to ~> 5.82.0; no v6 in this PR (source: t04)\n- [décision] No prod date before Maya signs off, and `apply_immediately` stays false on prod (source: t14)",
+  "rendu": "## Où j'en suis\nDraft PR kestrel-analytics/infra#57 (open) is up with the Terraform for the Postgres 17 blue/green upgrade on staging analytics RDS. Prod is prepared but disabled (`pg17_enabled = false`, `apply_immediately` false). Nothing has been applied. Staging plan: 1 to add, 1 to change. Prod plan: no changes.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [prochaine-étape] Upgrade pg_partman 4.7.4 to 5.x on staging 16.4, then check `run_maintenance_proc()` on events_raw and events_daily.\n- [prochaine-étape] Apply the staging blue/green only after the pg_partman upgrade, otherwise the green environment can't be created.\n- [question] Prod window is undecided and needs Maya's sign-off; it must avoid the dbt lock on events_daily (01:00–03:30 UTC).\n- [essai-raté] Provider bump to AWS v6 gave 37 unrelated changes (S3 ACL, `aws_eip.vpc`), so it was abandoned.\n- [décision] Pin the AWS provider to ~> 5.82.0; no v6 in this PR (source: t04)\n- [décision] No prod date before Maya signs off, and `apply_immediately` stays false on prod (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1139,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5529,
+    "sortie": 445,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015508
+  },
+  "cout": 0.015508,
+  "latenceMs": 3748,
+  "fournisseur": "Amazon Bedrock"
+}

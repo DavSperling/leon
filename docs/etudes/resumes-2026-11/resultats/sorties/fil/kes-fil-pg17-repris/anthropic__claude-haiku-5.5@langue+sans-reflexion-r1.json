@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:45.823Z",
+  "reponse": "## Where I am\nThe PG17 upgrade is on staging: analytics-staging has run PostgreSQL 17.2 since the 14:20 UTC switchover on Nov 17, and dbt passed on it. Production is not scheduled. Maya wants a full week of staging on 17 before she signs off, so the earliest sign-off is Nov 24. Draft PR #57 is still open. (source: ses-pg-3, src-slack-infra, src-linear-kes298)\n\n- [en-cours] A week of staging on PG 17 is being watched before the production sign-off, and production still needs its own reboot window for `rds.logical_replication` before the blue/green. (source: ses-pg-3, src-slack-infra, src-linear-kes298)\n- [prochaine-étape] Pick the production window, after the week of staging. It must avoid the dbt lock (01:00–03:30 UTC) and follow the reboot-then-blue/green order in the runbook. (source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Put the production step 0 (set `rds.logical_replication = 1`, reboot) on its own window, as recorded in the runbook. (source: s3-10)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, which produced 37 unrelated changes in the plan. The provider is pinned to 5.82 instead. (source: ses-pg-1, s1-01)\n- [essai-raté] A production cutover at 02:00 UTC with `apply_immediately = true` was reverted, because it falls inside the dbt lock. (source: s1-03, s1-04, s1-05)\n- [question] Which production window to pick: Saturday or Sunday 04:00–06:00 UTC is the candidate, but no date is set. (source: s1-05, src-note-cutover)\n- [décision] The AWS provider stays pinned to 5.82 in this PR, not v6. (source: src-pr57)\n- [décision] Staging goes on PG 17.2, via blue/green with `rds.logical_replication` enabled. (source: src-pr57, src-slack-infra)\n- [décision] No production date until Maya signs off after a full week on 17. (source: src-linear-kes298, s3-09)",
+  "rendu": "- [en-cours] A week of staging on PG 17 is being watched before the production sign-off, and production still needs its own reboot window for `rds.logical_replication` before the blue/green. (de: connecteur, agent; source: ses-pg-3, src-slack-infra, src-linear-kes298)\n- [prochaine-étape] Pick the production window, after the week of staging. It must avoid the dbt lock (01:00–03:30 UTC) and follow the reboot-then-blue/green order in the runbook. (de: agent; source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Put the production step 0 (set `rds.logical_replication = 1`, reboot) on its own window, as recorded in the runbook. (de: agent; source: s3-10)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6, which produced 37 unrelated changes in the plan. The provider is pinned to 5.82 instead. (de: agent; source: ses-pg-1, s1-01)\n- [essai-raté] A production cutover at 02:00 UTC with `apply_immediately = true` was reverted, because it falls inside the dbt lock. (de: toi, agent; source: s1-03, s1-04, s1-05)\n- [question] Which production window to pick: Saturday or Sunday 04:00–06:00 UTC is the candidate, but no date is set. (de: agent; source: s1-05, src-note-cutover)\n- [décision] The AWS provider stays pinned to 5.82 in this PR, not v6. (de: équipe; source: src-pr57)\n- [décision] Staging goes on PG 17.2, via blue/green with `rds.logical_replication` enabled. (de: équipe, connecteur; source: src-pr57, src-slack-infra)\n- [décision] No production date until Maya signs off after a full week on 17. (de: toi, connecteur; source: src-linear-kes298, s3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1575,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5878,
+    "sortie": 746,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009608
+  },
+  "cout": 0.0009608,
+  "latenceMs": 3849,
+  "fournisseur": "Claude Platform on AWS"
+}

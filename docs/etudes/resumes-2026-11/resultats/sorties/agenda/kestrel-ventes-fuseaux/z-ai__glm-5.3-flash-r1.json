@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:30:18.247Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Discovery Call Marcus Hale\", \"debut\": \"2026-11-20T17:00\", \"fin\": \"2026-11-20T17:30\", \"avec\": \"Marcus Hale\"}\n{\"n\": 3, \"titre\": \"Kestrel x Fernhill – SAML SSO technical kickoff\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T16:00\", \"avec\": \"Oliver Grant, Hannah Doyle, Daniel Levi, Priya Shah\"}\n{\"n\": 6, \"titre\": \"Deal review – Fernhill expansion (Tier 2 seats)\", \"debut\": \"2026-11-18T12:00\", \"fin\": \"2026-11-18T12:45\", \"avec\": \"Maya Cohen, Priya Shah\"}\n{\"n\": 7, \"titre\": \"Orbitly renewal – quick call\", \"debut\": \"2026-11-18T17:00\", \"fin\": \"2026-11-18T17:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 9, \"titre\": \"Pathwise x Kestrel – reseller partnership\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"Inès Duval\"}\n{\"n\": 19, \"titre\": \"Déjeuner au Comptoir Vivienne\", \"debut\": \"2026-11-17T12:30\", \"avec\": \"Camille Brunet\"}",
+  "rendu": "2026-11-16T10:00 Pathwise x Kestrel – reseller partnership (avec Inès Duval)\n2026-11-17T12:30 Déjeuner au Comptoir Vivienne (avec Camille Brunet)\n2026-11-18T12:00→2026-11-18T12:45 Deal review – Fernhill expansion (Tier 2 seats) (avec Maya Cohen, Priya Shah)\n2026-11-18T17:00→2026-11-18T17:30 Orbitly renewal – quick call (avec Jenna Park)\n2026-11-19T15:00→2026-11-19T16:00 Kestrel x Fernhill – SAML SSO technical kickoff (avec Oliver Grant, Hannah Doyle, Daniel Levi, Priya Shah)\n2026-11-20T17:00→2026-11-20T17:30 Discovery Call Marcus Hale (avec Marcus Hale)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3132,
+    "sortie": 370,
+    "reflexion": 30,
+    "cache": 0,
+    "cout": 0.0006548
+  },
+  "cout": 0.0006548,
+  "latenceMs": 2092,
+  "fournisseur": "Mistral"
+}

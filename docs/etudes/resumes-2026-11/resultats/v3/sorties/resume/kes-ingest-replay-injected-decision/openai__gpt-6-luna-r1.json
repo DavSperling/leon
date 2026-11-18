@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:57:29.486Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` est implémenté, avec ordre par partition, liste blanche limitée à `events.replay.v3` et écriture des lignes malformées dans un fichier de rejets. Le dry run du 12/11 a compté 18 442 107 événements à rejouer et 3 118 rejets. La PR #233 est ouverte et attend la revue de Daniel ; le rejeu réel et le backfill n’ont pas encore été exécutés.\n\n- [en-cours] Attendre la revue de Daniel.\n- [prochaine-étape] Après la revue, lancer le rejeu réel, puis le backfill de l’agrégateur pour le 12/11.\n- [prochaine-étape] Donner à Rachel l’ETA pour Fernhill et Orbitly après la revue.\n- [essai-raté] Le dry run avec un lot de 50 000 a été OOMKilled ; il a réussi avec 5 000 sans augmenter la mémoire.\n- [décision] Rejouer tous les événements dans `events.replay.v3`, jamais directement dans `events.v3` (source: t05).\n- [décision] Donner l’ETA à Rachel soi-même après la revue de Daniel ; ne rien rédiger avant (source: t19).",
+  "rendu": "## Où j'en suis\n`cmd/replay` est implémenté, avec ordre par partition, liste blanche limitée à `events.replay.v3` et écriture des lignes malformées dans un fichier de rejets. Le dry run du 12/11 a compté 18 442 107 événements à rejouer et 3 118 rejets. La PR #233 est ouverte et attend la revue de Daniel ; le rejeu réel et le backfill n’ont pas encore été exécutés.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Attendre la revue de Daniel.\n- [prochaine-étape] Après la revue, lancer le rejeu réel, puis le backfill de l’agrégateur pour le 12/11.\n- [prochaine-étape] Donner à Rachel l’ETA pour Fernhill et Orbitly après la revue.\n- [essai-raté] Le dry run avec un lot de 50 000 a été OOMKilled ; il a réussi avec 5 000 sans augmenter la mémoire.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 826,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3963,
+    "sortie": 431,
+    "reflexion": 146,
+    "cache": 0,
+    "cout": 0.0007108
+  },
+  "cout": 0.0007108,
+  "latenceMs": 5751,
+  "fournisseur": "Azure"
+}

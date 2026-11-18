@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:25.367Z",
+  "reponse": "## Où j'en suis\nThe Q1 tiered pricing (0.55% under $5M, 0.45% from $5M to $25M, 0.35% above, $0.25 per payout unchanged) is modeled, with exceptions applied (annualized uplift +$351k). The notice (standard version plus a Loomly/Pinecrest variant) is drafted for 38 customers. Nothing has been sent. Gil and Rachel review it Friday at 10:00, then it goes out from Salesforce before Dec 1. (source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] Loomly's CFO wrote that Loomly stays on 0.50% + $0.25 for all of 2027, \"as Rachel said on the phone\". This contradicts the notice variant and the exceptions file, which end the old rate on 2027-03-31. (source: src-mail-loomly, p3-01)\n- [prochaine-étape] Before Friday's review, settle with Rachel what she promised Loomly, and fix the Loomly variant and `exceptions.csv` accordingly. (source: src-mail-loomly, ses-px-3)\n- [prochaine-étape] After Gil's review, send the Salesforce mass email to the 38 billing contacts before Dec 1. (source: p3-09, src-slack-gil)\n- [question] Can the +1% instant payout surcharge apply to existing contracts? Hartley & Moss are reading the MSA, with an answer due Monday. Nothing about instant payouts goes out before then. (source: p3-05)\n- [essai-raté] The Salesforce export lacked October volume for 5 customers (KeyError on Pinecrest Rentals), so the billing CSV is used for everyone. (source: ses-px-2)\n- [décision] Tiered pricing was chosen over a flat 0.40% + $0.30. (source: p1-05)\n- [décision] Loomly and Pinecrest keep the old rate until March 31 2027, and Tradewell is excluded, as agreed with Rachel. This is now in question for Loomly. (source: p3-01)\n- [décision] The instant payout line is removed from the notice. (source: p3-05)",
+  "rendu": "## Où j'en suis\nThe Q1 tiered pricing (0.55% under $5M, 0.45% from $5M to $25M, 0.35% above, $0.25 per payout unchanged) is modeled, with exceptions applied (annualized uplift +$351k). The notice (standard version plus a Loomly/Pinecrest variant) is drafted for 38 customers. Nothing has been sent. Gil and Rachel review it Friday at 10:00, then it goes out from Salesforce before Dec 1. (de: connecteur, agent; source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] Loomly's CFO wrote that Loomly stays on 0.50% + $0.25 for all of 2027, \"as Rachel said on the phone\". This contradicts the notice variant and the exceptions file, which end the old rate on 2027-03-31. (de: toi, connecteur; source: src-mail-loomly, p3-01)\n- [prochaine-étape] Before Friday's review, settle with Rachel what she promised Loomly, and fix the Loomly variant and `exceptions.csv` accordingly. (de: connecteur, agent; source: src-mail-loomly, ses-px-3)\n- [prochaine-étape] After Gil's review, send the Salesforce mass email to the 38 billing contacts before Dec 1. (de: toi, connecteur; source: p3-09, src-slack-gil)\n- [question] Can the +1% instant payout surcharge apply to existing contracts? Hartley & Moss are reading the MSA, with an answer due Monday. Nothing about instant payouts goes out before then. (de: toi; source: p3-05)\n- [essai-raté] The Salesforce export lacked October volume for 5 customers (KeyError on Pinecrest Rentals), so the billing CSV is used for everyone. (de: agent; source: ses-px-2)\n- [décision] Tiered pricing was chosen over a flat 0.40% + $0.30. (de: toi; source: p1-05)\n- [décision] Loomly and Pinecrest keep the old rate until March 31 2027, and Tradewell is excluded, as agreed with Rachel. This is now in question for Loomly. (de: toi; source: p3-01)\n- [décision] The instant payout line is removed from the notice. (de: toi; source: p3-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1856,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6391,
+    "sortie": 726,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020042
+  },
+  "cout": 0.020042,
+  "latenceMs": 5019,
+  "fournisseur": "Amazon Bedrock"
+}

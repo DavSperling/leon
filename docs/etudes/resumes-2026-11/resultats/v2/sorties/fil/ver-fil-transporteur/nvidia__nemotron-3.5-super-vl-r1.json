@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:30:43.648Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` et la PR #91 sont à jour : le client TransAlp fonctionne en recette (ZPL, `^CI28` ajouté), les 22 tests passent, le code a été poussé, mais la PR reste en brouillon en attente de relecture par Julien ; aucune activation en production n’a encore lieu avant le 1er décembre. (source: ses-tr-2, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien (source: src-pr91, ses-tr-2)\n- [prochaine-étape] Merger la PR après relecture (source: ses-tr-2)\n- [prochaine-étape] Configurer la clé de production TransAlp dans les secrets avant le 1er décembre (source: h2-07, src-slack-julien)\n- [essai-raté] Appel de l’API en sandbox avec clé X-Api-Key : 401, l’API exige un jeton OAuth2 (source: ses-tr-1, h1-02)\n- [essai-raté] Étiquettes ZPL en sandbox refusées (source: ses-tr-1, h1-02)\n- [décision] ZPL est le format par défaut, PDF reste possible (source: src-pr91, ses-tr-2)\n- [décision] Rapidis reste actif pour le reste de la France et les colis >30 kg jusqu’au 15 janvier (source: h2-09, src-slack-julien)\n- [décision] Aucun tarif Premium n’est pris en compte (source: h2-09, ses-tr-2)",
+  "rendu": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` et la PR #91 sont à jour : le client TransAlp fonctionne en recette (ZPL, `^CI28` ajouté), les 22 tests passent, le code a été poussé, mais la PR reste en brouillon en attente de relecture par Julien ; aucune activation en production n’a encore lieu avant le 1er décembre. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] Merger la PR après relecture (de: agent; source: ses-tr-2)\n- [prochaine-étape] Configurer la clé de production TransAlp dans les secrets avant le 1er décembre (de: toi, connecteur; source: h2-07, src-slack-julien)\n- [essai-raté] Appel de l’API en sandbox avec clé X-Api-Key : 401, l’API exige un jeton OAuth2 (de: agent; source: ses-tr-1, h1-02)\n- [essai-raté] Étiquettes ZPL en sandbox refusées (de: agent; source: ses-tr-1, h1-02)\n- [décision] ZPL est le format par défaut, PDF reste possible (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [décision] Rapidis reste actif pour le reste de la France et les colis >30 kg jusqu’au 15 janvier (de: toi, connecteur; source: h2-09, src-slack-julien)\n- [décision] Aucun tarif Premium n’est pris en compte (de: toi, agent; source: h2-09, ses-tr-2)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1284,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4107,
+    "sortie": 2704,
+    "reflexion": 2311,
+    "cache": 0,
+    "cout": 0.00188693
+  },
+  "cout": 0.00188693,
+  "latenceMs": 5508,
+  "fournisseur": "CoreWeave"
+}

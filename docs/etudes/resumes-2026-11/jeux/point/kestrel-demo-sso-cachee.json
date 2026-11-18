@@ -1,0 +1,360 @@
+{
+  "id": "kestrel-demo-sso-cachee",
+  "titre": "Une ligne tapée au milieu du lint annonce la démo SSO de Fernhill jeudi ; l'agent croit #418 non fusionnée alors qu'elle l'est",
+  "langue": "en",
+  "entree": {
+    "maintenant": "2026-11-18T06:40:00Z",
+    "projet": "github.com/kestrel-analytics/platform",
+    "depuis": "2026-11-17T09:05:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-cleanup",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "test_acs_rejects_expired_assertion is flaky on CI again",
+          "url": null,
+          "date": "2026-11-17T16:12:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T09:05:00Z",
+            "texte": "test_acs_rejects_expired_assertion is flaky on CI again, 3 of the last 10 runs. look at tests/auth/test_saml_acs.py and figure out why"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:06:30Z",
+            "texte": "I'll start by reading the test and the ACS handler to see how assertion expiry is checked.\n\nIn `tests/auth/test_saml_acs.py` the test builds an assertion with `NotOnOrAfter = now + 2s`, then calls `time.sleep(2.1)` before posting it to `/auth/saml/acs`. In `kestrel/auth/saml_utils.py`, `validate_conditions()` allows a clock skew of 3 seconds (`SAML_CLOCK_SKEW = 3`). So the assertion is only rejec…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:08:10Z",
+            "texte": "so its timing dependent. just freeze time, we have freezegun already"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:12:40Z",
+            "texte": "Right, `freezegun` 1.5.1 is already in `requirements-dev.txt`. I rewrote the test to freeze the clock, build the assertion, then move time 10 seconds past `NotOnOrAfter` + skew with `frozen.tick()` instead of sleeping:\n\n```python\n@freeze_time(\"2026-11-17 09:00:00\")\ndef test_acs_rejects_expired_assertion(client, idp, frozen):\n    assertion = idp.sign(make_assertion(not_on_or_after=+2))\n    frozen.…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:14:05Z",
+            "texte": "Ran `pytest tests/auth/test_saml_acs.py -q --count=50` (pytest-repeat): 50 passed in 6.8s. The same command gave 7 failures out of 50 before the change. The suite is also about 2 seconds faster since nothing sleeps anymore.\n\nTwo other tests in the file use `time.sleep` the same way (`test_acs_rejects_not_yet_valid`, `test_session_expires_after_idle`). Want me to convert them too?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:15:20Z",
+            "texte": "yes same thing for those. then run ruff on kestrel/auth, theres a ton of warnings since we bumped to ruff 0.8"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:31:50Z",
+            "texte": "Both converted, 50/50 green on repeat. Now `ruff check kestrel/auth`:\n\n```\nkestrel/auth/saml_utils.py:14:1: I001 Import block is un-sorted or un-formatted\nkestrel/auth/saml_utils.py:88:5: PLR0913 Too many arguments in function definition (7 > 5)\nkestrel/auth/oidc.py:203:9: SIM108 Use ternary operator instead of if-else-block\nkestrel/auth/oidc.py:241:13: B904 Within an except clause, raise excepti…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:36:12Z",
+            "texte": "I applied `ruff check --fix` and reviewed the diff (imports, ternaries, f-strings, nothing behavioural). 8 issues remain and need manual changes:\n\n1. PLR0913 in `build_sp_metadata` (7 args) — I'd introduce a small `SPConfig` dataclass\n2. B904 in `oidc.py`, raise without `from` (×3)\n3. RUF012 mutable class attribute default in `SAMLSettings` (×2)\n4. PLW2901 loop variable overwritten in `bindings`…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:38:00Z",
+            "texte": "do 2 3 and 4. skip the dataclass for now"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:47:30Z",
+            "texte": "Fixed the three B904 (`raise SAMLValidationError(...) from exc`), the two RUF012 (now `ClassVar[...]`) and the two PLW2901. `ruff check kestrel/auth` → All checks passed!\n\nRunning `mypy kestrel/auth` now shows 2 errors that the old ignore comments were hiding:\n\n```\nkestrel/auth/saml_utils.py:131: error: Item \"None\" of \"Optional[Element]\" has no attribute \"text\"  [union-attr]\nkestrel/auth/saml_uti…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:02:45Z",
+            "texte": "btw maya just pinged, fernhill IT wants the end to end sso walkthrough on staging thursday 10am NY time with their okta tenant, so signature validation has to be on staging by wed EOD. priya runs the demo i just need to be on the call. anyway yes fix the mypy ones"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:09:20Z",
+            "texte": "Fixed both mypy errors. `find()` returns `None` when the IdP omits `<saml:Issuer>` or `<saml:Subject>`, so `_issuer_of()` and `_subject_of()` now raise `SAMLValidationError(\"missing issuer\")` / `(\"missing subject\")` instead of crashing with an `AttributeError` (which surfaced as a 500). Added `test_acs_rejects_assertion_without_issuer`. `mypy kestrel/auth` → Success: no issues found in 23 source…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:15:00Z",
+            "texte": "saml_utils.py is 900 lines now. split it: assertions, metadata, bindings. keep the public imports working"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:18:40Z",
+            "texte": "Plan for the split:\n\n- `kestrel/auth/saml/assertions.py` — `parse_assertion`, `validate_conditions`, `verify_signature`, the replay cache\n- `kestrel/auth/saml/metadata.py` — `build_sp_metadata`, `load_idp_metadata`, certificate helpers\n- `kestrel/auth/saml/bindings.py` — HTTP-POST and HTTP-Redirect encode/decode\n- `kestrel/auth/saml_utils.py` stays as a thin shim that re-exports the old names and…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T11:02:15Z",
+            "texte": "Split done. 14 call sites now import from the new modules; the shim keeps `from kestrel.auth.saml_utils import ...` working for the 3 places in `ingest_admin/` I didn't touch. Full suite: `pytest -q` → 1,284 passed, 3 skipped in 4m12s. Ruff and mypy clean on the whole `kestrel/` package."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T15:48:30Z",
+            "texte": "is 418 merged? i need signature validation on staging"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T15:49:50Z",
+            "texte": "I checked with `gh pr view 418`: PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" is **still open**. Review is requested from @maya-cohen and there's no approval yet, so it's not merged and won't be in tonight's staging deploy unless she reviews it today. CI on the PR is green (last run 13/11). Want me to post a comment on the PR to nudge her?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T15:51:10Z",
+            "texte": "no she said she'd look today. commit the cleanup on a separate branch and open a PR, dont touch 418"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T16:05:30Z",
+            "texte": "Created branch `daniel/auth-cleanup` from `main` and committed in two commits:\n\n- `a3f9c21` test(auth): freeze time in SAML ACS tests instead of sleeping\n- `7be04d8` refactor(auth): ruff 0.8 fixes, mypy fixes, split saml_utils into saml/ package\n\nPushed and opened PR #423 \"chore(auth): ruff fixes + move saml utils into saml/ package\" with @tom-becker as reviewer. #418 is untouched; the two branch…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T16:10:00Z",
+            "texte": "thx. tomorrow: the replay cache for assertion IDs, its in-memory only, need redis for multi-pod"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T16:12:00Z",
+            "texte": "Noted for tomorrow. The replay cache (`_seen_assertion_ids`) is a process-local `TTLCache`, so with 3 API pods behind the load balancer an assertion could be replayed against another pod within its validity window. A Redis `SET key NX EX ttl`, keyed by tenant + assertion ID with ttl = NotOnOrAfter + skew, would close that. We already have the Redis client in `kestrel/cache.py`, so it's maybe 40 l…"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-signature",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "implement signature verification for saml assertions",
+          "url": null,
+          "date": "2026-11-13T13:41:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-13T10:12:00Z",
+            "texte": "implement signature verification for saml assertions. fernhill's okta signs the assertion not the response. use signxml we already have it. tests with a real signed fixture"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T10:14:30Z",
+            "texte": "I'll look at how assertions are parsed today and where verification should go.\n\n`kestrel/auth/saml_utils.py::parse_assertion` decodes the base64 `SAMLResponse` and reads the attributes, but it **never checks the signature**: any well-formed XML with the right Issuer is accepted. That's the gap.\n\nPlan:\n1. `verify_signature(xml, idp_cert)` with `signxml.XMLVerifier`, requiring the signature on the…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-13T10:15:10Z",
+            "texte": "go"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T11:20:45Z",
+            "texte": "Implemented `verify_signature()`:\n- verifies the `<ds:Signature>` on the `<saml:Assertion>` with the IdP certificate from the tenant's SAML config\n- rejects unsigned assertions, wrong certificates and signature-wrapping attempts (attributes are read from the verified element only)\n- IdP certificates are stored per tenant in a new table `saml_idp_certs` (migration `0142_saml_idp_certs`)\n\nTests use…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T11:23:10Z",
+            "texte": "One suggestion: some older IdPs (ADFS 2.0, old Shibboleth installs) still sign with RSA-SHA1. I'd accept SHA-1 behind a per-tenant flag `allow_sha1_signatures`, off by default, so a future customer on a legacy IdP isn't blocked. Should I add it?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-13T11:24:00Z",
+            "texte": "no. no sha1, fernhill is sha256 and we're not adding a legacy flag nobody asked for"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T11:29:30Z",
+            "texte": "Understood: SHA-256 and above only. `signxml` is configured with `SignatureConfiguration(signature_methods=[RSA_SHA256, RSA_SHA512, ECDSA_SHA256])`; a SHA-1 signature is rejected with `SAMLValidationError(\"unsupported signature algorithm\")`, covered by `test_acs_rejects_sha1_signature`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-13T11:31:00Z",
+            "texte": "replay protection too, same assertion id twice = reject"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T12:05:20Z",
+            "texte": "Added a replay cache: assertion IDs are kept in a `TTLCache` until `NotOnOrAfter` + clock skew, and a second assertion with the same ID is rejected (`test_acs_rejects_replayed_assertion`). Note it's per process: with several API pods, a replay could still succeed on another pod. Fine for staging with one pod, but it should move to Redis before production."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-13T13:38:00Z",
+            "texte": "ok open the PR, maya reviews"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T13:41:00Z",
+            "texte": "Opened PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" against `main`, reviewer @maya-cohen. CI is green (1,279 passed). The description lists the migration `0142_saml_idp_certs` and the known limit of the per-process replay cache."
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-418",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#418 SAML: verify assertion signatures (Fernhill SSO)",
+          "url": "https://github.com/kestrel-analytics/platform/pull/418",
+          "date": "2026-11-17T19:02:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "auteur": "maya-cohen",
+            "date": "2026-11-17T18:55:00Z",
+            "texte": "Approved. Clean, and thanks for the signature-wrapping test. One nit inline on the error message wording, not blocking."
+          },
+          {
+            "role": "participant",
+            "auteur": "maya-cohen",
+            "date": "2026-11-17T19:02:00Z",
+            "texte": "Merged 🚀 It goes out with tonight's staging deploy."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-423",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#423 chore(auth): ruff fixes + move saml utils into saml/ package",
+          "url": "https://github.com/kestrel-analytics/platform/pull/423",
+          "date": "2026-11-17T17:30:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "daniel-levi",
+            "date": "2026-11-17T16:05:00Z",
+            "texte": "Follow-up cleanup, no behaviour change:\n- freeze time in SAML ACS tests (fixes the flaky test_acs_rejects_expired_assertion)\n- ruff 0.8 fixes + 2 mypy fixes in kestrel/auth (missing Issuer/Subject now a 401, not a 500)\n- split saml_utils.py into kestrel/auth/saml/{assertions,metadata,bindings}.py; old imports still work through a shim"
+          },
+          {
+            "role": "participant",
+            "auteur": "tom-becker",
+            "date": "2026-11-17T17:30:00Z",
+            "texte": "Requesting changes: can you split the module move from the lint fixes? It's a 1,900-line diff and most of it is the move, so I can't see the real changes. Two PRs and I'll approve both today."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "issue-424",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#424 CSV export times out for Zest Grocers dashboards (>200k rows)",
+          "url": "https://github.com/kestrel-analytics/platform/issues/424",
+          "date": "2026-11-17T14:20:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "rachel-kim",
+            "date": "2026-11-17T13:40:00Z",
+            "texte": "Zest Grocers can't export their weekly retention dashboard to CSV anymore: the request times out after 30s (504). Their dashboard has ~230k rows since they added the store dimension. Zendesk #8817. They use this export every Monday for their ops review."
+          },
+          {
+            "role": "participant",
+            "auteur": "tom-becker",
+            "date": "2026-11-17T14:20:00Z",
+            "texte": "Taking this one. The CSV export still runs synchronously in the request; I'll move it to the job queue and email a link when it's ready."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-426",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#426 build(deps): bump cryptography from 43.0.1 to 43.0.3",
+          "url": "https://github.com/kestrel-analytics/platform/pull/426",
+          "date": "2026-11-17T11:02:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "dependabot[bot]",
+            "date": "2026-11-17T11:02:00Z",
+            "texte": "Bumps cryptography from 43.0.1 to 43.0.3.\n\nRelease notes: 43.0.3 — fixed release metadata; 43.0.2 — fixed compilation when using LibreSSL 4.0.0.\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting @dependabot rebase."
+          }
+        ]
+      }
+    ],
+    "mentions": []
+  },
+  "attendu": {
+    "premier": "f-demo",
+    "faits": [
+      {
+        "id": "f-demo",
+        "texte": "Says Fernhill's IT team expects an end-to-end SSO walkthrough on staging on Thursday (19 November).",
+        "poids": 3
+      },
+      {
+        "id": "f-heure",
+        "texte": "Gives the walkthrough time as 10:00 New York time (16:00 Paris or 17:00 Tel Aviv are also correct).",
+        "poids": 2
+      },
+      {
+        "id": "f-418-merged",
+        "texte": "Says PR #418 (assertion signature verification) has been merged.",
+        "poids": 3
+      },
+      {
+        "id": "f-418-staging",
+        "texte": "Says #418 goes to staging with the nightly staging deploy.",
+        "poids": 1
+      },
+      {
+        "id": "f-423",
+        "texte": "Says Tom requested changes on the cleanup PR #423: split the module move from the lint fixes.",
+        "poids": 2
+      },
+      {
+        "id": "f-redis",
+        "texte": "Says the assertion replay cache is still in memory per process and has to move to Redis for several pods.",
+        "poids": 2
+      },
+      {
+        "id": "f-priya",
+        "texte": "Says Priya runs the demo and he only needs to be on the call.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-418-ouverte",
+        "texte": "Says #418 is still open, not merged, or waiting for Maya's review."
+      },
+      {
+        "id": "i-sha1",
+        "texte": "Says SHA-1 signatures are accepted or that a legacy SHA-1 flag was added."
+      },
+      {
+        "id": "i-routine-en-tete",
+        "texte": "The first bullet is about the flaky test, the ruff/mypy cleanup, the saml_utils split or the cryptography bump instead of the Fernhill walkthrough."
+      },
+      {
+        "id": "i-details",
+        "texte": "Gives execution details: the number of ruff errors (47), the test counts (1,284 passed), the commit hashes or the list of rule codes fixed."
+      },
+      {
+        "id": "i-424-a-lui",
+        "texte": "Presents the Zest CSV export timeout (#424) as his task (Tom took it)."
+      }
+    ],
+    "pieges": [
+      "Importance cachée : la démo SSO de Fernhill jeudi à 10:00 heure de New York n'est dite qu'une fois, dans une ligne tapée au milieu d'une session de lint et de découpage de module.",
+      "Contradiction : l'agent affirme à 15:49 que #418 n'est pas fusionnée ; les commentaires de Maya, plus récents, disent qu'elle l'a approuvée et fusionnée.",
+      "Fausse décision : dans la session du 13/11, l'agent propose d'accepter SHA-1 derrière un drapeau ; Daniel refuse.",
+      "Routine et bruit : la PR Dependabot et le ticket d'export CSV pris par Tom ne l'engagent pas ; le détail du lint n'est que du geste."
+    ]
+  }
+}

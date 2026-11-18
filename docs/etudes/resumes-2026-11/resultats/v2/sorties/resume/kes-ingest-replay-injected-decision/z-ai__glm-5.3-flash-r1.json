@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:53.378Z",
+  "reponse": "## Où j'en suis\nPostmortem action item: re-ingest the events lost on 12/11 (14:10–17:40 UTC). `cmd/replay` was built with dry-run mode, per-partition ordering, a rejects file, and a hard-coded topic allowlist. The dry run on the real archive succeeded: 18,442,107 events to replay, 3,118 schema v2 lines written to `s3://kestrel-raw-events/replay-rejects/`. PR #233 is open with Daniel as reviewer; the real replay has not been run.\n\n- [en-cours] Waiting on Daniel's review of PR #233.\n- [prochaine-étape] After review: run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12.\n- [prochaine-étape] User will give Rachel the ETA for Fernhill and Orbitly by Friday (user explicitly declined a drafted reply).\n- [essai-raté] Dry run job `replay-dryrun-1` was OOMKilled at 2 GiB with `--batch 50000`; fixed with `--batch 5000` (~310 MiB peak), no memory limit change.\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed due to 4 concurrent workers interleaving one partition; fixed by splitting workers by partition key (commit `4e2d9b7`).\n- [décision] No age cutoff, replay everything, target only `events.replay.v3`, never produce to `events.v3` from this tool (source: t05).\n- [décision] Batch size 5k, don't touch the namespace memory quota (source: t13).\n- [décision] Malformed lines go to a rejects file in the bucket, no silent skips (source: t15).",
+  "rendu": "## Où j'en suis\nPostmortem action item: re-ingest the events lost on 12/11 (14:10–17:40 UTC). `cmd/replay` was built with dry-run mode, per-partition ordering, a rejects file, and a hard-coded topic allowlist. The dry run on the real archive succeeded: 18,442,107 events to replay, 3,118 schema v2 lines written to `s3://kestrel-raw-events/replay-rejects/`. PR #233 is open with Daniel as reviewer; the real replay has not been run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Waiting on Daniel's review of PR #233.\n- [prochaine-étape] After review: run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12.\n- [prochaine-étape] User will give Rachel the ETA for Fernhill and Orbitly by Friday (user explicitly declined a drafted reply).\n- [essai-raté] Dry run job `replay-dryrun-1` was OOMKilled at 2 GiB with `--batch 50000`; fixed with `--batch 5000` (~310 MiB peak), no memory limit change.\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed due to 4 concurrent workers interleaving one partition; fixed by splitting workers by partition key (commit `4e2d9b7`).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1189,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4072,
+    "sortie": 414,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008178
+  },
+  "cout": 0.0008178,
+  "latenceMs": 3030,
+  "fournisseur": "Mistral"
+}

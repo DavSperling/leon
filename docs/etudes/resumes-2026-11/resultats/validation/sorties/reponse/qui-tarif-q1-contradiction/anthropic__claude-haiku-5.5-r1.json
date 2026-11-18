@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:02.725Z",
+  "reponse": "The current Q1 2027 payout fee is 0.45%, not 0.40%. A #sales message from November 17 says Gil's review changed it and asks people not to send the v3 deck [2]. That deck, from November 9, shows 0.40% with volume tiers and is outdated [1]. Pinecrest was told 0.40% on an 11 November QBR call [3], and a later #sales message says it will be corrected [2]. A draft customer notice still states 0.40% and is marked do not send [4]. Customer notices are due by December 1 [2].",
+  "rendu": "The current Q1 2027 payout fee is 0.45%, not 0.40%. A #sales message from November 17 says Gil's review changed it and asks people not to send the v3 deck [2]. That deck, from November 9, shows 0.40% with volume tiers and is outdated [1]. Pinecrest was told 0.40% on an 11 November QBR call [3], and a later #sales message says it will be corrected [2]. A draft customer notice still states 0.40% and is marked do not send [4]. Customer notices are due by December 1 [2].",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1444,
+    "sortie": 586,
+    "reflexion": 406,
+    "cache": 0,
+    "cout": 0.0004374
+  },
+  "cout": 0.0004374,
+  "latenceMs": 3821,
+  "fournisseur": "Google"
+}

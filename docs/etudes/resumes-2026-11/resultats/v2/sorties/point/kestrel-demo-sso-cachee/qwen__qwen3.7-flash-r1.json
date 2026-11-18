@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:11.871Z",
+  "reponse": "## What you did\n- Implemented SAML assertion signature verification (SHA-256/512) and added a replay cache to block duplicate assertion IDs, securing the login flow [2].\n- Stabilized the SAML ACS suite by freezing time in three flaky tests, and modularized the auth layer into dedicated modules after cleaning Ruff/Mypy warnings [1].\n\n## What changed\n- The staging deployment is locked for Wednesday EOD to enable Thursday’s 10 AM NY Fernhill E2E SSO walkthrough with their Okta tenant [1].\n- PR #418 was approved and merged for tonight’s staging release [3].\n- Tom asked you to split PR #423, separating the structural reorganization from the lint updates so reviews stay focused [4].\n\n## What is still open\n- Complete the replay protection workflow: move the cache from local memory to Redis to guarantee deduplication across multiple API pods before production [1][2].\n- Resubmit PR #423 as two independent PRs addressing Tom’s review feedback [4].\n- Attend the Fernhill SSO demo call Thursday [1].",
+  "rendu": "## What you did\n- Implemented SAML assertion signature verification (SHA-256/512) and added a replay cache to block duplicate assertion IDs, securing the login flow [2].\n- Stabilized the SAML ACS suite by freezing time in three flaky tests, and modularized the auth layer into dedicated modules after cleaning Ruff/Mypy warnings [1].\n\n## What changed\n- The staging deployment is locked for Wednesday EOD to enable Thursday’s 10 AM NY Fernhill E2E SSO walkthrough with their Okta tenant [1].\n- PR #418 was approved and merged for tonight’s staging release [3].\n- Tom asked you to split PR #423, separating the structural reorganization from the lint updates so reviews stay focused [4].\n\n## What is still open\n- Complete the replay protection workflow: move the cache from local memory to Redis to guarantee deduplication across multiple API pods before production [1][2].\n- Resubmit PR #423 as two independent PRs addressing Tom’s review feedback [4].\n- Attend the Fernhill SSO demo call Thursday [1].",
+  "mesures": {
+    "mots": 152,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6023,
+    "sortie": 4039,
+    "reflexion": 3795,
+    "cache": 0,
+    "cout": 0.00070576
+  },
+  "cout": 0.00070576,
+  "latenceMs": 39729,
+  "fournisseur": "Alibaba"
+}

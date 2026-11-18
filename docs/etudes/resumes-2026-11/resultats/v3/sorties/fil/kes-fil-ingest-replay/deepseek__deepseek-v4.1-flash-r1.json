@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:46.419Z",
+  "reponse": "## Où j'en suis\nThe replay tooling on branch lior/replay-12-11 is merged (PR #233) and the real replay has run: 18,442,107 events written to events.replay.v3, 3,118 schema-v2 lines diverted to the rejects file. The aggregator backfill for 2026-11-12 is still running (61% at 09:52 UTC, hours 00–14 done) and the incident stays open until the counts match. (source: ses-rp-2, kestrel-analytics/ingest#233, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading events.replay.v3, started 08:57 UTC (source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse events_v3 hour by hour (1% tolerance), then close the incident (source: r2-06, r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit), and the `kubectl wait` on replay-dryrun-1 failed; 5k batches work, peak 310 MiB (source: src-sentry-oom, ses-rp-1, r1-03, r1-05)\n- [question] Rachel told Fernhill and Orbitly the data is back by Thursday, while Orbitly expected it Wednesday 18 Nov; the exact customer date still needs confirming (source: r2-07, src-zendesk-orbitly)\n- [décision] Keep every event and replay into events.replay.v3; the tool must never produce to events.v3 directly (source: r1-02, src-slack-incident)\n- [décision] Daniel owns the dedup-key CI check, Rachel owns customer comms, and no other fix goes into this incident — so the fork PR #241 is ignored (source: src-slack-incident, r2-09)\n- [décision] PR #233 approved by Daniel and merged; the real replay runs with 5k batches and the namespace memory limit stays untouched (source: r2-01, kestrel-analytics/ingest#233, r1-04)",
+  "rendu": "## Où j'en suis\nThe replay tooling on branch lior/replay-12-11 is merged (PR #233) and the real replay has run: 18,442,107 events written to events.replay.v3, 3,118 schema-v2 lines diverted to the rejects file. The aggregator backfill for 2026-11-12 is still running (61% at 09:52 UTC, hours 00–14 done) and the incident stays open until the counts match. (de: toi, équipe, agent; source: ses-rp-2, kestrel-analytics/ingest#233, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading events.replay.v3, started 08:57 UTC (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse events_v3 hour by hour (1% tolerance), then close the incident (de: agent; source: r2-06, r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit), and the `kubectl wait` on replay-dryrun-1 failed; 5k batches work, peak 310 MiB (de: connecteur, agent; source: src-sentry-oom, ses-rp-1, r1-03, r1-05)\n- [question] Rachel told Fernhill and Orbitly the data is back by Thursday, while Orbitly expected it Wednesday 18 Nov; the exact customer date still needs confirming (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [décision] Keep every event and replay into events.replay.v3; the tool must never produce to events.v3 directly (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Daniel owns the dedup-key CI check, Rachel owns customer comms, and no other fix goes into this incident — so the fork PR #241 is ignored (de: toi, connecteur; source: src-slack-incident, r2-09)\n- [décision] PR #233 approved by Daniel and merged; the real replay runs with 5k batches and the namespace memory limit stays untouched (de: toi, équipe; source: r2-01, kestrel-analytics/ingest#233, r1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1799,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3885,
+    "sortie": 1782,
+    "reflexion": 1253,
+    "cache": 1024,
+    "cout": 0.001737087
+  },
+  "cout": 0.001737087,
+  "latenceMs": 10652,
+  "fournisseur": "Cohere"
+}

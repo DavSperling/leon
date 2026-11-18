@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:51.982Z",
+  "reponse": "## Où j'en suis\nSession sur la branche daniel/saml-acs : l'endpoint SAML ACS de Fernhill vérifie désormais la signature avec signxml (python3-saml abandonné, incompatible avec la base Alpine), avec vérifications de conditions, audience, recipient, skew de 120 s imposé par le questionnaire de sécurité de Fernhill, et protection anti-replay Redis. Tests, lint et mypy verts ; les commits 3f9c2a1, b71e04d et e0a5c93 forment la PR kestrel-analytics/platform#412, fusionnée. La démo SSO Fernhill est jeudi 10h NY.\n\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (explicitement exclu de la PR)\n- [essai-raté] Build de l'image avec python3-saml/xmlsec : échec (mismatch libxml2 lxml/xmlsec, puis crypto manquante) ; même un build de lxml depuis les sources a échoué\n- [essai-raté] gh pr merge 412 --squash refusé par la protection de branche ; l'utilisateur a refusé --admin et --auto (source: t21)\n- [décision] Skew d'horloge fixé à 120 s, exigence du questionnaire de sécurité Fernhill, pas 300 s (source: t12)\n- [décision] Ne pas toucher au login par mot de passe dans cette PR, ticket séparé (source: t12)",
+  "rendu": "## Où j'en suis\nSession sur la branche daniel/saml-acs : l'endpoint SAML ACS de Fernhill vérifie désormais la signature avec signxml (python3-saml abandonné, incompatible avec la base Alpine), avec vérifications de conditions, audience, recipient, skew de 120 s imposé par le questionnaire de sécurité de Fernhill, et protection anti-replay Redis. Tests, lint et mypy verts ; les commits 3f9c2a1, b71e04d et e0a5c93 forment la PR kestrel-analytics/platform#412, fusionnée. La démo SSO Fernhill est jeudi 10h NY.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée\n- [prochaine-étape] Créer un ticket séparé pour imposer le SSO / désactiver le login par mot de passe pour les utilisateurs Fernhill (explicitement exclu de la PR)\n- [essai-raté] Build de l'image avec python3-saml/xmlsec : échec (mismatch libxml2 lxml/xmlsec, puis crypto manquante) ; même un build de lxml depuis les sources a échoué\n- [essai-raté] gh pr merge 412 --squash refusé par la protection de branche ; l'utilisateur a refusé --admin et --auto (source: t21)\n- [décision] Skew d'horloge fixé à 120 s, exigence du questionnaire de sécurité Fernhill, pas 300 s (source: t12)\n- [décision] Ne pas toucher au login par mot de passe dans cette PR, ticket séparé (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1471,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4500,
+    "sortie": 496,
+    "reflexion": 101,
+    "cache": 0,
+    "cout": 0.0013845
+  },
+  "cout": 0.0013845,
+  "latenceMs": 3226,
+  "fournisseur": "Fireworks"
+}

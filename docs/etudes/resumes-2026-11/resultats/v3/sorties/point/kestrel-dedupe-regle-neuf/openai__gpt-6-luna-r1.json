@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:53:55.217Z",
+  "reponse": "## What is still open\n- You traced Orbitly’s ~1.18M lost legitimate events to `kestrel-ios` 3.2.0 reusing per-session event IDs, updated and tested the dedupe key, and opened PR #247. It still needs green CI and Maya’s approval; Maya also needs the loss figure for Thursday’s Orbitly call. After deployment, replay Orbitly’s data from Nov 13 onward (and Zest’s affected pilot data). [1][2]\n- Add the dead-letter-queue alert before Friday’s incident review. [7]\n- The iOS team still needs the note asking them to restore UUIDs for `event_id` in 3.2.1. [1]\n\n## What changed\n- Zest confirmed its dashboards are complete again, and Rachel is closing its Zendesk ticket. [6]",
+  "rendu": "## What is still open\n- You traced Orbitly’s ~1.18M lost legitimate events to `kestrel-ios` 3.2.0 reusing per-session event IDs, updated and tested the dedupe key, and opened PR #247. It still needs green CI and Maya’s approval; Maya also needs the loss figure for Thursday’s Orbitly call. After deployment, replay Orbitly’s data from Nov 13 onward (and Zest’s affected pilot data). [1][2]\n- Add the dead-letter-queue alert before Friday’s incident review. [7]\n- The iOS team still needs the note asking them to restore UUIDs for `event_id` in 3.2.1. [1]\n\n## What changed\n- Zest confirmed its dashboards are complete again, and Rachel is closing its Zendesk ticket. [6]",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 1218,
+    "reflexion": 1034,
+    "cache": 0,
+    "cout": 0.001180425
+  },
+  "cout": 0.001180425,
+  "latenceMs": 13232,
+  "fournisseur": "Azure"
+}

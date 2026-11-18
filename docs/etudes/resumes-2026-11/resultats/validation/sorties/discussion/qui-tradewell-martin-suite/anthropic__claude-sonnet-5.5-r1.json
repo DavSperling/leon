@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:42.609Z",
+  "reponse": "Martin flagged two things on the Nov 12 sync. Someone picked up the webhooks. The payout schedules are blocked for Dec 7.\n\n**1. Webhook signature failures on sandbox** [1]\n- Ellen Vance said every payout.paid and seller.verified event failed HMAC verification, with only about 1 in 20 passing [1].\n- Jake Whitfield found the cause. The delivery worker re-serialized the JSON after it was signed, so the body sent differed from the body signed [13].\n- His fix, core#1187, signs the exact bytes that are sent. It moves `delivered_at` and `attempt` to headers [13].\n- Noam Peretz approved it. It was merged and deployed to sandbox on Nov 16, and it goes to production with release 2026.47 on Tue Nov 24 [13].\n- I didn't see confirmation that Tradewell retested on sandbox.\n\n**2. Per-seller payout schedules** [3]\n- Tradewell wants net-7 for about 200 top sellers and net-30 for everyone else. Today a platform has a single schedule [3].\n- Tomer Golan estimated 3–4 weeks of work [3].\n- On Nov 16, Avi Kessler decided it would not ship for Dec 7. He won't touch the batcher three weeks before a contractual go-live. The earliest date is late January. He moved the ticket to Backlog with a target of 2027-Q1 and asked Owen to set expectations with Martin [3].\n- Owen had told Martin on Nov 13 that he'd have a clear answer by Friday Nov 20 [5]. I found no sign that Martin has been told the answer yet.\n\nMartin said Tradewell can't move the Dec 7 date [1]. The schedules request is therefore a gap to raise with him before then.",
+  "rendu": "Martin flagged two things on the Nov 12 sync. Someone picked up the webhooks. The payout schedules are blocked for Dec 7.\n\n**1. Webhook signature failures on sandbox** [1]\n- Ellen Vance said every payout.paid and seller.verified event failed HMAC verification, with only about 1 in 20 passing [1].\n- Jake Whitfield found the cause. The delivery worker re-serialized the JSON after it was signed, so the body sent differed from the body signed [13].\n- His fix, core#1187, signs the exact bytes that are sent. It moves `delivered_at` and `attempt` to headers [13].\n- Noam Peretz approved it. It was merged and deployed to sandbox on Nov 16, and it goes to production with release 2026.47 on Tue Nov 24 [13].\n- I didn't see confirmation that Tradewell retested on sandbox.\n\n**2. Per-seller payout schedules** [3]\n- Tradewell wants net-7 for about 200 top sellers and net-30 for everyone else. Today a platform has a single schedule [3].\n- Tomer Golan estimated 3–4 weeks of work [3].\n- On Nov 16, Avi Kessler decided it would not ship for Dec 7. He won't touch the batcher three weeks before a contractual go-live. The earliest date is late January. He moved the ticket to Backlog with a target of 2027-Q1 and asked Owen to set expectations with Martin [3].\n- Owen had told Martin on Nov 13 that he'd have a clear answer by Friday Nov 20 [5]. I found no sign that Martin has been told the answer yet.\n\nMartin said Tradewell can't move the Dec 7 date [1]. The schedules request is therefore a gap to raise with him before then.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0.8,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21940,
+    "sortie": 827,
+    "reflexion": 17,
+    "cache": 0,
+    "cout": 0.05215
+  },
+  "latenceMs": 8715,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync November 12 flagged\"}",
+    "chercher {\"requete\":\"Tradewell go-live risks Martin follow-up\",\"depuis\":\"2m\"}",
+    "lire {\"sourceId\":\"github-core-1187\"}"
+  ],
+  "cout": 0.05215
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:56:57.230Z",
+  "reponse": "## Où j'en suis\nWork on the dashboards v2 grid (branch tom/dashboard-grid-v2) is done and pushed as draft PR kestrel-analytics/platform#418: react-grid-layout drag/resize, layout persisted server-side via `PUT /dashboards/:id/layout` (localStorage fallback), widget sizing via ResizeObserver, DashboardTile renamed to WidgetCard, storybook build fixed. Awaiting UX review before the Zest demo on Tuesday Nov 24.\n\n- [en-cours] Draft PR #418 open, last commit d2286a0; Priya's UX review on iPad (iOS 15) not yet done.\n- [prochaine-étape] Priya reviews UX on BrowserStack iPad; enable dashboards_v2 flag for Zest workspace only (flags admin, no code change).\n- [prochaine-étape] Zest demo of new dashboards is Tuesday the 24th; v1 dashboards stay behind the flag until January (comment in DashboardPage).\n- [essai-raté] Container queries for widget sizing: ignored by iOS 15 Safari (needs Safari 16+); replaced by a ResizeObserver hook (0b9f4e2).\n- [essai-raté] DashboardGrid snapshot test failed after adding react-grid-layout wrappers; fixed by updating snapshots with `-u`.\n- [décision] Drop container queries entirely, use only the useWidgetSize hook (source: t09).\n- [décision] Flag on only for Zest's workspace, nothing removed until January, PR as draft (source: t15, t17).",
+  "rendu": "## Où j'en suis\nWork on the dashboards v2 grid (branch tom/dashboard-grid-v2) is done and pushed as draft PR kestrel-analytics/platform#418: react-grid-layout drag/resize, layout persisted server-side via `PUT /dashboards/:id/layout` (localStorage fallback), widget sizing via ResizeObserver, DashboardTile renamed to WidgetCard, storybook build fixed. Awaiting UX review before the Zest demo on Tuesday Nov 24.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR #418 open, last commit d2286a0; Priya's UX review on iPad (iOS 15) not yet done.\n- [prochaine-étape] Priya reviews UX on BrowserStack iPad; enable dashboards_v2 flag for Zest workspace only (flags admin, no code change).\n- [prochaine-étape] Zest demo of new dashboards is Tuesday the 24th; v1 dashboards stay behind the flag until January (comment in DashboardPage).\n- [essai-raté] Container queries for widget sizing: ignored by iOS 15 Safari (needs Safari 16+); replaced by a ResizeObserver hook (0b9f4e2).\n- [essai-raté] DashboardGrid snapshot test failed after adding react-grid-layout wrappers; fixed by updating snapshots with `-u`.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1212,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3471,
+    "sortie": 352,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.00055732
+  },
+  "cout": 0.00055732,
+  "latenceMs": 4631,
+  "fournisseur": "River"
+}

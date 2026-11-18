@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:28:12.822Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 upgrade is on branch `noa/rds-pg17`, with draft PR #57 still open. Staging is on PostgreSQL 17.2 after the blue/green switchover; `pg_partman` was upgraded and maintenance completed, and the staging dbt run passed all 14 models. Production remains disabled and has no scheduled window: Maya wants a full week of staging on 17 before sign-off. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Observe staging on PostgreSQL 17.2 for a full week before production sign-off; no incident is reported so far. (source: src-linear-kes298, src-slack-infra)\n- [prochaine-étape] After the staging week and sign-off, choose the production window; then set `rds.logical_replication = 1` and reboot production before creating the blue/green deployment. (source: src-linear-kes298, ses-pg-3)\n- [décision] Keep production’s date unset until Maya signs off after a full week on staging. (source: s3-09, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 upgrade is on branch `noa/rds-pg17`, with draft PR #57 still open. Staging is on PostgreSQL 17.2 after the blue/green switchover; `pg_partman` was upgraded and maintenance completed, and the staging dbt run passed all 14 models. Production remains disabled and has no scheduled window: Maya wants a full week of staging on 17 before sign-off. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Observe staging on PostgreSQL 17.2 for a full week before production sign-off; no incident is reported so far. (de: connecteur; source: src-linear-kes298, src-slack-infra)\n- [prochaine-étape] After the staging week and sign-off, choose the production window; then set `rds.logical_replication = 1` and reboot production before creating the blue/green deployment. (de: connecteur, agent; source: src-linear-kes298, ses-pg-3)\n- [décision] Keep production’s date unset until Maya signs off after a full week on staging. (de: toi, connecteur; source: s3-09, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1042,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4065,
+    "sortie": 262,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00063905
+  },
+  "cout": 0.00063905,
+  "latenceMs": 3346,
+  "fournisseur": "OpenAI"
+}

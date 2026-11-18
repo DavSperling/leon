@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:54.856Z",
+  "reponse": "I'll search the company memory for this issue.\n\n**D'où ça venait** : le 3 novembre, un deuxième emplacement « Showroom » (les pièces d'expo rue Auguste-Comte) a été ajouté dans Shopify [1][8]. Or le script `sync-stock` (cron toutes les 15 min) ne mettait à jour que l'emplacement « Entrepôt Vénissieux » : le Showroom gardait son ancien stock, et comme Shopify additionne les emplacements, le site affichait du stock qui n'existait plus [1][8][9]. D'où les commandes de meubles déjà vendus : banc Rhône [2], buffet Croix-Rousse [3], chaises Fourvière (9 affichées, 2 disponibles) [7].\n\n**Est-ce réparé** : oui, le correctif (PR #87) met à jour les deux emplacements à partir des onglets de l'export, avec 3 tests et une nouvelle variable `SHOPIFY_LOCATION_SHOWROOM` [9]. Il a été relu/testé par Hugo Petit le 13/11 [9], puis « fusionné, déployé », avec un repassage complet du catalogue et 7 commandes touchées entre le 3 et le 12/11, liste transmise à Lucie [8][9].\n\nEn prévention, un contrôle quotidien des écarts Shopify / export entrepôt (PR #91) est en cours mais n'était pas encore en production au 17/11 [8][10].",
+  "rendu": "I'll search the company memory for this issue.\n\n**D'où ça venait** : le 3 novembre, un deuxième emplacement « Showroom » (les pièces d'expo rue Auguste-Comte) a été ajouté dans Shopify [1][8]. Or le script `sync-stock` (cron toutes les 15 min) ne mettait à jour que l'emplacement « Entrepôt Vénissieux » : le Showroom gardait son ancien stock, et comme Shopify additionne les emplacements, le site affichait du stock qui n'existait plus [1][8][9]. D'où les commandes de meubles déjà vendus : banc Rhône [2], buffet Croix-Rousse [3], chaises Fourvière (9 affichées, 2 disponibles) [7].\n\n**Est-ce réparé** : oui, le correctif (PR #87) met à jour les deux emplacements à partir des onglets de l'export, avec 3 tests et une nouvelle variable `SHOPIFY_LOCATION_SHOWROOM` [9]. Il a été relu/testé par Hugo Petit le 13/11 [9], puis « fusionné, déployé », avec un repassage complet du catalogue et 7 commandes touchées entre le 3 et le 12/11, liste transmise à Lucie [8][9].\n\nEn prévention, un contrôle quotidien des écarts Shopify / export entrepôt (PR #91) est en cours mais n'était pas encore en production au 17/11 [8][10].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15717,
+    "sortie": 686,
+    "reflexion": 183,
+    "cache": 4992,
+    "cout": 0.003968394
+  },
+  "latenceMs": 4415,
+  "fournisseur": "Crusoe",
+  "trace": [
+    "chercher {\"requete\":\"meubles achetés non disponibles stock rupture\"}",
+    "chercher {\"requete\":\"stock disponible commande surproduit bug inventaire\"}",
+    "chercher {\"requete\":\"écart de stock après correctif PR 87 toujours\",\"outil\":\"slack\"}"
+  ],
+  "cout": 0.003968394
+}

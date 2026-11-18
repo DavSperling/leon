@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:02.156Z",
+  "reponse": "La commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » en chêne naturel, facturés 8 280 € HT (prix revendeur 690 € HT l'unité) [1][2]. Hélène Vasseur, responsable achats maison, souhaite une livraison au magasin au plus tard le 27 novembre [1]. Lexpédition est assurée par RapidColis, dont l'enlèvement a lieu le 24/11 avec livraison au magasin le 25 [3], avant l'échéance du contrat de transport au 30/11 [2]. Le paiement à 60 jours fin de mois [1] impliquera un encaissement fin janvier, à anticiper pour la trésorerie des soldes [4]. Une prochaine commande est envisagée au printemps : 8 tables basses Loire, avec demande de prix à venir [5].",
+  "rendu": "La commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » en chêne naturel, facturés 8 280 € HT (prix revendeur 690 € HT l'unité) [1][2]. Hélène Vasseur, responsable achats maison, souhaite une livraison au magasin au plus tard le 27 novembre [1]. Lexpédition est assurée par RapidColis, dont l'enlèvement a lieu le 24/11 avec livraison au magasin le 25 [3], avant l'échéance du contrat de transport au 30/11 [2]. Le paiement à 60 jours fin de mois [1] impliquera un encaissement fin janvier, à anticiper pour la trésorerie des soldes [4]. Une prochaine commande est envisagée au printemps : 8 tables basses Loire, avec demande de prix à venir [5].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1103,
+    "sortie": 224,
+    "reflexion": 45,
+    "cache": 128,
+    "cout": 0.00028257
+  },
+  "cout": 0.00028257,
+  "latenceMs": 3028,
+  "fournisseur": "Nebius"
+}

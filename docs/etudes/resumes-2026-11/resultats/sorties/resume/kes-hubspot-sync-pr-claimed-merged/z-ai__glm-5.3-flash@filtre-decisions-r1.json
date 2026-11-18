@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3-flash@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:24:09.187Z",
+  "reponse": "## Où j'en suis\nSéance sur la branche `daniel/hubspot-owner-sync` : remplacer les webhooks HubSpot par un polling CRM search pour afficher l'AE propriétaire et l'ARR des comptes dans la page admin. La PR webhook #405 a été fermée (impossible : token private app refusé 401 pour gérer les abonnements webhook). Le code a été réécrit en polling toutes les 15 min, avec pagination par fenêtres pour contourner la limite de 10 000 résultats, et filtre `arr > 0` pour exclure les essais. La PR #409 est ouverte avec auto-merge squash activé, mais l'e2e `test_admin_accounts` échoue : la fixture contient une entreprise d'essai avec un owner que le filtre `arr > 0` ignore désormais (3 lignes attendues, 2 obtenues). L'auto-merge ne se déclenchera pas tant que ce check requis échoue.\n\n- [en-cours] PR #409 ouverte, bloquée par le check e2e en échec ; le fixture `tests/e2e/test_admin_accounts.py` n'a pas encore été modifié\n- [prochaine-étape] corriger la fixture e2e (donner ARR > 0 à la 3ᵉ entreprise, ou attendre 2 lignes) pour débloquer l'auto-merge ; puis Noa ajoutera `HUBSPOT_TOKEN` dans Secrets Manager pour staging/prod\n- [essai-raté] enregistrement du webhook via API (401 : token private app non supporté, il faudrait une app publique) ; `pytest tests/integrations/test_hubspot_sync.py` a d'abord échoué sur la limite de 10 000 résultats du search, corrigé par pagination en fenêtres\n- [question] choix de correction de la fixture : modifier les données ou l'attendu (2 lignes)\n- [décision] abandonner les webhooks au profit du polling (source: t04)\n- [décision] ne synchroniser que les entreprises avec arr > 0, exclure totalement les essais (source: t10)\n- [décision] le token ira dans Secrets Manager pour staging/prod, Noa sera sollicitée (source: t12)",
+  "rendu": "## Où j'en suis\nSéance sur la branche `daniel/hubspot-owner-sync` : remplacer les webhooks HubSpot par un polling CRM search pour afficher l'AE propriétaire et l'ARR des comptes dans la page admin. La PR webhook #405 a été fermée (impossible : token private app refusé 401 pour gérer les abonnements webhook). Le code a été réécrit en polling toutes les 15 min, avec pagination par fenêtres pour contourner la limite de 10 000 résultats, et filtre `arr > 0` pour exclure les essais. La PR #409 est ouverte avec auto-merge squash activé, mais l'e2e `test_admin_accounts` échoue : la fixture contient une entreprise d'essai avec un owner que le filtre `arr > 0` ignore désormais (3 lignes attendues, 2 obtenues). L'auto-merge ne se déclenchera pas tant que ce check requis échoue.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [décision] abandonner les webhooks au profit du polling (source: t04)\n- [décision] ne synchroniser que les entreprises avec arr > 0, exclure totalement les essais (source: t10)\n- [décision] le token ira dans Secrets Manager pour staging/prod, Noa sera sollicitée (source: t12)\n- [en-cours] PR #409 ouverte, bloquée par le check e2e en échec ; le fixture `tests/e2e/test_admin_accounts.py` n'a pas encore été modifié",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1380,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3384,
+    "sortie": 552,
+    "reflexion": 30,
+    "cache": 0,
+    "cout": 0.000243696
+  },
+  "cout": 0.000243696,
+  "latenceMs": 4165,
+  "fournisseur": "Wafer",
+  "rejoue": true
+}

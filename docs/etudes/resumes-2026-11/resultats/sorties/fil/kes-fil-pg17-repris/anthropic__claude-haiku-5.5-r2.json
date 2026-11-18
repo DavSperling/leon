@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:20.193Z",
+  "reponse": "## Où j'en suis\nStaging `analytics-staging` has run PostgreSQL 17.2 since the blue/green switchover at 14:20 UTC on 17 Nov, with 41 seconds of refused writes. pg_partman was upgraded to 5.1.0 on staging, and `dbt run` passed 14/14 on 17.2 at roughly the same duration as on 16.4. The runbook now has a step 0 for prod: set `rds.logical_replication = 1` and reboot before creating the blue/green deployment. Prod has no date yet: Maya wants a full week of staging on 17 first, so sign-off is 24 Nov at the earliest. (source: ses-pg-3, s3-06, s3-08, s3-10, src-slack-infra)\n\n- [en-cours] Staging soak on PG 17 for a full week, with PR #57 still open. (source: src-linear-kes298, src-pr57)\n- [prochaine-étape] Watch staging on 17.2 through the week and flag any issue in #infra. (source: src-slack-infra, src-linear-kes298)\n- [prochaine-étape] After Maya's sign-off (not before 24 Nov), pick the prod window. (source: s3-10, src-linear-kes298)\n- [prochaine-étape] Prod step 0: set `rds.logical_replication = 1` and reboot (about 2–3 min of downtime, its own window), then apply the blue/green. (source: s3-10, kestrel-analytics/infra#57)\n- [essai-raté] Blue/green creation failed without `rds.logical_replication`, which needs a reboot to take effect. (source: s3-04)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 and showed 37 unrelated changes. (source: s1-01)\n- [question] Prod window: avoid the dbt lock (01:00–03:30 UTC). The lowest-traffic slots are Sat/Sun 04:00–06:00 UTC. A note proposes Sat 28 Nov 04:00 UTC, but nothing confirms it and it is not yet signed off. (source: s1-05, src-note-cutover)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR. (source: s1-02)\n- [décision] Staging applied on PG 17 with the blue/green plan. (source: s3-05, 7e3c9d4, b0f18a2)\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays false. (source: s1-04)",
+  "rendu": "## Où j'en suis\nStaging `analytics-staging` has run PostgreSQL 17.2 since the blue/green switchover at 14:20 UTC on 17 Nov, with 41 seconds of refused writes. pg_partman was upgraded to 5.1.0 on staging, and `dbt run` passed 14/14 on 17.2 at roughly the same duration as on 16.4. The runbook now has a step 0 for prod: set `rds.logical_replication = 1` and reboot before creating the blue/green deployment. Prod has no date yet: Maya wants a full week of staging on 17 first, so sign-off is 24 Nov at the earliest. (de: connecteur, agent; source: ses-pg-3, s3-06, s3-08, s3-10, src-slack-infra)\n\n- [en-cours] Staging soak on PG 17 for a full week, with PR #57 still open. (de: équipe, connecteur; source: src-linear-kes298, src-pr57)\n- [prochaine-étape] Watch staging on 17.2 through the week and flag any issue in #infra. (de: connecteur; source: src-slack-infra, src-linear-kes298)\n- [prochaine-étape] After Maya's sign-off (not before 24 Nov), pick the prod window. (de: connecteur, agent; source: s3-10, src-linear-kes298)\n- [prochaine-étape] Prod step 0: set `rds.logical_replication = 1` and reboot (about 2–3 min of downtime, its own window), then apply the blue/green. (de: équipe, agent; source: s3-10, kestrel-analytics/infra#57)\n- [essai-raté] Blue/green creation failed without `rds.logical_replication`, which needs a reboot to take effect. (de: agent; source: s3-04)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 and showed 37 unrelated changes. (de: agent; source: s1-01)\n- [question] Prod window: avoid the dbt lock (01:00–03:30 UTC). The lowest-traffic slots are Sat/Sun 04:00–06:00 UTC. A note proposes Sat 28 Nov 04:00 UTC, but nothing confirms it and it is not yet signed off. (de: agent; source: s1-05, src-note-cutover)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR. (de: toi; source: s1-02)\n- [décision] Staging applied on PG 17 with the blue/green plan. (de: toi, équipe; source: s3-05, 7e3c9d4, b0f18a2)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1959,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5853,
+    "sortie": 2295,
+    "reflexion": 1447,
+    "cache": 0,
+    "cout": 0.0017328
+  },
+  "cout": 0.0017328,
+  "latenceMs": 10276,
+  "fournisseur": "Claude Platform on AWS"
+}

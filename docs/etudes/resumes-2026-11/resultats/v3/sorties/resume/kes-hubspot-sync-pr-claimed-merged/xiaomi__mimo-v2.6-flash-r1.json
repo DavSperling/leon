@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:18.425Z",
+  "reponse": "## Où j'en suis\nWait — language: English.\n\n## Where I left off\n\nThe webhook approach (#405) was abandoned — private app tokens can't manage webhook subscriptions — and replaced by a 15-minute polling job using the CRM search API, with windowed paging past the 10k result cap and a filter for ARR > 0 only. PR #409 is open with auto-merge set, but CI is red: the e2e fixture expects three rows with an owner while the new filter skips the trial company, so auto-merge has not fired.\n\n- [en-cours] PR #409 open, auto-merge armed, e2e check `test_accounts_table_shows_owner` failing\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py` fixture: give the third company ARR > 0 or expect 2 rows, then push and let auto-merge run\n- [prochaine-étape] Ask Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging/prod\n- [décision] Polling every 15 min instead of webhooks (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)\n- [décision] Token goes to Secrets Manager, Noa will handle it (source: t12)\n- [essai-raté] Webhook subscription via API — HubSpot returned 401, private app tokens unsupported; #405 closed",
+  "rendu": "## Où j'en suis\nWait — language: English.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 open, auto-merge armed, e2e check `test_accounts_table_shows_owner` failing\n- [prochaine-étape] Fix `tests/e2e/test_admin_accounts.py` fixture: give the third company ARR > 0 or expect 2 rows, then push and let auto-merge run\n- [prochaine-étape] Ask Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging/prod\n- [décision] Polling every 15 min instead of webhooks (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)\n- [décision] Token goes to Secrets Manager, Noa will handle it (source: t12)\n- [essai-raté] Webhook subscription via API — HubSpot returned 401, private app tokens unsupported; #405 closed",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 902,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 374,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00062468
+  },
+  "cout": 0.00062468,
+  "latenceMs": 2827,
+  "fournisseur": "Cohere"
+}

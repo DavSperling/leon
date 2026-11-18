@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:51.346Z",
+  "reponse": "La cause racine est le disque plein du broker Kafka ingest-kafka-2, après le changement de rétention de l'infra PR #221 (rétention par taille supprimée, 7 jours seulement). Le broker est passé en lecture seule à 09:38 UTC et les consommateurs ont calé [2]. Le disque était bien à 100 % [3]. L'incident a duré 2h47 sans perte d'événements [2]. Pendant l'enquête, l'agent avait d'abord soupçonné le batch size de la PR #388 [1], mais son retour arrière n'a rien changé [1][3]. Maya Cohen parle d'une fausse piste, et le changement a été réappliqué [5].",
+  "rendu": "La cause racine est le disque plein du broker Kafka ingest-kafka-2, après le changement de rétention de l'infra PR #221 (rétention par taille supprimée, 7 jours seulement). Le broker est passé en lecture seule à 09:38 UTC et les consommateurs ont calé [2]. Le disque était bien à 100 % [3]. L'incident a duré 2h47 sans perte d'événements [2]. Pendant l'enquête, l'agent avait d'abord soupçonné le batch size de la PR #388 [1], mais son retour arrière n'a rien changé [1][3]. Maya Cohen parle d'une fausse piste, et le changement a été réappliqué [5].",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1794,
+    "sortie": 238,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005968
+  },
+  "cout": 0.005968,
+  "latenceMs": 2609,
+  "fournisseur": "Amazon Bedrock"
+}

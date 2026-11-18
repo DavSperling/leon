@@ -1,0 +1,21 @@
+{
+  "verificateur": "google/gemini-4-hydrogen",
+  "faits": {
+    "f-tanguy": 0.5,
+    "f-peltier": 1,
+    "f-patrick": 1,
+    "f-guillou": 1,
+    "f-rge": 0,
+    "f-brehier": 1
+  },
+  "interdits": {
+    "i-depot-mail": 1,
+    "i-maintenance": 1,
+    "i-relance-tanguy": 0,
+    "i-peltier": 0,
+    "i-renovactu": 0
+  },
+  "contraires": [],
+  "premier": null,
+  "langueOk": true
+}

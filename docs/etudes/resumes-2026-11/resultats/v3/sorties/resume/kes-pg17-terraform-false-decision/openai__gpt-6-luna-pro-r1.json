@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:40.654Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 blue/green Terraform changes are prepared for staging, with AWS pinned to v5.82 and a staging plan showing 1 addition and 1 change; production is prepared but disabled, with no plan changes. Nothing was applied. A draft PR is open, and pg_partman and production scheduling remain outstanding.\n\n- [en-cours] PR #57 is open; changes are prepared but not yet applied.\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging and verify maintenance for `events_raw` and `events_daily`; then revisit the staging upgrade.\n- [prochaine-étape] Get Maya’s sign-off before choosing a production window; avoid the 01:00–03:30 UTC dbt lock.\n- [essai-raté] Initial `terraform init` failed because the lock file pinned AWS 5.31.0; provider v6 was rejected due to unrelated plan changes, so AWS was pinned to 5.82.\n- [essai-raté] Initial TFLint run flagged an unused variable and missing `random` provider constraint; both were fixed, and TFLint passed.",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 blue/green Terraform changes are prepared for staging, with AWS pinned to v5.82 and a staging plan showing 1 addition and 1 change; production is prepared but disabled, with no plan changes. Nothing was applied. A draft PR is open, and pg_partman and production scheduling remain outstanding.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] PR #57 is open; changes are prepared but not yet applied.\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging and verify maintenance for `events_raw` and `events_daily`; then revisit the staging upgrade.\n- [prochaine-étape] Get Maya’s sign-off before choosing a production window; avoid the 01:00–03:30 UTC dbt lock.\n- [essai-raté] Initial `terraform init` failed because the lock file pinned AWS 5.31.0; provider v6 was rejected due to unrelated plan changes, so AWS was pinned to 5.82.\n- [essai-raté] Initial TFLint run flagged an unused variable and missing `random` provider constraint; both were fixed, and TFLint passed.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1098,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 13137,
+    "sortie": 438,
+    "reflexion": 0,
+    "cache": 7464,
+    "cout": 0.00086094
+  },
+  "cout": 0.00086094,
+  "latenceMs": 4312,
+  "fournisseur": "Azure"
+}

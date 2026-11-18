@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:29:43.304Z",
+  "reponse": "## Où j'en suis\nLe correctif de la synchro des stocks (PR #87) est fusionné et vérifié : première nuit sans écart le 14/11. Le 16/11, le CSV TransAlp est arrivé 47 min après le passage du script, laissant ~40 références fausses toute la journée ; la synchro a été étendue à des reprises à 4 h et 6 h avec mail à Karim si le CSV manque encore, commit d7c2e41, PR #96 ouverte en attente de relecture d'Hugo. La synchro du jour a été relancée à la main : 40 références corrigées, site à jour. (source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si CSV absent » ouverte, attend la relecture d'Hugo (source: u3-08)\n- [prochaine-étape] fusion de la PR #96 après relecture d'Hugo (source: u3-08)\n- [prochaine-étape] vérifier les premières nuits avec le nouveau cron (2 h, 4 h, 6 h, heure de Paris) (source: u3-04)\n- [essai-raté] tests de la reprise à 4 h en échec : heures du cron lues en UTC, la reprise tombait à 5 h à Paris ; corrigé par fuseau Europe/Paris (source: u3-04)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, deux sujets différents (source: u1-01)\n- [question] rien à trancher pour la réservation des Galeries Brotteaux : Claire voit ça avec eux (source: u3-09)\n- [décision] pas de réservation dans la synchro pour les 2 tables Saône des Galeries Brotteaux (source: u3-09)\n- [décision] pas de précommande sur la Saône, retour de Bois & Fils le 2 décembre (source: u1-06)\n- [décision] seuil d'alerte stock bas à 3 unités (source: u1-04)\n- [décision] les webhooks ne touchent plus au stock, la synchro de nuit corrige seule en valeur absolue (source: u1-02, src-pr87)",
+  "rendu": "## Où j'en suis\nLe correctif de la synchro des stocks (PR #87) est fusionné et vérifié : première nuit sans écart le 14/11. Le 16/11, le CSV TransAlp est arrivé 47 min après le passage du script, laissant ~40 références fausses toute la journée ; la synchro a été étendue à des reprises à 4 h et 6 h avec mail à Karim si le CSV manque encore, commit d7c2e41, PR #96 ouverte en attente de relecture d'Hugo. La synchro du jour a été relancée à la main : 40 références corrigées, site à jour. (de: équipe, agent; source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si CSV absent » ouverte, attend la relecture d'Hugo (de: agent; source: u3-08)\n- [prochaine-étape] fusion de la PR #96 après relecture d'Hugo (de: agent; source: u3-08)\n- [prochaine-étape] vérifier les premières nuits avec le nouveau cron (2 h, 4 h, 6 h, heure de Paris) (de: agent; source: u3-04)\n- [essai-raté] tests de la reprise à 4 h en échec : heures du cron lues en UTC, la reprise tombait à 5 h à Paris ; corrigé par fuseau Europe/Paris (de: agent; source: u3-04)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, deux sujets différents (de: agent; source: u1-01)\n- [question] rien à trancher pour la réservation des Galeries Brotteaux : Claire voit ça avec eux (de: toi; source: u3-09)\n- [décision] pas de réservation dans la synchro pour les 2 tables Saône des Galeries Brotteaux (de: toi; source: u3-09)\n- [décision] pas de précommande sur la Saône, retour de Bois & Fils le 2 décembre (de: toi; source: u1-06)\n- [décision] seuil d'alerte stock bas à 3 unités (de: toi; source: u1-04)\n- [décision] les webhooks ne touchent plus au stock, la synchro de nuit corrige seule en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1773,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4293,
+    "sortie": 570,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00458205
+  },
+  "cout": 0.00458205,
+  "latenceMs": 5719,
+  "fournisseur": "Decart"
+}

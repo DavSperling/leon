@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "anthropic/claude-haiku-5.5@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:14:00.752Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3870,
+    "sortie": 782,
+    "reflexion": 773,
+    "cache": 0,
+    "cout": 0.000778
+  },
+  "cout": 0.000778,
+  "latenceMs": 5369,
+  "fournisseur": "Claude Platform on AWS"
+}

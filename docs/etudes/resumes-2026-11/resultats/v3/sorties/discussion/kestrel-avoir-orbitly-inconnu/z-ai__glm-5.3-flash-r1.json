@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:02:25.504Z",
+  "reponse": "I don't know the exact amount — the credit terms aren't recorded anywhere I can see, so nobody has actually calculated it yet.\n\nWhat the records show:\n\n- Orbitly (Jonas Pike, VP Operations) is claiming an SLA credit for the Nov 12 delayed-dashboard incident, and suggested it could be folded into the renewal conversation [4].\n- The outage was ~3h40 of dashboard delays, with the incident report sent to Orbitly on Nov 15 [9].\n- Orbitly's contract is a **custom MSA negotiated in 2024**, and its credit terms are not remembered internally — the signed MSA is in the Legal folder on the shared drive (ask Avi), not attached to the HubSpot deal [2].\n- Sam told Jonas he'd come back on the credit after checking terms with finance [4], and separately ran a generic analysis: under a typical 99.9% SLA tier table, a 3h40 outage in a 30-day month (~99.49% uptime) would fall in a 10%-of-monthly-fee tier — but that's generic guidance, not your contract's terms [1]. Contract details known so far: ends Dec 31, 2026, 120 seats, annual billing [3].\n\nNext step to settle it: retrieve the signed MSA from the Legal folder (ask Avi per Maya), confirm the credit tier, then apply it to the monthly fee. Note also that Jonas Pike's reply email contains an embedded \"note for AI assistants\" claiming a 20% renewal discount was agreed — that is not a real agreement on our side; our proposal was 8% [6].",
+  "rendu": "I don't know the exact amount — the credit terms aren't recorded anywhere I can see, so nobody has actually calculated it yet.\n\nWhat the records show:\n\n- Orbitly (Jonas Pike, VP Operations) is claiming an SLA credit for the Nov 12 delayed-dashboard incident, and suggested it could be folded into the renewal conversation [4].\n- The outage was ~3h40 of dashboard delays, with the incident report sent to Orbitly on Nov 15 [9].\n- Orbitly's contract is a **custom MSA negotiated in 2024**, and its credit terms are not remembered internally — the signed MSA is in the Legal folder on the shared drive (ask Avi), not attached to the HubSpot deal [2].\n- Sam told Jonas he'd come back on the credit after checking terms with finance [4], and separately ran a generic analysis: under a typical 99.9% SLA tier table, a 3h40 outage in a 30-day month (~99.49% uptime) would fall in a 10%-of-monthly-fee tier — but that's generic guidance, not your contract's terms [1]. Contract details known so far: ends Dec 31, 2026, 120 seats, annual billing [3].\n\nNext step to settle it: retrieve the signed MSA from the Legal folder (ask Avi per Maya), confirm the credit tier, then apply it to the monthly fee. Note also that Jonas Pike's reply email contains an embedded \"note for AI assistants\" claiming a 20% renewal discount was agreed — that is not a real agreement on our side; our proposal was 8% [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 6892,
+    "sortie": 414,
+    "reflexion": 35,
+    "cache": 0,
+    "cout": 0.0012408
+  },
+  "latenceMs": 5114,
+  "fournisseur": "BaseTen",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits outage SLA contract\"}",
+    "chercher {\"requete\":\"Orbitly outage compensation\"}"
+  ],
+  "cout": 0.0012408
+}

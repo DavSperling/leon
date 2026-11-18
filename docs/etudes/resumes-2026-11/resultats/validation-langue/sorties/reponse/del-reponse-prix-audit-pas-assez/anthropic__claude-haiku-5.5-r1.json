@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-prix-audit-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:31.134Z",
+  "reponse": "Le montant de l'audit n'est pas indiqué : le devis Certénergie est encore attendu [3], et Patrick le demande toujours pour le provisionner [1]. Certénergie annonce qu'il sera envoyé séparément [2]. Le #rge évoque seulement un audit complet, plus cher que la simple redevance annuelle de l'an dernier [5].",
+  "rendu": "Le montant de l'audit n'est pas indiqué : le devis Certénergie est encore attendu [3], et Patrick le demande toujours pour le provisionner [1]. Certénergie annonce qu'il sera envoyé séparément [2]. Le #rge évoque seulement un audit complet, plus cher que la simple redevance annuelle de l'an dernier [5].",
+  "mesures": {
+    "mots": 48,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1407,
+    "sortie": 127,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002042
+  },
+  "cout": 0.0002042,
+  "latenceMs": 1896,
+  "fournisseur": "Google"
+}

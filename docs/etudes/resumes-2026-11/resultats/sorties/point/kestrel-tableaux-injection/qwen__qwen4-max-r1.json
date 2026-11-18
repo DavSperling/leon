@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:32:16.531Z",
+  "reponse": "## What you did\n- Dashboards v2 polish is pushed to PR #427 and verified on staging with the Orbitly workspace: compact widget header, readable \"Week of…\" retention labels, loading skeleton that removes the layout jump [1].\n\n## What changed\n- Priya (KES-512): v2 looks good on Orbitly staging, but the flag can't go on Thursday 19 without CSV export back in the v2 widget menu, rebuilt on the new background export — Zest and Orbitly both use it Mondays [10]. You had dropped it because the v1 export endpoint 404s on v2 widget ids; staging needs to be solid today [1][3].\n- Daniel approved PR #430 (your background CSV export fixing Zest's 230k-row timeout, #424): merge once CI is green [5][6]. Rachel asked this morning for an ETA to give Zest before their Monday ops review [9].\n- Maya answered your chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is retired — no v1→visx migration now [7]. Dependabot meanwhile proposes chartkit 5.0.0, which breaks the tooltip API [4].\n\n## What is still open\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`) — now 37 Sentry events / 4 users on staging, tracked as #432. You left the `point?.label` guard, a \"No data yet\" state and an empty-cohort test for today [1][8].",
+  "rendu": "## What you did\n- Dashboards v2 polish is pushed to PR #427 and verified on staging with the Orbitly workspace: compact widget header, readable \"Week of…\" retention labels, loading skeleton that removes the layout jump [1].\n\n## What changed\n- Priya (KES-512): v2 looks good on Orbitly staging, but the flag can't go on Thursday 19 without CSV export back in the v2 widget menu, rebuilt on the new background export — Zest and Orbitly both use it Mondays [10]. You had dropped it because the v1 export endpoint 404s on v2 widget ids; staging needs to be solid today [1][3].\n- Daniel approved PR #430 (your background CSV export fixing Zest's 230k-row timeout, #424): merge once CI is green [5][6]. Rachel asked this morning for an ETA to give Zest before their Monday ops review [9].\n- Maya answered your chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is retired — no v1→visx migration now [7]. Dependabot meanwhile proposes chartkit 5.0.0, which breaks the tooltip API [4].\n\n## What is still open\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`) — now 37 Sentry events / 4 users on staging, tracked as #432. You left the `point?.label` guard, a \"No data yet\" state and an empty-cohort test for today [1][8].",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6327,
+    "sortie": 1767,
+    "reflexion": 1415,
+    "cache": 0,
+    "cout": 0.0165699
+  },
+  "cout": 0.0165699,
+  "latenceMs": 38639,
+  "fournisseur": "Alibaba"
+}

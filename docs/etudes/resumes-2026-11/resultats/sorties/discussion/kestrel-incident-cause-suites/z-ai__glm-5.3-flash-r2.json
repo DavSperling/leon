@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:15.887Z",
+  "reponse": "Here's what happened on Nov 12 (08:47–12:27 UTC, ~3h40 of stale dashboards):\n\n**What broke:** ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes`, which made ingestion workers run out of memory [1][2]. Sentry caught it: consumer lag >500k messages on the `ingest-events` group, with OOM errors in `ingest/worker/batch.go` [10]. It was declared SEV2 in #incidents with Noa as IC [6].\n\n**Customer data:** none lost. Events kept arriving in Kafka and were just processed late; reconciliation on Nov 13 confirmed event counts per workspace match the Kafka offsets for 08:00–13:00 UTC [1][6].\n\n**Changes being made:**\n- Reverting the `max_batch_bytes` default to 1 MB, plus a guard refusing batches over 25% of the container memory limit (bulk import keeps 10 MB via explicit config) — ingest#419 [7]\n- A new alert when processing falls more than 5 minutes behind — the rule is in and routed to on-call (KES-431), though the threshold still fires during nightly backfills and is being tuned [2][11]\n- Configuration changes now go to a small canary group before full rollout [2]\n\n**Follow-up to be aware of:** Orbitly is claiming an SLA service credit for the incident; Sam is checking the MSA terms with finance [2][8]. Also, Maya asked to push the Postgres 17 cutover off Nov 21 because of this incident and the bank go-live [5].",
+  "rendu": "Here's what happened on Nov 12 (08:47–12:27 UTC, ~3h40 of stale dashboards):\n\n**What broke:** ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes`, which made ingestion workers run out of memory [1][2]. Sentry caught it: consumer lag >500k messages on the `ingest-events` group, with OOM errors in `ingest/worker/batch.go` [10]. It was declared SEV2 in #incidents with Noa as IC [6].\n\n**Customer data:** none lost. Events kept arriving in Kafka and were just processed late; reconciliation on Nov 13 confirmed event counts per workspace match the Kafka offsets for 08:00–13:00 UTC [1][6].\n\n**Changes being made:**\n- Reverting the `max_batch_bytes` default to 1 MB, plus a guard refusing batches over 25% of the container memory limit (bulk import keeps 10 MB via explicit config) — ingest#419 [7]\n- A new alert when processing falls more than 5 minutes behind — the rule is in and routed to on-call (KES-431), though the threshold still fires during nightly backfills and is being tuned [2][11]\n- Configuration changes now go to a small canary group before full rollout [2]\n\n**Follow-up to be aware of:** Orbitly is claiming an SLA service credit for the incident; Sam is checking the MSA terms with finance [2][8]. Also, Maya asked to push the Postgres 17 cutover off Nov 21 because of this incident and the bank go-live [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 5616,
+    "sortie": 416,
+    "reflexion": 31,
+    "cache": 0,
+    "cout": 0.00096904
+  },
+  "latenceMs": 3983,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident outage\"}",
+    "activite {\"depuis\":\"10j\",\"outil\":\"linear\"}"
+  ],
+  "cout": 0.00096904
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:27:41.135Z",
+  "reponse": "## Où j'en suis\nSSO for Fernhill works on staging. A real SP-initiated login with their IdP succeeds, after the short RelayState fix in commit 6d0e2b8. JIT provisioning (PR #415, merged) creates users with the viewer role. Group-to-role mapping (commit f4a91c7) is in PR #421, which is still open. Fernhill IT has not yet added the groups claim, so their admins can't be distinguished from other users yet. The demo with Fernhill IT is Thursday 10:00 ET. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] Group-to-role mapping: `Fernhill-Kestrel-Admins` → admin, default viewer, applied on every login. In PR #421, still open. (source: kestrel-analytics/platform#421, ses-sso-3)\n- [prochaine-étape] Get Fernhill IT to add the groups claim. Daniel is emailing them. (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test with the demo account `kestrel.test1` and one admin test account before Thursday. (source: ses-sso-3)\n- [prochaine-étape] Review and merge PR #421. (source: kestrel-analytics/platform#421)\n- [essai-raté] SP-initiated login failed: Fernhill's ADFS rejects a RelayState over 80 bytes (MSIS7042; our return URL is 143 bytes). Fixed by storing the URL in Redis for 10 minutes and sending a short opaque ID. (source: ses-sso-3)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and the analyst role by default. We have no analyst role, and this is not agreed. Maya is to talk to them. (source: src-slack-fernhill, ses-sso-3)\n- [question] The Dec 1 enforcement (password login disabled for the fernhill tenant) appears only in a note. Check it against the go-live plan. (source: src-note-enforce, src-linear-kes311)\n- [décision] SAML only, no OIDC for now. (source: ses-sso-1)\n- [décision] New users get the viewer role by default. (source: ses-sso-1)\n- [décision] Never create a user from an unverified domain. (source: ses-sso-2)\n- [décision] Keep the viewer default and SP-initiated login on for Fernhill. (source: ses-sso-3)",
+  "rendu": "## Où j'en suis\nSSO for Fernhill works on staging. A real SP-initiated login with their IdP succeeds, after the short RelayState fix in commit 6d0e2b8. JIT provisioning (PR #415, merged) creates users with the viewer role. Group-to-role mapping (commit f4a91c7) is in PR #421, which is still open. Fernhill IT has not yet added the groups claim, so their admins can't be distinguished from other users yet. The demo with Fernhill IT is Thursday 10:00 ET. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] Group-to-role mapping: `Fernhill-Kestrel-Admins` → admin, default viewer, applied on every login. In PR #421, still open. (de: équipe, agent; source: kestrel-analytics/platform#421, ses-sso-3)\n- [prochaine-étape] Get Fernhill IT to add the groups claim. Daniel is emailing them. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Once the claim exists, test with the demo account `kestrel.test1` and one admin test account before Thursday. (de: agent; source: ses-sso-3)\n- [prochaine-étape] Review and merge PR #421. (de: équipe; source: kestrel-analytics/platform#421)\n- [essai-raté] SP-initiated login failed: Fernhill's ADFS rejects a RelayState over 80 bytes (MSIS7042; our return URL is 143 bytes). Fixed by storing the URL in Redis for 10 minutes and sending a short opaque ID. (de: agent; source: ses-sso-3)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and the analyst role by default. We have no analyst role, and this is not agreed. Maya is to talk to them. (de: connecteur, agent; source: src-slack-fernhill, ses-sso-3)\n- [question] The Dec 1 enforcement (password login disabled for the fernhill tenant) appears only in a note. Check it against the go-live plan. (de: connecteur, agent; source: src-note-enforce, src-linear-kes311)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1853,
+    "lignesRetirees": 4,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6362,
+    "sortie": 3056,
+    "reflexion": 2221,
+    "cache": 0,
+    "cout": 0.0021642
+  },
+  "cout": 0.0021642,
+  "latenceMs": 13066,
+  "fournisseur": "Claude Platform on AWS"
+}

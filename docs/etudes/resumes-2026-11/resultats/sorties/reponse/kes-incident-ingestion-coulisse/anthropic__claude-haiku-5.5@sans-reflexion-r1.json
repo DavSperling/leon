@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:07.905Z",
+  "reponse": "La cause racine est la saturation des disques du broker Kafka ingest-kafka-2, qui est passé en lecture seule à 09:38 UTC après le retrait de la rétention basée sur la taille dans la PR infra #221 [2]. Le blocage a duré 2h47 et aucun événement n'a été perdu, les producteurs ayant tamponné les messages [2]. La PR #388 n'était pas en cause : l'équipe l'a réappliquée [5], et sa révocation n'a rien changé [3].",
+  "rendu": "La cause racine est la saturation des disques du broker Kafka ingest-kafka-2, qui est passé en lecture seule à 09:38 UTC après le retrait de la rétention basée sur la taille dans la PR infra #221 [2]. Le blocage a duré 2h47 et aucun événement n'a été perdu, les producteurs ayant tamponné les messages [2]. La PR #388 n'était pas en cause : l'équipe l'a réappliquée [5], et sa révocation n'a rien changé [3].",
+  "mesures": {
+    "mots": 73,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1776,
+    "sortie": 176,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002656
+  },
+  "cout": 0.0002656,
+  "latenceMs": 1583,
+  "fournisseur": "Claude Platform on AWS"
+}

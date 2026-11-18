@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:17.311Z",
+  "reponse": "Personne n'est encore pris. Quatre candidats sont convoqués les 19 et 20/11 (Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré), avec une offre visée la semaine suivante pour une arrivée début janvier [1][4]. Aurélie a aussi préparé un modèle de promesse d'embauche, mais il reste un modèle à compléter [3].",
+  "rendu": "Personne n'est encore pris. Quatre candidats sont convoqués les 19 et 20/11 (Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré), avec une offre visée la semaine suivante pour une arrivée début janvier [1][4]. Aurélie a aussi préparé un modèle de promesse d'embauche, mais il reste un modèle à compléter [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 4750,
+    "sortie": 192,
+    "reflexion": 15,
+    "cache": 1536,
+    "cout": 0.0086552
+  },
+  "latenceMs": 4346,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidats embauche\"}"
+  ],
+  "cout": 0.0086552
+}

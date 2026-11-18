@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.907Z",
+  "reponse": "## Où j'en suis\n\nLa branche `tom/dashboard-grid-v2` intègre un nouveau dashboard grid avec drag/resize et persistance des layouts côté serveur. La PR #418 est ouverte en draft, avec les commits `71ac3de` (grid + persistance), `0b9f4e2` (ResizeObserver) et `d2286a0` (renommage + fix Storybook). Le sizing des widgets utilise désormais un hook `useWidgetSize` basé sur ResizeObserver pour supporter iOS 15, après l'échec des container queries.\n\n- [en-cours] PR #418 ouverte, en attente de revue UX par Priya sur iPad\n- [prochaine-étape] Activer le flag `dashboards_v2` uniquement pour le workspace Zest (config flags admin)\n- [essai-raté] Container queries non supportés sur iOS 15 → remplacé par `useWidgetSize.ts` avec ResizeObserver\n- [décision] Flag `dashboards_v2` activé uniquement pour Zest, les dashboards v1 restent disponibles jusqu'en janvier (source: t15)",
+  "rendu": "## Où j'en suis\nLa branche `tom/dashboard-grid-v2` intègre un nouveau dashboard grid avec drag/resize et persistance des layouts côté serveur. La PR #418 est ouverte en draft, avec les commits `71ac3de` (grid + persistance), `0b9f4e2` (ResizeObserver) et `d2286a0` (renommage + fix Storybook). Le sizing des widgets utilise désormais un hook `useWidgetSize` basé sur ResizeObserver pour supporter iOS 15, après l'échec des container queries.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 ouverte, en attente de revue UX par Priya sur iPad\n- [prochaine-étape] Activer le flag `dashboards_v2` uniquement pour le workspace Zest (config flags admin)\n- [essai-raté] Container queries non supportés sur iOS 15 → remplacé par `useWidgetSize.ts` avec ResizeObserver\n- [décision] Flag `dashboards_v2` activé uniquement pour Zest, les dashboards v1 restent disponibles jusqu'en janvier (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1004,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3674,
+    "sortie": 763,
+    "reflexion": 506,
+    "cache": 0,
+    "cout": 0.00110979
+  },
+  "cout": 0.00110979,
+  "latenceMs": 5347,
+  "fournisseur": "Mistral"
+}

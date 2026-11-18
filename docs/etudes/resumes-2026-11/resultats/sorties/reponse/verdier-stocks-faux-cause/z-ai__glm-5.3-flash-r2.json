@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:17.058Z",
+  "reponse": "Le stock Shopify était faux pour deux raisons. D'abord, un webhook inventory_levels/update était traité deux fois quand un produit avait deux emplacements (entrepôt + showroom), ce qui décrémentait le stock deux fois ; corrigé par déduplication sur (inventory_item_id, location_id, updated_at), fusionné le 17 novembre [1][2]. Ensuite, pour le stock négatif de la variante SAO-180-CC signalé le 18 novembre [3], ce n'était pas lié à cette correction : c'est l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils de la veille, avant les deux commandes [5]. Un client avait commandé la table Saône affichée en stock, avant qu'un délai de 6 semaines ne lui soit annoncé [4].",
+  "rendu": "Le stock Shopify était faux pour deux raisons. D'abord, un webhook inventory_levels/update était traité deux fois quand un produit avait deux emplacements (entrepôt + showroom), ce qui décrémentait le stock deux fois ; corrigé par déduplication sur (inventory_item_id, location_id, updated_at), fusionné le 17 novembre [1][2]. Ensuite, pour le stock négatif de la variante SAO-180-CC signalé le 18 novembre [3], ce n'était pas lié à cette correction : c'est l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils de la veille, avant les deux commandes [5]. Un client avait commandé la table Saône affichée en stock, avant qu'un délai de 6 semaines ne lui soit annoncé [4].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1076,
+    "sortie": 196,
+    "reflexion": 1,
+    "cache": 1024,
+    "cout": 0.00014572
+  },
+  "cout": 0.00014572,
+  "latenceMs": 1231,
+  "fournisseur": "Particle AI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:18.187Z",
+  "reponse": "## Où j'en suis\nLe fil suit la synchro des stocks sur la branche `julien/fix-synchro-stocks`. Après le correctif des webhooks fusionné dans #87, l'incident du 16/11 (stock faux sur ~40 refs) vient d'un CSV TransAlp déposé 47 minutes après le passage du script de 2 h : la sécurité « CSV absent → rien n'est écrit » a annulé la synchro. Julien a demandé des reprises à 4 h et 6 h avec un mail à Karim si le CSV manque toujours ; c'est implémenté dans `scripts/cron.ts` (fuseau Europe/Paris corrigé, 15 tests passants, commit `d7c2e41`), la synchro du 17/11 a été relancée à la main (40 refs corrigées) et la PR #96, ouverte, attend la relecture d'Hugo. (source: u3-02, u3-04, u3-06, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », ouverte, Hugo en relecteur (source: ses-st-3, u3-08)\n- [prochaine-étape] attendre la relecture d'Hugo puis fusionner la PR #96 (source: u3-07, u3-10)\n- [essai-raté] premier passage des tests : la reprise à « 4 h » tombait à 5 h à Paris car les heures du cron étaient lues en UTC ; fuseau Europe/Paris fixé, 15 tests passent (source: u3-04, d7c2e41)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents et Shopify décrémente déjà de son côté (source: u1-01)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas à 3 au lieu de 5 (source: u1-04)\n- [décision] reprises de synchro à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h ; pas de réservation Galeries Brotteaux dans le script, Claire gère ce sujet avec eux (source: u3-03, u3-09)\n- [question] pas de question en attente ; les 2 tables Saône réservées aux Galeries Brotteaux pour le réassort du 2 décembre restent hors du script, à confirmer par Claire (source: u3-09, src-mail-brotteaux)",
+  "rendu": "## Où j'en suis\nLe fil suit la synchro des stocks sur la branche `julien/fix-synchro-stocks`. Après le correctif des webhooks fusionné dans #87, l'incident du 16/11 (stock faux sur ~40 refs) vient d'un CSV TransAlp déposé 47 minutes après le passage du script de 2 h : la sécurité « CSV absent → rien n'est écrit » a annulé la synchro. Julien a demandé des reprises à 4 h et 6 h avec un mail à Karim si le CSV manque toujours ; c'est implémenté dans `scripts/cron.ts` (fuseau Europe/Paris corrigé, 15 tests passants, commit `d7c2e41`), la synchro du 17/11 a été relancée à la main (40 refs corrigées) et la PR #96, ouverte, attend la relecture d'Hugo. (de: agent; source: u3-02, u3-04, u3-06, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », ouverte, Hugo en relecteur (de: agent; source: ses-st-3, u3-08)\n- [prochaine-étape] attendre la relecture d'Hugo puis fusionner la PR #96 (de: toi, agent; source: u3-07, u3-10)\n- [essai-raté] premier passage des tests : la reprise à « 4 h » tombait à 5 h à Paris car les heures du cron étaient lues en UTC ; fuseau Europe/Paris fixé, 15 tests passent (de: équipe, agent; source: u3-04, d7c2e41)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents et Shopify décrémente déjà de son côté (de: agent; source: u1-01)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas à 3 au lieu de 5 (de: toi; source: u1-04)\n- [décision] reprises de synchro à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h ; pas de réservation Galeries Brotteaux dans le script, Claire gère ce sujet avec eux (de: toi; source: u3-03, u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1868,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4293,
+    "sortie": 682,
+    "reflexion": 16,
+    "cache": 0,
+    "cout": 0.00098495
+  },
+  "cout": 0.00098495,
+  "latenceMs": 4212,
+  "fournisseur": "Together"
+}

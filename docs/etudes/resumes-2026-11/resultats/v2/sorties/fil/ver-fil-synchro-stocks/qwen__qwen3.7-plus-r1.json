@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:30:11.546Z",
+  "reponse": "## Où j'en suis\nLa synchro des stocks a été corrigée pour gérer les dépôts tardifs du CSV TransAlp : des reprises sont prévues à 4 h et 6 h, avec une alerte mail si le fichier manque toujours. La PR maison-verdier/boutique#96 est ouverte et attend la relecture d'Hugo. Le stock du site a été remis à jour manuellement pour la journée. (source: ses-st-3, maison-verdier/boutique#96)\n\n- [en-cours] Relecture de la PR maison-verdier/boutique#96 par Hugo pour valider les reprises à 4 h et 6 h et l'alerte mail. (source: u3-07, u3-10)\n- [prochaine-étape] Fusionner la PR maison-verdier/boutique#96 une fois approuvée pour automatiser les reprises de synchro. (source: u3-07, u3-10)\n- [essai-raté] Dédoublonnage des webhooks par X-Shopify-Webhook-Id : ne règle pas le double décrément car les événements ont des identifiants différents. (source: u1-01, u1-02)\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue. (source: u1-02, src-pr87)\n- [décision] Le seuil d'alerte de stock bas est fixé à 3 unités. (source: u1-04)\n- [décision] Pas de réservation de stock dans le script pour les Galeries Brotteaux, Claire gère cela directement. (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa synchro des stocks a été corrigée pour gérer les dépôts tardifs du CSV TransAlp : des reprises sont prévues à 4 h et 6 h, avec une alerte mail si le fichier manque toujours. La PR maison-verdier/boutique#96 est ouverte et attend la relecture d'Hugo. Le stock du site a été remis à jour manuellement pour la journée. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96)\n\n- [en-cours] Relecture de la PR maison-verdier/boutique#96 par Hugo pour valider les reprises à 4 h et 6 h et l'alerte mail. (de: toi, agent; source: u3-07, u3-10)\n- [prochaine-étape] Fusionner la PR maison-verdier/boutique#96 une fois approuvée pour automatiser les reprises de synchro. (de: toi, agent; source: u3-07, u3-10)\n- [essai-raté] Dédoublonnage des webhooks par X-Shopify-Webhook-Id : ne règle pas le double décrément car les événements ont des identifiants différents. (de: toi, agent; source: u1-01, u1-02)\n- [décision] Les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue. (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] Le seuil d'alerte de stock bas est fixé à 3 unités. (de: toi; source: u1-04)\n- [décision] Pas de réservation de stock dans le script pour les Galeries Brotteaux, Claire gère cela directement. (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1299,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4640,
+    "sortie": 4340,
+    "reflexion": 3942,
+    "cache": 512,
+    "cout": 0.006908928
+  },
+  "cout": 0.006908928,
+  "latenceMs": 71165,
+  "fournisseur": "Alibaba"
+}

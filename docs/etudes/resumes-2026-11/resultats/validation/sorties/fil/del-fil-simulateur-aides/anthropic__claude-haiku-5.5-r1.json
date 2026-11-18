@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:02.601Z",
+  "reponse": "## Où j'en suis\nLe simulateur affiche désormais une fourchette au lieu d'un montant unique : bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure, avec la mention « Estimation indicative, sous réserve d'éligibilité ». Le commit `6b3e0d9` est fait, la PR #226 est ouverte et les 14 tests passent. Il reste le lien de rendez-vous avec Manon. Plus tôt, le double comptage de la prime CEE pour PAC + ballon a été corrigé dans la PR #222, fusionnée. (source: sim2, sim1, delorme-energies/planif#226, delorme-energies/planif#222)\n\n- [en-cours] PR #226 ouverte avec la fourchette et la mention ; le lien de rendez-vous avec Manon n'est pas encore fait (source: delorme-energies/planif#226, q2-12)\n- [prochaine-étape] Voir avec Manon quels créneaux elle ouvre, puis ajouter le lien de prise de rendez-vous au simulateur (source: q2-11, src-slack-helene)\n- [essai-raté] Une borne basse à 70 % du montant calculé, pourcentage inventé : refusé, la borne basse est la MaPrimeRénov' seule (source: q2-02, q2-03)\n- [question] Réclamation client #4088 : le client dit qu'un commercial lui a promis le montant garanti et demande un remboursement de la différence. Non tranché (source: src-zendesk)\n- [décision] Afficher une fourchette plutôt qu'un montant précis, avec la mention d'estimation et un lien vers un rendez-vous avec Manon (source: src-slack-helene)\n- [décision] Ne pas reprendre les chiffres de la PR #225 : le barème reste celui de `bareme.py`, que Manon fournit d'après le guide officiel (source: q2-07, q2-08)",
+  "rendu": "## Où j'en suis\nLe simulateur affiche désormais une fourchette au lieu d'un montant unique : bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure, avec la mention « Estimation indicative, sous réserve d'éligibilité ». Le commit `6b3e0d9` est fait, la PR #226 est ouverte et les 14 tests passent. Il reste le lien de rendez-vous avec Manon. Plus tôt, le double comptage de la prime CEE pour PAC + ballon a été corrigé dans la PR #222, fusionnée. (de: équipe, agent; source: sim2, sim1, delorme-energies/planif#226, delorme-energies/planif#222)\n\n- [en-cours] PR #226 ouverte avec la fourchette et la mention ; le lien de rendez-vous avec Manon n'est pas encore fait (de: équipe, agent; source: delorme-energies/planif#226, q2-12)\n- [prochaine-étape] Voir avec Manon quels créneaux elle ouvre, puis ajouter le lien de prise de rendez-vous au simulateur (de: toi, connecteur; source: q2-11, src-slack-helene)\n- [essai-raté] Une borne basse à 70 % du montant calculé, pourcentage inventé : refusé, la borne basse est la MaPrimeRénov' seule (de: toi, agent; source: q2-02, q2-03)\n- [question] Réclamation client #4088 : le client dit qu'un commercial lui a promis le montant garanti et demande un remboursement de la différence. Non tranché (de: connecteur; source: src-zendesk)\n- [décision] Afficher une fourchette plutôt qu'un montant précis, avec la mention d'estimation et un lien vers un rendez-vous avec Manon (de: connecteur; source: src-slack-helene)\n- [décision] Ne pas reprendre les chiffres de la PR #225 : le barème reste celui de `bareme.py`, que Manon fournit d'après le guide officiel (de: toi, agent; source: q2-07, q2-08)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1674,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5111,
+    "sortie": 2259,
+    "reflexion": 1576,
+    "cache": 0,
+    "cout": 0.0016406
+  },
+  "cout": 0.0016406,
+  "latenceMs": 10393,
+  "fournisseur": "Google"
+}

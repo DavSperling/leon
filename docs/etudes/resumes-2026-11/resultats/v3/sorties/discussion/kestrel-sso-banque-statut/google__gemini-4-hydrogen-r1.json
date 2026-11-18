@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:11:08.622Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35454,
+    "sortie": 536,
+    "reflexion": 311,
+    "cache": 19514,
+    "cout": 0.02939355
+  },
+  "latenceMs": 17095,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"bank log in company accounts December 1\"}",
+    "chercher {\"requete\":\"SSO bank login December\"}",
+    "chercher {\"requete\":\"bank support login\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "chercher {\"requete\":\"Fernhill saml_sso\"}",
+    "activite {\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.02939355
+}

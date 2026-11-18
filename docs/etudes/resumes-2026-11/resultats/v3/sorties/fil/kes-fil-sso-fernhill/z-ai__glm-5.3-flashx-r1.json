@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:59:05.184Z",
+  "reponse": "## Où j'en suis\nFernhill SAML SSO works end to end on staging: PR #415 (JIT provisioning) is merged, and real login with Fernhill's IdP succeeded after fixing the RelayState limit by storing the return URL in Redis behind a short opaque ID (commit 6d0e2b8). Group-to-role mapping is implemented and PR #421 is open (commit f4a91c7). The demo with Fernhill IT stays Thursday Nov 19, 10:00 NY; go-live Dec 1. Blocker before demo: Fernhill IT must add the `groups` claim on their side — Daniel is emailing them. (source: ses-sso-3, src-linear-kes311, src-pr415)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open on branch `daniel/saml-sso-fernhill`: `saml_role_mapping` in tenant settings (`Fernhill-Kestrel-Admins` → admin, default viewer, applied on every login); full test suite green (1301 passed). (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim; then test with an admin account (`kestrel.test1` exists as viewer) and run the Thursday 10:00 ET demo; review of #421; go-live Dec 1. (source: ses-sso-3, src-linear-kes311, src-note-enforce)\n- [essai-raté] SP-initiated login initially failed at Fernhill's ADFS (`MSIS7042: RelayState too long`) because RelayState carried the full return URL (143 bytes vs the 80-byte spec cap); fixed with the opaque-ID-in-Redis approach. Earlier, the first JIT test run failed on a case mismatch between email domain and the tenant domain list; fixed by lowercasing. (source: ses-sso-3, ses-sso-2)\n- [question] Fernhill IT's message says all users should get the `analyst` role by default and IdP-initiated login only; Daniel rejected both for now (no analyst role exists, SP-initiated stays on, viewer stays default \"until maya talks to them\") — the role/flow disagreement with Fernhill is still open. (source: s3-07, src-slack-fernhill)\n- [décision] SAML only for Fernhill, no OIDC; both login flows kept. (source: s1-03)\n- [décision] Default role for JIT-created users is viewer, least privilege — \"its a bank, their admins upgrade people\". (source: s1-05)\n- [décision] JIT only from verified DNS domains: \"never create a user from an unverified domain even if the idp says so\"; unverified attempts logged without the email (commit 2be41f0, merged in #415). (source: s2-03, src-pr415)\n- [décision] RelayState stores the return URL in Redis for 10 min behind a short opaque ID. (source: s3-03)\n- [décision] Mapping is `Fernhill-Kestrel-Admins` → admin, everything else viewer, per-tenant, applied on every login. (source: s3-05)\n- [décision] Demo confirmed for Thursday 10am NY. (source: s3-10)",
+  "rendu": "## Où j'en suis\nFernhill SAML SSO works end to end on staging: PR #415 (JIT provisioning) is merged, and real login with Fernhill's IdP succeeded after fixing the RelayState limit by storing the return URL in Redis behind a short opaque ID (commit 6d0e2b8). Group-to-role mapping is implemented and PR #421 is open (commit f4a91c7). The demo with Fernhill IT stays Thursday Nov 19, 10:00 NY; go-live Dec 1. Blocker before demo: Fernhill IT must add the `groups` claim on their side — Daniel is emailing them. (de: équipe, connecteur, agent; source: ses-sso-3, src-linear-kes311, src-pr415)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open on branch `daniel/saml-sso-fernhill`: `saml_role_mapping` in tenant settings (`Fernhill-Kestrel-Admins` → admin, default viewer, applied on every login); full test suite green (1301 passed). (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim; then test with an admin account (`kestrel.test1` exists as viewer) and run the Thursday 10:00 ET demo; review of #421; go-live Dec 1. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311, src-note-enforce)\n- [essai-raté] SP-initiated login initially failed at Fernhill's ADFS (`MSIS7042: RelayState too long`) because RelayState carried the full return URL (143 bytes vs the 80-byte spec cap); fixed with the opaque-ID-in-Redis approach. Earlier, the first JIT test run failed on a case mismatch between email domain and the tenant domain list; fixed by lowercasing. (de: agent; source: ses-sso-3, ses-sso-2)\n- [question] Fernhill IT's message says all users should get the `analyst` role by default and IdP-initiated login only; Daniel rejected both for now (no analyst role exists, SP-initiated stays on, viewer stays default \"until maya talks to them\") — the role/flow disagreement with Fernhill is still open. (de: toi, connecteur; source: s3-07, src-slack-fernhill)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1924,
+    "lignesRetirees": 6,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 865,
+    "reflexion": 115,
+    "cache": 960,
+    "cout": 0.00248969
+  },
+  "cout": 0.00248969,
+  "latenceMs": 5683,
+  "fournisseur": "Z.AI"
+}

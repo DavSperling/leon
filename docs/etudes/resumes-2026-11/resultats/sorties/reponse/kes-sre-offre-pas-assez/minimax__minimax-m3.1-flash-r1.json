@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:46.381Z",
+  "reponse": "No offer was made to Yael Mizrahi. As of November 17, 2026, she had advanced to the final interview, and compensation discussions were to wait until after that round [1][3]. She had said she expected compensation “competitive with big tech” but had not given a figure [4]. The TLV band was 520,000–600,000 ILS base, with equity per the leveling guide; offers above it require CEO approval [2].",
+  "rendu": "No offer was made to Yael Mizrahi. As of November 17, 2026, she had advanced to the final interview, and compensation discussions were to wait until after that round [1][3]. She had said she expected compensation “competitive with big tech” but had not given a figure [4]. The TLV band was 520,000–600,000 ILS base, with equity per the leveling guide; offers above it require CEO approval [2].",
+  "mesures": {
+    "mots": 67,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1117,
+    "sortie": 115,
+    "reflexion": 14,
+    "cache": 0,
+    "cout": 0.00023655
+  },
+  "cout": 0.00023655,
+  "latenceMs": 771,
+  "fournisseur": "Inferact vLLM"
+}

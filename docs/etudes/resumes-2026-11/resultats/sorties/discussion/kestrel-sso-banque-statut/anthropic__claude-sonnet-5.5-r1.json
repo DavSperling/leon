@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:45.703Z",
+  "reponse": "**Dec 1 is at risk but still possible. It now depends on Fernhill changing their signing algorithm.**\n\n- **Where we are:** The contract fixes go-live at December 1, 2026 [2]. SP-initiated login is merged behind the `saml_sso` flag, which is off by default [4]. The admin settings page is on staging, though Priya still has to review its copy [2]. Fernhill's board approved the Kestrel application on Nov 17, and Helen Marsh sent the metadata, signing certificate and a test user [1].\n- **The blocker:** Fernhill's IdP signs assertions with SHA-1. Our platform requires SHA-256 or stronger, and that minimum is global, not per tenant [4]. On staging, IdP-initiated login works but SP-initiated login fails [6]. Daniel asked Fernhill to switch to RSA-SHA256 [1].\n- **Decision:** Maya refused to allow SHA-1 for the bank, even temporarily, because it would show up in their pen test and our SOC 2 audit. We are waiting for Helen's change board on Nov 24 [6]. Maya also asked Sam Ortiz to tell Fernhill the same day that Dec 1 is at risk [6].\n\n**What's left:**\n1. Fernhill's change board on Nov 24 must approve switching to SHA-256 [6].\n2. A joint end-to-end test with Helen is set for Wed Nov 25 at 16:00 Tel Aviv time (14:00 London) [1][6].\n3. Daniel needs to land the remaining SAML migrations before the Dec 3 migration freeze [12]. The Postgres 17 cutover was moved to Dec 5, after go-live [12].\n4. Priya needs to review the admin page copy [2].\n5. Sam needs to confirm the risk to Fernhill. I found no record that he has done so.\n\nI don't know whether the `saml_sso` flag will be switched on for Fernhill, or who will do it. I found nothing on that.",
+  "rendu": "**Dec 1 is at risk but still possible. It now depends on Fernhill changing their signing algorithm.**\n\n- **Where we are:** The contract fixes go-live at December 1, 2026 [2]. SP-initiated login is merged behind the `saml_sso` flag, which is off by default [4]. The admin settings page is on staging, though Priya still has to review its copy [2]. Fernhill's board approved the Kestrel application on Nov 17, and Helen Marsh sent the metadata, signing certificate and a test user [1].\n- **The blocker:** Fernhill's IdP signs assertions with SHA-1. Our platform requires SHA-256 or stronger, and that minimum is global, not per tenant [4]. On staging, IdP-initiated login works but SP-initiated login fails [6]. Daniel asked Fernhill to switch to RSA-SHA256 [1].\n- **Decision:** Maya refused to allow SHA-1 for the bank, even temporarily, because it would show up in their pen test and our SOC 2 audit. We are waiting for Helen's change board on Nov 24 [6]. Maya also asked Sam Ortiz to tell Fernhill the same day that Dec 1 is at risk [6].\n\n**What's left:**\n1. Fernhill's change board on Nov 24 must approve switching to SHA-256 [6].\n2. A joint end-to-end test with Helen is set for Wed Nov 25 at 16:00 Tel Aviv time (14:00 London) [1][6].\n3. Daniel needs to land the remaining SAML migrations before the Dec 3 migration freeze [12]. The Postgres 17 cutover was moved to Dec 5, after go-live [12].\n4. Priya needs to review the admin page copy [2].\n5. Sam needs to confirm the risk to Fernhill. I found no record that he has done so.\n\nI don't know whether the `saml_sso` flag will be switched on for Fernhill, or who will do it. I found nothing on that.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 11935,
+    "sortie": 939,
+    "reflexion": 144,
+    "cache": 0,
+    "cout": 0.03326
+  },
+  "latenceMs": 7445,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"SSO login company accounts December 1st bank\"}",
+    "chercher {\"requete\":\"SSO SAML 1er décembre banque connexion comptes entreprise\"}"
+  ],
+  "cout": 0.03326
+}

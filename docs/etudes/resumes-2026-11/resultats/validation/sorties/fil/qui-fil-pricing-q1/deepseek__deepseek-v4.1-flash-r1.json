@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:24.505Z",
+  "reponse": "## Où j'en suis\nAt the end of the last session the Q1 2027 tiered pricing is modelled on October net settled volume with the agreed exceptions, and the customer notice exists in a standard version and a Loomly/Pinecrest variant, but nothing has been sent: sending waits on Gil's review Friday 20 Nov 10:00 with Rachel, and the 30-day clause means the notice must land by 1 Dec (source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] Impact and exceptions rerun with Loomly and Pinecrest kept on 0.50% + $0.25 until 31 March 2027 and Tradewell excluded: annualized uplift +$351k, 5 customers above +10% from Jan 1 (source: p3-02, ses-px-3)\n- [en-cours] Notice draft in notice/q1-pricing-notice.md, standard and Loomly/Pinecrest variants, covering only the tiered rate and the unchanged $0.25 fee (source: p3-04, p3-06)\n- [prochaine-étape] Gil's review Friday 20 Nov 10:00 with Rachel, then the mass email from Salesforce to the 38 billing contacts, before 1 Dec (source: p3-09, p3-10, src-slack-gil)\n- [prochaine-étape] Rachel calls Loomly before the notice lands (source: p3-01, p3-08)\n- [essai-raté] The Salesforce October volume export had no numbers for 5 of 38 customers (KeyError on Pinecrest Rentals) after the October field rename; replaced by the dashboard billing CSV for everyone (source: p2-02, p2-03)\n- [question] Whether the +1% instant payout surcharge can apply to existing contracts under the MSA; Hartley & Moss answer Monday, so nothing about instant payouts goes out before then (source: p3-05, p2-05)\n- [question] Loomly's CFO writes that Loomly stays on the current rate for the whole of 2027, while the agreed exception ends 31 March 2027 (source: src-mail-loomly, p3-01)\n- [décision] Tiers at 0.55% under $5M monthly payout volume, 0.45% from $5M to $25M, 0.35% above, $0.25 per payout unchanged (source: p2-03)\n- [décision] Loomly and Pinecrest keep the old rate until 31 March 2027 with new tiers from 1 April, Tradewell excluded under its contract, everyone else on new tiers from 1 Jan (source: p3-01)",
+  "rendu": "## Où j'en suis\nAt the end of the last session the Q1 2027 tiered pricing is modelled on October net settled volume with the agreed exceptions, and the customer notice exists in a standard version and a Loomly/Pinecrest variant, but nothing has been sent: sending waits on Gil's review Friday 20 Nov 10:00 with Rachel, and the 30-day clause means the notice must land by 1 Dec (de: connecteur, agent; source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] Impact and exceptions rerun with Loomly and Pinecrest kept on 0.50% + $0.25 until 31 March 2027 and Tradewell excluded: annualized uplift +$351k, 5 customers above +10% from Jan 1 (de: agent; source: p3-02, ses-px-3)\n- [en-cours] Notice draft in notice/q1-pricing-notice.md, standard and Loomly/Pinecrest variants, covering only the tiered rate and the unchanged $0.25 fee (de: agent; source: p3-04, p3-06)\n- [prochaine-étape] Gil's review Friday 20 Nov 10:00 with Rachel, then the mass email from Salesforce to the 38 billing contacts, before 1 Dec (de: toi, connecteur, agent; source: p3-09, p3-10, src-slack-gil)\n- [prochaine-étape] Rachel calls Loomly before the notice lands (de: toi, agent; source: p3-01, p3-08)\n- [essai-raté] The Salesforce October volume export had no numbers for 5 of 38 customers (KeyError on Pinecrest Rentals) after the October field rename; replaced by the dashboard billing CSV for everyone (de: toi, agent; source: p2-02, p2-03)\n- [question] Whether the +1% instant payout surcharge can apply to existing contracts under the MSA; Hartley & Moss answer Monday, so nothing about instant payouts goes out before then (de: toi; source: p3-05, p2-05)\n- [question] Loomly's CFO writes that Loomly stays on the current rate for the whole of 2027, while the agreed exception ends 31 March 2027 (de: toi, connecteur; source: src-mail-loomly, p3-01)\n- [décision] Tiers at 0.55% under $5M monthly payout volume, 0.45% from $5M to $25M, 0.35% above, $0.25 per payout unchanged (de: toi; source: p2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1977,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4701,
+    "sortie": 1316,
+    "reflexion": 700,
+    "cache": 0,
+    "cout": 0.00121086
+  },
+  "cout": 0.00121086,
+  "latenceMs": 10970,
+  "fournisseur": "DeepInfra"
+}

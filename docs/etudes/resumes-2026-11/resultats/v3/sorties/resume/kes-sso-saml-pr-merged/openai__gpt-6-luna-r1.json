@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:57:57.833Z",
+  "reponse": "## Où j'en suis\nImplemented SAML assertion signature verification and condition checks using signxml, with a 120-second clock-skew limit and Redis replay protection. Tests, lint, and mypy passed; PR #412 is merged.\n\n- [en-cours] Fernhill staging IdP metadata has not yet been loaded.\n- [prochaine-étape] Load the staging IdP metadata, then send Fernhill the staging SP metadata by Wednesday EOD, ahead of Thursday’s 10:00 AM New York demo.\n- [décision] Do not use admin privileges or auto-merge; the user will contact Maya. (source: t21)\n- [décision] Leave SSO enforcement and password-login changes out of this PR. (source: t12)",
+  "rendu": "## Où j'en suis\nImplemented SAML assertion signature verification and condition checks using signxml, with a 120-second clock-skew limit and Redis replay protection. Tests, lint, and mypy passed; PR #412 is merged.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill staging IdP metadata has not yet been loaded.\n- [prochaine-étape] Load the staging IdP metadata, then send Fernhill the staging SP metadata by Wednesday EOD, ahead of Thursday’s 10:00 AM New York demo.\n- [décision] Do not use admin privileges or auto-merge; the user will contact Maya. (source: t21)\n- [décision] Leave SSO enforcement and password-login changes out of this PR. (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 762,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4391,
+    "sortie": 280,
+    "reflexion": 114,
+    "cache": 0,
+    "cout": 0.0006888
+  },
+  "cout": 0.0006888,
+  "latenceMs": 4073,
+  "fournisseur": "Azure"
+}

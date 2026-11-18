@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:25:22.745Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif a été corrigée : les webhooks ne décrémentent plus le stock et la synchro de nuit écrit la quantité absolue. Le seuil d’alerte est passé à 3, la Saône a été remise à 0 sur Shopify, la configuration a été déployée et la PR #87 est fusionnée.\n\n- [prochaine-étape] Traiter avec Lucie les commandes survendues #1041, #1043 et #1044.\n- [décision] Pas de précommande pour la Saône avant réception du bon de livraison (source: t17).",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif a été corrigée : les webhooks ne décrémentent plus le stock et la synchro de nuit écrit la quantité absolue. Le seuil d’alerte est passé à 3, la Saône a été remise à 0 sur Shopify, la configuration a été déployée et la PR #87 est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les commandes survendues #1041, #1043 et #1044.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 509,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3595,
+    "sortie": 287,
+    "reflexion": 146,
+    "cache": 0,
+    "cout": 0.0005928
+  },
+  "cout": 0.0005928,
+  "latenceMs": 4194,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "del-agenda-direction",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:16.101Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Visite technique SCI Les Tilleuls\", \"debut\": \"2026-11-18T17:00\", \"avec\": \"Camille Ferrand, M. Lebreton\"}\n{\"n\": 3, \"titre\": \"Entretien installateur Mathis Le Gac\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T15:45\", \"avec\": \"Aurélie Jaouen, Yannick, Mathis Le Gac\"}\n{\"n\": 3, \"titre\": \"Entretien installateur Dylan Perrot\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T09:45\", \"avec\": \"Aurélie Jaouen, Yannick, Dylan Perrot\"}\n{\"n\": 6, \"titre\": \"Réunion de chantier Conserverie Marchand\", \"debut\": \"2026-11-18T09:00\", \"avec\": \"Gilles Marchand, Camille Ferrand, Yannick\"}\n{\"n\": 7, \"titre\": \"Déjeuner avec le commissaire aux comptes\", \"debut\": \"2026-11-23T12:30\", \"avec\": \"Patrick Hamon\"}\n{\"n\": 9, \"titre\": \"Démo onduleurs hybrides HN-6 (visio)\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Marc-André Tremblay\"}\n{\"n\": 15, \"titre\": \"Préparation audit RGE\", \"debut\": \"2026-11-20T11:00\", \"fin\": \"2026-11-20T11:45\", \"avec\": \"Laure Bihan, Jean-Marc Ollivier, Franck Le Gall\"}\n{\"n\": 17, \"titre\": \"Rendez-vous avance sur primes au Crédit Ligérien\", \"debut\": \"2026-11-19T14:30\", \"avec\": \"Bertrand Josse, Patrick Hamon\"}\n\nRemarques sur les choix faits :\n- Le CODIR du lundi 23 (mail 14) tombe hors période (période se terminant le 22), donc exclu ; de même le déjeuner du 23 est hors période. Correction : le déjeuner ne doit pas figurer.\n\nRectification, version finale :\n\n{\"n\": 1, \"titre\": \"Visite technique SCI Les Tilleuls\", \"debut\": \"2026-11-18T17:00\", \"avec\": \"Camille Ferrand, M. Lebreton\"}\n{\"n\": 3, \"titre\": \"Entretien installateur Mathis Le Gac\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T15:45\", \"avec\": \"Aurélie Jaouen, Yannick, Mathis Le Gac\"}\n{\"n\": 3, \"titre\": \"Entretien installateur Dylan Perrot\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T09:45\", \"avec\": \"Aurélie Jaouen, Yannick, Dylan Perrot\"}\n{\"n\": 6, \"titre\": \"Réunion de chantier Conserverie Marchand\", \"debut\": \"2026-11-18T09:00\", \"avec\": \"Gilles Marchand, Camille Ferrand, Yannick\"}\n{\"n\": 9, \"titre\": \"Démo onduleurs hybrides HN-6 (visio)\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Marc-André Tremblay\"}\n{\"n\": 15, \"titre\": \"Préparation audit RGE\", \"debut\": \"2026-11-20T11:00\", \"fin\": \"2026-11-20T11:45\", \"avec\": \"Laure Bihan, Jean-Marc Ollivier, Franck Le Gall\"}\n{\"n\": 17, \"titre\": \"Rendez-vous avance sur primes au Crédit Ligérien\", \"debut\": \"2026-11-19T14:30\", \"avec\": \"Bertrand Josse, Patrick Hamon\"}",
+  "rendu": "2026-11-18T09:00 Réunion de chantier Conserverie Marchand (avec Gilles Marchand, Camille Ferrand, Yannick)\n2026-11-18T17:00 Visite technique SCI Les Tilleuls (avec Camille Ferrand, M. Lebreton)\n2026-11-19T14:30 Rendez-vous avance sur primes au Crédit Ligérien (avec Bertrand Josse, Patrick Hamon)\n2026-11-19T15:00→2026-11-19T15:45 Entretien installateur Mathis Le Gac (avec Aurélie Jaouen, Yannick, Mathis Le Gac)\n2026-11-19T16:00 Démo onduleurs hybrides HN-6 (visio) (avec Marc-André Tremblay)\n2026-11-20T09:00→2026-11-20T09:45 Entretien installateur Dylan Perrot (avec Aurélie Jaouen, Yannick, Dylan Perrot)\n2026-11-20T11:00→2026-11-20T11:45 Préparation audit RGE (avec Laure Bihan, Jean-Marc Ollivier, Franck Le Gall)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 7,
+    "justes": 6,
+    "rappel": 0.857,
+    "precision": 0.857,
+    "f1": 0.857,
+    "faux": "2026-11-19T15:00 Entretien installateur Mathis Le Gac",
+    "manques": "2026-11-16T08:00 CODIR",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4215,
+    "sortie": 1302,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02145
+  },
+  "cout": 0.02145,
+  "latenceMs": 6961,
+  "fournisseur": "Amazon Bedrock"
+}

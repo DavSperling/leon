@@ -135,7 +135,7 @@ describe('buildBriefingPrompt', () => {
 
     expect(BRIEFING_MAX_WORDS).toBe(250);
     expect(system).toContain(`${BRIEFING_MAX_WORDS} mots au plus`);
-    expect(BRIEFING_SECTIONS).toEqual(['What you did', 'What changed', 'What is still open']);
+    expect(BRIEFING_SECTIONS).toEqual(['What is still open', 'What changed', 'What you did']);
     for (const section of BRIEFING_SECTIONS) expect(system).toContain(`## ${section}`);
     expect(system).toContain('[2]');
     expect(system).toMatch(/attribut n/);
@@ -540,5 +540,48 @@ describe('renderEmptyBriefing', () => {
     expect(text.startsWith(`# Morning briefing · ${PROJECT}\n`)).toBe(true);
     expect(text).toMatch(/Nothing new on this project in the last 14 days/);
     expect(text).not.toContain('Sources');
+  });
+});
+
+describe('buildBriefingPrompt : la langue', () => {
+  const TYPED = 'can you check the logs and tell me what is failing in the job?';
+  const RECEIVED = "c'est bon pour moi, je fusionne la PR et on passe à la suite";
+
+  it('prend la langue des messages tapés dans ses sessions', () => {
+    const base = material();
+    const english = material({
+      sessions: base.sessions.map((session) => ({
+        ...session,
+        turns: session.turns.map((turn) =>
+          turn.role === 'user' ? { ...turn, text: TYPED } : turn,
+        ),
+      })),
+    });
+    expect(
+      userContent(buildBriefingPrompt(english, NOW)).startsWith(
+        "Écris ta réponse en anglais : c'est la langue de ses sessions.\n",
+      ),
+    ).toBe(true);
+  });
+
+  it('sans session, prend celle de ce qu’il reçoit ; sans rien de reconnu, l’anglais', () => {
+    const base = material();
+    const french = material({
+      sessions: [],
+      changes: base.changes.map((change) => ({
+        ...change,
+        turns: change.turns.map((turn) => ({ ...turn, text: RECEIVED })),
+      })),
+    });
+    expect(
+      userContent(buildBriefingPrompt(french, NOW)).startsWith(
+        "Écris ta réponse en français : c'est la langue de ce qu'il reçoit.\n",
+      ),
+    ).toBe(true);
+    expect(
+      userContent(buildBriefingPrompt(material(), NOW)).startsWith(
+        'Écris ta réponse en anglais.\n',
+      ),
+    ).toBe(true);
   });
 });

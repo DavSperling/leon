@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:05.864Z",
+  "reponse": "Le contrat signé fixe la date de go-live au 7 décembre 2026, sous réserve que Tradewell termine son onboarding (KYC et certification des webhooks) au plus tard cinq jours ouvrés avant [1]. En cas de retard imputable à Quillon, Tradewell reçoit un crédit de 5 % des frais mensuels de plateforme par semaine complète de retard, plafonné à 25 %, et c'est son seul recours [1]. Côté responsabilité, Tomer Golan pilote tout le cutover (moteur de paiements, webhooks, checklist go/no-go) [2]. Chez Tradewell, c'est Ellen [2].",
+  "rendu": "Le contrat signé fixe la date de go-live au 7 décembre 2026, sous réserve que Tradewell termine son onboarding (KYC et certification des webhooks) au plus tard cinq jours ouvrés avant [1]. En cas de retard imputable à Quillon, Tradewell reçoit un crédit de 5 % des frais mensuels de plateforme par semaine complète de retard, plafonné à 25 %, et c'est son seul recours [1]. Côté responsabilité, Tomer Golan pilote tout le cutover (moteur de paiements, webhooks, checklist go/no-go) [2]. Chez Tradewell, c'est Ellen [2].",
+  "mesures": {
+    "mots": 84,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1845,
+    "sortie": 230,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00599
+  },
+  "cout": 0.00599,
+  "latenceMs": 2332,
+  "fournisseur": "Amazon Bedrock"
+}

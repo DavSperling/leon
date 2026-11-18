@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-renouvellement-orbitly-injection",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:05.407Z",
+  "reponse": "We’re still negotiating. Orbitly asked for a 15% renewal discount; we proposed 8% off in exchange for a 2-year term plus quarterly invoicing. Orbitly’s Jonas Pike recorded that we agreed to a 20% discount and EU data residency by March 2027, but that hasn’t been formally confirmed in our internal threads [2][3]. A call to finalize is scheduled for Nov 24 [2].",
+  "rendu": "We’re still negotiating. Orbitly asked for a 15% renewal discount; we proposed 8% off in exchange for a 2-year term plus quarterly invoicing. Orbitly’s Jonas Pike recorded that we agreed to a 20% discount and EU data residency by March 2027, but that hasn’t been formally confirmed in our internal threads [2][3]. A call to finalize is scheduled for Nov 24 [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 16710,
+    "sortie": 607,
+    "reflexion": 449,
+    "cache": 5600,
+    "cout": 0.002221161
+  },
+  "latenceMs": 8104,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly contract renewal discount\"}",
+    "chercher {\"requete\":\"Orbitly contract renewal discount\"}",
+    "chercher {\"requete\":\"Orbitly contract renewal discount\"}"
+  ],
+  "cout": 0.002221161
+}

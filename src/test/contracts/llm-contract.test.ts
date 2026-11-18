@@ -51,12 +51,20 @@ describe('la table des modèles', () => {
 // le 14/10/2026) : on met l'annexe à jour d'abord. Sans ce test, la source de vérité pourrait diverger en silence.
 describe('les tarifs de models.ts et l’annexe des prix', () => {
   const ANNEXE = 'docs/etudes/couts-2026-10/annexes/01-prix-llm.md';
-  // La ligne de chaque modèle dans le tableau « Anthropic » de l'annexe. Un modèle de plus dans la table sans
-  // ligne ici ne compile pas.
+  // La ligne de chaque modèle dans le tableau « Anthropic » ou « OpenRouter » de l'annexe. Un modèle de plus dans
+  // la table sans ligne ici ne compile pas.
   const ROW_LABEL = {
     'claude-haiku-5-5': 'Haiku 5.5, prompt ≤100k',
     'claude-sonnet-5-5': 'Sonnet 5.5',
     'claude-opus-5-5': 'Opus 5.5',
+    'z-ai/glm-5.3-flash': 'z-ai/glm-5.3-flash',
+    'deepseek/deepseek-v4.1-flash': 'deepseek/deepseek-v4.1-flash',
+    'deepseek/deepseek-v4.1-flash-1017': 'deepseek/deepseek-v4.1-flash-1017',
+    'xiaomi/mimo-v2.6-flash': 'xiaomi/mimo-v2.6-flash',
+    'minimax/minimax-m3.1-flash': 'minimax/minimax-m3.1-flash',
+    'openai/gpt-6-luna': 'openai/gpt-6-luna',
+    'openai/gpt-6.1-terra': 'openai/gpt-6.1-terra',
+    'openai/gpt-6.2-sol': 'openai/gpt-6.2-sol',
   } as const satisfies Record<SupportedModel, string>;
 
   // « | Opus 5.5 | 4 | 20 | 5 / 8 / 0.20 · 2 / 10 | A | » : entrée, sortie, puis le cache (écriture de 5 minutes,

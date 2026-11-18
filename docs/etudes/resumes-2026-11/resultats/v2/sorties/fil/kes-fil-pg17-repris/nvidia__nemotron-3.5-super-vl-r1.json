@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:28:12.826Z",
+  "reponse": "## Où j'en suis\nStaging is on PostgreSQL 17.2 via blue/green (41s of refused writes at 14:20 UTC), pg_partman is at 5.1.0, and dbt events_daily passes on 17.2. PR #57 is open with the logical-replication and engine commits. The runbook now requires `rds.logical_replication = 1` plus a reboot before any prod blue/green; no prod date is set, pending a full week of clean staging. (source: ses-pg-3, src-pr57)\n\n- [en-cours] PR kestrel-analytics/infra#57 open on branch noa/rds-pg17; staging upgraded to 17.2 (source: ses-pg-3, src-pr57)\n- [prochaine-étape] Pick production window after a full week of staging on 17 without incident (source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] On prod: set `rds.logical_replication = 1`, reboot, then create blue/green deployment (source: ses-pg-3, src-slack-infra)\n- [essai-raté] `terraform init -upgrade` with AWS provider v6 produced 37 unrelated changes (source: ses-pg-1)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (source: s1-02, src-pr57)\n- [décision] `apply_immediately` stays false for prod (source: s1-04)\n- [question] Production date and window (source: ses-pg-3, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nStaging is on PostgreSQL 17.2 via blue/green (41s of refused writes at 14:20 UTC), pg_partman is at 5.1.0, and dbt events_daily passes on 17.2. PR #57 is open with the logical-replication and engine commits. The runbook now requires `rds.logical_replication = 1` plus a reboot before any prod blue/green; no prod date is set, pending a full week of clean staging. (de: équipe, agent; source: ses-pg-3, src-pr57)\n\n- [en-cours] PR kestrel-analytics/infra#57 open on branch noa/rds-pg17; staging upgraded to 17.2 (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] Pick production window after a full week of staging on 17 without incident (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] On prod: set `rds.logical_replication = 1`, reboot, then create blue/green deployment (de: connecteur, agent; source: ses-pg-3, src-slack-infra)\n- [essai-raté] `terraform init -upgrade` with AWS provider v6 produced 37 unrelated changes (de: agent; source: ses-pg-1)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (de: toi, équipe; source: s1-02, src-pr57)\n- [décision] `apply_immediately` stays false for prod (de: toi; source: s1-04)\n- [question] Production date and window (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1303,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4607,
+    "sortie": 3816,
+    "reflexion": 3425,
+    "cache": 0,
+    "cout": 0.00248457
+  },
+  "cout": 0.00248457,
+  "latenceMs": 8716,
+  "fournisseur": "CoreWeave"
+}

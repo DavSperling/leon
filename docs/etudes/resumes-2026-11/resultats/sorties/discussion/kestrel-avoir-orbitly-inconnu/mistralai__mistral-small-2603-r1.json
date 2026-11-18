@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:01.057Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 16353,
+    "sortie": 799,
+    "reflexion": 648,
+    "cache": 7360,
+    "cout": 0.0020701649999999997
+  },
+  "latenceMs": 8177,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage last week credits contract amount owed\",\"depuis\":\"7j\"}",
+    "chercher {\"requete\":\"Orbitly contract credits outage compensation\",\"depuis\":\"7j\"}",
+    "chercher {\"requete\":\"Orbitly VP settlement credits\",\"depuis\":\"7j\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"1\"}",
+    "lire {\"sourceId\":\"5\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"1\"}"
+  ],
+  "cout": 0.0020701649999999997
+}

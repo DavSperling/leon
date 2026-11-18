@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:04.363Z",
+  "reponse": "## Où j'en suis\nLa PR #226 (branche thomas/simulateur-fourchettes) est ouverte, avec le commit 6b3e0d9 : le simulateur affiche une fourchette (bas = MaPrimeRénov' seule, haut = avec la prime CEE, arrondis à la centaine inférieure) et la mention « Estimation indicative, sous réserve d'éligibilité ». Les tests passent (14 passed). Il manque le lien de rendez-vous avec Manon. (source: sim2, delorme-energies/planif#226, 6b3e0d9)\n\n- [en-cours] Lien de prise de rendez-vous avec Manon, tâche à faire, absent de la PR #226. (source: sim2, q2-12)\n- [prochaine-étape] Voir avec Manon quels créneaux elle ouvre, puis ajouter le lien dans le résultat du simulateur. (source: q2-11)\n- [prochaine-étape] Demander à Manon le barème 2026 d'après le guide officiel, puis le comparer à `bareme.py`, vérifié en janvier. (source: q2-07)\n- [essai-raté] Fourchette en pourcentage (bas = 70 % du montant) : refusée, le pourcentage était inventé. (source: q2-03)\n- [décision] La fourchette se fonde sur la prime CEE : bas = sans, haut = avec, car elle dépend de l'offre du fournisseur à la signature. (source: q2-03)\n- [décision] Rien n'est repris de la PR #225, car l'origine de ses chiffres est inconnue. Le barème vient de Manon, d'après le guide officiel. (source: q2-07)\n- [décision] Le simulateur n'affiche plus de montant précis : fourchette, mention d'estimation indicative, lien de rendez-vous. (source: src-slack-helene, q2-01)",
+  "rendu": "## Où j'en suis\nLa PR #226 (branche thomas/simulateur-fourchettes) est ouverte, avec le commit 6b3e0d9 : le simulateur affiche une fourchette (bas = MaPrimeRénov' seule, haut = avec la prime CEE, arrondis à la centaine inférieure) et la mention « Estimation indicative, sous réserve d'éligibilité ». Les tests passent (14 passed). Il manque le lien de rendez-vous avec Manon. (de: équipe, agent; source: sim2, delorme-energies/planif#226, 6b3e0d9)\n\n- [en-cours] Lien de prise de rendez-vous avec Manon, tâche à faire, absent de la PR #226. (de: agent; source: sim2, q2-12)\n- [prochaine-étape] Voir avec Manon quels créneaux elle ouvre, puis ajouter le lien dans le résultat du simulateur. (de: toi; source: q2-11)\n- [prochaine-étape] Demander à Manon le barème 2026 d'après le guide officiel, puis le comparer à `bareme.py`, vérifié en janvier. (de: toi; source: q2-07)\n- [essai-raté] Fourchette en pourcentage (bas = 70 % du montant) : refusée, le pourcentage était inventé. (de: toi; source: q2-03)\n- [décision] La fourchette se fonde sur la prime CEE : bas = sans, haut = avec, car elle dépend de l'offre du fournisseur à la signature. (de: toi; source: q2-03)\n- [décision] Rien n'est repris de la PR #225, car l'origine de ses chiffres est inconnue. Le barème vient de Manon, d'après le guide officiel. (de: toi; source: q2-07)\n- [décision] Le simulateur n'affiche plus de montant précis : fourchette, mention d'estimation indicative, lien de rendez-vous. (de: toi, connecteur; source: src-slack-helene, q2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1514,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5111,
+    "sortie": 639,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016612
+  },
+  "cout": 0.016612,
+  "latenceMs": 4675,
+  "fournisseur": "Amazon Bedrock"
+}

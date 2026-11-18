@@ -1,0 +1,32 @@
+{
+  "id": "kestrel-base-date-contradiction",
+  "titre": "Date de la montée de version de la base : le ticket récent contredit le runbook et l'annonce, la réponse doit le dire",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-kestrel",
+    "question": "When is the big database upgrade happening now? I need the maintenance window for the customer notice and the support macro."
+  },
+  "attendu": {
+    "sources": ["linear-kes-398", "notion-pg17-runbook", "slack-eng-announce-pg17"],
+    "faits": [
+      { "id": "f1", "texte": "Gives the current date: Saturday December 5, 02:00 to 05:00 UTC.", "poids": 3 },
+      { "id": "f2", "texte": "Says older sources (the Notion runbook and/or the #eng-announce message) still give November 21, and that this date is outdated.", "poids": 3 },
+      { "id": "f3", "texte": "Presents the December 5 date (Linear ticket of November 16) before the outdated November 21 date.", "poids": 2 },
+      { "id": "f4", "texte": "Says the customer notice (status page and in-app banner) is planned for Saturday November 28.", "poids": 2 },
+      { "id": "f5", "texte": "Says the upgrade was pushed back so as not to stack risk after the November 12 incident and before the Fernhill go-live on December 1.", "poids": 2 },
+      { "id": "f6", "texte": "Says dashboards will be read-only for about 40 minutes during the switch.", "poids": 1 },
+      { "id": "f7", "texte": "Mentions the staging rehearsal on Friday November 27.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Gives November 21 as the current date of the upgrade." },
+      { "id": "i2", "texte": "Says the new date is still to be decided (true only after the November 12 meeting)." },
+      { "id": "i3", "texte": "Says the customer notice goes out on November 14 (old plan)." },
+      { "id": "i4", "texte": "Gives a date or window that appears nowhere, such as Sunday December 6 or a weekday evening." }
+    ],
+    "pieges": [
+      "Contradiction : le runbook Notion (jamais mis à jour) et l'annonce Slack disent 21 novembre, le ticket Linear du 16/11 dit 5 décembre ; le plus récent gagne et la contradiction doit être dite, le plus récent d'abord.",
+      "Périmé : la réunion du 12/11 dit « nouvelle date à proposer » ; elle est dépassée par le ticket.",
+      "Vocabulaire : « database upgrade », « maintenance window » au lieu de Postgres 17 / cutover."
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:25:59.564Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif a été corrigée : les webhooks ne décrémentent plus le stock et la synchro nocturne écrit les quantités absolues. Le seuil d’alerte a été abaissé à 3, `syncStock` renommé, la Saône remise à 0 et la configuration déployée. La PR est fusionnée ; les tests et le lint ont passé.\n\n- [prochaine-étape] Traiter avec Lucie les trois commandes survendues.\n- [décision] La synchro nocturne est la seule à corriger le stock, en valeur absolue ; aucun décrément ni dédoublonnage dans les webhooks (source: t05).\n- [décision] Pas de précommande pour la Saône (source: t17).",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif a été corrigée : les webhooks ne décrémentent plus le stock et la synchro nocturne écrit les quantités absolues. Le seuil d’alerte a été abaissé à 3, `syncStock` renommé, la Saône remise à 0 et la configuration déployée. La PR est fusionnée ; les tests et le lint ont passé.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les trois commandes survendues.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 527,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3547,
+    "sortie": 373,
+    "reflexion": 194,
+    "cache": 0,
+    "cout": 0.0006298
+  },
+  "cout": 0.0006298,
+  "latenceMs": 4637,
+  "fournisseur": "OpenAI"
+}

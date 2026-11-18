@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:59.291Z",
+  "reponse": "## Où j'en suis\nNouvelle grille de dashboards (drag + resize via react-grid-layout 1.5.0) derrière le flag `dashboards_v2`, sur la branche tom/dashboard-grid-v2. Layout persisté par utilisateur via `PUT /dashboards/:id/layout` avec fallback localStorage. Le sizing par container queries (Safari 16+) a été remplacé par un hook ResizeObserver compatible iOS 15. `DashboardTile` renommé `WidgetCard` (re-export déprécié conservé pour la v1). Build Storybook réparé (import CSS dans `.storybook/preview.ts`). Draft PR kestrel-analytics/platform#418 ouverte, dernier commit d2286a0. Démo Zest mardi 24, revue UX par Priya à venir.\n\n- [en-cours] revue UX de Priya sur iPad (BrowserStack iOS 15) à faire avant la démo\n- [prochaine-étape] activer `dashboards_v2` uniquement pour le workspace Zest dans l'admin des flags (config, pas de code)\n- [essai-raté] container queries CSS : ignorées par Safari iOS 15 sans erreur, remplacées par `useWidgetSize` (data-size sm/md/lg) (source: t09)\n- [décision] v1 (DashboardList) reste disponible derrière le flag jusqu'en janvier, rien à supprimer maintenant (source: t15)\n- [décision] flag activé uniquement pour le workspace Zest pour la démo du 24 (source: t15)",
+  "rendu": "## Où j'en suis\nNouvelle grille de dashboards (drag + resize via react-grid-layout 1.5.0) derrière le flag `dashboards_v2`, sur la branche tom/dashboard-grid-v2. Layout persisté par utilisateur via `PUT /dashboards/:id/layout` avec fallback localStorage. Le sizing par container queries (Safari 16+) a été remplacé par un hook ResizeObserver compatible iOS 15. `DashboardTile` renommé `WidgetCard` (re-export déprécié conservé pour la v1). Build Storybook réparé (import CSS dans `.storybook/preview.ts`). Draft PR kestrel-analytics/platform#418 ouverte, dernier commit d2286a0. Démo Zest mardi 24, revue UX par Priya à venir.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] revue UX de Priya sur iPad (BrowserStack iOS 15) à faire avant la démo\n- [prochaine-étape] activer `dashboards_v2` uniquement pour le workspace Zest dans l'admin des flags (config, pas de code)\n- [essai-raté] container queries CSS : ignorées par Safari iOS 15 sans erreur, remplacées par `useWidgetSize` (data-size sm/md/lg) (source: t09)\n- [décision] v1 (DashboardList) reste disponible derrière le flag jusqu'en janvier, rien à supprimer maintenant (source: t15)\n- [décision] flag activé uniquement pour le workspace Zest pour la démo du 24 (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1336,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3418,
+    "sortie": 380,
+    "reflexion": 39,
+    "cache": 0,
+    "cout": 0.0007027
+  },
+  "cout": 0.0007027,
+  "latenceMs": 1984,
+  "fournisseur": "Mistral"
+}

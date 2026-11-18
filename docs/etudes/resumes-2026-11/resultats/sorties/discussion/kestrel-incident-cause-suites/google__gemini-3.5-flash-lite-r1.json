@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:35.606Z",
+  "reponse": "Last Thursday (November 12), the ingestion service deployment (v2.14.0) raised the default `max_batch_bytes` from 1 MB to 10 MB, causing the `ingest-worker` pods (which had a 512 Mi memory limit) to run out of memory and crash-loop [1][4]. This resulted in a 3 hour and 40 minute delay (08:47 to 12:27 UTC) where customer dashboards showed stale data [1]. \n\nNo customer data was lost; events kept arriving in Kafka and were processed late once the service was rolled back to v2.13.3 [1][4].\n\nTo prevent this from happening again, the team is implementing the following changes:\n- Paging the on-call when consumer lag exceeds 5 minutes [1].\n- Routing ingestion configuration changes to the canary pool first [1].\n- Raising the worker memory limit to 1 Gi and adding a load test on batch sizes [1].",
+  "rendu": "Last Thursday (November 12), the ingestion service deployment (v2.14.0) raised the default `max_batch_bytes` from 1 MB to 10 MB, causing the `ingest-worker` pods (which had a 512 Mi memory limit) to run out of memory and crash-loop [1][4]. This resulted in a 3 hour and 40 minute delay (08:47 to 12:27 UTC) where customer dashboards showed stale data [1]. \n\nNo customer data was lost; events kept arriving in Kafka and were processed late once the service was rolled back to v2.13.3 [1][4].\n\nTo prevent this from happening again, the team is implementing the following changes:\n- Paging the on-call when consumer lag exceeds 5 minutes [1].\n- Routing ingestion configuration changes to the canary pool first [1].\n- Raising the worker memory limit to 1 Gi and adding a load test on batch sizes [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8705,
+    "sortie": 580,
+    "reflexion": 311,
+    "cache": 0,
+    "cout": 0.0040615
+  },
+  "latenceMs": 3597,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline broke last Thursday data loss incident\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.0040615
+}

@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:53.928Z",
+  "reponse": "I'll look into this — let me search for what's been discussed around SSO / company account login and the December 1st deadline.\n\nLet me read the key threads in full.",
+  "rendu": "I'll look into this — let me search for what's been discussed around SSO / company account login and the December 1st deadline.\n\nLet me read the key threads in full.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 36809,
+    "sortie": 533,
+    "reflexion": 166,
+    "cache": 24832,
+    "cout": 0.00248883
+  },
+  "latenceMs": 5918,
+  "fournisseur": "Parasail",
+  "trace": [
+    "chercher {\"requete\":\"SSO login company accounts December 1\"}",
+    "chercher {\"requete\":\"bank support question staff log in company email\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "activite {\"depuis\":\"2026-11-17\"}",
+    "chercher {\"requete\":\"just-in-time provisioning Require SSO default role viewer\"}",
+    "chercher {\"requete\":\"support macro Fernhill launch production enable saml_sso workspace\"}"
+  ],
+  "cout": 0.00248883
+}

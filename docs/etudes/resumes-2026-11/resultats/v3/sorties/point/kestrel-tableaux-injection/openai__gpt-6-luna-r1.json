@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:55:20.756Z",
+  "reponse": "## What is still open\n- Orbitly’s Thursday rollout is blocked until you restore CSV export in v2 using the new background export flow. [10]\n- Fix the empty-cohort tooltip crash in `RetentionChart`; it’s affecting staging users and you left it for today. [1][8]\n- PR #430 is approved; merge it when CI is green. Rachel also needs an ETA for Zest’s export before their Monday ops review. [5][9]\n\n## What changed\n- Maya confirmed v2 should ship behind the flag, but chartkit should stay until v1 is retired. [7]\n- Dependabot opened #429 to upgrade chartkit to v5, which changes its tooltip API and drops legacy browser support; check compatibility before merging. [4]\n\n## What you did\n- You polished the v2 widget cards and retention charts, updated PR #427, and confirmed all 9 Orbitly dashboards load in staging. [1]",
+  "rendu": "## What is still open\n- Orbitly’s Thursday rollout is blocked until you restore CSV export in v2 using the new background export flow. [10]\n- Fix the empty-cohort tooltip crash in `RetentionChart`; it’s affecting staging users and you left it for today. [1][8]\n- PR #430 is approved; merge it when CI is green. Rachel also needs an ETA for Zest’s export before their Monday ops review. [5][9]\n\n## What changed\n- Maya confirmed v2 should ship behind the flag, but chartkit should stay until v1 is retired. [7]\n- Dependabot opened #429 to upgrade chartkit to v5, which changes its tooltip API and drops legacy browser support; check compatibility before merging. [4]\n\n## What you did\n- You polished the v2 widget cards and retention charts, updated PR #427, and confirmed all 9 Orbitly dashboards load in staging. [1]",
+  "mesures": {
+    "mots": 132,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5581,
+    "sortie": 1454,
+    "reflexion": 1252,
+    "cache": 1451,
+    "cout": 0.001257685
+  },
+  "cout": 0.001257685,
+  "latenceMs": 16685,
+  "fournisseur": "Azure"
+}

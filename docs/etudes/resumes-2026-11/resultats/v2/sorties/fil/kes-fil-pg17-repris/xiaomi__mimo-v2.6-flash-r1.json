@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:58.382Z",
+  "reponse": "## Où j'en suis\nStaging analytics runs PostgreSQL 17.2 since Nov 17, 14:20 UTC: pg_partman upgraded to 5.1.0, blue/green switchover done (41 s of refused writes), dbt green (14 models, +3% runtime). The runbook now documents the logical_replication + reboot prerequisite for prod. PR #57 is still open in draft with commits 7e3c9d4 and b0f18a2. Prod is not scheduled: waiting for a full week of staging on 17 before Maya's sign-off. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] A full week of staging on 17 is running; nothing to do on prod until it completes (source: s3-09, src-linear-kes298)\n- [prochaine-étape] Set rds.logical_replication = 1 on the prod parameter group and reboot — its own window, ≈2–3 min downtime, before any blue/green (source: s3-09, s3-10)\n- [prochaine-étape] Pick the production window, outside the dbt lock 01:00–03:30 UTC (Sat/Sun 04:00–06:00 UTC are the low-traffic slots); sign-off earliest Nov 24 (source: s1-05, s3-10)\n- [essai-raté] First staging apply failed: blue/green requires rds.logical_replication = 1 on the source, a static param needing a reboot (source: s3-04)\n- [essai-raté] terraform init -upgrade took AWS provider v6: 37 unrelated changes in the plan (source: s1-01)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] No prod date until Maya signs off; apply_immediately stays false (source: s1-04)\n- [décision] Full week of staging on 17 before picking the prod window (source: s3-09)",
+  "rendu": "## Où j'en suis\nStaging analytics runs PostgreSQL 17.2 since Nov 17, 14:20 UTC: pg_partman upgraded to 5.1.0, blue/green switchover done (41 s of refused writes), dbt green (14 models, +3% runtime). The runbook now documents the logical_replication + reboot prerequisite for prod. PR #57 is still open in draft with commits 7e3c9d4 and b0f18a2. Prod is not scheduled: waiting for a full week of staging on 17 before Maya's sign-off. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] A full week of staging on 17 is running; nothing to do on prod until it completes (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [prochaine-étape] Set rds.logical_replication = 1 on the prod parameter group and reboot — its own window, ≈2–3 min downtime, before any blue/green (de: toi, agent; source: s3-09, s3-10)\n- [prochaine-étape] Pick the production window, outside the dbt lock 01:00–03:30 UTC (Sat/Sun 04:00–06:00 UTC are the low-traffic slots); sign-off earliest Nov 24 (de: agent; source: s1-05, s3-10)\n- [essai-raté] First staging apply failed: blue/green requires rds.logical_replication = 1 on the source, a static param needing a reboot (de: agent; source: s3-04)\n- [essai-raté] terraform init -upgrade took AWS provider v6: 37 unrelated changes in the plan (de: agent; source: s1-01)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)\n- [décision] No prod date until Maya signs off; apply_immediately stays false (de: toi; source: s1-04)\n- [décision] Full week of staging on 17 before picking the prod window (de: toi; source: s3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1616,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4593,
+    "sortie": 1255,
+    "reflexion": 749,
+    "cache": 0,
+    "cout": 0.00099442
+  },
+  "cout": 0.00099442,
+  "latenceMs": 11851,
+  "fournisseur": "Cohere"
+}

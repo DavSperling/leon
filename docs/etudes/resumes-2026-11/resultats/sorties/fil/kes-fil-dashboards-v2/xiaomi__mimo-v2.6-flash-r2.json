@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:06.895Z",
+  "reponse": "## Où j'en suis\nLa grille v2 est en place : #418 est merged, et le follow-up demandé par Priya (déplacement/redimensionnement au clavier + focus ring) est poussé sur la branche tom/dashboard-keyboard en PR #423, ouverte et en attente de sa revue. Le flag dashboards_v2 est activé pour zest-grocers sur staging ; la prod est intacte. Aucune trace de visx ne subsiste. (source: d4-05, d4-07, d4-09)\n\n- [en-cours] PR #423 ouverte, en attente de la revue de Priya (source: d4-05)\n- [prochaine-étape] Retour de Priya sur #423, puis merger ; le flip du flag en prod le matin du 24 reste à faire par la personne elle-même (source: d4-06, d4-05)\n- [essai-raté] Intégration de dnd-kit KeyboardSensor au grid : conflits d'événements avec react-grid-layout (déplacements appliqués deux fois, double onLayoutChange) — abandonné au profit de `useGridKeyboard()` maison (source: d4-02, d4-04)\n- [décision] Propre handler clavier au-dessus de l'état de layout, sans dnd-kit (source: d4-04)\n- [décision] #401 fermé définitivement : on garde recharts, pas de double lib de graphiques (source: c3-03, src-pr401)\n- [décision] v1 reste disponible derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: b2-04)",
+  "rendu": "## Où j'en suis\nLa grille v2 est en place : #418 est merged, et le follow-up demandé par Priya (déplacement/redimensionnement au clavier + focus ring) est poussé sur la branche tom/dashboard-keyboard en PR #423, ouverte et en attente de sa revue. Le flag dashboards_v2 est activé pour zest-grocers sur staging ; la prod est intacte. Aucune trace de visx ne subsiste. (de: agent; source: d4-05, d4-07, d4-09)\n\n- [en-cours] PR #423 ouverte, en attente de la revue de Priya (de: agent; source: d4-05)\n- [prochaine-étape] Retour de Priya sur #423, puis merger ; le flip du flag en prod le matin du 24 reste à faire par la personne elle-même (de: toi, agent; source: d4-06, d4-05)\n- [essai-raté] Intégration de dnd-kit KeyboardSensor au grid : conflits d'événements avec react-grid-layout (déplacements appliqués deux fois, double onLayoutChange) — abandonné au profit de `useGridKeyboard()` maison (de: toi, agent; source: d4-02, d4-04)\n- [décision] Propre handler clavier au-dessus de l'état de layout, sans dnd-kit (de: toi; source: d4-04)\n- [décision] #401 fermé définitivement : on garde recharts, pas de double lib de graphiques (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] v1 reste disponible derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1297,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5298,
+    "sortie": 437,
+    "reflexion": 30,
+    "cache": 0,
+    "cout": 0.00086408
+  },
+  "cout": 0.00086408,
+  "latenceMs": 13296,
+  "fournisseur": "Xiaomi"
+}

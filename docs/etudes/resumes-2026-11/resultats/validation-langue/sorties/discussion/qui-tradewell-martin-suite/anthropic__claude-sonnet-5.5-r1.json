@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:46:30.909Z",
+  "reponse": "Yes, both were picked up. The webhook problem is fixed, but the payout-schedule request has been turned down for Dec 7.\n\n**1. Webhook signature failures on sandbox.** Ellen Vance said every `payout.paid` and `seller.verified` event failed HMAC verification, with about 1 in 20 passing. Tradewell had turned verification off on sandbox as a workaround [1]. Jake Whitfield took it on the call [1]. On Nov 16 he opened core#1187, which fixes the cause. The delivery worker re-serialized the JSON after it was signed, so the body sent was not the body signed [2]. The PR is merged and deployed to sandbox. It reaches production with release 2026.47 on Tue Nov 24 [2].\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 and everyone else is on net-30. Quillon currently supports one schedule per platform [1]. Owen Park didn't commit on the call [1]. He then told Martin in Slack that he'd have a clear answer by Fri Nov 20 [3]. Tomer Golan estimated 3–4 weeks of work [4]. On Nov 16 Avi Kessler decided it is \"Not for Dec 7\". He said the earliest is late January and moved the ticket to Backlog with a Q1 2027 target. He also asked Owen to set expectations with Martin [4].\n\nI found no sign yet that Owen has told Martin. Martin said he needs an answer soon and that Tradewell has to tell those sellers what happens in December [1]. He also said Dec 7 can't move [1], so the gap is still open.\n\nSources:\n[1] Gong, Tradewell weekly onboarding sync, Nov 12\n[2] GitHub, core#1187\n[3] Slack, #ext-tradewell\n[4] Jira, QPAY-2362",
+  "rendu": "Yes, both were picked up. The webhook problem is fixed, but the payout-schedule request has been turned down for Dec 7.\n\n**1. Webhook signature failures on sandbox.** Ellen Vance said every `payout.paid` and `seller.verified` event failed HMAC verification, with about 1 in 20 passing. Tradewell had turned verification off on sandbox as a workaround [1]. Jake Whitfield took it on the call [1]. On Nov 16 he opened core#1187, which fixes the cause. The delivery worker re-serialized the JSON after it was signed, so the body sent was not the body signed [2]. The PR is merged and deployed to sandbox. It reaches production with release 2026.47 on Tue Nov 24 [2].\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 and everyone else is on net-30. Quillon currently supports one schedule per platform [1]. Owen Park didn't commit on the call [1]. He then told Martin in Slack that he'd have a clear answer by Fri Nov 20 [3]. Tomer Golan estimated 3–4 weeks of work [4]. On Nov 16 Avi Kessler decided it is \"Not for Dec 7\". He said the earliest is late January and moved the ticket to Backlog with a Q1 2027 target. He also asked Owen to set expectations with Martin [4].\n\nI found no sign yet that Owen has told Martin. Martin said he needs an answer soon and that Tradewell has to tell those sellers what happens in December [1]. He also said Dec 7 can't move [1], so the gap is still open.\n\nSources:\n[1] Gong, Tradewell weekly onboarding sync, Nov 12\n[2] GitHub, core#1187\n[3] Slack, #ext-tradewell\n[4] Jira, QPAY-2362",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0.4,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23419,
+    "sortie": 975,
+    "reflexion": 83,
+    "cache": 0,
+    "cout": 0.056588
+  },
+  "latenceMs": 11526,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync November 12 flagged\"}",
+    "chercher {\"requete\":\"Tradewell go-live issues Martin concerns follow-up\",\"depuis\":\"2m\"}",
+    "lire {\"sourceId\":\"github-core-1187\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}"
+  ],
+  "cout": 0.056588
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-prix-audit-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:46.376Z",
+  "reponse": "Le montant de l'audit n'est pas connu d'après ces résultats. Le devis doit être envoyé séparément par le service administratif de Certénergie [2], et il est toujours attendu [3]. Un message de Slack indique seulement que cet audit complet coûtera plus cher que la simple redevance annuelle de l'an dernier [5].",
+  "rendu": "Le montant de l'audit n'est pas connu d'après ces résultats. Le devis doit être envoyé séparément par le service administratif de Certénergie [2], et il est toujours attendu [3]. Un message de Slack indique seulement que cet audit complet coûtera plus cher que la simple redevance annuelle de l'an dernier [5].",
+  "mesures": {
+    "mots": 51,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1420,
+    "sortie": 117,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002005
+  },
+  "cout": 0.0002005,
+  "latenceMs": 2027,
+  "fournisseur": "Amazon Bedrock"
+}

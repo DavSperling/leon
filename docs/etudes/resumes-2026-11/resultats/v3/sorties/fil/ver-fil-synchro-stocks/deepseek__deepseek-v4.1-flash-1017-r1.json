@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:59:21.682Z",
+  "reponse": "## Où j'en suis\nLa synchro de nuit a été corrigée après que le CSV TransAlp du 16/11, déposé 47 min après le passage du script, a laissé 40 références fausses sur le site : elle tourne désormais à 2 h, 4 h et 6 h (heure de Paris) et prévient Karim par mail si le CSV manque à 6 h. Le stock du 17/11 a été remis à jour par une relance manuelle, et la PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte, Hugo en relecteur ; le correctif précédent (#87) est fusionné. (source: ses-st-3, u3-02, u3-04)\n\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (source: maison-verdier/boutique#96, u3-10)\n- [prochaine-étape] faire relire puis fusionner la PR #96 (source: maison-verdier/boutique#96, u3-07)\n- [prochaine-étape] traiter avec Lucie les 3 commandes Saône survendues, dont la #1041 (source: ses-st-1, src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ayant des identifiants différents (source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris, corrigé en Europe/Paris, commit d7c2e41 (source: u3-04, d7c2e41)\n- [question] la date de livraison du réassort du 2 décembre reste à confirmer aux Galeries Brotteaux (source: src-mail-brotteaux)\n- [décision] pas de réservation de stock dans le script pour les 2 tables Saône des Galeries Brotteaux : Claire voit ça avec eux (source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas passé de 5 à 3 (source: u1-04)",
+  "rendu": "## Où j'en suis\nLa synchro de nuit a été corrigée après que le CSV TransAlp du 16/11, déposé 47 min après le passage du script, a laissé 40 références fausses sur le site : elle tourne désormais à 2 h, 4 h et 6 h (heure de Paris) et prévient Karim par mail si le CSV manque à 6 h. Le stock du 17/11 a été remis à jour par une relance manuelle, et la PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte, Hugo en relecteur ; le correctif précédent (#87) est fusionné. (de: agent; source: ses-st-3, u3-02, u3-04)\n\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (de: équipe, agent; source: maison-verdier/boutique#96, u3-10)\n- [prochaine-étape] faire relire puis fusionner la PR #96 (de: toi, équipe; source: maison-verdier/boutique#96, u3-07)\n- [prochaine-étape] traiter avec Lucie les 3 commandes Saône survendues, dont la #1041 (de: connecteur, agent; source: ses-st-1, src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ayant des identifiants différents (de: agent; source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris, corrigé en Europe/Paris, commit d7c2e41 (de: équipe, agent; source: u3-04, d7c2e41)\n- [question] la date de livraison du réassort du 2 décembre reste à confirmer aux Galeries Brotteaux (de: connecteur; source: src-mail-brotteaux)\n- [décision] pas de réservation de stock dans le script pour les 2 tables Saône des Galeries Brotteaux : Claire voit ça avec eux (de: toi; source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas passé de 5 à 3 (de: toi; source: u1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1801,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4417,
+    "sortie": 1308,
+    "reflexion": 731,
+    "cache": 0,
+    "cout": 0.00118394
+  },
+  "cout": 0.00118394,
+  "latenceMs": 7093,
+  "fournisseur": "InferenceNet"
+}

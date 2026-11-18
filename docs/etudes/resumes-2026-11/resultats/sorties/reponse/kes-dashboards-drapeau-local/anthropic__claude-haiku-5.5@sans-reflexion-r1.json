@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:07.904Z",
+  "reponse": "The flag is now dashboards_v2, and FEATURE_FLAGS in .env.local is ignored since the change moved flags to the API [2][3]. Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [2][3]. You can check it with `curl localhost:8000/api/flags` [3]. The Slack advice to use FEATURE_FLAGS=new_dash is out of date [1][2].",
+  "rendu": "The flag is now dashboards_v2, and FEATURE_FLAGS in .env.local is ignored since the change moved flags to the API [2][3]. Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [2][3]. You can check it with `curl localhost:8000/api/flags` [3]. The Slack advice to use FEATURE_FLAGS=new_dash is out of date [1][2].",
+  "mesures": {
+    "mots": 52,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1668,
+    "sortie": 151,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002423
+  },
+  "cout": 0.0002423,
+  "latenceMs": 1404,
+  "fournisseur": "Claude Platform on AWS"
+}

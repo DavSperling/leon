@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:47.344Z",
+  "reponse": "## Où j'en suis\nL'avenant n°1 Marchand est rédigé, signé par Hélène Delorme et parti chez Gilles Marchand le 17/11 : réception reportée du 4 au 11 décembre, première année d'entretien offerte (480 € HT), renonciation aux pénalités entre le 4 et le 11 puis reprise normale au-delà. Le 18/11, Gilles a répondu qu'il croyait l'accord porté à 3 ans d'entretien ; Camille n'a pas cette confirmation d'Hélène et a refusé de modifier l'avenant avant de lui parler. Une réponse d'attente (« on revient vers vous aujourd'hui avec l'avenant définitif ») a été envoyée à Gilles, sans que l'avenant soit touché : il reste à 1 an (source: m2-02, m3-03, src-mail-gilles, m3-09).\n\n- [en-cours] Avenant laissé à 1 an d'entretien, aucune modification faite tant qu'Hélène n'a pas confirmé (source: m3-03, m3-04)\n- [prochaine-étape] Faire trancher Hélène sur les 3 ans, puis corriger l'article 2 et envoyer l'avenant définitif à Gilles pour signature, comme annoncé dans la réponse d'attente (source: m3-07, m3-08)\n- [prochaine-étape] Récupérer la signature de M. Marchand sur l'avenant, seul acte encore manquant (source: m2-08)\n- [question] L'entretien offert est-il de 1 an (ce qu'Hélène a validé le 17/11) ou de 3 ans (ce que Gilles dit avoir convenu avec elle) ? (source: src-tldv, src-mail-gilles)\n- [décision] Avenant n°1 : réception au 11/12, première année d'entretien offerte, pas de pénalités sur la semaine, pénalités de l'article 9 applicables à compter du 11/12 en cas de nouveau dépassement (source: src-tldv, m2-02, m2-04)\n- [décision] Ne rien envoyer au client avant l'accord d'Hélène (source: m1-05)",
+  "rendu": "- [en-cours] Avenant laissé à 1 an d'entretien, aucune modification faite tant qu'Hélène n'a pas confirmé (de: toi, agent; source: m3-03, m3-04)\n- [prochaine-étape] Faire trancher Hélène sur les 3 ans, puis corriger l'article 2 et envoyer l'avenant définitif à Gilles pour signature, comme annoncé dans la réponse d'attente (de: toi, agent; source: m3-07, m3-08)\n- [prochaine-étape] Récupérer la signature de M. Marchand sur l'avenant, seul acte encore manquant (de: agent; source: m2-08)\n- [question] L'entretien offert est-il de 1 an (ce qu'Hélène a validé le 17/11) ou de 3 ans (ce que Gilles dit avoir convenu avec elle) ? (de: connecteur; source: src-tldv, src-mail-gilles)\n- [décision] Avenant n°1 : réception au 11/12, première année d'entretien offerte, pas de pénalités sur la semaine, pénalités de l'article 9 applicables à compter du 11/12 en cas de nouveau dépassement (de: connecteur, agent; source: src-tldv, m2-02, m2-04)\n- [décision] Ne rien envoyer au client avant l'accord d'Hélène (de: toi; source: m1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1024,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4111,
+    "sortie": 987,
+    "reflexion": 443,
+    "cache": 0,
+    "cout": 0.00145062
+  },
+  "cout": 0.00145062,
+  "latenceMs": 6250,
+  "fournisseur": "DigitalOcean"
+}

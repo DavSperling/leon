@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:59.296Z",
+  "reponse": "## Où j'en suis\nLe simulateur d'aides du site ne montre plus un montant précis : la branche `thomas/simulateur-fourchettes` calcule une fourchette (bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + CEE, arrondi à la centaine inférieure) avec la mention « Estimation indicative, sous réserve d'éligibilité », les tests passent, le commit `6b3e0d9` est posé et la PR #226 est ouverte ; il reste à y ajouter le lien de prise de rendez-vous avec Manon (source: sim2, 6b3e0d9, delorme-energies/planif#226, src-slack-helene).\n\n- [en-cours] PR #226 ouverte : fourchette et mention d'estimation faites, lien de rendez-vous avec Manon encore manquant (source: q2-12, delorme-energies/planif#226, 6b3e0d9)\n- [prochaine-étape] ajouter dans le simulateur le lien vers un rendez-vous avec Manon, une fois les créneaux qu'elle ouvre connus (source: q2-11, q2-12)\n- [essai-raté] premier passage de `pytest -q tests/test_simulateur.py` : 2 échecs, les tests attendaient encore un montant unique ; mis à jour, puis 14 passed (source: q2-10)\n- [question] quels créneaux de rendez-vous Manon ouvre-t-elle (source: q2-11)\n- [décision] la fourchette se calcule sans pourcentage inventé : bas sans la prime CEE, haut avec, arrondi à 100 € en dessous (source: q2-03, q2-04)\n- [décision] ne rien reprendre de la PR #225 (chiffres sans source) ; le barème reste celui donné par Manon d'après le guide officiel (source: q2-07, q2-08, src-pr225, sim1)",
+  "rendu": "- [en-cours] PR #226 ouverte : fourchette et mention d'estimation faites, lien de rendez-vous avec Manon encore manquant (de: équipe, agent; source: q2-12, delorme-energies/planif#226, 6b3e0d9)\n- [prochaine-étape] ajouter dans le simulateur le lien vers un rendez-vous avec Manon, une fois les créneaux qu'elle ouvre connus (de: toi, agent; source: q2-11, q2-12)\n- [essai-raté] premier passage de `pytest -q tests/test_simulateur.py` : 2 échecs, les tests attendaient encore un montant unique ; mis à jour, puis 14 passed (de: agent; source: q2-10)\n- [question] quels créneaux de rendez-vous Manon ouvre-t-elle (de: toi; source: q2-11)\n- [décision] la fourchette se calcule sans pourcentage inventé : bas sans la prime CEE, haut avec, arrondi à 100 € en dessous (de: toi, agent; source: q2-03, q2-04)\n- [décision] ne rien reprendre de la PR #225 (chiffres sans source) ; le barème reste celui donné par Manon d'après le guide officiel (de: toi, connecteur, agent; source: q2-07, q2-08, src-pr225, sim1)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1002,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3824,
+    "sortie": 1037,
+    "reflexion": 557,
+    "cache": 0,
+    "cout": 0.0017937
+  },
+  "cout": 0.0017937,
+  "latenceMs": 5064,
+  "fournisseur": "DigitalOcean"
+}

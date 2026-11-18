@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:09.548Z",
+  "reponse": "The first slice — phase 1 (chart builder + saved views) — is currently feature-complete on staging behind the `dash_v2` flag, with query performance on very large workspaces and empty states still open [5].\n\nCustomers can try it when the design-partner beta opens **Wednesday Dec 9**, for 5 customers only: Orbitly, Zest Grocers, and three accounts from the October trial cohort [5][6]. Everyone else waits until general availability, targeted for late January (not committed) [5]. Note this is a later, firmer date than the original plan of \"early December\" in the spec [1] and the plan of feature-complete by Dec 4 [2].\n\nTwo caveats worth flagging: Pinecrest Logistics asked for beta access during their evaluation and Sam said he'd check [10], but the beta list is fixed at 5 [5][6]; and a waitlist opens in January for everyone else [6].",
+  "rendu": "The first slice — phase 1 (chart builder + saved views) — is currently feature-complete on staging behind the `dash_v2` flag, with query performance on very large workspaces and empty states still open [5].\n\nCustomers can try it when the design-partner beta opens **Wednesday Dec 9**, for 5 customers only: Orbitly, Zest Grocers, and three accounts from the October trial cohort [5][6]. Everyone else waits until general availability, targeted for late January (not committed) [5]. Note this is a later, firmer date than the original plan of \"early December\" in the spec [1] and the plan of feature-complete by Dec 4 [2].\n\nTwo caveats worth flagging: Pinecrest Logistics asked for beta access during their evaluation and Sam said he'd check [10], but the beta list is fixed at 5 [5][6]; and a waitlist opens in January for everyone else [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13588,
+    "sortie": 384,
+    "reflexion": 82,
+    "cache": 9088,
+    "cout": 0.0010417199999999999
+  },
+  "latenceMs": 3774,
+  "fournisseur": "Parasail",
+  "trace": [
+    "chercher {\"requete\":\"dashboard beta customer preview date rollout first part\"}",
+    "chercher {\"requete\":\"dashboards spec Tom Becker Lior Ben-David Priya Shah milestones\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}"
+  ],
+  "cout": 0.0010417199999999999
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:25.806Z",
+  "reponse": "Les informations les plus récentes indiquent que 25 plateaux Saône arrivent à l’entrepôt le 1er décembre [2] ; après deux jours de montage et d’emballage, ils seront expédiables à partir du 3 décembre [2], date reprise pour la précommande [5]. Le fournisseur annonce une livraison chez vous le 1er décembre, puis 15 plateaux supplémentaires mi-décembre [1]. Une note du 10 novembre, plus ancienne et à confirmer, estimait un retour fin novembre [4].",
+  "rendu": "Les informations les plus récentes indiquent que 25 plateaux Saône arrivent à l’entrepôt le 1er décembre [2] ; après deux jours de montage et d’emballage, ils seront expédiables à partir du 3 décembre [2], date reprise pour la précommande [5]. Le fournisseur annonce une livraison chez vous le 1er décembre, puis 15 plateaux supplémentaires mi-décembre [1]. Une note du 10 novembre, plus ancienne et à confirmer, estimait un retour fin novembre [4].",
+  "mesures": {
+    "mots": 71,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1096,
+    "sortie": 714,
+    "reflexion": 584,
+    "cache": 0,
+    "cout": 0.000988
+  },
+  "cout": 0.000988,
+  "latenceMs": 5051,
+  "fournisseur": "Modal"
+}

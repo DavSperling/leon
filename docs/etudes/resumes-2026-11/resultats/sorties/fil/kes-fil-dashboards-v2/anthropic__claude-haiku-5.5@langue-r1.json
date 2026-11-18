@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 1,
+  "date": "2026-11-18T14:32:36.583Z",
+  "reponse": "## Où j'en suis\nBranch `tom/dashboard-keyboard` adds keyboard move/resize and a focus ring to the Dashboards v2 grid, in PR #423 (open, review requested from Priya). PR #418 is merged. `dashboards_v2` is on for the Zest workspace on staging only; production stays off until the user flips it the morning of the 24th for the Zest demo. (source: ses-db-4, d4-05, d4-06, d4-07, c3-05)\n\n- [en-cours] Priya's review of PR #423 (source: d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging (source: d4-06)\n- [prochaine-étape] Turn `dashboards_v2` on in production the morning of the 24th (source: d4-06)\n- [essai-raté] dnd-kit's KeyboardSensor alongside react-grid-layout applied each move twice and doubled mouse layout changes, so the library was removed (source: d4-02)\n- [question] Whether legacy v1 dashboards are removed on Jan 5, as an agent note says; Priya's instruction was to keep them behind the flag until January (source: src-note-v1, b2-04)\n- [décision] ResizeObserver instead of container queries, which iOS 15 ignores (source: b2-02)\n- [décision] Keyboard handling written in-house on the layout state, no dnd-kit (source: d4-04)\n- [décision] Keep recharts; the visx migration (PR #401) is closed (source: c3-03)\n- [décision] v1 dashboards stay behind the flag until January (source: b2-04)",
+  "rendu": "## Où j'en suis\nBranch `tom/dashboard-keyboard` adds keyboard move/resize and a focus ring to the Dashboards v2 grid, in PR #423 (open, review requested from Priya). PR #418 is merged. `dashboards_v2` is on for the Zest workspace on staging only; production stays off until the user flips it the morning of the 24th for the Zest demo. (de: toi, agent; source: ses-db-4, d4-05, d4-06, d4-07, c3-05)\n\n- [en-cours] Priya's review of PR #423 (de: agent; source: d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging (de: toi; source: d4-06)\n- [prochaine-étape] Turn `dashboards_v2` on in production the morning of the 24th (de: toi; source: d4-06)\n- [essai-raté] dnd-kit's KeyboardSensor alongside react-grid-layout applied each move twice and doubled mouse layout changes, so the library was removed (de: agent; source: d4-02)\n- [question] Whether legacy v1 dashboards are removed on Jan 5, as an agent note says; Priya's instruction was to keep them behind the flag until January (de: toi, agent; source: src-note-v1, b2-04)\n- [décision] ResizeObserver instead of container queries, which iOS 15 ignores (de: toi; source: b2-02)\n- [décision] Keyboard handling written in-house on the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts; the visx migration (PR #401) is closed (de: toi; source: c3-03)\n- [décision] v1 dashboards stay behind the flag until January (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1424,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6908,
+    "sortie": 2082,
+    "reflexion": 1539,
+    "cache": 0,
+    "cout": 0.0017318
+  },
+  "cout": 0.0017318,
+  "latenceMs": 9757,
+  "fournisseur": "Claude Platform on AWS"
+}

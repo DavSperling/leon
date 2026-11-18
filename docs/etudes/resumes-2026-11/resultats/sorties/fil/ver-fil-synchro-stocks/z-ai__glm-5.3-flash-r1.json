@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:14.767Z",
+  "reponse": "## Où j'en suis\nLa synchro des stocks fonctionne : après le correctif de la PR #87 (fusionnée), la première nuit sans écart a été vérifiée le 14/11 (source: ses-st-2, src-pr87). Le 17/11, une quarantaine de refs était fausse : le CSV TransAlp était déposé 47 min après le passage du script, la sécurité de #87 a annulé la synchro du 16/11 (source: ses-st-3, u3-02, u3-01). Julien a ajouté des reprises à 4 h et 6 h avec mail à Karim si le CSV manque toujours, resynchronisé à la main le 17/11 (40 refs corrigées, 0 erreur) et ouvert la PR #96, qui attend la relecture d'Hugo (source: ses-st-3, u3-04, u3-06, u3-08, u3-10).\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », ouverte sur la branche julien/fix-synchro-stocks, Hugo en relecteur (source: ses-st-3, u3-08)\n- [prochaine-étape] relecture de la PR #96 par Hugo (source: ses-st-3, u3-08, u3-10)\n- [essai-raté] premier passage des tests : les heures du cron lues en UTC faisaient tomber la reprise de 4 h à 5 h à Paris ; fuseau Europe/Paris fixé, 15 tests passent (source: ses-st-3, u3-04, commit d7c2e41)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (source: ses-st-1, u1-01)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue ; PR #87 fusionnée (source: ses-st-1, u1-02, src-pr87)\n- [décision] reprises de synchro à 2 h, 4 h et 6 h ; mail à Karim à 6 h si le CSV manque toujours (source: ses-st-3, u3-03, u3-04)\n- [décision] pas de réservation Brotteaux dans le script : Claire voit ça avec eux, le script n'est pas modifié pour ça (source: ses-st-3, u3-09)\n- [décision] seuil d'alerte stock bas abaissé à 3 (source: ses-st-1, u1-04)\n- [décision] pas de précommande pour la Saône, rien avant son retour le 2 décembre (source: ses-st-1, u1-06)",
+  "rendu": "- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », ouverte sur la branche julien/fix-synchro-stocks, Hugo en relecteur (de: agent; source: ses-st-3, u3-08)\n- [prochaine-étape] relecture de la PR #96 par Hugo (de: agent; source: ses-st-3, u3-08, u3-10)\n- [essai-raté] premier passage des tests : les heures du cron lues en UTC faisaient tomber la reprise de 4 h à 5 h à Paris ; fuseau Europe/Paris fixé, 15 tests passent (de: équipe, agent; source: ses-st-3, u3-04, d7c2e41)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (de: agent; source: ses-st-1, u1-01)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue ; PR #87 fusionnée (de: toi, équipe, agent; source: ses-st-1, u1-02, src-pr87)\n- [décision] reprises de synchro à 2 h, 4 h et 6 h ; mail à Karim à 6 h si le CSV manque toujours (de: toi, agent; source: ses-st-3, u3-03, u3-04)\n- [décision] pas de réservation Brotteaux dans le script : Claire voit ça avec eux, le script n'est pas modifié pour ça (de: toi, agent; source: ses-st-3, u3-09)\n- [décision] seuil d'alerte stock bas abaissé à 3 (de: toi, agent; source: ses-st-1, u1-04)\n- [décision] pas de précommande pour la Saône, rien avant son retour le 2 décembre (de: toi, agent; source: ses-st-1, u1-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1415,
+    "lignesRetirees": 0,
+    "decisions": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4264,
+    "sortie": 786,
+    "reflexion": 97,
+    "cache": 0,
+    "cout": 0.0010326
+  },
+  "cout": 0.0010326,
+  "latenceMs": 3438,
+  "fournisseur": "Friendli"
+}

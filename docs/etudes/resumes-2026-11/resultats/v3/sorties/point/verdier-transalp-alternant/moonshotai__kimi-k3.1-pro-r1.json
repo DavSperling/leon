@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:04:59.038Z",
+  "reponse": "## What is still open\n\n- **PR #60 bloquée par la clé sandbox TransAlp commitée** : passe-la dans `TRANSALP_API_KEY` et demande à TransAlp de la régénérer. Julien mettra lui-même la clé de production chez l’hébergeur ; le reste de sa relecture est positif. [3]\n- **Essai de production prévu vendredi 20/11**, de bout en bout avec la commande `TEST-0001`, avant la bascule de toutes les étiquettes vers TransAlp le lundi 23/11 à 6 h. [7][8]\n\n## What changed\n\n- **Ticket #61** : Karim a renseigné les dimensions de 8 produits dans le Notion « Fiches logistiques ». Il ne reste que la table Saône 180, qu’il mesurera jeudi à l’atelier de Bois & Fils. [5]\n- **Nouveau ticket #59** : automatiser l’ajout et le retrait du tag `soldes` selon le prix barré, pour préparer les collections de Sophie pour janvier. [4]\n\n## What you did\n\n- L’intégration TransAlp fonctionne en sandbox : création de l’étiquette avec le bon poids, ajout du suivi dans Shopify et e-mail client, validés sur la commande de dev #1042. Les produits sans dimensions sont bloqués avec un message explicite plutôt qu’avec des valeurs inventées. [1]",
+  "rendu": "## What is still open\n\n- **PR #60 bloquée par la clé sandbox TransAlp commitée** : passe-la dans `TRANSALP_API_KEY` et demande à TransAlp de la régénérer. Julien mettra lui-même la clé de production chez l’hébergeur ; le reste de sa relecture est positif. [3]\n- **Essai de production prévu vendredi 20/11**, de bout en bout avec la commande `TEST-0001`, avant la bascule de toutes les étiquettes vers TransAlp le lundi 23/11 à 6 h. [7][8]\n\n## What changed\n\n- **Ticket #61** : Karim a renseigné les dimensions de 8 produits dans le Notion « Fiches logistiques ». Il ne reste que la table Saône 180, qu’il mesurera jeudi à l’atelier de Bois & Fils. [5]\n- **Nouveau ticket #59** : automatiser l’ajout et le retrait du tag `soldes` selon le prix barré, pour préparer les collections de Sophie pour janvier. [4]\n\n## What you did\n\n- L’intégration TransAlp fonctionne en sandbox : création de l’étiquette avec le bon poids, ajout du suivi dans Shopify et e-mail client, validés sur la commande de dev #1042. Les produits sans dimensions sont bloqués avec un message explicite plutôt qu’avec des valeurs inventées. [1]",
+  "mesures": {
+    "mots": 174,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5325,
+    "sortie": 828,
+    "reflexion": 462,
+    "cache": 0,
+    "cout": 0.01893
+  },
+  "cout": 0.01893,
+  "latenceMs": 7242,
+  "fournisseur": "DigitalOcean"
+}

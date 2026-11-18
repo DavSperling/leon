@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:14:04.139Z",
+  "reponse": "## What you did\n- Moved the Zest CSV export to a background job: it streams 230k rows, emails a signed 24h link, and is in PR #430 [2].\n- Compacted the v2 widget header, cut the menu to Duplicate, Rename and Delete (dropping Export CSV), fixed the retention tooltip labels and added a loading skeleton. Pushed to PR #427 and checked staging with the Orbitly workspace [1].\n\n## What changed\n- Daniel approved #430 and said to merge once CI is green [5].\n- Maya wants v2 shipped behind the flag, with chartkit kept until v1 is gone, so your bundle proposal is parked [7].\n- Sentry caught the empty-cohort crash on staging: 37 events, 4 users [8].\n- Priya says v2 can't go live for Orbitly on Thursday without the CSV export in the widget menu [10].\n\n## What is still open\n- Bring CSV export back in the v2 menu, built on the background job. The v1 endpoint doesn't accept v2 widget ids, so it needs a v2 path [1][10]. Thursday 19 is the deadline.\n- Rachel is waiting for an ETA for Zest before their Monday ops review [9]. Merge #430 once CI is green [5].\n- Fix the tooltip crash on empty cohorts in `RetentionChart.tsx:212`: guard the label, show \"No data yet\", add a test [1][8].",
+  "rendu": "## What you did\n- Moved the Zest CSV export to a background job: it streams 230k rows, emails a signed 24h link, and is in PR #430 [2].\n- Compacted the v2 widget header, cut the menu to Duplicate, Rename and Delete (dropping Export CSV), fixed the retention tooltip labels and added a loading skeleton. Pushed to PR #427 and checked staging with the Orbitly workspace [1].\n\n## What changed\n- Daniel approved #430 and said to merge once CI is green [5].\n- Maya wants v2 shipped behind the flag, with chartkit kept until v1 is gone, so your bundle proposal is parked [7].\n- Sentry caught the empty-cohort crash on staging: 37 events, 4 users [8].\n- Priya says v2 can't go live for Orbitly on Thursday without the CSV export in the widget menu [10].\n\n## What is still open\n- Bring CSV export back in the v2 menu, built on the background job. The v1 endpoint doesn't accept v2 widget ids, so it needs a v2 path [1][10]. Thursday 19 is the deadline.\n- Rachel is waiting for an ETA for Zest before their Monday ops review [9]. Merge #430 once CI is green [5].\n- Fix the tooltip crash on empty cohorts in `RetentionChart.tsx:212`: guard the label, show \"No data yet\", add a test [1][8].",
+  "mesures": {
+    "mots": 209,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8280,
+    "sortie": 2105,
+    "reflexion": 1629,
+    "cache": 0,
+    "cout": 0.0018805
+  },
+  "cout": 0.0018805,
+  "latenceMs": 9516,
+  "fournisseur": "Claude Platform on AWS"
+}

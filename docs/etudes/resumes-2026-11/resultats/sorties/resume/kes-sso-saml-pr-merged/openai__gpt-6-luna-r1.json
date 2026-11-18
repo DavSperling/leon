@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:25:09.510Z",
+  "reponse": "## Où j'en suis\nLa vérification SAML de l’ACS est terminée : signature vérifiée avec signxml, conditions contrôlées, protection contre les rejeux et tolérance d’horloge de 120 s. Les tests auth, Ruff et mypy ont passé ; la suite complète a donné 1 284 réussites et 3 tests ignorés. La PR #412 est fusionnée.\n\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée, pour la démo de jeudi à 10 h (heure de New York).\n- [prochaine-étape] Traiter séparément l’application obligatoire du SSO et la désactivation de la connexion par mot de passe pour Fernhill.\n- [essai-raté] Les builds Docker avec python3-saml/xmlsec ont échoué à cause d’incompatibilités de bibliothèques sur Alpine, y compris après compilation de lxml depuis les sources. La solution retenue est signxml.\n- [décision] Utiliser signxml, supprimer python3-saml et xmlsec, et lire les données uniquement depuis l’élément vérifié. (source: t08)\n- [décision] Fixer la tolérance d’horloge à 120 secondes et laisser la connexion par mot de passe hors de cette PR. (source: t12)",
+  "rendu": "## Où j'en suis\nLa vérification SAML de l’ACS est terminée : signature vérifiée avec signxml, conditions contrôlées, protection contre les rejeux et tolérance d’horloge de 120 s. Les tests auth, Ruff et mypy ont passé ; la suite complète a donné 1 284 réussites et 3 tests ignorés. La PR #412 est fusionnée.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP de staging avant mercredi fin de journée, pour la démo de jeudi à 10 h (heure de New York).\n- [prochaine-étape] Traiter séparément l’application obligatoire du SSO et la désactivation de la connexion par mot de passe pour Fernhill.\n- [essai-raté] Les builds Docker avec python3-saml/xmlsec ont échoué à cause d’incompatibilités de bibliothèques sur Alpine, y compris après compilation de lxml depuis les sources. La solution retenue est signxml.\n- [décision] Utiliser signxml, supprimer python3-saml et xmlsec, et lire les données uniquement depuis l’élément vérifié. (source: t08)\n- [décision] Fixer la tolérance d’horloge à 120 secondes et laisser la connexion par mot de passe hors de cette PR. (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1259,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4343,
+    "sortie": 441,
+    "reflexion": 135,
+    "cache": 0,
+    "cout": 0.0007633
+  },
+  "cout": 0.0007633,
+  "latenceMs": 5210,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:05.247Z",
+  "reponse": "Le cutover de production PostgreSQL 17 est prévu le samedi 28 novembre, de 02:00 à 06:00 UTC. [2][6]",
+  "rendu": "Le cutover de production PostgreSQL 17 est prévu le samedi 28 novembre, de 02:00 à 06:00 UTC. [2][6]",
+  "mesures": {
+    "mots": 18,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4761,
+    "sortie": 118,
+    "reflexion": 0,
+    "cache": 2176,
+    "cout": 0.00033926
+  },
+  "cout": 0.00033926,
+  "latenceMs": 2918,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:26:06.159Z",
+  "reponse": "Only a small group of customers can try phase 1 (chart builder and saved views) soon. The design-partner beta opens Wednesday, Dec 9, for 5 customers. Those are Orbitly, Zest Grocers and three accounts from the October trial cohort [3].\n\nEveryone else has to wait. Other customers won't get access before general availability, which is targeted for late January [3]. Priya asked the team not to promise access to anyone outside the beta list. A waitlist will open in January [10].\n\nPhase 1 is feature-complete on staging behind the dash_v2 flag. Two items remain: query performance on workspaces above 50M events, and empty states [3].\n\nThe Dec 9 date is newer than earlier plans. The Nov 12 sync only said \"right after\" Dec 4 [1], and the spec said \"early December\" [2].",
+  "rendu": "Only a small group of customers can try phase 1 (chart builder and saved views) soon. The design-partner beta opens Wednesday, Dec 9, for 5 customers. Those are Orbitly, Zest Grocers and three accounts from the October trial cohort [3].\n\nEveryone else has to wait. Other customers won't get access before general availability, which is targeted for late January [3]. Priya asked the team not to promise access to anyone outside the beta list. A waitlist will open in January [10].\n\nPhase 1 is feature-complete on staging behind the dash_v2 flag. Two items remain: query performance on workspaces above 50M events, and empty states [3].\n\nThe Dec 9 date is newer than earlier plans. The Nov 12 sync only said \"right after\" Dec 4 [1], and the spec said \"early December\" [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10533,
+    "sortie": 410,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.025166
+  },
+  "latenceMs": 4901,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards release date beta customers first milestone\"}",
+    "chercher {\"requete\":\"dashboards launch timeline\",\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.025166
+}

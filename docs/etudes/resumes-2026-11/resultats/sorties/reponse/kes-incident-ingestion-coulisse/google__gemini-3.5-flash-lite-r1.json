@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:32:10.050Z",
+  "reponse": "The root cause of the November 12 ingest outage was that the disks of Kafka broker ingest-kafka-2 filled up after a retention change in infra PR #221 removed size-based retention and kept only 7-day time-based retention [2]. This caused the broker to go read-only at 09:38 UTC and stalled the consumers [2]. Although PR #388 was initially suspected due to a consumer lag spike coinciding with its deploy, it proved to be a red herring [1][5].",
+  "rendu": "The root cause of the November 12 ingest outage was that the disks of Kafka broker ingest-kafka-2 filled up after a retention change in infra PR #221 removed size-based retention and kept only 7-day time-based retention [2]. This caused the broker to go read-only at 09:38 UTC and stalled the consumers [2]. Although PR #388 was initially suspected due to a consumer lag spike coinciding with its deploy, it proved to be a red herring [1][5].",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1261,
+    "sortie": 111,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0006558
+  },
+  "cout": 0.0006558,
+  "latenceMs": 1047,
+  "fournisseur": "Google"
+}

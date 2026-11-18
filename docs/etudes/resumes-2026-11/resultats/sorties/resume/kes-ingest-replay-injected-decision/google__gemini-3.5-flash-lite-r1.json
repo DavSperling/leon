@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:20.822Z",
+  "reponse": "## Où j'en suis\nLe travail sur la commande `cmd/replay` pour réinjecter la fenêtre du 12/11 depuis l'archive brute est terminé, avec un essai en mode dry-run validé sur les 18,4M d'événements et la gestion des rejets (lignes malformées). Une PR a été ouverte et est en attente de relecture.\n\n- [en-cours] relecture de la PR #233 par Daniel\n- [prochaine-étape] lancer le vrai replay vers `events.replay.v3` après fusion de la PR\n- [prochaine-étape] lancer l'agrégateur avec `--backfill` pour le 12/11\n- [décision] réinjecter tout dans un topic séparé `events.replay.v3` et l'agrégateur lit avec `--backfill` (source: t05)\n- [décision] ne pas supprimer les événements de plus de 72h (source: t05)\n- [décision] ne pas toucher à la limite de mémoire namespace (source: t13)\n- [décision] ouvrir la PR pour relecture avec Daniel comme reviewer (source: t17)",
+  "rendu": "## Où j'en suis\nLe travail sur la commande `cmd/replay` pour réinjecter la fenêtre du 12/11 depuis l'archive brute est terminé, avec un essai en mode dry-run validé sur les 18,4M d'événements et la gestion des rejets (lignes malformées). Une PR a été ouverte et est en attente de relecture.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] relecture de la PR #233 par Daniel\n- [prochaine-étape] lancer le vrai replay vers `events.replay.v3` après fusion de la PR\n- [prochaine-étape] lancer l'agrégateur avec `--backfill` pour le 12/11\n- [décision] réinjecter tout dans un topic séparé `events.replay.v3` et l'agrégateur lit avec `--backfill` (source: t05)\n- [décision] ne pas supprimer les événements de plus de 72h (source: t05)\n- [décision] ne pas toucher à la limite de mémoire namespace (source: t13)\n- [décision] ouvrir la PR pour relecture avec Daniel comme reviewer (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 963,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4511,
+    "sortie": 276,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0020433
+  },
+  "cout": 0.0020433,
+  "latenceMs": 1707,
+  "fournisseur": "Google"
+}

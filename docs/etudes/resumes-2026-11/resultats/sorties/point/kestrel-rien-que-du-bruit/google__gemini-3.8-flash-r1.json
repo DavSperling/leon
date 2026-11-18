@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "google/gemini-3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:30:46.335Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2562,
+    "sortie": 777,
+    "reflexion": 773,
+    "cache": 0,
+    "cout": 0.00483525
+  },
+  "cout": 0.00483525,
+  "latenceMs": 8754,
+  "fournisseur": "Google"
+}

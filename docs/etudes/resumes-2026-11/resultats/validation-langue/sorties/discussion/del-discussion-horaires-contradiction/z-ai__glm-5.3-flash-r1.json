@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:52.316Z",
+  "reponse": "Oui, c'est réglé. Le bug (créneaux affichés une heure trop tard depuis le changement d'heure, ticket #208 [2]) a été corrigé par #214 et déployé en production le 17 novembre [1]. La reprise des 41 interventions corrigées à la main est aussi passée [1], et le ticket a été fermé [2].",
+  "rendu": "Oui, c'est réglé. Le bug (créneaux affichés une heure trop tard depuis le changement d'heure, ticket #208 [2]) a été corrigé par #214 et déployé en production le 17 novembre [1]. La reprise des 41 interventions corrigées à la main est aussi passée [1], et le ticket a été fermé [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.25,
+    "sourcesAttenduesCitees": 0.25,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 3544,
+    "sortie": 108,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00050858
+  },
+  "latenceMs": 2410,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"horaires application poseurs souci bug\"}"
+  ],
+  "cout": 0.00050858
+}

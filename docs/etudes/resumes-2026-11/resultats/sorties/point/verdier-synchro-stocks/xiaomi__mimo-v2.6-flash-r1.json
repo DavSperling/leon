@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:37:27.793Z",
+  "reponse": "## Ce que tu as fait\n- Trouvé la cause du bug : `sync-stock` associait le CSV de l'entrepôt à Shopify par préfixe et écrivait la même quantité sur les deux finitions — d'où la Saône chêne affichée à 12 pour rien [1]\n- Revu la PR #57 d'Hugo et poussé sur sa branche les 17 références multi-finitions qui manquaient, un avertissement quand une référence n'a pas de correspondance, et un test qui bloque les futures références sans entrée [1]\n- Ajouté le mode `--dry-run` de sync-stock : rapport d'écarts sans rien écrire ; 14 variantes en écart sur le fichier du 17/11, CSV de comptage préparé pour Karim [1]\n\n## Ce qui a bougé\n- #57 est fusionnée : la synchro de cette nuit tourne enfin avec la correspondance exacte des SKU, et #55 est indiquée corrigée par elle [4][3]\n\n## Ce qui reste ouvert\n- L'export des ventes Shopify d'octobre qu'Antoine te demande pour la TVA avant jeudi : tu as pris l'engagement, il reste à produire [1]\n- PR #58 (dry-run) ouverte sans relecteur, CI verte [5]\n- Karim fait le comptage physique jeudi matin à l'entrepôt et te renvoie les vrais chiffres : reste à réconcilier avec les 14 écarts [7]",
+  "rendu": "## Ce que tu as fait\n- Trouvé la cause du bug : `sync-stock` associait le CSV de l'entrepôt à Shopify par préfixe et écrivait la même quantité sur les deux finitions — d'où la Saône chêne affichée à 12 pour rien [1]\n- Revu la PR #57 d'Hugo et poussé sur sa branche les 17 références multi-finitions qui manquaient, un avertissement quand une référence n'a pas de correspondance, et un test qui bloque les futures références sans entrée [1]\n- Ajouté le mode `--dry-run` de sync-stock : rapport d'écarts sans rien écrire ; 14 variantes en écart sur le fichier du 17/11, CSV de comptage préparé pour Karim [1]\n\n## Ce qui a bougé\n- #57 est fusionnée : la synchro de cette nuit tourne enfin avec la correspondance exacte des SKU, et #55 est indiquée corrigée par elle [4][3]\n\n## Ce qui reste ouvert\n- L'export des ventes Shopify d'octobre qu'Antoine te demande pour la TVA avant jeudi : tu as pris l'engagement, il reste à produire [1]\n- PR #58 (dry-run) ouverte sans relecteur, CI verte [5]\n- Karim fait le comptage physique jeudi matin à l'entrepôt et te renvoie les vrais chiffres : reste à réconcilier avec les 14 écarts [7]",
+  "mesures": {
+    "mots": 188,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5553,
+    "sortie": 1643,
+    "reflexion": 1279,
+    "cache": 0,
+    "cout": 0.00123746
+  },
+  "cout": 0.00123746,
+  "latenceMs": 53727,
+  "fournisseur": "Xiaomi"
+}

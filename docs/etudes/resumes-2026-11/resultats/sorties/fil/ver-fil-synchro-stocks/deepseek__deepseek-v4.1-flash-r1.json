@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:06.797Z",
+  "reponse": "## Où j'en suis\nLe correctif #87 (les webhooks de commande ne touchent plus au stock, la synchro de nuit écrit la valeur absolue et s'arrête si le CSV manque) est fusionné et vérifié sur la nuit du 14/11 (1 204 variantes, 0 écart). Mais le 16/11, TransAlp a déposé son CSV 47 min après le passage du script : la sécurité « CSV absent → rien écrit » a laissé 40 références non mises à jour sur le site pendant la journée. Correctif : reprises à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h (commit d7c2e41), avec le fuseau Europe/Paris après un test rouge. La synchro a été relancée à la main le 17/11 (40 réf. corrigées, 0 erreur). La PR #96 est ouverte et attend la relecture d'Hugo. (source: ses-st-3, ses-st-2)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, Hugo en relecteur (source: ses-st-3)\n- [prochaine-étape] relecture puis fusion de la PR #96 (source: ses-st-3)\n- [prochaine-étape] traiter avec Lucie les 3 commandes Saône survendues (source: ses-st-1)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris (2 appels attendus, 1 reçu) — corrigé avec le fuseau Europe/Paris, 15 tests passent (source: ses-st-3)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (source: ses-st-1)\n- [décision] les webhooks de commande ne touchent plus au stock, seule la synchro de nuit corrige, en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (source: u1-04)\n- [décision] pas de précommande pour la Saône, elle ne revient de chez Bois & Fils que le 2 décembre (source: u1-06)\n- [décision] rien dans le script pour la réservation Saône : Claire voit ça avec les Galeries Brotteaux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLe correctif #87 (les webhooks de commande ne touchent plus au stock, la synchro de nuit écrit la valeur absolue et s'arrête si le CSV manque) est fusionné et vérifié sur la nuit du 14/11 (1 204 variantes, 0 écart). Mais le 16/11, TransAlp a déposé son CSV 47 min après le passage du script : la sécurité « CSV absent → rien écrit » a laissé 40 références non mises à jour sur le site pendant la journée. Correctif : reprises à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h (commit d7c2e41), avec le fuseau Europe/Paris après un test rouge. La synchro a été relancée à la main le 17/11 (40 réf. corrigées, 0 erreur). La PR #96 est ouverte et attend la relecture d'Hugo. (de: agent; source: ses-st-3, ses-st-2)\n\n- [en-cours] PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, Hugo en relecteur (de: agent; source: ses-st-3)\n- [prochaine-étape] relecture puis fusion de la PR #96 (de: agent; source: ses-st-3)\n- [prochaine-étape] traiter avec Lucie les 3 commandes Saône survendues (de: agent; source: ses-st-1)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris (2 appels attendus, 1 reçu) — corrigé avec le fuseau Europe/Paris, 15 tests passent (de: agent; source: ses-st-3)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (de: agent; source: ses-st-1)\n- [décision] les webhooks de commande ne touchent plus au stock, seule la synchro de nuit corrige, en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (de: toi; source: u1-04)\n- [décision] pas de précommande pour la Saône, elle ne revient de chez Bois & Fils que le 2 décembre (de: toi; source: u1-06)\n- [décision] rien dans le script pour la réservation Saône : Claire voit ça avec les Galeries Brotteaux (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1955,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4388,
+    "sortie": 2047,
+    "reflexion": 1426,
+    "cache": 0,
+    "cout": 0.00264096
+  },
+  "cout": 0.00264096,
+  "latenceMs": 12800,
+  "fournisseur": "Fireworks"
+}

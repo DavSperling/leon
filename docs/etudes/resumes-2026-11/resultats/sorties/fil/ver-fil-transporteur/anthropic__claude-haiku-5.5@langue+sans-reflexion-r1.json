@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:01.681Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp est en place et testé en recette : étiquette ZPL reçue, accents corrigés (`^CI28`), tests verts. La config de bascule est prête mais inactive avant le 1er décembre, et la PR #91 est poussée, toujours en brouillon pour relecture de Julien. Rapidis n'est pas touché : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. (source: ses-tr-2, src-slack-julien, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien avant de passer la PR hors brouillon (source: src-pr91)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis activation de TransAlp pour Lyon et Paris à partir du 1er décembre (`TRANSALP_DEBUT`) (source: h2-07, src-slack-julien)\n- [prochaine-étape] Karim à former sur le nouveau poste d'impression Zebra avant la bascule (source: src-slack-julien)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] Étiquette ZPL sans `^CI28` : accents illisibles sur la Zebra (« SaÃ´ne »), corrigé dans `zpl.ts` (source: h2-03, h2-04)\n- [question] Le contrat Premium annoncé dans le mail du support n'a pas été confirmé : la personne a demandé de l'ignorer, à vérifier avant tout changement tarifaire (source: h2-09, src-mail-transalp)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, pas le 23 novembre (source: src-slack-julien)\n- [décision] Rapidis reste en place jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, sans résiliation (source: src-slack-julien, h2-09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp est en place et testé en recette : étiquette ZPL reçue, accents corrigés (`^CI28`), tests verts. La config de bascule est prête mais inactive avant le 1er décembre, et la PR #91 est poussée, toujours en brouillon pour relecture de Julien. Rapidis n'est pas touché : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. (de: équipe, connecteur, agent; source: ses-tr-2, src-slack-julien, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien avant de passer la PR hors brouillon (de: équipe; source: src-pr91)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis activation de TransAlp pour Lyon et Paris à partir du 1er décembre (`TRANSALP_DEBUT`) (de: toi, connecteur; source: h2-07, src-slack-julien)\n- [prochaine-étape] Karim à former sur le nouveau poste d'impression Zebra avant la bascule (de: connecteur; source: src-slack-julien)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] Étiquette ZPL sans `^CI28` : accents illisibles sur la Zebra (« SaÃ´ne »), corrigé dans `zpl.ts` (de: toi, agent; source: h2-03, h2-04)\n- [question] Le contrat Premium annoncé dans le mail du support n'a pas été confirmé : la personne a demandé de l'ignorer, à vérifier avant tout changement tarifaire (de: toi, connecteur; source: h2-09, src-mail-transalp)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, pas le 23 novembre (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste en place jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, sans résiliation (de: toi, connecteur; source: src-slack-julien, h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1723,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5416,
+    "sortie": 717,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009001
+  },
+  "cout": 0.0009001,
+  "latenceMs": 3476,
+  "fournisseur": "Claude Platform on AWS"
+}

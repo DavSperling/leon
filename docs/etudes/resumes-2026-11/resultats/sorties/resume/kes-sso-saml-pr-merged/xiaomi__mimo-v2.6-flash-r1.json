@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:15.205Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint now verifies assertion signatures with signxml and checks conditions (audience, recipient, time window, 120 s clock skew from the Fernhill contract annex, replay protection in Redis), replacing the python3-saml/xmlsec approach that failed on Alpine. Work was moved to `api/auth/saml/verify.py`, tests/lint/mypy are green, and PR #412 was opened and is merged.\n\n- [en-cours] PR #412 was awaiting Maya's approving review when the session ended; a background full test run passed (1284 passed, 3 skipped).\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml with xmlsec: image build failed (lxml/xmlsec libxml2 version mismatch), and rebuilding lxml from source still failed (crypto library load error) — abandoned for signxml.\n- [question] None left open on the merge; review was pending Maya's approval.\n- [décision] Use signxml, drop python3-saml and xmlsec entirely, write the condition checks by hand with tests, and read attributes only from signed_xml (source: t08).\n- [décision] Clock skew is 120 s per the Fernhill security questionnaire annex; password login stays untouched in this PR (source: t12).\n- [décision] No `--admin` and no `--auto` on the merge; she will ping Maya herself (source: t21).",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint now verifies assertion signatures with signxml and checks conditions (audience, recipient, time window, 120 s clock skew from the Fernhill contract annex, replay protection in Redis), replacing the python3-saml/xmlsec approach that failed on Alpine. Work was moved to `api/auth/saml/verify.py`, tests/lint/mypy are green, and PR #412 was opened and is merged.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] PR #412 was awaiting Maya's approving review when the session ended; a background full test run passed (1284 passed, 3 skipped).\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, ahead of the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml with xmlsec: image build failed (lxml/xmlsec libxml2 version mismatch), and rebuilding lxml from source still failed (crypto library load error) — abandoned for signxml.\n- [question] None left open on the merge; review was pending Maya's approval.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1214,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4787,
+    "sortie": 476,
+    "reflexion": 90,
+    "cache": 0,
+    "cout": 0.00080346
+  },
+  "cout": 0.00080346,
+  "latenceMs": 17522,
+  "fournisseur": "Xiaomi"
+}

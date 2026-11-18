@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:05:02.608Z",
+  "reponse": "La cause était l’ajout de l’emplacement Showroom dans Shopify le 3 novembre : le script de synchro ne mettait à jour que l’entrepôt, et Shopify additionnait les quantités des deux emplacements. Le site pouvait donc afficher du stock fantôme conservé au showroom. [1][5]\n\nOui, le correctif a été fusionné et déployé le 13 novembre : la synchro met maintenant à jour les deux emplacements, puis le catalogue a été resynchronisé. Sept commandes ont été touchées entre le 3 et le 12 novembre, et aucun nouveau cas n’a été signalé au 17 novembre. [5] Le contrôle quotidien des écarts, lui, était encore en préparation et pas en production. [5]",
+  "rendu": "La cause était l’ajout de l’emplacement Showroom dans Shopify le 3 novembre : le script de synchro ne mettait à jour que l’entrepôt, et Shopify additionnait les quantités des deux emplacements. Le site pouvait donc afficher du stock fantôme conservé au showroom. [1][5]\n\nOui, le correctif a été fusionné et déployé le 13 novembre : la synchro met maintenant à jour les deux emplacements, puis le catalogue a été resynchronisé. Sept commandes ont été touchées entre le 3 et le 12 novembre, et aucun nouveau cas n’a été signalé au 17 novembre. [5] Le contrôle quotidien des écarts, lui, était encore en préparation et pas en production. [5]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9939,
+    "sortie": 262,
+    "reflexion": 0,
+    "cache": 6005,
+    "cout": 0.0006825749999999999
+  },
+  "latenceMs": 5300,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"clients acheté meubles plus disponibles stock inventaire disponibilité commande cause corrigé réparé\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}"
+  ],
+  "cout": 0.0006825749999999999
+}

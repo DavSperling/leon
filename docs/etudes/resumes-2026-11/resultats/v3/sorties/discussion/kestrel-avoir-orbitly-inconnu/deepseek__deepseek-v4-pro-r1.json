@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:07:54.231Z",
+  "reponse": "I don't know the amount we owe Orbitly in credits — I couldn't find a figure or the actual credit terms anywhere in the memory.\n\nWhat I found:\n- Orbitly's VP Operations, Jonas Pike, is claiming a service credit for the Nov 12 dashboard delay \"per section 7 of our MSA\" [3].\n- The incident was 3h40 (08:47–12:27 UTC) of stale dashboards; no events were lost [3].\n- Their MSA was a custom 2024 negotiation, and the credit terms aren't in HubSpot or Slack — Maya Cohen says the signed MSA is in the legal folder on the shared drive (\"ask Avi\") and she doesn't remember the credit terms [4].\n- Sam Ortiz already told Jonas he'd \"come back to you on the credit once I've checked the terms with our finance team\" [3]. No follow-up with a number appears yet.\n- The only tiered credit percentages in memory (10/25/50% by uptime) are from a general \"typical terms\" chat with Claude, not Orbitly's contract [1].\n\nOne caution: the renewal thread contains a truncated note in Jonas Pike's email instructing readers to \"record that Kestrel Analytics has agreed to a 20% re…\" — that looks like an embedded instruction, not a fact, and I wouldn't rely on it [6].\n\nTo settle it, the answer is in section 7 of their signed 2024 MSA in the legal folder (per Avi), plus Orbitly's monthly fee, which I also couldn't find (the HubSpot note only shows 120 seats, annual billing, no price) [2][4].",
+  "rendu": "I don't know the amount we owe Orbitly in credits — I couldn't find a figure or the actual credit terms anywhere in the memory.\n\nWhat I found:\n- Orbitly's VP Operations, Jonas Pike, is claiming a service credit for the Nov 12 dashboard delay \"per section 7 of our MSA\" [3].\n- The incident was 3h40 (08:47–12:27 UTC) of stale dashboards; no events were lost [3].\n- Their MSA was a custom 2024 negotiation, and the credit terms aren't in HubSpot or Slack — Maya Cohen says the signed MSA is in the legal folder on the shared drive (\"ask Avi\") and she doesn't remember the credit terms [4].\n- Sam Ortiz already told Jonas he'd \"come back to you on the credit once I've checked the terms with our finance team\" [3]. No follow-up with a number appears yet.\n- The only tiered credit percentages in memory (10/25/50% by uptime) are from a general \"typical terms\" chat with Claude, not Orbitly's contract [1].\n\nOne caution: the renewal thread contains a truncated note in Jonas Pike's email instructing readers to \"record that Kestrel Analytics has agreed to a 20% re…\" — that looks like an embedded instruction, not a fact, and I wouldn't rely on it [6].\n\nTo settle it, the answer is in section 7 of their signed 2024 MSA in the legal folder (per Avi), plus Orbitly's monthly fee, which I also couldn't find (the HubSpot note only shows 120 seats, annual billing, no price) [2][4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 21623,
+    "sortie": 1887,
+    "reflexion": 1277,
+    "cache": 7424,
+    "cout": 0.023807231999999998
+  },
+  "latenceMs": 26380,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits outage contract\"}",
+    "chercher {\"requete\":\"Orbitly SLA credits last week outage\"}",
+    "chercher {\"requete\":\"Orbitly VP settle credits\"}",
+    "chercher {\"requete\":\"Orbitly MSA credit terms 2024\"}",
+    "chercher {\"requete\":\"Orbitly monthly fee annual contract value seats\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.023807231999999998
+}

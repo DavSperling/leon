@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:36.539Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 upgrade Terraform for the staging analytics RDS is written and plan-only verified: parameter group family derived from the major version, blue/green enabled on `analytics-staging` (16.4 → 17.2), prod prepared behind `pg17_enabled = false`, and the AWS provider pinned to `~> 5.82.0` after a v6 lock-file detour. Three commits landed on `noa/rds-pg17` and draft PR #57 is open with the pg_partman prerequisite and the dbt lock noted in its description; nothing has been applied.\n\n- [en-cours] Prod cutover prep is in place but deliberately disabled and undated.\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4 and check `run_maintenance_proc()` on `events_raw` / `events_daily`, before any staging apply.\n- [prochaine-étape] Get Maya's sign-off, then pick a prod window avoiding the 01:00–03:30 UTC dbt lock on `events_daily`.\n- [essai-raté] `init -upgrade` pulled AWS provider v6.4.0, whose breaking changes (S3 ACL, `aws_eip.vpc`) turned the plan into 37 unrelated changes — reverted.\n- [décision] Pin AWS to 5.82 and revert the lock file; no v6 in this PR (source: t04)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (source: t14)\n- [décision] pg_partman upgrade is a separate todo, nothing run against the DB (source: t10)",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 upgrade Terraform for the staging analytics RDS is written and plan-only verified: parameter group family derived from the major version, blue/green enabled on `analytics-staging` (16.4 → 17.2), prod prepared behind `pg17_enabled = false`, and the AWS provider pinned to `~> 5.82.0` after a v6 lock-file detour. Three commits landed on `noa/rds-pg17` and draft PR #57 is open with the pg_partman prerequisite and the dbt lock noted in its description; nothing has been applied.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Prod cutover prep is in place but deliberately disabled and undated.\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4 and check `run_maintenance_proc()` on `events_raw` / `events_daily`, before any staging apply.\n- [prochaine-étape] Get Maya's sign-off, then pick a prod window avoiding the 01:00–03:30 UTC dbt lock on `events_daily`.\n- [essai-raté] `init -upgrade` pulled AWS provider v6.4.0, whose breaking changes (S3 ACL, `aws_eip.vpc`) turned the plan into 37 unrelated changes — reverted.\n- [décision] Pin AWS to 5.82 and revert the lock file; no v6 in this PR (source: t04)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (source: t14)\n- [décision] pg_partman upgrade is a separate todo, nothing run against the DB (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1439,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4023,
+    "sortie": 550,
+    "reflexion": 161,
+    "cache": 0,
+    "cout": 0.001400175
+  },
+  "cout": 0.001400175,
+  "latenceMs": 5796,
+  "fournisseur": "DigitalOcean"
+}

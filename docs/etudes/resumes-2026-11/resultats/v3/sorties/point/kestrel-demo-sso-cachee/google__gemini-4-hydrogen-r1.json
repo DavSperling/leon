@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T17:54:00.977Z",
+  "reponse": "## What is still open\n- Tom Becker requested changes on PR #423, asking you to split the `saml_utils.py` move into `kestrel/auth/saml/` from your `freezegun`, Ruff 0.8, and mypy fixes into two PRs so he can approve both today [1][4].\n- Join Fernhill IT's end-to-end SSO walkthrough on staging Thursday at 10am NY time (Priya is running the demo) [1].\n- Move the SAML assertion replay cache (`_seen_assertion_ids`) from an in-memory `TTLCache` to Redis (`kestrel/cache.py`) so replay protection holds across multiple API pods [1][2].\n\n## What changed\n- Maya Cohen approved and merged PR #418 (SAML assertion signature verification) for last night's staging deploy, putting signature validation on staging ahead of the Fernhill walkthrough [1][3].",
+  "rendu": "## What is still open\n- Tom Becker requested changes on PR #423, asking you to split the `saml_utils.py` move into `kestrel/auth/saml/` from your `freezegun`, Ruff 0.8, and mypy fixes into two PRs so he can approve both today [1][4].\n- Join Fernhill IT's end-to-end SSO walkthrough on staging Thursday at 10am NY time (Priya is running the demo) [1].\n- Move the SAML assertion replay cache (`_seen_assertion_ids`) from an in-memory `TTLCache` to Redis (`kestrel/cache.py`) so replay protection holds across multiple API pods [1][2].\n\n## What changed\n- Maya Cohen approved and merged PR #418 (SAML assertion signature verification) for last night's staging deploy, putting signature validation on staging ahead of the Fernhill walkthrough [1][3].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6181,
+    "sortie": 3075,
+    "reflexion": 2867,
+    "cache": 0,
+    "cout": 0.032334
+  },
+  "cout": 0.032334,
+  "latenceMs": 19954,
+  "fournisseur": "Google"
+}

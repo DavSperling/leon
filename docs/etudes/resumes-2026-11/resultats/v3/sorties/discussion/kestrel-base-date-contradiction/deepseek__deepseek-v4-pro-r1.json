@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:09:04.834Z",
+  "reponse": "La mise à niveau de la base Postgres 13 → 17 a été reportée. La fenêtre de maintenance production est désormais **samedi 5 décembre, 02:00–05:00 UTC** [2]. Le ticket KES-398 fait foi pour la fenêtre (le runbook Notion n'était pas encore à jour) [2], et l'annonce initiale du 21 novembre a été annulée lors du point du 12 novembre [5].\n\nPour la notice client et le macro support :\n- Notice client (status page + bannière in-app) : **samedi 28 novembre** [2]\n- Gel des migrations : **à partir du jeudi 3 décembre** [2]\n- Répétition sur staging : **vendredi 27 novembre** [2]",
+  "rendu": "La mise à niveau de la base Postgres 13 → 17 a été reportée. La fenêtre de maintenance production est désormais **samedi 5 décembre, 02:00–05:00 UTC** [2]. Le ticket KES-398 fait foi pour la fenêtre (le runbook Notion n'était pas encore à jour) [2], et l'annonce initiale du 21 novembre a été annulée lors du point du 12 novembre [5].\n\nPour la notice client et le macro support :\n- Notice client (status page + bannière in-app) : **samedi 28 novembre** [2]\n- Gel des migrations : **à partir du jeudi 3 décembre** [2]\n- Répétition sur staging : **vendredi 27 novembre** [2]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8981,
+    "sortie": 428,
+    "reflexion": 123,
+    "cache": 3072,
+    "cout": 0.008990976
+  },
+  "latenceMs": 10080,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"big database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"database upgrade maintenance\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}"
+  ],
+  "cout": 0.008990976
+}

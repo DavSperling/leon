@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:00.284Z",
+  "reponse": "PO-2291 : 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT, avec une livraison souhaitée au magasin avant le 27 novembre [1][2]. Les 12 pièces sont emballées, enlèvement Rapid'Colis le 24/11 et livraison le 25 [3], encore sous leur contrat qui se termine le 30/11 [2]. La facturation interviendra à la livraison, avec paiement à 60 jours fin de mois, l'encaissement tombant donc fin janvier [1][4].",
+  "rendu": "PO-2291 : 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT, avec une livraison souhaitée au magasin avant le 27 novembre [1][2]. Les 12 pièces sont emballées, enlèvement Rapid'Colis le 24/11 et livraison le 25 [3], encore sous leur contrat qui se termine le 30/11 [2]. La facturation interviendra à la livraison, avec paiement à 60 jours fin de mois, l'encaissement tombant donc fin janvier [1][4].",
+  "mesures": {
+    "mots": 69,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1097,
+    "sortie": 184,
+    "reflexion": 26,
+    "cache": 0,
+    "cout": 0.0002051
+  },
+  "cout": 0.0002051,
+  "latenceMs": 1870,
+  "fournisseur": "Xiaomi"
+}

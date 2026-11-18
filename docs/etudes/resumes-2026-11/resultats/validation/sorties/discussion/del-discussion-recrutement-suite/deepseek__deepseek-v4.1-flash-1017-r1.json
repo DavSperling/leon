@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:26:03.432Z",
+  "reponse": "Non, personne n'a été recruté à ce stade : au CODIR du 16/11, l'objectif affiché était encore de « faire une offre la semaine prochaine pour une arrivée début janvier » [1]. Les entretiens (avec Yannick Moreau, à l'atelier de Carquefou) sont prévus jeudi 19 et vendredi 20/11 [2][4], et il n'y a qu'un modèle de promesse d'embauche, non rempli, dans le Drive [3].\n\nPoints d'étape utiles :\n- 4 candidats convoqués : Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré [4]. Un cinquième (Haddou) a été écarté car il cherche en Mayenne, et l'absence d'attestation fluides n'est pas éliminatoire (formation payée) [4].\n- Mathis Le Gac a retiré sa candidature le 18/11, ayant accepté une autre offre près de Vannes [9] ; Aurélie lui a répondu [2]. Il reste donc 3 entretiens.\n- Les réponses aux candidats non retenus doivent partir avant le 27/11 [4].\n\nJe ne trouve aucune trace d'offre envoyée ni de candidat accepté après les entretiens (recherches « recrutement installateurs », « installateur recruté / offre acceptée », filtre 3 mois, et activité d'Aurélie Jaouen sur 7 jours).",
+  "rendu": "Non, personne n'a été recruté à ce stade : au CODIR du 16/11, l'objectif affiché était encore de « faire une offre la semaine prochaine pour une arrivée début janvier » [1]. Les entretiens (avec Yannick Moreau, à l'atelier de Carquefou) sont prévus jeudi 19 et vendredi 20/11 [2][4], et il n'y a qu'un modèle de promesse d'embauche, non rempli, dans le Drive [3].\n\nPoints d'étape utiles :\n- 4 candidats convoqués : Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré [4]. Un cinquième (Haddou) a été écarté car il cherche en Mayenne, et l'absence d'attestation fluides n'est pas éliminatoire (formation payée) [4].\n- Mathis Le Gac a retiré sa candidature le 18/11, ayant accepté une autre offre près de Vannes [9] ; Aurélie lui a répondu [2]. Il reste donc 3 entretiens.\n- Les réponses aux candidats non retenus doivent partir avant le 27/11 [4].\n\nJe ne trouve aucune trace d'offre envoyée ni de candidat accepté après les entretiens (recherches « recrutement installateurs », « installateur recruté / offre acceptée », filtre 3 mois, et activité d'Aurélie Jaouen sur 7 jours).",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13012,
+    "sortie": 731,
+    "reflexion": 154,
+    "cache": 4608,
+    "cout": 0.0013141792
+  },
+  "latenceMs": 9041,
+  "fournisseur": "Particle AI",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidats entretien embauche\"}",
+    "chercher {\"requete\":\"installateur recruté offre acceptée signature\",\"depuis\":\"3m\"}",
+    "activite {\"depuis\":\"7j\",\"de\":\"Aurélie Jaouen\"}",
+    "chercher {\"requete\":\"candidat retenu offre promesse embauche installateur\",\"depuis\":\"7j\"}"
+  ],
+  "cout": 0.0013141792
+}

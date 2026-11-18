@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:35.423Z",
+  "reponse": "## Où j'en suis\nAfter merging PR #418 (draggable/resizable grid), we implemented keyboard navigation (move, resize, drop/cancel) and a visible focus ring per Priya’s review. The initial attempt using `@dnd-kit` caused event collision and duplicate layout updates, so a custom `useGridKeyboard()` hook was written instead. The branch is tested and committed. The `dashboards_v2` flag is currently live only for the Zest workspace on staging to prep for the Nov 24 demo. The VisX migration (#401) was fully rolled back due to bundle overhead and rewrite workload, keeping Recharts. Production activation is scheduled for the morning of the 24th. (source: ses-db-4, ses-db-3, src-pr418)\n\n- [en-cours] Final validation of the new keyboard hook and focus ring styling against existing mouse-drag interactions in PR #423 (source: ses-db-4, d4-05)\n- [prochaine-étape] Obtain review on PR #423, merge it, and schedule the production flag flip for the morning of November 24 (source: ses-db-4, d4-06)\n- [essai-raté] Using `@dnd-kit`’s `KeyboardSensor` alongside `react-grid-layout` failed because both libraries intercepted the same pointer and key events, triggering duplicate moves and double layout changes (source: ses-db-4, d4-02)\n- [décision] Abort the VisX migration and retain Recharts to prevent bundle bloat and avoid rewriting nine remaining chart components (source: ses-db-3, d3-03)\n- [décision] Maintain legacy v1 dashboards behind the feature flag until January; enable `dashboards_v2` exclusively for Zest on staging prior to the demonstration (source: ses-db-2, b2-04; ses-db-4, d4-06)",
+  "rendu": "## Où j'en suis\nAfter merging PR #418 (draggable/resizable grid), we implemented keyboard navigation (move, resize, drop/cancel) and a visible focus ring per Priya’s review. The initial attempt using `@dnd-kit` caused event collision and duplicate layout updates, so a custom `useGridKeyboard()` hook was written instead. The branch is tested and committed. The `dashboards_v2` flag is currently live only for the Zest workspace on staging to prep for the Nov 24 demo. The VisX migration (#401) was fully rolled back due to bundle overhead and rewrite workload, keeping Recharts. Production activation is scheduled for the morning of the 24th. (de: équipe, agent; source: ses-db-4, ses-db-3, src-pr418)\n\n- [en-cours] Final validation of the new keyboard hook and focus ring styling against existing mouse-drag interactions in PR #423 (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] Obtain review on PR #423, merge it, and schedule the production flag flip for the morning of November 24 (de: toi, agent; source: ses-db-4, d4-06)\n- [essai-raté] Using `@dnd-kit`’s `KeyboardSensor` alongside `react-grid-layout` failed because both libraries intercepted the same pointer and key events, triggering duplicate moves and double layout changes (de: agent; source: ses-db-4, d4-02)\n- [décision] Maintain legacy v1 dashboards behind the feature flag until January; enable `dashboards_v2` exclusively for Zest on staging prior to the demonstration (de: toi, agent; source: ses-db-2, b2-04, ses-db-4, d4-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1506,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5334,
+    "sortie": 4224,
+    "reflexion": 3797,
+    "cache": 0,
+    "cout": 0.00070914
+  },
+  "cout": 0.00070914,
+  "latenceMs": 38974,
+  "fournisseur": "Alibaba"
+}

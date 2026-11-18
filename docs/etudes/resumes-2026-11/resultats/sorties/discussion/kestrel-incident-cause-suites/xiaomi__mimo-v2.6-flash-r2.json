@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:19.875Z",
+  "reponse": "Here's what the postmortem and follow-ups say:\n\n**What broke:** On Thursday Nov 12, 08:47–12:27 UTC (3h40), customer dashboards showed stale data. Release ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB for throughput; against the 512 Mi memory limit, the ingest-worker pods OOM'd on the first large batch and crash-looped — and the change went to all pods at once [1][4]. Detection was slow: no consumer-lag alert existed, first signal was a Sentry OOM alert at 09:14, 27 minutes after the deploy [1]. Kafka itself was fine (disk at 62%, ruled out at 09:41) [1][4]. Rolled back to v2.13.3 at 10:05; lag drained at 12:27 [1].\n\n**Customer data:** No loss. Events kept arriving in Kafka and were processed late; the Nov 13 reconciliation confirmed no events lost [1][3]. All workspaces had delayed dashboards; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts), and Maya sent incident reports on Nov 15 [1]. Orbitly is claiming an SLA service credit under their MSA [3][7].\n\n**What's changing** (postmortem action items):\n1. **KES-431** – page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20) — alert rule is in and routed, threshold still being tuned against nightly backfills [1][11]\n2. **KES-432** – ingest config changes go to the canary pool first (Daniel, due Nov 27) [1]\n3. **KES-433** – raise worker memory limit to 1 Gi + load test on batch sizes (Lior, due Nov 27) [1]\n\nAlready merged: **ingest#419** (Nov 13) reverted the default to 1 MB and added a guard so the batcher refuses any batch over 25% of the container memory limit, shipping as v2.14.1 through the canary first [8]. Side effect: the Postgres 17 cutover planned for Nov 21 was postponed to avoid stacking risk [6].",
+  "rendu": "Here's what the postmortem and follow-ups say:\n\n**What broke:** On Thursday Nov 12, 08:47–12:27 UTC (3h40), customer dashboards showed stale data. Release ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB for throughput; against the 512 Mi memory limit, the ingest-worker pods OOM'd on the first large batch and crash-looped — and the change went to all pods at once [1][4]. Detection was slow: no consumer-lag alert existed, first signal was a Sentry OOM alert at 09:14, 27 minutes after the deploy [1]. Kafka itself was fine (disk at 62%, ruled out at 09:41) [1][4]. Rolled back to v2.13.3 at 10:05; lag drained at 12:27 [1].\n\n**Customer data:** No loss. Events kept arriving in Kafka and were processed late; the Nov 13 reconciliation confirmed no events lost [1][3]. All workspaces had delayed dashboards; 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts), and Maya sent incident reports on Nov 15 [1]. Orbitly is claiming an SLA service credit under their MSA [3][7].\n\n**What's changing** (postmortem action items):\n1. **KES-431** – page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20) — alert rule is in and routed, threshold still being tuned against nightly backfills [1][11]\n2. **KES-432** – ingest config changes go to the canary pool first (Daniel, due Nov 27) [1]\n3. **KES-433** – raise worker memory limit to 1 Gi + load test on batch sizes (Lior, due Nov 27) [1]\n\nAlready merged: **ingest#419** (Nov 13) reverted the default to 1 MB and added a guard so the batcher refuses any batch over 25% of the container memory limit, shipping as v2.14.1 through the canary first [8]. Side effect: the Postgres 17 cutover planned for Nov 21 was postponed to avoid stacking risk [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21062,
+    "sortie": 888,
+    "reflexion": 213,
+    "cache": 13888,
+    "cout": 0.0012918864
+  },
+  "latenceMs": 36741,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident broken data loss\"}",
+    "chercher {\"requete\":\"pipeline événements panne jeudi incident postmortem\"}",
+    "lire {\"sourceId\":\"1\"}",
+    "lire {\"passageId\":\"notion-postmortem-ingest-1112-1\"}",
+    "chercher {\"requete\":\"canary deploy rollout staging ingest changement processus\"}"
+  ],
+  "cout": 0.0012918864
+}

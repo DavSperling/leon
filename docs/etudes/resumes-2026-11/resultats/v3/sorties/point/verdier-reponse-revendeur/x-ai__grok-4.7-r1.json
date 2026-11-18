@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:00:46.024Z",
+  "reponse": "## What is still open\n\n- Réponds à Bertrand ce matin, comme Claire te l’a demandé hier soir : 10 % sur les quatre tables, et quatre Saône chêne réservées sur le réassort de janvier. Le brouillon d’hier ne le dit pas et n’a pas été envoyé ; Lucie a déjà dit au service client que tu revenais vers eux. [1][4][6]\n- Si ces 10 % passent par un avoir, préviens Antoine avant de l’émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas. [5]\n\n## What changed\n\n- Hugo a approuvé la #62. Il a revérifié le fichier du 10/11 : la Saône chêne sort à 0. [2]",
+  "rendu": "## What is still open\n\n- Réponds à Bertrand ce matin, comme Claire te l’a demandé hier soir : 10 % sur les quatre tables, et quatre Saône chêne réservées sur le réassort de janvier. Le brouillon d’hier ne le dit pas et n’a pas été envoyé ; Lucie a déjà dit au service client que tu revenais vers eux. [1][4][6]\n- Si ces 10 % passent par un avoir, préviens Antoine avant de l’émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas. [5]\n\n## What changed\n\n- Hugo a approuvé la #62. Il a revérifié le fichier du 10/11 : la Saône chêne sort à 0. [2]",
+  "mesures": {
+    "mots": 106,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5253,
+    "sortie": 6394,
+    "reflexion": 6206,
+    "cache": 1152,
+    "cout": 0.047142
+  },
+  "cout": 0.047142,
+  "latenceMs": 114337,
+  "fournisseur": "xAI"
+}

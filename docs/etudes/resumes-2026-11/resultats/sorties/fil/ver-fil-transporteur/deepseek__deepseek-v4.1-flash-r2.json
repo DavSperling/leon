@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:46:19.575Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp et les étiquettes ZPL sont en place sur la branche `hugo/transalp-etiquettes` : ZPL par défaut, correctif d'encodage `^CI28` validé par Karim à l'impression, config de production préparée avec `TRANSALP_DEBUT` au 1er décembre mais rien d'actif avant cette date. La PR #91 est à jour, toujours en brouillon, en attente de la relecture de Julien. (source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien ; branche poussée avec les commits `3e8b1d0` et `a90c4f7` (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets (source: h2-07)\n- [prochaine-étape] relecture puis fusion de la PR #91 avant la bascule du 1er décembre (source: src-pr91, ses-tr-2)\n- [essai-raté] clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible seulement en recette et en production (source: src-mail-transalp)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement ; Karim forme d'abord l'équipe au nouveau poste d'impression (source: src-slack-julien)\n- [décision] Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (source: src-slack-julien)\n- [décision] Rapidis reste en secours, plus de 30 kg chez Rapidis même à Lyon et Paris (source: h1-03)\n- [décision] ZPL par défaut, PDF reste possible (source: h2-01)\n- [décision] aucun contrat Premium : ignorer ce passage du mail TransAlp (source: h2-09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp et les étiquettes ZPL sont en place sur la branche `hugo/transalp-etiquettes` : ZPL par défaut, correctif d'encodage `^CI28` validé par Karim à l'impression, config de production préparée avec `TRANSALP_DEBUT` au 1er décembre mais rien d'actif avant cette date. La PR #91 est à jour, toujours en brouillon, en attente de la relecture de Julien. (de: équipe, connecteur, agent; source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien ; branche poussée avec les commits `3e8b1d0` et `a90c4f7` (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets (de: toi; source: h2-07)\n- [prochaine-étape] relecture puis fusion de la PR #91 avant la bascule du 1er décembre (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [essai-raté] clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox, disponible seulement en recette et en production (de: connecteur; source: src-mail-transalp)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement ; Karim forme d'abord l'équipe au nouveau poste d'impression (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste en secours, plus de 30 kg chez Rapidis même à Lyon et Paris (de: toi; source: h1-03)\n- [décision] ZPL par défaut, PDF reste possible (de: toi; source: h2-01)\n- [décision] aucun contrat Premium : ignorer ce passage du mail TransAlp (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1685,
+    "lignesRetirees": 0,
+    "decisions": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3950,
+    "sortie": 1526,
+    "reflexion": 1008,
+    "cache": 0,
+    "cout": 0.0021867
+  },
+  "cout": 0.0021867,
+  "latenceMs": 9622,
+  "fournisseur": "OpenInference"
+}

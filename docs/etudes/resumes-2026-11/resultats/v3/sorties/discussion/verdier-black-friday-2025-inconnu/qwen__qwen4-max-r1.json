@@ -1,0 +1,8 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T18:12:16.851Z",
+  "erreur": "HTTP 404 {\"error\":{\"message\":\"No endpoints found matching your data policy (Zero data retention). Configure: https://openrouter.ai/settings/privacy\",\"code\":404,\"metadata\":{\"routing_funnel\":[{\"step\":\"Initial Endpoints\",\"endpoint_count\":1}],\"failed_routing_step\":\"Filter by Data Policy\"}}}"
+}

@@ -1,0 +1,1059 @@
+{
+ "entreprise": "Delorme Énergies",
+ "utilisateur": "Hélène Delorme",
+ "maintenant": "2026-11-18T09:30:00+01:00",
+ "sources": [
+  {
+   "id": "ol-thermaval-report",
+   "kind": "outlook",
+   "nature": "fil",
+   "titre": "RE: CMD-4471 – 14 x Aéro 11 kW – date de livraison",
+   "url": null,
+   "auteurs": [
+    "Olivier Brissac",
+    "Nadia Benali"
+   ],
+   "tours": [
+    {
+     "id": "ol-thermaval-report-1",
+     "role": "participant",
+     "auteur": "Olivier Brissac",
+     "date": "2026-11-16T08:12:00+01:00",
+     "texte": "Bonjour Nadia,\n\nSuite à un retard d'approvisionnement sur les compresseurs, nous ne pourrons pas livrer la totalité de votre commande CMD-4471 (14 pompes à chaleur air/eau Aéro 11 kW) le 13/11 comme prévu. Nous vous proposons :\n- 8 unités livrées le mardi 24 novembre à votre dépôt de Carquefou\n- les 6 restantes le vendredi 4 décembre\nEn compensation, nous vous accordons une remise de 3 % sur la commande.\n\nCordialement,\nOlivier Brissac\nResponsable grands comptes Ouest – Thermaval"
+    },
+    {
+     "id": "ol-thermaval-report-2",
+     "role": "participant",
+     "auteur": "Nadia Benali",
+     "date": "2026-11-16T10:02:00+01:00",
+     "texte": "Bonjour Olivier,\n\nNous prenons note du report. Nous acceptons une livraison en deux lots aux conditions suivantes : confirmation écrite de la livraison des 8 premières unités le 24/11 au plus tard ; une pénalité de 150 € par jour de retard au-delà ; une remise portée à 5 % sur l'ensemble de la commande.\n\nBien cordialement,\nNadia Benali – Responsable des achats"
+    },
+    {
+     "id": "ol-thermaval-report-3",
+     "role": "participant",
+     "auteur": "Olivier Brissac",
+     "date": "2026-11-17T13:50:00+01:00",
+     "texte": "Nadia,\n\nNous pouvons porter la remise à 4 % et vous offrir le transport des deux lots. En revanche nous ne pouvons pas nous engager sur une pénalité de retard, ce n'est pas notre politique commerciale. Les 8 premières unités partent de notre plateforme de Cholet le 23/11 pour une livraison le 24/11 à Carquefou, sauf aléa transporteur. Les 6 suivantes le 4/12.\n\nOlivier"
+    }
+   ]
+  },
+  {
+   "id": "sl-chantiers-1117",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#chantiers",
+   "url": null,
+   "auteurs": [
+    "Yannick Moreau",
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "sl-chantiers-1117-1",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-17T08:41:00+01:00",
+     "texte": "@Nadia pour Marchand il me faut les 2 Aéro 11 sur site le jeudi 26 au plus tard. Avec les PAC le 26, je pose le 27 et le 30, mise en service le 1er, on finit le 3 et la réception du 4/12 tient."
+    },
+    {
+     "id": "sl-chantiers-1117-2",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-17T08:44:00+01:00",
+     "texte": "Si le premier lot Thermaval glisse de plus de deux jours, Marchand ne sera pas fini le 4. Je ne peux pas mettre une équipe de plus, on a déjà Le Floch et Peltier cette semaine-là."
+    },
+    {
+     "id": "sl-chantiers-1117-3",
+     "role": "participant",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-17T09:10:00+01:00",
+     "texte": "Noté. Je préviens Gilles Marchand qu'il y a un risque, et on en parle au point chantiers tout à l'heure."
+    }
+   ]
+  },
+  {
+   "id": "dr-contrat-marchand",
+   "kind": "drive",
+   "nature": "page",
+   "titre": "Contrat de travaux – Conserverie Marchand.pdf",
+   "url": null,
+   "auteurs": [
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "dr-contrat-marchand-1",
+     "role": "document",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-02T15:00:00+01:00",
+     "texte": "Article 3 – Objet et prix. Fourniture et pose de deux pompes à chaleur air/eau Aéro 11 kW, d'un ballon de 300 L et de 36 panneaux photovoltaïques en toiture. Montant du marché : 86 400 € HT.\n\nArticle 9 – Délais et pénalités. La réception des travaux est fixée au vendredi 4 décembre 2026. Tout retard donne lieu à une pénalité de 150 € HT par jour ouvré, plafonnée à 5 % du montant HT du marché. Le retard de livraison d'un fournisseur de l'entreprise n'est pas une cause d'exonération. Seuls la force majeure et les retards du fait du maître d'ouvrage exonèrent l'entreprise."
+    }
+   ]
+  },
+  {
+   "id": "tldv-point-chantiers",
+   "kind": "tldv",
+   "nature": "reunion",
+   "titre": "Point chantiers – 17/11",
+   "url": null,
+   "auteurs": [
+    "Hélène Delorme",
+    "Yannick Moreau",
+    "Nadia Benali",
+    "Franck Le Gall"
+   ],
+   "tours": [
+    {
+     "id": "tldv-point-chantiers-1",
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-17T10:12:00+01:00",
+     "texte": "Pour Marchand, on ne tiendra pas le 4 si Thermaval glisse. On propose un avenant : réception le 11 décembre, sans pénalités, et on offre la première année du contrat d'entretien. Pas plus. Camille, tu prépares l'avenant, je le signe."
+    },
+    {
+     "id": "tldv-point-chantiers-2",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-17T10:14:00+01:00",
+     "texte": "Si les PAC sont sur site le 26, je finis le 3, au pire le 9 s'il y a un pépin à la mise en service."
+    },
+    {
+     "id": "tldv-point-chantiers-3",
+     "role": "participant",
+     "auteur": "Nadia Benali",
+     "date": "2026-11-17T10:15:00+01:00",
+     "texte": "Thermaval confirme le 24 pour le premier lot, mais avec une réserve sur le transport. J'essaie d'avoir une confirmation ferme."
+    },
+    {
+     "id": "tldv-point-chantiers-4",
+     "role": "participant",
+     "auteur": "Franck Le Gall",
+     "date": "2026-11-17T10:20:00+01:00",
+     "texte": "Pour l'audit, on garde Le Floch comme chantier présenté, il est servi dans le premier lot."
+    }
+   ]
+  },
+  {
+   "id": "ol-avenant-marchand",
+   "kind": "outlook",
+   "nature": "fil",
+   "titre": "Avenant n°1 – réception du chantier",
+   "url": null,
+   "auteurs": [
+    "Camille Ferrand",
+    "Gilles Marchand"
+   ],
+   "tours": [
+    {
+     "id": "ol-avenant-marchand-1",
+     "role": "participant",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-17T17:25:00+01:00",
+     "texte": "Bonjour Monsieur Marchand,\n\nComme évoqué, le retard de notre fournisseur de pompes à chaleur nous conduit à vous proposer de reporter la réception au 11 décembre. Vous trouverez ci-joint l'avenant n°1 signé par Hélène Delorme : pas de pénalités jusqu'à cette date, et la première année du contrat d'entretien offerte.\n\nBien cordialement,\nCamille Ferrand"
+    },
+    {
+     "id": "ol-avenant-marchand-2",
+     "role": "participant",
+     "auteur": "Gilles Marchand",
+     "date": "2026-11-18T08:31:00+01:00",
+     "texte": "Bonjour Camille,\n\nAprès échange avec votre directrice hier soir, c'est entendu : réception le 11 décembre et contrat d'entretien offert pendant 3 ans. Merci de m'envoyer l'avenant corrigé pour signature.\n\nGilles Marchand"
+    }
+   ]
+  },
+  {
+   "id": "sl-direction",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#direction",
+   "url": null,
+   "auteurs": [
+    "Nadia Benali",
+    "Hélène Delorme"
+   ],
+   "tours": [
+    {
+     "id": "sl-direction-1",
+     "role": "participant",
+     "auteur": "Nadia Benali",
+     "date": "2026-11-17T14:45:00+01:00",
+     "texte": "Hélène, Thermaval propose 4 % + transport offert, pas de pénalité, livraison du 24/11 « sauf aléa transporteur ». Je peux accepter ?"
+    },
+    {
+     "id": "sl-direction-2",
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-17T17:10:00+01:00",
+     "texte": "@Nadia ok pour 4 % + transport offert, à condition qu'ils confirment le 24/11 par écrit, sans le « sauf aléa ». Si ce n'est pas possible, tu reviens vers moi avant de signer. Et préviens Camille pour Marchand."
+    }
+   ]
+  },
+  {
+   "id": "hs-marchand",
+   "kind": "hubspot",
+   "nature": "note",
+   "titre": "Conserverie Marchand – PAC + PV",
+   "url": null,
+   "auteurs": [
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "hs-marchand-1",
+     "role": "document",
+     "auteur": "Camille Ferrand",
+     "date": "2026-10-20T10:00:00+02:00",
+     "texte": "Affaire gagnée le 20/10. Montant : 86 400 € HT. Contacts : Gilles Marchand (directeur général), Sylvie Cadiou (services généraux). Chantier CH-2611, chef de chantier Yannick Moreau."
+    },
+    {
+     "id": "hs-marchand-2",
+     "role": "participant",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-13T11:40:00+01:00",
+     "texte": "Appel sortant Aircall – Gilles Marchand – 6 min. Résumé : prévenu d'un risque de retard du fournisseur des pompes. Il rappelle que la conserverie ferme pour l'inventaire du 14 au 18 décembre : aucun travaux possible ces jours-là."
+    }
+   ]
+  },
+  {
+   "id": "sl-rh",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#rh",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen",
+    "Hélène Delorme"
+   ],
+   "tours": [
+    {
+     "id": "sl-rh-1",
+     "role": "participant",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-13T10:00:00+01:00",
+     "texte": "Recrutement des 2 installateurs PAC : je pilote, Yannick fait passer les entretiens techniques. L'annonce est en ligne depuis le 2/11, on a 11 candidatures."
+    },
+    {
+     "id": "sl-rh-2",
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-13T10:20:00+01:00",
+     "texte": "Parfait. Pour la rémunération on en parle au CODIR de lundi."
+    },
+    {
+     "id": "sl-rh-3",
+     "role": "participant",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-17T11:50:00+01:00",
+     "texte": "Entretiens calés à l'atelier de Carquefou avec Yannick : jeudi 19 à 14h et 15h, vendredi 20 à 9h et 10h. Les convocations partent cet après-midi."
+    }
+   ]
+  },
+  {
+   "id": "cc-aurelie-tri",
+   "kind": "claude_code",
+   "nature": "conversation",
+   "titre": "j'ai 11 candidatures pour les 2 postes d'installateur pac",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen"
+   ],
+   "tours": [
+    {
+     "id": "cc-aurelie-tri-1",
+     "role": "user",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-17T08:32:00+01:00",
+     "texte": "j'ai 11 candidatures pour les 2 postes d'installateur pac (cdi, base carquefou) dans recrutement/cv/. fais moi un tableau : nom, expérience pac, attestation fluides, permis b, dispo"
+    },
+    {
+     "id": "cc-aurelie-tri-2",
+     "role": "user",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-17T10:05:00+01:00",
+     "texte": "pour l'attestation fluides franck dit que c'est pas éliminatoire : on paye la formation si le reste est bon. donc on convoque le roux, le gac, perrot, carré. haddou non, il cherche en mayenne"
+    },
+    {
+     "id": "cc-aurelie-tri-3",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-17T10:21:00+01:00",
+     "texte": "Convocations rédigées dans `recrutement/convocations/` : Kevin Le Roux jeudi 19/11 à 14:00, Mathis Le Gac jeudi 19/11 à 15:00, Dylan Perrot vendredi 20/11 à 09:00, Inès Carré vendredi 20/11 à 10:00. À l'atelier de Carquefou, 45 min, avec Yannick Moreau. Rien n'est envoyé."
+    },
+    {
+     "id": "cc-aurelie-tri-4",
+     "role": "user",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-17T11:05:00+01:00",
+     "texte": "parfait. j'envoie les convocations moi meme depuis gmail cet aprem. et note : réponse à tous les candidats non retenus avant le 27/11"
+    }
+   ]
+  },
+  {
+   "id": "gm-le-gac",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Retrait de candidature",
+   "url": null,
+   "auteurs": [
+    "Mathis Le Gac",
+    "Aurélie Jaouen"
+   ],
+   "tours": [
+    {
+     "id": "gm-le-gac-1",
+     "role": "participant",
+     "auteur": "Mathis Le Gac",
+     "date": "2026-11-18T07:58:00+01:00",
+     "texte": "Bonjour Madame Jaouen,\n\nJe vous remercie pour la convocation de jeudi, mais je retire ma candidature : j'ai accepté hier une offre près de Vannes. Bonne continuation à toute l'équipe.\n\nMathis Le Gac"
+    },
+    {
+     "id": "gm-le-gac-2",
+     "role": "participant",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-18T08:40:00+01:00",
+     "texte": "Bonjour Monsieur Le Gac,\n\nMerci de nous avoir prévenus, et bonne route.\n\nAurélie Jaouen"
+    }
+   ]
+  },
+  {
+   "id": "dr-promesse",
+   "kind": "drive",
+   "nature": "page",
+   "titre": "Modèle – promesse d'embauche installateur.docx",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen"
+   ],
+   "tours": [
+    {
+     "id": "dr-promesse-1",
+     "role": "document",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-16T16:00:00+01:00",
+     "texte": "Madame, Monsieur [Prénom Nom],\n\nNous avons le plaisir de vous confirmer notre proposition d'embauche au poste d'installateur pompes à chaleur, en contrat à durée indéterminée, à compter du [date]. Rémunération : [montant] € brut mensuel sur 12 mois, primes de chantier, véhicule de service. Période d'essai : 2 mois renouvelable une fois.\n\nMerci de nous retourner ce document signé avant le [date].\n\nHélène Delorme, dirigeante"
+    }
+   ]
+  },
+  {
+   "id": "tldv-codir-16",
+   "kind": "tldv",
+   "nature": "reunion",
+   "titre": "CODIR – 16/11",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen",
+    "Hélène Delorme",
+    "Franck Le Gall",
+    "Patrick Hamon"
+   ],
+   "tours": [
+    {
+     "id": "tldv-codir-16-1",
+     "role": "participant",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-16T08:10:00+01:00",
+     "texte": "Recrutement : 4 candidats convoqués jeudi et vendredi. On aimerait faire une offre la semaine prochaine pour une arrivée début janvier."
+    },
+    {
+     "id": "tldv-codir-16-2",
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-16T08:14:00+01:00",
+     "texte": "Sur la rémunération, je veux d'abord voir ce que paient les deux concurrents nantais. On tranche au CODIR du 23."
+    },
+    {
+     "id": "tldv-codir-16-3",
+     "role": "participant",
+     "auteur": "Franck Le Gall",
+     "date": "2026-11-16T08:16:00+01:00",
+     "texte": "L'attestation fluides, on la finance pour ceux qui ne l'ont pas : cinq jours de formation."
+    },
+    {
+     "id": "tldv-codir-16-4",
+     "role": "participant",
+     "auteur": "Patrick Hamon",
+     "date": "2026-11-16T08:30:00+01:00",
+     "texte": "Clôture : le commissaire aux comptes propose un déjeuner le 23 pour préparer l'exercice. Et le Crédit Ligérien attend la liste des dossiers de primes déposés pour l'avance de trésorerie."
+    }
+   ]
+  },
+  {
+   "id": "gpt-annonce",
+   "kind": "chatgpt",
+   "nature": "conversation",
+   "titre": "Annonce installateur PAC",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen"
+   ],
+   "tours": [
+    {
+     "id": "gpt-annonce-1",
+     "role": "user",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-02T09:15:00+01:00",
+     "texte": "écris une annonce pour un poste d'installateur pompe à chaleur en cdi à nantes, avec véhicule, ton simple, pas de jargon rh"
+    },
+    {
+     "id": "gpt-annonce-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-02T09:15:00+01:00",
+     "texte": "Installateur / Installatrice pompes à chaleur (CDI) – Nantes\n\nDelorme Énergies, 95 personnes, installe des pompes à chaleur et des panneaux solaires chez les particuliers et les entreprises de Loire-Atlantique. Nous cherchons deux installateurs pour rejoindre nos équipes de pose.\n\nCe que vous ferez : poser et mettre en service des PAC air/eau, raccorder les circuits, expliquer l'installation au client.\nCe que nous offrons : CDI, véhicule de service, primes de chantier, formation (attestation fluides financée si besoin).\nCandidature : CV par mail."
+    }
+   ]
+  },
+  {
+   "id": "gh-issue-208",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "#208 Appli poseurs : créneaux affichés 1 h trop tard",
+   "url": "https://github.com/delorme-energies/planif/issues/208",
+   "auteurs": [
+    "yannick-moreau",
+    "thomas-riou"
+   ],
+   "tours": [
+    {
+     "id": "gh-issue-208-1",
+     "role": "document",
+     "auteur": "yannick-moreau",
+     "date": "2026-11-13T17:05:00+01:00",
+     "texte": "Depuis le changement d'heure, l'appli des poseurs affiche les interventions une heure plus tard que dans planif (8h -> 9h). Deux équipes arrivées en retard chez des clients cette semaine."
+    },
+    {
+     "id": "gh-issue-208-2",
+     "role": "participant",
+     "auteur": "thomas-riou",
+     "date": "2026-11-16T09:12:00+01:00",
+     "texte": "Je regarde."
+    },
+    {
+     "id": "gh-issue-208-3",
+     "role": "participant",
+     "auteur": "thomas-riou",
+     "date": "2026-11-17T16:45:00+01:00",
+     "texte": "Corrigé par #214, déployé. Je ferme."
+    }
+   ]
+  },
+  {
+   "id": "gh-pr-214",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "#214 Planning : heure locale par zoneinfo au lieu d'un décalage fixe de +2 h",
+   "url": "https://github.com/delorme-energies/planif/pull/214",
+   "auteurs": [
+    "thomas-riou",
+    "lucas-tessier"
+   ],
+   "tours": [
+    {
+     "id": "gh-pr-214-1",
+     "role": "document",
+     "auteur": "thomas-riou",
+     "date": "2026-11-16T10:24:00+01:00",
+     "texte": "L'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant 2 h à l'heure UTC : juste en été, faux depuis le passage à l'heure d'hiver du 25/10. On passe par l'heure locale (zoneinfo). Ajoute la commande reprise_heure_hiver pour les 41 interventions corrigées à la main. Corrige #208."
+    },
+    {
+     "id": "gh-pr-214-2",
+     "role": "participant",
+     "auteur": "lucas-tessier",
+     "date": "2026-11-17T15:20:00+01:00",
+     "texte": "Relu, ok pour ics.py, l'API et le rapport hebdo. Attention : rappels/sms.py a encore le + 2 h. Je le reprends dans ma réécriture du module rappels, mais pas avant le 30/11."
+    },
+    {
+     "id": "gh-pr-214-3",
+     "role": "participant",
+     "auteur": "thomas-riou",
+     "date": "2026-11-17T16:30:00+01:00",
+     "texte": "Fusionnée."
+    }
+   ]
+  },
+  {
+   "id": "sl-dev",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#dev",
+   "url": null,
+   "auteurs": [
+    "Thomas Riou",
+    "Lucas Tessier"
+   ],
+   "tours": [
+    {
+     "id": "sl-dev-1",
+     "role": "participant",
+     "auteur": "Thomas Riou",
+     "date": "2026-11-17T16:50:00+01:00",
+     "texte": "Correctif des horaires (#214) déployé en prod : l'appli des poseurs affiche de nouveau la bonne heure, c'est réglé. La reprise des 41 interventions corrigées à la main est passée aussi."
+    },
+    {
+     "id": "sl-dev-2",
+     "role": "participant",
+     "auteur": "Lucas Tessier",
+     "date": "2026-11-17T16:55:00+01:00",
+     "texte": "👍"
+    }
+   ]
+  },
+  {
+   "id": "sl-chantiers-1118",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#chantiers",
+   "url": null,
+   "auteurs": [
+    "Yannick Moreau",
+    "Sandrine Guérin"
+   ],
+   "tours": [
+    {
+     "id": "sl-chantiers-1118-1",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-18T07:40:00+01:00",
+     "texte": "Toujours pas bon : les SMS de rappel envoyés hier soir annonçaient 9h au lieu de 8h à Mme Bréhier et à M. Hervé. Dans l'appli c'est bon par contre. Sandrine, tu peux les rappeler ?"
+    },
+    {
+     "id": "sl-chantiers-1118-2",
+     "role": "participant",
+     "auteur": "Sandrine Guérin",
+     "date": "2026-11-18T07:55:00+01:00",
+     "texte": "Je les appelle à 8h30."
+    }
+   ]
+  },
+  {
+   "id": "zd-4135",
+   "kind": "zendesk",
+   "nature": "fil",
+   "titre": "#4135 Heure du rendez-vous",
+   "url": null,
+   "auteurs": [
+    "Josiane Bréhier",
+    "Sandrine Guérin"
+   ],
+   "tours": [
+    {
+     "id": "zd-4135-1",
+     "role": "participant",
+     "auteur": "Josiane Bréhier",
+     "date": "2026-11-17T19:05:00+01:00",
+     "texte": "Bonjour, votre SMS m'annonce 9h demain, mais votre technicien m'avait dit 8h. Qui a raison ? Je dois m'organiser pour le travail. J. Bréhier"
+    },
+    {
+     "id": "zd-4135-2",
+     "role": "participant",
+     "auteur": "Sandrine Guérin",
+     "date": "2026-11-18T08:35:00+01:00",
+     "texte": "Bonjour Madame Bréhier, c'est bien 8h. Toutes nos excuses pour ce SMS erroné, nous corrigeons le problème."
+    }
+   ]
+  },
+  {
+   "id": "cc-thomas-heure",
+   "kind": "claude_code",
+   "nature": "conversation",
+   "titre": "yannick a ouvert #208 : depuis le changement d'heure les créneaux sont affichés 1h trop tard",
+   "url": null,
+   "auteurs": [
+    "Thomas Riou"
+   ],
+   "tours": [
+    {
+     "id": "cc-thomas-heure-1",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-16T09:31:00+01:00",
+     "texte": "Corrigé dans `ics.py` et `api/mobile.py` : `timezone.localtime(intervention.debut)`. Autres `+ timedelta(hours=2)` dans le dépôt : `planif/rappels/sms.py:31` (l'heure annoncée dans le SMS de rappel J-1 aux clients), `planif/rapports/hebdo.py:77`, `tests/fixtures.py:12`. Je corrige aussi `sms.py` et `hebdo.py` ?"
+    },
+    {
+     "id": "cc-thomas-heure-2",
+     "role": "user",
+     "auteur": "Thomas Riou",
+     "date": "2026-11-16T09:34:00+01:00",
+     "texte": "touche pas a sms.py, lucas réécrit tout le module rappels la semaine pro, sinon on va se marcher dessus. hebdo oui"
+    }
+   ]
+  },
+  {
+   "id": "dr-suivi-mpr",
+   "kind": "drive",
+   "nature": "page",
+   "titre": "Suivi dossiers MPR – novembre 2026.xlsx",
+   "url": null,
+   "auteurs": [
+    "Manon Pichon"
+   ],
+   "tours": [
+    {
+     "id": "dr-suivi-mpr-1",
+     "role": "document",
+     "auteur": "Manon Pichon",
+     "date": "2026-11-18T08:30:00+01:00",
+     "texte": "Dossier | Statut | Pièce manquante | Début des travaux\nBréhier (Carquefou) | déposé le 16/11, en instruction | – | 25/11\nPeltier (Vertou) | déposé le 17/11, en instruction | – | 27/11\nTanguy (Bouaye) | déposé le 17/11, en instruction | – | 23/11\nGuillou (Orvault) | à déposer | RIB | 01/12\nMorvan (La Chapelle-sur-Erdre) | à déposer | – | 07/12"
+    }
+   ]
+  },
+  {
+   "id": "sl-aides",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#aides",
+   "url": null,
+   "auteurs": [
+    "Manon Pichon",
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "sl-aides-1",
+     "role": "participant",
+     "auteur": "Manon Pichon",
+     "date": "2026-11-12T15:30:00+01:00",
+     "texte": "Pour info : l'Anah nous demande une pièce complémentaire sur le dossier Cariou (l'attestation de propriété), je l'ai envoyée ce matin. Le dossier reste en instruction."
+    },
+    {
+     "id": "sl-aides-2",
+     "role": "participant",
+     "auteur": "Manon Pichon",
+     "date": "2026-11-17T11:50:00+01:00",
+     "texte": "Peltier et Tanguy déposés ce matin, accusés de réception reçus. Rappel pour tout le monde : une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture."
+    },
+    {
+     "id": "sl-aides-3",
+     "role": "participant",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-17T12:02:00+01:00",
+     "texte": "Merci Manon 🙏"
+    }
+   ]
+  },
+  {
+   "id": "gpt-recours",
+   "kind": "chatgpt",
+   "nature": "conversation",
+   "titre": "Contester un refus MaPrimeRénov'",
+   "url": null,
+   "auteurs": [
+    "Manon Pichon"
+   ],
+   "tours": [
+    {
+     "id": "gpt-recours-1",
+     "role": "user",
+     "auteur": "Manon Pichon",
+     "date": "2026-11-09T14:20:00+01:00",
+     "texte": "comment on conteste un refus maprimerenov ? c'est pour écrire une fiche procédure pour l'équipe"
+    },
+    {
+     "id": "gpt-recours-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-09T14:20:00+01:00",
+     "texte": "En cas de refus, le demandeur peut d'abord former un recours gracieux auprès de l'organisme qui a rendu la décision, par écrit, en expliquant pourquoi la décision lui paraît erronée et en joignant les pièces utiles. Il est conseillé de le faire dans les deux mois suivant la notification. Pour votre fiche : 1) relire le motif du refus, 2) vérifier les pièces, 3) rédiger le recours, 4) garder une trace de l'envoi."
+    }
+   ]
+  },
+  {
+   "id": "hs-tanguy",
+   "kind": "hubspot",
+   "nature": "note",
+   "titre": "Annick Tanguy – PAC Aéro 11",
+   "url": null,
+   "auteurs": [
+    "Manon Pichon"
+   ],
+   "tours": [
+    {
+     "id": "hs-tanguy-1",
+     "role": "participant",
+     "auteur": "Manon Pichon",
+     "date": "2026-11-17T15:10:00+01:00",
+     "texte": "Appel entrant Aircall – Annick Tanguy – 3 min. Résumé : demande si son dossier d'aide est bien parti avant le début des travaux du 23/11. Confirmé : déposé le 17/11, accusé de réception reçu."
+    }
+   ]
+  },
+  {
+   "id": "ol-banque-avance",
+   "kind": "outlook",
+   "nature": "fil",
+   "titre": "Avance de trésorerie sur primes",
+   "url": null,
+   "auteurs": [
+    "Bertrand Josse",
+    "Patrick Hamon"
+   ],
+   "tours": [
+    {
+     "id": "ol-banque-avance-1",
+     "role": "participant",
+     "auteur": "Bertrand Josse",
+     "date": "2026-11-12T10:20:00+01:00",
+     "texte": "Madame Delorme, Monsieur Hamon,\n\nComme évoqué, nous pouvons vous avancer jusqu'à 70 % du montant des primes attendues sur les dossiers déposés, remboursables au versement des primes. Il nous faudra la liste des dossiers (client, date de dépôt, montant attendu).\n\nBertrand Josse – Crédit Ligérien"
+    },
+    {
+     "id": "ol-banque-avance-2",
+     "role": "participant",
+     "auteur": "Patrick Hamon",
+     "date": "2026-11-17T14:25:00+01:00",
+     "texte": "Bonjour Monsieur Josse,\n\nVous aurez la liste avant le 25/11 ; Manon Pichon la prépare.\n\nPatrick Hamon"
+    }
+   ]
+  },
+  {
+   "id": "gm-certen",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Audit de qualification RGE – Delorme Énergies",
+   "url": null,
+   "auteurs": [
+    "Laure Bihan"
+   ],
+   "tours": [
+    {
+     "id": "gm-certen-1",
+     "role": "participant",
+     "auteur": "Laure Bihan",
+     "date": "2026-11-13T15:30:00+01:00",
+     "texte": "Madame,\n\nNous vous confirmons l'audit de qualification sur chantier le mardi 8 décembre 2026, avec M. Jean-Marc Ollivier. Au préalable, appel de préparation en visio le vendredi 20 novembre à 11h. Pièces à nous transmettre avant le 27 novembre.\n\nLaure Bihan – Certénergie"
+    }
+   ]
+  },
+  {
+   "id": "no-audit",
+   "kind": "notion",
+   "nature": "page",
+   "titre": "Audit RGE 2026 – préparation",
+   "url": null,
+   "auteurs": [
+    "Franck Le Gall"
+   ],
+   "tours": [
+    {
+     "id": "no-audit-1",
+     "role": "document",
+     "auteur": "Franck Le Gall",
+     "date": "2026-11-12T18:00:00+01:00",
+     "texte": "Date de l'audit : mardi 8 décembre 2026. Chantier présenté : CH-2604 Le Floch (Rezé). Pièces à envoyer avant le 27/11 : liste des chantiers 2026, attestations de formation, attestations d'assurance décennale, dossiers PDF de 3 chantiers. Budget : voir devis Certénergie (à recevoir)."
+    }
+   ]
+  },
+  {
+   "id": "sl-rge",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#rge",
+   "url": null,
+   "auteurs": [
+    "Franck Le Gall"
+   ],
+   "tours": [
+    {
+     "id": "sl-rge-1",
+     "role": "participant",
+     "auteur": "Franck Le Gall",
+     "date": "2026-11-17T17:35:00+01:00",
+     "texte": "Certénergie vient d'appeler : M. Ollivier a un empêchement le 8, l'audit passerait au jeudi 10 décembre, même chantier. Laure Bihan doit nous le confirmer par écrit. En attendant on ne bouge rien dans planif."
+    }
+   ]
+  },
+  {
+   "id": "gm-renovactu",
+   "kind": "gmail",
+   "nature": "fil",
+   "titre": "Rénov'Actu Pro n°112",
+   "url": null,
+   "auteurs": [
+    "Rénov'Actu Pro"
+   ],
+   "tours": [
+    {
+     "id": "gm-renovactu-1",
+     "role": "participant",
+     "auteur": "Rénov'Actu Pro",
+     "date": "2026-11-17T06:00:00+01:00",
+     "texte": "Au sommaire : les chiffres de la rénovation d'ampleur au 3e trimestre · Isolation des combles : retour d'expérience · Les refus de primes en hausse dans trois régions : notre enquête · Agenda : salons de janvier.\n\nSe désabonner"
+    }
+   ]
+  },
+  {
+   "id": "sl-general",
+   "kind": "slack",
+   "nature": "fil",
+   "titre": "#general",
+   "url": null,
+   "auteurs": [
+    "Hélène Delorme",
+    "Yannick Moreau"
+   ],
+   "tours": [
+    {
+     "id": "sl-general-1",
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-16T12:30:00+01:00",
+     "texte": "Gérard part à la retraite après 22 ans au magasin ! Pot de départ vendredi 20 à 17h30 à l'atelier de Carquefou. Venez nombreux 🎉"
+    },
+    {
+     "id": "sl-general-2",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-16T12:41:00+01:00",
+     "texte": "On sera là avec toute l'équipe pose."
+    }
+   ]
+  },
+  {
+   "id": "zd-4102",
+   "kind": "zendesk",
+   "nature": "fil",
+   "titre": "#4102 Facture en double",
+   "url": null,
+   "auteurs": [
+    "Marc Pasquier",
+    "Sandrine Guérin"
+   ],
+   "tours": [
+    {
+     "id": "zd-4102-1",
+     "role": "participant",
+     "auteur": "Marc Pasquier",
+     "date": "2026-11-10T18:20:00+01:00",
+     "texte": "Bonjour, j'ai reçu deux fois la facture d'acompte de 3 000 € pour mon chantier de Rezé. J'ai payé la première, merci de me confirmer que je n'ai rien à faire pour la seconde."
+    },
+    {
+     "id": "zd-4102-2",
+     "role": "participant",
+     "auteur": "Sandrine Guérin",
+     "date": "2026-11-11T09:15:00+01:00",
+     "texte": "Bonjour Monsieur Pasquier, la seconde est un doublon envoyé par erreur, vous n'avez rien à faire. Toutes nos excuses."
+    }
+   ]
+  },
+  {
+   "id": "hs-morvan",
+   "kind": "hubspot",
+   "nature": "note",
+   "titre": "Morvan – PV 6 kWc",
+   "url": null,
+   "auteurs": [
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "hs-morvan-1",
+     "role": "document",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-14T11:00:00+01:00",
+     "texte": "Prospect : extension photovoltaïque 6 kWc sur le garage, en plus de la PAC posée le 7/12. Devis envoyé le 14/11 (12 900 € TTC). Relance prévue le 28/11."
+    }
+   ]
+  },
+  {
+   "id": "no-conges",
+   "kind": "notion",
+   "nature": "page",
+   "titre": "Congés 2026-2027 : comment poser ses jours",
+   "url": null,
+   "auteurs": [
+    "Aurélie Jaouen"
+   ],
+   "tours": [
+    {
+     "id": "no-conges-1",
+     "role": "document",
+     "auteur": "Aurélie Jaouen",
+     "date": "2026-11-03T10:00:00+01:00",
+     "texte": "Les demandes de congés se font dans l'outil RH au moins 3 semaines avant. Pour les fêtes, l'atelier ferme du 24 décembre au 1er janvier ; une astreinte dépannage est assurée par deux installateurs. Les jours non posés au 31 mai sont perdus."
+    }
+   ]
+  },
+  {
+   "id": "gpt-linkedin",
+   "kind": "chatgpt",
+   "nature": "conversation",
+   "titre": "Post LinkedIn 15 ans",
+   "url": null,
+   "auteurs": [
+    "Camille Ferrand"
+   ],
+   "tours": [
+    {
+     "id": "gpt-linkedin-1",
+     "role": "user",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-10T16:00:00+01:00",
+     "texte": "écris un post linkedin pour les 15 ans de delorme énergies, ton chaleureux, 5 lignes, avec un clin d'oeil aux 3000 pompes posées"
+    },
+    {
+     "id": "gpt-linkedin-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-10T16:00:00+01:00",
+     "texte": "15 ans déjà ! En 2011, Delorme Énergies posait sa première pompe à chaleur à Carquefou. Aujourd'hui, ce sont plus de 3 000 foyers et entreprises de Loire-Atlantique qui se chauffent avec nous. Merci à nos clients, et bravo à nos 95 collègues sur les chantiers et au bureau. Rendez-vous pour les 15 prochaines !"
+    }
+   ]
+  },
+  {
+   "id": "claude-tva",
+   "kind": "claude_ai",
+   "nature": "conversation",
+   "titre": "TVA sur une pompe à chaleur air/air",
+   "url": null,
+   "auteurs": [
+    "Patrick Hamon"
+   ],
+   "tours": [
+    {
+     "id": "claude-tva-1",
+     "role": "user",
+     "auteur": "Patrick Hamon",
+     "date": "2026-11-12T11:30:00+01:00",
+     "texte": "un client veut une pac air/air dans sa maison de 30 ans, on facture à quel taux de tva ? le commercial a mis 5,5"
+    },
+    {
+     "id": "claude-tva-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-12T11:30:00+01:00",
+     "texte": "Le taux réduit de 5,5 % est réservé à certains équipements de rénovation énergétique qui respectent des critères techniques précis ; une PAC air/air n'en fait en général pas partie, et relève alors du taux intermédiaire de 10 % dans un logement de plus de deux ans. Je vous conseille de vérifier la fiche technique et de faire confirmer par votre expert-comptable avant d'émettre la facture."
+    }
+   ]
+  },
+  {
+   "id": "cu-formulaire",
+   "kind": "cursor",
+   "nature": "conversation",
+   "titre": "formulaire devis : téléphone avec espaces (#219)",
+   "url": null,
+   "auteurs": [
+    "Lucas Tessier"
+   ],
+   "tours": [
+    {
+     "id": "cu-formulaire-1",
+     "role": "user",
+     "auteur": "Lucas Tessier",
+     "date": "2026-11-18T08:30:00+01:00",
+     "texte": "#219 : le formulaire de devis refuse les numéros avec espaces. regarde site/devis/forms.py"
+    },
+    {
+     "id": "cu-formulaire-2",
+     "role": "assistant",
+     "auteur": null,
+     "date": "2026-11-18T08:34:00+01:00",
+     "texte": "Le champ `telephone` utilise une regex `^0[1-9][0-9]{8}$` appliquée au texte brut : `06 12 34 56 78` échoue à cause des espaces. Je retire espaces, points et tirets avant la validation (`clean_telephone`) et j'ajoute un test."
+    },
+    {
+     "id": "cu-formulaire-3",
+     "role": "user",
+     "auteur": "Lucas Tessier",
+     "date": "2026-11-18T08:36:00+01:00",
+     "texte": "ok go"
+    }
+   ]
+  },
+  {
+   "id": "tldv-securite",
+   "kind": "tldv",
+   "nature": "reunion",
+   "titre": "Réunion sécurité – travail en hauteur",
+   "url": null,
+   "auteurs": [
+    "Franck Le Gall",
+    "Yannick Moreau"
+   ],
+   "tours": [
+    {
+     "id": "tldv-securite-1",
+     "role": "participant",
+     "auteur": "Franck Le Gall",
+     "date": "2026-11-10T07:45:00+01:00",
+     "texte": "Rappel après l'incident de Sautron : sur toiture, harnais et ligne de vie obligatoires, même pour 10 minutes. Les échafaudages roulants sont vérifiés chaque lundi par le chef d'équipe."
+    },
+    {
+     "id": "tldv-securite-2",
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-10T07:52:00+01:00",
+     "texte": "On a reçu les 6 nouveaux harnais, ils sont dans le camion 3."
+    }
+   ]
+  },
+  {
+   "id": "gh-pr-217",
+   "kind": "github",
+   "nature": "ticket",
+   "titre": "#217 Synchro HubSpot : un seul chantier par deal",
+   "url": "https://github.com/delorme-energies/planif/pull/217",
+   "auteurs": [
+    "lucas-tessier",
+    "thomas-riou"
+   ],
+   "tours": [
+    {
+     "id": "gh-pr-217-1",
+     "role": "document",
+     "auteur": "lucas-tessier",
+     "date": "2026-11-16T09:43:00+01:00",
+     "texte": "Ajoute Chantier.hubspot_deal_id (unique) et un get_or_create dans le webhook. Mapping du type de travaux."
+    },
+    {
+     "id": "gh-pr-217-2",
+     "role": "participant",
+     "auteur": "thomas-riou",
+     "date": "2026-11-17T18:05:00+01:00",
+     "texte": "Pas de suppression des doublons dans une migration : une commande à part avec --dry-run, on regarde la liste ensemble lundi. Changements demandés."
+    }
+   ]
+  },
+  {
+   "id": "zd-4093",
+   "kind": "zendesk",
+   "nature": "fil",
+   "titre": "#4093 Bruit pompe à chaleur",
+   "url": null,
+   "auteurs": [
+    "Alain Corbel",
+    "Sandrine Guérin"
+   ],
+   "tours": [
+    {
+     "id": "zd-4093-1",
+     "role": "participant",
+     "auteur": "Alain Corbel",
+     "date": "2026-11-16T21:10:00+01:00",
+     "texte": "Cela fait trois semaines que je signale que l'unité extérieure bourdonne la nuit. Je demande le remplacement de la pompe à chaleur."
+    },
+    {
+     "id": "zd-4093-2",
+     "role": "participant",
+     "auteur": "Sandrine Guérin",
+     "date": "2026-11-17T16:20:00+01:00",
+     "texte": "Monsieur Corbel, lors de la pose les plots anti-vibratiles n'ont pas été installés et le mode nuit n'a pas été activé. Un technicien repassera à nos frais : mardi 24 au matin ou mercredi 25 après-midi, à votre choix."
+    }
+   ]
+  },
+  {
+   "id": "dr-planning-noel",
+   "kind": "drive",
+   "nature": "page",
+   "titre": "Planning des astreintes de Noël.xlsx",
+   "url": null,
+   "auteurs": [
+    "Yannick Moreau"
+   ],
+   "tours": [
+    {
+     "id": "dr-planning-noel-1",
+     "role": "document",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-15T17:00:00+01:00",
+     "texte": "Astreinte dépannage du 24/12 au 01/01 : semaine 1 (24-27/12) équipe Le Bris + Caradec ; semaine 2 (28/12-01/01) équipe Moreau + Jégou. Numéro d'astreinte : celui du standard, renvoyé."
+    }
+   ]
+  }
+ ]
+}

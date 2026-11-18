@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:18.018Z",
+  "reponse": "Je ne trouve aucun dossier d'aide refusé à l'un de vos clients cette année, donc je ne peux pas donner de chiffre ni de motifs.\n\n- Le suivi des dossiers MPR de novembre 2026 ne liste aucun refus : cinq dossiers sont déposés ou à déposer [13].\n- Le dossier Cariou n'est pas refusé : l'Anah a demandé une pièce complémentaire (l'attestation de propriété), elle a été envoyée et le dossier reste en instruction [1].\n- Une conversation ChatGPT porte sur la façon de contester un refus MaPrimeRénov', pour une fiche procédure. Elle ne décrit pas de cas réel [4].\n- La seule mention de refus concerne une lettre d'information externe, qui parle de refus de primes en hausse dans trois régions, sans rapport avec vos clients [5].\n\nJ'ai cherché « refus », « refusé », « rejeté », « motif » et « Anah / MaPrimeRénov » depuis janvier 2026, dans l'ensemble des sources visibles. Si les refus sont tenus ailleurs (par exemple dans le logiciel de dossiers ou directement dans les espaces des organismes), il faudrait regarder à cet endroit.",
+  "rendu": "Je ne trouve aucun dossier d'aide refusé à l'un de vos clients cette année, donc je ne peux pas donner de chiffre ni de motifs.\n\n- Le suivi des dossiers MPR de novembre 2026 ne liste aucun refus : cinq dossiers sont déposés ou à déposer [13].\n- Le dossier Cariou n'est pas refusé : l'Anah a demandé une pièce complémentaire (l'attestation de propriété), elle a été envoyée et le dossier reste en instruction [1].\n- Une conversation ChatGPT porte sur la façon de contester un refus MaPrimeRénov', pour une fiche procédure. Elle ne décrit pas de cas réel [4].\n- La seule mention de refus concerne une lettre d'information externe, qui parle de refus de primes en hausse dans trois régions, sans rapport avec vos clients [5].\n\nJ'ai cherché « refus », « refusé », « rejeté », « motif » et « Anah / MaPrimeRénov » depuis janvier 2026, dans l'ensemble des sources visibles. Si les refus sont tenus ailleurs (par exemple dans le logiciel de dossiers ou directement dans les espaces des organismes), il faudrait regarder à cet endroit.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 27591,
+    "sortie": 1208,
+    "reflexion": 470,
+    "cache": 0,
+    "cout": 0.0033631
+  },
+  "latenceMs": 10919,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"dossiers aides clients refusé refus raisons\",\"depuis\":\"2025-01-01\"}",
+    "chercher {\"requete\":\"aide client dossier refusé motif\"}",
+    "chercher {\"requete\":\"refus Anah MaPrimeRénov dossier rejeté\",\"depuis\":\"2026-01-01\"}",
+    "lire {\"sourceId\":\"dr-suivi-mpr\"}"
+  ],
+  "cout": 0.0033631
+}

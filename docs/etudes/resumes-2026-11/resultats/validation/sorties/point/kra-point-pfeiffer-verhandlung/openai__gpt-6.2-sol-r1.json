@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:03.201Z",
+  "reponse": "## What is still open\n- **Pfeiffer-API:** Sabine Kranich erwartet deine Aufwandsschätzung bis Donnerstag, 19.11., 17 Uhr an sie und Thomas; Freitag um 14 Uhr besprecht ihr sie bei ihr. [5] Deine technische Vorlage `docs/vertrieb/pfeiffer-api-2027.md` bietet REST/JSON an und nennt EDI nur als Option zur separaten Prüfung. [1] Jonas rechnet in #222 wegen fehlender Mandantentrennung mit **25 statt 15 Personentagen** und hält den Go-live am **1. April 2027** nur bei einem Start des Spikes noch im Dezember für machbar. [2]\n\n## What changed\n- Dein Jahresgespräch mit Werkzeug Pfeiffer wurde von Donnerstag auf **Montag, 23.11., 10 Uhr** in Nürnberg verschoben; Thomas fährt um **8 Uhr** bei euch los. [6]\n- Der von dir freigegebene Lieferexport nach Charge für Rückrufprüfungen (#214) ist gemergt. [3]\n- Das Update auf Spring Boot 3.3.6 samt fünf weiteren Abhängigkeitsupdates (#218) ist gemergt; die CI war grün. [4]",
+  "rendu": "## What is still open\n- **Pfeiffer-API:** Sabine Kranich erwartet deine Aufwandsschätzung bis Donnerstag, 19.11., 17 Uhr an sie und Thomas; Freitag um 14 Uhr besprecht ihr sie bei ihr. [5] Deine technische Vorlage `docs/vertrieb/pfeiffer-api-2027.md` bietet REST/JSON an und nennt EDI nur als Option zur separaten Prüfung. [1] Jonas rechnet in #222 wegen fehlender Mandantentrennung mit **25 statt 15 Personentagen** und hält den Go-live am **1. April 2027** nur bei einem Start des Spikes noch im Dezember für machbar. [2]\n\n## What changed\n- Dein Jahresgespräch mit Werkzeug Pfeiffer wurde von Donnerstag auf **Montag, 23.11., 10 Uhr** in Nürnberg verschoben; Thomas fährt um **8 Uhr** bei euch los. [6]\n- Der von dir freigegebene Lieferexport nach Charge für Rückrufprüfungen (#214) ist gemergt. [3]\n- Das Update auf Spring Boot 3.3.6 samt fünf weiteren Abhängigkeitsupdates (#218) ist gemergt; die CI war grün. [4]",
+  "mesures": {
+    "mots": 136,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4155,
+    "sortie": 407,
+    "reflexion": 139,
+    "cache": 1451,
+    "cout": 0.0109736
+  },
+  "cout": 0.0109736,
+  "latenceMs": 4344,
+  "fournisseur": "Azure"
+}

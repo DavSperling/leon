@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:45:39.525Z",
+  "reponse": "Tai Shan hat den Eingang der Reklamation bestätigt, aber einen Liefertermin für die Ersatzschalter noch nicht genannt [2][3]. Die Bestätigung datiert vom 16. November [2], die offene Terminfrage vom 17. November [3]. In der Planung wird ersatzweise mit sechs Wochen ab Bestellung gerechnet, ausdrücklich nur als Annahme und nicht abgestimmt [5].",
+  "rendu": "Tai Shan hat den Eingang der Reklamation bestätigt, aber einen Liefertermin für die Ersatzschalter noch nicht genannt [2][3]. Die Bestätigung datiert vom 16. November [2], die offene Terminfrage vom 17. November [3]. In der Planung wird ersatzweise mit sechs Wochen ab Bestellung gerechnet, ausdrücklich nur als Annahme und nicht abgestimmt [5].",
+  "mesures": {
+    "mots": 51,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1168,
+    "sortie": 163,
+    "reflexion": 65,
+    "cache": 0,
+    "cout": 0.000546
+  },
+  "cout": 0.000546,
+  "latenceMs": 1136,
+  "fournisseur": "CoreWeave"
+}

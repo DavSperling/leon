@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:21.657Z",
+  "reponse": "Je ne sais pas combien de dossiers d’aide de nos clients ont été refusés en 2026, ni pour quels motifs. J’ai cherché les bilans de suivi et les notifications de refus (MaPrimeRénov’, Anah, CEE), sans trouver de décompte annuel ni de décision de refus concernant un client [1][3][12].\n\nLe tableau de suivi MaPrimeRénov’ de novembre ne liste que des dossiers en instruction ou à déposer [12]. Dans Slack, Cariou reste en instruction après l’envoi d’une pièce complémentaire [1]. Et l’échange sur les recours porte sur une procédure générale, pas sur un refus précis [3]. Ça ne veut donc pas dire qu’il y a eu zéro refus.",
+  "rendu": "Je ne sais pas combien de dossiers d’aide de nos clients ont été refusés en 2026, ni pour quels motifs. J’ai cherché les bilans de suivi et les notifications de refus (MaPrimeRénov’, Anah, CEE), sans trouver de décompte annuel ni de décision de refus concernant un client [1][3][12].\n\nLe tableau de suivi MaPrimeRénov’ de novembre ne liste que des dossiers en instruction ou à déposer [12]. Dans Slack, Cariou reste en instruction après l’envoi d’une pièce complémentaire [1]. Et l’échange sur les recours porte sur une procédure générale, pas sur un refus précis [3]. Ça ne veut donc pas dire qu’il y a eu zéro refus.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 21443,
+    "sortie": 433,
+    "reflexion": 0,
+    "cache": 13724,
+    "cout": 0.0249939
+  },
+  "latenceMs": 6816,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"aides clients dossiers refusés refus rejet subvention\",\"depuis\":\"2026-01-01\"}",
+    "chercher {\"requete\":\"dossier aide client refusé rejeté motif 2025 2026\"}",
+    "lire {\"sourceId\":\"dr-suivi-mpr\"}",
+    "lire {\"sourceId\":\"sl-aides\"}",
+    "chercher {\"requete\":\"Anah MaPrimeRénov CEE notification rejet irrecevable refus non éligible bilan annuel dossiers\"}",
+    "chercher {\"requete\":\"suivi bilan dossiers primes aides 2026\",\"de\":\"Manon Pichon\"}",
+    "lire {\"sourceId\":\"gpt-recours\"}",
+    "chercher {\"requete\":\"\\\"refusé\\\" \\\"prime\\\" dossier décision rejet notification 2026\"}"
+  ],
+  "cout": 0.0249939
+}

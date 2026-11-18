@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:44.840Z",
+  "reponse": "## What is still open\n- La PR #217 est relue mais Thomas refuse la migration 0041 qui supprime les doublons : à refaire en commande de gestion avec `--dry-run`, dont la liste sera examinée ensemble lundi [3].\n- Le ticket #216 (signature du webhook non vérifiée) t'est assigné et reste bloquant pour la mise en prod de la synchro — Thomas ne part pas en prod sans lui [4][7].\n- Camille a tranché ta question : ne créer le chantier qu'à la réception de l'acompte (case « Acompte reçu »), d'accord avec Hélène — le comportement actuel sur « gagné » est donc à reprendre [8].\n- Thomas est en congé jeudi et vendredi : pour la sandbox HubSpot, demande à Camille si tu bloques [7].\n\n## What changed\n- Le ticket #213 (photo plaque signalétique) a été fusionné par Thomas et part en prod [5].\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec espaces ; pas urgent mais ça fait perdre des demandes [6].\n\n## What you did\n- Tu as clos le bug des doublons de chantiers : champ `hubspot_deal_id` unique, `get_or_create` dans le webhook, suppression des 17 doublons existants, et tests au vert (PR #217) [1].\n- Tu as ajouté le mapping de la propriété `type_travaux` vers `Chantier.type` (normalisation, valeurs vides « à préciser » : 350 deals mappés sur 364), poussé dans la PR #217 [2].",
+  "rendu": "## What is still open\n- La PR #217 est relue mais Thomas refuse la migration 0041 qui supprime les doublons : à refaire en commande de gestion avec `--dry-run`, dont la liste sera examinée ensemble lundi [3].\n- Le ticket #216 (signature du webhook non vérifiée) t'est assigné et reste bloquant pour la mise en prod de la synchro — Thomas ne part pas en prod sans lui [4][7].\n- Camille a tranché ta question : ne créer le chantier qu'à la réception de l'acompte (case « Acompte reçu »), d'accord avec Hélène — le comportement actuel sur « gagné » est donc à reprendre [8].\n- Thomas est en congé jeudi et vendredi : pour la sandbox HubSpot, demande à Camille si tu bloques [7].\n\n## What changed\n- Le ticket #213 (photo plaque signalétique) a été fusionné par Thomas et part en prod [5].\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec espaces ; pas urgent mais ça fait perdre des demandes [6].\n\n## What you did\n- Tu as clos le bug des doublons de chantiers : champ `hubspot_deal_id` unique, `get_or_create` dans le webhook, suppression des 17 doublons existants, et tests au vert (PR #217) [1].\n- Tu as ajouté le mapping de la propriété `type_travaux` vers `Chantier.type` (normalisation, valeurs vides « à préciser » : 350 deals mappés sur 364), poussé dans la PR #217 [2].",
+  "mesures": {
+    "mots": 211,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4487,
+    "sortie": 464,
+    "reflexion": 92,
+    "cache": 0,
+    "cout": 0.00067764
+  },
+  "cout": 0.00067764,
+  "latenceMs": 8231,
+  "fournisseur": "Reka"
+}

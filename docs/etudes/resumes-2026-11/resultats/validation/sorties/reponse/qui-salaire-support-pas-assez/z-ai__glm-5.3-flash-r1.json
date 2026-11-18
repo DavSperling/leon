@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:00.222Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre. La fiche de poste renvoie à la comp sheet [1], tout comme le hiring plan [5], et le recruteur demande encore le band à Carla le 16 novembre [4] : le band exact du Support Engineer à Austin n'apparaît nulle part. Seule une estimation générale du marché (75–95 k$ de base pour un Tier 2 à Austin) est disponible, hors band interne [2].",
+  "rendu": "Les résultats ne suffisent pas pour répondre. La fiche de poste renvoie à la comp sheet [1], tout comme le hiring plan [5], et le recruteur demande encore le band à Carla le 16 novembre [4] : le band exact du Support Engineer à Austin n'apparaît nulle part. Seule une estimation générale du marché (75–95 k$ de base pour un Tier 2 à Austin) est disponible, hors band interne [2].",
+  "mesures": {
+    "mots": 69,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1068,
+    "sortie": 100,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002102
+  },
+  "cout": 0.0002102,
+  "latenceMs": 1467,
+  "fournisseur": "Mistral"
+}

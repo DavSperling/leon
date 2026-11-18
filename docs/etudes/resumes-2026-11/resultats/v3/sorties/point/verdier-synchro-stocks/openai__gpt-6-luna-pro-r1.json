@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:56:27.477Z",
+  "reponse": "## What is still open\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour sa déclaration de TVA, avant jeudi. [1]\n- La PR #58 sur le mode `--dry-run` est ouverte sans relecteur signalé ; Karim comptera physiquement les 14 écarts jeudi matin et te transmettra les chiffres. [1][5][7]\n\n## What changed\n- La PR #57, complétée par toi avec les correspondances SKU manquantes et un avertissement, a été fusionnée : le problème du ticket #55 est corrigé, et les trois clients acceptent une livraison à la mi-janvier. [3][4][9]",
+  "rendu": "## What is still open\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour sa déclaration de TVA, avant jeudi. [1]\n- La PR #58 sur le mode `--dry-run` est ouverte sans relecteur signalé ; Karim comptera physiquement les 14 écarts jeudi matin et te transmettra les chiffres. [1][5][7]\n\n## What changed\n- La PR #57, complétée par toi avec les correspondances SKU manquantes et un avertissement, a été fusionnée : le problème du ticket #55 est corrigé, et les trois clients acceptent une livraison à la mi-janvier. [3][4][9]",
+  "mesures": {
+    "mots": 85,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 17735,
+    "sortie": 3067,
+    "reflexion": 2749,
+    "cache": 9522,
+    "cout": 0.00245002
+  },
+  "cout": 0.00245002,
+  "latenceMs": 29749,
+  "fournisseur": "Azure"
+}

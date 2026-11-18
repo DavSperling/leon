@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:11:15.597Z",
+  "reponse": "We’re **still aiming for December 1, but it’s conditional on Fernhill changing its SAML signing algorithm**. The contractual scope covers both login flows, just-in-time provisioning with Viewer as the default role, and a “Require SSO” setting that disables password login for Fernhill users [2].\n\nWhat’s left:\n- Fernhill’s IdP currently signs assertions with RSA-SHA1, so **IdP-initiated login works on staging but SP-initiated login fails**. Their change board meets November 24; if approved, the switch to RSA-SHA256 happens that evening [1][2].\n- A joint end-to-end test is scheduled for **November 25 at 16:00 Tel Aviv / 14:00 London** [1].\n- We’ve ruled out temporarily accepting SHA-1. If Fernhill’s board doesn’t approve the change on November 24, Sam will tell them that day that December 1 is at risk [8].\n- The admin SSO page is on staging; its copy still needs Priya’s review. I don’t see confirmation yet of the final production rollout [2].",
+  "rendu": "We’re **still aiming for December 1, but it’s conditional on Fernhill changing its SAML signing algorithm**. The contractual scope covers both login flows, just-in-time provisioning with Viewer as the default role, and a “Require SSO” setting that disables password login for Fernhill users [2].\n\nWhat’s left:\n- Fernhill’s IdP currently signs assertions with RSA-SHA1, so **IdP-initiated login works on staging but SP-initiated login fails**. Their change board meets November 24; if approved, the switch to RSA-SHA256 happens that evening [1][2].\n- A joint end-to-end test is scheduled for **November 25 at 16:00 Tel Aviv / 14:00 London** [1].\n- We’ve ruled out temporarily accepting SHA-1. If Fernhill’s board doesn’t approve the change on November 24, Sam will tell them that day that December 1 is at risk [8].\n- The admin SSO page is on staging; its copy still needs Priya’s review. I don’t see confirmation yet of the final production rollout [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 11886,
+    "sortie": 748,
+    "reflexion": 317,
+    "cache": 5376,
+    "cout": 0.021575200000000003
+  },
+  "latenceMs": 9894,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"bank support \\\"December 1\\\" staff company accounts login SSO\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.021575200000000003
+}

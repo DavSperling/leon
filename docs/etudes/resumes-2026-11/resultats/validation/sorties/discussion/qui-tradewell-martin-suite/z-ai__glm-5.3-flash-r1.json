@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:36.952Z",
+  "reponse": "The two flags from Martin on the Nov 12 sync, and what happened after:\n\n**1. Webhook signature failures** — Ellen Vance's team: ~95% of `payout.paid` and `seller.verified` sandbox webhooks failed HMAC verification, so they'd disabled it. ✅ Picked up and fixed: Jake Whitfield took it on the call [1], root cause was signing a re-serialized body instead of the raw bytes (PR core#1187, merged and deployed to sandbox Nov 16, production with release 2026.47 on Nov 24) [2]. Ellen turned verification back on Nov 17: 300+ events, all verifying ✅ [3].\n\n**2. Per-seller payout schedules** — Tradewell's ~200 top sellers are on net-7, everyone else net-30; Quillon only supports one platform-wide schedule. ⚠️ Picked up, but not solved: Owen promised an answer by Friday Nov 20 [3]; it's ticketed as QPAY-2362, estimated at 3–4 weeks, and Avi Kessler ruled it out for Dec 7 (\"not touching the batcher three weeks before a contractual go-live\"), pushing it to backlog / 2027-Q1 [11]. As of Nov 17 Martin was still chasing Owen for the answer he needs for seller comms [3]. Note the MSA summary lists only \"one platform-wide payout schedule\" as in scope at go-live [5] — so this is effectively a scope change request, and it's unresolved.",
+  "rendu": "The two flags from Martin on the Nov 12 sync, and what happened after:\n\n**1. Webhook signature failures** — Ellen Vance's team: ~95% of `payout.paid` and `seller.verified` sandbox webhooks failed HMAC verification, so they'd disabled it. ✅ Picked up and fixed: Jake Whitfield took it on the call [1], root cause was signing a re-serialized body instead of the raw bytes (PR core#1187, merged and deployed to sandbox Nov 16, production with release 2026.47 on Nov 24) [2]. Ellen turned verification back on Nov 17: 300+ events, all verifying ✅ [3].\n\n**2. Per-seller payout schedules** — Tradewell's ~200 top sellers are on net-7, everyone else net-30; Quillon only supports one platform-wide schedule. ⚠️ Picked up, but not solved: Owen promised an answer by Friday Nov 20 [3]; it's ticketed as QPAY-2362, estimated at 3–4 weeks, and Avi Kessler ruled it out for Dec 7 (\"not touching the batcher three weeks before a contractual go-live\"), pushing it to backlog / 2027-Q1 [11]. As of Nov 17 Martin was still chasing Owen for the answer he needs for seller comms [3]. Note the MSA summary lists only \"one platform-wide payout schedule\" as in scope at go-live [5] — so this is effectively a scope change request, and it's unresolved.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0.8,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24104,
+    "sortie": 555,
+    "reflexion": 82,
+    "cache": 16128,
+    "cout": 0.001566192
+  },
+  "latenceMs": 12038,
+  "fournisseur": "River",
+  "trace": [
+    "lire {\"passageId\":\"p_sync_tradewell_1120_martin_flags\"}",
+    "chercher {\"requete\":\"Martin Kobayashi Tradewell flagged\",\"type\":\"reunion\"}",
+    "lire {\"passageId\":\"gong-tradewell-1112-3\"}",
+    "chercher {\"requete\":\"webhook signature HMAC payout.paid seller.verified verification\"}",
+    "lire {\"passageId\":\"gong-tradewell-1112-6\"}",
+    "chercher {\"requete\":\"\\\"payout schedule\\\" per-seller net-7 Tradewell\"}"
+  ],
+  "cout": 0.001566192
+}

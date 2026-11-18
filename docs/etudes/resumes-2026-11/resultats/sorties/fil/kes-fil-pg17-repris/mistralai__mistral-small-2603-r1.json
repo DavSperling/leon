@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:27:21.796Z",
+  "reponse": "## Où j'en suis\nLa branche `noa/rds-pg17` a terminé la mise à niveau de l'environnement staging : PostgreSQL 17.2 est déployé en blue/green depuis 14:20 UTC le 17/11, avec un switchover de 41 secondes. Les tests dbt sur `events_daily` sont passés (14 modèles, +3% de temps vs 16.4, dans la marge de bruit). Le runbook `runbooks/pg17-upgrade.md` a été mis à jour pour inclure l'étape obligatoire de configuration de `rds.logical_replication = 1` et le reboot de l'instance source avant la création du blue/green deployment. La PR #57 reste en draft sur `kestrel-analytics/infra`.\n\n- [en-cours] Finaliser la PR #57 avec les commits 7e3c9d4 (logical replication) et b0f18a2 (staging engine 17.2) et préparer la mise à niveau de production (source: src-pr57, ses-pg-3)\n- [prochaine-étape] Attendre la validation de Maya Cohen après une semaine complète de staging sur 17 sans incident, puis planifier la fenêtre de production (source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] Exécuter la mise à niveau sur production : appliquer le paramètre `rds.logical_replication = 1` sur le groupe de paramètres pg16, rebooter l'instance, puis appliquer le blue/green deployment (source: ses-pg-3)\n- [question] Déterminer la date exacte de la fenêtre de production, en évitant la plage 01:00–03:30 UTC du verrou dbt (source: ses-pg-1, src-linear-kes298)\n- [décision] La mise à niveau de staging est validée et opérationnelle ; le runbook a été mis à jour pour inclure la nouvelle étape de configuration de `rds.logical_replication` et le reboot requis (source: ses-pg-3)",
+  "rendu": "- [en-cours] Finaliser la PR #57 avec les commits 7e3c9d4 (logical replication) et b0f18a2 (staging engine 17.2) et préparer la mise à niveau de production (de: équipe, agent; source: src-pr57, ses-pg-3)\n- [prochaine-étape] Attendre la validation de Maya Cohen après une semaine complète de staging sur 17 sans incident, puis planifier la fenêtre de production (de: connecteur, agent; source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] Exécuter la mise à niveau sur production : appliquer le paramètre `rds.logical_replication = 1` sur le groupe de paramètres pg16, rebooter l'instance, puis appliquer le blue/green deployment (de: agent; source: ses-pg-3)\n- [question] Déterminer la date exacte de la fenêtre de production, en évitant la plage 01:00–03:30 UTC du verrou dbt (de: connecteur, agent; source: ses-pg-1, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 841,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4580,
+    "sortie": 1457,
+    "reflexion": 971,
+    "cache": 0,
+    "cout": 0.00171732
+  },
+  "cout": 0.00171732,
+  "latenceMs": 9307,
+  "fournisseur": "Mistral"
+}

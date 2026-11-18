@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:11.442Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif de la Saône (SAONE-CHENE-180, passé à -3) est trouvée : les webhooks `orders/create` et `orders/updated` décrémentaient le stock que Shopify décrémente déjà. Sur la branche `julien/fix-synchro-stocks`, les webhooks ne touchent plus à l'inventaire, la synchro de nuit (`scripts/stock/sync.ts`) passe en valeurs absolues et s'arrête si le CSV TransAlp est vide, le seuil d'alerte passe à 3, `syncStock` renommé en `synchroniserStocks`, lint corrigé, tests au vert. La Saône a été remise à 0 sur Shopify et la config déployée pour couper l'abonnement `orders/updated`. La PR maison-verdier/boutique#87 est fusionnée.\n\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044, toutes Saône chêne 180) ; la Saône ne revient en vente qu'après le réassort du 2 décembre.\n- [essai-raté] Dédoublonnage des webhooks via `X-Shopify-Webhook-Id` (table `webhooks_vus`, 48 h) : règle les vrais doublons mais pas le bug, car `orders/create` et `orders/updated` ont des ID différents et Shopify décrémente déjà tout seul ; retiré ensuite.\n- [décision] Plus aucun décrément de stock dans les webhooks : seule la synchro de nuit corrige, en valeur absolue, et le dédoublonnage est supprimé (source: t05)\n- [décision] Seuil d'alerte stock bas abaissé de 5 à 3 pour réduire les mails à Karim (source: t09)\n- [décision] Stock Saône remis à 0 ; pas de précommande malgré la proposition de l'agent, Claire refuse de promettre une date tant que le bon de livraison de Bois & Fils n'est pas là (source: t17)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config de l'app pour retirer `orders/updated` (source: t19)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône (SAONE-CHENE-180, passé à -3) est trouvée : les webhooks `orders/create` et `orders/updated` décrémentaient le stock que Shopify décrémente déjà. Sur la branche `julien/fix-synchro-stocks`, les webhooks ne touchent plus à l'inventaire, la synchro de nuit (`scripts/stock/sync.ts`) passe en valeurs absolues et s'arrête si le CSV TransAlp est vide, le seuil d'alerte passe à 3, `syncStock` renommé en `synchroniserStocks`, lint corrigé, tests au vert. La Saône a été remise à 0 sur Shopify et la config déployée pour couper l'abonnement `orders/updated`. La PR maison-verdier/boutique#87 est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044, toutes Saône chêne 180) ; la Saône ne revient en vente qu'après le réassort du 2 décembre.\n- [essai-raté] Dédoublonnage des webhooks via `X-Shopify-Webhook-Id` (table `webhooks_vus`, 48 h) : règle les vrais doublons mais pas le bug, car `orders/create` et `orders/updated` ont des ID différents et Shopify décrémente déjà tout seul ; retiré ensuite.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1233,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3741,
+    "sortie": 584,
+    "reflexion": 42,
+    "cache": 0,
+    "cout": 0.00085315
+  },
+  "cout": 0.00085315,
+  "latenceMs": 3641,
+  "fournisseur": "Modal"
+}

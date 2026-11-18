@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:27:14.436Z",
+  "reponse": "## Où j'en suis\nL'instance `analytics-staging` est passée à PostgreSQL 17.2 via un déploiement blue/green après avoir mis à jour `pg_partman` en 5.1.0 et activé la réplication logique (ce qui a nécessité un redémarrage). Les tests dbt sont validés. La PR #57 est ouverte et le runbook a été mis à jour pour intégrer l'étape de redémarrage en production. (source: ses-pg-3, src-pr57)\n\n- [en-cours] Surveillance de l'environnement de staging sur PostgreSQL 17 pour une durée d'une semaine (source: src-linear-kes298)\n- [prochaine-étape] Choisir la fenêtre de production après la validation du staging (source: src-linear-kes298)\n- [essai-raté] La création du déploiement blue/green a échoué car la réplication logique n'était pas activée sur l'instance source (source: ses-pg-3)\n- [décision] Le fournisseur AWS est épinglé à la version 5.82 sans passer à la v6 dans cette PR (source: s1-02)",
+  "rendu": "## Où j'en suis\nL'instance `analytics-staging` est passée à PostgreSQL 17.2 via un déploiement blue/green après avoir mis à jour `pg_partman` en 5.1.0 et activé la réplication logique (ce qui a nécessité un redémarrage). Les tests dbt sont validés. La PR #57 est ouverte et le runbook a été mis à jour pour intégrer l'étape de redémarrage en production. (de: équipe, agent; source: ses-pg-3, src-pr57)\n\n- [en-cours] Surveillance de l'environnement de staging sur PostgreSQL 17 pour une durée d'une semaine (de: connecteur; source: src-linear-kes298)\n- [prochaine-étape] Choisir la fenêtre de production après la validation du staging (de: connecteur; source: src-linear-kes298)\n- [essai-raté] La création du déploiement blue/green a échoué car la réplication logique n'était pas activée sur l'instance source (de: agent; source: ses-pg-3)\n- [décision] Le fournisseur AWS est épinglé à la version 5.82 sans passer à la v6 dans cette PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 959,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4588,
+    "sortie": 276,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0020664
+  },
+  "cout": 0.0020664,
+  "latenceMs": 1823,
+  "fournisseur": "Google"
+}

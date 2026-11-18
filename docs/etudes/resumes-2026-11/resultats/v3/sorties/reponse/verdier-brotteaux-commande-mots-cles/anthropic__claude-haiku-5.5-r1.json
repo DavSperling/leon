@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:19.613Z",
+  "reponse": "PO-2291 is an order from Galeries Brotteaux for 12 \"Rhône\" oak buffets at 690 € HT each, for a total of 8,280 € HT [1][2]. The client asked for delivery to the store by 27 November [1]. The order was packed, with pickup by Rapid'Colis on 24 November and delivery on 25 November [3]. Payment terms are 60 days end of month, so the cash should arrive at the end of January [4].",
+  "rendu": "PO-2291 is an order from Galeries Brotteaux for 12 \"Rhône\" oak buffets at 690 € HT each, for a total of 8,280 € HT [1][2]. The client asked for delivery to the store by 27 November [1]. The order was packed, with pickup by Rapid'Colis on 24 November and delivery on 25 November [3]. Payment terms are 60 days end of month, so the cash should arrive at the end of January [4].",
+  "mesures": {
+    "mots": 71,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1537,
+    "sortie": 568,
+    "reflexion": 417,
+    "cache": 0,
+    "cout": 0.0004377
+  },
+  "cout": 0.0004377,
+  "latenceMs": 4486,
+  "fournisseur": "Google"
+}

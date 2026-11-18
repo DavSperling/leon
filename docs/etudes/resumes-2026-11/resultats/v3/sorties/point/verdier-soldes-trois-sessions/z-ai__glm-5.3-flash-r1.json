@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:55:51.270Z",
+  "reponse": "## What is still open\n- **PR #63 attend une réponse sur la Saône** : Hugo demande si le -20 % est voulu, et Claire a tranché dans #direction — pas de Saône en soldes (rupture jusqu'en janvier, précommandes au plein prix). Il faut retirer la Saône de la grille et répondre à Hugo [4][10].\n- Ticket #65 : le flux Google Shopping doit afficher les prix soldés dès le 6 janvier, sinon les annonces sont refusées. Sophie demande si le flux peut être relancé juste après le script des soldes — à traiter avant la fusion [5].\n- Ticket #64 : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile ; à corriger avant le shooting [6].\n\n## What changed\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le **lundi 30/11** au lieu de vendredi — la PR #63 doit donc être bouclée et appliquée plus tôt que prévu [11].\n- Ticket #7 fusionné : le tag `soldes` s'ajoute automatiquement aux produits remisés et se retire à la fin, collections de Sophie prêtes pour janvier [7].\n\n## What you did\n- Tu as livré le script des soldes depuis la grille de Sophie : application le 6 janvier à 8 h avec prix arrondi à l'euro inférieur, restauration le 3 février, dry-run prod validé (212 variantes, 3 déjà en promo laissées de côté, 7 lignes orphelines signalées), les deux déclenchements testés sur la boutique de dev, et PR #63 ouverte pour relecture par Hugo [1].\n- PR #52 fusionnée : le widget Zendesk est en prod sur les pages produit, Lucie signale déjà 23 conversations ouvertes depuis ces pages [9].",
+  "rendu": "## What is still open\n- **PR #63 attend une réponse sur la Saône** : Hugo demande si le -20 % est voulu, et Claire a tranché dans #direction — pas de Saône en soldes (rupture jusqu'en janvier, précommandes au plein prix). Il faut retirer la Saône de la grille et répondre à Hugo [4][10].\n- Ticket #65 : le flux Google Shopping doit afficher les prix soldés dès le 6 janvier, sinon les annonces sont refusées. Sophie demande si le flux peut être relancé juste après le script des soldes — à traiter avant la fusion [5].\n- Ticket #64 : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile ; à corriger avant le shooting [6].\n\n## What changed\n- Le shooting soldes est décalé au 2 décembre : Sophie a besoin des prix soldés dans Shopify pour le **lundi 30/11** au lieu de vendredi — la PR #63 doit donc être bouclée et appliquée plus tôt que prévu [11].\n- Ticket #7 fusionné : le tag `soldes` s'ajoute automatiquement aux produits remisés et se retire à la fin, collections de Sophie prêtes pour janvier [7].\n\n## What you did\n- Tu as livré le script des soldes depuis la grille de Sophie : application le 6 janvier à 8 h avec prix arrondi à l'euro inférieur, restauration le 3 février, dry-run prod validé (212 variantes, 3 déjà en promo laissées de côté, 7 lignes orphelines signalées), les deux déclenchements testés sur la boutique de dev, et PR #63 ouverte pour relecture par Hugo [1].\n- PR #52 fusionnée : le widget Zendesk est en prod sur les pages produit, Lucie signale déjà 23 conversations ouvertes depuis ces pages [9].",
+  "mesures": {
+    "mots": 263,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4745,
+    "sortie": 577,
+    "reflexion": 146,
+    "cache": 0,
+    "cout": 0.00100025
+  },
+  "cout": 0.00100025,
+  "latenceMs": 6265,
+  "fournisseur": "BaseTen"
+}

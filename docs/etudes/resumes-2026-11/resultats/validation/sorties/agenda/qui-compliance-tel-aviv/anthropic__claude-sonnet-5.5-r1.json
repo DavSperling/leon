@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-compliance-tel-aviv",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:33.227Z",
+  "reponse": "{\"n\": 2, \"titre\": \"Quillon PCI DSS scoping walkthrough\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T17:30\", \"avec\": \"Victor Lindqvist, Elad Navon, Avi Kessler\"}\n{\"n\": 5, \"titre\": \"Audit & risk committee prep\", \"debut\": \"2026-11-22T09:30\", \"fin\": \"2026-11-22T10:30\", \"avec\": \"Gil Shamir, Avi Kessler\"}\n{\"n\": 6, \"titre\": \"Annual third-party oversight review call\", \"debut\": \"2026-11-19T16:00\", \"fin\": \"2026-11-19T17:00\", \"avec\": \"Monique Tran\"}\n{\"n\": 12, \"titre\": \"1:1 avec Avi\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T14:30\", \"avec\": \"Avi Kessler\"}\n{\"n\": 13, \"titre\": \"Interview Noga Elbaz (compliance analyst)\", \"debut\": \"2026-11-17T13:30\", \"fin\": \"2026-11-17T14:15\", \"avec\": \"Noga Elbaz, Hadas Levin\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T14:30 1:1 avec Avi (avec Avi Kessler)\n2026-11-17T13:30→2026-11-17T14:15 Interview Noga Elbaz (compliance analyst) (avec Noga Elbaz, Hadas Levin)\n2026-11-18T16:00→2026-11-18T17:30 Quillon PCI DSS scoping walkthrough (avec Victor Lindqvist, Elad Navon, Avi Kessler)\n2026-11-19T16:00→2026-11-19T17:00 Annual third-party oversight review call (avec Monique Tran)\n2026-11-22T09:30→2026-11-22T10:30 Audit & risk committee prep (avec Gil Shamir, Avi Kessler)",
+  "mesures": {
+    "trouves": 5,
+    "attendus": 5,
+    "justes": 1,
+    "rappel": 0.2,
+    "precision": 0.2,
+    "f1": 0.2,
+    "faux": "2026-11-16T14:00 1:1 avec Avi | 2026-11-17T13:30 Interview Noga Elbaz (compliance analyst) | 2026-11-18T16:00 Quillon PCI DSS scoping walkthrough | 2026-11-22T09:30 Audit & risk committee prep",
+    "manques": "2026-11-16T13:00 1:1 with Avi | 2026-11-17T12:30 Interview: Noga Elbaz, compliance analyst | 2026-11-18T15:00 PCI DSS scoping walkthrough with Ardent | 2026-11-22T08:30 Audit & risk committee prep",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4321,
+    "sortie": 401,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.012652
+  },
+  "cout": 0.012652,
+  "latenceMs": 2885,
+  "fournisseur": "Amazon Bedrock"
+}

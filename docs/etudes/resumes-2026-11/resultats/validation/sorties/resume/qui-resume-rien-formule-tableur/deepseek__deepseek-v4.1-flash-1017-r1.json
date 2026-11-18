@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-rien-formule-tableur",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:43.553Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1806,
+    "sortie": 331,
+    "reflexion": 324,
+    "cache": 768,
+    "cout": 0.000323504
+  },
+  "cout": 0.000323504,
+  "latenceMs": 2512,
+  "fournisseur": "Cohere"
+}

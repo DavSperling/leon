@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:56:14.302Z",
+  "reponse": "## What is still open\n\n- **The prod cutover moves to Sunday 22/11, 02:00–04:00 UTC**, because Fernhill’s batch runs Saturday night. Update the runbook, then merge **#321**: Maya has approved it and confirmed you can merge once rescheduled. [8][3]\n- **Rehearse rollback on a fresh clone Thursday 19/11**, before the window: measure its duration and data loss. Rollback is not a simple switch back, since the old instance stops receiving writes and diverges. [1]\n- Give **Lior 30 minutes’ notice** so he can pause ingest consumers cleanly; **Daniel is on API on-call Sunday** and wants a ping when you start switchover. Ingest needs no configuration change. [9][7]\n\n## What you did\n\n- Prepared the prod blue/green Terraform so the read replica follows the deployment rather than being destroyed; the plan now has **2 changes, 0 destroys**, and the runbook is in `runbooks/pg17-cutover.md`. [1]\n- Completed a full snapshot-clone rehearsal: green was ready in 52 minutes, switchover caused **74 seconds of write downtime**, API pods reconnected without restarts, and row counts matched. You then deleted all rehearsal resources. [1]",
+  "rendu": "## What is still open\n\n- **The prod cutover moves to Sunday 22/11, 02:00–04:00 UTC**, because Fernhill’s batch runs Saturday night. Update the runbook, then merge **#321**: Maya has approved it and confirmed you can merge once rescheduled. [8][3]\n- **Rehearse rollback on a fresh clone Thursday 19/11**, before the window: measure its duration and data loss. Rollback is not a simple switch back, since the old instance stops receiving writes and diverges. [1]\n- Give **Lior 30 minutes’ notice** so he can pause ingest consumers cleanly; **Daniel is on API on-call Sunday** and wants a ping when you start switchover. Ingest needs no configuration change. [9][7]\n\n## What you did\n\n- Prepared the prod blue/green Terraform so the read replica follows the deployment rather than being destroyed; the plan now has **2 changes, 0 destroys**, and the runbook is in `runbooks/pg17-cutover.md`. [1]\n- Completed a full snapshot-clone rehearsal: green was ready in 52 minutes, switchover caused **74 seconds of write downtime**, API pods reconnected without restarts, and row counts matched. You then deleted all rehearsal resources. [1]",
+  "mesures": {
+    "mots": 171,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5372,
+    "sortie": 625,
+    "reflexion": 339,
+    "cache": 0,
+    "cout": 0.016994
+  },
+  "cout": 0.016994,
+  "latenceMs": 4084,
+  "fournisseur": "DigitalOcean"
+}

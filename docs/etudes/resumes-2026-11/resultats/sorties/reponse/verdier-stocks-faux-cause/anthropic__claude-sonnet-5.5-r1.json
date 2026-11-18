@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:33:34.418Z",
+  "reponse": "Deux causes distinctes ressortent. La première : quand un produit a deux emplacements (entrepôt et showroom), Shopify envoie un webhook par emplacement et le script de synchro décrémentait le stock deux fois [1][2]. Un correctif de déduplication a été fusionné le 17 novembre [1].\n\nLa seconde concerne la variante Saône chêne clair, qui affichait -2 [3]. Un message Slack plus récent précise que ce n'est pas lié à #87 : l'import nocturne a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5]. Un client s'est plaint d'un stock affiché faux [4].",
+  "rendu": "Deux causes distinctes ressortent. La première : quand un produit a deux emplacements (entrepôt et showroom), Shopify envoie un webhook par emplacement et le script de synchro décrémentait le stock deux fois [1][2]. Un correctif de déduplication a été fusionné le 17 novembre [1].\n\nLa seconde concerne la variante Saône chêne clair, qui affichait -2 [3]. Un message Slack plus récent précise que ce n'est pas lié à #87 : l'import nocturne a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5]. Un client s'est plaint d'un stock affiché faux [4].",
+  "mesures": {
+    "mots": 96,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1605,
+    "sortie": 235,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00556
+  },
+  "cout": 0.00556,
+  "latenceMs": 2138,
+  "fournisseur": "Claude Platform on AWS"
+}

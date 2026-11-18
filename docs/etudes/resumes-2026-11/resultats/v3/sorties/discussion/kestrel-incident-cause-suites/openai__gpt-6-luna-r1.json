@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:03:20.963Z",
+  "reponse": "On Thursday, Nov 12, a change in ingest v2.14.0 increased the default batch size from 1 MB to 10 MB. With workers limited to 512 MiB, large batches caused them to run out of memory and crash-loop; the rollout went to all pods at once. Dashboards were stale for 3h40, until the backlog cleared at 12:27 UTC. [1]\n\nNo customer events were lost: they continued arriving in Kafka, and reconciliation matched event counts to Kafka offsets. They were processed late. [1][4]\n\nTo prevent a repeat, the team reverted the batch-size default and added a memory guard; the fix was merged and planned for canary rollout. [1][16] They’re also adding on-call alerts for consumer lag, sending config changes to a canary pool first, and raising worker memory to 1 GiB with load tests for large batches. The lag alert is in, but still being tuned because nightly backfills trigger it. [1][14]",
+  "rendu": "On Thursday, Nov 12, a change in ingest v2.14.0 increased the default batch size from 1 MB to 10 MB. With workers limited to 512 MiB, large batches caused them to run out of memory and crash-loop; the rollout went to all pods at once. Dashboards were stale for 3h40, until the backlog cleared at 12:27 UTC. [1]\n\nNo customer events were lost: they continued arriving in Kafka, and reconciliation matched event counts to Kafka offsets. They were processed late. [1][4]\n\nTo prevent a repeat, the team reverted the batch-size default and added a memory guard; the fix was merged and planned for canary rollout. [1][16] They’re also adding on-call alerts for consumer lag, sending config changes to a canary pool first, and raising worker memory to 1 GiB with load tests for large batches. The lag alert is in, but still being tuned because nightly backfills trigger it. [1][14]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 36888,
+    "sortie": 529,
+    "reflexion": 122,
+    "cache": 27822,
+    "cout": 0.0016755950000000002
+  },
+  "latenceMs": 13562,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident last Thursday customer data lost prevention\"}",
+    "chercher {\"requete\":\"event pipeline outage incident Thursday ingestion dropped events data loss\"}",
+    "chercher {\"requete\":\"pipeline postmortem events duplicate missing customer data remediation\",\"depuis\":\"2025-01-01\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "chercher {\"requete\":\"KES-432 ingest config canary pool KES-433 worker memory 1 Gi batch sizes load test\"}",
+    "lire {\"sourceId\":\"linear-kes-431\"}"
+  ],
+  "cout": 0.0016755950000000002
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:36.471Z",
+  "reponse": "## Où j'en suis\nLa synchro des stocks est corrigée et publiée (#87 fusionnée), et la suite — reprises à 2 h, 4 h et 6 h avec mail à Karim si le CSV TransAlp manque toujours à 6 h — est dans la PR #96, ouverte et confiée à Hugo pour relecture ; en attendant, la synchro du 17/11 a été relancée à la main et les 40 références en écart sont corrigées (source: ses-st-3, src-pr87, u3-08)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, en attente de la relecture d'Hugo (source: ses-st-3, u3-10)\n- [prochaine-étape] faire relire puis fusionner #96, et surveiller la première nuit avec les trois passages (source: ses-st-3, u3-08)\n- [prochaine-étape] traiter avec Lucie les 3 commandes de Saône survendues (source: ses-st-1, src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, create et updated ont des identifiants différents (source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de 4 h tombait à 5 h à Paris, corrigé par le fuseau Europe/Paris (source: u3-04)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: src-pr87, u1-02)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (source: u1-04)\n- [décision] pas de précommande sur la Saône, retour de Bois & Fils le 2 décembre seulement (source: u1-06)\n- [décision] pas de réservation des 2 tables Saône dans le script : Claire voit ça avec les Galeries Brotteaux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa synchro des stocks est corrigée et publiée (#87 fusionnée), et la suite — reprises à 2 h, 4 h et 6 h avec mail à Karim si le CSV TransAlp manque toujours à 6 h — est dans la PR #96, ouverte et confiée à Hugo pour relecture ; en attendant, la synchro du 17/11 a été relancée à la main et les 40 références en écart sont corrigées (de: équipe, agent; source: ses-st-3, src-pr87, u3-08)\n\n- [en-cours] PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » ouverte, en attente de la relecture d'Hugo (de: agent; source: ses-st-3, u3-10)\n- [prochaine-étape] faire relire puis fusionner #96, et surveiller la première nuit avec les trois passages (de: agent; source: ses-st-3, u3-08)\n- [prochaine-étape] traiter avec Lucie les 3 commandes de Saône survendues (de: connecteur, agent; source: ses-st-1, src-zendesk-1041)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, create et updated ont des identifiants différents (de: agent; source: u1-01)\n- [essai-raté] heures du cron lues en UTC : la reprise de 4 h tombait à 5 h à Paris, corrigé par le fuseau Europe/Paris (de: agent; source: u3-04)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: src-pr87, u1-02)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (de: toi; source: u1-04)\n- [décision] pas de précommande sur la Saône, retour de Bois & Fils le 2 décembre seulement (de: toi; source: u1-06)\n- [décision] pas de réservation des 2 tables Saône dans le script : Claire voit ça avec les Galeries Brotteaux (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1629,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4417,
+    "sortie": 890,
+    "reflexion": 375,
+    "cache": 0,
+    "cout": 0.00071793
+  },
+  "cout": 0.00071793,
+  "latenceMs": 6829,
+  "fournisseur": "Alibaba"
+}

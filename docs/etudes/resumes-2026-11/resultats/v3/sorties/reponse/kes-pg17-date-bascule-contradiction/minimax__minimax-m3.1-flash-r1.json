@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:03.960Z",
+  "reponse": "Le cutover PostgreSQL 17 en production est reporté du 21 au samedi 28 novembre 2026, avec le même créneau 02:00–06:00 UTC [2][6]. Ce report fait suite à l'incident d'ingestion du 12/11 et à la demande d'un second dry run sur des données à l'échelle de la production avant toute intervention [2]. Une PR déplaçant la date dans la configuration Terraform et sur la page de statut a été ouverte le 17 novembre, mais n'est pas encore appliquée et attend la revue de Daniel Levi [6].",
+  "rendu": "Le cutover PostgreSQL 17 en production est reporté du 21 au samedi 28 novembre 2026, avec le même créneau 02:00–06:00 UTC [2][6]. Ce report fait suite à l'incident d'ingestion du 12/11 et à la demande d'un second dry run sur des données à l'échelle de la production avant toute intervention [2]. Une PR déplaçant la date dans la configuration Terraform et sur la page de statut a été ouverte le 17 novembre, mais n'est pas encore appliquée et attend la revue de Daniel Levi [6].",
+  "mesures": {
+    "mots": 85,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1253,
+    "sortie": 183,
+    "reflexion": 56,
+    "cache": 0,
+    "cout": 0.00029775
+  },
+  "cout": 0.00029775,
+  "latenceMs": 1407,
+  "fournisseur": "Together"
+}

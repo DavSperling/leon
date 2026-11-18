@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:02:50.518Z",
+  "reponse": "The current plan is the rescheduled one: production cutover on **Saturday December 5, 02:00–05:00 UTC**, after the Fernhill go-live of Dec 1 [2]. That was approved by Maya [2]; the earlier Nov 21 window announced in #eng-announce [3] was postponed at the Nov 12 sync, with Noa asked to propose a new date [5] — KES-398 now says the ticket, not the Notion runbook, is the reference for the maintenance window [2].\n\nFor your two deliverables:\n- **Customer notice** (status page + in-app banner): goes out Saturday Nov 28 [2]. Staging rehearsal is Friday Nov 27, and migration freeze starts Thursday Dec 3 [2].\n- **Support macro**: I only found the original plan — Rachel saying on Nov 3 she'd prepare the customer notice and the support macro \"for the 14th\" [3], which was tied to the Nov 21 cutover. I found no updated date for the macro after the postponement. The runbook page still isn't updated [2], so you may want to ask Noa or Rachel directly.",
+  "rendu": "The current plan is the rescheduled one: production cutover on **Saturday December 5, 02:00–05:00 UTC**, after the Fernhill go-live of Dec 1 [2]. That was approved by Maya [2]; the earlier Nov 21 window announced in #eng-announce [3] was postponed at the Nov 12 sync, with Noa asked to propose a new date [5] — KES-398 now says the ticket, not the Notion runbook, is the reference for the maintenance window [2].\n\nFor your two deliverables:\n- **Customer notice** (status page + in-app banner): goes out Saturday Nov 28 [2]. Staging rehearsal is Friday Nov 27, and migration freeze starts Thursday Dec 3 [2].\n- **Support macro**: I only found the original plan — Rachel saying on Nov 3 she'd prepare the customer notice and the support macro \"for the 14th\" [3], which was tied to the Nov 21 cutover. I found no updated date for the macro after the postponement. The runbook page still isn't updated [2], so you may want to ask Noa or Rachel directly.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23884,
+    "sortie": 919,
+    "reflexion": 441,
+    "cache": 6144,
+    "cout": 0.002911078
+  },
+  "latenceMs": 11691,
+  "fournisseur": "DeepInfra",
+  "trace": [
+    "chercher {\"requete\":\"big database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"database upgrade maintenance window customer notice\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}",
+    "chercher {\"requete\":\"support macro customer notice December cutover\",\"depuis\":\"2026-11-13\"}",
+    "lire {\"sourceId\":\"slack-eng-announce-pg17\"}"
+  ],
+  "cout": 0.002911078
+}

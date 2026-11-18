@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:50.501Z",
+  "reponse": "Côté appli, oui : le correctif #214 a été déployé en prod le 17/11 et l'appli des poseurs réaffiche la bonne heure [1][2], et Yannick confirme le 18/11 que « dans l'appli c'est bon » [3].\n\nEn revanche, tout n'est pas réglé : les SMS de rappel annonçaient encore 9h au lieu de 8h à Mme Bréhier et M. Hervé le 17/11 au soir [3]. Lucas Tessier l'avait signalé sur la PR : `rappels/sms.py` garde le décalage fixe de +2 h et sera repris dans sa réécriture du module rappels, « pas avant le 30/11 » [4].",
+  "rendu": "Côté appli, oui : le correctif #214 a été déployé en prod le 17/11 et l'appli des poseurs réaffiche la bonne heure [1][2], et Yannick confirme le 18/11 que « dans l'appli c'est bon » [3].\n\nEn revanche, tout n'est pas réglé : les SMS de rappel annonçaient encore 9h au lieu de 8h à Mme Bréhier et M. Hervé le 17/11 au soir [3]. Lucas Tessier l'avait signalé sur la PR : `rappels/sms.py` garde le décalage fixe de +2 h et sera repris dans sa réécriture du module rappels, « pas avant le 30/11 » [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7300,
+    "sortie": 473,
+    "reflexion": 97,
+    "cache": 2304,
+    "cout": 0.00138988
+  },
+  "latenceMs": 6766,
+  "fournisseur": "Particle AI",
+  "trace": [
+    "chercher {\"requete\":\"horaires appli poseurs\"}",
+    "chercher {\"requete\":\"poseurs application horaires bug\",\"outil\":\"linear\"}",
+    "lire {\"passageId\":\"sl-chantiers-1118-1\"}",
+    "chercher {\"requete\":\"#214 horaires fuseau correctif\",\"outil\":\"github\"}"
+  ],
+  "cout": 0.00138988
+}

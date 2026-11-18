@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:50.532Z",
+  "reponse": "The Go-Live Date is December 7, 2026, per the signed agreement [1]. If Quillon causes a delay, Tradewell receives service credits of 5% of monthly platform fees per full week of delay, capped at 25%, as the sole remedy [1]. Tomer Golan owns the cutover end to end on Quillon's side — payout engine config, webhooks, and the go/no-go checklist [2] — while Ellen is Tradewell's internal owner, committing to deliver the KYC file for the first 400 sellers by December 2 [2]. Note the go-live is conditional on Tradewell completing onboarding obligations five business days prior [1].",
+  "rendu": "The Go-Live Date is December 7, 2026, per the signed agreement [1]. If Quillon causes a delay, Tradewell receives service credits of 5% of monthly platform fees per full week of delay, capped at 25%, as the sole remedy [1]. Tomer Golan owns the cutover end to end on Quillon's side — payout engine config, webhooks, and the go/no-go checklist [2] — while Ellen is Tradewell's internal owner, committing to deliver the KYC file for the first 400 sellers by December 2 [2]. Note the go-live is conditional on Tradewell completing onboarding obligations five business days prior [1].",
+  "mesures": {
+    "mots": 96,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1219,
+    "sortie": 148,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00025685
+  },
+  "cout": 0.00025685,
+  "latenceMs": 1088,
+  "fournisseur": "Mistral"
+}

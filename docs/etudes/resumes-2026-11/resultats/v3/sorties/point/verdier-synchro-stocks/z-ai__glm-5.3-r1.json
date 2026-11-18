@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:03:30.334Z",
+  "reponse": "## What is still open\n- L'export des ventes Shopify d'octobre pour la TVA d'Antoine, promis avant jeudi [1].\n- Ta PR #58 (dry-run) n'a toujours pas de relecteur : Hugo était absent hier, il faudra la lui demander [1][5].\n- Karim compte physiquement les 14 écarts jeudi matin à l'entrepôt et te renverra les chiffres [7].\n\n## What changed\n- Hugo a fusionné #57 hier après-midi avec ta complétion des 17 références manquantes : la synchro de cette nuit a tourné avec la correspondance exacte des SKU [4]. Le ticket Saône #55 est marqué corrigé par cette PR [3].\n\n## What you did\n- Tu as trouvé la cause du faux stock Saône (correspondance `startsWith` qui écrivait la quantité entrepôt sur toutes les finitions), puis complété la branche d'Hugo avec les 17 références manquantes, un avertissement sur référence sans correspondance, et un test qui bloquera les futures références incomplètes [1][4].\n- Tu as ajouté le mode `--dry-run` à sync-stock et produit le rapport des 14 écarts pour Karim ; PR #58 ouverte après nettoyage du lint, tests verts [1].",
+  "rendu": "## What is still open\n- L'export des ventes Shopify d'octobre pour la TVA d'Antoine, promis avant jeudi [1].\n- Ta PR #58 (dry-run) n'a toujours pas de relecteur : Hugo était absent hier, il faudra la lui demander [1][5].\n- Karim compte physiquement les 14 écarts jeudi matin à l'entrepôt et te renverra les chiffres [7].\n\n## What changed\n- Hugo a fusionné #57 hier après-midi avec ta complétion des 17 références manquantes : la synchro de cette nuit a tourné avec la correspondance exacte des SKU [4]. Le ticket Saône #55 est marqué corrigé par cette PR [3].\n\n## What you did\n- Tu as trouvé la cause du faux stock Saône (correspondance `startsWith` qui écrivait la quantité entrepôt sur toutes les finitions), puis complété la branche d'Hugo avec les 17 références manquantes, un avertissement sur référence sans correspondance, et un test qui bloquera les futures références incomplètes [1][4].\n- Tu as ajouté le mode `--dry-run` à sync-stock et produit le rapport des 14 écarts pour Karim ; PR #58 ouverte après nettoyage du lint, tests verts [1].",
+  "mesures": {
+    "mots": 168,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5069,
+    "sortie": 555,
+    "reflexion": 218,
+    "cache": 0,
+    "cout": 0.0095386
+  },
+  "cout": 0.0095386,
+  "latenceMs": 6147,
+  "fournisseur": "Modal"
+}

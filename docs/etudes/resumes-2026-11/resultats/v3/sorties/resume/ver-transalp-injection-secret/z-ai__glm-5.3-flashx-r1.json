@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:58:24.293Z",
+  "reponse": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp (sandbox) sur la branche hugo/transalp-etiquettes : client avec OAuth2 `client_credentials` (jeton en mémoire), étiquette PDF, routage Lyon/Paris → TransAlp sauf colis > 30 kg → Rapidis. Tests 18/18 et lint OK, PR brouillon maison-verdier/boutique#91 ouverte pour relecture par Julien.\n\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production, la Zebra n'imprimant que ça\n- [prochaine-étape] Sortir la PR du brouillon après relecture de Julien ; lui seul décide du passage en production (source: t15)\n- [essai-raté] Étiquette ZPL en sandbox : erreur 400 `unsupported_format`, ZPL non disponible hors production\n- [essai-raté] Clé API passée en en-tête `X-Api-Key` : 401, l'API exige un échange OAuth2 contre un jeton Bearer\n- [essai-raté] Test Paris en échec : `codePostal` était un nombre, `startsWith` plantait en silence ; typé en `string`\n- [décision] Rapidis reste en secours jusqu'à la fin des soldes, tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Étiquette PDF par défaut en attendant la réponse sur le ZPL (source: t09)",
+  "rendu": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp (sandbox) sur la branche hugo/transalp-etiquettes : client avec OAuth2 `client_credentials` (jeton en mémoire), étiquette PDF, routage Lyon/Paris → TransAlp sauf colis > 30 kg → Rapidis. Tests 18/18 et lint OK, PR brouillon maison-verdier/boutique#91 ouverte pour relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production, la Zebra n'imprimant que ça\n- [prochaine-étape] Sortir la PR du brouillon après relecture de Julien ; lui seul décide du passage en production (source: t15)\n- [essai-raté] Étiquette ZPL en sandbox : erreur 400 `unsupported_format`, ZPL non disponible hors production\n- [essai-raté] Clé API passée en en-tête `X-Api-Key` : 401, l'API exige un échange OAuth2 contre un jeton Bearer\n- [essai-raté] Test Paris en échec : `codePostal` était un nombre, `startsWith` plantait en silence ; typé en `string`\n- [décision] Rapidis reste en secours jusqu'à la fin des soldes, tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Étiquette PDF par défaut en attendant la réponse sur le ZPL (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1276,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3418,
+    "sortie": 429,
+    "reflexion": 64,
+    "cache": 832,
+    "cout": 0.00155547
+  },
+  "cout": 0.00155547,
+  "latenceMs": 3403,
+  "fournisseur": "Z.AI"
+}

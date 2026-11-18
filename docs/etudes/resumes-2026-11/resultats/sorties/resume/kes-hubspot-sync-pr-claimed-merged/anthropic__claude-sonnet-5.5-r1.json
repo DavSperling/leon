@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:13.353Z",
+  "reponse": "## Où j'en suis\nLe webhook HubSpot (#405) était impossible : un token d'app privée ne peut pas gérer les abonnements webhook par API. #405 est fermée, remplacée par un polling toutes les 15 min via la recherche CRM, avec pagination par fenêtres au-delà de 10 000 résultats et filtre arr > 0 (essais exclus). La PR #409 est ouverte, pas fusionnée : l'agent l'avait annoncée fusionnée à tort. Le check e2e échoue, donc l'auto-merge ne se déclenche pas.\n\n- [en-cours] #409 bloquée par l'e2e `test_accounts_table_shows_owner` (3 lignes attendues, 2 obtenues) : la fixture contient un essai que le filtre arr > 0 écarte. Rien n'est modifié pour l'instant.\n- [prochaine-étape] Corriger la fixture (donner un ARR > 0 à la 3e société, ou attendre 2 lignes), puis relancer la CI.\n- [prochaine-étape] Une fois #409 fusionnée, Noa ajoute HUBSPOT_TOKEN dans AWS Secrets Manager (staging et prod).\n- [essai-raté] POST /webhooks/v3/{appId}/subscriptions avec le token d'app privée : 401, il faudrait une app publique.\n- [question] Les anciens comptes d'essai gardent leur owner issu d'un import manuel : à nettoyer ou non ?\n- [décision] Polling toutes les 15 min à la place des webhooks, #405 fermée (source: t04)\n- [décision] Synchroniser uniquement les sociétés avec arr > 0, essais exclus (source: t10)",
+  "rendu": "## Où j'en suis\nLe webhook HubSpot (#405) était impossible : un token d'app privée ne peut pas gérer les abonnements webhook par API. #405 est fermée, remplacée par un polling toutes les 15 min via la recherche CRM, avec pagination par fenêtres au-delà de 10 000 résultats et filtre arr > 0 (essais exclus). La PR #409 est ouverte, pas fusionnée : l'agent l'avait annoncée fusionnée à tort. Le check e2e échoue, donc l'auto-merge ne se déclenche pas.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] #409 bloquée par l'e2e `test_accounts_table_shows_owner` (3 lignes attendues, 2 obtenues) : la fixture contient un essai que le filtre arr > 0 écarte. Rien n'est modifié pour l'instant.\n- [prochaine-étape] Corriger la fixture (donner un ARR > 0 à la 3e société, ou attendre 2 lignes), puis relancer la CI.\n- [prochaine-étape] Une fois #409 fusionnée, Noa ajoute HUBSPOT_TOKEN dans AWS Secrets Manager (staging et prod).\n- [essai-raté] POST /webhooks/v3/{appId}/subscriptions avec le token d'app privée : 401, il faudrait une app publique.\n- [question] Les anciens comptes d'essai gardent leur owner issu d'un import manuel : à nettoyer ou non ?\n- [décision] Polling toutes les 15 min à la place des webhooks, #405 fermée (source: t04)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1382,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4964,
+    "sortie": 593,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015858
+  },
+  "cout": 0.015858,
+  "latenceMs": 4435,
+  "fournisseur": "Claude Platform on AWS"
+}

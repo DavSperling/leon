@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:51.870Z",
+  "reponse": "## Où j'en suis\nAt the end of ses-sso-3, real SAML login works on staging with Fernhill's IdP after loading metadata and fixing RelayState; JIT user creation from #415 is merged, role mapping is in open PR #421, and the Thursday 10:00 NY demo waits on Fernhill IT adding the groups claim. (source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 is open for group-to-role mapping plus short RelayState; Fernhill's assertion still lacks the groups claim, so admins cannot yet be separated from viewers. (source: kestrel-analytics/platform#421, s3-04, s3-06",
+  "rendu": "## Où j'en suis\nAt the end of ses-sso-3, real SAML login works on staging with Fernhill's IdP after loading metadata and fixing RelayState; JIT user creation from #415 is merged, role mapping is in open PR #421, and the Thursday 10:00 NY demo waits on Fernhill IT adding the groups claim. (de: équipe, connecteur, agent; source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 422,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4989,
+    "sortie": 6000,
+    "reflexion": 5816,
+    "cache": 0,
+    "cout": 0.00356835
+  },
+  "cout": 0.00356835,
+  "latenceMs": 69213,
+  "fournisseur": "Alibaba"
+}

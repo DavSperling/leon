@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:29:00.354Z",
+  "reponse": "## Où j'en suis\nReal SAML login works end to end on staging with Fernhill's IdP: the short opaque RelayState (Redis, 10 min TTL) replaced the too-long return URL, JIT creates users as `viewer`, and group-to-role mapping is committed and open in PR #421, waiting on Fernhill IT to add the `groups` claim before Thursday's 10:00 NY demo. (source: ses-sso-3, s3-11)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open; default role stays `viewer`, SP-initiated stays on, awaiting Fernhill IT's groups claim (source: ses-sso-3, s3-06, s3-07)\n- [prochaine-étape] Fernhill IT adds the `groups` claim to their IdP (they said they will email), then review/merge #421 and run the Thursday demo with `kestrel.test1` plus one admin account (source: ses-sso-3, s3-05, s3-08, src-linear-kes311)\n- [prochaine-étape] demo Thursday 10:00 New York (source: s3-10, src-linear-kes311)\n- [décision] default role for new SAML users is `viewer`, least privilege (source: s1-05, s3-07)\n- [décision] SP-initiated login stays on for Fernhill (source: s3-07)\n- [décision] JIT only from verified domains; unverified domains refused and logged without email (source: s2-03)\n- [décision] SAML 2.0 only, no OIDC for now (source: s1-03)",
+  "rendu": "## Où j'en suis\nReal SAML login works end to end on staging with Fernhill's IdP: the short opaque RelayState (Redis, 10 min TTL) replaced the too-long return URL, JIT creates users as `viewer`, and group-to-role mapping is committed and open in PR #421, waiting on Fernhill IT to add the `groups` claim before Thursday's 10:00 NY demo. (de: agent; source: ses-sso-3, s3-11)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" open; default role stays `viewer`, SP-initiated stays on, awaiting Fernhill IT's groups claim (de: toi, agent; source: ses-sso-3, s3-06, s3-07)\n- [prochaine-étape] Fernhill IT adds the `groups` claim to their IdP (they said they will email), then review/merge #421 and run the Thursday demo with `kestrel.test1` plus one admin account (de: toi, connecteur, agent; source: ses-sso-3, s3-05, s3-08, src-linear-kes311)\n- [prochaine-étape] demo Thursday 10:00 New York (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [décision] default role for new SAML users is `viewer`, least privilege (de: toi; source: s1-05, s3-07)\n- [décision] SP-initiated login stays on for Fernhill (de: toi; source: s3-07)\n- [décision] JIT only from verified domains; unverified domains refused and logged without email (de: toi; source: s2-03)\n- [décision] SAML 2.0 only, no OIDC for now (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1341,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4996,
+    "sortie": 1965,
+    "reflexion": 1551,
+    "cache": 0,
+    "cout": 0.0019817
+  },
+  "cout": 0.0019817,
+  "latenceMs": 4092,
+  "fournisseur": "Venice"
+}

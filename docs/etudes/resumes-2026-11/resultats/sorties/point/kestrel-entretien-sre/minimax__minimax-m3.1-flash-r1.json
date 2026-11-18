@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:15.536Z",
+  "reponse": "## What you did\n\n- Built Ilan Barak's 90-minute interview plan (Terraform exercise with Noa, the 12/11 ingest incident played as a live scenario, on-call and pager-noise questions) plus a 1–4 rubric, as a single doc for Noa [1].\n- Told Dana Shapira (Talentbridge) that Thursday 19/11 at 15:00 is confirmed, with her and Noa on the panel, and asked for three more profiles by end of next week, ideally people who've done on-call for US customers [1].\n- Kept the candidates' salary packages out of her notes — that data stays in the ATS [1].\n\n## What changed\n\n- Noa confirmed Thursday 15:00 and will prep the Terraform exercise (the RDS parameter group one) herself [3].\n- Eitan asked for the SRE shortlist before Friday: the board deck goes out Monday and he wants a hiring update in it [4].\n\n## What is still open\n\n- The plan doc was written but not sent — sharing it with Noa is still on her [1].\n- The band looks like the main risk to closing this hire: Yoav's counter-offer and Elena's explicit comp refusal are two of the last four declines, and the only remaining candidate already sits above the band. She plans to propose ₪42–48k to Eitan at Monday's leadership sync [1].\n- Pipeline is thin: Ilan is the only active candidate, and Dana owes three more profiles by end of next week [1].",
+  "rendu": "## What you did\n\n- Built Ilan Barak's 90-minute interview plan (Terraform exercise with Noa, the 12/11 ingest incident played as a live scenario, on-call and pager-noise questions) plus a 1–4 rubric, as a single doc for Noa [1].\n- Told Dana Shapira (Talentbridge) that Thursday 19/11 at 15:00 is confirmed, with her and Noa on the panel, and asked for three more profiles by end of next week, ideally people who've done on-call for US customers [1].\n- Kept the candidates' salary packages out of her notes — that data stays in the ATS [1].\n\n## What changed\n\n- Noa confirmed Thursday 15:00 and will prep the Terraform exercise (the RDS parameter group one) herself [3].\n- Eitan asked for the SRE shortlist before Friday: the board deck goes out Monday and he wants a hiring update in it [4].\n\n## What is still open\n\n- The plan doc was written but not sent — sharing it with Noa is still on her [1].\n- The band looks like the main risk to closing this hire: Yoav's counter-offer and Elena's explicit comp refusal are two of the last four declines, and the only remaining candidate already sits above the band. She plans to propose ₪42–48k to Eitan at Monday's leadership sync [1].\n- Pipeline is thin: Ilan is the only active candidate, and Dana owes three more profiles by end of next week [1].",
+  "mesures": {
+    "mots": 222,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3928,
+    "sortie": 1099,
+    "reflexion": 778,
+    "cache": 184,
+    "cout": 0.001101384
+  },
+  "cout": 0.001101384,
+  "latenceMs": 8294,
+  "fournisseur": "Wafer"
+}

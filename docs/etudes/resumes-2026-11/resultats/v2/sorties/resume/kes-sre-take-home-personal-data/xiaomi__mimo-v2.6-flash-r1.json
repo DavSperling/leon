@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:11.825Z",
+  "reponse": "## Où j'en suisThe SRE take-home is finished and lives in its own private repo `kestrel-analytics/sre-take-home`, pushed as a subtree so its history shows nothing from infra. It runs from source (arm64 + amd64), has the planted alert bug, the connection leak, the over-broad IAM policy, a 3-hour box, and a 4-area rubric scored 0–3; `hiring/` is deleted from the infra branch.\n\n- [décision] No Kubernetes, no optional part, 3 hours max, terraform + compose only (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] No pass threshold; scores are input, the panel decides, Noa is 2nd reviewer (source: t10)\n- [décision] Exercise kept in its own private repo; no PR in infra, `hiring/` deleted from the branch (source: t14)\n- [prochaine-étape] You send the exercise yourself after the call, Thursday 4pm Tel Aviv time; nothing is emailed, the repo awaits your collaborator invite (source: t16)",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] No Kubernetes, no optional part, 3 hours max, terraform + compose only (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] No pass threshold; scores are input, the panel decides, Noa is 2nd reviewer (source: t10)\n- [décision] Exercise kept in its own private repo; no PR in infra, `hiring/` deleted from the branch (source: t14)\n- [prochaine-étape] You send the exercise yourself after the call, Thursday 4pm Tel Aviv time; nothing is emailed, the repo awaits your collaborator invite (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 665,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3859,
+    "sortie": 341,
+    "reflexion": 66,
+    "cache": 0,
+    "cout": 0.00063574
+  },
+  "cout": 0.00063574,
+  "latenceMs": 3508,
+  "fournisseur": "Cohere"
+}

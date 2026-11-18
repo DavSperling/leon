@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:49.787Z",
+  "reponse": "The signed agreement sets the go-live date at December 7, 2026, provided Tradewell completes its onboarding obligations (KYC data and webhook certification) at least five business days beforehand [1]. If Quillon misses the date for reasons attributable to it, Tradewell gets a credit of 5% of monthly platform fees per full week of delay, capped at 25%, and this is its sole remedy for delay [1].\n\nOn ownership, Tomer Golan owns the Tradewell cutover end to end, including payout engine config, webhooks and the go/no-go checklist [2]. On Tradewell's side, Ellen is the owner [2].\n\nNote that the webhook certification is still in progress, with recertification planned for November 24 [3].",
+  "rendu": "The signed agreement sets the go-live date at December 7, 2026, provided Tradewell completes its onboarding obligations (KYC data and webhook certification) at least five business days beforehand [1]. If Quillon misses the date for reasons attributable to it, Tradewell gets a credit of 5% of monthly platform fees per full week of delay, capped at 25%, and this is its sole remedy for delay [1].\n\nOn ownership, Tomer Golan owns the Tradewell cutover end to end, including payout engine config, webhooks and the go/no-go checklist [2]. On Tradewell's side, Ellen is the owner [2].\n\nNote that the webhook certification is still in progress, with recertification planned for November 24 [3].",
+  "mesures": {
+    "mots": 111,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1834,
+    "sortie": 239,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.006058
+  },
+  "cout": 0.006058,
+  "latenceMs": 2437,
+  "fournisseur": "Amazon Bedrock"
+}

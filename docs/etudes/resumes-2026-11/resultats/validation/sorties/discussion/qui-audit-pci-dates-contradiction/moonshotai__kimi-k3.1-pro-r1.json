@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:21.689Z",
+  "reponse": "Plan for **Tuesday December 15 to Thursday December 17, 2026**, at the Austin office — Ardent Assurance requested the move on Nov 16, and Shira confirmed it works on their side. [2]\n\nHeads up: Avi's #compliance reminder from Nov 17 still says **Dec 8–10**, but that conflicts with the confirmed email exchange, so I'd double-check with Shira before booking non-refundable flights. [4][2] The Dec 1 evidence-package deadline is unchanged either way. [2]",
+  "rendu": "Plan for **Tuesday December 15 to Thursday December 17, 2026**, at the Austin office — Ardent Assurance requested the move on Nov 16, and Shira confirmed it works on their side. [2]\n\nHeads up: Avi's #compliance reminder from Nov 17 still says **Dec 8–10**, but that conflicts with the confirmed email exchange, so I'd double-check with Shira before booking non-refundable flights. [4][2] The Dec 1 evidence-package deadline is unchanged either way. [2]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15962,
+    "sortie": 458,
+    "reflexion": 96,
+    "cache": 8512,
+    "cout": 0.021182399999999997
+  },
+  "latenceMs": 8757,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors coming to the office Austin audit visit dates\"}",
+    "lire {\"passageId\":\"gmail-ardent-fieldwork-1\"}",
+    "lire {\"passageId\":\"slack-compliance-4\"}",
+    "chercher {\"depuis\":\"2026-11-17\",\"requete\":\"PCI fieldwork Dec 15-17 Austin updated invites reschedule\"}"
+  ],
+  "cout": 0.021182399999999997
+}

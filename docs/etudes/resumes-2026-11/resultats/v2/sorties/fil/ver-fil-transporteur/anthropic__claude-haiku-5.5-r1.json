@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:30:13.381Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est poussée et la PR #91 reste en brouillon, en attente de la relecture de Julien. Le client TransAlp fonctionne en recette, l'étiquette ZPL est imprimée et validée par Karim, et le format ZPL est par défaut. Rien n'est activé en production : `TRANSALP_DEBUT` est réglé au 1er décembre. (source: ses-tr-2, h2-12, h2-05, h2-08)\n\n- [en-cours] La configuration de production est prête, mais son activation attend la clé de production que Julien doit ajouter aux secrets. (source: h2-07, 3e8b1d0, a90c4f7)\n- [prochaine-étape] 1. Julien relit la PR #91. (source: src-pr91) 2. Julien ajoute la clé de production dans les secrets avant le 1er décembre. (source: h2-07) 3. Vérifier la bascule de Lyon et Paris le 1er décembre. (source: src-slack-julien)\n- [essai-raté] Sans `^CI28`, les accents sortent en bouillie sur la Zebra (« SaÃ´ne »). Corrigé dans le commit 3e8b1d0. (source: h2-03, h2-04)\n- [essai-raté] L'en-tête `X-Api-Key` renvoie 401 : l'API exige un jeton OAuth2. (source: ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, Lyon et Paris seulement. Le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier. (source: src-slack-julien)\n- [décision] Rapidis n'est pas désactivé : il reste en secours et prend les colis de plus de 30 kg. (source: h2-09, h1-03)",
+  "rendu": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est poussée et la PR #91 reste en brouillon, en attente de la relecture de Julien. Le client TransAlp fonctionne en recette, l'étiquette ZPL est imprimée et validée par Karim, et le format ZPL est par défaut. Rien n'est activé en production : `TRANSALP_DEBUT` est réglé au 1er décembre. (de: toi, agent; source: ses-tr-2, h2-12, h2-05, h2-08)\n\n- [en-cours] La configuration de production est prête, mais son activation attend la clé de production que Julien doit ajouter aux secrets. (de: toi, équipe; source: h2-07, 3e8b1d0, a90c4f7)\n- [prochaine-étape] 1. Julien relit la PR #91. (source: src-pr91) 2. Julien ajoute la clé de production dans les secrets avant le 1er décembre. (source: h2-07) 3. Vérifier la bascule de Lyon et Paris le 1er décembre. (de: connecteur; source: src-slack-julien)\n- [essai-raté] Sans `^CI28`, les accents sortent en bouillie sur la Zebra (« SaÃ´ne »). Corrigé dans le commit 3e8b1d0. (de: toi, agent; source: h2-03, h2-04)\n- [essai-raté] L'en-tête `X-Api-Key` renvoie 401 : l'API exige un jeton OAuth2. (de: agent; source: ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, Lyon et Paris seulement. Le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier. (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis n'est pas désactivé : il reste en secours et prend les colis de plus de 30 kg. (de: toi; source: h2-09, h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1483,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5434,
+    "sortie": 2365,
+    "reflexion": 1711,
+    "cache": 0,
+    "cout": 0.0017259
+  },
+  "cout": 0.0017259,
+  "latenceMs": 10863,
+  "fournisseur": "Claude Platform on AWS"
+}

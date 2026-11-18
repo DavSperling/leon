@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:38:49.329Z",
+  "reponse": "## Où j'en suis\nThe dashboard v2 grid is built behind the `dashboards_v2` flag. Widgets can be dragged and resized with react-grid-layout, and the layout is saved per user per dashboard, with localStorage as an offline fallback. Widget sizing uses a ResizeObserver hook, because iOS 15 Safari ignores container queries. Draft PR #418 is open and ready for Priya's UX review.\n\n- [prochaine-étape] Priya's UX review on iPad, including a BrowserStack re-check on iOS 15.7\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin, before the demo on Tuesday 24th\n- [essai-raté] CSS container queries: iOS 15 Safari ignores `@container` rules without any error, so they were replaced by `useWidgetSize()` with ResizeObserver\n- [décision] Layout saved server-side via `PUT /dashboards/:id/layout`, with localStorage only as an offline fallback (source: t03)\n- [décision] Widget sizing with ResizeObserver and no container queries, to keep a single system (source: t09)\n- [décision] Rename `DashboardTile` to `WidgetCard`, keeping a deprecated re-export for the v1 `DashboardList` (source: t11)\n- [décision] Keep v1 dashboards behind the flag until January, remove nothing, and turn the flag on for Zest only (source: t15)\n- [décision] Open the work as a draft PR for Priya's UX review (source: t17)",
+  "rendu": "## Où j'en suis\nThe dashboard v2 grid is built behind the `dashboards_v2` flag. Widgets can be dragged and resized with react-grid-layout, and the layout is saved per user per dashboard, with localStorage as an offline fallback. Widget sizing uses a ResizeObserver hook, because iOS 15 Safari ignores container queries. Draft PR #418 is open and ready for Priya's UX review.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [prochaine-étape] Priya's UX review on iPad, including a BrowserStack re-check on iOS 15.7\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only, in the flags admin, before the demo on Tuesday 24th\n- [essai-raté] CSS container queries: iOS 15 Safari ignores `@container` rules without any error, so they were replaced by `useWidgetSize()` with ResizeObserver\n- [décision] Layout saved server-side via `PUT /dashboards/:id/layout`, with localStorage only as an offline fallback (source: t03)\n- [décision] Widget sizing with ResizeObserver and no container queries, to keep a single system (source: t09)\n- [décision] Rename `DashboardTile` to `WidgetCard`, keeping a deprecated re-export for the v1 `DashboardList` (source: t11)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1260,
+    "decisions": 3,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5125,
+    "sortie": 1949,
+    "reflexion": 1423,
+    "cache": 0,
+    "cout": 0.001487
+  },
+  "cout": 0.001487,
+  "latenceMs": 9263,
+  "fournisseur": "Claude Platform on AWS"
+}

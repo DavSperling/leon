@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:13.241Z",
+  "reponse": "Daniel Levi owns the Fernhill SAML work end to end [1][3]. The internal due date is November 27, 2026, which leaves a buffer before the contractual go-live [1], and the order form signed on November 3 commits us to having SAML SSO live in production by December 1, 2026 [2]. Note that we're currently blocked on Fernhill's production IdP metadata, which their change board won't release before the 26th at the earliest [1][6].",
+  "rendu": "Daniel Levi owns the Fernhill SAML work end to end [1][3]. The internal due date is November 27, 2026, which leaves a buffer before the contractual go-live [1], and the order form signed on November 3 commits us to having SAML SSO live in production by December 1, 2026 [2]. Note that we're currently blocked on Fernhill's production IdP metadata, which their change board won't release before the 26th at the earliest [1][6].",
+  "mesures": {
+    "mots": 73,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1347,
+    "sortie": 158,
+    "reflexion": 41,
+    "cache": 0,
+    "cout": 0.00023282
+  },
+  "cout": 0.00023282,
+  "latenceMs": 2218,
+  "fournisseur": "DeepInfra"
+}

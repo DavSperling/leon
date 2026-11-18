@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:35.450Z",
+  "reponse": "## Où j'en suis\nBranche julien/fix-synchro-stocks : la PR #96 est ouverte, en attente de la relecture d'Hugo. Elle ajoute des reprises de synchro à 4 h et 6 h (Europe/Paris) et un mail à Karim si le CSV TransAlp manque encore à 6 h. C'est la sécurité de #87 (CSV absent → rien écrit) qui a causé l'incident du 16 : TransAlp a déposé le fichier 47 min après le passage de 2 h, et 40 réfs sont restées fausses toute la journée. Synchro du 17/11 relancée à la main (40 réfs corrigées), commit d7c2e41. (source: ses-st-3, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte, non fusionnée, Hugo en relecteur (source: ses-st-3, maison-verdier/boutique#96)\n- [prochaine-étape] Faire relire et fusionner #96 par Hugo pour que les reprises tournent dès les prochaines nuits (source: ses-st-3, u3-08)\n- [prochaine-étape] Suivre avec Lucie les commandes Saône survendues (bon d'achat 50 € déjà proposé pour la #1041) (source: ses-st-1, src-zendesk-1041)\n- [essai-raté] Dédoublonnage des webhooks par X-Shopify-Webhook-Id : insuffisant, orders/create et orders/updated ont des identifiants différents (source: ses-st-1, u1-01)\n- [essai-raté] Tests de la reprise en échec au premier passage : les heures du cron étaient lues en UTC, la reprise « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé dans le planificateur (source: ses-st-3, u3-04)\n- [question] Où tracer la réservation des 2 tables Saône pour les Galeries Brotteaux (réassort du 2 déc.) puisque le script n'en fait rien (source: src-mail-brotteaux, u3-09)\n- [décision] Les webhooks ne touchent plus au stock (Shopify décrémente déjà) ; la synchro de nuit corrige en valeur absolue et s'arrête si le CSV manque (source: u1-02, src-pr87)\n- [décision] Reprises à 4 h et 6 h, et mail à Karim à 6 h si le CSV manque toujours (source: u3",
+  "rendu": "## Où j'en suis\nBranche julien/fix-synchro-stocks : la PR #96 est ouverte, en attente de la relecture d'Hugo. Elle ajoute des reprises de synchro à 4 h et 6 h (Europe/Paris) et un mail à Karim si le CSV TransAlp manque encore à 6 h. C'est la sécurité de #87 (CSV absent → rien écrit) qui a causé l'incident du 16 : TransAlp a déposé le fichier 47 min après le passage de 2 h, et 40 réfs sont restées fausses toute la journée. Synchro du 17/11 relancée à la main (40 réfs corrigées), commit d7c2e41. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte, non fusionnée, Hugo en relecteur (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96)\n- [prochaine-étape] Faire relire et fusionner #96 par Hugo pour que les reprises tournent dès les prochaines nuits (de: agent; source: ses-st-3, u3-08)\n- [prochaine-étape] Suivre avec Lucie les commandes Saône survendues (bon d'achat 50 € déjà proposé pour la #1041) (de: connecteur, agent; source: ses-st-1, src-zendesk-1041)\n- [essai-raté] Dédoublonnage des webhooks par X-Shopify-Webhook-Id : insuffisant, orders/create et orders/updated ont des identifiants différents (de: agent; source: ses-st-1, u1-01)\n- [essai-raté] Tests de la reprise en échec au premier passage : les heures du cron étaient lues en UTC, la reprise « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé dans le planificateur (de: agent; source: ses-st-3, u3-04)\n- [question] Où tracer la réservation des 2 tables Saône pour les Galeries Brotteaux (réassort du 2 déc.) puisque le script n'en fait rien (de: toi, connecteur; source: src-mail-brotteaux, u3-09)\n- [décision] Les webhooks ne touchent plus au stock (Shopify décrémente déjà) ; la synchro de nuit corrige en valeur absolue et s'arrête si le CSV manque (de: toi, équipe; source: u1-02, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1837,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4998,
+    "sortie": 6000,
+    "reflexion": 5333,
+    "cache": 0,
+    "cout": 0.00103491
+  },
+  "cout": 0.00103491,
+  "latenceMs": 60024,
+  "fournisseur": "Novita"
+}

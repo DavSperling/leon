@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:10:49.760Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5257,
+    "sortie": 8000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0135771
+  },
+  "cout": 0.0135771,
+  "latenceMs": 40641,
+  "fournisseur": "Cohere"
+}

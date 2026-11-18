@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:31:48.157Z",
+  "reponse": "{\"n\": 25, \"titre\": \"Visite de suivi en entreprise – Hugo Petit\", \"debut\": \"2026-11-17\", \"avec\": \"Nathalie Delorme, Hugo Petit\"}\n{\"n\": 14, \"titre\": \"Point bug synchro avec Hugo\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 6, \"titre\": \"Point tunnel de commande – Studio Canut\", \"debut\": \"2026-11-17T16:00\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 5, \"titre\": \"Webhook duplicates – debugging session\", \"debut\": \"2026-11-18T18:00\", \"avec\": \"Ryan Okafor\"}",
+  "rendu": "2026-11-17 Visite de suivi en entreprise – Hugo Petit (avec Nathalie Delorme, Hugo Petit)\n2026-11-17T10:00 Point bug synchro avec Hugo (avec Hugo Petit)\n2026-11-17T16:00 Point tunnel de commande – Studio Canut (avec Mélanie Roche)\n2026-11-18T18:00 Webhook duplicates – debugging session (avec Ryan Okafor)",
+  "mesures": {
+    "trouves": 4,
+    "attendus": 4,
+    "justes": 4,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3272,
+    "sortie": 1269,
+    "reflexion": 1066,
+    "cache": 384,
+    "cout": 0.0007607152
+  },
+  "cout": 0.0007607152,
+  "latenceMs": 10361,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kra-fil-messeaktion",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:05.185Z",
+  "reponse": "## Où j'en suis\nDie Messeaktion ist in zwei Schritten gebaut: Der Rabatt kommt aus der SAP-Preisfindung (Konditionsart ZMES), der Code PROWERK27 geht als ZZ_AKTION an SAP – PR #209 ist gemergt. Darauf sitzt seit dem 18.11. das Hinweisbanner auf einem eigenen Branch `feat/messeaktion-banner`: Banner erst ab 12.01.2027 (Flag `messeaktion.banner.ab`), vorerst nur für Kunden mit Land DE; Tests grün, Draft-PR #224 offen, Reviewer @mvogt. Eine Mail von Thomas Brenner vom 17.11. stellt die Eckdaten allerdings auf 4 %, 19.–29.01.2027, nur Rahmenvertragskunden, AT ja, CH nein – der Bannertext steht noch auf 5 % und 19.–31.01. (source: ses-m3, src-pr224, src-pr209, src-mail-thomas)\n\n- [en-cours] Banner-Feature auf `feat/messeaktion-banner`: ControllerAdvice, Fragment, Texte in `messages_de.properties`, Datums-Flag, DE-Filter; Commits `7a3c2d1` und `f0b9e44`, PR #224 als Draft (source: ses-m3, src-pr224)\n- [prochaine-étape] Bannertext auf die neuen Eckdaten umstellen: 4 %, 19.–29.01.2027, nur Händler mit Rahmenvertrag (source: src-mail-thomas)\n- [prochaine-étape] Länderfreigabe im Banner nachziehen: AT aufnehmen, CH bleibt draußen (Preisstellung in CHF) (source: src-mail-thomas, ses-m3)\n- [prochaine-étape] Review von @mvogt abwarten, dann PR #224 aus dem Draft holen (source: ses-m3)\n- [essai-raté] Der Sichtbarkeitstest verglich in UTC, das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch nicht sichtbar; mit `ZoneId.of(\"Europe/Berlin\")` grün (source: ses-m3)\n- [décision] SAP ist führend für den Messerabatt, das Portal rechnet nicht selbst; der Aktionscode geht als ZZ_AKTION an SAP (source: src-pr209)\n- [décision] Messerabatt 4 % statt 5 %, nur Rahmenvertragskunden, 19.–29.01.2027, Österreich ja, Schweiz nein (source: src-mail-thomas)\n- [décision] Das Banner erscheint vorerst nur für Kunden in DE (source: m3-07, src-pr224)\n- [question] Ob die Schweizer Anfrage von Eisenwaren Gerber (5 % in CHF) beantwortet ist – sie widerspricht der Entscheidung vom 17.11. (source: src-mail-gerber, src-mail-thomas)",
+  "rendu": "## Où j'en suis\nDie Messeaktion ist in zwei Schritten gebaut: Der Rabatt kommt aus der SAP-Preisfindung (Konditionsart ZMES), der Code PROWERK27 geht als ZZ_AKTION an SAP – PR #209 ist gemergt. Darauf sitzt seit dem 18.11. das Hinweisbanner auf einem eigenen Branch `feat/messeaktion-banner`: Banner erst ab 12.01.2027 (Flag `messeaktion.banner.ab`), vorerst nur für Kunden mit Land DE; Tests grün, Draft-PR #224 offen, Reviewer @mvogt. Eine Mail von Thomas Brenner vom 17.11. stellt die Eckdaten allerdings auf 4 %, 19.–29.01.2027, nur Rahmenvertragskunden, AT ja, CH nein – der Bannertext steht noch auf 5 % und 19.–31.01. (de: équipe, connecteur, agent; source: ses-m3, src-pr224, src-pr209, src-mail-thomas)\n\n- [en-cours] Banner-Feature auf `feat/messeaktion-banner`: ControllerAdvice, Fragment, Texte in `messages_de.properties`, Datums-Flag, DE-Filter; Commits `7a3c2d1` und `f0b9e44`, PR #224 als Draft (de: équipe, agent; source: ses-m3, src-pr224)\n- [prochaine-étape] Bannertext auf die neuen Eckdaten umstellen: 4 %, 19.–29.01.2027, nur Händler mit Rahmenvertrag (de: connecteur; source: src-mail-thomas)\n- [prochaine-étape] Länderfreigabe im Banner nachziehen: AT aufnehmen, CH bleibt draußen (Preisstellung in CHF) (de: connecteur, agent; source: src-mail-thomas, ses-m3)\n- [prochaine-étape] Review von @mvogt abwarten, dann PR #224 aus dem Draft holen (de: agent; source: ses-m3)\n- [essai-raté] Der Sichtbarkeitstest verglich in UTC, das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch nicht sichtbar; mit `ZoneId.of(\"Europe/Berlin\")` grün (de: agent; source: ses-m3)\n- [décision] SAP ist führend für den Messerabatt, das Portal rechnet nicht selbst; der Aktionscode geht als ZZ_AKTION an SAP (de: équipe; source: src-pr209)\n- [décision] Messerabatt 4 % statt 5 %, nur Rahmenvertragskunden, 19.–29.01.2027, Österreich ja, Schweiz nein (de: connecteur; source: src-mail-thomas)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1895,
+    "lignesRetirees": 2,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4998,
+    "sortie": 1228,
+    "reflexion": 550,
+    "cache": 0,
+    "cout": 0.0011892
+  },
+  "cout": 0.0011892,
+  "latenceMs": 8865,
+  "fournisseur": "River"
+}

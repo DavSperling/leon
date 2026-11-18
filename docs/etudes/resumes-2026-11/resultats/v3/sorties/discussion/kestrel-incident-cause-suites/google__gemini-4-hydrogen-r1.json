@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:09:35.362Z",
+  "reponse": "On Thursday, November 12 (08:47–12:27 UTC), `ingest` v2.14.0 (PR `ingest#412`) raised the default `max_batch_bytes` from 1 MB to 10 MB and rolled out to all pods at once [1]. With a 512 Mi memory limit, the `ingest-worker` pods ran out of memory on the first large batch and crash-looped, causing consumer lag and stale customer dashboards for 3h40 [1][5].\n\nNo customer data was lost [1][3]. Events continued arriving in Kafka and were processed late after a rollback to v2.13.3 [1]; a November 13 reconciliation confirmed that event counts per workspace matched Kafka offsets [1][3].\n\nThe following changes are being made:\n- **Reverted batch size and added a memory guard (`ingest#419`, merged Nov 13):** Restored the default `max_batch_bytes` to 1 MB, updated the batcher to reject batches larger than 25% of the container memory limit with a warning, and kept 10 MB only via explicit config for bulk imports running on the 2 Gi pool [1][23].\n- **Consumer lag alerting (`KES-431`, due Nov 20):** Added an on-call alert for `ingest-events` consumer lag exceeding 5 minutes, which is currently being tuned so it does not trigger during nightly backfills [1][6].\n- **Canary config rollouts (`KES-432`, due Nov 27):** Send ingest configuration changes to the canary pool first [1].\n- **Higher memory limit and load testing (`KES-433`, due Nov 27):** Raise the worker memory limit to 1 Gi and add a load test covering batch sizes [1].",
+  "rendu": "On Thursday, November 12 (08:47–12:27 UTC), `ingest` v2.14.0 (PR `ingest#412`) raised the default `max_batch_bytes` from 1 MB to 10 MB and rolled out to all pods at once [1]. With a 512 Mi memory limit, the `ingest-worker` pods ran out of memory on the first large batch and crash-looped, causing consumer lag and stale customer dashboards for 3h40 [1][5].\n\nNo customer data was lost [1][3]. Events continued arriving in Kafka and were processed late after a rollback to v2.13.3 [1]; a November 13 reconciliation confirmed that event counts per workspace matched Kafka offsets [1][3].\n\nThe following changes are being made:\n- **Reverted batch size and added a memory guard (`ingest#419`, merged Nov 13):** Restored the default `max_batch_bytes` to 1 MB, updated the batcher to reject batches larger than 25% of the container memory limit with a warning, and kept 10 MB only via explicit config for bulk imports running on the 2 Gi pool [1][23].\n- **Consumer lag alerting (`KES-431`, due Nov 20):** Added an on-call alert for `ingest-events` consumer lag exceeding 5 minutes, which is currently being tuned so it does not trigger during nightly backfills [1][6].\n- **Canary config rollouts (`KES-432`, due Nov 27):** Send ingest configuration changes to the canary pool first [1].\n- **Higher memory limit and load testing (`KES-433`, due Nov 27):** Raise the worker memory limit to 1 Gi and add a load test covering batch sizes [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23482,
+    "sortie": 1527,
+    "reflexion": 970,
+    "cache": 10843,
+    "cout": 0.031224225
+  },
+  "latenceMs": 13031,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline\"}",
+    "activite {\"depuis\":\"2s\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"github-ingest-419\"}",
+    "chercher {\"requete\":\"KES-432 KES-433\"}",
+    "lire {\"sourceId\":\"linear-kes-431\"}"
+  ],
+  "cout": 0.031224225
+}

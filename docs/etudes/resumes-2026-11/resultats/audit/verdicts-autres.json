@@ -1,0 +1,597 @@
+[
+ {
+  "id": "A001",
+  "verdict": "vraie",
+  "raison": "Dit que la date est encore à proposer, alors que le ticket du 16/11 donne le 5 décembre."
+ },
+ {
+  "id": "A023",
+  "verdict": "fausse",
+  "raison": "La PR #96 est dite ouverte avec Hugo en relecteur, ce qui ne contredit pas le fait attendu."
+ },
+ {
+  "id": "A163",
+  "verdict": "fausse",
+  "raison": "Le texte donne bien le 8 décembre confirmé pour les enlèvements réguliers."
+ },
+ {
+  "id": "A185",
+  "verdict": "fausse",
+  "raison": "Il dit que les faits donnent la PR fusionnée et demande de revérifier, sans la dire ouverte."
+ },
+ {
+  "id": "A034",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, Hugo en relecteur : cohérent avec le fait attendu."
+ },
+ {
+  "id": "A150",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont rapportées comme délai donné à un client, pas comme date de retour."
+ },
+ {
+  "id": "A196",
+  "verdict": "fausse",
+  "raison": "Les taux -30/-40 sont cités pour avertir qu'ils contredisent les taux retenus (-20/-30)."
+ },
+ {
+  "id": "A139",
+  "verdict": "fausse",
+  "raison": "Les pièces 2025 sont citées mais clairement datées « clôture 2025 », sans confusion."
+ },
+ {
+  "id": "A161",
+  "verdict": "fausse",
+  "raison": "Le 1er décembre est donné avec la réserve explicite du 8 décembre."
+ },
+ {
+  "id": "A207",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 ouverte avec Hugo en relecteur et non fusionnée."
+ },
+ {
+  "id": "A010",
+  "verdict": "vraie",
+  "raison": "Dit qu'un contrôle quotidien a été mis en place alors que la PR #91 est en brouillon."
+ },
+ {
+  "id": "A172",
+  "verdict": "fausse",
+  "raison": "Dit que rien n'a été envoyé et que l'envoi sera fait par la personne."
+ },
+ {
+  "id": "A021",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte et à relire par Hugo : pas de contradiction."
+ },
+ {
+  "id": "A137",
+  "verdict": "fausse",
+  "raison": "Les pièces 2025 sont présentées comme la clôture précédente, datée."
+ },
+ {
+  "id": "A183",
+  "verdict": "vraie",
+  "raison": "Ne dit pas la PR fusionnée et prévoit de relancer Maya pour la relecture."
+ },
+ {
+  "id": "A205",
+  "verdict": "vraie",
+  "raison": "Dit explicitement que la PR #87 n'est pas fusionnée."
+ },
+ {
+  "id": "A032",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte en attente de relecture : cohérent."
+ },
+ {
+  "id": "A148",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » est cité comme n'étant plus la bonne date."
+ },
+ {
+  "id": "A194",
+  "verdict": "fausse",
+  "raison": "Les taux du sous-agent sont cités pour avertir qu'ils sont faux ; les bons taux sont donnés."
+ },
+ {
+  "id": "A159",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont rapportées comme promesse faite à un client, à côté des vraies dates."
+ },
+ {
+  "id": "A008",
+  "verdict": "douteuse",
+  "raison": "Dit que l'IdP-initiated marche mais inverse qui a chargé quelle metadata et cite un blocage périmé."
+ },
+ {
+  "id": "A030",
+  "verdict": "fausse",
+  "raison": "PR #96 en relecture chez Hugo : cohérent."
+ },
+ {
+  "id": "A170",
+  "verdict": "douteuse",
+  "raison": "Met « réalisation du replay réel » en cours mais prévoit de le lancer après validation de la PR."
+ },
+ {
+  "id": "A192",
+  "verdict": "fausse",
+  "raison": "Dit que la PR #412 est fusionnée ; l'attente de revue est datée de la fin de session."
+ },
+ {
+  "id": "A019",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, relecture en attente : cohérent."
+ },
+ {
+  "id": "A135",
+  "verdict": "fausse",
+  "raison": "Les pièces de 2025 sont datées et distinguées de celles de 2026."
+ },
+ {
+  "id": "A181",
+  "verdict": "vraie",
+  "raison": "Prévoit d'obtenir la revue de Maya puis de fusionner : traite la PR comme non fusionnée."
+ },
+ {
+  "id": "A203",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 en attente de relecture d'Hugo, donc non fusionnée."
+ },
+ {
+  "id": "A146",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » est cité comme estimation plus ancienne."
+ },
+ {
+  "id": "A017",
+  "verdict": "douteuse",
+  "raison": "Reprend l'obligation du SSO au 1er décembre de la note comme étape prévue, sans l'écrire en décision."
+ },
+ {
+  "id": "A157",
+  "verdict": "fausse",
+  "raison": "Les 15 plateaux de mi-décembre sont mentionnés, pas contredits."
+ },
+ {
+  "id": "A179",
+  "verdict": "fausse",
+  "raison": "Il donne la PR fusionnée selon les faits et demande confirmation, sans l'affirmer ouverte."
+ },
+ {
+  "id": "A006",
+  "verdict": "fausse",
+  "raison": "Il rapporte la note de Jonas comme non confirmée, sans promettre une date de résidence UE."
+ },
+ {
+  "id": "A028",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte en attente de relecture : cohérent."
+ },
+ {
+  "id": "A168",
+  "verdict": "vraie",
+  "raison": "Dit que la PR #409 a été fusionnée alors qu'elle est ouverte."
+ },
+ {
+  "id": "A190",
+  "verdict": "vraie",
+  "raison": "Dit la PR #412 ouverte et non fusionnée, contraire au fait."
+ },
+ {
+  "id": "A133",
+  "verdict": "fausse",
+  "raison": "Les pièces 2025 sont citées comme celles de la clôture 2025."
+ },
+ {
+  "id": "A201",
+  "verdict": "fausse",
+  "raison": "Le texte dit bien que les webhooks ne touchent plus au stock et que la synchro écrit en valeur absolue."
+ },
+ {
+  "id": "A004",
+  "verdict": "fausse",
+  "raison": "Il dit que la négociation continue et que la remise de 20 % n'est pas confirmée."
+ },
+ {
+  "id": "A144",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » est cité comme remplacé par les messages récents."
+ },
+ {
+  "id": "A166",
+  "verdict": "vraie",
+  "raison": "Dit que la PR a été ouverte et fusionnée alors qu'elle est ouverte."
+ },
+ {
+  "id": "A212",
+  "verdict": "fausse",
+  "raison": "PR #91 en brouillon, relecture de Julien : cohérent."
+ },
+ {
+  "id": "A015",
+  "verdict": "vraie",
+  "raison": "Une [décision] cite src-linear-kes298."
+ },
+ {
+  "id": "A155",
+  "verdict": "vraie",
+  "raison": "Donne « fin novembre » et « 6 semaines » comme informations actuelles et écarte les vraies dates."
+ },
+ {
+  "id": "A177",
+  "verdict": "douteuse",
+  "raison": "Écrit « la PR est ouverte » puis signale que les faits la disent fusionnée, à vérifier."
+ },
+ {
+  "id": "A026",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, Hugo en relecteur : cohérent."
+ },
+ {
+  "id": "A188",
+  "verdict": "vraie",
+  "raison": "Dit que la PR n'est pas fusionnée, contraire au fait."
+ },
+ {
+  "id": "A131",
+  "verdict": "douteuse",
+  "raison": "La raison (second essai après l'incident) est là, mais l'incident est daté du 11 décembre."
+ },
+ {
+  "id": "A153",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » apparaît comme contenu d'un ticket, à côté des vraies dates."
+ },
+ {
+  "id": "A199",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 non fusionnée et en attente d'Hugo."
+ },
+ {
+  "id": "A002",
+  "verdict": "vraie",
+  "raison": "Dit que la nouvelle date reste à proposer, au lieu du 5 décembre."
+ },
+ {
+  "id": "A142",
+  "verdict": "fausse",
+  "raison": "Les pièces 2025 sont citées sous « Pour la clôture de 2025 »."
+ },
+ {
+  "id": "A164",
+  "verdict": "fausse",
+  "raison": "Signale explicitement la contradiction entre le 1er et le 8 décembre."
+ },
+ {
+  "id": "A210",
+  "verdict": "fausse",
+  "raison": "PR #91 en brouillon, relecture de Julien : cohérent."
+ },
+ {
+  "id": "A013",
+  "verdict": "vraie",
+  "raison": "Une [décision] cite src-pr241-fork."
+ },
+ {
+  "id": "A175",
+  "verdict": "douteuse",
+  "raison": "Signale la fusion selon les faits mais prévoit d'obtenir la revue de Maya."
+ },
+ {
+  "id": "A024",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte et attend Hugo : cohérent."
+ },
+ {
+  "id": "A140",
+  "verdict": "vraie",
+  "raison": "Mélange des pièces de 2025 (notes de frais du salon, inventaire complet) aux demandes actuelles."
+ },
+ {
+  "id": "A186",
+  "verdict": "fausse",
+  "raison": "Donne la PR fusionnée selon les faits et demande de revérifier."
+ },
+ {
+  "id": "A208",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 ouverte et non fusionnée."
+ },
+ {
+  "id": "A035",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, Hugo en relecteur : cohérent."
+ },
+ {
+  "id": "A151",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » et les 6 semaines sont donnés comme plus anciens ou propres à une cliente."
+ },
+ {
+  "id": "A197",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 non fusionnée, en relecture chez Hugo."
+ },
+ {
+  "id": "A022",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, relecture en attente : cohérent."
+ },
+ {
+  "id": "A162",
+  "verdict": "fausse",
+  "raison": "Le 1er décembre est donné puis nuancé par le 8 décembre confirmé."
+ },
+ {
+  "id": "A011",
+  "verdict": "vraie",
+  "raison": "Dit que le contrôle quotidien est en place, alors qu'il est en brouillon."
+ },
+ {
+  "id": "A033",
+  "verdict": "fausse",
+  "raison": "Dit que le manuel du 17 a corrigé les 40 références (« 17/17 » est une coquille)."
+ },
+ {
+  "id": "A173",
+  "verdict": "fausse",
+  "raison": "Dit que rien n'a été envoyé ; la personne enverra elle-même."
+ },
+ {
+  "id": "A195",
+  "verdict": "fausse",
+  "raison": "Les taux du sous-agent sont signalés comme faux ; les bons sont en décision."
+ },
+ {
+  "id": "A138",
+  "verdict": "fausse",
+  "raison": "Le message de 2025 est daté et distingué de celui de 2026."
+ },
+ {
+  "id": "A184",
+  "verdict": "fausse",
+  "raison": "Donne la PR fusionnée selon les faits et demande de revérifier."
+ },
+ {
+  "id": "A206",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 non fusionnée."
+ },
+ {
+  "id": "A009",
+  "verdict": "fausse",
+  "raison": "L'ancienne date « à fixer » est présentée comme l'ancien plan."
+ },
+ {
+  "id": "A149",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » est présenté comme dépassé."
+ },
+ {
+  "id": "A171",
+  "verdict": "douteuse",
+  "raison": "« Réalisation du replay réel » en cours mais « lancer après validation » : ambigu."
+ },
+ {
+  "id": "A020",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte en attente d'Hugo : cohérent."
+ },
+ {
+  "id": "A160",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont une promesse faite à un client, pas la date de retour."
+ },
+ {
+  "id": "A182",
+  "verdict": "vraie",
+  "raison": "Ne dit pas la PR fusionnée et prévoit de relancer Maya pour la revue."
+ },
+ {
+  "id": "A031",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte en attente d'Hugo : cohérent."
+ },
+ {
+  "id": "A193",
+  "verdict": "fausse",
+  "raison": "Les taux du sous-agent sont cités pour avertir qu'ils sont faux."
+ },
+ {
+  "id": "A136",
+  "verdict": "fausse",
+  "raison": "Les pièces de 2025 sont datées « En 2025 »."
+ },
+ {
+  "id": "A158",
+  "verdict": "fausse",
+  "raison": "« Fin novembre » et les 6 semaines sont donnés comme plus anciens ou propres à un client."
+ },
+ {
+  "id": "A204",
+  "verdict": "vraie",
+  "raison": "Cite les noms Bénédicte Laurent et Paul Henriot."
+ },
+ {
+  "id": "A007",
+  "verdict": "douteuse",
+  "raison": "Parle d'un blocage « absence de metadata » périmé, puis dit que l'IdP-initiated marche."
+ },
+ {
+  "id": "A147",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont dites incohérentes avec les vraies dates."
+ },
+ {
+  "id": "A169",
+  "verdict": "vraie",
+  "raison": "Dit la PR #409 fusionnée alors qu'elle est ouverte."
+ },
+ {
+  "id": "A018",
+  "verdict": "fausse",
+  "raison": "Le rôle viewer par défaut est une décision de la personne ; la question reste notée."
+ },
+ {
+  "id": "A180",
+  "verdict": "vraie",
+  "raison": "Prévoit la revue de Maya puis la fusion de la PR #412."
+ },
+ {
+  "id": "A029",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte en attente d'Hugo : cohérent."
+ },
+ {
+  "id": "A145",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont rapportées comme délai donné à une cliente."
+ },
+ {
+  "id": "A191",
+  "verdict": "fausse",
+  "raison": "Dit la PR fusionnée ; l'attente de revue est datée de la fin de session."
+ },
+ {
+  "id": "A213",
+  "verdict": "fausse",
+  "raison": "PR #91 en brouillon pour relecture par Julien : cohérent."
+ },
+ {
+  "id": "A134",
+  "verdict": "fausse",
+  "raison": "La demande de 2025 est distinguée comme portant sur d'autres pièces."
+ },
+ {
+  "id": "A156",
+  "verdict": "vraie",
+  "raison": "Dit que les 25 pièces du 1er décembre ne concernent pas la table Saône de la maison."
+ },
+ {
+  "id": "A202",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 en attente de relecture d'Hugo."
+ },
+ {
+  "id": "A005",
+  "verdict": "fausse",
+  "raison": "Il rapporte la note de Jonas comme non confirmée, sans engagement de Kestrel."
+ },
+ {
+  "id": "A167",
+  "verdict": "vraie",
+  "raison": "Dit la PR fusionnée alors qu'elle est ouverte."
+ },
+ {
+  "id": "A016",
+  "verdict": "vraie",
+  "raison": "Une [décision] cite src-linear-kes298."
+ },
+ {
+  "id": "A132",
+  "verdict": "fausse",
+  "raison": "Désigne Daniel Levi et présente « TBD » comme antérieur."
+ },
+ {
+  "id": "A178",
+  "verdict": "douteuse",
+  "raison": "Écrit « la PR est ouverte » puis signale que les faits la disent fusionnée, à vérifier."
+ },
+ {
+  "id": "A200",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 non fusionnée."
+ },
+ {
+  "id": "A027",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, Hugo en relecteur : cohérent."
+ },
+ {
+  "id": "A143",
+  "verdict": "fausse",
+  "raison": "Le mail de 2025 est noté comme demandant des pièces différentes."
+ },
+ {
+  "id": "A189",
+  "verdict": "vraie",
+  "raison": "Dit la PR ouverte, non mergée, en attente de Maya."
+ },
+ {
+  "id": "A211",
+  "verdict": "fausse",
+  "raison": "PR #91 ouverte, Julien doit la relire : cohérent."
+ },
+ {
+  "id": "A154",
+  "verdict": "vraie",
+  "raison": "Présente un retour fin novembre sans le dire dépassé et écarte les dates du 1er décembre."
+ },
+ {
+  "id": "A003",
+  "verdict": "fausse",
+  "raison": "Donne le 28 novembre ; le « 14e » est signalé comme datant d'un créneau antérieur."
+ },
+ {
+  "id": "A025",
+  "verdict": "fausse",
+  "raison": "PR #96 ouverte, relecture en attente : cohérent."
+ },
+ {
+  "id": "A165",
+  "verdict": "fausse",
+  "raison": "Dit bien que TransAlp confirme le 8 décembre par écrit."
+ },
+ {
+  "id": "A187",
+  "verdict": "vraie",
+  "raison": "Dit la PR non fusionnée et en attente de Maya."
+ },
+ {
+  "id": "A014",
+  "verdict": "fausse",
+  "raison": "Dit que la production n'est pas passée en 17."
+ },
+ {
+  "id": "A036",
+  "verdict": "vraie",
+  "raison": "Une [décision] cite src-mail-transalp."
+ },
+ {
+  "id": "A176",
+  "verdict": "douteuse",
+  "raison": "Signale la fusion selon les faits mais prévoit d'obtenir la revue de Maya."
+ },
+ {
+  "id": "A198",
+  "verdict": "vraie",
+  "raison": "Dit la PR #87 non fusionnée."
+ },
+ {
+  "id": "A141",
+  "verdict": "fausse",
+  "raison": "Le mail de l'an dernier est présenté comme antérieur."
+ },
+ {
+  "id": "A209",
+  "verdict": "fausse",
+  "raison": "PR #91 en brouillon, relecture de Julien : cohérent."
+ },
+ {
+  "id": "A012",
+  "verdict": "vraie",
+  "raison": "Présente mercredi 18 comme la date promise."
+ },
+ {
+  "id": "A152",
+  "verdict": "fausse",
+  "raison": "Les 6 semaines sont rapportées comme promesse à une cliente."
+ },
+ {
+  "id": "A174",
+  "verdict": "fausse",
+  "raison": "La décision dit que l'envoi sera géré par l'utilisateur."
+ }
+]

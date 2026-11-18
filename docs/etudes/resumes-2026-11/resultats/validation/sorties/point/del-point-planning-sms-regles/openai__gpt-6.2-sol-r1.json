@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:26:58.967Z",
+  "reponse": "## What is still open\n- **SMS de rappel, aujourd’hui avant 18 h :** six clients ont reçu une heure erronée ; Sandrine prévoit de rappeler les trois qui l’ont contactée et attend que tu lui confirmes le rétablissement [4][7]. Lucas a validé le reste de la PR #214, mais te demande d’y corriger les SMS sans attendre sa réécriture du module, pas prête avant le 30 novembre [3]. La reprise des 41 interventions modifiées à la main est prête et reste à lancer en production après la fusion [1].\n- **Audit RGE :** Franck compte sur toi pour verrouiller dans Planif, avant vendredi, toute la journée du 8 décembre sur le chantier Le Floch (CH-2604) [2].\n\n## What changed\n- Le nouveau ticket #219 signale que le formulaire de devis refuse les numéros avec des espaces ; deux clients ont appelé à ce sujet [6].\n- Dependabot a rebasé la PR Django #205 après un changement de la branche cible [5].\n\n## What you did\n- Tu as séparé les réglages Django de développement et de production sur `thomas/settings-split`, sans changer le point d’entrée du serveur ; le contrôle de déploiement ne remonte plus d’avertissement [2].\n- Tu as mis Pillow à niveau vers 11.0.0 pour corriger une vulnérabilité connue ; les tests des miniatures passent [2].",
+  "rendu": "## What is still open\n- **SMS de rappel, aujourd’hui avant 18 h :** six clients ont reçu une heure erronée ; Sandrine prévoit de rappeler les trois qui l’ont contactée et attend que tu lui confirmes le rétablissement [4][7]. Lucas a validé le reste de la PR #214, mais te demande d’y corriger les SMS sans attendre sa réécriture du module, pas prête avant le 30 novembre [3]. La reprise des 41 interventions modifiées à la main est prête et reste à lancer en production après la fusion [1].\n- **Audit RGE :** Franck compte sur toi pour verrouiller dans Planif, avant vendredi, toute la journée du 8 décembre sur le chantier Le Floch (CH-2604) [2].\n\n## What changed\n- Le nouveau ticket #219 signale que le formulaire de devis refuse les numéros avec des espaces ; deux clients ont appelé à ce sujet [6].\n- Dependabot a rebasé la PR Django #205 après un changement de la branche cible [5].\n\n## What you did\n- Tu as séparé les réglages Django de développement et de production sur `thomas/settings-split`, sans changer le point d’entrée du serveur ; le contrôle de déploiement ne remonte plus d’avertissement [2].\n- Tu as mis Pillow à niveau vers 11.0.0 pour corriger une vulnérabilité connue ; les tests des miniatures passent [2].",
+  "mesures": {
+    "mots": 203,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5756,
+    "sortie": 392,
+    "reflexion": 77,
+    "cache": 1451,
+    "cout": 0.0148261
+  },
+  "cout": 0.0148261,
+  "latenceMs": 3832,
+  "fournisseur": "Azure"
+}

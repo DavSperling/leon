@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:23:25.009Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home exercise for the SRE role was built, tested, and moved to its own private repo `kestrel-analytics/sre-take-home` (compose stack with planted bugs, Terraform, 3-hour time box, no Kubernetes), plus a rubric with scores as panel input. The `hiring/` folder was removed from the infra branch `maya/sre-take-home` (uncommitted), no PR opened in infra, and nothing was sent to the candidate.\n\n- [en-cours] `hiring/` removed from infra branch working tree but not committed; Maya plans to drop the branch\n- [prochaine-étape] Maya sends the exercise to Ethan herself after Thursday's call (4pm Tel Aviv time)\n- [prochaine-étape] Add Ethan as collaborator on the private repo when ready\n- [essai-raté] Multi-arch build with `--load` failed (docker exporter can't export manifest lists); solved by having compose build flaky-svc from source\n- [décision] No Kubernetes, 3-hour max, Terraform + compose only (source: t03)\n- [décision] No scoring threshold; panel (Maya + Noa) decides, scores are input (source: t10)\n- [décision] No email to anyone; Maya sends the exercise herself (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home exercise for the SRE role was built, tested, and moved to its own private repo `kestrel-analytics/sre-take-home` (compose stack with planted bugs, Terraform, 3-hour time box, no Kubernetes), plus a rubric with scores as panel input. The `hiring/` folder was removed from the infra branch `maya/sre-take-home` (uncommitted), no PR opened in infra, and nothing was sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] `hiring/` removed from infra branch working tree but not committed; Maya plans to drop the branch\n- [prochaine-étape] Maya sends the exercise to Ethan herself after Thursday's call (4pm Tel Aviv time)\n- [prochaine-étape] Add Ethan as collaborator on the private repo when ready\n- [essai-raté] Multi-arch build with `--load` failed (docker exporter can't export manifest lists); solved by having compose build flaky-svc from source\n- [décision] No Kubernetes, 3-hour max, Terraform + compose only (source: t03)\n- [décision] No scoring threshold; panel (Maya + Noa) decides, scores are input (source: t10)\n- [décision] No email to anyone; Maya sends the exercise herself (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1212,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3598,
+    "sortie": 301,
+    "reflexion": 0,
+    "cache": 10,
+    "cout": 0.0095253
+  },
+  "cout": 0.0095253,
+  "latenceMs": 2343,
+  "fournisseur": "Fireworks"
+}

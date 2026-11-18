@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:26:54.814Z",
+  "reponse": "## What is still open\n- Tanguy : Annick a joint l’avis d’imposition au ticket #4127. Tu peux déposer le dossier avant le début des travaux lundi 23/11 pour préserver la prime. Elle attend aussi ta confirmation que les travaux commencent bien lundi. [1][3]\n- Patrick Hamon te demande, avant le 25/11, la liste des dossiers déposés (client, date de dépôt, prime attendue) pour l’avance de trésorerie de décembre du Crédit Ligérien. [5]\n- Guillou : tu avais prévu de relancer le 17/11 pour le RIB manquant ; ni l’envoi de la relance ni la réception du RIB ne sont confirmés. [1]\n- Morvan : le dossier reste à déposer ; l’attestation RGE couvre les travaux du 07/12. Son renouvellement dépend de l’audit de décembre et reste à surveiller pour les chantiers de 2027. [1]\n\n## What changed\n- Peltier : Camille Ferrand t’a confirmé que le devis signé est dans le Drive. Le dossier peut être déposé avant les travaux du 27/11. [1][4]\n\n## What you did\n- Tu as déposé le dossier Bréhier le 16/11 et l’as inscrit dans le suivi. [1]\n- Tu as préparé pour Hélène un récapitulatif des cinq dossiers de novembre. [1]",
+  "rendu": "## What is still open\n- Tanguy : Annick a joint l’avis d’imposition au ticket #4127. Tu peux déposer le dossier avant le début des travaux lundi 23/11 pour préserver la prime. Elle attend aussi ta confirmation que les travaux commencent bien lundi. [1][3]\n- Patrick Hamon te demande, avant le 25/11, la liste des dossiers déposés (client, date de dépôt, prime attendue) pour l’avance de trésorerie de décembre du Crédit Ligérien. [5]\n- Guillou : tu avais prévu de relancer le 17/11 pour le RIB manquant ; ni l’envoi de la relance ni la réception du RIB ne sont confirmés. [1]\n- Morvan : le dossier reste à déposer ; l’attestation RGE couvre les travaux du 07/12. Son renouvellement dépend de l’audit de décembre et reste à surveiller pour les chantiers de 2027. [1]\n\n## What changed\n- Peltier : Camille Ferrand t’a confirmé que le devis signé est dans le Drive. Le dossier peut être déposé avant les travaux du 27/11. [1][4]\n\n## What you did\n- Tu as déposé le dossier Bréhier le 16/11 et l’as inscrit dans le suivi. [1]\n- Tu as préparé pour Hélène un récapitulatif des cinq dossiers de novembre. [1]",
+  "mesures": {
+    "mots": 182,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3488,
+    "sortie": 436,
+    "reflexion": 123,
+    "cache": 1451,
+    "cout": 0.0095961
+  },
+  "cout": 0.0095961,
+  "latenceMs": 4715,
+  "fournisseur": "Azure"
+}

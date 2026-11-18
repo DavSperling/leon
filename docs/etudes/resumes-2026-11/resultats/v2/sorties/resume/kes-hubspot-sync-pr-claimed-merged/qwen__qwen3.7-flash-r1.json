@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:20.229Z",
+  "reponse": "## Où j'en suis\nThe workflow shifted from HubSpot webhooks to a 15-minute CRM polling job due to private app authentication limits. PR #409 remains open; it implements windowed pagination to bypass the 10k result cap and exclusively syncs active companies (ARR > 0). Auto-squash merge was triggered, but background CI flagged a failure in `test_admin_accounts.py` because the test fixture still references a trial account now excluded by the filter.\n\n- [en-cours] Patch the e2e fixture in `tests/e2e/test_admin_accounts.py` to align expected row counts with the new ARR filter so CI clears.\n- [prochaine-étape] Coordinate with Noa to inject the `HUBSPOT_TOKEN` into AWS Secrets Manager for staging and production.\n- [décision] Abandon the webhook PR and adopt scheduled polling instead (source: t04)\n- [décision] Restrict the sync query to companies with positive ARR, discarding all trials (source: t10)\n- [décision] Raise PR #409 with automated squash merging enabled (source: t12)",
+  "rendu": "## Où j'en suis\nThe workflow shifted from HubSpot webhooks to a 15-minute CRM polling job due to private app authentication limits. PR #409 remains open; it implements windowed pagination to bypass the 10k result cap and exclusively syncs active companies (ARR > 0). Auto-squash merge was triggered, but background CI flagged a failure in `test_admin_accounts.py` because the test fixture still references a trial account now excluded by the filter.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Patch the e2e fixture in `tests/e2e/test_admin_accounts.py` to align expected row counts with the new ARR filter so CI clears.\n- [prochaine-étape] Coordinate with Noa to inject the `HUBSPOT_TOKEN` into AWS Secrets Manager for staging and production.\n- [décision] Abandon the webhook PR and adopt scheduled polling instead (source: t04)\n- [décision] Restrict the sync query to companies with positive ARR, discarding all trials (source: t10)\n- [décision] Raise PR #409 with automated squash merging enabled (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1166,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3716,
+    "sortie": 2758,
+    "reflexion": 2509,
+    "cache": 0,
+    "cout": 0.00047002
+  },
+  "cout": 0.00047002,
+  "latenceMs": 25402,
+  "fournisseur": "Alibaba"
+}

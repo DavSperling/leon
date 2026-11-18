@@ -55,10 +55,10 @@ const TRANSCRIPTS = ['transcript_full.jsonl', 'transcript.jsonl'] as const;
 // Les sous-agents d'une session Antigravity, pour le tri de T63 et les coulisses (antigravity.ts ; annexe 11). Le
 // fichier de la session est `<variante>/brain/<conversation>/.system_generated/logs/<transcript>` ; elle nomme ses
 // sous-agents dans `.system_generated/subagents/<identifiant>.json`, dont la fiche porte le même `conversationId`.
-// Chacun est une conversation à part, `brain/<identifiant>/`, lue comme une session (`transcript_full.jsonl`, sinon
-// `transcript.jsonl`), dans la même variante ; puis ses propres sous-agents, une fois chacun. Rien n'est lu hors du
-// dossier `brain/`. Ce qui ne se lit pas est laissé de côté : son appel restera externe. Sans `readdir`, aucun
-// sous-agent n'est lu.
+// Chacun est une conversation à part, `brain/<identifiant>/`, lue dans son `transcript_full.jsonl` seulement (les
+// valeurs des `args` y ont leur type), dans la même variante ; puis ses propres sous-agents, une fois chacun. Rien n'est
+// lu hors du dossier `brain/`. Ce qui ne se lit pas est laissé de côté, comme un sous-agent qui n'a que
+// `transcript.jsonl` : son appel restera externe. Sans `readdir`, aucun sous-agent n'est lu.
 export async function loadAntigravitySubagents(
   sessionFile: string,
   deps: Lecture,
@@ -97,10 +97,7 @@ export async function loadAntigravitySubagents(
       if (seen.has(child)) continue;
       seen.add(child);
       const childLogs = join(brain, child, '.system_generated', 'logs');
-      const transcript = await deps
-        .readFile(join(childLogs, TRANSCRIPTS[0]))
-        .catch(() => deps.readFile(join(childLogs, TRANSCRIPTS[1])))
-        .catch(() => null);
+      const transcript = await deps.readFile(join(childLogs, TRANSCRIPTS[0])).catch(() => null);
       if (transcript === null) continue;
       transcripts.set(child, transcript);
       queue.push(child);

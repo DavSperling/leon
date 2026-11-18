@@ -209,6 +209,11 @@ describe('extractAntigravityFacts', () => {
       expect(externe(call('mcp_leon_thread', {}))).toBe(true);
     });
 
+    // Échec fermé : dans transcript.jsonl, une valeur nue qui commence par un guillemet ressemble à une valeur coupée.
+    it('une valeur nue de l’ancienne appli qui commence par un guillemet rend l’appel illisible : oui', () => {
+      expect(externe(call('run_command', { CommandLine: '"./a b.sh" --x' }))).toBe(true);
+    });
+
     it('lire, écrire, chercher, lister, la liste de tâches, les commandes locales, `leon` : non', () => {
       expect(
         externe(
@@ -1030,12 +1035,24 @@ describe('antigravityReportTurns', () => {
     expect(antigravityReportTurns(FICHIER, sousAgents(named, transcripts))).toEqual([]);
   });
 
-  it('dans transcript.jsonl le Recipient est entre guillemets : le message à la session donne un tour, celui à un autre aucun', () => {
-    expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${S}"`) }))).toEqual([
-      'Trouvé.',
-    ]);
-    expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${N}"`) }))).toEqual([]);
-  });
+  // Un sous-agent ne se lit que dans transcript_full.jsonl, où rien n'est entre guillemets : égalité stricte.
+  it.each([
+    ['entre guillemets', `"${S}"`],
+    ['précédé d’une espace', ` ${S}`],
+    ['suivi d’autre chose', `${S}:${N}`],
+    ['dans une phrase', `conversation ${S}`],
+  ])(
+    'un Recipient qui contient l’identifiant de la session %s ne donne ni tour ni bloc rapport',
+    (_cas, Recipient) => {
+      const sa = sousAgents({ [S]: [R] }, { [R]: ecrit('Trouvé.', Recipient) });
+
+      expect(textes(sa)).toEqual([]);
+      const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, sa);
+      expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+        false,
+      );
+    },
+  );
 
   it('une étape sans step_index prend le rang de sa ligne dans l’identifiant', () => {
     const sansIndex = [
@@ -1170,9 +1187,15 @@ describe('antigravityReportTurns', () => {
 });
 
 // --- transcript.jsonl (annexe 11) : chaque valeur des `args` y est écrite comme en JSON, une chaîne entre guillemets --
+// La forme se décide d'après le fichier lu : transcript_full.jsonl n'est jamais décodé, et un sous-agent ne se lit que
+// dans le sien.
 describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
   const enJson = (args: Record<string, unknown>) =>
     Object.fromEntries(Object.entries(args).map(([cle, valeur]) => [cle, JSON.stringify(valeur)]));
+  const COURT = {
+    ...FICHIER,
+    path: FICHIER.path.replace('transcript_full.jsonl', 'transcript.jsonl'),
+  };
   const ENV = 'DB_PASSWORD=hunter2secret';
   const SESSION_CITEE = [
     appels(
@@ -1186,16 +1209,15 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     ...[2, 3, 4, 5, 6].map((index) => resultat(index)),
     fin(7),
   ].join('\n');
+  // Le sous-agent se lit dans son transcript_full.jsonl : ses valeurs ont leur type.
   const SA = sousAgents(
     { [S]: [R] },
-    {
-      [R]: sousAgent(['send_message', enJson({ Message: `Rapport.\n${ENV}\nfin`, Recipient: S })]),
-    },
+    { [R]: sousAgent(['send_message', { Message: `Rapport.\n${ENV}\nfin`, Recipient: S }]) },
   );
   const MASQUE = `DB_PASSWORD=${SECRET_MASK}`;
 
   it('les faits : un chemin hors du dépôt n’est pas un fichier, celui du dépôt l’est, la commande se lit', () => {
-    const faits = extractAntigravityFacts(SESSION_CITEE, FICHIER, ESSAI, null, SA);
+    const faits = extractAntigravityFacts(SESSION_CITEE, COURT, ESSAI, null, SA);
 
     expect(faits.fichiers).toEqual(['src/a.ts']);
     expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false }]);
@@ -1208,11 +1230,27 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
       enJson({ CommandLine: 'curl -s https://exemple.test' }),
     ]);
 
-    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).externe).toBe(true);
+    expect(extractAntigravityFacts(contenu, COURT, ESSAI).externe).toBe(true);
+  });
+
+  it('une valeur qui ne se décode pas (coupée ?) rend l’appel illisible : externe, ni fichier, ni cible, ni bloc', () => {
+    const contenu = [
+      appels(1, [
+        'write_to_file',
+        { TargetFile: '"/Users/demo/autre/secret.txt"', CodeContent: '"coupé' },
+      ]),
+      resultat(2),
+      fin(3),
+    ].join('\n');
+    const faits = extractAntigravityFacts(contenu, COURT, ESSAI);
+
+    expect(faits.externe).toBe(true);
+    expect(faits.fichiers).toEqual([]);
+    expect(extractAntigravityBackstage(contenu, COURT, ESSAI, sousAgents({}))).toEqual([]);
   });
 
   it('les coulisses : aucune cible hors du dépôt, la consigne et le rapport masqués', () => {
-    const blocs = extractAntigravityBackstage(SESSION_CITEE, FICHIER, ESSAI, SA);
+    const blocs = extractAntigravityBackstage(SESSION_CITEE, COURT, ESSAI, SA);
 
     expect(
       blocs.flatMap((bloc) =>
@@ -1233,8 +1271,8 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     expect(JSON.stringify(blocs)).not.toMatch(/hunter2secret|\/Users\/demo\/(?:\.ssh|autre)/);
   });
 
-  it('le tour du rapport : le message décodé, son secret masqué', () => {
-    expect(antigravityReportTurns(FICHIER, SA).map(({ text }) => text)).toEqual([
+  it('le tour du rapport : son secret masqué', () => {
+    expect(antigravityReportTurns(COURT, SA).map(({ text }) => text)).toEqual([
       `Rapport.\n${MASQUE}\nfin`,
     ]);
   });
@@ -1262,5 +1300,30 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
         ({ text }) => text,
       ),
     ).toEqual([MESSAGE]);
+  });
+
+  // Jamais décodé, même quand toutes les valeurs sont du texte JSON : la valeur est l'argument même. Un chemin qui
+  // commence par un guillemet est relatif, donc pour l'outil un fichier du dépôt, gardé tel quel.
+  it('dans transcript_full.jsonl, un appel dont toutes les valeurs sont du texte JSON n’est pas décodé non plus', () => {
+    const contenu = [
+      appels(
+        1,
+        ['read_file', { Path: '"/Users/demo/autre/secret.txt"' }],
+        ['write_to_file', { TargetFile: '"src/a.ts"' }],
+      ),
+      resultat(2),
+      resultat(3),
+      fin(4),
+    ].join('\n');
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).fichiers).toEqual(['"src/a.ts"']);
+    expect(
+      extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).map(
+        (bloc) => bloc.role === 'appel_outil' && [bloc.outil, bloc.cible],
+      ),
+    ).toEqual([
+      ['Read', '"/Users/demo/autre/secret.txt"'],
+      ['Write', '"src/a.ts"'],
+    ]);
   });
 });

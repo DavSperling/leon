@@ -59,8 +59,8 @@ export type AntigravityFile = { path: string; mtime: Date };
 
 // Les sous-agents d'une session (T63 amendé le 17/11, chargés par la CLI : loadAntigravitySubagents) : `named`, pour
 // chaque conversation lue (la session comprise), les identifiants des sous-agents qu'elle nomme ; `transcripts`, la
-// conversation de chaque sous-agent qui se lit. Ils décident de `externe` et des coulisses, et donnent les tours de leurs
-// messages à la session (antigravityReportTurns).
+// conversation de chaque sous-agent qui se lit (son `transcript_full.jsonl`, jamais décodé). Ils décident de `externe`
+// et des coulisses, et donnent les tours de leurs messages à la session (antigravityReportTurns).
 export type AntigravitySubagents = {
   named: ReadonlyMap<string, readonly string[]>;
   transcripts: ReadonlyMap<string, string>;
@@ -163,29 +163,7 @@ function workingDirectory(steps: Step[]): string | null {
 
 type Call = { name: string; args: Record<string, unknown> | null };
 
-// Dans `transcript.jsonl` (2.31.0, annexe 11), chaque valeur des `args` est écrite comme en JSON : une chaîne y est
-// entre guillemets, un nombre ou `true` y sont des chaînes. Décodée ici, sinon un chemin hors du dépôt y passerait pour
-// un chemin du dépôt, un secret ne se masquerait pas, une commande réseau passerait pour locale. Dans
-// `transcript_full.jsonl`, les valeurs ont déjà leur type : un appel ne se décode donc que si toutes ses valeurs sont du
-// texte JSON, ce qu'un appel de ce fichier n'a pas (un nombre, un `Recipient` ou un `TypeName` nus). Seule une chaîne se
-// décode : un nombre ou `true` restent des chaînes, qu'aucun lecteur n'utilise.
-// shortcut: un appel de `transcript_full.jsonl` dont toutes les valeurs sont du texte JSON (un read_file au `Path`
-// entre guillemets) se décode encore, et un appel de `transcript.jsonl` dont une valeur ne se décode pas (coupée ?)
-// reste tel quel, jamais vus ; passer la forme d'après le nom du fichier lu le jour où on les voit.
-function unquote(args: object): Record<string, unknown> {
-  const decoded: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(args)) {
-    if (typeof value !== 'string') return { ...args };
-    try {
-      const json: unknown = JSON.parse(value);
-      decoded[key] = typeof json === 'string' ? json : value;
-    } catch {
-      return { ...args };
-    }
-  }
-  return decoded;
-}
-
+// Les appels d'une étape, avec leurs `args` tels que l'étape les donne (sessionSteps les a déjà décodés).
 function calls(step: Step): Call[] {
   return (step.tool_calls ?? []).map((raw) => {
     const call = ToolCallSchema.safeParse(raw);
@@ -200,9 +178,51 @@ function calls(step: Step): Call[] {
       }
     }
     const record =
-      typeof args === 'object' && args !== null && !Array.isArray(args) ? unquote(args) : null;
+      typeof args === 'object' && args !== null && !Array.isArray(args)
+        ? (args as Record<string, unknown>)
+        : null;
     return { name: call.data.name, args: record };
   });
+}
+
+// Un appel lu dans `transcript.jsonl` (annexe 11). Toutes ses valeurs sont du texte JSON (2.31.0, où une chaîne est
+// écrite entre guillemets) : ses chaînes sont décodées, un nombre ou `true` restent des chaînes, qu'aucun lecteur
+// n'utilise. Sinon, une valeur qui commence par un guillemet (l'appel a l'air écrit en JSON, mais une valeur ne se
+// décode pas : coupée ?) le rend illisible : un outil inconnu, comme un appel hors forme (échec fermé). Sinon, la
+// forme nue de l'ancienne appli (2.0.1) : tel quel.
+// shortcut: une valeur nue de la 2.0.1 qui commence par un guillemet (`"./a b.sh" --x`) rend aussi son appel illisible,
+// donc la session externe ; à revoir si une session de la 2.0.1 se capte encore.
+function decoded(call: Call): Call {
+  if (call.args === null) return call;
+  const args: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(call.args)) {
+    let json: unknown;
+    try {
+      json = typeof value === 'string' ? JSON.parse(value) : undefined; // JSON.parse ne rend jamais undefined
+    } catch {
+      json = undefined;
+    }
+    if (json === undefined) {
+      const encoded = Object.values(call.args).some(
+        (other) => typeof other === 'string' && other.startsWith('"'),
+      );
+      return encoded ? { name: '', args: null } : call;
+    }
+    args[key] = typeof json === 'string' ? json : value;
+  }
+  return { name: call.name, args };
+}
+
+// Les étapes de la session. La forme des `args` se décide d'après le fichier lu : dans `transcript_full.jsonl`, les
+// valeurs ont leur type et ne sont jamais décodées ; dans un autre (`transcript.jsonl`), chaque appel passe par
+// decoded, sinon un chemin hors du dépôt y passerait pour un chemin du dépôt, un secret ne se masquerait pas, une
+// commande réseau passerait pour locale. Les sous-agents ne se lisent que dans `transcript_full.jsonl` (subagents.ts).
+function sessionSteps(content: string, file: AntigravityFile): Step[] {
+  const steps = parseSteps(content);
+  if (basename(file.path) === 'transcript_full.jsonl') return steps;
+  return steps.map((step) =>
+    step.tool_calls === undefined ? step : { ...step, tool_calls: calls(step).map(decoded) },
+  );
 }
 
 type CallWithResult = Call & { step: Step; index: number; rang: number; result?: Step };
@@ -227,14 +247,12 @@ function callsWithResults(steps: Step[]): CallWithResult[] {
 }
 
 // Les messages d'un sous-agent à la conversation qui l'a lancé (annexe 11) : ses appels send_message dont le `Recipient`
-// porte l'identifiant de cette conversation (dans `transcript.jsonl`, entre guillemets, que calls() retire). Le tour de
-// chaque message (antigravityReportTurns) et le bloc rapport des coulisses en partent.
+// est l'identifiant de cette conversation, exactement (un sous-agent ne se lit que dans `transcript_full.jsonl`, où rien
+// n'est entre guillemets). Le tour de chaque message (antigravityReportTurns) et le bloc rapport des coulisses en
+// partent.
 const messagesTo = (parent: string, steps: Step[]) =>
   callsWithResults(steps).filter(
-    ({ name, args }) =>
-      name === 'send_message' &&
-      typeof args?.Recipient === 'string' &&
-      args.Recipient.includes(parent),
+    ({ name, args }) => name === 'send_message' && args?.Recipient === parent,
   );
 
 const turnId = (conversation: string, step: Step, index: number) =>
@@ -245,7 +263,7 @@ export function parseAntigravitySession(
   file: AntigravityFile,
 ): AntigravitySession | null {
   const conversation = conversationOf(file.path);
-  const steps = parseSteps(content);
+  const steps = sessionSteps(content, file);
   if (conversation === '' || conversation === '.' || isSubagent(steps)) return null;
   const turns: Turn[] = [];
   for (const [index, step] of steps.entries()) {
@@ -407,7 +425,7 @@ export function extractAntigravityFacts(
   subagents?: AntigravitySubagents,
 ): SessionFacts {
   const record = newFactsRecord();
-  const steps = parseSteps(content);
+  const steps = sessionSteps(content, file);
   let errors = 0;
   for (const { name, args, result } of callsWithResults(steps)) {
     const commandLine = args?.CommandLine;
@@ -551,6 +569,6 @@ export function extractAntigravityBackstage(
     }
   }
 
-  read(session, parseSteps(content), '');
+  read(session, sessionSteps(content, file), '');
   return finishBlocs(blocs);
 }

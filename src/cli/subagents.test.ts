@@ -1,6 +1,11 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import {
+  antigravityReportTurns,
+  extractAntigravityBackstage,
+  extractAntigravityFacts,
+} from '../capture/antigravity';
 import { loadAntigravitySubagents, loadCodexSubagents, loadSubagents } from './subagents';
 
 // Un disque inventé : chemin → contenu ; un dossier se liste par ses noms.
@@ -189,29 +194,79 @@ describe('loadAntigravitySubagents', () => {
     });
   });
 
-  it('lit transcript.jsonl quand transcript_full.jsonl manque, puis les sous-agents d’un sous-agent', async () => {
+  it('ne lit pas un sous-agent qui n’a que transcript.jsonl ; lit les sous-agents d’un sous-agent lu', async () => {
+    const lus: string[] = [];
     const deps = disque(
       {
         [`${fiches(S)}/${R}.json`]: fiche(R),
+        [`${fiches(S)}/${N}.json`]: fiche(N),
         [`${logs(R)}/transcript.jsonl`]: 'court R',
-        [`${fiches(R)}/${G}.json`]: fiche(G),
+        [`${logs(N)}/transcript_full.jsonl`]: 'complet N',
+        [`${fiches(N)}/${G}.json`]: fiche(G),
         [`${logs(G)}/transcript_full.jsonl`]: 'complet G',
         [`${logs(G)}/transcript.jsonl`]: 'court G',
       },
-      { [fiches(S)]: [`${R}.json`], [fiches(R)]: [`${G}.json`] },
+      { [fiches(S)]: [`${R}.json`, `${N}.json`], [fiches(N)]: [`${G}.json`] },
     );
+    const readFile = async (path: string) => {
+      lus.push(path);
+      return deps.readFile(path);
+    };
 
-    expect(await loadAntigravitySubagents(SESSION_AG, deps)).toEqual({
+    expect(await loadAntigravitySubagents(SESSION_AG, { ...deps, readFile })).toEqual({
       named: new Map([
-        [S, [R]],
-        [R, [G]],
+        [S, [R, N]],
+        [N, [G]],
         [G, []],
       ]),
       transcripts: new Map([
-        [R, 'court R'],
+        [N, 'complet N'],
         [G, 'complet G'],
       ]),
     });
+    expect(lus.filter((path) => path.endsWith('/transcript.jsonl'))).toEqual([]);
+  });
+
+  it('un sous-agent qui n’a que transcript.jsonl rend la session externe, sans tour ni bloc rapport pour lui', async () => {
+    const brain = fileURLToPath(
+      new URL('../capture/fixtures/antigravity-sous-agents/brain', import.meta.url),
+    );
+    const lu = (id: string) =>
+      readFile(`${brain}/${id}/.system_generated/logs/transcript_full.jsonl`, 'utf8');
+    const [session, lecture] = await Promise.all([lu(S), lu(R)]);
+    const ESSAI = '/Users/demo/projets/essai';
+    const fichier = { path: SESSION_AG, mtime: new Date('2026-11-13T12:30:00.000Z') };
+    // Deux sous-agents qui ne font que lire le dépôt ; R se lit dans `nom`.
+    const juge = async (nom: string) => {
+      const sa = await loadAntigravitySubagents(
+        SESSION_AG,
+        disque(
+          {
+            [`${fiches(S)}/${R}.json`]: fiche(R),
+            [`${fiches(S)}/${N}.json`]: fiche(N),
+            [`${logs(R)}/${nom}`]: lecture,
+            [`${logs(N)}/transcript_full.jsonl`]: lecture,
+          },
+          { [fiches(S)]: [`${R}.json`, `${N}.json`] },
+        ),
+      );
+      return {
+        externe: extractAntigravityFacts(session, fichier, ESSAI, null, sa).externe,
+        tours: antigravityReportTurns(fichier, sa).filter(({ external_id }) =>
+          external_id.includes(R),
+        ).length,
+        rapport: extractAntigravityBackstage(session, fichier, ESSAI, sa).some(
+          ({ id }) => id === `${R}:rapport`,
+        ),
+      };
+    };
+
+    expect(await juge('transcript_full.jsonl')).toEqual({
+      externe: false,
+      tours: 1,
+      rapport: true,
+    });
+    expect(await juge('transcript.jsonl')).toEqual({ externe: true, tours: 0, rapport: false });
   });
 
   it('ignore un nom de fiche qui n’est pas un UUID, sans rien lire pour lui', async () => {

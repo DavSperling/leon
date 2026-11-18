@@ -12,7 +12,7 @@ import {
   type TurnRow,
   upsertSource,
 } from './ingest-turns';
-import { isWithdrawn } from './record-facts';
+import { isRepoPath, isWithdrawn } from './record-facts';
 
 // Les outils dont la cible est un chemin du dépôt (C10 amendé le 12/11) : le fichier, ou le `path` de la recherche.
 const PATH_TOOLS = new Set([
@@ -25,18 +25,13 @@ const PATH_TOOLS = new Set([
   'Grep',
   'LS',
 ]);
-// Un chemin absolu (Unix, le dossier personnel, une variable `$HOME/…` ou `%USERPROFILE%\…`) ou une URL (`schéma:`,
-// qui couvre aussi la lettre de lecteur `C:`) sort du dépôt ; un saut de ligne casserait la ligne du tour.
-const OUTSIDE_REPO = /^(?:[\\/~$]|[A-Za-z][A-Za-z0-9+.-]*:)|%[A-Za-z_][A-Za-z0-9_]*%|[\r\n]/;
-
 // La seconde barrière, après la CLI : une cible n'est gardée que pour Bash (la commande réduite, sinon [commande]) et
-// pour un chemin relatif au dépôt. Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée ne fait
-// jamais ranger une URL, un motif ou une requête. Puis le masque et la borne.
+// pour un chemin relatif au dépôt (isRepoPath). Pour tout autre outil, elle est retirée : une CLI ancienne ou modifiée
+// ne fait jamais ranger une URL, un motif ou une requête. Puis le masque et la borne.
 function recheckTarget(outil: string, cible: string | undefined): string | null {
   if (cible === undefined || cible === '') return null;
   if (outil === 'Bash') return recheckCommand(cible);
-  if (!PATH_TOOLS.has(outil) || OUTSIDE_REPO.test(cible) || cible.split(/[\\/]/).includes('..'))
-    return null;
+  if (!PATH_TOOLS.has(outil) || !isRepoPath(cible)) return null;
   return factText(cible, TEXTE_MAX) || null;
 }
 

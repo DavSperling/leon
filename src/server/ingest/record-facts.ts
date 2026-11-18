@@ -1,7 +1,12 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { type RetraitRequest, type SessionFactsPayload, TEXTE_MAX } from '@/capture/api-contract';
 import { maskSecrets } from '@/capture/mask-secrets';
-import { factText, recheckCommand, type SessionFacts } from '@/capture/session-facts';
+import {
+  factText,
+  HOME_OR_VARIABLE,
+  recheckCommand,
+  type SessionFacts,
+} from '@/capture/session-facts';
 import type { CodeSessionKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { apiTokens } from '@/server/db/schema/api-tokens';
@@ -10,15 +15,28 @@ import { sources } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { recordProject, upsertSource } from './ingest-turns';
 
+// Un chemin absolu (Unix ou Windows) ou une URL (`schéma:`, qui couvre aussi la lettre de lecteur `C:`) sort du dépôt.
+// Un caractère de contrôle (saut de ligne compris) ou invisible est refusé partout : l'affichage l'efface (oneLine), et
+// « ​/Users/x » se lirait « /Users/x ».
+const OUTSIDE_REPO = /^(?:[\\/]|[A-Za-z][A-Za-z0-9+.-]*:)|[\p{Cc}\p{Cf}]/u;
+
+// La seconde barrière, après repoRelativePath sur le poste, pour les fichiers des faits et les cibles des coulisses
+// (record-backstage.ts) : un chemin n'est gardé que relatif au dépôt. HOME_OR_VARIABLE est la garde de la CLI (le
+// dossier personnel, une variable, un guillemet ou un blanc en tête) : une CLI ancienne ou modifiée ne fait pas ranger
+// « "/Users/x/secret.txt" ».
+export const isRepoPath = (path: string): boolean =>
+  !HOME_OR_VARIABLE.test(path) && !OUTSIDE_REPO.test(path) && !path.split(/[\\/]/).includes('..');
+
 // Comme à la relève sur le poste (factText). Une PR dont le masque changerait le dépôt n'aurait plus une clé que
 // SessionFactsSchema relit : elle est retirée, plutôt que de rendre illisibles tous les faits de la session.
-// Une commande hors de la forme réduite est remplacée, et non refusée : un 400 perdrait toute la session.
+// Une commande hors de la forme réduite est remplacée, et non refusée : un 400 perdrait toute la session. Un fichier
+// hors du dépôt est retiré (isRepoPath).
 function cleanFacts(faits: SessionFacts): SessionFacts {
   return {
     ...faits,
     branche: faits.branche === null ? null : factText(faits.branche),
     prs: faits.prs.filter((pr) => maskSecrets(pr.repo) === pr.repo),
-    fichiers: faits.fichiers.map((file) => factText(file)),
+    fichiers: faits.fichiers.filter(isRepoPath).map((file) => factText(file)),
     commandes: faits.commandes.map((command) => ({
       ...command,
       texte: recheckCommand(command.texte),

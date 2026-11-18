@@ -484,6 +484,26 @@ describe('extractCodexFacts', () => {
     expect(faits).toMatchObject({ fichiers: ['a.ts', 'b.ts'], erreurs: 1 });
   });
 
+  it('un fichier changé en ~/…, $HOME/… ou %USERPROFILE%\\… n’est pas un fichier du dépôt', () => {
+    const faits = extractCodexFacts(
+      session(
+        element({
+          type: 'FileChange',
+          id: 'p1',
+          changes: {
+            '~/.aws/credentials': { type: 'update' },
+            '$HOME/.ssh/id': { type: 'add' },
+            '%USERPROFILE%\\x': { type: 'add' },
+            'src/a.ts': { type: 'update', move_path: '~/b.ts' },
+          },
+          status: 'completed',
+        }),
+      ),
+      RACINE,
+    );
+    expect(faits.fichiers).toEqual(['src/a.ts']);
+  });
+
   it('masque un secret dans une commande et ne garde que l’exécutable', () => {
     const faits = extractCodexFacts(session(commande('PGPASSWORD=s3cret psql -h db')), RACINE);
     expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false }]);
@@ -548,6 +568,31 @@ describe('extractCodexFacts', () => {
         erreurs: 1,
         externe: false,
       });
+    });
+
+    it('un fichier d’apply_patch ou de patch_apply_end en ~/… n’est pas un fichier du dépôt', () => {
+      const contenu = [
+        ancien(
+          {
+            type: 'custom_tool_call',
+            name: 'apply_patch',
+            call_id: 'c1',
+            input: '*** Begin Patch\n*** Update File: ~/.zshrc\n@@\n*** End Patch',
+          },
+          { type: 'custom_tool_call_output', call_id: 'c1', output: 'Success.' },
+        ),
+        JSON.stringify({
+          timestamp: '2026-01-02T09:00:09.000Z',
+          type: 'event_msg',
+          payload: {
+            type: 'patch_apply_end',
+            success: true,
+            changes: { '~/.aws/credentials': {}, 'src/y.ts': {} },
+          },
+        }),
+      ].join('\n');
+
+      expect(extractCodexFacts(contenu, RACINE).fichiers).toEqual(['src/y.ts']);
     });
 
     it('un outil MCP (avec espace de noms) ou inconnu rend la session externe', () => {

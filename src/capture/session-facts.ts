@@ -131,14 +131,19 @@ const LEON_CLAUDE_TOOLS = new Set(
 // Tout gh est externe (il lit du texte de tiers : PR, tickets, recherche), sauf ce qui n'écrit que le nôtre,
 // reconnu après les options -R/--repo ; une forme non reconnue compte comme externe.
 // shortcut: git fetch et git pull restent locaux (trop courants, et leur texte vient de l'équipe) ; un lanceur à
-// arguments (« timeout 5 curl », « xargs -n1 curl ») ou un réseau par un interpréteur (« python -c urllib… ») passe :
-// les compter si une session externe s'y glisse.
+// arguments (« timeout 5 curl », « xargs -n1 curl »), un réseau par un interpréteur (« python -c urllib… ») ou un nom
+// coupé par des guillemets (« cu""rl », « $'curl' ») passe : les compter si une session externe s'y glisse.
 const COMMAND_END = String.raw`(?=[\s;&|)\x60]|$)`;
 const GH_LOCAL = String.raw`(?:\s+(?:-R|--repo)(?:\s+|=)\S+){0,2}\s+(?:pr\s+(?:create|edit|merge|checkout)|auth\s+status)${COMMAND_END}`;
+// Le nom réseau peut être écrit « "curl" », « 'curl' », « \curl » ou « /usr/bin/curl » : le shell lance le même
+// programme. Le guillemet fermant suit le nom (\k<q>) : « "curl is cool" » n'est pas curl. Un segment de chemin ne
+// contient pas « / » : chaque « / » n'a qu'une place, la relecture reste linéaire.
+const NAME_PREFIX = String.raw`(?:\\|(?<q>["']))?(?:[^\s"'\\/;&|()\x60]*/)*`;
 // La valeur sans guillemets s'arrête aux séparateurs : sinon, chaque « ; » ou « & » relirait la suite (quadratique).
+// Pour la même raison, les blancs après un début de commande s'arrêtent au retour à la ligne, qui en est un autre.
 const EXTERNAL_COMMAND = new RegExp(
-  String.raw`(?:^|[;&|(\n\x60])\s*(?:(?:[A-Za-z_]\w*=(?:"[^"]*"|'[^']*'|[^\s"';&|()\x60]*)|sudo|env|exec|command|nohup|time|xargs|if|then|do|else|!|\{)\s+){0,8}` +
-    String.raw`(?:curl|wget|ssh|sshpass|scp|sftp|rsync|nc|ncat|telnet|https?|xh|aria2c|npm\s+(?:view|info|show|v)|pnpm\s+view|pip\s+download|git${GIT_OPTIONS}\s+clone|gh(?!${GH_LOCAL}))${COMMAND_END}`,
+  String.raw`(?:^|[;&|(\n\x60])[^\S\n]*(?:(?:[A-Za-z_]\w*=(?:"[^"]*"|'[^']*'|[^\s"';&|()\x60]*)|sudo|env|exec|command|nohup|time|xargs|if|then|do|else|!|\{)\s+){0,8}${NAME_PREFIX}` +
+    String.raw`(?:(?:curl|wget|ssh|sshpass|scp|sftp|rsync|nc|ncat|telnet|https?|xh|aria2c)\k<q>|npm\k<q>\s+(?:view|info|show|v)|pnpm\k<q>\s+view|pip\k<q>\s+download|git\k<q>${GIT_OPTIONS}\s+clone|gh\k<q>(?!${GH_LOCAL}))${COMMAND_END}`,
 );
 // « [branche 1a2b3c4] message », la ligne qu'écrit git commit.
 const COMMIT_LINE = /^\[[^\]\n]* ([0-9a-f]{7,40})\]/gm;

@@ -441,7 +441,8 @@ export function extractAntigravityFacts(
       recordCommand(record, commandLine, output, error);
       continue;
     }
-    if (READ_TOOLS.test(name)) continue;
+    // Une écriture en ERROR n'a rien écrit : les coulisses marquent l'appel `erreur` (statut).
+    if (READ_TOOLS.test(name) || result?.status === 'ERROR') continue;
     for (const key of ['TargetFile', 'AbsolutePath']) {
       const path = args?.[key];
       if (typeof path === 'string') recordFile(record, path, root);

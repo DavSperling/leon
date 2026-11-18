@@ -356,7 +356,8 @@ describe('POST /api/v1/faits', () => {
     expect(stored?.metadata).toMatchObject({
       branche: `paul/${SECRET_MASK}`,
       faits: {
-        fichiers: [`src/${SECRET_MASK}.ts`, 'src/nul.ts'],
+        // Un nom de fichier ne contient jamais de caractère nul : celui-là n'est pas un fichier du dépôt (isRepoPath).
+        fichiers: [`src/${SECRET_MASK}.ts`],
         taches: [{ texte: `Coller ${SECRET_MASK}`, etat: 'a_faire' }],
         // Un dépôt masqué ne serait plus une clé de PR : la PR est retirée, le reste des faits reste lisible.
         prs: [{ repo: 'acme/leon', numero: 2, par: 'pr-link' }],
@@ -396,6 +397,38 @@ describe('POST /api/v1/faits', () => {
           '[commande]',
         ].map((texte) => ({ texte, erreur: false })),
       },
+    });
+  });
+
+  it('ne garde que les fichiers relatifs au dépôt, comme les cibles des coulisses', async () => {
+    const { paul, paulToken } = await setup();
+    const fichiers = [
+      'src/a.ts',
+      'app/routes/$id.tsx',
+      '/Users/x/secret.txt',
+      '"/Users/x/secret.txt"',
+      "'/Users/x/secret.txt'",
+      ' /Users/x/secret.txt',
+      '~/.ssh/id_rsa',
+      '$HOME/.ssh/config',
+      '%USERPROFILE%\\x',
+      'C:\\Users\\x.txt',
+      'file:///Users/x/.ssh/id_ed25519',
+      '../autre/x.ts',
+      'src/../../autre/x.ts',
+      'src/a\nb.ts',
+      '\u0085/Users/x/secret.txt',
+      '⁠~/.ssh/id_rsa',
+      'src/.​./.​./etc/passwd',
+    ];
+    const body = { ...validBody(), faits: facts({ fichiers }) };
+
+    const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+
+    expect(response.status).toBe(202);
+    const [stored] = await storedMetadata(paul, body.external_id);
+    expect(stored?.metadata).toMatchObject({
+      faits: { fichiers: ['src/a.ts', 'app/routes/$id.tsx'] },
     });
   });
 

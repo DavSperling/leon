@@ -510,6 +510,11 @@ const isLeonLocalCall = (item: unknown) => {
   return call.success && LEON_LOCAL_TOOLS.includes(call.data.tool);
 };
 
+// Un chemin relatif se lit depuis `cwd`, le dossier de la session ; « ~/x » ou « $HOME/x » reste tel quel, pour que
+// `repoRelativePath` l'écarte : résolu, il passerait pour un fichier du dépôt.
+const fromCwd = (cwd: string, path: string) =>
+  HOME_OR_VARIABLE.test(path) ? path : resolve(cwd, path);
+
 // Un élément de tour typé par Codex (historique paginé).
 function readItem(reading: Reading, item: Item): void {
   if (item.type === 'McpToolCall' && reading.leonMcp && isLeonLocalCall(item)) return;
@@ -556,10 +561,10 @@ function readItem(reading: Reading, item: Item): void {
       return;
     }
     for (const [path, change] of Object.entries(changes)) {
-      recordFile(reading.record, resolve(reading.cwd, path), reading.root);
+      recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
       const moved = MovedSchema.safeParse(change);
       if (moved.success && moved.data.move_path) {
-        recordFile(reading.record, resolve(reading.cwd, moved.data.move_path), reading.root);
+        recordFile(reading.record, fromCwd(reading.cwd, moved.data.move_path), reading.root);
       }
     }
   }
@@ -594,7 +599,7 @@ function readLine(
       if (!applied.data.success) reading.errors += 1;
       else {
         for (const path of Object.keys(applied.data.changes)) {
-          recordFile(reading.record, resolve(reading.cwd, path), reading.root);
+          recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
         }
       }
     }
@@ -637,7 +642,7 @@ function readLine(
     if (error || /^\s*(?:error|failed)\b/i.test(text)) reading.errors += 1;
     else
       for (const path of patchFiles(answered))
-        recordFile(reading.record, resolve(reading.cwd, path), reading.root);
+        recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
     return;
   }
   const command = callCommand(answered);
@@ -728,8 +733,7 @@ const SpawnArgumentsSchema = z.object({ message: z.string() });
 // Les appels d'un élément de tour, par une table fermée (T52 amendé le 17/11) : le nom commun de Claude Code quand il y
 // en a un (une commande est `Bash`, un changement de fichier `Edit`, un bloc par fichier), sinon le nom de l'élément ;
 // un type inconnu, `[outil]`. Un élément qui n'est pas un appel n'en donne aucun, une commande hors forme non plus. Un
-// chemin relatif se lit depuis `cwd`, le dossier de la session, comme dans les faits ; « ~/x » ou « $HOME/x » reste tel
-// quel, pour que `repoRelativePath` l'écarte.
+// chemin se lit comme dans les faits (fromCwd).
 function itemCalls(
   item: Item,
   root: string | null,
@@ -750,7 +754,7 @@ function itemCalls(
     const change = FileChangeItemSchema.safeParse(item);
     if (!change.success) return [];
     return Object.keys(change.data.changes).map((path) =>
-      call('Edit', { file_path: HOME_OR_VARIABLE.test(path) ? path : resolve(cwd, path) }),
+      call('Edit', { file_path: fromCwd(cwd, path) }),
     );
   }
   if (item.type === 'McpToolCall') {

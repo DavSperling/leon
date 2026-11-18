@@ -13,7 +13,6 @@ import {
   canonicalKey,
   type FilterKey,
   filterTokens,
-  hasFilter,
   searchHref,
   withFilter,
   withoutFilter,
@@ -156,34 +155,46 @@ const PERIODS_EN: Array<{ value: string; label: string }> = [
   { value: '12mo', label: 'Last 12 months' },
 ];
 
+// Ce que `parseQuery` lit dans la valeur d'un `type:` (la date ne compte pas pour lui).
+const typeFilters = (value: string) => parseQuery(`type:"${value}"`, new Date()).filters;
+
+// La nature ou le rôle d'un `type:`, quel que soit le nom écrit : leurs identifiants ne se croisent pas.
+function typeId(value: string): string | undefined {
+  const { natures, roles } = typeFilters(value);
+  return natures?.[0] ?? roles?.[0];
+}
+
+// La requête sans ses `type:` dont la valeur vérifie `test`.
+function withoutTypes(q: string, test: (value: string) => boolean): string {
+  return filterTokens(q)
+    .filter((token) => canonicalKey(token.key) === 'type' && test(token.value))
+    .reduce((rest, token) => withoutFilter(rest, token.key, token.value), q);
+}
+
 // Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic. Une
-// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser).
+// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser). Pour
+// `type:`, c'est le sens qui compte, pas le mot : `type:"tool call"` coche « Appels d’outils » sur le site français, et
+// décocher retire le filtre sous tous ses noms.
 function option(q: string, key: FilterKey, value: string, label: string, base = q): FilterOption {
-  const active = hasFilter(q, key, value);
+  const type = canonicalKey(key) === 'type' ? typeId(value) : undefined;
+  const removed = type
+    ? withoutTypes(q, (written) => typeId(written) === type)
+    : withoutFilter(q, key, value);
+  // Un filtre présent se retire toujours : la requête change.
+  const active = removed !== q;
   return {
     label,
     active,
-    href: searchHref({ q: active ? withoutFilter(q, key, value) : withFilter(base, key, value) }),
+    href: searchHref({ q: active ? removed : withFilter(base, key, value) }),
   };
-}
-
-// La requête sans ses `type:` d'une sorte (`natures` ou `roles`). La date ne compte pas pour `type:`.
-function withoutTypes(q: string, kind: 'natures' | 'roles'): string {
-  return filterTokens(q)
-    .filter(
-      (token) =>
-        canonicalKey(token.key) === 'type' &&
-        parseQuery(`type:"${token.value}"`, new Date()).filters[kind] !== undefined,
-    )
-    .reduce((rest, token) => withoutFilter(rest, token.key, token.value), q);
 }
 
 // En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
 export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
   const en = locale === 'en';
   // Une nature et les appels d'outils se croisent (un ticket n'a jamais d'appels) : chaque entrée retire l'autre sorte.
-  const noRoles = withoutTypes(q, 'roles');
-  const noNatures = withoutTypes(q, 'natures');
+  const noRoles = withoutTypes(q, (value) => typeFilters(value).roles !== undefined);
+  const noNatures = withoutTypes(q, (value) => typeFilters(value).natures !== undefined);
   return [
     {
       name: 'outil',

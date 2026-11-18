@@ -108,6 +108,8 @@ describe('buildActiveChips', () => {
 
 describe('buildMenus', () => {
   const menu = (q: string, name: string) => buildMenus(q).find((m) => m.name === name);
+  const type = (q: string, locale = 'fr') =>
+    buildMenus(q, locale).find((m) => m.name === 'type')?.options ?? [];
 
   it('propose les outils, les types et les périodes', () => {
     expect(buildMenus('x').map((m) => m.name)).toEqual(['outil', 'type', 'periode']);
@@ -160,18 +162,44 @@ describe('buildMenus', () => {
   // Une nature et un rôle se croisent : `type:ticket type:appel_outil` ne rend jamais rien (un ticket n'a pas d'appels
   // d'outils). Chaque entrée du menu Type retire donc l'autre sorte ; deux natures, elles, s'additionnent toujours.
   it('ne croise jamais une nature et les appels d’outils', () => {
-    const type = (q: string, locale = 'fr') =>
-      buildMenus(q, locale).find((m) => m.name === 'type')?.options ?? [];
-
     expect(type('type:ticket x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+x');
     expect(type('type:ticket x', 'en').at(-1)?.href).toBe('/?q=type%3A%22tool+call%22+x');
     expect(type('type:appel_outil x').find((o) => o.label === 'Ticket')).toMatchObject({
       active: false,
       href: '/?q=type%3Aticket+x',
     });
+    expect(type('type:"tool call" x', 'en').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+x',
+    );
     expect(type('type:ticket x').find((o) => o.label === 'Réunion')?.href).toBe(
       '/?q=type%3Areunion+type%3Aticket+x',
     );
+    // Toutes les natures partent, pas seulement la première ; décocher une nature garde le rôle.
+    expect(type('type:ticket type:reunion x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+x');
+    expect(type('type:ticket type:appel_outil x').find((o) => o.label === 'Ticket')).toMatchObject({
+      active: true,
+      href: '/?q=type%3Aappel_outil+x',
+    });
+    // Seuls les `type:` partent : `outil:note` n'est pas la nature « Note ».
+    expect(type('outil:note x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+outil%3Anote+x');
+  });
+
+  // Le sens compte, pas le mot : un lien venu de l'autre langue, ou l'aide de `leon search`, coche la bonne entrée, et
+  // la décocher retire le filtre sous tous ses noms.
+  it('coche une entrée de Type écrite sous un autre nom, et la retire', () => {
+    expect(type('type:"tool call" pnpm').at(-1)).toMatchObject({ active: true, href: '/?q=pnpm' });
+    expect(type('type:appel_outil pnpm', 'en').at(-1)).toMatchObject({
+      active: true,
+      href: '/?q=pnpm',
+    });
+    expect(type('type:"tool calls" type:appel_outil pnpm').at(-1)).toMatchObject({
+      active: true,
+      href: '/?q=pnpm',
+    });
+    expect(type('type:meeting x').find((o) => o.label === 'Réunion')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
   });
 });
 

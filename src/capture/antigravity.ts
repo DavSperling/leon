@@ -269,10 +269,11 @@ const EXTERNAL_ID_MAX = 200; // celui du contrat (TurnSchema)
 // Le message de chaque sous-agent direct de la session (décision d'Amos du 17/11, « comme Claude Code ») : un tour
 // `user` marqué injecté (T43), écrit par Antigravity, qui part sous l'accord de base. Le message d'un sous-agent de
 // sous-agent va à son parent, pas à la session. Un sous-agent qui n'a pas fini donne les messages qu'il a déjà
-// envoyés : la session les a reçus. Rien d'autre de sa conversation (sa consigne, son raisonnement, ses appels et leurs
-// sorties), ni le texte des étapes SYSTEM_MESSAGE de la session (jamais relevé). Ces tours viennent d'autres fichiers
-// que celui de la session : la CLI les envoie à part de ses tours (captureToolFile). Identifiant : la session, le
-// sous-agent, le rang de l'étape, celui de l'appel dans l'étape.
+// envoyés : la session les a reçus. Un envoi dont l'étape de résultat est en ERROR, elle ne l'a pas reçu : aucun tour.
+// Rien d'autre de sa conversation (sa consigne, son raisonnement, ses appels et leurs sorties), ni le texte des étapes
+// SYSTEM_MESSAGE de la session (jamais relevé). Ces tours viennent d'autres fichiers que celui de la session : la CLI
+// les envoie à part de ses tours (captureToolFile). Identifiant : la session, le sous-agent, le rang de l'étape, celui
+// de l'appel dans l'étape.
 export function antigravityReportTurns(
   file: AntigravityFile,
   subagents: AntigravitySubagents,
@@ -282,7 +283,10 @@ export function antigravityReportTurns(
   const seen = new Set<string>();
   for (const child of subagents.named.get(session) ?? []) {
     const steps = subagentSteps(subagents.transcripts.get(child));
-    for (const { args, step, index, rang } of steps === null ? [] : messagesTo(session, steps)) {
+    for (const { args, step, index, rang, result } of steps === null
+      ? []
+      : messagesTo(session, steps)) {
+      if (result?.status === 'ERROR') continue;
       const message = args?.Message;
       const text = typeof message === 'string' ? prepareTurnText(stripLeonBlocks(message)) : null;
       const external_id = `${session}:${child}:${step.step_index ?? index}:${rang}`;

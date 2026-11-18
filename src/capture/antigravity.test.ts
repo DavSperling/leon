@@ -970,6 +970,22 @@ describe('antigravityReportTurns', () => {
     ['que la session ne nomme pas', { [R]: [] }, { [R]: RECHERCHE }],
     ['qui écrit à un autre que la session', { [S]: [R] }, { [R]: ecrit('À un autre.', N) }],
     [
+      'dont l’envoi est en échec',
+      { [S]: [R] },
+      {
+        [R]: [
+          etape(0, {
+            source: 'SYSTEM',
+            type: 'SYSTEM_MESSAGE',
+            content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+          }),
+          appels(1, ['send_message', { Message: 'Jamais reçu.', Recipient: S }]),
+          resultat(2, 'ERROR'),
+          fin(3),
+        ].join('\n'),
+      },
+    ],
+    [
       'de sous-agent, qui écrit à son parent',
       { [S]: [R], [R]: [G] },
       { [R]: RELAIS, [G]: ecrit('Au parent.', R) },

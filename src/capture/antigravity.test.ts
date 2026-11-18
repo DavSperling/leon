@@ -1238,4 +1238,29 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
       `Rapport.\n${MASQUE}\nfin`,
     ]);
   });
+
+  it('dans transcript_full.jsonl, où les valeurs ont leur type, une vraie valeur entre guillemets n’est pas décodée', () => {
+    const SCRIPT = '"/Users/demo/Clients Acme/deploy.sh"';
+    const contenu = [
+      appels(1, ['run_command', { CommandLine: SCRIPT, WaitMsBeforeAsync: 500 }]),
+      resultat(2),
+      fin(3),
+    ].join('\n');
+    const MESSAGE = '"Trouvé : print(\\"a\\nb\\")"';
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).commandes).toEqual([
+      { texte: '[commande]', erreur: false },
+    ]);
+    expect(
+      extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).find(
+        (bloc) => bloc.role === 'appel_outil',
+      ),
+    ).toMatchObject({ outil: 'Bash', cible: '[commande]' });
+    const ecrit = sousAgent(['send_message', { Message: MESSAGE, Recipient: S }]);
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: ecrit })).map(
+        ({ text }) => text,
+      ),
+    ).toEqual([MESSAGE]);
+  });
 });

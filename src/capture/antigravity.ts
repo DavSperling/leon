@@ -164,20 +164,27 @@ function workingDirectory(steps: Step[]): string | null {
 type Call = { name: string; args: Record<string, unknown> | null };
 
 // Dans `transcript.jsonl` (2.31.0, annexe 11), chaque valeur des `args` est écrite comme en JSON : une chaîne y est
-// entre guillemets. Décodée ici, sinon un chemin hors du dépôt y passerait pour un chemin du dépôt, un secret ne se
-// masquerait pas, une commande réseau passerait pour locale. Seule une chaîne se décode : un nombre ou `true` restent
-// des chaînes, qu'aucun lecteur n'utilise.
-// shortcut: une valeur entre guillemets qui ne se décode pas (coupée ?) reste telle quelle, jamais vue ; la rejeter
-// le jour où on la voit.
-const unquote = (value: unknown): unknown => {
-  if (typeof value !== 'string' || !/^".*"$/s.test(value)) return value;
-  try {
-    const decoded: unknown = JSON.parse(value);
-    return typeof decoded === 'string' ? decoded : value;
-  } catch {
-    return value;
+// entre guillemets, un nombre ou `true` y sont des chaînes. Décodée ici, sinon un chemin hors du dépôt y passerait pour
+// un chemin du dépôt, un secret ne se masquerait pas, une commande réseau passerait pour locale. Dans
+// `transcript_full.jsonl`, les valeurs ont déjà leur type : un appel ne se décode donc que si toutes ses valeurs sont du
+// texte JSON, ce qu'un appel de ce fichier n'a pas (un nombre, un `Recipient` ou un `TypeName` nus). Seule une chaîne se
+// décode : un nombre ou `true` restent des chaînes, qu'aucun lecteur n'utilise.
+// shortcut: un appel de `transcript_full.jsonl` dont toutes les valeurs sont du texte JSON (un read_file au `Path`
+// entre guillemets) se décode encore, et un appel de `transcript.jsonl` dont une valeur ne se décode pas (coupée ?)
+// reste tel quel, jamais vus ; passer la forme d'après le nom du fichier lu le jour où on les voit.
+function unquote(args: object): Record<string, unknown> {
+  const decoded: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(args)) {
+    if (typeof value !== 'string') return { ...args };
+    try {
+      const json: unknown = JSON.parse(value);
+      decoded[key] = typeof json === 'string' ? json : value;
+    } catch {
+      return { ...args };
+    }
   }
-};
+  return decoded;
+}
 
 function calls(step: Step): Call[] {
   return (step.tool_calls ?? []).map((raw) => {
@@ -193,9 +200,7 @@ function calls(step: Step): Call[] {
       }
     }
     const record =
-      typeof args === 'object' && args !== null && !Array.isArray(args)
-        ? Object.fromEntries(Object.entries(args).map(([key, value]) => [key, unquote(value)]))
-        : null;
+      typeof args === 'object' && args !== null && !Array.isArray(args) ? unquote(args) : null;
     return { name: call.data.name, args: record };
   });
 }

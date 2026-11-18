@@ -44,8 +44,8 @@ export function FilterMenu({
           {label}
         </Pill>
       </DropdownMenuTrigger>
-      {/* 420 px : les onze entrées du menu Type tiennent sans défiler. */}
-      <DropdownMenuContent className="max-h-[min(420px,var(--radix-dropdown-menu-content-available-height))] w-[240px] overflow-y-auto">
+      {/* 420 px (540 px sous 861 px, lignes de 44 px) : les onze entrées du menu Type tiennent sans défiler. */}
+      <DropdownMenuContent className="max-h-[min(420px,var(--radix-dropdown-menu-content-available-height))] max-shell:max-h-[min(540px,var(--radix-dropdown-menu-content-available-height))] w-[240px] overflow-y-auto">
         <DropdownMenuLabel>
           {t(name === 'outil' ? 'byTool' : name === 'type' ? 'byType' : 'byDate')}
         </DropdownMenuLabel>

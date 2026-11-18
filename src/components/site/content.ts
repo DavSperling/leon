@@ -1375,7 +1375,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place a guest under them, and then read what that person doesn’t share.',
+    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place someone they invite under them, and then read what that person doesn’t share.',
   },
   {
     q: 'What happens when Leon doesn’t know?',

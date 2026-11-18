@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:23.225Z",
+  "reponse": "## Où j'en suis\nL'endpoint ACS SAML pour Fernhill est terminé : la signature est vérifiée avec `signxml==4.0.3` (et non `python3-saml`), les conditions (`Conditions`, `AudienceRestriction`, `SubjectConfirmationData`, anti-rejeu via Redis) sont écrites à la main dans `api/auth/saml/verify.py` (ex-`saml_utils.py`), et les attributs ne sont lus que depuis le `signed_xml`. Skew d'horloge 120 s, mypy et ruff propres, 36 tests verts et suite complète verte (1284 passed, 3 skipped). PR kestrel-analytics/platform#412 est mergée (état GitHub : merged), après un premier refus de `gh pr merge 412 --squash` dû à la protection de `main` (approbation de Maya requise).\n\n- [en-cours] Charger la métadonnée IdP de staging Fernhill ; la tâche est encore à faire.\n- [prochaine-étape] Envoyer notre métadonnée SP de staging à l'IT de Fernhill avant mercredi fin de journée, pour la démo de jeudi 10:00 New York.\n- [essai-raté] `python3-saml` sur base Alpine : conflit libxml2 lxml 2.12 vs système 2.11 (`xmlsec.Error: lxml & xmlsec libxml2 library version mismatch`), et compiler lxml depuis les sources (9 min de build) échoue quand même (`cannot load crypto library for xmlsec`, pas de `xmlsec1-openssl` séparé sur Alpine 3.20) ; option base Debian écartée car taille d'image (+85 MB) refusée.\n- [question] Créer le ticket séparé pour l' SSO obligatoire sur le domaine Fernhill et la désactivation du login par mot de passe (hors PR #412).\n- [décision] Passer à `signxml` et supprimer `python3-saml`/`xmlsec` du Dockerfile, écrire les checks de conditions soi-même, ne lire que `signed_xml` (source: t08).\n- [décision] Skew d'horloge fixed à 120 s max selon l'annexe contractuelle du questionnaire sécurité Fernhill ; ne pas toucher au login par mot de passe dans cette PR (source: t12).\n- [décision] Déplacer `saml_utils` vers `api/auth/saml/verify.py` et corriger les imports (source: t14).\n- [décision] Ne pas fusionner avec `--admin` ni `--auto` ; la personne relance Maya elle-même (source: t21).",
+  "rendu": "## Où j'en suis\nL'endpoint ACS SAML pour Fernhill est terminé : la signature est vérifiée avec `signxml==4.0.3` (et non `python3-saml`), les conditions (`Conditions`, `AudienceRestriction`, `SubjectConfirmationData`, anti-rejeu via Redis) sont écrites à la main dans `api/auth/saml/verify.py` (ex-`saml_utils.py`), et les attributs ne sont lus que depuis le `signed_xml`. Skew d'horloge 120 s, mypy et ruff propres, 36 tests verts et suite complète verte (1284 passed, 3 skipped). PR kestrel-analytics/platform#412 est mergée (état GitHub : merged), après un premier refus de `gh pr merge 412 --squash` dû à la protection de `main` (approbation de Maya requise).\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Charger la métadonnée IdP de staging Fernhill ; la tâche est encore à faire.\n- [prochaine-étape] Envoyer notre métadonnée SP de staging à l'IT de Fernhill avant mercredi fin de journée, pour la démo de jeudi 10:00 New York.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1033,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4498,
+    "sortie": 869,
+    "reflexion": 311,
+    "cache": 185,
+    "cout": 0.0010540125
+  },
+  "cout": 0.0010540125,
+  "latenceMs": 5560,
+  "fournisseur": "Wafer"
+}

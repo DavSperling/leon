@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:55:22.048Z",
+  "reponse": "## What is still open\n- Orbitly’s Thursday rollout is blocked until you restore CSV export in v2 using the background-export flow. PR #430 is approved; merge when CI is green, and give Rachel an ETA for Zest. [10][5][9][6]\n- Fix the empty-cohort tooltip crash tracked in #432; you left it for today, and Sentry reports 37 events across 4 users. [1][8]\n\n## What changed\n- Dependabot opened #429 to upgrade chartkit to 5.0. Since the team wants to keep chartkit while v1 is still active, assess this major upgrade separately. [4][7]\n\n## What you did\n- You polished the v2 widget header and menu and improved retention chart labels, loading behavior, and cohort colors. Orbitly staging loaded all 9 dashboards and showed the new labels. [1]",
+  "rendu": "## What is still open\n- Orbitly’s Thursday rollout is blocked until you restore CSV export in v2 using the background-export flow. PR #430 is approved; merge when CI is green, and give Rachel an ETA for Zest. [10][5][9][6]\n- Fix the empty-cohort tooltip crash tracked in #432; you left it for today, and Sentry reports 37 events across 4 users. [1][8]\n\n## What changed\n- Dependabot opened #429 to upgrade chartkit to 5.0. Since the team wants to keep chartkit while v1 is still active, assess this major upgrade separately. [4][7]\n\n## What you did\n- You polished the v2 widget header and menu and improved retention chart labels, loading behavior, and cohort colors. Orbitly staging loaded all 9 dashboards and showed the new labels. [1]",
+  "mesures": {
+    "mots": 120,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 21510,
+    "sortie": 4368,
+    "reflexion": 3978,
+    "cache": 11156,
+    "cout": 0.00333096
+  },
+  "cout": 0.00333096,
+  "latenceMs": 43904,
+  "fournisseur": "Azure"
+}

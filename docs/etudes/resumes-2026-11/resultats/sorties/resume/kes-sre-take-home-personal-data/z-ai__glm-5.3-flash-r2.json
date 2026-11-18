@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:20.021Z",
+  "reponse": "## Où j'en suis\nL'exercice SRE take-home est terminé et vit dans son propre dépôt privé `kestrel-analytics/sre-take-home` (poussé via `git subtree split`, historique propre) : docker-compose avec un service Go bogué (règle d'alerte silencieuse, fuite de connexions), un module Terraform trop permissif, time box de 3 heures. La grille d'évaluation (`RUBRIC.md`) est en place, sans seuil de passage : les scores de Maya et Noa alimentent une décision commune du panel. Le dossier `hiring/` a été retiré de la branche `maya/sre-take-home` de l'infra, sans PR.\n\n- [prochaine-étape] appel avec le candidat jeudi 16h heure de Tel-Aviv ; Maya enverra elle-même l'exercice après l'appel, avec une invitation collaborateur au dépôt\n- [essai-raté] `docker compose up` échouait sur Apple Silicon (image amd64 uniquement) ; le multi-arch avec `--load` ne passe pas (exporter ne supporte pas les manifest lists) — résolu en construisant le service depuis les sources dans compose\n- [décision] pas de Kubernetes, exercice limité à 3 h, Terraform + compose uniquement (source: t03)\n- [décision] compose construit flaky-svc depuis les sources, pas d'image préconstruite (source: t06)\n- [décision] pas de seuil de score : le panel décide, Noa en second relecteur (source: t10)\n- [décision] l'exercice va dans un dépôt privé séparé, hors de l'infra (source: t12)\n- [décision] suppression de `hiring/` sans PR en infra ; aucune branche de PR (source: t14)\n- [décision] aucun e-mail envoyé par l'agent : Maya s'en charge après l'appel de jeudi (source: t16)",
+  "rendu": "## Où j'en suis\nL'exercice SRE take-home est terminé et vit dans son propre dépôt privé `kestrel-analytics/sre-take-home` (poussé via `git subtree split`, historique propre) : docker-compose avec un service Go bogué (règle d'alerte silencieuse, fuite de connexions), un module Terraform trop permissif, time box de 3 heures. La grille d'évaluation (`RUBRIC.md`) est en place, sans seuil de passage : les scores de Maya et Noa alimentent une décision commune du panel. Le dossier `hiring/` a été retiré de la branche `maya/sre-take-home` de l'infra, sans PR.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] appel avec le candidat jeudi 16h heure de Tel-Aviv ; Maya enverra elle-même l'exercice après l'appel, avec une invitation collaborateur au dépôt\n- [essai-raté] `docker compose up` échouait sur Apple Silicon (image amd64 uniquement) ; le multi-arch avec `--load` ne passe pas (exporter ne supporte pas les manifest lists) — résolu en construisant le service depuis les sources dans compose\n- [décision] pas de Kubernetes, exercice limité à 3 h, Terraform + compose uniquement (source: t03)\n- [décision] compose construit flaky-svc depuis les sources, pas d'image préconstruite (source: t06)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1264,
+    "decisions": 2,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3545,
+    "sortie": 526,
+    "reflexion": 68,
+    "cache": 0,
+    "cout": 0.000356665
+  },
+  "cout": 0.000356665,
+  "latenceMs": 5948,
+  "fournisseur": "Wafer"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:30:17.883Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` porte le client TransAlp (OAuth2), des étiquettes ZPL par défaut avec `^CI28` pour les accents, et une bascule de Lyon/Paris programmée au 1er décembre via `TRANSALP_DEBUT`. Tout est poussé ; la PR #91 reste en brouillon, en attente de la relecture de Julien. (source: src-pr91, ses-tr-2)\n\n- [en-cours] PR maison-verdier/boutique#91 ouverte en brouillon, commits `3e8b1d0` et `a90c4f7` poussés sur la branche, en attente de la relecture de Julien (source: src-pr91, ses-tr-2)\n- [prochaine-étape] avant le 1er décembre : Julien met la clé de prod dans les secrets, rien ne s'active sans lui (source: h2-07)\n- [essai-raté] en-tête `X-Api-Key` → 401 : l'API exige un jeton OAuth2 client_credentials (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox : testé en recette à la place, puis accents en bouillie corrigés par l'insertion de `^CI28` (source: ses-tr-1, h2-03)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement ; le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier (source: src-slack-julien, h1-03)\n- [décision] le format ZPL est par défaut, PDF reste possible (source: h2-01)\n- [décision] aucun tarif Premium : ignorer ce passage du mail de TransAlp, Rapidis n'est pas résilié au 1er décembre (source: h2-09)",
+  "rendu": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` porte le client TransAlp (OAuth2), des étiquettes ZPL par défaut avec `^CI28` pour les accents, et une bascule de Lyon/Paris programmée au 1er décembre via `TRANSALP_DEBUT`. Tout est poussé ; la PR #91 reste en brouillon, en attente de la relecture de Julien. (de: équipe, agent; source: src-pr91, ses-tr-2)\n\n- [en-cours] PR maison-verdier/boutique#91 ouverte en brouillon, commits `3e8b1d0` et `a90c4f7` poussés sur la branche, en attente de la relecture de Julien (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] avant le 1er décembre : Julien met la clé de prod dans les secrets, rien ne s'active sans lui (de: toi; source: h2-07)\n- [essai-raté] en-tête `X-Api-Key` → 401 : l'API exige un jeton OAuth2 client_credentials (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox : testé en recette à la place, puis accents en bouillie corrigés par l'insertion de `^CI28` (de: toi, agent; source: ses-tr-1, h2-03)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement ; le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier (de: toi, connecteur; source: src-slack-julien, h1-03)\n- [décision] le format ZPL est par défaut, PDF reste possible (de: toi; source: h2-01)\n- [décision] aucun tarif Premium : ignorer ce passage du mail de TransAlp, Rapidis n'est pas résilié au 1er décembre (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1444,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4226,
+    "sortie": 1396,
+    "reflexion": 922,
+    "cache": 0,
+    "cout": 0.00098252
+  },
+  "cout": 0.00098252,
+  "latenceMs": 22063,
+  "fournisseur": "Cohere"
+}

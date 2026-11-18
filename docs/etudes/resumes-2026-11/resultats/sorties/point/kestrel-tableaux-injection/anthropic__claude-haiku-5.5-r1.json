@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:30:57.892Z",
+  "reponse": "## What you did\n- Pushed the v2 widget polish to PR #427: 40px header, simplified menu, week labels in the retention tooltip, loading skeleton, cohort palette [1]. You also decided to leave chartkit and v1 alone for now [1].\n- Built the background CSV export for Zest's 230k rows. It streams to a gzipped file and emails a 24h link. PR #430 is open for Daniel [2][5].\n\n## What changed\n- Priya says Orbitly can't go on Thursday without CSV export back in the v2 widget menu, on top of the background export [10].\n- Rachel asks for an ETA for Zest before their Monday ops review [9][6].\n- Daniel approved #430, to merge once CI is green [5].\n- Maya approved #427 to ship behind the flag, but chartkit stays until v1 is gone [7].\n\n## What is still open\n- Restore Export CSV in the v2 widget menu, wired to the new job. The v1 endpoint doesn't work with v2 widget ids [1][10].\n- Fix the empty-cohort tooltip crash at `RetentionChart.tsx:212`. Sentry shows 37 events for 4 users on staging [8][1].\n- Merge #430 once CI is green, then give Rachel an ETA [5][9].",
+  "rendu": "## What you did\n- Pushed the v2 widget polish to PR #427: 40px header, simplified menu, week labels in the retention tooltip, loading skeleton, cohort palette [1]. You also decided to leave chartkit and v1 alone for now [1].\n- Built the background CSV export for Zest's 230k rows. It streams to a gzipped file and emails a 24h link. PR #430 is open for Daniel [2][5].\n\n## What changed\n- Priya says Orbitly can't go on Thursday without CSV export back in the v2 widget menu, on top of the background export [10].\n- Rachel asks for an ETA for Zest before their Monday ops review [9][6].\n- Daniel approved #430, to merge once CI is green [5].\n- Maya approved #427 to ship behind the flag, but chartkit stays until v1 is gone [7].\n\n## What is still open\n- Restore Export CSV in the v2 widget menu, wired to the new job. The v1 endpoint doesn't work with v2 widget ids [1][10].\n- Fix the empty-cohort tooltip crash at `RetentionChart.tsx:212`. Sentry shows 37 events for 4 users on staging [8][1].\n- Merge #430 once CI is green, then give Rachel an ETA [5][9].",
+  "mesures": {
+    "mots": 185,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8206,
+    "sortie": 2172,
+    "reflexion": 1746,
+    "cache": 0,
+    "cout": 0.0019066
+  },
+  "cout": 0.0019066,
+  "latenceMs": 11290,
+  "fournisseur": "Claude Platform on AWS"
+}

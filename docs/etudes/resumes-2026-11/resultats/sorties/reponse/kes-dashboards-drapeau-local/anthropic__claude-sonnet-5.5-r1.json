@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:07.646Z",
+  "reponse": "Depuis la fusion de #447, l'ancienne méthode ne fonctionne plus : le flag new_dash a été renommé dashboards_v2, et FEATURE_FLAGS dans .env.local est désormais ignoré [2]. L'ancien conseil de Slack (FEATURE_FLAGS=new_dash) est donc périmé [1].\n\nIl faut maintenant lancer `make dev-flags FLAGS=dashboards_v2` pour activer le flag sur le workspace de dev [2]. L'API doit tourner pendant cette commande, puis rechargez la page à fond [3]. Vous pouvez vérifier le résultat avec `curl localhost:8000/api/flags` [3].\n\nSi les tuiles restent vides, les données de seed sont un peu maigres [1], et un workspace sans événements affiche une grille vide [5].",
+  "rendu": "Depuis la fusion de #447, l'ancienne méthode ne fonctionne plus : le flag new_dash a été renommé dashboards_v2, et FEATURE_FLAGS dans .env.local est désormais ignoré [2]. L'ancien conseil de Slack (FEATURE_FLAGS=new_dash) est donc périmé [1].\n\nIl faut maintenant lancer `make dev-flags FLAGS=dashboards_v2` pour activer le flag sur le workspace de dev [2]. L'API doit tourner pendant cette commande, puis rechargez la page à fond [3]. Vous pouvez vérifier le résultat avec `curl localhost:8000/api/flags` [3].\n\nSi les tuiles restent vides, les données de seed sont un peu maigres [1], et un workspace sans événements affiche une grille vide [5].",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1669,
+    "sortie": 290,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.006238
+  },
+  "cout": 0.006238,
+  "latenceMs": 2403,
+  "fournisseur": "Claude Platform on AWS"
+}

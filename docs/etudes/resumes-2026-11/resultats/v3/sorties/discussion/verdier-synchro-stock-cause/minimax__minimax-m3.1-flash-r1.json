@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:58.940Z",
+  "reponse": "Ça venait de la synchronisation du stock multi-emplacements : depuis l’ajout de l’emplacement « Showroom » dans Shopify le 3/11, le script `sync-stock` ne mettait à jour que « Entrepôt Vénissieux ». Le showroom conservait son ancien stock et Shopify additionnait les deux emplacements, donc la boutique affichait des quantités qui n’existaient plus [3][6].\n\nC’est réparé : la PR #87 met désormais à jour les deux emplacements, avec des tests (41 tests passés), et elle a été fusionnée et déployée le 13/11 ; tout le catalogue a été recontrôlé [3][6]. Le SAV avait remboursé les commandes annulées, avec dédommagement sur la prochaine commande [13][12].\n\nImpact : 7 commandes touchées entre le 3 et le 12/11, avec la liste conservée par Lucie [6]. Aucun nouveau cas signalé depuis le correctif [6]. En revanche, un contrôle quotidien des écarts Shopify / entrepôt (PR #91) est encore en brouillon, pas en production, et les corrections demandées sur cette PR restent à faire [11][6].",
+  "rendu": "Ça venait de la synchronisation du stock multi-emplacements : depuis l’ajout de l’emplacement « Showroom » dans Shopify le 3/11, le script `sync-stock` ne mettait à jour que « Entrepôt Vénissieux ». Le showroom conservait son ancien stock et Shopify additionnait les deux emplacements, donc la boutique affichait des quantités qui n’existaient plus [3][6].\n\nC’est réparé : la PR #87 met désormais à jour les deux emplacements, avec des tests (41 tests passés), et elle a été fusionnée et déployée le 13/11 ; tout le catalogue a été recontrôlé [3][6]. Le SAV avait remboursé les commandes annulées, avec dédommagement sur la prochaine commande [13][12].\n\nImpact : 7 commandes touchées entre le 3 et le 12/11, avec la liste conservée par Lucie [6]. Aucun nouveau cas signalé depuis le correctif [6]. En revanche, un contrôle quotidien des écarts Shopify / entrepôt (PR #91) est encore en brouillon, pas en production, et les corrections demandées sur cette PR restent à faire [11][6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18200,
+    "sortie": 602,
+    "reflexion": 115,
+    "cache": 8192,
+    "cout": 0.0019852800000000003
+  },
+  "latenceMs": 4570,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"clients commander meuble indisponible stock購 achat exceeded inventory\"}",
+    "chercher {\"requete\":\"panier commande produit unavailable out of stock overselling incident\"}",
+    "chercher {\"requete\":\"incident disponibilité produit commande furniture réclamation client\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}",
+    "lire {\"sourceId\":\"github-boutique-pr-91\"}",
+    "lire {\"sourceId\":\"zendesk-4812-buffet-annule\"}"
+  ],
+  "cout": 0.0019852800000000003
+}

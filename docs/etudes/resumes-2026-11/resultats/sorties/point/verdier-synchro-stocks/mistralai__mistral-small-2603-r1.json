@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:37:19.966Z",
+  "reponse": "## What you did\n\n- **Corrigé le bug critique de sync-stock** : la PR #57 d’Hugo, relue et complétée avec les 17 références manquantes et un avertissement pour les correspondances manquantes, a été fusionnée hier. Le script ne remet plus en stock des variantes déjà en rupture [1][4].\n- **Ajouté un mode --dry-run** : le script `sync-stock` peut maintenant comparer les stocks entrepôt/Shopify sans rien écrire, et génère un rapport d’écarts (`rapports/ecarts-2026-11-17-karim.csv`). La PR #58 est ouverte [1].\n- **Préparé le fichier pour Karim** : le rapport des 14 écarts détectés sur le fichier du 17/11 est prêt, trié par écart décroissant, avec une colonne à remplir pour le comptage réel [1].\n- **Transmis l’information à Lucie** : les trois clients Saône chêne ont été prévenus de la rupture et de la livraison mi-janvier [2][9].\n\n## What changed\n\n- **Tickets résolus** : le bug de la Saône (#55) est corrigé par #57, fusionnée hier [3][4].\n- **Nouvelle PR ouverte** : #58 (mode --dry-run) est en attente de relecture et de fusion [5].\n\n## What is still open\n\n- **PR #58 en attente** : le mode --dry-run n’est pas encore fusionné. Hugo est absent aujourd’hui, il faudra relancer la relecture demain [5].\n- **Comptage physique en cours** : Karim doit encore faire le décompte réel des écarts jeudi matin et te renvoyer les chiffres [7].",
+  "rendu": "## What you did\n\n- **Corrigé le bug critique de sync-stock** : la PR #57 d’Hugo, relue et complétée avec les 17 références manquantes et un avertissement pour les correspondances manquantes, a été fusionnée hier. Le script ne remet plus en stock des variantes déjà en rupture [1][4].\n- **Ajouté un mode --dry-run** : le script `sync-stock` peut maintenant comparer les stocks entrepôt/Shopify sans rien écrire, et génère un rapport d’écarts (`rapports/ecarts-2026-11-17-karim.csv`). La PR #58 est ouverte [1].\n- **Préparé le fichier pour Karim** : le rapport des 14 écarts détectés sur le fichier du 17/11 est prêt, trié par écart décroissant, avec une colonne à remplir pour le comptage réel [1].\n- **Transmis l’information à Lucie** : les trois clients Saône chêne ont été prévenus de la rupture et de la livraison mi-janvier [2][9].\n\n## What changed\n\n- **Tickets résolus** : le bug de la Saône (#55) est corrigé par #57, fusionnée hier [3][4].\n- **Nouvelle PR ouverte** : #58 (mode --dry-run) est en attente de relecture et de fusion [5].\n\n## What is still open\n\n- **PR #58 en attente** : le mode --dry-run n’est pas encore fusionné. Hugo est absent aujourd’hui, il faudra relancer la relecture demain [5].\n- **Comptage physique en cours** : Karim doit encore faire le décompte réel des écarts jeudi matin et te renvoyer les chiffres [7].",
+  "mesures": {
+    "mots": 205,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5278,
+    "sortie": 1096,
+    "reflexion": 695,
+    "cache": 1408,
+    "cout": 0.001385142
+  },
+  "cout": 0.001385142,
+  "latenceMs": 7824,
+  "fournisseur": "Mistral"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:36.682Z",
+  "reponse": "Yes, Fernhill Bank's SSO go-live for Dec 1 is still targeted, but it's currently flagged as at risk. Here's the picture:\n\n**Where we stand**\n- SAML SSO scope is contractual: SP- and IdP-initiated login, signed assertions (SHA-256 minimum), JIT provisioning with default role Viewer [2]\n- SP-initiated login is built and merged behind the `saml_sso` flag [9], IdP-initiated login and the metadata-upload endpoint are committed too [12]\n- Fernhill's metadata is loaded on staging and **IdP-initiated login works** [1][11]\n\n**The blocker**\n- Fernhill's IdP signs assertions with RSA-SHA1, which our platform rejects (SHA-256 minimum, no per-tenant override) [1][9][11]. Helen Marsh (IAM Lead) needs to switch them to RSA-SHA256 via her change board on **Nov 24** [11][1]\n- The team decided not to accept SHA-1 even temporarily (SOC 2 / pen-test risk), and Sam Ortiz will inform Fernhill that Dec 1 is at risk — \"no surprises for a bank\" [11]\n\n**What's left before it works**\n1. Fernhill switches signing to RSA-SHA256 (waiting on their Nov 24 change board) [1][11]\n2. End-to-end login test, planned for the week of Nov 23 — it can't be done until the above is fixed [1][2]\n3. Admin SSO settings page copy needs Priya's review [2]\n4. Don't schedule anything disruptive near the go-live: the Postgres cutover was deliberately pushed to Dec 5 so it lands after Dec 1 [10][5]\n\nShort version: on track by contract, but the date depends entirely on Fernhill completing the SHA-256 change on Nov 24 and the end-to-end test passing that week [1][11].",
+  "rendu": "Yes, Fernhill Bank's SSO go-live for Dec 1 is still targeted, but it's currently flagged as at risk. Here's the picture:\n\n**Where we stand**\n- SAML SSO scope is contractual: SP- and IdP-initiated login, signed assertions (SHA-256 minimum), JIT provisioning with default role Viewer [2]\n- SP-initiated login is built and merged behind the `saml_sso` flag [9], IdP-initiated login and the metadata-upload endpoint are committed too [12]\n- Fernhill's metadata is loaded on staging and **IdP-initiated login works** [1][11]\n\n**The blocker**\n- Fernhill's IdP signs assertions with RSA-SHA1, which our platform rejects (SHA-256 minimum, no per-tenant override) [1][9][11]. Helen Marsh (IAM Lead) needs to switch them to RSA-SHA256 via her change board on **Nov 24** [11][1]\n- The team decided not to accept SHA-1 even temporarily (SOC 2 / pen-test risk), and Sam Ortiz will inform Fernhill that Dec 1 is at risk — \"no surprises for a bank\" [11]\n\n**What's left before it works**\n1. Fernhill switches signing to RSA-SHA256 (waiting on their Nov 24 change board) [1][11]\n2. End-to-end login test, planned for the week of Nov 23 — it can't be done until the above is fixed [1][2]\n3. Admin SSO settings page copy needs Priya's review [2]\n4. Don't schedule anything disruptive near the go-live: the Postgres cutover was deliberately pushed to Dec 5 so it lands after Dec 1 [10][5]\n\nShort version: on track by contract, but the date depends entirely on Fernhill completing the SHA-256 change on Nov 24 and the end-to-end test passing that week [1][11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7665,
+    "sortie": 509,
+    "reflexion": 63,
+    "cache": 0,
+    "cout": 0.00135257
+  },
+  "latenceMs": 9807,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"bank staff login December 1st company accounts\"}",
+    "chercher {\"requete\":\"\\\"December 1\\\" SSO login deployment bank\"}"
+  ],
+  "cout": 0.00135257
+}

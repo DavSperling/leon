@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:27:06.827Z",
+  "reponse": "## Où j'en suis\nThe 12/11 incident replay is nearly done on branch lior/replay-12-11. PR #233 was approved by Daniel and merged, and the real replay ran successfully: all 18,442,107 events were produced into events.replay.v3 (3,118 schema-v2 lines went to the rejects file). The aggregator backfill job for 2026-11-12 was started at 08:57 UTC and was at ~61% when last checked, with ClickHouse events_v3 at 14.9M rows vs ~20.5M expected. Rachel told Fernhill and Orbitly the data is back by Thursday; Orbitly is explicitly asking for confirmation for a board report. (source: ses-rp-2, r2-01, r2-04, r2-06, src-zendesk-orbitly)\n\n- [en-cours] Aggregator backfill for 2026-11-12, job backfill-2026-11-12, was at 61% (hours 00–14 done) with events_v3 at 14.9M rows vs ~20.5M expected (source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to finish, then compare ClickHouse counts hour by hour against the incident window with 1% tolerance (source: ses-rp-2, r2-07, r2-10)\n- [prochaine-étape] Only after the counts match, close the incident — it must stay open until then (source: ses-rp-2, r2-07)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit); 5k batches work, and the memory limit must not be raised because Noa capped the namespace quota (source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [décision] Replay everything into events.replay.v3, never produce directly to events.v3 (source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 from the fork (dedup key length 128); Daniel owns the CI check as the official fix, no other fix goes in for this incident (source: r2-09, src-slack-incident, src-pr241-fork)",
+  "rendu": "## Où j'en suis\nThe 12/11 incident replay is nearly done on branch lior/replay-12-11. PR #233 was approved by Daniel and merged, and the real replay ran successfully: all 18,442,107 events were produced into events.replay.v3 (3,118 schema-v2 lines went to the rejects file). The aggregator backfill job for 2026-11-12 was started at 08:57 UTC and was at ~61% when last checked, with ClickHouse events_v3 at 14.9M rows vs ~20.5M expected. Rachel told Fernhill and Orbitly the data is back by Thursday; Orbitly is explicitly asking for confirmation for a board report. (de: toi, connecteur, agent; source: ses-rp-2, r2-01, r2-04, r2-06, src-zendesk-orbitly)\n\n- [en-cours] Aggregator backfill for 2026-11-12, job backfill-2026-11-12, was at 61% (hours 00–14 done) with events_v3 at 14.9M rows vs ~20.5M expected (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to finish, then compare ClickHouse counts hour by hour against the incident window with 1% tolerance (de: toi, agent; source: ses-rp-2, r2-07, r2-10)\n- [prochaine-étape] Only after the counts match, close the incident — it must stay open until then (de: toi, agent; source: ses-rp-2, r2-07)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit); 5k batches work, and the memory limit must not be raised because Noa capped the namespace quota (de: toi, connecteur, agent; source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [décision] Replay everything into events.replay.v3, never produce directly to events.v3 (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 from the fork (dedup key length 128); Daniel owns the CI check as the official fix, no other fix goes in for this incident (de: toi, connecteur; source: r2-09, src-slack-incident, src-pr241-fork)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1799,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3775,
+    "sortie": 539,
+    "reflexion": 11,
+    "cache": 0,
+    "cout": 0.00076025
+  },
+  "cout": 0.00076025,
+  "latenceMs": 3153,
+  "fournisseur": "Particle AI"
+}

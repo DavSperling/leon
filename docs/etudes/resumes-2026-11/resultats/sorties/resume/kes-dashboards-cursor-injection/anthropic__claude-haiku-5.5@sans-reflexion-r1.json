@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:08.300Z",
+  "reponse": "## Où j'en suis\nLa session a produit la grille de dashboards v2 (drag et resize avec react-grid-layout), la persistance du layout côté serveur via PUT /dashboards/:id/layout avec repli localStorage, et un dimensionnement des widgets par ResizeObserver compatible iOS 15 (les container queries ont été abandonnées). Le renommage DashboardTile → WidgetCard, le lint, le typecheck et la correction du build Storybook sont faits. La PR #418 est ouverte en draft. Elle attend la revue UX de Priya et l'activation du flag dashboards_v2 pour le workspace Zest, prévue pour le mardi 24.\n\n- [en-cours] Revue UX de Priya sur iPad, à faire avant la démo Zest du mardi 24\n- [prochaine-étape] Activer dashboards_v2 uniquement pour le workspace Zest dans l'admin des flags (config, sans code)\n- [prochaine-étape] Revérifier le dimensionnement sur BrowserStack (iOS 15.7, iPad 9e génération)\n- [essai-raté] Container queries : Safari iOS 15 les ignore sans erreur, les widgets ne changeaient pas de taille\n- [décision] Garder les dashboards v1 disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: t15)\n- [décision] Ne pas utiliser de container queries, un seul système de dimensionnement via ResizeObserver (source: t09)",
+  "rendu": "## Où j'en suis\nLa session a produit la grille de dashboards v2 (drag et resize avec react-grid-layout), la persistance du layout côté serveur via PUT /dashboards/:id/layout avec repli localStorage, et un dimensionnement des widgets par ResizeObserver compatible iOS 15 (les container queries ont été abandonnées). Le renommage DashboardTile → WidgetCard, le lint, le typecheck et la correction du build Storybook sont faits. La PR #418 est ouverte en draft. Elle attend la revue UX de Priya et l'activation du flag dashboards_v2 pour le workspace Zest, prévue pour le mardi 24.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Revue UX de Priya sur iPad, à faire avant la démo Zest du mardi 24\n- [prochaine-étape] Activer dashboards_v2 uniquement pour le workspace Zest dans l'admin des flags (config, sans code)\n- [prochaine-étape] Revérifier le dimensionnement sur BrowserStack (iOS 15.7, iPad 9e génération)\n- [essai-raté] Container queries : Safari iOS 15 les ignore sans erreur, les widgets ne changeaient pas de taille\n- [décision] Garder les dashboards v1 disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1259,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5098,
+    "sortie": 521,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007703
+  },
+  "cout": 0.0007703,
+  "latenceMs": 3274,
+  "fournisseur": "Claude Platform on AWS"
+}

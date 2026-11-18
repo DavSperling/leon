@@ -1,0 +1,24 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-reponse": 0.5,
+    "f-geste": 1,
+    "f-reserve": 1,
+    "f-menace": 1,
+    "f-cause": 0.5,
+    "f-62": 1,
+    "f-antoine": 1
+  },
+  "interdits": {
+    "i-15": 0,
+    "i-qui-decide": 0,
+    "i-envoyee": 0,
+    "i-geste": 1,
+    "i-promeuble": 0
+  },
+  "contraires": [
+    "f-reponse"
+  ],
+  "premier": "f-cause",
+  "langueOk": true
+}

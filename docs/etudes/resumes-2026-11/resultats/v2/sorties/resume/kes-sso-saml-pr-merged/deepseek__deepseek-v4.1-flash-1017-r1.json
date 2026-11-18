@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:23:42.321Z",
+  "reponse": "## Où j'en suis\nThe Fernhill SAML ACS endpoint is finished: signature verification now runs on `signxml` (python3-saml was dropped), with hand-written checks for conditions, audience and subject confirmation (120 s skew), Redis replay protection, and attributes read only from the verified `signed_xml`. `saml_utils` moved to `api/auth/saml/verify.py`, ruff/mypy are clean and the test suite is green; PR #412 is merged into `main`.\n\n- [en-cours] Loading Fernhill's staging IdP metadata is still to do (listed as remaining on the agent's task list)\n- [prochaine-étape] Send Fernhill IT our staging SP metadata by Wednesday EOD, then the demo Thursday 10:00 New York; open the separate ticket for enforcing SSO / disabling password login\n- [essai-raté] python3-saml on the Alpine image: lxml wheel and system libxml2 versions clash in xmlsec, and building lxml from source also failed (no loadable xmlsec crypto module), so it was abandoned\n- [décision] Switch to signxml, remove python3-saml and xmlsec from the Dockerfile, write the condition checks with tests and only read from `signed_xml` (source: t08)\n- [décision] Use a 120 s clock skew (contract annex), and leave password login out of this PR (source: t12)\n- [décision] Merge neither with `--admin` nor `--auto`; the person pings Maya for review directly (source: t21)",
+  "rendu": "## Où j'en suis\nThe Fernhill SAML ACS endpoint is finished: signature verification now runs on `signxml` (python3-saml was dropped), with hand-written checks for conditions, audience and subject confirmation (120 s skew), Redis replay protection, and attributes read only from the verified `signed_xml`. `saml_utils` moved to `api/auth/saml/verify.py`, ruff/mypy are clean and the test suite is green; PR #412 is merged into `main`.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Loading Fernhill's staging IdP metadata is still to do (listed as remaining on the agent's task list)\n- [prochaine-étape] Send Fernhill IT our staging SP metadata by Wednesday EOD, then the demo Thursday 10:00 New York; open the separate ticket for enforcing SSO / disabling password login\n- [essai-raté] python3-saml on the Alpine image: lxml wheel and system libxml2 versions clash in xmlsec, and building lxml from source also failed (no loadable xmlsec crypto module), so it was abandoned\n- [décision] Switch to signxml, remove python3-saml and xmlsec from the Dockerfile, write the condition checks with tests and only read from `signed_xml` (source: t08)\n- [décision] Use a 120 s clock skew (contract annex), and leave password login out of this PR (source: t12)\n- [décision] Merge neither with `--admin` nor `--auto`; the person pings Maya for review directly (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1460,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4616,
+    "sortie": 765,
+    "reflexion": 419,
+    "cache": 0,
+    "cout": 0.00138168
+  },
+  "cout": 0.00138168,
+  "latenceMs": 2108,
+  "fournisseur": "Nebius"
+}

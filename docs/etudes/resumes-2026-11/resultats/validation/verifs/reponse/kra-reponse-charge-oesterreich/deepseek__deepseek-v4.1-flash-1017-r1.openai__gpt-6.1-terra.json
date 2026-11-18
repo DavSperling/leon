@@ -1,0 +1,21 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-huber": 0.5,
+    "f-mayr": 1,
+    "f-summe": 0,
+    "f-1211": 0.5
+  },
+  "interdits": {
+    "i-2639": 0,
+    "i-176": 0,
+    "i-tirol": 0,
+    "i-rueckruf": 0
+  },
+  "contraires": [
+    "f-huber",
+    "f-summe"
+  ],
+  "premier": null,
+  "langueOk": true
+}

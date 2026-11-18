@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:10:36.212Z",
+  "reponse": "## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and applied the same fix to the two other timing-dependent tests. [1]\n- You cleaned up `kestrel/auth` for ruff 0.8 and mypy: missing Issuer/Subject in assertions now raise a proper validation error instead of a 500, and you split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}` with a shim keeping old imports working. All shipped as PR #423. [1]\n\n## What changed\n- Maya approved and merged PR #418 (SAML signature verification) — it goes out with tonight's staging deploy, so the Wednesday deadline for the Fernhill walkthrough on Thursday is met. She left one non-blocking nit on an error message wording. [3]\n- Tom requested changes on #423: the module move and the lint fixes are mixed in a 1,900-line diff and he can't see the real changes. Split it into two PRs and he'll approve both today. [4]\n\n## What is still open\n- Split #423 into two PRs (cleanup vs module move) to unblock Tom's review. [4]\n- Move the SAML replay cache from in-memory TTLCache to Redis so a replayed assertion can't hit another pod — your planned task for today, roughly 40 lines using the existing client in `kestrel/cache.py`. [1]",
+  "rendu": "## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time instead of sleeping, and applied the same fix to the two other timing-dependent tests. [1]\n- You cleaned up `kestrel/auth` for ruff 0.8 and mypy: missing Issuer/Subject in assertions now raise a proper validation error instead of a 500, and you split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}` with a shim keeping old imports working. All shipped as PR #423. [1]\n\n## What changed\n- Maya approved and merged PR #418 (SAML signature verification) — it goes out with tonight's staging deploy, so the Wednesday deadline for the Fernhill walkthrough on Thursday is met. She left one non-blocking nit on an error message wording. [3]\n- Tom requested changes on #423: the module move and the lint fixes are mixed in a 1,900-line diff and he can't see the real changes. Split it into two PRs and he'll approve both today. [4]\n\n## What is still open\n- Split #423 into two PRs (cleanup vs module move) to unblock Tom's review. [4]\n- Move the SAML replay cache from in-memory TTLCache to Redis so a replayed assertion can't hit another pod — your planned task for today, roughly 40 lines using the existing client in `kestrel/cache.py`. [1]",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5559,
+    "sortie": 374,
+    "reflexion": 55,
+    "cache": 0,
+    "cout": 0.00506685
+  },
+  "cout": 0.00506685,
+  "latenceMs": 4058,
+  "fournisseur": "Decart"
+}

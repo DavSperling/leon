@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:22:37.344Z",
+  "reponse": "## What is still open\n- The Hearthly follow-up email to Nadia and Tom is finalized but unsent: Sofia's confirmation just changed it — CAD payouts are Q2 at the earliest (not Q1), and she asked you not to put a date in writing. The email needs that section rewritten before it goes out [1][6].\n- The SIG Lite questionnaire is due Monday Nov 23 and Hearthly won't keep you in the final round without it. You need to confirm Shira owns it and get it started — ~200 questions, the clock is tight [1][4].\n- Rachel's sign-off is now required for any discount above 10%, and you're proposing 15% for a 2-year commit. Talk to her before sending numbers to Hearthly [1][3].\n- The reference call is still TBD: Loomly and Pinecrest had payout delays, Tradewell isn't live — you planned to ask Rachel who you can put forward [1].\n\n## What changed\n- Nadia moved Hearthly's provider decision up to Wednesday Dec 2 (from Dec 4). Your mutual action plan dates working back from Dec 4 need adjusting — the Nov 30 pricing proposal and Dec 1 reference call are now very tight [4].\n- Rachel viewed your Hearthly discovery call in Gong, alongside her discount sign-off reminder [2][3].\n\n## What you did\n- Yesterday you prepped the full Hearthly follow-up after the discovery call: the email draft, a mutual action plan with dates from their Dec 4 decision, and the pricing math — you settled on 15% off the 0.38% scale tier (≈ $1.0M/year) rather than opening at 20%, knowing Rachel's stance [1].",
+  "rendu": "## What is still open\n- The Hearthly follow-up email to Nadia and Tom is finalized but unsent: Sofia's confirmation just changed it — CAD payouts are Q2 at the earliest (not Q1), and she asked you not to put a date in writing. The email needs that section rewritten before it goes out [1][6].\n- The SIG Lite questionnaire is due Monday Nov 23 and Hearthly won't keep you in the final round without it. You need to confirm Shira owns it and get it started — ~200 questions, the clock is tight [1][4].\n- Rachel's sign-off is now required for any discount above 10%, and you're proposing 15% for a 2-year commit. Talk to her before sending numbers to Hearthly [1][3].\n- The reference call is still TBD: Loomly and Pinecrest had payout delays, Tradewell isn't live — you planned to ask Rachel who you can put forward [1].\n\n## What changed\n- Nadia moved Hearthly's provider decision up to Wednesday Dec 2 (from Dec 4). Your mutual action plan dates working back from Dec 4 need adjusting — the Nov 30 pricing proposal and Dec 1 reference call are now very tight [4].\n- Rachel viewed your Hearthly discovery call in Gong, alongside her discount sign-off reminder [2][3].\n\n## What you did\n- Yesterday you prepped the full Hearthly follow-up after the discovery call: the email draft, a mutual action plan with dates from their Dec 4 decision, and the pricing math — you settled on 15% off the 0.38% scale tier (≈ $1.0M/year) rather than opening at 20%, knowing Rachel's stance [1].",
+  "mesures": {
+    "mots": 250,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3836,
+    "sortie": 429,
+    "reflexion": 63,
+    "cache": 0,
+    "cout": 0.00063192
+  },
+  "cout": 0.00063192,
+  "latenceMs": 6437,
+  "fournisseur": "River"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:29:29.008Z",
+  "reponse": "{\"n\": 10, \"titre\": \"Postmortem \\u2013 ingest outage 12 Nov\", \"debut\": \"2026-11-16T16:00\", \"fin\": \"2026-11-16T17:00\", \"avec\": \"Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim\"}\n{\"n\": 15, \"titre\": \"Interview Yael Mizrahi\", \"debut\": \"2026-11-17T15:00\", \"fin\": \"2026-11-17T16:00\", \"avec\": \"Daniel Levi\"}\n{\"n\": 5, \"titre\": \"Senior SRE interview \\u2013 Ben Carter\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T10:00\", \"avec\": \"Ben Carter\"}\n{\"n\": 13, \"titre\": \"Lumenstack x Kestrel \\u2013 Postgres 17 upgrade review\", \"debut\": \"2026-11-19T18:30\", \"fin\": \"2026-11-19T19:15\", \"avec\": \"Grace Whitfield, Daniel Levi\"}",
+  "rendu": "2026-11-16T16:00→2026-11-16T17:00 Postmortem – ingest outage 12 Nov (avec Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim)\n2026-11-17T15:00→2026-11-17T16:00 Interview Yael Mizrahi (avec Daniel Levi)\n2026-11-19T18:30→2026-11-19T19:15 Lumenstack x Kestrel – Postgres 17 upgrade review (avec Grace Whitfield, Daniel Levi)\n2026-11-20T09:00→2026-11-20T10:00 Senior SRE interview – Ben Carter (avec Ben Carter)",
+  "mesures": {
+    "trouves": 4,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "2026-11-16T16:00 Postmortem – ingest outage 12 Nov | 2026-11-17T15:00 Interview Yael Mizrahi | 2026-11-19T18:30 Lumenstack x Kestrel – Postgres 17 upgrade review | 2026-11-20T09:00 Senior SRE interview – Ben Carter",
+    "manques": "2026-11-16T10:00 pg_upgrade dry run with Daniel | 2026-11-16T15:00 Postmortem – ingest outage 12 Nov | 2026-11-17T14:00 Interview Yael Mizrahi – system design | 2026-11-19T17:30 Lumenstack – Postgres 17 upgrade review | 2026-11-20T15:00 Interview Ben Carter – Senior SRE | 2026-11-22T09:00 PG17 cutover – go/no-go planning",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3259,
+    "sortie": 316,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0017677
+  },
+  "cout": 0.0017677,
+  "latenceMs": 1562,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:29.335Z",
+  "reponse": "D'après les derniers éléments, les 25 premiers plateaux Saône arrivent à l'entrepôt le 1er décembre [1][2], et les tables seront expédiables à partir du 3 décembre, après deux jours de montage et d'emballage [2]. Une précommande avec cette date doit ouvrir jeudi [5]. Les 15 plateaux suivants sont prévus mi-décembre, semaine du 14 [1]. La note de rupture du 10 novembre annonçait plutôt un retour fin novembre, à confirmer [4]. Pour la chêne clair, un ticket client mentionne une livraison sous 6 semaines environ [3].",
+  "rendu": "D'après les derniers éléments, les 25 premiers plateaux Saône arrivent à l'entrepôt le 1er décembre [1][2], et les tables seront expédiables à partir du 3 décembre, après deux jours de montage et d'emballage [2]. Une précommande avec cette date doit ouvrir jeudi [5]. Les 15 plateaux suivants sont prévus mi-décembre, semaine du 14 [1]. La note de rupture du 10 novembre annonçait plutôt un retour fin novembre, à confirmer [4]. Pour la chêne clair, un ticket client mentionne une livraison sous 6 semaines environ [3].",
+  "mesures": {
+    "mots": 85,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1549,
+    "sortie": 225,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005348
+  },
+  "cout": 0.005348,
+  "latenceMs": 2263,
+  "fournisseur": "Amazon Bedrock"
+}

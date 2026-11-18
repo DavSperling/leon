@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:12.021Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Fernhill dashboards review – prep\", \"debut\": \"2026-11-22T18:30\", \"fin\": \"2026-11-22T19:00\", \"avec\": \"Ethan Brooks, Priya Shah\"}\n{\"n\": 2, \"titre\": \"Fernhill go-live readiness review\", \"debut\": \"2026-11-30T10:00\", \"fin\": \"2026-11-30T11:00\", \"avec\": \"Maya Cohen, Priya Shah, Daniel Levi, Noa Friedman, Sam Ortiz\"}\n{\"n\": 4, \"titre\": \"Fernhill SSO demo\", \"debut\": \"2026-11-20T10:00\", \"fin\": \"2026-11-20T11:00\", \"avec\": \"Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant\"}\n{\"n\": 5, \"titre\": \"Product Loop Summit (livestream)\", \"debut\": \"2026-11-18T12:00\", \"fin\": \"2026-11-18T17:00\"}\n{\"n\": 10, \"titre\": \"Zest x Kestrel – customer interview (dashboards)\", \"debut\": \"2026-11-18T14:00\", \"fin\": \"2026-11-18T14:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 7, \"titre\": \"Customer interview (45 min) avec Ana Ruiz\", \"debut\": \"2026-11-19T11:30\", \"fin\": \"2026-11-19T12:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 13, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T11:00\", \"fin\": \"2026-11-17T12:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 23, \"titre\": \"Dîner avec l'équipe Northfold Studio (Lark & Lantern)\", \"debut\": \"2026-11-19T19:30\", \"avec\": \"Jonah Reyes\"}",
+  "rendu": "2026-11-17T11:00→2026-11-17T12:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T12:00→2026-11-18T17:00 Product Loop Summit (livestream)\n2026-11-18T14:00→2026-11-18T14:45 Zest x Kestrel – customer interview (dashboards) (avec Hannah Wolfe, Leah Turner)\n2026-11-19T11:30→2026-11-19T12:15 Customer interview (45 min) avec Ana Ruiz (avec Ana Ruiz)\n2026-11-19T19:30 Dîner avec l'équipe Northfold Studio (Lark & Lantern) (avec Jonah Reyes)\n2026-11-20T10:00→2026-11-20T11:00 Fernhill SSO demo (avec Maya Cohen, Priya Shah, Daniel Levi, Oliver Grant)\n2026-11-22T18:30→2026-11-22T19:00 Fernhill dashboards review – prep (avec Ethan Brooks, Priya Shah)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "2026-11-17T11:00 Dashboards redesign – design review | 2026-11-18T12:00 Product Loop Summit (livestream) | 2026-11-18T14:00 Zest x Kestrel – customer interview (dashboards) | 2026-11-19T11:30 Customer interview (45 min) avec Ana Ruiz | 2026-11-19T19:30 Dîner avec l'équipe Northfold Studio (Lark & Lantern) | 2026-11-20T10:00 Fernhill SSO demo | 2026-11-22T18:30 Fernhill dashboards review – prep",
+    "manques": "2026-11-17T17:00 Dashboards redesign – design review | 2026-11-18T15:30 Coffee with Lior | 2026-11-18T21:00 Zest Grocers – dashboards feedback interview | 2026-11-19T17:30 Customer interview – Ana Ruiz (Orbitly) | 2026-11-20T01:30 Dinner with Northfold Studio | 2026-11-20T16:00 Fernhill – SSO demo",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4516,
+    "sortie": 669,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007861
+  },
+  "cout": 0.0007861,
+  "latenceMs": 2739,
+  "fournisseur": "Claude Platform on AWS"
+}

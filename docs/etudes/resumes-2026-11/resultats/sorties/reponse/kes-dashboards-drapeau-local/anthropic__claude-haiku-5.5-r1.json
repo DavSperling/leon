@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:31:58.520Z",
+  "reponse": "Pour activer les dashboards v2 en local, lance `make dev-flags FLAGS=dashboards_v2` pendant que l'API tourne, puis recharge la page [3][2]. Le flag s'appelle désormais dashboards_v2 et non new_dash, et FEATURE_FLAGS dans .env.local est ignoré [2]. Un message Slack plus ancien recommande encore FEATURE_FLAGS=new_dash, mais il est antérieur à ce changement et n'est plus valable [1][2]. Pour vérifier, utilise `curl localhost:8000/api/flags` [3].",
+  "rendu": "Pour activer les dashboards v2 en local, lance `make dev-flags FLAGS=dashboards_v2` pendant que l'API tourne, puis recharge la page [3][2]. Le flag s'appelle désormais dashboards_v2 et non new_dash, et FEATURE_FLAGS dans .env.local est ignoré [2]. Un message Slack plus ancien recommande encore FEATURE_FLAGS=new_dash, mais il est antérieur à ce changement et n'est plus valable [1][2]. Pour vérifier, utilise `curl localhost:8000/api/flags` [3].",
+  "mesures": {
+    "mots": 61,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1669,
+    "sortie": 557,
+    "reflexion": 349,
+    "cache": 0,
+    "cout": 0.0004454
+  },
+  "cout": 0.0004454,
+  "latenceMs": 3241,
+  "fournisseur": "Claude Platform on AWS"
+}

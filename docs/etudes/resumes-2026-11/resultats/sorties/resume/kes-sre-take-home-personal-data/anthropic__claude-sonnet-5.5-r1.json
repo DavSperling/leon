@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:08.348Z",
+  "reponse": "## Où j'en suis\nLe take-home SRE (3 h) est prêt dans son propre dépôt privé `kestrel-analytics/sre-take-home` : compose avec flaky-svc construit depuis les sources (arm64 et amd64), alerte cassée, fuite de connexions, politique IAM trop large, et grille d'évaluation sur 4 axes (0–3). `hiring/` a été retiré de la branche infra (non commité) et aucune PR n'a été ouverte. Rien n'a été envoyé au candidat.\n\n- [prochaine-étape] Après l'appel de jeudi, envoyer soi-même l'exercice au candidat et l'inviter comme collaborateur sur le dépôt.\n- [prochaine-étape] Supprimer plus tard la branche `maya/sre-take-home` de l'infra.\n- [essai-raté] Build multi-arch avec `--load` : impossible de charger une liste de manifestes dans le démon local. Remplacé par un build depuis les sources dans compose.\n- [décision] Pas de Kubernetes, 3 h maximum, Terraform et compose uniquement (source: t03)\n- [décision] Compose construit flaky-svc depuis les sources, sans image préconstruite (source: t06)\n- [décision] Pas de seuil de réussite : les scores nourrissent la décision du panel, Noa est 2e relectrice (source: t10)\n- [décision] Exercice dans un dépôt privé séparé, aucune PR dans infra (source: t14)\n- [décision] Aucun e-mail envoyé par l'agent ; la personne envoie elle-même après l'appel (source: t16)",
+  "rendu": "## Où j'en suis\nLe take-home SRE (3 h) est prêt dans son propre dépôt privé `kestrel-analytics/sre-take-home` : compose avec flaky-svc construit depuis les sources (arm64 et amd64), alerte cassée, fuite de connexions, politique IAM trop large, et grille d'évaluation sur 4 axes (0–3). `hiring/` a été retiré de la branche infra (non commité) et aucune PR n'a été ouverte. Rien n'a été envoyé au candidat.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Après l'appel de jeudi, envoyer soi-même l'exercice au candidat et l'inviter comme collaborateur sur le dépôt.\n- [prochaine-étape] Supprimer plus tard la branche `maya/sre-take-home` de l'infra.\n- [essai-raté] Build multi-arch avec `--load` : impossible de charger une liste de manifestes dans le démon local. Remplacé par un build depuis les sources dans compose.\n- [décision] Pas de Kubernetes, 3 h maximum, Terraform et compose uniquement (source: t03)\n- [décision] Compose construit flaky-svc depuis les sources, sans image préconstruite (source: t06)\n- [décision] Pas de seuil de réussite : les scores nourrissent la décision du panel, Noa est 2e relectrice (source: t10)\n- [décision] Exercice dans un dépôt privé séparé, aucune PR dans infra (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1283,
+    "decisions": 4,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5097,
+    "sortie": 561,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015804
+  },
+  "cout": 0.015804,
+  "latenceMs": 4749,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:09:48.397Z",
+  "reponse": "**What broke (Thursday, Nov 12):** The ingest v2.14.0 deploy at 08:47 UTC raised the default `max_batch_bytes` from 1 MB to 10 MB (PR ingest#412), while ingest-worker pods run with a 512 Mi memory limit — so the workers OOM-looped and the Kafka consumer lag climbed to over 500k messages [3][9]. It was a SEV2; dashboards ran stale from 08:47 to 12:27 UTC (3h40, peaking ~3h40 behind) [1][3][7]. It was not the Kafka brokers (disk was fine at 62%) [3].\n\n**Data loss:** No. Events kept arriving in Kafka and were just processed late; reconciliation on Nov 13 confirmed per-workspace event counts match Kafka offsets for 08:00–13:00 UTC — nothing lost, only delayed [1][3].\n\n**What we're changing:**\n- Revert `max_batch_bytes` default to 1 MB, plus a memory guard: the batcher refuses any batch larger than 25% of the container memory limit and logs a warning (bulk import keeps 10 MB via explicit config on the 2 Gi pool) — PR ingest#419 [6].\n- A new alert to on-call when ingest-events consumer lag exceeds 5 minutes of events (KES-431, due Nov 20) [10].\n- Config changes will go to a small canary group first [2].\n\nFull details are in Lior's postmortem [1]. One heads-up: Orbitly is claiming an SLA service credit for the incident under their custom MSA [2][7].",
+  "rendu": "**What broke (Thursday, Nov 12):** The ingest v2.14.0 deploy at 08:47 UTC raised the default `max_batch_bytes` from 1 MB to 10 MB (PR ingest#412), while ingest-worker pods run with a 512 Mi memory limit — so the workers OOM-looped and the Kafka consumer lag climbed to over 500k messages [3][9]. It was a SEV2; dashboards ran stale from 08:47 to 12:27 UTC (3h40, peaking ~3h40 behind) [1][3][7]. It was not the Kafka brokers (disk was fine at 62%) [3].\n\n**Data loss:** No. Events kept arriving in Kafka and were just processed late; reconciliation on Nov 13 confirmed per-workspace event counts match Kafka offsets for 08:00–13:00 UTC — nothing lost, only delayed [1][3].\n\n**What we're changing:**\n- Revert `max_batch_bytes` default to 1 MB, plus a memory guard: the batcher refuses any batch larger than 25% of the container memory limit and logs a warning (bulk import keeps 10 MB via explicit config on the 2 Gi pool) — PR ingest#419 [6].\n- A new alert to on-call when ingest-events consumer lag exceeds 5 minutes of events (KES-431, due Nov 20) [10].\n- Config changes will go to a small canary group first [2].\n\nFull details are in Lior's postmortem [1]. One heads-up: Orbitly is claiming an SLA service credit for the incident under their custom MSA [2][7].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6961,
+    "sortie": 421,
+    "reflexion": 34,
+    "cache": 1536,
+    "cout": 0.006400394
+  },
+  "latenceMs": 4377,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident broke\"}",
+    "chercher {\"requete\":\"event pipeline data loss customer\"}"
+  ],
+  "cout": 0.006400394
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:41.457Z",
+  "reponse": "Le dossier MaPrimeRénov' de Peltier (Vertou) est en instruction : le devis a été signé le 16/11, puis le dossier déposé le 17/11 avec accusé de réception [1]. Un suivi plus ancien, du 10/11, indiquait encore un devis non signé, il est donc dépassé [1]. Les travaux sont prévus le 27/11 [1][4]. Selon un rappel sur Slack, les travaux peuvent commencer après le dépôt, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. Odile Peltier demande justement si elle peut commencer sans attendre la réponse [2].",
+  "rendu": "Le dossier MaPrimeRénov' de Peltier (Vertou) est en instruction : le devis a été signé le 16/11, puis le dossier déposé le 17/11 avec accusé de réception [1]. Un suivi plus ancien, du 10/11, indiquait encore un devis non signé, il est donc dépassé [1]. Les travaux sont prévus le 27/11 [1][4]. Selon un rappel sur Slack, les travaux peuvent commencer après le dépôt, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. Odile Peltier demande justement si elle peut commencer sans attendre la réponse [2].",
+  "mesures": {
+    "mots": 89,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1535,
+    "sortie": 986,
+    "reflexion": 756,
+    "cache": 0,
+    "cout": 0.0006465
+  },
+  "cout": 0.0006465,
+  "latenceMs": 6082,
+  "fournisseur": "Google"
+}

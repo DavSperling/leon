@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:58.577Z",
+  "reponse": "## Où j'en suis\nIntégration du client TransAlp avec authentification OAuth2 et stockage de jeton en mémoire, ajout du paramètre d'étiquettes PDF et mise à jour de `choix.ts`. Lyon et Paris sous les 30 kg sont routés vers TransAlp, tandis que tous les colis plus lourds et les autres zones conservent Rapidis. La PR #91 est ouverte en draft et attend le feu vert de Julien pour toute activation en production.\n\n- [en-cours] Client TransAlp fonctionnel en sandbox et logique de routage pondérée active.\n- [prochaine-étape] Demander au service technique TransAlp la disponibilité du format ZPL en production.\n- [essai-raté] Exécution de la requête ZPL qui retourne une erreur sandbox refusant ce format.\n- [décision] Maintien de Rapidis en secours jusqu'à",
+  "rendu": "## Où j'en suis\nIntégration du client TransAlp avec authentification OAuth2 et stockage de jeton en mémoire, ajout du paramètre d'étiquettes PDF et mise à jour de `choix.ts`. Lyon et Paris sous les 30 kg sont routés vers TransAlp, tandis que tous les colis plus lourds et les autres zones conservent Rapidis. La PR #91 est ouverte en draft et attend le feu vert de Julien pour toute activation en production.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] Client TransAlp fonctionnel en sandbox et logique de routage pondérée active.\n- [prochaine-étape] Demander au service technique TransAlp la disponibilité du format ZPL en production.\n- [essai-raté] Exécution de la requête ZPL qui retourne une erreur sandbox refusant ce format.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 817,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3640,
+    "sortie": 4000,
+    "reflexion": 3803,
+    "cache": 0,
+    "cout": 0.0006292
+  },
+  "cout": 0.0006292,
+  "latenceMs": 40439,
+  "fournisseur": "Alibaba"
+}

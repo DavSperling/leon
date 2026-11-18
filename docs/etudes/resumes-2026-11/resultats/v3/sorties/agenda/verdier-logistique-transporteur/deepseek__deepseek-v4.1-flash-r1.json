@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:01:56.138Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T14:00 Réunion de lancement TransAlp | 2026-11-18T11:30 Réunion soldes d'hiver – logistique | 2026-11-18T16:00 Visio Têxteis Douro – mousses et tissus | 2026-11-19T09:00 Point téléphonique rupture table Saône | 2026-11-19T16:00 Appel Boutique Érable & Cie – export Québec | 2026-11-20T12:30 Déjeuner avec Bruno Ferrand (TransAlp)",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 2791,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 512,
+    "cout": 0.004405941
+  },
+  "cout": 0.004405941,
+  "latenceMs": 32197,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:26:15.431Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp OAuth2 et les choix de transporteur sont implémentés et testés : Lyon/Paris → TransAlp, colis de plus de 30 kg → Rapidis, le reste → Rapidis. L’intégration reste en sandbox, les étiquettes sont en PDF. La PR #91 est ouverte en brouillon ; `pnpm lint` et les tests transporteurs passent.\n\n- [prochaine-étape] Demander à Marc si le ZPL est disponible en production ; Julien décidera du passage en production.\n- [décision] Garder Rapidis en secours jusqu’à la fin des soldes et lui confier les colis de plus de 30 kg, même à Lyon ou Paris (source: t13)\n- [décision] Utiliser le PDF en attendant la réponse sur le ZPL (source: t09)\n- [décision] Ne pas brancher la production sans décision de Julien (source: t15)",
+  "rendu": "## Où j'en suis\nLe client TransAlp OAuth2 et les choix de transporteur sont implémentés et testés : Lyon/Paris → TransAlp, colis de plus de 30 kg → Rapidis, le reste → Rapidis. L’intégration reste en sandbox, les étiquettes sont en PDF. La PR #91 est ouverte en brouillon ; `pnpm lint` et les tests transporteurs passent.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [prochaine-étape] Demander à Marc si le ZPL est disponible en production ; Julien décidera du passage en production.\n- [décision] Garder Rapidis en secours jusqu’à la fin des soldes et lui confier les colis de plus de 30 kg, même à Lyon ou Paris (source: t13)\n- [décision] Utiliser le PDF en attendant la réponse sur le ZPL (source: t09)\n- [décision] Ne pas brancher la production sans décision de Julien (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 860,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3204,
+    "sortie": 211,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000505925
+  },
+  "cout": 0.000505925,
+  "latenceMs": 2756,
+  "fournisseur": "OpenAI"
+}

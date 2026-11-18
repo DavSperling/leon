@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:56:28.966Z",
+  "reponse": "## What is still open\n- Antoine attend l'export des ventes Shopify d'octobre pour la TVA avant jeudi, et tu lui as dit ok [1]. Rien dans tes sessions ne montre qu'il est parti : c'est pour demain.\n- Karim fait le comptage physique jeudi matin à l'entrepôt et doit te renvoyer les vrais chiffres des 14 écarts [5][7].\n\n## What changed\n- Hugo a fusionné #57 cet après-midi : la synchro de cette nuit tourne avec la correspondance exacte, et le ticket #55 (Saône affichée en stock) est traité par cette correction [3][4].\n- Lucie : les trois clients Saône acceptent une livraison mi-janvier [9].\n\n## What you did\n- Complété la table de correspondance de #57 avec les 17 références à finitions manquantes, ajouté un test et un avertissement pour les références sans correspondance [1][4].\n- Ajouté le mode `--dry-run` au script et sorti le rapport d'écarts du 17/11 (14 variantes), envoyé à Karim pour comptage [1][5]. La PR #58 n'a pas de relecteur : Hugo est à l'école aujourd'hui, elle reste donc à relire [1][5].",
+  "rendu": "## What is still open\n- Antoine attend l'export des ventes Shopify d'octobre pour la TVA avant jeudi, et tu lui as dit ok [1]. Rien dans tes sessions ne montre qu'il est parti : c'est pour demain.\n- Karim fait le comptage physique jeudi matin à l'entrepôt et doit te renvoyer les vrais chiffres des 14 écarts [5][7].\n\n## What changed\n- Hugo a fusionné #57 cet après-midi : la synchro de cette nuit tourne avec la correspondance exacte, et le ticket #55 (Saône affichée en stock) est traité par cette correction [3][4].\n- Lucie : les trois clients Saône acceptent une livraison mi-janvier [9].\n\n## What you did\n- Complété la table de correspondance de #57 avec les 17 références à finitions manquantes, ajouté un test et un avertissement pour les références sans correspondance [1][4].\n- Ajouté le mode `--dry-run` au script et sorti le rapport d'écarts du 17/11 (14 variantes), envoyé à Karim pour comptage [1][5]. La PR #58 n'a pas de relecteur : Hugo est à l'école aujourd'hui, elle reste donc à relire [1][5].",
+  "mesures": {
+    "mots": 165,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7316,
+    "sortie": 2684,
+    "reflexion": 2250,
+    "cache": 0,
+    "cout": 0.0020736
+  },
+  "cout": 0.0020736,
+  "latenceMs": 13116,
+  "fournisseur": "Amazon Bedrock"
+}

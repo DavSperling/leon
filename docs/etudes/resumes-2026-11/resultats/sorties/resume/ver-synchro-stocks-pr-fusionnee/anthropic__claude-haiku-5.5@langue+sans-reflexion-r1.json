@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:29.348Z",
+  "reponse": "## Où j'en suis\nJulien a corrigé la synchronisation des stocks de la boutique. La cause : Shopify décrémente déjà le stock à chaque commande, et les webhooks `orders/create` et `orders/updated` décrémentaient en plus, ce qui a fait tomber la Saône à -3. Les webhooks ne touchent plus au stock, seule la synchro de nuit écrit les quantités, en valeur absolue. Le seuil d'alerte est passé à 3 et la fonction a été renommée `synchroniserStocks`. La Saône est remise à 0 dans Shopify. La PR #87 est ouverte, Hugo en relecture, et elle n'est pas encore fusionnée : le code en production décrémente encore dans `orders/create`. Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie.\n\n- [en-cours] Relecture de la PR #87 par Hugo, puis fusion\n- [prochaine-étape] Traiter les commandes #1041, #1043 et #1044 (Saône chêne 180) avec Lucie\n- [prochaine-étape] Vérifier la synchro de nuit une fois la PR fusionnée, puisque la Saône doit être réécrite à partir du stock physique de TransAlp\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : le test échouait et le problème ne venait pas des doublons ; supprimé ensuite\n- [question] Quand la Saône sera-t-elle de nouveau disponible ? Le retour de chez Bois & Fils est annoncé pour le 2 décembre, sans date de livraison confirmée\n- [décision] Pas de précommande sur la Saône : Claire ne veut pas promettre une date à Bois & Fils tant qu'elle n'a pas le bon de livraison (source: t17)\n- [décision] Stock de la Saône mis à 0 dans Shopify jusqu'au réassort (source: t15)\n- [décision] Seuil d'alerte stock bas porté à 3 unités (source: t09)\n- [décision] Les webhooks ne modifient plus le stock, la synchro de nuit est la seule à corriger, en valeur absolue (source: t05)",
+  "rendu": "## Où j'en suis\nJulien a corrigé la synchronisation des stocks de la boutique. La cause : Shopify décrémente déjà le stock à chaque commande, et les webhooks `orders/create` et `orders/updated` décrémentaient en plus, ce qui a fait tomber la Saône à -3. Les webhooks ne touchent plus au stock, seule la synchro de nuit écrit les quantités, en valeur absolue. Le seuil d'alerte est passé à 3 et la fonction a été renommée `synchroniserStocks`. La Saône est remise à 0 dans Shopify. La PR #87 est ouverte, Hugo en relecture, et elle n'est pas encore fusionnée : le code en production décrémente encore dans `orders/create`. Les 3 commandes survendues (#1041, #1043, #1044) restent à traiter avec Lucie.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Relecture de la PR #87 par Hugo, puis fusion\n- [prochaine-étape] Traiter les commandes #1041, #1043 et #1044 (Saône chêne 180) avec Lucie\n- [prochaine-étape] Vérifier la synchro de nuit une fois la PR fusionnée, puisque la Saône doit être réécrite à partir du stock physique de TransAlp\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : le test échouait et le problème ne venait pas des doublons ; supprimé ensuite",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1289,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5364,
+    "sortie": 775,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009239
+  },
+  "cout": 0.0009239,
+  "latenceMs": 3620,
+  "fournisseur": "Claude Platform on AWS"
+}

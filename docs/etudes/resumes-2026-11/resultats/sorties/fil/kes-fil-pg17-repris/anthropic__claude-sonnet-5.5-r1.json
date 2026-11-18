@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:27:39.477Z",
+  "reponse": "## Où j'en suis\nStaging (analytics-staging) tourne en PostgreSQL 17.2 depuis le switchover blue/green du 17/11 à 14:20 UTC (41 s d'écritures refusées). pg_partman est passé en 5.1.0, dbt est vert (14/14) et le runbook est à jour. La PR #57 reste ouverte (commits 7e3c9d4 et b0f18a2). Prod : aucune date, en attente de la validation de Maya après une semaine complète de staging en 17. (source: ses-pg-3, kestrel-analytics/infra#57, src-linear-kes298)\n\n- [en-cours] Semaine d'observation de staging sur 17 ; validation de Maya au plus tôt le 24/11. (source: s3-10, src-linear-kes298)\n- [prochaine-étape] Après validation, choisir la fenêtre prod en évitant le verrou dbt 01:00–03:30 UTC. (source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Prod en deux fenêtres : d'abord rds.logical_replication = 1 avec reboot (≈ 2–3 min d'arrêt), puis le blue/green. (source: s3-10, src-slack-infra)\n- [essai-raté] Premier apply staging échoué : le blue/green exigeait rds.logical_replication = 1, paramètre statique nécessitant un reboot. (source: s3-04)\n- [décision] Provider AWS épinglé à 5.82, pas de v6 dans cette PR. (source: s1-02)\n- [décision] Aucune date prod avant la validation de Maya ; apply_immediately reste false. La date du 28/11 de la note de l'agent n'est pas retenue. (source: s1-04, s3-09)",
+  "rendu": "## Où j'en suis\nStaging (analytics-staging) tourne en PostgreSQL 17.2 depuis le switchover blue/green du 17/11 à 14:20 UTC (41 s d'écritures refusées). pg_partman est passé en 5.1.0, dbt est vert (14/14) et le runbook est à jour. La PR #57 reste ouverte (commits 7e3c9d4 et b0f18a2). Prod : aucune date, en attente de la validation de Maya après une semaine complète de staging en 17. (de: équipe, connecteur, agent; source: ses-pg-3, kestrel-analytics/infra#57, src-linear-kes298)\n\n- [en-cours] Semaine d'observation de staging sur 17 ; validation de Maya au plus tôt le 24/11. (de: connecteur, agent; source: s3-10, src-linear-kes298)\n- [prochaine-étape] Après validation, choisir la fenêtre prod en évitant le verrou dbt 01:00–03:30 UTC. (de: agent; source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] Prod en deux fenêtres : d'abord rds.logical_replication = 1 avec reboot (≈ 2–3 min d'arrêt), puis le blue/green. (de: connecteur, agent; source: s3-10, src-slack-infra)\n- [essai-raté] Premier apply staging échoué : le blue/green exigeait rds.logical_replication = 1, paramètre statique nécessitant un reboot. (de: agent; source: s3-04)\n- [décision] Provider AWS épinglé à 5.82, pas de v6 dans cette PR. (de: toi; source: s1-02)\n- [décision] Aucune date prod avant la validation de Maya ; apply_immediately reste false. La date du 28/11 de la note de l'agent n'est pas retenue. (de: toi; source: s1-04, s3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1409,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5853,
+    "sortie": 610,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017806
+  },
+  "cout": 0.017806,
+  "latenceMs": 4410,
+  "fournisseur": "Claude Platform on AWS"
+}

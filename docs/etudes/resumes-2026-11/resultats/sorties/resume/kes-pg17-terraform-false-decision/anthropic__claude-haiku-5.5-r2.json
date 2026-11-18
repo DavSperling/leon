@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:39:04.412Z",
+  "reponse": "## Où j'en suis\nLa branche noa/rds-pg17 prépare la mise à niveau blue/green du RDS de staging, de PostgreSQL 16.4 à 17.2. Les commits 9d41c0e, a2b7f55 et c58e1fa sont faits, le plan est seulement en lecture et rien n'est appliqué. Le provider AWS est épinglé en ~> 5.82.0, et tflint passe. La prod est préparée derrière `pg17_enabled = false`, sans changement au plan. La PR brouillon kestrel-analytics/infra#57 est ouverte. Avant d'appliquer sur staging, il faut d'abord mettre à niveau pg_partman.\n\n- [en-cours] Prod préparée mais désactivée (`pg17_enabled = false`), sans date.\n- [prochaine-étape] Mettre à niveau pg_partman 4.7.4 vers 5.x sur staging (ALTER EXTENSION sur 16.4), puis vérifier `run_maintenance_proc()` sur events_raw et events_daily. Pas encore exécuté.\n- [prochaine-étape] Choisir une fenêtre de prod hors du lock dbt sur events_daily (01:00–03:30 UTC), après la validation de Maya.\n- [essai-raté] `terraform init` a échoué sur le lock file. Après `init -upgrade`, le provider v6 donnait un plan de 37 changements sans rapport avec RDS (ACL S3, aws_eip) : l'épinglage est resté en 5.82.\n- [question] Validation de Maya sur l'ensemble du changement, et date du basculement en prod. Samedi ou dimanche 04:00–06:00 UTC ont été proposés hors du lock, non tranché.\n- [décision] Plan seulement, rien d'appliqué (source: t01)\n- [décision] Provider AWS épinglé en 5.82, pas de v6 dans cette PR (source: t04)\n- [décision] Mise à niveau de pg_partman traitée comme une étape séparée, notée en todo, aucune commande lancée sur la base (source: t10)\n- [décision] Pas de date de prod avant la validation de Maya, `apply_immediately` reste à false (source: t14)",
+  "rendu": "## Où j'en suis\nLa branche noa/rds-pg17 prépare la mise à niveau blue/green du RDS de staging, de PostgreSQL 16.4 à 17.2. Les commits 9d41c0e, a2b7f55 et c58e1fa sont faits, le plan est seulement en lecture et rien n'est appliqué. Le provider AWS est épinglé en ~> 5.82.0, et tflint passe. La prod est préparée derrière `pg17_enabled = false`, sans changement au plan. La PR brouillon kestrel-analytics/infra#57 est ouverte. Avant d'appliquer sur staging, il faut d'abord mettre à niveau pg_partman.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Prod préparée mais désactivée (`pg17_enabled = false`), sans date.\n- [prochaine-étape] Mettre à niveau pg_partman 4.7.4 vers 5.x sur staging (ALTER EXTENSION sur 16.4), puis vérifier `run_maintenance_proc()` sur events_raw et events_daily. Pas encore exécuté.\n- [prochaine-étape] Choisir une fenêtre de prod hors du lock dbt sur events_daily (01:00–03:30 UTC), après la validation de Maya.\n- [essai-raté] `terraform init` a échoué sur le lock file. Après `init -upgrade`, le provider v6 donnait un plan de 37 changements sans rapport avec RDS (ACL S3, aws_eip) : l'épinglage est resté en 5.82.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1233,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5448,
+    "sortie": 2280,
+    "reflexion": 1514,
+    "cache": 0,
+    "cout": 0.0016848
+  },
+  "cout": 0.0016848,
+  "latenceMs": 9746,
+  "fournisseur": "Claude Platform on AWS"
+}

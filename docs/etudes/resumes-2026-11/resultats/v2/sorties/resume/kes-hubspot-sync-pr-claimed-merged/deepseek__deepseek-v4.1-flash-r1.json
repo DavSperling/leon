@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:25.843Z",
+  "reponse": "## Où j'en suis\nWe picked up PR #405 (HubSpot webhooks) and found it couldn't be finished: subscription management rejects our private-app token, so we moved to polling the CRM search API every 15 min, with windowed paging past the 10k result cap and a filter keeping only companies with ARR > 0. That work went into PR #409 with auto-merge enabled, but the PR is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails, so auto-merge never fired.\n\n- [en-cours] e2e fixture still has a trial company with an owner, which the new `arr > 0` filter skips (3 rows expected, 2 got)\n- [prochaine-étape] fix that fixture, then let auto-merge land #409; Noa adds `HUBSPOT_TOKEN` to Secrets Manager for staging/prod\n- [essai-raté] registering webhook subscriptions via API returned 401 — private app tokens can't manage them, only public apps can\n- [décision] switch to polling every 15 min and close #405 with a comment (source: t04)\n- [décision] sync only companies with ARR > 0, skip trials entirely (source: t10)\n- [décision] open the PR with auto-merge, and have Noa put the token in Secrets Manager (source: t12)",
+  "rendu": "## Où j'en suis\nWe picked up PR #405 (HubSpot webhooks) and found it couldn't be finished: subscription management rejects our private-app token, so we moved to polling the CRM search API every 15 min, with windowed paging past the 10k result cap and a filter keeping only companies with ARR > 0. That work went into PR #409 with auto-merge enabled, but the PR is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails, so auto-merge never fired.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] e2e fixture still has a trial company with an owner, which the new `arr > 0` filter skips (3 rows expected, 2 got)\n- [prochaine-étape] fix that fixture, then let auto-merge land #409; Noa adds `HUBSPOT_TOKEN` to Secrets Manager for staging/prod\n- [essai-raté] registering webhook subscriptions via API returned 401 — private app tokens can't manage them, only public apps can\n- [décision] switch to polling every 15 min and close #405 with a comment (source: t04)\n- [décision] sync only companies with ARR > 0, skip trials entirely (source: t10)\n- [décision] open the PR with auto-merge, and have Noa put the token in Secrets Manager (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1326,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3572,
+    "sortie": 869,
+    "reflexion": 552,
+    "cache": 0,
+    "cout": 0.0003573336
+  },
+  "cout": 0.0003573336,
+  "latenceMs": 6664,
+  "fournisseur": "Baidu"
+}

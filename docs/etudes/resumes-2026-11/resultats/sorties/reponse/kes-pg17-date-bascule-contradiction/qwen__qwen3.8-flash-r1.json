@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:33.657Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 1254,
+    "sortie": 1500,
+    "reflexion": 1500,
+    "cache": 0,
+    "cout": 0.0008931
+  },
+  "cout": 0.0008931,
+  "latenceMs": 16322,
+  "fournisseur": "Alibaba"
+}

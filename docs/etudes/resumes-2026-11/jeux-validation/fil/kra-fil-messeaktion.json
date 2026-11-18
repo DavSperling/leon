@@ -1,0 +1,460 @@
+{
+  "id": "kra-fil-messeaktion",
+  "titre": "Fil en allemand sur l'action salon ProWerk dans le portail (3 sessions, 5 sources) : la note de l'agent dit 5 %, un mail de l'équipe dit 4 % et exclut la Suisse, un revendeur suisse affirme le contraire, la PR #209 est fusionnée malgré un tour qui dit le contraire, et la bannière de la session la plus récente reprend le 5 % périmé",
+  "langue": "de",
+  "entree": {
+    "sessions": [
+      {
+        "id": "ses-m3",
+        "kind": "claude_code",
+        "date": "2026-11-18T08:10:00Z",
+        "faits": {
+          "branche": "feat/messeaktion-banner",
+          "prs": [
+            {
+              "repo": "kranich/haendlerportal",
+              "numero": 224,
+              "etat": "open"
+            }
+          ],
+          "commits": [
+            "7a3c2d1",
+            "f0b9e44"
+          ],
+          "fichiers": [
+            "src/main/java/de/kranich/portal/aktion/MesseaktionBannerAdvice.java",
+            "src/main/resources/templates/fragments/messe-banner.html",
+            "src/main/resources/messages_de.properties",
+            "src/main/resources/application.yml",
+            "src/test/java/de/kranich/portal/aktion/MesseaktionBannerAdviceTest.java"
+          ],
+          "commandes": [
+            {
+              "texte": "./mvnw -q test -Dtest=MesseaktionBannerAdviceTest",
+              "erreur": true
+            },
+            {
+              "texte": "./mvnw -q test -Dtest=MesseaktionBannerAdviceTest",
+              "erreur": false
+            },
+            {
+              "texte": "gh pr create --draft --title \"Messeaktion: Hinweisbanner (DE)\"",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Hinweisbanner Messeaktion auf Startseite und im Warenkorb",
+              "etat": "fait"
+            },
+            {
+              "texte": "Banner für Österreich und Schweiz klären",
+              "etat": "a_faire"
+            }
+          ],
+          "debut": "2026-11-18T08:10:00Z",
+          "fin": "2026-11-18T09:40:00Z"
+        },
+        "resume": null,
+        "tours": [
+          {
+            "id": "m3-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T08:10:00Z",
+            "texte": "#209 ist drin. jetzt das banner im portal: „Messeaktion ProWerk 2027“ auf der startseite und im warenkorb, mit rabatt und zeitraum. nimm die eckdaten aus der notiz von letzter woche"
+          },
+          {
+            "id": "m3-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T08:18:30Z",
+            "texte": "Laut der Notiz vom 10.11. (mcp_remember): 5 % Messerabatt, gültig vom 19. bis 31.01.2027, Code PROWERK27, für alle Händler.\n\nIch baue:\n- `MesseaktionBannerAdvice` (ControllerAdvice), der das Banner für Startseite und Warenkorb ins Model legt\n- Fragment `fragments/messe-banner.html`\n- Text in `messages_de.properties`: „Messeaktion ProWerk 2027: 5 % Messerabatt auf alle Bestellungen mit dem Code PROWERK27, gültig vom 19. bis 31. Januar 2027.“"
+          },
+          {
+            "id": "m3-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T08:24:00Z",
+            "texte": "ok. sichtbar erst ab 12.01., über ein flag messeaktion.banner.ab=2027-01-12"
+          },
+          {
+            "id": "m3-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T08:51:10Z",
+            "texte": "Umgesetzt: `messeaktion.banner.ab: 2027-01-12` in `application.yml`; das Banner erscheint nur, wenn das heutige Datum gleich oder später ist.\n\n`MesseaktionBannerAdviceTest` schlug zuerst fehl: Der Vergleich lief in UTC, am 12.01. um 00:30 Uhr deutscher Zeit war das Banner noch nicht sichtbar. Jetzt mit `ZoneId.of(\"Europe/Berlin\")`, 5 Tests grün. Commit `7a3c2d1`."
+          },
+          {
+            "id": "m3-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T09:05:00Z",
+            "texte": "auch für AT und CH händler? die schweizer zahlen in CHF"
+          },
+          {
+            "id": "m3-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T09:12:40Z",
+            "texte": "Der Rabatt selbst kommt aus den SAP-Konditionen (Entscheidung vom 13.11.), das Banner zeigt nur den Text. Ob die Aktion für Österreich und für die Schweiz in CHF gilt, steht weder im Code noch im Ticket MKT-17. Die Konditionen der Verkaufsorganisation 3000 (CH) pflegt der Vertriebsinnendienst. Ich würde das Banner vorerst für alle Länder zeigen."
+          },
+          {
+            "id": "m3-07",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T09:15:00Z",
+            "texte": "nein, banner erstmal nur für DE, bis geklärt ist ob AT/CH dabei sind. frag ich thomas"
+          },
+          {
+            "id": "m3-08",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-18T09:36:20Z",
+            "texte": "Geändert: Das Banner erscheint nur für Kunden mit Land DE (`kunde.land == 'DE'`). Test ergänzt. Commit `f0b9e44`. Draft-PR #224 „Messeaktion: Hinweisbanner (DE)“ geöffnet, Reviewer @mvogt."
+          },
+          {
+            "id": "m3-09",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-18T09:40:00Z",
+            "texte": "passt. mittag"
+          }
+        ]
+      },
+      {
+        "id": "ses-m2",
+        "kind": "claude_code",
+        "date": "2026-11-13T13:40:00Z",
+        "faits": {
+          "branche": "feat/messeaktion",
+          "prs": [
+            {
+              "repo": "kranich/haendlerportal",
+              "numero": 209,
+              "etat": "merged"
+            }
+          ],
+          "commits": [
+            "c41d8e2",
+            "9b2f7a0"
+          ],
+          "fichiers": [
+            "src/main/java/de/kranich/portal/aktion/MesseaktionService.java",
+            "src/main/java/de/kranich/portal/sap/AuftragMapper.java",
+            "src/main/resources/application.yml",
+            "src/test/java/de/kranich/portal/sap/AuftragMapperTest.java"
+          ],
+          "commandes": [
+            {
+              "texte": "./mvnw -q verify",
+              "erreur": false
+            },
+            {
+              "texte": "git push origin feat/messeaktion",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Messerabatt aus der SAP-Preisfindung anzeigen",
+              "etat": "fait"
+            },
+            {
+              "texte": "Aktionscode als ZZ_AKTION an SAP",
+              "etat": "fait"
+            }
+          ],
+          "debut": "2026-11-13T13:40:00Z",
+          "fin": "2026-11-13T15:20:00Z"
+        },
+        "resume": "## Où j'en suis\nDie Messeaktion rechnet nicht mehr im Portal: Der Messerabatt kommt aus der SAP-Preisfindung (Konditionsart ZMES), das Portal zeigt ihn nur an. Der Aktionscode PROWERK27 geht als ZZ_AKTION an SAP. PR #209 wartet auf die Freigabe von Matthias.\n\n- [décision] SAP ist führend für den Messerabatt, das Portal rechnet nicht selbst (source: m2-01)\n- [décision] Der Aktionscode geht als Auftragsmerkmal ZZ_AKTION an SAP (source: m2-03)\n- [prochaine-étape] Freigabe von PR #209 durch Matthias",
+        "tours": [
+          {
+            "id": "m2-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T13:40:00Z",
+            "texte": "review von matthias zu #209: „rabatt nicht im portal rechnen, SAP ist führend“. bau um: portal zeigt den messerabatt nur an, gerechnet wird in SAP über die konditionsart ZMES"
+          },
+          {
+            "id": "m2-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T14:22:15Z",
+            "texte": "Umgebaut:\n- `MesseaktionService` berechnet nichts mehr. Der Warenkorb zeigt den Rabatt aus der SAP-Preisfindung (`BAPI_SALESORDER_SIMULATE`), Position mit Konditionsart ZMES.\n- Den festen Wert `messeaktion.rabatt: 5` aus `application.yml` habe ich entfernt.\n- Gibt SAP keine ZMES-Kondition zurück, zeigt das Portal keinen Messerabatt an.\n\n`./mvnw -q verify` grün. Commit `c41d8e2`."
+          },
+          {
+            "id": "m2-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T14:30:00Z",
+            "texte": "gut. der code PROWERK27 bleibt im portal als auftragsmerkmal und geht als ZZ_AKTION an SAP"
+          },
+          {
+            "id": "m2-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T15:02:40Z",
+            "texte": "Umgesetzt: Feld `aktionscode` am Auftrag; `AuftragMapper` schreibt es in den RFC-Aufruf als Kopf-Zusatzfeld `ZZ_AKTION`. `AuftragMapperTest` um zwei Fälle erweitert (mit und ohne Code), grün. Commit `9b2f7a0`."
+          },
+          {
+            "id": "m2-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T15:15:00Z",
+            "texte": "push, matthias soll nochmal drüberschauen"
+          },
+          {
+            "id": "m2-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T15:20:00Z",
+            "texte": "Gepusht (`9b2f7a0`). PR #209 ist noch nicht gemergt; Matthias muss die Änderungen erst freigeben."
+          }
+        ]
+      },
+      {
+        "id": "ses-m1",
+        "kind": "claude_code",
+        "date": "2026-11-10T14:20:00Z",
+        "faits": {
+          "branche": "feat/messeaktion",
+          "prs": [
+            {
+              "repo": "kranich/haendlerportal",
+              "numero": 209,
+              "etat": "merged"
+            }
+          ],
+          "commits": [
+            "5d17c3b"
+          ],
+          "fichiers": [
+            "src/main/java/de/kranich/portal/aktion/Messeaktion.java",
+            "src/main/java/de/kranich/portal/aktion/MesseaktionService.java",
+            "src/main/resources/db/migration/V55__messeaktion.sql",
+            "src/main/resources/application.yml"
+          ],
+          "commandes": [
+            {
+              "texte": "./mvnw -q test",
+              "erreur": false
+            },
+            {
+              "texte": "gh pr create --draft --title \"Messeaktion ProWerk 2027: Aktionscode und Messerabatt\"",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Grundgerüst Messeaktion (Code, Zeitraum, Rabatt)",
+              "etat": "fait"
+            }
+          ],
+          "debut": "2026-11-10T14:20:00Z",
+          "fin": "2026-11-10T16:05:00Z"
+        },
+        "resume": "## Où j'en suis\nGrundgerüst der Messeaktion ProWerk 2027 gebaut: Aktionscode PROWERK27, Gültigkeitszeitraum und Rabatt im Warenkorb, Eckdaten laut Ticket MKT-17 (5 %, 19. bis 31.01.2027). PR #209 als Draft geöffnet.\n\n- [en-cours] Der Rabatt wird im Portal berechnet (5 % aus application.yml)\n- [question] Gilt die Aktion auch für Händler in Österreich und der Schweiz?",
+        "tours": [
+          {
+            "id": "m1-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-10T14:20:00Z",
+            "texte": "neues feature für die messe ProWerk im januar, ticket MKT-17 von miriam: händler die während der messe mit einem aktionscode im portal bestellen kriegen einen messerabatt. leg mal los, branch feat/messeaktion"
+          },
+          {
+            "id": "m1-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-10T14:31:50Z",
+            "texte": "Ticket MKT-17 gelesen: 5 % Messerabatt, Code PROWERK27, gültig vom 19. bis 31.01.2027.\n\nIch lege an:\n- Entität `Messeaktion` (Code, gültig von, gültig bis, Rabatt in Prozent), Migration `V55__messeaktion.sql`\n- `MesseaktionService`: prüft den Code im Warenkorb und zieht den Rabatt ab\n- Rabatt vorerst in `application.yml` (`messeaktion.rabatt: 5`)"
+          },
+          {
+            "id": "m1-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-10T15:50:00Z",
+            "texte": "ok, merk dir die eckdaten"
+          },
+          {
+            "id": "m1-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-10T16:02:10Z",
+            "texte": "Notiz gespeichert (mcp_remember): „Entscheidung: Messerabatt 5 %, gültig 19.–31.01.2027, Code PROWERK27, für alle Händler (DE, AT, CH).“ Commit `5d17c3b`, Draft-PR #209 geöffnet."
+          },
+          {
+            "id": "m1-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-10T16:05:00Z",
+            "texte": "danke"
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "src-pr209",
+        "kind": "github",
+        "externalId": "pr:209",
+        "nature": "ticket",
+        "cote": "equipe",
+        "equipe": true,
+        "outil": null,
+        "titre": "Messeaktion ProWerk 2027: Aktionscode, Anzeige des SAP-Messerabatts",
+        "date": "2026-11-16T10:12:00Z",
+        "texte": "jhartmann: Aktionscode PROWERK27 als Auftragsmerkmal (ZZ_AKTION an SAP). Der Messerabatt kommt aus der SAP-Preisfindung (Konditionsart ZMES), das Portal rechnet nicht selbst.\nmvogt: Approved.\nmvogt merged this pull request on 16.11.2026."
+      },
+      {
+        "id": "src-pr224",
+        "kind": "github",
+        "externalId": "pr:224",
+        "nature": "ticket",
+        "cote": "equipe",
+        "equipe": true,
+        "outil": null,
+        "titre": "Messeaktion: Hinweisbanner (DE)",
+        "date": "2026-11-18T09:36:00Z",
+        "texte": "jhartmann (Draft): Hinweisbanner zur Messeaktion auf Startseite und im Warenkorb, sichtbar ab 12.01.2027 (Flag messeaktion.banner.ab), vorerst nur für Kunden in DE. Text: „5 % Messerabatt … gültig vom 19. bis 31. Januar 2027“."
+      },
+      {
+        "id": "src-mail-thomas",
+        "kind": "outlook",
+        "externalId": "msg:AAMkADk3NTVhLTE3MTEtNDI",
+        "nature": "mail",
+        "cote": null,
+        "equipe": true,
+        "outil": null,
+        "titre": "AW: Messeaktion ProWerk – Konditionen",
+        "date": "2026-11-17T16:05:00Z",
+        "texte": "Thomas Brenner: Hallo Jonas, hallo Miriam, Frau Kranich hat heute entschieden: Der Messerabatt beträgt 4 % (nicht 5 %), gilt nur für Händler mit Rahmenvertrag und nur für Bestellungen vom 19. bis 29.01.2027. Österreich ja, Schweiz nein (Preisstellung in CHF ist uns zu aufwendig). Der Vertriebsinnendienst pflegt die Kondition ZMES in SAP bis Mitte Dezember. Gruß, Thomas"
+      },
+      {
+        "id": "src-note",
+        "kind": "mcp_remember",
+        "externalId": "remember:2026-11-10-messeaktion",
+        "nature": "note",
+        "cote": null,
+        "equipe": true,
+        "outil": "claude_code",
+        "titre": "Messeaktion ProWerk – Eckdaten",
+        "date": "2026-11-10T16:02:00Z",
+        "texte": "Entscheidung: Messerabatt 5 % auf alle Bestellungen mit Code PROWERK27, gültig 19.–31.01.2027, für alle Händler (DE, AT, CH)."
+      },
+      {
+        "id": "src-mail-gerber",
+        "kind": "outlook",
+        "externalId": "msg:AAMkADk3NTVhLTA4MzAtR2Vy",
+        "nature": "mail",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "Messeaktion ProWerk – gilt auch für die Schweiz?",
+        "date": "2026-11-17T08:30:00Z",
+        "texte": "Markus Gerber (Eisenwaren Gerber AG, Winterthur): Grüezi Herr Hartmann, wir haben von Ihrer Messeaktion gehört. Wie mit Herrn Brenner besprochen, gilt der Messerabatt von 5 % selbstverständlich auch für unsere Bestellungen in CHF. Bitte richten Sie das im Portal entsprechend ein. Freundliche Grüsse, Markus Gerber"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f-4prozent",
+        "texte": "La remise salon est de 4 % (et non 5 %), réservée aux revendeurs sous contrat-cadre, pour les commandes du 19 au 29/01/2027 (décision de Sabine Kranich, mail de Thomas).",
+        "poids": 3
+      },
+      {
+        "id": "f-banner",
+        "texte": "La bannière de la PR #224 affiche encore 5 % et le 31/01 : son texte est à corriger.",
+        "poids": 3
+      },
+      {
+        "id": "f-at-ch",
+        "texte": "L'Autriche est incluse, la Suisse non : la bannière, aujourd'hui limitée à l'Allemagne, est à étendre à l'Autriche mais pas à la Suisse.",
+        "poids": 2
+      },
+      {
+        "id": "f-merged",
+        "texte": "La PR #209 (code d'action, remise calculée par SAP) est fusionnée.",
+        "poids": 2
+      },
+      {
+        "id": "f-sap",
+        "texte": "Le portail ne calcule pas la remise : SAP est maître (condition ZMES), et le code PROWERK27 part vers SAP comme ZZ_AKTION.",
+        "poids": 2
+      },
+      {
+        "id": "f-pr224",
+        "texte": "La PR #224 (bannière visible à partir du 12/01/2027 par un drapeau) est ouverte en brouillon.",
+        "poids": 1
+      },
+      {
+        "id": "f-zmes",
+        "texte": "Le service commercial interne saisit la condition ZMES dans SAP d'ici la mi-décembre.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-5",
+        "texte": "Donne 5 % ou le 31/01 comme les conditions valables de la remise salon."
+      },
+      {
+        "id": "i-ch",
+        "texte": "Dit que la remise vaut pour la Suisse ou en CHF (affirmation du revendeur Gerber)."
+      },
+      {
+        "id": "i-pas-fusionnee",
+        "texte": "Dit que la PR #209 n'est pas encore fusionnée ou attend la validation de Matthias."
+      },
+      {
+        "id": "i-decision-note",
+        "texte": "Une [décision] qui cite src-note, src-mail-gerber, m1-04 ou un résumé de session."
+      }
+    ],
+    "pieges": [
+      "Décision par une note : la note mcp_remember (et le résumé de ses-m1) disent 5 % ; seule la décision rapportée par le mail de Thomas (équipe, preuve) vaut : 4 %, contrat-cadre, 19–29/01.",
+      "PR fusionnée : #209 est merged dans les faits et la source, alors que le dernier tour de ses-m2 et son résumé disent qu'elle attend Matthias.",
+      "Message de client : le revendeur suisse affirme que la remise vaut pour la Suisse en CHF ; ni décision ni fait, et contredit par l'équipe.",
+      "Travail repris : la session la plus récente (bannière, PR #224) a repris le 5 % périmé de la note et attend une réponse sur AT/CH que le mail de Thomas donne déjà."
+    ],
+    "decisions": [
+      {
+        "texte": "SAP est maître pour la remise salon ; le portail l'affiche seulement (condition ZMES).",
+        "sources": [
+          "m2-01",
+          "src-pr209"
+        ]
+      },
+      {
+        "texte": "Le code PROWERK27 est un attribut de commande, envoyé à SAP comme ZZ_AKTION.",
+        "sources": [
+          "m2-03",
+          "src-pr209"
+        ]
+      },
+      {
+        "texte": "Remise salon de 4 %, contrat-cadre seulement, commandes du 19 au 29/01/2027, Autriche oui, Suisse non.",
+        "sources": [
+          "src-mail-thomas"
+        ]
+      },
+      {
+        "texte": "Bannière visible à partir du 12/01/2027, par un drapeau.",
+        "sources": [
+          "m3-03",
+          "7a3c2d1"
+        ]
+      },
+      {
+        "texte": "Bannière limitée à l'Allemagne tant que l'Autriche et la Suisse ne sont pas clarifiées.",
+        "sources": [
+          "m3-07",
+          "f0b9e44"
+        ]
+      }
+    ]
+  }
+}

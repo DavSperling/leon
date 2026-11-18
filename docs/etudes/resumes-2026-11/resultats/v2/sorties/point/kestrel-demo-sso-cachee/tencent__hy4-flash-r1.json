@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:09.609Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5729,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 0,
+    "cout": 0.001324515
+  },
+  "cout": 0.001324515,
+  "latenceMs": 66591,
+  "fournisseur": "Tencent"
+}

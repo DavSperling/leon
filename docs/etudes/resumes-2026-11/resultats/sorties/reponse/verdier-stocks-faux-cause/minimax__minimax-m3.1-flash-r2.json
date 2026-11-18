@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:17.060Z",
+  "reponse": "Deux causes distinctes. La première : quand un produit a deux emplacements, Shopify envoie deux webhooks inventory_levels/update et la synchro décrémentait le stock deux fois, corrigé par déduplication sur (inventory_item_id, location_id, updated_at) [1][2]. La seconde, plus récente : le stock négatif de la variante Saône chêne clair (-2) venait de l'import nocturne scripts/stock/import-csv.ts, qui a écrasé le stock avec le CSV de la veille avant deux commandes, et non de la PR #87 [5][3]. Ces deux fautes se cumulaient, ce qui explique aussi le délai de 6 semaines signalé par un client sur la table Saône [4]. L'import est en cours de replanification pour tourner avant l'ouverture plutôt qu'à 3h [5].",
+  "rendu": "Deux causes distinctes. La première : quand un produit a deux emplacements, Shopify envoie deux webhooks inventory_levels/update et la synchro décrémentait le stock deux fois, corrigé par déduplication sur (inventory_item_id, location_id, updated_at) [1][2]. La seconde, plus récente : le stock négatif de la variante Saône chêne clair (-2) venait de l'import nocturne scripts/stock/import-csv.ts, qui a écrasé le stock avec le CSV de la veille avant deux commandes, et non de la PR #87 [5][3]. Ces deux fautes se cumulaient, ce qui explique aussi le délai de 6 semaines signalé par un client sur la table Saône [4]. L'import est en cours de replanification pour tourner avant l'ouverture plutôt qu'à 3h [5].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1173,
+    "sortie": 205,
+    "reflexion": 29,
+    "cache": 512,
+    "cout": 0.00022983
+  },
+  "cout": 0.00022983,
+  "latenceMs": 1598,
+  "fournisseur": "Nebius"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:04:52.831Z",
+  "reponse": "Voici ce que je trouve :\n\n**Cause** : depuis l'ajout de l'emplacement « Showroom » dans Shopify le 3/11, le script `sync-stock.ts` écrasait le stock en ne poussant que les quantités de l'entrepôt de Vénissieux, ignorant le showroom. Le site affichait donc du stock disponible qui ne l'était plus (parfois des pièces d'expo déjà vendues) [3][14][10].\n\n**Réparation** : oui, en grande partie.\n- Le correctif a été développé le 12/11 (tout en conservant la vente en précommande pour la table Saône) [3], puis déployé et vérifié le vendredi 13/11 : Julien a repassé tout le catalogue, les quantités sont correctes [14].\n- 7 commandes ont été touchées entre le 3 et le 12/11 ; les clients concernés (ex. banc Rhône, buffet Croix-Rousse) ont été remboursés intégralement, parfois avec un geste commercial [9][10][14].\n- En prévention, Hugo prépare un contrôle quotidien des écarts de stock Shopify/entrepôt (PR boutique#91, encore en relecture — à reprendre avant fusion) [12][4].\n\nPoint de vigilance : les tickets #91 (PR non fusionnée au 17/11) et le point d'équipe du 16/11 qui dit le correctif « corrigé vendredi » [4] se recoupent — la synchro est réparée, mais le filet de sécurité quotidien n'est pas encore en place.",
+  "rendu": "Voici ce que je trouve :\n\n**Cause** : depuis l'ajout de l'emplacement « Showroom » dans Shopify le 3/11, le script `sync-stock.ts` écrasait le stock en ne poussant que les quantités de l'entrepôt de Vénissieux, ignorant le showroom. Le site affichait donc du stock disponible qui ne l'était plus (parfois des pièces d'expo déjà vendues) [3][14][10].\n\n**Réparation** : oui, en grande partie.\n- Le correctif a été développé le 12/11 (tout en conservant la vente en précommande pour la table Saône) [3], puis déployé et vérifié le vendredi 13/11 : Julien a repassé tout le catalogue, les quantités sont correctes [14].\n- 7 commandes ont été touchées entre le 3 et le 12/11 ; les clients concernés (ex. banc Rhône, buffet Croix-Rousse) ont été remboursés intégralement, parfois avec un geste commercial [9][10][14].\n- En prévention, Hugo prépare un contrôle quotidien des écarts de stock Shopify/entrepôt (PR boutique#91, encore en relecture — à reprendre avant fusion) [12][4].\n\nPoint de vigilance : les tickets #91 (PR non fusionnée au 17/11) et le point d'équipe du 16/11 qui dit le correctif « corrigé vendredi » [4] se recoupent — la synchro est réparée, mais le filet de sécurité quotidien n'est pas encore en place.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6954,
+    "sortie": 449,
+    "reflexion": 59,
+    "cache": 3008,
+    "cout": 0.00224687
+  },
+  "latenceMs": 9776,
+  "fournisseur": "Z.AI",
+  "trace": [
+    "chercher {\"requete\":\"achat meubles indisponibles stock clients\"}",
+    "chercher {\"requete\":\"commandes produits non disponibles bug stock\"}"
+  ],
+  "cout": 0.00224687
+}

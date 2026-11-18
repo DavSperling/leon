@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:46:19.574Z",
+  "reponse": "## Où j'en suis\nLe client API TransAlp (OAuth2) est écrit sur `hugo/transalp-etiquettes`, avec étiquettes ZPL par défaut : le format fonctionne en recette et en prod, pas en sandbox (source: src-mail-transalp, h2-01). L'essai en recette a réussi, les accents ont été corrigés par `^CI28` dans `zpl.ts` (commit `3e8b1d0`), et Karim a validé l'impression sur la Zebra (source: h2-03, h2-05). La configuration de prod est prête mais inactive : TransAlp n'est choisi qu'à partir de `TRANSALP_DEBUT` (commit `a90c4f7`), poussé sur la PR #91, toujours en brouillon, relue par Julien (source: h2-11, h2-12, src-pr91).\n\n- [en-cours] PR #91 en brouillon, poussée sur `hugo/transalp-etiquettes`, en attente de relecture de Julien (source: h2-12, src-pr91)\n- [prochaine-étape] Relecture de Julien puis sortie du brouillon ; la bascule Lyon/Paris se fait le mardi 1er décembre (et non le 23), Karim devant d'abord former l'équipe sur le nouveau poste d'impression (source: src-slack-julien, h2-12)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, point après les soldes ; aucune résiliation au 1er décembre (source: src-slack-julien, h2-09, h1-03)\n- [décision] Aucun tarif Premium : le passage du mail de TransAlp évoquant un contrat Premium signé est à ignorer (source: h2-09, h2-10)\n- [essai-raté] Format ZPL en sandbox : refusé, l'API ne le propose qu'en recette et en production ; l'essai a donc été fait en recette (source: src-mail-transalp, ses-tr-1, h2-01)\n- [essai-raté] Clé API en en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] Accents en bouillie sur la Zebra (« SaÃ´ne chÃªne ») : le ZPL de TransAlp est en UTF-8 sans déclarer l'encodage, corrigé en insérant `^CI28` après `^XA` (source: h2-03, h2-04)\n- [question] Rien à trancher : la date de bascule est confirmée au 1er décembre par Julien (source: src-slack-julien)",
+  "rendu": "- [en-cours] PR #91 en brouillon, poussée sur `hugo/transalp-etiquettes`, en attente de relecture de Julien (de: équipe, agent; source: h2-12, src-pr91)\n- [prochaine-étape] Relecture de Julien puis sortie du brouillon ; la bascule Lyon/Paris se fait le mardi 1er décembre (et non le 23), Karim devant d'abord former l'équipe sur le nouveau poste d'impression (de: connecteur, agent; source: src-slack-julien, h2-12)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, point après les soldes ; aucune résiliation au 1er décembre (de: toi, connecteur; source: src-slack-julien, h2-09, h1-03)\n- [décision] Aucun tarif Premium : le passage du mail de TransAlp évoquant un contrat Premium signé est à ignorer (de: toi, agent; source: h2-09, h2-10)\n- [essai-raté] Format ZPL en sandbox : refusé, l'API ne le propose qu'en recette et en production ; l'essai a donc été fait en recette (de: toi, connecteur, agent; source: src-mail-transalp, ses-tr-1, h2-01)\n- [essai-raté] Clé API en en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] Accents en bouillie sur la Zebra (« SaÃ´ne chÃªne ») : le ZPL de TransAlp est en UTF-8 sans déclarer l'encodage, corrigé en insérant `^CI28` après `^XA` (de: toi, agent; source: h2-03, h2-04)\n- [question] Rien à trancher : la date de bascule est confirmée au 1er décembre par Julien (de: connecteur; source: src-slack-julien)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1455,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3815,
+    "sortie": 664,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000282406
+  },
+  "cout": 0.000282406,
+  "latenceMs": 4773,
+  "fournisseur": "Wafer"
+}

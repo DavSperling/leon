@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.907Z",
+  "reponse": "## Où j'en suis\nLa grille de dashboards v2 (glisser-déposer, redimensionnement et persistance serveur avec fallback local) est implémentée derrière `dashboards_v2`. Le sizing utilise `ResizeObserver` pour iOS 15. La PR #418 est ouverte en draft ; lint, typecheck et build Storybook passent après corrections. Le test ciblé passe après mise à jour du snapshot.\n\n- [en-cours] La PR attend la revue UX de Priya sur iPad ; le flag doit être activé pour le workspace Zest.\n- [prochaine-étape] Obtenir la revue UX, puis activer `dashboards_v2` uniquement pour Zest dans l’admin des flags, avant la démo du 24 novembre.\n- [essai-raté] Le premier test `DashboardGrid` a échoué sur un snapshot obsolète après l’ajout des wrappers de grille ; le snapshot a été mis à jour. Le premier build Storybook a échoué à résoudre le CSS de `react-grid-layout` ; import déplacé dans `.storybook/preview.ts` et dépendance ajoutée à `optimizeDeps.include`.\n- [décision] Utiliser `ResizeObserver` et supprimer les container queries (source: t09)\n- [décision] Garder les anciens dashboards disponibles jusqu’en janvier ; ne rien supprimer maintenant (source: t15)\n- [décision] Activer le flag uniquement pour le workspace Zest (source: t15)\n- [décision] Ouvrir une PR en draft pour la revue UX de Priya (source: t17)",
+  "rendu": "## Où j'en suis\nLa grille de dashboards v2 (glisser-déposer, redimensionnement et persistance serveur avec fallback local) est implémentée derrière `dashboards_v2`. Le sizing utilise `ResizeObserver` pour iOS 15. La PR #418 est ouverte en draft ; lint, typecheck et build Storybook passent après corrections. Le test ciblé passe après mise à jour du snapshot.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] La PR attend la revue UX de Priya sur iPad ; le flag doit être activé pour le workspace Zest.\n- [prochaine-étape] Obtenir la revue UX, puis activer `dashboards_v2` uniquement pour Zest dans l’admin des flags, avant la démo du 24 novembre.\n- [essai-raté] Le premier test `DashboardGrid` a échoué sur un snapshot obsolète après l’ajout des wrappers de grille ; le snapshot a été mis à jour. Le premier build Storybook a échoué à résoudre le CSS de `react-grid-layout` ; import déplacé dans `.storybook/preview.ts` et dépendance ajoutée à `optimizeDeps.include`.\n- [décision] Utiliser `ResizeObserver` et supprimer les container queries (source: t09)\n- [décision] Garder les anciens dashboards disponibles jusqu’en janvier ; ne rien supprimer maintenant (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1277,
+    "decisions": 2,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3334,
+    "sortie": 427,
+    "reflexion": 83,
+    "cache": 0,
+    "cout": 0.000630175
+  },
+  "cout": 0.000630175,
+  "latenceMs": 5588,
+  "fournisseur": "OpenAI"
+}

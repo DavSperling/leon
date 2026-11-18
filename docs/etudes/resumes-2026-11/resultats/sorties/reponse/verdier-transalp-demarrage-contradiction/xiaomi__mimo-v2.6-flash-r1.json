@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:37.725Z",
+  "reponse": "La bascule générale chez TransAlp est prévue le 1er décembre, avec fin du contrat Rapid'Colis au 30 novembre [1][3][4]. Toutefois, le mail le plus récent indique que les enlèvements réguliers pour Maison Verdier démarreront seulement le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber ces volumes avant cette date [2]. Il y a donc un écart entre le 1er décembre annoncé [1][3] et le 8 décembre confirmé par écrit [2], d'autant plus que Rapid'Colis s'arrête bien le 30 novembre [5]. Un enlèvement test reste prévu le 20 novembre [1][2].",
+  "rendu": "La bascule générale chez TransAlp est prévue le 1er décembre, avec fin du contrat Rapid'Colis au 30 novembre [1][3][4]. Toutefois, le mail le plus récent indique que les enlèvements réguliers pour Maison Verdier démarreront seulement le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber ces volumes avant cette date [2]. Il y a donc un écart entre le 1er décembre annoncé [1][3] et le 8 décembre confirmé par écrit [2], d'autant plus que Rapid'Colis s'arrête bien le 30 novembre [5]. Un enlèvement test reste prévu le 20 novembre [1][2].",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1097,
+    "sortie": 277,
+    "reflexion": 105,
+    "cache": 512,
+    "cout": 0.0001608936
+  },
+  "cout": 0.0001608936,
+  "latenceMs": 5047,
+  "fournisseur": "Xiaomi"
+}

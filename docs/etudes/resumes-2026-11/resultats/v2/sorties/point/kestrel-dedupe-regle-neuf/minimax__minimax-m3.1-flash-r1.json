@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:09:25.910Z",
+  "reponse": "## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's `event_id`-only dedupe: `kestrel-ios/3.2.0` sends a per-session counter instead of a UUID, so distinct events collided. About **1,179,950 legitimate Orbitly events** were dropped (≈8.1% of their iOS volume), plus 3,812 at Zest Grocers' pilot store app [1].\n- You changed the dedupe key to `project_id:device_id:event_id` (device_id is schema-required since v2), keeping genuine replay protection. The full suite (412 tests) and lint pass, and you opened **PR #247** with Maya Cohen as reviewer [1][2].\n\n## What changed\n- Maya will approve #247 once CI is green, and asked for the exact number of Orbitly events dropped since #240 for Thursday's call with Orbitly — ~1.18M [2].\n- The CI/Dockerfile Go toolchain bump to 1.23.4 was merged [4].\n\n## What is still open\n- #247 is not yet merged or deployed. Once deployed, the Orbitly and Zest replays from 13/11 out of landing can run (~40 min for Orbitly), and you should confirm `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1][2].\n- The note to the iOS team, asking them to restore UUIDs for `event_id` in 3.2.1, was drafted but not sent [1].\n- You owe an alert for the ingest dead-letter queue crossing 1,000 messages, before Friday's incident review on 20/11 where Noa presents the postmortem [7].",
+  "rendu": "## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's `event_id`-only dedupe: `kestrel-ios/3.2.0` sends a per-session counter instead of a UUID, so distinct events collided. About **1,179,950 legitimate Orbitly events** were dropped (≈8.1% of their iOS volume), plus 3,812 at Zest Grocers' pilot store app [1].\n- You changed the dedupe key to `project_id:device_id:event_id` (device_id is schema-required since v2), keeping genuine replay protection. The full suite (412 tests) and lint pass, and you opened **PR #247** with Maya Cohen as reviewer [1][2].\n\n## What changed\n- Maya will approve #247 once CI is green, and asked for the exact number of Orbitly events dropped since #240 for Thursday's call with Orbitly — ~1.18M [2].\n- The CI/Dockerfile Go toolchain bump to 1.23.4 was merged [4].\n\n## What is still open\n- #247 is not yet merged or deployed. Once deployed, the Orbitly and Zest replays from 13/11 out of landing can run (~40 min for Orbitly), and you should confirm `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1][2].\n- The note to the iOS team, asking them to restore UUIDs for `event_id` in 3.2.1, was drafted but not sent [1].\n- You owe an alert for the ingest dead-letter queue crossing 1,000 messages, before Friday's incident review on 20/11 where Noa presents the postmortem [7].",
+  "mesures": {
+    "mots": 205,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4670,
+    "sortie": 1247,
+    "reflexion": 863,
+    "cache": 0,
+    "cout": 0.0014487
+  },
+  "cout": 0.0014487,
+  "latenceMs": 5616,
+  "fournisseur": "Together"
+}

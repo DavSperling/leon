@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:20:35.403Z",
+  "reponse": "## Où j'en suis\nEnglish: the dashboard grid work is done and shipped as draft PR #418 — react-grid-layout drag/resize, layout persisted via PUT /dashboards/:id/layout, iOS 15-compatible sizing via ResizeObserver, DashboardTile renamed to WidgetCard, Storybook build fixed. It's waiting on Priya's UX review and the Zest flag rollout.\n\n- [en-cours] draft PR #418 open, awaiting Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace in the flags admin before the demo on Tuesday the 24th\n- [prochaine-étape] verify widget sizing on iOS 15 in BrowserStack (Priya's re-check)\n- [essai-raté] CSS container queries for widget scaling — ignored silently by iOS 15 Safari, replaced by a ResizeObserver `data-size` hook (source: t09)\n- [décision] layout persisted server-side via PUT /dashboards/:id/layout (source: t03)\n- [décision] rename DashboardTile to WidgetCard everywhere (source: t11)\n- [décision] flag on only for the Zest workspace; v1 dashboards stay available until January, nothing removed now (source: t15)",
+  "rendu": "## Où j'en suis\nEnglish: the dashboard grid work is done and shipped as draft PR #418 — react-grid-layout drag/resize, layout persisted via PUT /dashboards/:id/layout, iOS 15-compatible sizing via ResizeObserver, DashboardTile renamed to WidgetCard, Storybook build fixed. It's waiting on Priya's UX review and the Zest flag rollout.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] draft PR #418 open, awaiting Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace in the flags admin before the demo on Tuesday the 24th\n- [prochaine-étape] verify widget sizing on iOS 15 in BrowserStack (Priya's re-check)\n- [essai-raté] CSS container queries for widget scaling — ignored silently by iOS 15 Safari, replaced by a ResizeObserver `data-size` hook (source: t09)\n- [décision] layout persisted server-side via PUT /dashboards/:id/layout (source: t03)\n- [décision] rename DashboardTile to WidgetCard everywhere (source: t11)\n- [décision] flag on only for the Zest workspace; v1 dashboards stay available until January, nothing removed now (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1193,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3725,
+    "sortie": 360,
+    "reflexion": 69,
+    "cache": 0,
+    "cout": 0.000871
+  },
+  "cout": 0.000871,
+  "latenceMs": 1897,
+  "fournisseur": "Makora"
+}

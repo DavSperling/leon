@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:25:50.276Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp sandbox est écrit (OAuth2 avec jeton en mémoire, étiquette PDF) et `choix.ts` envoie Lyon et Paris vers TransAlp, le reste vers Rapidis. Les colis de plus de 30 kg partent chez Rapidis. Les tests passent, le lint est propre, et la PR #91 est ouverte en brouillon pour relecture par Julien.\n\n- [prochaine-étape] Julien relit la PR #91 avant toute mise en production.\n- [prochaine-étape] Demander à TransAlp si le format ZPL est disponible en production, puisque la Zebra de l'entrepôt n'imprime que du ZPL.\n- [essai-raté] La sandbox refuse le ZPL (400, `unsupported_format`) : on garde le PDF par défaut, avec un paramètre `format` prêt pour le ZPL.\n- [décision] Rapidis reste en secours jusqu'à la fin des soldes, sans résiliation ; les colis de plus de 30 kg vont chez Rapidis, même à Lyon ou Paris (source: t13)\n- [décision] Le passage en production est décidé par Julien, pas branché pour l'instant (source: t15)\n- [décision] L'étiquette reste en PDF en attendant la réponse sur le ZPL (source: t09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp sandbox est écrit (OAuth2 avec jeton en mémoire, étiquette PDF) et `choix.ts` envoie Lyon et Paris vers TransAlp, le reste vers Rapidis. Les colis de plus de 30 kg partent chez Rapidis. Les tests passent, le lint est propre, et la PR #91 est ouverte en brouillon pour relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [prochaine-étape] Julien relit la PR #91 avant toute mise en production.\n- [prochaine-étape] Demander à TransAlp si le format ZPL est disponible en production, puisque la Zebra de l'entrepôt n'imprime que du ZPL.\n- [essai-raté] La sandbox refuse le ZPL (400, `unsupported_format`) : on garde le PDF par défaut, avec un paramètre `format` prêt pour le ZPL.\n- [décision] Rapidis reste en secours jusqu'à la fin des soldes, sans résiliation ; les colis de plus de 30 kg vont chez Rapidis, même à Lyon ou Paris (source: t13)\n- [décision] Le passage en production est décidé par Julien, pas branché pour l'instant (source: t15)\n- [décision] L'étiquette reste en PDF en attendant la réponse sur le ZPL (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1154,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5046,
+    "sortie": 1658,
+    "reflexion": 1189,
+    "cache": 0,
+    "cout": 0.0013336
+  },
+  "cout": 0.0013336,
+  "latenceMs": 8298,
+  "fournisseur": "Claude Platform on AWS"
+}

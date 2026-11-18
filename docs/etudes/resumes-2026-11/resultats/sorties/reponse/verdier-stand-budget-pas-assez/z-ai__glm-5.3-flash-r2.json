@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:16.241Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1004,
+    "sortie": 30,
+    "reflexion": 20,
+    "cache": 0,
+    "cout": 0.0001656
+  },
+  "cout": 0.0001656,
+  "latenceMs": 819,
+  "fournisseur": "Modal"
+}

@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:24:24.851Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1888,
+    "sortie": 6,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00070606
+  },
+  "cout": 0.00070606,
+  "latenceMs": 1136,
+  "fournisseur": "Z.AI"
+}

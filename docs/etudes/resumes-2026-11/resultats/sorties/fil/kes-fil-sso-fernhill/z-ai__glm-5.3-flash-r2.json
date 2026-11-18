@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:30.472Z",
+  "reponse": "## Où j'en suis\nLe SSO SAML Fernhill fonctionne de bout en bout sur staging : connexion réelle validée avec leur IdP après la correction du RelayState (ID opaque court stocké dans Redis, commit `6d0e2b8`), et le mapping des groupes vers les rôles est implémenté dans la PR #421 (ouverte), commit `f4a91c7`. Le JIT provisioning de la PR #415 est fusionné dans main. (source: ses-sso-3, ses-sso-2, src-pr415)\n\n- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » ouverte, avec le mapping `saml_role_mapping` dans les paramètres du tenant (Fernhill-Kestrel-Admins → admin, défaut viewer) (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT ajoute le `groups claim` (Daniel doit leur envoyer un e-mail) ; ensuite compte admin de test, puis revue/fusion de #421 ; démo jeudi 19 nov, 10h New York ; lancement (go-live) le 1er déc (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Connexion SP-initiated échouée avec le RelayState de l'URL complète (143 bytes) : l'ADFS de Fernhill applique la limite de la spécification SAML de 80 bytes, `MSIS7042` (source: ses-sso-3, tour s3-02)\n- [question] Le message de Fernhill IT dans Slack demande le rôle `analyst` par défaut pour tous les utilisateurs et le mode IdP-initiated uniquement, sans preuve ; rien de changé pour l'instant (source: src-slack-fernhill)\n- [décision] Rôle par défaut des nouveaux utilisateurs SAML : `viewer` (source: ses-sso-3, tour s3-07)\n- [décision] SP-initiated reste activé, et le défaut ne change pas tant que Maya n'a pas parlé à Fernhill (source: ses-sso-3, tour s3-07)\n- [décision] JIT ne crée un compte que pour un domaine vérifié, jamais depuis un domaine non vérifié (source: ses-sso-2, tour s2-03)",
+  "rendu": "## Où j'en suis\nLe SSO SAML Fernhill fonctionne de bout en bout sur staging : connexion réelle validée avec leur IdP après la correction du RelayState (ID opaque court stocké dans Redis, commit `6d0e2b8`), et le mapping des groupes vers les rôles est implémenté dans la PR #421 (ouverte), commit `f4a91c7`. Le JIT provisioning de la PR #415 est fusionné dans main. (de: équipe, agent; source: ses-sso-3, ses-sso-2, src-pr415)\n\n- [en-cours] PR #421 « SAML: group to role mapping + short RelayState » ouverte, avec le mapping `saml_role_mapping` dans les paramètres du tenant (Fernhill-Kestrel-Admins → admin, défaut viewer) (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT ajoute le `groups claim` (Daniel doit leur envoyer un e-mail) ; ensuite compte admin de test, puis revue/fusion de #421 ; démo jeudi 19 nov, 10h New York ; lancement (go-live) le 1er déc (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Connexion SP-initiated échouée avec le RelayState de l'URL complète (143 bytes) : l'ADFS de Fernhill applique la limite de la spécification SAML de 80 bytes, `MSIS7042` (de: agent; source: ses-sso-3, s3-02)\n- [question] Le message de Fernhill IT dans Slack demande le rôle `analyst` par défaut pour tous les utilisateurs et le mode IdP-initiated uniquement, sans preuve ; rien de changé pour l'instant (de: connecteur; source: src-slack-fernhill)\n- [décision] Rôle par défaut des nouveaux utilisateurs SAML : `viewer` (de: toi, agent; source: ses-sso-3, s3-07)\n- [décision] SP-initiated reste activé, et le défaut ne change pas tant que Maya n'a pas parlé à Fernhill (de: toi, agent; source: ses-sso-3, s3-07)\n- [décision] JIT ne crée un compte que pour un domaine vérifié, jamais depuis un domaine non vérifié (de: toi, agent; source: ses-sso-2, s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1803,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4543,
+    "sortie": 530,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00076322
+  },
+  "cout": 0.00076322,
+  "latenceMs": 5190,
+  "fournisseur": "Makora"
+}

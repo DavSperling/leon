@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "google/gemini-3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:29:29.381Z",
+  "reponse": "## What you did\n\n* You validated the PG17 blue/green cutover on a prod clone, measuring 74 seconds of write downtime with seamless API reconnection before tearing down the test instances [1].\n\n## What changed\n\n* Maya approved PR #321 and shifted the maintenance window to Sunday 22/11 (02:00–04:00 UTC) after confirming Fernhill's batch schedule, clearing the PR to merge once updated [3][8].\n* Lior confirmed ingest workers need no configuration changes for the cutover, but requested 30 minutes notice before switchover to pause consumers [9].\n* Daniel confirmed he will cover API on-call on Sunday and asked for a ping when switchover begins [7].\n\n## What is still open\n\n* Updating `runbooks/pg17-cutover.md` with the new Sunday schedule and merging PR #321 [1][3][8].\n* Rehearsing the rollback procedure on a fresh clone on Thursday to measure data loss and recovery time before the window [1].",
+  "rendu": "## What you did\n\n* You validated the PG17 blue/green cutover on a prod clone, measuring 74 seconds of write downtime with seamless API reconnection before tearing down the test instances [1].\n\n## What changed\n\n* Maya approved PR #321 and shifted the maintenance window to Sunday 22/11 (02:00–04:00 UTC) after confirming Fernhill's batch schedule, clearing the PR to merge once updated [3][8].\n* Lior confirmed ingest workers need no configuration changes for the cutover, but requested 30 minutes notice before switchover to pause consumers [9].\n* Daniel confirmed he will cover API on-call on Sunday and asked for a ping when switchover begins [7].\n\n## What is still open\n\n* Updating `runbooks/pg17-cutover.md` with the new Sunday schedule and merging PR #321 [1][3][8].\n* Rehearsing the rollback procedure on a fresh clone on Thursday to measure data loss and recovery time before the window [1].",
+  "mesures": {
+    "mots": 136,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5540,
+    "sortie": 7908,
+    "reflexion": 7679,
+    "cache": 0,
+    "cout": 0.03381
+  },
+  "cout": 0.03381,
+  "latenceMs": 74229,
+  "fournisseur": "Google AI Studio"
+}

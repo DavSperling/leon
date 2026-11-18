@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:26:53.760Z",
+  "reponse": "## Où j'en suis\nDashboards v2 is moving fast: PR #418 (drag/resize grid) was merged after Priya's approval, and the follow-up is already underway on branch `tom/dashboard-keyboard` — PR #423 \"Dashboards v2: keyboard move/resize + focus ring\" is open with 11 green tests (commit `8f1a2c7`), using a custom `useGridKeyboard()` hook instead of dnd-kit. The `dashboards_v2` flag is on for Zest Grocers on staging only; Tom flips prod himself on the 24th, the morning of the demo. Session ended with \"done for today\" — PR #423 still awaits review. (source: ses-db-4, d4-05, d4-07, d4-10, src-pr418)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring) open, awaiting Priya's review (source: ses-db-4, d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging; Tom flips the prod flag the morning of Tuesday the 24th (source: d4-06, d4-07, b2-04)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries listen to the same events, every move applied twice and drags fired two layout changes; would require rewriting the grid (source: d4-02)\n- [décision] Own keyboard handler on top of layout state, no dnd-kit (source: d4-04)\n- [décision] Keep recharts, close #401 for good — two chart libs and rewriting 9 charts not worth it (source: c3-03, src-pr401)\n- [décision] ResizeObserver instead of container queries (incompatible with iOS 15 Safari) (source: b2-02)\n- [décision] Flag on only for Zest's workspace; v1 dashboards stay behind the flag until January (source: b2-04)\n- [question] Nothing pending; visx cleanup confirmed done — no `@visx/*` left in `web/package.json` (source: d4-09)",
+  "rendu": "## Où j'en suis\nDashboards v2 is moving fast: PR #418 (drag/resize grid) was merged after Priya's approval, and the follow-up is already underway on branch `tom/dashboard-keyboard` — PR #423 \"Dashboards v2: keyboard move/resize + focus ring\" is open with 11 green tests (commit `8f1a2c7`), using a custom `useGridKeyboard()` hook instead of dnd-kit. The `dashboards_v2` flag is on for Zest Grocers on staging only; Tom flips prod himself on the 24th, the morning of the demo. Session ended with \"done for today\" — PR #423 still awaits review. (de: toi, équipe, agent; source: ses-db-4, d4-05, d4-07, d4-10, src-pr418)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring) open, awaiting Priya's review (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] Priya rehearses the Zest demo on staging; Tom flips the prod flag the morning of Tuesday the 24th (de: toi, agent; source: d4-06, d4-07, b2-04)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries listen to the same events, every move applied twice and drags fired two layout changes; would require rewriting the grid (de: agent; source: d4-02)\n- [décision] Own keyboard handler on top of layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts, close #401 for good — two chart libs and rewriting 9 charts not worth it (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] ResizeObserver instead of container queries (incompatible with iOS 15 Safari) (de: toi; source: b2-02)\n- [décision] Flag on only for Zest's workspace; v1 dashboards stay behind the flag until January (de: toi; source: b2-04)\n- [question] Nothing pending; visx cleanup confirmed done — no `@visx/*` left in `web/package.json` (de: agent; source: d4-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1740,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4869,
+    "sortie": 509,
+    "reflexion": 18,
+    "cache": 0,
+    "cout": 0.00243778
+  },
+  "cout": 0.00243778,
+  "latenceMs": 4143,
+  "fournisseur": "Z.AI"
+}

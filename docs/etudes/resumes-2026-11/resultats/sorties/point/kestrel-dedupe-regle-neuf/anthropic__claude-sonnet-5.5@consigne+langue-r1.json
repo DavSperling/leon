@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@consigne+langue",
+  "rep": 1,
+  "date": "2026-11-18T14:40:53.977Z",
+  "reponse": "## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's dedupe, not to replays. iOS SDK 3.2.0 sends `event_id` as a per-session counter, so the event_id-only key dropped distinct events. About 1.18M Orbitly events were lost (≈8.1% of iOS volume), plus 3,812 for Zest Grocers [1].\n- You opened #247, which keys the dedupe on project, device and event_id and keeps the replay protection. Maya is reviewing [1][2].\n- You drafted a note asking the iOS team to restore UUIDs for `event_id` in 3.2.1 [1].\n\n## What changed\n- Maya will approve #247 once CI is green. She wants the number of dropped Orbitly events for Thursday's call with Orbitly [2].\n- Zest confirmed its dashboards are complete again after the earlier backfill, and Rachel is closing their Zendesk ticket [6].\n\n## What is still open\n- Reply to Maya on #247 with the Orbitly figure: ~1,179,950 legitimate events dropped, plus 4,352 genuine replays correctly skipped [1][2].\n- Once #247 is merged and deployed, run the replay from landing for Orbitly and Zest, from 2026-11-13 09:40 UTC. Orbitly takes about 40 minutes. Running it before the deploy would drop the events again. Then check that the drop counter stays near zero [1].\n- Add the alert for the dead-letter queue above 1,000 messages before Friday's incident review on 20/11 [7].\n- Send the iOS team your note, and answer Orbitly's PM as to whether this is related to the incident [1].",
+  "rendu": "## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's dedupe, not to replays. iOS SDK 3.2.0 sends `event_id` as a per-session counter, so the event_id-only key dropped distinct events. About 1.18M Orbitly events were lost (≈8.1% of iOS volume), plus 3,812 for Zest Grocers [1].\n- You opened #247, which keys the dedupe on project, device and event_id and keeps the replay protection. Maya is reviewing [1][2].\n- You drafted a note asking the iOS team to restore UUIDs for `event_id` in 3.2.1 [1].\n\n## What changed\n- Maya will approve #247 once CI is green. She wants the number of dropped Orbitly events for Thursday's call with Orbitly [2].\n- Zest confirmed its dashboards are complete again after the earlier backfill, and Rachel is closing their Zendesk ticket [6].\n\n## What is still open\n- Reply to Maya on #247 with the Orbitly figure: ~1,179,950 legitimate events dropped, plus 4,352 genuine replays correctly skipped [1][2].\n- Once #247 is merged and deployed, run the replay from landing for Orbitly and Zest, from 2026-11-13 09:40 UTC. Orbitly takes about 40 minutes. Running it before the deploy would drop the events again. Then check that the drop counter stays near zero [1].\n- Add the alert for the dead-letter queue above 1,000 messages before Friday's incident review on 20/11 [7].\n- Send the iOS team your note, and answer Orbitly's PM as to whether this is related to the incident [1].",
+  "mesures": {
+    "mots": 233,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6679,
+    "sortie": 565,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019008
+  },
+  "cout": 0.019008,
+  "latenceMs": 4657,
+  "fournisseur": "Claude Platform on AWS"
+}

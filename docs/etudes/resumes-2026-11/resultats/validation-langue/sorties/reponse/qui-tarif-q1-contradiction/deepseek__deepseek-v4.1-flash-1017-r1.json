@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:45:49.635Z",
+  "reponse": "The most recent guidance says the Q1 payout fee is 0.45%, not 0.40%, after Gil’s review [2]. That conflicts with the earlier proposal v3, which says 0.40% [1], and the draft customer notice, also 0.40% [4]. Slack notes Pinecrest was already told 0.40% [2], and the Pinecrest QBR mentions 0.40% [3]. Volume tiers are unchanged [2].",
+  "rendu": "The most recent guidance says the Q1 payout fee is 0.45%, not 0.40%, after Gil’s review [2]. That conflicts with the earlier proposal v3, which says 0.40% [1], and the draft customer notice, also 0.40% [4]. Slack notes Pinecrest was already told 0.40% [2], and the Pinecrest QBR mentions 0.40% [3]. Volume tiers are unchanged [2].",
+  "mesures": {
+    "mots": 56,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1034,
+    "sortie": 356,
+    "reflexion": 252,
+    "cache": 0,
+    "cout": 0.00043786
+  },
+  "cout": 0.00043786,
+  "latenceMs": 2678,
+  "fournisseur": "Ionstream"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:20:28.086Z",
+  "reponse": "## Où j'en suis\nThe dashboard grid is built behind the `dashboards_v2` flag: drag and resize, with the layout saved per user through `PUT /dashboards/:id/layout` and a localStorage fallback. Container queries were replaced by a ResizeObserver hook so widgets resize on iOS 15, `DashboardTile` was renamed `WidgetCard`, and the Storybook build is fixed. Draft PR #418 is open.\n\n- [en-cours] Priya's UX review on iPad (BrowserStack, iOS 15.7) before the Zest demo\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin before the demo on Tuesday 24th\n- [essai-raté] Container queries: iOS 15 Safari ignores `@container` rules silently, so widgets never resized on Zest's iPads\n- [décision] Drop container queries and use the ResizeObserver hook, to avoid two sizing systems (source: t09)\n- [décision] Keep the v1 dashboards behind the flag until January and remove nothing now (source: t15)\n- [décision] Rename `DashboardTile` to `WidgetCard` everywhere (source: t11)",
+  "rendu": "## Où j'en suis\nThe dashboard grid is built behind the `dashboards_v2` flag: drag and resize, with the layout saved per user through `PUT /dashboards/:id/layout` and a localStorage fallback. Container queries were replaced by a ResizeObserver hook so widgets resize on iOS 15, `DashboardTile` was renamed `WidgetCard`, and the Storybook build is fixed. Draft PR #418 is open.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Priya's UX review on iPad (BrowserStack, iOS 15.7) before the Zest demo\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin before the demo on Tuesday 24th\n- [essai-raté] Container queries: iOS 15 Safari ignores `@container` rules silently, so widgets never resized on Zest's iPads\n- [décision] Drop container queries and use the ResizeObserver hook, to avoid two sizing systems (source: t09)\n- [décision] Keep the v1 dashboards behind the flag until January and remove nothing now (source: t15)\n- [décision] Rename `DashboardTile` to `WidgetCard` everywhere (source: t11)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1134,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5180,
+    "sortie": 1302,
+    "reflexion": 894,
+    "cache": 0,
+    "cout": 0.001169
+  },
+  "cout": 0.001169,
+  "latenceMs": 6243,
+  "fournisseur": "Claude Platform on AWS"
+}

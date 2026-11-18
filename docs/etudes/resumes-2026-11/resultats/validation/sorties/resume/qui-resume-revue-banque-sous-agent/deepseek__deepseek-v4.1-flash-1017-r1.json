@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-revue-banque-sous-agent",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:39.468Z",
+  "reponse": "## Où j'en suis\nFour of the five items for Corvane's annual oversight review are ready in `corvane-2026/`: the complaints log (214 complaints from 1,368 tickets, median resolution 31 h), the 41-seller high-risk list with the 6 expired EDD reviews flagged, the Nov 10 payout-delay disclosure, and the 25-screening OFAC sample. The AML policy answer (v3.1 current plus v3.2 draft) is agreed but the cover letter is not written; the package is due to Kofi Mensah on Fri Nov 27.\n\n- [en-cours] Cover letter not started; the incident's root cause is still marked preliminary pending postmortem QPAY-2291.\n- [prochaine-étape] Write the cover letter, get Rotem's confirmation on the remediation date, do a final read.\n- [question] Whether 6 EDD refreshes by 2026-12-11 is realistic for KYC ops (marked TBC).\n- [décision] Send all 41 sellers, the 6 expired ones flagged, with seller ID, business type and risk reason only, no owner names/SSN/DOB (source: t11)\n- [décision] Disclose any incident affecting settlement, no dollar threshold (source: t17)\n- [décision] Send v3.1 plus the v3.2 draft marked pending board approval, and say so in the cover letter (source: t23)",
+  "rendu": "## Où j'en suis\nFour of the five items for Corvane's annual oversight review are ready in `corvane-2026/`: the complaints log (214 complaints from 1,368 tickets, median resolution 31 h), the 41-seller high-risk list with the 6 expired EDD reviews flagged, the Nov 10 payout-delay disclosure, and the 25-screening OFAC sample. The AML policy answer (v3.1 current plus v3.2 draft) is agreed but the cover letter is not written; the package is due to Kofi Mensah on Fri Nov 27.\n\n- [en-cours] Cover letter not started; the incident's root cause is still marked preliminary pending postmortem QPAY-2291.\n- [prochaine-étape] Write the cover letter, get Rotem's confirmation on the remediation date, do a final read.\n- [question] Whether 6 EDD refreshes by 2026-12-11 is realistic for KYC ops (marked TBC).\n- [décision] Send all 41 sellers, the 6 expired ones flagged, with seller ID, business type and risk reason only, no owner names/SSN/DOB (source: t11)\n- [décision] Disclose any incident affecting settlement, no dollar threshold (source: t17)\n- [décision] Send v3.1 plus the v3.2 draft marked pending board approval, and say so in the cover letter (source: t23)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1160,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3856,
+    "sortie": 1067,
+    "reflexion": 743,
+    "cache": 0,
+    "cout": 0.00097488
+  },
+  "cout": 0.00097488,
+  "latenceMs": 7873,
+  "fournisseur": "Novita"
+}

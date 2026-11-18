@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:39.360Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21126,
+    "sortie": 408,
+    "reflexion": 95,
+    "cache": 10240,
+    "cout": 0.0020313
+  },
+  "latenceMs": 6339,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"bank support staff log in company accounts December 1 SSO\"}",
+    "chercher {\"requete\":\"support bank \\\"December 1\\\" login company accounts\"}",
+    "chercher {\"requete\":\"bank single sign-on company account rollout\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "chercher {\"requete\":\"support question Fernhill staff log in company accounts December 1 reply Sam Ortiz bank\"}",
+    "chercher {\"requete\":\"customer support question bank staff login company account December 1 SSO\",\"type\":\"ticket\"}"
+  ],
+  "cout": 0.0020313
+}

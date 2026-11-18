@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:43.402Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet — the team agreed to wait until after her final round with Maya before discussing numbers [4], and the same reminder was posted in #hiring-sre [3]. Her final is scheduled for November 24, 2026 [1]. The role's compensation band for Tel Aviv is 520–600k ILS base, with offers above the band requiring CEO approval [2]. Yael only said she expects something \"competitive with big tech\" and gave no figure [4].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet — the team agreed to wait until after her final round with Maya before discussing numbers [4], and the same reminder was posted in #hiring-sre [3]. Her final is scheduled for November 24, 2026 [1]. The role's compensation band for Tel Aviv is 520–600k ILS base, with offers above the band requiring CEO approval [2]. Yael only said she expects something \"competitive with big tech\" and gave no figure [4].",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1062,
+    "sortie": 196,
+    "reflexion": 77,
+    "cache": 0,
+    "cout": 0.00020356
+  },
+  "cout": 0.00020356,
+  "latenceMs": 3855,
+  "fournisseur": "Xiaomi"
+}

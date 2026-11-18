@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:22.886Z",
+  "reponse": "## Où j'en suis\nThe Q1 pricing thread is at the notice stage. Per-customer exceptions are in the model (Loomly and Pinecrest on the old rate until 2027-03-31, Tradewell excluded), the impact rerun sits at +$351k annualized with 5 customers above +10% from 1 Jan, and `notice/q1-pricing-notice.md` holds a standard version plus a Loomly/Pinecrest variant, with the instant-payout line removed. Nothing has been sent: Gil and Rachel review Friday 20 Nov 10:00 Austin, then the notice goes out from Salesforce before 1 Dec. (source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] 38 notices ready (36 standard, Loomly + Pinecrest variant); Rachel calls Loomly before the notice lands (source: p3-08, p3-01)\n- [prochaine-étape] Gil and Rachel's review Friday, then the Salesforce mass email to the 38 billing contacts, before 1 Dec (source: p3-09, src-slack-gil, p3-10)\n- [essai-raté] Salesforce volume export had no October volume for 5 customers (KeyError on Pinecrest Rentals); the dashboard billing CSV now covers all 38 (source: p2-02, p2-03)\n- [essai-raté] Flat 0.40% + $0.30 was rejected: small marketplaces pay less, large ones still lose money (source: p1-03, p1-05)\n- [question] Loomly's CFO writes that Loomly stays on the current rate for all of 2027, but the agreed exception and the notice variant end it on 31 March — the variant and the call need to line up (source: src-mail-loomly, p3-01)\n- [question] Whether the +1% instant payout surcharge can apply to existing contracts under the MSA; Hartley & Moss answer Monday (source: p3-05, p2-05)\n- [décision] Tiered pricing: 0.55% under $5M monthly payout, 0.45% $5M–$25M, 0.35% above, $0.25 per payout unchanged (source: p2-03)\n- [décision] Loomly and Pinecrest keep 0.50% + $0.25 until 2027-03-31 and move to tiers on 1 April; Tradewell excluded; everyone else from 1 Jan (source: p3-01)\n- [décision] No instant-payout line in the notice until legal answers (source: p3-05)",
+  "rendu": "## Où j'en suis\nThe Q1 pricing thread is at the notice stage. Per-customer exceptions are in the model (Loomly and Pinecrest on the old rate until 2027-03-31, Tradewell excluded), the impact rerun sits at +$351k annualized with 5 customers above +10% from 1 Jan, and `notice/q1-pricing-notice.md` holds a standard version plus a Loomly/Pinecrest variant, with the instant-payout line removed. Nothing has been sent: Gil and Rachel review Friday 20 Nov 10:00 Austin, then the notice goes out from Salesforce before 1 Dec. (de: connecteur, agent; source: ses-px-3, p3-10, src-slack-gil)\n\n- [en-cours] 38 notices ready (36 standard, Loomly + Pinecrest variant); Rachel calls Loomly before the notice lands (de: toi, agent; source: p3-08, p3-01)\n- [prochaine-étape] Gil and Rachel's review Friday, then the Salesforce mass email to the 38 billing contacts, before 1 Dec (de: toi, connecteur, agent; source: p3-09, src-slack-gil, p3-10)\n- [essai-raté] Salesforce volume export had no October volume for 5 customers (KeyError on Pinecrest Rentals); the dashboard billing CSV now covers all 38 (de: toi, agent; source: p2-02, p2-03)\n- [essai-raté] Flat 0.40% + $0.30 was rejected: small marketplaces pay less, large ones still lose money (de: toi, agent; source: p1-03, p1-05)\n- [question] Loomly's CFO writes that Loomly stays on the current rate for all of 2027, but the agreed exception and the notice variant end it on 31 March — the variant and the call need to line up (de: toi, connecteur; source: src-mail-loomly, p3-01)\n- [question] Whether the +1% instant payout surcharge can apply to existing contracts under the MSA; Hartley & Moss answer Monday (de: toi; source: p3-05, p2-05)\n- [décision] Tiered pricing: 0.55% under $5M monthly payout, 0.45% $5M–$25M, 0.35% above, $0.25 per payout unchanged (de: toi; source: p2-03)\n- [décision] Loomly and Pinecrest keep 0.50% + $0.25 until 2027-03-31 and move to tiers on 1 April; Tradewell excluded; everyone else from 1 Jan (de: toi; source: p3-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1995,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4701,
+    "sortie": 1773,
+    "reflexion": 1171,
+    "cache": 0,
+    "cout": 0.00208647
+  },
+  "cout": 0.00208647,
+  "latenceMs": 10836,
+  "fournisseur": "Ionstream"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:30.104Z",
+  "reponse": "Deux causes distinctes apparaissent. Le webhook inventory_levels/update était traité deux fois quand un produit a deux emplacements, ce qui décrémentait le stock en double ; corrigé par une déduplication sur (inventory_item_id, location_id, updated_at), fusionnée dans main [1], après un diagnostic en session de code [2]. Mais le stock négatif de la variante SAO-180-CC (#91) n'est pas lié à cette PR : c'est l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5], alors que le ticket #91 soupçonnait un lien avec la #87 [3]. Un client s'est plaint d'un délai de 6 semaines sur une table affichée en stock [4].",
+  "rendu": "Deux causes distinctes apparaissent. Le webhook inventory_levels/update était traité deux fois quand un produit a deux emplacements, ce qui décrémentait le stock en double ; corrigé par une déduplication sur (inventory_item_id, location_id, updated_at), fusionnée dans main [1], après un diagnostic en session de code [2]. Mais le stock négatif de la variante SAO-180-CC (#91) n'est pas lié à cette PR : c'est l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils de la veille, avant deux commandes [5], alors que le ticket #91 soupçonnait un lien avec la #87 [3]. Un client s'est plaint d'un délai de 6 semaines sur une table affichée en stock [4].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1154,
+    "sortie": 287,
+    "reflexion": 90,
+    "cache": 512,
+    "cout": 0.0002160288
+  },
+  "cout": 0.0002160288,
+  "latenceMs": 4313,
+  "fournisseur": "River"
+}

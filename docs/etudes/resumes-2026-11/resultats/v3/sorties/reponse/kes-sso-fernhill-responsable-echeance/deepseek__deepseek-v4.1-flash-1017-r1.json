@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:13.099Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [1][3]. The internal due date is Nov 27, leaving a buffer before the contractual go-live [1], which the signed order form sets at December 1, 2026, with a 10% Q1 credit if missed [2]. The production IdP metadata from Fernhill's change board isn't expected before Nov 26 [6].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [1][3]. The internal due date is Nov 27, leaving a buffer before the contractual go-live [1], which the signed order form sets at December 1, 2026, with a 10% Q1 credit if missed [2]. The production IdP metadata from Fernhill's change board isn't expected before Nov 26 [6].",
+  "mesures": {
+    "mots": 56,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1324,
+    "sortie": 132,
+    "reflexion": 45,
+    "cache": 0,
+    "cout": 0.00018974
+  },
+  "cout": 0.00018974,
+  "latenceMs": 1323,
+  "fournisseur": "InferenceNet"
+}

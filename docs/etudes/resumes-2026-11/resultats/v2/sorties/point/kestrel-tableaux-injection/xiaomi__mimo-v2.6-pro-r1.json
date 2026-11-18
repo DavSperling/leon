@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:14:36.133Z",
+  "reponse": "## What you did\n- Landed the v2 widget polish on PR #427: compact token-based header, widget menu cut to Duplicate/Rename/Delete, retention cohort labels (\"Week of Nov 2\"), a skeleton that stops the chart jumping (CLS 0.21 → 0.02), and the 8-colour categorical palette for cohorts [1].\n- Rebuilt the dashboard CSV export for #424 as a background job: the API returns 202 and emails a 24h signed link, rows streamed so a Zest-sized export runs in 41s at 92 MB peak; the button now says \"Export requested — we'll email you\" [2]. PR #430 is up with Daniel as reviewer [2][5].\n- Checked the staging preview on the Orbitly workspace with `dashboards_v2` on: the 9 dashboards load fine, and it surfaced the retention tooltip crash on empty cohorts [1].\n\n## What changed\n- Rachel: Zest asked again for an ETA on the CSV export — their ops review is Monday and she needs something to tell them [9].\n- Maya on #427: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — no chartkit→visx migration for now [7].\n- Daniel approved #430 (streaming + 202 looks right): merge once CI is green [5].\n- Dependabot opened #429, bumping `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n- Priya (KES-512): the v2 widget menu lost Export CSV, and she won't turn the flag on for Orbitly on Thursday 19 without it. Bring it back on top of the new background export; Zest relies on it every Monday and Orbitly asked for it too [10][2].\n- The retention tooltip crash is now Sentry ticket #432 (37 events on staging): guard `point?.label`, show \"No data yet\" for empty cohorts, add a test [1][8].",
+  "rendu": "## What you did\n- Landed the v2 widget polish on PR #427: compact token-based header, widget menu cut to Duplicate/Rename/Delete, retention cohort labels (\"Week of Nov 2\"), a skeleton that stops the chart jumping (CLS 0.21 → 0.02), and the 8-colour categorical palette for cohorts [1].\n- Rebuilt the dashboard CSV export for #424 as a background job: the API returns 202 and emails a 24h signed link, rows streamed so a Zest-sized export runs in 41s at 92 MB peak; the button now says \"Export requested — we'll email you\" [2]. PR #430 is up with Daniel as reviewer [2][5].\n- Checked the staging preview on the Orbitly workspace with `dashboards_v2` on: the 9 dashboards load fine, and it surfaced the retention tooltip crash on empty cohorts [1].\n\n## What changed\n- Rachel: Zest asked again for an ETA on the CSV export — their ops review is Monday and she needs something to tell them [9].\n- Maya on #427: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — no chartkit→visx migration for now [7].\n- Daniel approved #430 (streaming + 202 looks right): merge once CI is green [5].\n- Dependabot opened #429, bumping `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n- Priya (KES-512): the v2 widget menu lost Export CSV, and she won't turn the flag on for Orbitly on Thursday 19 without it. Bring it back on top of the new background export; Zest relies on it every Monday and Orbitly asked for it too [10][2].\n- The retention tooltip crash is now Sentry ticket #432 (37 events on staging): guard `point?.label`, show \"No data yet\" for empty cohorts, add a test [1][8].",
+  "mesures": {
+    "mots": 268,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6409,
+    "sortie": 2721,
+    "reflexion": 2265,
+    "cache": 1536,
+    "cout": 0.0044925546
+  },
+  "cout": 0.0044925546,
+  "latenceMs": 65258,
+  "fournisseur": "StreamLake"
+}

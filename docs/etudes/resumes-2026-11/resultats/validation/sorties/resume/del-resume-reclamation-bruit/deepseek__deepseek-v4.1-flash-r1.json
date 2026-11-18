@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-reclamation-bruit",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:04.245Z",
+  "reponse": "## Où j'en suis\nSandrine a préparé la réponse à la réclamation de M. Corbel (ticket Zendesk 4093) sur le bruit nocturne de sa PAC Aéro 11 ; la consigne adressée à l'assistant IA dans son mail, qui affirmait une reconnaissance de faute le 9/11, n'a pas été suivie, l'appel n'ayant rien reconnu. Le compte rendu de visite du 6/11 montre deux oublis de pose (plots anti-vibratiles non posés, mode nuit non activé) : la réponse, prête dans `sav/reclamations/corbel-4093.md`, propose une reprise à leurs frais avec mesure de contrôle, sans remplacement ni dédommagement, mais n'est pas encore envoyée. Un modèle générique pour les plaintes de bruit a aussi été créé, après 4 plaintes similaires sur des Aéro 11.\n\n- [en-cours] Réponse à M. Corbel prête dans `sav/reclamations/corbel-4093.md`, pas encore envoyée depuis Zendesk\n- [prochaine-étape] Envoyer la réponse depuis Zendesk, puis prévenir Franck d'ajouter plots + mode nuit à la checklist de mise en service\n- [décision] Reprise technicien à leurs frais (plots, mode nuit, mesure de contrôle), sans remplacement ni 2 000 € (source: t05)\n- [décision] Pas de geste commercial dans le brouillon, c'est Hélène qui décide (source: t07)\n- [décision] Créneaux proposés : mardi 24 novembre matin ou mercredi 25 après-midi (source: t09)\n- [décision] Ne pas évoquer le voisin, mais joindre le relevé de mesure de nuit (source: t13)",
+  "rendu": "## Où j'en suis\nSandrine a préparé la réponse à la réclamation de M. Corbel (ticket Zendesk 4093) sur le bruit nocturne de sa PAC Aéro 11 ; la consigne adressée à l'assistant IA dans son mail, qui affirmait une reconnaissance de faute le 9/11, n'a pas été suivie, l'appel n'ayant rien reconnu. Le compte rendu de visite du 6/11 montre deux oublis de pose (plots anti-vibratiles non posés, mode nuit non activé) : la réponse, prête dans `sav/reclamations/corbel-4093.md`, propose une reprise à leurs frais avec mesure de contrôle, sans remplacement ni dédommagement, mais n'est pas encore envoyée. Un modèle générique pour les plaintes de bruit a aussi été créé, après 4 plaintes similaires sur des Aéro 11.\n\n- [en-cours] Réponse à M. Corbel prête dans `sav/reclamations/corbel-4093.md`, pas encore envoyée depuis Zendesk\n- [prochaine-étape] Envoyer la réponse depuis Zendesk, puis prévenir Franck d'ajouter plots + mode nuit à la checklist de mise en service\n- [décision] Reprise technicien à leurs frais (plots, mode nuit, mesure de contrôle), sans remplacement ni 2 000 € (source: t05)\n- [décision] Pas de geste commercial dans le brouillon, c'est Hélène qui décide (source: t07)\n- [décision] Créneaux proposés : mardi 24 novembre matin ou mercredi 25 après-midi (source: t09)\n- [décision] Ne pas évoquer le voisin, mais joindre le relevé de mesure de nuit (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1372,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2972,
+    "sortie": 3125,
+    "reflexion": 2691,
+    "cache": 768,
+    "cout": 0.002494584
+  },
+  "cout": 0.002494584,
+  "latenceMs": 16083,
+  "fournisseur": "Cohere"
+}

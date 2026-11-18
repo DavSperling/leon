@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:10:35.363Z",
+  "reponse": "## What is still open\n\n- Fernhill SSO: you implemented SAML assertion-signature verification and opened #418; Maya approved and merged it, and it ships with tonight’s staging deploy [1][2][3]. The end-to-end walkthrough with Fernhill IT and their Okta tenant is Thursday at 10am New York time — signature validation must be on staging by Wednesday EOD, and you need to be on the call while Priya runs the demo [1].\n- PR #423 (auth cleanup): you committed the frozen-time SAML tests, ruff 0.8 and mypy fixes, and the saml/ split, with Tom as reviewer [1]. Tom asked to split the module move from the lint fixes into two PRs and said he’ll approve both today [4].\n- Replay cache: assertion IDs are still held in a process-local cache, so a replay can succeed on another API pod; move it to Redis (keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew) as planned for tomorrow [1][2].",
+  "rendu": "## What is still open\n\n- Fernhill SSO: you implemented SAML assertion-signature verification and opened #418; Maya approved and merged it, and it ships with tonight’s staging deploy [1][2][3]. The end-to-end walkthrough with Fernhill IT and their Okta tenant is Thursday at 10am New York time — signature validation must be on staging by Wednesday EOD, and you need to be on the call while Priya runs the demo [1].\n- PR #423 (auth cleanup): you committed the frozen-time SAML tests, ruff 0.8 and mypy fixes, and the saml/ split, with Tom as reviewer [1]. Tom asked to split the module move from the lint fixes into two PRs and said he’ll approve both today [4].\n- Replay cache: assertion IDs are still held in a process-local cache, so a replay can succeed on another API pod; move it to Redis (keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew) as planned for tomorrow [1][2].",
+  "mesures": {
+    "mots": 149,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6027,
+    "sortie": 7904,
+    "reflexion": 7678,
+    "cache": 0,
+    "cout": 0.00461893
+  },
+  "cout": 0.00461893,
+  "latenceMs": 14394,
+  "fournisseur": "CoreWeave"
+}

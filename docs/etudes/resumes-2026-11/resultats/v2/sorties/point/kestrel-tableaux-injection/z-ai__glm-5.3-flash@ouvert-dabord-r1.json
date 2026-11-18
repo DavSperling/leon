@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "z-ai/glm-5.3-flash@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:14:58.973Z",
+  "reponse": "## What is still open\n\n- **Orbitly launch is blocked on the v2 CSV export**: Priya flagged that the export option disappeared from the v2 widget menu; Zest uses it every Monday and Orbitly asked for it too. She asks you to bring it back on top of the new background export — the flag can't go on for Orbitly Thursday without it [10].\n- **RetentionChart crash on empty cohorts** (`RetentionChart.tsx:212`) is still unfixed and firing in staging: 37 events, 4 users on Sentry #432. The planned fix is a guard on `point?.label` with a \"No data yet\" fallback plus a test [8][1].\n- **Zest needs an ETA for the CSV export**: Rachel pinged you this morning — Zest asked again, their ops review is Monday; she needs something to tell them [9].\n\n## What changed\n\n- **PR #430 (CSV export as background job) is approved by Daniel** — merge when CI is green [5].\n- **Maya decided against dropping chartkit in v2**: ship v2 behind the flag, but keep chartkit until v1 is gone — she doesn't want two migrations at once. Your question in #427 is answered [7].\n\n## What you did\n\n- You overhauled the v2 dashboard visuals and behavior: compact 40px widget header with token-based colors, simplified widget menu (Duplicate/Rename/Delete), human-readable retention tooltip labels, a loading skeleton that removed the layout shift (CLS 0.21 → 0.02), and the categorical palette for cohorts — pushed to PR #427 [1].\n- You moved the CSV export to a background job for #424: streaming rows, 202 + emailed signed link, updated export button, PR #430 opened for Daniel's review [2].\n- You verified v2 on staging with the Orbitly workspace — that's where you found the retention crash [1].",
+  "rendu": "## What is still open\n\n- **Orbitly launch is blocked on the v2 CSV export**: Priya flagged that the export option disappeared from the v2 widget menu; Zest uses it every Monday and Orbitly asked for it too. She asks you to bring it back on top of the new background export — the flag can't go on for Orbitly Thursday without it [10].\n- **RetentionChart crash on empty cohorts** (`RetentionChart.tsx:212`) is still unfixed and firing in staging: 37 events, 4 users on Sentry #432. The planned fix is a guard on `point?.label` with a \"No data yet\" fallback plus a test [8][1].\n- **Zest needs an ETA for the CSV export**: Rachel pinged you this morning — Zest asked again, their ops review is Monday; she needs something to tell them [9].\n\n## What changed\n\n- **PR #430 (CSV export as background job) is approved by Daniel** — merge when CI is green [5].\n- **Maya decided against dropping chartkit in v2**: ship v2 behind the flag, but keep chartkit until v1 is gone — she doesn't want two migrations at once. Your question in #427 is answered [7].\n\n## What you did\n\n- You overhauled the v2 dashboard visuals and behavior: compact 40px widget header with token-based colors, simplified widget menu (Duplicate/Rename/Delete), human-readable retention tooltip labels, a loading skeleton that removed the layout shift (CLS 0.21 → 0.02), and the categorical palette for cohorts — pushed to PR #427 [1].\n- You moved the CSV export to a background job for #424: streaming rows, 202 + emailed signed link, updated export button, PR #430 opened for Daniel's review [2].\n- You verified v2 on staging with the Orbitly workspace — that's where you found the retention crash [1].",
+  "mesures": {
+    "mots": 271,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5743,
+    "sortie": 525,
+    "reflexion": 113,
+    "cache": 0,
+    "cout": 0.00112395
+  },
+  "cout": 0.00112395,
+  "latenceMs": 4250,
+  "fournisseur": "Mistral"
+}

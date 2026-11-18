@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:04.635Z",
+  "reponse": "## What is still open\n- Get draft PR quillon/dashboard#402 onto staging by Thursday EOD for the Loomly demo on Friday 20/11 at 4pm CT. Jake’s events endpoint has slipped to Monday 23/11, so Friday’s demo will need mocked data; Sofia explicitly accepts a mocked returned state. [2][6]\n- The returned-state reason is still unresolved: core lacks the R-code-to-text mapping, so the timeline currently shows raw codes such as “Returned (R02)”. [1][6]\n\n## What changed\n- Carla reports 23 Loomly “where is my payout” support tickets this week and expects the timeline’s expected dates to eliminate roughly half of them. [5]\n- A repository ticket reports that `next build` fails with `ERR_REQUIRE_ESM` on Node 22.11. [3]\n\n## What you did\n- Built the seller payout timeline behind `payout_timeline`, with mocked events, Storybook coverage for every state, accessible status announcements, and Corvane “expected by” dates handling weekends and Federal Reserve holidays. All 48 tests pass, and you opened draft PR #402. [1]",
+  "rendu": "## What is still open\n- Get draft PR quillon/dashboard#402 onto staging by Thursday EOD for the Loomly demo on Friday 20/11 at 4pm CT. Jake’s events endpoint has slipped to Monday 23/11, so Friday’s demo will need mocked data; Sofia explicitly accepts a mocked returned state. [2][6]\n- The returned-state reason is still unresolved: core lacks the R-code-to-text mapping, so the timeline currently shows raw codes such as “Returned (R02)”. [1][6]\n\n## What changed\n- Carla reports 23 Loomly “where is my payout” support tickets this week and expects the timeline’s expected dates to eliminate roughly half of them. [5]\n- A repository ticket reports that `next build` fails with `ERR_REQUIRE_ESM` on Node 22.11. [3]\n\n## What you did\n- Built the seller payout timeline behind `payout_timeline`, with mocked events, Storybook coverage for every state, accessible status announcements, and Corvane “expected by” dates handling weekends and Federal Reserve holidays. All 48 tests pass, and you opened draft PR #402. [1]",
+  "mesures": {
+    "mots": 153,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4566,
+    "sortie": 727,
+    "reflexion": 468,
+    "cache": 0,
+    "cout": 0.016402
+  },
+  "cout": 0.016402,
+  "latenceMs": 16126,
+  "fournisseur": "Together"
+}

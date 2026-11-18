@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5@langue@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:32:22.444Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home` (3 commits, history limited to the exercise). It has a compose stack that builds `flaky-svc` from source, a broken alert rule, a connection leak, an over-broad IAM policy in Terraform, a 3-hour time box and no Kubernetes. The rubric has four areas scored 0–3, with no cut-off, and Noa is the second reviewer. Nothing has been sent to the candidate.\n\n- [en-cours] Removing `hiring/` from the `maya/sre-take-home` working tree: done but not committed, no PR opened\n- [prochaine-étape] After the Thursday 4pm call, send the exercise yourself (repo invite and README)\n- [essai-raté] Multi-arch build with `--load` failed: the docker exporter can't load manifest lists. The prebuilt amd64 image also broke on Apple Silicon, so `flaky-svc` now builds from source in compose\n- [question] When to invite the candidate to the private repo\n- [décision] 3-hour time box, Terraform and compose only, no Kubernetes (source: t03)\n- [décision] Candidates build `flaky-svc` from source, no prebuilt image (source: t06)\n- [décision] No pass threshold: scores are input for the panel, with Noa as second reviewer (source: t10)\n- [décision] Exercise in its own private repo, not in infra (source: t12)\n- [décision] Delete `hiring/` from the infra branch, no PR there (source: t14)\n- [décision] Nothing emailed; you send the exercise yourself after the call (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home` (3 commits, history limited to the exercise). It has a compose stack that builds `flaky-svc` from source, a broken alert rule, a connection leak, an over-broad IAM policy in Terraform, a 3-hour time box and no Kubernetes. The rubric has four areas scored 0–3, with no cut-off, and Noa is the second reviewer. Nothing has been sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] 3-hour time box, Terraform and compose only, no Kubernetes (source: t03)\n- [décision] Candidates build `flaky-svc` from source, no prebuilt image (source: t06)\n- [décision] No pass threshold: scores are input for the panel, with Noa as second reviewer (source: t10)\n- [décision] Exercise in its own private repo, not in infra (source: t12)\n- [décision] Delete `hiring/` from the infra branch, no PR there (source: t14)\n- [décision] Nothing emailed; you send the exercise yourself after the call (source: t16)\n- [en-cours] Removing `hiring/` from the `maya/sre-take-home` working tree: done but not committed, no PR opened\n- [prochaine-étape] After the Thursday 4pm call, send the exercise yourself (repo invite and README)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1293,
+    "decisions": 6,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5123,
+    "sortie": 2018,
+    "reflexion": 1459,
+    "cache": 0,
+    "cout": 0.0015213
+  },
+  "cout": 0.0015213,
+  "latenceMs": 8942,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

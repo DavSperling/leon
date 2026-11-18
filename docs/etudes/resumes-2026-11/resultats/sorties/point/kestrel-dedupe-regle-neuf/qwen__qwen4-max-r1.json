@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:24:25.858Z",
+  "reponse": "## What changed\n- Maya is holding #247 until you give her the count of dropped Orbitly events for **Thursday's call with Orbitly**: 1,179,950 legitimate events, ≈8.1% of their iOS volume since 13/11. She approves as soon as CI is green [1][2].\n\n## What you did\n- Orbitly's ~8% iOS funnel drop is our own fault, not a replay: kestrel-ios 3.2.0 turned `event_id` into a per-session counter, so #240's dedupe threw away distinct events from different devices. Fix in PR #247 keys on project/device/event_id and still drops genuine replays [1].\n- Zest Grocers' pilot store app runs the same SDK version and lost 3,812 events the same way; all other customers are unaffected [1].\n\n## What is still open\n- Once #247 is **deployed** (not just merged), replay Orbitly from landing for 13/11 onward (~40 min) and Zest (seconds), then verify `ingest_dedupe_dropped_total` for Orbitly stays near zero. Running it before deploy loses the events again [1].\n- Your action item from the postmortem prep: alert when the ingest dead-letter queue exceeds 1,000 messages, **before Friday's incident review (20/11)** [7].\n- The note to the iOS team is still a draft: `event_id` must go back to UUIDs in 3.2.1, since other consumers rely on the contract and this will recur [1].",
+  "rendu": "## What changed\n- Maya is holding #247 until you give her the count of dropped Orbitly events for **Thursday's call with Orbitly**: 1,179,950 legitimate events, ≈8.1% of their iOS volume since 13/11. She approves as soon as CI is green [1][2].\n\n## What you did\n- Orbitly's ~8% iOS funnel drop is our own fault, not a replay: kestrel-ios 3.2.0 turned `event_id` into a per-session counter, so #240's dedupe threw away distinct events from different devices. Fix in PR #247 keys on project/device/event_id and still drops genuine replays [1].\n- Zest Grocers' pilot store app runs the same SDK version and lost 3,812 events the same way; all other customers are unaffected [1].\n\n## What is still open\n- Once #247 is **deployed** (not just merged), replay Orbitly from landing for 13/11 onward (~40 min) and Zest (seconds), then verify `ingest_dedupe_dropped_total` for Orbitly stays near zero. Running it before deploy loses the events again [1].\n- Your action item from the postmortem prep: alert when the ingest dead-letter queue exceeds 1,000 messages, **before Friday's incident review (20/11)** [7].\n- The note to the iOS team is still a draft: `event_id` must go back to UUIDs in 3.2.1, since other consumers rely on the contract and this will recur [1].",
+  "mesures": {
+    "mots": 201,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5086,
+    "sortie": 1425,
+    "reflexion": 1063,
+    "cache": 0,
+    "cout": 0.013339425
+  },
+  "cout": 0.013339425,
+  "latenceMs": 30342,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:58:59.885Z",
+  "reponse": "## Où j'en suis\nThe staging upgrade on branch `noa/rds-pg17` is complete: analytics-staging is on PostgreSQL 17.2, the `pg_partman` maintenance check is green, and dbt passed all 14 models. PR #57 remains open. Production is not scheduled; Maya wants a full incident-free week on staging before sign-off, with the earliest review on Nov 24. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Observe staging on PostgreSQL 17 for a full week; production remains disabled pending sign-off. (source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] After a full week without incident, get Maya’s sign-off and choose the production window; plan a separate reboot window to enable `rds.logical_replication` before the blue/green deployment. (source: src-linear-kes298, src-slack-infra, ses-pg-3)\n- [décision] Keep the production date unset until Maya signs off; the runbook now requires enabling `rds.logical_replication` and rebooting before blue/green. (source: s3-09)",
+  "rendu": "## Où j'en suis\nThe staging upgrade on branch `noa/rds-pg17` is complete: analytics-staging is on PostgreSQL 17.2, the `pg_partman` maintenance check is green, and dbt passed all 14 models. PR #57 remains open. Production is not scheduled; Maya wants a full incident-free week on staging before sign-off, with the earliest review on Nov 24. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Observe staging on PostgreSQL 17 for a full week; production remains disabled pending sign-off. (de: connecteur, agent; source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] After a full week without incident, get Maya’s sign-off and choose the production window; plan a separate reboot window to enable `rds.logical_replication` before the blue/green deployment. (de: connecteur, agent; source: src-linear-kes298, src-slack-infra, ses-pg-3)\n- [décision] Keep the production date unset until Maya signs off; the runbook now requires enabling `rds.logical_replication` and rebooting before blue/green. (de: toi; source: s3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1062,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4065,
+    "sortie": 264,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00064005
+  },
+  "cout": 0.00064005,
+  "latenceMs": 3261,
+  "fournisseur": "Azure"
+}

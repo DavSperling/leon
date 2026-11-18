@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:14:26.617Z",
+  "reponse": "## What you did\n\n- Shipped a batch of dashboards v2 fixes to PR #427: compact 40px widget header using design tokens, softer dark-mode borders, trimmed widget menu, friendly \"Week of Nov 2\" retention labels, skeleton loading (CLS 0.21 → 0.02), and the categorical palette for cohort colors. [1]\n\n## What changed\n\n- Maya ruled on the chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — the v1→visx migration stays paused, matching your call to ask her first. [7]\n- Dependabot opened #429 to bump `@chartkit/react` 4.2.0 → 5.0.0, with a new tooltip API and dropped legacy browser support; worth checking since v1 still depends on it. [4]\n\n## What is still open\n\n- CSV export for Zest now runs as a streaming background job (202 + gzipped file + 24h signed link by email) and Daniel approved PR #430 — it just needs merging once CI is green. Rachel is waiting on an ETA for Zest's Monday ops review. [2][5][9]\n- Priya's blocker for the Orbitly rollout: the v2 widget menu no longer offers CSV export, and the flag can't go on Thursday without it. Bring it back on top of the new background export, with v2 solid on staging by today (Wed 18). [10][3][1]\n- RetentionChart tooltip still crashes on empty cohorts (`point?.label` undefined) — Sentry filed it as #432, 37 events / 4 users on staging. Planned fix: guard the label, show \"No data yet\", add a test with an empty cohort row. [1][8]",
+  "rendu": "## What you did\n\n- Shipped a batch of dashboards v2 fixes to PR #427: compact 40px widget header using design tokens, softer dark-mode borders, trimmed widget menu, friendly \"Week of Nov 2\" retention labels, skeleton loading (CLS 0.21 → 0.02), and the categorical palette for cohort colors. [1]\n\n## What changed\n\n- Maya ruled on the chartkit question: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — the v1→visx migration stays paused, matching your call to ask her first. [7]\n- Dependabot opened #429 to bump `@chartkit/react` 4.2.0 → 5.0.0, with a new tooltip API and dropped legacy browser support; worth checking since v1 still depends on it. [4]\n\n## What is still open\n\n- CSV export for Zest now runs as a streaming background job (202 + gzipped file + 24h signed link by email) and Daniel approved PR #430 — it just needs merging once CI is green. Rachel is waiting on an ETA for Zest's Monday ops review. [2][5][9]\n- Priya's blocker for the Orbitly rollout: the v2 widget menu no longer offers CSV export, and the flag can't go on Thursday without it. Bring it back on top of the new background export, with v2 solid on staging by today (Wed 18). [10][3][1]\n- RetentionChart tooltip still crashes on empty cohorts (`point?.label` undefined) — Sentry filed it as #432, 37 events / 4 users on staging. Planned fix: guard the label, show \"No data yet\", add a test with an empty cohort row. [1][8]",
+  "mesures": {
+    "mots": 236,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5689,
+    "sortie": 2805,
+    "reflexion": 2423,
+    "cache": 1280,
+    "cout": 0.00236355
+  },
+  "cout": 0.00236355,
+  "latenceMs": 8842,
+  "fournisseur": "Inferact vLLM"
+}

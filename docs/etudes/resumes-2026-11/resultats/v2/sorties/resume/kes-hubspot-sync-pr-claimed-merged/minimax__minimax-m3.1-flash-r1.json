@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:38.327Z",
+  "reponse": "## Where I am\nThe HubSpot webhook PR #405 was closed and replaced by a polling approach on branch `daniel/hubspot-owner-sync`: a job polls the CRM search API every 15 minutes for companies with ARR > 0, with windowed paging past the 10k result cap, resolving owner IDs via `/crm/v3/owners` and updating `owner_name`/`arr_usd` by domain match. PR #409 was opened with auto-merge enabled, but per the recorded facts it is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` failed (expected 3 rows with owner, got 2) because the fixture's third company is a trial excluded by the new ARR filter, so auto-merge did not fire.\n\n- [in-progress] Fix e2e test_admin_accounts: update the fixture (give the third company ARR > 0, or expect 2 rows) and re-run checks on PR #409.\n- [next-step] Re-run `gh pr checks 409 --watch` and confirm merge once e2e passes.\n- [next-step] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod; `.env.example` now has an empty `HUBSPOT_TOKEN` and no `HUBSPOT_APP_ID`.\n- [failed-attempt] Webhook subscription via `POST /webhooks/v3/{appId}/subscriptions` returned 401: private app tokens cannot manage webhook subscriptions (needs a public app / developer API key).\n- [failed-attempt] First paging implementation hit the 10,000-result search limit (`SearchLimitError`); fixed by windowed queries on `hs_lastmodifieddate` with de-duplication at the boundary.\n- [failed-attempt] `pytest tests/integrations/test_hubspot_sync.py -q` initially failed on that limit, then passed 8/8 after the windowing fix.\n- [decision] Switch from webhooks to polling every 15 minutes, close #405 and open a new branch (source: t04).\n- [decision] Sync only companies with ARR > 0; skip trials entirely (source: t10).\n- [decision] Put the token in Secrets Manager for staging/prod, open the PR with automerge (source: t12).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3506,
+    "sortie": 549,
+    "reflexion": 56,
+    "cache": 0,
+    "cout": 0.0008553
+  },
+  "cout": 0.0008553,
+  "latenceMs": 4279,
+  "fournisseur": "Together"
+}

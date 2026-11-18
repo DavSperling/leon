@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:10.779Z",
+  "reponse": "Le budget du stand a été transmis à Antoine Roussel, qui demande à recevoir le devis signé pour le passer en charges sur janvier [4]. Le devis est de 18 400 € HT, valable 30 jours [1]. Rien dans ces passages n'indique qui l'a validé formellement.",
+  "rendu": "Le budget du stand a été transmis à Antoine Roussel, qui demande à recevoir le devis signé pour le passer en charges sur janvier [4]. Le devis est de 18 400 € HT, valable 30 jours [1]. Rien dans ces passages n'indique qui l'a validé formellement.",
+  "mesures": {
+    "mots": 45,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1505,
+    "sortie": 105,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000203
+  },
+  "cout": 0.000203,
+  "latenceMs": 1241,
+  "fournisseur": "Claude Platform on AWS"
+}

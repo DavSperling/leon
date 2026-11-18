@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-thermaval-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:48.404Z",
+  "reponse": "Pour la commande 4471 (14 x Aéro 11 kW chez Thermaval), la livraison initialement prévue le 13/11 a été reportée [4]. Thermaval propose d'expédier 8 unités le 23/11 pour livraison le 24/11 à Carquefou, puis les 6 restantes le 4/12, avec une remise portée à 4 % et le transport offert, mais sans accepter de pénalité de retard [1][2]. Hélène a donné son accord à ces conditions, à condition que Thermaval confirme par écrit la livraison du 24/11 sans la mention « sauf aléa transporteur » ; sinon Nadia doit revenir vers elle avant de signer [3].",
+  "rendu": "Pour la commande 4471 (14 x Aéro 11 kW chez Thermaval), la livraison initialement prévue le 13/11 a été reportée [4]. Thermaval propose d'expédier 8 unités le 23/11 pour livraison le 24/11 à Carquefou, puis les 6 restantes le 4/12, avec une remise portée à 4 % et le transport offert, mais sans accepter de pénalité de retard [1][2]. Hélène a donné son accord à ces conditions, à condition que Thermaval confirme par écrit la livraison du 24/11 sans la mention « sauf aléa transporteur » ; sinon Nadia doit revenir vers elle avant de signer [3].",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1155,
+    "sortie": 182,
+    "reflexion": 16,
+    "cache": 0,
+    "cout": 0.0001981875
+  },
+  "cout": 0.0001981875,
+  "latenceMs": 2835,
+  "fournisseur": "DigitalOcean"
+}

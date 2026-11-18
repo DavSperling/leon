@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:05:04.049Z",
+  "reponse": "**Origine.** Le problème venait de la synchro du stock avec Shopify. Le 3 novembre, l'emplacement « Showroom » a été ajouté dans Shopify [2]. Ensuite, le script `sync-stock` ne mettait à jour que l'entrepôt [11]. Le showroom gardait son ancien stock, et Shopify additionne les emplacements. Le site affichait donc du stock qui n'existait plus [2]. Des commandes ont été annulées puis remboursées (banc Rhône, buffet Croix-Rousse) [1][6]. Pour les chaises Fourvière, le site affichait 9 chaises alors que seules 2 pouvaient partir [7].\n\n**Réparé ?** Oui, apparemment. La PR #87 met à jour les deux emplacements. Hugo Petit l'a relue et testée en local, puis Julien l'a fusionnée et déployée le 13 novembre [11]. Le point d'équipe du 16 novembre confirme que la synchro est corrigée [14].\n\n**Suite prévue.** Hugo prépare un contrôle quotidien des écarts de stock (PR #91). Cette PR n'est pas encore fusionnée. Julien a demandé des retouches: ignorer les produits en précommande et ne signaler que les écarts de plus d'une pièce [12].\n\nJe n'ai pas trouvé de commande annulée pour rupture après le 13 novembre. Je n'ai pas non plus cherché de vérification explicite après le déploiement.",
+  "rendu": "**Origine.** Le problème venait de la synchro du stock avec Shopify. Le 3 novembre, l'emplacement « Showroom » a été ajouté dans Shopify [2]. Ensuite, le script `sync-stock` ne mettait à jour que l'entrepôt [11]. Le showroom gardait son ancien stock, et Shopify additionne les emplacements. Le site affichait donc du stock qui n'existait plus [2]. Des commandes ont été annulées puis remboursées (banc Rhône, buffet Croix-Rousse) [1][6]. Pour les chaises Fourvière, le site affichait 9 chaises alors que seules 2 pouvaient partir [7].\n\n**Réparé ?** Oui, apparemment. La PR #87 met à jour les deux emplacements. Hugo Petit l'a relue et testée en local, puis Julien l'a fusionnée et déployée le 13 novembre [11]. Le point d'équipe du 16 novembre confirme que la synchro est corrigée [14].\n\n**Suite prévue.** Hugo prépare un contrôle quotidien des écarts de stock (PR #91). Cette PR n'est pas encore fusionnée. Julien a demandé des retouches: ignorer les produits en précommande et ne signaler que les écarts de plus d'une pièce [12].\n\nJe n'ai pas trouvé de commande annulée pour rupture après le 13 novembre. Je n'ai pas non plus cherché de vérification explicite après le déploiement.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12015,
+    "sortie": 642,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.030449999999999998
+  },
+  "latenceMs": 5548,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"meubles plus disponibles achetés stock indisponible commande\"}",
+    "chercher {\"requete\":\"overselling out of stock items purchased inventory bug\"}"
+  ],
+  "cout": 0.030449999999999998
+}

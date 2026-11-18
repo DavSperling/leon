@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T14:36:43.161Z",
+  "reponse": "## Ce qui a changé\n- Sophie a repoussé au lundi 30 novembre l’échéance pour avoir les prix soldés dans Shopify, avant le shooting du 2 décembre. [11]\n- La PR #59, qui automatise l’étiquette « soldes » sur les produits remisés, a été fusionnée. [7]\n- Lucie signale 23 conversations ouvertes cette semaine depuis le widget Zendesk des pages produit (#52). [9]\n\n## Ce qui reste ouvert\n- Sur la PR #63, Hugo a validé en dev l’application des remises le 6 janvier à 8 h et la restauration des prix le 3 février, mais demande si le rabais de 20 % sur la Saône est voulu. Claire a tranché : la Saône doit rester hors soldes pour préserver les précommandes au plein prix. [1][4][10]\n- Sophie te demande si le flux Google Shopping (#65) peut être régénéré juste après l’application des remises le 6 janvier : la mise à jour nocturne laisserait des prix différents de ceux du site, au risque de faire refuser les annonces. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur les petits écrans (#64) ; le correctif est attendu avant le shooting. [6][11]",
+  "rendu": "## Ce qui a changé\n- Sophie a repoussé au lundi 30 novembre l’échéance pour avoir les prix soldés dans Shopify, avant le shooting du 2 décembre. [11]\n- La PR #59, qui automatise l’étiquette « soldes » sur les produits remisés, a été fusionnée. [7]\n- Lucie signale 23 conversations ouvertes cette semaine depuis le widget Zendesk des pages produit (#52). [9]\n\n## Ce qui reste ouvert\n- Sur la PR #63, Hugo a validé en dev l’application des remises le 6 janvier à 8 h et la restauration des prix le 3 février, mais demande si le rabais de 20 % sur la Saône est voulu. Claire a tranché : la Saône doit rester hors soldes pour préserver les précommandes au plein prix. [1][4][10]\n- Sophie te demande si le flux Google Shopping (#65) peut être régénéré juste après l’application des remises le 6 janvier : la mise à jour nocturne laisserait des prix différents de ceux du site, au risque de faire refuser les annonces. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur les petits écrans (#64) ; le correctif est attendu avant le shooting. [6][11]",
+  "mesures": {
+    "mots": 180,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4448,
+    "sortie": 284,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01396
+  },
+  "cout": 0.01396,
+  "latenceMs": 2509,
+  "fournisseur": "Amazon Bedrock"
+}

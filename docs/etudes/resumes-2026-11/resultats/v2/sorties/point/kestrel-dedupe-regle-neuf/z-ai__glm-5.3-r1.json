@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:09:25.456Z",
+  "reponse": "## What you did\n- You diagnosed Orbitly's iOS funnel drop: it's a real bug of ours — kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so #240's dedupe dropped distinct events from different devices. ~1.18M legitimate Orbitly events were lost (≈8.1% of their iOS volume, matching their PM's number), plus 3,812 for Zest's pilot app [1].\n- You fixed the dedupe to key on (project, device, event_id) and opened PR #247 with Maya as reviewer, keeping replay protection intact [1].\n\n## What changed\n- Maya will approve #247 once CI is green, but first wants the number of Orbitly events dropped since #240 for Thursday's Orbitly call — you have it: ~1.18M [2][1].\n- Rachel confirmed Zest's dashboards are complete and is closing their Zendesk ticket [6].\n- Noa posted the final 12/11 postmortem; she presents it at Friday's incident review [3].\n- CI's Go toolchain was bumped to 1.23.4 and merged (#245) [4].\n\n## What is still open\n- Run the landing replay for Orbitly (~40 min) and Zest (a few seconds) from 13/11 09:40 **after #247 is deployed**, then check `ingest_dedupe_dropped_total{prj_0rb1}` stays near zero [1].\n- Send the iOS team your note: 3.2.1 must restore UUID `event_id`s, or this bites again [1].\n- Per the incident review prep, you owe a dead-letter-queue alert (>1,000 messages) before Friday's review [7].",
+  "rendu": "## What you did\n- You diagnosed Orbitly's iOS funnel drop: it's a real bug of ours — kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so #240's dedupe dropped distinct events from different devices. ~1.18M legitimate Orbitly events were lost (≈8.1% of their iOS volume, matching their PM's number), plus 3,812 for Zest's pilot app [1].\n- You fixed the dedupe to key on (project, device, event_id) and opened PR #247 with Maya as reviewer, keeping replay protection intact [1].\n\n## What changed\n- Maya will approve #247 once CI is green, but first wants the number of Orbitly events dropped since #240 for Thursday's Orbitly call — you have it: ~1.18M [2][1].\n- Rachel confirmed Zest's dashboards are complete and is closing their Zendesk ticket [6].\n- Noa posted the final 12/11 postmortem; she presents it at Friday's incident review [3].\n- CI's Go toolchain was bumped to 1.23.4 and merged (#245) [4].\n\n## What is still open\n- Run the landing replay for Orbitly (~40 min) and Zest (a few seconds) from 13/11 09:40 **after #247 is deployed**, then check `ingest_dedupe_dropped_total{prj_0rb1}` stays near zero [1].\n- Send the iOS team your note: 3.2.1 must restore UUID `event_id`s, or this bites again [1].\n- Per the incident review prep, you owe a dead-letter-queue alert (>1,000 messages) before Friday's review [7].",
+  "mesures": {
+    "mots": 208,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4706,
+    "sortie": 642,
+    "reflexion": 262,
+    "cache": 0,
+    "cout": 0.00611858
+  },
+  "cout": 0.00611858,
+  "latenceMs": 5023,
+  "fournisseur": "DigitalOcean"
+}

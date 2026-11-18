@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-iso-auditnachweis",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:20.158Z",
+  "reponse": "## Où j'en suis\n\nFür das ISO-9001-Überwachungsaudit (Kapitel 8.5.6) wurde eine Übersicht der 23 produktiven Releases seit November 2025 erstellt und mit den Jira-Change-Tickets abgeglichen. Der direkte Jira-Zugriff schlug fehl, deshalb wurde ein CSV-Export verwendet. Die Abweichungen (zwei Hotfixes ohne Freigabe, drei Releases mit nachträglicher Freigabe) sind mit Maßnahmen dokumentiert. Das PDF `docs/iso/aenderungsnachweis-2026.pdf` liegt lokal, nichts ist committet.\n\n- [en-cours] PDF in SharePoint unter QM/Nachweise ablegen (durch die Person selbst)\n- [prochaine-étape] Übersicht bis Freitag, 20.11., an Anja Lindner schicken; Stichprobe in der IT am Dienstag, 24.11.\n- [essai-raté] Jira-API mit `JIRA_TOKEN`: 401 Unauthorized, Token abgelaufen oder ohne Zugriff auf Projekt ITS; stattdessen CSV-Export verwendet\n- [décision] Hotfixes nicht rückdatieren; als offene Abweichung aufnehmen, Notfall-Change-Prozess mit nachträglicher Freigabe innerhalb von 2 Arbeitstagen bis 31.12.2026 (source: a09)\n- [décision] Ab Dezember 2026 blockiert eine Branch Protection auf GitHub den Merge auf `main`, solange kein freigegebenes Change-Ticket verlinkt ist (source: a13)",
+  "rendu": "## Où j'en suis\nFür das ISO-9001-Überwachungsaudit (Kapitel 8.5.6) wurde eine Übersicht der 23 produktiven Releases seit November 2025 erstellt und mit den Jira-Change-Tickets abgeglichen. Der direkte Jira-Zugriff schlug fehl, deshalb wurde ein CSV-Export verwendet. Die Abweichungen (zwei Hotfixes ohne Freigabe, drei Releases mit nachträglicher Freigabe) sind mit Maßnahmen dokumentiert. Das PDF `docs/iso/aenderungsnachweis-2026.pdf` liegt lokal, nichts ist committet.\n\n- branche [[docs/iso-audit-2026]]\n- [en-cours] PDF in SharePoint unter QM/Nachweise ablegen (durch die Person selbst)\n- [prochaine-étape] Übersicht bis Freitag, 20.11., an Anja Lindner schicken; Stichprobe in der IT am Dienstag, 24.11.\n- [essai-raté] Jira-API mit `JIRA_TOKEN`: 401 Unauthorized, Token abgelaufen oder ohne Zugriff auf Projekt ITS; stattdessen CSV-Export verwendet\n- [décision] Hotfixes nicht rückdatieren; als offene Abweichung aufnehmen, Notfall-Change-Prozess mit nachträglicher Freigabe innerhalb von 2 Arbeitstagen bis 31.12.2026 (source: a09)\n- [décision] Ab Dezember 2026 blockiert eine Branch Protection auf GitHub den Merge auf `main`, solange kein freigegebenes Change-Ticket verlinkt ist (source: a13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1201,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5622,
+    "sortie": 1784,
+    "reflexion": 1183,
+    "cache": 0,
+    "cout": 0.0014542
+  },
+  "cout": 0.0014542,
+  "latenceMs": 7513,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:47.153Z",
+  "reponse": "Aucune offre ne semble avoir été faite à Yael Mizrahi. Elle passe en finale le 24 novembre 2026 avec Maya Cohen [1], et l'équipe a décidé de ne pas parler chiffres avant cette étape [3][4]. Elle a seulement dit attendre quelque chose de « competitive with big tech », sans donner de montant [4]. La fourchette prévue pour le poste à Tel Aviv est de 520–600k ILS de base [2], mais ce n'est qu'une grille, pas une offre.",
+  "rendu": "Aucune offre ne semble avoir été faite à Yael Mizrahi. Elle passe en finale le 24 novembre 2026 avec Maya Cohen [1], et l'équipe a décidé de ne pas parler chiffres avant cette étape [3][4]. Elle a seulement dit attendre quelque chose de « competitive with big tech », sans donner de montant [4]. La fourchette prévue pour le poste à Tel Aviv est de 520–600k ILS de base [2], mais ce n'est qu'une grille, pas une offre.",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1501,
+    "sortie": 187,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.004872
+  },
+  "cout": 0.004872,
+  "latenceMs": 1743,
+  "fournisseur": "Claude Platform on AWS"
+}

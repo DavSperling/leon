@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:44.692Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet. She is still in the interview process, moving to a final round with Maya Cohen on November 24 [1][3], and the team agreed to wait until after the finals before discussing numbers [4]. She hasn't given a figure either, only saying she expects something \"competitive with big tech\" [4].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet. She is still in the interview process, moving to a final round with Maya Cohen on November 24 [1][3], and the team agreed to wait until after the finals before discussing numbers [4]. She hasn't given a figure either, only saying she expects something \"competitive with big tech\" [4].",
+  "mesures": {
+    "mots": 58,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 998,
+    "sortie": 78,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00015844
+  },
+  "cout": 0.00015844,
+  "latenceMs": 1688,
+  "fournisseur": "Makora"
+}

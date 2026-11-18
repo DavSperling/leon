@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:19:49.902Z",
+  "reponse": "## What you did\n- Ton intégration TransAlp est fonctionnelle en sandbox et validée bout en bout sur la commande de dev #1042 (chaise Terreaux noire). [1]\n\n## What is still open\n- Corriger ta PR #60 : sortir la clé en dur et la passer en variable d’environnement `TRANSALP_API_KEY`, puis faire régénérer la clé sandbox par TransAlp, car elle a été committée (demande de Julien). [3]\n- Activer ton compte production : TransAlp demande ta clé de production par e-mail (activation@transalp-logistique-support.example). [6]\n- Faire l’essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001, avant la bascule lundi 23/11 à 6 h. [7][8]\n- Débloquer la Saône 180 : Karim doit la mesurer jeudi à l’atelier ; les 8 autres produits ont déjà leurs dimensions dans Notion. [5]",
+  "rendu": "## What you did\n- Ton intégration TransAlp est fonctionnelle en sandbox et validée bout en bout sur la commande de dev #1042 (chaise Terreaux noire). [1]\n\n## What is still open\n- Corriger ta PR #60 : sortir la clé en dur et la passer en variable d’environnement `TRANSALP_API_KEY`, puis faire régénérer la clé sandbox par TransAlp, car elle a été committée (demande de Julien). [3]\n- Activer ton compte production : TransAlp demande ta clé de production par e-mail (activation@transalp-logistique-support.example). [6]\n- Faire l’essai de bout en bout en production vendredi 20/11 avec la commande TEST-0001, avant la bascule lundi 23/11 à 6 h. [7][8]\n- Débloquer la Saône 180 : Karim doit la mesurer jeudi à l’atelier ; les 8 autres produits ont déjà leurs dimensions dans Notion. [5]",
+  "mesures": {
+    "mots": 121,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5003,
+    "sortie": 7419,
+    "reflexion": 7188,
+    "cache": 0,
+    "cout": 0.0047101
+  },
+  "cout": 0.0047101,
+  "latenceMs": 25618,
+  "fournisseur": "Venice"
+}

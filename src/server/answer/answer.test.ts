@@ -738,3 +738,30 @@ describe('answerStream', () => {
     });
   });
 });
+
+describe('buildAnswerPrompt : la langue', () => {
+  it('dit en tête la langue de la recherche, à défaut celle des passages, puis l’anglais', () => {
+    const english = userText(
+      promptFor('what did we decide about the new pricing for the customers?', [hit()]),
+    );
+    expect(
+      english.startsWith("Écris ta réponse en anglais : c'est la langue de sa recherche.\n"),
+    ).toBe(true);
+
+    const french = hit({
+      passages: [
+        passage("c'est bon, le contrat est renouvelé pour un an et il faut juste le signer"),
+      ],
+    });
+    expect(
+      userText(promptFor('contrat OVH', [french])).startsWith(
+        "Écris ta réponse en français : c'est la langue de ce que la recherche a trouvé.\n",
+      ),
+    ).toBe(true);
+
+    const unknown = hit({ passages: [passage('OVH 2027')] });
+    expect(
+      userText(promptFor('contrat OVH', [unknown])).startsWith('Écris ta réponse en anglais.\n'),
+    ).toBe(true);
+  });
+});

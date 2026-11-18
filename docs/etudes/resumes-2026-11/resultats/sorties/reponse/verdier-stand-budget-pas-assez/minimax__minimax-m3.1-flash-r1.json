@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:24.333Z",
+  "reponse": "Aucun passage n'indique qui a validé le budget : le montant prévisionnel de 25 k€ apparaît dans la fiche salon [3], et Antoine Roussel se contente d'annoncer qu'il passera la dépense en charges sur janvier en demandant le devis signé [4], sans mentionner de validation [2]. Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Aucun passage n'indique qui a validé le budget : le montant prévisionnel de 25 k€ apparaît dans la fiche salon [3], et Antoine Roussel se contente d'annoncer qu'il passera la dépense en charges sur janvier en demandant le devis signé [4], sans mentionner de validation [2]. Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 52,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1103,
+    "sortie": 286,
+    "reflexion": 214,
+    "cache": 636,
+    "cout": 0.000226071
+  },
+  "cout": 0.000226071,
+  "latenceMs": 2726,
+  "fournisseur": "Wafer"
+}

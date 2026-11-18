@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:45.677Z",
+  "reponse": "The bank is Fernhill Bank, and the request is about SAML SSO going live per contract on December 1 [2]. Short answer: still on track, but with one open risk.\n\nWhere things stand:\n- SP-initiated SAML login is merged behind the `saml_sso` flag, with SHA-256 minimum enforced [4][2]; IdP-initiated flow and the admin metadata-upload endpoint were built on Nov 9 [12].\n- Fernhill sent their IdP metadata, signing certificate and a test user on Nov 17, and proposed a joint test session Wednesday Nov 25, 16:00 Tel Aviv [1].\n\nWhat's left:\n1. **Signature algorithm issue (the main risk)**: Fernhill's IdP currently signs assertions with RSA-SHA1, which our platform rejects; we only accept RSA-SHA256 [1]. The team decided not to allow SHA-1 even temporarily (pen-test / SOC 2 concerns) and to wait for Fernhill's change board on Nov 24 to switch them to SHA-256 [6].\n2. **End-to-end test**: Priya set this as the condition for Dec 1 [1]; the joint test session is Nov 25 [1].\n3. **Minor items**: admin SSO-settings page copy still needs Priya's review [2], and just-in-time provisioning is in the Dec 1 scope [2] — I didn't find confirmation it's done.\n4. **Production rollout**: everything is on staging so far; the flag has to be enabled for Fernhill in production.\n5. **Communication**: per Maya's decision, Sam Ortiz should tell Fernhill the same day (Nov 17) that Dec 1 is at risk, so there are no surprises [6].\n\nOne dependency noted: the Postgres cutover was pushed off Nov 21 partly because of the bank's Dec 1 go-live, with a new date expected the first weekend of December [5] — worth keeping an eye on so it doesn't collide with the go-live itself.",
+  "rendu": "The bank is Fernhill Bank, and the request is about SAML SSO going live per contract on December 1 [2]. Short answer: still on track, but with one open risk.\n\nWhere things stand:\n- SP-initiated SAML login is merged behind the `saml_sso` flag, with SHA-256 minimum enforced [4][2]; IdP-initiated flow and the admin metadata-upload endpoint were built on Nov 9 [12].\n- Fernhill sent their IdP metadata, signing certificate and a test user on Nov 17, and proposed a joint test session Wednesday Nov 25, 16:00 Tel Aviv [1].\n\nWhat's left:\n1. **Signature algorithm issue (the main risk)**: Fernhill's IdP currently signs assertions with RSA-SHA1, which our platform rejects; we only accept RSA-SHA256 [1]. The team decided not to allow SHA-1 even temporarily (pen-test / SOC 2 concerns) and to wait for Fernhill's change board on Nov 24 to switch them to SHA-256 [6].\n2. **End-to-end test**: Priya set this as the condition for Dec 1 [1]; the joint test session is Nov 25 [1].\n3. **Minor items**: admin SSO-settings page copy still needs Priya's review [2], and just-in-time provisioning is in the Dec 1 scope [2] — I didn't find confirmation it's done.\n4. **Production rollout**: everything is on staging so far; the flag has to be enabled for Fernhill in production.\n5. **Communication**: per Maya's decision, Sam Ortiz should tell Fernhill the same day (Nov 17) that Dec 1 is at risk, so there are no surprises [6].\n\nOne dependency noted: the Postgres cutover was pushed off Nov 21 partly because of the bank's Dec 1 go-live, with a new date expected the first weekend of December [5] — worth keeping an eye on so it doesn't collide with the go-live itself.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7608,
+    "sortie": 515,
+    "reflexion": 52,
+    "cache": 0,
+    "cout": 0.0013987000000000001
+  },
+  "latenceMs": 13200,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"bank staff login company accounts December 1st SSO\"}",
+    "chercher {\"requete\":\"SSO Google Workspace deployment bank\"}"
+  ],
+  "cout": 0.0013987000000000001
+}

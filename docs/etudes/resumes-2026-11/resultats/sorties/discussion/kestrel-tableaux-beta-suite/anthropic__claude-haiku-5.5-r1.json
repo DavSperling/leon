@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:46.492Z",
+  "reponse": "Design partners get the first part on **Wednesday, December 9**. Priya's update names five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3]. In #product she asked that anyone outside that list not be promised access, since a waitlist opens in January [4].\n\nThe feature-complete target for phase 1 behind the flag was December 4, per the November 12 sync [1]. General availability is targeted for late January [3].\n\nPinecrest Logistics asked for beta access during their evaluation, and Sam said he'd check [5]. Under Priya's guidance, they should go on the waitlist rather than get a promise.\n\nI also need to correct my earlier answer. I attributed the team roles to the November 12 sync [1], but the excerpts I saw don't show that. Priya's ownership of the spec is in [2], Tom's work on the chart builder is in [6], and Lior's query-layer work is only hinted at in [3]. I didn't see a source that states all three roles.",
+  "rendu": "Design partners get the first part on **Wednesday, December 9**. Priya's update names five customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [3]. In #product she asked that anyone outside that list not be promised access, since a waitlist opens in January [4].\n\nThe feature-complete target for phase 1 behind the flag was December 4, per the November 12 sync [1]. General availability is targeted for late January [3].\n\nPinecrest Logistics asked for beta access during their evaluation, and Sam said he'd check [5]. Under Priya's guidance, they should go on the waitlist rather than get a promise.\n\nI also need to correct my earlier answer. I attributed the team roles to the November 12 sync [1], but the excerpts I saw don't show that. Priya's ownership of the spec is in [2], Tom's work on the chart builder is in [6], and Lior's query-layer work is only hinted at in [3]. I didn't see a source that states all three roles.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10276,
+    "sortie": 955,
+    "reflexion": 506,
+    "cache": 0,
+    "cout": 0.0015051
+  },
+  "latenceMs": 5716,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"nouveaux dashboards bêta clients premier lot date de sortie\"}",
+    "chercher {\"requete\":\"dashboards beta customers release date\"}"
+  ],
+  "cout": 0.0015051
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:54.856Z",
+  "reponse": "Tai Shan hat bislang keinen Liefertermin für die Ersatzschalter genannt. Das Unternehmen hat die Reklamation bestätigt und einen Lieferplan nur „so bald wie möglich“ in Aussicht gestellt [2]. Laut Einkauf steht der Termin noch aus; man erwartet bis Freitag eine Antwort und will andernfalls an den Sales Director eskalieren [3]. Kranich hatte eine bestätigte Lieferzeit für 2.000 Ersatzschalter bis zum 20. November verlangt [1]. In der Planung rechnet man vorläufig mit 6 Wochen ab Bestellung, was aber nur eine nicht abgestimmte Annahme ist [5].",
+  "rendu": "Tai Shan hat bislang keinen Liefertermin für die Ersatzschalter genannt. Das Unternehmen hat die Reklamation bestätigt und einen Lieferplan nur „so bald wie möglich“ in Aussicht gestellt [2]. Laut Einkauf steht der Termin noch aus; man erwartet bis Freitag eine Antwort und will andernfalls an den Sales Director eskalieren [3]. Kranich hatte eine bestätigte Lieferzeit für 2.000 Ersatzschalter bis zum 20. November verlangt [1]. In der Planung rechnet man vorläufig mit 6 Wochen ab Bestellung, was aber nur eine nicht abgestimmte Annahme ist [5].",
+  "mesures": {
+    "mots": 84,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1820,
+    "sortie": 260,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00624
+  },
+  "cout": 0.00624,
+  "latenceMs": 2333,
+  "fournisseur": "Amazon Bedrock"
+}

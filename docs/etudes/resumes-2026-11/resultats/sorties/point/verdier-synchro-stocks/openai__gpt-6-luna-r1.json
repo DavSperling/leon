@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:37:00.013Z",
+  "reponse": "## Ce qui a changé\n- La correction de la synchro a été fusionnée dans #57 ; les trois clients concernés acceptent une livraison mi-janvier [4][9].\n\n## Ce qui reste ouvert\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour sa TVA avant jeudi ; il reste à le lui fournir [1].\n- Karim fera le comptage physique des 14 écarts jeudi matin et te transmettra les chiffres réels [1][7].\n- La PR #58 pour le mode `--dry-run` est ouverte ; le lint et les 38 tests passent, mais elle reste à fusionner [1][5].",
+  "rendu": "## Ce qui a changé\n- La correction de la synchro a été fusionnée dans #57 ; les trois clients concernés acceptent une livraison mi-janvier [4][9].\n\n## Ce qui reste ouvert\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour sa TVA avant jeudi ; il reste à le lui fournir [1].\n- Karim fera le comptage physique des 14 écarts jeudi matin et te transmettra les chiffres réels [1][7].\n- La PR #58 pour le mode `--dry-run` est ouverte ; le lint et les 38 tests passent, mais elle reste à fusionner [1][5].",
+  "mesures": {
+    "mots": 88,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4715,
+    "sortie": 1434,
+    "reflexion": 1291,
+    "cache": 1417,
+    "cout": 0.001143345
+  },
+  "cout": 0.001143345,
+  "latenceMs": 17497,
+  "fournisseur": "OpenAI"
+}

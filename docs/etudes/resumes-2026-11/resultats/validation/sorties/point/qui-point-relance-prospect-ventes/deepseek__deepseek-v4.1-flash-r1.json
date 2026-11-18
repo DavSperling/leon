@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:22:35.249Z",
+  "reponse": "## What is still open\n- Rachel must sign off anything above a 10% discount and wants to talk before Hearthly gets numbers — your 15% for a 2-year commit can't go out until then [1][3].\n- The SIG Lite questionnaire is due Mon Nov 23 and Hearthly won't keep a vendor in the final round without it; you still need to confirm Shira owns it [1][4].\n- CAD payouts are no longer a Q1 item — Sofia says Q2 at the earliest (Corvane is reviewing the cross-border program) and no date should go in writing, so the draft email needs fixing [1][6].\n- The reference call is still unnamed; you're waiting on Rachel to say who's usable [1].\n\n## What changed\n- Hearthly moved its provider decision up to Wed Dec 2 [4].\n\n## What you did\n- Worked the Hearthly discovery follow-up end to end: confirmed the fit (instant payouts, CAD, 1099-K filing) and drafted the email for Nadia and Tom [1].\n- Priced it at 15% off the 2027 grid for a two-year commit (≈$1.0M/year), holding at 15% instead of opening at 20% [1].\n- Built the mutual action plan working back from their decision date [1].\n- Ruled out Loomly, Pinecrest and Tradewell as references for now [1].",
+  "rendu": "## What is still open\n- Rachel must sign off anything above a 10% discount and wants to talk before Hearthly gets numbers — your 15% for a 2-year commit can't go out until then [1][3].\n- The SIG Lite questionnaire is due Mon Nov 23 and Hearthly won't keep a vendor in the final round without it; you still need to confirm Shira owns it [1][4].\n- CAD payouts are no longer a Q1 item — Sofia says Q2 at the earliest (Corvane is reviewing the cross-border program) and no date should go in writing, so the draft email needs fixing [1][6].\n- The reference call is still unnamed; you're waiting on Rachel to say who's usable [1].\n\n## What changed\n- Hearthly moved its provider decision up to Wed Dec 2 [4].\n\n## What you did\n- Worked the Hearthly discovery follow-up end to end: confirmed the fit (instant payouts, CAD, 1099-K filing) and drafted the email for Nadia and Tom [1].\n- Priced it at 15% off the 2027 grid for a two-year commit (≈$1.0M/year), holding at 15% instead of opening at 20% [1].\n- Built the mutual action plan working back from their decision date [1].\n- Ruled out Loomly, Pinecrest and Tradewell as references for now [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3925,
+    "sortie": 2407,
+    "reflexion": 2097,
+    "cache": 0,
+    "cout": 0.00162636
+  },
+  "cout": 0.00162636,
+  "latenceMs": 25872,
+  "fournisseur": "River"
+}

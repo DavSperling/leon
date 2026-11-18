@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:33:20.408Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1011,
+    "sortie": 9,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0003258
+  },
+  "cout": 0.0003258,
+  "latenceMs": 835,
+  "fournisseur": "Google"
+}

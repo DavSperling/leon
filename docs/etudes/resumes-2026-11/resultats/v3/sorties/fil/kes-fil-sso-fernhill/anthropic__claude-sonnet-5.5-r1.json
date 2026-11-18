@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:16.153Z",
+  "reponse": "## Où j'en suis\nReal SAML login now works on staging with Fernhill's IdP, after the short RelayState fix (commit 6d0e2b8). PR #415 (JIT provisioning) is merged. PR #421 (group-to-role mapping plus short RelayState) is open. Everyone still lands as `viewer` because Fernhill's assertion has no `groups` claim. (source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421)\n\n- [en-cours] PR #421 is open: `saml_role_mapping` per tenant (`Fernhill-Kestrel-Admins` → admin, default viewer), applied on every login. Tests pass. (source: f4a91c7, kestrel-analytics/platform#421)\n- [prochaine-étape] Email Fernhill IT today so they add the groups claim. (source: s3-05)\n- [prochaine-étape] Once the claim exists, create an admin test account and keep `kestrel.test1` for the demo. (source: s3-08)\n- [prochaine-étape] Demo with Fernhill IT on Thursday Nov 19, 10:00 New York. (source: s3-10, src-linear-kes311)\n- [question] Default role: Fernhill IT's Slack message asks for `analyst` and IdP-initiated only. No `analyst` role exists, and Maya is to talk to them. (source: src-slack-fernhill, s3-07)\n- [question] An agent note says SSO enforcement on Dec 1 was decided with Maya. No team source confirms it. (source: src-note-enforce)\n- [essai-raté] The full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS (MSIS7042, limit 80 bytes). Fix: a 16-byte random ID stored in Redis for 600 s. (source: s3-02, 6d0e2b8)\n- [décision] RelayState is a short opaque ID, with the URL stored in Redis for 10 minutes. (source: s3-03)\n- [décision] `viewer` stays the default role until Maya talks to Fernhill. SP-initiated login stays on. (source: s3-07)\n- [décision] Unverified domains never create a user. (source: s2-03)",
+  "rendu": "## Où j'en suis\nReal SAML login now works on staging with Fernhill's IdP, after the short RelayState fix (commit 6d0e2b8). PR #415 (JIT provisioning) is merged. PR #421 (group-to-role mapping plus short RelayState) is open. Everyone still lands as `viewer` because Fernhill's assertion has no `groups` claim. (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421)\n\n- [en-cours] PR #421 is open: `saml_role_mapping` per tenant (`Fernhill-Kestrel-Admins` → admin, default viewer), applied on every login. Tests pass. (de: équipe; source: f4a91c7, kestrel-analytics/platform#421)\n- [prochaine-étape] Email Fernhill IT today so they add the groups claim. (de: toi; source: s3-05)\n- [prochaine-étape] Once the claim exists, create an admin test account and keep `kestrel.test1` for the demo. (de: agent; source: s3-08)\n- [prochaine-étape] Demo with Fernhill IT on Thursday Nov 19, 10:00 New York. (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [question] Default role: Fernhill IT's Slack message asks for `analyst` and IdP-initiated only. No `analyst` role exists, and Maya is to talk to them. (de: toi, connecteur; source: src-slack-fernhill, s3-07)\n- [question] An agent note says SSO enforcement on Dec 1 was decided with Maya. No team source confirms it. (de: agent; source: src-note-enforce)\n- [essai-raté] The full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS (MSIS7042, limit 80 bytes). Fix: a 16-byte random ID stored in Redis for 600 s. (de: équipe, agent; source: s3-02, 6d0e2b8)\n- [décision] RelayState is a short opaque ID, with the URL stored in Redis for 10 minutes. (de: toi; source: s3-03)\n- [décision] `viewer` stays the default role until Maya talks to Fernhill. SP-initiated login stays on. (de: toi; source: s3-07)\n- [décision] Unverified domains never create a user. (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1891,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6405,
+    "sortie": 754,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02035
+  },
+  "cout": 0.02035,
+  "latenceMs": 5005,
+  "fournisseur": "Amazon Bedrock"
+}

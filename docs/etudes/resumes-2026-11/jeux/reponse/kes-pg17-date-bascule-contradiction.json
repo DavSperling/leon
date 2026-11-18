@@ -1,0 +1,160 @@
+{
+  "id": "kes-pg17-date-bascule-contradiction",
+  "titre": "Recherche de la date de bascule Postgres 17 : le plan, l'annonce aux clients et le ticket disent le 21 novembre, un message Slack plus récent et une PR ouverte disent le 28 ; la réponse doit signaler la contradiction, le plus récent d'abord",
+  "langue": "en",
+  "entree": {
+    "recherche": "postgres 17 production cutover date",
+    "resultats": [
+      {
+        "id": "no-pg17-plan",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Postgres 17 migration – plan",
+        "url": null,
+        "date": "2026-11-06T11:20:00Z",
+        "passages": [
+          {
+            "id": "pn1",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-06T11:20:00Z",
+            "texte": "Production cutover: Saturday Nov 21, 02:00–06:00 UTC (maintenance window, announced to customers on Nov 9).\nMethod: pg_upgrade --link on a fresh replica, then promote.\nRollback: keep the PG15 primary as a logical replica for 72h.\nGo/no-go: Thursday before the cutover, based on the staging dry run."
+          }
+        ]
+      },
+      {
+        "id": "sl-infra-1116",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#infra",
+        "url": null,
+        "date": "2026-11-16T13:48:00Z",
+        "passages": [
+          {
+            "id": "ps1",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-16T13:48:00Z",
+            "texte": "Heads-up: after the 12/11 ingest incident Maya wants a second dry run on prod-sized data before we touch prod. The PG17 cutover moves to Sat Nov 28, same window (02:00–06:00 UTC). I'll update the status page and the customer notice tomorrow."
+          }
+        ]
+      },
+      {
+        "id": "gm-maint-notice",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Scheduled maintenance – Saturday, November 21",
+        "url": null,
+        "date": "2026-11-09T15:00:00Z",
+        "passages": [
+          {
+            "id": "pg1",
+            "auteur": "Rachel Kim",
+            "date": "2026-11-09T15:00:00Z",
+            "texte": "Hello,\n\nOn Saturday, November 21 from 02:00 to 06:00 UTC, Kestrel will upgrade its main database. Dashboards and the API may be unavailable for up to 30 minutes during this window. Event ingestion is not affected: events are buffered and processed after the upgrade.\n\nThe Kestrel Support team"
+          }
+        ]
+      },
+      {
+        "id": "lin-kes-509",
+        "kind": "linear",
+        "nature": "ticket",
+        "titre": "KES-509 PG17: production cutover",
+        "url": "https://linear.app/kestrel/issue/KES-509",
+        "date": "2026-11-10T08:05:00Z",
+        "passages": [
+          {
+            "id": "pl1",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-10T08:05:00Z",
+            "texte": "Status: In Progress · Assignee: Noa Friedman · Due date: Nov 21\nChecklist: dry run on staging (done), customer notice (done), freeze schema migrations (KES-511), cutover runbook review with Daniel."
+          }
+        ]
+      },
+      {
+        "id": "cx-noa-1117",
+        "kind": "codex",
+        "nature": "conversation",
+        "titre": "move pg17 cutover window",
+        "url": null,
+        "date": "2026-11-17T09:31:00Z",
+        "passages": [
+          {
+            "id": "pc1",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-17T09:12:00Z",
+            "role": "user",
+            "texte": "update the terraform var cutover_date to 2026-11-28 in envs/prod and the maintenance window in the status page module, then open a PR. dont apply anything"
+          }
+        ]
+      },
+      {
+        "id": "gh-infra-233",
+        "kind": "github",
+        "nature": "ticket",
+        "titre": "kestrel-analytics/infra#233 PG17: move cutover window to 2026-11-28",
+        "url": "https://github.com/kestrel-analytics/infra/pull/233",
+        "date": "2026-11-17T09:31:00Z",
+        "passages": [
+          {
+            "id": "ph1",
+            "auteur": "noa-friedman",
+            "date": "2026-11-17T09:31:00Z",
+            "texte": "Moves the PG17 cutover window from 2026-11-21 to 2026-11-28 (same 02:00–06:00 UTC slot) and updates the status page maintenance entry. Plan only, nothing applied. Needs review from @daniel-levi.\nOpen · 2 files changed · checks pending"
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "contradiction": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Selon le message le plus récent (Noa sur Slack, 16 novembre), la bascule est déplacée au samedi 28 novembre (02:00–06:00 UTC).",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Le plan de migration, l'annonce aux clients et/ou le ticket donnent encore le samedi 21 novembre.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "La réponse signale que les sources se contredisent (ou que les plus anciennes ne sont pas à jour), en donnant le 28 novembre avant le 21.",
+        "poids": 3
+      },
+      {
+        "id": "f4",
+        "texte": "Raison du report : Maya veut un second essai sur des données de taille production après l'incident d'ingestion du 12 novembre.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "La PR qui déplace la fenêtre au 28 novembre (infra#233) est ouverte, pas encore fusionnée.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Affirmer sans réserve que la bascule a lieu le samedi 21 novembre."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que la PR infra#233 est fusionnée ou que le changement est appliqué."
+      },
+      {
+        "id": "x3",
+        "texte": "Dire que les clients ont déjà été prévenus du 28 novembre."
+      }
+    ],
+    "pieges": [
+      "Contradiction : trois sources anciennes (plan, annonce, ticket) disent le 21, deux plus récentes (Slack, PR) le 28 ; il faut le dire, le plus récent d'abord.",
+      "La majorité a tort : compter les sources donnerait le 21.",
+      "État d'une PR : la PR qui reporte est ouverte, rien n'est appliqué ; l'annonce aux clients n'a pas encore été corrigée."
+    ],
+    "cites": [
+      2,
+      1
+    ]
+  }
+}

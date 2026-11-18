@@ -1,0 +1,120 @@
+{
+  "id": "kes-sre-offre-pas-assez",
+  "titre": "Recherche du salaire proposé à une candidate SRE : les résultats parlent de son parcours et de la grille du poste, jamais d'une offre ; la seule bonne sortie est la phrase « pas assez »",
+  "langue": "en",
+  "entree": {
+    "recherche": "what salary did we offer yael mizrahi",
+    "resultats": [
+      {
+        "id": "gm-hl-final",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Interview scheduled: Yael Mizrahi – Senior SRE – Final round with Maya",
+        "url": null,
+        "date": "2026-11-17T15:30:00Z",
+        "passages": [
+          {
+            "id": "py1",
+            "auteur": "HireLoop Scheduling",
+            "date": "2026-11-17T15:30:00Z",
+            "texte": "Yael Mizrahi has moved to the final round.\nStage: Final round with Maya Cohen (60 min)\nWhen: Tuesday, November 24, 2026, 11:00 AM – 12:00 PM (GMT+02:00) Jerusalem\nWhere: Tel Aviv office"
+          }
+        ]
+      },
+      {
+        "id": "no-sre-jd",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Senior SRE – job description & leveling",
+        "url": null,
+        "date": "2026-10-28T10:00:00Z",
+        "passages": [
+          {
+            "id": "pj1",
+            "auteur": "Shira Katz",
+            "date": "2026-10-28T10:00:00Z",
+            "texte": "Level: L5 (Senior). Location: Tel Aviv or New York, hybrid.\nCompensation band: TLV 520–600k ILS base, NY $170–190k base, equity per the leveling guide. Offers above the band need CEO approval.\nInterview loop: recruiter screen → system design → incident simulation → final with Maya."
+          }
+        ]
+      },
+      {
+        "id": "sl-hiring-sre",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#hiring-sre",
+        "url": null,
+        "date": "2026-11-17T15:02:00Z",
+        "passages": [
+          {
+            "id": "pk1",
+            "auteur": "Noa Friedman",
+            "date": "2026-11-17T15:02:00Z",
+            "texte": "Yael was strong on system design, 3.5/4 from me and Daniel. Moving her to the final with Maya. Reminder: no offer discussion with candidates until after the final round please."
+          }
+        ]
+      },
+      {
+        "id": "fa-hiring-1113",
+        "kind": "fathom",
+        "nature": "reunion",
+        "titre": "SRE hiring sync – Nov 13",
+        "url": null,
+        "date": "2026-11-13T12:00:00Z",
+        "passages": [
+          {
+            "id": "pf1",
+            "auteur": "Shira Katz",
+            "date": "2026-11-13T12:00:00Z",
+            "texte": "Maya Cohen: For Ben and Yael, let's wait for the finals before we talk numbers.\nShira Katz: Agreed. Yael only said she expects something \"competitive with big tech\", she didn't give a figure. Ben is in the NY band."
+          }
+        ]
+      },
+      {
+        "id": "lin-kes-498",
+        "kind": "linear",
+        "nature": "ticket",
+        "titre": "KES-498 Hiring: Senior SRE (TLV/NY)",
+        "url": "https://linear.app/kestrel/issue/KES-498",
+        "date": "2026-11-12T08:40:00Z",
+        "passages": [
+          {
+            "id": "pl2",
+            "auteur": "Shira Katz",
+            "date": "2026-11-12T08:40:00Z",
+            "texte": "Checklist: JD published (done) · sourcing agencies briefed (done) · interview loop calibrated (done) · offer letter template ready (Shira, in progress) · relocation policy for NY candidates (open)."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "pasAssez": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La sortie est exactement « Les résultats ne suffisent pas pour répondre. », sans autre texte.",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Donner un montant comme offre faite à Yael (par exemple 520–600k ILS ou 170–190k $, qui sont la grille du poste)."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire qu'une offre a été faite à Yael Mizrahi."
+      },
+      {
+        "id": "x3",
+        "texte": "Répondre par un résumé du recrutement (finale le 24 novembre, note de 3.5/4…) au lieu de la phrase."
+      }
+    ],
+    "pieges": [
+      "Pas assez : aucun résultat ne parle d'une offre ; la grille du poste est tentante mais ce n'est pas une offre.",
+      "Deux résultats disent explicitement qu'on ne parle pas de chiffres avant la finale.",
+      "Donnée d'un tiers : les attentes de salaire d'une candidate ne doivent pas être inventées ni déduites."
+    ],
+    "cites": []
+  }
+}

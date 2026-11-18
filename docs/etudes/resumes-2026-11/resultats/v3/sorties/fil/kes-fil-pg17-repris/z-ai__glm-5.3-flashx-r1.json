@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:58:56.244Z",
+  "reponse": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS (branch noa/rds-pg17, draft PR kestrel-analytics/infra#57): staging is done — pg_partman upgraded to 5.1.0 on 16.4, `rds.logical_replication = 1` added with a reboot, blue/green cutover completed at 14:20 UTC (41 s of refused writes), analytics-staging now runs PG 17.2. dbt ran clean on 17.2 (14 models pass, +3% runtime, within noise). Runbook updated: prod needs a step-0 \"set rds.logical_replication = 1 and reboot (~2–3 min downtime)\" before its blue/green, so prod needs two windows. No prod date yet: Maya will sign off after a full incident-free week of staging on 17 (sign-off possible from Nov 24). (source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [en-cours] PR kestrel-analytics/infra#57 is open (draft) with commits 7e3c9d4 and b0f18a2 pushed; staging running 17.2 for its one-week soak test (source: ses-pg-3, src-pr57)\n- [prochaine-étape] wait for Maya's sign-off after the full week on staging (earliest Nov 24), then pick the production windows — one for the reboot, one for the blue/green switchover, outside the 01:00–03:30 UTC dbt lock (source: ses-pg-3, src-linear-kes298, ses-pg-1)\n- [essai-raté] first `terraform apply pg17.plan` failed: blue/green for PostgreSQL requires `rds.logical_replication = 1` in the source parameter group plus a reboot (source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 with 37 unrelated plan changes; provider pinned to 5.82 instead (source: ses-pg-1)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] no prod date until Maya signs off; `apply_immediately` stays false (source: s1-04, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS (branch noa/rds-pg17, draft PR kestrel-analytics/infra#57): staging is done — pg_partman upgraded to 5.1.0 on 16.4, `rds.logical_replication = 1` added with a reboot, blue/green cutover completed at 14:20 UTC (41 s of refused writes), analytics-staging now runs PG 17.2. dbt ran clean on 17.2 (14 models pass, +3% runtime, within noise). Runbook updated: prod needs a step-0 \"set rds.logical_replication = 1 and reboot (~2–3 min downtime)\" before its blue/green, so prod needs two windows. No prod date yet: Maya will sign off after a full incident-free week of staging on 17 (sign-off possible from Nov 24). (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra, src-linear-kes298)\n\n- [en-cours] PR kestrel-analytics/infra#57 is open (draft) with commits 7e3c9d4 and b0f18a2 pushed; staging running 17.2 for its one-week soak test (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] wait for Maya's sign-off after the full week on staging (earliest Nov 24), then pick the production windows — one for the reboot, one for the blue/green switchover, outside the 01:00–03:30 UTC dbt lock (de: connecteur, agent; source: ses-pg-3, src-linear-kes298, ses-pg-1)\n- [essai-raté] first `terraform apply pg17.plan` failed: blue/green for PostgreSQL requires `rds.logical_replication = 1` in the source parameter group plus a reboot (de: agent; source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 with 37 unrelated plan changes; provider pinned to 5.82 instead (de: agent; source: ses-pg-1)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)\n- [décision] no prod date until Maya signs off; `apply_immediately` stays false (de: toi, connecteur; source: s1-04, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1827,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4176,
+    "sortie": 534,
+    "reflexion": 0,
+    "cache": 960,
+    "cout": 0.00192942
+  },
+  "cout": 0.00192942,
+  "latenceMs": 3637,
+  "fournisseur": "Z.AI"
+}

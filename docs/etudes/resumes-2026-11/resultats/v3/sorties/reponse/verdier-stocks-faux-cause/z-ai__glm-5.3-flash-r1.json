@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:34.191Z",
+  "reponse": "Le stock Shopify était faux à cause de deux problèmes distincts. D'abord, un webhook inventory_levels/update était traité deux fois quand un produit avait deux emplacements (entrepôt + showroom), ce qui décrémentait le stock deux fois ; corrigé par déduplication sur (inventory_item_id, location_id, updated_at) dans la PR #87, mergée le 17 novembre [1][2]. Ensuite, pour le stock négatif sur la variante Saône chêne clair (SAO-180-CC, -2 en stock, deux commandes passées), ce n'était pas la PR #87 mais l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils avant les deux commandes [3][5]. Un correctif est prévu : lancer l'import avant l'ouverture plutôt qu'à 3h [5].",
+  "rendu": "Le stock Shopify était faux à cause de deux problèmes distincts. D'abord, un webhook inventory_levels/update était traité deux fois quand un produit avait deux emplacements (entrepôt + showroom), ce qui décrémentait le stock deux fois ; corrigé par déduplication sur (inventory_item_id, location_id, updated_at) dans la PR #87, mergée le 17 novembre [1][2]. Ensuite, pour le stock négatif sur la variante Saône chêne clair (SAO-180-CC, -2 en stock, deux commandes passées), ce n'était pas la PR #87 mais l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils avant les deux commandes [3][5]. Un correctif est prévu : lancer l'import avant l'ouverture plutôt qu'à 3h [5].",
+  "mesures": {
+    "mots": 106,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1089,
+    "sortie": 204,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00026535
+  },
+  "cout": 0.00026535,
+  "latenceMs": 2140,
+  "fournisseur": "Together"
+}

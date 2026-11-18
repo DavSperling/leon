@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:21.142Z",
+  "reponse": "## Où j'en suis\nCause trouvée du stock négatif de la Saône : les webhooks de commande décrémentaient en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit écrit en valeur absolue, le seuil d'alerte est à 3, `syncStock` est renommé `synchroniserStocks`, et la Saône est remise à 0. La PR #87 est fusionnée et l'abonnement `orders/updated` est retiré par le déploiement de la config.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044).\n- [prochaine-étape] Remettre la Saône en vente après son retour de chez Bois & Fils (2 décembre), via la synchro de nuit une fois reçue chez TransAlp.\n- [essai-raté] Le dédoublonnage par `X-Shopify-Webhook-Id` ne réglait rien : `orders/create` et `orders/updated` ont des ids différents. Il a été retiré.\n- [décision] Plus aucun décrément de stock dans les webhooks ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Pas de précommande sur la Saône, Claire ne veut pas promettre de date sans bon de livraison (source: t17)",
+  "rendu": "## Où j'en suis\nCause trouvée du stock négatif de la Saône : les webhooks de commande décrémentaient en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit écrit en valeur absolue, le seuil d'alerte est à 3, `syncStock` est renommé `synchroniserStocks`, et la Saône est remise à 0. La PR #87 est fusionnée et l'abonnement `orders/updated` est retiré par le déploiement de la config.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044).\n- [prochaine-étape] Remettre la Saône en vente après son retour de chez Bois & Fils (2 décembre), via la synchro de nuit une fois reçue chez TransAlp.\n- [essai-raté] Le dédoublonnage par `X-Shopify-Webhook-Id` ne réglait rien : `orders/create` et `orders/updated` ont des ids différents. Il a été retiré.\n- [décision] Plus aucun décrément de stock dans les webhooks ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Pas de précommande sur la Saône, Claire ne veut pas promettre de date sans bon de livraison (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1250,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5420,
+    "sortie": 492,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01576
+  },
+  "cout": 0.01576,
+  "latenceMs": 3701,
+  "fournisseur": "Amazon Bedrock"
+}

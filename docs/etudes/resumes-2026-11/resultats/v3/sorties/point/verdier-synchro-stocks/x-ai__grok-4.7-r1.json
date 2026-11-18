@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:03:14.605Z",
+  "reponse": "## What is still open\n\n- Antoine attend l'export des ventes Shopify d'octobre pour la TVA avant jeudi : tu t'y es engagé, et rien ne montre qu'il est fait. [1]\n- Karim a le fichier des 14 écarts ; il compte jeudi matin à l'entrepôt et te renvoie les chiffres. [7]\n- La #58 (mode dry-run de sync-stock) est ouverte, toujours sans relecteur. [5][1]\n\n## What changed\n\n- Hugo a fusionné la #57 : la synchro de cette nuit tournera avec la correspondance exacte des SKU, y compris les 17 références que tu as ajoutées. [4]\n- Les trois clients de la Saône chêne ont accepté une livraison mi-janvier. [9]",
+  "rendu": "## What is still open\n\n- Antoine attend l'export des ventes Shopify d'octobre pour la TVA avant jeudi : tu t'y es engagé, et rien ne montre qu'il est fait. [1]\n- Karim a le fichier des 14 écarts ; il compte jeudi matin à l'entrepôt et te renvoie les chiffres. [7]\n- La #58 (mode dry-run de sync-stock) est ouverte, toujours sans relecteur. [5][1]\n\n## What changed\n\n- Hugo a fusionné la #57 : la synchro de cette nuit tournera avec la correspondance exacte des SKU, y compris les 17 références que tu as ajoutées. [4]\n- Les trois clients de la Saône chêne ont accepté une livraison mi-janvier. [9]",
+  "mesures": {
+    "mots": 101,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6178,
+    "sortie": 4171,
+    "reflexion": 3995,
+    "cache": 1152,
+    "cout": 0.035654
+  },
+  "cout": 0.035654,
+  "latenceMs": 72014,
+  "fournisseur": "xAI"
+}

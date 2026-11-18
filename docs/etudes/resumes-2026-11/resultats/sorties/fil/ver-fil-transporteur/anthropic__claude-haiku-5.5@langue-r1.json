@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 1,
+  "date": "2026-11-18T14:32:58.490Z",
+  "reponse": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est poussée et la PR #91 est à jour, toujours en brouillon en attente de la relecture de Julien. Le client TransAlp produit des étiquettes ZPL par défaut, testées en recette, avec `^CI28` ajouté pour corriger les accents à l'impression. TransAlp ne s'active qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut) et Rapidis reste en place. (source: ses-tr-2, maison-verdier/boutique#91, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien, qui doit encore valider le brouillon. (source: h2-12, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets avant le 1er décembre ; rien ne s'active avant. (source: h2-07)\n- [prochaine-étape] Passer la PR de brouillon à prête une fois relue. (source: src-pr91)\n- [essai-raté] Le ZPL était refusé en sandbox ; il fonctionne en recette. Les accents sortaient en « SaÃ´ne » faute de `^CI28` ; corrigé. (source: ses-tr-1, h2-03, h2-04)\n- [essai-raté] L'en-tête X-Api-Key donnait un 401 : l'API exige un jeton OAuth2. (source: ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, et non le 23 novembre. (source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, et Rapidis reste en secours. (source: src-slack-julien, h2-09, h1-03)\n- [décision] Le format ZPL devient le format par défaut. (source: h2-01)",
+  "rendu": "## Où j'en suis\nLa branche `hugo/transalp-etiquettes` est poussée et la PR #91 est à jour, toujours en brouillon en attente de la relecture de Julien. Le client TransAlp produit des étiquettes ZPL par défaut, testées en recette, avec `^CI28` ajouté pour corriger les accents à l'impression. TransAlp ne s'active qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut) et Rapidis reste en place. (de: équipe, agent; source: ses-tr-2, maison-verdier/boutique#91, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par Julien, qui doit encore valider le brouillon. (de: équipe, agent; source: h2-12, src-pr91)\n- [prochaine-étape] Julien met la clé de production dans les secrets avant le 1er décembre ; rien ne s'active avant. (de: toi; source: h2-07)\n- [prochaine-étape] Passer la PR de brouillon à prête une fois relue. (de: équipe; source: src-pr91)\n- [essai-raté] Le ZPL était refusé en sandbox ; il fonctionne en recette. Les accents sortaient en « SaÃ´ne » faute de `^CI28` ; corrigé. (de: toi, agent; source: ses-tr-1, h2-03, h2-04)\n- [essai-raté] L'en-tête X-Api-Key donnait un 401 : l'API exige un jeton OAuth2. (de: agent; source: ses-tr-1)\n- [décision] Lyon et Paris passent chez TransAlp le mardi 1er décembre, et non le 23 novembre. (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, et Rapidis reste en secours. (de: toi, connecteur; source: src-slack-julien, h2-09, h1-03)\n- [décision] Le format ZPL devient le format par défaut. (de: toi; source: h2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1561,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5417,
+    "sortie": 1696,
+    "reflexion": 1030,
+    "cache": 0,
+    "cout": 0.0013897
+  },
+  "cout": 0.0013897,
+  "latenceMs": 8068,
+  "fournisseur": "Claude Platform on AWS"
+}

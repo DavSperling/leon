@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:21:58.503Z",
+  "reponse": "## What is still open\n- Les SMS de rappel annoncent encore 9h au lieu de 8h. Le correctif est dans `rappels/sms.py`, que tu avais laissé de côté. Lucas demande de le corriger dans #214 [3]. Yannick et Sandrine attendent que ce soit bon avant l'envoi de ce soir à 18h, et Sandrine attend ta réponse pour confirmer 8h aux clients demain [4][7].\n- Une fois #214 fusionnée, lancer `reprise_heure_hiver` sans `--dry-run`, jamais avant le merge, sinon les heures sont décalées dans l'autre sens [1].\n- Bloquer à la main le chantier du 8/12 chez le Floch (CH-2604) avant vendredi, pour l'audit RGE demandé par Franck [2].\n\n## What changed\n- Lucas a validé l'export ICS, l'API mobile et le rapport hebdo dans #214 [3].\n- Le ticket #219 signale que le formulaire de devis refuse les numéros avec des espaces. Rien ne t'y est adressé pour l'instant [6].\n- Dependabot a rebasé #205 ce matin [5].\n\n## What you did\n- Corrigé le calcul de l'heure de Paris dans l'export ICS, l'API mobile et le rapport hebdo, avec les tests et ruff/black au vert. Ouvert #214 et ajouté la commande de reprise pour les 41 interventions corrigées à la main. Tu as laissé `sms.py` de côté [1].\n- Découpé `settings.py` en base, dev et prod sans toucher au serveur, activé HSTS et les cookies sécurisés, monté pillow en 11.0.0. Le tout est sur `thomas/settings-split` [2].",
+  "rendu": "## What is still open\n- Les SMS de rappel annoncent encore 9h au lieu de 8h. Le correctif est dans `rappels/sms.py`, que tu avais laissé de côté. Lucas demande de le corriger dans #214 [3]. Yannick et Sandrine attendent que ce soit bon avant l'envoi de ce soir à 18h, et Sandrine attend ta réponse pour confirmer 8h aux clients demain [4][7].\n- Une fois #214 fusionnée, lancer `reprise_heure_hiver` sans `--dry-run`, jamais avant le merge, sinon les heures sont décalées dans l'autre sens [1].\n- Bloquer à la main le chantier du 8/12 chez le Floch (CH-2604) avant vendredi, pour l'audit RGE demandé par Franck [2].\n\n## What changed\n- Lucas a validé l'export ICS, l'API mobile et le rapport hebdo dans #214 [3].\n- Le ticket #219 signale que le formulaire de devis refuse les numéros avec des espaces. Rien ne t'y est adressé pour l'instant [6].\n- Dependabot a rebasé #205 ce matin [5].\n\n## What you did\n- Corrigé le calcul de l'heure de Paris dans l'export ICS, l'API mobile et le rapport hebdo, avec les tests et ruff/black au vert. Ouvert #214 et ajouté la commande de reprise pour les 41 interventions corrigées à la main. Tu as laissé `sms.py` de côté [1].\n- Découpé `settings.py` en base, dev et prod sans toucher au serveur, activé HSTS et les cookies sécurisés, monté pillow en 11.0.0. Le tout est sur `thomas/settings-split` [2].",
+  "mesures": {
+    "mots": 225,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8793,
+    "sortie": 3566,
+    "reflexion": 2956,
+    "cache": 0,
+    "cout": 0.0026623
+  },
+  "cout": 0.0026623,
+  "latenceMs": 18018,
+  "fournisseur": "Google"
+}

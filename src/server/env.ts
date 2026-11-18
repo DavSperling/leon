@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { EMBEDDER_IDS } from './embeddings/embedder';
-import { SUPPORTED_MODEL_IDS } from './llm/models';
+import { SETTING_BY_STEP, SUPPORTED_MODEL_IDS, SUPPORTED_MODELS } from './llm/models';
 
 // Une variable laissée vide (« ANTHROPIC_API_KEY= » après cp .env.example) vaut une variable absente.
 const emptyIsAbsent = (value: unknown) => (value === '' ? undefined : value);
@@ -46,7 +46,7 @@ export const EnvSchema = z
     ANTHROPIC_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     // Faux modèle déterministe, sans réseau, pour les essais et les démos sans clé. Absent : le vrai modèle.
     LEON_LLM: z.preprocess(emptyIsAbsent, z.enum(['factice']).optional()),
-    // Modèle de chaque étape. Absent : le défaut de models.ts.
+    // Modèle de chaque étape. Absent : le défaut de models.ts. Un modèle d'OpenRouter exige OPENROUTER_API_KEY.
     LEON_MODEL_REPONSE: z.preprocess(
       emptyIsAbsent,
       supportedModel('LEON_MODEL_REPONSE').optional(),
@@ -89,7 +89,8 @@ export const EnvSchema = z
     // l'accepterait et l'indexation échouerait en silence au premier appel.
     LEON_BGE_URL: z.preprocess(emptyIsAbsent, z.url({ protocol: /^https?$/ }).optional()),
     // OpenRouter : une clé et un modèle de vecteurs de 1 024 valeurs (voyageai/voyage-4, mistralai/mistral-embed-2312,
-    // baai/bge-m3…), pour comparer les candidats avec un seul compte.
+    // baai/bge-m3…), pour comparer les candidats avec un seul compte. La clé ouvre aussi les modèles d'OpenRouter
+    // aux étapes du modèle d'IA (models.ts).
     OPENROUTER_API_KEY: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     LEON_EMBEDDINGS_MODEL: z.preprocess(emptyIsAbsent, z.string().min(1).optional()),
     // Les e-mails qui ouvrent /admin, séparés par des virgules. Absent : David seul.
@@ -118,6 +119,21 @@ export const EnvSchema = z
         message:
           'LEON_IP_HEADER : obligatoire en production (l’en-tête où le proxy pose l’adresse du client, x-real-ip derrière Caddy)',
       });
+    }
+    // Un modèle d'OpenRouter sans sa clé : chaque appel de l'étape échouerait. On refuse de démarrer.
+    for (const setting of Object.values(SETTING_BY_STEP)) {
+      const model = env[setting];
+      if (
+        model !== undefined &&
+        SUPPORTED_MODELS[model].provider === 'openrouter' &&
+        env.OPENROUTER_API_KEY === undefined
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [setting],
+          message: `${setting} : ${model} passe par OpenRouter, OPENROUTER_API_KEY est obligatoire`,
+        });
+      }
     }
     const id = env.LEON_EMBEDDINGS;
     if (id === undefined || id === 'factice') return;

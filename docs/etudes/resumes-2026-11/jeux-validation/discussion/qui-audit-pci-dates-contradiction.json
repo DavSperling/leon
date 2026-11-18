@@ -1,0 +1,31 @@
+{
+  "id": "qui-audit-pci-dates-contradiction",
+  "titre": "Dates de la visite des auditeurs PCI : le mail de l'auditeur (déplacée au 15-17/12, acceptée par Shira) contredit le rappel plus récent du CTO (8-10/12)",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-quillon",
+    "question": "when exactly are the pci auditors coming to the office? need to book my flight to austin"
+  },
+  "attendu": {
+    "sources": ["slack-compliance", "gmail-ardent-fieldwork", "drive-pci-evidence-tracker"],
+    "faits": [
+      { "id": "f1", "texte": "Says the sources disagree about the dates of the auditors' visit.", "poids": 3 },
+      { "id": "f2", "texte": "Says Avi's Slack reminder of November 17 gives December 8-10 in Austin.", "poids": 3 },
+      { "id": "f3", "texte": "Says Ardent (Victor Lindqvist) asked on November 16 to move the on-site to December 15-17, and Shira accepted.", "poids": 3 },
+      { "id": "f4", "texte": "Presents the most recent source (Avi's message of November 17) before the older email of November 16.", "poids": 2 },
+      { "id": "f5", "texte": "Says the December 1 deadline for the evidence package does not change.", "poids": 1 },
+      { "id": "f6", "texte": "Suggests confirming with Shira (or Avi) before booking the flight.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Gives December 8-10 as the date without mentioning that Ardent asked to move it." },
+      { "id": "i2", "texte": "Gives December 15-17 as settled without mentioning Avi's later message with December 8-10." },
+      { "id": "i3", "texte": "Says the evidence deadline moved." },
+      { "id": "i4", "texte": "Says Ardent re-confirmed December 8-10 or that the move was cancelled." }
+    ],
+    "pieges": [
+      "Contradiction : le mail de l'auditeur du 16/11 (visite déplacée au 15-17/12, acceptée par Shira) contre le rappel d'Avi dans #compliance le 17/11 (8-10/12) ; il faut le dire, la plus récente d'abord, sans trancher.",
+      "Nombre contre date : le suivi des preuves (9/11), le mail d'accès au portail (9/11) et la session Claude de Shira (12/11) répètent 8-10/12 ; la majorité ne fait pas la vérité.",
+      "Vocabulaire : « auditors coming to the office » pour « on-site fieldwork », le QSA, Ardent Assurance ; la date limite des preuves (1/12) est une autre échéance, inchangée."
+    ]
+  }
+}

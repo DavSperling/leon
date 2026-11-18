@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-dossier-audit-rge",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:02.313Z",
+  "reponse": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE est faite, et la PR #209 est fusionnée sur `main`. Les photos HEIC sont converties à l'upload : 1 211 converties sur 1 214, et les 3 restantes sont corrompues. Il reste le déploiement en prod.\n\n- [en-cours] Yannick reprend sur place, chez Le Floch, les 3 photos « après » corrompues (IMG_4471, IMG_4502, IMG_4519).\n- [prochaine-étape] En prod : renseigner `ATTESTATION_CAPACITE`, lancer `convertir_heic` (environ 2 h), puis déployer.\n- [essai-raté] Exclure les HEIC du dossier a été écarté : l'auditeur veut toutes les photos avant/après de chaque pose.\n- [décision] Convertir les HEIC à l'upload et garder toutes les photos dans le dossier (source: t11)\n- [décision] Mettre le numéro d'attestation de capacité fluides en pied de chaque page (source: t17)\n- [décision] Déployer en prod lundi, après la conversion des photos de prod le week-end (source: t23)",
+  "rendu": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE est faite, et la PR #209 est fusionnée sur `main`. Les photos HEIC sont converties à l'upload : 1 211 converties sur 1 214, et les 3 restantes sont corrompues. Il reste le déploiement en prod.\n\n- pr [[delorme-energies/planif#209]]\n- branche [[thomas/export-dossier-audit]]\n- commit [[3c8e1f4]]\n- commit [[b71a09d]]\n- commit [[f4e2c86]]\n- [en-cours] Yannick reprend sur place, chez Le Floch, les 3 photos « après » corrompues (IMG_4471, IMG_4502, IMG_4519).\n- [prochaine-étape] En prod : renseigner `ATTESTATION_CAPACITE`, lancer `convertir_heic` (environ 2 h), puis déployer.\n- [essai-raté] Exclure les HEIC du dossier a été écarté : l'auditeur veut toutes les photos avant/après de chaque pose.\n- [décision] Convertir les HEIC à l'upload et garder toutes les photos dans le dossier (source: t11)\n- [décision] Mettre le numéro d'attestation de capacité fluides en pied de chaque page (source: t17)\n- [décision] Déployer en prod lundi, après la conversion des photos de prod le week-end (source: t23)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1049,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5067,
+    "sortie": 1232,
+    "reflexion": 826,
+    "cache": 0,
+    "cout": 0.0011227
+  },
+  "cout": 0.0011227,
+  "latenceMs": 6797,
+  "fournisseur": "Google"
+}

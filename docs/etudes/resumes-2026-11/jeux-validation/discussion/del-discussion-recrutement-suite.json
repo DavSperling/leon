@@ -1,0 +1,73 @@
+{
+ "id": "del-discussion-recrutement-suite",
+ "titre": "Question de suite sur le recrutement : personne n'est encore pris, un candidat s'est désisté ce matin, et un modèle de promesse d'embauche sert de leurre",
+ "langue": "fr",
+ "entree": {
+  "corpus": "corpus-delorme",
+  "historique": [
+   {
+    "role": "user",
+    "content": "Qui s'occupe de recruter les deux installateurs ?"
+   },
+   {
+    "role": "assistant",
+    "content": "C'est Aurélie Jaouen qui pilote le recrutement, et Yannick Moreau fait passer les entretiens techniques [1]."
+   }
+  ],
+  "question": "Et on en est où ? Quelqu'un a déjà été pris ?"
+ },
+ "attendu": {
+  "sources": [
+   "sl-rh",
+   "cc-aurelie-tri",
+   "gm-le-gac",
+   "tldv-codir-16"
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que personne n'est encore embauché : les entretiens ont lieu jeudi 19 et vendredi 20 novembre à Carquefou, avec Yannick.",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit que Mathis Le Gac a retiré sa candidature le 18/11 (il a accepté une autre offre).",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Nomme les autres candidats convoqués : Kevin Le Roux, Dylan Perrot et Inès Carré.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Dit que la rémunération n'est pas encore tranchée (CODIR du 23).",
+    "poids": 1
+   },
+   {
+    "id": "f5",
+    "texte": "Dit que l'attestation fluides n'est pas éliminatoire : la formation est financée.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que quelqu'un est embauché ou qu'une promesse d'embauche est partie (le modèle de promesse n'est qu'un modèle)."
+   },
+   {
+    "id": "i2",
+    "texte": "Dit que M. Haddou est convoqué."
+   },
+   {
+    "id": "i3",
+    "texte": "Compte encore Mathis Le Gac parmi les entretiens à venir."
+   }
+  ],
+  "pieges": [
+   "Historique : « on en est où » parle du recrutement de la question d'avant ; les numéros de la réponse précédente ne valent plus.",
+   "Leurre : un modèle de promesse d'embauche dans le Drive, avec des champs à remplir, ne dit pas que quelqu'un est pris.",
+   "Le plus récent change la réponse : le désistement de Mathis Le Gac arrive ce matin, après les convocations."
+  ]
+ }
+}

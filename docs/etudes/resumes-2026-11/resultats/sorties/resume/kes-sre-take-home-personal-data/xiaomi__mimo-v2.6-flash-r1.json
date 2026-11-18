@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:55.195Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is complete and lives in its own private repo `kestrel-analytics/sre-take-home` (exported via subtree split, so history shows only exercise commits): compose with flaky-svc built from source (multi-arch), a planted broken alert rule, a connection leak, an over-broad IAM policy, a 3-hour time box, no Kubernetes, plus `RUBRIC.md` (4 areas × 0–3). `hiring/` was removed from the infra branch working tree (uncommitted, branch to be dropped later); no PR opened in infra; nothing sent to anyone.\n\n- [en-cours] The repo awaits a collaborator invite to the candidate.\n- [prochaine-étape] Maya sends the exercise herself after the call with Ethan, Thursday 4pm Tel Aviv time; invite the repo then.\n- [décision] No Kubernetes, terraform + compose only, 3 hours max (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] No pass threshold — scores are input, the panel (Maya + Noa as 2nd reviewer) decides (source: t10)\n- [décision] Exercise lives in its own private repo, not in infra (source: t12)\n- [décision] No PR in infra; drop the branch later (source: t14)\n- [décision] No emails at all — Maya sends it herself after Thursday's call (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is complete and lives in its own private repo `kestrel-analytics/sre-take-home` (exported via subtree split, so history shows only exercise commits): compose with flaky-svc built from source (multi-arch), a planted broken alert rule, a connection leak, an over-broad IAM policy, a 3-hour time box, no Kubernetes, plus `RUBRIC.md` (4 areas × 0–3). `hiring/` was removed from the infra branch working tree (uncommitted, branch to be dropped later); no PR opened in infra; nothing sent to anyone.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] The repo awaits a collaborator invite to the candidate.\n- [prochaine-étape] Maya sends the exercise herself after the call with Ethan, Thursday 4pm Tel Aviv time; invite the repo then.\n- [décision] No Kubernetes, terraform + compose only, 3 hours max (source: t03)\n- [décision] Compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] No pass threshold — scores are input, the panel (Maya + Noa as 2nd reviewer) decides (source: t10)\n- [décision] Exercise lives in its own private repo, not in infra (source: t12)\n- [décision] No PR in infra; drop the branch later (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1242,
+    "decisions": 5,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3805,
+    "sortie": 555,
+    "reflexion": 206,
+    "cache": 0,
+    "cout": 0.0006881
+  },
+  "cout": 0.0006881,
+  "latenceMs": 18245,
+  "fournisseur": "Xiaomi"
+}

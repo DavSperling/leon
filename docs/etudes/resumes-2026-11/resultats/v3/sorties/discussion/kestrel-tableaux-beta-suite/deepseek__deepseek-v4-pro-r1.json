@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:12:03.180Z",
+  "reponse": "The first part (chart builder + saved views) opens to the 5 design partners on Wednesday December 9 [4][9]. Everyone else has to wait: a waitlist opens in January, and general availability is targeted for late January [4][9].",
+  "rendu": "The first part (chart builder + saved views) opens to the 5 design partners on Wednesday December 9 [4][9]. Everyone else has to wait: a waitlist opens in January, and general availability is targeted for late January [4][9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7765,
+    "sortie": 405,
+    "reflexion": 261,
+    "cache": 0,
+    "cout": 0.010976
+  },
+  "latenceMs": 7422,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"dashboards beta release date customers try first part\"}",
+    "chercher {\"requete\":\"dashboards rollout plan milestone\"}"
+  ],
+  "cout": 0.010976
+}

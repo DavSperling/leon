@@ -1,0 +1,292 @@
+{
+  "id": "kestrel-ventes-fuseaux",
+  "titre": "Boîte d'un commercial de Kestrel basé à Paris : rendez-vous à Londres, New York, Tel-Aviv et Los Angeles, un report, une annulation, des dates relatives et du bruit",
+  "langue": "en",
+  "entree": {
+    "periode": {
+      "first": "2026-11-16",
+      "last": "2026-11-22"
+    },
+    "mails": [
+      {
+        "sourceId": "gmail-thr-a41f7c",
+        "title": "New Event: Marcus Hale - 08:00am Fri, Nov 20, 2026 - 30 Minute Discovery Call",
+        "author": "Calendly",
+        "at": "2026-11-17T20:33",
+        "text": "Hi Sam Ortiz,\n\nA new event has been scheduled.\n\nEvent Type: 30 Minute Discovery Call\nInvitee: Marcus Hale\nInvitee Email: marcus.hale@brightloop.example\nEvent Date/Time: 08:00am - Friday, November 20, 2026 (Pacific Time - US & Canada)\nLocation: Zoom (details in the calendar invite)\n\nQuestions:\nWhat would you like to discuss? Evaluating product analytics for our 3 mobile apps (~2M MAU), moving off our in-house tool.\n\nView event in Calendly"
+      },
+      {
+        "sourceId": "gmail-thr-zest3",
+        "title": "Canceled event: Zest Grocers – dashboards demo @ Fri Nov 20, 2026 10am - 11am (CET)",
+        "author": "Priya Shah",
+        "at": "2026-11-17T08:55",
+        "text": "This event has been canceled and removed from your calendar.\n\nZest Grocers – dashboards demo\nFriday 20 Nov 2026 ⋅ 10:00 – 11:00 (Central European Time - Paris)\n\nNote from Priya: Zest asked to wait for their new head of data. We'll re-book in December.\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gmail-thr-c09e11",
+        "title": "Updated: Kestrel x Fernhill – SAML SSO technical kickoff",
+        "author": "Oliver Grant",
+        "at": "2026-11-16T15:40",
+        "text": "Oliver Grant has updated this meeting: Priya Shah added as an optional attendee. The time has not changed.\n\nKestrel x Fernhill – SAML SSO technical kickoff\nWhen: Thursday, November 19, 2026 2:00 PM-3:00 PM. (UTC+00:00) Dublin, Edinburgh, Lisbon, London\nWhere: Microsoft Teams Meeting"
+      },
+      {
+        "sourceId": "gmail-thr-41e2b9",
+        "title": "Reminder: Q4 forecast due Friday",
+        "author": "Eitan Mor",
+        "at": "2026-11-16T08:30",
+        "text": "Hi all,\n\nReminder that Q4 commit and upside numbers must be in HubSpot by Friday Nov 20, 6pm CET. There's no forecast call this week, just update your deal stages and close dates.\n\nThanks,\nEitan\nRevOps, Kestrel Analytics"
+      },
+      {
+        "sourceId": "gmail-thr-77aa01",
+        "title": "SaaS Sales Weekly #212: the renewal call playbook",
+        "author": "SaaS Sales Weekly",
+        "at": "2026-11-15T13:00",
+        "text": "This week in SaaS Sales Weekly\n\n1. The renewal call playbook: how to expand seats when usage is flat\n2. Five discovery questions that surface budget early\n3. Why your champion just changed jobs (and what to do)\n\nWant the full playbook? Book a call with our team.\n\nYou are receiving this newsletter because you subscribed at saas-sales-weekly.example. Unsubscribe."
+      },
+      {
+        "sourceId": "gmail-thr-5be010",
+        "title": "Invitation: Deal review – Fernhill expansion (Tier 2 seats) @ Wed Nov 18, 2026 1pm - 1:45pm (IST)",
+        "author": "Maya Cohen",
+        "at": "2026-11-15T10:12",
+        "text": "Maya Cohen has invited you to this event.\n\nDeal review – Fernhill expansion (Tier 2 seats)\nWednesday 18 Nov 2026 ⋅ 13:00 – 13:45 (Israel Standard Time - Jerusalem)\nGoogle Meet joining info: meet.google.com/hxe-pmzu-tob\nGuests: Maya Cohen (organiser), Sam Ortiz, Priya Shah\n\nBring the pricing sheet and the procurement timeline. I want to know if we can promise the audit-log export by Q1.\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gmail-thr-orb88",
+        "title": "Orbitly renewal – quick call",
+        "author": "Sam Ortiz",
+        "at": "2026-11-14T10:15",
+        "text": "No problem at all. Confirmed: Wednesday Nov 18, 11:00–11:30 AM ET, same Zoom link.\nI'll bring the usage export so we can settle the seat count.\n\nTalk then,\nSam\n\nSam Ortiz | Account Executive, EMEA | Kestrel Analytics | Paris\n\n> On Fri, Nov 13, 2026 at 4:08 PM Jenna Park wrote:\n> Could we push our call to Wednesday, same time?"
+      },
+      {
+        "sourceId": "gmail-thr-orb88",
+        "title": "Orbitly renewal – quick call",
+        "author": "Jenna Park",
+        "at": "2026-11-13T22:08",
+        "text": "Sam, so sorry: our board prep just got moved to Tuesday. Could we push our call to Wednesday, same time?\n\nJ.\n\nSent from my iPhone"
+      },
+      {
+        "sourceId": "gmail-thr-pw502",
+        "title": "Pathwise x Kestrel – reseller partnership",
+        "author": "Sam Ortiz",
+        "at": "2026-11-13T15:02",
+        "text": "Hi Inès,\n\nGreat to hear. Monday at 10 works for me, I'll call you then.\n\nHave a good weekend,\nSam"
+      },
+      {
+        "sourceId": "gmail-thr-pw502",
+        "title": "Pathwise x Kestrel – reseller partnership",
+        "author": "Inès Duval",
+        "at": "2026-11-13T14:20",
+        "text": "Hi Sam,\n\nFollowing our chat at the conference, my partners are keen to discuss a reseller agreement for the French market (mostly insurers and mutuelles).\n\nCould we have a quick call early next week? Monday morning is best for me.\n\nKind regards,\nInès Duval\nPartner, Pathwise Conseil, Paris"
+      },
+      {
+        "sourceId": "gmail-thr-orb88",
+        "title": "Orbitly renewal – quick call",
+        "author": "Sam Ortiz",
+        "at": "2026-11-12T16:51",
+        "text": "Hi Jenna,\n\nTuesday 11am ET works (that's 5pm for me in Paris). I'll send a Zoom link.\n\nSam"
+      },
+      {
+        "sourceId": "gmail-thr-orb88",
+        "title": "Orbitly renewal – quick call",
+        "author": "Jenna Park",
+        "at": "2026-11-12T16:25",
+        "text": "Hi Sam,\n\nThanks for the renewal draft. Before it goes to procurement I'd like 30 minutes with you to go through the seat count (we're at 140 active, the draft says 180).\n\nCould we do Tuesday at 11am ET?\n\nBest,\nJenna Park\nVP Operations, Orbitly | New York"
+      },
+      {
+        "sourceId": "gmail-thr-2d9e55",
+        "title": "Invitation: Orbitly QBR @ Tue Nov 24, 2026 3pm - 4pm (CET)",
+        "author": "Rachel Kim",
+        "at": "2026-11-11T10:00",
+        "text": "Rachel Kim has invited you to this event.\n\nOrbitly QBR\nTuesday 24 Nov 2026 ⋅ 15:00 – 16:00 (Central European Time - Paris)\nGoogle Meet joining info: meet.google.com/ofb-wqkc-yra\nGuests: Rachel Kim (organiser), Sam Ortiz, Jenna Park (Orbitly)\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gmail-thr-7f21a0",
+        "title": "Kestrel x Fernhill – SAML SSO technical kickoff",
+        "author": "Oliver Grant",
+        "at": "2026-11-10T11:04",
+        "text": "Oliver Grant has invited you to a Microsoft Teams meeting.\n\nKestrel x Fernhill – SAML SSO technical kickoff\nWhen: Thursday, November 19, 2026 2:00 PM-3:00 PM. (UTC+00:00) Dublin, Edinburgh, Lisbon, London\nWhere: Microsoft Teams Meeting\nAttendees: Oliver Grant; Hannah Doyle; Sam Ortiz; Daniel Levi\n\nAgenda:\n- IdP metadata exchange (Fernhill ADFS -> Kestrel SP)\n- attribute mapping (email, department, cost centre)\n- test users and the cut-over plan for go-live on 1 December\n\nJoin on your computer or mobile app: Click here to join the meeting\nMeeting ID: 381 220 449 017\n\nOliver Grant | Head of Identity & Access Management | Fernhill Bank"
+      },
+      {
+        "sourceId": "gmail-thr-zest1",
+        "title": "Invitation: Zest Grocers – dashboards demo @ Fri Nov 20, 2026 10am - 11am (CET)",
+        "author": "Priya Shah",
+        "at": "2026-11-09T14:30",
+        "text": "Priya Shah has invited you to this event.\n\nZest Grocers – dashboards demo\nFriday 20 Nov 2026 ⋅ 10:00 – 11:00 (Central European Time - Paris)\nGoogle Meet joining info: meet.google.com/qwd-rtys-kpe\nGuests: Priya Shah (organiser), Sam Ortiz, Tom Becker, Leah Turner (Zest Grocers)\n\nReply for sam@kestrel-analytics.example: Yes · No · Maybe\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gmail-thr-e118f0",
+        "title": "Fernhill – on-site visit 3 December",
+        "author": "Oliver Grant",
+        "at": "2026-11-17T12:10",
+        "text": "Sam,\n\nAs discussed, our CISO would like to meet your team on site in London on Thursday 3 December, 10:00–12:00. Could you confirm who will travel?\n\nAlso a reminder that go-live stays on 1 December: our change board signs it off on 26 November.\n\nBest,\nOliver"
+      },
+      {
+        "sourceId": "gmail-thr-0b7d3e",
+        "title": "Task due today: Send Orbitly renewal quote",
+        "author": "HubSpot",
+        "at": "2026-11-17T08:00",
+        "text": "You have 1 task due today.\n\nSend Orbitly renewal quote (v2, 140 seats)\nAssociated deal: Orbitly – Renewal 2027\nDue: Tue, Nov 17, 2026\n\nOpen task in HubSpot"
+      },
+      {
+        "sourceId": "gmail-thr-zest2",
+        "title": "Dashboards demo next week",
+        "author": "Leah Turner",
+        "at": "2026-11-16T21:30",
+        "text": "Hi Sam,\n\nSorry for the late notice. Our new head of data starts on December 1st and wants to be in the room, so let's skip Friday's demo and find a slot after that. I've told Priya as well.\n\nThanks for understanding,\nLeah Turner\nCategory Analytics Lead, Zest Grocers"
+      },
+      {
+        "sourceId": "gmail-thr-d3a771",
+        "title": "Déjeuner ?",
+        "author": "Sam Ortiz",
+        "at": "2026-11-16T19:02",
+        "text": "Avec plaisir, à demain 12h30 au Comptoir Vivienne !\n\nSam"
+      },
+      {
+        "sourceId": "gmail-thr-d3a771",
+        "title": "Déjeuner ?",
+        "author": "Camille Brunet",
+        "at": "2026-11-16T18:41",
+        "text": "Bonjour Sam,\n\nRavie de vous avoir rencontré ce matin au Paris Data Breakfast. Puisque vous êtes dans le quartier : déjeuner demain à 12h30 ? Il y a une bonne adresse près de nos bureaux, Le Comptoir Vivienne.\n\nBelle soirée,\nCamille Brunet\nDirectrice data, Vireo Assurances"
+      },
+      {
+        "sourceId": "gmail-thr-7f21a0",
+        "title": "Kestrel x Fernhill – SAML SSO technical kickoff",
+        "author": "Daniel Levi",
+        "at": "2026-11-16T09:12",
+        "text": "Accepted. I'll dial in from Tel Aviv, that's 16:00 for me so it doesn't clash with standup.\nSam, can you send Oliver our SP metadata XML before Thursday? It's in the Notion page \"Fernhill SSO\".\n\nDaniel\n\n> On Tue, Nov 10, 2026 at 12:04 PM Oliver Grant wrote:\n> When: Thursday, November 19, 2026 2:00 PM-3:00 PM. (UTC+00:00) London"
+      },
+      {
+        "sourceId": "gmail-thr-90cc2d",
+        "title": "Live this Thursday: Product analytics for regulated industries",
+        "author": "DataGuild Events",
+        "at": "2026-11-16T07:00",
+        "text": "Join us live this Thursday!\n\nProduct analytics for regulated industries\nThursday, November 19 · 5:00 PM CET · 45 minutes · online\n\nBanking and insurance data leaders share how they ship analytics under audit constraints. Live Q&A at the end.\n\n[Save my seat]\n\nYou're receiving this because you registered for DataGuild updates. Unsubscribe | Preferences"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Appel avec Inès Duval (Pathwise) le lundi 16 novembre à 10:00 (« Monday » lu depuis un mail du vendredi 13).",
+        "poids": 2
+      },
+      {
+        "id": "f2",
+        "texte": "Déjeuner avec Camille Brunet le mardi 17 novembre à 12:30 (« demain » lu depuis un mail du lundi 16).",
+        "poids": 2
+      },
+      {
+        "id": "f3",
+        "texte": "Revue de deal Fernhill avec Maya le mercredi 18 novembre à 12:00 heure de Paris (13:00 heure d'Israël).",
+        "poids": 3
+      },
+      {
+        "id": "f4",
+        "texte": "Appel de renouvellement Orbitly le mercredi 18 novembre à 17:00 heure de Paris (11:00 ET), à sa nouvelle date.",
+        "poids": 3
+      },
+      {
+        "id": "f5",
+        "texte": "Lancement technique SSO SAML avec Fernhill le jeudi 19 novembre à 15:00 heure de Paris (14:00 à Londres), rendu une seule fois.",
+        "poids": 3
+      },
+      {
+        "id": "f6",
+        "texte": "Appel découverte avec Marcus Hale (Brightloop) le vendredi 20 novembre à 17:00 heure de Paris (08:00 PT).",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Rendre la démo Zest Grocers du vendredi 20 novembre à 10:00 (annulée)."
+      },
+      {
+        "id": "i2",
+        "texte": "Rendre l'appel Orbitly le mardi 17 novembre (date abandonnée) ou à 11:00 heure de Paris (heure de New York non convertie)."
+      },
+      {
+        "id": "i3",
+        "texte": "Rendre le webinaire DataGuild du jeudi 19 novembre ou l'échéance du forecast Q4 du vendredi 20 comme des rendez-vous."
+      },
+      {
+        "id": "i4",
+        "texte": "Rendre la QBR Orbitly du 24 novembre, la visite Fernhill du 3 décembre ou le comité du 26 novembre (hors période)."
+      },
+      {
+        "id": "i5",
+        "texte": "Rendre le lancement Fernhill à 14:00 ou 16:00 (heure de Londres ou de Tel-Aviv), ou deux fois."
+      },
+      {
+        "id": "i6",
+        "texte": "Mettre l'adresse e-mail de Marcus Hale (ou une autre adresse) dans « avec »."
+      }
+    ],
+    "pieges": [
+      "Fuseaux : Londres (+1 h), Tel-Aviv (-1 h), New York (+6 h), Los Angeles (+9 h) ; le fil Fernhill cite trois heures (14:00 GMT, 15:00 implicite, 16:00 à Tel-Aviv) pour un seul rendez-vous.",
+      "Déplacé : l'appel Orbitly passe du mardi au mercredi, même heure ; seule la dernière date vaut.",
+      "Annulé : la démo Zest du vendredi est annulée par deux mails (client puis organisatrice).",
+      "Dates relatives : « Monday » écrit un vendredi, « demain » écrit un lundi soir, dans un mail en français au milieu d'une boîte anglaise.",
+      "Pas des rendez-vous : webinaire, lettre d'information qui propose un « call », échéance du forecast (« no forecast call this week »), tâche HubSpot ; et trois rendez-vous hors période.",
+      "Doublons : l'invitation Fernhill, la réponse de Daniel et l'invitation mise à jour décrivent le même rendez-vous."
+    ],
+    "rdv": [
+      {
+        "n": 9,
+        "autresN": [
+          10
+        ],
+        "debut": "2026-11-16T10:00",
+        "titre": "Call with Inès Duval (Pathwise) – reseller partnership",
+        "avec": "Inès Duval"
+      },
+      {
+        "n": 20,
+        "autresN": [
+          19
+        ],
+        "debut": "2026-11-17T12:30",
+        "titre": "Déjeuner avec Camille Brunet",
+        "avec": "Camille Brunet"
+      },
+      {
+        "n": 6,
+        "debut": "2026-11-18T12:00",
+        "fin": "2026-11-18T12:45",
+        "titre": "Deal review – Fernhill expansion",
+        "avec": "Maya Cohen, Priya Shah"
+      },
+      {
+        "n": 7,
+        "autresN": [
+          12,
+          11,
+          8
+        ],
+        "debut": "2026-11-18T17:00",
+        "fin": "2026-11-18T17:30",
+        "titre": "Orbitly renewal call",
+        "avec": "Jenna Park"
+      },
+      {
+        "n": 14,
+        "autresN": [
+          21,
+          3
+        ],
+        "debut": "2026-11-19T15:00",
+        "fin": "2026-11-19T16:00",
+        "titre": "Fernhill SAML SSO technical kickoff",
+        "avec": "Oliver Grant, Hannah Doyle, Daniel Levi"
+      },
+      {
+        "n": 1,
+        "debut": "2026-11-20T17:00",
+        "fin": "2026-11-20T17:30",
+        "titre": "Discovery call with Marcus Hale (Brightloop)",
+        "avec": "Marcus Hale"
+      }
+    ]
+  }
+}

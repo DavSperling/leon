@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:05.786Z",
+  "reponse": "## What is still open\n- Sofia wants your seller payout timeline (draft PR #402) on staging by Thursday EOD for Loomly’s Friday, Nov 20 call at 4 p.m. CT. [1][2] Jake moved the events API to Monday, Nov 23 because the return-reason mapping isn’t ready, so the demo can’t use the live endpoint. [6] Sofia is fine with a mocked returned state. [2] Your draft already shows the expected settlement date, which Support flagged as key to reducing Loomly’s payout inquiries. [1][5]\n\n## What changed\n- A new ticket reports that the dashboard build fails on Node 22.11 with `ERR_REQUIRE_ESM`; the report is unverified. [3]",
+  "rendu": "## What is still open\n- Sofia wants your seller payout timeline (draft PR #402) on staging by Thursday EOD for Loomly’s Friday, Nov 20 call at 4 p.m. CT. [1][2] Jake moved the events API to Monday, Nov 23 because the return-reason mapping isn’t ready, so the demo can’t use the live endpoint. [6] Sofia is fine with a mocked returned state. [2] Your draft already shows the expected settlement date, which Support flagged as key to reducing Loomly’s payout inquiries. [1][5]\n\n## What changed\n- A new ticket reports that the dashboard build fails on Node 22.11 with `ERR_REQUIRE_ESM`; the report is unverified. [3]",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "puces": 2,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4081,
+    "sortie": 236,
+    "reflexion": 73,
+    "cache": 1451,
+    "cout": 0.0090786
+  },
+  "cout": 0.0090786,
+  "latenceMs": 3938,
+  "fournisseur": "Azure"
+}

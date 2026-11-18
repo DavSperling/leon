@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "z-ai/glm-5.3-flash@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:26:23.655Z",
+  "reponse": "## Où j'en suis\nSession sur la branche hugo/transalp-etiquettes : intégration de l'API étiquettes du transporteur TransAlp en sandbox. Client écrit (`app/transporteurs/transalp/client.ts`) avec OAuth2 `client_credentials`, jeton gardé en mémoire (renouvelé 60 s avant expiration) ; premier essai avec la clé directe en en-tête `X-Api-Key` avait échoué en 401. Étiquette PDF A4 OK sur la commande test 1052 ; le ZPL est refusé en sandbox (400), paramètre `format` prêt. `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, le reste vers Rapidis, avec bascule vers Rapidis si un colis dépasse 30 kg. Tests 18/18, lint propre, commits b8d2e19 et 47fa0c6, PR brouillon maison-verdier/boutique#91 ouverte pour relecture par Julien. Clé de production TransAlp non configurée, passage en prod à la décision de Julien.\n\n- [en-cours] PR maison-verdier/boutique#91 en draft, en attente de relecture de Julien\n- [prochaine-étape] Demander au support TransAlp (Marc Dubreuil) si le ZPL est disponible en production — la Zebra de l'entrepôt n'imprime que ça\n- [prochaine-étape] Basculer en production quand Julien en décidera (identifiants prod non renseignés)\n- [essai-raté] Appel direct avec la clé en `X-Api-Key` → 401, l'API exige un échange OAuth2 contre un jeton Bearer (corrigé depuis)\n- [essai-raté] Format ZPL en sandbox → 400 `unsupported_format`, non disponible hors production\n- [essai-raté] Test choix.test.ts Paris échouait : code postal en nombre dans la fixture, `startsWith` plantait en silence ; corrigé en typant `codePostal` en string\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, aucune résiliation ; colis > 30 kg chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Étiquette en PDF par défaut en attendant la réponse sur le ZPL (source: t09)\n- [décision] Jeton OAuth gardé en mémoire, pas en base (source: t05)",
+  "rendu": "## Où j'en suis\nSession sur la branche hugo/transalp-etiquettes : intégration de l'API étiquettes du transporteur TransAlp en sandbox. Client écrit (`app/transporteurs/transalp/client.ts`) avec OAuth2 `client_credentials`, jeton gardé en mémoire (renouvelé 60 s avant expiration) ; premier essai avec la clé directe en en-tête `X-Api-Key` avait échoué en 401. Étiquette PDF A4 OK sur la commande test 1052 ; le ZPL est refusé en sandbox (400), paramètre `format` prêt. `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, le reste vers Rapidis, avec bascule vers Rapidis si un colis dépasse 30 kg. Tests 18/18, lint propre, commits b8d2e19 et 47fa0c6, PR brouillon maison-verdier/boutique#91 ouverte pour relecture par Julien. Clé de production TransAlp non configurée, passage en prod à la décision de Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, aucune résiliation ; colis > 30 kg chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] Étiquette en PDF par défaut en attendant la réponse sur le ZPL (source: t09)\n- [décision] Jeton OAuth gardé en mémoire, pas en base (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1243,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3365,
+    "sortie": 602,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00073845
+  },
+  "cout": 0.00073845,
+  "latenceMs": 2339,
+  "fournisseur": "Particle AI",
+  "rejoue": true
+}

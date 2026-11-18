@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:12.550Z",
+  "reponse": "## What is still open\n- **#1412 is approved but not ready to merge**: Elad requires an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI traceability. Avi wants this in and the PR merged by Monday. [3]\n\n## What changed\n- Shira needs two items from the production run for Ardent’s assessment: **the rotation audit-log export and the signed change ticket**, by **Wednesday 25 November**. [5]\n- The production window is confirmed for **Tuesday 24 November, 22:00–23:30 IL**, with Elad on call with you. The only fallback is Thursday 26 November, same time, before the 1 December change freeze. [6]\n\n## What you did\n- Built and opened **#1412**, the card-vault KEK rotation job: legacy v1 tokens map explicitly to `vault-kek-2022`, rewritten tokens use v2 envelopes, dry-run and resume are supported, and a final audit event is emitted. The staging dry run passed all **1,204,880 tokens**, and all **212 vault tests** pass. [1][3]\n- Wrote the production runbook covering pre-checks, replica dry run, the real run, verification, decrypt-only retention of old keys for 30 days, and failure recovery: re-wrapped tokens remain valid, so fix the cause and resume with `--from-id`. [2]",
+  "rendu": "## What is still open\n- **#1412 is approved but not ready to merge**: Elad requires an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI traceability. Avi wants this in and the PR merged by Monday. [3]\n\n## What changed\n- Shira needs two items from the production run for Ardent’s assessment: **the rotation audit-log export and the signed change ticket**, by **Wednesday 25 November**. [5]\n- The production window is confirmed for **Tuesday 24 November, 22:00–23:30 IL**, with Elad on call with you. The only fallback is Thursday 26 November, same time, before the 1 December change freeze. [6]\n\n## What you did\n- Built and opened **#1412**, the card-vault KEK rotation job: legacy v1 tokens map explicitly to `vault-kek-2022`, rewritten tokens use v2 envelopes, dry-run and resume are supported, and a final audit event is emitted. The staging dry run passed all **1,204,880 tokens**, and all **212 vault tests** pass. [1][3]\n- Wrote the production runbook covering pre-checks, replica dry run, the real run, verification, decrypt-only retention of old keys for 30 days, and failure recovery: re-wrapped tokens remain valid, so fix the cause and resume with `--from-id`. [2]",
+  "mesures": {
+    "mots": 191,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5643,
+    "sortie": 846,
+    "reflexion": 524,
+    "cache": 0,
+    "cout": 0.019746
+  },
+  "cout": 0.019746,
+  "latenceMs": 8266,
+  "fournisseur": "River"
+}

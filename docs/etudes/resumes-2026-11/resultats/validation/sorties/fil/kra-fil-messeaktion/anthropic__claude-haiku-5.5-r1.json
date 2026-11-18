@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kra-fil-messeaktion",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:09.844Z",
+  "reponse": "## Où j'en suis\nDie Messeaktion ProWerk 2027 ist im Portal angebunden. PR #209 (Aktionscode als ZZ_AKTION an SAP, Messerabatt aus der SAP-Preisfindung) ist gemergt. Offen ist das Hinweisbanner in PR #224 (Draft, nur DE, sichtbar ab 12.01.2027). Es zeigt noch 5 % bis 31.01. und passt damit nicht zur Entscheidung vom 17.11. (source: ses-m3, ses-m2, src-pr209, src-mail-thomas, src-pr224)\n\n- [en-cours] Hinweisbanner (DE) in PR #224 als Draft; die Prüfung für Österreich und die Schweiz ist noch offen (source: ses-m3, src-pr224)\n- [prochaine-étape] Banner-Text und Zeitraum an die Entscheidung anpassen: 4 %, 19. bis 29.01.2027, nur Rahmenvertrag (source: src-mail-thomas, src-pr224)\n- [prochaine-étape] Kondition ZMES in SAP durch den Vertriebsinnendienst bis Mitte Dezember pflegen lassen (source: src-mail-thomas)\n- [essai-raté] Vergleich in UTC: Das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch nicht sichtbar. Behoben mit Europe/Berlin (source: m3-04)\n- [essai-raté] Messerabatt im Portal selbst berechnen: von Matthias verworfen, SAP ist führend (source: m2-01)\n- [question] Gilt der Messerabatt für Schweizer Kunden in CHF? Thomas Brenner schreibt Nein, der Kunde Markus Gerber schreibt 5 % in CHF (source: src-mail-thomas, src-mail-gerber)\n- [décision] Messerabatt aus der SAP-Preisfindung (ZMES), Aktionscode als ZZ_AKTION an SAP (source: src-pr209, m2-03)\n- [décision] Messerabatt 4 %, nur Rahmenvertrag, 19. bis 29.01.2027, Österreich ja, Schweiz nein (source: src-mail-thomas)\n- [décision] Banner vorerst nur für Kunden in DE (source: m3-07)",
+  "rendu": "## Où j'en suis\nDie Messeaktion ProWerk 2027 ist im Portal angebunden. PR #209 (Aktionscode als ZZ_AKTION an SAP, Messerabatt aus der SAP-Preisfindung) ist gemergt. Offen ist das Hinweisbanner in PR #224 (Draft, nur DE, sichtbar ab 12.01.2027). Es zeigt noch 5 % bis 31.01. und passt damit nicht zur Entscheidung vom 17.11. (de: équipe, connecteur, agent; source: ses-m3, ses-m2, src-pr209, src-mail-thomas, src-pr224)\n\n- [en-cours] Hinweisbanner (DE) in PR #224 als Draft; die Prüfung für Österreich und die Schweiz ist noch offen (de: équipe, agent; source: ses-m3, src-pr224)\n- [prochaine-étape] Banner-Text und Zeitraum an die Entscheidung anpassen: 4 %, 19. bis 29.01.2027, nur Rahmenvertrag (de: équipe, connecteur; source: src-mail-thomas, src-pr224)\n- [prochaine-étape] Kondition ZMES in SAP durch den Vertriebsinnendienst bis Mitte Dezember pflegen lassen (de: connecteur; source: src-mail-thomas)\n- [essai-raté] Vergleich in UTC: Das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch nicht sichtbar. Behoben mit Europe/Berlin (de: agent; source: m3-04)\n- [essai-raté] Messerabatt im Portal selbst berechnen: von Matthias verworfen, SAP ist führend (de: toi; source: m2-01)\n- [question] Gilt der Messerabatt für Schweizer Kunden in CHF? Thomas Brenner schreibt Nein, der Kunde Markus Gerber schreibt 5 % in CHF (de: connecteur; source: src-mail-thomas, src-mail-gerber)\n- [décision] Messerabatt aus der SAP-Preisfindung (ZMES), Aktionscode als ZZ_AKTION an SAP (de: toi, équipe; source: src-pr209, m2-03)\n- [décision] Messerabatt 4 %, nur Rahmenvertrag, 19. bis 29.01.2027, Österreich ja, Schweiz nein (de: connecteur; source: src-mail-thomas)\n- [décision] Banner vorerst nur für Kunden in DE (de: toi; source: m3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1730,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7100,
+    "sortie": 3072,
+    "reflexion": 2246,
+    "cache": 0,
+    "cout": 0.002246
+  },
+  "cout": 0.002246,
+  "latenceMs": 13040,
+  "fournisseur": "Google"
+}

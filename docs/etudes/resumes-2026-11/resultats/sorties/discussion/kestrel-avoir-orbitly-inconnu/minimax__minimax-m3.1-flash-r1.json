@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:09.239Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15172,
+    "sortie": 469,
+    "reflexion": 76,
+    "cache": 5120,
+    "cout": 0.001866
+  },
+  "latenceMs": 2898,
+  "fournisseur": "Inferact vLLM",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage credits contract service credit\"}",
+    "chercher {\"requete\":\"Orbitly\"}",
+    "chercher {\"requete\":\"Orbitly outage\",\"type\":\"conversation\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"claude-ai-sam-sla-credits\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"hubspot-orbitly-renewal-call\"}",
+    "lire {\"sourceId\":\"slack-deal-desk-orbitly\"}"
+  ],
+  "cout": 0.001866
+}

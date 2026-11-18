@@ -1,0 +1,137 @@
+{
+  "id": "verdier-saone-retour-stock",
+  "titre": "Recherche « quand la table Saône revient en stock » : la date d'arrivée vient du fournisseur, la date d'expédition de Karim ; une page Notion plus ancienne donne une estimation dépassée et un ticket client un délai générique",
+  "langue": "fr",
+  "entree": {
+    "recherche": "quand la table Saône revient en stock ?",
+    "resultats": [
+      {
+        "id": "gm-bf-plateaux",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Plateaux Saône – planning",
+        "url": null,
+        "date": "2026-11-16T09:30:00Z",
+        "passages": [
+          {
+            "id": "pv1",
+            "auteur": "Paul Besson",
+            "date": "2026-11-16T09:30:00Z",
+            "texte": "Bonjour Karim,\n\nBonne nouvelle : 25 plateaux sortent du séchoir cette semaine, livrables chez vous le mardi 1er décembre. Les 15 suivants seront prêts mi-décembre (semaine du 14).\n\nPaul Besson\nBois & Fils"
+          }
+        ]
+      },
+      {
+        "id": "sl-ventes-1117",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#ventes",
+        "url": null,
+        "date": "2026-11-17T10:12:00Z",
+        "passages": [
+          {
+            "id": "pv2",
+            "auteur": "Karim Haddad",
+            "date": "2026-11-17T10:12:00Z",
+            "texte": "Les 25 Saône arrivent à l'entrepôt le 1er décembre. Je compte deux jours de montage des piètements et d'emballage, donc expédiables à partir du jeudi 3 décembre. Sophie, tu peux ouvrir la précommande avec cette date."
+          }
+        ]
+      },
+      {
+        "id": "zd-5521",
+        "kind": "zendesk",
+        "nature": "fil",
+        "titre": "Ticket #5521 – Stock affiché faux sur la table Saône",
+        "url": null,
+        "date": "2026-11-17T08:40:00Z",
+        "passages": [
+          {
+            "id": "pv3",
+            "auteur": "Lucie Fontaine",
+            "date": "2026-11-17T08:40:00Z",
+            "texte": "Bonjour Madame Perrin,\n\nToutes nos excuses : la table Saône chêne clair était affichée en stock par erreur. Nous vous la livrerons sous 6 semaines environ, ou nous vous remboursons immédiatement si vous préférez.\n\nLucie, service client Maison Verdier"
+          }
+        ]
+      },
+      {
+        "id": "no-ruptures",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Ruptures en cours",
+        "url": null,
+        "date": "2026-11-10T08:00:00Z",
+        "passages": [
+          {
+            "id": "pv4",
+            "auteur": "Karim Haddad",
+            "date": "2026-11-10T08:00:00Z",
+            "texte": "Table Saône (toutes finitions) : rupture depuis le 28/10. Retour estimé fin novembre, à confirmer avec Bois & Fils.\nBuffet Loire noyer : 3 en stock, réassort janvier."
+          }
+        ]
+      },
+      {
+        "id": "tl-ventes-1117",
+        "kind": "tldv",
+        "nature": "reunion",
+        "titre": "Réunion hebdo ventes – 17/11",
+        "url": null,
+        "date": "2026-11-17T13:00:00Z",
+        "passages": [
+          {
+            "id": "pv5",
+            "auteur": "Sophie Garnier",
+            "date": "2026-11-17T13:00:00Z",
+            "texte": "Sophie Garnier : J'ouvre la précommande Saône jeudi, avec la mention « expédition à partir du 3 décembre ».\nClaire Verdier : Ok. Et on prévient les clients en attente avant d'ouvrir, Lucie a la liste."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "25 tables Saône arrivent à l'entrepôt le 1er décembre.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Elles sont expédiables à partir du jeudi 3 décembre (deux jours de montage et d'emballage).",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Les 15 suivantes sont prévues mi-décembre (semaine du 14).",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Une précommande ouvre jeudi avec la mention « expédition à partir du 3 décembre ».",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Donner « fin novembre » comme date de retour (estimation dépassée)."
+      },
+      {
+        "id": "x2",
+        "texte": "Donner « sous 6 semaines » comme date de retour."
+      },
+      {
+        "id": "x3",
+        "texte": "Dire que les 40 tables arrivent toutes le 1er décembre."
+      }
+    ],
+    "pieges": [
+      "Croiser : l'arrivée (1er décembre) vient du fournisseur, l'expédition possible (3 décembre) de Karim.",
+      "Périmé : la page des ruptures du 10/11 dit « fin novembre, à confirmer » ; elle est dépassée, pas en contradiction.",
+      "Distracteur : le délai générique donné à une cliente (« sous 6 semaines »)."
+    ],
+    "cites": [
+      1,
+      2
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:51.432Z",
+  "reponse": "Zwei österreichische Händler haben Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz mit 236 Stück und Eisen-Mayr KG in Graz mit 120 Stück, zusammen 356 Geräte [1][2]. Darin sind die Lieferungen vom 12.11. enthalten, die im Händlerportal fehlten und manuell aus SAP nachgetragen wurden [1]. Ob die Charge zurückgerufen wird, ist noch nicht entschieden. Die Entscheidung fällt am Freitag, bis dahin sollen die Händler nicht informiert werden [3].",
+  "rendu": "Zwei österreichische Händler haben Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz mit 236 Stück und Eisen-Mayr KG in Graz mit 120 Stück, zusammen 356 Geräte [1][2]. Darin sind die Lieferungen vom 12.11. enthalten, die im Händlerportal fehlten und manuell aus SAP nachgetragen wurden [1]. Ob die Charge zurückgerufen wird, ist noch nicht entschieden. Die Entscheidung fällt am Freitag, bis dahin sollen die Händler nicht informiert werden [3].",
+  "mesures": {
+    "mots": 68,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2204,
+    "sortie": 908,
+    "reflexion": 686,
+    "cache": 0,
+    "cout": 0.0006744
+  },
+  "cout": 0.0006744,
+  "latenceMs": 4884,
+  "fournisseur": "Google"
+}

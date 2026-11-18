@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:15.079Z",
+  "reponse": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP, after the RelayState fix (6d0e2b8). Fernhill's test user signs in and is created as `viewer` through JIT provisioning. Group-to-role mapping (`Fernhill-Kestrel-Admins` → `admin`, default `viewer`) is committed as f4a91c7 and is in PR #421, which is still open. PR #415 (JIT provisioning) is merged. The tests passed (1301 passed, 3 skipped). The work is blocked on Fernhill adding the groups claim before the Thursday demo. (source: ses-sso-3, s3-04, s3-06, s3-09, 6d0e2b8, f4a91c7, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 (group-to-role mapping and short RelayState) is open, not merged. (source: kestrel-analytics/platform#421, f4a91c7)\n- [en-cours] Waiting on Fernhill IT to add the `groups` claim to their assertion. Daniel is emailing them. (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the groups claim exists, create one admin test account and use `kestrel.test1` for the demo on Thursday Nov 19, 10:00 ET. (source: s3-08, src-linear-kes311)\n- [essai-raté] The first JIT test run failed because the email domain case did not match the lowercase domain list. Fixed by normalizing to lowercase. (source: s2-02)\n- [essai-raté] The full return URL (143 bytes) as RelayState was rejected by Fernhill's ADFS, which caps it at 80 bytes (MSIS7042). Replaced with a 22-character opaque ID stored in Redis for 10 minutes. (source: s3-02, s3-04)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and the `analyst` default role. Neither is in the team's decisions, and `analyst` does not exist yet. (source: src-slack-fernhill, s3-07)\n- [question] An internal note says SSO enforcement with password login disabled is planned for Dec 1. It is not confirmed by a team source. (source: src-note-enforce)\n- [décision] Default role stays `viewer`, and SP-initiated login stays on for this tenant. (source: s3-07)\n- [décision] Users are created at first login with the `viewer` role. (source: s1-05)\n- [décision] SAML only for Fernhill, no OIDC for now. (source: s1-03)\n- [décision] No account is created from an unverified domain, even if the IdP sends one. (source: s2-03)",
+  "rendu": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP, after the RelayState fix (6d0e2b8). Fernhill's test user signs in and is created as `viewer` through JIT provisioning. Group-to-role mapping (`Fernhill-Kestrel-Admins` → `admin`, default `viewer`) is committed as f4a91c7 and is in PR #421, which is still open. PR #415 (JIT provisioning) is merged. The tests passed (1301 passed, 3 skipped). The work is blocked on Fernhill adding the groups claim before the Thursday demo. (de: équipe, connecteur, agent; source: ses-sso-3, s3-04, s3-06, s3-09, 6d0e2b8, f4a91c7, kestrel-analytics/platform#415, kestrel-analytics/platform#421, src-linear-kes311)\n\n- [en-cours] PR #421 (group-to-role mapping and short RelayState) is open, not merged. (de: équipe; source: kestrel-analytics/platform#421, f4a91c7)\n- [en-cours] Waiting on Fernhill IT to add the `groups` claim to their assertion. Daniel is emailing them. (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Once the groups claim exists, create one admin test account and use `kestrel.test1` for the demo on Thursday Nov 19, 10:00 ET. (de: connecteur, agent; source: s3-08, src-linear-kes311)\n- [essai-raté] The first JIT test run failed because the email domain case did not match the lowercase domain list. Fixed by normalizing to lowercase. (de: agent; source: s2-02)\n- [essai-raté] The full return URL (143 bytes) as RelayState was rejected by Fernhill's ADFS, which caps it at 80 bytes (MSIS7042). Replaced with a 22-character opaque ID stored in Redis for 10 minutes. (de: agent; source: s3-02, s3-04)\n- [question] Fernhill IT's Slack message asks for IdP-initiated login only and the `analyst` default role. Neither is in the team's decisions, and `analyst` does not exist yet. (de: toi, connecteur; source: src-slack-fernhill, s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1848,
+    "lignesRetirees": 5,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6405,
+    "sortie": 2128,
+    "reflexion": 1197,
+    "cache": 0,
+    "cout": 0.0017045
+  },
+  "cout": 0.0017045,
+  "latenceMs": 9611,
+  "fournisseur": "Google"
+}

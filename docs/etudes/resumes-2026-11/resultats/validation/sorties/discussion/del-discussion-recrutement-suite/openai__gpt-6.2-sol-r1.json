@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:20.764Z",
+  "reponse": "Je n’ai trouvé aucune embauche confirmée : le recrutement en est encore aux entretiens, et la promesse d’embauche que j’ai trouvée est un modèle non rempli [2][7][8].\n\nSur 11 candidatures pour les deux postes, quatre personnes avaient été retenues pour un entretien. Mathis Le Gac s’est désisté le 18 novembre ; les trois autres entretiens sont prévus les 19 et 20 novembre avec Yannick à Carquefou [1][2][3].\n\nAurélie vise une première offre la semaine du 23 novembre, pour une arrivée début janvier. La rémunération doit être tranchée au CODIR du 23 [8].",
+  "rendu": "Je n’ai trouvé aucune embauche confirmée : le recrutement en est encore aux entretiens, et la promesse d’embauche que j’ai trouvée est un modèle non rempli [2][7][8].\n\nSur 11 candidatures pour les deux postes, quatre personnes avaient été retenues pour un entretien. Mathis Le Gac s’est désisté le 18 novembre ; les trois autres entretiens sont prévus les 19 et 20 novembre avec Yannick à Carquefou [1][2][3].\n\nAurélie vise une première offre la semaine du 23 novembre, pour une arrivée début janvier. La rémunération doit être tranchée au CODIR du 23 [8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20533,
+    "sortie": 398,
+    "reflexion": 0,
+    "cache": 13884,
+    "cout": 0.021984899999999998
+  },
+  "latenceMs": 8407,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"recrutement deux installateurs Aurélie Jaouen Yannick Moreau candidat embauché\"}",
+    "chercher {\"requete\":\"\\\"installateurs\\\" recrutement entretien embauche candidat\"}",
+    "lire {\"sourceId\":\"sl-rh\"}",
+    "lire {\"sourceId\":\"gm-le-gac\"}",
+    "lire {\"sourceId\":\"tldv-codir-16\"}",
+    "chercher {\"requete\":\"\\\"Kevin Le Roux\\\" \\\"Dylan Perrot\\\" \\\"Inès Carré\\\" offre contrat accepté recrutement retrait\"}",
+    "lire {\"sourceId\":\"cc-aurelie-tri\"}",
+    "lire {\"sourceId\":\"dr-promesse\"}"
+  ],
+  "cout": 0.021984899999999998
+}

@@ -1,0 +1,134 @@
+{
+  "id": "verdier-cloture-pieces-comptable",
+  "titre": "Recherche des pièces demandées par le comptable pour la clôture : deux demandes de 2026 à réunir, l'état de ce qui est déjà envoyé, et une liste de la clôture 2025 qui ressemble beaucoup",
+  "langue": "fr",
+  "entree": {
+    "recherche": "pièces demandées par Antoine pour la clôture",
+    "resultats": [
+      {
+        "id": "ol-cloture-2025",
+        "kind": "outlook",
+        "nature": "fil",
+        "titre": "Clôture 2025 – liste des pièces",
+        "url": null,
+        "date": "2025-11-14T10:00:00Z",
+        "passages": [
+          {
+            "id": "pc1",
+            "auteur": "Antoine Roussel",
+            "date": "2025-11-14T10:00:00Z",
+            "texte": "Bonjour Claire,\n\nPour la clôture, merci de me transmettre avant le 5 décembre : les relevés bancaires de novembre, l'inventaire physique complet de l'entrepôt et les notes de frais du salon de septembre.\n\nAntoine Roussel\nCabinet Roussel & Associés"
+          }
+        ]
+      },
+      {
+        "id": "ol-cloture-pieces",
+        "kind": "outlook",
+        "nature": "fil",
+        "titre": "Clôture – pièces à préparer",
+        "url": null,
+        "date": "2026-11-12T10:05:00Z",
+        "passages": [
+          {
+            "id": "pc2",
+            "auteur": "Antoine Roussel",
+            "date": "2026-11-12T10:05:00Z",
+            "texte": "Bonjour Claire,\n\nJe vous ai envoyé l'invitation pour mercredi 16h. D'ici là, pourriez-vous me transmettre les relevés bancaires d'octobre et l'état des stocks ? Il me les faut avant mardi soir pour préparer la réunion. Nous regarderons aussi ensemble les factures Bois & Fils non rapprochées.\n\nBien à vous,\nAntoine Roussel"
+          }
+        ]
+      },
+      {
+        "id": "ol-inventaire-karim",
+        "kind": "outlook",
+        "nature": "fil",
+        "titre": "Inventaire tournant – clôture",
+        "url": null,
+        "date": "2026-11-13T08:00:00Z",
+        "passages": [
+          {
+            "id": "pc3",
+            "auteur": "Antoine Roussel",
+            "date": "2026-11-13T08:00:00Z",
+            "texte": "Bonjour Karim,\n\nPour la clôture, l'inventaire tournant des références Saône, Rhône et Loire doit m'être transmis avant le samedi 21 novembre (tableur habituel).\n\nAntoine Roussel"
+          }
+        ]
+      },
+      {
+        "id": "sl-direction-1117",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#direction",
+        "url": null,
+        "date": "2026-11-17T08:15:00Z",
+        "passages": [
+          {
+            "id": "pc4",
+            "auteur": "Claire Verdier",
+            "date": "2026-11-17T08:15:00Z",
+            "texte": "Relevés d'octobre envoyés à Antoine ce matin. Reste l'état des stocks : Julien, tu peux sortir l'export Shopify aujourd'hui ? Il le veut ce soir."
+          }
+        ]
+      },
+      {
+        "id": "no-checklist-cloture",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Clôture trimestrielle – checklist",
+        "url": null,
+        "date": "2026-03-02T09:00:00Z",
+        "passages": [
+          {
+            "id": "pc5",
+            "auteur": "Claire Verdier",
+            "date": "2026-03-02T09:00:00Z",
+            "texte": "Modèle à dupliquer chaque trimestre. Pièces habituelles : relevés bancaires, état des stocks, factures fournisseurs, notes de frais, contrats signés du trimestre."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Antoine demande les relevés bancaires d'octobre et l'état des stocks, avant le mardi 17 novembre au soir.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Il demande aussi l'inventaire tournant des références Saône, Rhône et Loire avant le samedi 21 novembre.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Les relevés d'octobre ont été envoyés le 17 novembre ; l'état des stocks manque encore.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Les factures Bois & Fils non rapprochées seront revues ensemble à la réunion.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Citer les pièces de la clôture 2025 (relevés de novembre, inventaire physique complet, notes de frais du salon, avant le 5 décembre)."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que l'état des stocks a déjà été envoyé."
+      }
+    ],
+    "pieges": [
+      "Périmé d'une année : le premier résultat est la demande de la clôture 2025, presque la même ; seule sa date (2025) la distingue.",
+      "Croiser : les pièces sont réparties entre un mail à Claire et un mail à Karim ; Slack dit ce qui est déjà parti.",
+      "Distracteur : la checklist générique Notion n'est pas une demande d'Antoine."
+    ],
+    "cites": [
+      2,
+      3,
+      4
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+{
+ "id": "del-discussion-marchand-reception-risque",
+ "titre": "Tiendra-t-on la date chez la conserverie, et sinon combien ça coûte : croiser le fournisseur, le chef de chantier, le contrat, la réunion et le mail du client",
+ "langue": "fr",
+ "entree": {
+  "corpus": "corpus-delorme",
+  "question": "La conserverie, on va tenir la date de fin de chantier ? Et si on ne la tient pas, ça nous coûte combien ?"
+ },
+ "attendu": {
+  "sources": [
+   "ol-thermaval-report",
+   "sl-chantiers-1117",
+   "dr-contrat-marchand",
+   "tldv-point-chantiers",
+   "ol-avenant-marchand"
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que la réception du 4 décembre ne tient que si les 2 pompes sont sur site le 26 novembre, ce qui dépend du premier lot Thermaval du 24/11, confirmé seulement « sauf aléa transporteur ».",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit que le retard coûte 150 € HT par jour ouvré après le 4 décembre, plafonné à 5 % du marché (4 320 € HT sur 86 400 € HT).",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Dit que le retard du fournisseur n'exonère pas Delorme des pénalités.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Dit qu'un avenant a été proposé (décidé au point chantiers du 17/11) : réception au 11 décembre sans pénalités, avec la première année d'entretien offerte.",
+    "poids": 2
+   },
+   {
+    "id": "f5",
+    "texte": "Dit que le client accepte la date du 11 décembre mais réclame 3 ans d'entretien offerts, et que l'avenant n'est pas encore signé de son côté.",
+    "poids": 2
+   },
+   {
+    "id": "f6",
+    "texte": "Dit que la conserverie est fermée pour inventaire du 14 au 18 décembre.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que le retard de Thermaval exonère Delorme des pénalités."
+   },
+   {
+    "id": "i2",
+    "texte": "Dit que l'avenant est signé par le client, ou que les 3 ans d'entretien sont accordés."
+   },
+   {
+    "id": "i3",
+    "texte": "Donne le 9 décembre comme date de réception."
+   },
+   {
+    "id": "i4",
+    "texte": "Donne un coût de retard sans plafond, ou un autre montant que 150 € HT par jour ouvré."
+   }
+  ],
+  "pieges": [
+   "Croiser cinq sources : les dates du fournisseur, la condition du chef de chantier (le 26), le contrat (pénalités, plafond, pas d'exonération), la décision de la réunion (avenant), la réponse du client (3 ans).",
+   "Calcul : le plafond se lit en pourcentage (5 %) d'un montant donné dans un autre article du contrat.",
+   "Message de client : « c'est entendu… 3 ans » n'est pas un accord de l'équipe ; la réunion dit « pas plus » d'un an.",
+   "Vocabulaire : « la conserverie », « date de fin de chantier », « ça nous coûte » au lieu de Marchand, réception, pénalités."
+  ]
+ }
+}

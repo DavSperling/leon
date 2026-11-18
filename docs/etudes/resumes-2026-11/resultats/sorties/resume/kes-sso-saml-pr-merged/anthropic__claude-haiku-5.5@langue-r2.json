@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:39:25.970Z",
+  "reponse": "## Où j'en suis\n\nSAML ACS verification is implemented with signxml, not python3-saml. It checks the XML signature, the conditions (time window with a 120 s skew, audience, recipient), and assertion replay via Redis, and reads attributes only from the signed element. The changes are in PR #412 (commits 3f9c2a1, b71e04d, e0a5c93), with tests passing and CI green. The Fernhill staging IdP metadata is not loaded yet, and the demo is Thursday 10:00 New York, so metadata must be exchanged by Wednesday EOD.\n\n- [en-cours] Fernhill SSO demo prep: load their staging IdP metadata and send them our staging SP metadata\n- [prochaine-étape] Load Fernhill staging IdP metadata into the tenant config\n- [prochaine-étape] Send Fernhill our staging SP metadata by Wednesday EOD (demo Thursday 10:00 NY)\n- [prochaine-étape] Ping Maya for review on PR #412\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine image: xmlsec/lxml libxml2 mismatch; building lxml from source (9 min build) still failed on the crypto library. Dropped in favour of signxml.\n- [question] PR #412 status: the facts record it as merged, but the last agent message says it is blocked awaiting Maya's approval, and the merge attempt failed. Confirm which is true.\n- [décision] Use signxml and drop python3-saml and xmlsec (source: t08)\n- [décision] Clock skew set to 120 s, per the Fernhill security questionnaire; password login left untouched (source: t12)\n- [décision] Move saml_utils into api/auth/saml/verify.py (source: t14)\n- [décision] No admin or auto merge; the user will ping Maya directly (source: t21)",
+  "rendu": "## Où j'en suis\nSAML ACS verification is implemented with signxml, not python3-saml. It checks the XML signature, the conditions (time window with a 120 s skew, audience, recipient), and assertion replay via Redis, and reads attributes only from the signed element. The changes are in PR #412 (commits 3f9c2a1, b71e04d, e0a5c93), with tests passing and CI green. The Fernhill staging IdP metadata is not loaded yet, and the demo is Thursday 10:00 New York, so metadata must be exchanged by Wednesday EOD.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill SSO demo prep: load their staging IdP metadata and send them our staging SP metadata\n- [prochaine-étape] Load Fernhill staging IdP metadata into the tenant config\n- [prochaine-étape] Send Fernhill our staging SP metadata by Wednesday EOD (demo Thursday 10:00 NY)\n- [prochaine-étape] Ping Maya for review on PR #412\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine image: xmlsec/lxml libxml2 mismatch; building lxml from source (9 min build) still failed on the crypto library. Dropped in favour of signxml.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1266,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6505,
+    "sortie": 1487,
+    "reflexion": 831,
+    "cache": 0,
+    "cout": 0.001394
+  },
+  "cout": 0.001394,
+  "latenceMs": 7431,
+  "fournisseur": "Claude Platform on AWS"
+}

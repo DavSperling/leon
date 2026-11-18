@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:34.084Z",
+  "reponse": "## Où j'en suis\nSAML SSO for Fernhill on branch `daniel/saml-sso-fernhill` is functionally working on staging: PR #415 (JIT provisioning) is merged, and PR #421 (group-to-role mapping + short RelayState) is open. A real login with Fernhill's IdP works end to end — the initial failure was their ADFS rejecting our 143-byte RelayState (spec caps it at 80 bytes), fixed by storing the return URL in Redis (10-min TTL) behind a 16-byte opaque ID. JIT creates users as `viewer`; group mapping (`Fernhill-Kestrel-Admins` → `admin`, default `viewer`) is applied on every login. Full test suite green (1301 passed). Fernhill IT still has to add the `groups` claim — until then everyone lands as `viewer` — and the demo is Thursday Nov 19, 10:00 ET. (source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, awaiting review/merge; commits `6d0e2b8` (RelayState) and `f4a91c7` (role mapping) (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the `groups` claim; then create one admin test account for the Thursday Nov 19, 10:00 ET demo with Fernhill IT (Priya) (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] SP-initiated login first failed: Fernhill's ADFS error `MSIS7042: The RelayState parameter is too long` — return URL exceeded the 80-byte RelayState cap; fixed with the Redis-backed opaque ID (source: ses-sso-3)\n- [décision] JIT only creates users from verified domains, never unverified ones, even if the IdP asserts them (source: s2-03, src-pr415)\n- [décision] Default role is `viewer` for new SAML users — least privilege, admins upgrade people (source: s1-05)\n- [décision] SAML only, no OIDC; both SP- and IdP-initiated flows (source: s1-03)\n- [décision] Rejected Fernhill IT's Slack request: no `analyst` default role (role doesn't exist) and SP-initiated login stays on; `viewer` stays default until Maya talks to them (source: s3-07, src-slack-fernhill)",
+  "rendu": "## Où j'en suis\nSAML SSO for Fernhill on branch `daniel/saml-sso-fernhill` is functionally working on staging: PR #415 (JIT provisioning) is merged, and PR #421 (group-to-role mapping + short RelayState) is open. A real login with Fernhill's IdP works end to end — the initial failure was their ADFS rejecting our 143-byte RelayState (spec caps it at 80 bytes), fixed by storing the return URL in Redis (10-min TTL) behind a 16-byte opaque ID. JIT creates users as `viewer`; group mapping (`Fernhill-Kestrel-Admins` → `admin`, default `viewer`) is applied on every login. Full test suite green (1301 passed). Fernhill IT still has to add the `groups` claim — until then everyone lands as `viewer` — and the demo is Thursday Nov 19, 10:00 ET. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, awaiting review/merge; commits `6d0e2b8` (RelayState) and `f4a91c7` (role mapping) (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the `groups` claim; then create one admin test account for the Thursday Nov 19, 10:00 ET demo with Fernhill IT (Priya) (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] SP-initiated login first failed: Fernhill's ADFS error `MSIS7042: The RelayState parameter is too long` — return URL exceeded the 80-byte RelayState cap; fixed with the Redis-backed opaque ID (de: agent; source: ses-sso-3)\n- [décision] JIT only creates users from verified domains, never unverified ones, even if the IdP asserts them (de: toi, équipe; source: s2-03, src-pr415)\n- [décision] Default role is `viewer` for new SAML users — least privilege, admins upgrade people (de: toi; source: s1-05)\n- [décision] SAML only, no OIDC; both SP- and IdP-initiated flows (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1822,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 614,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00090136
+  },
+  "cout": 0.00090136,
+  "latenceMs": 2708,
+  "fournisseur": "Particle AI"
+}

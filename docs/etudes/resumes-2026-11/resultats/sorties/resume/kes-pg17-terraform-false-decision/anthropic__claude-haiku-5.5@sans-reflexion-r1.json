@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:16.032Z",
+  "reponse": "## Où j'en suis\nSession sur la branche `noa/rds-pg17` : mise à niveau de l'instance analytics RDS vers PostgreSQL 17 en blue/green, d'abord sur staging, en plan seulement. Le module RDS a été adapté (groupe de paramètres dérivé de la version majeure, blue/green), le provider AWS est épinglé en 5.82 et la PR de brouillon #57 est ouverte. La prod est préparée mais désactivée. Rien n'a été appliqué. L'upgrade de pg_partman et le choix de la fenêtre de prod restent à faire.\n\n- [en-cours] PR kestrel-analytics/infra#57 en brouillon, à relire avant de passer en revue\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.x sur staging (ALTER EXTENSION sur 16.4, puis vérifier run_maintenance_proc sur events_raw et events_daily)\n- [prochaine-étape] Choisir la fenêtre de prod, hors du verrou dbt sur events_daily (01:00–03:30 UTC)\n- [essai-raté] Passage au provider AWS v6 : 37 changements dont beaucoup sans lien avec RDS (ACL S3, aws_eip), abandonné, retour en 5.82\n- [question] Validation de Maya requise avant toute date de prod\n- [décision] Provider AWS épinglé en ~> 5.82.0, pas de v6 dans cette PR (source: t04)\n- [décision] Prod désactivée par défaut derrière pg17_enabled = false, apply_immediately reste à false (source: t14)\n- [décision] Pas de date de prod tant que Maya n'a pas validé (source: t14)",
+  "rendu": "## Où j'en suis\nSession sur la branche `noa/rds-pg17` : mise à niveau de l'instance analytics RDS vers PostgreSQL 17 en blue/green, d'abord sur staging, en plan seulement. Le module RDS a été adapté (groupe de paramètres dérivé de la version majeure, blue/green), le provider AWS est épinglé en 5.82 et la PR de brouillon #57 est ouverte. La prod est préparée mais désactivée. Rien n'a été appliqué. L'upgrade de pg_partman et le choix de la fenêtre de prod restent à faire.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] PR kestrel-analytics/infra#57 en brouillon, à relire avant de passer en revue\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.x sur staging (ALTER EXTENSION sur 16.4, puis vérifier run_maintenance_proc sur events_raw et events_daily)\n- [prochaine-étape] Choisir la fenêtre de prod, hors du verrou dbt sur events_daily (01:00–03:30 UTC)\n- [essai-raté] Passage au provider AWS v6 : 37 changements dont beaucoup sans lien avec RDS (ACL S3, aws_eip), abandonné, retour en 5.82\n- [question] Validation de Maya requise avant toute date de prod\n- [décision] Provider AWS épinglé en ~> 5.82.0, pas de v6 dans cette PR (source: t04)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1239,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5447,
+    "sortie": 600,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008447
+  },
+  "cout": 0.0008447,
+  "latenceMs": 3138,
+  "fournisseur": "Claude Platform on AWS"
+}

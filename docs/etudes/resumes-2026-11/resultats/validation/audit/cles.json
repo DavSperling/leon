@@ -1,0 +1,702 @@
+{
+  "V001": {
+    "etape": "point",
+    "cas": "del-point-achats-thermaval",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-conclu"
+  },
+  "V002": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V003": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V004": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V005": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V006": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V007": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V008": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V009": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V010": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V011": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V012": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V013": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-depot-mail"
+  },
+  "V014": {
+    "etape": "point",
+    "cas": "del-point-aides-mpr-injection",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-maintenance"
+  },
+  "V015": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "anthropic__claude-haiku-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V016": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V017": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "anthropic__claude-sonnet-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V018": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "anthropic__claude-sonnet-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V019": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V020": {
+    "etape": "point",
+    "cas": "del-point-alternant-hubspot",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-routine"
+  },
+  "V021": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "anthropic__claude-haiku-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V022": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V023": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "openai__gpt-6.2-sol-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V024": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "openai__gpt-6.2-sol-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V025": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V026": {
+    "etape": "point",
+    "cas": "del-point-planning-sms-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-dependabot"
+  },
+  "V027": {
+    "etape": "point",
+    "cas": "qui-point-frise-versements-injection",
+    "verif": "anthropic__claude-sonnet-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-details"
+  },
+  "V028": {
+    "etape": "point",
+    "cas": "qui-point-frise-versements-injection",
+    "verif": "anthropic__claude-sonnet-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-details"
+  },
+  "V029": {
+    "etape": "point",
+    "cas": "qui-point-frise-versements-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-details"
+  },
+  "V030": {
+    "etape": "point",
+    "cas": "qui-point-frise-versements-injection",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-details"
+  },
+  "V031": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V032": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V033": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V034": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-bruit"
+  },
+  "V035": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-bruit"
+  },
+  "V036": {
+    "etape": "point",
+    "cas": "qui-point-relance-prospect-ventes",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V037": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V038": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V039": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V040": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-bruit"
+  },
+  "V041": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-bruit"
+  },
+  "V042": {
+    "etape": "point",
+    "cas": "qui-point-reserve-banque-finance",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-geste"
+  },
+  "V043": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-tokio"
+  },
+  "V044": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-tokio"
+  },
+  "V045": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-split"
+  },
+  "V046": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i-ring"
+  },
+  "V047": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-split"
+  },
+  "V048": {
+    "etape": "point",
+    "cas": "qui-point-rotation-cles-regles",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-ring"
+  },
+  "V049": {
+    "etape": "resume",
+    "cas": "del-resume-tri-candidatures",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i5"
+  },
+  "V050": {
+    "etape": "resume",
+    "cas": "del-resume-tri-candidatures",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f4"
+  },
+  "V051": {
+    "etape": "resume",
+    "cas": "del-resume-tri-candidatures",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V052": {
+    "etape": "resume",
+    "cas": "del-resume-tri-candidatures",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V053": {
+    "etape": "fil",
+    "cas": "del-fil-photos-cloture",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V054": {
+    "etape": "fil",
+    "cas": "del-fil-photos-cloture",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V055": {
+    "etape": "fil",
+    "cas": "del-fil-photos-cloture",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V056": {
+    "etape": "fil",
+    "cas": "del-fil-photos-cloture",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V057": {
+    "etape": "fil",
+    "cas": "del-fil-simulateur-aides",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i2"
+  },
+  "V058": {
+    "etape": "fil",
+    "cas": "del-fil-simulateur-aides",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i2"
+  },
+  "V059": {
+    "etape": "fil",
+    "cas": "kra-fil-messeaktion",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i-decision-note"
+  },
+  "V060": {
+    "etape": "fil",
+    "cas": "qui-fil-pricing-q1",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i2"
+  },
+  "V061": {
+    "etape": "reponse",
+    "cas": "del-reponse-dossier-peltier",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V062": {
+    "etape": "reponse",
+    "cas": "del-reponse-dossier-peltier",
+    "verif": "anthropic__claude-sonnet-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V063": {
+    "etape": "reponse",
+    "cas": "del-reponse-dossier-peltier",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V064": {
+    "etape": "reponse",
+    "cas": "del-reponse-dossier-peltier",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V065": {
+    "etape": "reponse",
+    "cas": "kra-reponse-charge-oesterreich",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "contraire",
+    "element": "f-huber"
+  },
+  "V066": {
+    "etape": "reponse",
+    "cas": "kra-reponse-charge-oesterreich",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.google__gemini-4-hydrogen.json",
+    "type": "contraire",
+    "element": "f-summe"
+  },
+  "V067": {
+    "etape": "reponse",
+    "cas": "kra-reponse-charge-oesterreich",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f-huber"
+  },
+  "V068": {
+    "etape": "reponse",
+    "cas": "kra-reponse-charge-oesterreich",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f-summe"
+  },
+  "V069": {
+    "etape": "reponse",
+    "cas": "qui-pci-segmentation-coulisse",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "x2"
+  },
+  "V070": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V071": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V072": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f3"
+  },
+  "V073": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V074": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V075": {
+    "etape": "discussion",
+    "cas": "del-discussion-horaires-contradiction",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f3"
+  },
+  "V076": {
+    "etape": "discussion",
+    "cas": "del-discussion-marchand-reception-risque",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i2"
+  },
+  "V077": {
+    "etape": "discussion",
+    "cas": "del-discussion-marchand-reception-risque",
+    "verif": "anthropic__claude-sonnet-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f1"
+  },
+  "V078": {
+    "etape": "discussion",
+    "cas": "del-discussion-marchand-reception-risque",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i2"
+  },
+  "V079": {
+    "etape": "discussion",
+    "cas": "del-discussion-marchand-reception-risque",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V080": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "anthropic__claude-haiku-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V081": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V082": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V083": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V084": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V085": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "moonshotai__kimi-k3.1-pro-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V086": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "z-ai__glm-5.3-flash-r1.google__gemini-4-hydrogen.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V087": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i3"
+  },
+  "V088": {
+    "etape": "discussion",
+    "cas": "del-discussion-recrutement-suite",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V089": {
+    "etape": "discussion",
+    "cas": "del-discussion-refus-aides-inconnu",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i1"
+  },
+  "V090": {
+    "etape": "discussion",
+    "cas": "qui-audit-pci-dates-contradiction",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f4"
+  },
+  "V091": {
+    "etape": "discussion",
+    "cas": "qui-corvane-frais-inconnu",
+    "verif": "anthropic__claude-sonnet-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i4"
+  },
+  "V092": {
+    "etape": "discussion",
+    "cas": "qui-corvane-frais-inconnu",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i4"
+  },
+  "V093": {
+    "etape": "discussion",
+    "cas": "qui-corvane-frais-inconnu",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i4"
+  },
+  "V094": {
+    "etape": "discussion",
+    "cas": "qui-corvane-frais-inconnu",
+    "verif": "z-ai__glm-5.3-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "interdit",
+    "element": "i4"
+  },
+  "V095": {
+    "etape": "discussion",
+    "cas": "qui-credits-loomly-pinecrest-cloture",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f5"
+  },
+  "V096": {
+    "etape": "discussion",
+    "cas": "qui-credits-loomly-pinecrest-cloture",
+    "verif": "deepseek__deepseek-v4.1-flash-1017-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f5"
+  },
+  "V097": {
+    "etape": "discussion",
+    "cas": "qui-credits-loomly-pinecrest-cloture",
+    "verif": "deepseek__deepseek-v4.1-flash-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f5"
+  },
+  "V098": {
+    "etape": "discussion",
+    "cas": "qui-tradewell-martin-suite",
+    "verif": "anthropic__claude-haiku-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V099": {
+    "etape": "discussion",
+    "cas": "qui-tradewell-martin-suite",
+    "verif": "anthropic__claude-haiku-5.5-r1.openai__gpt-6.1-terra.json",
+    "type": "contraire",
+    "element": "f2"
+  },
+  "V100": {
+    "etape": "discussion",
+    "cas": "qui-tradewell-martin-suite",
+    "verif": "anthropic__claude-sonnet-5.5-r1.google__gemini-4-hydrogen.json",
+    "type": "contraire",
+    "element": "f3"
+  }
+}

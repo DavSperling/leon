@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:20:49.405Z",
+  "reponse": "## Où j'en suis\nDraggable, resizable dashboard grid built on react-grid-layout behind the dashboards_v2 flag, with per-user layout persisted via PUT /dashboards/:id/layout and a localStorage fallback. Widget sizing moved from container queries to a ResizeObserver hook",
+  "rendu": "## Où j'en suis\nDraggable, resizable dashboard grid built on react-grid-layout behind the dashboards_v2 flag, with per-user layout persisted via PUT /dashboards/:id/layout and a localStorage fallback. Widget sizing moved from container queries to a ResizeObserver hook\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 408,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3723,
+    "sortie": 4000,
+    "reflexion": 3944,
+    "cache": 0,
+    "cout": 0.00255845
+  },
+  "cout": 0.00255845,
+  "latenceMs": 10426,
+  "fournisseur": "PrimeIntellect"
+}

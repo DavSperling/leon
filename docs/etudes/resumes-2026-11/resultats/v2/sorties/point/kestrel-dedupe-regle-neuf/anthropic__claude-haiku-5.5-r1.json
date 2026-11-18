@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:09:12.502Z",
+  "reponse": "## What you did\n- You traced Orbitly's iOS funnel drop to #240's dedupe, which keyed on `event_id` alone. kestrel-ios 3.2.0 sends per-session counters, so about 1.18 million real Orbitly events were dropped since 13/11, roughly 8.1% of their iOS volume [1]. You changed the key to project, device and `event_id`, opened PR #247 with Maya as reviewer, and drafted a note asking the iOS team to restore UUIDs in 3.2.1 [1][2].\n\n## What changed\n- Noa's final postmortem for #233 is up, and she presents it at Friday's incident review on 20/11 [3][7].\n- Rachel closed Zest's Zendesk ticket after the backfill [6], but Zest has also lost 3,812 events since 13/11 [1].\n\n## What is still open\n- Maya wants the Orbitly drop count for Thursday's call with Orbitly before she approves #247 [2]. You have it: about 1.18 million events, 8.1% of their iOS volume [1].\n- Once #247 is deployed, replay from 13/11 for Orbitly and Zest, then check that the dropped counter stays near zero [1][2]. You asked to be reminded of this.\n- Fathom lists an action item for you: add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].",
+  "rendu": "## What you did\n- You traced Orbitly's iOS funnel drop to #240's dedupe, which keyed on `event_id` alone. kestrel-ios 3.2.0 sends per-session counters, so about 1.18 million real Orbitly events were dropped since 13/11, roughly 8.1% of their iOS volume [1]. You changed the key to project, device and `event_id`, opened PR #247 with Maya as reviewer, and drafted a note asking the iOS team to restore UUIDs in 3.2.1 [1][2].\n\n## What changed\n- Noa's final postmortem for #233 is up, and she presents it at Friday's incident review on 20/11 [3][7].\n- Rachel closed Zest's Zendesk ticket after the backfill [6], but Zest has also lost 3,812 events since 13/11 [1].\n\n## What is still open\n- Maya wants the Orbitly drop count for Thursday's call with Orbitly before she approves #247 [2]. You have it: about 1.18 million events, 8.1% of their iOS volume [1].\n- Once #247 is deployed, replay from 13/11 for Orbitly and Zest, then check that the dropped counter stays near zero [1][2]. You asked to be reminded of this.\n- Fathom lists an action item for you: add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].",
+  "mesures": {
+    "mots": 192,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6713,
+    "sortie": 3555,
+    "reflexion": 3090,
+    "cache": 0,
+    "cout": 0.0024488
+  },
+  "cout": 0.0024488,
+  "latenceMs": 18010,
+  "fournisseur": "Claude Platform on AWS"
+}

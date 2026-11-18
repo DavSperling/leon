@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:19:55.409Z",
+  "reponse": "## What you did\n\n- Tu as bouclé l'intégration TransAlp : création de l'étiquette à l'expédition, numéro de suivi renvoyé dans Shopify avec e-mail client, conversion des poids en kg, et blocage clair des produits sans dimensions — validé bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as fait l'inventaire des 9 produits sans dimensions et ouvert le ticket #61 pour Karim [2].\n\n## What changed\n\n- **PR #60 : Julien demande un correctif bloquant** — la clé sandbox est dans l'historique git ; il faut la passer en variable d'environnement (`TRANSALP_API_KEY`) et demander sa régénération à TransAlp. Lui met la clé de prod côté hébergeur, jamais dans le code [3].\n- **Bascule production actée** : toutes les étiquettes passent par l'API TransAlp le lundi 23/11 à 6 h, avec un essai de bout en bout à faire **vendredi 20/11** sur la commande test TEST-0001 [7][8].\n- **Point de vigilance sur la clé de prod** : TransAlp Support te demande de lui renvoyer la clé de production par mail, ce qui contredit la procédure (clé jamais envoyée par mail, transmise via l'espace client) et l'accord avec Julien [6][8][3].\n- Karim a renseigné les dimensions de 8 produits sur 9 ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5].\n- Nouveau ticket #59 : poser/retirer automatiquement le tag `soldes` selon le prix barré, pour les collections de janvier de Sophie [4].\n\n## What is still open\n\n- La PR #60 ne peut pas être mergée tant que la clé sandbox n'est pas sortie du code et régénérée chez TransAlp [3].\n- L'essai en production du 20/11 sur TEST-0001 [7][8].\n- La Saône 180 restera bloquée à l'expédition jusqu'aux mesures de Karim [5][1].\n- Le tag `soldes` automatique (#59) reste à implémenter [4].",
+  "rendu": "## What you did\n\n- Tu as bouclé l'intégration TransAlp : création de l'étiquette à l'expédition, numéro de suivi renvoyé dans Shopify avec e-mail client, conversion des poids en kg, et blocage clair des produits sans dimensions — validé bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as fait l'inventaire des 9 produits sans dimensions et ouvert le ticket #61 pour Karim [2].\n\n## What changed\n\n- **PR #60 : Julien demande un correctif bloquant** — la clé sandbox est dans l'historique git ; il faut la passer en variable d'environnement (`TRANSALP_API_KEY`) et demander sa régénération à TransAlp. Lui met la clé de prod côté hébergeur, jamais dans le code [3].\n- **Bascule production actée** : toutes les étiquettes passent par l'API TransAlp le lundi 23/11 à 6 h, avec un essai de bout en bout à faire **vendredi 20/11** sur la commande test TEST-0001 [7][8].\n- **Point de vigilance sur la clé de prod** : TransAlp Support te demande de lui renvoyer la clé de production par mail, ce qui contredit la procédure (clé jamais envoyée par mail, transmise via l'espace client) et l'accord avec Julien [6][8][3].\n- Karim a renseigné les dimensions de 8 produits sur 9 ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5].\n- Nouveau ticket #59 : poser/retirer automatiquement le tag `soldes` selon le prix barré, pour les collections de janvier de Sophie [4].\n\n## What is still open\n\n- La PR #60 ne peut pas être mergée tant que la clé sandbox n'est pas sortie du code et régénérée chez TransAlp [3].\n- L'essai en production du 20/11 sur TEST-0001 [7][8].\n- La Saône 180 restera bloquée à l'expédition jusqu'aux mesures de Karim [5][1].\n- Le tag `soldes` automatique (#59) reste à implémenter [4].",
+  "mesures": {
+    "mots": 278,
+    "tropLong": true,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4602,
+    "sortie": 1491,
+    "reflexion": 1035,
+    "cache": 0,
+    "cout": 0.0015849
+  },
+  "cout": 0.0015849,
+  "latenceMs": 8867,
+  "fournisseur": "Makora"
+}

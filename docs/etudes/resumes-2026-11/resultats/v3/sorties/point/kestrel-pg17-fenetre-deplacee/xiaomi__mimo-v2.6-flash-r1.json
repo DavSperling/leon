@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:52.046Z",
+  "reponse": "## What still open\n- The window moved to Sunday 22/11, 02:00–04:00 UTC (Fernhill's month-end batch runs Saturday night): update the runbook and the Notion page, which still say Saturday, then merge #321 — Maya approved it, her only condition was confirming the date [8][10][3].\n- Rehearse rollback on a fresh clone Thursday 19/11 and record how long it takes and what data is lost — after switchover blue is renamed and takes no writes, so it isn't a switch back [1].\n- Ahead of the switchover, give Lior 30 minutes' notice so he can pause the ingest consumers cleanly, and ping Daniel when you start — he's on API call Sunday [9][7].\n\n## What changed\n- Renovate opened #320, bumping the AWS provider from 5.80 to 5.82; unreviewed [4].\n- Daniel reported staging on PG17 has been smooth, with dashboards p95 slightly down [5].\n\n## What you did\n- Wrote the prod Terraform for the blue/green cutover, with `apply_immediately` off so nothing moves before the window; plan shows 2 changes, 0 destroys once the replica follows the blue/green instead of being replaced [1].\n- Ran a full rehearsal on a restored prod snapshot: green ready in 52 minutes, 74 seconds of write downtime at switchover, no row-count mismatches; tore the clone down afterwards [1].\n- Wrote `runbooks/pg17-cutover.md` and opened #321 with Maya as reviewer [1].",
+  "rendu": "## What still open\n- The window moved to Sunday 22/11, 02:00–04:00 UTC (Fernhill's month-end batch runs Saturday night): update the runbook and the Notion page, which still say Saturday, then merge #321 — Maya approved it, her only condition was confirming the date [8][10][3].\n- Rehearse rollback on a fresh clone Thursday 19/11 and record how long it takes and what data is lost — after switchover blue is renamed and takes no writes, so it isn't a switch back [1].\n- Ahead of the switchover, give Lior 30 minutes' notice so he can pause the ingest consumers cleanly, and ping Daniel when you start — he's on API call Sunday [9][7].\n\n## What changed\n- Renovate opened #320, bumping the AWS provider from 5.80 to 5.82; unreviewed [4].\n- Daniel reported staging on PG17 has been smooth, with dashboards p95 slightly down [5].\n\n## What you did\n- Wrote the prod Terraform for the blue/green cutover, with `apply_immediately` off so nothing moves before the window; plan shows 2 changes, 0 destroys once the replica follows the blue/green instead of being replaced [1].\n- Ran a full rehearsal on a restored prod snapshot: green ready in 52 minutes, 74 seconds of write downtime at switchover, no row-count mismatches; tore the clone down afterwards [1].\n- Wrote `runbooks/pg17-cutover.md` and opened #321 with Maya as reviewer [1].",
+  "mesures": {
+    "mots": 212,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5623,
+    "sortie": 1521,
+    "reflexion": 1145,
+    "cache": 0,
+    "cout": 0.00165695
+  },
+  "cout": 0.00165695,
+  "latenceMs": 9979,
+  "fournisseur": "Makora"
+}

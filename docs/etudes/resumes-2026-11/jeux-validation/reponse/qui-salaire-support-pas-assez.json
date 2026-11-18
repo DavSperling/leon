@@ -1,0 +1,114 @@
+{
+  "id": "qui-salaire-support-pas-assez",
+  "titre": "Grille de salaire du poste d'ingénieur support à Austin : aucun résultat ne la donne ; une estimation de marché tirée de ChatGPT et les grilles d'autres postes tentent",
+  "langue": "en",
+  "entree": {
+    "recherche": "support engineer austin salary band",
+    "resultats": [
+      {
+        "id": "dr-jd-support",
+        "kind": "drive",
+        "nature": "fichier",
+        "titre": "Job description – Support Engineer (Austin)",
+        "url": null,
+        "date": "2026-11-03T15:10:00Z",
+        "passages": [
+          {
+            "id": "sb1",
+            "auteur": "Carla Reyes",
+            "date": "2026-11-03T15:10:00Z",
+            "texte": "Support Engineer, Austin (hybrid, 3 days in office)\nReports to: Carla Reyes, Support Manager\nYou'll own escalations from our marketplace customers (payout exceptions, KYC holds, webhook failures) and work with engineering on root causes.\nCompensation: competitive base + equity, see the comp sheet."
+          }
+        ]
+      },
+      {
+        "id": "gpt-carla-pay",
+        "kind": "chatgpt",
+        "nature": "conversation",
+        "titre": "Support engineer pay in Austin",
+        "url": null,
+        "date": "2026-11-14T18:02:00Z",
+        "passages": [
+          {
+            "id": "sb2",
+            "auteur": "Carla Reyes",
+            "role": "user",
+            "date": "2026-11-14T18:00:00Z",
+            "texte": "whats a typical base salary for a tier 2 support engineer at a fintech in austin? 3-5 yrs exp, api debugging heavy"
+          },
+          {
+            "id": "sb3",
+            "role": "assistant",
+            "date": "2026-11-14T18:02:00Z",
+            "texte": "For a Tier 2 support engineer with 3–5 years of experience at a fintech in Austin, base salaries commonly fall around $75,000–$95,000, with the upper end for roles heavy on API debugging. This is a general market estimate, not your company's band; check it against your own compensation data."
+          }
+        ]
+      },
+      {
+        "id": "sl-hiring-sre-band",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#hiring",
+        "url": null,
+        "date": "2026-11-13T10:44:00Z",
+        "passages": [
+          {
+            "id": "sb4",
+            "auteur": "Hadas Levin",
+            "date": "2026-11-13T10:44:00Z",
+            "texte": "SRE band is approved 🎉 Gil signed off: ₪40–47k/month gross for the senior SRE in TLV. Northpeak can start screening against it."
+          }
+        ]
+      },
+      {
+        "id": "gm-northpeak-support",
+        "kind": "gmail",
+        "nature": "mail",
+        "titre": "Support Engineer: 3 profiles",
+        "url": null,
+        "date": "2026-11-16T16:25:00Z",
+        "passages": [
+          {
+            "id": "sb5",
+            "auteur": "Kelsey Moran",
+            "date": "2026-11-16T16:25:00Z",
+            "texte": "Hi Carla, we have three strong profiles for the Austin support engineer role, two of them with fintech escalation experience. Before we go further, can you share the salary band? Candidates in Austin are asking upfront.\nKelsey Moran | Northpeak Talent"
+          }
+        ]
+      },
+      {
+        "id": "dr-hiring-plan",
+        "kind": "drive",
+        "nature": "fichier",
+        "titre": "Hiring plan H2 2026",
+        "url": null,
+        "date": "2026-10-30T12:00:00Z",
+        "passages": [
+          {
+            "id": "sb6",
+            "auteur": "Marcus Oyelaran",
+            "date": "2026-10-30T12:00:00Z",
+            "texte": "Role | Location | Quarter | Hiring manager | Budget\nSenior SRE | Tel Aviv | Q4 | Avi Kessler | band pending CEO\nSupport Engineer | Austin | Q4 | Carla Reyes | see comp sheet\nCompliance Analyst | Tel Aviv | Q4 | Shira Ben-Ami | ₪22–26k/month"
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "pasAssez": true,
+    "faits": [
+      { "id": "f1", "texte": "The output is exactly « Les résultats ne suffisent pas pour répondre. », with no other text.", "poids": 3 }
+    ],
+    "interdits": [
+      { "id": "x1", "texte": "Gives $75,000–$95,000 (ChatGPT's market estimate) as the support engineer band." },
+      { "id": "x2", "texte": "Gives the SRE band (₪40–47k) or the compliance analyst band (₪22–26k) as the support engineer band." },
+      { "id": "x3", "texte": "Answers with a summary of the hiring (three profiles from Northpeak, \"competitive base + equity\", reports to Carla) instead of the sentence." }
+    ],
+    "pieges": [
+      "Pas assez : aucun résultat ne donne la grille du poste ; la fiche de poste et le plan renvoient à une « comp sheet » absente des résultats.",
+      "Estimation tentante : ChatGPT donne une fourchette de marché ($75-95k) qui n'est pas la grille de Quillon (il le dit lui-même).",
+      "Autres postes : les grilles de l'SRE et de l'analyste conformité sont dans les résultats, pas celle du support."
+    ],
+    "cites": []
+  }
+}

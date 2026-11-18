@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:03:24.171Z",
+  "reponse": "**What broke:** Ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB. With the 512 Mi memory limit, the ingest-worker pods ran out of memory on the first large batch and crash-looped, and the change went to all pods at once [1]. Dashboards were stale from 08:47 to 12:27 UTC on Nov 12. The rollback to v2.13.3 happened at 10:05, and lag fully drained at 12:27 [1][4].\n\n**Data loss:** No. Events kept arriving in Kafka and were processed late [1]. Lior's reconciliation matched event counts per workspace to the Kafka offsets for 08:00–13:00 UTC [4]. Orbitly was told the same: all events were received and processed late, none lost [3].\n\n**What we're changing:**\n- ingest#419 reverts the default to 1 MB, adds a batcher guard that refuses batches over 25% of the container memory limit, and keeps 10 MB only for bulk import via explicit config [9].\n- KES-431: page on-call when ingest consumer lag exceeds 5 minutes, due Nov 20 [11].\n- KES-432: send ingest config changes to the canary pool first, owner Daniel, due Nov 27 [1].\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes, owner Lior, due Nov 27 [1].\n\nThe detection gap was the main problem: there was no consumer-lag alert, and the first signal was an OOM alert 27 minutes after the deploy [1].\n\nCustomer-facing follow-up: Orbitly is claiming an SLA service credit under section 7 of their MSA [3][8]. Sam has told them he'll come back once finance has checked the terms [3]. The custom MSA isn't attached to the HubSpot deal, so Maya suggested asking Avi [8].",
+  "rendu": "**What broke:** Ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB. With the 512 Mi memory limit, the ingest-worker pods ran out of memory on the first large batch and crash-looped, and the change went to all pods at once [1]. Dashboards were stale from 08:47 to 12:27 UTC on Nov 12. The rollback to v2.13.3 happened at 10:05, and lag fully drained at 12:27 [1][4].\n\n**Data loss:** No. Events kept arriving in Kafka and were processed late [1]. Lior's reconciliation matched event counts per workspace to the Kafka offsets for 08:00–13:00 UTC [4]. Orbitly was told the same: all events were received and processed late, none lost [3].\n\n**What we're changing:**\n- ingest#419 reverts the default to 1 MB, adds a batcher guard that refuses batches over 25% of the container memory limit, and keeps 10 MB only for bulk import via explicit config [9].\n- KES-431: page on-call when ingest consumer lag exceeds 5 minutes, due Nov 20 [11].\n- KES-432: send ingest config changes to the canary pool first, owner Daniel, due Nov 27 [1].\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes, owner Lior, due Nov 27 [1].\n\nThe detection gap was the main problem: there was no consumer-lag alert, and the first signal was an OOM alert 27 minutes after the deploy [1].\n\nCustomer-facing follow-up: Orbitly is claiming an SLA service credit under section 7 of their MSA [3][8]. Sam has told them he'll come back once finance has checked the terms [3]. The custom MSA isn't attached to the HubSpot deal, so Maya suggested asking Avi [8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18714,
+    "sortie": 1224,
+    "reflexion": 352,
+    "cache": 0,
+    "cout": 0.0024834
+  },
+  "latenceMs": 9515,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident outage customer data\",\"depuis\":\"2s\"}",
+    "chercher {\"requete\":\"pipeline événements incident postmortem perte de données\",\"depuis\":\"2s\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.0024834
+}

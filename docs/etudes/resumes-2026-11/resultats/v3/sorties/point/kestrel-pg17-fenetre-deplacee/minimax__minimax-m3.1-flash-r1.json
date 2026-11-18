@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:47.692Z",
+  "reponse": "## What is still open\n\n- Rollback rehearsal on a fresh clone is still to be done on Thursday 19/11: after switchover the old instance diverges, so you need to measure how long a rollback takes and what data is lost. [1][3]\n- Merge #321 and update the runbook (and the Notion page) to the confirmed date — Maya has now cleared the merge condition. [3][8]\n- Give Lior 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly. [9]\n- Daniel is on call for the API side on Sunday and wants you to ping him when the switchover starts. [7]\n\n## What changed\n\n- The cutover window moved from Saturday 21/11 to **Sunday 22/11, 02:00–04:00 UTC**, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya has informed the CSMs. [8]\n- Maya approved #321, with the caveat that the runbook date had to be confirmed first. [3]\n- Renovate opened #320 to bump the AWS provider from 5.80 to 5.82 (automerge off). [4]\n\n## What you did\n\n- Prepared the prod PG15→PG17 cutover: RDS blue/green Terraform with the read replica following the deployment instead of being destroyed, plus `runbooks/pg17-cutover.md`, all in PR #321. [1]\n- Validated it on a snapshot clone: green ready in 52 minutes, replication lag under 1s, **74 seconds of write unavailability** at switchover, API pods reconnected via pgbouncer without restarts, and no row-count mismatch on the 20 biggest tables; the clone was then torn down to stop costs. [1]",
+  "rendu": "## What is still open\n\n- Rollback rehearsal on a fresh clone is still to be done on Thursday 19/11: after switchover the old instance diverges, so you need to measure how long a rollback takes and what data is lost. [1][3]\n- Merge #321 and update the runbook (and the Notion page) to the confirmed date — Maya has now cleared the merge condition. [3][8]\n- Give Lior 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly. [9]\n- Daniel is on call for the API side on Sunday and wants you to ping him when the switchover starts. [7]\n\n## What changed\n\n- The cutover window moved from Saturday 21/11 to **Sunday 22/11, 02:00–04:00 UTC**, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya has informed the CSMs. [8]\n- Maya approved #321, with the caveat that the runbook date had to be confirmed first. [3]\n- Renovate opened #320 to bump the AWS provider from 5.80 to 5.82 (automerge off). [4]\n\n## What you did\n\n- Prepared the prod PG15→PG17 cutover: RDS blue/green Terraform with the read replica following the deployment instead of being destroyed, plus `runbooks/pg17-cutover.md`, all in PR #321. [1]\n- Validated it on a snapshot clone: green ready in 52 minutes, replication lag under 1s, **74 seconds of write unavailability** at switchover, API pods reconnected via pgbouncer without restarts, and no row-count mismatch on the 20 biggest tables; the clone was then torn down to stop costs. [1]",
+  "mesures": {
+    "mots": 238,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4997,
+    "sortie": 1182,
+    "reflexion": 797,
+    "cache": 1536,
+    "cout": 0.00125139
+  },
+  "cout": 0.00125139,
+  "latenceMs": 7968,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:26:48.847Z",
+  "reponse": "## Où j'en suis\nKeyboard move/resize and focus-ring follow-up for dashboards v2 is done on branch tom/dashboard-keyboard: useGridKeyboard() handles Tab focus, arrow moves, Shift+arrow resize, Enter drop/Escape cancel, aria-live announcements and a 2px focus ring; 11 new tests are green and the mouse-drag regression is fixed, committed as 8f1a2c7. PR #423 is open for Priya. dashboards_v2 is on for Zest on staging; production stays off until the morning of the 24th. The visx migration is abandoned: #401 closed, no @visx/* dependency, all charts on recharts. (source: d4-05, d4-06, c3-03)\n\n- [en-cours] PR kestrel-analytics/platform#423 open for Priya's review and merge (source: d4-05, ses-db-4)\n- [prochaine-étape] Priya reviews and merges PR #423 (source: d4-05)\n- [prochaine-étape] Flip dashboards_v2 on prod the morning of the 24th (source: d4-06)\n- [essai-raté] dnd-kit KeyboardSensor on react-grid-layout items: every move applied twice and mouse drag fired two layout changes; fixing it would mean rewriting the grid, so @dnd-kit/core was removed (source: d4-02)\n- [décision] dashboards_v2 on for Zest on staging only; production untouched until the morning of the 24th (source: d4-06)\n- [décision] Keep recharts and close visx migration PR #401 (source: c3-03)",
+  "rendu": "## Où j'en suis\nKeyboard move/resize and focus-ring follow-up for dashboards v2 is done on branch tom/dashboard-keyboard: useGridKeyboard() handles Tab focus, arrow moves, Shift+arrow resize, Enter drop/Escape cancel, aria-live announcements and a 2px focus ring; 11 new tests are green and the mouse-drag regression is fixed, committed as 8f1a2c7. PR #423 is open for Priya. dashboards_v2 is on for Zest on staging; production stays off until the morning of the 24th. The visx migration is abandoned: #401 closed, no @visx/* dependency, all charts on recharts. (de: toi, agent; source: d4-05, d4-06, c3-03)\n\n- [en-cours] PR kestrel-analytics/platform#423 open for Priya's review and merge (de: agent; source: d4-05, ses-db-4)\n- [prochaine-étape] Priya reviews and merges PR #423 (de: agent; source: d4-05)\n- [prochaine-étape] Flip dashboards_v2 on prod the morning of the 24th (de: toi; source: d4-06)\n- [essai-raté] dnd-kit KeyboardSensor on react-grid-layout items: every move applied twice and mouse drag fired two layout changes; fixing it would mean rewriting the grid, so @dnd-kit/core was removed (de: agent; source: d4-02)\n- [décision] dashboards_v2 on for Zest on staging only; production untouched until the morning of the 24th (de: toi; source: d4-06)\n- [décision] Keep recharts and close visx migration PR #401 (de: toi; source: c3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1348,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5339,
+    "sortie": 3914,
+    "reflexion": 3513,
+    "cache": 0,
+    "cout": 0.0030248
+  },
+  "cout": 0.0030248,
+  "latenceMs": 7384,
+  "fournisseur": "Venice"
+}

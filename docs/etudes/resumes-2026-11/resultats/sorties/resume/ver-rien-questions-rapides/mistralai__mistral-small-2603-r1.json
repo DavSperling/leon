@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:36.887Z",
+  "reponse": "## Où j'en suis\nCette session a permis de vérifier la version de la CLI Shopify (3.69.0, 3.70.1 disponible) et de tester une regex pour valider des SKU comme SAONE-CHENE-180. L'utilisateur a abandonné l'idée d'intégrer cette regex après avoir constaté que certains SKU (ex. CROIX-ROUSSE-BLANC) ne comportaient pas de taille.\n\n- [prochaine-étape] rien à faire, la regex n'est pas intégrée\n- [essai-raté] la regex initiale `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` rejetait les SKU sans taille\n- [décision] ne pas ajouter la regex dans `scripts/stock/sku.ts` (source: t09)",
+  "rendu": "## Où j'en suis\nCette session a permis de vérifier la version de la CLI Shopify (3.69.0, 3.70.1 disponible) et de tester une regex pour valider des SKU comme SAONE-CHENE-180. L'utilisateur a abandonné l'idée d'intégrer cette regex après avoir constaté que certains SKU (ex. CROIX-ROUSSE-BLANC) ne comportaient pas de taille.\n\n- branche [[main]]\n- [prochaine-étape] rien à faire, la regex n'est pas intégrée\n- [essai-raté] la regex initiale `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` rejetait les SKU sans taille\n- [décision] ne pas ajouter la regex dans `scripts/stock/sku.ts` (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 578,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1925,
+    "sortie": 1124,
+    "reflexion": 936,
+    "cache": 640,
+    "cout": 0.000964425
+  },
+  "cout": 0.000964425,
+  "latenceMs": 8216,
+  "fournisseur": "Mistral"
+}

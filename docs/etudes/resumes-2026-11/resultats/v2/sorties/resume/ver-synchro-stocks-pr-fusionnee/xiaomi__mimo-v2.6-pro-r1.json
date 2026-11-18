@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:25:40.561Z",
+  "reponse": "## Où j'en suis\nSur la branche `julien/fix-synchro-stocks`, le bug de stock négatif de la Saône est identifié : Shopify décrémentait déjà le stock et les webhooks `orders/create`/`orders/updated` décrémentaient en plus. Les webhooks ne touchent plus à l'inventaire, la synchro de nuit (`scripts/stock/sync.ts`) écrit désormais en valeur absolue (`physique - reserve`), le seuil d'alerte est à 3 et `syncStock` est renommé `synchroniserStocks` ; les tests (96) et le lint passent, la config d'app a été déployée et la PR #87 est fusionnée. Il reste le traitement des commandes survendues avec Lucie.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues : #1041 (Saône chêne 180), #1043 (Saône chêne 180), #1044 (Saône chêne 180 x1, revendeur)\n- [décision] Les webhooks ne décrémentent plus le stock, seule la synchro de nuit corrige, en valeur absolue et non en delta ; le dédoublonnage est retiré (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 pour limiter les mails (source: t09)\n- [décision] La Saône est remise à 0 sur Shopify, sans précommande ni date promise tant que le bon de livraison de Bois & Fils n'est pas reçu ; retour attendu le 2 décembre (source: t17)",
+  "rendu": "## Où j'en suis\nSur la branche `julien/fix-synchro-stocks`, le bug de stock négatif de la Saône est identifié : Shopify décrémentait déjà le stock et les webhooks `orders/create`/`orders/updated` décrémentaient en plus. Les webhooks ne touchent plus à l'inventaire, la synchro de nuit (`scripts/stock/sync.ts`) écrit désormais en valeur absolue (`physique - reserve`), le seuil d'alerte est à 3 et `syncStock` est renommé `synchroniserStocks` ; les tests (96) et le lint passent, la config d'app a été déployée et la PR #87 est fusionnée. Il reste le traitement des commandes survendues avec Lucie.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues : #1041 (Saône chêne 180), #1043 (Saône chêne 180), #1044 (Saône chêne 180 x1, revendeur)\n- [décision] Les webhooks ne décrémentent plus le stock, seule la synchro de nuit corrige, en valeur absolue et non en delta ; le dédoublonnage est retiré (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 pour limiter les mails (source: t09)\n- [décision] La Saône est remise à 0 sur Shopify, sans précommande ni date promise tant que le bon de livraison de Bois & Fils n'est pas reçu ; retour attendu le 2 décembre (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1340,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4111,
+    "sortie": 858,
+    "reflexion": 447,
+    "cache": 0,
+    "cout": 0.002262771
+  },
+  "cout": 0.002262771,
+  "latenceMs": 12954,
+  "fournisseur": "DeepInfra"
+}

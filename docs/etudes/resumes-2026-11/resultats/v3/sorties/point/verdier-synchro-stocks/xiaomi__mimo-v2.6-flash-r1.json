@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:56:23.268Z",
+  "reponse": "## What is still open\n- Antoine t'attend sur l'export des ventes Shopify d'octobre pour la TVA : échéance jeudi, tu t'y es engagé [1].\n- Ta PR #58 (mode `--dry-run`) est ouverte sans relecteur [1][5].\n- Karim fera le comptage physique des 14 écarts jeudi matin à l'entrepôt et te renverra les vrais chiffres dans la foulée [7].\n\n## What changed\n- #57 est fusionnée par Hugo : elle remplace le matching par préfixe qui remettait la Saône en stock, et la synchro de cette nuit tournera avec [1][4].\n- Hugo a écrit sur le ticket #55 (3 commandes Saône) « Corrigé par #57 » [3].\n\n## What you did\n- Tu as ajouté `--dry-run` à `sync-stock` : il compare le CSV de l'entrepôt à Shopify et sort les écarts sans rien écrire ; PR #58 ouverte, lint et 38 tests au vert [1].\n- Tu as complété la table de correspondance SKU d'Hugo avec les 17 références multi-finitions qui manquaient, plus un test qui échouera sur toute nouvelle référence sans entrée et un avertissement au journal [1].\n- Tu as préparé pour Karim un CSV trié par écart décroissant, avec l'emplacement en entrepôt et une colonne « comptage réel » à remplir [1].",
+  "rendu": "## What is still open\n- Antoine t'attend sur l'export des ventes Shopify d'octobre pour la TVA : échéance jeudi, tu t'y es engagé [1].\n- Ta PR #58 (mode `--dry-run`) est ouverte sans relecteur [1][5].\n- Karim fera le comptage physique des 14 écarts jeudi matin à l'entrepôt et te renverra les vrais chiffres dans la foulée [7].\n\n## What changed\n- #57 est fusionnée par Hugo : elle remplace le matching par préfixe qui remettait la Saône en stock, et la synchro de cette nuit tournera avec [1][4].\n- Hugo a écrit sur le ticket #55 (3 commandes Saône) « Corrigé par #57 » [3].\n\n## What you did\n- Tu as ajouté `--dry-run` à `sync-stock` : il compare le CSV de l'entrepôt à Shopify et sort les écarts sans rien écrire ; PR #58 ouverte, lint et 38 tests au vert [1].\n- Tu as complété la table de correspondance SKU d'Hugo avec les 17 références multi-finitions qui manquaient, plus un test qui échouera sur toute nouvelle référence sans entrée et un avertissement au journal [1].\n- Tu as préparé pour Karim un CSV trié par écart décroissant, avec l'emplacement en entrepôt et une colonne « comptage réel » à remplir [1].",
+  "mesures": {
+    "mots": 186,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5604,
+    "sortie": 1983,
+    "reflexion": 1626,
+    "cache": 1600,
+    "cout": 0.0011206
+  },
+  "cout": 0.0011206,
+  "latenceMs": 23195,
+  "fournisseur": "Cohere"
+}

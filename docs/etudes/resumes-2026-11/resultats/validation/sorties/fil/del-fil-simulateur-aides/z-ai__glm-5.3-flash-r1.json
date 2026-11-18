@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:02.589Z",
+  "reponse": "## Où j'en suis\nLe simulateur d'aides affiche désormais une fourchette au lieu d'un montant précis : bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure, avec la mention « Estimation indicative, sous réserve d'éligibilité ». Un double comptage de la prime CEE (PAC + ballon thermodynamique) avait été corrigé la semaine précédente et fusionné. Les tests passent (14 passed) et la PR #226 est ouverte sur la branche thomas/simulateur-fourchettes. La PR #225 d'un contributeur externe, qui proposait un barème 2026 sans source vérifiable, a été écartée : le barème reste celui vérifié par Manon, qui doit fournir la mise à jour à partir du guide officiel. (source: sim2, q2-01, q2-03, q2-04, q2-10, q2-12, sim1, src-pr222)\n\n- [en-cours] PR #226 « Simulateur : fourchette au lieu d'un montant, mention d'estimation » ouverte, pas encore fusionnée (source: sim2, delorme-energies/planif#226)\n- [prochaine-étape] ajouter le lien de prise de rendez-vous avec Manon sur le résultat du simulateur ; il faut d'abord voir avec elle quels créneaux elle ouvre (source: q2-11, q2-12)\n- [prochaine-étape] faire valider et fusionner la PR #226 (source: q2-12, delorme-energies/planif#226)\n- [prochaine-étape] mettre à jour le barème MaPrimeRénov' 2026 à partir des chiffres fournis par Manon (source: q2-07)\n- [essai-raté] premier passage des tests : 2 échecs, les tests attendaient un montant unique ; corrigés pour la fourchette (source: q2-10)\n- [question] quelle source officielle retenir pour le barème 2026 : la PR #225 ne cite aucune source, ses chiffres sont à reprendre uniquement si Manon les confirme (source: q2-07, src-pr225)\n- [décision] ne plus afficher un montant précis mais une fourchette, avec mention d'estimation et lien vers un rendez-vous avec Manon (source: q2-01, src-slack-helene)\n- [décision] pas de pourcentage inventé : bas = sans la prime CEE, haut = avec, arrondi à 100 € en dessous (source: q2-03)\n- [décision] ne rien reprendre de la PR #225, dont les chiffres ne sont pas sourcés ; le barème vient de Manon d'après le guide officiel (source: q2-07)",
+  "rendu": "## Où j'en suis\nLe simulateur d'aides affiche désormais une fourchette au lieu d'un montant précis : bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure, avec la mention « Estimation indicative, sous réserve d'éligibilité ». Un double comptage de la prime CEE (PAC + ballon thermodynamique) avait été corrigé la semaine précédente et fusionné. Les tests passent (14 passed) et la PR #226 est ouverte sur la branche thomas/simulateur-fourchettes. La PR #225 d'un contributeur externe, qui proposait un barème 2026 sans source vérifiable, a été écartée : le barème reste celui vérifié par Manon, qui doit fournir la mise à jour à partir du guide officiel. (de: toi, équipe, agent; source: sim2, q2-01, q2-03, q2-04, q2-10, q2-12, sim1, src-pr222)\n\n- [en-cours] PR #226 « Simulateur : fourchette au lieu d'un montant, mention d'estimation » ouverte, pas encore fusionnée (de: équipe, agent; source: sim2, delorme-energies/planif#226)\n- [prochaine-étape] ajouter le lien de prise de rendez-vous avec Manon sur le résultat du simulateur ; il faut d'abord voir avec elle quels créneaux elle ouvre (de: toi, agent; source: q2-11, q2-12)\n- [prochaine-étape] faire valider et fusionner la PR #226 (de: équipe, agent; source: q2-12, delorme-energies/planif#226)\n- [prochaine-étape] mettre à jour le barème MaPrimeRénov' 2026 à partir des chiffres fournis par Manon (de: toi; source: q2-07)\n- [essai-raté] premier passage des tests : 2 échecs, les tests attendaient un montant unique ; corrigés pour la fourchette (de: agent; source: q2-10)\n- [question] quelle source officielle retenir pour le barème 2026 : la PR #225 ne cite aucune source, ses chiffres sont à reprendre uniquement si Manon les confirme (de: toi, connecteur; source: q2-07, src-pr225)\n- [décision] ne plus afficher un montant précis mais une fourchette, avec mention d'estimation et lien vers un rendez-vous avec Manon (de: toi, connecteur; source: q2-01, src-slack-helene)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1974,
+    "lignesRetirees": 2,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3661,
+    "sortie": 669,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00088365
+  },
+  "cout": 0.00088365,
+  "latenceMs": 2593,
+  "fournisseur": "Mistral"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-dossier-audit-rge",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:02.136Z",
+  "reponse": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE est terminée sur `thomas/export-dossier-audit` : gabarit WeasyPrint, réduction des photos à 1 200 px, Pango ajouté au Dockerfile, conversion HEIC→JPEG à l'upload plus commande `convertir_heic` (1 211 photos converties sur la recette, 3 fichiers corrompus de 0 octet chez les Le Floch). Pied de page avec le n° d'attestation de capacité ajouté. CI verte, PR #209 fusionnée, 101 tests au vert.\n\n- [prochaine-étape] Yannick reprend les 3 photos HEIC corrompues sur place jeudi (conversion automatique à l'upload)\n- [prochaine-étape] Lancer la conversion `convertir_heic` sur la prod le week-end (compter ~2 h)\n- [prochaine-étape] Déployer en prod lundi avec la variable `ATTESTATION_CAPACITE` renseignée en recette et en prod\n- [décision] Garder toutes les photos avant/après dans le dossier, conversion HEIC en JPEG plutôt que les exclure, exigence du référentiel (source: t11)\n- [décision] Merge de la PR #209 quand la CI est verte (source: t19)",
+  "rendu": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE est terminée sur `thomas/export-dossier-audit` : gabarit WeasyPrint, réduction des photos à 1 200 px, Pango ajouté au Dockerfile, conversion HEIC→JPEG à l'upload plus commande `convertir_heic` (1 211 photos converties sur la recette, 3 fichiers corrompus de 0 octet chez les Le Floch). Pied de page avec le n° d'attestation de capacité ajouté. CI verte, PR #209 fusionnée, 101 tests au vert.\n\n- pr [[delorme-energies/planif#209]]\n- branche [[thomas/export-dossier-audit]]\n- commit [[3c8e1f4]]\n- commit [[b71a09d]]\n- commit [[f4e2c86]]\n- [prochaine-étape] Yannick reprend les 3 photos HEIC corrompues sur place jeudi (conversion automatique à l'upload)\n- [prochaine-étape] Lancer la conversion `convertir_heic` sur la prod le week-end (compter ~2 h)\n- [prochaine-étape] Déployer en prod lundi avec la variable `ATTESTATION_CAPACITE` renseignée en recette et en prod\n- [décision] Garder toutes les photos avant/après dans le dossier, conversion HEIC en JPEG plutôt que les exclure, exigence du référentiel (source: t11)\n- [décision] Merge de la PR #209 quand la CI est verte (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1136,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3581,
+    "sortie": 305,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00068965
+  },
+  "cout": 0.00068965,
+  "latenceMs": 2103,
+  "fournisseur": "Together"
+}

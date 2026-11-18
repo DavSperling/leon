@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:31:37.708Z",
+  "reponse": "## What changed\n\n- Maya confirmed that v2 should ship behind the flag, but Chartkit must stay until v1 is retired. [7]\n\n## What is still open\n\n- **Orbitly rollout blocker:** Priya needs CSV export restored to the v2 widget menu using the new background export before the flag can go on Thursday. The old v1 endpoint did not work with v2 widget IDs. [1][10]\n- **Staging needs to be solid today:** PR #427 is updated, but hovering an empty cohort crashes the retention chart. Fix the tooltip and add an empty-cohort test; Sentry recorded the error as #432. [1][3][8]\n- **Zest CSV export:** Daniel approved PR #430; it can merge when CI is green. Rachel needs an ETA for Zest ahead of Monday’s ops review. [5][6][9]",
+  "rendu": "## What changed\n\n- Maya confirmed that v2 should ship behind the flag, but Chartkit must stay until v1 is retired. [7]\n\n## What is still open\n\n- **Orbitly rollout blocker:** Priya needs CSV export restored to the v2 widget menu using the new background export before the flag can go on Thursday. The old v1 endpoint did not work with v2 widget IDs. [1][10]\n- **Staging needs to be solid today:** PR #427 is updated, but hovering an empty cohort crashes the retention chart. Fix the tooltip and add an empty-cohort test; Sentry recorded the error as #432. [1][3][8]\n- **Zest CSV export:** Daniel approved PR #430; it can merge when CI is green. Rachel needs an ETA for Zest ahead of Monday’s ops review. [5][6][9]",
+  "mesures": {
+    "mots": 121,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5532,
+    "sortie": 316,
+    "reflexion": 128,
+    "cache": 1417,
+    "cout": 0.00679385
+  },
+  "cout": 0.00679385,
+  "latenceMs": 13468,
+  "fournisseur": "OpenAI"
+}

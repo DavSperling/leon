@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:25.367Z",
+  "reponse": "## Où j'en suis\nOn branch `tom/dashboard-keyboard` (session of Nov 18), PR #418 is merged and Priya's two follow-up comments — keyboard move/resize of widgets and a visible focus ring — are implemented in commit `8f1a2c7`: a new `useGridKeyboard()` hook (Tab to focus, Enter to pick up, arrows to move, Shift+arrows to resize, Escape to restore), aria-live announcements, and a `:focus-visible` ring on `.widget-card`. All 11 new tests pass and mouse drag still works. PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\") is open, requested for Priya's review. The `dashboards_v2` flag was turned on for the zest-grocers workspace in staging so Priya can rehearse; production is untouched. Zest's demo is Tuesday Nov 24. (source: ses-db-4, d4-05, d4-07, src-pr418)\n\n- [en-cours] PR #423 open, waiting on Priya's review of the keyboard/focus-ring work (source: d4-05)\n- [prochaine-étape] Priya reviews #423; then the user flips the `dashboards_v2` prod flag themselves the morning of the 24th (source: d4-06, d4-07)\n- [essai-raté] wrapping react-grid-layout items with dnd-kit's `KeyboardSensor`: both libraries listen to the same pointer/key events, so every move applied twice and mouse drags fired two `onLayoutChange` calls — would require rewriting the grid (source: d4-02, d4-03)\n- [décision] own keyboard handler on top of the layout state, no dnd-kit — `@dnd-kit/core` removed (source: d4-04, d4-05)\n- [décision] keep recharts and close the visx migration #401 for good: not worth +181 KB or rewriting 9 charts (source: c3-03, src-pr401)\n- [décision] `dashboards_v2` on for the Zest workspace only; v1 dashboards stay behind the flag until January, nothing removed now (source: d4-06, b2-04)",
+  "rendu": "## Où j'en suis\nOn branch `tom/dashboard-keyboard` (session of Nov 18), PR #418 is merged and Priya's two follow-up comments — keyboard move/resize of widgets and a visible focus ring — are implemented in commit `8f1a2c7`: a new `useGridKeyboard()` hook (Tab to focus, Enter to pick up, arrows to move, Shift+arrows to resize, Escape to restore), aria-live announcements, and a `:focus-visible` ring on `.widget-card`. All 11 new tests pass and mouse drag still works. PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\") is open, requested for Priya's review. The `dashboards_v2` flag was turned on for the zest-grocers workspace in staging so Priya can rehearse; production is untouched. Zest's demo is Tuesday Nov 24. (de: équipe, agent; source: ses-db-4, d4-05, d4-07, src-pr418)\n\n- [en-cours] PR #423 open, waiting on Priya's review of the keyboard/focus-ring work (de: agent; source: d4-05)\n- [prochaine-étape] Priya reviews #423; then the user flips the `dashboards_v2` prod flag themselves the morning of the 24th (de: toi, agent; source: d4-06, d4-07)\n- [essai-raté] wrapping react-grid-layout items with dnd-kit's `KeyboardSensor`: both libraries listen to the same pointer/key events, so every move applied twice and mouse drags fired two `onLayoutChange` calls — would require rewriting the grid (de: toi, agent; source: d4-02, d4-03)\n- [décision] own keyboard handler on top of the layout state, no dnd-kit — `@dnd-kit/core` removed (de: toi, agent; source: d4-04, d4-05)\n- [décision] keep recharts and close the visx migration #401 for good: not worth +181 KB or rewriting 9 charts (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] `dashboards_v2` on for the Zest workspace only; v1 dashboards stay behind the flag until January, nothing removed now (de: toi; source: d4-06, b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1810,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4869,
+    "sortie": 1046,
+    "reflexion": 544,
+    "cache": 0,
+    "cout": 0.00125335
+  },
+  "cout": 0.00125335,
+  "latenceMs": 5198,
+  "fournisseur": "Cohere"
+}

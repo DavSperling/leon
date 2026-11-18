@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:20:37.304Z",
+  "reponse": "## Où j'en suis\nOn branch tom/dashboard-grid-v2, the dashboards_v2 grid is implemented behind the flag: drag/resize via react-grid-layout, per-user/dashboard server-side layout persistence with localStorage fallback, iOS 15 sizing through a ResizeObserver data-size hook, WidgetCard rename, and lint/typecheck/test/Storybook fixes. Draft PR kestrel-analytics/platform#418 is open; last commit d2286a0; v1 dashboards remain untouched and the work is waiting on UX review plus flags-admin configuration.\n\n- [en-cours] Draft PR kestrel-analytics/platform#418 is open and not yet reviewed.\n- [prochaine-étape] Get Priya's UX review on the Zest iPad/BrowserStack.\n- [prochaine-étape] Enable dashboards_v2 only for Zest in flags admin before Tuesday 24th.\n- [essai-raté] Container queries failed on iOS 15 Safari, which ignored them and left widgets small.\n- [décision] Keep v1 dashboards until January and remove nothing now; flag only for Zest (source: t15).",
+  "rendu": "## Où j'en suis\nOn branch tom/dashboard-grid-v2, the dashboards_v2 grid is implemented behind the flag: drag/resize via react-grid-layout, per-user/dashboard server-side layout persistence with localStorage fallback, iOS 15 sizing through a ResizeObserver data-size hook, WidgetCard rename, and lint/typecheck/test/Storybook fixes. Draft PR kestrel-analytics/platform#418 is open; last commit d2286a0; v1 dashboards remain untouched and the work is waiting on UX review plus flags-admin configuration.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR kestrel-analytics/platform#418 is open and not yet reviewed.\n- [prochaine-étape] Get Priya's UX review on the Zest iPad/BrowserStack.\n- [prochaine-étape] Enable dashboards_v2 only for Zest in flags admin before Tuesday 24th.\n- [essai-raté] Container queries failed on iOS 15 Safari, which ignored them and left widgets small.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 989,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3603,
+    "sortie": 3127,
+    "reflexion": 2883,
+    "cache": 0,
+    "cout": 0.0005654485
+  },
+  "cout": 0.0005654485,
+  "latenceMs": 27399,
+  "fournisseur": "Tencent"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T14:32:03.236Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5572,
+    "sortie": 8000,
+    "reflexion": 7999,
+    "cache": 0,
+    "cout": 0.0207004
+  },
+  "cout": 0.0207004,
+  "latenceMs": 146716,
+  "fournisseur": "Mistral"
+}

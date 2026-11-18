@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:05.759Z",
+  "reponse": "## What is still open\n\n- **PR #423 needs splitting into two**: tom-becker can't review the 1,900-line diff because the module move hides the real changes — one PR for the `saml/` package move, one for the lint/mypy fixes. He said he'll approve both today [4].\n- **Replay cache must move to Redis**: assertion-ID replay protection is still an in-memory `TTLCache` per process, so a replayed assertion can hit another API pod. You flagged this as today's work [1].\n- **Fernhill end-to-end SSO walkthrough, Thursday 10am NY time, on staging with their Okta tenant**. Maya confirmed signature validation merged and goes out with tonight's staging deploy [3]; Priya runs the demo, you're on the call [1].\n\n## What changed\n\n- **PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" was approved and merged by maya-cohen on Nov 17 evening**, shipping with the staging deploy. Her only note was non-blocking wording on an error message [3].\n- The no-SHA-1 decision stands: only RSA-SHA256/SHA512 and ECDSA-SHA256 are accepted, with no per-tenant legacy flag [2].\n\n## What you did\n\n- Replaced the `time.sleep`-based expiry check in `tests/auth/test_saml_acs.py` with `freezegun` (the failure was skew tolerance beating the 2s sleep), converted the two other sleeping tests, and made the suite reliably green — 50/50 repeats, ~2s faster [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors it exposed: a missing `saml:Issuer`/`saml:Subject` now raises a SAML validation error (401) instead of crashing with a 500, covered by a new test [1].\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping old imports working; full suite 1,284 passed, ruff and mypy clean [1].\n- Landed the earlier signature-verification work on PR #418: verification of the assertion signature against the tenant's IdP cert, rejection of unsigned/wrapped assertions, and the `saml_idp_certs` migration [2].",
+  "rendu": "## What is still open\n\n- **PR #423 needs splitting into two**: tom-becker can't review the 1,900-line diff because the module move hides the real changes — one PR for the `saml/` package move, one for the lint/mypy fixes. He said he'll approve both today [4].\n- **Replay cache must move to Redis**: assertion-ID replay protection is still an in-memory `TTLCache` per process, so a replayed assertion can hit another API pod. You flagged this as today's work [1].\n- **Fernhill end-to-end SSO walkthrough, Thursday 10am NY time, on staging with their Okta tenant**. Maya confirmed signature validation merged and goes out with tonight's staging deploy [3]; Priya runs the demo, you're on the call [1].\n\n## What changed\n\n- **PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" was approved and merged by maya-cohen on Nov 17 evening**, shipping with the staging deploy. Her only note was non-blocking wording on an error message [3].\n- The no-SHA-1 decision stands: only RSA-SHA256/SHA512 and ECDSA-SHA256 are accepted, with no per-tenant legacy flag [2].\n\n## What you did\n\n- Replaced the `time.sleep`-based expiry check in `tests/auth/test_saml_acs.py` with `freezegun` (the failure was skew tolerance beating the 2s sleep), converted the two other sleeping tests, and made the suite reliably green — 50/50 repeats, ~2s faster [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors it exposed: a missing `saml:Issuer`/`saml:Subject` now raises a SAML validation error (401) instead of crashing with a 500, covered by a new test [1].\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping old imports working; full suite 1,284 passed, ruff and mypy clean [1].\n- Landed the earlier signature-verification work on PR #418: verification of the assertion signature against the tenant's IdP cert, rejection of unsigned/wrapped assertions, and the `saml_idp_certs` migration [2].",
+  "mesures": {
+    "mots": 286,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5498,
+    "sortie": 1114,
+    "reflexion": 615,
+    "cache": 128,
+    "cout": 0.00147582
+  },
+  "cout": 0.00147582,
+  "latenceMs": 5041,
+  "fournisseur": "Parasail"
+}

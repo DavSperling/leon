@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:03:13.557Z",
+  "reponse": "## What is still open\n\n- **Antoine attend l’export des ventes Shopify d’octobre pour la TVA avant jeudi** : tu lui as confirmé que tu t’en occupais. [1]\n- **La PR #58 sur le mode `--dry-run` reste à faire relire** : elle est ouverte sans relecteur, Hugo étant absent hier. [1][5]\n- **Karim fera le comptage physique jeudi matin** des 14 écarts relevés entre l’entrepôt et Shopify, puis te renverra les chiffres réels. Ton fichier de comptage est prêt. [1][7]\n\n## What changed\n\n- **Hugo a fusionné la PR #57** : la synchro utilise désormais la correspondance exacte des SKU, ce qui corrige le ticket #55 sur les variantes indûment remises en stock. [4][3]\n- **Les trois clients concernés par la Saône chêne acceptent une livraison mi-janvier**, confirme Lucie. [9]\n\n## What you did\n\n- Tu as identifié la cause des faux stocks : la correspondance par préfixe appliquait la quantité d’une référence entrepôt à toutes ses finitions Shopify. Tu as complété la PR d’Hugo avec les 17 références manquantes, un avertissement et un test de couverture. [1]\n- Tu as ajouté le mode `--dry-run`, révélé les 14 écarts de stock et préparé le rapport destiné au comptage de Karim. [1]",
+  "rendu": "## What is still open\n\n- **Antoine attend l’export des ventes Shopify d’octobre pour la TVA avant jeudi** : tu lui as confirmé que tu t’en occupais. [1]\n- **La PR #58 sur le mode `--dry-run` reste à faire relire** : elle est ouverte sans relecteur, Hugo étant absent hier. [1][5]\n- **Karim fera le comptage physique jeudi matin** des 14 écarts relevés entre l’entrepôt et Shopify, puis te renverra les chiffres réels. Ton fichier de comptage est prêt. [1][7]\n\n## What changed\n\n- **Hugo a fusionné la PR #57** : la synchro utilise désormais la correspondance exacte des SKU, ce qui corrige le ticket #55 sur les variantes indûment remises en stock. [4][3]\n- **Les trois clients concernés par la Saône chêne acceptent une livraison mi-janvier**, confirme Lucie. [9]\n\n## What you did\n\n- Tu as identifié la cause des faux stocks : la correspondance par préfixe appliquait la quantité d’une référence entrepôt à toutes ses finitions Shopify. Tu as complété la PR d’Hugo avec les 17 références manquantes, un avertissement et un test de couverture. [1]\n- Tu as ajouté le mode `--dry-run`, révélé les 14 écarts de stock et préparé le rapport destiné au comptage de Karim. [1]",
+  "mesures": {
+    "mots": 187,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5577,
+    "sortie": 906,
+    "reflexion": 527,
+    "cache": 0,
+    "cout": 0.020214
+  },
+  "cout": 0.020214,
+  "latenceMs": 16776,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:28:53.753Z",
+  "reponse": "## What you did\n\n- **Migration staging vers PostgreSQL 17 terminée** : la suite de régression (1 284 tests API + 46 scénarios ingest) a passé avec un p95 des requêtes dashboards stable, validant la préparation prod [2].\n- **Configuration Terraform pour le blue/green prod** : activation du blue/green sur `module.rds_prod`, version 17.2, groupe de paramètres PG17 (#318), et gestion de la réplique sans destruction forcée grâce au `lifecycle { ignore_changes = [engine_version] }` [1].\n- **Runbook complet** : timeline (T-24h à T+post-switchover), vérifications (réplication <1s, santé API, dashboards, Sentry), et section dédiée au rollback (non trivial après switchover) [1].\n- **Réhersal sur clone** : 74 secondes de downtime en écriture mesurées, pas de perte de données sur les 20 plus grosses tables [1].\n- **PR #321 ouverte et reviewée** : Terraform + runbook, avec @maya-cohen en reviewer ; clone de réhersal détruit pour éviter les coûts [1][3].\n\n## What changed\n\n- **Fenêtre de migration déplacée au dimanche 22/11, 02:00–04:00 UTC** : Fernhill’s month-end batch bloque le samedi soir, Maya a prévenu les CSMs [8].\n- **PR #321 approuvée mais en attente** : Maya demande de mettre à jour le runbook avec la nouvelle date avant de merger [3][8].\n- **Mise à jour des dépendances** : PR #320 pour le provider AWS Terraform 5.80 → 5.82 (automerge désactivé) [4].\n- **Préparation des équipes** : Lior (ingest workers) confirme qu’aucun changement infra n’est nécessaire de leur côté, mais demande un préavis de 30 min avant le switchover [9]. Daniel sera en oncall côté API [7].\n\n## What is still open\n\n- **Mettre à jour le runbook** avec la nouvelle fenêtre du 22/11 et merger #321 [8].\n- **Réherser le rollback jeudi 19/11** : créer un nouveau clone, suivre la procédure du runbook, mesurer la durée et la perte de données [1].",
+  "rendu": "## What you did\n\n- **Migration staging vers PostgreSQL 17 terminée** : la suite de régression (1 284 tests API + 46 scénarios ingest) a passé avec un p95 des requêtes dashboards stable, validant la préparation prod [2].\n- **Configuration Terraform pour le blue/green prod** : activation du blue/green sur `module.rds_prod`, version 17.2, groupe de paramètres PG17 (#318), et gestion de la réplique sans destruction forcée grâce au `lifecycle { ignore_changes = [engine_version] }` [1].\n- **Runbook complet** : timeline (T-24h à T+post-switchover), vérifications (réplication <1s, santé API, dashboards, Sentry), et section dédiée au rollback (non trivial après switchover) [1].\n- **Réhersal sur clone** : 74 secondes de downtime en écriture mesurées, pas de perte de données sur les 20 plus grosses tables [1].\n- **PR #321 ouverte et reviewée** : Terraform + runbook, avec @maya-cohen en reviewer ; clone de réhersal détruit pour éviter les coûts [1][3].\n\n## What changed\n\n- **Fenêtre de migration déplacée au dimanche 22/11, 02:00–04:00 UTC** : Fernhill’s month-end batch bloque le samedi soir, Maya a prévenu les CSMs [8].\n- **PR #321 approuvée mais en attente** : Maya demande de mettre à jour le runbook avec la nouvelle date avant de merger [3][8].\n- **Mise à jour des dépendances** : PR #320 pour le provider AWS Terraform 5.80 → 5.82 (automerge désactivé) [4].\n- **Préparation des équipes** : Lior (ingest workers) confirme qu’aucun changement infra n’est nécessaire de leur côté, mais demande un préavis de 30 min avant le switchover [9]. Daniel sera en oncall côté API [7].\n\n## What is still open\n\n- **Mettre à jour le runbook** avec la nouvelle fenêtre du 22/11 et merger #321 [8].\n- **Réherser le rollback jeudi 19/11** : créer un nouveau clone, suivre la procédure du runbook, mesurer la durée et la perte de données [1].",
+  "mesures": {
+    "mots": 269,
+    "tropLong": true,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5489,
+    "sortie": 1509,
+    "reflexion": 953,
+    "cache": 0,
+    "cout": 0.001901625
+  },
+  "cout": 0.001901625,
+  "latenceMs": 10733,
+  "fournisseur": "Mistral"
+}

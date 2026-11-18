@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:25:35.054Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3960,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 768,
+    "cout": 0.006349192
+  },
+  "cout": 0.006349192,
+  "latenceMs": 36960,
+  "fournisseur": "Tencent"
+}

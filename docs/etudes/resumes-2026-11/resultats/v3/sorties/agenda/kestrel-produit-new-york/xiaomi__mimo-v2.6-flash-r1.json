@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:51.802Z",
+  "reponse": "{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 17, \"titre\": \"Coffee with Lior Ben-David\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 7, \"titre\": \"Customer interview – Ana Ruiz (Orbitly)\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 23, \"titre\": \"Dinner – Lark & Lantern\", \"debut\": \"2026-11-20T00:30\", \"avec\": \"Jonah Reyes\"}\n{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Daniel Levi, Oliver Grant\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Coffee with Lior Ben-David (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview – Ana Ruiz (Orbitly) (avec Ana Ruiz)\n2026-11-20T00:30 Dinner – Lark & Lantern (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.833,
+    "f1": 0.833,
+    "faux": "2026-11-20T00:30 Dinner – Lark & Lantern",
+    "manques": "2026-11-20T01:30 Dinner with Northfold Studio",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3240,
+    "sortie": 3615,
+    "reflexion": 3219,
+    "cache": 0,
+    "cout": 0.0014658
+  },
+  "cout": 0.0014658,
+  "latenceMs": 11751,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T17:53:57.384Z",
+  "reponse": "## What is still open\n\n- Fernhill’s Okta walkthrough is Thursday at 10 a.m. New York time. Priya is running it; you’re joining the call. Maya approved and merged signature validation (PR #418) for last night’s staging deploy, but it isn’t confirmed on staging yet and needs to be there by Wednesday EOD. [1][3]\n- Tom requested changes on auth cleanup PR #423: he wants the SAML module move in a separate PR from the lint fixes so he can review the substantive changes. Your cleanup also stabilized the ACS timing tests, and the module split preserved existing imports. [1][4]\n- Your next SAML task is to move assertion replay protection to Redis before production; the current in-memory cache isn’t shared across API pods. [1][2]",
+  "rendu": "## What is still open\n\n- Fernhill’s Okta walkthrough is Thursday at 10 a.m. New York time. Priya is running it; you’re joining the call. Maya approved and merged signature validation (PR #418) for last night’s staging deploy, but it isn’t confirmed on staging yet and needs to be there by Wednesday EOD. [1][3]\n- Tom requested changes on auth cleanup PR #423: he wants the SAML module move in a separate PR from the lint fixes so he can review the substantive changes. Your cleanup also stabilized the ACS timing tests, and the module split preserved existing imports. [1][4]\n- Your next SAML task is to move assertion replay protection to Redis before production; the current in-memory cache isn’t shared across API pods. [1][2]",
+  "mesures": {
+    "mots": 121,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5398,
+    "sortie": 295,
+    "reflexion": 121,
+    "cache": 1451,
+    "cout": 0.0129611
+  },
+  "cout": 0.0129611,
+  "latenceMs": 3590,
+  "fournisseur": "Azure"
+}

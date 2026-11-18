@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:25:14.723Z",
+  "reponse": "## Où j'en suis\n\nLe travail sur la vérification SAML pour l'endpoint ACS est terminé côté code et tests, avec une PR ouverte mais non mergée.\n\n- [en-cours] PR #412 ouverte, en attente d'approbation de Maya pour merger (protection de branche)\n- [prochaine-étape] Charger les métadonnées IdP staging Fernhill et leur envoyer notre métadonnées SP staging d'ici mercredi EOD, pour la démo jeudi 10h NY\n- [décision] Abandon de python3-saml/xmlsec au profit de signxml (pure Python) pour éviter les problèmes de compatibilité (source: t08)",
+  "rendu": "## Où j'en suis\nLe travail sur la vérification SAML pour l'endpoint ACS est terminé côté code et tests, avec une PR ouverte mais non mergée.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] PR #412 ouverte, en attente d'approbation de Maya pour merger (protection de branche)\n- [prochaine-étape] Charger les métadonnées IdP staging Fernhill et leur envoyer notre métadonnées SP staging d'ici mercredi EOD, pour la démo jeudi 10h NY\n- [décision] Abandon de python3-saml/xmlsec au profit de signxml (pure Python) pour éviter les problèmes de compatibilité (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 665,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4786,
+    "sortie": 452,
+    "reflexion": 296,
+    "cache": 0,
+    "cout": 0.0009891
+  },
+  "cout": 0.0009891,
+  "latenceMs": 3993,
+  "fournisseur": "Mistral"
+}

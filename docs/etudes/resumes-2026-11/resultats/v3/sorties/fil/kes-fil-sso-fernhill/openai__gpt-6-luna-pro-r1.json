@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:59:14.500Z",
+  "reponse": "## Où j'en suis\nFernhill SAML login works end to end on staging. JIT provisioning creates users with the `viewer` role; PR #415 is merged, while PR #421, which adds per-tenant group-to-role mapping and short RelayState, is open. Fernhill IT still needs to add the groups claim before the Thursday 10:00 a.m. New York demo. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] Waiting for Fernhill IT to add the groups claim; until then, group-based admin mapping cannot be verified. (source: ses-sso-3)\n- [prochaine-étape] After the claim is added, verify the group-to-role mapping and prepare an admin test account for the demo. (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Initial SP-initiated login failed because the full return URL exceeded Fernhill ADFS’s 80-byte RelayState limit. Replaced it with a short opaque ID backed by Redis; staging login now works. (source: ses-sso-3)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled. (source: s3-07)",
+  "rendu": "## Où j'en suis\nFernhill SAML login works end to end on staging. JIT provisioning creates users with the `viewer` role; PR #415 is merged, while PR #421, which adds per-tenant group-to-role mapping and short RelayState, is open. Fernhill IT still needs to add the groups claim before the Thursday 10:00 a.m. New York demo. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] Waiting for Fernhill IT to add the groups claim; until then, group-based admin mapping cannot be verified. (de: agent; source: ses-sso-3)\n- [prochaine-étape] After the claim is added, verify the group-to-role mapping and prepare an admin test account for the demo. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Initial SP-initiated login failed because the full return URL exceeded Fernhill ADFS’s 80-byte RelayState limit. Replaced it with a short opaque ID backed by Redis; staging login now works. (de: agent; source: ses-sso-3)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1090,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 15638,
+    "sortie": 783,
+    "reflexion": 162,
+    "cache": 8900,
+    "cout": 0.0011543
+  },
+  "cout": 0.0011543,
+  "latenceMs": 7179,
+  "fournisseur": "Azure"
+}

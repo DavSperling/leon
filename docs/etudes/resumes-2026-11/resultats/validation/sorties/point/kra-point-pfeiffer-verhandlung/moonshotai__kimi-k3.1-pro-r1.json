@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:02.802Z",
+  "reponse": "## What is still open\n\n- **Bis Donnerstag, 19.11., 17 Uhr** brauchen Sabine Kranich und Thomas deine API-Aufwandsschätzung; am Freitag um 14 Uhr besprecht ihr alles bei Sabine. Jonas korrigiert die Schätzung auf **25 statt 15 PT**: `/api/v1/auftraege` hat keine Mandantentrennung, daher sind Kundenableitung aus dem Token, Absicherung aller Abfragen und ein Pen-Test nötig. Der 1. April bleibt nur realistisch, wenn der Spike im Dezember startet. [5][2]\n- Das Pfeiffer-Jahresgespräch wurde auf **Montag, 23.11., 10 Uhr in Nürnberg** verschoben; Abfahrt mit Thomas ist um 8 Uhr. [6]\n- Sabines kommerzielle Leitplanken: Der Jahresbonus bleibt bei **2 %**; die API wird nur bei einer Mindestabnahme von **3 Mio. € jährlich** angeboten. [5]\n\n## What changed\n\n- **#214** „Export Lieferungen nach Charge“ ist nach deiner Freigabe gemergt. [3]\n- **#218** mit Spring Boot 3.3.6 und den zusammengefassten Dependabot-Updates ist bei grüner CI gemergt. [4]\n\n## What you did\n\n- Du hast für Thomas die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` mit Pfeiffers Portalzahlen, dem REST-Angebot, Aufwand und Termin erstellt; Bonus, Preise und Zahlungsziel hast du bewusst ausgespart. EDIFACT ORDERS ist nur als separat zu bewertende Option enthalten. Für Jonas’ Gegenprüfung hast du **#222** angelegt. [1]",
+  "rendu": "## What is still open\n\n- **Bis Donnerstag, 19.11., 17 Uhr** brauchen Sabine Kranich und Thomas deine API-Aufwandsschätzung; am Freitag um 14 Uhr besprecht ihr alles bei Sabine. Jonas korrigiert die Schätzung auf **25 statt 15 PT**: `/api/v1/auftraege` hat keine Mandantentrennung, daher sind Kundenableitung aus dem Token, Absicherung aller Abfragen und ein Pen-Test nötig. Der 1. April bleibt nur realistisch, wenn der Spike im Dezember startet. [5][2]\n- Das Pfeiffer-Jahresgespräch wurde auf **Montag, 23.11., 10 Uhr in Nürnberg** verschoben; Abfahrt mit Thomas ist um 8 Uhr. [6]\n- Sabines kommerzielle Leitplanken: Der Jahresbonus bleibt bei **2 %**; die API wird nur bei einer Mindestabnahme von **3 Mio. € jährlich** angeboten. [5]\n\n## What changed\n\n- **#214** „Export Lieferungen nach Charge“ ist nach deiner Freigabe gemergt. [3]\n- **#218** mit Spring Boot 3.3.6 und den zusammengefassten Dependabot-Updates ist bei grüner CI gemergt. [4]\n\n## What you did\n\n- Du hast für Thomas die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` mit Pfeiffers Portalzahlen, dem REST-Angebot, Aufwand und Termin erstellt; Bonus, Preise und Zahlungsziel hast du bewusst ausgespart. EDIFACT ORDERS ist nur als separat zu bewertende Option enthalten. Für Jonas’ Gegenprüfung hast du **#222** angelegt. [1]",
+  "mesures": {
+    "mots": 178,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5058,
+    "sortie": 1186,
+    "reflexion": 729,
+    "cache": 0,
+    "cout": 0.021976
+  },
+  "cout": 0.021976,
+  "latenceMs": 9745,
+  "fournisseur": "DigitalOcean"
+}

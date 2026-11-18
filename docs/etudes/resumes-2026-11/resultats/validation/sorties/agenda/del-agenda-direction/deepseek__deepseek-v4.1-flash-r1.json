@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "del-agenda-direction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:10.732Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 7,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T08:00 CODIR | 2026-11-18T09:00 Réunion de chantier Conserverie Marchand | 2026-11-18T17:00 Visite technique SCI Les Tilleuls | 2026-11-19T14:30 Rendez-vous avance sur primes, Crédit Ligérien | 2026-11-19T16:00 Visio démo onduleur HN-6 | 2026-11-20T09:00 Entretien installateur (Dylan Perrot) | 2026-11-20T11:00 Préparation audit RGE",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 2928,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.00428064
+  },
+  "cout": 0.00428064,
+  "latenceMs": 22453,
+  "fournisseur": "CoreWeave"
+}

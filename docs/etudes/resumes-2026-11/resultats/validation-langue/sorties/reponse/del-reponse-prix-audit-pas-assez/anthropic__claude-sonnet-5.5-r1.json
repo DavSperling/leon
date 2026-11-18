@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-prix-audit-pas-assez",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:30.269Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1407,
+    "sortie": 21,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.003024
+  },
+  "cout": 0.003024,
+  "latenceMs": 1088,
+  "fournisseur": "Amazon Bedrock"
+}

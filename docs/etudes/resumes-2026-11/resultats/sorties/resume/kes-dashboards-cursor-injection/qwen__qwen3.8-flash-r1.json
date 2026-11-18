@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.907Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3717,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 0,
+    "cout": 0.00243755
+  },
+  "cout": 0.00243755,
+  "latenceMs": 40534,
+  "fournisseur": "Alibaba"
+}

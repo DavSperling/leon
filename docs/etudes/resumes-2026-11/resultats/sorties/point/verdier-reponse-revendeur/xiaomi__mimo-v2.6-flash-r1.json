@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:04.670Z",
+  "reponse": "## Ce que tu as fait\n- Trouvé la cause des deux incidents Galeries Brotteaux : `scripts/export-revendeurs.ts` exportait `on_hand` au lieu de `available`, donc les tables réservées par des commandes web étaient annoncées comme vendables — le défaut existe depuis mars, d'où l'incident de septembre (buffet Rhône) [1].\n- Corrigé le script avec un test couvrant les deux cas (Saône du 10/11, Rhône du 22/09) et ouvert la PR #62 avec Hugo en relecteur [1].\n- Rédigé le brouillon de réponse à Bertrand (reconnaissance de l'erreur, sans jargon) et le résumé cause/correction/options envoyé à Claire [1].\n\n## Ce qui a bougé\n- Hugo a approuvé la PR #62 ce matin, après avoir relancé le fichier du 10/11 : la Saône chêne sort bien à 0 [2].\n\n## Ce qui reste ouvert\n- Envoyer la réponse à Bertrand ce matin : Claire valide 10 % sur les 4 tables et la réservation de 4 Saône chêne sur le réassort de janvier, et elle attend l'envoi aujourd'hui [4]. Le brouillon est prêt dans `brouillons/galeries-brotteaux-2026-11-17.md`, rien n'est parti [1].\n- Si le geste prend la forme d'un avoir, préviens Antoine Roussel avant de l'émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas [5].\n- Lucie a déjà annoncé aux Brotteaux que tu reviens vers eux : le service client attend lui aussi une suite [6].",
+  "rendu": "## Ce que tu as fait\n- Trouvé la cause des deux incidents Galeries Brotteaux : `scripts/export-revendeurs.ts` exportait `on_hand` au lieu de `available`, donc les tables réservées par des commandes web étaient annoncées comme vendables — le défaut existe depuis mars, d'où l'incident de septembre (buffet Rhône) [1].\n- Corrigé le script avec un test couvrant les deux cas (Saône du 10/11, Rhône du 22/09) et ouvert la PR #62 avec Hugo en relecteur [1].\n- Rédigé le brouillon de réponse à Bertrand (reconnaissance de l'erreur, sans jargon) et le résumé cause/correction/options envoyé à Claire [1].\n\n## Ce qui a bougé\n- Hugo a approuvé la PR #62 ce matin, après avoir relancé le fichier du 10/11 : la Saône chêne sort bien à 0 [2].\n\n## Ce qui reste ouvert\n- Envoyer la réponse à Bertrand ce matin : Claire valide 10 % sur les 4 tables et la réservation de 4 Saône chêne sur le réassort de janvier, et elle attend l'envoi aujourd'hui [4]. Le brouillon est prêt dans `brouillons/galeries-brotteaux-2026-11-17.md`, rien n'est parti [1].\n- Si le geste prend la forme d'un avoir, préviens Antoine Roussel avant de l'émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas [5].\n- Lucie a déjà annoncé aux Brotteaux que tu reviens vers eux : le service client attend lui aussi une suite [6].",
+  "mesures": {
+    "mots": 214,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4460,
+    "sortie": 1211,
+    "reflexion": 775,
+    "cache": 0,
+    "cout": 0.00096348
+  },
+  "cout": 0.00096348,
+  "latenceMs": 35284,
+  "fournisseur": "Xiaomi"
+}

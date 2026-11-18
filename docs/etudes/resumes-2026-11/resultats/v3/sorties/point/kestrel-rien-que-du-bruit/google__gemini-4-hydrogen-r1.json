@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T17:57:26.391Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2651,
+    "sortie": 924,
+    "reflexion": 916,
+    "cache": 0,
+    "cout": 0.0109065
+  },
+  "cout": 0.0109065,
+  "latenceMs": 6005,
+  "fournisseur": "Google"
+}

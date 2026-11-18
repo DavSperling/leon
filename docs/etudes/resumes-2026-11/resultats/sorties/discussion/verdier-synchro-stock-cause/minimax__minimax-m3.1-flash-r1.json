@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:13.618Z",
+  "reponse": "Le problème venait de l’ajout de l’emplacement **Showroom le 3/11** : le script de synchronisation ne mettait à jour que l’entrepôt de Vénissieux. Shopify additionnant le stock de tous les emplacements, l’ancien stock du showroom restait affiché sur le site, ce qui permettait de commander des meubles déjà vendus [3][12].\n\nC’est **corrigé et déployé** : la PR #87 met désormais à jour les deux emplacements, elle a été fusionnée le 13/11, et le catalogue complet a été revérifié avec des quantités correctes [12][13]. Sept commandes ont été touchées entre le 3 et le 12/11, remboursées au client [9][10][13][15].\n\nEn prévention, un contrôle quotidien comparant Shopify et l’export entrepôt est en cours (PR #91), mais il est encore en brouillon et pas encore en production [16].",
+  "rendu": "Le problème venait de l’ajout de l’emplacement **Showroom le 3/11** : le script de synchronisation ne mettait à jour que l’entrepôt de Vénissieux. Shopify additionnant le stock de tous les emplacements, l’ancien stock du showroom restait affiché sur le site, ce qui permettait de commander des meubles déjà vendus [3][12].\n\nC’est **corrigé et déployé** : la PR #87 met désormais à jour les deux emplacements, elle a été fusionnée le 13/11, et le catalogue complet a été revérifié avec des quantités correctes [12][13]. Sept commandes ont été touchées entre le 3 et le 12/11, remboursées au client [9][10][13][15].\n\nEn prévention, un contrôle quotidien comparant Shopify et l’export entrepôt est en cours (PR #91), mais il est encore en brouillon et pas encore en production [16].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20204,
+    "sortie": 561,
+    "reflexion": 134,
+    "cache": 10752,
+    "cout": 0.0019156800000000001
+  },
+  "latenceMs": 3510,
+  "fournisseur": "Inferact vLLM",
+  "trace": [
+    "chercher {\"requete\":\"clients meubles disponibles stock achat panier indisponible problème\"}",
+    "chercher {\"requete\":\"furniture unavailable sold out inventory bug checkout\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"cursor-hugo-controle-stock\"}",
+    "chercher {\"requete\":\"PR #87 synchro stock emplacements mergée déployée production\"}",
+    "chercher {\"requete\":\"sync-stock showroom correctif déployé vérifié commandes rupture stock\",\"depuis\":\"2026-11-12\"}"
+  ],
+  "cout": 0.0019156800000000001
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5@langue@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:32:29.322Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône (SAONE-CHENE-180, passé à -3) venait de notre webhook de commande, qui décrémentait le stock en plus de Shopify. Les webhooks ne touchent plus au stock, le dédoublonnage est retiré, et la synchro de nuit écrit désormais la valeur absolue et s'arrête si le CSV est vide. Le seuil d'alerte est à 3 et le stock de la Saône est remis à 0. La PR #87 est fusionnée, et la config de l'app est déployée sans `orders/updated`.\n\n- [prochaine-étape] Traiter avec Lucie les trois commandes survendues (#1041, #1043, #1044).\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : sans effet, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémentait déjà. Retiré.\n- [essai-raté] Précommande de la Saône avec livraison au 10 décembre, proposée par l'agent : refusée.\n- [question] Date réelle du réassort de la Saône (retour annoncé chez Bois & Fils le 2 décembre, pas encore confirmé par le bon de livraison).\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Saône remise à 0 sur Shopify, sans précommande (source: t15)\n- [décision] Renommer `syncStock` en `synchroniserStocks` (source: t11)",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône (SAONE-CHENE-180, passé à -3) venait de notre webhook de commande, qui décrémentait le stock en plus de Shopify. Les webhooks ne touchent plus au stock, le dédoublonnage est retiré, et la synchro de nuit écrit désormais la valeur absolue et s'arrête si le CSV est vide. Le seuil d'alerte est à 3 et le stock de la Saône est remis à 0. La PR #87 est fusionnée, et la config de l'app est déployée sans `orders/updated`.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Saône remise à 0 sur Shopify, sans précommande (source: t15)\n- [décision] Renommer `syncStock` en `synchroniserStocks` (source: t11)\n- [prochaine-étape] Traiter avec Lucie les trois commandes survendues (#1041, #1043, #1044).\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : sans effet, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémentait déjà. Retiré.\n- [essai-raté] Précommande de la Saône avec livraison au 10 décembre, proposée par l'agent : refusée.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1299,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5365,
+    "sortie": 1903,
+    "reflexion": 1321,
+    "cache": 0,
+    "cout": 0.001488
+  },
+  "cout": 0.001488,
+  "latenceMs": 8378,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

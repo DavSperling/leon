@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:07:02.381Z",
+  "reponse": "I don’t know how much, if anything, we owe under Orbitly’s contract. The signed 2024 MSA was custom-negotiated, and its credit terms weren’t known in the deal-desk thread. [2]\n\n- The November 12 incident caused stale dashboards for 3 hours 40 minutes; events were delayed, not lost. [4][9]\n- Jonas claimed a credit under section 7 of the MSA, and Sam said he would check the terms with Finance. [4]\n- Ask Avi for the signed MSA in the shared-drive Legal folder, then check whether stale data qualifies and how the credit is calculated. [2] A generic 10% example Sam found is **not** evidence of Orbitly’s contractual rate. [1]\n\nI searched for Orbitly’s contract, SLA credits and outage settlement without tool or date filters, and read the deal-desk thread, incident email, postmortem and Sam’s SLA research.",
+  "rendu": "I don’t know how much, if anything, we owe under Orbitly’s contract. The signed 2024 MSA was custom-negotiated, and its credit terms weren’t known in the deal-desk thread. [2]\n\n- The November 12 incident caused stale dashboards for 3 hours 40 minutes; events were delayed, not lost. [4][9]\n- Jonas claimed a credit under section 7 of the MSA, and Sam said he would check the terms with Finance. [4]\n- Ask Avi for the signed MSA in the shared-drive Legal folder, then check whether stale data qualifies and how the credit is calculated. [2] A generic 10% example Sam found is **not** evidence of Orbitly’s contractual rate. [1]\n\nI searched for Orbitly’s contract, SLA credits and outage settlement without tool or date filters, and read the deal-desk thread, incident email, postmortem and Sam’s SLA research.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 19871,
+    "sortie": 507,
+    "reflexion": 83,
+    "cache": 8457,
+    "cout": 0.0172231
+  },
+  "latenceMs": 6977,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage credits SLA contract\"}",
+    "chercher {\"requete\":\"Orbitly outage VP credit settlement\"}",
+    "chercher {\"requete\":\"Orbitly agreement service credit downtime\"}",
+    "lire {\"sourceId\":\"slack-deal-desk-orbitly\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "lire {\"sourceId\":\"claude-ai-sam-sla-credits\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "chercher {\"requete\":\"\\\"Orbitly\\\" \\\"credit\\\" MSA fee signed\"}"
+  ],
+  "cout": 0.0172231
+}

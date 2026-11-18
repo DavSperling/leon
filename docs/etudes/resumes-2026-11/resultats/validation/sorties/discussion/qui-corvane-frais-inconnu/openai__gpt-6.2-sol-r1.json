@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:28.479Z",
+  "reponse": "I don’t know what Corvane will charge after March 31, 2027. The current rate is **$0.08 per ACH payout** through then, and the 2027 pricing memo uses that same rate for planning—not as a confirmed renewal rate [1].\n\nI searched for Corvane’s renewal pricing and read the pricing memo and the Nov. 16 #finance update. Marcus said Corvane had hinted at an increase but hadn’t put anything in writing; the renewal call was moved to the week of Nov. 23 [1][5].",
+  "rendu": "I don’t know what Corvane will charge after March 31, 2027. The current rate is **$0.08 per ACH payout** through then, and the 2027 pricing memo uses that same rate for planning—not as a confirmed renewal rate [1].\n\nI searched for Corvane’s renewal pricing and read the pricing memo and the Nov. 16 #finance update. Marcus said Corvane had hinted at an increase but hadn’t put anything in writing; the renewal call was moved to the week of Nov. 23 [1][5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 14978,
+    "sortie": 283,
+    "reflexion": 0,
+    "cache": 7977,
+    "cout": 0.021125699999999997
+  },
+  "latenceMs": 4889,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"Corvane \\\"per payout\\\" pricing next year fee\"}",
+    "chercher {\"requete\":\"Corvane payout renewal pricing 2027 2026\"}",
+    "lire {\"sourceId\":\"drive-q1-pricing-memo\"}",
+    "lire {\"sourceId\":\"slack-finance-corvane\"}",
+    "chercher {\"requete\":\"\\\"Corvane\\\" \\\"renewal\\\" Paula Brandt fee quote agreement\"}"
+  ],
+  "cout": 0.021125699999999997
+}

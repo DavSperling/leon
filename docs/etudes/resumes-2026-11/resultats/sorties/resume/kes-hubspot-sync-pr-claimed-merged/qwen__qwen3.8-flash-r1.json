@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:04.314Z",
+  "reponse": "## Où j'en suis\nWebhook sync was replaced by CRM polling on branch daniel/hubspot-owner-sync; #405 is closed and #409 is open with auto-merge enabled. Commits 8b3e6f1, 2d90ac4, ae47c15 implement polling every 15 minutes, windowed paging past the 10k limit, and ARR > 0 only. Unit tests pass; the e2e failure still blocks #409.\n\n- [en-cours] #409 remains open because tests/e2e/test_admin_accounts.py fails the required check.\n- [prochaine-étape] Fix the e2e fixture for ARR > 0 (third company needs ARR > 0 or expect 2 owner rows), then re-run checks.\n- [prochaine-étape] Ask Noa to add HUBSPOT_TOKEN to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription registration failed because private app tokens cannot manage webhook subscriptions by API.\n- [décision] Use polling every 15 minutes and close #405 (source: t04).\n- [décision] Sync only companies with ARR > 0, skipping trials (source: t10).\n- [décision] Open the PR with auto-merge and move the token to Secrets Manager (source: t12).",
+  "rendu": "## Où j'en suis\nWebhook sync was replaced by CRM polling on branch daniel/hubspot-owner-sync; #405 is closed and #409 is open with auto-merge enabled. Commits 8b3e6f1, 2d90ac4, ae47c15 implement polling every 15 minutes, windowed paging past the 10k limit, and ARR > 0 only. Unit tests pass; the e2e failure still blocks #409.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] #409 remains open because tests/e2e/test_admin_accounts.py fails the required check.\n- [prochaine-étape] Fix the e2e fixture for ARR > 0 (third company needs ARR > 0 or expect 2 owner rows), then re-run checks.\n- [prochaine-étape] Ask Noa to add HUBSPOT_TOKEN to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscription registration failed because private app tokens cannot manage webhook subscriptions by API.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 951,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3704,
+    "sortie": 2855,
+    "reflexion": 2545,
+    "cache": 0,
+    "cout": 0.00189745
+  },
+  "cout": 0.00189745,
+  "latenceMs": 36040,
+  "fournisseur": "Alibaba"
+}

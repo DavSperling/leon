@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-rien-questions-rapides",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:10.725Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1745,
+    "sortie": 6,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00026475
+  },
+  "cout": 0.00026475,
+  "latenceMs": 665,
+  "fournisseur": "Mistral"
+}

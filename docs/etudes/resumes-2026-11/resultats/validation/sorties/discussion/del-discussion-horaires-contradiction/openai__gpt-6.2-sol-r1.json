@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:16.190Z",
+  "reponse": "Oui, c’est réglé **dans l’appli des poseurs** : le correctif a été déployé le 17 novembre, et Yannick a confirmé le 18 que les horaires affichés étaient bons [6][1].\n\nEn revanche, les **SMS de rappel aux clients** pouvaient encore annoncer 9 h au lieu de 8 h. Leur correction est prévue séparément, pas avant le 30 novembre [6][4].",
+  "rendu": "Oui, c’est réglé **dans l’appli des poseurs** : le correctif a été déployé le 17 novembre, et Yannick a confirmé le 18 que les horaires affichés étaient bons [6][1].\n\nEn revanche, les **SMS de rappel aux clients** pouvaient encore annoncer 9 h au lieu de 8 h. Leur correction est prévue séparément, pas avant le 30 novembre [6][4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9067,
+    "sortie": 282,
+    "reflexion": 0,
+    "cache": 5755,
+    "cout": 0.011671
+  },
+  "latenceMs": 5495,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"poseurs\\\" horaires appli bug corrigé\"}",
+    "chercher {\"requete\":\"horaire application poseurs décalage planning créneaux\"}",
+    "lire {\"sourceId\":\"sl-dev\"}",
+    "lire {\"sourceId\":\"sl-chantiers-1118\"}",
+    "lire {\"sourceId\":\"gh-pr-214\"}",
+    "chercher {\"requete\":\"SMS rappels 9h 8h décalage horaires correctif déployé\",\"depuis\":\"2026-11-18\"}"
+  ],
+  "cout": 0.011671
+}

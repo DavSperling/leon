@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:57.729Z",
+  "reponse": "## Where I am\n\nStaging `analytics-staging` now runs PostgreSQL 17.2 after a successful blue/green cutover on 2026-11-17 at 14:20 UTC (41 s of refused writes); pg_partman was upgraded to 5.1.0 on 16.4 first, the dbt run on 17.2 passed 14/14 models in 21m12s vs 20m35s the previous day (+3%, within noise), and the runbook now documents the logical-replication prerequisite. PR #57 (draft, open) carries the module change enabling `rds.logical_replication = 1` (commit 7e3c9d4) and the staging engine bump to 17.2 (commit b0f18a2). Production is untouched: `pg17_enabled = false`, no date set, waiting on Maya's sign-off after a full week on staging — earliest 2026-11-24. (source: src-pr57, ses-pg-3)\n\n- [en-cours] Staging soak on PG 17.2 for a full week before prod sign-off; nothing left to run on staging meanwhile (source: ses-pg-3)\n- [prochaine-étape] Get Maya's sign-off, then pick the production window (a full week on staging means the 24th at the earliest) (source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] Prod upgrade in two windows: first set `rds.logical_replication = 1` and reboot the source instance (static parameter, ~2–3 min downtime), then create and switch over the blue/green deployment (source: ses-pg-3)\n- [prochaine-étape] Keep the prod date empty in `runbooks/pg17-upgrade.md` until the window is chosen; PR #57 still open (source: ses-pg-3, src-pr57)\n- [essai-raté] The first staging `terraform apply` failed: RDS blue/green for PostgreSQL requires `rds.logical_replication = 1` on the source 16.4 parameter group, plus an instance reboot (source: ses-pg-3)\n- [essai-raté] A prod date of Saturday 28 November 02:00 UTC with `apply_immediately = true` was proposed and reverted: no date before Maya signs off, 02:00 falls inside the 01:00–03:30 UTC dbt lock, and `apply_immediately` stays false (source: s1-04)\n- [question] Which production window to book once staging has soaked a full week, outside the 01:00–03:30 UTC dbt lock (weekend 04:00–06:00 UTC were the lowest-traffic slots) (source: ses-pg-3, ses-pg-1)\n- [décision] pg_partman goes first (ALTER EXTENSION on staging 16.4, then maintenance check on events_raw and events_daily) before applying the staging plan (source: s3-01)\n- [décision] The staging reboot for logical replication is approved (source: s3-05)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] Prod goes forward only after staging has run a full week on PG 17 without incident (source: src-linear-kes298)",
+  "rendu": "- [en-cours] Staging soak on PG 17.2 for a full week before prod sign-off; nothing left to run on staging meanwhile (de: agent; source: ses-pg-3)\n- [prochaine-étape] Get Maya's sign-off, then pick the production window (a full week on staging means the 24th at the earliest) (de: connecteur, agent; source: src-linear-kes298, ses-pg-3)\n- [prochaine-étape] Prod upgrade in two windows: first set `rds.logical_replication = 1` and reboot the source instance (static parameter, ~2–3 min downtime), then create and switch over the blue/green deployment (de: agent; source: ses-pg-3)\n- [prochaine-étape] Keep the prod date empty in `runbooks/pg17-upgrade.md` until the window is chosen; PR #57 still open (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [essai-raté] The first staging `terraform apply` failed: RDS blue/green for PostgreSQL requires `rds.logical_replication = 1` on the source 16.4 parameter group, plus an instance reboot (de: agent; source: ses-pg-3)\n- [essai-raté] A prod date of Saturday 28 November 02:00 UTC with `apply_immediately = true` was proposed and reverted: no date before Maya signs off, 02:00 falls inside the 01:00–03:30 UTC dbt lock, and `apply_immediately` stays false (de: toi; source: s1-04)\n- [question] Which production window to book once staging has soaked a full week, outside the 01:00–03:30 UTC dbt lock (weekend 04:00–06:00 UTC were the lowest-traffic slots) (de: agent; source: ses-pg-3, ses-pg-1)\n- [décision] pg_partman goes first (ALTER EXTENSION on staging 16.4, then maintenance check on events_raw and events_daily) before applying the staging plan (de: toi; source: s3-01)\n- [décision] The staging reboot for logical replication is approved (de: toi; source: s3-05)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (de: toi; source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1905,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4253,
+    "sortie": 912,
+    "reflexion": 140,
+    "cache": 128,
+    "cout": 0.00116787
+  },
+  "cout": 0.00116787,
+  "latenceMs": 5845,
+  "fournisseur": "Parasail"
+}

@@ -74,6 +74,21 @@ LoRA fine-tuning and serving: Together SFT $0.34/M (8–9B), $1.05/M (27–35B),
 | voyage-4-large / voyage-4 / voyage-4-lite | 0.12 / 0.06 / 0.02 (first 200M tokens free) | 1024 |
 | Cohere embed-v5.0-pro / fast | 0.12 / 0.08 (launch blog, 2026-09-30) | 2048 |
 
+## 6. OpenRouter
+
+Source : API des modèles d'OpenRouter, lue le 18/11/2026 (https://openrouter.ai/api/v1/models). Prix d'entrée et de sortie seulement : le cache n'y est pas chiffré, il est compté ici au prix d'entrée (estimation haute). Le coût que Leon journalise pour ces modèles est celui qu'OpenRouter facture (`usage.cost`), pas cette estimation.
+
+| Model | In | Out | Cache: write / — / read | Src |
+|---|---|---|---|---|
+| z-ai/glm-5.3-flash | 0.15 | 0.50 | 0.15 / — / 0.15 | OR |
+| deepseek/deepseek-v4.1-flash | 0.051 | 0.203 | 0.051 / — / 0.051 | OR |
+| deepseek/deepseek-v4.1-flash-1017 | 0.036 | 0.50 | 0.036 / — / 0.036 | OR |
+| xiaomi/mimo-v2.6-flash | 0.14 | 0.28 | 0.14 / — / 0.14 | OR |
+| minimax/minimax-m3.1-flash | 0.15 | 0.60 | 0.15 / — / 0.15 | OR |
+| openai/gpt-6-luna | 0.10 | 0.50 | 0.10 / — / 0.10 | OR |
+| openai/gpt-6.1-terra | 1 | 5 | 1 / — / 1 | OR |
+| openai/gpt-6.2-sol | 2 | 10 | 2 / — / 2 | OR |
+
 ## Notes and caveats
 
 1. **Discounts stack** on Anthropic (cache × batch × US-only 1.1). Gemini caching also bills hourly storage.

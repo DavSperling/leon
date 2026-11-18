@@ -1,0 +1,25 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "anthropic/claude-sonnet-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:25:41.692Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2601,
+    "sortie": 8,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005282
+  },
+  "cout": 0.005282,
+  "latenceMs": 906,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

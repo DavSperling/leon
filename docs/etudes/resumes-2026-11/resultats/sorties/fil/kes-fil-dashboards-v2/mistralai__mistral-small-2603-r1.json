@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:26:45.016Z",
+  "reponse": "## Où j'en suis\nLe fil a commencé par une migration des graphiques vers visx (PR #401), puis a pivoté vers une réécriture complète du tableau de bord v2 (PR #418) avec drag-and-drop et redimensionnement, derrière un flag dashboards_v2. Après la revue de Priya, deux points ont été identifiés pour une suite : déplacement/redimensionnement au clavier et anneau de focus visible. Une nouvelle branche tom/dashboard-keyboard a été créée pour implémenter ces fonctionnalités sans dnd-kit (car incompatibilité avec react-grid-layout). L'implémentation est terminée (commit 8f1a2c7), testée, et la PR #423 est ouverte. Le flag dashboards_v2 est activé sur staging pour zest-grocers, et doit être activé en production le 24/11. (source: ses-db-4, ses-db-3, ses-db-2, ses-db-1)\n\n- [en-cours] PR #423 ouverte pour les fonctionnalités clavier et focus ring (source: ses-db-4)\n- [prochaine-étape] Activer le flag dashboards_v2 en production le 24/11 (source: ses-db-4)\n- [décision] Abandon de la migration visx et maintien de recharts (source: ses-db-3, src-pr401)\n- [décision] Utilisation de ResizeObserver au lieu de container queries pour la taille des widgets (source: ses-db-2)\n- [décision] Conservation des anciens tableaux de bord v1 derrière le flag jusqu'en janvier (source: ses-db-2, src-note-v1)",
+  "rendu": "## Où j'en suis\nLe fil a commencé par une migration des graphiques vers visx (PR #401), puis a pivoté vers une réécriture complète du tableau de bord v2 (PR #418) avec drag-and-drop et redimensionnement, derrière un flag dashboards_v2. Après la revue de Priya, deux points ont été identifiés pour une suite : déplacement/redimensionnement au clavier et anneau de focus visible. Une nouvelle branche tom/dashboard-keyboard a été créée pour implémenter ces fonctionnalités sans dnd-kit (car incompatibilité avec react-grid-layout). L'implémentation est terminée (commit 8f1a2c7), testée, et la PR #423 est ouverte. Le flag dashboards_v2 est activé sur staging pour zest-grocers, et doit être activé en production le 24/11. (de: agent; source: ses-db-4, ses-db-3, ses-db-2, ses-db-1)\n\n- [en-cours] PR #423 ouverte pour les fonctionnalités clavier et focus ring (de: agent; source: ses-db-4)\n- [prochaine-étape] Activer le flag dashboards_v2 en production le 24/11 (de: agent; source: ses-db-4)\n- [décision] Abandon de la migration visx et maintien de recharts (de: équipe, agent; source: ses-db-3, src-pr401)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1105,
+    "lignesRetirees": 2,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5311,
+    "sortie": 1305,
+    "reflexion": 927,
+    "cache": 0,
+    "cout": 0.00157965
+  },
+  "cout": 0.00157965,
+  "latenceMs": 9072,
+  "fournisseur": "Mistral"
+}

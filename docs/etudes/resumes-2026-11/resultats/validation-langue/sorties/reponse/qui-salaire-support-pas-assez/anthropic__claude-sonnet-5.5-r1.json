@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:44.516Z",
+  "reponse": "The results don't give an approved salary band for the Austin support engineer role. The job description only says \"competitive base + equity, see the comp sheet\" [1], and the hiring plan also refers to the comp sheet [5]. Northpeak Talent asked Carla Reyes to share the band because Austin candidates are asking upfront [4]. The only approved band I found is for the senior SRE in Tel Aviv, ₪40–47k/month gross [3], which is a different role. A ChatGPT answer gives a general market estimate of $75,000–$95,000 base for a Tier 2 support engineer in Austin, but it says this is not your company's band [2].",
+  "rendu": "The results don't give an approved salary band for the Austin support engineer role. The job description only says \"competitive base + equity, see the comp sheet\" [1], and the hiring plan also refers to the comp sheet [5]. Northpeak Talent asked Carla Reyes to share the band because Austin candidates are asking upfront [4]. The only approved band I found is for the senior SRE in Tel Aviv, ₪40–47k/month gross [3], which is a different role. A ChatGPT answer gives a general market estimate of $75,000–$95,000 base for a Tier 2 support engineer in Austin, but it says this is not your company's band [2].",
+  "mesures": {
+    "mots": 105,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1617,
+    "sortie": 211,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005344
+  },
+  "cout": 0.005344,
+  "latenceMs": 2063,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:24:12.364Z",
+  "reponse": "## What is still open\n\n- **PR #247:** Maya wants the Orbitly impact for Thursday’s call and will approve once CI is green. Your estimate is **1,179,950 legitimate events dropped**, excluding 4,352 genuine replays. After the fix is deployed, replay Orbitly and Zest from landing since 13 November, then check Orbitly’s dedupe-drop counter. [1][2]\n- **Friday’s incident review:** Noa has finalized the postmortem; you need to add an alert for the ingest dead-letter queue exceeding 1,000 messages before the review. [3][7]\n- **iOS SDK:** You drafted a note asking the iOS team to restore UUID event IDs in 3.2.1; the session does not show it being sent. Zest’s pilot also lost 3,812 events. [1]",
+  "rendu": "## What is still open\n\n- **PR #247:** Maya wants the Orbitly impact for Thursday’s call and will approve once CI is green. Your estimate is **1,179,950 legitimate events dropped**, excluding 4,352 genuine replays. After the fix is deployed, replay Orbitly and Zest from landing since 13 November, then check Orbitly’s dedupe-drop counter. [1][2]\n- **Friday’s incident review:** Noa has finalized the postmortem; you need to add an alert for the ingest dead-letter queue exceeding 1,000 messages before the review. [3][7]\n- **iOS SDK:** You drafted a note asking the iOS team to restore UUID event IDs in 3.2.1; the session does not show it being sent. Zest’s pilot also lost 3,812 events. [1]",
+  "mesures": {
+    "mots": 110,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4523,
+    "sortie": 505,
+    "reflexion": 318,
+    "cache": 0,
+    "cout": 0.008178
+  },
+  "cout": 0.008178,
+  "latenceMs": 15032,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:18.206Z",
+  "reponse": "## Où j'en suis\nLa PR #96 est ouverte sur la branche `julien/fix-synchro-stocks` et attend la relecture d'Hugo : la synchro des stocks a été complétée par des reprises à 4 h et 6 h (Europe/Paris), avec alerte par mail à Karim à 6 h si le CSV TransAlp manque toujours. La synchro manuelle du 17/11 a corrigé 40 références sans erreur. La PR #87, qui avait supprimé les décrémentations Shopify dans les webhooks, est fusionnée. (source: u3-04, u3-06, u3-08, src-pr87)\n\n- [en-cours] La relecture de la PR #96 par Hugo est en attente ; le commit `d7c2e41` modifie `scripts/cron.ts`, `scripts/stock/sync.ts` et `scripts/stock/sync.test.ts`. (source: u3-04, u3-08)\n- [prochaine-étape] Faire relire et fusionner la PR #96, puis vérifier les reprises de 4 h et 6 h ainsi que l'alerte mail à Karim en production. (source: u3-08, u3-04)\n- [question] Confirmer la date de livraison des 2 tables Saône aux Galeries Brotteaux ; Claire s'en charge, sans modification du script. (source: u3-09, src-mail-brotteaux)\n- [décision] Les webhooks de commande ne touchent plus au stock, la synchro de nuit reste le seul correcteur et écrit en valeur absolue. (source: u1-02, src-pr87)\n- [décision] Le seuil d'alerte de stock bas passe à 3 unités. (source: u1-04)\n- [décision] Les reprises de synchro sont fixées à 4 h et 6 h, avec un mail à Karim à 6 h si le CSV est toujours absent. (source: u3-03)\n- [décision] Aucune réservation des 2 tables Saône ne sera ajoutée au script. (source: u3-09)\n- [essai-raté] Le premier test de reprise à 4 h échouait : les heures du cron étaient interpretées en UTC ; le passage du planificateur en `Europe/Paris` a corrigé le test. (source: u3-04)",
+  "rendu": "## Où j'en suis\nLa PR #96 est ouverte sur la branche `julien/fix-synchro-stocks` et attend la relecture d'Hugo : la synchro des stocks a été complétée par des reprises à 4 h et 6 h (Europe/Paris), avec alerte par mail à Karim à 6 h si le CSV TransAlp manque toujours. La synchro manuelle du 17/11 a corrigé 40 références sans erreur. La PR #87, qui avait supprimé les décrémentations Shopify dans les webhooks, est fusionnée. (de: équipe, agent; source: u3-04, u3-06, u3-08, src-pr87)\n\n- [en-cours] La relecture de la PR #96 par Hugo est en attente ; le commit `d7c2e41` modifie `scripts/cron.ts`, `scripts/stock/sync.ts` et `scripts/stock/sync.test.ts`. (de: agent; source: u3-04, u3-08)\n- [prochaine-étape] Faire relire et fusionner la PR #96, puis vérifier les reprises de 4 h et 6 h ainsi que l'alerte mail à Karim en production. (de: agent; source: u3-08, u3-04)\n- [question] Confirmer la date de livraison des 2 tables Saône aux Galeries Brotteaux ; Claire s'en charge, sans modification du script. (de: toi, connecteur; source: u3-09, src-mail-brotteaux)\n- [décision] Les webhooks de commande ne touchent plus au stock, la synchro de nuit reste le seul correcteur et écrit en valeur absolue. (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] Le seuil d'alerte de stock bas passe à 3 unités. (de: toi; source: u1-04)\n- [décision] Les reprises de synchro sont fixées à 4 h et 6 h, avec un mail à Karim à 6 h si le CSV est toujours absent. (de: toi; source: u3-03)\n- [décision] Aucune réservation des 2 tables Saône ne sera ajoutée au script. (de: toi; source: u3-09)\n- [essai-raté] Le premier test de reprise à 4 h échouait : les heures du cron étaient interpretées en UTC ; le passage du planificateur en `Europe/Paris` a corrigé le test. (de: agent; source: u3-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1777,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4177,
+    "sortie": 541,
+    "reflexion": 22,
+    "cache": 0,
+    "cout": 0.00095115
+  },
+  "cout": 0.00095115,
+  "latenceMs": 3452,
+  "fournisseur": "Inferact vLLM"
+}

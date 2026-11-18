@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:37.226Z",
+  "reponse": "**What broke:** On Thursday Nov 12, the ingest v2.14.0 deploy (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the pods' 512 Mi memory limit, ingest-workers OOM'd on the first large batch and crash-looped, so dashboards went stale from 08:47 to 12:27 UTC (3h40 behind at peak) [1][4]. The change hit all pods at once, and there was no consumer-lag alert — the first signal was a Sentry OOM alert at 09:14, 27 minutes after deploy; an early Kafka-broker-disk hypothesis was ruled out at 09:41 (brokers were at 62%) [1][4]. Rollback to v2.13.3 at 10:05 took 13 minutes; the lag fully drained by 12:27 [1][4]. Severity SEV2, incident commander Noa Friedman [1][4].\n\n**Customer data lost:** No. Events kept arriving in Kafka and were processed late — none lost, confirmed by the Nov 13 reconciliation [1]. That's also what Maya told Orbitly: \"All your events were received and processed late; none were lost\" [3]. Impact: all workspaces had delayed dashboards, and 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts); incident reports went to Orbitly and Zest Grocers on Nov 15 [1][3].\n\n**What's changing:**\n- ingest#419 (merged Nov 13, shipped as v2.14.1 through the canary): default `max_batch_bytes` back to 1 MB, batcher refuses any batch larger than 25% of the container memory limit and logs a warning, bulk import keeps 10 MB via explicit config on the 2 Gi pool [8].\n- KES-431 — page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20): the alert rule is in and routed to on-call, but still In Progress because 5 minutes fires during every nightly backfill and the threshold is being tuned [1][12].\n- KES-432 — ingest config changes go to the canary pool first (Daniel, due Nov 27), and KES-433 — raise worker memory to 1 Gi plus a load test on batch sizes (Lior, due Nov 27) [1]. I found no ticket update for these two, so their status beyond the postmortem plan is unconfirmed.\n\n**Fallout worth knowing:** Orbitly is claiming an SLA service credit under section 7 of their MSA; Sam Ortiz is checking terms with finance, and the signed MSA isn't attached to their HubSpot deal [3][7]. Separately, Maya asked to push the Nov 21 Postgres 17 cutover given the incident and the bank go-live on Dec 1 [2][6].",
+  "rendu": "**What broke:** On Thursday Nov 12, the ingest v2.14.0 deploy (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the pods' 512 Mi memory limit, ingest-workers OOM'd on the first large batch and crash-looped, so dashboards went stale from 08:47 to 12:27 UTC (3h40 behind at peak) [1][4]. The change hit all pods at once, and there was no consumer-lag alert — the first signal was a Sentry OOM alert at 09:14, 27 minutes after deploy; an early Kafka-broker-disk hypothesis was ruled out at 09:41 (brokers were at 62%) [1][4]. Rollback to v2.13.3 at 10:05 took 13 minutes; the lag fully drained by 12:27 [1][4]. Severity SEV2, incident commander Noa Friedman [1][4].\n\n**Customer data lost:** No. Events kept arriving in Kafka and were processed late — none lost, confirmed by the Nov 13 reconciliation [1]. That's also what Maya told Orbitly: \"All your events were received and processed late; none were lost\" [3]. Impact: all workspaces had delayed dashboards, and 4 customers contacted support (Orbitly, Zest Grocers, 2 trial accounts); incident reports went to Orbitly and Zest Grocers on Nov 15 [1][3].\n\n**What's changing:**\n- ingest#419 (merged Nov 13, shipped as v2.14.1 through the canary): default `max_batch_bytes` back to 1 MB, batcher refuses any batch larger than 25% of the container memory limit and logs a warning, bulk import keeps 10 MB via explicit config on the 2 Gi pool [8].\n- KES-431 — page on-call when ingest consumer lag exceeds 5 minutes (Noa, due Nov 20): the alert rule is in and routed to on-call, but still In Progress because 5 minutes fires during every nightly backfill and the threshold is being tuned [1][12].\n- KES-432 — ingest config changes go to the canary pool first (Daniel, due Nov 27), and KES-433 — raise worker memory to 1 Gi plus a load test on batch sizes (Lior, due Nov 27) [1]. I found no ticket update for these two, so their status beyond the postmortem plan is unconfirmed.\n\n**Fallout worth knowing:** Orbitly is claiming an SLA service credit under section 7 of their MSA; Sam Ortiz is checking terms with finance, and the signed MSA isn't attached to their HubSpot deal [3][7]. Separately, Maya asked to push the Nov 21 Postgres 17 cutover given the incident and the bank go-live on Dec 1 [2][6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 31544,
+    "sortie": 1396,
+    "reflexion": 474,
+    "cache": 22528,
+    "cout": 0.002368968
+  },
+  "latenceMs": 22228,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline broke incident data loss\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"github-ingest-419-1\"}",
+    "activite {\"depuis\":\"2026-11-12\",\"outil\":\"github\"}",
+    "chercher {\"requete\":\"KES-431 KES-432 KES-433 consumer lag alert canary memory limit\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.002368968
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T17:54:13.039Z",
+  "reponse": "## What is still open\n- PR #423 has changes requested from Tom: he wants the module move split from the lint fixes into two PRs, and will approve both today — worth doing before more diff piles on [4].\n- Thursday 10am NY: Fernhill IT's end-to-end SSO walkthrough on staging with their Okta tenant; Priya demos, you just need to be on the call [1].\n- Today's planned task: move the assertion-ID replay cache from in-process TTLCache to Redis so replays can't succeed across pods [1].\n\n## What changed\n- PR #418 (signature verification) was approved by Maya and merged yesterday evening — it's on staging with last night's deploy, so the Wednesday deadline is met [3].\n\n## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` (and two siblings) by freezing time instead of sleeping, cleared all ruff 0.8 and mypy issues in `kestrel/auth` — missing Issuer/Subject is now a 401 instead of a 500 — and split the 900-line `saml_utils.py` into a `saml/` package with a backwards-compatible shim; all on branch `daniel/auth-cleanup` in PR #423 [1].",
+  "rendu": "## What is still open\n- PR #423 has changes requested from Tom: he wants the module move split from the lint fixes into two PRs, and will approve both today — worth doing before more diff piles on [4].\n- Thursday 10am NY: Fernhill IT's end-to-end SSO walkthrough on staging with their Okta tenant; Priya demos, you just need to be on the call [1].\n- Today's planned task: move the assertion-ID replay cache from in-process TTLCache to Redis so replays can't succeed across pods [1].\n\n## What changed\n- PR #418 (signature verification) was approved by Maya and merged yesterday evening — it's on staging with last night's deploy, so the Wednesday deadline is met [3].\n\n## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` (and two siblings) by freezing time instead of sleeping, cleared all ruff 0.8 and mypy issues in `kestrel/auth` — missing Issuer/Subject is now a 401 instead of a 500 — and split the 900-line `saml_utils.py` into a `saml/` package with a backwards-compatible shim; all on branch `daniel/auth-cleanup` in PR #423 [1].",
+  "mesures": {
+    "mots": 167,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5567,
+    "sortie": 274,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0044175
+  },
+  "cout": 0.0044175,
+  "latenceMs": 3482,
+  "fournisseur": "SiliconFlow"
+}

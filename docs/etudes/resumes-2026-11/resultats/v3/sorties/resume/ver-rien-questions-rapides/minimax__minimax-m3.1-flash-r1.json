@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:02.439Z",
+  "reponse": "## Où j'en suis\nSession de questions rapides sur la CLI Shopify et une regex de SKU, sans aucune modification du dépôt (branche main). La regex `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` matche SAONE-CHENE-180 et RHONE-NOYER-90, mais échoue sur CROIX-ROUSSE-BLANC, faute de taille finale.\n\n- [décision] Ne rien ajouter au dépôt : la regex servait juste à tester une idée, pas de valider le CSV TransAlp (source: t09)\n- [essai-raté] Regex à taille obligatoire : CROIX-ROUSSE-BLANC (rangement) ne passe pas ; variante à taille facultative évoquée mais non retenue\n- [en-cours] Shopify CLI en 3.69.0, la 3.70.1 est disponible (mise à jour via `pnpm add -D @shopify/cli@latest`)\n\nrien à retenir",
+  "rendu": "## Où j'en suis\nSession de questions rapides sur la CLI Shopify et une regex de SKU, sans aucune modification du dépôt (branche main). La regex `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` matche SAONE-CHENE-180 et RHONE-NOYER-90, mais échoue sur CROIX-ROUSSE-BLANC, faute de taille finale.\n\n- branche [[main]]\n- [décision] Ne rien ajouter au dépôt : la regex servait juste à tester une idée, pas de valider le CSV TransAlp (source: t09)\n- [essai-raté] Regex à taille obligatoire : CROIX-ROUSSE-BLANC (rangement) ne passe pas ; variante à taille facultative évoquée mais non retenue\n- [en-cours] Shopify CLI en 3.69.0, la 3.70.1 est disponible (mise à jour via `pnpm add -D @shopify/cli@latest`)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 681,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1962,
+    "sortie": 212,
+    "reflexion": 0,
+    "cache": 896,
+    "cout": 0.00030054
+  },
+  "cout": 0.00030054,
+  "latenceMs": 1675,
+  "fournisseur": "Parasail"
+}

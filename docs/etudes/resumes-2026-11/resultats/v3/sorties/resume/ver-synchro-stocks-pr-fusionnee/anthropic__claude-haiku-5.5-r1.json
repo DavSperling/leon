@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:20.129Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône venait de décréments en double : les webhooks de commande retiraient du stock en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit écrit désormais la valeur absolue, le seuil d'alerte est à 3 et la PR #87 est fusionnée. Il reste à traiter les trois commandes survendues avec Lucie.\n\n- [en-cours] Traiter avec Lucie les 3 commandes survendues de Saône (#1041, #1043, #1044).\n- [prochaine-étape] Laisser la synchro de nuit remettre la Saône à jour quand TransAlp la recevra en stock physique.\n- [essai-raté] Le dédoublonnage des webhooks ne réglait rien : Shopify décrémentait déjà et les identifiants diffèrent. Retiré.\n- [décision] Les webhooks de commande ne touchent plus au stock ; seule la synchro de nuit écrit, en valeur absolue (source: t05).\n- [décision] Seuil d'alerte stock bas fixé à 3 unités (source: t09).\n- [décision] Saône à 0, ni remise en vente ni précommande avant le retour du 2 décembre (source: t15).",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône venait de décréments en double : les webhooks de commande retiraient du stock en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit écrit désormais la valeur absolue, le seuil d'alerte est à 3 et la PR #87 est fusionnée. Il reste à traiter les trois commandes survendues avec Lucie.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traiter avec Lucie les 3 commandes survendues de Saône (#1041, #1043, #1044).\n- [prochaine-étape] Laisser la synchro de nuit remettre la Saône à jour quand TransAlp la recevra en stock physique.\n- [essai-raté] Le dédoublonnage des webhooks ne réglait rien : Shopify décrémentait déjà et les identifiants diffèrent. Retiré.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 828,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5420,
+    "sortie": 2059,
+    "reflexion": 1626,
+    "cache": 0,
+    "cout": 0.0015715
+  },
+  "cout": 0.0015715,
+  "latenceMs": 12517,
+  "fournisseur": "Amazon Bedrock"
+}

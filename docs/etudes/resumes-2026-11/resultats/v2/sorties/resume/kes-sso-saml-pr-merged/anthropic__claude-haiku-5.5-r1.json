@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:23:39.516Z",
+  "reponse": "## Où j'en suis\nSAML ACS signature and condition verification is implemented with signxml, with a 120-second clock-skew tolerance and Redis-based replay protection. The work is in PR #412, which the facts record as merged. The tests pass (1284 passed, 3 skipped). Fernhill's staging IdP metadata is still to be loaded before the Thursday demo.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo.\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml/xmlsec failed on the Alpine image: libxml2 mismatch with lxml, and building lxml from source did not fix it.\n- [décision] Use signxml instead of python3-saml, and remove xmlsec from the image (source: t08).\n- [décision] Clock skew is 120 seconds, per the Fernhill contract annex (source: t12).\n- [décision] Password login is not changed in this PR, handled as a separate ticket (source: t12).",
+  "rendu": "## Où j'en suis\nSAML ACS signature and condition verification is implemented with signxml, with a 120-second clock-skew tolerance and Redis-based replay protection. The work is in PR #412, which the facts record as merged. The tests pass (1284 passed, 3 skipped). Fernhill's staging IdP metadata is still to be loaded before the Thursday demo.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo.\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml/xmlsec failed on the Alpine image: libxml2 mismatch with lxml, and building lxml from source did not fix it.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 872,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6560,
+    "sortie": 1402,
+    "reflexion": 1010,
+    "cache": 0,
+    "cout": 0.001357
+  },
+  "cout": 0.001357,
+  "latenceMs": 6664,
+  "fournisseur": "Claude Platform on AWS"
+}

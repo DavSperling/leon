@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:04:14.770Z",
+  "reponse": "Only a few design partners get access at first. The first part, phase 1 (chart builder and saved views), opens as a design-partner beta on Wednesday, Dec 9, for 5 customers. Those are Orbitly, Zest Grocers and three accounts from the October trial cohort [3].\n\nOther customers won't get access before general availability, which is targeted for late January [3]. The Pinecrest Logistics prospect has asked for beta access during its evaluation. Sam Ortiz told them he'd check [5].\n\nThe Dec 9 date comes from the Nov 16 project update, which says the work is on track. Earlier sources were vaguer. The spec said \"early December\" [2], and the Nov 12 sync said phase 1 should be feature-complete by Dec 4, with the beta right after [1]. Two items were still open on Nov 16: query performance on workspaces above 50M events, and empty states [3].",
+  "rendu": "Only a few design partners get access at first. The first part, phase 1 (chart builder and saved views), opens as a design-partner beta on Wednesday, Dec 9, for 5 customers. Those are Orbitly, Zest Grocers and three accounts from the October trial cohort [3].\n\nOther customers won't get access before general availability, which is targeted for late January [3]. The Pinecrest Logistics prospect has asked for beta access during its evaluation. Sam Ortiz told them he'd check [5].\n\nThe Dec 9 date comes from the Nov 16 project update, which says the work is on track. Earlier sources were vaguer. The spec said \"early December\" [2], and the Nov 12 sync said phase 1 should be feature-complete by Dec 4, with the beta right after [1]. Two items were still open on Nov 16: query performance on workspaces above 50M events, and empty states [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10769,
+    "sortie": 430,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.025838
+  },
+  "latenceMs": 4326,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards release date beta customers first part\"}",
+    "chercher {\"requete\":\"dashboards launch timeline\",\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.025838
+}

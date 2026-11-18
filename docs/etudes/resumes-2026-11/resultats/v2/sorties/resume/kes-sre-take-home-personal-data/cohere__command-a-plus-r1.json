@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:23:31.937Z",
+  "reponse": "## Where I am\nWe built the SRE take‑home exercise in a private repo, fixed the broken alert, connection leak and over‑broad IAM policy, and added a rubric. The repo is ready, and the hiring folder was removed from the infra branch (pending commit).\n- [in-progress] Removing the hiring/ folder from the infra branch (not yet committed)\n- [next-step] After Thursday’s call, send Ethan the repo invite and exercise\n- [failed-attempt] Docker compose initially failed on Apple Silicon; multi‑arch build with --load also failed\n- [decision] Will send the exercise after the call (source: t16)",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] Will send the exercise after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 160,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3405,
+    "sortie": 3830,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0067665
+  },
+  "cout": 0.0067665,
+  "latenceMs": 15087,
+  "fournisseur": "Cohere"
+}

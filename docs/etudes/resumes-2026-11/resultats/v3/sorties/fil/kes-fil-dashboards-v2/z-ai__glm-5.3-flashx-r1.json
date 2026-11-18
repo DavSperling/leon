@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:58:34.452Z",
+  "reponse": "## Où j'en suis\nDashboard v2 is live behind `dashboards_v2` and the follow-up from Priya's #418 review is done: keyboard move/resize (Tab to focus, Enter to pick up, arrows to move/resize, Escape to cancel, aria-live announcements) plus a visible focus ring are in PR #423, open and awaiting Priya's review. A first attempt with dnd-kit conflicted with react-grid-layout (double event handling) and was removed in favor of a custom `useGridKeyboard()` hook (commit 8f1a2c7). The staging flag is on for Zest Grocers; production stays off until Tom flips it himself the morning of the Nov 24 demo. The visx migration (#401) was closed for good — recharts stays. (source: ses-db-4, ses-db-3)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring) open, waiting on Priya's review (source: ses-db-4, d4-05)\n- [prochaine-étape] Get #423 reviewed/merged, then Tom flips the production `dashboards_v2` flag himself the morning of the 24th Zest demo (source: d4-06, d4-07, src-pr418)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both libraries listen to the same events, every move applied twice and mouse drags fired two layout changes (source: d4-02)\n- [décision] Custom keyboard handler, no dnd-kit (source: d4-04)\n- [décision] Keep recharts and close #401 — not worth +181 KB or rewriting 9 charts (source: c3-03, src-pr401)\n- [décision] Staging flag on for zest-grocers only; production flipped by Tom the morning of the 24th (source: d4-06)\n- [décision] v1 dashboards stay behind the flag until January, nothing removed now (source: b2-04)",
+  "rendu": "## Où j'en suis\nDashboard v2 is live behind `dashboards_v2` and the follow-up from Priya's #418 review is done: keyboard move/resize (Tab to focus, Enter to pick up, arrows to move/resize, Escape to cancel, aria-live announcements) plus a visible focus ring are in PR #423, open and awaiting Priya's review. A first attempt with dnd-kit conflicted with react-grid-layout (double event handling) and was removed in favor of a custom `useGridKeyboard()` hook (commit 8f1a2c7). The staging flag is on for Zest Grocers; production stays off until Tom flips it himself the morning of the Nov 24 demo. The visx migration (#401) was closed for good — recharts stays. (de: agent; source: ses-db-4, ses-db-3)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring) open, waiting on Priya's review (de: agent; source: ses-db-4, d4-05)\n- [prochaine-étape] Get #423 reviewed/merged, then Tom flips the production `dashboards_v2` flag himself the morning of the 24th Zest demo (de: toi, équipe, agent; source: d4-06, d4-07, src-pr418)\n- [essai-raté] dnd-kit's KeyboardSensor on top of react-grid-layout: both libraries listen to the same events, every move applied twice and mouse drags fired two layout changes (de: agent; source: d4-02)\n- [décision] Custom keyboard handler, no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts and close #401 — not worth +181 KB or rewriting 9 charts (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] Staging flag on for zest-grocers only; production flipped by Tom the morning of the 24th (de: toi; source: d4-06)\n- [décision] v1 dashboards stay behind the flag until January, nothing removed now (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1664,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4869,
+    "sortie": 471,
+    "reflexion": 15,
+    "cache": 0,
+    "cout": 0.00239028
+  },
+  "cout": 0.00239028,
+  "latenceMs": 3436,
+  "fournisseur": "Z.AI"
+}

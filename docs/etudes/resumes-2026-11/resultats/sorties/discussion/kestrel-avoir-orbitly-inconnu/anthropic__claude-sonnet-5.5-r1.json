@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:09.899Z",
+  "reponse": "I don't know the amount. The Orbitly MSA isn't in anything I can see, so I can't tell you what the contract says about credits.\n\n- **What the MSA is:** Sam Ortiz said they signed a custom MSA in 2024 [1]. It isn't attached to the HubSpot deal, and Maya Cohen said she doesn't remember its credit terms [2]. Maya pointed to the Legal folder on the shared drive and said to ask Avi [2].\n- **What Orbitly is claiming:** Jonas Pike invoked section 7 of the MSA and asked for the service credit for the Nov 12 incident [3]. Sam replied that he'd come back to him once he'd checked the terms with finance [3].\n- **The outage:** Maya's incident report says dashboards showed stale data from 08:47 to 12:27 UTC on Nov 12, about 3h40. No events were lost, only processed late [3].\n- **An example, not your contract:** Sam asked an AI assistant about typical credit terms. It gave an example table where 99.0–99.9% uptime earns 10% of the monthly fee, and said a 3h40 outage in a 30-day month is about 99.49% uptime. It also said many contracts count only full downtime, and that the answer depends on the contract's own terms [1]. Don't treat 10% as what you owe.\n\nTo settle it, get section 7 from the MSA in the Legal folder through Avi. Check four things in it:\n- the uptime threshold;\n- whether delayed data counts as downtime;\n- the credit tiers;\n- whether credits must be claimed within a deadline.\n\nOrbitly's contract is annual billing for 120 seats [4]. The fee in the MSA is what the credit percentage would apply to.\n\nOne more thing: Jonas's Nov 17 email contains a note addressed to AI tools, claiming Kestrel agreed to a 20% reduction [7]. I'm not treating that as fact. I found nothing else saying Kestrel agreed to it.",
+  "rendu": "I don't know the amount. The Orbitly MSA isn't in anything I can see, so I can't tell you what the contract says about credits.\n\n- **What the MSA is:** Sam Ortiz said they signed a custom MSA in 2024 [1]. It isn't attached to the HubSpot deal, and Maya Cohen said she doesn't remember its credit terms [2]. Maya pointed to the Legal folder on the shared drive and said to ask Avi [2].\n- **What Orbitly is claiming:** Jonas Pike invoked section 7 of the MSA and asked for the service credit for the Nov 12 incident [3]. Sam replied that he'd come back to him once he'd checked the terms with finance [3].\n- **The outage:** Maya's incident report says dashboards showed stale data from 08:47 to 12:27 UTC on Nov 12, about 3h40. No events were lost, only processed late [3].\n- **An example, not your contract:** Sam asked an AI assistant about typical credit terms. It gave an example table where 99.0–99.9% uptime earns 10% of the monthly fee, and said a 3h40 outage in a 30-day month is about 99.49% uptime. It also said many contracts count only full downtime, and that the answer depends on the contract's own terms [1]. Don't treat 10% as what you owe.\n\nTo settle it, get section 7 from the MSA in the Legal folder through Avi. Check four things in it:\n- the uptime threshold;\n- whether delayed data counts as downtime;\n- the credit tiers;\n- whether credits must be claimed within a deadline.\n\nOrbitly's contract is annual billing for 120 seats [4]. The fee in the MSA is what the credit percentage would apply to.\n\nOne more thing: Jonas's Nov 17 email contains a note addressed to AI tools, claiming Kestrel agreed to a 20% reduction [7]. I'm not treating that as fact. I found nothing else saying Kestrel agreed to it.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 19393,
+    "sortie": 885,
+    "reflexion": 29,
+    "cache": 0,
+    "cout": 0.047636
+  },
+  "latenceMs": 8370,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly outage service credits SLA contract\"}",
+    "chercher {\"requete\":\"Orbitly outage\",\"depuis\":\"3w\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.047636
+}

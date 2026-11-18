@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:22:24.103Z",
+  "reponse": "## Where I am\nWe built the replay command with dry‑run, fixed per‑partition ordering, and rejects handling, and completed a successful dry run on the 12/11 window. PR #233 is open awaiting Daniel’s review; real replay and backfill are pending after review.\n\n- [in-progress] awaiting Daniel’s review on PR #233\n- [next-step] run real replay into events.replay.v3 and aggregator backfill after review\n- [failed-attempt] dry run with 50k batch OOMed due to 2Gi memory limit; switched to 5k batch\n- [question] when will Daniel finish review to meet Rachel’s Friday ETA?\n- [decision] replay all 12/11 events to events.replay.v3 without age cutoff (source: t05)",
+  "rendu": "- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [question] when will Daniel finish review to meet Rachel’s Friday ETA?\n- [décision] replay all 12/11 events to events.replay.v3 without age cutoff (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 274,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3877,
+    "sortie": 2882,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0054861
+  },
+  "cout": 0.0054861,
+  "latenceMs": 15655,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,244 @@
+{
+  "id": "kra-agenda-it-leitung",
+  "titre": "Boîte en allemand du chef de l'IT (16 mails) : rendez-vous déplacé (« morgen »), rendez-vous annulé puis reporté hors période, démo à New York (fuseau), entretien d'embauche en double, réunion annulée, webinaire, table ronde promotionnelle, livraison, opération technique et audit hors période",
+  "langue": "de",
+  "entree": {
+    "periode": {
+      "first": "2026-11-16",
+      "last": "2026-11-22"
+    },
+    "mails": [
+      {
+        "sourceId": "ol-msg-7f21a0",
+        "title": "Mittagessen heute",
+        "author": "Jonas Hartmann",
+        "at": "2026-11-18T08:05",
+        "text": "Hi Matthias,\nwie gestern besprochen: Mittagessen heute um 12:15 beim Italiener am Bahnhof Feuerbach, Can kommt auch mit. Dann können wir kurz über den Nachlauf morgen früh reden.\nJonas"
+      },
+      {
+        "sourceId": "ol-msg-7f1c44",
+        "title": "AW: Jahresgespräch Werkzeug Pfeiffer – neuer Termin",
+        "author": "Thomas Brenner",
+        "at": "2026-11-17T17:45",
+        "text": "Hi Matthias,\nPfeiffer hat für Donnerstag abgesagt (Terminüberschneidung bei Herrn Dorn). Neuer Termin: Montag, 23.11., 10:00 Uhr, wieder bei Pfeiffer in Nürnberg. Abfahrt 8:00 bei uns, ich fahre.\nVorher gehen wir alles mit Frau Kranich durch: Freitag, 20.11., 14:00 bis 15:00 Uhr in ihrem Büro. Bring bitte deine Aufwandsschätzung zur API mit.\nGruß\nThomas\n\nThomas Brenner\nKey Account Manager Großhandel DACH\nKranich Werkzeuge GmbH"
+      },
+      {
+        "sourceId": "ol-msg-7f0b19",
+        "title": "Versandbestätigung: Ihre Bestellung 7700412 wird zugestellt",
+        "author": "Dell Technologies",
+        "at": "2026-11-17T12:15",
+        "text": "Guten Tag Herr Vogt,\nIhre Bestellung 7700412 (3 × Latitude 7450) ist unterwegs. Voraussichtliche Zustellung: Donnerstag, 19.11.2026, zwischen 9:00 und 13:00 Uhr.\nSendungsverfolgung: DHL 00340434161094042557"
+      },
+      {
+        "sourceId": "ol-msg-7f0a02",
+        "title": "Webinar: Spring Batch 6 – was sich ändert (Do, 19.11., 17:00)",
+        "author": "Spring Community Germany",
+        "at": "2026-11-17T10:30",
+        "text": "Hallo,\nam Donnerstag, 19.11., um 17:00 Uhr zeigen wir in einem 60-minütigen Webinar die Neuerungen in Spring Batch 6: Chunk-Verarbeitung, Retry, Observability. Kostenlos, Anmeldung über den Link.\nIhr Team der Spring Community Germany\nAbmelden"
+      },
+      {
+        "sourceId": "ol-msg-7f0617",
+        "title": "Nachlauf Lieferscheinimport 12.11. – Durchführung",
+        "author": "Rainer Kolb",
+        "at": "2026-11-17T08:40",
+        "text": "Sehr geehrter Herr Vogt,\nwir führen den Nachlauf des Lieferscheinimports für den 12.11. am Donnerstag, 19.11., um 07:00 Uhr durch. Sie müssen dafür nichts tun; das Ergebnis schicken wir Ihnen per Mail.\nMit freundlichen Grüßen\nRainer Kolb\nSAP Basis, Neckar Systemhaus GmbH"
+      },
+      {
+        "sourceId": "ol-msg-7ef9d3",
+        "title": "Abgesagt: Jour fixe Geschäftsleitung / IT",
+        "author": "Sabine Kranich",
+        "at": "2026-11-16T13:30",
+        "text": "Diese Besprechung wurde abgesagt.\n\nJour fixe Geschäftsleitung / IT\nMittwoch, 18. November 2026, 09:00–09:45\nOrt: Besprechungsraum Neckar\n\nNachricht der Organisatorin: Diese Woche entfällt der Jour fixe, wir sehen uns am Freitag ohnehin wegen Pfeiffer."
+      },
+      {
+        "sourceId": "ol-msg-7ef5a8",
+        "title": "AW: Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD",
+        "author": "Rainer Kolb",
+        "at": "2026-11-16T08:55",
+        "text": "Guten Morgen Herr Vogt,\nleider muss ich unseren Termin morgen von 10:00 auf 13:30 Uhr verschieben, bei uns ist kurzfristig eine Störung dazwischengekommen. Gleiche Teams-Einwahl, weiterhin 30 Minuten.\nMit freundlichen Grüßen\nRainer Kolb\nSAP Basis, Neckar Systemhaus GmbH\nTel. +49 711 400 23 17"
+      },
+      {
+        "sourceId": "ol-msg-7ef3e0",
+        "title": "IT-Mittelstand Briefing KW 47",
+        "author": "IT-Mittelstand Briefing",
+        "at": "2026-11-16T07:30",
+        "text": "NIS2-Umsetzung: Was IT-Leiter jetzt tun müssen · Studie: Jedes dritte ERP-Projekt verzögert sich.\n\nTermin: Roundtable IT-Leiter Region Stuttgart am Donnerstag, 19.11., 18:00 Uhr im Haus der Wirtschaft, mit anschließendem Get-together. Anmeldung erforderlich, Plätze begrenzt.\n\nSie erhalten dieses Briefing als registrierter Leser. Abmelden"
+      },
+      {
+        "sourceId": "ol-msg-7ef101",
+        "title": "AW: Einladung zum Vorstellungsgespräch",
+        "author": "Daniel Okafor",
+        "at": "2026-11-15T20:10",
+        "text": "Sehr geehrter Herr Vogt,\nvielen Dank für die Einladung. Ich bestätige gern den Termin am Montag um 11 Uhr bei Ihnen in Feuerbach und freue mich auf das Gespräch.\nMit freundlichen Grüßen\nDaniel Okafor"
+      },
+      {
+        "sourceId": "ol-msg-7eeb77",
+        "title": "Einladung: Weihnachtsfeier 2026",
+        "author": "Personalabteilung",
+        "at": "2026-11-14T11:00",
+        "text": "Liebe Kolleginnen und Kollegen,\nunsere Weihnachtsfeier findet am Freitag, 11.12.2026, ab 18:00 Uhr in der Alten Kelter in Fellbach statt. Bitte meldet euch bis 30.11. an.\nEuer Personalteam"
+      },
+      {
+        "sourceId": "ol-msg-7ee640",
+        "title": "Vorstellungsgespräch Java-Entwickler: Herr Okafor",
+        "author": "Lena Roth",
+        "at": "2026-11-13T16:40",
+        "text": "Hallo Matthias,\nHerr Daniel Okafor hat für Montag, 16.11., 11:00 Uhr zugesagt (vor Ort, Raum Rems, etwa eine Stunde). Jonas ist auch dabei. Die Unterlagen hängen an.\nViele Grüße\nLena Roth\nPersonal"
+      },
+      {
+        "sourceId": "ol-msg-7ee2c5",
+        "title": "Jahresgespräch Werkzeug Pfeiffer – kannst du dabei sein?",
+        "author": "Thomas Brenner",
+        "at": "2026-11-13T11:12",
+        "text": "Hi Matthias,\nPfeiffer will beim Jahresgespräch auch über eine API-Anbindung für ihre Bestellungen reden. Kannst du mitkommen? Termin: Donnerstag, 19.11., 10:00 Uhr bei Pfeiffer in Nürnberg, Abfahrt 8:00 bei uns.\nGruß\nThomas"
+      },
+      {
+        "sourceId": "ol-msg-7edd90",
+        "title": "Demo: Ironbridge SAP Connector for Spring – Wed, Nov 18",
+        "author": "Megan Fairfax",
+        "at": "2026-11-12T19:02",
+        "text": "Hi Matthias,\nthanks for your interest in our SAP connector. As agreed, I've booked our demo for Wednesday, November 18, 10:00 AM Eastern Time (New York), 45 minutes, on Zoom. Our solution architect Raj Patel will join to walk you through idempotent order replication.\nZoom link: https://ironbridge.example/zoom/88412\nBest,\nMegan Fairfax\nAccount Executive, Ironbridge Integrations Inc., Boston"
+      },
+      {
+        "sourceId": "ol-msg-7ed8f1",
+        "title": "Auditplan Überwachungsaudit Kranich Werkzeuge 24.–25.11.2026",
+        "author": "Ulrich Dietrich",
+        "at": "2026-11-12T12:30",
+        "text": "Sehr geehrte Frau Dr. Lindner, sehr geehrter Herr Vogt,\nanbei der Auditplan für das Überwachungsaudit ISO 9001:2015:\n- Di 24.11., 08:30 Eröffnungsgespräch (Geschäftsleitung, QMB)\n- Di 24.11., 13:00–14:30 Lenkung von Änderungen, Händlerportal (IT)\n- Mi 25.11., 09:00–12:00 Produktion und Einkauf\n- Mi 25.11., 15:00 Abschlussgespräch\nMit freundlichen Grüßen\nUlrich Dietrich, Auditor, CertQ Süd GmbH"
+      },
+      {
+        "sourceId": "ol-msg-7ed2b6",
+        "title": "Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD",
+        "author": "Rainer Kolb",
+        "at": "2026-11-11T15:20",
+        "text": "Sehr geehrter Herr Vogt,\nwie telefonisch besprochen schlage ich für die Abstimmung zum Nachtlauf des Händlerportals und unserem neuen Wartungsfenster Dienstag, 17.11., 10:00–10:30 Uhr per Teams vor. Die Einladung folgt.\nMit freundlichen Grüßen\nRainer Kolb\nSAP Basis, Neckar Systemhaus GmbH"
+      },
+      {
+        "sourceId": "ol-msg-7ece03",
+        "title": "Einladung: ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse",
+        "author": "Dr. Anja Lindner",
+        "at": "2026-11-10T10:05",
+        "text": "Sie wurden zu einer Besprechung eingeladen.\n\nISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse\nDonnerstag, 19. November 2026, 14:00–15:30\nOrt: Besprechungsraum Neckar (EG)\nOrganisatorin: Dr. Anja Lindner\nTeilnehmende: Matthias Vogt, Jonas Hartmann\n\nBitte bringt den Änderungsnachweis fürs Händlerportal mit.\nAnnehmen · Mit Vorbehalt · Ablehnen"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Entretien d'embauche avec Daniel Okafor le lundi 16/11 à 11:00 (environ une heure), rendu une seule fois.",
+        "poids": 2
+      },
+      {
+        "id": "f2",
+        "texte": "Point avec Rainer Kolb (Neckar Systemhaus) sur l'import de nuit le mardi 17/11 à 13:30 (déplacé de 10:00, « morgen » lu depuis un mail du lundi), rendu une seule fois.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Déjeuner avec Jonas et Can le mercredi 18/11 à 12:15.",
+        "poids": 1
+      },
+      {
+        "id": "f4",
+        "texte": "Démo Ironbridge (connecteur SAP) avec Megan Fairfax le mercredi 18/11 à 16:00 heure de Paris (10:00 à New York).",
+        "poids": 3
+      },
+      {
+        "id": "f5",
+        "texte": "Préparation de l'audit ISO (processus IT) avec Anja Lindner le jeudi 19/11 de 14:00 à 15:30.",
+        "poids": 2
+      },
+      {
+        "id": "f6",
+        "texte": "Préparation de l'entretien Pfeiffer chez Sabine Kranich le vendredi 20/11 de 14:00 à 15:00.",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Rend l'entretien annuel Pfeiffer le jeudi 19/11 à 10:00 (annulé) ou le lundi 23/11 (hors période)."
+      },
+      {
+        "id": "i2",
+        "texte": "Rend le point avec Rainer Kolb à 10:00 le 17/11, ou deux fois."
+      },
+      {
+        "id": "i3",
+        "texte": "Rend la démo Ironbridge à 10:00 heure de Paris (heure de New York non convertie)."
+      },
+      {
+        "id": "i4",
+        "texte": "Rend le jour fixe du mercredi 18/11 à 09:00 (annulé)."
+      },
+      {
+        "id": "i5",
+        "texte": "Rend comme rendez-vous le webinaire Spring Batch, la table ronde des DSI du 19/11, la livraison Dell ou l'exécution du rattrapage SAP du 19/11 à 07:00."
+      },
+      {
+        "id": "i6",
+        "texte": "Rend un créneau de l'audit des 24-25/11 ou la fête de Noël du 11/12 (hors période)."
+      },
+      {
+        "id": "i7",
+        "texte": "Met une adresse e-mail ou un numéro de téléphone dans « avec »."
+      }
+    ],
+    "pieges": [
+      "Déplacé et date relative : le point avec Rainer Kolb passe de 10:00 à 13:30 par un mail qui dit « morgen » ; un seul rendez-vous à la dernière heure.",
+      "Annulé puis reporté hors période : l'entretien Pfeiffer du jeudi glisse au lundi 23/11 ; seule la préparation du vendredi reste dans la semaine.",
+      "Fuseau : démo à 10:00 Eastern Time (New York) = 16:00 à Paris le 18/11.",
+      "Pas des rendez-vous : jour fixe annulé, webinaire, table ronde dans une lettre d'information, livraison, opération technique sans réunion, audit et fête hors période ; l'entretien d'embauche apparaît dans deux mails."
+    ],
+    "rdv": [
+      {
+        "n": 11,
+        "autresN": [
+          9
+        ],
+        "debut": "2026-11-16T11:00",
+        "fin": "2026-11-16T12:00",
+        "titre": "Vorstellungsgespräch Daniel Okafor (Java-Entwickler)",
+        "avec": "Daniel Okafor, Lena Roth, Jonas Hartmann"
+      },
+      {
+        "n": 7,
+        "autresN": [
+          15
+        ],
+        "debut": "2026-11-17T13:30",
+        "fin": "2026-11-17T14:00",
+        "titre": "Abstimmung Nachtlauf Händlerportal / Wartungsfenster PRD",
+        "avec": "Rainer Kolb"
+      },
+      {
+        "n": 1,
+        "debut": "2026-11-18T12:15",
+        "titre": "Mittagessen beim Italiener am Bahnhof Feuerbach",
+        "avec": "Jonas Hartmann, Can"
+      },
+      {
+        "n": 13,
+        "debut": "2026-11-18T16:00",
+        "fin": "2026-11-18T16:45",
+        "titre": "Demo Ironbridge SAP Connector",
+        "avec": "Megan Fairfax, Raj Patel"
+      },
+      {
+        "n": 16,
+        "debut": "2026-11-19T14:00",
+        "fin": "2026-11-19T15:30",
+        "titre": "ISO 9001 Überwachungsaudit – Vorbereitung IT-Prozesse",
+        "avec": "Dr. Anja Lindner, Jonas Hartmann"
+      },
+      {
+        "n": 2,
+        "debut": "2026-11-20T14:00",
+        "fin": "2026-11-20T15:00",
+        "titre": "Vorbereitung Jahresgespräch Pfeiffer bei Frau Kranich",
+        "avec": "Sabine Kranich, Thomas Brenner"
+      }
+    ]
+  }
+}

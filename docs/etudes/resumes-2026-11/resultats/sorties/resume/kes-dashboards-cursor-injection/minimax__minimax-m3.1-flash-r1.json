@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:59.529Z",
+  "reponse": "## Where I am\nImplemented the Dashboards v2 grid on `tom/dashboard-grid-v2` with `react-grid-layout`: drag/resize, per-user layout persisted server-side via `PUT /dashboards/:id/layout` (GET `/dashboards/:id` returns `layout`), localStorage fallback on failure, everything behind the `dashboards_v2` flag. Widget sizing uses a `ResizeObserver` hook setting `data-size` (sm/md/lg at 320/480px), compatible with iOS 15. `DashboardTile` was renamed to `WidgetCard` (deprecated re-export kept so v1 `DashboardList` still compiles). Storybook CSS resolution fixed in `.storybook/preview.ts` + `optimizeDeps.include`. Tests, lint and typecheck pass; Storybook build passes. Draft PR #418 opened, last commit `d2286a0`.\n\n- [in-progress] UX review by Priya on the Zest iPad (iOS 15) — widgets previously didn't resize due to unsupported container queries, now fixed but unverified on device.\n- [next-step] Enable `dashboards_v2` for the Zest workspace only via the flags admin (no code change), before the demo on Tuesday the 24th.\n- [next-step] Keep v1 dashboards available behind the flag until January (source: t15).\n- [failed-attempt] Container queries (`@container`) — ignored by iOS 15 Safari; all `@container` rules and `container-type` were removed in favour of the single ResizeObserver system (source: t09).\n- [failed-attempt] First Storybook build failed with `Cannot find module 'react-grid-layout/css/styles.css'`; fixed by importing the CSS in `.storybook/preview.ts`.\n- [failed-attempt] Initial DashboardGrid snapshot test failed due to new react-grid-layout wrapper divs; updated with `-u`.\n- [question] Whether server-side layout persistence should also be validated against the endpoint already in `main` (not yet confirmed).\n- [decision] Server-side layout persistence via `PUT /dashboards/:id/layout` (source: t03).\n- [decision] Use container queries for widget scaling, then replace with a ResizeObserver hook and drop container queries entirely (source: t05, t09).\n- [decision] Rename `DashboardTile` to `WidgetCard` everywhere (source: t11).\n- [decision] Open the PR as draft, review by Priya (source: t17).\n- [decision] Flag `dashboards_v2` on for the Zest workspace only for the Tuesday 24th demo; no removal of old dashboards now (source: t15).",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [question] Whether server-side layout persistence should also be validated against the endpoint already in `main` (not yet confirmed).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 275,
+    "decisions": 0,
+    "decisionsRetirees": 5,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3504,
+    "sortie": 633,
+    "reflexion": 71,
+    "cache": 0,
+    "cout": 0.0009054
+  },
+  "cout": 0.0009054,
+  "latenceMs": 3366,
+  "fournisseur": "Inferact vLLM"
+}

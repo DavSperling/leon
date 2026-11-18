@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:37:40.657Z",
+  "reponse": "## Ce qui a changé\n\n- La PR #57 d’Hugo, qui corrige la correspondance des stocks par finition, a été fusionnée après tes ajouts ; la synchro de la nuit devait utiliser le correctif. [1][4]\n- Les trois clients concernés par la Saône chêne acceptent une livraison mi-janvier. [9]\n\n## Ce qui reste ouvert\n\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour la TVA **avant jeudi 19 novembre**. [1]\n- Karim a reçu le rapport des 14 écarts et te renverra les chiffres après son comptage physique jeudi matin. [1][7]\n- Ta PR #58 pour le mode dry-run est ouverte ; aucun relecteur n’était désigné à son ouverture. Les tests passent. [1][5]",
+  "rendu": "## Ce qui a changé\n\n- La PR #57 d’Hugo, qui corrige la correspondance des stocks par finition, a été fusionnée après tes ajouts ; la synchro de la nuit devait utiliser le correctif. [1][4]\n- Les trois clients concernés par la Saône chêne acceptent une livraison mi-janvier. [9]\n\n## Ce qui reste ouvert\n\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour la TVA **avant jeudi 19 novembre**. [1]\n- Karim a reçu le rapport des 14 écarts et te renverra les chiffres après son comptage physique jeudi matin. [1][7]\n- Ta PR #58 pour le mode dry-run est ouverte ; aucun relecteur n’était désigné à son ouverture. Les tests passent. [1][5]",
+  "mesures": {
+    "mots": 107,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4715,
+    "sortie": 515,
+    "reflexion": 333,
+    "cache": 1417,
+    "cout": 0.0067676
+  },
+  "cout": 0.0067676,
+  "latenceMs": 15208,
+  "fournisseur": "OpenAI"
+}

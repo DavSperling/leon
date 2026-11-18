@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:28:21.460Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4342,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.009313614
+  },
+  "cout": 0.009313614,
+  "latenceMs": 64640,
+  "fournisseur": "Tencent"
+}

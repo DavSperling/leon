@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:54:03.995Z",
+  "reponse": "## What is still open\n- Tom asked you to split PR #423: the module move apart from the lint/mypy fixes, so he can see the real changes — he'll approve both today [4].\n- The assertion-replay cache is still per process, so with several API pods a replay can land on another pod: it needs Redis before production, which you planned to do today [1].\n\n## What changed\n- Maya approved and merged #418, so signature verification goes out with tonight's staging deploy — in place for the Fernhill walkthrough Thursday 10:00 NY time, with Priya running the demo and you on the call [3][1].\n- #424: Zest Grocers' CSV export (230k rows) times out for their Monday ops review; Tom took it and is moving it to the job queue [5].\n\n## What you did\n- Made the flaky SAML ACS test deterministic by freezing time instead of sleeping, and did the same for the two other timing-based tests, so the auth suite is stable and faster [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors they were hiding: an assertion missing Issuer or Subject now fails validation instead of returning a 500 [1].\n- Split `saml_utils.py` into `saml/{assertions,metadata,bindings}` while keeping the old imports working; full suite green [1].",
+  "rendu": "## What is still open\n- Tom asked you to split PR #423: the module move apart from the lint/mypy fixes, so he can see the real changes — he'll approve both today [4].\n- The assertion-replay cache is still per process, so with several API pods a replay can land on another pod: it needs Redis before production, which you planned to do today [1].\n\n## What changed\n- Maya approved and merged #418, so signature verification goes out with tonight's staging deploy — in place for the Fernhill walkthrough Thursday 10:00 NY time, with Priya running the demo and you on the call [3][1].\n- #424: Zest Grocers' CSV export (230k rows) times out for their Monday ops review; Tom took it and is moving it to the job queue [5].\n\n## What you did\n- Made the flaky SAML ACS test deterministic by freezing time instead of sleeping, and did the same for the two other timing-based tests, so the auth suite is stable and faster [1].\n- Cleared the ruff 0.8 warnings in `kestrel/auth` and the two mypy errors they were hiding: an assertion missing Issuer or Subject now fails validation instead of returning a 500 [1].\n- Split `saml_utils.py` into `saml/{assertions,metadata,bindings}` while keeping the old imports working; full suite green [1].",
+  "mesures": {
+    "mots": 204,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5740,
+    "sortie": 1293,
+    "reflexion": 992,
+    "cache": 0,
+    "cout": 0.0032736
+  },
+  "cout": 0.0032736,
+  "latenceMs": 6416,
+  "fournisseur": "CoreWeave"
+}

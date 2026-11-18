@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:15.318Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [3], and he is the assignee on ticket KES-430 [1]. The internal due date is Nov 27 [1]. The contractual commitment is SSO live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. The ticket is blocked on Fernhill's production IdP metadata [1]. Fernhill's change board meets on the 26th, so the metadata will arrive then at the earliest [6]. Daniel says the swap is a config change he can do the same day [6]. The Notion design doc still lists the owner as TBD, but it is older (Oct 20) [4].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [3], and he is the assignee on ticket KES-430 [1]. The internal due date is Nov 27 [1]. The contractual commitment is SSO live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. The ticket is blocked on Fernhill's production IdP metadata [1]. Fernhill's change board meets on the 26th, so the metadata will arrive then at the earliest [6]. Daniel says the swap is a config change he can do the same day [6]. The Notion design doc still lists the owner as TBD, but it is older (Oct 20) [4].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1915,
+    "sortie": 222,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00605
+  },
+  "cout": 0.00605,
+  "latenceMs": 2097,
+  "fournisseur": "Amazon Bedrock"
+}

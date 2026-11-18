@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-haiku-5.5@langue@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:32:18.009Z",
+  "reponse": "## Où j'en suis\nThe staging RDS module now targets PostgreSQL 17.2 with blue/green update, and the AWS provider is pinned to `~> 5.82.0` (no v6). Three commits are in draft PR kestrel-analytics/infra#57. Only `terraform plan` has been run: staging shows 1 to add and 1 to change, and prod is prepared behind `pg17_enabled = false` with no changes. Nothing has been applied, and the database was only read through a single `select` on extensions.\n\n- [en-cours] Draft PR kestrel-analytics/infra#57 is open and awaiting review, with the pg_partman and dbt lock notes in its description.\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging: `ALTER EXTENSION` on 16.4, then check `run_maintenance_proc()` on `events_raw` and `events_daily`.\n- [prochaine-étape] Pick a production window that avoids the dbt lock on `events_daily` (01:00–03:30 UTC), after Maya signs off.\n- [essai-raté] `terraform init` failed on the lock file. `init -upgrade` then selected aws v6.4.0, which produced 37 changes unrelated to RDS, so it was rejected.\n- [question] Does pg_partman 4.7.4 really have to be upgraded to 5.x before the blue/green switchover? This is the agent's claim and has not been verified.\n- [question] Maya's sign-off on the whole change is still pending.\n- [décision] Pin the AWS provider to 5.82 and keep v6 out of this PR (source: t04).\n- [décision] Only plan, no apply (source: t01).\n- [décision] Keep prod disabled (source: t12).\n- [décision] Record the pg_partman upgrade as a todo and run nothing against the database (source: t10).\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (source: t14).",
+  "rendu": "## Où j'en suis\nThe staging RDS module now targets PostgreSQL 17.2 with blue/green update, and the AWS provider is pinned to `~> 5.82.0` (no v6). Three commits are in draft PR kestrel-analytics/infra#57. Only `terraform plan` has been run: staging shows 1 to add and 1 to change, and prod is prepared behind `pg17_enabled = false` with no changes. Nothing has been applied, and the database was only read through a single `select` on extensions.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR kestrel-analytics/infra#57 is open and awaiting review, with the pg_partman and dbt lock notes in its description.\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging: `ALTER EXTENSION` on 16.4, then check `run_maintenance_proc()` on `events_raw` and `events_daily`.\n- [prochaine-étape] Pick a production window that avoids the dbt lock on `events_daily` (01:00–03:30 UTC), after Maya signs off.\n- [essai-raté] `terraform init` failed on the lock file. `init -upgrade` then selected aws v6.4.0, which produced 37 changes unrelated to RDS, so it was rejected.\n- [question] Does pg_partman 4.7.4 really have to be upgraded to 5.x before the blue/green switchover? This is the agent's claim and has not been verified.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1314,
+    "decisions": 0,
+    "decisionsRetirees": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5474,
+    "sortie": 1412,
+    "reflexion": 758,
+    "cache": 0,
+    "cout": 0.0012534
+  },
+  "cout": 0.0012534,
+  "latenceMs": 6737,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

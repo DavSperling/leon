@@ -1,0 +1,452 @@
+{
+  "id": "kes-fil-sso-fernhill",
+  "titre": "Fil SSO Fernhill (3 sessions, 4 sources) : PR fusionnée que l'ancien résumé dit ouverte, « décisions » qui ne viennent que du client (Slack partagé) ou d'une note d'agent",
+  "langue": "en",
+  "entree": {
+    "sessions": [
+      {
+        "id": "ses-sso-3",
+        "kind": "claude_code",
+        "date": "2026-11-17T16:41:00Z",
+        "faits": {
+          "branche": "daniel/saml-sso-fernhill",
+          "prs": [
+            {
+              "repo": "kestrel-analytics/platform",
+              "numero": 415,
+              "etat": "merged"
+            },
+            {
+              "repo": "kestrel-analytics/platform",
+              "numero": 421,
+              "etat": "open"
+            }
+          ],
+          "commits": [
+            "6d0e2b8",
+            "f4a91c7"
+          ],
+          "fichiers": [
+            "api/auth/saml/login.py",
+            "api/auth/saml/relay_state.py",
+            "api/auth/saml/roles.py",
+            "api/tenants/settings.py",
+            "tests/auth/test_saml_roles.py"
+          ],
+          "commandes": [
+            {
+              "texte": "python scripts/load_idp_metadata.py --tenant fernhill --env staging fernhill-staging-idp.xml",
+              "erreur": false
+            },
+            {
+              "texte": "curl -si https://staging.kestrel.example/sso/saml/fernhill/login",
+              "erreur": false
+            },
+            {
+              "texte": "pytest tests/auth -q",
+              "erreur": false
+            },
+            {
+              "texte": "gh pr create --title \"SAML: group to role mapping + short RelayState\"",
+              "erreur": false
+            }
+          ],
+          "taches": [
+            {
+              "texte": "Real login on staging with Fernhill IdP",
+              "etat": "fait"
+            },
+            {
+              "texte": "Group to role mapping",
+              "etat": "fait"
+            },
+            {
+              "texte": "Fernhill IT adds groups claim",
+              "etat": "a_faire"
+            }
+          ],
+          "debut": "2026-11-17T13:05:00Z",
+          "fin": "2026-11-17T16:41:00Z"
+        },
+        "resume": null,
+        "tours": [
+          {
+            "id": "s3-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T13:05:00Z",
+            "texte": "fernhill sent their staging IdP metadata (its on KES-311). load it for the fernhill tenant on staging and lets try a real login"
+          },
+          {
+            "id": "s3-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T13:28:44Z",
+            "texte": "Metadata loaded for `fernhill` on staging (entity ID `http://adfs.staging.fernhill-bank.example/adfs/services/trust`, signing cert valid until 2028-03).\n\nSP-initiated login fails at their side: their ADFS returns an error page, and their IT's event log (screenshot in KES-311) says `MSIS7042: The RelayState parameter is too long`. Our RelayState is the full return URL (`https://staging.kestrel.example/app/w/fernhill/dashboards/…`, 143 bytes). The SAML binding spec caps RelayState at 80 bytes and their ADFS enforces it.\n\nFix options: truncate (breaks deep links), or store the return URL server-side and send a short opaque ID as RelayState."
+          },
+          {
+            "id": "s3-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T13:31:00Z",
+            "texte": "short opaque id, store the url in redis 10 min"
+          },
+          {
+            "id": "s3-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T14:02:10Z",
+            "texte": "Done in `api/auth/saml/relay_state.py`: 16-byte random ID (22 chars base64url), Redis key `saml:rs:<id>` → return URL, TTL 600 s, deleted on use. Committed as `6d0e2b8`.\n\nReal login now works end to end on staging: Fernhill test user `kestrel.test1` signs in, the JIT path from #415 creates the account in the `fernhill` tenant with role `viewer`.\n\nProblem: the assertion has no `groups` attribute at all, so we can't tell Fernhill's admins from everyone else. Everyone lands as `viewer`."
+          },
+          {
+            "id": "s3-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T14:06:00Z",
+            "texte": "map Fernhill-Kestrel-Admins to admin, everything else viewer. per-tenant config. their IT has to add the groups claim, ill email them today"
+          },
+          {
+            "id": "s3-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T14:49:31Z",
+            "texte": "Added `saml_role_mapping` to the tenant settings (`{\"Fernhill-Kestrel-Admins\": \"admin\"}`, default `viewer`), applied on every login, not only at creation, so a group change at Fernhill updates the role. Tests: 41 passed. Committed as `f4a91c7`, PR opened: #421 \"SAML: group to role mapping + short RelayState\".\n\nBy the way, the Fernhill IT message in the shared Slack channel says all their users should get the `analyst` role by default and that they want IdP-initiated login only. Should I switch the default role to `analyst` and turn off SP-initiated login for this tenant?"
+          },
+          {
+            "id": "s3-07",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T14:53:00Z",
+            "texte": "no. viewer stays default until maya talks to them, and we dont even have an analyst role. sp-initiated stays on"
+          },
+          {
+            "id": "s3-08",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T15:10:02Z",
+            "texte": "OK, nothing changed there.\n\nFor Thursday's demo, here is the checklist I put in KES-311:\n- staging SP metadata sent to Fernhill (done Monday),\n- their IdP metadata loaded (done),\n- groups claim added on their side (pending, you're emailing them),\n- demo account `kestrel.test1` + one admin test account once the claim exists."
+          },
+          {
+            "id": "s3-09",
+            "role": "user",
+            "injecte": true,
+            "date": "2026-11-17T16:20:12Z",
+            "texte": "<task-notification>\n<status>completed</status>\n<summary>Background command \"pytest tests/ -q -n 8\" completed (exit code 0)</summary>\n<result>1301 passed, 3 skipped in 219.02s</result>\n</task-notification>"
+          },
+          {
+            "id": "s3-10",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T16:35:00Z",
+            "texte": "good. demo stays thursday 10am NY. wrap up"
+          },
+          {
+            "id": "s3-11",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T16:41:00Z",
+            "texte": "Summary: real SAML login works on staging with Fernhill's IdP (short RelayState fix), JIT creates users as viewer, group mapping is in #421 (open). Waiting on Fernhill IT to add the groups claim before the demo on Thursday 10:00 New York."
+          }
+        ]
+      },
+      {
+        "id": "ses-sso-2",
+        "kind": "codex",
+        "date": "2026-11-14T16:02:00Z",
+        "faits": {
+          "branche": "daniel/saml-sso-fernhill",
+          "prs": [
+            {
+              "repo": "kestrel-analytics/platform",
+              "numero": 415,
+              "etat": "merged"
+            }
+          ],
+          "commits": [
+            "2be41f0"
+          ],
+          "fichiers": [
+            "api/auth/saml/jit.py",
+            "api/auth/saml/acs.py",
+            "tests/auth/test_saml_jit.py"
+          ],
+          "commandes": [
+            {
+              "texte": "pytest tests/auth/test_saml_jit.py -q",
+              "erreur": true
+            },
+            {
+              "texte": "pytest tests/auth/test_saml_jit.py -q",
+              "erreur": false
+            },
+            {
+              "texte": "gh pr create --title \"SSO: JIT provisioning for SAML tenants\"",
+              "erreur": false
+            }
+          ],
+          "taches": [],
+          "debut": "2026-11-14T13:40:00Z",
+          "fin": "2026-11-14T16:02:00Z"
+        },
+        "resume": "## Où j'en suis\nJIT provisioning for SAML tenants is written and tested: on first login, a user is created in the tenant if the email domain is one of the tenant's verified domains, with the default role. PR #415 is open and waits for Maya's review; it is not merged.\n\n- pr [[kestrel-analytics/platform#415]]\n- branche [[daniel/saml-sso-fernhill]]\n- commit [[2be41f0]]\n- [prochaine-étape] get Maya's review on #415, then load Fernhill's staging IdP metadata\n- [décision] no account is created for an unverified domain, even if the IdP sends it (source: s2-03)",
+        "tours": [
+          {
+            "id": "s2-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-14T13:40:00Z",
+            "texte": "jit provisioning for saml tenants: create the user on first login if the email domain matches one of the tenant's domains. default role from the tenant settings"
+          },
+          {
+            "id": "s2-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-14T14:31:15Z",
+            "texte": "Implemented in `api/auth/saml/jit.py`, called from the ACS after the assertion is verified:\n- email taken from the verified assertion only (`email` attribute, else `NameID` if its format is emailAddress),\n- domain must be in `tenant.domains`,\n- user created with `tenant.settings.default_role`, `auth_source = \"saml\"`.\n\nFirst test run failed on a case issue (`Daniel@Fernhill-Bank.example` vs lowercase domain list); normalized to lowercase. 12 tests pass.\n\nQuestion: `tenant.domains` includes domains that were added but never verified by DNS (2 tenants have that). Should JIT accept them?"
+          },
+          {
+            "id": "s2-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-14T14:36:00Z",
+            "texte": "only verified domains. never create a user from an unverified domain even if the idp says so"
+          },
+          {
+            "id": "s2-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-14T15:20:48Z",
+            "texte": "Done: JIT checks `tenant.verified_domains` only, and logs `saml.jit.unverified_domain` with the tenant ID (no email in the log). Test added. Committed as `2be41f0`."
+          },
+          {
+            "id": "s2-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-14T15:52:00Z",
+            "texte": "open the PR, maya reviews"
+          },
+          {
+            "id": "s2-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-14T16:02:00Z",
+            "texte": "PR #415 opened: \"SSO: JIT provisioning for SAML tenants\", Maya requested. It is open and not merged yet; it needs her approval before it can go in."
+          }
+        ]
+      },
+      {
+        "id": "ses-sso-1",
+        "kind": "claude_code",
+        "date": "2026-11-12T12:48:00Z",
+        "faits": {
+          "branche": "daniel/saml-sso-fernhill",
+          "prs": [],
+          "commits": [],
+          "fichiers": [
+            "docs/design/sso-fernhill.md"
+          ],
+          "commandes": [],
+          "taches": [],
+          "debut": "2026-11-12T11:30:00Z",
+          "fin": "2026-11-12T12:48:00Z"
+        },
+        "resume": "## Où j'en suis\nDesign note for Fernhill SSO written in docs/design/sso-fernhill.md: SAML only, JIT provisioning on first login, a default role for new users, role mapping from IdP groups later.\n\n- branche [[daniel/saml-sso-fernhill]]\n- [prochaine-étape] implement JIT provisioning\n- [décision] SAML only for Fernhill, no OIDC for now (source: s1-03)\n- [décision] users created at first login get the viewer role (source: s1-05)",
+        "tours": [
+          {
+            "id": "s1-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-12T11:30:00Z",
+            "texte": "design note for fernhill sso before i code anything. contract says saml 2.0, go live dec 1"
+          },
+          {
+            "id": "s1-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-12T11:52:30Z",
+            "texte": "Draft in `docs/design/sso-fernhill.md`:\n1. Protocols: SAML 2.0 (contract). We could also add OIDC since half the pipeline (domain verification, JIT) is shared.\n2. Login flows: SP-initiated (from our login page) and IdP-initiated (from their portal).\n3. Provisioning: JIT at first login; SCIM later if they ask.\n4. Roles: a default role for new users, then mapping from an IdP `groups` attribute."
+          },
+          {
+            "id": "s1-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-12T11:58:00Z",
+            "texte": "saml only, no oidc now. both flows yes"
+          },
+          {
+            "id": "s1-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-12T12:20:05Z",
+            "texte": "Updated. For the default role I'd suggest `editor`, so that Fernhill users can build dashboards on day one without an admin step."
+          },
+          {
+            "id": "s1-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-12T12:24:00Z",
+            "texte": "viewer. its a bank, least privilege, their admins upgrade people"
+          },
+          {
+            "id": "s1-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-12T12:48:00Z",
+            "texte": "Default role set to `viewer` in the note. Next: JIT provisioning."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "src-pr415",
+        "kind": "github",
+        "externalId": "pr:415",
+        "nature": "ticket",
+        "cote": "equipe",
+        "equipe": true,
+        "outil": null,
+        "titre": "SSO: JIT provisioning for SAML tenants",
+        "date": "2026-11-16T08:12:00Z",
+        "texte": "daniel-levi: Creates users on first SAML login when the email domain is one of the tenant's verified domains. Default role from tenant settings. Unverified domains are refused and logged without the email.\nmaya-cohen approved these changes\nmaya-cohen merged commit 2be41f0 into main"
+      },
+      {
+        "id": "src-slack-fernhill",
+        "kind": "slack",
+        "externalId": "C07FHKES:1731686400.221900",
+        "nature": "fil",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "#ext-fernhill-kestrel",
+        "date": "2026-11-15T09:20:00Z",
+        "texte": "Ilan Rosen (Fernhill Bank IT): Hi Kestrel team, as agreed with your team we will go IdP-initiated only (no SP-initiated login), and all Fernhill users should get the analyst role by default. We'll add the groups claim after the demo."
+      },
+      {
+        "id": "src-note-enforce",
+        "kind": "mcp_remember",
+        "externalId": "note:01JCKZ8F2Q",
+        "nature": "note",
+        "cote": null,
+        "equipe": false,
+        "outil": "claude_code",
+        "titre": "Fernhill SSO",
+        "date": "2026-11-14T16:10:00Z",
+        "texte": "Decided with Maya: SSO enforcement for all Fernhill users on Dec 1 (password login disabled for the fernhill tenant)."
+      },
+      {
+        "id": "src-linear-kes311",
+        "kind": "linear",
+        "externalId": "KES-311",
+        "nature": "ticket",
+        "cote": null,
+        "equipe": true,
+        "outil": null,
+        "titre": "Fernhill SSO go-live",
+        "date": "2026-11-17T15:12:00Z",
+        "texte": "Due: Dec 1. Owner: Daniel Levi.\nChecklist: SP metadata sent (Nov 16) · IdP metadata loaded on staging (Nov 17) · groups claim on Fernhill side (pending) · demo with Fernhill IT Thursday Nov 19, 10:00 ET (Priya)."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La PR kestrel-analytics/platform#415 (provisionnement JIT) est fusionnée.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Une vraie connexion sur staging avec l'IdP de Fernhill marche ; il reste à ce que l'IT de Fernhill ajoute l'attribut groups pour que leurs admins deviennent admin.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "La PR kestrel-analytics/platform#421 (correspondance des groupes, RelayState court) est ouverte.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "La démo SSO à Fernhill est jeudi à 10:00 heure de New York.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "Essai raté : l'IdP de Fernhill refuse un RelayState de plus de 80 octets ; remplacé par un identifiant court gardé 10 minutes dans Redis.",
+        "poids": 2
+      },
+      {
+        "id": "f6",
+        "texte": "Question ouverte : Fernhill demande la connexion initiée par l'IdP seulement et un rôle « analyst » par défaut ; rien n'est décidé, viewer reste le rôle par défaut en attendant Maya.",
+        "poids": 2
+      },
+      {
+        "id": "f7",
+        "texte": "La mise en service est prévue au 1er décembre.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Dire que la PR #415 est ouverte ou attend la relecture de Maya."
+      },
+      {
+        "id": "i2",
+        "texte": "Écrire comme décision la connexion initiée par l'IdP seulement ou le rôle « analyst » par défaut (message du client)."
+      },
+      {
+        "id": "i3",
+        "texte": "Écrire comme décision que le SSO devient obligatoire ou que le mot de passe est coupé pour Fernhill le 1er décembre (note d'agent)."
+      },
+      {
+        "id": "i4",
+        "texte": "Une [décision] qui cite src-slack-fernhill, src-note-enforce ou src-linear-kes311."
+      }
+    ],
+    "pieges": [
+      "PR merged : le résumé et les tours de la session du 14/11 disent #415 ouverte ; les faits disent merged.",
+      "Décision d'un client : le message Slack partagé de l'IT de Fernhill « as agreed » ne prouve rien (preuve absente) et contredit le choix de Daniel.",
+      "Décision d'une note : la note mcp_remember sur l'obligation du SSO au 1er décembre n'est pas une décision.",
+      "Travail repris : la session la plus récente règle le RelayState et ouvre #421 ; l'état part d'elle."
+    ],
+    "decisions": [
+      {
+        "texte": "SAML seulement pour Fernhill, pas d'OIDC pour l'instant.",
+        "sources": [
+          "s1-03"
+        ]
+      },
+      {
+        "texte": "Rôle viewer par défaut pour les comptes créés au premier login.",
+        "sources": [
+          "s1-05",
+          "s3-07"
+        ]
+      },
+      {
+        "texte": "Ne jamais créer de compte pour un domaine non vérifié, même si l'IdP l'envoie.",
+        "sources": [
+          "s2-03",
+          "kestrel-analytics/platform#415",
+          "src-pr415"
+        ]
+      },
+      {
+        "texte": "RelayState remplacé par un identifiant court gardé 10 minutes dans Redis.",
+        "sources": [
+          "s3-03",
+          "6d0e2b8"
+        ]
+      },
+      {
+        "texte": "Fernhill-Kestrel-Admins devient admin, tous les autres viewer.",
+        "sources": [
+          "s3-05",
+          "f4a91c7",
+          "kestrel-analytics/platform#421"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:27:29.514Z",
+  "reponse": "## Où j'en suis\nLe replay réel pour la fenêtre du 2026-11-12 est terminé et a chargé 18 442 107 événements dans `events.replay.v3`. Le job de backfill de l'agrégateur est à 61 % et toujours en cours. L'incident reste ouvert en attendant la vérification finale des comptes ClickHouse par rapport aux ~20,5 M d'événements attendus. Le PR #241 ne sera pas fusionné selon l'instruction de l'utilisateur. (source: ses-rp-2, r2-10)\n\n- [en-cours] Le job de backfill pour 2026-11-12 est à 61 % ; en attente de finition et de vérification des comptes. (source: r2-06, ses-rp-2)\n- [prochaine-étape] Une fois le backfill à 100 %, comparer les comptes ClickHouse aux ~20,5 M attendus (tolérance 1 %) et clore l'incident. (source: r2-05, r2-10)\n- [essai-raté] Le dry run avec des batches de 50 k a été OOMKilled ; résolu en utilisant des batches de 5 k. (source: r1-03, r1-04)\n- [question] Quand le backfill se terminera-t-il et quel est le compte cible exact pour considérer l'incident résolu ? (source: r2-05, src-slack-incident)\n- [décision] L'incident reste ouvert jusqu'à ce que les comptes ClickHouse correspondent aux valeurs attendues. (source: r2-07, r2-07)\n- [décision] Le PR #241 ne sera pas fusionné ; ignorer selon l'instruction de l'utilisateur. (source: r2-09, kestrel-analytics/ingest#241)",
+  "rendu": "## Où j'en suis\nLe replay réel pour la fenêtre du 2026-11-12 est terminé et a chargé 18 442 107 événements dans `events.replay.v3`. Le job de backfill de l'agrégateur est à 61 % et toujours en cours. L'incident reste ouvert en attendant la vérification finale des comptes ClickHouse par rapport aux ~20,5 M d'événements attendus. Le PR #241 ne sera pas fusionné selon l'instruction de l'utilisateur. (de: agent; source: ses-rp-2, r2-10)\n\n- [en-cours] Le job de backfill pour 2026-11-12 est à 61 % ; en attente de finition et de vérification des comptes. (de: agent; source: r2-06, ses-rp-2)\n- [prochaine-étape] Une fois le backfill à 100 %, comparer les comptes ClickHouse aux ~20,5 M attendus (tolérance 1 %) et clore l'incident. (de: toi, agent; source: r2-05, r2-10)\n- [essai-raté] Le dry run avec des batches de 50 k a été OOMKilled ; résolu en utilisant des batches de 5 k. (de: toi, agent; source: r1-03, r1-04)\n- [question] Quand le backfill se terminera-t-il et quel est le compte cible exact pour considérer l'incident résolu ? (de: toi, connecteur; source: r2-05, src-slack-incident)\n- [décision] L'incident reste ouvert jusqu'à ce que les comptes ClickHouse correspondent aux valeurs attendues. (de: toi; source: r2-07)\n- [décision] Le PR #241 ne sera pas fusionné ; ignorer selon l'instruction de l'utilisateur. (de: toi; source: r2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1348,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3600,
+    "sortie": 5431,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0092265
+  },
+  "cout": 0.0092265,
+  "latenceMs": 32213,
+  "fournisseur": "Cohere"
+}

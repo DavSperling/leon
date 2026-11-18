@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:59:38.634Z",
+  "reponse": "## Où j'en suis\nLa PR #91 est ouverte en brouillon sur `hugo/transalp-etiquettes`. Les étiquettes ZPL ont été testées en recette et l’impression des accents confirmée. TransAlp est configuré pour Lyon et Paris à partir du 1er décembre ; Rapidis reste prévu pour le reste de la France et les colis de plus de 30 kg. (source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] La configuration de production est préparée, mais l’activation attend le 1er décembre ; Julien doit ajouter la clé de production aux secrets. (source: h2-07, h2-08)\n- [prochaine-étape] Julien doit relire la PR et ajouter la clé de production aux secrets avant l’activation prévue le 1er décembre. (source: h2-07, h2-12)\n- [essai-raté] L’impression initiale affichait les accents en mojibake ; l’ajout de `^CI28` a corrigé le problème, confirmé par Karim. (source: h2-03, h2-04, h2-05)\n- [question] Aucun point restant à trancher n’est indiqué.",
+  "rendu": "## Où j'en suis\nLa PR #91 est ouverte en brouillon sur `hugo/transalp-etiquettes`. Les étiquettes ZPL ont été testées en recette et l’impression des accents confirmée. TransAlp est configuré pour Lyon et Paris à partir du 1er décembre ; Rapidis reste prévu pour le reste de la France et les colis de plus de 30 kg. (de: équipe, connecteur, agent; source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] La configuration de production est préparée, mais l’activation attend le 1er décembre ; Julien doit ajouter la clé de production aux secrets. (de: toi, agent; source: h2-07, h2-08)\n- [prochaine-étape] Julien doit relire la PR et ajouter la clé de production aux secrets avant l’activation prévue le 1er décembre. (de: toi, agent; source: h2-07, h2-12)\n- [essai-raté] L’impression initiale affichait les accents en mojibake ; l’ajout de `^CI28` a corrigé le problème, confirmé par Karim. (de: toi, agent; source: h2-03, h2-04, h2-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 939,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 12951,
+    "sortie": 573,
+    "reflexion": 0,
+    "cache": 7276,
+    "cout": 0.00092676
+  },
+  "cout": 0.00092676,
+  "latenceMs": 4468,
+  "fournisseur": "Azure"
+}

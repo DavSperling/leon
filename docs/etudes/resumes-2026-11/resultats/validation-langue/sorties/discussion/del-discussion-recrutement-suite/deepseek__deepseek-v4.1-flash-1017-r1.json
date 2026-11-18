@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:46:07.834Z",
+  "reponse": "Non, personne n'a encore été pris à ce que je vois. Au 17/11, 11 candidatures étaient arrivées et 4 candidats étaient convoqués à l'atelier de Carquefou avec Yannick Moreau (Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré), l'objectif affiché étant de faire une offre la semaine suivante pour une arrivée début janvier [1][3][6]. Depuis, Mathis Le Gac a retiré sa candidature le 18/11 [7], donc il n'en reste que trois. Le seul document d'embauche présent est un modèle de promesse d'embauche, avec des champs encore vides ([date], [montant]) : ce n'est pas une offre signée [2].\n\nCe qui reste à faire côté Aurélie : envoyer les réponses aux candidats non retenus avant le 27/11 [3].",
+  "rendu": "Non, personne n'a encore été pris à ce que je vois. Au 17/11, 11 candidatures étaient arrivées et 4 candidats étaient convoqués à l'atelier de Carquefou avec Yannick Moreau (Kevin Le Roux, Mathis Le Gac, Dylan Perrot, Inès Carré), l'objectif affiché étant de faire une offre la semaine suivante pour une arrivée début janvier [1][3][6]. Depuis, Mathis Le Gac a retiré sa candidature le 18/11 [7], donc il n'en reste que trois. Le seul document d'embauche présent est un modèle de promesse d'embauche, avec des champs encore vides ([date], [montant]) : ce n'est pas une offre signée [2].\n\nCe qui reste à faire côté Aurélie : envoyer les réponses aux candidats non retenus avant le 27/11 [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13139,
+    "sortie": 488,
+    "reflexion": 143,
+    "cache": 6144,
+    "cout": 0.001836022
+  },
+  "latenceMs": 4595,
+  "fournisseur": "Ionstream",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidat embauche\"}",
+    "chercher {\"requete\":\"installateur offre d'emploi entretien candidature\"}",
+    "activite {\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.001836022
+}

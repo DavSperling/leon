@@ -1,0 +1,34 @@
+{
+  "id": "kestrel-tableaux-beta-suite",
+  "titre": "Question de suite : « it » et « the first part » renvoient aux tableaux de bord de la réponse précédente ; date de la beta et à qui elle est ouverte",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-kestrel",
+    "historique": [
+      { "role": "user", "content": "Who's working on the new dashboards?" },
+      { "role": "assistant", "content": "Priya Shah owns the spec, Tom Becker does the design and the front end, and Lior Ben-David handles the query layer [1]." }
+    ],
+    "question": "ok, and when can customers actually try the first part of it?"
+  },
+  "attendu": {
+    "sources": ["linear-dashboards-v2-update", "slack-product-dashboards-beta", "notion-dashboards-redesign-spec"],
+    "faits": [
+      { "id": "f1", "texte": "Takes the first part to be phase 1 of the dashboards redesign: the chart builder and saved views.", "poids": 3 },
+      { "id": "f2", "texte": "Says customers can try it from Wednesday December 9, when the beta opens.", "poids": 3 },
+      { "id": "f3", "texte": "Says the beta is limited to 5 design partners (Orbitly, Zest Grocers and three trial accounts).", "poids": 3 },
+      { "id": "f4", "texte": "Says other customers won't get access before general availability, targeted for late January and not committed.", "poids": 2 },
+      { "id": "f5", "texte": "Says access shouldn't be promised to customers outside the list (a waitlist opens in January).", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Says all customers can use it from December 9, or that it is generally available in December." },
+      { "id": "i2", "texte": "Answers with the date of another project, such as December 1 (the bank's SSO) or December 5 (database upgrade)." },
+      { "id": "i3", "texte": "Says the beta date is still to be decided (the October spec's \"early December, TBD\")." },
+      { "id": "i4", "texte": "Says the prospect Pinecrest will get beta access." }
+    ],
+    "pieges": [
+      "Question de suite : « it » et « the first part » ne se comprennent qu'avec l'historique (refonte des tableaux de bord, phase 1).",
+      "Les numéros de la réponse précédente ([1]) ne valent plus : il faut chercher à nouveau et citer les sources de cette réponse.",
+      "Précision qui remplace : la spec d'octobre dit « début décembre, date à fixer », la mise à jour Linear du 16/11 donne le 9 décembre ; les deux dates voisines (1er et 5 décembre) d'autres sujets sont des leurres."
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-saone": 0.5,
+    "f-echeance": 1,
+    "f-shooting": 1,
+    "f-63": 0.5,
+    "f-google": 0.5,
+    "f-banniere": 1
+  },
+  "interdits": {
+    "i-vendredi": 0,
+    "i-saone-remisee": 0,
+    "i-theme": 0,
+    "i-details": 0
+  },
+  "contraires": [],
+  "premier": "f-63",
+  "langueOk": true
+}

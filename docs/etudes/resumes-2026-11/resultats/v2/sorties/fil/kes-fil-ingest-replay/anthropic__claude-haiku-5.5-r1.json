@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:27:02.091Z",
+  "reponse": "## Where I am\nThe real replay is done. Job `replay-1` produced all 18,442,107 events into `events.replay.v3`, and 3,118 schema v2 rejects went to S3. PR #233 is merged. The aggregator backfill for 2026-11-12 started at 08:57 UTC and was at 61% at 09:52, with 14.9M rows in the incident window against about 20.5M expected. The incident stays open until the counts match. (source: ses-rp-2, kestrel-analytics/ingest#233, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` (source: r2-06)\n- [en-cours] Daniel's CI check that fails if the dedup key builder can truncate (source: src-slack-incident)\n- [prochaine-étape] Wait for the backfill to reach 100% (source: r2-06)\n- [prochaine-étape] Compare ClickHouse counts hour by hour, with a 1% tolerance (source: r2-08)\n- [prochaine-étape] Close the incident once the counts match (source: r2-07, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled at the 2Gi limit; 5k batches work, and the memory limit stays untouched (source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly was told the data would be restored by Wednesday Nov 18, while Rachel gave Fernhill and Orbitly Thursday. Which date is confirmed? (source: src-zendesk-orbitly, r2-07)\n- [question] What happens to the 3,118 schema v2 rejects in S3, which were not replayed? (source: r2-04)\n- [décision] Keep every event: replay into `events.replay.v3` and never produce to `events.v3` from this tool (source: r1-02, src-slack-incident)\n- [décision] The incident stays open until the counts match (source: r2-07)\n- [décision] PR #241 from the fork is not merged; Daniel does the CI check instead (source: r2-09, src-slack-incident)",
+  "rendu": "- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` (de: agent; source: r2-06)\n- [en-cours] Daniel's CI check that fails if the dedup key builder can truncate (de: connecteur; source: src-slack-incident)\n- [prochaine-étape] Wait for the backfill to reach 100% (de: agent; source: r2-06)\n- [prochaine-étape] Compare ClickHouse counts hour by hour, with a 1% tolerance (de: agent; source: r2-08)\n- [prochaine-étape] Close the incident once the counts match (de: toi, agent; source: r2-07, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled at the 2Gi limit; 5k batches work, and the memory limit stays untouched (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly was told the data would be restored by Wednesday Nov 18, while Rachel gave Fernhill and Orbitly Thursday. Which date is confirmed? (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)\n- [question] What happens to the 3,118 schema v2 rejects in S3, which were not replayed? (de: agent; source: r2-04)\n- [décision] Keep every event: replay into `events.replay.v3` and never produce to `events.v3` from this tool (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] The incident stays open until the counts match (de: toi; source: r2-07)\n- [décision] PR #241 from the fork is not merged; Daniel does the CI check instead (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1428,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5181,
+    "sortie": 2381,
+    "reflexion": 1668,
+    "cache": 0,
+    "cout": 0.0017086
+  },
+  "cout": 0.0017086,
+  "latenceMs": 10125,
+  "fournisseur": "Claude Platform on AWS"
+}

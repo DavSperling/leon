@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:22:03.684Z",
+  "reponse": "## Où j'en suis\nBuilt `cmd/replay` on branch `lior/replay-12-11` to re-ingest the 12/11 incident window (14:10–17:40 UTC) from the raw S3 archive: archive reader with per-partition ordering, dedup check, counters, rejects file, and a topic allowlist. A dry run on the real archive (`replay-dryrun-2`, 19m42s) found 18,442,107 events to replay into `events.replay.v3` and 3,118 schema-v2 lines routed to the rejects file. PR #233 is open for review; the real replay and the aggregator backfill have not been run.\n\n- [en-cours] real replay into `events.replay.v3` not started; aggregator `--backfill` for 2026-11-12 pending\n- [prochaine-étape] once Daniel has reviewed #233, run the real replay, then the aggregator backfill\n- [essai-raté] `--batch 50000` OOMKilled at the 2Gi limit; re-ran at 5k batch, 310 MiB peak\n- [décision] no age cutoff, replay everything into `events.replay.v3`, never produce directly to `events.v3` (source: t05)\n- [décision] use batch 5k and leave the namespace memory limit untouched (source: t13)\n- [décision] write skipped malformed lines to a rejects file instead of skipping silently (source: t15)",
+  "rendu": "## Où j'en suis\nBuilt `cmd/replay` on branch `lior/replay-12-11` to re-ingest the 12/11 incident window (14:10–17:40 UTC) from the raw S3 archive: archive reader with per-partition ordering, dedup check, counters, rejects file, and a topic allowlist. A dry run on the real archive (`replay-dryrun-2`, 19m42s) found 18,442,107 events to replay into `events.replay.v3` and 3,118 schema-v2 lines routed to the rejects file. PR #233 is open for review; the real replay and the aggregator backfill have not been run.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] real replay into `events.replay.v3` not started; aggregator `--backfill` for 2026-11-12 pending\n- [prochaine-étape] once Daniel has reviewed #233, run the real replay, then the aggregator backfill\n- [essai-raté] `--batch 50000` OOMKilled at the 2Gi limit; re-ran at 5k batch, 310 MiB peak\n- [décision] no age cutoff, replay everything into `events.replay.v3`, never produce directly to `events.v3` (source: t05)\n- [décision] use batch 5k and leave the namespace memory limit untouched (source: t13)\n- [décision] write skipped malformed lines to a rejects file instead of skipping silently (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1240,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4177,
+    "sortie": 885,
+    "reflexion": 542,
+    "cache": 384,
+    "cout": 0.000924751
+  },
+  "cout": 0.000924751,
+  "latenceMs": 4896,
+  "fournisseur": "InferenceNet"
+}

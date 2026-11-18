@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-dossier-audit-rge",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:02.433Z",
+  "reponse": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE (fiche chantier, matériel, photos avant/après, PV) est faite, avec Pango ajouté à l'image Docker, la conversion HEIC→JPEG à l'upload et le pied de page avec le numéro d'attestation. La PR #209 est fusionnée (faits). Sur la recette, la conversion a traité 1 211 photos sur 1 214. Le déploiement en prod reste à faire.\n\n- [en-cours] 3 photos « après » de CH-2604 (IMG_4471, IMG_4502, IMG_4519) font 0 octet dans S3 ; Yannick doit les reprendre chez les Le Floch jeudi.\n- [prochaine-étape] Renseigner la variable ATTESTATION_CAPACITE en recette et en prod.\n- [prochaine-étape] Lancer `convertir_heic` sur la prod ce week-end (environ 2 h).\n- [prochaine-étape] Déployer en prod lundi.\n- [essai-raté] Exclure les HEIC du dossier : écarté, le référentiel exige les photos avant/après de chaque pose.\n- [décision] Conversion en JPEG à l'upload, avec conservation de toutes les photos (source: t11)",
+  "rendu": "## Où j'en suis\nLa vue PDF du dossier d'audit RGE (fiche chantier, matériel, photos avant/après, PV) est faite, avec Pango ajouté à l'image Docker, la conversion HEIC→JPEG à l'upload et le pied de page avec le numéro d'attestation. La PR #209 est fusionnée (faits). Sur la recette, la conversion a traité 1 211 photos sur 1 214. Le déploiement en prod reste à faire.\n\n- pr [[delorme-energies/planif#209]]\n- branche [[thomas/export-dossier-audit]]\n- commit [[3c8e1f4]]\n- commit [[b71a09d]]\n- commit [[f4e2c86]]\n- [en-cours] 3 photos « après » de CH-2604 (IMG_4471, IMG_4502, IMG_4519) font 0 octet dans S3 ; Yannick doit les reprendre chez les Le Floch jeudi.\n- [prochaine-étape] Renseigner la variable ATTESTATION_CAPACITE en recette et en prod.\n- [prochaine-étape] Lancer `convertir_heic` sur la prod ce week-end (environ 2 h).\n- [prochaine-étape] Déployer en prod lundi.\n- [essai-raté] Exclure les HEIC du dossier : écarté, le référentiel exige les photos avant/après de chaque pose.\n- [décision] Conversion en JPEG à l'upload, avec conservation de toutes les photos (source: t11)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1082,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5067,
+    "sortie": 439,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.014524
+  },
+  "cout": 0.014524,
+  "latenceMs": 3463,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:35.857Z",
+  "reponse": "In Österreich haben laut Händlerportal (Stand 16.11.) zwei Händler Winkelschleifer der Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz mit 116 Stück und Eisen-Mayr KG in Graz mit 60 Stück, insgesamt also 176 Geräte [1][2]. Nachtrag vom 17.11.: Bei der Lieferung vom 12.11. erhielt Bauprofi Huber (40117) 120 Stück zusätzlich, Eisen-Mayr (40342) weitere 60 Stück [1]. Damit ergibt sich 40117 mit 236 und 40342 mit 120 Stück, zusammen 356 Geräte [1]. Zu weiteren österreichischen Händlern enthält die Charge-Liste keine Einträge [1][2].",
+  "rendu": "In Österreich haben laut Händlerportal (Stand 16.11.) zwei Händler Winkelschleifer der Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz mit 116 Stück und Eisen-Mayr KG in Graz mit 60 Stück, insgesamt also 176 Geräte [1][2]. Nachtrag vom 17.11.: Bei der Lieferung vom 12.11. erhielt Bauprofi Huber (40117) 120 Stück zusätzlich, Eisen-Mayr (40342) weitere 60 Stück [1]. Damit ergibt sich 40117 mit 236 und 40342 mit 120 Stück, zusammen 356 Geräte [1]. Zu weiteren österreichischen Händlern enthält die Charge-Liste keine Einträge [1][2].",
+  "mesures": {
+    "mots": 81,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1405,
+    "sortie": 171,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00029625
+  },
+  "cout": 0.00029625,
+  "latenceMs": 1266,
+  "fournisseur": "Mistral"
+}

@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:13.823Z",
+  "reponse": "Oui, c'est réglé : le correctif (#214) a été déployé en production le 17 novembre et l'appli affiche de nouveau la bonne heure. La reprise des 41 interventions corrigées à la main est passée aussi [1]. Le ticket initial (#208, créneaux affichés 1 h trop tard depuis le changement d'heure) a été fermé par Thomas Riou [2].",
+  "rendu": "Oui, c'est réglé : le correctif (#214) a été déployé en production le 17 novembre et l'appli affiche de nouveau la bonne heure. La reprise des 41 interventions corrigées à la main est passée aussi [1]. Le ticket initial (#208, créneaux affichés 1 h trop tard depuis le changement d'heure) a été fermé par Thomas Riou [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.25,
+    "sourcesAttenduesCitees": 0.25,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 3888,
+    "sortie": 220,
+    "reflexion": 40,
+    "cache": 3072,
+    "cout": 0.0044464
+  },
+  "latenceMs": 3220,
+  "fournisseur": "River",
+  "trace": [
+    "chercher {\"requete\":\"\\\"horaires\\\" \\\"poseurs\\\" application souci réglé\"}"
+  ],
+  "cout": 0.0044464
+}

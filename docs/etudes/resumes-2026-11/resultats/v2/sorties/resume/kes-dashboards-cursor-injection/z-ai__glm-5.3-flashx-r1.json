@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:21:01.785Z",
+  "reponse": "## Où j'en suis\nThe team built the new dashboards v2 grid on branch `tom/dashboard-grid-v2`: react-grid-layout with drag/resize, per-user layout persisted server-side (PUT /dashboards/:id/layout, debounced, localStorage fallback), and widget sizing via a ResizeObserver hook after container queries proved broken on iOS 15. Widget sizing was switched from container queries to `useWidgetSize`, `DashboardTile` was renamed to `WidgetCard` (deprecated re-export kept), and the Storybook CSS resolution failure was fixed. Draft PR kestrel-analytics/platform#418 is open (last commit `d2286a0`) for Priya's UX review ahead of the Zest demo on Tuesday the 24th.\n\n- [en-cours] PR #418 open as draft, awaiting Priya's UX review on iPad (iOS 15, BrowserStack re-check of `0b9f4e2`)\n- [prochaine-étape] Enable `dashboards_v2` flag for the Zest workspace only (config change in flags admin, no code)\n- [prochaine-étape] Keep v1 `DashboardList` and the `DashboardTile` re-export until January — nothing removed now (source: t15)\n- [essai-raté] Container queries in `WidgetCard`: no effect on iOS 15 Safari (needs Safari 16+); replaced entirely by the ResizeObserver hook (source: t09)\n- [essai-raté] First `storybook:build` failed on unresolved `react-grid-layout/css/styles.css`; fixed via `.storybook/preview.ts` import and `optimizeDeps.include`\n- [décision] Use `useWidgetSize()` with ResizeObserver and drop container queries completely — no dual systems (source: t09)",
+  "rendu": "## Où j'en suis\nThe team built the new dashboards v2 grid on branch `tom/dashboard-grid-v2`: react-grid-layout with drag/resize, per-user layout persisted server-side (PUT /dashboards/:id/layout, debounced, localStorage fallback), and widget sizing via a ResizeObserver hook after container queries proved broken on iOS 15. Widget sizing was switched from container queries to `useWidgetSize`, `DashboardTile` was renamed to `WidgetCard` (deprecated re-export kept), and the Storybook CSS resolution failure was fixed. Draft PR kestrel-analytics/platform#418 is open (last commit `d2286a0`) for Priya's UX review ahead of the Zest demo on Tuesday the 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 open as draft, awaiting Priya's UX review on iPad (iOS 15, BrowserStack re-check of `0b9f4e2`)\n- [prochaine-étape] Enable `dashboards_v2` flag for the Zest workspace only (config change in flags admin, no code)\n- [prochaine-étape] Keep v1 `DashboardList` and the `DashboardTile` re-export until January — nothing removed now (source: t15)\n- [essai-raté] Container queries in `WidgetCard`: no effect on iOS 15 Safari (needs Safari 16+); replaced entirely by the ResizeObserver hook (source: t09)\n- [essai-raté] First `storybook:build` failed on unresolved `react-grid-layout/css/styles.css`; fixed via `.storybook/preview.ts` import and `optimizeDeps.include`\n- [décision] Use `useWidgetSize()` with ResizeObserver and drop container queries completely — no dual systems (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1601,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3471,
+    "sortie": 438,
+    "reflexion": 59,
+    "cache": 0,
+    "cout": 0.00183177
+  },
+  "cout": 0.00183177,
+  "latenceMs": 5138,
+  "fournisseur": "Z.AI"
+}

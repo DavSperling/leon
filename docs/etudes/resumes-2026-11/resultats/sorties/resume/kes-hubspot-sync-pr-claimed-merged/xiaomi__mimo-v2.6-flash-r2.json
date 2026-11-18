@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:38:55.883Z",
+  "reponse": "## Où j'en suis\nLe sync HubSpot a été refait en polling (webhooks abandonnés, #405 fermé) : job toutes les 15 min, pagination fenêtrée au-delà de la limite 10k, filtrage arr > 0. La PR #409 est ouverte avec automerge, mais le check e2e échoue donc elle n'est pas fusionnée.\n- [en-cours] #409 en attente : le check e2e `test_accounts_table_shows_owner` échoue (3 lignes attendues, 2 obtenues), l'automerge ne se déclenche pas.\n- [prochaine-étape] Corriger `tests/e2e/test_admin_accounts.py` : la fixture inclut une entreprise d'essai avec owner, que le filtre arr > 0 exclut désormais — lui donner ARR > 0 ou s'attendre à 2 lignes, puis relancer les checks.\n- [prochaine-étape] Noa doit mettre `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod.\n- [essai-raté] Enregistrer un webhook HubSpot via l'API : refusé en 401, un token de private app ne peut pas gérer les abonnements — d'où le passage au polling.\n- [décision] Polling toutes les 15 min à la place des webhooks, #405 fermée (source: t04)\n- [décision] Seules les entreprises avec ARR > 0 sont synchronisées, les essais sont exclus de la page admin (source: t10)",
+  "rendu": "## Où j'en suis\nLe sync HubSpot a été refait en polling (webhooks abandonnés, #405 fermé) : job toutes les 15 min, pagination fenêtrée au-delà de la limite 10k, filtrage arr > 0. La PR #409 est ouverte avec automerge, mais le check e2e échoue donc elle n'est pas fusionnée.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] #409 en attente : le check e2e `test_accounts_table_shows_owner` échoue (3 lignes attendues, 2 obtenues), l'automerge ne se déclenche pas.\n- [prochaine-étape] Corriger `tests/e2e/test_admin_accounts.py` : la fixture inclut une entreprise d'essai avec owner, que le filtre arr > 0 exclut désormais — lui donner ARR > 0 ou s'attendre à 2 lignes, puis relancer les checks.\n- [prochaine-étape] Noa doit mettre `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod.\n- [essai-raté] Enregistrer un webhook HubSpot via l'API : refusé en 401, un token de private app ne peut pas gérer les abonnements — d'où le passage au polling.\n- [décision] Polling toutes les 15 min à la place des webhooks, #405 fermée (source: t04)\n- [décision] Seules les entreprises avec ARR > 0 sont synchronisées, les essais sont exclus de la page admin (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1310,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3660,
+    "sortie": 419,
+    "reflexion": 47,
+    "cache": 3648,
+    "cout": 0.0001292144
+  },
+  "cout": 0.0001292144,
+  "latenceMs": 12390,
+  "fournisseur": "Xiaomi"
+}

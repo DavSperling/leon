@@ -1,0 +1,118 @@
+{
+ "id": "del-reponse-prix-audit-pas-assez",
+ "titre": "Question sur le prix de l'audit : le devis est « à recevoir », le comptable pose la même question sans réponse, et un prix de formation sert de leurre",
+ "langue": "fr",
+ "entree": {
+  "recherche": "combien coute l'audit rge certenergie",
+  "resultats": [
+   {
+    "id": "ol-provision",
+    "kind": "outlook",
+    "nature": "fil",
+    "titre": "Montant audit Certénergie ?",
+    "url": null,
+    "date": "2026-11-16T16:20:00+01:00",
+    "passages": [
+     {
+      "id": "q2a",
+      "texte": "Franck, on a le montant de l'audit Certénergie ? Je dois le provisionner sur novembre. Merci, Patrick",
+      "date": "2026-11-16T16:20:00+01:00",
+      "auteur": "Patrick Hamon"
+     }
+    ]
+   },
+   {
+    "id": "gm-certen",
+    "kind": "gmail",
+    "nature": "fil",
+    "titre": "Audit de qualification RGE – Delorme Énergies",
+    "url": null,
+    "date": "2026-11-13T15:30:00+01:00",
+    "passages": [
+     {
+      "id": "q2b",
+      "texte": "Nous vous confirmons l'audit de qualification sur chantier le mardi 8 décembre 2026, avec M. Jean-Marc Ollivier. Le devis correspondant à l'audit vous sera adressé séparément par notre service administratif.",
+      "date": "2026-11-13T15:30:00+01:00",
+      "auteur": "Laure Bihan"
+     }
+    ]
+   },
+   {
+    "id": "no-audit",
+    "kind": "notion",
+    "nature": "page",
+    "titre": "Audit RGE 2026 – préparation",
+    "url": null,
+    "date": "2026-11-12T18:00:00+01:00",
+    "passages": [
+     {
+      "id": "q2c",
+      "texte": "Référent : Franck Le Gall. Budget : voir devis Certénergie (à recevoir). Pièces à envoyer avant le 27/11 : liste des chantiers 2026, attestations de formation, attestations d'assurance décennale.",
+      "date": "2026-11-12T18:00:00+01:00",
+      "auteur": "Franck Le Gall"
+     }
+    ]
+   },
+   {
+    "id": "dr-formations",
+    "kind": "drive",
+    "nature": "page",
+    "titre": "Formations 2026.xlsx",
+    "url": null,
+    "date": "2026-11-09T11:00:00+01:00",
+    "passages": [
+     {
+      "id": "q2d",
+      "texte": "Formation attestation d'aptitude fluides (catégorie I) | 5 jours | 1 180 € HT par personne | Forma'Clim Ouest | prochaines sessions : 7 décembre, 11 janvier",
+      "date": "2026-11-09T11:00:00+01:00"
+     }
+    ]
+   },
+   {
+    "id": "sl-rge",
+    "kind": "slack",
+    "nature": "fil",
+    "titre": "#rge",
+    "url": null,
+    "date": "2026-11-10T09:40:00+01:00",
+    "passages": [
+     {
+      "id": "q2e",
+      "texte": "L'an dernier le renouvellement s'était bien passé, on a juste eu à payer la redevance annuelle de qualification, comme d'habitude. Cette année c'est un audit complet, donc plus cher.",
+      "date": "2026-11-10T09:40:00+01:00",
+      "auteur": "Franck Le Gall"
+     }
+    ]
+   }
+  ]
+ },
+ "attendu": {
+  "pasAssez": true,
+  "cites": [],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "La sortie est exactement « Les résultats ne suffisent pas pour répondre. », sans autre texte.",
+    "poids": 3
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Donne 1 180 € HT (le prix de la formation fluides) comme prix de l'audit."
+   },
+   {
+    "id": "i2",
+    "texte": "Invente ou estime un montant pour l'audit."
+   },
+   {
+    "id": "i3",
+    "texte": "Répond par un résumé de l'audit (date, pièces, devis à venir) au lieu de la phrase."
+   }
+  ],
+  "pieges": [
+   "Pas assez : le devis est « à recevoir » et la question du comptable reste sans réponse.",
+   "Leurre : un prix (1 180 € HT) dans les résultats, celui d'une formation, pas de l'audit."
+  ]
+ }
+}

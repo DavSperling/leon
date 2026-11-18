@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "deepseek/deepseek-v4.1-flash-1017@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:17:28.854Z",
+  "reponse": "## What is still open\n\n- **La Saône doit sortir des soldes** : Claire refuse la remise de -20 % (rupture jusqu'à mi-janvier, précommandes au plein prix à ne pas voir remisées) — c'est exactement la question d'Hugo sur la #63, il te faut trancher et corriger la grille ou le script [4][10].\n- Sophie demande, sur le #65, que le flux Google Shopping soit relancé juste après le script des soldes le 6 janvier, sinon les annonces seront refusées pour écart de prix [5].\n- Le #64 attend une correction : sur petit téléphone, la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur les pages produit, avant le shooting [6].\n- La PR #63 reste à fusionner, et l'échéance s'est resserrée : Sophie veut les prix soldés dans Shopify pour le **lundi 30/11** (shooting décalé au 2 décembre), au lieu de vendredi [11][1].\n\n## What changed\n\n- Le #59 (étiquette « soldes » automatique sur les produits remisés) a été relu et fusionné par Hugo [7].\n- Le #52 (widget Zendesk sur les pages produit) est fusionné et Lucie signale déjà 23 conversations ouvertes depuis ces pages cette semaine [9].\n- Dependabot propose de passer `@shopify/shopify-api` de 11.4.0 à 11.6.1 [8].\n\n## What you did\n\n- Écrit le script des soldes : application et restauration des prix à partir de la grille de Sophie, avec sauvegarde des prix d'origine et rapport ; les deux tâches planifiées (6 janvier, 3 février) ont été déclenchées en test sur la boutique de dev et fonctionnent [1].\n- Fait tourner un dry-run en lecture seule sur la prod : 212 variantes de 57 produits seraient soldées ; les 3 variantes déjà en promo sont laissées de côté, et 7 lignes de la grille ne correspondent plus à aucun produit actif [1].\n- Ouvert la PR #63 avec ce rapport en description, Hugo en relecteur [1].",
+  "rendu": "## What is still open\n\n- **La Saône doit sortir des soldes** : Claire refuse la remise de -20 % (rupture jusqu'à mi-janvier, précommandes au plein prix à ne pas voir remisées) — c'est exactement la question d'Hugo sur la #63, il te faut trancher et corriger la grille ou le script [4][10].\n- Sophie demande, sur le #65, que le flux Google Shopping soit relancé juste après le script des soldes le 6 janvier, sinon les annonces seront refusées pour écart de prix [5].\n- Le #64 attend une correction : sur petit téléphone, la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur les pages produit, avant le shooting [6].\n- La PR #63 reste à fusionner, et l'échéance s'est resserrée : Sophie veut les prix soldés dans Shopify pour le **lundi 30/11** (shooting décalé au 2 décembre), au lieu de vendredi [11][1].\n\n## What changed\n\n- Le #59 (étiquette « soldes » automatique sur les produits remisés) a été relu et fusionné par Hugo [7].\n- Le #52 (widget Zendesk sur les pages produit) est fusionné et Lucie signale déjà 23 conversations ouvertes depuis ces pages cette semaine [9].\n- Dependabot propose de passer `@shopify/shopify-api` de 11.4.0 à 11.6.1 [8].\n\n## What you did\n\n- Écrit le script des soldes : application et restauration des prix à partir de la grille de Sophie, avec sauvegarde des prix d'origine et rapport ; les deux tâches planifiées (6 janvier, 3 février) ont été déclenchées en test sur la boutique de dev et fonctionnent [1].\n- Fait tourner un dry-run en lecture seule sur la prod : 212 variantes de 57 produits seraient soldées ; les 3 variantes déjà en promo sont laissées de côté, et 7 lignes de la grille ne correspondent plus à aucun produit actif [1].\n- Ouvert la PR #63 avec ce rapport en description, Hugo en relecteur [1].",
+  "mesures": {
+    "mots": 290,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4908,
+    "sortie": 1497,
+    "reflexion": 990,
+    "cache": 0,
+    "cout": 0.0032688
+  },
+  "cout": 0.0032688,
+  "latenceMs": 4649,
+  "fournisseur": "Together"
+}

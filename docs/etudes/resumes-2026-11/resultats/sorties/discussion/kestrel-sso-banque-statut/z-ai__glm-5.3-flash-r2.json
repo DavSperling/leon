@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:38.773Z",
+  "reponse": "Here's the state of the Fernhill Bank SSO go-live (contract date: December 1, 2026) [3]:\n\n**On track, but with one open blocker.** As of Nov 17 the team considers Dec 1 achievable, conditional on a signing-algorithm fix on Fernhill's side [5][12].\n\n**What's done:**\n- SP-initiated login merged behind the `saml_sso` flag, with SHA-256 minimum enforced globally [11][3]\n- IdP-initiated flow + metadata upload endpoint built (platform#1296) [13]\n- Fernhill's IdP metadata and cert received Nov 17 and loaded on staging; IdP-initiated login works [1][12]\n- SSO admin page (metadata upload, \"Require SSO\" toggle, test-login button) on staging — copy still needs Priya's review [3]\n\n**What's left:**\n1. **SHA-1 blocker**: Fernhill's IdP still signs assertions with RSA-SHA1, which our platform rejects. Daniel asked them to switch to RSA-SHA256 [1][12]. Decision was made not to allow SHA-1 even temporarily (SOC 2 / pen-test risk) — waiting on Fernhill's change board on Nov 24 [12].\n2. **Joint end-to-end test** with Helen Marsh on Wednesday Nov 25, 16:00 Tel Aviv time [1][12].\n3. Admin page copy review by Priya [3].\n4. If the change board doesn't approve on the 24th, Sam Ortiz tells Fernhill that day that Dec 1 is at risk [12].\n\nOne adjacent note: the Postgres 17 production cutover was deliberately moved to Dec 5 so it wouldn't risk the Dec 1 go-live [9].",
+  "rendu": "Here's the state of the Fernhill Bank SSO go-live (contract date: December 1, 2026) [3]:\n\n**On track, but with one open blocker.** As of Nov 17 the team considers Dec 1 achievable, conditional on a signing-algorithm fix on Fernhill's side [5][12].\n\n**What's done:**\n- SP-initiated login merged behind the `saml_sso` flag, with SHA-256 minimum enforced globally [11][3]\n- IdP-initiated flow + metadata upload endpoint built (platform#1296) [13]\n- Fernhill's IdP metadata and cert received Nov 17 and loaded on staging; IdP-initiated login works [1][12]\n- SSO admin page (metadata upload, \"Require SSO\" toggle, test-login button) on staging — copy still needs Priya's review [3]\n\n**What's left:**\n1. **SHA-1 blocker**: Fernhill's IdP still signs assertions with RSA-SHA1, which our platform rejects. Daniel asked them to switch to RSA-SHA256 [1][12]. Decision was made not to allow SHA-1 even temporarily (SOC 2 / pen-test risk) — waiting on Fernhill's change board on Nov 24 [12].\n2. **Joint end-to-end test** with Helen Marsh on Wednesday Nov 25, 16:00 Tel Aviv time [1][12].\n3. Admin page copy review by Priya [3].\n4. If the change board doesn't approve on the 24th, Sam Ortiz tells Fernhill that day that Dec 1 is at risk [12].\n\nOne adjacent note: the Postgres 17 production cutover was deliberately moved to Dec 5 so it wouldn't risk the Dec 1 go-live [9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13795,
+    "sortie": 450,
+    "reflexion": 13,
+    "cache": 5760,
+    "cout": 0.001529946
+  },
+  "latenceMs": 7236,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"\\\"December 1\\\" log in company accounts bank\"}",
+    "chercher {\"requete\":\"SSO login bank staff go-live deadline\"}",
+    "lire {\"passageId\":\"slack-eng-sso-sha1-4\"}"
+  ],
+  "cout": 0.001529946
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:27:53.224Z",
+  "reponse": "## Où j'en suis\nÀ la fin de la session du 17 nov 16:41, le login SAML fonctionne sur staging avec l'IdP Fernhill après correction du RelayState (ID opaque stocké en Redis). Le JIT provisioning est merged (#415), le mapping groupes→rôles est implémenté dans #421 (open). Il reste à attendre que Fernhill IT ajoute le claim `groups` avant la démo du jeudi 19 nov à 10:00 New York.\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" est ouverte et attend la finalisation avant la démo (source: ses-sso-3, kestrel-analytics/platform#421 etat=\"open\")\n\n- [prochaine-étape] Fernhill IT doit ajouter le claim `groups` dans leurs assertions SAML pour que le mapping fonctionne (source: ses-sso-3, ses-sso-3-04)\n- [prochaine-étape] Préparer le compte de démo `kestrel.test1` et créer un compte admin une fois le claim `groups` disponible (source: ses-sso-3, ses-sso-3-08)\n\n- [essai-raté] SP-initiated login échouait initialement car le RelayState dépassait 80 octets (143 octets), l'ADFS de Fernhill rejetait la requête (source: ses-sso-3, ses-sso-3-02)\n\n- [question] Fernhill IT souhaite IdP-initiated login uniquement et un rôle `analyst` par défaut pour tous leurs utilisateurs, mais l'équipe a décidé de maintenir SP-initiated activé et le rôle `viewer` par défaut jusqu'à discussion avec Maya (source: src-slack-fernhill, ses-sso-3, ses-sso-3-07)\n\n- [décision] Le rôle par défaut pour les nouveaux utilisateurs Fernhill reste `viewer` et SP-initiated login reste activé pour ce tenant (source: ses-sso-3-07)",
+  "rendu": "- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" est ouverte et attend la finalisation avant la démo (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#421)\n- [prochaine-étape] Fernhill IT doit ajouter le claim `groups` dans leurs assertions SAML pour que le mapping fonctionne (de: agent; source: ses-sso-3)\n- [prochaine-étape] Préparer le compte de démo `kestrel.test1` et créer un compte admin une fois le claim `groups` disponible (de: agent; source: ses-sso-3)\n- [essai-raté] SP-initiated login échouait initialement car le RelayState dépassait 80 octets (143 octets), l'ADFS de Fernhill rejetait la requête (de: agent; source: ses-sso-3)\n- [question] Fernhill IT souhaite IdP-initiated login uniquement et un rôle `analyst` par défaut pour tous leurs utilisateurs, mais l'équipe a décidé de maintenir SP-initiated activé et le rôle `viewer` par défaut jusqu'à discussion avec Maya (de: connecteur, agent; source: src-slack-fernhill, ses-sso-3)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 985,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4968,
+    "sortie": 1660,
+    "reflexion": 1187,
+    "cache": 0,
+    "cout": 0.00191532
+  },
+  "cout": 0.00191532,
+  "latenceMs": 12135,
+  "fournisseur": "Mistral"
+}

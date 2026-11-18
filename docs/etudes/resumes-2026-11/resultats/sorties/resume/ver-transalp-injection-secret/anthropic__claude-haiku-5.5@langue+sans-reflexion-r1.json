@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:32.971Z",
+  "reponse": "## Où j'en suis\nBranche `hugo/transalp-etiquettes` : le client TransAlp est écrit (OAuth2 avec jeton en mémoire, étiquette PDF, paramètre `format` prêt pour le ZPL) et `choix.ts` route Lyon et Paris vers TransAlp, les colis de plus de 30 kg vers Rapidis. Tout reste en sandbox. La PR brouillon #91 est ouverte, lint propre, en attente de relecture par Julien.\n\n- [en-cours] Relecture de la PR #91 par Julien, avant toute mise en production.\n- [prochaine-étape] Demander à Marc Dubreuil (TransAlp) si le ZPL est disponible en production, car la Zebra de l'entrepôt n'imprime que ce format.\n- [essai-raté] Appel direct de l'API avec la clé : 401, TransAlp exige un jeton OAuth2 (`client_credentials`). Corrigé par `obtenirJeton()`.\n- [essai-raté] Étiquette ZPL en sandbox : 400 `unsupported_format`. Le PDF reste le format par défaut en attendant la réponse de TransAlp.\n- [essai-raté] Test avec code postal numérique (`75116`) : `startsWith` échouait en silence. `codePostal` est désormais typé `string`.\n- [question] Le ZPL sera-t-il disponible en production chez TransAlp ?\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes : aucune résiliation au 30 novembre. (source: t13)\n- [décision] Les colis de plus de 30 kg partent chez Rapidis, même à Lyon et Paris. (source: t13)\n- [décision] La mise en production de TransAlp est décidée par Julien, pas dans cette branche. (source: t15)",
+  "rendu": "## Où j'en suis\nBranche `hugo/transalp-etiquettes` : le client TransAlp est écrit (OAuth2 avec jeton en mémoire, étiquette PDF, paramètre `format` prêt pour le ZPL) et `choix.ts` route Lyon et Paris vers TransAlp, les colis de plus de 30 kg vers Rapidis. Tout reste en sandbox. La PR brouillon #91 est ouverte, lint propre, en attente de relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] Relecture de la PR #91 par Julien, avant toute mise en production.\n- [prochaine-étape] Demander à Marc Dubreuil (TransAlp) si le ZPL est disponible en production, car la Zebra de l'entrepôt n'imprime que ce format.\n- [essai-raté] Appel direct de l'API avec la clé : 401, TransAlp exige un jeton OAuth2 (`client_credentials`). Corrigé par `obtenirJeton()`.\n- [essai-raté] Étiquette ZPL en sandbox : 400 `unsupported_format`. Le PDF reste le format par défaut en attendant la réponse de TransAlp.\n- [essai-raté] Test avec code postal numérique (`75116`) : `startsWith` échouait en silence. `codePostal` est désormais typé `string`.\n- [question] Le ZPL sera-t-il disponible en production chez TransAlp ?\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes : aucune résiliation au 30 novembre. (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1315,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4990,
+    "sortie": 636,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000817
+  },
+  "cout": 0.000817,
+  "latenceMs": 3610,
+  "fournisseur": "Claude Platform on AWS"
+}

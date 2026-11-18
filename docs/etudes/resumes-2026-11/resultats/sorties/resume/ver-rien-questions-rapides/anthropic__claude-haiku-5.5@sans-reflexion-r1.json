@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:24.748Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2600,
+    "sortie": 8,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000264
+  },
+  "cout": 0.000264,
+  "latenceMs": 790,
+  "fournisseur": "Claude Platform on AWS"
+}

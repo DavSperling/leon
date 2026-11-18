@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.676Z",
+  "reponse": "## What is still open\n\n- **PR #247 awaits green CI and Maya’s approval.** She needs the Orbitly loss figure for Thursday’s customer call: **~1.18 million legitimate events (8.1% of iOS volume)**, excluding 4,352 genuine replays. [2][1]\n- Add an alert when the ingest dead-letter queue exceeds **1,000 messages**, before Friday’s incident review on 20 November. [7]\n- After #247 is deployed, replay Orbitly and Zest from landing starting **13 November 09:40 UTC** through deployment; running earlier would drop the events again. Then confirm Orbitly’s dedupe-drop counter stays near zero. [1]\n- Send the iOS team your drafted note: **3.2.1 must restore UUID `event_id` values**, as required by the ingest contract and relied upon by other consumers. [1]\n\n## What changed\n\n- Noa finalized the 12/11 postmortem in #233 and will present it at Friday’s incident review. [3]\n\n## What you did\n\n- You traced Orbitly’s funnel loss to kestrel-ios 3.2.0 replacing UUIDs with per-session counters, causing #240 to discard distinct events across devices. Zest’s pilot app was affected too, losing 3,812 events. [1]\n- You changed dedupe to key on `project_id:device_id:event_id`, preserved replay protection, and passed the full test suite and lint before opening #247. [1]",
+  "rendu": "## What is still open\n\n- **PR #247 awaits green CI and Maya’s approval.** She needs the Orbitly loss figure for Thursday’s customer call: **~1.18 million legitimate events (8.1% of iOS volume)**, excluding 4,352 genuine replays. [2][1]\n- Add an alert when the ingest dead-letter queue exceeds **1,000 messages**, before Friday’s incident review on 20 November. [7]\n- After #247 is deployed, replay Orbitly and Zest from landing starting **13 November 09:40 UTC** through deployment; running earlier would drop the events again. Then confirm Orbitly’s dedupe-drop counter stays near zero. [1]\n- Send the iOS team your drafted note: **3.2.1 must restore UUID `event_id` values**, as required by the ingest contract and relied upon by other consumers. [1]\n\n## What changed\n\n- Noa finalized the 12/11 postmortem in #233 and will present it at Friday’s incident review. [3]\n\n## What you did\n\n- You traced Orbitly’s funnel loss to kestrel-ios 3.2.0 replacing UUIDs with per-session counters, causing #240 to discard distinct events across devices. Zest’s pilot app was affected too, losing 3,812 events. [1]\n- You changed dedupe to key on `project_id:device_id:event_id`, preserved replay protection, and passed the full test suite and lint before opening #247. [1]",
+  "mesures": {
+    "mots": 187,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5082,
+    "sortie": 1415,
+    "reflexion": 1079,
+    "cache": 0,
+    "cout": 0.024314
+  },
+  "cout": 0.024314,
+  "latenceMs": 7091,
+  "fournisseur": "DigitalOcean"
+}

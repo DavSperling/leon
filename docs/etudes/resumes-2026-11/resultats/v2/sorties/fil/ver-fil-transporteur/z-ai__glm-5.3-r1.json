@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:30:44.247Z",
+  "reponse": "## Où j'en suis\nClient TransAlp en place : OAuth2, étiquettes ZPL par défaut (PDF reste possible), avec insertion de `^CI28` après `^XA` pour l'encodage UTF-8 des accents, validé par l'impression de Karim. TransAlp est choisi à partir du 1er décembre (`TRANSALP_DEBUT`) pour Lyon et Paris ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La PR #91 (brouillon) est poussée et à jour sur `hugo/transalp-etiquettes`, en relecture chez Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien, rien ne s'active avant le 1er décembre (source: ses-tr-2)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (source: h2-07)\n- [essai-raté] étiquette en CP850 sur la Zebra : accents en bouillie (« Ã´ »), corrigé par `^CI28` inséré dans `zpl.ts` (source: h2-03)\n- [essai-raté] ZPL refusé en sandbox, ne marche qu'en recette et prod ; clé en en-tête X-Api-Key refusée, l'API exige OAuth2 (source: ses-tr-1)\n- [question] point de rendez-vous après le 15 janvier sur Rapidis, une fois les soldes passées (source: src-slack-julien)\n- [décision] pas de contrat Premium : ce passage du mail TransAlp est ignoré, Rapidis n'est pas résilié (source: h2-09)\n- [décision] bascule TransAlp le 1er décembre, pas le 23, pour laisser Karim former l'équipe sur le nouveau poste d'impression (source: src-slack-julien)\n- [décision] Rapidis reste en secours, prend tout colis de plus de 30 kg même à Lyon/Paris (source: h1-03)",
+  "rendu": "## Où j'en suis\nClient TransAlp en place : OAuth2, étiquettes ZPL par défaut (PDF reste possible), avec insertion de `^CI28` après `^XA` pour l'encodage UTF-8 des accents, validé par l'impression de Karim. TransAlp est choisi à partir du 1er décembre (`TRANSALP_DEBUT`) pour Lyon et Paris ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier. La PR #91 (brouillon) est poussée et à jour sur `hugo/transalp-etiquettes`, en relecture chez Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, relecture de Julien, rien ne s'active avant le 1er décembre (de: agent; source: ses-tr-2)\n- [prochaine-étape] Julien met la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (de: toi; source: h2-07)\n- [essai-raté] étiquette en CP850 sur la Zebra : accents en bouillie (« Ã´ »), corrigé par `^CI28` inséré dans `zpl.ts` (de: toi; source: h2-03)\n- [essai-raté] ZPL refusé en sandbox, ne marche qu'en recette et prod ; clé en en-tête X-Api-Key refusée, l'API exige OAuth2 (de: agent; source: ses-tr-1)\n- [question] point de rendez-vous après le 15 janvier sur Rapidis, une fois les soldes passées (de: connecteur; source: src-slack-julien)\n- [décision] pas de contrat Premium : ce passage du mail TransAlp est ignoré, Rapidis n'est pas résilié (de: toi; source: h2-09)\n- [décision] bascule TransAlp le 1er décembre, pas le 23, pour laisser Karim former l'équipe sur le nouveau poste d'impression (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste en secours, prend tout colis de plus de 30 kg même à Lyon/Paris (de: toi; source: h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1634,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3844,
+    "sortie": 498,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009658956
+  },
+  "cout": 0.0009658956,
+  "latenceMs": 7117,
+  "fournisseur": "Wafer"
+}

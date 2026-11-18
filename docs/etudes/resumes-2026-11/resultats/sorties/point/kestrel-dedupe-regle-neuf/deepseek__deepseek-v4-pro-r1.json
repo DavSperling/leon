@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T14:24:13.043Z",
+  "reponse": "## Ce que tu as fait\n- Tu as identifié que la déduplication par `event_id` de la PR #240 rejette 1,18 M d’événements réels d’Orbitly depuis l’adoption de l’SDK iOS 3.2.0 (qui utilise un compteur par session au lieu d’un UUID). Tu as ouvert #247, qui passe à une clé `project_id:device_id:event_id` [1].\n- Tu as rédigé une note pour l’équipe iOS afin qu’ils rétablissent les UUIDs dans la version 3.2.1 [1].\n\n## Ce qui a bougé\n- Sur #247, Maya demande le nombre exact d’événements perdus par Orbitly, dont elle a besoin pour l’appel de jeudi avec eux. Tu as déjà le chiffre (1,18 M), il suffit de lui répondre [2].\n- Le postmortem du 12/11 (#233) est finalisé : Noa le présentera vendredi [3].\n\n## Ce qui reste ouvert\n- Déployer #247, puis rejouer les ~1,18 M d’événements d’Orbitly (et les quelques milliers de Zest) depuis le 13/11 [1].\n- Répondre à Maya sur #247 avec le chiffre des pertes [2].\n- Ajouter une alerte quand la dead-letter queue d’ingest dépasse 1 000 messages, avant la revue d’incident de vendredi [7].",
+  "rendu": "## Ce que tu as fait\n- Tu as identifié que la déduplication par `event_id` de la PR #240 rejette 1,18 M d’événements réels d’Orbitly depuis l’adoption de l’SDK iOS 3.2.0 (qui utilise un compteur par session au lieu d’un UUID). Tu as ouvert #247, qui passe à une clé `project_id:device_id:event_id` [1].\n- Tu as rédigé une note pour l’équipe iOS afin qu’ils rétablissent les UUIDs dans la version 3.2.1 [1].\n\n## Ce qui a bougé\n- Sur #247, Maya demande le nombre exact d’événements perdus par Orbitly, dont elle a besoin pour l’appel de jeudi avec eux. Tu as déjà le chiffre (1,18 M), il suffit de lui répondre [2].\n- Le postmortem du 12/11 (#233) est finalisé : Noa le présentera vendredi [3].\n\n## Ce qui reste ouvert\n- Déployer #247, puis rejouer les ~1,18 M d’événements d’Orbitly (et les quelques milliers de Zest) depuis le 13/11 [1].\n- Répondre à Maya sur #247 avec le chiffre des pertes [2].\n- Ajouter une alerte quand la dead-letter queue d’ingest dépasse 1 000 messages, avant la revue d’incident de vendredi [7].",
+  "mesures": {
+    "mots": 171,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4757,
+    "sortie": 2188,
+    "reflexion": 1548,
+    "cache": 0,
+    "cout": 0.0075633
+  },
+  "cout": 0.0075633,
+  "latenceMs": 24388,
+  "fournisseur": "Relace"
+}

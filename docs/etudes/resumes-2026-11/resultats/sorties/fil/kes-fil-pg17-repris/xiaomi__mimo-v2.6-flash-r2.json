@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:25.183Z",
+  "reponse": "## Où j'en suis\nLa migration de staging est faite : pg_partman passé en 5.1.0, puis blue/green 16.4 → 17.2 avec switchover à 14:20 UTC (41 s d'écritures refusées), dbt vert (14 modèles, +3 % de temps, dans le bruit). Le runbook a une étape 0 prod (réglage `rds.logical_replication = 1` + reboot, ≈ 2–3 min, fenêtre dédiée). Le PR #57 est toujours en draft, le ticket KES-298 en In Progress. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Semaine complète de recul sur staging en 17.2, sans incident, avant tout passage prod ; le PR #57 reste en draft avec 7e3c9d4 et b0f18a2 poussés. (source: ses-pg-3, src-pr57)\n- [prochaine-étape] Après la semaine de staging : obtenir le sign-off de Maya, puis choisir la fenêtre prod en dehors du verrou dbt (01:00–03:30 UTC), en tenant compte des deux fenêtres nécessaires (reboot logical_replication puis blue/green). (source: src-linear-kes298, src-slack-infra)\n- [essai-raté] Le premier apply staging a échoué : blue/green PostgreSQL exige `rds.logical_replication = 1` dans le parameter group source + reboot (paramètre statique) ; corrigé en pending-reboot puis reboot de 1m48 s. (source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` avait pris AWS provider v6 et 37 changements hors sujet. (source: ses-pg-1)\n- [question] Pas encore de date prod : à trancher après le sign-off de Maya, sachant que la note du 13/11 (28 nov, 04:00) est antérieure au blocage « sign-off d'abord ». (source: src-note-cutover, s1-04)\n- [décision] Provider AWS épinglé en ~> 5.82, pas de v6 dans ce PR. (source: s1-02)\n- [décision] Pas de date prod sans le sign-off de Maya, `apply_immediately` reste à false ; le verrou dbt 01:00–03:30 UTC est à éviter. (source: s1-04)\n- [décision] Sign-off prod conditionné à une semaine complète de staging en 17 sans incident. (source: src-linear-kes298)",
+  "rendu": "## Où j'en suis\nLa migration de staging est faite : pg_partman passé en 5.1.0, puis blue/green 16.4 → 17.2 avec switchover à 14:20 UTC (41 s d'écritures refusées), dbt vert (14 modèles, +3 % de temps, dans le bruit). Le runbook a une étape 0 prod (réglage `rds.logical_replication = 1` + reboot, ≈ 2–3 min, fenêtre dédiée). Le PR #57 est toujours en draft, le ticket KES-298 en In Progress. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Semaine complète de recul sur staging en 17.2, sans incident, avant tout passage prod ; le PR #57 reste en draft avec 7e3c9d4 et b0f18a2 poussés. (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] Après la semaine de staging : obtenir le sign-off de Maya, puis choisir la fenêtre prod en dehors du verrou dbt (01:00–03:30 UTC), en tenant compte des deux fenêtres nécessaires (reboot logical_replication puis blue/green). (de: connecteur; source: src-linear-kes298, src-slack-infra)\n- [essai-raté] Le premier apply staging a échoué : blue/green PostgreSQL exige `rds.logical_replication = 1` dans le parameter group source + reboot (paramètre statique) ; corrigé en pending-reboot puis reboot de 1m48 s. (de: agent; source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` avait pris AWS provider v6 et 37 changements hors sujet. (de: agent; source: ses-pg-1)\n- [question] Pas encore de date prod : à trancher après le sign-off de Maya, sachant que la note du 13/11 (28 nov, 04:00) est antérieure au blocage « sign-off d'abord ». (de: toi, agent; source: src-note-cutover, s1-04)\n- [décision] Provider AWS épinglé en ~> 5.82, pas de v6 dans ce PR. (de: toi; source: s1-02)\n- [décision] Pas de date prod sans le sign-off de Maya, `apply_immediately` reste à false ; le verrou dbt 01:00–03:30 UTC est à éviter. (de: toi; source: s1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1835,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4563,
+    "sortie": 691,
+    "reflexion": 39,
+    "cache": 4544,
+    "cout": 0.0002088632
+  },
+  "cout": 0.0002088632,
+  "latenceMs": 25914,
+  "fournisseur": "Xiaomi"
+}

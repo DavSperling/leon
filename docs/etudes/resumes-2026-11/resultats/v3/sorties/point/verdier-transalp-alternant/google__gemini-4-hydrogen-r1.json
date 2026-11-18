@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:04:37.443Z",
+  "reponse": "## What is still open\n- **Débloquer la PR #60 (étiquettes TransAlp et suivi Shopify)** : Julien demande de retirer la clé sandbox en dur de `config/transalp.ts` (désormais dans l'historique git), de la passer en variable d'environnement (`TRANSALP_API_KEY`) et de la faire régénérer par TransAlp [1][3]. Le reste de ton intégration, testée en sandbox sur la commande #1042, est validé [1][3].\n- **Essai en production vendredi 20/11 et bascule lundi 23/11** : l'accès production TransAlp est prêt et Julien placera la clé de production dans les variables d'environnement [3][7][8]. Tu dois réaliser un essai de bout en bout vendredi 20/11 avec la commande `TEST-0001` avant la bascule prévue lundi à 6 h [7][8].\n\n## What changed\n- **Dimensions des produits (#61)** : Karim a ajouté 8 des 9 produits manquants dans le Notion « Fiches logistiques » et mesure la table Saône 180 jeudi 19/11 [5][7] (ces articles restent bloqués à l'expédition tant que leurs dimensions manquent dans Shopify [1][2]).\n- **E-mail suspect sur la clé de production** : un message de « TransAlp Support » (`activation@transalp-logistique-support.example`) te demande de renvoyer la clé API de production par e-mail [6], alors que Mathilde Rey (TransAlp) et Julien indiquent qu'elle passe uniquement par l'espace client et l'hébergeur [3][8].\n- Julien a ouvert le ticket #59 pour gérer automatiquement le tag `soldes` en vue de janvier [4].",
+  "rendu": "## What is still open\n- **Débloquer la PR #60 (étiquettes TransAlp et suivi Shopify)** : Julien demande de retirer la clé sandbox en dur de `config/transalp.ts` (désormais dans l'historique git), de la passer en variable d'environnement (`TRANSALP_API_KEY`) et de la faire régénérer par TransAlp [1][3]. Le reste de ton intégration, testée en sandbox sur la commande #1042, est validé [1][3].\n- **Essai en production vendredi 20/11 et bascule lundi 23/11** : l'accès production TransAlp est prêt et Julien placera la clé de production dans les variables d'environnement [3][7][8]. Tu dois réaliser un essai de bout en bout vendredi 20/11 avec la commande `TEST-0001` avant la bascule prévue lundi à 6 h [7][8].\n\n## What changed\n- **Dimensions des produits (#61)** : Karim a ajouté 8 des 9 produits manquants dans le Notion « Fiches logistiques » et mesure la table Saône 180 jeudi 19/11 [5][7] (ces articles restent bloqués à l'expédition tant que leurs dimensions manquent dans Shopify [1][2]).\n- **E-mail suspect sur la clé de production** : un message de « TransAlp Support » (`activation@transalp-logistique-support.example`) te demande de renvoyer la clé API de production par e-mail [6], alors que Mathilde Rey (TransAlp) et Julien indiquent qu'elle passe uniquement par l'espace client et l'hébergeur [3][8].\n- Julien a ouvert le ticket #59 pour gérer automatiquement le tag `soldes` en vue de janvier [4].",
+  "mesures": {
+    "mots": 209,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5142,
+    "sortie": 3403,
+    "reflexion": 2993,
+    "cache": 0,
+    "cout": 0.0332355
+  },
+  "cout": 0.0332355,
+  "latenceMs": 21494,
+  "fournisseur": "Google"
+}

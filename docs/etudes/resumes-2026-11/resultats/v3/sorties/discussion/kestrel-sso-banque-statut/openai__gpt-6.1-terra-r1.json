@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:11:00.254Z",
+  "reponse": "**December 1, 2026 is still the target, but it isn’t guaranteed.** As of November 17, Fernhill’s identity-provider-initiated login worked on staging, but login started from Kestrel was blocked by the bank’s SHA-1 signing configuration. Kestrel requires SHA-256 or stronger and has ruled out a temporary SHA-1 exception [2][12].\n\nWhat remains:\n\n- Fernhill’s change board must approve the switch to SHA-256 on November 24; Helen says it would be applied that evening if approved [1].\n- The teams need to complete the joint end-to-end test scheduled for November 25 at 14:00 London time. Priya had made that week’s test a condition for the launch date [1].\n- The SSO admin page is on staging, though its copy still needs Priya’s review [2].\n\nIf the board does not approve the change, Sam will tell Fernhill on November 24 that December 1 is at risk [12]. The planned launch includes automatic user creation with a Viewer role; SCIM deprovisioning is not in the December scope [2].",
+  "rendu": "**December 1, 2026 is still the target, but it isn’t guaranteed.** As of November 17, Fernhill’s identity-provider-initiated login worked on staging, but login started from Kestrel was blocked by the bank’s SHA-1 signing configuration. Kestrel requires SHA-256 or stronger and has ruled out a temporary SHA-1 exception [2][12].\n\nWhat remains:\n\n- Fernhill’s change board must approve the switch to SHA-256 on November 24; Helen says it would be applied that evening if approved [1].\n- The teams need to complete the joint end-to-end test scheduled for November 25 at 14:00 London time. Priya had made that week’s test a condition for the launch date [1].\n- The SSO admin page is on staging, though its copy still needs Priya’s review [2].\n\nIf the board does not approve the change, Sam will tell Fernhill on November 24 that December 1 is at risk [12]. The planned launch includes automatic user creation with a Viewer role; SCIM deprovisioning is not in the December scope [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22460,
+    "sortie": 572,
+    "reflexion": 99,
+    "cache": 10002,
+    "cout": 0.01893035
+  },
+  "latenceMs": 8362,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"bank support \\\"December 1\\\" login company accounts\"}",
+    "chercher {\"requete\":\"bank SSO December 1 staff accounts login\"}",
+    "chercher {\"requete\":\"banque support \\\"1 décembre\\\" connexion comptes entreprise SSO\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "chercher {\"requete\":\"Fernhill support December 1 staff log in company accounts\"}",
+    "chercher {\"requete\":\"Fernhill SSO SHA-256 Nov 24 25 launch\"}"
+  ],
+  "cout": 0.01893035
+}

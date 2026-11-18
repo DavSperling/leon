@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:05.561Z",
+  "reponse": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload — the front reads flags from /api/flags, so FEATURE_FLAGS in .env.local is ignored since #447 [2][3]. You can verify with `curl localhost:8000/api/flags` [3]. Note the old instructions (FEATURE_FLAGS=new_dash in .env.local) [1] are now outdated, which explains why some setups stopped showing the dashboards [3]. If tiles stay empty in new workspaces, it may be the blank-state issue for workspaces with no events [5].",
+  "rendu": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload — the front reads flags from /api/flags, so FEATURE_FLAGS in .env.local is ignored since #447 [2][3]. You can verify with `curl localhost:8000/api/flags` [3]. Note the old instructions (FEATURE_FLAGS=new_dash in .env.local) [1] are now outdated, which explains why some setups stopped showing the dashboards [3]. If tiles stay empty in new workspaces, it may be the blank-state issue for workspaces with no events [5].",
+  "mesures": {
+    "mots": 72,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1106,
+    "sortie": 129,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000070188
+  },
+  "cout": 0.000070188,
+  "latenceMs": 2085,
+  "fournisseur": "Wafer"
+}

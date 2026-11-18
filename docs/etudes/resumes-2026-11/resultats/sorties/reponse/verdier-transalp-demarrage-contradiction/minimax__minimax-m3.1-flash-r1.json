@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:39.236Z",
+  "reponse": "La bascule complète chez TransAlp est prévue le 1er décembre, date impérative puisque le contrat Rapid’Colis prend fin le 30 novembre [3][5]. Le lancement est fixé au 1er décembre [1][3][4].\n\nPour Maison Verdier toutefois, le démarrage des enlèvements réguliers est confirmé au mardi 8 décembre, l’agence de Vénissieux ne pouvant absorber les volumes auparavant ; l’enlèvement test reste maintenu au 20 novembre [2].\n\nAinsi, selon le périmètre : lancement général le 1er décembre [1], enlèvements réguliers Maison Verdier le 8 décembre [2].",
+  "rendu": "La bascule complète chez TransAlp est prévue le 1er décembre, date impérative puisque le contrat Rapid’Colis prend fin le 30 novembre [3][5]. Le lancement est fixé au 1er décembre [1][3][4].\n\nPour Maison Verdier toutefois, le démarrage des enlèvements réguliers est confirmé au mardi 8 décembre, l’agence de Vénissieux ne pouvant absorber les volumes auparavant ; l’enlèvement test reste maintenu au 20 novembre [2].\n\nAinsi, selon le périmètre : lancement général le 1er décembre [1], enlèvements réguliers Maison Verdier le 8 décembre [2].",
+  "mesures": {
+    "mots": 80,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1092,
+    "sortie": 205,
+    "reflexion": 74,
+    "cache": 256,
+    "cout": 0.00025224
+  },
+  "cout": 0.00025224,
+  "latenceMs": 1449,
+  "fournisseur": "Inferact vLLM"
+}

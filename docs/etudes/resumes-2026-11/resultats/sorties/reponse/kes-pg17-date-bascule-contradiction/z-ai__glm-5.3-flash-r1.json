@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:35.623Z",
+  "reponse": "La mise en production Postgres 17 est prévue le samedi 28 novembre, 02:00–06:00 UTC : le créneau initial du 21 novembre a été repoussé après l'incident d'ingestion du 12/11, à la demande de Maya qui veut une seconde répétition sur des données de taille prod avant de toucher la prod [2]. Un PR infra (en plan seulement, rien d'appliqué, revue en attente de Daniel) reflète ce report [6]. L'e-mail client du 9 novembre annonçait encore le 21 novembre avec jusqu'à 30 minutes d'indisponibilité des dashboards et de l'API [3], mais il est antérieur à la décision de report.",
+  "rendu": "La mise en production Postgres 17 est prévue le samedi 28 novembre, 02:00–06:00 UTC : le créneau initial du 21 novembre a été repoussé après l'incident d'ingestion du 12/11, à la demande de Maya qui veut une seconde répétition sur des données de taille prod avant de toucher la prod [2]. Un PR infra (en plan seulement, rien d'appliqué, revue en attente de Daniel) reflète ce report [6]. L'e-mail client du 9 novembre annonçait encore le 21 novembre avec jusqu'à 30 minutes d'indisponibilité des dashboards et de l'API [3], mais il est antérieur à la décision de report.",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1134,
+    "sortie": 174,
+    "reflexion": 12,
+    "cache": 0,
+    "cout": 0.0002571
+  },
+  "cout": 0.0002571,
+  "latenceMs": 2862,
+  "fournisseur": "Modal"
+}

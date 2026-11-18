@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:49.675Z",
+  "reponse": "## Where I am\nThe Fernhill SAML SSO work on branch daniel/saml-sso-fernhill is working end to end on staging: a real login with Fernhill's IdP succeeds, and JIT creates users with the viewer role. The RelayState length fix is merged in the sense that its commit is in the branch, and the group-to-role mapping is in PR #421, still open. The remaining blocker is Fernhill IT adding the groups claim before Thursday's demo. (source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] Group-to-role mapping (`saml_role_mapping`) is written and tested (41 tests pass) but PR #421 is still open and unmerged. (source: ses-sso-3, pr #421)\n- [en-cours] Fernhill IT has to add the groups claim to their assertion; Daniel said he would email them. Linear still shows this as pending. (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Once the groups claim exists, test with a Fernhill admin account to confirm the admin mapping works on staging. (source: ses-sso-3)\n- [prochaine-étape] Get #421 reviewed and merged. (source: ses-sso-3, pr #421)\n- [prochaine-étape] Demo with Fernhill IT on Thursday Nov 19, 10:00 ET, using `kestrel.test1` and an admin test account. (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The SAML binding caps RelayState at 80 bytes and Fernhill's ADFS rejected the full return URL (143 bytes) with MSIS7042. Fixed by storing the return URL in Redis under a short random ID. (source: ses-sso-3)\n- [question] Fernhill's Slack message asks for analyst as the default role and IdP-initiated login only. Daniel declined for now: the default stays viewer and SP-initiated login stays on, until Maya has talked to them. (source: ses-sso-3, src-slack-fernhill)\n- [question] Maya's note says SSO enforcement is set for Dec 1 with password login disabled for the fernhill tenant. This is not yet reflected in the Linear ticket or the code history. (source: src-note-enforce)\n- [décision] Default role for new Fernhill users is viewer (least privilege); admins upgrade people. (source: ses-sso-1, s1-05)\n- [décision] SAML only for Fernhill, no OIDC for now; both SP- and IdP-initiated flows. (source: ses-sso-1, s1-03)\n- [décision] Users are only created from verified tenant domains; unverified domains are refused and logged without the email. (source: ses-sso-2, src-pr415)\n- [décision] Default role stays viewer and SP-initiated login stays on for this tenant until Maya talks to Fernhill. (source: ses-sso-3, s3-07)",
+  "rendu": "- [en-cours] Group-to-role mapping (`saml_role_mapping`) is written and tested (41 tests pass) but PR #421 is still open and unmerged. (de: agent; source: ses-sso-3)\n- [en-cours] Fernhill IT has to add the groups claim to their assertion; Daniel said he would email them. Linear still shows this as pending. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Once the groups claim exists, test with a Fernhill admin account to confirm the admin mapping works on staging. (de: agent; source: ses-sso-3)\n- [prochaine-étape] Get #421 reviewed and merged. (de: agent; source: ses-sso-3)\n- [prochaine-étape] Demo with Fernhill IT on Thursday Nov 19, 10:00 ET, using `kestrel.test1` and an admin test account. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The SAML binding caps RelayState at 80 bytes and Fernhill's ADFS rejected the full return URL (143 bytes) with MSIS7042. Fixed by storing the return URL in Redis under a short random ID. (de: agent; source: ses-sso-3)\n- [question] Fernhill's Slack message asks for analyst as the default role and IdP-initiated login only. Daniel declined for now: the default stays viewer and SP-initiated login stays on, until Maya has talked to them. (de: connecteur, agent; source: ses-sso-3, src-slack-fernhill)\n- [question] Maya's note says SSO enforcement is set for Dec 1 with password login disabled for the fernhill tenant. This is not yet reflected in the Linear ticket or the code history. (de: agent; source: src-note-enforce)\n- [décision] Default role for new Fernhill users is viewer (least privilege); admins upgrade people. (de: toi, agent; source: ses-sso-1, s1-05)\n- [décision] SAML only for Fernhill, no OIDC for now; both SP- and IdP-initiated flows. (de: toi, agent; source: ses-sso-1, s1-03)\n- [décision] Users are only created from verified tenant domains; unverified domains are refused and logged without the email. (de: équipe, agent; source: ses-sso-2, src-pr415)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1986,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6387,
+    "sortie": 977,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0011272
+  },
+  "cout": 0.0011272,
+  "latenceMs": 4729,
+  "fournisseur": "Claude Platform on AWS"
+}

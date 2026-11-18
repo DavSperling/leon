@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-iso-auditnachweis",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:19.177Z",
+  "reponse": "## Où j'en suis\nFür das Überwachungsaudit ISO 9001 (8.5.6) wurde die Änderungslenkung des Händlerportals aufgearbeitet: 23 produktive Releases seit November 2025 aus den Git-Tags erfasst, mit den Jira-Change-Tickets (Projekt ITS) abgeglichen — 18 mit Freigabe vor Produktivsetzung, 3 danach, 2 Hotfixes ohne Ticket — und die Abweichungen samt Maßnahmen in `docs/iso/aenderungsnachweis-2026.md` formuliert. Der Nachweis liegt als sechsseitiges PDF vor; committet wurde nichts, der Jira-CSV-Export bleibt lokal. Der Auditor kommt bereits am Dienstag, 24.11., in die IT, die Übersicht muss bis Freitag, 20.11., bei Anja Lindner sein.\n\n- [prochaine-étape] PDF in SharePoint unter QM/Nachweise ablegen — macht die Person selbst\n- [essai-raté] Jira-API-Abruf der Change-Tickets scheiterte mit 401, ersetzt durch den CSV-Export aus Jira\n- [essai-raté] Nachträgliche Change-Tickets mit rückdatiertem Freigabedatum für die Hotfixes — verworfen\n- [décision] keine Rückdatierung; beide Hotfixes offen als Abweichung aufnehmen, Maßnahme Notfall-Change-Prozess mit Nachfreigabe binnen 2 Arbeitstagen (source: a09)\n- [décision] dieselbe Maßnahme für die drei Releases mit Freigabe nach Produktivsetzung; ab Dezember blockiert eine Branch Protection den Merge auf `main` ohne verlinktes freigegebenes Change-Ticket (source: a13)\n- [décision] Übersicht als PDF erzeugen, selbst in SharePoint ablegen, nichts committen (source: a17)",
+  "rendu": "## Où j'en suis\nFür das Überwachungsaudit ISO 9001 (8.5.6) wurde die Änderungslenkung des Händlerportals aufgearbeitet: 23 produktive Releases seit November 2025 aus den Git-Tags erfasst, mit den Jira-Change-Tickets (Projekt ITS) abgeglichen — 18 mit Freigabe vor Produktivsetzung, 3 danach, 2 Hotfixes ohne Ticket — und die Abweichungen samt Maßnahmen in `docs/iso/aenderungsnachweis-2026.md` formuliert. Der Nachweis liegt als sechsseitiges PDF vor; committet wurde nichts, der Jira-CSV-Export bleibt lokal. Der Auditor kommt bereits am Dienstag, 24.11., in die IT, die Übersicht muss bis Freitag, 20.11., bei Anja Lindner sein.\n\n- branche [[docs/iso-audit-2026]]\n- [prochaine-étape] PDF in SharePoint unter QM/Nachweise ablegen — macht die Person selbst\n- [essai-raté] Jira-API-Abruf der Change-Tickets scheiterte mit 401, ersetzt durch den CSV-Export aus Jira\n- [essai-raté] Nachträgliche Change-Tickets mit rückdatiertem Freigabedatum für die Hotfixes — verworfen\n- [décision] keine Rückdatierung; beide Hotfixes offen als Abweichung aufnehmen, Maßnahme Notfall-Change-Prozess mit Nachfreigabe binnen 2 Arbeitstagen (source: a09)\n- [décision] dieselbe Maßnahme für die drei Releases mit Freigabe nach Produktivsetzung; ab Dezember blockiert eine Branch Protection den Merge auf `main` ohne verlinktes freigegebenes Change-Ticket (source: a13)\n- [décision] Übersicht als PDF erzeugen, selbst in SharePoint ablegen, nichts committen (source: a17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1449,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3812,
+    "sortie": 1510,
+    "reflexion": 1075,
+    "cache": 0,
+    "cout": 0.00206892
+  },
+  "cout": 0.00206892,
+  "latenceMs": 7720,
+  "fournisseur": "Fireworks"
+}

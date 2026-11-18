@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-saone-avant-noel",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:04:50.026Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24016,
+    "sortie": 1588,
+    "reflexion": 1168,
+    "cache": 14960,
+    "cout": 0.00190915
+  },
+  "latenceMs": 21000,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"table Saône disponibilité livraison réception 24 décembre grande table cliente cette semaine promettre délai stock livraison\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"sourceId\":\"10\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"notion-reponses-types-saone\"}",
+    "lire {\"sourceId\":\"slack-logistique-saone\"}",
+    "lire {\"sourceId\":\"tldv-point-equipe-1116\"}"
+  ],
+  "cout": 0.00190915
+}

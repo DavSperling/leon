@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:05.361Z",
+  "reponse": "Since #447 the front end reads flags from the API (GET /api/flags), so the older FEATURE_FLAGS=new_dash in .env.local is now ignored [2][3]. To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. The flag was renamed from new_dash to dashboards_v2 [2]. Note the earlier Slack tip to set FEATURE_FLAGS=new_dash and restart vite is outdated [1]. Rollout is at the internal workspaces stage, with beta for Fernhill and Orbitly on Nov 30 and general availability in January [4]. If the tiles come up empty on a new workspace, that is a known blank-grid case tracked in KES-470, which asks for an empty state linking to the SDK setup guide [5].",
+  "rendu": "Since #447 the front end reads flags from the API (GET /api/flags), so the older FEATURE_FLAGS=new_dash in .env.local is now ignored [2][3]. To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. The flag was renamed from new_dash to dashboards_v2 [2]. Note the earlier Slack tip to set FEATURE_FLAGS=new_dash and restart vite is outdated [1]. Rollout is at the internal workspaces stage, with beta for Fernhill and Orbitly on Nov 30 and general availability in January [4]. If the tiles come up empty on a new workspace, that is a known blank-grid case tracked in KES-470, which asks for an empty state linking to the SDK setup guide [5].",
+  "mesures": {
+    "mots": 124,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1242,
+    "sortie": 226,
+    "reflexion": 29,
+    "cache": 512,
+    "cout": 0.00025278
+  },
+  "cout": 0.00025278,
+  "latenceMs": 1839,
+  "fournisseur": "Parasail"
+}

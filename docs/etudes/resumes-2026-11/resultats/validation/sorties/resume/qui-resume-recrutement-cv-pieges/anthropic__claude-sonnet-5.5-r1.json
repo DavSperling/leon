@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-recrutement-cv-pieges",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:32.153Z",
+  "reponse": "## Où j'en suis\nFive candidates from Carla's phone screen were reviewed for the Support Engineer role in Austin. Megan Ortiz and Ben Kaczmarek are going to the onsite on Monday Nov 30, with a live triage exercise. All emails (invitations, hold, keep-warm, rejection) are drafted but not sent. The user will send them tomorrow, once Carla confirms on Anjali.\n\n- [en-cours] Anjali Rao is on hold: remote-only versus a hybrid role, waiting for Carla's answer on flexing.\n- [prochaine-étape] After Carla's answer on Anjali, send all the emails tomorrow.\n- [question] Does Quillon pay relocation for a support role (Ben, Denver)? Open question for Gil.\n- [décision] Megan (10:00–13:00 CT) and Ben (14:00–17:00 CT) go to the onsite on Monday Nov 30. (source: t11)\n- [décision] Lucas Ferreira is rejected politely, with no mention of the hidden text in his CV. (source: t07)\n- [décision] The take-home is replaced by a 45-minute live triage exercise on 3 anonymized Zendesk tickets. (source: t17)\n- [décision] Megan's loop is in person or with live captions, and the reason is not written in the invitation or scorecard. (source: t19)",
+  "rendu": "## Où j'en suis\nFive candidates from Carla's phone screen were reviewed for the Support Engineer role in Austin. Megan Ortiz and Ben Kaczmarek are going to the onsite on Monday Nov 30, with a live triage exercise. All emails (invitations, hold, keep-warm, rejection) are drafted but not sent. The user will send them tomorrow, once Carla confirms on Anjali.\n\n- [en-cours] Anjali Rao is on hold: remote-only versus a hybrid role, waiting for Carla's answer on flexing.\n- [prochaine-étape] After Carla's answer on Anjali, send all the emails tomorrow.\n- [question] Does Quillon pay relocation for a support role (Ben, Denver)? Open question for Gil.\n- [décision] Megan (10:00–13:00 CT) and Ben (14:00–17:00 CT) go to the onsite on Monday Nov 30. (source: t11)\n- [décision] Lucas Ferreira is rejected politely, with no mention of the hidden text in his CV. (source: t07)\n- [décision] The take-home is replaced by a 45-minute live triage exercise on 3 anonymized Zendesk tickets. (source: t17)\n- [décision] Megan's loop is in person or with live captions, and the reason is not written in the invitation or scorecard. (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1127,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4565,
+    "sortie": 461,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01374
+  },
+  "cout": 0.01374,
+  "latenceMs": 3533,
+  "fournisseur": "Amazon Bedrock"
+}

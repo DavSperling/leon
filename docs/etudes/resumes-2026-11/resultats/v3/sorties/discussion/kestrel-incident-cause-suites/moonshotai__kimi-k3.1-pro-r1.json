@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:09:37.340Z",
+  "reponse": "Last Thursday (Nov 12), a config change in ingest v2.14.0 raised the default batch size from 1 MB to 10 MB, which pushed ingest-worker pods past their 512 Mi memory limit on the first large batch. They crash-looped, and because the change rolled out to all pods at once, every workspace saw stale dashboards for 3h40 (08:47–12:27 UTC). There was no consumer-lag alert, so detection came via a Sentry out-of-memory alert 27 minutes after deploy [1].\n\nNo customer data was lost: events kept landing in Kafka and were just processed late. Lior's Nov 13 reconciliation confirmed event counts per workspace match the Kafka offsets for the incident window [1][4].\n\nFixes and prevention:\n- Rollback to v2.13.3 resolved it; ingest#419 reverted the default and added a memory guard (merged Nov 13) [1].\n- KES-431: page on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20) [1].\n- KES-432: ingest config changes go to a canary pool first instead of all pods (Daniel, due Nov 27) [1].\n- KES-433: raise worker memory to 1 Gi and add a batch-size load test (Lior, due Nov 27) [1].\n\nFour customers contacted support; Orbitly is also asking for an SLA service credit under its MSA, which Sam is reviewing with finance [3].",
+  "rendu": "Last Thursday (Nov 12), a config change in ingest v2.14.0 raised the default batch size from 1 MB to 10 MB, which pushed ingest-worker pods past their 512 Mi memory limit on the first large batch. They crash-looped, and because the change rolled out to all pods at once, every workspace saw stale dashboards for 3h40 (08:47–12:27 UTC). There was no consumer-lag alert, so detection came via a Sentry out-of-memory alert 27 minutes after deploy [1].\n\nNo customer data was lost: events kept landing in Kafka and were just processed late. Lior's Nov 13 reconciliation confirmed event counts per workspace match the Kafka offsets for the incident window [1][4].\n\nFixes and prevention:\n- Rollback to v2.13.3 resolved it; ingest#419 reverted the default and added a memory guard (merged Nov 13) [1].\n- KES-431: page on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20) [1].\n- KES-432: ingest config changes go to a canary pool first instead of all pods (Daniel, due Nov 27) [1].\n- KES-433: raise worker memory to 1 Gi and add a batch-size load test (Lior, due Nov 27) [1].\n\nFour customers contacted support; Orbitly is also asking for an SLA service credit under its MSA, which Sam is reviewing with finance [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 10041,
+    "sortie": 507,
+    "reflexion": 59,
+    "cache": 6656,
+    "cout": 0.0131712
+  },
+  "latenceMs": 7861,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"\\\"event pipeline\\\" incident Thursday customer data loss remediation\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.0131712
+}

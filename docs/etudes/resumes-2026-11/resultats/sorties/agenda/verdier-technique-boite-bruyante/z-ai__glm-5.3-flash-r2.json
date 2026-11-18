@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:44.698Z",
+  "reponse": "{\"n\": 5, \"titre\": \"Debugging session webhooks\", \"debut\": \"2026-11-18T18:00\", \"avec\": \"Ryan Okafor\"}\n{\"n\": 6, \"titre\": \"Point tunnel de commande – Studio Canut\", \"debut\": \"2026-11-17T16:00\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 15, \"titre\": \"Point bug de synchro\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 25, \"titre\": \"Visite de suivi en entreprise – Hugo Petit\", \"debut\": \"2026-11-17\", \"avec\": \"Nathalie Delorme\"}",
+  "rendu": "2026-11-17 Visite de suivi en entreprise – Hugo Petit (avec Nathalie Delorme)\n2026-11-17T10:00 Point bug de synchro (avec Hugo Petit)\n2026-11-17T16:00 Point tunnel de commande – Studio Canut (avec Mélanie Roche)\n2026-11-18T18:00 Debugging session webhooks (avec Ryan Okafor)",
+  "mesures": {
+    "trouves": 4,
+    "attendus": 4,
+    "justes": 4,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2930,
+    "sortie": 533,
+    "reflexion": 361,
+    "cache": 2880,
+    "cout": 0.0003882
+  },
+  "cout": 0.0003882,
+  "latenceMs": 2583,
+  "fournisseur": "Particle AI"
+}

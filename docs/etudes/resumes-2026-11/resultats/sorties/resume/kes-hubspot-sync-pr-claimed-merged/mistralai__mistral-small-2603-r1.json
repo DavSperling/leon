@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:24:04.550Z",
+  "reponse": "## Où j'en suis\nLe polling HubSpot a été implémenté (branche daniel/hubspot-owner-sync) avec une synchronisation toutes les 15 minutes via CRM search, pagination fenêtrée pour dépasser la limite de 10k résultats, et filtre sur ARR > 0. La PR #409 a été fusionnée, mais le test e2e `test_admin_accounts::test_accounts_table_shows_owner` échoue car il attend 3 comptes avec propriétaire alors que le filtre ARR > 0 en exclut un (trial).\n\n- [en-cours] PR #409 est merged mais le test e2e échoue\n- [prochaine-étape] Corriger le test e2e (fixture) pour qu'il reflète le filtre ARR > 0\n- [prochaine-étape] Demander à Noa d'ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod\n- [essai-raté] Impossible de créer des webhooks via API avec un token privé HubSpot (401 Unauthorized)\n- [décision] Fermeture de #405 remplacée par polling (source: t04)\n- [décision] Ouverture de #409 avec filtre ARR > 0 (source: t12)",
+  "rendu": "## Où j'en suis\nLe polling HubSpot a été implémenté (branche daniel/hubspot-owner-sync) avec une synchronisation toutes les 15 minutes via CRM search, pagination fenêtrée pour dépasser la limite de 10k résultats, et filtre sur ARR > 0. La PR #409 a été fusionnée, mais le test e2e `test_admin_accounts::test_accounts_table_shows_owner` échoue car il attend 3 comptes avec propriétaire alors que le filtre ARR > 0 en exclut un (trial).\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 est merged mais le test e2e échoue\n- [prochaine-étape] Corriger le test e2e (fixture) pour qu'il reflète le filtre ARR > 0\n- [prochaine-étape] Demander à Noa d'ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod\n- [essai-raté] Impossible de créer des webhooks via API avec un token privé HubSpot (401 Unauthorized)\n- [décision] Fermeture de #405 remplacée par polling (source: t04)\n- [décision] Ouverture de #409 avec filtre ARR > 0 (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1101,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3687,
+    "sortie": 1519,
+    "reflexion": 1220,
+    "cache": 0,
+    "cout": 0.001610895
+  },
+  "cout": 0.001610895,
+  "latenceMs": 10265,
+  "fournisseur": "Mistral"
+}

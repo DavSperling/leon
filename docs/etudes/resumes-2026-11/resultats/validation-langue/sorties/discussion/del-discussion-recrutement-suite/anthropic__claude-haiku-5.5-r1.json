@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:46:00.495Z",
+  "reponse": "Personne n'a encore été embauché d'après ce que j'ai trouvé. L'annonce est en ligne depuis le 2/11 avec 11 candidatures [1]. Lors du CODIR du 16/11, Aurélie prévoyait de faire une offre la semaine suivante pour une arrivée début janvier, et la rémunération doit être tranchée au CODIR du 23 [6]. Un modèle de promesse d'embauche existe déjà [2].\n\nQuatre candidats sont convoqués à l'atelier de Carquefou avec Yannick [1][3] :\n- Kevin Le Roux, jeudi 19/11 à 14h\n- Mathis Le Gac, jeudi 19/11 à 15h. Il a retiré sa candidature le 18/11 après avoir accepté une offre près de Vannes [7]\n- Dylan Perrot, vendredi 20/11 à 9h\n- Inès Carré, vendredi 20/11 à 10h\n\nIl reste donc trois candidats en lice pour les entretiens.",
+  "rendu": "Personne n'a encore été embauché d'après ce que j'ai trouvé. L'annonce est en ligne depuis le 2/11 avec 11 candidatures [1]. Lors du CODIR du 16/11, Aurélie prévoyait de faire une offre la semaine suivante pour une arrivée début janvier, et la rémunération doit être tranchée au CODIR du 23 [6]. Un modèle de promesse d'embauche existe déjà [2].\n\nQuatre candidats sont convoqués à l'atelier de Carquefou avec Yannick [1][3] :\n- Kevin Le Roux, jeudi 19/11 à 14h\n- Mathis Le Gac, jeudi 19/11 à 15h. Il a retiré sa candidature le 18/11 après avoir accepté une offre près de Vannes [7]\n- Dylan Perrot, vendredi 20/11 à 9h\n- Inès Carré, vendredi 20/11 à 10h\n\nIl reste donc trois candidats en lice pour les entretiens.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9446,
+    "sortie": 914,
+    "reflexion": 404,
+    "cache": 0,
+    "cout": 0.0014016
+  },
+  "latenceMs": 9440,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs embauche candidat\",\"depuis\":\"3m\"}",
+    "chercher {\"requete\":\"deux installateurs recrutement Aurélie Jaouen Yannick Moreau\"}"
+  ],
+  "cout": 0.0014016
+}

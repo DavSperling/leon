@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:07.709Z",
+  "reponse": "## What you did\n\n- Traced Orbitly's ~8% iOS funnel drop to your own iOS SDK: kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so the #240 dedupe discarded ~1.18M legitimate Orbitly events (8.1% of their iOS volume since 13/11), plus 3,812 for Zest's pilot app [1]\n- Fixed the dedupe to key on (project, device, event_id) — genuine batch replays are still dropped — and opened PR #247 with Maya as reviewer [1][2]\n\n## What changed\n\n- Maya will approve #247 once CI is green, but asked you for the number of Orbitly events dropped since #240, for her Thursday call with Orbitly [2]\n- Noa's final version of the 12/11 postmortem is up; she presents it at Friday's incident review on 20/11 [3]\n- The incident-review prep added an action item for you on the ingest dead-letter queue alert [7]\n\n## What is still open\n\n- Once #247 is merged and deployed, replay Orbitly from landing for 13/11 onward (~40 min, keeps the ~1.18M events and skips the 4,352 genuine replays), then the same for Zest, and check the dedupe drop counter stays near zero [1]\n- Add the alert for the ingest dead-letter queue going above 1,000 messages, before Friday's review [7]\n- The note asking the iOS team to restore UUIDs for `event_id` in kestrel-ios 3.2.1 is still a draft to send [1]",
+  "rendu": "## What you did\n\n- Traced Orbitly's ~8% iOS funnel drop to your own iOS SDK: kestrel-ios 3.2.0 sends `event_id` as a per-session counter, so the #240 dedupe discarded ~1.18M legitimate Orbitly events (8.1% of their iOS volume since 13/11), plus 3,812 for Zest's pilot app [1]\n- Fixed the dedupe to key on (project, device, event_id) — genuine batch replays are still dropped — and opened PR #247 with Maya as reviewer [1][2]\n\n## What changed\n\n- Maya will approve #247 once CI is green, but asked you for the number of Orbitly events dropped since #240, for her Thursday call with Orbitly [2]\n- Noa's final version of the 12/11 postmortem is up; she presents it at Friday's incident review on 20/11 [3]\n- The incident-review prep added an action item for you on the ingest dead-letter queue alert [7]\n\n## What is still open\n\n- Once #247 is merged and deployed, replay Orbitly from landing for 13/11 onward (~40 min, keeps the ~1.18M events and skips the 4,352 genuine replays), then the same for Zest, and check the dedupe drop counter stays near zero [1]\n- Add the alert for the ingest dead-letter queue going above 1,000 messages, before Friday's review [7]\n- The note asking the iOS team to restore UUIDs for `event_id` in kestrel-ios 3.2.1 is still a draft to send [1]",
+  "mesures": {
+    "mots": 214,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4640,
+    "sortie": 1785,
+    "reflexion": 1426,
+    "cache": 0,
+    "cout": 0.001767
+  },
+  "cout": 0.001767,
+  "latenceMs": 18147,
+  "fournisseur": "Makora"
+}

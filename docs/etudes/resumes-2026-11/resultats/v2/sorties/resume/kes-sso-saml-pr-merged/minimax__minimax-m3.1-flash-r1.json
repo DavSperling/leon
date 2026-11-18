@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:03.802Z",
+  "reponse": "## Where things are\n\nThe SAML ACS endpoint for Fernhill is complete: signatures are verified with `signxml` (python3-saml and xmlsec removed), attributes are read only from the verified `signed_xml`, and condition checks (audience, recipient, time window, replay protection) were added with tests. `saml_utils` was moved to `api/auth/saml/verify.py`, mypy and ruff are clean, the full suite passed (1284 passed, 3 skipped), and PR kestrel-analytics/platform#412 was merged after Maya's approval. The branch `daniel/saml-acs` holds commits 3f9c2a1, b71e04d and e0a5c93.\n\n- [in-progress] Load Fernhill staging IdP metadata; the PR description also mentions sending them our staging SP metadata by Wednesday EOD for the Thursday 10:00 New York demo.\n- [next-step] Create the separate ticket to enforce SSO / disable password login for Fernhill users.\n- [failed] Docker builds using `python3-saml`/`xmlsec` failed on Alpine (libxml2 mismatch, then missing crypto library); building lxml from source did not help.\n- [failed] `gh pr merge 412 --squash` was refused by branch protection until review; `--admin` and `--auto` were explicitly ruled out.\n- [decision] Drop python3-saml and xmlsec entirely in favour of signxml, with hand-written condition checks reading only from `signed_xml` (source: t08).\n- [decision] Set clock skew tolerance to 120 s per the Fernhill security questionnaire, as a setting, and leave password login untouched in this PR (source: t12).\n- [decision] Do not use `--admin` or `--auto` to merge; ping Maya directly instead (source: t21).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4533,
+    "sortie": 413,
+    "reflexion": 24,
+    "cache": 256,
+    "cout": 0.00089319
+  },
+  "cout": 0.00089319,
+  "latenceMs": 4084,
+  "fournisseur": "Inferact vLLM"
+}

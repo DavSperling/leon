@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:06.656Z",
+  "reponse": "## Où j'en suis\n\nLe bug de stock négatif est corrigé : les webhooks ne décrémentent plus l'inventaire (Shopify le fait déjà seul), la synchro de nuit passe en valeur absolue avec `inventorySetQuantities`, le dédoublonnage a été retiré, le seuil d'alerte bas est à 3, `syncStock` renommée `synchroniserStocks`, et la config d'app déployée sans `orders/updated`. La Saône a été remise à 0 sur Shopify ; la PR #87 est ouverte avec Hugo en relecteur.\n\n- [en-cours] PR #87 en attente de relecture/review de Hugo ; le code prod de `orders/create` ne décrémente toujours pas tant que la PR n'est pas fusionnée\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044), toutes en Saône chêne 180\n- [prochaine-étape] Suivre le retour de la Saône (réassort Bois & Fils prévu le 2 décembre) pour la remise en vente\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : sans effet sur le stock, retiré — la cause était le double décrément\n- [décision] Webhooks sans aucun décrément de stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône avant le bon de livraison de Bois & Fils (source: t17)",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif est corrigé : les webhooks ne décrémentent plus l'inventaire (Shopify le fait déjà seul), la synchro de nuit passe en valeur absolue avec `inventorySetQuantities`, le dédoublonnage a été retiré, le seuil d'alerte bas est à 3, `syncStock` renommée `synchroniserStocks`, et la config d'app déployée sans `orders/updated`. La Saône a été remise à 0 sur Shopify ; la PR #87 est ouverte avec Hugo en relecteur.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] PR #87 en attente de relecture/review de Hugo ; le code prod de `orders/create` ne décrémente toujours pas tant que la PR n'est pas fusionnée\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044), toutes en Saône chêne 180\n- [prochaine-étape] Suivre le retour de la Saône (réassort Bois & Fils prévu le 2 décembre) pour la remise en vente\n- [essai-raté] Dédoublonnage des webhooks par `X-Shopify-Webhook-Id` : sans effet sur le stock, retiré — la cause était le double décrément\n- [décision] Webhooks sans aucun décrément de stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1298,
+    "decisions": 2,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4057,
+    "sortie": 440,
+    "reflexion": 12,
+    "cache": 768,
+    "cout": 0.0005858104
+  },
+  "cout": 0.0005858104,
+  "latenceMs": 5851,
+  "fournisseur": "Xiaomi"
+}

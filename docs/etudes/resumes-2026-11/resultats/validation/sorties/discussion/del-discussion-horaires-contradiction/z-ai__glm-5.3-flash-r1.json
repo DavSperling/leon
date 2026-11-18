@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:51.999Z",
+  "reponse": "Oui, c'est réglé. Le problème (créneaux affichés une heure trop tard après le changement d'heure, ticket #208) a été corrigé via la PR #214, fusionnée et déployée le 17/11 — Thomas Riou a fermé le ticket et confirmé sur #dev que l'appli affiche de nouveau la bonne heure, la reprise des 41 interventions corrigées à la main étant aussi passée [1][2][12].",
+  "rendu": "Oui, c'est réglé. Le problème (créneaux affichés une heure trop tard après le changement d'heure, ticket #208) a été corrigé via la PR #214, fusionnée et déployée le 17/11 — Thomas Riou a fermé le ticket et confirmé sur #dev que l'appli affiche de nouveau la bonne heure, la reprise des 41 interventions corrigées à la main étant aussi passée [1][2][12].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 5939,
+    "sortie": 138,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007540800000000001
+  },
+  "latenceMs": 4198,
+  "fournisseur": "Reka",
+  "trace": [
+    "chercher {\"requete\":\"horaires application poseurs\"}",
+    "activite {\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.0007540800000000001
+}

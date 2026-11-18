@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-sap-nachtlauf",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:24.352Z",
+  "reponse": "## Où j'en suis\nDie Ursache ist gefunden: das SAP-Wartungsfenster PRD liegt seit dem 09.11. auf 02:00–02:45, der Job startet um 02:15 mitten hinein; bricht die RFC-Verbindung ab, wiederholt Spring Batch den ganzen Chunk und legt bereits angelegte Aufträge erneut in SAP an. Behoben wurde das idempotente Anlegen (Suche über die Portal-Nr. in BSTKD vor dem Anlegen) und der Exportstatus pro Auftrag (Migration V57, 421 Tests grün); die Arbeit liegt als Draft-PR #221 offen und wartet auf Review durch Matthias.\n\n- [en-cours] Draft-PR #221 wartet auf Review, danach Merge\n- [prochaine-étape] die 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst stornieren lassen (Liste in docs/betrieb/duplikate-2026-11.md), Startzeit des Jobs mit dem Basis-Team klären\n- [essai-raté] Retry pro Auftrag statt pro Chunk löst nichts: der Test abbruchNachAnlage legt trotzdem doppelt an, ein Timeout heißt nicht, dass SAP nichts angelegt hat\n- [décision] idempotent anlegen: vor dem Anlegen über die Portal-Nr. als BSTKD in SAP suchen, Retry pro Auftrag bleibt drin (source: t11)\n- [décision] Exportstatus pro Auftrag in der Datenbank statt Flag pro Chunk, mit Migration (source: t13)\n- [décision] die Uhrzeit des Jobs bleibt unangetastet, das klärt Matthias mit dem Basis-Team (source: t07)",
+  "rendu": "## Où j'en suis\nDie Ursache ist gefunden: das SAP-Wartungsfenster PRD liegt seit dem 09.11. auf 02:00–02:45, der Job startet um 02:15 mitten hinein; bricht die RFC-Verbindung ab, wiederholt Spring Batch den ganzen Chunk und legt bereits angelegte Aufträge erneut in SAP an. Behoben wurde das idempotente Anlegen (Suche über die Portal-Nr. in BSTKD vor dem Anlegen) und der Exportstatus pro Auftrag (Migration V57, 421 Tests grün); die Arbeit liegt als Draft-PR #221 offen und wartet auf Review durch Matthias.\n\n- pr [[kranich/haendlerportal#221]]\n- branche [[fix/sap-nachtlauf-idempotenz]]\n- commit [[4c1e9a7]]\n- commit [[b07d3f2]]\n- commit [[e95a610]]\n- [en-cours] Draft-PR #221 wartet auf Review, danach Merge\n- [prochaine-étape] die 4 doppelten SAP-Aufträge durch den Vertriebsinnendienst stornieren lassen (Liste in docs/betrieb/duplikate-2026-11.md), Startzeit des Jobs mit dem Basis-Team klären\n- [essai-raté] Retry pro Auftrag statt pro Chunk löst nichts: der Test abbruchNachAnlage legt trotzdem doppelt an, ein Timeout heißt nicht, dass SAP nichts angelegt hat\n- [décision] idempotent anlegen: vor dem Anlegen über die Portal-Nr. als BSTKD in SAP suchen, Retry pro Auftrag bleibt drin (source: t11)\n- [décision] Exportstatus pro Auftrag in der Datenbank statt Flag pro Chunk, mit Migration (source: t13)\n- [décision] die Uhrzeit des Jobs bleibt unangetastet, das klärt Matthias mit dem Basis-Team (source: t07)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1419,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5180,
+    "sortie": 1375,
+    "reflexion": 979,
+    "cache": 0,
+    "cout": 0.0012816
+  },
+  "cout": 0.0012816,
+  "latenceMs": 12907,
+  "fournisseur": "Novita"
+}

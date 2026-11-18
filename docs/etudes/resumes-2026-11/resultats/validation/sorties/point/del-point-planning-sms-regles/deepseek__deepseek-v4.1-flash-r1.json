@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:55.604Z",
+  "reponse": "## What is still open\n- La PR #214 n'est pas prête à fusionner : Lucas demande d'y corriger `rappels/sms.py`, sinon les SMS J-1 resteront faux jusqu'au 30/11 [3] ; Yannick signale que les SMS de ce soir annoncent encore 9h et qu'il faut que ce soit bon avant l'envoi de mercredi 18 h [4], et Sandrine attend ta réponse pour rappeler les clients [7].\n- La reprise des 41 interventions corrigées à la main (`reprise_heure_hiver`) est prête, mais à lancer en prod seulement après la fusion de #214 [1].\n- Franck compte sur toi pour verrouiller le créneau de l'audit RGE du chantier Le Floch le 8/12, à faire avant vendredi [2].\n\n## What changed\n- #219 : le formulaire de devis rejette les numéros de téléphone avec des espaces, deux demandes perdues ; pas urgent [6].\n\n## What you did\n- Tu as corrigé le décalage d'une heure de l'appli des poseurs (#208) en passant à `timezone.localtime` dans l'ICS, l'API mobile et le rapport hebdo, avec des tests pour l'heure d'été et d'hiver, puis ouvert la PR #214 [1].\n- Tu as assaini le dépôt : réglages découpés en base/dev/prod sans changer le serveur, HSTS et cookies durcis, pillow monté à 11.0.0, ruff/black passés [2].",
+  "rendu": "## What is still open\n- La PR #214 n'est pas prête à fusionner : Lucas demande d'y corriger `rappels/sms.py`, sinon les SMS J-1 resteront faux jusqu'au 30/11 [3] ; Yannick signale que les SMS de ce soir annoncent encore 9h et qu'il faut que ce soit bon avant l'envoi de mercredi 18 h [4], et Sandrine attend ta réponse pour rappeler les clients [7].\n- La reprise des 41 interventions corrigées à la main (`reprise_heure_hiver`) est prête, mais à lancer en prod seulement après la fusion de #214 [1].\n- Franck compte sur toi pour verrouiller le créneau de l'audit RGE du chantier Le Floch le 8/12, à faire avant vendredi [2].\n\n## What changed\n- #219 : le formulaire de devis rejette les numéros de téléphone avec des espaces, deux demandes perdues ; pas urgent [6].\n\n## What you did\n- Tu as corrigé le décalage d'une heure de l'appli des poseurs (#208) en passant à `timezone.localtime` dans l'ICS, l'API mobile et le rapport hebdo, avec des tests pour l'heure d'été et d'hiver, puis ouvert la PR #214 [1].\n- Tu as assaini le dépôt : réglages découpés en base/dev/prod sans changer le serveur, HSTS et cookies durcis, pillow monté à 11.0.0, ruff/black passés [2].",
+  "mesures": {
+    "mots": 193,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6245,
+    "sortie": 5275,
+    "reflexion": 4914,
+    "cache": 1536,
+    "cout": 0.003662315
+  },
+  "cout": 0.003662315,
+  "latenceMs": 24673,
+  "fournisseur": "InferenceNet"
+}

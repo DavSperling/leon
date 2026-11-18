@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:58:07.481Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit et testé : `regles.ts` (remises par collection), `appliquer.ts` (dry run CSV puis application par opération en masse JSONL), `export-csv.ts`, et la programmation dans `scripts/cron.ts`. Après un échec par throttling sur la boutique de dev (remise à ses prix d'origine depuis le CSV du dry run), l'application en masse a passé 512 variantes sans rejet ; la PR #94 est ouverte, mais non fusionnée.\n\n- [en-cours] PR #94 ouverte, en attente de relecture et de fusion\n- [prochaine-étape] écrire le script de retour aux prix d'origine pour la fin des soldes (prévu en décembre)\n- [prochaine-étape] régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [prochaine-étape] vérifier la répétition sur `dev-verdier` la veille du lancement (`pnpm soldes:repetition`)\n- [essai-raté] écriture directe produit par produit : THROTTLED à mi-chemin, boutique de dev à moitié soldée ; remplacée par `bulkOperationRunMutation`\n- [décision] remises -20 % Rhône, -30 % fins de série, rien sur la Saône (source: t05)\n- [décision] prix arrondis à l'euro inférieur puis finissant par 9 (source: t07)\n- [décision] lancement le mercredi 13 janvier 2027 à 8h00, pas le 12 au soir (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit et testé : `regles.ts` (remises par collection), `appliquer.ts` (dry run CSV puis application par opération en masse JSONL), `export-csv.ts`, et la programmation dans `scripts/cron.ts`. Après un échec par throttling sur la boutique de dev (remise à ses prix d'origine depuis le CSV du dry run), l'application en masse a passé 512 variantes sans rejet ; la PR #94 est ouverte, mais non fusionnée.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] PR #94 ouverte, en attente de relecture et de fusion\n- [prochaine-étape] écrire le script de retour aux prix d'origine pour la fin des soldes (prévu en décembre)\n- [prochaine-étape] régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [prochaine-étape] vérifier la répétition sur `dev-verdier` la veille du lancement (`pnpm soldes:repetition`)\n- [essai-raté] écriture directe produit par produit : THROTTLED à mi-chemin, boutique de dev à moitié soldée ; remplacée par `bulkOperationRunMutation`\n- [décision] remises -20 % Rhône, -30 % fins de série, rien sur la Saône (source: t05)\n- [décision] prix arrondis à l'euro inférieur puis finissant par 9 (source: t07)\n- [décision] lancement le mercredi 13 janvier 2027 à 8h00, pas le 12 au soir (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1391,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4029,
+    "sortie": 537,
+    "reflexion": 150,
+    "cache": 0,
+    "cout": 0.00074124
+  },
+  "cout": 0.00074124,
+  "latenceMs": 4264,
+  "fournisseur": "Novita"
+}

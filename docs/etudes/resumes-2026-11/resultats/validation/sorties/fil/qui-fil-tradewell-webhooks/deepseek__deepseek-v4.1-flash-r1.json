@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:30.390Z",
+  "reponse": "## Où j'en suis\nThe Tradewell certification work has moved to branch `jake/tradewell-webhook-cert`, cut from the now-merged PR #1468 work: WH-17 is fixed (payout.failed now emits `failure_code`, mapped from the NACHA `return_code`, plus `failure_message`, commit c41f9a2e), and WH-31 is written but unfinished — signing moved to send time in `delivery.rs` with fresh unit tests, while the retry integration test still asserts the old reused header and is uncommitted. The certification re-run is blocked because Tradewell's sandbox API key expired on Nov 17. Friday Nov 20 is the deadline to pass; missing it pushes the next cert window to Dec 2. (source: ses-tw-3, c41f9a2e, src-jira-2310)\n\n- [en-cours] WH-31 send-time re-signing: `sign(secret, now_unix(), body)` before each HTTP call, `signature_header` no longer written; `tests/retry.rs` still checks the old header against the mock receiver (source: ses-tw-3, w3-06)\n- [prochaine-étape] Jake finishes the retry integration test tomorrow morning and pushes; then re-run `./scripts/tradewell-cert.sh --env sandbox`; open the PR against main only after a green run (source: ses-tw-3, w3-11)\n- [essai-raté] the sandbox cert run returned `401 Unauthorized`: Tradewell's partner API key expired 2026-11-17, so nothing was tested (source: ses-tw-3, w3-08)\n- [question] whether the mTLS and `payout.updated` that Ellen says were \"agreed\" are actually in scope — they are not in the spec; Jake will check with Sofia before anything is built (source: w3-09, src-slack-tradewell)\n- [décision] do WH-17 first, on a new branch, not piled onto #1468 (source: w3-03)\n- [décision] re-sign every attempt with a fresh timestamp rather than asking Tradewell to widen its 300 s tolerance (source: w3-05)\n- [décision] #1468 \"webhooks: signed delivery + retries for payout events (Tradewell)\" approved by Tomer Golan and merged into main (source: src-pr1468)",
+  "rendu": "## Où j'en suis\nThe Tradewell certification work has moved to branch `jake/tradewell-webhook-cert`, cut from the now-merged PR #1468 work: WH-17 is fixed (payout.failed now emits `failure_code`, mapped from the NACHA `return_code`, plus `failure_message`, commit c41f9a2e), and WH-31 is written but unfinished — signing moved to send time in `delivery.rs` with fresh unit tests, while the retry integration test still asserts the old reused header and is uncommitted. The certification re-run is blocked because Tradewell's sandbox API key expired on Nov 17. Friday Nov 20 is the deadline to pass; missing it pushes the next cert window to Dec 2. (de: équipe, connecteur, agent; source: ses-tw-3, c41f9a2e, src-jira-2310)\n\n- [en-cours] WH-31 send-time re-signing: `sign(secret, now_unix(), body)` before each HTTP call, `signature_header` no longer written; `tests/retry.rs` still checks the old header against the mock receiver (de: agent; source: ses-tw-3, w3-06)\n- [prochaine-étape] Jake finishes the retry integration test tomorrow morning and pushes; then re-run `./scripts/tradewell-cert.sh --env sandbox`; open the PR against main only after a green run (de: toi, agent; source: ses-tw-3, w3-11)\n- [essai-raté] the sandbox cert run returned `401 Unauthorized`: Tradewell's partner API key expired 2026-11-17, so nothing was tested (de: agent; source: ses-tw-3, w3-08)\n- [question] whether the mTLS and `payout.updated` that Ellen says were \"agreed\" are actually in scope — they are not in the spec; Jake will check with Sofia before anything is built (de: toi, connecteur; source: w3-09, src-slack-tradewell)\n- [décision] do WH-17 first, on a new branch, not piled onto #1468 (de: toi; source: w3-03)\n- [décision] re-sign every attempt with a fresh timestamp rather than asking Tradewell to widen its 300 s tolerance (de: toi; source: w3-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1848,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5823,
+    "sortie": 1172,
+    "reflexion": 635,
+    "cache": 0,
+    "cout": 0.001302969
+  },
+  "cout": 0.001302969,
+  "latenceMs": 5667,
+  "fournisseur": "InferenceNet"
+}

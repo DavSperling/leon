@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:34.992Z",
+  "reponse": "## Où j'en suis\nLe travail sur les tableaux de bord v2 se poursuit avec l'ajout de la navigation au clavier et d'un indicateur de focus, intégrés dans la branche `tom/dashboard-keyboard` et la PR #423 en cours de relecture par Priya, tandis que l'option d'une migration vers visx a été abandonnée au profit de Recharts. (source: ses-db-4, ses-db-3)\n\n- [en-cours] relecture par Priya de la PR #423 pour le déplacement/redimensionnement des widgets au clavier et l'anneau de focus (source: ses-db-4)\n- [prochaine-étape] basculer le feature flag `dashboards_v2` pour l'espace de travail Zest sur la production le matin du 24 novembre (source: ses-db-4)\n- [essai-raté] l'utilisation de dnd-kit a provoqué des doubles écoutes et des mouvements appliqués en double avec react-grid-layout (source: ses-db-4)\n- [décision] garder Recharts et fermer définitivement la PR #401 sur visx (source: c3-03)\n- [décision] activer le feature flag `dashboards_v2` uniquement pour le workspace Zest sur staging pour la répétition de la démo (source: d0-06, ses-db-4)",
+  "rendu": "## Où j'en suis\nLe travail sur les tableaux de bord v2 se poursuit avec l'ajout de la navigation au clavier et d'un indicateur de focus, intégrés dans la branche `tom/dashboard-keyboard` et la PR #423 en cours de relecture par Priya, tandis que l'option d'une migration vers visx a été abandonnée au profit de Recharts. (de: agent; source: ses-db-4, ses-db-3)\n\n- [en-cours] relecture par Priya de la PR #423 pour le déplacement/redimensionnement des widgets au clavier et l'anneau de focus (de: agent; source: ses-db-4)\n- [prochaine-étape] basculer le feature flag `dashboards_v2` pour l'espace de travail Zest sur la production le matin du 24 novembre (de: agent; source: ses-db-4)\n- [essai-raté] l'utilisation de dnd-kit a provoqué des doubles écoutes et des mouvements appliqués en double avec react-grid-layout (de: agent; source: ses-db-4)\n- [décision] garder Recharts et fermer définitivement la PR #401 sur visx (de: toi; source: c3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 943,
+    "lignesRetirees": 1,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5349,
+    "sortie": 320,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0024047
+  },
+  "cout": 0.0024047,
+  "latenceMs": 2234,
+  "fournisseur": "Google"
+}

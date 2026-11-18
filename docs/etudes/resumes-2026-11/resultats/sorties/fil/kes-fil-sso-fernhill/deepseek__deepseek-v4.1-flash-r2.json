@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:35.666Z",
+  "reponse": "## Où j'en suis\nLe login SAML réel fonctionne de bout en bout sur staging avec l'IdP Fernhill : métadonnées chargées, JIT de #415 (fusionnée) qui crée les comptes en `viewer`, et le correctif de RelayState court (`saml:rs:<id>` en Redis, TTL 600 s, commit `6d0e2b8`) qui a débloqué l'erreur ADFS. Le mapping groupe→rôle par tenant est écrit et testé (41 tests, commit `f4a91c7`) mais il est dans #421, encore ouverte, et il ne servira à rien tant que Fernhill n'ajoute pas le claim `groups`. La démo Fernhill IT est fixée au jeudi 19 novembre 10:00 ET (source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] #421 « SAML: group to role mapping + short RelayState » ouverte, mapping `{\"Fernhill-Kestrel-Admins\": \"admin\"}` appliqué à chaque login, pas seulement à la création (source: kestrel-analytics/platform#421, s3-06)\n- [prochaine-étape] Fernhill IT ajoute le claim `groups` (Daniel leur écrit), puis créer un compte de test admin et refaire le tour complet avant la démo de jeudi (source: s3-06, s3-08)\n- [prochaine-étape] faire relire et fusionner #421 (source: s3-11, kestrel-analytics/platform#421)\n- [essai-raté] RelayState = URL de retour complète (143 octets) : ADFS de Fernhill la refuse (`MSIS7042: The RelayState parameter is too long`, limite 80 octets) ; remplacée par un ID opaque stocké côté serveur (source: s3-02, 6d0e2b8)\n- [question] la demande d'Ilan Rosen (Fernhill IT) — `analyst` par défaut et IdP-initiated seulement — n'est pas tranchée avec eux ; Maya doit leur parler (source: src-slack-fernhill, s3-06)\n- [décision] le rôle par défaut reste `viewer` jusqu'à ce que Maya parle à Fernhill, et le SP-initiated reste activé ; il n'existe pas de rôle `analyst` (source: s3-07)\n- [décision] JIT : seuls les domaines vérifiés, jamais de compte depuis un domaine non vérifié même si l'IdP l'envoie (source: s2-03)\n- [décision] SAML 2.0 seulement pour Fernhill, pas d'OIDC pour l'instant ; les deux flux, SP et IdP-initiated (source: s1-03)\n- [décision] les utilisateurs créés au premier login ont le rôle `viewer` (source: s1-05)",
+  "rendu": "## Où j'en suis\nLe login SAML réel fonctionne de bout en bout sur staging avec l'IdP Fernhill : métadonnées chargées, JIT de #415 (fusionnée) qui crée les comptes en `viewer`, et le correctif de RelayState court (`saml:rs:<id>` en Redis, TTL 600 s, commit `6d0e2b8`) qui a débloqué l'erreur ADFS. Le mapping groupe→rôle par tenant est écrit et testé (41 tests, commit `f4a91c7`) mais il est dans #421, encore ouverte, et il ne servira à rien tant que Fernhill n'ajoute pas le claim `groups`. La démo Fernhill IT est fixée au jeudi 19 novembre 10:00 ET (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n\n- [en-cours] #421 « SAML: group to role mapping + short RelayState » ouverte, mapping `{\"Fernhill-Kestrel-Admins\": \"admin\"}` appliqué à chaque login, pas seulement à la création (de: équipe, agent; source: kestrel-analytics/platform#421, s3-06)\n- [prochaine-étape] Fernhill IT ajoute le claim `groups` (Daniel leur écrit), puis créer un compte de test admin et refaire le tour complet avant la démo de jeudi (de: agent; source: s3-06, s3-08)\n- [prochaine-étape] faire relire et fusionner #421 (de: équipe, agent; source: s3-11, kestrel-analytics/platform#421)\n- [essai-raté] RelayState = URL de retour complète (143 octets) : ADFS de Fernhill la refuse (`MSIS7042: The RelayState parameter is too long`, limite 80 octets) ; remplacée par un ID opaque stocké côté serveur (de: équipe, agent; source: s3-02, 6d0e2b8)\n- [question] la demande d'Ilan Rosen (Fernhill IT) — `analyst` par défaut et IdP-initiated seulement — n'est pas tranchée avec eux ; Maya doit leur parler (de: connecteur, agent; source: src-slack-fernhill, s3-06)\n- [décision] le rôle par défaut reste `viewer` jusqu'à ce que Maya parle à Fernhill, et le SP-initiated reste activé ; il n'existe pas de rôle `analyst` (de: toi; source: s3-07)\n- [décision] JIT : seuls les domaines vérifiés, jamais de compte depuis un domaine non vérifié même si l'IdP l'envoie (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1964,
+    "lignesRetirees": 2,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4687,
+    "sortie": 1255,
+    "reflexion": 588,
+    "cache": 0,
+    "cout": 0.00170628
+  },
+  "cout": 0.00170628,
+  "latenceMs": 8809,
+  "fournisseur": "Wafer"
+}

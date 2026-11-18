@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:11:08.130Z",
+  "reponse": "## What you did\n- Built the full plan and rubric for Ilan Barak's technical interview: a Terraform exercise with Noa, a live incident-response scenario based on the 12/11 ingest incident, and on-call questions covering TLV nights and cutting Noa's ~30 pages a week [1].\n- Read the SRE band as the main hiring risk — 2 of the last 4 declines trace back to pay — and stripped salary figures from your hiring notes, leaving them in the ATS [1].\n\n## What changed\n- Eitan asked for the SRE shortlist before Friday: he wants a hiring update in Monday's board deck [4].\n- Noa confirmed tomorrow 15:00 with Ilan and will prepare the RDS parameter-group exercise [3].\n\n## What is still open\n- Reply to Dana: confirm Thursday 15:00 with panel you + Noa, and demand 3 more profiles by end of next week — the pipeline is down to one candidate [1].\n- Send the interview plan doc to Noa [1].\n- Propose raising the band to ₪42–48k to Eitan at Monday's leadership sync [1].",
+  "rendu": "## What you did\n- Built the full plan and rubric for Ilan Barak's technical interview: a Terraform exercise with Noa, a live incident-response scenario based on the 12/11 ingest incident, and on-call questions covering TLV nights and cutting Noa's ~30 pages a week [1].\n- Read the SRE band as the main hiring risk — 2 of the last 4 declines trace back to pay — and stripped salary figures from your hiring notes, leaving them in the ATS [1].\n\n## What changed\n- Eitan asked for the SRE shortlist before Friday: he wants a hiring update in Monday's board deck [4].\n- Noa confirmed tomorrow 15:00 with Ilan and will prepare the RDS parameter-group exercise [3].\n\n## What is still open\n- Reply to Dana: confirm Thursday 15:00 with panel you + Noa, and demand 3 more profiles by end of next week — the pipeline is down to one candidate [1].\n- Send the interview plan doc to Noa [1].\n- Propose raising the band to ₪42–48k to Eitan at Monday's leadership sync [1].",
+  "mesures": {
+    "mots": 163,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4354,
+    "sortie": 1614,
+    "reflexion": 1358,
+    "cache": 0,
+    "cout": 0.00106148
+  },
+  "cout": 0.00106148,
+  "latenceMs": 50253,
+  "fournisseur": "Xiaomi"
+}

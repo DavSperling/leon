@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:37.915Z",
+  "reponse": "La date de cutover en production de Postgres 17 a été repoussée du samedi 21 novembre au samedi 28 novembre 2026, même créneau horaire (02:00–06:00 UTC) [2][6]. Originally planifié au 21 novembre avec go/no-go le jeudi précédent [1], et annoncé aux clients le 9 novembre [3], le ticket Linear KES-509 affichait encore une échéance au 21 novembre [4]. Le déplacement fait suite à l'incident d'ingestion du 12/11, Maya exigeant un second dry run sur des données de taille prod [2]. La PR d'infra du 17 novembre met à jour la variable terraform cutover_date et l'entrée status page, sans rien appliquer, en attente de revue par @daniel-levi [5][6].",
+  "rendu": "La date de cutover en production de Postgres 17 a été repoussée du samedi 21 novembre au samedi 28 novembre 2026, même créneau horaire (02:00–06:00 UTC) [2][6]. Originally planifié au 21 novembre avec go/no-go le jeudi précédent [1], et annoncé aux clients le 9 novembre [3], le ticket Linear KES-509 affichait encore une échéance au 21 novembre [4]. Le déplacement fait suite à l'incident d'ingestion du 12/11, Maya exigeant un second dry run sur des données de taille prod [2]. La PR d'infra du 17 novembre met à jour la variable terraform cutover_date et l'entrée status page, sans rien appliquer, en attente de revue par @daniel-levi [5][6].",
+  "mesures": {
+    "mots": 107,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1255,
+    "sortie": 206,
+    "reflexion": 32,
+    "cache": 636,
+    "cout": 0.000203391
+  },
+  "cout": 0.000203391,
+  "latenceMs": 2101,
+  "fournisseur": "Wafer"
+}

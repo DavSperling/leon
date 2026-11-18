@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:39.288Z",
+  "reponse": "## What is still open\n- Your draft to Nadia and Tom still promises CAD payouts in Q1 2027, which Sofia has ruled out (Q2 at the earliest), and she asks that no date go in writing to a prospect. Fix that before you send it tomorrow [1][6].\n- The 15% discount needs Rachel's sign-off, since anything above 10% now requires it [3].\n- The SIG Lite is still due Monday Nov 23, and Nadia's security team won't keep a vendor without it. You planned to ask Shira today [4][1].\n- The reference is still TBD. You planned to ask Rachel which customer you can use [1].\n\n## What changed\n- Nadia moved the provider decision to Wed Dec 2, from Dec 4. The SIG Lite deadline stays the same [4]. The action plan dates built on Dec 4 need reworking [1].\n\n## What you did\n- Drafted the follow-up email to Nadia and Tom, with 15% off for a 2-year commit after rejecting a 20% opening [1].\n- Built a mutual action plan with dates working back from the Dec 4 decision [1].",
+  "rendu": "## What is still open\n- Your draft to Nadia and Tom still promises CAD payouts in Q1 2027, which Sofia has ruled out (Q2 at the earliest), and she asks that no date go in writing to a prospect. Fix that before you send it tomorrow [1][6].\n- The 15% discount needs Rachel's sign-off, since anything above 10% now requires it [3].\n- The SIG Lite is still due Monday Nov 23, and Nadia's security team won't keep a vendor without it. You planned to ask Shira today [4][1].\n- The reference is still TBD. You planned to ask Rachel which customer you can use [1].\n\n## What changed\n- Nadia moved the provider decision to Wed Dec 2, from Dec 4. The SIG Lite deadline stays the same [4]. The action plan dates built on Dec 4 need reworking [1].\n\n## What you did\n- Drafted the follow-up email to Nadia and Tom, with 15% off for a 2-year commit after rejecting a 20% opening [1].\n- Built a mutual action plan with dates working back from the Dec 4 decision [1].",
+  "mesures": {
+    "mots": 174,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5680,
+    "sortie": 1943,
+    "reflexion": 1572,
+    "cache": 0,
+    "cout": 0.0015395
+  },
+  "cout": 0.0015395,
+  "latenceMs": 10261,
+  "fournisseur": "Google"
+}

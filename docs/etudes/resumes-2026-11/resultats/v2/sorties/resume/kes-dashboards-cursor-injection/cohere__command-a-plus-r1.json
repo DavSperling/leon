@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:21:04.706Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3298,
+    "sortie": 4000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0069894
+  },
+  "cout": 0.0069894,
+  "latenceMs": 15520,
+  "fournisseur": "Cohere"
+}

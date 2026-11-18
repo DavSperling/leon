@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:05.452Z",
+  "reponse": "## What you did\n- Fixed the flaky `test_acs_rejects_expired_assertion`: it slept 2.1s against a 3s clock-skew allowance, so rejection depended on timing; all three sleeping ACS tests now use freezegun — 50/50 green, suite ~2s faster [1].\n- Cleared ruff 0.8 and mypy across `kestrel/auth`: a missing Issuer or Subject now returns a 401 instead of crashing into a 500 [1].\n- Split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` behind a re-export shim; full suite green, ruff and mypy clean on `kestrel/` [1].\n\n## What changed\n- Maya approved and merged PR #418 (SAML assertion signature verification, Fernhill SSO) — it goes out with tonight's staging deploy [3].\n\n## What is still open\n- PR #423 (this cleanup): Tom requests changes — split the module move from the lint fixes into two PRs; he says he'll approve both today [4].\n- Thursday 10am NY time: the Fernhill end-to-end SSO walkthrough on staging with their Okta tenant; Priya runs the demo, you just need to be on the call [1].\n- The replay cache for assertion IDs is still in-memory per process: move it to Redis (`SET key NX EX`, keyed by tenant + assertion ID) for multi-pod [1][2].",
+  "rendu": "## What you did\n- Fixed the flaky `test_acs_rejects_expired_assertion`: it slept 2.1s against a 3s clock-skew allowance, so rejection depended on timing; all three sleeping ACS tests now use freezegun — 50/50 green, suite ~2s faster [1].\n- Cleared ruff 0.8 and mypy across `kestrel/auth`: a missing Issuer or Subject now returns a 401 instead of crashing into a 500 [1].\n- Split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` behind a re-export shim; full suite green, ruff and mypy clean on `kestrel/` [1].\n\n## What changed\n- Maya approved and merged PR #418 (SAML assertion signature verification, Fernhill SSO) — it goes out with tonight's staging deploy [3].\n\n## What is still open\n- PR #423 (this cleanup): Tom requests changes — split the module move from the lint fixes into two PRs; he says he'll approve both today [4].\n- Thursday 10am NY time: the Fernhill end-to-end SSO walkthrough on staging with their Okta tenant; Priya runs the demo, you just need to be on the call [1].\n- The replay cache for assertion IDs is still in-memory per process: move it to Redis (`SET key NX EX`, keyed by tenant + assertion ID) for multi-pod [1][2].",
+  "mesures": {
+    "mots": 183,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6098,
+    "sortie": 4136,
+    "reflexion": 3801,
+    "cache": 0,
+    "cout": 0.0020118
+  },
+  "cout": 0.0020118,
+  "latenceMs": 46764,
+  "fournisseur": "Cohere"
+}

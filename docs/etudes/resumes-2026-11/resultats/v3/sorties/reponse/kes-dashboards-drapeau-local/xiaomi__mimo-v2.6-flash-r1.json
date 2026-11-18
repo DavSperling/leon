@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:44.276Z",
+  "reponse": "Since PR #447, the flag is served by the API, so the old advice of setting `FEATURE_FLAGS=new_dash` in `.env.local` is outdated and ignored [2]. To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [3]. You can verify with `curl localhost:8000/api/flags` [3]. The flag was also renamed from `new_dash` to `dashboards_v2` [2]. Note that new workspaces with no events may show a blank grid until the empty states land [5].",
+  "rendu": "Since PR #447, the flag is served by the API, so the old advice of setting `FEATURE_FLAGS=new_dash` in `.env.local` is outdated and ignored [2]. To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page [3]. You can verify with `curl localhost:8000/api/flags` [3]. The flag was also renamed from `new_dash` to `dashboards_v2` [2]. Note that new workspaces with no events may show a blank grid until the empty states land [5].",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1199,
+    "sortie": 199,
+    "reflexion": 62,
+    "cache": 0,
+    "cout": 0.00022358
+  },
+  "cout": 0.00022358,
+  "latenceMs": 15854,
+  "fournisseur": "Cohere"
+}

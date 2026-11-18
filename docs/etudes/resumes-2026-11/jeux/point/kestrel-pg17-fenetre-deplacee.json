@@ -1,0 +1,400 @@
+{
+  "id": "kestrel-pg17-fenetre-deplacee",
+  "titre": "Bascule Postgres 17 : la fenêtre passe de samedi à dimanche après la session (le runbook écrit dit encore samedi), sujets réglés qui reviennent sans neuf, fausse décision sur la répétition du retour arrière",
+  "langue": "en",
+  "entree": {
+    "maintenant": "2026-11-18T07:05:00Z",
+    "projet": "github.com/kestrel-analytics/infra",
+    "depuis": "2026-11-17T07:30:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [
+      "Staging has been on Postgres 17 since Thursday and the regression suite passed.",
+      "The PG17 parameter group is merged (#318)."
+    ],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-cutover",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "prod cutover to pg17, rds blue/green",
+          "url": null,
+          "date": "2026-11-17T14:52:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T07:30:00Z",
+            "texte": "prod cutover to pg17. we're doing rds blue/green. write the terraform for it on the prod instance, and a runbook in runbooks/. window is saturday 21/11 02:00-04:00 UTC per the notion page"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T07:34:10Z",
+            "texte": "I'll read `envs/prod/rds.tf` and the `modules/rds` module first.\n\nProd today: `kestrel-prod-pg`, PostgreSQL 15.8, db.r6g.2xlarge, Multi-AZ, 1 read replica `kestrel-prod-pg-ro` used by the dashboards API. The AWS provider pinned in `versions.tf` is 5.80, which supports `blue_green_update` on `aws_db_instance`, so no provider upgrade is needed for this."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T07:52:30Z",
+            "texte": "Changes in `envs/prod/rds.tf`:\n- `blue_green_update { enabled = true }` on `module.rds_prod`\n- `engine_version = \"17.2\"`, `allow_major_version_upgrade = true`\n- `parameter_group_name = aws_db_parameter_group.pg17.name` (the one from #318)\n- `apply_immediately = false`, so nothing happens until we trigger the switchover in the window\n\nI haven't run anything against prod yet."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T07:55:00Z",
+            "texte": "run plan"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:01:45Z",
+            "texte": "`terraform plan` on prod (read-only role): 2 to change, **1 to destroy and recreate**:\n\n```\n# module.rds_prod.aws_db_instance.replica must be replaced\n-/+ resource \"aws_db_instance\" \"replica\" {\n      ~ engine_version = \"15.8\" -> \"17.2\" # forces replacement\n```\nThe read replica would be destroyed and recreated, which drops the dashboards' read traffic for 20 to 30 minutes."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:03:20Z",
+            "texte": "no way. the replica has to follow the blue/green, not be replaced"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:15:00Z",
+            "texte": "Right: with blue/green, RDS creates the green copy of the replica itself and swaps it at switchover, so Terraform must not drive the replica's engine version. I removed `engine_version` from the replica and added `lifecycle { ignore_changes = [engine_version] }`. New plan: 2 to change, 0 to destroy."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:16:30Z",
+            "texte": "fmt + tflint"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:20:10Z",
+            "texte": "`terraform fmt -recursive` reformatted 3 files (alignment only). `tflint --recursive` reported 2 warnings: `aws_db_instance_previous_type` on the old staging bastion DB (db.t2.micro) and `terraform_unused_declarations` for `var.replica_engine_version`, which is now unused. Removed the variable; left the bastion alone since it's not part of this change. tflint is clean on `envs/prod`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:25:00Z",
+            "texte": "now the runbook"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:48:30Z",
+            "texte": "Wrote `runbooks/pg17-cutover.md`:\n\n1. T-24h: freeze schema migrations, announce in #eng\n2. Window: **Saturday 21/11, 02:00–04:00 UTC**\n3. T-30 min: create the blue/green deployment if not already done, check replication lag < 1s\n4. T-0: pause ingest consumers, switchover, wait for `available`\n5. Verify: API health, dashboards read path, ingest resumes, error rate in Sentry\n6. Rollback: see sectio…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:55:00Z",
+            "texte": "rehearsal: restore last night's prod snapshot to a clone and do the whole blue/green on it. time the write downtime"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:02:20Z",
+            "texte": "Started: restored snapshot `rds:kestrel-prod-pg-2026-11-17-03-00` as `kestrel-rehearsal-pg` (15.8, same class) with a replica, then created a blue/green deployment targeting 17.2 with the PG17 parameter group. I'll poll the green environment status and report when it's ready for switchover."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T11:31:40Z",
+            "texte": "Rehearsal done. Green was ready after 52 minutes (major upgrade + catch-up). Replication lag before switchover stayed under 1 s. Switchover: **74 seconds** of write unavailability; the API pods reconnected through pgbouncer without restarts, and a test writer saw 74 s of failed inserts, then normal. No data mismatch on row counts of the 20 biggest tables."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T11:33:00Z",
+            "texte": "Status recap:\n- Staging has been on PG17 since Thursday 13/11 and the regression suite passed\n- The PG17 parameter group (#318) is merged\n- Prod blue/green Terraform is ready, plan shows 2 changes, 0 destroys\n- Runbook written in `runbooks/pg17-cutover.md`\n- Rehearsal on a clone: 74 s of write downtime"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T11:34:30Z",
+            "texte": "Given how cleanly the rehearsal went, and since blue/green keeps the old blue instance after switchover, I think we can skip a separate rollback rehearsal: rolling back is just switching back. Shall I mark it as not needed in the runbook?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T11:40:10Z",
+            "texte": "no. after switchover blue is renamed and gets no writes, it diverges right away. rollback is not 'switching back'. we rehearse rollback on a fresh clone thursday. put it in the runbook as a todo"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T11:44:50Z",
+            "texte": "You're right: after switchover the old instance is renamed `-old1` and receives no writes, so going back means accepting data loss or replaying writes. Added to the runbook: \"TODO before the window: rehearse rollback on a fresh clone (Thursday 19/11), measure how long it takes and what data is lost.\" Section 7 now says rollback is not a simple switch."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:35:00Z",
+            "texte": "open the pr, maya reviews"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:40:30Z",
+            "texte": "Opened PR #321 \"rds: blue/green deployment for prod PG17 cutover\" with @maya-cohen as reviewer. It includes the Terraform change, the replica lifecycle fix and `runbooks/pg17-cutover.md`. The plan output is in the description."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:48:00Z",
+            "texte": "tear down the rehearsal clone, its costing money"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:52:00Z",
+            "texte": "Deleted the blue/green deployment and the three rehearsal instances (`kestrel-rehearsal-pg`, its `-old1` and the replica), skipping final snapshots. Nothing from the rehearsal is left running."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-staging",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "staging pg17 upgrade today",
+          "url": null,
+          "date": "2026-11-13T15:30:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-13T09:00:00Z",
+            "texte": "staging pg17 upgrade today. in-place major upgrade is fine for staging. go"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T09:04:10Z",
+            "texte": "Set `engine_version = \"17.2\"` and `allow_major_version_upgrade = true` on `module.rds_staging`, with the PG17 parameter group from #318. Plan: 1 to change. Applying with `apply_immediately = true`, which takes staging down for the upgrade (about 20 minutes)."
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T09:31:30Z",
+            "texte": "Staging is on PostgreSQL 17.2. `ANALYZE` run on all databases (statistics aren't carried over by a major upgrade). Starting the regression suite against staging."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-13T15:20:00Z",
+            "texte": "suite status?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-13T15:30:00Z",
+            "texte": "Regression suite passed: 1,284 API tests and the 46 ingest end-to-end scenarios. p95 of the dashboards queries is within 5% of PG15. Nothing to fix before planning prod."
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-321",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#321 rds: blue/green deployment for prod PG17 cutover",
+          "url": "https://github.com/kestrel-analytics/infra/pull/321",
+          "date": "2026-11-17T15:30:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "noa-friedman",
+            "date": "2026-11-17T14:40:00Z",
+            "texte": "Enables RDS blue/green on prod for the PG15 → PG17 cutover. The read replica follows the blue/green instead of being replaced (lifecycle ignore on engine_version). Runbook in runbooks/pg17-cutover.md. Rehearsal on a snapshot clone: 74 s of write downtime. Rollback rehearsal still to do."
+          },
+          {
+            "role": "participant",
+            "auteur": "maya-cohen",
+            "date": "2026-11-17T15:30:00Z",
+            "texte": "Approved. Terraform looks right, good catch on the replica. Don't merge before the window is confirmed with Fernhill, the date in the runbook may move."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-320",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#320 chore(deps): update terraform aws provider to v5.82",
+          "url": "https://github.com/kestrel-analytics/infra/pull/320",
+          "date": "2026-11-17T10:15:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "renovate[bot]",
+            "date": "2026-11-17T10:15:00Z",
+            "texte": "This PR contains the following updates: hashicorp/aws 5.80.0 → 5.82.0.\n\nConfiguration: 📅 Schedule: at any time. 🚦 Automerge: disabled. ♻ Rebasing: whenever PR becomes conflicted. This PR was generated by Renovate."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-318",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#318 rds: PG17 parameter group",
+          "url": "https://github.com/kestrel-analytics/infra/pull/318",
+          "date": "2026-11-17T08:00:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "auteur": "maya-cohen",
+            "date": "2026-11-12T16:10:00Z",
+            "texte": "LGTM, merged."
+          },
+          {
+            "role": "participant",
+            "auteur": "daniel-levi",
+            "date": "2026-11-17T08:00:00Z",
+            "texte": "🎉 staging on PG17 has been smooth since Thursday, p95 even dropped a bit on the dashboards queries."
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "mail-terrastack",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "Terrastack Weekly #212: drift detection, OpenTofu tips, and our winter webinar",
+          "url": null,
+          "date": "2026-11-18T05:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Terrastack Weekly",
+          "date": "2026-11-18T05:30:00Z",
+          "texte": "This week: 5 ways to catch drift before it catches you · Module versioning done right · Join our winter webinar on policy as code (Dec 3)!\n\nRead the issue →\n\nYou're receiving Terrastack Weekly at noa@kestrel-analytics.example. Update preferences or unsubscribe."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-oncall",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#oncall, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T17:05:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Daniel Levi",
+          "date": "2026-11-17T17:05:00Z",
+          "texte": "@noa for sunday I'll be on call for the API side, ping me when you start the switchover"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-infra-maya",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#infra, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T16:20:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Maya Cohen",
+          "date": "2026-11-17T16:20:00Z",
+          "texte": "@noa confirmed with Sam: Fernhill's month-end batch runs Saturday night until ~06:00 UTC. The PG17 cutover moves to Sunday 22/11, 02:00–04:00 UTC. I've told the CSMs, you can update the runbook and merge #321."
+        }
+      },
+      {
+        "source": {
+          "id": "linear-kes-530",
+          "kind": "linear",
+          "nature": "ticket",
+          "titre": "KES-530 PG17 cutover: ingest workers",
+          "url": "https://linear.app/kestrel/issue/KES-530",
+          "date": "2026-11-17T11:40:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Lior Ben-David",
+          "date": "2026-11-17T11:40:00Z",
+          "texte": "@noa ingest workers read DATABASE_URL from SSM, so nothing to change on our side for the cutover. Please give me 30 min notice before the switchover so I can pause the consumers cleanly."
+        }
+      },
+      {
+        "source": {
+          "id": "notion-runbook",
+          "kind": "notion",
+          "nature": "page",
+          "titre": "PG17 production cutover",
+          "url": "https://www.notion.so/kestrel/PG17-production-cutover",
+          "date": "2026-11-17T09:10:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Maya Cohen",
+          "date": "2026-11-17T09:10:00Z",
+          "texte": "@Noa Friedman the window here still says Saturday 21/11 02:00 UTC. I think Fernhill's month-end batch runs Saturday night, checking with Sam before we lock it."
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-dimanche",
+    "faits": [
+      {
+        "id": "f-dimanche",
+        "texte": "Says the production PG17 cutover is now Sunday 22 November, 02:00–04:00 UTC (03:00–05:00 Paris).",
+        "poids": 3
+      },
+      {
+        "id": "f-raison",
+        "texte": "Gives the reason for the move: Fernhill's month-end batch runs on Saturday night.",
+        "poids": 1
+      },
+      {
+        "id": "f-runbook",
+        "texte": "Says the runbook written in the session still gives Saturday and has to be updated to the new date.",
+        "poids": 2
+      },
+      {
+        "id": "f-321",
+        "texte": "Says #321 (prod blue/green) is approved by Maya and can be merged once the runbook is updated.",
+        "poids": 2
+      },
+      {
+        "id": "f-rollback",
+        "texte": "Says the rollback rehearsal on a fresh clone is still to do, planned for Thursday 19 November.",
+        "poids": 2
+      },
+      {
+        "id": "f-lior",
+        "texte": "Says Lior wants 30 minutes' notice before the switchover to pause the ingest consumers.",
+        "poids": 2
+      },
+      {
+        "id": "f-repetition",
+        "texte": "Says the rehearsal on a snapshot clone cost about 74 seconds of write downtime.",
+        "poids": 1
+      },
+      {
+        "id": "f-daniel",
+        "texte": "Says Daniel will be on call for the API during the cutover.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-samedi",
+        "texte": "Gives Saturday 21 November as the cutover date."
+      },
+      {
+        "id": "i-staging",
+        "texte": "Reports that staging is on PG17 or that the regression suite passed (already settled)."
+      },
+      {
+        "id": "i-318",
+        "texte": "Reports the PG17 parameter group (#318) as merged or as news (already settled)."
+      },
+      {
+        "id": "i-rollback-inutile",
+        "texte": "Says the rollback rehearsal was skipped or is not needed, or that rolling back is just switching back."
+      },
+      {
+        "id": "i-newsletter",
+        "texte": "Mentions the Terrastack newsletter or its webinar."
+      }
+    ],
+    "pieges": [
+      "Périmé : la session et le runbook disent samedi 21/11 ; le message de Maya, plus récent, déplace la bascule au dimanche 22/11 02:00–04:00 UTC.",
+      "Déjà réglé sans neuf : le récapitulatif de l'agent et le « 🎉 » de Daniel sur #318 redisent le passage de la préproduction à PG17 et la PR #318, retirés du point.",
+      "Fausse décision : l'agent propose de sauter la répétition du retour arrière ; Noa refuse et la garde pour jeudi.",
+      "Bruit : la lettre d'information Terrastack."
+    ]
+  }
+}

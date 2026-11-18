@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:58.466Z",
+  "reponse": "## What is still open\n\n- Elad approved #1412 on condition that you add an audit event per batch (id range, count, from/to KEK), not only the final summary. Assessors want per-batch traceability under 10.2. Avi wants it merged by Monday so the run can happen Tuesday night [3].\n- Prod window confirmed: Tue 24/11, 22:00–23:30 IL time, with Elad on call. The only fallback is Thu 26/11, because the change freeze starts Tue 1/12 [6].\n- Shira needs two things by Wed 25/11 for the auditor (Victor, Ardent): the export of the prod run's audit log and the signed change ticket. Screenshots won't be accepted [5].\n- The runbook's on-call is still a placeholder. Elad is now named as on call for the run [2][6].\n\n## What changed\n\n- Avi gave an LGTM on #1412, conditional on Elad's audit-event change [3].\n\n## What you did\n\n- You built the KEK rotation job for card tokens (PCI 3.7.4) and opened #1412. The staging dry run scanned 1,204,880 tokens with 0 failures after you mapped the old v1 envelopes to `vault-kek-2022` [1][3].\n- You decided the old keys stay decrypt-only for 30 days and are not deleted. Deletion is a separate decision with Shira [1].\n- You wrote the prod runbook, including a failure/rollback section [2].",
+  "rendu": "## What is still open\n\n- Elad approved #1412 on condition that you add an audit event per batch (id range, count, from/to KEK), not only the final summary. Assessors want per-batch traceability under 10.2. Avi wants it merged by Monday so the run can happen Tuesday night [3].\n- Prod window confirmed: Tue 24/11, 22:00–23:30 IL time, with Elad on call. The only fallback is Thu 26/11, because the change freeze starts Tue 1/12 [6].\n- Shira needs two things by Wed 25/11 for the auditor (Victor, Ardent): the export of the prod run's audit log and the signed change ticket. Screenshots won't be accepted [5].\n- The runbook's on-call is still a placeholder. Elad is now named as on call for the run [2][6].\n\n## What changed\n\n- Avi gave an LGTM on #1412, conditional on Elad's audit-event change [3].\n\n## What you did\n\n- You built the KEK rotation job for card tokens (PCI 3.7.4) and opened #1412. The staging dry run scanned 1,204,880 tokens with 0 failures after you mapped the old v1 envelopes to `vault-kek-2022` [1][3].\n- You decided the old keys stay decrypt-only for 30 days and are not deleted. Deletion is a separate decision with Shira [1].\n- You wrote the prod runbook, including a failure/rollback section [2].",
+  "mesures": {
+    "mots": 204,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7704,
+    "sortie": 474,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020148
+  },
+  "cout": 0.020148,
+  "latenceMs": 3960,
+  "fournisseur": "Amazon Bedrock"
+}

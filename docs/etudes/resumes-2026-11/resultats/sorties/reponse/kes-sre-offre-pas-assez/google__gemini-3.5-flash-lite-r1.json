@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:32:40.257Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1019,
+    "sortie": 9,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0003282
+  },
+  "cout": 0.0003282,
+  "latenceMs": 1022,
+  "fournisseur": "Google"
+}

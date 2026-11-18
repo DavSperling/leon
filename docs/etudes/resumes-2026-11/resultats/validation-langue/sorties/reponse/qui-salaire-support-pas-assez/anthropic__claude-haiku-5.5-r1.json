@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:45.555Z",
+  "reponse": "The results don't include the company's salary band for the Austin Support Engineer role. The job description only says \"see the comp sheet\" [1], and the hiring plan points to the same sheet [5]. A recruiter asked for the band on November 16, which suggests it hadn't been shared yet [4]. The only salary figure is a general market estimate of $75,000–$95,000 base for a Tier 2 support engineer at an Austin fintech, which the source says is not your company's band [2]. The approved band in #hiring is for a senior SRE in Tel Aviv, so it doesn't apply here [3].",
+  "rendu": "The results don't include the company's salary band for the Austin Support Engineer role. The job description only says \"see the comp sheet\" [1], and the hiring plan points to the same sheet [5]. A recruiter asked for the band on November 16, which suggests it hadn't been shared yet [4]. The only salary figure is a general market estimate of $75,000–$95,000 base for a Tier 2 support engineer at an Austin fintech, which the source says is not your company's band [2]. The approved band in #hiring is for a senior SRE in Tel Aviv, so it doesn't apply here [3].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1617,
+    "sortie": 503,
+    "reflexion": 311,
+    "cache": 0,
+    "cout": 0.0004132
+  },
+  "cout": 0.0004132,
+  "latenceMs": 4231,
+  "fournisseur": "Google"
+}

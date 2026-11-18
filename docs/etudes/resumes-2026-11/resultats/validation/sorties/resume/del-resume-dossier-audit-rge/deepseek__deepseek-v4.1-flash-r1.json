@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-dossier-audit-rge",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:01.237Z",
+  "reponse": "## Où j'en suis\nLa vue PDF « dossier d'audit RGE » (fiche chantier, matériel avec n° de série, photos avant/après, PV de réception, pied de page avec l'attestation de capacité) est livrée en WeasyPrint, avec Pango ajouté au Dockerfile et la conversion HEIC→JPEG à l'upload plus une commande pour l'existant. Tests et lint au vert, la PR #209 est fusionnée sur `thomas/export-dossier-audit` ; il reste le déploiement en prod.\n\n- [en-cours] conversion des photos HEIC de prod, à lancer ce week-end (la recette est faite : 1 211/1 214)\n- [prochaine-étape] renseigner `ATTESTATION_CAPACITE` en recette et en prod, puis déployer lundi\n- [prochaine-étape] Yannick reprend jeudi les 3 photos « après » de CH-2604, illisibles (0 octet dans S3)\n- [essai-raté] exclure les HEIC du dossier (option 2 de l'agent) : refusé, l'auditeur veut les avant/après de chaque pose\n- [décision] conversion HEIC→JPEG à l'upload et conservation de toutes les photos (source: t11)\n- [décision] déploiement en prod lundi, après la conversion des photos du week-end (source: t23)",
+  "rendu": "## Où j'en suis\nLa vue PDF « dossier d'audit RGE » (fiche chantier, matériel avec n° de série, photos avant/après, PV de réception, pied de page avec l'attestation de capacité) est livrée en WeasyPrint, avec Pango ajouté au Dockerfile et la conversion HEIC→JPEG à l'upload plus une commande pour l'existant. Tests et lint au vert, la PR #209 est fusionnée sur `thomas/export-dossier-audit` ; il reste le déploiement en prod.\n\n- pr [[delorme-energies/planif#209]]\n- branche [[thomas/export-dossier-audit]]\n- commit [[3c8e1f4]]\n- commit [[b71a09d]]\n- commit [[f4e2c86]]\n- [en-cours] conversion des photos HEIC de prod, à lancer ce week-end (la recette est faite : 1 211/1 214)\n- [prochaine-étape] renseigner `ATTESTATION_CAPACITE` en recette et en prod, puis déployer lundi\n- [prochaine-étape] Yannick reprend jeudi les 3 photos « après » de CH-2604, illisibles (0 octet dans S3)\n- [essai-raté] exclure les HEIC du dossier (option 2 de l'agent) : refusé, l'auditeur veut les avant/après de chaque pose\n- [décision] conversion HEIC→JPEG à l'upload et conservation de toutes les photos (source: t11)\n- [décision] déploiement en prod lundi, après la conversion des photos du week-end (source: t23)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1192,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3731,
+    "sortie": 1004,
+    "reflexion": 661,
+    "cache": 768,
+    "cout": 0.002098308
+  },
+  "cout": 0.002098308,
+  "latenceMs": 2378,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:22:16.208Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4151,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 768,
+    "cout": 0.006428839
+  },
+  "cout": 0.006428839,
+  "latenceMs": 42781,
+  "fournisseur": "Tencent"
+}

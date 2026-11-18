@@ -1,0 +1,122 @@
+{
+  "id": "qui-tradewell-golive-responsable",
+  "titre": "Date de mise en service Tradewell, pénalité et responsable : la date et la pénalité sont dans le contrat, le responsable dans un message Slack ; des dates voisines et un faux responsable tentent",
+  "langue": "en",
+  "entree": {
+    "recherche": "tradewell go live date penalty who owns cutover",
+    "resultats": [
+      {
+        "id": "dr-tradewell-contract",
+        "kind": "drive",
+        "nature": "fichier",
+        "titre": "Tradewell – Order Form & Payments Services Agreement (signed).pdf",
+        "url": null,
+        "date": "2026-10-22T16:40:00Z",
+        "passages": [
+          {
+            "id": "tw1",
+            "date": "2026-10-22T16:40:00Z",
+            "texte": "4. Go-Live. Quillon shall make the Production Environment available to Customer no later than December 7, 2026 (the \"Go-Live Date\"), subject to Customer completing its onboarding obligations under Schedule B (KYC data for the initial seller cohort and certification of its webhook endpoints) no later than five (5) business days before the Go-Live Date."
+          },
+          {
+            "id": "tw2",
+            "date": "2026-10-22T16:40:00Z",
+            "texte": "4.3 Service Credits. If the Production Environment is not available by the Go-Live Date for reasons attributable to Quillon, Customer shall receive a credit equal to five percent (5%) of the monthly Platform Fees for each full week of delay, up to a maximum of twenty-five percent (25%). Such credits are Customer's sole and exclusive remedy for delay."
+          }
+        ]
+      },
+      {
+        "id": "sl-ext-tradewell",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#ext-tradewell",
+        "url": null,
+        "date": "2026-11-12T14:22:00Z",
+        "passages": [
+          {
+            "id": "tw3",
+            "auteur": "Avi Kessler",
+            "date": "2026-11-12T14:05:00Z",
+            "texte": "Hi Martin, Ellen 👋 quick org note on our side: Tomer Golan owns the Tradewell cutover end to end (payout engine config, webhooks, go/no-go checklist). Sofia stays your contact for product questions, Rachel for anything commercial."
+          },
+          {
+            "id": "tw4",
+            "auteur": "Martin Kobayashi",
+            "date": "2026-11-12T14:22:00Z",
+            "texte": "Thanks Avi. Ellen is the owner on our side. The KYC file for the first 400 sellers lands Dec 2 at the latest."
+          }
+        ]
+      },
+      {
+        "id": "ji-qpay-2340",
+        "kind": "jira",
+        "nature": "ticket",
+        "titre": "QPAY-2340 Tradewell: webhook v2 signatures + sandbox certification",
+        "url": null,
+        "date": "2026-11-16T11:30:00Z",
+        "passages": [
+          {
+            "id": "tw5",
+            "auteur": "Noam Peretz",
+            "date": "2026-11-16T11:30:00Z",
+            "texte": "Status: In Progress · Assignee: Noam Peretz · Due: 30/Nov/26\nComment: 2 signature mismatches left, on Tradewell's side (they sign the body after re-serializing the JSON). Sent Ellen the fix, recertification planned 24/11."
+          }
+        ]
+      },
+      {
+        "id": "go-tradewell-kickoff",
+        "kind": "gong",
+        "nature": "reunion",
+        "titre": "Tradewell – kickoff call",
+        "url": null,
+        "date": "2026-10-27T17:00:00Z",
+        "passages": [
+          {
+            "id": "tw6",
+            "auteur": "Martin Kobayashi",
+            "date": "2026-10-27T17:00:00Z",
+            "texte": "Martin Kobayashi: Our sellers have been told December. If it slips into January we hit our peak season, and honestly we'd rather wait until February than go live mid-January.\nRachel Dunmore: Understood. December 7 is in the contract and that's what we're planning for."
+          }
+        ]
+      },
+      {
+        "id": "gm-tradewell-invoice",
+        "kind": "gmail",
+        "nature": "mail",
+        "titre": "Tradewell invoice INV-2026-1187",
+        "url": null,
+        "date": "2026-11-02T09:15:00Z",
+        "passages": [
+          {
+            "id": "tw7",
+            "auteur": "Jenna Kowalski",
+            "date": "2026-11-02T09:15:00Z",
+            "texte": "Hi Martin, please find attached invoice INV-2026-1187 for the Tradewell onboarding fee ($24,000), payable within 30 days. Platform fees start being invoiced from the Go-Live Date. Best, Jenna"
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      { "id": "f1", "texte": "The Tradewell go-live date is 7 December 2026.", "poids": 3 },
+      { "id": "f2", "texte": "Tomer Golan owns the Tradewell cutover on Quillon's side.", "poids": 3 },
+      { "id": "f3", "texte": "If go-live is late for Quillon's reasons, Tradewell gets a credit of 5% of monthly platform fees per full week of delay.", "poids": 2 },
+      { "id": "f4", "texte": "The credit is capped at 25%.", "poids": 1 },
+      { "id": "f5", "texte": "Ellen Vance is the owner on Tradewell's side.", "poids": 1 },
+      { "id": "f6", "texte": "The date depends on Tradewell delivering its onboarding items (seller KYC data, webhook certification) five business days before.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "x1", "texte": "Says Noam Peretz, Sofia Alvarez or Rachel Dunmore owns the cutover." },
+      { "id": "x2", "texte": "Gives another go-live date (2 December, 30 November, January or February)." },
+      { "id": "x3", "texte": "Describes the penalty as uncapped, per day, or as a share of the whole contract." },
+      { "id": "x4", "texte": "Says Tradewell will go live in February or has postponed." }
+    ],
+    "pieges": [
+      "Croiser : la date et la pénalité sont dans le contrat, le responsable seulement dans un message Slack ; les deux sont nécessaires.",
+      "Dates voisines tentantes : 2 décembre (fichier KYC), 30 novembre (échéance du ticket), février (hypothèse du client s'il y avait glissement).",
+      "Faux responsable : Noam est assigné au ticket des webhooks, pas au basculement ; Sofia et Rachel sont citées pour d'autres rôles."
+    ],
+    "cites": [1, 2]
+  }
+}

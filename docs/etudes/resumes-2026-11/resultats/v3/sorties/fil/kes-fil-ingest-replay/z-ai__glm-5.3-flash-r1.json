@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:45.025Z",
+  "reponse": "## Où j'en suis\nThe 12/11 replay work is nearly done: PR #233 was approved by Daniel and merged, and the real replay ran on Nov 18 — all 18,442,107 events landed in `events.replay.v3` (3,118 schema-v2 lines sent to the rejects file). The aggregator backfill job `backfill-2026-11-12` was started at 08:57 UTC and was at ~61% (14.9M rows in the incident window vs ~20.5M expected) when the session ended. The incident stays open until the counts match. (source: ses-rp-2, r2-01, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` — 61% done at last check, hours 15–23 still in progress (source: r2-06)\n- [prochaine-étape] Wait for the backfill to finish, then compare ClickHouse counts hour by hour (1% tolerance) against expectations, and only then close the incident (source: r2-07, r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (2 Gi limit); 5k batches work — do not raise the memory limit, the namespace quota is capped (source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [question] Rachel told customers the data is back by Thursday, but Orbitly was told Wednesday Nov 18 and is asking for confirmation for a board report — exact date to confirm with engineering (source: r2-07, src-zendesk-orbitly)\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` directly from the tool (source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 (fork fix raising dedup key length to 128); Daniel owns the CI check as the official fix — no other fix goes into this incident (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nThe 12/11 replay work is nearly done: PR #233 was approved by Daniel and merged, and the real replay ran on Nov 18 — all 18,442,107 events landed in `events.replay.v3` (3,118 schema-v2 lines sent to the rejects file). The aggregator backfill job `backfill-2026-11-12` was started at 08:57 UTC and was at ~61% (14.9M rows in the incident window vs ~20.5M expected) when the session ended. The incident stays open until the counts match. (de: toi, agent; source: ses-rp-2, r2-01, r2-04, r2-06, r2-07)\n\n- [en-cours] Aggregator backfill for 2026-11-12, reading `events.replay.v3` — 61% done at last check, hours 15–23 still in progress (de: agent; source: r2-06)\n- [prochaine-étape] Wait for the backfill to finish, then compare ClickHouse counts hour by hour (1% tolerance) against expectations, and only then close the incident (de: toi, agent; source: r2-07, r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (2 Gi limit); 5k batches work — do not raise the memory limit, the namespace quota is capped (de: toi, connecteur, agent; source: ses-rp-1, r1-03, r1-04, src-sentry-oom)\n- [question] Rachel told customers the data is back by Thursday, but Orbitly was told Wednesday Nov 18 and is asking for confirmation for a board report — exact date to confirm with engineering (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` directly from the tool (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Ignore PR #241 (fork fix raising dedup key length to 128); Daniel owns the CI check as the official fix — no other fix goes into this incident (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1741,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3775,
+    "sortie": 567,
+    "reflexion": 75,
+    "cache": 0,
+    "cout": 0.0006798
+  },
+  "cout": 0.0006798,
+  "latenceMs": 8723,
+  "fournisseur": "River"
+}

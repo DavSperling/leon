@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:25.253Z",
+  "reponse": "## Où j'en suis\nQ1 2027 pricing is ready for review but not sent. The impact model uses October billing volume for 38 active customers. With the Loomly/Pinecrest exception and the Tradewell exclusion, the annualized uplift is +$351k and 5 customers are above +10% on 1 January. The notice is drafted in a standard and a Loomly/Pinecrest version, with the instant payout line removed. (source: ses-px-3, p3-02, p3-04, p3-06, p3-10)\n\n- [en-cours] Impact per customer and notice drafts are done, awaiting review (source: p3-10)\n- [prochaine-étape] Gil and Rachel review on Friday 20 Nov at 10:00. Then send the notice from Salesforce to the 38 billing contacts, before 1 December (source: src-slack-gil, p3-09)\n- [prochaine-étape] Rachel calls Loomly before the notice lands (source: p3-01)\n- [essai-raté] The Salesforce October export had no volume for 5 customers (KeyError on Pinecrest Rentals) after a field rename. The billing CSV now covers everyone (source: p2-02, p2-03)\n- [question] Loomly's CFO wrote on 18 Nov that Loomly stays at 0.50% + $0.25 for all of 2027. That conflicts with the agreed switch on 1 April 2027 (source: src-mail-loomly, p3-01)\n- [question] Can the +1% instant payout fee apply to existing contracts under the MSA? Hartley & Moss answer Monday, and nothing on instant payouts goes out before then. An agent note of 16 Nov says it applies to all, but it is not a team decision (source: p3-05, src-note-instant)\n- [décision] Tiers: 0.55% under $5M monthly payout volume, 0.45% from $5M to $25M, 0.35% above $25M, $0.25 per payout unchanged (source: p2-03)\n- [décision] Loomly and Pinecrest keep 0.50% + $0.25 until 31 March 2027. Tradewell is excluded, with its contracted rate for 12 months from go-live (source: p3-01)\n- [décision] The flat 0.40% + $0.30 option is rejected in favour of tiers (source: p1-05)",
+  "rendu": "## Où j'en suis\nQ1 2027 pricing is ready for review but not sent. The impact model uses October billing volume for 38 active customers. With the Loomly/Pinecrest exception and the Tradewell exclusion, the annualized uplift is +$351k and 5 customers are above +10% on 1 January. The notice is drafted in a standard and a Loomly/Pinecrest version, with the instant payout line removed. (de: agent; source: ses-px-3, p3-02, p3-04, p3-06, p3-10)\n\n- [en-cours] Impact per customer and notice drafts are done, awaiting review (de: agent; source: p3-10)\n- [prochaine-étape] Gil and Rachel review on Friday 20 Nov at 10:00. Then send the notice from Salesforce to the 38 billing contacts, before 1 December (de: toi, connecteur; source: src-slack-gil, p3-09)\n- [prochaine-étape] Rachel calls Loomly before the notice lands (de: toi; source: p3-01)\n- [essai-raté] The Salesforce October export had no volume for 5 customers (KeyError on Pinecrest Rentals) after a field rename. The billing CSV now covers everyone (de: toi, agent; source: p2-02, p2-03)\n- [question] Loomly's CFO wrote on 18 Nov that Loomly stays at 0.50% + $0.25 for all of 2027. That conflicts with the agreed switch on 1 April 2027 (de: toi, connecteur; source: src-mail-loomly, p3-01)\n- [question] Can the +1% instant payout fee apply to existing contracts under the MSA? Hartley & Moss answer Monday, and nothing on instant payouts goes out before then. An agent note of 16 Nov says it applies to all, but it is not a team decision (de: toi, agent; source: p3-05, src-note-instant)\n- [décision] Tiers: 0.55% under $5M monthly payout volume, 0.45% from $5M to $25M, 0.35% above $25M, $0.25 per payout unchanged (de: toi; source: p2-03)\n- [décision] Loomly and Pinecrest keep 0.50% + $0.25 until 31 March 2027. Tradewell is excluded, with its contracted rate for 12 months from go-live (de: toi; source: p3-01)\n- [décision] The flat 0.40% + $0.30 option is rejected in favour of tiers (de: toi; source: p1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1969,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6391,
+    "sortie": 2980,
+    "reflexion": 2208,
+    "cache": 0,
+    "cout": 0.0021291
+  },
+  "cout": 0.0021291,
+  "latenceMs": 15347,
+  "fournisseur": "Google"
+}

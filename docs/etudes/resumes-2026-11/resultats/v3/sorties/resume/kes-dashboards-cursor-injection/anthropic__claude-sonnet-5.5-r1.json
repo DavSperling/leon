@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:11.294Z",
+  "reponse": "## Où j'en suis\nDraft PR #418 is open (still open) on tom/dashboards-grid-v2: a drag/resize widget grid built with react-grid-layout, layout saved per user via PUT /dashboards/:id/layout with a localStorage fallback, behind the dashboards_v2 flag. Widget sizing uses a ResizeObserver hook, since container queries failed on iOS 15. DashboardTile was renamed WidgetCard, lint, typecheck and the Storybook build pass.\n\n- [en-cours] Draft PR #418 awaits Priya's UX review on the iPad.\n- [prochaine-étape] Enable dashboards_v2 for the Zest workspace only in the flags admin before the demo on Tuesday 24th.\n- [essai-raté] CSS container queries did nothing on Zest's iOS 15 Safari (needs Safari 16+), so they were removed.\n- [décision] Use a ResizeObserver hook (data-size) and drop container queries entirely, to avoid two systems (source: t09)\n- [décision] Keep v1 dashboards available behind the flag until January; remove nothing now (source: t15)\n- [décision] Persist the layout server-side via PUT /dashboards/:id/layout in this PR (source: t03)",
+  "rendu": "## Où j'en suis\nDraft PR #418 is open (still open) on tom/dashboards-grid-v2: a drag/resize widget grid built with react-grid-layout, layout saved per user via PUT /dashboards/:id/layout with a localStorage fallback, behind the dashboards_v2 flag. Widget sizing uses a ResizeObserver hook, since container queries failed on iOS 15. DashboardTile was renamed WidgetCard, lint, typecheck and the Storybook build pass.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Draft PR #418 awaits Priya's UX review on the iPad.\n- [prochaine-étape] Enable dashboards_v2 for the Zest workspace only in the flags admin before the demo on Tuesday 24th.\n- [essai-raté] CSS container queries did nothing on Zest's iOS 15 Safari (needs Safari 16+), so they were removed.\n- [décision] Use a ResizeObserver hook (data-size) and drop container queries entirely, to avoid two systems (source: t09)\n- [décision] Keep v1 dashboards available behind the flag until January; remove nothing now (source: t15)\n- [décision] Persist the layout server-side via PUT /dashboards/:id/layout in this PR (source: t03)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1185,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5180,
+    "sortie": 426,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01462
+  },
+  "cout": 0.01462,
+  "latenceMs": 3270,
+  "fournisseur": "Amazon Bedrock"
+}

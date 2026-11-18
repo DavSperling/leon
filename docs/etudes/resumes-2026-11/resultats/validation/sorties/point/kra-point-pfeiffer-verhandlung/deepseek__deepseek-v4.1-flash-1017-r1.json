@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:22:12.134Z",
+  "reponse": "## What is still open\n- Deine Aufwandsschätzung für die Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Sabine Kranich und Thomas sein; Freitag 14 Uhr gehen sie alles bei ihr durch [5].\n- Jonas hat #222 gegengelesen: `/api/v1/auftraege` hat keine Mandantentrennung, für externe Händler müsste der Kunde aus dem Token kommen plus Pen-Test vor Go-live – er rechnet mit 25 statt 15 PT, und den 1. April hält er nur, wenn der Spike noch im Dezember startet [2]. Die Vorlage steht damit auf einer überholten Zahl.\n- Das Jahresgespräch ist von Donnerstag auf Montag, 23.11., 10 Uhr in Nürnberg verlegt; Abfahrt 8 Uhr, Thomas fährt [6].\n- Kranichs Linie fürs Gespräch: Bonus bleibt bei 2 %, die API nur bei 3 Mio. € Mindestabnahme im Jahr – die Konditionen bleiben bei ihr und Thomas [5].\n\n## What changed\n- #214 (Export Lieferungen nach Charge, Rückrufprüfung) ist freigegeben und von Jonas gemergt [3].\n- #218 fasst Spring Boot 3.3.6 und fünf Dependabot-Updates zusammen, CI grün, ebenfalls gemergt – ohne Änderung am Produktivcode [4].\n\n## What you did\n- Für die Vorbereitung die Pfeiffer-Zahlen 2026 aus dem Lesereplikat geholt: 1.412 Aufträge, 2,61 Mio. €, 6,1 % manuell nachbearbeitet – die Grundlage der Argumentation [1].\n- Daraus die einseitige Vorlage für Thomas in `docs/vertrieb/` geschrieben: Ausgangslage, REST-API auf Basis von `/api/v1/auftraege`, 15 PT, produktiv 1. April 2027 [1].\n- EDI (EDIFACT ORDERS) bewusst nur als Option erwähnt – 30 bis 40 PT, separat zu bewerten [1].\n- Bonus, Preise und Zahlungsziel auf deine Weisung aus der Vorlage gestrichen: du lieferst nur Technik, Aufwand und Termin [1].",
+  "rendu": "## What is still open\n- Deine Aufwandsschätzung für die Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Sabine Kranich und Thomas sein; Freitag 14 Uhr gehen sie alles bei ihr durch [5].\n- Jonas hat #222 gegengelesen: `/api/v1/auftraege` hat keine Mandantentrennung, für externe Händler müsste der Kunde aus dem Token kommen plus Pen-Test vor Go-live – er rechnet mit 25 statt 15 PT, und den 1. April hält er nur, wenn der Spike noch im Dezember startet [2]. Die Vorlage steht damit auf einer überholten Zahl.\n- Das Jahresgespräch ist von Donnerstag auf Montag, 23.11., 10 Uhr in Nürnberg verlegt; Abfahrt 8 Uhr, Thomas fährt [6].\n- Kranichs Linie fürs Gespräch: Bonus bleibt bei 2 %, die API nur bei 3 Mio. € Mindestabnahme im Jahr – die Konditionen bleiben bei ihr und Thomas [5].\n\n## What changed\n- #214 (Export Lieferungen nach Charge, Rückrufprüfung) ist freigegeben und von Jonas gemergt [3].\n- #218 fasst Spring Boot 3.3.6 und fünf Dependabot-Updates zusammen, CI grün, ebenfalls gemergt – ohne Änderung am Produktivcode [4].\n\n## What you did\n- Für die Vorbereitung die Pfeiffer-Zahlen 2026 aus dem Lesereplikat geholt: 1.412 Aufträge, 2,61 Mio. €, 6,1 % manuell nachbearbeitet – die Grundlage der Argumentation [1].\n- Daraus die einseitige Vorlage für Thomas in `docs/vertrieb/` geschrieben: Ausgangslage, REST-API auf Basis von `/api/v1/auftraege`, 15 PT, produktiv 1. April 2027 [1].\n- EDI (EDIFACT ORDERS) bewusst nur als Option erwähnt – 30 bis 40 PT, separat zu bewerten [1].\n- Bonus, Preise und Zahlungsziel auf deine Weisung aus der Vorlage gestrichen: du lieferst nur Technik, Aufwand und Termin [1].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4608,
+    "sortie": 2261,
+    "reflexion": 1737,
+    "cache": 0,
+    "cout": 0.003413
+  },
+  "cout": 0.003413,
+  "latenceMs": 18251,
+  "fournisseur": "Modal"
+}

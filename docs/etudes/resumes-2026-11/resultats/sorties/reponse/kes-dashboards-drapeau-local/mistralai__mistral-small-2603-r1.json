@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:32:01.765Z",
+  "reponse": "To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` (the API must be running), then hard-reload the page. You can verify with `curl localhost:8000/api/flags`. The old method using FEATURE_FLAGS=new_dash in .env.local no longer works [2][3].",
+  "rendu": "To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` (the API must be running), then hard-reload the page. You can verify with `curl localhost:8000/api/flags`. The old method using FEATURE_FLAGS=new_dash in .env.local no longer works [2][3].",
+  "mesures": {
+    "mots": 36,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1151,
+    "sortie": 529,
+    "reflexion": 452,
+    "cache": 0,
+    "cout": 0.000539055
+  },
+  "cout": 0.000539055,
+  "latenceMs": 3793,
+  "fournisseur": "Mistral"
+}

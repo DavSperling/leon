@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:27.696Z",
+  "reponse": "L'appli des poseurs affiche une heure de trop parce que l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de 2 h à l'heure UTC [2]. Ce calcul est juste en été, mais faux depuis le passage à l'heure d'hiver du 25/10 : une intervention à 8:00 sortait à 9:00 [2]. Les réglages du serveur (TIME_ZONE, USE_TZ) étaient bons [2]. L'hypothèse d'un problème de variable d'environnement en production, émise au début de l'enquête, n'a donc pas été retenue [1][2]. Le correctif #214 utilise l'heure locale de Paris via zoneinfo [2]. Un message du 17/11 signale toutefois que les SMS de rappel annoncent encore 9h à 6 clients [4].",
+  "rendu": "L'appli des poseurs affiche une heure de trop parce que l'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant un décalage fixe de 2 h à l'heure UTC [2]. Ce calcul est juste en été, mais faux depuis le passage à l'heure d'hiver du 25/10 : une intervention à 8:00 sortait à 9:00 [2]. Les réglages du serveur (TIME_ZONE, USE_TZ) étaient bons [2]. L'hypothèse d'un problème de variable d'environnement en production, émise au début de l'enquête, n'a donc pas été retenue [1][2]. Le correctif #214 utilise l'heure locale de Paris via zoneinfo [2]. Un message du 17/11 signale toutefois que les SMS de rappel annoncent encore 9h à 6 clients [4].",
+  "mesures": {
+    "mots": 112,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1746,
+    "sortie": 300,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.006492
+  },
+  "cout": 0.006492,
+  "latenceMs": 2570,
+  "fournisseur": "Amazon Bedrock"
+}

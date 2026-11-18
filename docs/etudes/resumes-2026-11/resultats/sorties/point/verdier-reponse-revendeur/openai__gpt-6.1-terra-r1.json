@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T14:33:40.989Z",
+  "reponse": "## Ce qui reste ouvert\n\n- **Galeries Brotteaux : réponds à Bertrand ce matin**, comme demandé par Claire, avec une remise de 10 % sur les quatre tables et la réservation de quatre Saône en janvier. Le brouillon initial n’a pas été envoyé. [4][1] Si le geste prend la forme d’un avoir, préviens Antoine avant de l’émettre : il doit être rattaché à la facture FA-2026-1187. [5]\n- **Correction du stock revendeurs :** Hugo a approuvé la PR #62 et confirmé que la Saône sort à zéro dans le fichier du 10 novembre. [2] Elle corrige l’export qui comptait les unités déjà réservées ; un test couvre les incidents de septembre et de novembre. [1]",
+  "rendu": "## Ce qui reste ouvert\n\n- **Galeries Brotteaux : réponds à Bertrand ce matin**, comme demandé par Claire, avec une remise de 10 % sur les quatre tables et la réservation de quatre Saône en janvier. Le brouillon initial n’a pas été envoyé. [4][1] Si le geste prend la forme d’un avoir, préviens Antoine avant de l’émettre : il doit être rattaché à la facture FA-2026-1187. [5]\n- **Correction du stock revendeurs :** Hugo a approuvé la PR #62 et confirmé que la Saône sort à zéro dans le fichier du 10 novembre. [2] Elle corrige l’export qui comptait les unités déjà réservées ; un test couvre les incidents de septembre et de novembre. [1]",
+  "mesures": {
+    "mots": 107,
+    "tropLong": false,
+    "puces": 2,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3805,
+    "sortie": 424,
+    "reflexion": 250,
+    "cache": 1417,
+    "cout": 0.0051751
+  },
+  "cout": 0.0051751,
+  "latenceMs": 14550,
+  "fournisseur": "OpenAI"
+}

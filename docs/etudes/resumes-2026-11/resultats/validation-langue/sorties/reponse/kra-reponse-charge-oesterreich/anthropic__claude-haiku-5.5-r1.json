@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:35.332Z",
+  "reponse": "Zwei österreichische Händler haben Geräte aus Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz und Eisen-Mayr KG in Graz [1][2]. Insgesamt sind es 356 Geräte, davon 236 bei Huber und 120 bei Eisen-Mayr [1]. Die Zahlen stammen aus dem Händlerportal und einem manuellen Nachtrag aus SAP, weil der Nachtlauf am 12.11. ausgefallen war [1]. Die Lieferung 80044713 an Huber gehört zu Charge 26-39 und ist nicht enthalten [1]. Werkzeughaus Tirol GmbH in Innsbruck steht in der Exportliste nicht [1]. Ob zurückgerufen wird, entscheidet sich am Freitag, bis dahin sollen die Händler nicht informiert werden [3].",
+  "rendu": "Zwei österreichische Händler haben Geräte aus Charge 26-38 erhalten: Bauprofi Huber GmbH in Linz und Eisen-Mayr KG in Graz [1][2]. Insgesamt sind es 356 Geräte, davon 236 bei Huber und 120 bei Eisen-Mayr [1]. Die Zahlen stammen aus dem Händlerportal und einem manuellen Nachtrag aus SAP, weil der Nachtlauf am 12.11. ausgefallen war [1]. Die Lieferung 80044713 an Huber gehört zu Charge 26-39 und ist nicht enthalten [1]. Werkzeughaus Tirol GmbH in Innsbruck steht in der Exportliste nicht [1]. Ob zurückgerufen wird, entscheidet sich am Freitag, bis dahin sollen die Händler nicht informiert werden [3].",
+  "mesures": {
+    "mots": 95,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2159,
+    "sortie": 1167,
+    "reflexion": 851,
+    "cache": 0,
+    "cout": 0.0007994
+  },
+  "cout": 0.0007994,
+  "latenceMs": 5764,
+  "fournisseur": "Google"
+}

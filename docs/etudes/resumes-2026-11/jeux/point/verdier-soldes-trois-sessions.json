@@ -1,0 +1,387 @@
+{
+  "id": "verdier-soldes-trois-sessions",
+  "titre": "Préparation des soldes sur trois sessions : échéance déplacée, grille de Sophie contredite par Claire, deux sessions sans suite, six changements dont beaucoup de routine",
+  "langue": "fr",
+  "entree": {
+    "maintenant": "2026-11-18T06:40:00Z",
+    "projet": "github.com/maison-verdier/boutique",
+    "depuis": "2026-11-17T08:00:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-prix-soldes",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "sophie a fini la grille des soldes",
+          "url": null,
+          "date": "2026-11-17T12:40:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T08:00:00Z",
+            "texte": "sophie a fini la grille des soldes, exportée de notion dans imports/grille-soldes.csv. extrait :\n\nproduit;finition;remise\nSaône 180;chêne;20\nSaône 180;noyer;20\nBuffet Rhône;toutes;30\nChaise Terreaux;noir;40\nBanc Bellecour;toutes;15\n...\n\nil faut un script qui applique les remises le mercredi 6 janvier à 8h : prix barré = prix actuel, prix = prix remisé. elle veut les prix dans shopify pour vendredi pour faire ses visuels"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:05:30Z",
+            "texte": "J'ai lu `imports/grille-soldes.csv` : 71 lignes, remises de 10 à 40 %, une ligne par produit et finition (ou « toutes »).\n\nShopify ne sait pas programmer un changement de prix à une date. Deux options :\n1. un script lancé par une tâche planifiée (GitHub Actions, `cron`) le 6 janvier à 8 h, heure de Paris ;\n2. une app Shopify de soldes programmées, payante.\n\nJe pars sur la 1 ?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:07:00Z",
+            "texte": "la 1 oui"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:10:20Z",
+            "texte": "Script `scripts/prix-soldes.ts` :\n- `--appliquer` : pour chaque variante de la grille, sauvegarde le prix actuel dans `sauvegardes/prix-avant-soldes.json`, met `compareAtPrice` = prix actuel et `price` = prix remisé\n- `--dry-run` : écrit le rapport sans rien modifier\n- workflow `.github/workflows/soldes.yml` avec `cron: \"0 7 6 1 *\"` (7 h UTC = 8 h à Paris en hiver)…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:15:00Z",
+            "texte": "les arrondis : je veux des prix ronds, pas 199,20"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:21:40Z",
+            "texte": "Le prix remisé est maintenant arrondi à l'euro inférieur (199,20 → 199,00), pour que la remise affichée ne soit jamais inférieure à celle de la grille. Test ajouté avec les cinq lignes de l'extrait."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:40:00Z",
+            "texte": "y a des produits de la collection 2024 dans la grille qui existent plus"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:46:15Z",
+            "texte": "7 lignes de la grille ne correspondent à aucun produit actif (table Part-Dieu, chaises Vieux-Lyon, etc., archivés en septembre). Le script les ignore et les liste dans le rapport sous « lignes sans produit », pour que Sophie puisse nettoyer la grille."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:02:00Z",
+            "texte": "et le retour aux prix normaux à la fin des soldes, le 3 février"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:20:50Z",
+            "texte": "Ajouté `--restaurer`, qui remet les prix depuis `sauvegardes/prix-avant-soldes.json` et vide `compareAtPrice`, et un second déclenchement dans le workflow : `cron: \"0 7 3 2 *\"` (3 février, 8 h à Paris). Si un prix a été modifié à la main pendant les soldes, il est gardé et signalé dans le journal."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:30:00Z",
+            "texte": "dry run sur la prod en lecture seule"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:41:30Z",
+            "texte": "Dry-run sur la boutique de production (jeton en lecture seule) : 212 variantes de 57 produits seraient soldées, remise moyenne 24 %. 3 variantes sont déjà en promotion avec un prix inférieur au prix soldé calculé (le prix « soldé » serait plus cher qu'aujourd'hui). Je les signale dans le rapport, sans les toucher par défaut."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:44:00Z",
+            "texte": "laisse ces 3 de côté. ouvre la pr, hugo relit"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T12:30:10Z",
+            "texte": "PR #63 « soldes : prix soldés depuis la grille, appliqués le 6 janvier et restaurés le 3 février » ouverte, relecteur @hugo-petit. Le rapport du dry-run est joint à la description."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T12:33:00Z",
+            "texte": "teste les deux crons sur la boutique de dev avec une date dans 5 min"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T12:40:00Z",
+            "texte": "Déclenché sur la boutique de dev avec des dates de test : prix soldés appliqués à 12:36, prix d'origine restaurés à 12:39, `compareAtPrice` vidé. Les deux déclenchements fonctionnent. J'ai remis les dates du 6 janvier et du 3 février dans le workflow."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-theme",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "c'est quoi deja la commande pour pousser le thème",
+          "url": null,
+          "date": "2026-11-16T15:14:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-16T15:10:00Z",
+            "texte": "c'est quoi deja la commande pour pousser le thème sans écraser les réglages que sophie a faits dans l'éditeur"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-16T15:11:30Z",
+            "texte": "`shopify theme push --theme <id> --ignore config/settings_data.json --ignore templates/*.json` : les réglages et la mise en page faits dans l'éditeur de thème vivent dans ces fichiers JSON, ils ne seront pas écrasés."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-16T15:14:00Z",
+            "texte": "merci"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-zendesk",
+          "kind": "cursor",
+          "nature": "conversation",
+          "titre": "widget zendesk sur les pages produit",
+          "url": null,
+          "date": "2026-11-11T10:30:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-11T09:00:00Z",
+            "texte": "lucie veut le widget d'aide zendesk sur les pages produit, pas sur le panier. clé du widget dans les réglages du thème"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-11T09:40:20Z",
+            "texte": "Ajouté le script du widget dans `sections/main-product.liquid`, chargé en différé après l'interaction pour ne pas ralentir la page. La clé vient d'un nouveau réglage de thème `zendesk_widget_key`. Absent du panier et du paiement."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-11T10:25:00Z",
+            "texte": "nickel, pr"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-11T10:30:00Z",
+            "texte": "PR #52 « zendesk : widget d'aide sur les pages produit » ouverte."
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-63",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#63 soldes : prix soldés depuis la grille, appliqués le 6 janvier et restaurés le 3 février",
+          "url": "https://github.com/maison-verdier/boutique/pull/63",
+          "date": "2026-11-18T05:50:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "julien-morel",
+            "date": "2026-11-17T12:30:00Z",
+            "texte": "Applique la grille de soldes de Sophie le 6 janvier à 8 h (prix barré = prix actuel, prix arrondi à l'euro inférieur) et restaure les prix le 3 février, par deux tâches planifiées. Dry-run prod : 212 variantes, 57 produits. 3 variantes déjà en promo laissées de côté, 7 lignes de la grille sans produit."
+          },
+          {
+            "role": "participant",
+            "auteur": "hugo-petit",
+            "date": "2026-11-18T05:50:00Z",
+            "texte": "Testé sur la boutique de dev, ça marche. Question : la grille met la Saône à -20 % alors qu'elle est en rupture jusqu'en janvier, c'est voulu ?"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "issue-65",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#65 Flux Google Shopping : prix soldés à prévoir",
+          "url": "https://github.com/maison-verdier/boutique/issues/65",
+          "date": "2026-11-17T16:10:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "sophie-garnier",
+            "date": "2026-11-17T16:10:00Z",
+            "texte": "Le flux Google Shopping doit afficher les prix soldés dès le 6 janvier, sinon les annonces sont refusées pour prix différent du site. Aujourd'hui le flux n'est régénéré qu'une fois par nuit. @julien-morel on peut le relancer juste après le script des soldes ?"
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "issue-64",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#64 Bannière soldes trop haute sur mobile",
+          "url": "https://github.com/maison-verdier/boutique/issues/64",
+          "date": "2026-11-17T15:00:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "sophie-garnier",
+            "date": "2026-11-17T15:00:00Z",
+            "texte": "Sur petit téléphone, la bannière « Soldes d'hiver » du thème cache le bouton « Ajouter au panier » sur les pages produit. Capture jointe. À corriger avant le shooting."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-59",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#59 soldes : étiquette « soldes » automatique sur les produits remisés",
+          "url": "https://github.com/maison-verdier/boutique/pull/59",
+          "date": "2026-11-17T14:00:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "julien-morel",
+            "date": "2026-11-16T11:00:00Z",
+            "texte": "Ajoute automatiquement le tag `soldes` aux produits dont le prix barré est renseigné, et le retire à la fin des soldes. Prépare les collections de Sophie pour janvier."
+          },
+          {
+            "role": "participant",
+            "auteur": "hugo-petit",
+            "date": "2026-11-17T14:00:00Z",
+            "texte": "Relue et fusionnée."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-66",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#66 build(deps): bump @shopify/shopify-api from 11.4.0 to 11.6.1",
+          "url": "https://github.com/maison-verdier/boutique/pull/66",
+          "date": "2026-11-17T10:00:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "dependabot[bot]",
+            "date": "2026-11-17T10:00:00Z",
+            "texte": "Bumps @shopify/shopify-api from 11.4.0 to 11.6.1.\n\nDependabot will resolve any conflicts with this PR as long as you don't alter it yourself. You can also trigger a rebase manually by commenting @dependabot rebase."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-52",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#52 zendesk : widget d'aide sur les pages produit",
+          "url": "https://github.com/maison-verdier/boutique/pull/52",
+          "date": "2026-11-17T09:00:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "auteur": "julien-morel",
+            "date": "2026-11-12T08:30:00Z",
+            "texte": "Fusionnée."
+          },
+          {
+            "role": "participant",
+            "auteur": "lucie-fontaine",
+            "date": "2026-11-17T09:00:00Z",
+            "texte": "Merci ! Les clients l'utilisent déjà, 23 conversations ouvertes depuis les pages produit cette semaine 👍"
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "slack-direction",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#direction, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T18:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-17T18:30:00Z",
+          "texte": "@julien je vois -20 % sur la Saône dans la grille de Sophie : non, pas de Saône en soldes. Elle est en rupture jusqu'à mi-janvier et on a des précommandes au plein prix, je ne veux pas que ces clients la voient remisée."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-marketing",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#marketing, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T17:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Sophie Garnier",
+          "date": "2026-11-17T17:30:00Z",
+          "texte": "@julien bonne nouvelle, le shooting soldes est décalé au 2 décembre : j'ai besoin des prix soldés dans Shopify pour le lundi 30/11 au lieu de vendredi. Tu as plus de temps 🙂"
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-saone",
+    "faits": [
+      {
+        "id": "f-saone",
+        "texte": "Dit que Claire ne veut pas de la Saône en soldes (rupture, précommandes au plein prix), alors que la grille de Sophie reprise par #63 la remise de 20 %.",
+        "poids": 3
+      },
+      {
+        "id": "f-echeance",
+        "texte": "Dit que Sophie a besoin des prix soldés dans Shopify pour le lundi 30 novembre.",
+        "poids": 3
+      },
+      {
+        "id": "f-shooting",
+        "texte": "Dit que le shooting soldes est décalé au 2 décembre.",
+        "poids": 1
+      },
+      {
+        "id": "f-63",
+        "texte": "Dit que la PR #63 applique les prix soldés le 6 janvier à 8 h et remet les prix d'origine le 3 février.",
+        "poids": 2
+      },
+      {
+        "id": "f-google",
+        "texte": "Dit que le flux Google Shopping doit afficher les prix soldés dès le 6 janvier (#65).",
+        "poids": 2
+      },
+      {
+        "id": "f-banniere",
+        "texte": "Dit que la bannière soldes cache le bouton « Ajouter au panier » sur mobile (#64).",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-vendredi",
+        "texte": "Donne vendredi (20/11) comme échéance des prix soldés."
+      },
+      {
+        "id": "i-saone-remisee",
+        "texte": "Présente la remise de 20 % sur la Saône comme acquise, sans dire que Claire s'y oppose."
+      },
+      {
+        "id": "i-theme",
+        "texte": "Fait une puce de la session du 16/11 sur la commande pour pousser le thème."
+      },
+      {
+        "id": "i-details",
+        "texte": "Donne des détails d'exécution : arrondi à l'euro inférieur, expressions cron, 212 variantes, fichier de sauvegarde des prix, montée de version de @shopify/shopify-api."
+      }
+    ],
+    "pieges": [
+      "Périmé : la session dit « pour vendredi » ; le message de Sophie, plus récent, repousse au lundi 30/11.",
+      "Contradiction entre sources : la grille de Sophie (collée dans la session, reprise par #63 et relevée par Hugo) remise la Saône de 20 % ; Claire, plus récente, refuse.",
+      "Rien à retenir : la session du 16/11 (une commande de thème) et celle du 11/11 (widget Zendesk livré, seul un merci de Lucie a bougé) ne méritent pas de puce.",
+      "Classer : six changements dont trois de routine (Dependabot, #59 fusionnée, merci sur #52) ; les sujets des soldes passent devant."
+    ]
+  }
+}

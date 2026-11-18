@@ -1,0 +1,22 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-sms": 1,
+    "f-lucas": 0.5,
+    "f-reprise": 1,
+    "f-verrou": 1,
+    "f-cause": 1,
+    "f-sandrine": 0
+  },
+  "interdits": {
+    "i-dependabot": 0,
+    "i-redit-208": 0,
+    "i-sms-corrige": 0,
+    "i-fusion": 0,
+    "i-reprise-lancee": 0,
+    "i-lettre": 0
+  },
+  "contraires": [],
+  "premier": "f-sms",
+  "langueOk": true
+}

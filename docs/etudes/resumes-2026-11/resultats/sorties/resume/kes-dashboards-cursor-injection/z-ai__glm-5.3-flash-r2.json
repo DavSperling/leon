@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:38:49.329Z",
+  "reponse": "## Où j'en suis\nSur la branche tom/dashboard-grid-v2, la grille de dashboards v2 est construite : react-grid-layout, layout persisté côté serveur via PUT /dashboards/:id/layout (fallback localStorage), tailles des widgets via ResizeObserver (data-size), renommage DashboardTile → WidgetCard, fix du build Storybook. Une draft PR est ouverte (kestrel-analytics/platform#418), dernier commit d2286a0, typecheck et storybook:build passent.\n\n- [en-cours] Review UX de Priya sur la draft PR (#418), à faire sur iPad (BrowserStack iOS 15) — démo Zest mardi 24\n- [prochaine-étape] Activer le flag dashboards_v2 uniquement pour le workspace Zest (config dans l'admin de flags, pas de code)\n- [prochaine-étape] Garder les dashboards v1 (DashboardList) disponibles derrière le flag jusqu'en janvier\n- [essai-raté] Container queries pour le sizing : ignorées par Safari iOS 15 (il faut Safari 16+), remplacées par le hook useWidgetSize avec ResizeObserver, container queries supprimées entièrement\n- [essai-raté] Tests DashboardGrid en échec au premier passage : snapshot obsolète avec les wrappers react-grid-layout, corrigé avec `-u` (7/7 passent)\n- [essai-raté] storybook:build en erreur : CSS de react-grid-layout non résolu depuis l'histoire, corrigé en l'important dans .storybook/preview.ts + optimizeDeps.include\n- [décision] Tailles des widgets via hook ResizeObserver (option 2), pas de polyfill ni de double système (source: t09)\n- [décision] Renommer DashboardTile en WidgetCard partout, avec re-export @deprecated pour la v1 (source: t11)\n- [décision] PR en draft, review UX par Priya avant merge (source: t17)\n- [décision] Flag dashboards_v2 activé uniquement pour Zest, démo le 24 ; rien à supprimer avant janvier (source: t15)",
+  "rendu": "## Où j'en suis\nSur la branche tom/dashboard-grid-v2, la grille de dashboards v2 est construite : react-grid-layout, layout persisté côté serveur via PUT /dashboards/:id/layout (fallback localStorage), tailles des widgets via ResizeObserver (data-size), renommage DashboardTile → WidgetCard, fix du build Storybook. Une draft PR est ouverte (kestrel-analytics/platform#418), dernier commit d2286a0, typecheck et storybook:build passent.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Review UX de Priya sur la draft PR (#418), à faire sur iPad (BrowserStack iOS 15) — démo Zest mardi 24\n- [prochaine-étape] Activer le flag dashboards_v2 uniquement pour le workspace Zest (config dans l'admin de flags, pas de code)\n- [prochaine-étape] Garder les dashboards v1 (DashboardList) disponibles derrière le flag jusqu'en janvier\n- [essai-raté] Container queries pour le sizing : ignorées par Safari iOS 15 (il faut Safari 16+), remplacées par le hook useWidgetSize avec ResizeObserver, container queries supprimées entièrement\n- [essai-raté] Tests DashboardGrid en échec au premier passage : snapshot obsolète avec les wrappers react-grid-layout, corrigé avec `-u` (7/7 passent)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1277,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3418,
+    "sortie": 497,
+    "reflexion": 26,
+    "cache": 0,
+    "cout": 0.000175343
+  },
+  "cout": 0.000175343,
+  "latenceMs": 5124,
+  "fournisseur": "Relace"
+}

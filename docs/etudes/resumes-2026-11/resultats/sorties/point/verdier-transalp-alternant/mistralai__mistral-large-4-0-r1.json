@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T14:39:54.985Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4449,
+    "sortie": 8000,
+    "reflexion": 7999,
+    "cache": 1280,
+    "cout": 0.0191079
+  },
+  "cout": 0.0191079,
+  "latenceMs": 189739,
+  "fournisseur": "Mistral"
+}

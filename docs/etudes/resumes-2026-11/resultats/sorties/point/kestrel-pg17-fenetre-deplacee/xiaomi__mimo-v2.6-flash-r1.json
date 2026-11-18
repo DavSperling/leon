@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:53.983Z",
+  "reponse": "## What you did\n- Prepared the prod PG17 cutover: blue/green Terraform in `envs/prod` (the read replica now follows the blue/green instead of being replaced), runbook in `runbooks/pg17-cutover.md`, and PR #321 opened with Maya as reviewer [1]\n- Rehearsed the whole blue/green on a clone of last night's prod snapshot: green ready in 52 minutes, switchover cost 74 seconds of write downtime, no data mismatch — then tore the clone down [1]\n\n## What changed\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00, Maya confirmed with Sam and has told the CSMs [8][10]\n- Daniel will be on call for the API side on Sunday; he wants a ping when you start the switchover [7]\n- Lior says the ingest workers need no change for the cutover, but asks for 30 minutes' notice before the switchover so he can pause the consumers cleanly [9]\n\n## What is still open\n- Update the runbook's date to the new window, then merge #321 — Maya approved it but asked you to hold the merge until the window was confirmed, which it now is [1][3][8]\n- Rehearse rollback on a fresh clone Thursday 19/11 and record how long it takes and how much data is lost — it's a TODO in the runbook, since after switchover the old instance stops taking writes [1]",
+  "rendu": "## What you did\n- Prepared the prod PG17 cutover: blue/green Terraform in `envs/prod` (the read replica now follows the blue/green instead of being replaced), runbook in `runbooks/pg17-cutover.md`, and PR #321 opened with Maya as reviewer [1]\n- Rehearsed the whole blue/green on a clone of last night's prod snapshot: green ready in 52 minutes, switchover cost 74 seconds of write downtime, no data mismatch — then tore the clone down [1]\n\n## What changed\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00, Maya confirmed with Sam and has told the CSMs [8][10]\n- Daniel will be on call for the API side on Sunday; he wants a ping when you start the switchover [7]\n- Lior says the ingest workers need no change for the cutover, but asks for 30 minutes' notice before the switchover so he can pause the consumers cleanly [9]\n\n## What is still open\n- Update the runbook's date to the new window, then merge #321 — Maya approved it but asked you to hold the merge until the window was confirmed, which it now is [1][3][8]\n- Rehearse rollback on a fresh clone Thursday 19/11 and record how long it takes and how much data is lost — it's a TODO in the runbook, since after switchover the old instance stops taking writes [1]",
+  "mesures": {
+    "mots": 217,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5572,
+    "sortie": 1301,
+    "reflexion": 933,
+    "cache": 0,
+    "cout": 0.00114436
+  },
+  "cout": 0.00114436,
+  "latenceMs": 35397,
+  "fournisseur": "Xiaomi"
+}

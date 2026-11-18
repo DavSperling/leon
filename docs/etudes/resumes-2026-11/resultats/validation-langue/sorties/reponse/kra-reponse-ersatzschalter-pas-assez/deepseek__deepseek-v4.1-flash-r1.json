@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:39.430Z",
+  "reponse": "Ein bestätigter Liefertermin für die Ersatzschalter liegt nicht vor: Tai Shan hat den Eingang der Reklamation bestätigt, nennt aber noch kein Datum [2][3]. Die Forderung nach 2.000 Ersatzschaltern bis 20. November stammt aus der Reklamation QR-2611 [1]. Intern rechnet die Planung mangels Bestätigung mit sechs Wochen ab Bestellung, ausdrücklich nur als Annahme und nicht abgestimmt [5]. Falls bis Freitag keine Antwort kommt, ist eine Eskalation an den Sales Director vorgesehen [3].",
+  "rendu": "Ein bestätigter Liefertermin für die Ersatzschalter liegt nicht vor: Tai Shan hat den Eingang der Reklamation bestätigt, nennt aber noch kein Datum [2][3]. Die Forderung nach 2.000 Ersatzschaltern bis 20. November stammt aus der Reklamation QR-2611 [1]. Intern rechnet die Planung mangels Bestätigung mit sechs Wochen ab Bestellung, ausdrücklich nur als Annahme und nicht abgestimmt [5]. Falls bis Freitag keine Antwort kommt, ist eine Eskalation an den Sales Director vorgesehen [3].",
+  "mesures": {
+    "mots": 71,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1168,
+    "sortie": 491,
+    "reflexion": 350,
+    "cache": 0,
+    "cout": 0.000414904
+  },
+  "cout": 0.000414904,
+  "latenceMs": 4870,
+  "fournisseur": "InferenceNet"
+}

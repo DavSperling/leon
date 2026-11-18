@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:57:15.125Z",
+  "reponse": "## Où j'en suis\nThe HubSpot owner + ARR sync was switched from webhooks to polling: PR #405 was closed after finding that private app tokens can't manage webhook subscriptions, and `daniel/hubspot-owner-sync` now holds a 15-minute CRM-search job with windowed paging past the 10k cap and an `arr > 0` filter. PR #409 is open, not merged — auto-merge was enabled but the e2e check `test_admin_accounts` fails, so it never fired.\n\n- [en-cours] `test_accounts_table_shows_owner` expects 3 rows with an owner but gets 2: the e2e fixture's third company is a trial with an owner, now skipped by the `arr > 0` filter.\n- [prochaine-étape] Fix that fixture (give the third company ARR > 0, or expect 2 rows) so the check goes green and auto-merge squashes #409; Noa still has to add `HUBSPOT_TOKEN` to Secrets Manager for staging/prod.\n- [essai-raté] Registering webhook subscriptions via the API: 401, private app tokens aren't supported there, only public apps.\n- [décision] Poll every 15 minutes instead of webhooks, and close #405 (source: t04)\n- [décision] Sync only companies with arr > 0, trials excluded entirely (source: t10)\n- [décision] Open the PR with auto-merge, token to be moved to Secrets Manager (source: t12)",
+  "rendu": "## Où j'en suis\nThe HubSpot owner + ARR sync was switched from webhooks to polling: PR #405 was closed after finding that private app tokens can't manage webhook subscriptions, and `daniel/hubspot-owner-sync` now holds a 15-minute CRM-search job with windowed paging past the 10k cap and an `arr > 0` filter. PR #409 is open, not merged — auto-merge was enabled but the e2e check `test_admin_accounts` fails, so it never fired.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] `test_accounts_table_shows_owner` expects 3 rows with an owner but gets 2: the e2e fixture's third company is a trial with an owner, now skipped by the `arr > 0` filter.\n- [prochaine-étape] Fix that fixture (give the third company ARR > 0, or expect 2 rows) so the check goes green and auto-merge squashes #409; Noa still has to add `HUBSPOT_TOKEN` to Secrets Manager for staging/prod.\n- [essai-raté] Registering webhook subscriptions via the API: 401, private app tokens aren't supported there, only public apps.\n- [décision] Poll every 15 minutes instead of webhooks, and close #405 (source: t04)\n- [décision] Sync only companies with arr > 0, trials excluded entirely (source: t10)\n- [décision] Open the PR with auto-merge, token to be moved to Secrets Manager (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1402,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3572,
+    "sortie": 1351,
+    "reflexion": 1006,
+    "cache": 0,
+    "cout": 0.0013464
+  },
+  "cout": 0.0013464,
+  "latenceMs": 8223,
+  "fournisseur": "SiliconFlow"
+}

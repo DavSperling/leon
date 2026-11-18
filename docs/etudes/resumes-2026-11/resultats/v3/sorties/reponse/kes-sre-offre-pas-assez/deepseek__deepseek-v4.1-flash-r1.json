@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:08.157Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1068,
+    "sortie": 106,
+    "reflexion": 94,
+    "cache": 0,
+    "cout": 0.000173604
+  },
+  "cout": 0.000173604,
+  "latenceMs": 1047,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "del-agenda-commerciale",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:06.632Z",
+  "reponse": "{\"n\": 5, \"titre\": \"Rendez-vous devis panneaux\", \"debut\": \"2026-11-20T18:00\", \"avec\": \"Colette Lemoine\"}\n{\"n\": 8, \"titre\": \"Visite technique\", \"debut\": \"2026-11-18T17:00\", \"avec\": \"Hélène Delorme\"}\n{\"n\": 13, \"titre\": \"Déjeuner partenariat prêts travaux\", \"debut\": \"2026-11-18T12:30\", \"avec\": \"Bertrand Josse\"}\n{\"n\": 16, \"titre\": \"Visite technique\", \"debut\": \"2026-11-19T10:00\", \"avec\": \"Franck Le Gall\"}\n{\"n\": 18, \"titre\": \"Rendez-vous pompe à chaleur\", \"debut\": \"2026-11-17T14:00\", \"avec\": \"Jean-Luc Hervé\"}\n{\"n\": 19, \"titre\": \"Réunion commerciale hebdo\", \"debut\": \"2026-11-16T09:00\", \"fin\": \"2026-11-16T10:00\", \"avec\": \"Hélène Delorme\"}",
+  "rendu": "2026-11-16T09:00→2026-11-16T10:00 Réunion commerciale hebdo (avec Hélène Delorme)\n2026-11-17T14:00 Rendez-vous pompe à chaleur (avec Jean-Luc Hervé)\n2026-11-18T12:30 Déjeuner partenariat prêts travaux (avec Bertrand Josse)\n2026-11-18T17:00 Visite technique (avec Hélène Delorme)\n2026-11-19T10:00 Visite technique (avec Franck Le Gall)\n2026-11-20T18:00 Rendez-vous devis panneaux (avec Colette Lemoine)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2412,
+    "sortie": 1775,
+    "reflexion": 1494,
+    "cache": 0,
+    "cout": 0.00146731
+  },
+  "cout": 0.00146731,
+  "latenceMs": 8401,
+  "fournisseur": "CoreWeave"
+}

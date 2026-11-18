@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:12:56.430Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5213,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 0,
+    "cout": 0.012177821
+  },
+  "cout": 0.012177821,
+  "latenceMs": 86390,
+  "fournisseur": "Tencent"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:09:12.504Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to our own kestrel-ios/3.2.0, which sends `event_id` as a per-session counter, so #240's dedupe was discarding distinct events [1].\n- Re-keyed dedupe on `(project_id, device_id, event_id)`, keeping replay coverage and a green full test suite [1].\n\n## What changed\n- PR #247 is open with @maya-cohen reviewing; she'll approve once CI is green and wants the dropped-event count for Thursday's Orbitly call — your figure is ~1.18M events (8.1% of Orbitly's iOS volume; Zest lost 3,812) [1][2].\n- The 12/11 postmortem is final; Noa will present it at Friday's incident review [3].\n- Rachel confirmed Zest's dashboards are complete and closed their ticket [6].\n\n## What is still open\n- Run the replay from landing for Orbitly (and Zest), 13/11 onward, only after #247 is deployed, then check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- Your Fathom action item: add an alert when the ingest dead-letter queue exceeds 1,000 messages, due before Friday's review [7].",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to our own kestrel-ios/3.2.0, which sends `event_id` as a per-session counter, so #240's dedupe was discarding distinct events [1].\n- Re-keyed dedupe on `(project_id, device_id, event_id)`, keeping replay coverage and a green full test suite [1].\n\n## What changed\n- PR #247 is open with @maya-cohen reviewing; she'll approve once CI is green and wants the dropped-event count for Thursday's Orbitly call — your figure is ~1.18M events (8.1% of Orbitly's iOS volume; Zest lost 3,812) [1][2].\n- The 12/11 postmortem is final; Noa will present it at Friday's incident review [3].\n- Rachel confirmed Zest's dashboards are complete and closed their ticket [6].\n\n## What is still open\n- Run the replay from landing for Orbitly (and Zest), 13/11 onward, only after #247 is deployed, then check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero [1].\n- Your Fathom action item: add an alert when the ingest dead-letter queue exceeds 1,000 messages, due before Friday's review [7].",
+  "mesures": {
+    "mots": 154,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5200,
+    "sortie": 1458,
+    "reflexion": 1147,
+    "cache": 0,
+    "cout": 0.00113624
+  },
+  "cout": 0.00113624,
+  "latenceMs": 12936,
+  "fournisseur": "Cohere"
+}

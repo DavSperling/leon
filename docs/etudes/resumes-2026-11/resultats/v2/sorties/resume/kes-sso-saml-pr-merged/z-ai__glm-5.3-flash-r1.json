@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:39.721Z",
+  "reponse": "## Où j'en suis\nThe Fernhill SAML ACS endpoint is done: signature verification was implemented with signxml (python3-saml was dropped after the lxml/xmlsec mismatch), condition checks (audience, recipient, time window, replay protection) written with tests, skew set to 120 s per Fernhill's contract annex. Code passed lint, mypy and the full test suite; PR #412 was opened and merged (squash) after Maya's approval. Demo with Fernhill is Thursday 10:00 New York.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD\n- [prochaine-étape] Create a separate ticket to enforce SSO / disable password login for Fernhill users (explicitly out of PR #412)\n- [essai-raté] python3-saml on Alpine: libxml2 version mismatch, and building lxml from source still failed — replaced with signxml\n- [essai-raté] `gh pr merge 412 --squash` initially refused (needed an approving review); user declined `--admin` and `--auto` (source: t21)\n- [décision] Skew tolerance is 120 s, driven by the Fernhill security questionnaire (source: t12)\n- [décision] Only read attributes from the signxml-verified `signed_xml` element, never the raw document (source: t08)",
+  "rendu": "## Où j'en suis\nThe Fernhill SAML ACS endpoint is done: signature verification was implemented with signxml (python3-saml was dropped after the lxml/xmlsec mismatch), condition checks (audience, recipient, time window, replay protection) written with tests, skew set to 120 s per Fernhill's contract annex. Code passed lint, mypy and the full test suite; PR #412 was opened and merged (squash) after Maya's approval. Demo with Fernhill is Thursday 10:00 New York.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD\n- [prochaine-étape] Create a separate ticket to enforce SSO / disable password login for Fernhill users (explicitly out of PR #412)\n- [essai-raté] python3-saml on Alpine: libxml2 version mismatch, and building lxml from source still failed — replaced with signxml\n- [essai-raté] `gh pr merge 412 --squash` initially refused (needed an approving review); user declined `--admin` and `--auto` (source: t21)\n- [décision] Skew tolerance is 120 s, driven by the Fernhill security questionnaire (source: t12)\n- [décision] Only read attributes from the signxml-verified `signed_xml` element, never the raw document (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1331,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4500,
+    "sortie": 327,
+    "reflexion": 15,
+    "cache": 0,
+    "cout": 0.0008385
+  },
+  "cout": 0.0008385,
+  "latenceMs": 2597,
+  "fournisseur": "Modal"
+}

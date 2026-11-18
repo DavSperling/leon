@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:54:46.326Z",
+  "reponse": "## What is still open\n- The window moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — update the runbook and merge #321, which Maya has cleared [8][3].\n- The rollback rehearsal on a fresh clone is still owed for Thursday 19/11: after switchover the old instance is renamed and gets no writes, so rollback is not just switching back — the runbook has it as a TODO, with time and data loss to measure [1].\n- Lior wants 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly; nothing changes on his side, they read `DATABASE_URL` from SSM [9].\n- Daniel is on call for the API on Sunday and asks you to ping him when you start the switchover [7].\n\n## What changed\n- Maya approved #321 — Terraform looks right, and she called out the replica fix as a good catch; her only condition was confirming the date with Fernhill, which she has now done herself [3][8].\n- Daniel reports staging has run smoothly on PG17 since Thursday, with dashboards p95 even dropping slightly [5].\n- Renovate opened #320 bumping the AWS provider 5.80 → 5.82, no automerge [4].\n\n## What you did\n- Got prod blue/green Terraform ready: the read replica now follows the blue/green instead of being destroyed and recreated (lifecycle ignore on engine version), leaving a plan of 2 changes and 0 destroys [1].\n- Rehearsed the full cutover on a clone of last night's prod snapshot: 74 seconds of write downtime, replication lag under 1 s, no row-count mismatches on the biggest tables — then tore the clone down to stop the spend [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 with Maya as reviewer, plan output in the description [1].",
+  "rendu": "## What is still open\n- The window moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — update the runbook and merge #321, which Maya has cleared [8][3].\n- The rollback rehearsal on a fresh clone is still owed for Thursday 19/11: after switchover the old instance is renamed and gets no writes, so rollback is not just switching back — the runbook has it as a TODO, with time and data loss to measure [1].\n- Lior wants 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly; nothing changes on his side, they read `DATABASE_URL` from SSM [9].\n- Daniel is on call for the API on Sunday and asks you to ping him when you start the switchover [7].\n\n## What changed\n- Maya approved #321 — Terraform looks right, and she called out the replica fix as a good catch; her only condition was confirming the date with Fernhill, which she has now done herself [3][8].\n- Daniel reports staging has run smoothly on PG17 since Thursday, with dashboards p95 even dropping slightly [5].\n- Renovate opened #320 bumping the AWS provider 5.80 → 5.82, no automerge [4].\n\n## What you did\n- Got prod blue/green Terraform ready: the read replica now follows the blue/green instead of being destroyed and recreated (lifecycle ignore on engine version), leaving a plan of 2 changes and 0 destroys [1].\n- Rehearsed the full cutover on a clone of last night's prod snapshot: 74 seconds of write downtime, replication lag under 1 s, no row-count mismatches on the biggest tables — then tore the clone down to stop the spend [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 with Maya as reviewer, plan output in the description [1].",
+  "mesures": {
+    "mots": 282,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5190,
+    "sortie": 1233,
+    "reflexion": 794,
+    "cache": 0,
+    "cout": 0.0012588
+  },
+  "cout": 0.0012588,
+  "latenceMs": 11291,
+  "fournisseur": "Cloudflare"
+}

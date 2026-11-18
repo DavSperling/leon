@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:01:26.623Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T10:00 Call with Inès Duval (Pathwise) – reseller partnership | 2026-11-17T12:30 Déjeuner avec Camille Brunet | 2026-11-18T12:00 Deal review – Fernhill expansion | 2026-11-18T17:00 Orbitly renewal call | 2026-11-19T15:00 Fernhill SAML SSO technical kickoff | 2026-11-20T17:00 Discovery call with Marcus Hale (Brightloop)",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3192,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 512,
+    "cout": 0.004484136
+  },
+  "cout": 0.004484136,
+  "latenceMs": 32345,
+  "fournisseur": "Cohere"
+}

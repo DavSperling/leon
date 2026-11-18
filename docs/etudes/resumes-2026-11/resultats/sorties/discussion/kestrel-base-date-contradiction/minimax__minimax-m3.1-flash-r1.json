@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:26.805Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24462,
+    "sortie": 534,
+    "reflexion": 244,
+    "cache": 13717,
+    "cout": 0.0019562894999999997
+  },
+  "latenceMs": 4930,
+  "fournisseur": "Inferact vLLM",
+  "trace": [
+    "chercher {\"requete\":\"\\\"database upgrade\\\" maintenance window customer notice support macro\"}",
+    "chercher {\"requete\":\"database maintenance upgrade production window\"}",
+    "chercher {\"requete\":\"customer notice maintenance upgrade macro\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}",
+    "lire {\"sourceId\":\"slack-eng-announce-pg17\"}",
+    "chercher {\"requete\":\"Postgres 17 cutover December 5 reschedule announcement\",\"depuis\":\"2026-11-16\"}",
+    "chercher {\"requete\":\"support macro status page in-app banner maintenance\"}",
+    "activite {\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.0019562894999999997
+}

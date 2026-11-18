@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:43.013Z",
+  "reponse": "## Où j'en suis\nBuilt a 3-hour SRE take-home exercise (compose with flaky-svc, Prometheus broken alert rule, connection leak, over-broad Terraform IAM policy, no Kubernetes) and a 4-area rubric scored 0–3 with no cut-off. Exercise lives in new private repo kestrel-analytics/sre-take-home (subtree-pushed, only exercise commits); hiring/ removed from the infra branch working tree, not committed, no PR opened.\n\n- [prochaine-étape] Thursday 4pm Tel Aviv call, then Maya sends the exercise herself and adds the collaborator invite (agent must not email anyone)\n- [décision] No Kubernetes, 3-hour max, Terraform + compose only (source: t03)\n- [décision] compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] Rubric has no pass threshold; scores feed the panel (Maya + Noa), Noa is second reviewer (source: t10)\n- [décision] Exercise moved to its own private repo, not infra, to keep candidate history clean (source: t12)\n- [décision] Delete hiring/ from the infra branch, no PR in infra (source: t14)\n- [essai-raté] Multi-arch build with `docker buildx --load` fails (manifest lists unsupported); compose up also failed on the amd64-only image on Apple Silicon",
+  "rendu": "## Où j'en suis\nBuilt a 3-hour SRE take-home exercise (compose with flaky-svc, Prometheus broken alert rule, connection leak, over-broad Terraform IAM policy, no Kubernetes) and a 4-area rubric scored 0–3 with no cut-off. Exercise lives in new private repo kestrel-analytics/sre-take-home (subtree-pushed, only exercise commits); hiring/ removed from the infra branch working tree, not committed, no PR opened.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Thursday 4pm Tel Aviv call, then Maya sends the exercise herself and adds the collaborator invite (agent must not email anyone)\n- [décision] No Kubernetes, 3-hour max, Terraform + compose only (source: t03)\n- [décision] compose builds flaky-svc from source, no prebuilt image (source: t06)\n- [décision] Rubric has no pass threshold; scores feed the panel (Maya + Noa), Noa is second reviewer (source: t10)\n- [décision] Exercise moved to its own private repo, not infra, to keep candidate history clean (source: t12)\n- [décision] Delete hiring/ from the infra branch, no PR in infra (source: t14)\n- [essai-raté] Multi-arch build with `docker buildx --load` fails (manifest lists unsupported); compose up also failed on the amd64-only image on Apple Silicon",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1283,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3599,
+    "sortie": 335,
+    "reflexion": 18,
+    "cache": 0,
+    "cout": 0.00070735
+  },
+  "cout": 0.00070735,
+  "latenceMs": 5933,
+  "fournisseur": "BaseTen"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:08.167Z",
+  "reponse": "No offer to Yael Mizrahi appears in these results. The team explicitly deferred any offer discussion until after her final round [3], and in the hiring sync Maya Cohen and Shira Katz agreed to wait for the finals before talking numbers [4]. She only said she expects something \"competitive with big tech,\" without giving a figure [4]. The Senior SRE band that would apply is 520–600k ILS base in Tel Aviv, with anything above the band requiring CEO approval [2].",
+  "rendu": "No offer to Yael Mizrahi appears in these results. The team explicitly deferred any offer discussion until after her final round [3], and in the hiring sync Maya Cohen and Shira Katz agreed to wait for the finals before talking numbers [4]. She only said she expects something \"competitive with big tech,\" without giving a figure [4]. The Senior SRE band that would apply is 520–600k ILS base in Tel Aviv, with anything above the band requiring CEO approval [2].",
+  "mesures": {
+    "mots": 80,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1068,
+    "sortie": 263,
+    "reflexion": 160,
+    "cache": 0,
+    "cout": 0.000252445
+  },
+  "cout": 0.000252445,
+  "latenceMs": 2432,
+  "fournisseur": "InferenceNet"
+}

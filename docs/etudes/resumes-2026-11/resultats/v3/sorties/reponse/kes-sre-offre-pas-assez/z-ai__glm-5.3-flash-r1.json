@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:06.679Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet — she was still in the hiring process as of November 17, moving to her final round with Maya Cohen scheduled for November 24 [1][3]. The team agreed to wait until after the finals before discussing numbers [4]. Yael hasn't given a figure, only saying she expects something \"competitive with big tech\" [4]. For reference, the Senior SRE compensation band is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet — she was still in the hiring process as of November 17, moving to her final round with Maya Cohen scheduled for November 24 [1][3]. The team agreed to wait until after the finals before discussing numbers [4]. Yael hasn't given a figure, only saying she expects something \"competitive with big tech\" [4]. For reference, the Senior SRE compensation band is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "mesures": {
+    "mots": 81,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1011,
+    "sortie": 116,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00020965
+  },
+  "cout": 0.00020965,
+  "latenceMs": 2346,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:17:09.634Z",
+  "reponse": "## What you did\n\n- Tu as automatisé les soldes de Sophie : un script applique la grille (prix barré = prix actuel, prix remisé arrondi à l'euro inférieur) le 6 janvier à 8 h et restaure les prix d'origine le 3 février, via deux tâches planifiées ; PR #63 ouverte avec Hugo en relecteur et validée en test sur la boutique de dev [1].\n- Le dry-run sur la prod chiffre l'impact : 212 variantes sur 57 produits, remise moyenne 24 % ; les 3 variantes déjà en promo sont laissées de côté et 7 lignes de la grille pointent vers des produits archivés, à faire nettoyer par Sophie [1].\n- Le widget Zendesk est en production sur les pages produit : les clients l'utilisent déjà, 23 conversations ouvertes cette semaine [3][9].\n\n## What changed\n\n- Sophie a décalé le shooting soldes au 2 décembre et a besoin des prix soldés dans Shopify le lundi 30/11 au lieu du vendredi — elle te laisse donc plus de temps, mais le flux Google Shopping doit refléter les nouveaux prix dès le 6 janvier, sinon ses annonces seront refusées pour écart de prix avec le site (#65) [11][5].\n- Un bug bloquant avant le shooting : sur mobile, la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur les pages produit (#64) [6].\n\n## What is still open\n\n- Tu dois répondre sur #63 : Claire tranche — pas de Saône en soldes, elle est en rupture jusqu'à mi-janvier et des précommandes sont au plein prix ; il faut donc l'exclure de la grille avant la fusion [4][10].\n- Il reste à décider comment mettre les prix soldés dans Shopify pour le 30/11 (shooting) alors que le cron ne les applique que le 6 janvier [11].\n- Répondre à Sophie sur le déclenchement du flux Google Shopping juste après le script des soldes [5].\n- Corriger la bannière mobile avant le shooting [6].\n- Le tag `soldes` automatique sur les produits remisés (#59) est fusionné ; reste le bump `@shopify/shopify-api` proposé par Dependabot (#66), à arbitrer ou laisser passer [7][8].",
+  "rendu": "## What you did\n\n- Tu as automatisé les soldes de Sophie : un script applique la grille (prix barré = prix actuel, prix remisé arrondi à l'euro inférieur) le 6 janvier à 8 h et restaure les prix d'origine le 3 février, via deux tâches planifiées ; PR #63 ouverte avec Hugo en relecteur et validée en test sur la boutique de dev [1].\n- Le dry-run sur la prod chiffre l'impact : 212 variantes sur 57 produits, remise moyenne 24 % ; les 3 variantes déjà en promo sont laissées de côté et 7 lignes de la grille pointent vers des produits archivés, à faire nettoyer par Sophie [1].\n- Le widget Zendesk est en production sur les pages produit : les clients l'utilisent déjà, 23 conversations ouvertes cette semaine [3][9].\n\n## What changed\n\n- Sophie a décalé le shooting soldes au 2 décembre et a besoin des prix soldés dans Shopify le lundi 30/11 au lieu du vendredi — elle te laisse donc plus de temps, mais le flux Google Shopping doit refléter les nouveaux prix dès le 6 janvier, sinon ses annonces seront refusées pour écart de prix avec le site (#65) [11][5].\n- Un bug bloquant avant le shooting : sur mobile, la bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur les pages produit (#64) [6].\n\n## What is still open\n\n- Tu dois répondre sur #63 : Claire tranche — pas de Saône en soldes, elle est en rupture jusqu'à mi-janvier et des précommandes sont au plein prix ; il faut donc l'exclure de la grille avant la fusion [4][10].\n- Il reste à décider comment mettre les prix soldés dans Shopify pour le 30/11 (shooting) alors que le cron ne les applique que le 6 janvier [11].\n- Répondre à Sophie sur le déclenchement du flux Google Shopping juste après le script des soldes [5].\n- Corriger la bannière mobile avant le shooting [6].\n- Le tag `soldes` automatique sur les produits remisés (#59) est fusionné ; reste le bump `@shopify/shopify-api` proposé par Dependabot (#66), à arbitrer ou laisser passer [7][8].",
+  "mesures": {
+    "mots": 324,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4614,
+    "sortie": 1791,
+    "reflexion": 1300,
+    "cache": 184,
+    "cout": 0.001567674
+  },
+  "cout": 0.001567674,
+  "latenceMs": 14150,
+  "fournisseur": "Wafer"
+}

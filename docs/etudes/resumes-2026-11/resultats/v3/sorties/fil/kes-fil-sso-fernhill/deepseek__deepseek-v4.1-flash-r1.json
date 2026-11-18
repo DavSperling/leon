@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:06.951Z",
+  "reponse": "## Où j'en suis\nReal SAML login works end to end on staging for the `fernhill` tenant with Fernhill's IdP: the RelayState rejection was fixed by storing the return URL in Redis behind a short opaque ID, and JIT provisioning (now merged in #415) creates users as `viewer`; group→role mapping is written and sits in the still-open PR #421. The remaining blocker before the demo is Fernhill IT adding the `groups` claim. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged (commit `f4a91c7`) (source: kestrel-analytics/platform#421, f4a91c7)\n- [en-cours] Fernhill IT adding the `groups` claim on their side; the admin demo account waits on it (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 reviewed and merged (source: kestrel-analytics/platform#421)\n- [prochaine-étape] add one admin test account once the claim exists; demo Thursday Nov 19, 10:00 ET (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] sending the full return URL as RelayState: their ADFS refused the login (`MSIS7042`, 143 bytes vs the 80-byte cap); replaced by server-side URL + short opaque ID (source: ses-sso-3)\n- [essai-raté] first JIT test run failed on email case (`Daniel@Fernhill-Bank.example` vs the lowercase domain list); normalized to lowercase (source: ses-sso-2)\n- [question] Dec 1 SSO enforcement / password login off for `fernhill` rests only on an agent note; and Fernhill's Slack ask (IdP-initiated only, `analyst` default) was refused but not yet answered to them (source: src-note-enforce, src-slack-fernhill)\n- [décision] short opaque RelayState ID, return URL in Redis with a 10-minute TTL (source: s3-03)\n- [décision] per-tenant group mapping: `Fernhill-Kestrel-Admins` → `admin`, everything else `viewer` (source: s3-05)\n- [décision] `viewer` stays the default until Maya talks to Fernhill; no `analyst` role; SP-initiated login stays on (source: s3-07)\n- [décision] SAML only for Fernhill, no OIDC; both SP- and IdP-initiated flows (source: s1-03)\n- [décision] JIT never creates a user from an unverified domain (source: s2-03)\n- [décision] demo stays Thursday, 10:00 New York (source: s3-10)",
+  "rendu": "## Où j'en suis\nReal SAML login works end to end on staging for the `fernhill` tenant with Fernhill's IdP: the RelayState rejection was fixed by storing the return URL in Redis behind a short opaque ID, and JIT provisioning (now merged in #415) creates users as `viewer`; group→role mapping is written and sits in the still-open PR #421. The remaining blocker before the demo is Fernhill IT adding the `groups` claim. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged (commit `f4a91c7`) (de: équipe; source: kestrel-analytics/platform#421, f4a91c7)\n- [en-cours] Fernhill IT adding the `groups` claim on their side; the admin demo account waits on it (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] get #421 reviewed and merged (de: équipe; source: kestrel-analytics/platform#421)\n- [prochaine-étape] add one admin test account once the claim exists; demo Thursday Nov 19, 10:00 ET (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] sending the full return URL as RelayState: their ADFS refused the login (`MSIS7042`, 143 bytes vs the 80-byte cap); replaced by server-side URL + short opaque ID (de: agent; source: ses-sso-3)\n- [essai-raté] first JIT test run failed on email case (`Daniel@Fernhill-Bank.example` vs the lowercase domain list); normalized to lowercase (de: agent; source: ses-sso-2)\n- [question] Dec 1 SSO enforcement / password login off for `fernhill` rests only on an agent note; and Fernhill's Slack ask (IdP-initiated only, `analyst` default) was refused but not yet answered to them (de: connecteur, agent; source: src-note-enforce, src-slack-fernhill)\n- [décision] short opaque RelayState ID, return URL in Redis with a 10-minute TTL (de: toi; source: s3-03)\n- [décision] per-tenant group mapping: `Fernhill-Kestrel-Admins` → `admin`, everything else `viewer` (de: toi; source: s3-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1988,
+    "lignesRetirees": 4,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4716,
+    "sortie": 2276,
+    "reflexion": 1616,
+    "cache": 1024,
+    "cout": 0.002225172
+  },
+  "cout": 0.002225172,
+  "latenceMs": 11740,
+  "fournisseur": "Cohere"
+}

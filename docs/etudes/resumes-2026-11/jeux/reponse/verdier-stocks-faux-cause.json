@@ -1,0 +1,141 @@
+{
+  "id": "verdier-stocks-faux-cause",
+  "titre": "Recherche « pourquoi le stock Shopify est faux » : la cause et le correctif viennent d'une PR fusionnée et d'une session de code, puis un nouveau cas apparaît le lendemain avec une autre explication",
+  "langue": "fr",
+  "entree": {
+    "recherche": "pourquoi le stock Shopify est faux",
+    "resultats": [
+      {
+        "id": "gh-boutique-87",
+        "kind": "github",
+        "nature": "ticket",
+        "titre": "maison-verdier/boutique#87 Fix: webhook inventory_levels/update traité deux fois",
+        "url": "https://github.com/maison-verdier/boutique/pull/87",
+        "date": "2026-11-17T17:05:00Z",
+        "passages": [
+          {
+            "id": "ps1",
+            "auteur": "hugo-petit",
+            "date": "2026-11-16T14:20:00Z",
+            "texte": "Quand un produit a deux emplacements (entrepôt + showroom), Shopify envoie un webhook inventory_levels/update par emplacement et le script de synchro décrémentait le stock deux fois. On déduplique sur (inventory_item_id, location_id, updated_at). Test ajouté avec deux emplacements."
+          },
+          {
+            "id": "ps2",
+            "auteur": "julien-morel",
+            "date": "2026-11-17T17:05:00Z",
+            "texte": "julien-morel merged commit a71c3d2 into main."
+          }
+        ]
+      },
+      {
+        "id": "cc-julien-1116",
+        "kind": "claude_code",
+        "nature": "conversation",
+        "titre": "bug synchro stock double décrément",
+        "url": null,
+        "date": "2026-11-16T13:40:00Z",
+        "passages": [
+          {
+            "id": "ps3",
+            "auteur": "Julien Morel",
+            "date": "2026-11-16T13:40:00Z",
+            "role": "user",
+            "texte": "ok donc c'est bien le double webhook quand y a 2 emplacements, je le vois dans les logs : même updated_at, deux location_id. hugo fait la PR avec la dédup, toi écris juste le test qui reproduit"
+          }
+        ]
+      },
+      {
+        "id": "gh-boutique-91",
+        "kind": "github",
+        "nature": "ticket",
+        "titre": "maison-verdier/boutique#91 Stock négatif sur la variante Saône chêne clair",
+        "url": "https://github.com/maison-verdier/boutique/issues/91",
+        "date": "2026-11-18T07:10:00Z",
+        "passages": [
+          {
+            "id": "ps4",
+            "auteur": "lucie-fontaine",
+            "date": "2026-11-18T07:10:00Z",
+            "texte": "La variante SAO-180-CC affiche -2 en stock depuis ce matin, deux clients ont pu commander. Est-ce lié à la PR #87 ?"
+          }
+        ]
+      },
+      {
+        "id": "zd-5521b",
+        "kind": "zendesk",
+        "nature": "fil",
+        "titre": "Ticket #5521 – Stock affiché faux sur la table Saône",
+        "url": null,
+        "date": "2026-11-17T08:10:00Z",
+        "passages": [
+          {
+            "id": "ps5",
+            "auteur": "Client",
+            "date": "2026-11-17T08:10:00Z",
+            "texte": "Bonjour, j'ai commandé la table Saône chêne clair affichée en stock et on m'annonce maintenant 6 semaines de délai. Ce n'est pas sérieux."
+          }
+        ]
+      },
+      {
+        "id": "sl-tech-1118",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#tech",
+        "url": null,
+        "date": "2026-11-18T08:00:00Z",
+        "passages": [
+          {
+            "id": "ps6",
+            "auteur": "Hugo Petit",
+            "date": "2026-11-18T08:00:00Z",
+            "texte": "Pour le #91 : ce n'est pas #87. C'est l'import nocturne (scripts/stock/import-csv.ts) qui a écrasé le stock avec le CSV de Bois & Fils de la veille, avant les deux commandes. Je regarde pour lancer l'import avant l'ouverture plutôt qu'à 3h."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "Cause des écarts : quand un produit a deux emplacements (entrepôt et showroom), le webhook de stock arrive deux fois et le stock était décrémenté deux fois.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Correctif : la PR #87 déduplique ces webhooks ; elle est fusionnée (17 novembre).",
+        "poids": 2
+      },
+      {
+        "id": "f3",
+        "texte": "Un nouveau cas est apparu le 18 novembre : la Saône chêne clair affiche un stock négatif (#91).",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Selon Hugo, ce nouveau cas vient de l'import nocturne du CSV de Bois & Fils, pas de la PR #87.",
+        "poids": 2
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Dire que la PR #87 n'est pas fusionnée ou pas encore corrigée."
+      },
+      {
+        "id": "x2",
+        "texte": "Affirmer que le stock négatif du #91 est causé par la PR #87."
+      }
+    ],
+    "pieges": [
+      "Croiser : la cause est dans la PR et dans un tour tapé de la session de code ; le nouveau cas et son explication sont dans deux autres résultats.",
+      "Question ouverte d'un ticket (« Est-ce lié à #87 ? ») à ne pas prendre pour une réponse.",
+      "Un message de client mécontent ne dit rien de la cause."
+    ],
+    "cites": [
+      1,
+      3,
+      5
+    ]
+  }
+}

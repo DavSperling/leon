@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:36.558Z",
+  "reponse": "Le démarrage des enlèvements réguliers a été confirmé au mardi 8 décembre par TransAlp, qui indique que son agence de Vénissieux ne peut pas absorber les volumes avant [2]. Le plan de passage, lui, prévoyait une bascule complète le 1er décembre, avec l'arrêt de Rapid'Colis le 30/11 [1], date jugée impérative en réunion [4] et confirmée en interne [3]. Les deux se contredisent ; l'enlèvement test du 20 novembre est maintenu dans les deux cas [1][2].",
+  "rendu": "Le démarrage des enlèvements réguliers a été confirmé au mardi 8 décembre par TransAlp, qui indique que son agence de Vénissieux ne peut pas absorber les volumes avant [2]. Le plan de passage, lui, prévoyait une bascule complète le 1er décembre, avec l'arrêt de Rapid'Colis le 30/11 [1], date jugée impérative en réunion [4] et confirmée en interne [3]. Les deux se contredisent ; l'enlèvement test du 20 novembre est maintenu dans les deux cas [1][2].",
+  "mesures": {
+    "mots": 75,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1081,
+    "sortie": 188,
+    "reflexion": 49,
+    "cache": 0,
+    "cout": 0.00026273
+  },
+  "cout": 0.00026273,
+  "latenceMs": 3798,
+  "fournisseur": "CoreWeave"
+}

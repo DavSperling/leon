@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:53.564Z",
+  "reponse": "## Où j'en suis\nPR #233 is merged. The real replay finished on 2026-11-18 and put 18,442,107 events into events.replay.v3, with 3,118 schema v2 lines sent to the rejects file. The aggregator backfill for 2026-11-12 was about 61% done at 09:52 UTC. The incident is still open. (source: ses-rp-2, kestrel-analytics/ingest#233, r2-04)\n\n- [en-cours] Backfill job backfill-2026-11-12, started 08:57 UTC. At the last check, ClickHouse events_v3 held 14.9M rows in the incident window against ~20.5M expected. (source: r2-06)\n- [prochaine-étape] Once the backfill reaches 100%, compare ClickHouse counts hour by hour (1% tolerance), tell the user when they look right, then close the incident. (source: r2-08, r2-05)\n- [question] The 3,118 schema v2 rejects are in s3://kestrel-raw-events/replay-rejects/2026-11-12/. It is unclear whether they count toward the \"counts match\" check or need separate handling. (source: r2-04)\n- [question] Customers were told the data would be back by Thursday. The Orbitly ticket assumes today, Wednesday, and Rachel has yet to confirm the date. (source: r2-07, src-zendesk-orbitly)\n- [décision] Do not close the incident until the counts match. (source: r2-07)\n- [décision] Ignore fork PR #241 (dedup key 128). Daniel's CI check is the agreed fix. (source: r2-09, src-slack-incident)\n- [décision] Replay everything into events.replay.v3, never produce directly to events.v3. Use 5k batches and leave the memory limit alone. (source: r1-02, r1-04)",
+  "rendu": "## Où j'en suis\nPR #233 is merged. The real replay finished on 2026-11-18 and put 18,442,107 events into events.replay.v3, with 3,118 schema v2 lines sent to the rejects file. The aggregator backfill for 2026-11-12 was about 61% done at 09:52 UTC. The incident is still open. (de: équipe, agent; source: ses-rp-2, kestrel-analytics/ingest#233, r2-04)\n\n- [en-cours] Backfill job backfill-2026-11-12, started 08:57 UTC. At the last check, ClickHouse events_v3 held 14.9M rows in the incident window against ~20.5M expected. (de: agent; source: r2-06)\n- [prochaine-étape] Once the backfill reaches 100%, compare ClickHouse counts hour by hour (1% tolerance), tell the user when they look right, then close the incident. (de: toi, agent; source: r2-08, r2-05)\n- [question] The 3,118 schema v2 rejects are in s3://kestrel-raw-events/replay-rejects/2026-11-12/. It is unclear whether they count toward the \"counts match\" check or need separate handling. (de: agent; source: r2-04)\n- [question] Customers were told the data would be back by Thursday. The Orbitly ticket assumes today, Wednesday, and Rachel has yet to confirm the date. (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [décision] Do not close the incident until the counts match. (de: toi; source: r2-07)\n- [décision] Ignore fork PR #241 (dedup key 128). Daniel's CI check is the agreed fix. (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] Replay everything into events.replay.v3, never produce directly to events.v3. Use 5k batches and leave the memory limit alone. (de: toi; source: r1-02, r1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1590,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5181,
+    "sortie": 607,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016432
+  },
+  "cout": 0.016432,
+  "latenceMs": 4839,
+  "fournisseur": "Amazon Bedrock"
+}

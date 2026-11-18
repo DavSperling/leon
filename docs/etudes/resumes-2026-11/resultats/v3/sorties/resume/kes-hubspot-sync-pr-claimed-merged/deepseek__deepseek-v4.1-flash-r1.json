@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:14.566Z",
+  "reponse": "## Où j'en suis\nThe HubSpot work moved from webhooks to polling: `client.search_companies` and `sync_companies` poll the CRM every 15 minutes, page past the 10k search cap using time windows, and only fetch companies with ARR > 0 (commits 8b3e6f1, 2d90ac4, ae47c15). PR #409 is open with auto-merge enabled, but the required e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails (3 owner rows expected, 2 found), so nothing is merged yet.\n\n- [en-cours] the e2e fixture still contains a trial company with an owner, which the new ARR > 0 filter skips\n- [prochaine-étape] update that fixture (ARR > 0 on the third company, or expect 2 rows), then let auto-merge squash #409\n- [essai-raté] registering webhook subscriptions by API returned 401: private app tokens can't manage them\n- [décision] poll instead of webhooks, close #405 (source: t04)\n- [décision] sync only companies with ARR > 0, trials skipped (source: t10)\n- [décision] HUBSPOT_TOKEN to Secrets Manager via Noa, PR opened with auto-merge (source: t12)",
+  "rendu": "## Où j'en suis\nThe HubSpot work moved from webhooks to polling: `client.search_companies` and `sync_companies` poll the CRM every 15 minutes, page past the 10k search cap using time windows, and only fetch companies with ARR > 0 (commits 8b3e6f1, 2d90ac4, ae47c15). PR #409 is open with auto-merge enabled, but the required e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails (3 owner rows expected, 2 found), so nothing is merged yet.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] the e2e fixture still contains a trial company with an owner, which the new ARR > 0 filter skips\n- [prochaine-étape] update that fixture (ARR > 0 on the third company, or expect 2 rows), then let auto-merge squash #409\n- [essai-raté] registering webhook subscriptions by API returned 401: private app tokens can't manage them\n- [décision] poll instead of webhooks, close #405 (source: t04)\n- [décision] sync only companies with ARR > 0, trials skipped (source: t10)\n- [décision] HUBSPOT_TOKEN to Secrets Manager via Noa, PR opened with auto-merge (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1216,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3572,
+    "sortie": 2222,
+    "reflexion": 1915,
+    "cache": 768,
+    "cout": 0.002015604
+  },
+  "cout": 0.002015604,
+  "latenceMs": 11432,
+  "fournisseur": "Cohere"
+}

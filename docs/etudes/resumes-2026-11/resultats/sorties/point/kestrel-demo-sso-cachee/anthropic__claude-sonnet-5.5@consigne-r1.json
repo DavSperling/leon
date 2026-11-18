@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@consigne",
+  "rep": 1,
+  "date": "2026-11-18T14:40:16.257Z",
+  "reponse": "## What you did\n\n- Tu as fait avancer le SSO Fernhill : la vérification des signatures SAML (SHA-256 et plus, pas de SHA-1) avec protection contre le rejeu est dans la PR #418 [2], et le nettoyage de `kestrel/auth` est dans la PR #423 : test flaky corrigé avec freezegun, ruff et mypy propres, `saml_utils.py` découpé en package `saml/` [1].\n\n## What changed\n\n- La PR #418 est approuvée et fusionnée par Maya ; elle part avec le déploiement staging de ce soir, donc la validation de signature sera sur staging avant la démo de jeudi [3].\n- Tom demande des changements sur #423 : le diff fait 1 900 lignes, surtout le déplacement de module. Il veut deux PR (déplacement et correctifs lint) et promet d'approuver les deux aujourd'hui [4].\n- Ticket #424 : l'export CSV des dashboards de Zest Grocers (plus de 200k lignes) expire en 504. Tom le prend en charge et passera par la file de jobs [5].\n\n## What is still open\n\n- Démo SSO de bout en bout pour l'IT de Fernhill jeudi 10h heure de New York, avec leur tenant Okta. Priya anime, tu dois être sur l'appel [1].\n- Découper #423 en deux PR pour répondre à Tom [4].\n- Le cache de rejeu des identifiants d'assertion est en mémoire par processus. Il faut le passer sur Redis (clé tenant + ID, `SET NX EX`) avant la production multi-pod, c'est ce que tu avais prévu pour aujourd'hui [1][2].\n- La PR #426 de Dependabot (cryptography 43.0.3) attend toujours [6].",
+  "rendu": "## What you did\n\n- Tu as fait avancer le SSO Fernhill : la vérification des signatures SAML (SHA-256 et plus, pas de SHA-1) avec protection contre le rejeu est dans la PR #418 [2], et le nettoyage de `kestrel/auth` est dans la PR #423 : test flaky corrigé avec freezegun, ruff et mypy propres, `saml_utils.py` découpé en package `saml/` [1].\n\n## What changed\n\n- La PR #418 est approuvée et fusionnée par Maya ; elle part avec le déploiement staging de ce soir, donc la validation de signature sera sur staging avant la démo de jeudi [3].\n- Tom demande des changements sur #423 : le diff fait 1 900 lignes, surtout le déplacement de module. Il veut deux PR (déplacement et correctifs lint) et promet d'approuver les deux aujourd'hui [4].\n- Ticket #424 : l'export CSV des dashboards de Zest Grocers (plus de 200k lignes) expire en 504. Tom le prend en charge et passera par la file de jobs [5].\n\n## What is still open\n\n- Démo SSO de bout en bout pour l'IT de Fernhill jeudi 10h heure de New York, avec leur tenant Okta. Priya anime, tu dois être sur l'appel [1].\n- Découper #423 en deux PR pour répondre à Tom [4].\n- Le cache de rejeu des identifiants d'assertion est en mémoire par processus. Il faut le passer sur Redis (clé tenant + ID, `SET NX EX`) avant la production multi-pod, c'est ce que tu avais prévu pour aujourd'hui [1][2].\n- La PR #426 de Dependabot (cryptography 43.0.3) attend toujours [6].",
+  "mesures": {
+    "mots": 241,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8105,
+    "sortie": 615,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02236
+  },
+  "cout": 0.02236,
+  "latenceMs": 5293,
+  "fournisseur": "Claude Platform on AWS"
+}

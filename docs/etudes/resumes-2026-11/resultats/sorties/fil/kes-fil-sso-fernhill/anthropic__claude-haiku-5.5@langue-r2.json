@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:40:30.077Z",
+  "reponse": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP. JIT provisioning (PR #415) is merged, and new users are created with the viewer role. The RelayState fix is in commit 6d0e2b8. Group-to-role mapping is in PR #421, still open. Fernhill IT still has to add the groups claim before the demo on Thursday, Nov 19, 10:00 ET. (source: ses-sso-3, s3-04, s3-11, src-linear-kes311)\n\n- [en-cours] Fernhill IT is adding the groups claim to their assertion. The owner is emailing them. (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Get PR #421 reviewed and merged. (source: kestrel-analytics/platform#421)\n- [prochaine-étape] Once the claim exists, create the demo account kestrel.test1 and one admin test account. (source: s3-08)\n- [prochaine-étape] Run the demo with Fernhill IT, Thursday Nov 19, 10:00 ET. (source: s3-10, src-linear-kes311)\n- [essai-raté] Fernhill's ADFS rejected SP-initiated login because the 143-byte RelayState exceeds its 80-byte limit (MSIS7042). Fixed with a short opaque ID that maps to the return URL in Redis for 10 minutes. (source: s3-02, s3-04)\n- [essai-raté] The first JIT test failed on email case. The domain is now normalized to lowercase. (source: s2-02)\n- [question] Fernhill IT asked for IdP-initiated login only and the analyst role by default. No analyst role exists, and Maya is to talk to them first. (source: src-slack-fernhill, s3-07)\n- [décision] RelayState becomes a short opaque ID, with the return URL stored in Redis for 10 minutes. (source: s3-03)\n- [décision] Fernhill-Kestrel-Admins maps to admin, everyone else to viewer, applied on every login. (source: s3-05, s3-06)\n- [décision] The default role stays viewer, and SP-initiated login stays on. (source: s3-07)\n- [décision] SAML only for Fernhill, no OIDC, with both login flows. (source: s1-03)\n- [décision] JIT accepts only verified domains. (source: s2-03, src-pr415)",
+  "rendu": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP. JIT provisioning (PR #415) is merged, and new users are created with the viewer role. The RelayState fix is in commit 6d0e2b8. Group-to-role mapping is in PR #421, still open. Fernhill IT still has to add the groups claim before the demo on Thursday, Nov 19, 10:00 ET. (de: connecteur, agent; source: ses-sso-3, s3-04, s3-11, src-linear-kes311)\n\n- [en-cours] Fernhill IT is adding the groups claim to their assertion. The owner is emailing them. (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Get PR #421 reviewed and merged. (de: équipe; source: kestrel-analytics/platform#421)\n- [prochaine-étape] Once the claim exists, create the demo account kestrel.test1 and one admin test account. (de: agent; source: s3-08)\n- [prochaine-étape] Run the demo with Fernhill IT, Thursday Nov 19, 10:00 ET. (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [essai-raté] Fernhill's ADFS rejected SP-initiated login because the 143-byte RelayState exceeds its 80-byte limit (MSIS7042). Fixed with a short opaque ID that maps to the return URL in Redis for 10 minutes. (de: agent; source: s3-02, s3-04)\n- [essai-raté] The first JIT test failed on email case. The domain is now normalized to lowercase. (de: agent; source: s2-02)\n- [question] Fernhill IT asked for IdP-initiated login only and the analyst role by default. No analyst role exists, and Maya is to talk to them first. (de: toi, connecteur; source: src-slack-fernhill, s3-07)\n- [décision] RelayState becomes a short opaque ID, with the return URL stored in Redis for 10 minutes. (de: toi; source: s3-03)\n- [décision] Fernhill-Kestrel-Admins maps to admin, everyone else to viewer, applied on every login. (de: toi, agent; source: s3-05, s3-06)\n- [décision] The default role stays viewer, and SP-initiated login stays on. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1912,
+    "lignesRetirees": 2,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6388,
+    "sortie": 3143,
+    "reflexion": 2338,
+    "cache": 0,
+    "cout": 0.0022103
+  },
+  "cout": 0.0022103,
+  "latenceMs": 13280,
+  "fournisseur": "Claude Platform on AWS"
+}

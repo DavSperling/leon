@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:24:31.845Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est en place sur la branche `julien/script-soldes-hiver` : règles de remise par collection, arrondi en 9, application par opération en masse (après un premier essai throttlé), programmation du lancement, export CSV pour la newsletter, et la PR #94 est ouverte. Il reste le script de retour aux prix d'origine, que la personne fera en décembre.\n\n- [en-cours] Script de retour aux prix d'origine à la fin des soldes, à écrire en décembre\n- [prochaine-étape] Corriger le résumé de la PR #94, qui annonce -30 % / -40 % au lieu des taux réellement décidés\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Écriture variante par variante : API throttlée au 62e produit, boutique de dev à moitié soldée puis remise à l'état d'origine depuis le CSV du dry run\n- [décision] Remises : -20 % Rhône, -30 % fins de série, rien sur Saône (source: t05)\n- [décision] Application en opération en masse (source: t11)\n- [décision] Lancement mercredi 13 janvier 2027 à 8h00, vérification sur la boutique de dev la veille (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est en place sur la branche `julien/script-soldes-hiver` : règles de remise par collection, arrondi en 9, application par opération en masse (après un premier essai throttlé), programmation du lancement, export CSV pour la newsletter, et la PR #94 est ouverte. Il reste le script de retour aux prix d'origine, que la personne fera en décembre.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine à la fin des soldes, à écrire en décembre\n- [prochaine-étape] Corriger le résumé de la PR #94, qui annonce -30 % / -40 % au lieu des taux réellement décidés\n- [prochaine-étape] Régénérer `/tmp/prix-soldes.csv` avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Écriture variante par variante : API throttlée au 62e produit, boutique de dev à moitié soldée puis remise à l'état d'origine depuis le CSV du dry run\n- [décision] Remises : -20 % Rhône, -30 % fins de série, rien sur Saône (source: t05)\n- [décision] Application en opération en masse (source: t11)\n- [décision] Lancement mercredi 13 janvier 2027 à 8h00, vérification sur la boutique de dev la veille (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1271,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4029,
+    "sortie": 1261,
+    "reflexion": 913,
+    "cache": 0,
+    "cout": 0.00108876
+  },
+  "cout": 0.00108876,
+  "latenceMs": 10992,
+  "fournisseur": "River"
+}

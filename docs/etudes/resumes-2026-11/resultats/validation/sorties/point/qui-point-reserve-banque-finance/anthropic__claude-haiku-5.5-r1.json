@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:49.551Z",
+  "reponse": "## What is still open\n- Fund the $900k reserve top-up by November 30 and put the change on the cash slide of Thursday's board pack [3][5].\n- Jenna asks whether to chase Northpeak's $27,500 SRE search invoice, which hasn't arrived, or keep the accrual and close October on Friday [4].\n\n## What changed\n- Corvane refused phasing: the full $2.4M reserve is due by November 30. They are open to revisiting the level in Q2 after a clean quarter [5].\n- Gil gave his sign-off to move the $900k from the treasury sweep without you needing to come back to him [3].\n\n## What you did\n- Drafted and sent the phasing request to Corvane and the sign-off note to Gil yourself. Runway goes from 19.5 to 18.3 months after the top-up, still above the 18-month floor [1].\n- Mapped the October card export (146 lines) to GL accounts and flagged lines over $2k. Moved the $4,500 Northpeak deposit to prepaid expenses and exported the CSV for Jenna [2].",
+  "rendu": "## What is still open\n- Fund the $900k reserve top-up by November 30 and put the change on the cash slide of Thursday's board pack [3][5].\n- Jenna asks whether to chase Northpeak's $27,500 SRE search invoice, which hasn't arrived, or keep the accrual and close October on Friday [4].\n\n## What changed\n- Corvane refused phasing: the full $2.4M reserve is due by November 30. They are open to revisiting the level in Q2 after a clean quarter [5].\n- Gil gave his sign-off to move the $900k from the treasury sweep without you needing to come back to him [3].\n\n## What you did\n- Drafted and sent the phasing request to Corvane and the sign-off note to Gil yourself. Runway goes from 19.5 to 18.3 months after the top-up, still above the 18-month floor [1].\n- Mapped the October card export (146 lines) to GL accounts and flagged lines over $2k. Moved the $4,500 Northpeak deposit to prepaid expenses and exported the CSV for Jenna [2].",
+  "mesures": {
+    "mots": 161,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6557,
+    "sortie": 2529,
+    "reflexion": 2175,
+    "cache": 0,
+    "cout": 0.0019202
+  },
+  "cout": 0.0019202,
+  "latenceMs": 11683,
+  "fournisseur": "Google"
+}

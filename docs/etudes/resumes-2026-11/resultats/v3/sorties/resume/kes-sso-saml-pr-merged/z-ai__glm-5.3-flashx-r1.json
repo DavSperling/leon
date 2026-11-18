@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:57:52.789Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint on branch daniel/saml-acs is done: signature verification via signxml (python3-saml/xmlsec was abandoned), condition/audience/recipient/replay checks written by hand, 120 s clock skew per Fernhill's contract annex, mypy and full test suite green (1284 passed). PR #412 was opened with the demo checklist in its description, and it is merged on GitHub (tours mention a merge refusal pending Maya's review — the recorded state is merged).\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD\n- [prochaine-étape] SSO demo Thursday 10:00 New York with Fernhill IT\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users (explicitly out of PR #412)\n- [essai-raté] python3-saml: xmlsec/lxml libxml2 version mismatch on Alpine; building lxml from source still failed (missing xmlsec1-openssl module) and made the build 9 min\n- [essai-raté] `gh pr merge 412 --squash` refused by branch protection (no approving review); user declined --admin and --auto (source: t21)\n- [décision] Use signxml instead of python3-saml, drop xmlsec from the Dockerfile, write condition checks by hand and only read from signed_xml (source: t08)\n- [décision] Clock skew = 120 s per the Fernhill security questionnaire/contract annex (source: t12)\n- [décision] No --admin, no --auto merge; user will ping Maya directly (source: t21)",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint on branch daniel/saml-acs is done: signature verification via signxml (python3-saml/xmlsec was abandoned), condition/audience/recipient/replay checks written by hand, 120 s clock skew per Fernhill's contract annex, mypy and full test suite green (1284 passed). PR #412 was opened with the demo checklist in its description, and it is merged on GitHub (tours mention a merge refusal pending Maya's review — the recorded state is merged).\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD\n- [prochaine-étape] SSO demo Thursday 10:00 New York with Fernhill IT\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users (explicitly out of PR #412)\n- [essai-raté] python3-saml: xmlsec/lxml libxml2 version mismatch on Alpine; building lxml from source still failed (missing xmlsec1-openssl module) and made the build 9 min\n- [essai-raté] `gh pr merge 412 --squash` refused by branch protection (no approving review); user declined --admin and --auto (source: t21)\n- [décision] Use signxml instead of python3-saml, drop xmlsec from the Dockerfile, write condition checks by hand and only read from signed_xml (source: t08)\n- [décision] Clock skew = 120 s per the Fernhill security questionnaire/contract annex (source: t12)\n- [décision] No --admin, no --auto merge; user will ping Maya directly (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1581,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4500,
+    "sortie": 456,
+    "reflexion": 70,
+    "cache": 832,
+    "cout": 0.00198956
+  },
+  "cout": 0.00198956,
+  "latenceMs": 3435,
+  "fournisseur": "Z.AI"
+}

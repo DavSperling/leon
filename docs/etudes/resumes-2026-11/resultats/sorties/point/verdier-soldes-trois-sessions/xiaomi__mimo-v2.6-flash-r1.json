@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:35:11.922Z",
+  "reponse": "## Ce que tu as fait\n\n- Le script de soldes est prêt : prix barré + prix remisé arrondi à l'euro, application automatisée et restauration des prix, PR ouverte avec Hugo comme relecteur [1].\n- Rien n'est laissé au hasard : dry-run en lecture seule sur la prod (212 variantes, 57 produits, 3 déjà en promo écartées) et les deux déclenchements testés sur la boutique de dev [1].\n\n## Ce qui a bougé\n\n- Hugo a fusionné la PR #59 : les produits remisés seront automatiquement tagués `soldes`, ce qui prépare tes collections de janvier [7].\n- Lucie te remercie pour le widget Zendesk : 23 conversations ouvertes depuis les pages produit cette semaine [9].\n- Dependabot propose la montée de `@shopify/shopify-api` en 11.6.1 (PR #66) [8].\n\n## Ce qui reste ouvert\n\n- La Saône ne doit pas être en soldes : Claire l'interdit (rupture jusqu'à mi-janvier, précommandes au plein prix) et Hugo pose la même question sur #63 — à retirer de la grille avant la fusion [10][4].\n- Sophie décale le shooting au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11, alors que le script est planifié au 6 janvier : à trancher [11].\n- #64 : sur petit mobile, la bannière soldes masque le bouton « Ajouter au panier » des pages produit, à corriger avant le shooting [6].\n- #65 : le flux Google Shopping doit être régénéré juste après l'application des soldes, sinon les annonces seront refusées pour prix différent du site [5].",
+  "rendu": "## Ce que tu as fait\n\n- Le script de soldes est prêt : prix barré + prix remisé arrondi à l'euro, application automatisée et restauration des prix, PR ouverte avec Hugo comme relecteur [1].\n- Rien n'est laissé au hasard : dry-run en lecture seule sur la prod (212 variantes, 57 produits, 3 déjà en promo écartées) et les deux déclenchements testés sur la boutique de dev [1].\n\n## Ce qui a bougé\n\n- Hugo a fusionné la PR #59 : les produits remisés seront automatiquement tagués `soldes`, ce qui prépare tes collections de janvier [7].\n- Lucie te remercie pour le widget Zendesk : 23 conversations ouvertes depuis les pages produit cette semaine [9].\n- Dependabot propose la montée de `@shopify/shopify-api` en 11.6.1 (PR #66) [8].\n\n## Ce qui reste ouvert\n\n- La Saône ne doit pas être en soldes : Claire l'interdit (rupture jusqu'à mi-janvier, précommandes au plein prix) et Hugo pose la même question sur #63 — à retirer de la grille avant la fusion [10][4].\n- Sophie décale le shooting au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11, alors que le script est planifié au 6 janvier : à trancher [11].\n- #64 : sur petit mobile, la bannière soldes masque le bouton « Ajouter au panier » des pages produit, à corriger avant le shooting [6].\n- #65 : le flux Google Shopping doit être régénéré juste après l'application des soldes, sinon les annonces seront refusées pour prix différent du site [5].",
+  "mesures": {
+    "mots": 230,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5215,
+    "sortie": 4771,
+    "reflexion": 4355,
+    "cache": 0,
+    "cout": 0.00206598
+  },
+  "cout": 0.00206598,
+  "latenceMs": 139887,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:10.869Z",
+  "reponse": "## Où j'en suis\nReal SAML login works end to end on staging with Fernhill's IdP: their metadata is loaded, the over-long RelayState was fixed with a short opaque ID stored in Redis, and JIT (#415, merged) creates Fernhill users as `viewer`. Group-to-role mapping (`Fernhill-Kestrel-Admins` → `admin`, per-tenant setting) is written, tested (full suite green: 1301 passed) and open as PR #421; it can't be exercised until Fernhill adds the groups claim. The demo is Thursday Nov 19, 10:00 New York. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 open, awaiting review; Fernhill IT still has to add the groups claim on their side (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] email Fernhill IT about the groups claim, then create an admin test account once it exists, before Thursday's demo (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The full return URL as RelayState (143 bytes) failed: their ADFS enforces the 80-byte cap (`MSIS7042`); truncating was rejected as it breaks deep links (source: ses-sso-3, s3-03)\n- [décision] `viewer` stays the default role and SP-initiated login stays on, until Maya talks to Fernhill (their IT asked for `analyst` default and IdP-initiated only) (source: s3-07, s1-05, src-slack-fernhill)\n- [décision] Short opaque RelayState ID, return URL in Redis for 10 minutes (source: s3-03)\n- [décision] JIT only accepts verified domains, never an unverified one even if the IdP asserts it (source: s2-03, src-pr415)\n- [décision] SAML only for Fernhill, no OIDC for now; both login flows (source: s1-03)",
+  "rendu": "## Où j'en suis\nReal SAML login works end to end on staging with Fernhill's IdP: their metadata is loaded, the over-long RelayState was fixed with a short opaque ID stored in Redis, and JIT (#415, merged) creates Fernhill users as `viewer`. Group-to-role mapping (`Fernhill-Kestrel-Admins` → `admin`, per-tenant setting) is written, tested (full suite green: 1301 passed) and open as PR #421; it can't be exercised until Fernhill adds the groups claim. The demo is Thursday Nov 19, 10:00 New York. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 open, awaiting review; Fernhill IT still has to add the groups claim on their side (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] email Fernhill IT about the groups claim, then create an admin test account once it exists, before Thursday's demo (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The full return URL as RelayState (143 bytes) failed: their ADFS enforces the 80-byte cap (`MSIS7042`); truncating was rejected as it breaks deep links (de: toi, agent; source: ses-sso-3, s3-03)\n- [décision] `viewer` stays the default role and SP-initiated login stays on, until Maya talks to Fernhill (their IT asked for `analyst` default and IdP-initiated only) (de: toi, connecteur; source: s3-07, s1-05, src-slack-fernhill)\n- [décision] Short opaque RelayState ID, return URL in Redis for 10 minutes (de: toi; source: s3-03)\n- [décision] JIT only accepts verified domains, never an unverified one even if the IdP asserts it (de: toi, équipe; source: s2-03, src-pr415)\n- [décision] SAML only for Fernhill, no OIDC for now; both login flows (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1725,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4990,
+    "sortie": 783,
+    "reflexion": 286,
+    "cache": 0,
+    "cout": 0.00127205
+  },
+  "cout": 0.00127205,
+  "latenceMs": 28985,
+  "fournisseur": "Makora"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:28:21.660Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp est configuré avec les étiquettes ZPL par défaut, et l’essai en recette a réussi. La PR #91 est poussée, toujours en brouillon et en attente de relecture ; le choix du transporteur est configuré pour une bascule au 1er décembre. (source: ses-tr-2, src-pr91)\n\n- [en-cours] La PR #91 attend la relecture de Julien. (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien doit ajouter la clé de production aux secrets ; la configuration ne doit rien activer avant le 1er décembre. (source: h2-07)\n- [prochaine-étape] À partir du 1er décembre, TransAlp concerne Lyon et Paris seulement ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu’au 15 janvier. (source: src-slack-julien)\n- [décision] Les étiquettes ZPL sont le format par défaut ; l’essai en recette a réussi et Karim a confirmé que les accents s’impriment correctement. (source: h2-01, h2-05)\n- [décision] Aucune résiliation de Rapidis ni aucun tarif Premium ne sont à retenir. (source: h2-09)",
+  "rendu": "## Où j'en suis\nLe client TransAlp est configuré avec les étiquettes ZPL par défaut, et l’essai en recette a réussi. La PR #91 est poussée, toujours en brouillon et en attente de relecture ; le choix du transporteur est configuré pour une bascule au 1er décembre. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] La PR #91 attend la relecture de Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Julien doit ajouter la clé de production aux secrets ; la configuration ne doit rien activer avant le 1er décembre. (de: toi; source: h2-07)\n- [prochaine-étape] À partir du 1er décembre, TransAlp concerne Lyon et Paris seulement ; Rapidis garde le reste de la France et les colis de plus de 30 kg jusqu’au 15 janvier. (de: connecteur; source: src-slack-julien)\n- [décision] Les étiquettes ZPL sont le format par défaut ; l’essai en recette a réussi et Karim a confirmé que les accents s’impriment correctement. (de: toi; source: h2-01, h2-05)\n- [décision] Aucune résiliation de Rapidis ni aucun tarif Premium ne sont à retenir. (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1087,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3614,
+    "sortie": 457,
+    "reflexion": 161,
+    "cache": 0,
+    "cout": 0.000680175
+  },
+  "cout": 0.000680175,
+  "latenceMs": 13473,
+  "fournisseur": "OpenAI"
+}

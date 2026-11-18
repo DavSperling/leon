@@ -494,3 +494,22 @@ describe('deterministicState', () => {
     expect(entrees).toEqual(sessions.slice(0, texte.split('\n').length));
   });
 });
+
+describe('buildFilPrompt : la langue', () => {
+  it('dit en tête la langue des messages tapés dans les sessions du fil, pas celle des sources', () => {
+    const condense = condenseFil({
+      sessions: [
+        session({
+          turns: [turn({ text: 'can you check the logs and tell me what is failing in the job?' })],
+        }),
+      ],
+      sources: [source({ texte: "c'est bon, je fusionne la PR et on passe à la suite" })],
+    });
+    const [message] = buildFilPrompt(condense).messages;
+    expect(
+      message?.content.startsWith(
+        `Écris ta réponse en anglais : c'est la langue de ses messages.\n${DATA_GUARD_LINE}\n`,
+      ),
+    ).toBe(true);
+  });
+});

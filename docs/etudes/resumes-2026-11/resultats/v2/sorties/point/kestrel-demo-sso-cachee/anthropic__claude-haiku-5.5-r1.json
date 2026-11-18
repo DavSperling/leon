@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:09:51.257Z",
+  "reponse": "## What you did\n- Made the flaky `test_acs_rejects_expired_assertion` deterministic by freezing time with freezegun instead of sleeping. It now passes 50/50, against 7 failures in 50 before, and you converted two more sleep-based tests [1].\n- Cleared the ruff 0.8 warnings and the mypy errors in `kestrel/auth`, then split `saml_utils.py` into a `saml/` package with the old imports still working [1].\n\n## What changed\n- PR #418, SAML assertion signature verification for Fernhill, was approved and merged by Maya. It goes out with tonight's staging deploy, so signature validation will be on staging by Wednesday EOD [2][3].\n\n## What is still open\n- Fernhill's end-to-end SSO walkthrough on staging is Thursday 10am New York time (4pm Paris) with their Okta tenant. Priya runs the demo and you need to be on the call [1].\n- Tom wants PR #423 split into the module move and the lint fixes before he approves. He says he'll approve both today [4].\n- The assertion replay cache is still per-process. With three API pods, a replay could succeed on another pod, so it needs to move to Redis [1][2].",
+  "rendu": "## What you did\n- Made the flaky `test_acs_rejects_expired_assertion` deterministic by freezing time with freezegun instead of sleeping. It now passes 50/50, against 7 failures in 50 before, and you converted two more sleep-based tests [1].\n- Cleared the ruff 0.8 warnings and the mypy errors in `kestrel/auth`, then split `saml_utils.py` into a `saml/` package with the old imports still working [1].\n\n## What changed\n- PR #418, SAML assertion signature verification for Fernhill, was approved and merged by Maya. It goes out with tonight's staging deploy, so signature validation will be on staging by Wednesday EOD [2][3].\n\n## What is still open\n- Fernhill's end-to-end SSO walkthrough on staging is Thursday 10am New York time (4pm Paris) with their Okta tenant. Priya runs the demo and you need to be on the call [1].\n- Tom wants PR #423 split into the module move and the lint fixes before he approves. He says he'll approve both today [4].\n- The assertion replay cache is still per-process. With three API pods, a replay could succeed on another pod, so it needs to move to Redis [1][2].",
+  "mesures": {
+    "mots": 177,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8165,
+    "sortie": 2583,
+    "reflexion": 2182,
+    "cache": 0,
+    "cout": 0.002108
+  },
+  "cout": 0.002108,
+  "latenceMs": 13214,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-direction-semaine",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:30:33.145Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-16T11:30 Visite du showroom – Galeries Brotteaux | 2026-11-17T08:45 Point transporteur à l'entrepôt | 2026-11-18T15:00 Préparation stand Maison&Objet | 2026-11-18T16:00 Point clôture trimestrielle | 2026-11-19T14:00 Rendez-vous à la banque – financement et trésorerie | 2026-11-20T10:00 Visite de l'atelier Bois & Fils",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3276,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.0033114
+  },
+  "cout": 0.0033114,
+  "latenceMs": 83834,
+  "fournisseur": "Alibaba"
+}

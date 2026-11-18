@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-sonnet-5.5@consigne",
+  "rep": 1,
+  "date": "2026-11-18T14:40:18.045Z",
+  "reponse": "## What you did\n\n- Tu as sorti l'export CSV en tâche de fond pour Zest (230k rows, timeout 30 s) : la PR #430 renvoie un 202 et envoie un lien signé par email, et Daniel l'a approuvée, à fusionner une fois la CI verte [2][5][6].\n- Tu as poussé sur la PR #427 (dashboards v2) l'en-tête de carte compact, le menu réduit à Duplicate/Rename/Delete, les libellés « Week of … » du graphique de rétention, le skeleton de chargement et la palette catégorielle [1].\n- Tu as demandé à Priya avant de toucher à chartkit. Maya a tranché : on ne supprime pas chartkit tant que v1 existe, donc pas de migration visx pour l'instant [1][7].\n\n## What changed\n\n- Priya bloque l'activation du flag pour Orbitly jeudi 19 : l'export CSV a disparu du menu v2, et Zest comme Orbitly en ont besoin. Elle te demande de le remettre, branché sur le nouvel export en tâche de fond [10][1].\n- Rachel relance : Zest redemande un ETA pour son export, sa revue ops est lundi [9].\n- Sentry a ouvert #432 : le crash du tooltip sur staging touche 4 utilisateurs et 37 événements [8].\n- Dependabot propose #429, le passage de @chartkit/react en 5.0.0 [4].\n\n## What is still open\n\n- Le crash du tooltip sur les cohortes vides (`RetentionChart.tsx:212`, #432) n'est pas corrigé. Il faut protéger `point?.label`, afficher « No data yet » et ajouter un test [1][8].\n- Il faut remettre l'export CSV dans le menu v2 sur le nouvel endpoint. Le v1 attend d'anciens ids de widget, donc il renverrait un 404 sur v2 [1][10]. Ce point et le tooltip conditionnent le flag Orbitly, prévu jeudi 19 et stable sur staging mercredi 18 [3][10].\n- Il faut fusionner #430 quand la CI est verte, puis répondre à Rachel sur l'ETA [5][9].",
+  "rendu": "## What you did\n\n- Tu as sorti l'export CSV en tâche de fond pour Zest (230k rows, timeout 30 s) : la PR #430 renvoie un 202 et envoie un lien signé par email, et Daniel l'a approuvée, à fusionner une fois la CI verte [2][5][6].\n- Tu as poussé sur la PR #427 (dashboards v2) l'en-tête de carte compact, le menu réduit à Duplicate/Rename/Delete, les libellés « Week of … » du graphique de rétention, le skeleton de chargement et la palette catégorielle [1].\n- Tu as demandé à Priya avant de toucher à chartkit. Maya a tranché : on ne supprime pas chartkit tant que v1 existe, donc pas de migration visx pour l'instant [1][7].\n\n## What changed\n\n- Priya bloque l'activation du flag pour Orbitly jeudi 19 : l'export CSV a disparu du menu v2, et Zest comme Orbitly en ont besoin. Elle te demande de le remettre, branché sur le nouvel export en tâche de fond [10][1].\n- Rachel relance : Zest redemande un ETA pour son export, sa revue ops est lundi [9].\n- Sentry a ouvert #432 : le crash du tooltip sur staging touche 4 utilisateurs et 37 événements [8].\n- Dependabot propose #429, le passage de @chartkit/react en 5.0.0 [4].\n\n## What is still open\n\n- Le crash du tooltip sur les cohortes vides (`RetentionChart.tsx:212`, #432) n'est pas corrigé. Il faut protéger `point?.label`, afficher « No data yet » et ajouter un test [1][8].\n- Il faut remettre l'export CSV dans le menu v2 sur le nouvel endpoint. Le v1 attend d'anciens ids de widget, donc il renverrait un 404 sur v2 [1][10]. Ce point et le tooltip conditionnent le flag Orbitly, prévu jeudi 19 et stable sur staging mercredi 18 [3][10].\n- Il faut fusionner #430 quand la CI est verte, puis répondre à Rachel sur l'ETA [5][9].",
+  "mesures": {
+    "mots": 285,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8220,
+    "sortie": 762,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02406
+  },
+  "cout": 0.02406,
+  "latenceMs": 6202,
+  "fournisseur": "Claude Platform on AWS"
+}

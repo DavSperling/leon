@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:32:57.724Z",
+  "reponse": "Commande PO-2291 pour Galeries Brotteaux : 12 buffets « Rhône » chêne naturel à 690 € HT l'unité (8 280 € HT au total) [1][2]. Livraison initialement souhaitée au 27/11, confirmée au 25/11 avec enlèvement Rapid'Colis le 24/11 [3]. Paiement à 60 jours fin de mois, facturation à la livraison avec encaissement prévu fin janvier [1][4].",
+  "rendu": "Commande PO-2291 pour Galeries Brotteaux : 12 buffets « Rhône » chêne naturel à 690 € HT l'unité (8 280 € HT au total) [1][2]. Livraison initialement souhaitée au 27/11, confirmée au 25/11 avec enlèvement Rapid'Colis le 24/11 [3]. Paiement à 60 jours fin de mois, facturation à la livraison avec encaissement prévu fin janvier [1][4].",
+  "mesures": {
+    "mots": 51,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1027,
+    "sortie": 594,
+    "reflexion": 472,
+    "cache": 0,
+    "cout": 0.000561495
+  },
+  "cout": 0.000561495,
+  "latenceMs": 3952,
+  "fournisseur": "Mistral"
+}

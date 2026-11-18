@@ -621,7 +621,39 @@ describe('summarizeSession', () => {
     expect(await resumeTurns(seeded.sourceId)).toEqual([]);
   });
 
-  it('borne la part du modèle à 1 200 caractères', async () => {
+  it('quand la place manque, garde les décisions avant le reste, et rend les lignes dans l’ordre du modèle', async () => {
+    const { paul } = await team();
+    const seeded = await session(paul);
+    const [userTurn] = seeded.turnIds;
+    await adminDb
+      .update(turns)
+      .set({ injecte: false })
+      .where(eq(turns.id, userTurn ?? ''));
+    const steps = Array.from(
+      { length: 12 },
+      (_, index) => `- [prochaine-étape] étape ${index} ${'x'.repeat(90)}`,
+    );
+    const llm = answer(
+      [
+        "## Où j'en suis",
+        'p'.repeat(400),
+        '',
+        '- [en-cours] écrire les tests',
+        ...steps,
+        `- [décision] garder Haiku (source: ${userTurn})`,
+      ].join('\n'),
+    );
+
+    await summarizeSession(seeded.job, { llm });
+
+    const [resume] = await resumeTurns(seeded.sourceId);
+    const lines = (resume?.text ?? '').split('\n');
+    expect(lines.at(-1)).toBe(`- [décision] garder Haiku (source: ${userTurn})`);
+    expect(lines).toContain('- [en-cours] écrire les tests');
+    expect(lines.filter((line) => line.startsWith('- [prochaine-étape]')).length).toBeLessThan(12);
+  });
+
+  it('borne la part du modèle à 1 500 caractères', async () => {
     const { paul } = await team();
     const seeded = await session(paul);
     const items = Array.from(
@@ -636,7 +668,7 @@ describe('summarizeSession', () => {
     const model = (resume?.text ?? '')
       .split('\n')
       .filter((line) => !/^- (pr|commit|branche) \[\[/.test(line));
-    expect(model.join('\n').length).toBeLessThanOrEqual(1200);
+    expect(model.join('\n').length).toBeLessThanOrEqual(1500);
     expect(model[0]).toBe("## Où j'en suis");
   });
 

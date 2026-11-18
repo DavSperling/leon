@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:09:16.460Z",
+  "reponse": "## What changed\n- Zest confirmed its dashboards are complete after the backfill and is closing its Zendesk ticket. [6]\n- The 12/11 postmortem is final; Noa will present it at Friday’s incident review. [3][7]\n\n## What is still open\n- Your investigation found that iOS 3.2.0 caused Orbitly to lose about 1.18 million legitimate events (~8.1%). The composite-key fix is tested in PR #247; Maya is waiting for green CI and needs the loss figure for Thursday’s Orbitly call. After deployment, replay Orbitly (and Zest) from Nov 13 onward, and send the iOS team your note about restoring UUIDs. [1][2]\n- Add the dead-letter queue alert for more than 1,000 messages before Friday’s review. [7]",
+  "rendu": "## What changed\n- Zest confirmed its dashboards are complete after the backfill and is closing its Zendesk ticket. [6]\n- The 12/11 postmortem is final; Noa will present it at Friday’s incident review. [3][7]\n\n## What is still open\n- Your investigation found that iOS 3.2.0 caused Orbitly to lose about 1.18 million legitimate events (~8.1%). The composite-key fix is tested in PR #247; Maya is waiting for green CI and needs the loss figure for Thursday’s Orbitly call. After deployment, replay Orbitly (and Zest) from Nov 13 onward, and send the iOS team your note about restoring UUIDs. [1][2]\n- Add the dead-letter queue alert for more than 1,000 messages before Friday’s review. [7]",
+  "mesures": {
+    "mots": 110,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4564,
+    "sortie": 1570,
+    "reflexion": 1385,
+    "cache": 0,
+    "cout": 0.001355425
+  },
+  "cout": 0.001355425,
+  "latenceMs": 17600,
+  "fournisseur": "OpenAI"
+}

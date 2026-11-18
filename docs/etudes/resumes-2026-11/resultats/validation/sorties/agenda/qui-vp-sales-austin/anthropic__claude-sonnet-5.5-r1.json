@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-vp-sales-austin",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:48.731Z",
+  "reponse": "{\"n\": 15, \"titre\": \"Entretien final Bianca Ferreira (Account Executive)\", \"debut\": \"2026-11-16T10:00\", \"fin\": \"2026-11-16T10:45\", \"avec\": \"Bianca Ferreira\"}\n{\"n\": 7, \"titre\": \"Harborline deal review\", \"debut\": \"2026-11-16T17:30\", \"fin\": \"2026-11-16T18:00\", \"avec\": \"Owen Park\"}\n{\"n\": 8, \"titre\": \"Déjeuner avec Nate Holloway (Gearloft)\", \"debut\": \"2026-11-17T12:30\", \"avec\": \"Nate Holloway\"}\n{\"n\": 11, \"titre\": \"Q1 pricing: lock the tiers\", \"debut\": \"2026-11-18T09:00\", \"fin\": \"2026-11-18T09:45\", \"avec\": \"Gil Shamir, Marcus\"}\n{\"n\": 3, \"titre\": \"Tradewell x Quillon – go-live readiness review\", \"debut\": \"2026-11-19T10:00\", \"fin\": \"2026-11-19T11:00\", \"avec\": \"Martin Kobayashi, Ellen Vance, Tomer Golan, Sofia Alvarez\"}\n{\"n\": 9, \"titre\": \"Loomly – payout incident follow-up\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T09:45\", \"avec\": \"Hannah Brooke, Carla Reyes\"}",
+  "rendu": "2026-11-16T10:00→2026-11-16T10:45 Entretien final Bianca Ferreira (Account Executive) (avec Bianca Ferreira)\n2026-11-16T17:30→2026-11-16T18:00 Harborline deal review (avec Owen Park)\n2026-11-17T12:30 Déjeuner avec Nate Holloway (Gearloft) (avec Nate Holloway)\n2026-11-18T09:00→2026-11-18T09:45 Q1 pricing: lock the tiers (avec Gil Shamir, Marcus)\n2026-11-19T10:00→2026-11-19T11:00 Tradewell x Quillon – go-live readiness review (avec Martin Kobayashi, Ellen Vance, Tomer Golan, Sofia Alvarez)\n2026-11-20T09:00→2026-11-20T09:45 Loomly – payout incident follow-up (avec Hannah Brooke, Carla Reyes)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "2026-11-16T10:00 Entretien final Bianca Ferreira (Account Executive) | 2026-11-16T17:30 Harborline deal review | 2026-11-17T12:30 Déjeuner avec Nate Holloway (Gearloft) | 2026-11-18T09:00 Q1 pricing: lock the tiers | 2026-11-19T10:00 Tradewell x Quillon – go-live readiness review | 2026-11-20T09:00 Loomly – payout incident follow-up",
+    "manques": "2026-11-16T17:00 AE final-round interview with Bianca Ferreira | 2026-11-17T00:30 Harborline deal review | 2026-11-17T19:30 Lunch with Nate Holloway (Gearloft) | 2026-11-18T16:00 Q1 pricing decision | 2026-11-19T17:00 Tradewell x Quillon go-live readiness review | 2026-11-20T16:00 Loomly payout incident follow-up",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5237,
+    "sortie": 482,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.015294
+  },
+  "cout": 0.015294,
+  "latenceMs": 3267,
+  "fournisseur": "Amazon Bedrock"
+}

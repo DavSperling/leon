@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "anthropic/claude-haiku-5.5@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:12:02.582Z",
+  "reponse": "## What is still open\n- Eitan wants the SRE shortlist before Friday for Monday's board deck [4], but Ilan is the only active candidate [1].\n- Ilan's technical interview is Thursday 19/11 at 15:00 at the office, with you and Noa on the panel [1][3].\n- Dana still needs to send 3 more profiles by end of next week, ideally people with on-call experience for US customers. I can't see whether the reply draft went out [1].\n- The proposal to raise the SRE band to ₪42–48k/month is still to be made to Eitan at Monday's leadership sync [1].\n\n## What changed\n- Noa confirmed she'll be on the Thursday panel and will prepare the RDS Terraform exercise tomorrow [3].\n- Eitan asked in #leadership for the SRE hiring update to go into Monday's board deck [4].\n\n## What you did\n- Built Ilan's 90-minute interview plan: Terraform with a planted RDS bug, a live incident based on the 12/11 ingest rebalance, and on-call questions [1].\n- Wrote the plan and scoring rubric as a document for Noa, ready for you to send [1].\n- Logged the pipeline and the band proposal in your notes, and removed candidates' salaries and Ilan's phone number, which stay in the ATS [1].",
+  "rendu": "## What is still open\n- Eitan wants the SRE shortlist before Friday for Monday's board deck [4], but Ilan is the only active candidate [1].\n- Ilan's technical interview is Thursday 19/11 at 15:00 at the office, with you and Noa on the panel [1][3].\n- Dana still needs to send 3 more profiles by end of next week, ideally people with on-call experience for US customers. I can't see whether the reply draft went out [1].\n- The proposal to raise the SRE band to ₪42–48k/month is still to be made to Eitan at Monday's leadership sync [1].\n\n## What changed\n- Noa confirmed she'll be on the Thursday panel and will prepare the RDS Terraform exercise tomorrow [3].\n- Eitan asked in #leadership for the SRE hiring update to go into Monday's board deck [4].\n\n## What you did\n- Built Ilan's 90-minute interview plan: Terraform with a planted RDS bug, a live incident based on the 12/11 ingest rebalance, and on-call questions [1].\n- Wrote the plan and scoring rubric as a document for Noa, ready for you to send [1].\n- Logged the pipeline and the band proposal in your notes, and removed candidates' salaries and Ilan's phone number, which stay in the ATS [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5901,
+    "sortie": 1711,
+    "reflexion": 1274,
+    "cache": 0,
+    "cout": 0.0014456
+  },
+  "cout": 0.0014456,
+  "latenceMs": 8206,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,176 @@
+{
+  "id": "qui-vp-sales-austin",
+  "titre": "Boîte de la VP Sales de Quillon à Austin : heure Central à convertir (+7 h, dont un lundi soir qui tombe le mardi à Paris), une invitation hebdomadaire, un report, deux annulations, des dates relatives et du bruit",
+  "langue": "en",
+  "entree": {
+    "periode": { "first": "2026-11-16", "last": "2026-11-22" },
+    "mails": [
+      {
+        "sourceId": "gm-rd-ledgerline-1118",
+        "title": "Ledgerline Weekly: marketplace payouts are getting faster. Are yours?",
+        "author": "Ledgerline Weekly",
+        "at": "2026-11-18T09:15",
+        "text": "This week in payments ops:\n• Instant payouts adoption hits 38% among US marketplaces\n• What the new same-day ACH windows mean for your sellers\n• Interview: how a rentals platform cut payout disputes by half\n\nWant to benchmark your payout speed? Book a free 20-minute call with our analysts, any slot this Thursday or Friday.\n\nYou're receiving this because you subscribed at ledgerline.example. Unsubscribe | Manage preferences"
+      },
+      {
+        "sourceId": "gm-rd-pinecrest-cancel",
+        "title": "Canceled event: Pinecrest Rentals – Q1 pricing preview @ Wed Nov 18, 2026 11am - 11:30am (CST) (rachel@quillon.example)",
+        "author": "Rob Delgado",
+        "at": "2026-11-18T07:30",
+        "text": "This event has been canceled and removed from your calendar.\n\nPinecrest Rentals – Q1 pricing preview\nWednesday Nov 18, 2026 ⋅ 11am – 11:30am (Central Time - Chicago)\n\nNote from Rob Delgado: Sorry Rachel, our CFO is out sick this week. Let's find a new slot after Thanksgiving, I'll reach out.\n\nInvitation from Google Calendar\nYou are receiving this email because you are an attendee on the event."
+      },
+      {
+        "sourceId": "gm-rd-tradewell-review",
+        "title": "Re: Tradewell x Quillon – go-live readiness review",
+        "author": "Ellen Vance",
+        "at": "2026-11-17T18:20",
+        "text": "Hi all,\n\nAgenda for Thursday's review (usual time, same Zoom):\n1. Webhook sandbox results: we replayed 3 days of orders, 2 signature mismatches left on our side\n2. KYC batch for the first 400 sellers: upload planned Dec 2\n3. Cutover plan for Dec 7: Martin wants a go/no-go checklist\n\nReminder there's no review on the 26th (Thanksgiving). For the Dec 7 cutover we'll run an on-site war room in Chicago from 6am CT, invites to follow.\n\nThanks,\nEllen\n\nEllen Vance | Engineering Lead, Payments | Tradewell\n\nOn Tue, Nov 10, 2026 at 10:05 AM Ellen Vance wrote:\n> Invitation: Tradewell x Quillon – go-live readiness review, weekly on Thursday 10am – 11am CT"
+      },
+      {
+        "sourceId": "gm-rd-loomly-prep",
+        "title": "Loomly: prep for Friday",
+        "author": "Carla Reyes",
+        "at": "2026-11-17T15:45",
+        "text": "Rachel,\n\nFor Friday's call with Hannah, here's where we are:\n- 1,212 Loomly sellers were paid ~30h late (file of Nov 10 rejected by Corvane, paid Nov 12)\n- 37 Zendesk tickets from their sellers, all answered, 4 still open\n- Marcus approved a credit of the November payout fees on the affected payouts. He wants it framed as a credit on the December invoice, not a refund\n\nTomer can't join Friday (Tradewell prep), I'll cover the timeline. Draft talking points are in the Drive folder.\n\nCarla\n\n--\nCarla Reyes | Support Manager | Quillon Systems\n+1 512 555 0187"
+      },
+      {
+        "sourceId": "gm-rd-derek-withdrew",
+        "title": "AE final round: Derek withdrew",
+        "author": "Hadas Levin",
+        "at": "2026-11-17T12:05",
+        "text": "Hi Rachel,\n\nDerek Saunders called me this morning: he accepted another offer, so Thursday's interview is off. I've cancelled the Greenhouse slot, you should get the cancellation shortly.\n\nBianca's scorecard is still missing in Greenhouse btw, could you fill it in before Friday? The hiring committee wants to decide early next week.\n\nThanks!\nHadas"
+      },
+      {
+        "sourceId": "gm-rd-sfdc-commit",
+        "title": "Reminder: Q4 commit due Friday, Nov 20 at 5:00 PM CT",
+        "author": "Salesforce",
+        "at": "2026-11-17T08:40",
+        "text": "Hi Rachel,\n\nThis is an automated reminder from Salesforce.\n\nQ4 FY26 forecast submission\nDue: Friday, November 20, 2026, 5:00 PM CT\nOpportunities missing Close Date or Forecast Category: 6 (team), 2 (yours)\n\nOpen Forecasts\n\nYou are receiving this reminder because you are a forecast manager."
+      },
+      {
+        "sourceId": "gm-rd-harborline-invite",
+        "title": "Invitation: Harborline deal review @ Mon Nov 16, 2026 5:30pm - 6pm (CST) (rachel@quillon.example)",
+        "author": "Owen Park",
+        "at": "2026-11-16T22:50",
+        "text": "Owen Park has invited you to a meeting.\n\nHarborline deal review\nMonday Nov 16, 2026 ⋅ 5:30pm – 6pm (Central Time - Chicago)\nJoining info: meet.google.example/hrb-qpay-dlr\n\nNote from Owen: quick one before their procurement call tomorrow morning. I need your OK on the 12-month ramp and on whether we can match their current provider on payout fees.\n\nGuests: Rachel Dunmore, Owen Park\n\nReply for rachel@quillon.example: Yes / No / Maybe\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gm-rd-gearloft-2",
+        "title": "Re: Quillon intro",
+        "author": "Nate Holloway",
+        "at": "2026-11-16T21:40",
+        "text": "Hi Rachel,\n\nTomorrow 12:30 at Salt & Ember on South Congress works. I booked a table for two under Holloway. I'll bring our payments lead's list of questions about split payouts and 1099s.\n\nSee you then,\nNate\n\nNate Holloway | COO | Gearloft\n\nOn Fri, Nov 13, 2026 at 5:15 PM Nate Holloway wrote:\n> Great to meet at the MarketOps meetup. Happy to grab lunch when you're back in Austin. How about Tuesday? I'm free from noon."
+      },
+      {
+        "sourceId": "gm-rd-loomly-updated",
+        "title": "Updated invitation: Loomly – payout incident follow-up @ Fri Nov 20, 2026 9am - 9:45am (CST) (rachel@quillon.example)",
+        "author": "Google Calendar",
+        "at": "2026-11-16T21:10",
+        "text": "This event has been changed.\n\nLoomly – payout incident follow-up\nChanged: Friday Nov 20, 2026 ⋅ 9am – 9:45am (Central Time - Chicago)\nWas: Tuesday Nov 17, 2026 ⋅ 2pm – 2:45pm (Central Time - Chicago)\nJoining info: zoom.example/j/88412093311\n\nGuests: Rachel Dunmore (organizer), Hannah Brooke, Carla Reyes\n\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gm-rd-loomly-move",
+        "title": "Re: Payout delay: follow-up call",
+        "author": "Hannah Brooke",
+        "at": "2026-11-16T20:05",
+        "text": "Rachel,\n\nThanks for the note and the apology, appreciated. Tuesday 2pm your time no longer works for me, our board meeting got moved. Could we do Friday morning instead, say 9am Central? I'd like Carla on it too, our sellers are still asking questions.\n\nHannah\n\nHannah Brooke | COO | Loomly\n\nOn Thu, Nov 12, 2026, Rachel Dunmore wrote:\n> Hannah, I'm sorry about the payout delay your sellers experienced on Nov 10-11. Could we get 45 minutes on Tuesday Nov 17 at 2pm CT to walk you through what happened and what we're changing?"
+      },
+      {
+        "sourceId": "gm-rd-pricing-gil",
+        "title": "Q1 pricing: let's lock it",
+        "author": "Gil Shamir",
+        "at": "2026-11-16T15:30",
+        "text": "Rachel, Marcus,\n\nLet's lock the Q1 tiers this Wednesday, 17:00 my time (9am for you in Austin), 45 min on my Zoom. I want one proposal, not three: payout fee, volume tiers, and what we grandfather for Tradewell.\n\nRachel, bring the Pinecrest and Loomly feedback. Marcus, the margin impact per tier.\n\nThe customer notices have to go out by Dec 1 (30 days' notice), so this is the last slot.\n\nGil"
+      },
+      {
+        "sourceId": "gm-rd-corvane-dinner",
+        "title": "Dinner on the 24th",
+        "author": "Dev Raghunathan",
+        "at": "2026-11-15T19:00",
+        "text": "Hi Rachel,\n\nConfirming dinner with our partnerships team on Tuesday, Nov 24 at 7pm at Lumen Grill, downtown Austin. We'd love to hear about the Tradewell launch and talk about volume commitments for 2027.\n\nBest,\nDev Raghunathan\nVP Partnerships, Corvane Bank"
+      },
+      {
+        "sourceId": "gm-rd-gearloft-1",
+        "title": "Quillon intro",
+        "author": "Nate Holloway",
+        "at": "2026-11-14T00:15",
+        "text": "Hi Rachel,\n\nGreat to meet at the MarketOps meetup on Wednesday. As I mentioned, Gearloft pays out ~9,000 sellers a month and our current provider takes 4 days. Happy to grab lunch when you're back in Austin. How about Tuesday? I'm free from noon.\n\nNate"
+      },
+      {
+        "sourceId": "gm-rd-payops-webinar",
+        "title": "Reminder: Marketplace Payouts 2027, live webinar this Thursday",
+        "author": "PayOps Forum",
+        "at": "2026-11-13T22:30",
+        "text": "You're registered!\n\nMarketplace Payouts 2027: instant, cross-border, compliant\nThursday, November 19, 2026 · 1:00 PM ET · 60 min\n\nSpeakers from three top-50 marketplaces. Live Q&A.\n\nAdd to calendar | The join link will be sent 1 hour before.\n\nPayOps Forum · Unsubscribe"
+      },
+      {
+        "sourceId": "gm-rd-greenhouse-bianca",
+        "title": "Interview scheduled: Bianca Ferreira – Account Executive (Final round)",
+        "author": "Greenhouse",
+        "at": "2026-11-13T09:10",
+        "text": "Hi Rachel,\n\nYou've been scheduled to interview Bianca Ferreira for Account Executive (Austin).\n\nInterview: Final round, deal strategy & role play\nMonday, November 16, 2026\n10:00 AM – 10:45 AM CST\nLocation: Zoom (link in calendar invite)\n\nOther interviewers: none\nPlease submit your scorecard within 24 hours of the interview.\n\nGreenhouse"
+      },
+      {
+        "sourceId": "gm-rd-hadas-ae",
+        "title": "AE final rounds next week",
+        "author": "Hadas Levin",
+        "at": "2026-11-12T15:00",
+        "text": "Hi Rachel,\n\nTwo final-round AE interviews next week, both on Zoom, 45 min:\n- Bianca Ferreira: Monday 16/11, 18:00 Israel time (10:00 for you)\n- Derek Saunders: Thursday 19/11, 17:00 Israel time (9:00 for you)\n\nInvites will come from Greenhouse. Bianca currently earns $95k base + commission and asked about remote Fridays, FYI.\n\nHadas"
+      },
+      {
+        "sourceId": "gm-rd-gong-pinecrest",
+        "title": "Call recap: Pinecrest Rentals – QBR",
+        "author": "Gong",
+        "at": "2026-11-11T19:40",
+        "text": "Gong call recap\nPinecrest Rentals – QBR · Nov 11, 2026 · 52 min\nParticipants: Rachel Dunmore, Owen Park (Quillon); Rob Delgado, Amy Cho (Pinecrest)\n\nKey moments\n• Payout delay of Nov 10: Rob asked for a written root cause (14:02)\n• Volume: ~22k payouts/month, expected +30% in Q1\n• Pricing: Rob pushed back on any increase above the current 0.50%\n\nNext steps\n• Rachel to share the Q1 pricing preview before Thanksgiving\n• Owen to send the incident report when available\n\nView call in Gong"
+      },
+      {
+        "sourceId": "gm-rd-tradewell-invite",
+        "title": "Invitation: Tradewell x Quillon – go-live readiness review @ Weekly on Thursday from 10am to 11am (CST) (rachel@quillon.example)",
+        "author": "Ellen Vance",
+        "at": "2026-11-10T17:05",
+        "text": "Ellen Vance has invited you to a recurring meeting.\n\nTradewell x Quillon – go-live readiness review\nWeekly on Thursday, from Thursday Nov 12 to Thursday Dec 3, 2026 ⋅ 10am – 11am (Central Time - Chicago)\nJoining info: zoom.example/j/93017742210\n\nGuests: Martin Kobayashi, Ellen Vance, Rachel Dunmore, Tomer Golan, Sofia Alvarez\n\nReply: Yes / No / Maybe\nInvitation from Google Calendar"
+      },
+      {
+        "sourceId": "gm-rd-tradewell-weekly",
+        "title": "Weekly readiness reviews until go-live",
+        "author": "Martin Kobayashi",
+        "at": "2026-11-09T16:20",
+        "text": "Rachel,\n\nAs discussed, let's hold a weekly readiness review every Thursday until go-live, 10 to 11am Central. Ellen will send the invite. First one this Thursday the 12th.\n\nOn our side the go-live date of December 7 is fixed, our sellers have been told.\n\nMartin Kobayashi\nHead of Payments, Tradewell"
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      { "id": "f1", "texte": "Lists the Tradewell go-live readiness review on Thursday 19 November at 17:00 Paris time (10:00 Central), once.", "poids": 3 },
+      { "id": "f2", "texte": "Lists the Loomly payout-incident follow-up call on Friday 20 November at 16:00 Paris time (its new date, 9:00 Central).", "poids": 3 },
+      { "id": "f3", "texte": "Lists the Q1 pricing meeting with Gil Shamir and Marcus on Wednesday 18 November at 16:00 Paris time (17:00 Israel).", "poids": 3 },
+      { "id": "f4", "texte": "Lists the final-round interview with Bianca Ferreira on Monday 16 November at 17:00 Paris time (10:00 CST).", "poids": 2 },
+      { "id": "f5", "texte": "Lists the Harborline deal review with Owen Park on Tuesday 17 November at 00:30 Paris time (Monday 5:30 pm Central).", "poids": 2 },
+      { "id": "f6", "texte": "Lists the lunch with Nate Holloway (Gearloft) on Tuesday 17 November at 19:30 Paris time (12:30 Central, \"tomorrow\" read from Monday's mail).", "poids": 2 }
+    ],
+    "interdits": [
+      { "id": "x1", "texte": "Lists the interview with Derek Saunders on Thursday 19 November (cancelled: he withdrew)." },
+      { "id": "x2", "texte": "Lists the Pinecrest Q1 pricing preview of Wednesday 18 November (cancelled)." },
+      { "id": "x3", "texte": "Lists the Loomly call on Tuesday 17 November (old date), or at 9:00 or 14:00 Paris time (Central time not converted)." },
+      { "id": "x4", "texte": "Lists the PayOps webinar of Thursday 19 November, the Q4 commit deadline of Friday 20 November or the Ledgerline \"book a call\" offer as meetings." },
+      { "id": "x5", "texte": "Lists the Corvane dinner of 24 November, a Tradewell review on 12 November, 26 November or 3 December, or the 7 December war room (out of period)." },
+      { "id": "x6", "texte": "Lists the Harborline deal review on Monday 16 November (day not shifted) or at 17:30." },
+      { "id": "x7", "texte": "Puts an e-mail address in \"avec\"." }
+    ],
+    "pieges": [
+      "Fuseaux : la boîte est à Austin (heure Central, +7 h pour Paris) ; la revue Harborline du lundi 17:30 Central tombe le mardi à 00:30 à Paris ; deux mails donnent l'heure d'Israël (-1 h pour Paris).",
+      "Récurrence : la revue Tradewell est une invitation hebdomadaire du 12/11 au 03/12 ; seule l'occurrence du jeudi 19 est dans la période, et trois mails en parlent (rendue une fois).",
+      "Déplacé et annulés : l'appel Loomly passe du mardi 17 au vendredi 20 ; l'entretien de Derek Saunders et la présentation tarifaire Pinecrest sont annulés.",
+      "Pas des rendez-vous : webinaire, échéance Salesforce, récapitulatif Gong d'un appel passé, lettre d'information qui propose un appel ; et des rendez-vous hors période (dîner du 24, war room du 7 décembre)."
+    ],
+    "rdv": [
+      { "n": 15, "autresN": [16], "debut": "2026-11-16T17:00", "fin": "2026-11-16T17:45", "titre": "AE final-round interview with Bianca Ferreira", "avec": "Bianca Ferreira" },
+      { "n": 7, "debut": "2026-11-17T00:30", "fin": "2026-11-17T01:00", "titre": "Harborline deal review", "avec": "Owen Park" },
+      { "n": 8, "autresN": [13], "debut": "2026-11-17T19:30", "titre": "Lunch with Nate Holloway (Gearloft)", "avec": "Nate Holloway" },
+      { "n": 11, "debut": "2026-11-18T16:00", "fin": "2026-11-18T16:45", "titre": "Q1 pricing decision", "avec": "Gil Shamir, Marcus" },
+      { "n": 18, "autresN": [19, 3], "debut": "2026-11-19T17:00", "fin": "2026-11-19T18:00", "titre": "Tradewell x Quillon go-live readiness review", "avec": "Martin Kobayashi, Ellen Vance, Tomer Golan, Sofia Alvarez" },
+      { "n": 9, "autresN": [10, 4], "debut": "2026-11-20T16:00", "fin": "2026-11-20T16:45", "titre": "Loomly payout incident follow-up", "avec": "Hannah Brooke, Carla Reyes" }
+    ]
+  }
+}

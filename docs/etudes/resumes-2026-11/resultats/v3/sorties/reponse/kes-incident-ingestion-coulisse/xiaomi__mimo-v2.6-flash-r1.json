@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:48.861Z",
+  "reponse": "The root cause was the Kafka broker ingest-kafka-2 running out of disk after infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and the consumers stalled [2]. The initial suspicion that PR #388's batch size increase caused the lag was wrong: reverting it changed nothing [3][5], and the change was re-applied later [5]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed but none lost [2], matching the Sentry consumer timeout window [4].",
+  "rendu": "The root cause was the Kafka broker ingest-kafka-2 running out of disk after infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and the consumers stalled [2]. The initial suspicion that PR #388's batch size increase caused the lag was wrong: reverting it changed nothing [3][5], and the change was re-applied later [5]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed but none lost [2], matching the Sentry consumer timeout window [4].",
+  "mesures": {
+    "mots": 82,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1318,
+    "sortie": 243,
+    "reflexion": 102,
+    "cache": 0,
+    "cout": 0.00034865
+  },
+  "cout": 0.00034865,
+  "latenceMs": 17816,
+  "fournisseur": "Makora"
+}

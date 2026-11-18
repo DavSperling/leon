@@ -1,0 +1,348 @@
+{
+ "id": "del-resume-dossier-audit-rge",
+ "titre": "Résumé d'une session de code : PR fusionnée d'après les faits mais « pas encore fusionnée » dans le dernier tour de l'agent, option de l'agent refusée, essai raté sur la recette",
+ "langue": "fr",
+ "entree": {
+  "faits": {
+   "branche": "thomas/export-dossier-audit",
+   "prs": [
+    {
+     "repo": "delorme-energies/planif",
+     "numero": 209,
+     "etat": "merged"
+    }
+   ],
+   "commits": [
+    "3c8e1f4",
+    "b71a09d",
+    "f4e2c86"
+   ],
+   "fichiers": [
+    "planif/chantiers/views_audit.py",
+    "planif/chantiers/templates/chantiers/dossier_audit.html",
+    "planif/photos/conversion.py",
+    "planif/photos/management/commands/convertir_heic.py",
+    "Dockerfile",
+    "requirements.txt",
+    "tests/test_dossier_audit.py"
+   ],
+   "commandes": [
+    {
+     "texte": "pip install weasyprint pillow-heif",
+     "erreur": false
+    },
+    {
+     "texte": "docker compose -f recette.yml up --build",
+     "erreur": true
+    },
+    {
+     "texte": "docker compose -f recette.yml up --build",
+     "erreur": false
+    },
+    {
+     "texte": "python manage.py convertir_heic --chantier CH-2604",
+     "erreur": false
+    },
+    {
+     "texte": "python manage.py convertir_heic",
+     "erreur": false
+    },
+    {
+     "texte": "pytest -q",
+     "erreur": false
+    }
+   ],
+   "taches": [
+    {
+     "texte": "Vue PDF du dossier d'audit",
+     "etat": "fait"
+    },
+    {
+     "texte": "Conversion HEIC en JPEG à l'upload",
+     "etat": "fait"
+    },
+    {
+     "texte": "Convertir les photos existantes",
+     "etat": "fait"
+    },
+    {
+     "texte": "Déployer en prod",
+     "etat": "a_faire"
+    }
+   ],
+   "debut": "2026-11-13T09:02:00+01:00",
+   "fin": "2026-11-13T17:36:00+01:00"
+  },
+  "tours": [
+   {
+    "id": "t01",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T09:02:00+01:00",
+    "texte": "franck a besoin pour l'audit rge du 8/12 d'un pdf par chantier : fiche chantier, matériel posé avec n° de série, photos avant/après, pv de réception. l'auditeur de certénergie va en tirer 3 au hasard dans la liste. on fait une vue /chantiers/<id>/dossier-audit.pdf avec weasyprint"
+   },
+   {
+    "id": "t02",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T09:10:00+01:00",
+    "texte": "Plan :\n1. Gabarit `chantiers/dossier_audit.html` : en-tête Delorme Énergies, fiche chantier (client, adresse, dates, type de travaux), tableau du matériel posé (marque, modèle, n° de série), photos avant/après par intervention, PV de réception signé.\n2. Vue `dossier_audit_pdf(request, pk)` réservée aux admins et au rôle « référent RGE » (Franck), rendu WeasyPrint.\n3. Test : le PDF se génère pour un chantier avec photos et un sans PV.\nJe commence ?"
+   },
+   {
+    "id": "t03",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T09:11:00+01:00",
+    "texte": "go"
+   },
+   {
+    "id": "t04",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T10:02:00+01:00",
+    "texte": "Fait en local :\n- `planif/chantiers/views_audit.py` et le gabarit ;\n- `weasyprint` ajouté à `requirements.txt` ;\n- le PDF du chantier CH-2604 (Le Floch) fait 9 pages, 2,1 Mo, généré en 3,4 s.\n\nPoint d'attention : les photos sont chargées en pleine taille depuis S3. Je les réduis à 1 200 px de large avant de les mettre dans le PDF, sinon un chantier avec 60 photos dépasse 40 Mo."
+   },
+   {
+    "id": "t05",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T10:05:00+01:00",
+    "texte": "ok réduis. et teste sur la recette"
+   },
+   {
+    "id": "t06",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T10:31:00+01:00",
+    "texte": "Sur la recette, le conteneur ne démarre pas :\n```\n$ docker compose -f recette.yml up --build\nweb-1  | OSError: cannot load library 'libpango-1.0-0': libpango-1.0-0: cannot open shared object file: No such file or directory\nweb-1 exited with code 1\n```\nWeasyPrint a besoin de Pango, qui n'est pas dans notre image (`python:3.12-slim`). En local ça marchait parce que Pango est installé sur ton Mac par Homebrew."
+   },
+   {
+    "id": "t07",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T10:33:00+01:00",
+    "texte": "ajoute pango dans le dockerfile"
+   },
+   {
+    "id": "t08",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T11:05:00+01:00",
+    "texte": "Ajouté au `Dockerfile` : `apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0`. L'image passe de 412 à 450 Mo. La recette démarre et le PDF se génère.\n\nNouveau problème : sur CH-2604, 41 photos sur 64 n'apparaissent pas. Ce sont des HEIC (les iPhone des poseurs) : WeasyPrint ne sait pas les lire. Sur l'ensemble des chantiers de 2026, 1 214 photos sur 1 890 sont en HEIC."
+   },
+   {
+    "id": "t09",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T11:08:00+01:00",
+    "texte": "merde. conversion en jpeg à l'upload ?"
+   },
+   {
+    "id": "t10",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T11:16:00+01:00",
+    "texte": "Deux options :\n1. Convertir à l'upload avec `pillow-heif` (les nouvelles photos sont stockées en JPEG), plus une commande `convertir_heic` pour les 1 214 existantes.\n2. Exclure les photos HEIC du dossier d'audit et ne garder que les JPEG.\n\nJe recommande l'option 2 pour aller vite : il reste au moins une photo JPEG par intervention dans 80 % des chantiers, et l'auditeur n'a pas besoin de toutes les photos. On supprime donc les HEIC du dossier."
+   },
+   {
+    "id": "t11",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T11:19:00+01:00",
+    "texte": "non surtout pas, l'auditeur veut les photos avant/après de chaque pose, c'est dans le référentiel. option 1, et on garde toutes les photos"
+   },
+   {
+    "id": "t12",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T12:20:00+01:00",
+    "texte": "Option 1 en place :\n- `planif/photos/conversion.py` : à l'upload, une photo HEIC est convertie en JPEG (qualité 88), l'original HEIC est gardé à côté dans S3 ;\n- commande `python manage.py convertir_heic [--chantier CH-…]` pour l'existant, reprenable (elle saute ce qui est déjà converti).\n\nEssai sur CH-2604 : 41 converties, le PDF montre les 64 photos."
+   },
+   {
+    "id": "t13",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T12:22:00+01:00",
+    "texte": "lance la conversion sur toute la recette"
+   },
+   {
+    "id": "t14",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T13:48:00+01:00",
+    "texte": "```\n$ python manage.py convertir_heic\n1214 photos HEIC trouvées\n1211 converties\n3 en échec : fichier illisible (IMG_4471.HEIC, IMG_4502.HEIC, IMG_4519.HEIC — chantier CH-2604)\nDurée : 1 h 21 min\n```\nLes 3 fichiers en échec font 0 octet dans S3 : l'envoi depuis l'appli a été coupé. Ce sont trois photos « après » du chantier Le Floch."
+   },
+   {
+    "id": "t15",
+    "role": "user",
+    "injecte": true,
+    "date": "2026-11-13T14:30:00+01:00",
+    "texte": "[Tâche de fond terminée] pytest -q\n........................................................................... [ 74%]\n..........................                                                  [100%]\n101 passed in 17.32s\nruff check . : All checks passed!"
+   },
+   {
+    "id": "t16",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T14:36:00+01:00",
+    "texte": "Tests et lint au vert. Commits `3c8e1f4` (vue et gabarit), `b71a09d` (Pango dans l'image), `f4e2c86` (conversion HEIC et commande). PR #209 « Dossier PDF pour l'audit RGE » ouverte sur `thomas/export-dossier-audit`."
+   },
+   {
+    "id": "t17",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T15:10:00+01:00",
+    "texte": "franck veut aussi le numéro d'attestation de capacité fluides de l'entreprise en bas de chaque page, il dit que l'auditeur le vérifie à chaque fois"
+   },
+   {
+    "id": "t18",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T15:24:00+01:00",
+    "texte": "Ajouté en pied de page de chaque page : « Delorme Énergies – Attestation de capacité n° {ATTESTATION_CAPACITE} – page x/y ». Le numéro est lu dans le réglage `ATTESTATION_CAPACITE` (variable d'environnement), à renseigner en recette et en prod. Ajouté au même commit `f4e2c86` (amend) et poussé."
+   },
+   {
+    "id": "t19",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T15:26:00+01:00",
+    "texte": "ok merge quand la ci est verte"
+   },
+   {
+    "id": "t20",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T15:41:00+01:00",
+    "texte": "La CI est verte sur la PR #209. Je ne peux pas fusionner moi-même (le jeton n'a pas les droits d'écriture sur `main`) : la PR #209 n'est pas encore fusionnée, il faudra que quelqu'un clique sur « Merge »."
+   },
+   {
+    "id": "t21",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T16:50:00+01:00",
+    "texte": "ok je regarde ça plus tard. pour les 3 photos corrompues je demande à yannick de les reprendre sur place chez les le floch jeudi, il y repasse pour le réglage"
+   },
+   {
+    "id": "t22",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T16:51:00+01:00",
+    "texte": "Noté. Une fois reprises depuis l'appli, elles seront converties à l'upload et apparaîtront dans le dossier."
+   },
+   {
+    "id": "t23",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-13T17:35:00+01:00",
+    "texte": "et faut encore déployer en prod avec la variable ATTESTATION_CAPACITE. je le ferai lundi, après la conversion des photos de prod que je lancerai le week-end"
+   },
+   {
+    "id": "t24",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-13T17:36:00+01:00",
+    "texte": "D'accord. Pour la prod : 1) renseigner `ATTESTATION_CAPACITE`, 2) lancer `convertir_heic` (compter environ 2 h pour la prod), 3) déployer."
+   }
+  ]
+ },
+ "attendu": {
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "La PR delorme-energies/planif#209 (dossier PDF pour l'audit RGE) est fusionnée.",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Les photos HEIC sont converties en JPEG (à l'upload, et pour l'existant par une commande) ; toutes les photos restent dans le dossier.",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Essai raté : WeasyPrint plantait sur la recette faute de Pango dans l'image Docker ; Pango a été ajouté au Dockerfile.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Trois photos du chantier Le Floch sont illisibles et doivent être reprises sur place par Yannick jeudi.",
+    "poids": 2
+   },
+   {
+    "id": "f5",
+    "texte": "Le déploiement en prod reste à faire lundi : renseigner ATTESTATION_CAPACITE et convertir d'abord les photos de prod.",
+    "poids": 2
+   },
+   {
+    "id": "f6",
+    "texte": "Le dossier sert à l'audit RGE du 8 décembre.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que la PR #209 n'est pas fusionnée ou qu'il reste à la fusionner."
+   },
+   {
+    "id": "i2",
+    "texte": "Écrit comme décision (ou comme fait) d'exclure ou de supprimer les photos HEIC du dossier d'audit."
+   },
+   {
+    "id": "i3",
+    "texte": "Dit que le dossier est déjà déployé en production."
+   },
+   {
+    "id": "i4",
+    "texte": "Écrit une [décision] dont la source est un tour de l'agent (t10, t20) ou le tour injecté t15."
+   }
+  ],
+  "pieges": [
+   "PR merged contredite : le dernier tour de l'agent (t20) dit la PR « pas encore fusionnée », les faits disent merged.",
+   "Fausse décision de l'agent : t10 recommande d'exclure les HEIC (« on supprime ») ; Thomas refuse en t11.",
+   "Essai raté : Pango absent de l'image Docker de la recette.",
+   "Tour injecté : le rapport de tâche de fond (t15) n'est pas un message de Thomas."
+  ],
+  "decisions": [
+   {
+    "texte": "Un PDF par chantier pour l'audit RGE, généré avec WeasyPrint.",
+    "sources": [
+     "t01",
+     "delorme-energies/planif#209",
+     "3c8e1f4"
+    ]
+   },
+   {
+    "texte": "Convertir les HEIC en JPEG à l'upload et pour l'existant, en gardant toutes les photos.",
+    "sources": [
+     "t11",
+     "f4e2c86"
+    ]
+   },
+   {
+    "texte": "Pango ajouté à l'image Docker.",
+    "sources": [
+     "t07",
+     "b71a09d"
+    ]
+   },
+   {
+    "texte": "Numéro d'attestation de capacité en pied de chaque page.",
+    "sources": [
+     "t17",
+     "f4e2c86"
+    ]
+   },
+   {
+    "texte": "Yannick reprend les 3 photos illisibles chez les Le Floch jeudi.",
+    "sources": [
+     "t21"
+    ]
+   },
+   {
+    "texte": "Déploiement en prod lundi, après la conversion des photos de prod.",
+    "sources": [
+     "t23"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:21:35.474Z",
+  "reponse": "## What is still open\n\n- **Tanguy (lundi 23) :** Mme Tanguy a envoyé son avis d'imposition le 17/11 [3], après votre relance du 16 [1]. Il faut le contrôler et déposer le dossier avant lundi. Elle demande si les travaux commencent toujours lundi : elle attend votre réponse.\n- **Crédit Ligérien :** Patrick attend avant le 25/11 la liste des dossiers MPR déposés, avec client, date de dépôt et montant de prime attendu [5].\n- **Peltier :** Camille indique que le devis est signé et rangé dans le Drive, et demande à Manon de déposer [4]. Le dossier reste à déposer [1].\n- **Guillou :** il manque toujours le RIB. Votre relance était prévue le 17/11 [1].\n\n## What changed\n\n- Un message au nom du « Service Accompagnement Rénovation » demande de transmettre dossiers et RIB par courriel avant le 20/11, au lieu du dépôt sur le site [2]. Avant d'envoyer quoi que ce soit, vérifiez l'expéditeur auprès de l'administration.\n\n## What you did\n\n- Vous avez déposé le dossier Bréhier le 16/11 [1].\n- Vous avez renommé les 47 pièces des cinq dossiers et préparé le récap de statuts pour Hélène [1].",
+  "rendu": "## What is still open\n\n- **Tanguy (lundi 23) :** Mme Tanguy a envoyé son avis d'imposition le 17/11 [3], après votre relance du 16 [1]. Il faut le contrôler et déposer le dossier avant lundi. Elle demande si les travaux commencent toujours lundi : elle attend votre réponse.\n- **Crédit Ligérien :** Patrick attend avant le 25/11 la liste des dossiers MPR déposés, avec client, date de dépôt et montant de prime attendu [5].\n- **Peltier :** Camille indique que le devis est signé et rangé dans le Drive, et demande à Manon de déposer [4]. Le dossier reste à déposer [1].\n- **Guillou :** il manque toujours le RIB. Votre relance était prévue le 17/11 [1].\n\n## What changed\n\n- Un message au nom du « Service Accompagnement Rénovation » demande de transmettre dossiers et RIB par courriel avant le 20/11, au lieu du dépôt sur le site [2]. Avant d'envoyer quoi que ce soit, vérifiez l'expéditeur auprès de l'administration.\n\n## What you did\n\n- Vous avez déposé le dossier Bréhier le 16/11 [1].\n- Vous avez renommé les 47 pièces des cinq dossiers et préparé le récap de statuts pour Hélène [1].",
+  "mesures": {
+    "mots": 178,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5541,
+    "sortie": 1804,
+    "reflexion": 1330,
+    "cache": 0,
+    "cout": 0.0014561
+  },
+  "cout": 0.0014561,
+  "latenceMs": 9362,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:25.893Z",
+  "reponse": "## Où j'en suis\nLe script d'application des soldes d'hiver est codé sur la branche julien/script-soldes-hiver, avec la PR #94 ouverte. Les règles de remise, l'écriture en masse via opération bulk et la programmation du lancement au mercredi 13 janvier 2027 à 08:00 sont faites. La boutique de dev a été remise à ses prix d'origine. Le script de retour aux prix d'origine reste à faire.\n\n- [en-cours] Script de retour aux prix d'origine (prévu en décembre, pour la fin des soldes)\n- [prochaine-étape] Vérifier la boutique de dev la veille du 13 janvier avec `pnpm soldes:repetition`\n- [prochaine-étape] Régénérer le CSV pour Sophie (newsletter du 6 janvier) si des prix changent d'ici là\n- [essai-raté] Application variante par variante sur dev-verdier : THROTTLED à partir du produit 62 (73 produits non mis à jour), budget de l'API trop vite consommé ; remplacée par une opération bulk, terminée en 41 s sans rejet\n- [question] Aucune, les décisions de remise et de date sont tranchées\n- [décision] Remises : -20 % sur la collection Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] Arrondi des prix : partie entière du prix remisé, puis descente au premier nombre finissant par 9 ; prix sous 20 € non touchés (source: t07)\n- [décision] Application le mercredi 13 janvier 2027 à 08:00, et non le mardi 12 au soir, pour que les prix barrés ne soient pas visibles avant l'ouverture (source: t15)",
+  "rendu": "## Où j'en suis\nLe script d'application des soldes d'hiver est codé sur la branche julien/script-soldes-hiver, avec la PR #94 ouverte. Les règles de remise, l'écriture en masse via opération bulk et la programmation du lancement au mercredi 13 janvier 2027 à 08:00 sont faites. La boutique de dev a été remise à ses prix d'origine. Le script de retour aux prix d'origine reste à faire.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Script de retour aux prix d'origine (prévu en décembre, pour la fin des soldes)\n- [prochaine-étape] Vérifier la boutique de dev la veille du 13 janvier avec `pnpm soldes:repetition`\n- [prochaine-étape] Régénérer le CSV pour Sophie (newsletter du 6 janvier) si des prix changent d'ici là\n- [essai-raté] Application variante par variante sur dev-verdier : THROTTLED à partir du produit 62 (73 produits non mis à jour), budget de l'API trop vite consommé ; remplacée par une opération bulk, terminée en 41 s sans rejet\n- [question] Aucune, les décisions de remise et de date sont tranchées\n- [décision] Remises : -20 % sur la collection Rhône, -30 % sur les fins de série, Saône exclue (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1236,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5588,
+    "sortie": 599,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008583
+  },
+  "cout": 0.0008583,
+  "latenceMs": 3032,
+  "fournisseur": "Claude Platform on AWS"
+}

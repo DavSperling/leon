@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:11.663Z",
+  "reponse": "## Where I'm at\n\nDaniel is replacing the HubSpot webhook sync with a 15-minute polling job, so the admin accounts page can show AE owner and ARR. Webhooks were dropped because private app tokens can't manage webhook subscriptions. PR #405 is closed, and #409 is open (auto-merge was set, but a required CI check is failing). Trials (ARR = 0) are excluded on purpose.\n\n- [en-cours] PR #409 is open with a failing e2e check: `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` expects 3 owner rows, gets 2. Auto-merge is blocked until it passes.\n- [prochaine-étape] Fix the e2e fixture (give the third company ARR > 0 or expect 2 rows), then push and let CI run again.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging and prod.\n- [essai-raté] Registering webhook subscriptions via the HubSpot API: refused with 401, since private app tokens can't manage them. Hence the switch to polling.\n- [question] Existing trial accounts that already have an owner from an old manual import keep it; nothing clears them. Whether that is acceptable is still open.\n- [décision] Only sync companies with ARR > 0 and skip trials completely; the admin page is not meant to show them (source: t10)\n- [décision] Close #405 and replace webhooks with polling every 15 minutes (source: t04)",
+  "rendu": "- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 is open with a failing e2e check: `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` expects 3 owner rows, gets 2. Auto-merge is blocked until it passes.\n- [prochaine-étape] Fix the e2e fixture (give the third company ARR > 0 or expect 2 rows), then push and let CI run again.\n- [prochaine-étape] Noa adds `HUBSPOT_TOKEN` to AWS Secrets Manager for staging and prod.\n- [essai-raté] Registering webhook subscriptions via the HubSpot API: refused with 401, since private app tokens can't manage them. Hence the switch to polling.\n- [question] Existing trial accounts that already have an owner from an old manual import keep it; nothing clears them. Whether that is acceptable is still open.\n- [décision] Only sync companies with ARR > 0 and skip trials completely; the admin page is not meant to show them (source: t10)\n- [décision] Close #405 and replace webhooks with polling every 15 minutes (source: t04)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1128,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4989,
+    "sortie": 513,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007554
+  },
+  "cout": 0.0007554,
+  "latenceMs": 2805,
+  "fournisseur": "Claude Platform on AWS"
+}

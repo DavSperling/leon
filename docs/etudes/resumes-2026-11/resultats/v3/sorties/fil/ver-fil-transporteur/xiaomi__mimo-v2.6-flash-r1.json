@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:35.750Z",
+  "reponse": "## Où j'en suis\nLe travail est poussé sur `hugo/transalp-etiquettes` et la PR #91 est à jour : client TransAlp en OAuth2, étiquettes ZPL par défaut avec `^CI28` (accents corrigés, validés par Karim en recette), et `choix.ts` ne choisit TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre) ; avant, tout part chez Rapidis. La PR reste en brouillon, en attente de la relecture de Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, en attente de la relecture de Julien ; rien n'est actif avant le 1er décembre, la clé de prod sera mise par Julien dans les secrets. (source: src-pr91, h2-07)\n- [prochaine-étape] Attendre la relecture de Julien, puis vérifier le déploiement de la config une fois `TRANSALP_DEBUT` et les clés de prod en place. (source: src-pr91, h2-12)\n- [essai-raté] En-tête `X-Api-Key` refusé en 401 : l'API exige un jeton OAuth2 `client_credentials`. (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox et accents en bouillie sur Zebra (lecture CP850) : corrigé par `^CI28`, confirmé par Karim. (source: h2-03, h2-05)\n- [question] Reste à confirmer l'arrivée de la clé de prod par Julien avant le 1er décembre. (source: h2-07)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement ; le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier. (source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut, testé en recette, avant activation au 1er décembre. (source: h2-01, h2-07)",
+  "rendu": "## Où j'en suis\nLe travail est poussé sur `hugo/transalp-etiquettes` et la PR #91 est à jour : client TransAlp en OAuth2, étiquettes ZPL par défaut avec `^CI28` (accents corrigés, validés par Karim en recette), et `choix.ts` ne choisit TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre) ; avant, tout part chez Rapidis. La PR reste en brouillon, en attente de la relecture de Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, en attente de la relecture de Julien ; rien n'est actif avant le 1er décembre, la clé de prod sera mise par Julien dans les secrets. (de: toi, équipe; source: src-pr91, h2-07)\n- [prochaine-étape] Attendre la relecture de Julien, puis vérifier le déploiement de la config une fois `TRANSALP_DEBUT` et les clés de prod en place. (de: équipe, agent; source: src-pr91, h2-12)\n- [essai-raté] En-tête `X-Api-Key` refusé en 401 : l'API exige un jeton OAuth2 `client_credentials`. (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox et accents en bouillie sur Zebra (lecture CP850) : corrigé par `^CI28`, confirmé par Karim. (de: toi; source: h2-03, h2-05)\n- [question] Reste à confirmer l'arrivée de la clé de prod par Julien avant le 1er décembre. (de: toi; source: h2-07)\n- [décision] Bascule le mardi 1er décembre, Lyon et Paris seulement ; le reste de la France et les colis de plus de 30 kg restent chez Rapidis jusqu'au 15 janvier. (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut, testé en recette, avant activation au 1er décembre. (de: toi; source: h2-01, h2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1593,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4226,
+    "sortie": 536,
+    "reflexion": 10,
+    "cache": 0,
+    "cout": 0.00074172
+  },
+  "cout": 0.00074172,
+  "latenceMs": 2880,
+  "fournisseur": "Cohere"
+}

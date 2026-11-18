@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:46:33.193Z",
+  "reponse": "Martin raised two issues on the November 12 sync. Both have been picked up, but neither is fully resolved.\n\n1. **Webhook signatures failing on sandbox.** Jake Whitfield took it that day [1]. He found that events sent by the TypeScript delivery worker are re-serialized before sending, so their signatures don't match, while retries sent by the old Rust path do verify [10]. A fix PR (core#1187) was opened on November 16 to sign the raw request body [16]. I couldn't find whether it has been merged or deployed. Tradewell had turned signature verification off on sandbox in the meantime [1].\n\n2. **Per-seller payout schedules** (net-7 for about 200 top sellers, net-30 for the rest). Owen Park told Martin he would have a clear answer by Friday, November 20 [5]. Engineering estimated 3-4 weeks of work [4]. On November 16, Avi Kessler wrote that it won't ship for December 7, that the earliest date is late January, and that the ticket moved to Backlog with a 2027-Q1 target. He asked Owen to set expectations with Martin [4]. I didn't find a message showing that Martin has been told.\n\nThe payout schedule gap is the real risk to the December 7 date. Tradewell has said their seller comms depend on that date and on the top sellers keeping net-7 [1]. The KYC import is still on track for November 30 [3].",
+  "rendu": "Martin raised two issues on the November 12 sync. Both have been picked up, but neither is fully resolved.\n\n1. **Webhook signatures failing on sandbox.** Jake Whitfield took it that day [1]. He found that events sent by the TypeScript delivery worker are re-serialized before sending, so their signatures don't match, while retries sent by the old Rust path do verify [10]. A fix PR (core#1187) was opened on November 16 to sign the raw request body [16]. I couldn't find whether it has been merged or deployed. Tradewell had turned signature verification off on sandbox in the meantime [1].\n\n2. **Per-seller payout schedules** (net-7 for about 200 top sellers, net-30 for the rest). Owen Park told Martin he would have a clear answer by Friday, November 20 [5]. Engineering estimated 3-4 weeks of work [4]. On November 16, Avi Kessler wrote that it won't ship for December 7, that the earliest date is late January, and that the ticket moved to Backlog with a 2027-Q1 target. He asked Owen to set expectations with Martin [4]. I didn't find a message showing that Martin has been told.\n\nThe payout schedule gap is the real risk to the December 7 date. Tradewell has said their seller comms depend on that date and on the top sellers keeping net-7 [1]. The KYC import is still on track for November 30 [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.8,
+    "sourcesAttenduesCitees": 0.8,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22916,
+    "sortie": 1471,
+    "reflexion": 816,
+    "cache": 0,
+    "cout": 0.0030271
+  },
+  "latenceMs": 10001,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync flagged issues\"}",
+    "chercher {\"requete\":\"Tradewell go-live blocker follow-up\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}"
+  ],
+  "cout": 0.0030271
+}

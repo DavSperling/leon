@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:53:59.430Z",
+  "reponse": "## What is still open\n\n- Maya needs the number of Orbitly events lost since #240 for Thursday's call with Orbitly, and she'll approve #247 once CI is green. Your figure: about 1.18M legitimate events dropped (≈8.1% of their iOS volume), plus 3,812 for Zest [1][2].\n- After #247 is deployed, run the replay from landing for Orbitly from 13/11 09:40 UTC (about 40 minutes), then for Zest. Running it before the deploy would drop the events again. Then check that `ingest_dedupe_dropped_total` for Orbitly stays near zero [1].\n- The iOS team still has to be told to restore UUIDs for `event_id` in 3.2.1. You asked for a note, and it is drafted but not confirmed as sent [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n\n## What changed\n\n- Maya's review of #247 says the logic looks right [2].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop (raised by Rachel) to #240's dedupe. It keyed on `event_id` alone, and iOS SDK 3.2.0 sends a per-session counter instead of a UUID, so distinct events collided [1].\n- You fixed the key to `project_id:device_id:event_id`, with tests, and opened PR #247 [1][2].",
+  "rendu": "## What is still open\n\n- Maya needs the number of Orbitly events lost since #240 for Thursday's call with Orbitly, and she'll approve #247 once CI is green. Your figure: about 1.18M legitimate events dropped (≈8.1% of their iOS volume), plus 3,812 for Zest [1][2].\n- After #247 is deployed, run the replay from landing for Orbitly from 13/11 09:40 UTC (about 40 minutes), then for Zest. Running it before the deploy would drop the events again. Then check that `ingest_dedupe_dropped_total` for Orbitly stays near zero [1].\n- The iOS team still has to be told to restore UUIDs for `event_id` in 3.2.1. You asked for a note, and it is drafted but not confirmed as sent [1].\n- Before Friday's incident review (20/11), you owe an alert for when the dead-letter queue goes above 1,000 messages [7].\n\n## What changed\n\n- Maya's review of #247 says the logic looks right [2].\n\n## What you did\n\n- You traced Orbitly's ~8% iOS funnel drop (raised by Rachel) to #240's dedupe. It keyed on `event_id` alone, and iOS SDK 3.2.0 sends a per-session counter instead of a UUID, so distinct events collided [1].\n- You fixed the key to `project_id:device_id:event_id`, with tests, and opened PR #247 [1][2].",
+  "mesures": {
+    "mots": 197,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6726,
+    "sortie": 478,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018232
+  },
+  "cout": 0.018232,
+  "latenceMs": 4057,
+  "fournisseur": "Amazon Bedrock"
+}

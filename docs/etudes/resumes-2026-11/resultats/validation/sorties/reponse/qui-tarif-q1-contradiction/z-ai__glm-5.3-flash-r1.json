@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:02.721Z",
+  "reponse": "Il y a une contradiction sur le taux : la version la plus récente (Slack #sales du 17 novembre) indique que le payout fee du Q1 est de 0,45 %, et non 0,40 %, le deck v3 étant obsolète [2]. La proposition v3 mentionnait 0,40 % par payout (minimum 0,25 $) avec des paliers de volume, applicable au 1er janvier 2027, et Tradewill conservant son tarif jusqu'en décembre 2027 [1]. Un message confirme que Pinecrest a été informé à tort de 0,40 % lors de son QBR, et que la correction sera faite avec Rob [2]. Un brouillon d'annonce clients évoque aussi 0,40 %, mais il n'est pas à jour [4].",
+  "rendu": "Il y a une contradiction sur le taux : la version la plus récente (Slack #sales du 17 novembre) indique que le payout fee du Q1 est de 0,45 %, et non 0,40 %, le deck v3 étant obsolète [2]. La proposition v3 mentionnait 0,40 % par payout (minimum 0,25 $) avec des paliers de volume, applicable au 1er janvier 2027, et Tradewill conservant son tarif jusqu'en décembre 2027 [1]. Un message confirme que Pinecrest a été informé à tort de 0,40 % lors de son QBR, et que la correction sera faite avec Rob [2]. Un brouillon d'annonce clients évoque aussi 0,40 %, mais il n'est pas à jour [4].",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 987,
+    "sortie": 207,
+    "reflexion": 25,
+    "cache": 0,
+    "cout": 0.00025155
+  },
+  "cout": 0.00025155,
+  "latenceMs": 2096,
+  "fournisseur": "Mistral"
+}

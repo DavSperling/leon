@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:37.742Z",
+  "reponse": "## Où j'en suis\nDashboards v2 (drag/resize grid, per-user layout persistence) is merged: #418 squash-merged as `4c0e9b3`. The two follow-ups from Priya's review — keyboard move/resize and a visible focus ring — are done on branch `tom/dashboard-keyboard` (commit `8f1a2c7`) and opened as PR #423, still open. `dashboards_v2` is on for zest-grocers on staging so Priya can rehearse the demo; production is untouched, Tom flips that flag himself on the morning of the 24th. No visx anywhere: #401 closed, all charts on recharts. (source: ses-db-4, ses-db-3)\n\n- [en-cours] PR kestrel-analytics/platform#423 \"Dashboards v2: keyboard move/resize + focus ring\" open, not yet merged (source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Get #423 reviewed and merged (source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Zest demo Tuesday the 24th: staging flag already on for zest-grocers; Tom turns on the production flag himself that morning (source: ses-db-4, ses-db-2)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries listen to the same pointer/key events, so every move was applied twice and mouse drags fired two layout changes; making them cooperate would mean rewriting the grid, so @dnd-kit/core was removed (source: ses-db-4, d4-02)\n- [décision] Hand-rolled keyboard handler (useGridKeyboard) on top of the layout state, no dnd-kit (source: ses-db-4, d4-04)\n- [décision] Keep recharts, close #401 for good — no two chart libraries (source: ses-db-3, c3-03, kestrel-analytics/platform#401)\n- [décision] v1 dashboards stay behind the flag until January, nothing removed now (source: ses-db-2, b2-04)\n- [décision] ResizeObserver hook (useWidgetSize) instead of container queries (source: ses-db-2, b2-02)",
+  "rendu": "## Où j'en suis\nDashboards v2 (drag/resize grid, per-user layout persistence) is merged: #418 squash-merged as `4c0e9b3`. The two follow-ups from Priya's review — keyboard move/resize and a visible focus ring — are done on branch `tom/dashboard-keyboard` (commit `8f1a2c7`) and opened as PR #423, still open. `dashboards_v2` is on for zest-grocers on staging so Priya can rehearse the demo; production is untouched, Tom flips that flag himself on the morning of the 24th. No visx anywhere: #401 closed, all charts on recharts. (de: agent; source: ses-db-4, ses-db-3)\n\n- [en-cours] PR kestrel-analytics/platform#423 \"Dashboards v2: keyboard move/resize + focus ring\" open, not yet merged (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Get #423 reviewed and merged (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Zest demo Tuesday the 24th: staging flag already on for zest-grocers; Tom turns on the production flag himself that morning (de: agent; source: ses-db-4, ses-db-2)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries listen to the same pointer/key events, so every move was applied twice and mouse drags fired two layout changes; making them cooperate would mean rewriting the grid, so @dnd-kit/core was removed (de: agent; source: ses-db-4, d4-02)\n- [décision] Hand-rolled keyboard handler (useGridKeyboard) on top of the layout state, no dnd-kit (de: toi, agent; source: ses-db-4, d4-04)\n- [décision] Keep recharts, close #401 for good — no two chart libraries (de: toi, équipe, agent; source: ses-db-3, c3-03, kestrel-analytics/platform#401)\n- [décision] v1 dashboards stay behind the flag until January, nothing removed now (de: toi, agent; source: ses-db-2, b2-04)\n- [décision] ResizeObserver hook (useWidgetSize) instead of container queries (de: toi, agent; source: ses-db-2, b2-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1914,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5617,
+    "sortie": 3983,
+    "reflexion": 3432,
+    "cache": 0,
+    "cout": 0.00079047
+  },
+  "cout": 0.00079047,
+  "latenceMs": 38076,
+  "fournisseur": "Novita"
+}

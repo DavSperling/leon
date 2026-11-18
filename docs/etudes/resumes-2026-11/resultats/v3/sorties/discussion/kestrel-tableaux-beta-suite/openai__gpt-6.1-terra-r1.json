@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:11:33.789Z",
+  "reponse": "The first phase—chart builder and saved views—is scheduled to open in beta on **December 9, 2026** for five design partners, including Orbitly and Zest Grocers [3].\n\nOther customers will have to wait for general availability, targeted for late January 2027 but not yet committed [3]. A waitlist is planned for January [15].",
+  "rendu": "The first phase—chart builder and saved views—is scheduled to open in beta on **December 9, 2026** for five design partners, including Orbitly and Zest Grocers [3].\n\nOther customers will have to wait for general availability, targeted for late January 2027 but not yet committed [3]. A waitlist is planned for January [15].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 16093,
+    "sortie": 261,
+    "reflexion": 7,
+    "cache": 9416,
+    "cout": 0.0101198
+  },
+  "latenceMs": 4968,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"dashboards\\\" \\\"Priya\\\" \\\"Tom\\\"\"}",
+    "chercher {\"requete\":\"\\\"new dashboards\\\" customers first beta launch\"}",
+    "chercher {\"requete\":\"dashboard rollout customers try first phase Lior\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}",
+    "lire {\"sourceId\":\"slack-product-dashboards-beta\"}",
+    "lire {\"sourceId\":\"notion-dashboards-redesign-spec\"}"
+  ],
+  "cout": 0.0101198
+}

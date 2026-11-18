@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:37.977Z",
+  "reponse": "Le passage chez TransAlp est prévu le 1er décembre, date confirmée comme impérative puisque le contrat Rapid'Colis s'arrête le 30 novembre [1][3][4]. Toutefois, pour Maison Verdier, TransAlp a confirmé par mail que les enlèvements réguliers ne démarreront que le mardi 8 décembre, son agence de Vénissieux ne pouvant pas absorber les volumes avant cette date [2] — ce qui contredit la bascule complète annoncée au 1er décembre [1]. L'enlèvement test reste maintenu le 20 novembre [1][2].",
+  "rendu": "Le passage chez TransAlp est prévu le 1er décembre, date confirmée comme impérative puisque le contrat Rapid'Colis s'arrête le 30 novembre [1][3][4]. Toutefois, pour Maison Verdier, TransAlp a confirmé par mail que les enlèvements réguliers ne démarreront que le mardi 8 décembre, son agence de Vénissieux ne pouvant pas absorber les volumes avant cette date [2] — ce qui contredit la bascule complète annoncée au 1er décembre [1]. L'enlèvement test reste maintenu le 20 novembre [1][2].",
+  "mesures": {
+    "mots": 75,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1045,
+    "sortie": 180,
+    "reflexion": 36,
+    "cache": 0,
+    "cout": 0.00024675
+  },
+  "cout": 0.00024675,
+  "latenceMs": 1594,
+  "fournisseur": "Together"
+}

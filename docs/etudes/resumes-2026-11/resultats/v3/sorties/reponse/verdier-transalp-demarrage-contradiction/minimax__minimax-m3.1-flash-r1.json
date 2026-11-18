@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:40.646Z",
+  "reponse": "Le démarrage est prévu le 1er décembre, avec la fin du contrat Rapid'Colis le 30 novembre [1][3][4][5]. La réunion de lancement a eu lieu le 16/11 et un enlèvement test est prévu le 20/11 [1][4]. Attention : pour Maison Verdier, TransAlp indique par écrit que les enlèvements réguliers ne commenceront que le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber les volumes avant [2].",
+  "rendu": "Le démarrage est prévu le 1er décembre, avec la fin du contrat Rapid'Colis le 30 novembre [1][3][4][5]. La réunion de lancement a eu lieu le 16/11 et un enlèvement test est prévu le 20/11 [1][4]. Attention : pour Maison Verdier, TransAlp indique par écrit que les enlèvements réguliers ne commenceront que le mardi 8 décembre, l'agence de Vénissieux ne pouvant absorber les volumes avant [2].",
+  "mesures": {
+    "mots": 64,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1117,
+    "sortie": 140,
+    "reflexion": 35,
+    "cache": 640,
+    "cout": 0.00016515
+  },
+  "cout": 0.00016515,
+  "latenceMs": 4651,
+  "fournisseur": "Parasail"
+}

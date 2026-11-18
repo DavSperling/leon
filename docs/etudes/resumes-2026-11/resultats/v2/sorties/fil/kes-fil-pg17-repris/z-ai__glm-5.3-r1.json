@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:28:16.171Z",
+  "reponse": "## Où j'en suis\nThe PG17 upgrade of the analytics RDS has been executed end-to-end on staging: pg_partman upgraded 4.7.4 → 5.1.0 with maintenance green on events_raw and events_daily, `rds.logical_replication = 1` added to the pg16 parameter group (static, needs a reboot), blue/green deployment created and switchover done at 14:20 UTC (41 s of refused writes); analytics-staging now runs PostgreSQL 17.2, and dbt ran clean (14 models pass, +3% vs 16.4). The runbook has been updated with the logical-replication/reboot step for prod; PR #57 is still open (draft), and Maya's sign-off for prod requires a full incident-free week on staging 17. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] PR #57 open (draft), staging blue/green done, prod still behind `pg17_enabled = false`; production window not picked (source: ses-pg-3, src-pr57)\n- [prochaine-étape] monitor staging on 17.2 for a full week (sign-off on the 24th at the earliest), then pick the prod window — two windows needed: one for the logical_replication reboot (~2–3 min downtime), one for the blue/green switchover (source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first staging apply failed: blue/green requires `rds.logical_replication = 1` (static parameter, reboot of the source needed); fixed by adding it to the parameter group with `pending-reboot` and rebooting (source: ses-pg-3)\n- [essai-raté] (earlier) `terraform init -upgrade` pulled AWS provider v6: 37 unrelated changes; provider pinned to 5.82 (source: ses-pg-1)\n- [question] production date still open, pending Maya's sign-off after the staging week; window must avoid the dbt lock on events_daily (01:00–03:30 UTC) (source: ses-pg-3, src-linear-kes298)\n- [décision] no prod date until Maya signs off on a full week of staging on 17; runbook prod step 0 is now \"set rds.logical_replication = 1 and reboot\" (source: s3-09, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nThe PG17 upgrade of the analytics RDS has been executed end-to-end on staging: pg_partman upgraded 4.7.4 → 5.1.0 with maintenance green on events_raw and events_daily, `rds.logical_replication = 1` added to the pg16 parameter group (static, needs a reboot), blue/green deployment created and switchover done at 14:20 UTC (41 s of refused writes); analytics-staging now runs PostgreSQL 17.2, and dbt ran clean (14 models pass, +3% vs 16.4). The runbook has been updated with the logical-replication/reboot step for prod; PR #57 is still open (draft), and Maya's sign-off for prod requires a full incident-free week on staging 17. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] PR #57 open (draft), staging blue/green done, prod still behind `pg17_enabled = false`; production window not picked (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] monitor staging on 17.2 for a full week (sign-off on the 24th at the earliest), then pick the prod window — two windows needed: one for the logical_replication reboot (~2–3 min downtime), one for the blue/green switchover (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [essai-raté] first staging apply failed: blue/green requires `rds.logical_replication = 1` (static parameter, reboot of the source needed); fixed by adding it to the parameter group with `pending-reboot` and rebooting (de: agent; source: ses-pg-3)\n- [essai-raté] (earlier) `terraform init -upgrade` pulled AWS provider v6: 37 unrelated changes; provider pinned to 5.82 (de: agent; source: ses-pg-1)\n- [question] production date still open, pending Maya's sign-off after the staging week; window must avoid the dbt lock on events_daily (01:00–03:30 UTC) (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1821,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4176,
+    "sortie": 546,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0026874006
+  },
+  "cout": 0.0026874006,
+  "latenceMs": 7221,
+  "fournisseur": "Relace"
+}

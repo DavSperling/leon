@@ -42,21 +42,28 @@ type Usage = {
 
 // Journalise les compteurs de tokens et le coût estimé d'un appel, jamais son contenu. Le coût vient des tarifs de
 // models.ts ; c'est un minimum : après un repli du serveur, les tentatives refusées (`usage.iterations`) ne sont
-// pas comptées, et un modèle de repli absent de la table n'est pas chiffré.
+// pas comptées, et un modèle de repli absent de la table n'est pas chiffré. Un coût donné (`chargedUsd`, ce
+// qu'OpenRouter a facturé) remplace l'estimation.
 // La ligne va aussi dans appels_modele (0039), que lit le tableau des admins. Sans attendre et sans lever : la réponse
 // de l'utilisateur ne doit ni ralentir ni échouer à cause de son journal.
-export function logUsage(step: LlmStep, model: string, usage: Usage | undefined): void {
+export function logUsage(
+  step: LlmStep,
+  model: string,
+  usage: Usage | undefined,
+  chargedUsd?: number,
+): void {
   if (!usage) return;
   const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
   const cacheWriteTokens = usage.cache_creation_input_tokens ?? 0;
   const price = modelSpec(model)?.price;
-  const costUsd = price
+  const estimatedUsd = price
     ? (usage.input_tokens * price.input +
         usage.output_tokens * price.output +
         cacheReadTokens * price.cacheRead +
         cacheWriteTokens * price.cacheWrite) /
       1_000_000
     : null;
+  const costUsd = chargedUsd ?? estimatedUsd;
   const line = {
     step,
     model,

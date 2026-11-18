@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:54.078Z",
+  "reponse": "La commande PO-2291 de Galeries Brotteaux porte sur 12 buffets « Rhône » en chêne naturel, à 690 € HT l'unité [1], soit 8 280 € HT au total [2]. Les articles ont été emballés, avec un enlèvement par Rapid'Colis le 24 novembre et une livraison au magasin le 25 [3]. Le paiement se fait à 60 jours fin de mois, donc l'encaissement est attendu fin janvier, à surveiller pour la trésorerie des soldes [1][4]. Le contrat avec Rapid'Colis se termine le 30 novembre [2].",
+  "rendu": "La commande PO-2291 de Galeries Brotteaux porte sur 12 buffets « Rhône » en chêne naturel, à 690 € HT l'unité [1], soit 8 280 € HT au total [2]. Les articles ont été emballés, avec un enlèvement par Rapid'Colis le 24 novembre et une livraison au magasin le 25 [3]. Le paiement se fait à 60 jours fin de mois, donc l'encaissement est attendu fin janvier, à surveiller pour la trésorerie des soldes [1][4]. Le contrat avec Rapid'Colis se termine le 30 novembre [2].",
+  "mesures": {
+    "mots": 81,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1520,
+    "sortie": 515,
+    "reflexion": 298,
+    "cache": 0,
+    "cout": 0.0004095
+  },
+  "cout": 0.0004095,
+  "latenceMs": 3232,
+  "fournisseur": "Claude Platform on AWS"
+}

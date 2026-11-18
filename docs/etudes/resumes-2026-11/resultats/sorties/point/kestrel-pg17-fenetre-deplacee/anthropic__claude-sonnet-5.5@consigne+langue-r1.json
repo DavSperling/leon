@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5@consigne+langue",
+  "rep": 1,
+  "date": "2026-11-18T14:40:53.978Z",
+  "reponse": "## What changed\n\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has told the CSMs and says you can update the runbook and merge #321 [8]. Your runbook and the Notion page still say Saturday 21/11 [1][10].\n- Maya approved #321 but asked you not to merge before the window is confirmed with Fernhill [3]. Her later Slack message says it's confirmed [8].\n- Daniel Levi will be on call for the API side on Sunday. He wants a ping when you start the switchover [7].\n- Lior Ben-David (KES-530) needs nothing changed for the ingest workers, since they read DATABASE_URL from SSM. He wants 30 minutes' notice before the switchover so he can pause the consumers [9].\n\n## What is still open\n\n- **Runbook and #321 merge:** update the window to Sunday 22/11 in `runbooks/pg17-cutover.md`, then merge #321 [1][8]. Add the 30-minute notice to Lior and the ping to Daniel to the steps [7][9].\n- **Rollback rehearsal:** this is still to do on a fresh clone, planned for Thursday 19/11. Switching back to blue is not a real rollback, because the old instance gets no writes after switchover and diverges immediately. The runbook carries this as a TODO [1][3].\n\n## What you did\n\n- Prod PG17 blue/green is ready in PR #321: the Terraform change, a fix so the read replica follows the blue/green instead of being replaced, and the runbook [1][3].\n- A rehearsal on a clone of last night's snapshot gave 74 s of write downtime and no row-count mismatches on the 20 biggest tables. You deleted the clone afterwards [1].",
+  "rendu": "## What changed\n\n- The cutover window moved to **Sunday 22/11, 02:00–04:00 UTC**, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has told the CSMs and says you can update the runbook and merge #321 [8]. Your runbook and the Notion page still say Saturday 21/11 [1][10].\n- Maya approved #321 but asked you not to merge before the window is confirmed with Fernhill [3]. Her later Slack message says it's confirmed [8].\n- Daniel Levi will be on call for the API side on Sunday. He wants a ping when you start the switchover [7].\n- Lior Ben-David (KES-530) needs nothing changed for the ingest workers, since they read DATABASE_URL from SSM. He wants 30 minutes' notice before the switchover so he can pause the consumers [9].\n\n## What is still open\n\n- **Runbook and #321 merge:** update the window to Sunday 22/11 in `runbooks/pg17-cutover.md`, then merge #321 [1][8]. Add the 30-minute notice to Lior and the ping to Daniel to the steps [7][9].\n- **Rollback rehearsal:** this is still to do on a fresh clone, planned for Thursday 19/11. Switching back to blue is not a real rollback, because the old instance gets no writes after switchover and diverges immediately. The runbook carries this as a TODO [1][3].\n\n## What you did\n\n- Prod PG17 blue/green is ready in PR #321: the Terraform change, a fix so the read replica follows the blue/green instead of being replaced, and the runbook [1][3].\n- A rehearsal on a clone of last night's snapshot gave 74 s of write downtime and no row-count mismatches on the 20 biggest tables. You deleted the clone afterwards [1].",
+  "mesures": {
+    "mots": 266,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7317,
+    "sortie": 615,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020784
+  },
+  "cout": 0.020784,
+  "latenceMs": 6872,
+  "fournisseur": "Claude Platform on AWS"
+}

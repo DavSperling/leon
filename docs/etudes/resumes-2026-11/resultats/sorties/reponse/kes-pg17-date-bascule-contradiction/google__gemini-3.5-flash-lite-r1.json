@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:32:32.086Z",
+  "reponse": "The production cutover for Postgres 17 is scheduled for Saturday, November 28, 2026, from 02:00 to 06:00 UTC [2][6]. It was initially planned for November 21, but the date was moved following an ingest incident to allow for a second dry run [1][2][6].",
+  "rendu": "The production cutover for Postgres 17 is scheduled for Saturday, November 28, 2026, from 02:00 to 06:00 UTC [2][6]. It was initially planned for November 21, but the date was moved following an ingest incident to allow for a second dry run [1][2][6].",
+  "mesures": {
+    "mots": 43,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1186,
+    "sortie": 78,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005508
+  },
+  "cout": 0.0005508,
+  "latenceMs": 1568,
+  "fournisseur": "Google"
+}

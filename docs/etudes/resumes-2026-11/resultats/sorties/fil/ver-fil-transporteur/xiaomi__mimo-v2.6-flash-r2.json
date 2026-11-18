@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:46:19.575Z",
+  "reponse": "## Où j'en suis\nLe branchement de l'API d'étiquettes TransAlp est terminé sur `hugo/transalp-etiquettes` et poussé : client OAuth2, étiquettes ZPL par défaut (accents corrigés par `^CI28`, validé par Karim), `choix.ts` bascule Lyon/Paris chez TransAlp à partir du 1er décembre, le reste de la France et les +30 kg restent chez Rapidis. La PR #91 est à jour, toujours en brouillon, en attente de la relecture de Julien. (source: src-pr91, h2-12)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien ; rien ne s'active avant le 1er décembre (source: src-pr91, h2-12)\n- [prochaine-étape] Julien mettre la clé de prod dans les secrets ; vérifier `TRANSALP_DEBUT` en prod (source: h2-07, h2-08)\n- [essai-raté] clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 ; ZPL refusé en sandbox (testé seulement en recette depuis) (source: ses-tr-1, src-mail-transalp)\n- [question] aucune ouverte : la date de bascule (1er décembre) et le sort de Rapidis (jusqu'au 15 janvier) sont tranchés par Julien (source: src-slack-julien)\n- [décision] Bascule le 1er décembre, Lyon et Paris seulement ; Rapidis garde le reste de la France et les +30 kg jusqu'au 15 janvier ; pas de contrat Premium, ignorer ce passage du mail TransAlp (source: src-slack-julien, h2-09, h1-03)",
+  "rendu": "## Où j'en suis\nLe branchement de l'API d'étiquettes TransAlp est terminé sur `hugo/transalp-etiquettes` et poussé : client OAuth2, étiquettes ZPL par défaut (accents corrigés par `^CI28`, validé par Karim), `choix.ts` bascule Lyon/Paris chez TransAlp à partir du 1er décembre, le reste de la France et les +30 kg restent chez Rapidis. La PR #91 est à jour, toujours en brouillon, en attente de la relecture de Julien. (de: équipe, agent; source: src-pr91, h2-12)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien ; rien ne s'active avant le 1er décembre (de: équipe, agent; source: src-pr91, h2-12)\n- [prochaine-étape] Julien mettre la clé de prod dans les secrets ; vérifier `TRANSALP_DEBUT` en prod (de: toi, agent; source: h2-07, h2-08)\n- [essai-raté] clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 ; ZPL refusé en sandbox (testé seulement en recette depuis) (de: connecteur, agent; source: ses-tr-1, src-mail-transalp)\n- [question] aucune ouverte : la date de bascule (1er décembre) et le sort de Rapidis (jusqu'au 15 janvier) sont tranchés par Julien (de: connecteur; source: src-slack-julien)\n- [décision] Bascule le 1er décembre, Lyon et Paris seulement ; Rapidis garde le reste de la France et les +30 kg jusqu'au 15 janvier ; pas de contrat Premium, ignorer ce passage du mail TransAlp (de: toi, connecteur; source: src-slack-julien, h2-09, h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1396,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4196,
+    "sortie": 455,
+    "reflexion": 7,
+    "cache": 0,
+    "cout": 0.00099845
+  },
+  "cout": 0.00099845,
+  "latenceMs": 3622,
+  "fournisseur": "Makora"
+}

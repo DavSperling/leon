@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-sonnet-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:24:45.025Z",
+  "reponse": "## Où j'en suis\nLe Terraform pour passer l'RDS analytics en PG17 en blue/green est écrit, en plan seulement (rien appliqué). Staging : 16.4 → 17.2, plan « 1 à ajouter, 1 à modifier ». Prod est préparée mais désactivée (`pg17_enabled = false`, plan sans changement). La PR draft kestrel-analytics/infra#57 est ouverte (open), avec pg_partman et le verrou dbt dans sa description.\n\n- [en-cours] PR #57 en draft, en attente de relecture et de l'accord de Maya\n- [prochaine-étape] Sur staging en 16.4 : mettre pg_partman de 4.7.4 à 5.1.0, puis vérifier `run_maintenance_proc()` sur `events_raw` et `events_daily`. C'est un préalable, sinon l'environnement green ne sera pas créé.\n- [prochaine-étape] Choisir la fenêtre prod après l'accord de Maya, hors du verrou dbt (01:00–03:30 UTC sur `events_daily`)\n- [essai-raté] Le provider AWS v6.4.0 (via `init -upgrade`) a fait monter le plan à 37 changements (ACL S3, `aws_eip.vpc`), donc abandonné\n- [décision] AWS épinglé à ~> 5.82.0, pas de v6 dans cette PR (source: t04)\n- [décision] Aucune date prod avant l'accord de Maya ; `apply_immediately` reste à false (source: t14)\n- [décision] La mise à jour de pg_partman est une étape à part : aucune commande sur la base pour l'instant (source: t10)",
+  "rendu": "## Où j'en suis\nLe Terraform pour passer l'RDS analytics en PG17 en blue/green est écrit, en plan seulement (rien appliqué). Staging : 16.4 → 17.2, plan « 1 à ajouter, 1 à modifier ». Prod est préparée mais désactivée (`pg17_enabled = false`, plan sans changement). La PR draft kestrel-analytics/infra#57 est ouverte (open), avec pg_partman et le verrou dbt dans sa description.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [décision] AWS épinglé à ~> 5.82.0, pas de v6 dans cette PR (source: t04)\n- [décision] Aucune date prod avant l'accord de Maya ; `apply_immediately` reste à false (source: t14)\n- [décision] La mise à jour de pg_partman est une étape à part : aucune commande sur la base pour l'instant (source: t10)\n- [en-cours] PR #57 en draft, en attente de relecture et de l'accord de Maya\n- [prochaine-étape] Sur staging en 16.4 : mettre pg_partman de 4.7.4 à 5.1.0, puis vérifier `run_maintenance_proc()` sur `events_raw` et `events_daily`. C'est un préalable, sinon l'environnement green ne sera pas créé.\n- [prochaine-étape] Choisir la fenêtre prod après l'accord de Maya, hors du verrou dbt (01:00–03:30 UTC sur `events_daily`)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1226,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5448,
+    "sortie": 583,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016726
+  },
+  "cout": 0.016726,
+  "latenceMs": 4556,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

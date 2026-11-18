@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:32.399Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2858,
+    "sortie": 118,
+    "reflexion": 101,
+    "cache": 0,
+    "cout": 0.006896
+  },
+  "cout": 0.006896,
+  "latenceMs": 2483,
+  "fournisseur": "DigitalOcean"
+}

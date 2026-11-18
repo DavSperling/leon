@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:54.893Z",
+  "reponse": "## Where I stand\nThe Fernhill SAML ACS endpoint now verifies the assertion signature with signxml and checks conditions, audience and subject confirmation itself, plus replay protection in Redis. python3-saml/xmlsec was abandoned after the Alpine libxml2 mismatch; after fixes for ruff, mypy and the skew tests, CI came back green and PR #412 is merged into main. What is left is the staging metadata exchange for Thursday's demo and the follow-up SSO enforcement ticket.\n\n- [en-cours] Fernhill's staging IdP metadata is not loaded and our staging SP metadata has not been sent yet.\n- [prochaine-étape] Load their staging IdP metadata and send them ours by Wednesday EOD, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket for enforcing SSO / disabling password login for Fernhill users.\n- [essai-raté] python3-saml on Alpine: lxml and xmlsec loaded mismatched libxml2, and building lxml from source failed too (no crypto module), so it was replaced by signxml.\n- [décision] Go with signxml, drop python3-saml and xmlsec entirely, write the condition checks with tests, and read attributes only from the verified signed_xml (source: t08)\n- [décision] 120 s clock skew per the Fernhill contract annex; password login left untouched as a separate ticket (source: t12)\n- [décision] No --admin and no --auto on the PR; Maya to be pinged directly (source: t21)",
+  "rendu": "- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill's staging IdP metadata is not loaded and our staging SP metadata has not been sent yet.\n- [prochaine-étape] Load their staging IdP metadata and send them ours by Wednesday EOD, for the demo Thursday 10:00 New York.\n- [prochaine-étape] Create the separate ticket for enforcing SSO / disabling password login for Fernhill users.\n- [essai-raté] python3-saml on Alpine: lxml and xmlsec loaded mismatched libxml2, and building lxml from source failed too (no crypto module), so it was replaced by signxml.\n- [décision] Go with signxml, drop python3-saml and xmlsec entirely, write the condition checks with tests, and read attributes only from the verified signed_xml (source: t08)\n- [décision] 120 s clock skew per the Fernhill contract annex; password login left untouched as a separate ticket (source: t12)\n- [décision] No --admin and no --auto on the PR; Maya to be pinged directly (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1049,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4616,
+    "sortie": 810,
+    "reflexion": 467,
+    "cache": 0,
+    "cout": 0.00070704
+  },
+  "cout": 0.00070704,
+  "latenceMs": 6100,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:02:39.144Z",
+  "reponse": "I don’t know the credit amount. I couldn’t find Orbitly’s signed 2024 MSA or its section 7 credit terms; the team also noted that the MSA was custom and wasn’t attached to the deal. [5] The Nov 12 incident left dashboards stale for 3 hours 40 minutes, but the events were processed late rather than lost. [2] We’d need the MSA’s credit formula—and any required billing amount—to calculate what’s owed.",
+  "rendu": "I don’t know the credit amount. I couldn’t find Orbitly’s signed 2024 MSA or its section 7 credit terms; the team also noted that the MSA was custom and wasn’t attached to the deal. [5] The Nov 12 incident left dashboards stale for 3 hours 40 minutes, but the events were processed late rather than lost. [2] We’d need the MSA’s credit formula—and any required billing amount—to calculate what’s owed.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 21428,
+    "sortie": 701,
+    "reflexion": 341,
+    "cache": 14116,
+    "cout": 0.001405285
+  },
+  "latenceMs": 15325,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits outage last week contract service credit compensation SLA VP settled\"}",
+    "chercher {\"requete\":\"Orbitly signed MSA 2024 service credit SLA monthly fee outage availability terms\",\"outil\":\"google_drive\"}",
+    "chercher {\"requete\":\"Orbitly November 12 outage duration 3h40 monthly fee credit\",\"outil\":\"Gmail\"}",
+    "chercher {\"requete\":\"Orbitly contract service credits 99.9% credit amount MSA\",\"type\":\"fichier\"}",
+    "lire {\"sourceId\":\"slack-deal-desk-orbitly\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "chercher {\"requete\":\"Orbitly 2024 MSA section 7 legal folder Avi service credit\"}"
+  ],
+  "cout": 0.001405285
+}

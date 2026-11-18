@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:22:58.556Z",
+  "reponse": "## Où j'en suis\nTerraform work for the PostgreSQL 17 upgrade on the analytics RDS is done and plan-only: postgres17 parameter group with derived family, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`, AWS provider pinned, tflint clean. Draft PR kestrel-analytics/infra#57 is open and nothing has been applied; the pg_partman upgrade and the prod window remain.\n\n- [en-cours] Draft PR #57 open, staging plan clean (1 add, 1 change), prod plan shows no changes\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging (16.4) and check `run_maintenance_proc()` on `events_raw` / `events_daily` before any apply\n- [prochaine-étape] Pick the prod window after Maya's sign-off, avoiding the dbt lock on `events_daily` (01:00–03:30 UTC); candidate slots are Sat/Sun 04:00–06:00 UTC\n- [essai-raté] `terraform init` failed on the lock file (aws 5.31.0 vs `>= 5.60.0`); `init -upgrade` pulled provider v6 with 37 unrelated changes, so it was rolled back to 5.82.x\n- [décision] Pin the AWS provider to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] No prod date until Maya signs off, `apply_immediately` stays false (source: t14)",
+  "rendu": "## Où j'en suis\nTerraform work for the PostgreSQL 17 upgrade on the analytics RDS is done and plan-only: postgres17 parameter group with derived family, blue/green enabled on staging (16.4 → 17.2), prod prepared but disabled behind `pg17_enabled = false`, AWS provider pinned, tflint clean. Draft PR kestrel-analytics/infra#57 is open and nothing has been applied; the pg_partman upgrade and the prod window remain.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR #57 open, staging plan clean (1 add, 1 change), prod plan shows no changes\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging (16.4) and check `run_maintenance_proc()` on `events_raw` / `events_daily` before any apply\n- [prochaine-étape] Pick the prod window after Maya's sign-off, avoiding the dbt lock on `events_daily` (01:00–03:30 UTC); candidate slots are Sat/Sun 04:00–06:00 UTC\n- [essai-raté] `terraform init` failed on the lock file (aws 5.31.0 vs `>= 5.60.0`); `init -upgrade` pulled provider v6 with 37 unrelated changes, so it was rolled back to 5.82.x\n- [décision] Pin the AWS provider to `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] No prod date until Maya signs off, `apply_immediately` stays false (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1316,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4130,
+    "sortie": 759,
+    "reflexion": 370,
+    "cache": 0,
+    "cout": 0.00184266
+  },
+  "cout": 0.00184266,
+  "latenceMs": 12905,
+  "fournisseur": "GMICloud"
+}

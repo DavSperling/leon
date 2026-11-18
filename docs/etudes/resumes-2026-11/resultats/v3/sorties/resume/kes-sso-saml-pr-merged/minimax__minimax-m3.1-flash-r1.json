@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:55.211Z",
+  "reponse": "## Where I am\nThe Fernhill SAML ACS endpoint is finished: signature verification via signxml (python3-saml and xmlsec dropped), custom condition checks (audience, recipient, time window with 120 s skew), replay protection in Redis, and `saml_utils` moved to `api/auth/saml/verify.py`. All 36 auth tests and the full suite (1284 passed, 3 skipped) are green, lint and mypy clean. PR kestrel-analytics/platform#412 was opened and, per the facts, is now merged (commits 3f9c2a1, b71e04d, e0a5c93).\n\n- [next-step] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo.\n- [next-step] Create the separate ticket to enforce SSO / disable password login for Fernhill users.\n- [failed-attempt] python3-saml on Alpine failed: lxml/libxml2 version mismatch, then \"cannot load crypto library for xmlsec\" when building lxml from source; base-image switch was rejected because of image size.\n- [failed-attempt] `gh pr merge 412 --squash` was refused by branch policy (needs one approving review); no `--admin` or `--auto` was used, and Maya was to be pinged directly.\n- [decision] Use signxml instead of python3-saml, remove xmlsec from the Dockerfile, write the conditions checks ourselves, and read only from signed_xml (source: t08).\n- [decision] Clock skew set to 120 s per the Fernhill security questionnaire; password login left untouched as a separate ticket (source: t12).\n- [decision] No admin merge and no auto-merge (source: t21).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4533,
+    "sortie": 393,
+    "reflexion": 9,
+    "cache": 512,
+    "cout": 0.00084663
+  },
+  "cout": 0.00084663,
+  "latenceMs": 2998,
+  "fournisseur": "Together"
+}

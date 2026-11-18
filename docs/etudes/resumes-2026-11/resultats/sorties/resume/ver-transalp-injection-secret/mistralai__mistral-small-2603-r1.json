@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:26:18.190Z",
+  "reponse": "## Où j'en suis\n\nLe client TransAlp a été implémenté pour Lyon et Paris (codes postaux 69/75), avec Rapidis en secours. L'authentification OAuth2 (`client_credentials`) est fonctionnelle, les étiquettes sont générées en PDF (ZPL non disponible en sandbox mais paramètre prêt). `choix.ts` gère maintenant la répartition géographique et le poids (>30 kg → Rapidis partout). Les tests passent après correction du typage `codePostal` en `string`. Une PR draft [[maison-verdier/boutique#91]] est ouverte.\n\n- [en-cours] Client TransAlp (`app/transporteurs/transalp/client.ts`), logique de choix (`app/transporteurs/choix.ts`) et tests associés\n- [prochaine-étape] Demander à TransAlp si le ZPL est disponible en production ; Julien validera le passage en production\n- [question] Le format ZPL est-il disponible en environnement de production ?\n- [décision] Logique de choix transporteur : Lyon/Paris → TransAlp (sauf >30 kg), le reste → Rapidis (source: t14)",
+  "rendu": "## Où j'en suis\nLe client TransAlp a été implémenté pour Lyon et Paris (codes postaux 69/75), avec Rapidis en secours. L'authentification OAuth2 (`client_credentials`) est fonctionnelle, les étiquettes sont générées en PDF (ZPL non disponible en sandbox mais paramètre prêt). `choix.ts` gère maintenant la répartition géographique et le poids (>30 kg → Rapidis partout). Les tests passent après correction du typage `codePostal` en `string`. Une PR draft [[maison-verdier/boutique#91]] est ouverte.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] Client TransAlp (`app/transporteurs/transalp/client.ts`), logique de choix (`app/transporteurs/choix.ts`) et tests associés\n- [prochaine-étape] Demander à TransAlp si le ZPL est disponible en production ; Julien validera le passage en production\n- [question] Le format ZPL est-il disponible en environnement de production ?",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 953,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3579,
+    "sortie": 766,
+    "reflexion": 502,
+    "cache": 736,
+    "cout": 0.000986799
+  },
+  "cout": 0.000986799,
+  "latenceMs": 5462,
+  "fournisseur": "Mistral"
+}

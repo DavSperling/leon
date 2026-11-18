@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:59.985Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 7,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1119,
+    "sortie": 270,
+    "reflexion": 259,
+    "cache": 0,
+    "cout": 0.00026388
+  },
+  "cout": 0.00026388,
+  "latenceMs": 3011,
+  "fournisseur": "Novita"
+}

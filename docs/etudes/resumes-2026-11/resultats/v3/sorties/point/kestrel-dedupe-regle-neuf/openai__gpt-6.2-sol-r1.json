@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T17:53:49.674Z",
+  "reponse": "## What is still open\n- Maya needs your estimate before #247 merges for Thursday’s Orbitly call: **1,179,950 legitimate events dropped (~8.1% of iOS volume)**, excluding genuine replays. She’ll approve the dedupe fix once CI is green. [1][2]\n- You’re due to add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday’s incident review. [7]\n- Once #247 is deployed, you still need to replay landing data from Nov 13 for Orbitly and the Zest Grocers iOS pilot (3,812 dropped events), then verify that Orbitly’s dedupe drops return to near zero. [1][2]\n- You drafted a note asking the iOS team to restore UUIDs in SDK 3.2.1. The new dedupe key separates devices, but per-session counters can still collide across sessions on the same device. [1][2]\n\n## What changed\n- Noa finalized postmortem #233 and will present it at Friday’s incident review. [3]\n- Rachel is closing Zest’s Zendesk ticket for the earlier ingestion gap. [6]\n- #245 merged, moving CI and the Dockerfile to Go 1.23.4. [4]",
+  "rendu": "## What is still open\n- Maya needs your estimate before #247 merges for Thursday’s Orbitly call: **1,179,950 legitimate events dropped (~8.1% of iOS volume)**, excluding genuine replays. She’ll approve the dedupe fix once CI is green. [1][2]\n- You’re due to add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday’s incident review. [7]\n- Once #247 is deployed, you still need to replay landing data from Nov 13 for Orbitly and the Zest Grocers iOS pilot (3,812 dropped events), then verify that Orbitly’s dedupe drops return to near zero. [1][2]\n- You drafted a note asking the iOS team to restore UUIDs in SDK 3.2.1. The new dedupe key separates devices, but per-session counters can still collide across sessions on the same device. [1][2]\n\n## What changed\n- Noa finalized postmortem #233 and will present it at Friday’s incident review. [3]\n- Rachel is closing Zest’s Zendesk ticket for the earlier ingestion gap. [6]\n- #245 merged, moving CI and the Dockerfile to Go 1.23.4. [4]",
+  "mesures": {
+    "mots": 162,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 408,
+    "reflexion": 134,
+    "cache": 0,
+    "cout": 0.0155085
+  },
+  "cout": 0.0155085,
+  "latenceMs": 4260,
+  "fournisseur": "Azure"
+}

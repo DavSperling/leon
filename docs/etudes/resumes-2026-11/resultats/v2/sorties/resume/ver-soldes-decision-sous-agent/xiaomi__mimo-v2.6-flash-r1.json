@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:35.246Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit, testé et éprouvé en masse sur la boutique de dev (opération bulk, 0 rejet), planifié le mercredi 13 janvier 2027 à 08:00, avec un CSV exporté pour la newsletter ; la PR #94 est ouverte sur maison-verdier/boutique.\n- [en-cours] attente de revue sur la PR #94 (ouverte)\n- [prochaine-étape] écrire le script de retour aux prix d'origine en décembre\n- [prochaine-étape] régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix bougent\n- [essai-raté] écriture appel par appel : THROTTLED à mi-chemin, boutique laissée à moitié soldée puis restaurée via le CSV du dry run\n- [décision] remises : -20 % Rhône, -30 % fins de série, Saône exclue (source: t05)\n- [décision] prix finissant en 9, arrondi à l'euro inférieur ; lancement bulk le 13 janvier à 08:00 pile, vérif dev la veille (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit, testé et éprouvé en masse sur la boutique de dev (opération bulk, 0 rejet), planifié le mercredi 13 janvier 2027 à 08:00, avec un CSV exporté pour la newsletter ; la PR #94 est ouverte sur maison-verdier/boutique.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] attente de revue sur la PR #94 (ouverte)\n- [prochaine-étape] écrire le script de retour aux prix d'origine en décembre\n- [prochaine-étape] régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix bougent\n- [essai-raté] écriture appel par appel : THROTTLED à mi-chemin, boutique laissée à moitié soldée puis restaurée via le CSV du dry run\n- [décision] remises : -20 % Rhône, -30 % fins de série, Saône exclue (source: t05)\n- [décision] prix finissant en 9, arrondi à l'euro inférieur ; lancement bulk le 13 janvier à 08:00 pile, vérif dev la veille (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1003,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4317,
+    "sortie": 487,
+    "reflexion": 187,
+    "cache": 0,
+    "cout": 0.00074074
+  },
+  "cout": 0.00074074,
+  "latenceMs": 34755,
+  "fournisseur": "Cohere"
+}

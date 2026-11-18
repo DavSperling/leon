@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:02:40.364Z",
+  "reponse": "## What is still open\n\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour la TVA, avant jeudi 19 novembre. [1]\n- Karim compte jeudi matin les 14 écarts de stock et doit te renvoyer les chiffres réels dans la foulée. [7]\n- Ta PR #58 ajoute un mode de simulation sans écriture ; elle a été ouverte sans relecteur. [1][5]\n\n## What changed\n\n- La PR #57 d’Hugo a été fusionnée : la correction de la correspondance des stocks devait s’appliquer à la synchro de la nuit dernière. [4]\n- Les trois clients concernés acceptent une livraison de leur Saône mi-janvier. [9]",
+  "rendu": "## What is still open\n\n- Tu as promis à Antoine l’export des ventes Shopify d’octobre pour la TVA, avant jeudi 19 novembre. [1]\n- Karim compte jeudi matin les 14 écarts de stock et doit te renvoyer les chiffres réels dans la foulée. [7]\n- Ta PR #58 ajoute un mode de simulation sans écriture ; elle a été ouverte sans relecteur. [1][5]\n\n## What changed\n\n- La PR #57 d’Hugo a été fusionnée : la correction de la correspondance des stocks devait s’appliquer à la synchro de la nuit dernière. [4]\n- Les trois clients concernés acceptent une livraison de leur Saône mi-janvier. [9]",
+  "mesures": {
+    "mots": 97,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4764,
+    "sortie": 365,
+    "reflexion": 205,
+    "cache": 1451,
+    "cout": 0.00603805
+  },
+  "cout": 0.00603805,
+  "latenceMs": 4698,
+  "fournisseur": "Azure"
+}

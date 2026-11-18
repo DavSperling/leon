@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:43.784Z",
+  "reponse": "## What is still open\n\n- Don't send the follow-up email as drafted: it promises CAD payouts \"in Q1 2027\". Sofia says that's wrong: Q2 at the earliest, since Corvane is reviewing the cross-border program, and she asks for no date in writing to the prospect [1][6]. CAD is one of Hearthly's needs, so reword that line before sending.\n- The 15% discount on a 2-year commit needs Rachel's sign-off, because anything above 10% now requires it. She asked to talk before you send any numbers, and the email includes the 15% [1][3]. You also planned to ask her which customer can serve as a reference, since Loomly and Pinecrest are awkward after the payout delay and Tradewell isn't live [1].\n- The SIG Lite (~200 questions) is still due Monday Nov 23. Hearthly's security team won't keep a vendor in the final round without it. You meant to ask Shira today whether she owns it, and last year's answers could be reused [1][4].\n\n## What changed\n\n- Hearthly moved its provider decision from Fri Dec 4 to Wed Dec 2 because of a board meeting. Your action plan was built back from Dec 4, so the dates (pricing proposal Nov 30, reference call Dec 1) now need to be redone [1][4].",
+  "rendu": "## What is still open\n\n- Don't send the follow-up email as drafted: it promises CAD payouts \"in Q1 2027\". Sofia says that's wrong: Q2 at the earliest, since Corvane is reviewing the cross-border program, and she asks for no date in writing to the prospect [1][6]. CAD is one of Hearthly's needs, so reword that line before sending.\n- The 15% discount on a 2-year commit needs Rachel's sign-off, because anything above 10% now requires it. She asked to talk before you send any numbers, and the email includes the 15% [1][3]. You also planned to ask her which customer can serve as a reference, since Loomly and Pinecrest are awkward after the payout delay and Tradewell isn't live [1].\n- The SIG Lite (~200 questions) is still due Monday Nov 23. Hearthly's security team won't keep a vendor in the final round without it. You meant to ask Shira today whether she owns it, and last year's answers could be reused [1][4].\n\n## What changed\n\n- Hearthly moved its provider decision from Fri Dec 4 to Wed Dec 2 because of a board meeting. Your action plan was built back from Dec 4, so the dates (pricing proposal Nov 30, reference call Dec 1) now need to be redone [1][4].",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5680,
+    "sortie": 430,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01566
+  },
+  "cout": 0.01566,
+  "latenceMs": 4230,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-direction-semaine",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:35.113Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Réunion stand\", \"debut\": \"2026-11-18T15:00\", \"avec\": \"Sophie Garnier\"}\n{\"n\": 6, \"titre\": \"Point clôture trimestrielle – Maison Verdier\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T17:00\", \"avec\": \"Antoine Roussel\"}\n{\"n\": 10, \"titre\": \"Préparation stand Maison&Objet\", \"debut\": \"2026-11-17T15:00\", \"fin\": \"2026-11-17T16:00\", \"avec\": \"Sophie Garnier, Julien Morel\"}\n{\"n\": 13, \"titre\": \"Point transporteur à l'entrepôt\", \"debut\": \"2026-11-17T08:45\", \"avec\": \"Karim Haddad\"}\n{\"n\": 7, \"titre\": \"Rendez-vous financement stand et trésorerie\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:00\", \"avec\": \"Mathieu Lambert\"}\n{\"n\": 15, \"titre\": \"Visite showroom Galeries Brotteaux\", \"debut\": \"2026-11-16T11:30\", \"avec\": \"Hélène Vasseur\"}\n{\"n\": 19, \"titre\": \"Visite de l'atelier Bois & Fils\", \"debut\": \"2026-11-20T10:00\", \"avec\": \"Paul Besson\"}",
+  "rendu": "2026-11-16T11:30 Visite showroom Galeries Brotteaux (avec Hélène Vasseur)\n2026-11-17T08:45 Point transporteur à l'entrepôt (avec Karim Haddad)\n2026-11-17T15:00→2026-11-17T16:00 Préparation stand Maison&Objet (avec Sophie Garnier, Julien Morel)\n2026-11-18T15:00 Réunion stand (avec Sophie Garnier)\n2026-11-18T16:00→2026-11-18T17:00 Point clôture trimestrielle – Maison Verdier (avec Antoine Roussel)\n2026-11-19T14:00→2026-11-19T15:00 Rendez-vous financement stand et trésorerie (avec Mathieu Lambert)\n2026-11-20T10:00 Visite de l'atelier Bois & Fils (avec Paul Besson)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.857,
+    "f1": 0.923,
+    "faux": "2026-11-17T15:00 Préparation stand Maison&Objet",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4509,
+    "sortie": 1947,
+    "reflexion": 1476,
+    "cache": 0,
+    "cout": 0.0014244
+  },
+  "cout": 0.0014244,
+  "latenceMs": 7938,
+  "fournisseur": "Claude Platform on AWS"
+}

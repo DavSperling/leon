@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:09:34.062Z",
+  "reponse": "## What you did\n* Diagnosed Orbitly's 8% iOS funnel drop: the iOS SDK 3.2.0 uses session counters for `event_id`, causing the new dedupe logic to drop 1.18 million legitimate events [1].\n* Fixed the dedupe key to include project and device, opening PR #247, and drafted a warning for the iOS team to restore UUIDs [1].\n\n## What changed\n* Maya validated the logic of PR #247 pending CI, but needs the exact count of dropped Orbitly events for her Thursday call with the client [2].\n* Noa finalized the 12/11 postmortem and will present it at Friday's incident review [3].\n\n## What is still open\n* Merge and deploy PR #247, then execute the planned rebackfill from the landing bucket for Orbitly and Zest [1][2].\n* Send Maya the 1.18 million figure for Orbitly's dropped events for her Thursday call [2].\n* Add an alert for when the ingest dead-letter queue exceeds 1,000 messages before Friday's review [7].",
+  "rendu": "## What you did\n* Diagnosed Orbitly's 8% iOS funnel drop: the iOS SDK 3.2.0 uses session counters for `event_id`, causing the new dedupe logic to drop 1.18 million legitimate events [1].\n* Fixed the dedupe key to include project and device, opening PR #247, and drafted a warning for the iOS team to restore UUIDs [1].\n\n## What changed\n* Maya validated the logic of PR #247 pending CI, but needs the exact count of dropped Orbitly events for her Thursday call with the client [2].\n* Noa finalized the 12/11 postmortem and will present it at Friday's incident review [3].\n\n## What is still open\n* Merge and deploy PR #247, then execute the planned rebackfill from the landing bucket for Orbitly and Zest [1][2].\n* Send Maya the 1.18 million figure for Orbitly's dropped events for her Thursday call [2].\n* Add an alert for when the ingest dead-letter queue exceeds 1,000 messages before Friday's review [7].",
+  "mesures": {
+    "mots": 150,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5118,
+    "sortie": 3781,
+    "reflexion": 3532,
+    "cache": 0,
+    "cout": 0.00647744
+  },
+  "cout": 0.00647744,
+  "latenceMs": 62147,
+  "fournisseur": "Alibaba"
+}

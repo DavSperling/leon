@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:37.800Z",
+  "reponse": "## Où j'en suis\nPg17 blue/green upgrade of the analytics RDS, staging first, plan only. The module now derives the parameter group family from the major version and exposes blue/green behind a flag; the AWS provider is pinned. Staging is set to 17.2 with blue/green = true (plan: 1 add, 1 change); prod is prepared behind `pg17_enabled = false` (plan: no changes). Draft PR #57 is open. Nothing applied.\n\n- [en-cours] staging blue/green is planned but not applied\n- [prochaine-étape] upgrade pg_partman 4.7.4 → 5.1.0 on 16.4 and check `run_maintenance_proc()` on `events_raw` / `events_daily`, on staging before the switchover\n- [prochaine-étape] pick the prod window: Saturday or Sunday 04:00–06:00 UTC suggested, once Maya signs off\n- [essai-raté] `terraform init` failed on the locked aws 5.31.0; `init -upgrade` pulled aws v6, whose breaking changes gave 37 unrelated plan changes — reverted\n- [décision] plan only, no apply (source: t01)\n- [décision] pin aws 5.82, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade as a separate todo, nothing run against the db (source: t10)\n- [décision] prod prepped but disabled; window must avoid the dbt lock 01:00–03:30 UTC (source: t12)\n- [décision] no prod date until Maya's sign-off, apply_immediately stays false (source: t14)\n- [décision] draft PR with the pg_partman step and the dbt lock in the description (source: t16)",
+  "rendu": "## Où j'en suis\nPg17 blue/green upgrade of the analytics RDS, staging first, plan only. The module now derives the parameter group family from the major version and exposes blue/green behind a flag; the AWS provider is pinned. Staging is set to 17.2 with blue/green = true (plan: 1 add, 1 change); prod is prepared behind `pg17_enabled = false` (plan: no changes). Draft PR #57 is open. Nothing applied.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] staging blue/green is planned but not applied\n- [prochaine-étape] upgrade pg_partman 4.7.4 → 5.1.0 on 16.4 and check `run_maintenance_proc()` on `events_raw` / `events_daily`, on staging before the switchover\n- [prochaine-étape] pick the prod window: Saturday or Sunday 04:00–06:00 UTC suggested, once Maya signs off\n- [essai-raté] `terraform init` failed on the locked aws 5.31.0; `init -upgrade` pulled aws v6, whose breaking changes gave 37 unrelated plan changes — reverted\n- [décision] plan only, no apply (source: t01)\n- [décision] pin aws 5.82, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade as a separate todo, nothing run against the db (source: t10)\n- [décision] prod prepped but disabled; window must avoid the dbt lock 01:00–03:30 UTC (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1320,
+    "decisions": 4,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3970,
+    "sortie": 2073,
+    "reflexion": 1650,
+    "cache": 0,
+    "cout": 0.00275895
+  },
+  "cout": 0.00275895,
+  "latenceMs": 10286,
+  "fournisseur": "DigitalOcean"
+}

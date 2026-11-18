@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:34:39.748Z",
+  "reponse": "## Ce que tu as fait\n- Le script des soldes est prêt : prix barré, prix remisé arrondi à l'euro, restauration le 3 février, dry-run sur la prod (212 variantes) et crons testés sur la boutique de dev [1].\n- Tu as retrouvé la commande de push du thème qui garde les réglages faits par Sophie dans l'éditeur [2].\n\n## Ce qui a bougé\n- Le widget Zendesk sur les pages produit est fusionné. Lucie signale 23 conversations ouvertes depuis ces pages cette semaine [3][9].\n- Le tag `soldes` s'ajoute désormais automatiquement aux produits remisés (#59), fusionné par Hugo [7].\n\n## Ce qui reste ouvert\n- Sophie a besoin des prix soldés dans Shopify lundi 30/11 au lieu de vendredi, le shooting ayant été décalé au 2 décembre [11].\n- Claire ne veut aucune Saône en soldes, à cause des précommandes au plein prix. Hugo pose la même question sur la PR #63, encore en relecture, et la grille doit être corrigée avant la fusion [10][4][1].\n- Sophie demande de relancer le flux Google Shopping juste après le script, sinon les annonces seront refusées pour prix différent du site [5].\n- La bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].",
+  "rendu": "## Ce que tu as fait\n- Le script des soldes est prêt : prix barré, prix remisé arrondi à l'euro, restauration le 3 février, dry-run sur la prod (212 variantes) et crons testés sur la boutique de dev [1].\n- Tu as retrouvé la commande de push du thème qui garde les réglages faits par Sophie dans l'éditeur [2].\n\n## Ce qui a bougé\n- Le widget Zendesk sur les pages produit est fusionné. Lucie signale 23 conversations ouvertes depuis ces pages cette semaine [3][9].\n- Le tag `soldes` s'ajoute désormais automatiquement aux produits remisés (#59), fusionné par Hugo [7].\n\n## Ce qui reste ouvert\n- Sophie a besoin des prix soldés dans Shopify lundi 30/11 au lieu de vendredi, le shooting ayant été décalé au 2 décembre [11].\n- Claire ne veut aucune Saône en soldes, à cause des précommandes au plein prix. Hugo pose la même question sur la PR #63, encore en relecture, et la grille doit être corrigée avant la fusion [10][4][1].\n- Sophie demande de relancer le flux Google Shopping juste après le script, sinon les annonces seront refusées pour prix différent du site [5].\n- La bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6833,
+    "sortie": 3359,
+    "reflexion": 2851,
+    "cache": 0,
+    "cout": 0.0023628
+  },
+  "cout": 0.0023628,
+  "latenceMs": 15750,
+  "fournisseur": "Claude Platform on AWS"
+}

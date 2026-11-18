@@ -1,0 +1,352 @@
+{
+ "id": "del-point-alternant-hubspot",
+ "titre": "Point d'un alternant avec « à propos » et poste : la relecture bloquante de son tuteur et la date de mise en prod passent avant la routine ; une règle métier arrive par Slack ; rien de son profil ne doit sortir",
+ "langue": "fr",
+ "entree": {
+  "maintenant": "2026-11-18T08:00:00+01:00",
+  "projet": "github.com/delorme-energies/planif",
+  "depuis": "2026-11-16T08:40:00+01:00",
+  "apropos": "Alternant développeur (BUT informatique), au bureau du lundi au mercredi, à l'IUT le jeudi et le vendredi. Je m'occupe de la synchro HubSpot vers planif et de l'appli des poseurs. Mon tuteur, c'est Thomas. Je dois rendre mon rapport d'alternance le 4 décembre.",
+  "poste": {
+   "department": "engineering",
+   "job": "fullstack",
+   "seniority": 2
+  },
+  "regles": [],
+  "sessions": [
+   {
+    "source": {
+     "id": "s-doublons",
+     "kind": "cursor",
+     "nature": "conversation",
+     "titre": "la synchro hubspot crée des doublons de chantier quand un deal passe 2 fois en 'gagné'",
+     "url": null,
+     "date": "2026-11-16T09:43:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-16T08:40:00+01:00",
+      "texte": "la synchro hubspot crée des doublons de chantier quand un deal passe 2 fois en 'gagné' (camille le remet en négo puis re-gagné quand le client rechange d'avis). regarde sync/hubspot.py"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T08:47:00+01:00",
+      "texte": "Dans `sync/hubspot.py`, `on_deal_stage_change()` crée un `Chantier` à chaque événement `dealstage = closedwon`, sans vérifier s'il en existe déjà un pour ce deal : aucun lien n'est gardé entre le deal HubSpot et le chantier. Chaque passage en « gagné » crée donc un nouveau chantier. En dev, 17 deals ont 2 chantiers ou plus."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T08:50:00+01:00",
+      "texte": "ajoute un champ hubspot_deal_id unique sur Chantier et fais un get_or_create"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:06:00+01:00",
+      "texte": "Champ ajouté (`CharField(max_length=32, unique=True, null=True)`), migration `0042_chantier_hubspot_deal_id.py`, et `get_or_create(hubspot_deal_id=…)` dans le webhook.\n\n```\n$ python manage.py migrate\n  Applying chantiers.0042_chantier_hubspot_deal_id...\ndjango.db.utils.IntegrityError: could not create unique index \"chantiers_chantier_hubspot_deal_id_key\"\nDETAIL:  Key (hubspot_deal_id)=(18273645) is duplicated.\n```\nLa migration échoue : les doublons existants ont déjà le même deal."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:08:00+01:00",
+      "texte": "ah oui y'a deja des doublons. fais une migration qui supprime les doublons avant"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:25:00+01:00",
+      "texte": "Migration de données `0041_supprime_doublons_chantiers.py` : pour chaque deal, garde le chantier le plus ancien et supprime les autres. En dev : 17 chantiers supprimés, puis `0042` passe. `python manage.py migrate` : OK."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:27:00+01:00",
+      "texte": "lance les tests"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:31:00+01:00",
+      "texte": "`pytest -q` : 97 passed in 15.8s. Nouveau test `test_webhook_deal_gagne_deux_fois` : un deal passé deux fois en « gagné » ne crée qu'un chantier."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:33:00+01:00",
+      "texte": "black ruff"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:35:00+01:00",
+      "texte": "`black .` : 3 fichiers reformatés. `ruff check --fix .` : 2 imports inutilisés retirés."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:40:00+01:00",
+      "texte": "ouvre la pr thomas relecteur"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:43:00+01:00",
+      "texte": "PR #217 « Synchro HubSpot : un seul chantier par deal » ouverte sur `lucas/sync-hubspot-doublons`, relecteur @thomas-riou."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "s-mapping",
+     "kind": "cursor",
+     "nature": "conversation",
+     "titre": "maintenant le mapping : la propriété hubspot 'type_travaux'",
+     "url": null,
+     "date": "2026-11-17T11:17:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-17T08:50:00+01:00",
+      "texte": "maintenant le mapping : la propriété hubspot 'type_travaux' -> Chantier.type. y'a des valeurs bizarres dans hubspot, regarde"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T09:02:00+01:00",
+      "texte": "Valeurs distinctes de `type_travaux` sur les 364 deals :\n- `PAC air/eau` (212), `pac air eau` (9), `PAC Air-Eau` (4)\n- `Solaire PV` (88), `photovoltaïque` (6)\n- `Ballon thermo` (31)\n- vide (14)\nLes variantes viennent de la saisie à la main avant que Camille ne crée la liste déroulante en septembre."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T09:05:00+01:00",
+      "texte": "normalise en minuscules sans accents et mappe, et les vides -> 'à préciser'"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T09:20:00+01:00",
+      "texte": "Fait dans `sync/mapping.py` : `normaliser()` (minuscules, sans accents, tirets et barres en espaces) puis table de correspondance vers `Chantier.Type`. Vide ou inconnu : `A_PRECISER`. Test sur les 364 deals : 350 mappés, 14 « à préciser »."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T09:40:00+01:00",
+      "texte": "question : faut-il créer le chantier dès 'gagné' ou attendre l'acompte ? je sais pas, je demande a camille sur slack"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T09:41:00+01:00",
+      "texte": "D'accord, je laisse la création sur « gagné » pour l'instant. Si Camille préfère attendre l'acompte, il faudra écouter aussi la propriété `acompte_recu` et créer le chantier quand elle passe à oui."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T10:30:00+01:00",
+      "texte": "renomme sync/hubspot.py en sync/hubspot_deals.py"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T10:34:00+01:00",
+      "texte": "Renommé, imports mis à jour dans 6 fichiers. `pytest -q` : 99 passed."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T11:15:00+01:00",
+      "texte": "commit push"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T11:17:00+01:00",
+      "texte": "Commit `8d3f0a6` « Synchro HubSpot : mapping du type de travaux » sur `lucas/sync-hubspot-doublons`, poussé. La PR #217 est mise à jour."
+     }
+    ]
+   }
+  ],
+  "changements": [
+   {
+    "source": {
+     "id": "pr-217",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#217 Synchro HubSpot : un seul chantier par deal",
+     "url": "https://github.com/delorme-energies/planif/pull/217",
+     "date": "2026-11-17T18:05:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "lucas-tessier",
+      "date": "2026-11-16T09:43:00+01:00",
+      "texte": "Ajoute Chantier.hubspot_deal_id (unique) et un get_or_create dans le webhook. La migration 0041 supprime les doublons existants (garde le plus ancien). Mapping du type de travaux."
+     },
+     {
+      "role": "participant",
+      "auteur": "thomas-riou",
+      "date": "2026-11-17T18:05:00+01:00",
+      "texte": "Relu. Le get_or_create et le mapping, très bien. Par contre la migration 0041 qui supprime des chantiers : non. En prod, un « doublon » peut avoir des interventions, des photos et un dossier MPR rattachés, et une migration ne se relit pas avant de tourner. Sors ça de la migration : une commande de gestion à part, avec --dry-run qui liste ce qu'elle supprimerait, et on regarde la liste ensemble lundi avant de lancer quoi que ce soit.\n\nChangements demandés."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "issue-216",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#216 Webhook HubSpot : signature non vérifiée",
+     "url": "https://github.com/delorme-energies/planif/issues/216",
+     "date": "2026-11-16T15:00:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "thomas-riou",
+      "date": "2026-11-16T15:00:00+01:00",
+      "texte": "Le webhook /sync/hubspot/ ne vérifie pas l'en-tête X-HubSpot-Signature-v3 : n'importe qui qui connaît l'URL peut créer des chantiers dans planif. Bloquant pour la mise en prod de la synchro. Assigné : @lucas-tessier."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "pr-213",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#213 Appli poseurs : bouton « Photo plaque signalétique »",
+     "url": "https://github.com/delorme-energies/planif/pull/213",
+     "date": "2026-11-16T17:30:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "lucas-tessier",
+      "date": "2026-11-12T16:10:00+01:00",
+      "texte": "Ajoute un bouton pour photographier la plaque signalétique de la PAC à la fin d'une intervention."
+     },
+     {
+      "role": "participant",
+      "auteur": "thomas-riou",
+      "date": "2026-11-16T17:30:00+01:00",
+      "texte": "Fusionnée, merci. Part en prod ce soir."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "issue-219",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#219 Site : le formulaire de devis refuse les numéros de téléphone avec des espaces",
+     "url": "https://github.com/delorme-energies/planif/issues/219",
+     "date": "2026-11-17T10:02:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "sandrine-guerin",
+      "date": "2026-11-17T10:02:00+01:00",
+      "texte": "Deux clients nous ont appelés parce que le formulaire de demande de devis leur disait « numéro invalide » : ils tapaient le numéro avec des espaces. Pas urgent mais ça nous fait perdre des demandes."
+     }
+    ]
+   }
+  ],
+  "mentions": [
+   {
+    "source": {
+     "id": "slack-dev",
+     "kind": "slack",
+     "nature": "fil",
+     "titre": "#dev",
+     "url": null,
+     "date": "2026-11-17T18:10:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Thomas Riou",
+     "date": "2026-11-17T18:10:00+01:00",
+     "texte": "@Lucas je suis en congé jeudi et vendredi. La synchro HubSpot ne part pas en prod avant lundi 23, et pas sans #216 (la signature du webhook). Si tu bloques sur l'accès à la sandbox HubSpot, demande à Camille."
+    }
+   },
+   {
+    "source": {
+     "id": "slack-commerce",
+     "kind": "slack",
+     "nature": "fil",
+     "titre": "#commerce",
+     "url": null,
+     "date": "2026-11-17T15:32:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Camille Ferrand",
+     "date": "2026-11-17T15:32:00+01:00",
+     "texte": "@Lucas pour moi on ne crée le chantier que quand l'acompte est reçu (la case « Acompte reçu » dans HubSpot), sinon Yannick planifie des chantiers qui ne se feront jamais. J'en ai parlé avec Hélène, elle est d'accord."
+    }
+   },
+   {
+    "source": {
+     "id": "mail-iut",
+     "kind": "gmail",
+     "nature": "fil",
+     "titre": "Forum alternance 2027 – inscrivez-vous !",
+     "url": null,
+     "date": "2026-11-16T12:00:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Relations entreprises IUT",
+     "date": "2026-11-16T12:00:00+01:00",
+     "texte": "Chers étudiants et chères étudiantes, le forum alternance 2027 aura lieu le 4 février dans le hall de l'IUT. Plus de 60 entreprises attendues. Inscription obligatoire avant le 15 janvier sur l'espace étudiant.\n\nLe service des relations entreprises"
+    }
+   }
+  ]
+ },
+ "attendu": {
+  "premier": "f-migration",
+  "faits": [
+   {
+    "id": "f-migration",
+    "texte": "Dit que Thomas demande des changements sur la PR #217 : ne pas supprimer les doublons dans une migration, mais dans une commande à part avec --dry-run, à revoir ensemble lundi.",
+    "poids": 3
+   },
+   {
+    "id": "f-prod",
+    "texte": "Dit que la synchro HubSpot ne part pas en prod avant le lundi 23 novembre, et pas sans la vérification de la signature du webhook (#216).",
+    "poids": 3
+   },
+   {
+    "id": "f-acompte",
+    "texte": "Dit que Camille veut qu'un chantier ne soit créé qu'à l'acompte reçu, et non au passage en « gagné » (Hélène d'accord).",
+    "poids": 2
+   },
+   {
+    "id": "f-216",
+    "texte": "Dit que #216 lui est assigné : la signature du webhook HubSpot n'est pas vérifiée, n'importe qui pourrait créer des chantiers.",
+    "poids": 2
+   },
+   {
+    "id": "f-213",
+    "texte": "Dit que sa PR #213 (photo de la plaque signalétique) est fusionnée.",
+    "poids": 1
+   },
+   {
+    "id": "f-mapping",
+    "texte": "Dit que le type de travaux venant de HubSpot est normalisé, les valeurs vides devenant « à préciser ».",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i-217",
+    "texte": "Dit que la PR #217 est approuvée ou fusionnée."
+   },
+   {
+    "id": "i-prod",
+    "texte": "Dit que la synchro peut partir en production cette semaine."
+   },
+   {
+    "id": "i-apropos",
+    "texte": "Rapporte ce qu'il a écrit de lui (rapport d'alternance du 4 décembre, jours à l'IUT) comme un élément du point."
+   },
+   {
+    "id": "i-forum",
+    "texte": "Parle du forum alternance de l'IUT."
+   },
+   {
+    "id": "i-routine",
+    "texte": "Fait des puces du renommage de sync/hubspot.py ou du formatage black/ruff."
+   }
+  ],
+  "pieges": [
+   "À propos et poste : un alternant dont le tuteur est Thomas ; ce que Thomas bloque (#217, mise en prod, #216) passe d'abord ; son profil ne se rapporte pas.",
+   "Essai raté et risque : la migration a échoué sur les doublons, Lucas a contourné en supprimant des chantiers, ce que Thomas refuse pour la prod.",
+   "Règle métier venue de Slack : Camille tranche la question laissée ouverte dans la session (chantier à l'acompte reçu), ce qui contredit le code actuel.",
+   "Bruit : le forum alternance de l'IUT ; routine : formatage et renommage."
+  ]
+ }
+}

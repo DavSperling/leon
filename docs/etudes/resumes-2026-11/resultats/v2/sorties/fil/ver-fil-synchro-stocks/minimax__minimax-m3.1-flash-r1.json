@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:43.486Z",
+  "reponse": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` contient le correctif des reprises de synchro des stocks : passages à 2 h, 4 h et 6 h (Europe/Paris), arrêt immédiat si le CSV du jour a déjà été traité, et mail d'alerte à Karim à 6 h si le fichier TransAlp manque toujours. La synchro manuelle du 17/11 a corrigé 40 références sans erreur ; le commit `d7c2e41` est poussé et la PR #96 est ouverte, en attente de la relecture d'Hugo. (source: ses-st-3, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte avec Hugo comme relecteur ; fusion en attente (source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] faire relire et fusionner la PR #96 par Hugo (source: u3-07, maison-verdier/boutique#96)\n- [essai-raté] premier test des reprises : le cron était interprété en UTC, la reprise de 4 h tombant à 5 h à Paris ; corrigé avec le fuseau `Europe/Paris`, 15 tests passent (source: u3-04, d7c2e41)\n- [question] reste à confirmer par Hugo que la planification 2 h/4 h/6 h et l'alerte mail à Karim conviennent (source: u3-08, maison-verdier/boutique#96)\n- [décision] TransAlp déposant souvent en retard, prévoir des reprises à 4 h et 6 h et mailer Karim si le CSV est toujours absent à 6 h (source: u3-03)\n- [décision] ne rien ajouter au script pour la réservation de 2 tables Saône aux Galeries Brotteaux, cette question est traitée avec eux (source: u3-09)\n- [décision] les webhooks de commande ne modifient plus le stock, Shopify décrémente seul ; la synchro de nuit est la seule à corriger en valeur absolue (source: u1-02, src-pr87)",
+  "rendu": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` contient le correctif des reprises de synchro des stocks : passages à 2 h, 4 h et 6 h (Europe/Paris), arrêt immédiat si le CSV du jour a déjà été traité, et mail d'alerte à Karim à 6 h si le fichier TransAlp manque toujours. La synchro manuelle du 17/11 a corrigé 40 références sans erreur ; le commit `d7c2e41` est poussé et la PR #96 est ouverte, en attente de la relecture d'Hugo. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte avec Hugo comme relecteur ; fusion en attente (de: équipe, agent; source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] faire relire et fusionner la PR #96 par Hugo (de: toi, équipe; source: u3-07, maison-verdier/boutique#96)\n- [essai-raté] premier test des reprises : le cron était interprété en UTC, la reprise de 4 h tombant à 5 h à Paris ; corrigé avec le fuseau `Europe/Paris`, 15 tests passent (de: équipe, agent; source: u3-04, d7c2e41)\n- [question] reste à confirmer par Hugo que la planification 2 h/4 h/6 h et l'alerte mail à Karim conviennent (de: équipe, agent; source: u3-08, maison-verdier/boutique#96)\n- [décision] TransAlp déposant souvent en retard, prévoir des reprises à 4 h et 6 h et mailer Karim si le CSV est toujours absent à 6 h (de: toi; source: u3-03)\n- [décision] ne rien ajouter au script pour la réservation de 2 tables Saône aux Galeries Brotteaux, cette question est traitée avec eux (de: toi; source: u3-09)\n- [décision] les webhooks de commande ne modifient plus le stock, Shopify décrémente seul ; la synchro de nuit est la seule à corriger en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1687,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4205,
+    "sortie": 593,
+    "reflexion": 112,
+    "cache": 768,
+    "cout": 0.00088287
+  },
+  "cout": 0.00088287,
+  "latenceMs": 2010,
+  "fournisseur": "Inferact vLLM"
+}

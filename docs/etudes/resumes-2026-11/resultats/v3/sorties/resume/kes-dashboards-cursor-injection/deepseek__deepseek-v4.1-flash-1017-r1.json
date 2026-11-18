@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:57:03.431Z",
+  "reponse": "## Où j'en suis\nBuilt the v2 dashboard grid on `react-grid-layout` behind the `dashboards_v2` flag: drag/resize with layout persisted server-side via `PUT /dashboards/:id/layout` (localStorage as offline fallback), widget sizing via a `useWidgetSize` ResizeObserver hook, `DashboardTile` renamed to `WidgetCard`, lint/typecheck clean and the Storybook build fixed. Draft PR #418 is open on `tom/dashboard-grid-v2` with Priya as UX reviewer, so the work is ready for review ahead of the Zest demo on Tuesday the 24th.\n\n- [en-cours] PR #418 is a draft, waiting on Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace only in the flags admin, before the 24th demo\n- [essai-raté] container queries: silently ignored by iOS 15 Safari, so Zest's iPads never changed layout\n- [décision] drop container queries entirely and use the ResizeObserver hook instead (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, nothing removed now (source: t15)\n- [décision] open the PR as a draft for Priya's UX review (source: t17)",
+  "rendu": "## Où j'en suis\nBuilt the v2 dashboard grid on `react-grid-layout` behind the `dashboards_v2` flag: drag/resize with layout persisted server-side via `PUT /dashboards/:id/layout` (localStorage as offline fallback), widget sizing via a `useWidgetSize` ResizeObserver hook, `DashboardTile` renamed to `WidgetCard`, lint/typecheck clean and the Storybook build fixed. Draft PR #418 is open on `tom/dashboard-grid-v2` with Priya as UX reviewer, so the work is ready for review ahead of the Zest demo on Tuesday the 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 is a draft, waiting on Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace only in the flags admin, before the 24th demo\n- [essai-raté] container queries: silently ignored by iOS 15 Safari, so Zest's iPads never changed layout\n- [décision] drop container queries entirely and use the ResizeObserver hook instead (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, nothing removed now (source: t15)\n- [décision] open the PR as a draft for Priya's UX review (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1226,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3624,
+    "sortie": 806,
+    "reflexion": 504,
+    "cache": 768,
+    "cout": 0.000833704
+  },
+  "cout": 0.000833704,
+  "latenceMs": 5467,
+  "fournisseur": "Cohere"
+}

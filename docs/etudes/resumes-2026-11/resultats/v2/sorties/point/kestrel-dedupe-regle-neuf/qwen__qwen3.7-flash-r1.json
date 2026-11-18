@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:09:12.505Z",
+  "reponse": "## What you did\nYou identified that the iOS SDK 3.2.0 regression replaced global UUIDs with per-session counters, causing massive legitimate event drops and triggering Orbitly’s funnel decline [1]. You authored PR #247 to correct the deduplication key, alerted the mobile team to restore UUIDs, and queued a landing-data replay to recover ~1.18M lost events for Orbitly once deployed [1].\n\n## What changed\nMaya requested the precise drop volume to prepare for Thursday’s client sync [2]. Zest Grocers confirmed their pilot dashboard is fully restored following the backfill [6]. The 12/11 ingestion postmortem is finalized and locked for Friday’s incident review [3].\n\n## What is still open\nMerge and deploy #247, then immediately run the scheduled replay for Orbitly and Zest, confirming the drop counter normalizes [1]. Publish the validated loss metrics to Maya before Thursday’s Orbitly call [2]. Implement the dead-letter queue threshold alert (>1,000 messages) ahead of Friday’s review [7].",
+  "rendu": "## What you did\nYou identified that the iOS SDK 3.2.0 regression replaced global UUIDs with per-session counters, causing massive legitimate event drops and triggering Orbitly’s funnel decline [1]. You authored PR #247 to correct the deduplication key, alerted the mobile team to restore UUIDs, and queued a landing-data replay to recover ~1.18M lost events for Orbitly once deployed [1].\n\n## What changed\nMaya requested the precise drop volume to prepare for Thursday’s client sync [2]. Zest Grocers confirmed their pilot dashboard is fully restored following the backfill [6]. The 12/11 ingestion postmortem is finalized and locked for Friday’s incident review [3].\n\n## What is still open\nMerge and deploy #247, then immediately run the scheduled replay for Orbitly and Zest, confirming the drop counter normalizes [1]. Publish the validated loss metrics to Maya before Thursday’s Orbitly call [2]. Implement the dead-letter queue threshold alert (>1,000 messages) ahead of Friday’s review [7].",
+  "mesures": {
+    "mots": 149,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5118,
+    "sortie": 2665,
+    "reflexion": 2433,
+    "cache": 0,
+    "cout": 0.00049999
+  },
+  "cout": 0.00049999,
+  "latenceMs": 27977,
+  "fournisseur": "Alibaba"
+}

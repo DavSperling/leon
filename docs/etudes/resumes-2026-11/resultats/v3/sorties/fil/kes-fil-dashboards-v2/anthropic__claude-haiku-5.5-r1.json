@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:41.852Z",
+  "reponse": "## Where I am\nThe keyboard follow-up is in progress on branch tom/dashboard-keyboard. PR #418 (dashboard grid v2) is merged, and #401 (visx migration) is closed, so charts stay on recharts. The keyboard handler is committed as 8f1a2c7 in PR #423, which is open with Priya requested as reviewer. The dashboards_v2 flag is on for zest-grocers in staging only; production is still off. The Zest demo is on Tuesday the 24th. (source: ses-db-4, ses-db-3, src-pr418, src-pr401)\n\n- [en-cours] Keyboard move/resize and focus ring are done and in PR #423, waiting for review. (source: d4-05, src-pr418)\n- [prochaine-étape] Get Priya's review on #423, then have Tom flip the production flag the morning of the 24th. (source: d4-06, d4-05)\n- [essai-raté] Wrapping the grid with dnd-kit's KeyboardSensor double-applied every move and broke mouse drag, so dnd-kit was removed. (source: d4-02, d4-04)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16). (source: b2-01)\n- [question] Still open: whether the demo rehearsal on staging is enough, or whether Priya needs production access beforehand. (source: d4-06)\n- [décision] Keep recharts; visx migration #401 closed, as the team decided. (source: c3-03, src-pr401)\n- [décision] Drop container queries in favour of a ResizeObserver hook, per the team. (source: b2-02)\n- [décision] Keep v1 dashboards behind the flag until January; nothing removed now. (source: b2-04)",
+  "rendu": "- [en-cours] Keyboard move/resize and focus ring are done and in PR #423, waiting for review. (de: équipe, agent; source: d4-05, src-pr418)\n- [prochaine-étape] Get Priya's review on #423, then have Tom flip the production flag the morning of the 24th. (de: toi, agent; source: d4-06, d4-05)\n- [essai-raté] Wrapping the grid with dnd-kit's KeyboardSensor double-applied every move and broke mouse drag, so dnd-kit was removed. (de: toi, agent; source: d4-02, d4-04)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16). (de: agent; source: b2-01)\n- [question] Still open: whether the demo rehearsal on staging is enough, or whether Priya needs production access beforehand. (de: toi; source: d4-06)\n- [décision] Keep recharts; visx migration #401 closed, as the team decided. (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] Drop container queries in favour of a ResizeObserver hook, per the team. (de: toi; source: b2-02)\n- [décision] Keep v1 dashboards behind the flag until January; nothing removed now. (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1071,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6925,
+    "sortie": 595,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00099
+  },
+  "cout": 0.00099,
+  "latenceMs": 3170,
+  "fournisseur": "Google"
+}

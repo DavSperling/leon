@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:14:10.175Z",
+  "reponse": "## What you did\n\n- Built the dashboards v2 base: per-workspace flag, Orbitly-first rollout, snapping/reorderable grid and saved layouts behind draft PR #427 [3].\n\n## What changed\n\n- Maya said the v2 code looks fine and chartkit should stay until v1 is gone [7]; Dependabot opened #429 to bump `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n\n- Your streaming background CSV export (#430) is approved but still needs green CI [2][5]; Rachel wants a Zest ETA before Monday’s ops review [9], and Priya says Orbitly’s Thursday flag needs the export back in the v2 widget menu on the new flow [10].\n- You pushed v2 widget-card and retention-chart polish to PR #427 and checked Orbitly staging [1], but empty cohorts still crash the tooltip and Sentry tracks it as #432 [1][8].",
+  "rendu": "## What you did\n\n- Built the dashboards v2 base: per-workspace flag, Orbitly-first rollout, snapping/reorderable grid and saved layouts behind draft PR #427 [3].\n\n## What changed\n\n- Maya said the v2 code looks fine and chartkit should stay until v1 is gone [7]; Dependabot opened #429 to bump `@chartkit/react` to 5.0.0 [4].\n\n## What is still open\n\n- Your streaming background CSV export (#430) is approved but still needs green CI [2][5]; Rachel wants a Zest ETA before Monday’s ops review [9], and Priya says Orbitly’s Thursday flag needs the export back in the v2 widget menu on the new flow [10].\n- You pushed v2 widget-card and retention-chart polish to PR #427 and checked Orbitly staging [1], but empty cohorts still crash the tooltip and Sentry tracks it as #432 [1][8].",
+  "mesures": {
+    "mots": 126,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5897,
+    "sortie": 7320,
+    "reflexion": 7113,
+    "cache": 0,
+    "cout": 0.001234855
+  },
+  "cout": 0.001234855,
+  "latenceMs": 48794,
+  "fournisseur": "Tencent"
+}

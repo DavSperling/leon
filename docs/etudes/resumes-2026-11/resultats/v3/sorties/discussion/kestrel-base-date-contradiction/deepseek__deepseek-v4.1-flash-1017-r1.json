@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:02:54.477Z",
+  "reponse": "The upgrade has been rescheduled: production cutover is now **Saturday December 5, 02:00–05:00 UTC**, approved by Maya, after the Fernhill go-live of Dec 1 [2]. The key dates from the ticket, which Noa says is the reference because the Notion runbook isn't updated yet: staging rehearsal Friday Nov 27, customer notice (status page + in-app banner) Saturday Nov 28, migration freeze from Thursday Dec 3 [2].\n\nNote two contradictions with older sources: the runbook still shows \"Saturday November 21, 02:00–05:00 UTC\", freeze Nov 19, notice Nov 14 [1], and the #eng-announce post of Nov 3 says the same Nov 21 window [3] — the Nov 16/17 ticket supersedes both [2].\n\nFor the macro: the only thing I found is Rachel saying on Nov 3 she'd prepare \"the customer notice and the support macro for the 14th\" [3], i.e. tied to the old notice date. I searched for a newer macro date (queries around \"support macro / status page / December 5\", filtered to items since Nov 13) and read the Linear ticket KES-398, the runbook, and the #eng-announce thread — no updated macro date is recorded, so you'll need to confirm it with Rachel.",
+  "rendu": "The upgrade has been rescheduled: production cutover is now **Saturday December 5, 02:00–05:00 UTC**, approved by Maya, after the Fernhill go-live of Dec 1 [2]. The key dates from the ticket, which Noa says is the reference because the Notion runbook isn't updated yet: staging rehearsal Friday Nov 27, customer notice (status page + in-app banner) Saturday Nov 28, migration freeze from Thursday Dec 3 [2].\n\nNote two contradictions with older sources: the runbook still shows \"Saturday November 21, 02:00–05:00 UTC\", freeze Nov 19, notice Nov 14 [1], and the #eng-announce post of Nov 3 says the same Nov 21 window [3] — the Nov 16/17 ticket supersedes both [2].\n\nFor the macro: the only thing I found is Rachel saying on Nov 3 she'd prepare \"the customer notice and the support macro for the 14th\" [3], i.e. tied to the old notice date. I searched for a newer macro date (queries around \"support macro / status page / December 5\", filtered to items since Nov 13) and read the Linear ticket KES-398, the runbook, and the #eng-announce thread — no updated macro date is recorded, so you'll need to confirm it with Rachel.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23109,
+    "sortie": 811,
+    "reflexion": 244,
+    "cache": 12032,
+    "cout": 0.002141546
+  },
+  "latenceMs": 8444,
+  "fournisseur": "Ionstream",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"maintenance window customer notice support macro\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}",
+    "lire {\"sourceId\":\"notion-pg17-runbook\"}",
+    "chercher {\"requete\":\"support macro status page December 5\",\"depuis\":\"2026-11-13\"}",
+    "lire {\"sourceId\":\"slack-eng-announce-pg17\"}"
+  ],
+  "cout": 0.002141546
+}

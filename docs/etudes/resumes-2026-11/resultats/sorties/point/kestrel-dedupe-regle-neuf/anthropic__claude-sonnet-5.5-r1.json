@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:27.399Z",
+  "reponse": "## What you did\n\n- Tu as trouvé pourquoi les chiffres iOS d'Orbitly ont baissé d'environ 8 %. Le SDK iOS 3.2.0 envoie `event_id` comme compteur par session, et non plus comme UUID, donc le dédoublonnage de #240 supprimait des événements légitimes. Environ 1,18 M d'événements d'Orbitly ont été perdus depuis le 13/11, et 3 812 chez Zest Grocers [1].\n- Tu as ouvert la PR #247, qui change la clé en `project_id:device_id:event_id`. Les rejeux restent bien dédoublonnés [1][2]. Tu as aussi rédigé la note pour l'équipe iOS : le SDK doit revenir aux UUID dans la 3.2.1 [1].\n\n## What changed\n\n- Maya demande le nombre d'événements Orbitly perdus depuis #240 pour l'appel de jeudi avec Orbitly. Elle approuvera #247 quand la CI sera verte [2]. Ton chiffre est dans ta session : 1 179 950 événements légitimes perdus, soit ≈ 8,1 % du volume iOS [1].\n- Zest confirme que ses tableaux de bord sont complets après le backfill du 12/11, et Rachel clôt leur ticket Zendesk [6].\n\n## What is still open\n\n- Après le déploiement de #247, relancer le rejeu depuis le landing pour Orbitly, puis pour Zest (`prj_0rb1` et `prj_z3st`, à partir du 13/11 09:40 UTC). Ensuite, vérifier que `ingest_dedupe_dropped_total` reste proche de zéro. Ce rejeu doit passer après le déploiement, sinon l'ancienne clé supprimera de nouveau les événements [1].\n- Ajouter l'alerte sur la file de lettres mortes (dead-letter queue) au-dessus de 1 000 messages, avant la revue d'incident de vendredi 20/11 [7].\n- Envoyer la note à l'équipe iOS : le texte est prêt, mais rien n'indique qu'elle a été transmise [1].",
+  "rendu": "## What you did\n\n- Tu as trouvé pourquoi les chiffres iOS d'Orbitly ont baissé d'environ 8 %. Le SDK iOS 3.2.0 envoie `event_id` comme compteur par session, et non plus comme UUID, donc le dédoublonnage de #240 supprimait des événements légitimes. Environ 1,18 M d'événements d'Orbitly ont été perdus depuis le 13/11, et 3 812 chez Zest Grocers [1].\n- Tu as ouvert la PR #247, qui change la clé en `project_id:device_id:event_id`. Les rejeux restent bien dédoublonnés [1][2]. Tu as aussi rédigé la note pour l'équipe iOS : le SDK doit revenir aux UUID dans la 3.2.1 [1].\n\n## What changed\n\n- Maya demande le nombre d'événements Orbitly perdus depuis #240 pour l'appel de jeudi avec Orbitly. Elle approuvera #247 quand la CI sera verte [2]. Ton chiffre est dans ta session : 1 179 950 événements légitimes perdus, soit ≈ 8,1 % du volume iOS [1].\n- Zest confirme que ses tableaux de bord sont complets après le backfill du 12/11, et Rachel clôt leur ticket Zendesk [6].\n\n## What is still open\n\n- Après le déploiement de #247, relancer le rejeu depuis le landing pour Orbitly, puis pour Zest (`prj_0rb1` et `prj_z3st`, à partir du 13/11 09:40 UTC). Ensuite, vérifier que `ingest_dedupe_dropped_total` reste proche de zéro. Ce rejeu doit passer après le déploiement, sinon l'ancienne clé supprimera de nouveau les événements [1].\n- Ajouter l'alerte sur la file de lettres mortes (dead-letter queue) au-dessus de 1 000 messages, avant la revue d'incident de vendredi 20/11 [7].\n- Envoyer la note à l'équipe iOS : le texte est prêt, mais rien n'indique qu'elle a été transmise [1].",
+  "mesures": {
+    "mots": 253,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6639,
+    "sortie": 744,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020718
+  },
+  "cout": 0.020718,
+  "latenceMs": 6054,
+  "fournisseur": "Claude Platform on AWS"
+}

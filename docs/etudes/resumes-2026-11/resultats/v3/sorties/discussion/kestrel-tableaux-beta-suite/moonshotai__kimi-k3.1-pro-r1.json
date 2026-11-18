@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:11:53.006Z",
+  "reponse": "The first customers get access on **Wednesday, December 9**: the Phase 1 design-partner beta (chart builder + saved views) opens to 5 customers — Orbitly, Zest Grocers, and three accounts from the October trial cohort [5]. Everyone else has to wait for general availability, which is targeted for late January but not committed [5]. Phase 1 is already feature-complete on staging behind the `dash_v2` flag, with only query performance on very large workspaces and empty states remaining [5].",
+  "rendu": "The first customers get access on **Wednesday, December 9**: the Phase 1 design-partner beta (chart builder + saved views) opens to 5 customers — Orbitly, Zest Grocers, and three accounts from the October trial cohort [5]. Everyone else has to wait for general availability, which is targeted for late January but not committed [5]. Phase 1 is already feature-complete on staging behind the `dash_v2` flag, with only query performance on very large workspaces and empty states remaining [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14013,
+    "sortie": 443,
+    "reflexion": 148,
+    "cache": 9344,
+    "cout": 0.0156368
+  },
+  "latenceMs": 10170,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards customers try first part beta release timeline Priya Shah Tom Becker Lior Ben-David\"}",
+    "lire {\"sourceId\":\"5\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}"
+  ],
+  "cout": 0.0156368
+}

@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-produit-new-york",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:29:01.085Z",
+  "reponse": "{\"n\": 14, \"titre\": \"Dashboards redesign – design review\", \"debut\": \"2026-11-17T17:00\", \"fin\": \"2026-11-17T18:00\", \"avec\": \"Tom Becker, Maya Cohen, Jonah Reyes\"}\n{\"n\": 16, \"titre\": \"Coffee with Lior Ben-David\", \"debut\": \"2026-11-18T15:30\", \"avec\": \"Lior Ben-David\"}\n{\"n\": 9, \"titre\": \"Kestrel dashboards feedback – Zest\", \"debut\": \"2026-11-18T21:00\", \"fin\": \"2026-11-18T21:45\", \"avec\": \"Hannah Wolfe, Leah Turner\"}\n{\"n\": 7, \"titre\": \"Customer interview – Ana Ruiz\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Ana Ruiz\"}\n{\"n\": 22, \"titre\": \"Dinner with Jonah Reyes\", \"debut\": \"2026-11-20T01:30\", \"avec\": \"Jonah Reyes\"}\n{\"n\": 3, \"titre\": \"Fernhill – SSO demo\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T17:00\", \"avec\": \"Maya Cohen, Daniel Levi, Oliver Grant\"}\n{\"n\": 1, \"titre\": \"Fernhill dashboards review – prep\", \"debut\": \"2026-11-23T00:30\", \"fin\": \"2026-11-23T01:30\", \"avec\": \"Ethan Brooks, Priya Shah\"}",
+  "rendu": "2026-11-17T17:00→2026-11-17T18:00 Dashboards redesign – design review (avec Tom Becker, Maya Cohen, Jonah Reyes)\n2026-11-18T15:30 Coffee with Lior Ben-David (avec Lior Ben-David)\n2026-11-18T21:00→2026-11-18T21:45 Kestrel dashboards feedback – Zest (avec Hannah Wolfe, Leah Turner)\n2026-11-19T17:30→2026-11-19T18:15 Customer interview – Ana Ruiz (avec Ana Ruiz)\n2026-11-20T01:30 Dinner with Jonah Reyes (avec Jonah Reyes)\n2026-11-20T16:00→2026-11-20T17:00 Fernhill – SSO demo (avec Maya Cohen, Daniel Levi, Oliver Grant)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3240,
+    "sortie": 2936,
+    "reflexion": 2473,
+    "cache": 0,
+    "cout": 0.00127568
+  },
+  "cout": 0.00127568,
+  "latenceMs": 22980,
+  "fournisseur": "Xiaomi"
+}

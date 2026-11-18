@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kra-fil-messeaktion",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:06.801Z",
+  "reponse": "## Où j'en suis\nDer Messerabatt steckt in PR #209 und ist gemergt: SAP ist führend, ZMES, Code als ZZ_AKTION. Darauf aufbauend ist in PR #224 (Draft, offen) das Hinweisbanner für Startseite und Warenkorb entstanden, sichtbar ab 12.01.2027 und vorerst nur für Kunden in DE. Neu eingetroffen ist eine Mail von Thomas Brenner mit geänderten Konditionen (4 %, 19.–29.01.2027, nur Rahmenvertrag, AT ja, CH nein), die im Banner noch nicht abgebildet sind. (source: ses-m3, src-pr209, src-pr224, src-mail-thomas)\n\n- [en-cours] Hinweisbanner in PR #224 (Draft, offen): Flag `messeaktion.banner.ab=2027-01-12`, Anzeige nur bei `kunde.land == 'DE'`, Zeitvergleich in `Europe/Berlin`; Commits `7a3c2d1`, `f0b9e44` (source: ses-m3, src-pr224)\n- [prochaine-étape] Banner für AT/CH klären: laut Mail von Thomas ist AT dabei, CH nein (CHF-Preisstellung) (source: ses-m3, src-mail-thomas)\n- [prochaine-étape] Banner-Rabatt und -Zeitraum auf die neuen Konditionen anpassen (4 %, 19.–29.01.2027, nur Rahmenvertragskunden) und PR #224 aus dem Draft holen (source: src-mail-thomas)\n- [essai-raté] `MesseaktionBannerAdviceTest` war zuerst rot: Der Datumsvergleich lief in UTC, das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch unsichtbar; mit `ZoneId.of(\"Europe/Berlin\")` behoben (source: ses-m3)\n- [question] Gilt die Aktion für AT und CH? Interne Konditionen sagen CH nein, eine Händleranfrage aus Winterthur behauptet 5 % in CHF (source: src-mail-thomas, src-mail-gerber)\n- [décision] SAP ist führend für den Messerabatt, das Portal rechnet nicht selbst, sondern zeigt Konditionsart ZMES an (source: src-pr209, m2-01)\n- [décision] Der Code PROWERK27 bleibt im Portal als Auftragsmerkmal und geht als ZZ_AKTION an SAP (source: src-pr209, m2-03)\n- [décision] Messerabatt 4 % statt 5 %, nur für Händler mit Rahmenvertrag, Bestellungen 19.–29.01.2027, Österreich ja, Schweiz nein (source: src-mail-thomas)",
+  "rendu": "## Où j'en suis\nDer Messerabatt steckt in PR #209 und ist gemergt: SAP ist führend, ZMES, Code als ZZ_AKTION. Darauf aufbauend ist in PR #224 (Draft, offen) das Hinweisbanner für Startseite und Warenkorb entstanden, sichtbar ab 12.01.2027 und vorerst nur für Kunden in DE. Neu eingetroffen ist eine Mail von Thomas Brenner mit geänderten Konditionen (4 %, 19.–29.01.2027, nur Rahmenvertrag, AT ja, CH nein), die im Banner noch nicht abgebildet sind. (de: équipe, connecteur, agent; source: ses-m3, src-pr209, src-pr224, src-mail-thomas)\n\n- [en-cours] Hinweisbanner in PR #224 (Draft, offen): Flag `messeaktion.banner.ab=2027-01-12`, Anzeige nur bei `kunde.land == 'DE'`, Zeitvergleich in `Europe/Berlin`; Commits `7a3c2d1`, `f0b9e44` (de: équipe, agent; source: ses-m3, src-pr224)\n- [prochaine-étape] Banner für AT/CH klären: laut Mail von Thomas ist AT dabei, CH nein (CHF-Preisstellung) (de: connecteur, agent; source: ses-m3, src-mail-thomas)\n- [prochaine-étape] Banner-Rabatt und -Zeitraum auf die neuen Konditionen anpassen (4 %, 19.–29.01.2027, nur Rahmenvertragskunden) und PR #224 aus dem Draft holen (de: connecteur; source: src-mail-thomas)\n- [essai-raté] `MesseaktionBannerAdviceTest` war zuerst rot: Der Datumsvergleich lief in UTC, das Banner war am 12.01. um 00:30 Uhr deutscher Zeit noch unsichtbar; mit `ZoneId.of(\"Europe/Berlin\")` behoben (de: agent; source: ses-m3)\n- [question] Gilt die Aktion für AT und CH? Interne Konditionen sagen CH nein, eine Händleranfrage aus Winterthur behauptet 5 % in CHF (de: connecteur; source: src-mail-thomas, src-mail-gerber)\n- [décision] SAP ist führend für den Messerabatt, das Portal rechnet nicht selbst, sondern zeigt Konditionsart ZMES an (de: toi, équipe; source: src-pr209, m2-01)\n- [décision] Der Code PROWERK27 bleibt im Portal als Auftragsmerkmal und geht als ZZ_AKTION an SAP (de: toi, équipe; source: src-pr209, m2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1883,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4998,
+    "sortie": 2389,
+    "reflexion": 1737,
+    "cache": 0,
+    "cout": 0.0043662
+  },
+  "cout": 0.0043662,
+  "latenceMs": 8885,
+  "fournisseur": "Parasail"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:38.959Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp (OAuth2 client_credentials, étiquettes ZPL par défaut avec insertion de `^CI28` pour les accents) est fonctionnel et validé en recette sur l'impression réelle ; la bascule est pilotée par `TRANSALP_DEBUT` (1er décembre 2026), Rapidis restant le transporteur du reste de la France et des colis de plus de 30 kg jusqu'au 15 janvier. Les commits `3e8b1d0` et `a90c4f7` sont poussés sur `hugo/transalp-etiquettes`, PR #91 toujours en brouillon, relue par Julien. (source: ses-tr-2, src-slack-julien, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par julien-morel, toujours en brouillon (source: src-pr91, ses-tr-2)\n- [prochaine-étape] Julien doit déposer la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (source: h2-07, src-slack-julien)\n- [prochaine-étape] Former l'équipe sur le nouveau poste d'impression ZPL avant la bascule (source: src-slack-julien)\n- [prochaine-étape] Point d'étape sur Rapidis après les soldes, au 15 janvier (source: src-slack-julien, h2-09)\n- [essai-raté] ZPL refusé en sandbox : TransAlp le permet seulement en recette et en production ; les essais ont été refaits en recette (source: h1-06, src-mail-transalp)\n- [essai-raté] Accents illisibles à l'impression (« SaÃ´ne ») : le ZPL est en UTF-8 sans déclaration d'encodage, corrigé par `^CI28` inséré après `^XA` ; Karim a validé (source: h2-03, h2-05, h2-04)\n- [essai-raté] Authentification par en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [question] Portée exacte de Rapidis au 1er décembre : la résiliation évoquée dans le mail TransAlp est écartée, mais la date et le périmètre doivent être confirmés par Julien (source: h2-09, src-slack-julien)\n- [question] Le passage du mail sur un « contrat Premium » est explicitement ignoré par la personne ; ne pas en tenir compte (source: h2-09)\n- [décision] Passage en ZPL par défaut, testé sur la recette (source: h2-01)\n- [décision] Bascule le 1er décembre, Lyon et Paris seulement, après formation de l'équipe (source: src-slack-julien)\n- [décision] Rapidis conserve le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier ; rien n'est résilié (source: h2-09, h1-03)\n- [décision] La configuration prod est préparée mais l'activation n'a lieu qu'au 1er décembre, la clé de prod étant mise par Julien (source: h2-07)",
+  "rendu": "## Où j'en suis\nLe client TransAlp (OAuth2 client_credentials, étiquettes ZPL par défaut avec insertion de `^CI28` pour les accents) est fonctionnel et validé en recette sur l'impression réelle ; la bascule est pilotée par `TRANSALP_DEBUT` (1er décembre 2026), Rapidis restant le transporteur du reste de la France et des colis de plus de 30 kg jusqu'au 15 janvier. Les commits `3e8b1d0` et `a90c4f7` sont poussés sur `hugo/transalp-etiquettes`, PR #91 toujours en brouillon, relue par Julien. (de: équipe, connecteur, agent; source: ses-tr-2, src-slack-julien, src-pr91)\n\n- [en-cours] Relecture de la PR #91 par julien-morel, toujours en brouillon (de: équipe, agent; source: src-pr91, ses-tr-2)\n- [prochaine-étape] Julien doit déposer la clé de prod dans les secrets ; rien ne s'active avant le 1er décembre (de: toi, connecteur; source: h2-07, src-slack-julien)\n- [prochaine-étape] Former l'équipe sur le nouveau poste d'impression ZPL avant la bascule (de: connecteur; source: src-slack-julien)\n- [prochaine-étape] Point d'étape sur Rapidis après les soldes, au 15 janvier (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [essai-raté] ZPL refusé en sandbox : TransAlp le permet seulement en recette et en production ; les essais ont été refaits en recette (de: connecteur, agent; source: h1-06, src-mail-transalp)\n- [essai-raté] Accents illisibles à l'impression (« SaÃ´ne ») : le ZPL est en UTF-8 sans déclaration d'encodage, corrigé par `^CI28` inséré après `^XA` ; Karim a validé (de: toi, agent; source: h2-03, h2-05, h2-04)\n- [essai-raté] Authentification par en-tête `X-Api-Key` : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [question] Portée exacte de Rapidis au 1er décembre : la résiliation évoquée dans le mail TransAlp est écartée, mais la date et le périmètre doivent être confirmés par Julien (de: toi, connecteur; source: h2-09, src-slack-julien)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1893,
+    "lignesRetirees": 5,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3774,
+    "sortie": 716,
+    "reflexion": 4,
+    "cache": 197,
+    "cout": 0.000969105
+  },
+  "cout": 0.000969105,
+  "latenceMs": 5217,
+  "fournisseur": "Fireworks"
+}

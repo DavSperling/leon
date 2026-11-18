@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T18:00:06.929Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet. She was still in the hiring process as of November 17, 2026, having advanced to a final round interview with Maya Cohen scheduled for November 24 [1][3]. The team agreed to wait until after the final round before discussing numbers with her [4], and Slack guidance said no offer discussions with candidates until after the final [3]. Yael hasn't given a salary figure, only that she expects something \"competitive with big tech\" [4]. For reference, the L5 Senior SRE band is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet. She was still in the hiring process as of November 17, 2026, having advanced to a final round interview with Maya Cohen scheduled for November 24 [1][3]. The team agreed to wait until after the final round before discussing numbers with her [4], and Slack guidance said no offer discussions with candidates until after the final [3]. Yael hasn't given a salary figure, only that she expects something \"competitive with big tech\" [4]. For reference, the L5 Senior SRE band is 520–600k ILS base in Tel Aviv or $170–190k in New York [2].",
+  "mesures": {
+    "mots": 102,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1011,
+    "sortie": 143,
+    "reflexion": 0,
+    "cache": 512,
+    "cout": 0.00040178
+  },
+  "cout": 0.00040178,
+  "latenceMs": 2098,
+  "fournisseur": "Z.AI"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:45.324Z",
+  "reponse": "## What is still open\n- Merge #321 and update the runbook to the new window: Maya approved but asked not to merge until the date was confirmed with Fernhill, and it now is [3][8].\n- Rehearse the rollback on a fresh clone on Thursday 19/11, measuring how long it takes and what data is lost — it's still a TODO in the runbook [1].\n- Give Lior 30 minutes' notice before the switchover so his ingest consumers are paused cleanly [9].\n- Ping Daniel when you start the switchover — he's on call for the API side on Sunday [7].\n\n## What changed\n- The cutover moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and has told the CSMs [8][10].\n- Maya approved #321 — Terraform looks right, and she flagged the replica fix as a good catch [3].\n- Staging has held on PG17 since Thursday with nothing to report, p95 even down slightly on dashboards queries [5].\n- Renovate opened #320 (aws provider 5.80 → 5.82), automerge off [4].\n\n## What you did\n- Wrote the prod blue/green Terraform for the PG15 → PG17 cutover, and reworked it so the read replica follows the blue/green swap instead of being destroyed and recreated [1].\n- Rehearsed the whole cutover on a clone of the previous night's prod snapshot: 74 s of write downtime, API reconnected without restarts, no data mismatch; then tore the clone down [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 with Maya as reviewer [1].",
+  "rendu": "## What is still open\n- Merge #321 and update the runbook to the new window: Maya approved but asked not to merge until the date was confirmed with Fernhill, and it now is [3][8].\n- Rehearse the rollback on a fresh clone on Thursday 19/11, measuring how long it takes and what data is lost — it's still a TODO in the runbook [1].\n- Give Lior 30 minutes' notice before the switchover so his ingest consumers are paused cleanly [9].\n- Ping Daniel when you start the switchover — he's on call for the API side on Sunday [7].\n\n## What changed\n- The cutover moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and has told the CSMs [8][10].\n- Maya approved #321 — Terraform looks right, and she flagged the replica fix as a good catch [3].\n- Staging has held on PG17 since Thursday with nothing to report, p95 even down slightly on dashboards queries [5].\n- Renovate opened #320 (aws provider 5.80 → 5.82), automerge off [4].\n\n## What you did\n- Wrote the prod blue/green Terraform for the PG15 → PG17 cutover, and reworked it so the read replica follows the blue/green swap instead of being destroyed and recreated [1].\n- Rehearsed the whole cutover on a clone of the previous night's prod snapshot: 74 s of write downtime, API reconnected without restarts, no data mismatch; then tore the clone down [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 with Maya as reviewer [1].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5190,
+    "sortie": 2095,
+    "reflexion": 1707,
+    "cache": 0,
+    "cout": 0.00203645
+  },
+  "cout": 0.00203645,
+  "latenceMs": 13905,
+  "fournisseur": "CoreWeave"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:39:28.902Z",
+  "reponse": "## Ce que tu as fait\n- Intégration TransAlp complète côté sandbox : étiquette créée au départ d'une commande, poids Shopify converti en kg, numéro de suivi renvoyé dans Shopify avec l'e-mail client ; validé de bout en bout sur la commande de dev #1042 et soumis en PR #60 pour relecture par Julien. [1]\n- Diagnostic des rejets sandbox : signature HMAC à calculer sur les octets réellement envoyés, horodatage en secondes, et dérive d'horloge due au VPN de l'école. [1]\n\n## Ce qui a bougé\n- Julien a relu la PR #60 le 17/11 : tout est validé sauf la clé sandbox en dur dans le code, désormais présente dans l'historique git. [3]\n- TransAlp a confirmé la bascule lundi 23/11 à 6h, toutes les étiquettes passant par l'API. [7][8]\n- Le support TransAlp te demande par mail de renvoyer la clé de production par e-mail, alors que Mathilde Rey précise qu'elle ne transite jamais par e-mail et que Julien la reçoit via l'espace client. [6][8]\n- Nouveau ticket #59 : tag « soldes » automatique sur les produits remisés, pour les collections de janvier. [4]\n\n## Ce qui reste ouvert\n- Corriger la PR #60 avant merge : passer la clé en variable d'environnement `TRANSALP_API_KEY` et faire régénérer celle déjà exposée dans l'historique git. [3]\n- Faire l'essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, avant la bascule du 23/11. [7][8]\n- Dimensions de la Saône 180 : Karim les mesure jeudi 19/11 à l'atelier de Bois & Fils ; les 8 autres produits sont renseignés, et tant qu'un manque, son expédition reste bloquée. [5][1]",
+  "rendu": "## Ce que tu as fait\n- Intégration TransAlp complète côté sandbox : étiquette créée au départ d'une commande, poids Shopify converti en kg, numéro de suivi renvoyé dans Shopify avec l'e-mail client ; validé de bout en bout sur la commande de dev #1042 et soumis en PR #60 pour relecture par Julien. [1]\n- Diagnostic des rejets sandbox : signature HMAC à calculer sur les octets réellement envoyés, horodatage en secondes, et dérive d'horloge due au VPN de l'école. [1]\n\n## Ce qui a bougé\n- Julien a relu la PR #60 le 17/11 : tout est validé sauf la clé sandbox en dur dans le code, désormais présente dans l'historique git. [3]\n- TransAlp a confirmé la bascule lundi 23/11 à 6h, toutes les étiquettes passant par l'API. [7][8]\n- Le support TransAlp te demande par mail de renvoyer la clé de production par e-mail, alors que Mathilde Rey précise qu'elle ne transite jamais par e-mail et que Julien la reçoit via l'espace client. [6][8]\n- Nouveau ticket #59 : tag « soldes » automatique sur les produits remisés, pour les collections de janvier. [4]\n\n## Ce qui reste ouvert\n- Corriger la PR #60 avant merge : passer la clé en variable d'environnement `TRANSALP_API_KEY` et faire régénérer celle déjà exposée dans l'historique git. [3]\n- Faire l'essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, avant la bascule du 23/11. [7][8]\n- Dimensions de la Saône 180 : Karim les mesure jeudi 19/11 à l'atelier de Bois & Fils ; les 8 autres produits sont renseignés, et tant qu'un manque, son expédition reste bloquée. [5][1]",
+  "mesures": {
+    "mots": 251,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4546,
+    "sortie": 2504,
+    "reflexion": 2090,
+    "cache": 0,
+    "cout": 0.0021843
+  },
+  "cout": 0.0021843,
+  "latenceMs": 6912,
+  "fournisseur": "Inferact vLLM"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.829Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's event_id-only dedupe colliding with kestrel-ios 3.2.0's per-session event_id counter: ~1.18M legitimate Orbitly events dropped since 13/11, plus ~3,800 for Zest's pilot store app [1].\n- Fixed it by keying the dedupe on project:device:event_id, keeping the genuine-replay case covered by tests, and opened PR #247 for Maya [1][2].\n- Drafted the note for the iOS team: 3.2.0 must go back to UUID event_ids in 3.2.1 [1].\n\n## What changed\n- Maya finds #247's logic right and will approve once CI is green; she wants the number of Orbitly events dropped since #240 for Thursday's call with Orbitly [2].\n- The 12/11 postmortem is final — Noa presents it at Friday's incident review, and your root-cause section has action items attached [3][7].\n\n## What is still open\n- Add an alert when the ingest dead-letter queue passes 1,000 messages; it's your action item, due before Friday's review (20/11) [7].\n- Replay from landing for Orbitly (~1.18M) and Zest from 13/11 — only after #247 is deployed — then verify the dedupe drop counter stays near zero [1][2].",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to #240's event_id-only dedupe colliding with kestrel-ios 3.2.0's per-session event_id counter: ~1.18M legitimate Orbitly events dropped since 13/11, plus ~3,800 for Zest's pilot store app [1].\n- Fixed it by keying the dedupe on project:device:event_id, keeping the genuine-replay case covered by tests, and opened PR #247 for Maya [1][2].\n- Drafted the note for the iOS team: 3.2.0 must go back to UUID event_ids in 3.2.1 [1].\n\n## What changed\n- Maya finds #247's logic right and will approve once CI is green; she wants the number of Orbitly events dropped since #240 for Thursday's call with Orbitly [2].\n- The 12/11 postmortem is final — Noa presents it at Friday's incident review, and your root-cause section has action items attached [3][7].\n\n## What is still open\n- Add an alert when the ingest dead-letter queue passes 1,000 messages; it's your action item, due before Friday's review (20/11) [7].\n- Replay from landing for Orbitly (~1.18M) and Zest from 13/11 — only after #247 is deployed — then verify the dedupe drop counter stays near zero [1][2].",
+  "mesures": {
+    "mots": 175,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4783,
+    "sortie": 1850,
+    "reflexion": 1455,
+    "cache": 0,
+    "cout": 0.00149896
+  },
+  "cout": 0.00149896,
+  "latenceMs": 19198,
+  "fournisseur": "Relace"
+}

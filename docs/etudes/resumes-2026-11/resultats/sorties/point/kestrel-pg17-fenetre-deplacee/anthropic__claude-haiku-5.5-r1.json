@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:28:37.690Z",
+  "reponse": "## What you did\n- Prod blue/green Terraform for the PG17 cutover is ready: the replica now follows the blue/green instead of being replaced, and the plan shows 2 changes, 0 destroys [1].\n- The rehearsal on a snapshot clone showed 74 s of write downtime. You tore the clone down afterwards [1].\n- You opened PR #321 with Maya as reviewer [1].\n\n## What changed\n- Maya approved #321: the Terraform is right, and the replica fix is a good catch. She asked that it not be merged before Fernhill confirms the window [3].\n\n## What is still open\n- Fernhill's month-end batch moved the cutover to Sunday 22/11, 02:00–04:00 UTC [8]. The runbook and the Notion page still say Saturday 21/11 [1][10]. Once the runbook is updated, #321 can be merged [3][8].\n- Lior wants 30 minutes' notice before the switchover so he can pause the ingest consumers [9]. Daniel is on call for the API side on Sunday and wants a ping when you start the switchover [7].\n- The rollback rehearsal on a fresh clone is still a TODO in the runbook, planned for Thursday 19/11 [1]. After switchover the old instance gets no writes, so rolling back is not a simple switch [1].",
+  "rendu": "## What you did\n- Prod blue/green Terraform for the PG17 cutover is ready: the replica now follows the blue/green instead of being replaced, and the plan shows 2 changes, 0 destroys [1].\n- The rehearsal on a snapshot clone showed 74 s of write downtime. You tore the clone down afterwards [1].\n- You opened PR #321 with Maya as reviewer [1].\n\n## What changed\n- Maya approved #321: the Terraform is right, and the replica fix is a good catch. She asked that it not be merged before Fernhill confirms the window [3].\n\n## What is still open\n- Fernhill's month-end batch moved the cutover to Sunday 22/11, 02:00–04:00 UTC [8]. The runbook and the Notion page still say Saturday 21/11 [1][10]. Once the runbook is updated, #321 can be merged [3][8].\n- Lior wants 30 minutes' notice before the switchover so he can pause the ingest consumers [9]. Daniel is on call for the API side on Sunday and wants a ping when you start the switchover [7].\n- The rollback rehearsal on a fresh clone is still a TODO in the runbook, planned for Thursday 19/11 [1]. After switchover the old instance gets no writes, so rolling back is not a simple switch [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7277,
+    "sortie": 2568,
+    "reflexion": 2130,
+    "cache": 0,
+    "cout": 0.0020117
+  },
+  "cout": 0.0020117,
+  "latenceMs": 12170,
+  "fournisseur": "Claude Platform on AWS"
+}

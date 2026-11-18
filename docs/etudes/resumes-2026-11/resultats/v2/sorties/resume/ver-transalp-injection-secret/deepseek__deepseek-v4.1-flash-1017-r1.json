@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:25:55.401Z",
+  "reponse": "## Où j'en suis\nL'API TransAlp (sandbox) est branchée : client OAuth2 `client_credentials` avec jeton gardé en mémoire, étiquette PDF, et `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, tout colis de plus de 30 kg vers Rapidis. Les tests (18/18) et le lint passent, deux commits sont faits et une PR brouillon (#91) est ouverte pour relecture par Julien ; rien n'est branché en production.\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien\n- [prochaine-étape] demander à TransAlp si le format ZPL existe en production (la Zebra de l'entrepôt ne prend que ça)\n- [essai-raté] ZPL refusé en sandbox (400 `unsupported_format`) : PDF A4 par défaut, paramètre `format` prêt\n- [question] le ZPL est-il disponible en production ?\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, et tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris ; aucune résiliation (source: t13)\n- [décision] ouvrir la PR en brouillon, et ne pas brancher la production sans Julien (source: t15)",
+  "rendu": "## Où j'en suis\nL'API TransAlp (sandbox) est branchée : client OAuth2 `client_credentials` avec jeton gardé en mémoire, étiquette PDF, et `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, tout colis de plus de 30 kg vers Rapidis. Les tests (18/18) et le lint passent, deux commits sont faits et une PR brouillon (#91) est ouverte pour relecture par Julien ; rien n'est branché en production.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien\n- [prochaine-étape] demander à TransAlp si le format ZPL existe en production (la Zebra de l'entrepôt ne prend que ça)\n- [essai-raté] ZPL refusé en sandbox (400 `unsupported_format`) : PDF A4 par défaut, paramètre `format` prêt\n- [question] le ZPL est-il disponible en production ?\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, et tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris ; aucune résiliation (source: t13)\n- [décision] ouvrir la PR en brouillon, et ne pas brancher la production sans Julien (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1142,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3543,
+    "sortie": 591,
+    "reflexion": 270,
+    "cache": 0,
+    "cout": 0.000620235
+  },
+  "cout": 0.000620235,
+  "latenceMs": 4147,
+  "fournisseur": "StepFun"
+}

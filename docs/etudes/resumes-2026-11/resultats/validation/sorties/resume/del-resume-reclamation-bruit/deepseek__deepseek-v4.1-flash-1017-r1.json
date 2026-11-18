@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-reclamation-bruit",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:03.618Z",
+  "reponse": "## Où j'en suis\nLa réclamation de M. Corbel (ticket Zendesk 4093) sur le bruit nocturne de sa PAC Aéro 11 a été analysée : le compte rendu de visite du 6/11 montre des plots anti-vibratiles non posés et un mode nuit non activé, deux oublis de mise en service qui expliquent le bourdonnement, sans justifier un remplacement. Le brouillon de réponse est prêt dans `sav/reclamations/corbel-4093.md` mais n'a pas encore été envoyé, et un modèle générique de réponse aux plaintes de bruit a été créé dans `sav/modeles/reponse-nuisance-sonore.md`.\n\n- [en-cours] réponse à M. Corbel finalisée dans le fichier, envoi depuis Zendesk prévu par la personne\n- [prochaine-étape] envoyer la réponse ; prévenir Franck pour ajouter plots + mode nuit à la checklist de mise en service\n- [décision] technicien à nos frais pour poser les plots et activer le mode nuit, puis mesure de contrôle ; ni remplacement ni 2 000 €, excuses pour les plots (source: t05)\n- [décision] créneaux proposés : mardi 24 novembre matin ou mercredi 25 novembre après-midi (source: t09)\n- [décision] geste commercial retiré du brouillon, Hélène décide de ce point (source: t07)\n- [décision] ne pas mentionner le voisin directement, mais remettre le relevé de mesure de nuit à montrer au voisinage (source: t13)",
+  "rendu": "## Où j'en suis\nLa réclamation de M. Corbel (ticket Zendesk 4093) sur le bruit nocturne de sa PAC Aéro 11 a été analysée : le compte rendu de visite du 6/11 montre des plots anti-vibratiles non posés et un mode nuit non activé, deux oublis de mise en service qui expliquent le bourdonnement, sans justifier un remplacement. Le brouillon de réponse est prêt dans `sav/reclamations/corbel-4093.md` mais n'a pas encore été envoyé, et un modèle générique de réponse aux plaintes de bruit a été créé dans `sav/modeles/reponse-nuisance-sonore.md`.\n\n- [en-cours] réponse à M. Corbel finalisée dans le fichier, envoi depuis Zendesk prévu par la personne\n- [prochaine-étape] envoyer la réponse ; prévenir Franck pour ajouter plots + mode nuit à la checklist de mise en service\n- [décision] technicien à nos frais pour poser les plots et activer le mode nuit, puis mesure de contrôle ; ni remplacement ni 2 000 €, excuses pour les plots (source: t05)\n- [décision] créneaux proposés : mardi 24 novembre matin ou mercredi 25 novembre après-midi (source: t09)\n- [décision] geste commercial retiré du brouillon, Hélène décide de ce point (source: t07)\n- [décision] ne pas mentionner le voisin directement, mais remettre le relevé de mesure de nuit à montrer au voisinage (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1270,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2972,
+    "sortie": 857,
+    "reflexion": 471,
+    "cache": 0,
+    "cout": 0.000781955
+  },
+  "cout": 0.000781955,
+  "latenceMs": 4142,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:25:33.530Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône venait d'un double décrément : Shopify décrémente déjà à la commande, et le webhook `orders/create` décrémentait par-dessus (plus les reprises `orders/updated`). On a retiré toute modification de stock des webhooks, la synchro de nuit écrit désormais la valeur absolue (`physique - reserve`) au lieu d'un delta, et le seuil d'alerte stock bas est passé de 5 à 3. La Saône est remise à 0 sur Shopify (retour le 2 décembre, sans précommande), la config de l'app est déployée sans `orders/updated`, et la PR #87 attend la relecture d'Hugo.\n\n- [en-cours] PR en relecture chez Hugo ; à fusionner pour couper le décrément de `orders/create` en production.\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041 Laurent, #1043 Henriot, #1044 Galeries Brotteaux).\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : inutile, `create` et `updated` ont des id différents et Shopify décrémente déjà ; retiré sur demande.\n- [décision] Plus aucune écriture de stock dans les webhooks ; seule la synchro de nuit corrige, en valeur absolue (source: t05).\n- [décision] Seuil d'alerte stock bas à 3 (source: t09).\n- [décision] Pas de précommande sur la Saône avant le bon de livraison de Bois & Fils (source: t17).",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône venait d'un double décrément : Shopify décrémente déjà à la commande, et le webhook `orders/create` décrémentait par-dessus (plus les reprises `orders/updated`). On a retiré toute modification de stock des webhooks, la synchro de nuit écrit désormais la valeur absolue (`physique - reserve`) au lieu d'un delta, et le seuil d'alerte stock bas est passé de 5 à 3. La Saône est remise à 0 sur Shopify (retour le 2 décembre, sans précommande), la config de l'app est déployée sans `orders/updated`, et la PR #87 attend la relecture d'Hugo.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] PR en relecture chez Hugo ; à fusionner pour couper le décrément de `orders/create` en production.\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041 Laurent, #1043 Henriot, #1044 Galeries Brotteaux).\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : inutile, `create` et `updated` ont des id différents et Shopify décrémente déjà ; retiré sur demande.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1117,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3794,
+    "sortie": 455,
+    "reflexion": 70,
+    "cache": 0,
+    "cout": 0.0009022006
+  },
+  "cout": 0.0009022006,
+  "latenceMs": 7028,
+  "fournisseur": "Wafer"
+}

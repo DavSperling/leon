@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:25:58.246Z",
+  "reponse": "## Où j'en suis\nLe décrément de stock dans les webhooks de commande est retiré. Shopify décrémente déjà seul à chaque commande, donc seule la synchro de nuit écrit le stock, en valeur absolue (`physique - réserve`), et s'arrête sans rien écrire si le CSV est vide. Le dédoublonnage des webhooks est retiré aussi. Le seuil d'alerte est passé à 3, `syncStock` a été renommé `synchroniserStocks`, le lint est passé et les 96 tests sont verts. La Saône est à 0 dans Shopify, sans précommande. La PR #87 est fusionnée et la config de l'app est déployée sans `orders/updated`.\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues de Saône chêne 180 (#1041, #1043, #1044).\n- [essai-raté] Le test de dédoublonnage a échoué (attendu 4, reçu 2) : `orders/create` et `orders/updated` ont des `X-Shopify-Webhook-Id` différents, et Shopify décrémentait déjà de son côté. Le dédoublonnage a donc été retiré. Une précommande de la Saône avec date au 10 décembre a aussi été proposée, puis refusée.\n- [question] Retour de la Saône chez Bois & Fils annoncé le 2 décembre : à confirmer par le bon de livraison, Claire doit s'en charger avant toute promesse de date.\n- [décision] Le stock ne se met à jour que dans la synchro de nuit, en valeur absolue, et le webhook ne décrémente plus rien (source: t05).\n- [décision] Seuil d'alerte stock bas à 3 unités (source: t09).\n- [décision] La Saône reste à 0, sans précommande (source: t17).",
+  "rendu": "## Où j'en suis\nLe décrément de stock dans les webhooks de commande est retiré. Shopify décrémente déjà seul à chaque commande, donc seule la synchro de nuit écrit le stock, en valeur absolue (`physique - réserve`), et s'arrête sans rien écrire si le CSV est vide. Le dédoublonnage des webhooks est retiré aussi. Le seuil d'alerte est passé à 3, `syncStock` a été renommé `synchroniserStocks`, le lint est passé et les 96 tests sont verts. La Saône est à 0 dans Shopify, sans précommande. La PR #87 est fusionnée et la config de l'app est déployée sans `orders/updated`.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues de Saône chêne 180 (#1041, #1043, #1044).\n- [essai-raté] Le test de dédoublonnage a échoué (attendu 4, reçu 2) : `orders/create` et `orders/updated` ont des `X-Shopify-Webhook-Id` différents, et Shopify décrémentait déjà de son côté. Le dédoublonnage a donc été retiré. Une précommande de la Saône avec date au 10 décembre a aussi été proposée, puis refusée.\n- [question] Retour de la Saône chez Bois & Fils annoncé le 2 décembre : à confirmer par le bon de livraison, Claire doit s'en charger avant toute promesse de date.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1300,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5341,
+    "sortie": 1850,
+    "reflexion": 1222,
+    "cache": 0,
+    "cout": 0.0014591
+  },
+  "cout": 0.0014591,
+  "latenceMs": 8407,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:45.571Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver, testé et appliqué en propre sur dev via bulk; PR #94 ouverte. Remises retenues: -20 % Rhône, -30 % fins de série, Saône exclue; prix arrondis finissant par 9. Lancement programmé au 13 janvier 8h00 et export CSV des prix fait.\n\n- [prochaine-étape] script de retour aux prix d'origine à la fin des soldes, prévu en décembre.\n- [prochaine-étape] régénérer le CSV avant la newsletter du 6 janvier si des prix changent.\n- [essai-raté] écriture produit par produit sur dev: dépassement de limite Shopify, boutique à moitié soldée; corrigé par reset puis bulk.\n- [décision] -20 % Rhône, -30 % fins de série, rien sur Saône (source: t05)\n- [décision] prix finissant par 9, arrondi inférieur (source: t07)\n- [décision] utiliser bulk et nettoyer dev avant (source: t11)\n- [décision] programmer le 13 janvier 8h00, pas avant l'ouverture (source: t15)\n- [décision] ouvrir la PR et prévoir le script de retour (source: t19)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver, testé et appliqué en propre sur dev via bulk; PR #94 ouverte. Remises retenues: -20 % Rhône, -30 % fins de série, Saône exclue; prix arrondis finissant par 9. Lancement programmé au 13 janvier 8h00 et export CSV des prix fait.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] script de retour aux prix d'origine à la fin des soldes, prévu en décembre.\n- [prochaine-étape] régénérer le CSV avant la newsletter du 6 janvier si des prix changent.\n- [essai-raté] écriture produit par produit sur dev: dépassement de limite Shopify, boutique à moitié soldée; corrigé par reset puis bulk.\n- [décision] -20 % Rhône, -30 % fins de série, rien sur Saône (source: t05)\n- [décision] prix finissant par 9, arrondi inférieur (source: t07)\n- [décision] utiliser bulk et nettoyer dev avant (source: t11)\n- [décision] programmer le 13 janvier 8h00, pas avant l'ouverture (source: t15)\n- [décision] ouvrir la PR et prévoir le script de retour (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1148,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4171,
+    "sortie": 2653,
+    "reflexion": 2332,
+    "cache": 0,
+    "cout": 0.00187256
+  },
+  "cout": 0.00187256,
+  "latenceMs": 49418,
+  "fournisseur": "Alibaba"
+}

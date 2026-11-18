@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 1,
+  "date": "2026-11-18T14:32:48.420Z",
+  "reponse": "## Où j'en suis\nFernhill SAML SSO works end to end on staging: a real login with Fernhill's IdP succeeds, and JIT provisioning (#415) is merged. The RelayState fix (6d0e2b8) and group-to-role mapping (f4a91c7) are in #421, which is still open. Users are created as `viewer` because Fernhill has not yet added the groups claim, so admins cannot be told apart. The full test suite passed (1301 passed, 3 skipped). (source: s3-11, s3-04, s3-06, src-pr415, s3-09)\n\n- [en-cours] Waiting for Fernhill IT to add the groups claim; Daniel is emailing them. (source: s3-05, s3-08)\n- [en-cours] PR #421 is open, not merged: short RelayState and group-to-role mapping. (source: kestrel-analytics/platform#421, 6d0e2b8, f4a91c7)\n- [prochaine-étape] Get the groups claim from Fernhill IT, then check that Fernhill-Kestrel-Admins maps to `admin`. (source: s3-05, s3-08)\n- [prochaine-étape] Demo on Thursday 19 Nov at 10:00 ET with the demo account `kestrel.test1` and one admin test account. (source: s3-10, src-linear-kes311)\n- [essai-raté] SP-initiated login failed at Fernhill's ADFS with \"RelayState parameter is too long\": the 143-byte return URL exceeds the 80-byte cap. Fixed by storing the URL in Redis and sending a short opaque ID. (source: s3-02, s3-04)\n- [question] Fernhill's Slack message says the groups claim comes after the demo, but the checklist needs it before. (source: src-slack-fernhill, src-linear-kes311)\n- [question] Fernhill's Slack message asks for IdP-initiated login only and an `analyst` default role, which does not exist. Do we reply, and what do we say? (source: src-slack-fernhill, s3-07)\n- [question] A note says SSO is enforced for all Fernhill users on Dec 1, with password login disabled. No verified source confirms it. (source: src-note-enforce, src-linear-kes311)\n- [décision] The default role stays `viewer`; SP-initiated login stays on. (source: s3-07)\n- [décision] Users from an unverified domain are refused and not created. (source: src-pr415, s2-03)\n- [décision] Fernhill-Kestrel-Admins maps to `admin`, everyone else `viewer`, configured per tenant. (source: s3-05)\n- [décision] SAML only, no OIDC; both SP-initiated and IdP-initiated flows. (source: s1-03)",
+  "rendu": "## Où j'en suis\nFernhill SAML SSO works end to end on staging: a real login with Fernhill's IdP succeeds, and JIT provisioning (#415) is merged. The RelayState fix (6d0e2b8) and group-to-role mapping (f4a91c7) are in #421, which is still open. Users are created as `viewer` because Fernhill has not yet added the groups claim, so admins cannot be told apart. The full test suite passed (1301 passed, 3 skipped). (de: équipe, agent; source: s3-11, s3-04, s3-06, src-pr415, s3-09)\n\n- [en-cours] Waiting for Fernhill IT to add the groups claim; Daniel is emailing them. (de: toi, agent; source: s3-05, s3-08)\n- [en-cours] PR #421 is open, not merged: short RelayState and group-to-role mapping. (de: équipe; source: kestrel-analytics/platform#421, 6d0e2b8, f4a91c7)\n- [prochaine-étape] Get the groups claim from Fernhill IT, then check that Fernhill-Kestrel-Admins maps to `admin`. (de: toi, agent; source: s3-05, s3-08)\n- [prochaine-étape] Demo on Thursday 19 Nov at 10:00 ET with the demo account `kestrel.test1` and one admin test account. (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [essai-raté] SP-initiated login failed at Fernhill's ADFS with \"RelayState parameter is too long\": the 143-byte return URL exceeds the 80-byte cap. Fixed by storing the URL in Redis and sending a short opaque ID. (de: agent; source: s3-02, s3-04)\n- [question] Fernhill's Slack message says the groups claim comes after the demo, but the checklist needs it before. (de: connecteur; source: src-slack-fernhill, src-linear-kes311)\n- [question] Fernhill's Slack message asks for IdP-initiated login only and an `analyst` default role, which does not exist. Do we reply, and what do we say? (de: toi, connecteur; source: src-slack-fernhill, s3-07)\n- [question] A note says SSO is enforced for all Fernhill users on Dec 1, with password login disabled. No verified source confirms it. (de: connecteur, agent; source: src-note-enforce, src-linear-kes311)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1945,
+    "lignesRetirees": 4,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6388,
+    "sortie": 3216,
+    "reflexion": 2295,
+    "cache": 0,
+    "cout": 0.0022468
+  },
+  "cout": 0.0022468,
+  "latenceMs": 13523,
+  "fournisseur": "Claude Platform on AWS"
+}

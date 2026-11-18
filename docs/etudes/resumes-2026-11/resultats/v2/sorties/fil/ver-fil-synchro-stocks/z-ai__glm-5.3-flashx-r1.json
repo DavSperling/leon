@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:29:49.025Z",
+  "reponse": "## Où j'en suis\nLe stock de la Saône a été corrigé via la PR #87 (webhooks ne décrémentent plus, synchro de nuit en valeur absolue, arrêt si CSV TransAlp absent), fusionnée par Hugo. La synchro du 16 a quand même raté 40 références : TransAlp a déposé son CSV 47 min après le passage à 2 h. Sur la branche `julien/fix-synchro-stocks`, le cron tourne maintenant à 2 h, 4 h et 6 h avec mail à Karim si le CSV manque toujours à 6 h (commit `d7c2e41`, 15 tests passent), la synchro du 17/11 a été relancée à la main (40 références corrigées), et la PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte avec Hugo en relecteur. (source: ses-st-3, ses-st-2, ses-st-1, src-pr87)\n\n- [en-cours] PR #96 ouverte, relecture d'Hugo en attente (source: ses-st-3)\n- [prochaine-étape] attendre l'approbation puis la fusion de #96 (source: ses-st-3)\n- [essai-raté] premier passage des tests : reprise « 4 h » tombait à 5 h à Paris, heures du cron lues en UTC ; fuseau `Europe/Paris` fixé, 15 tests passent (source: ses-st-3)\n- [question] confirmation de la date de livraison du 2 décembre aux Galeries Brotteaux (source: src-mail-brotteaux)\n- [décision] pas de réservation Brotteaux dans le script, Claire gère ça avec eux (source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 (source: u1-04)",
+  "rendu": "## Où j'en suis\nLe stock de la Saône a été corrigé via la PR #87 (webhooks ne décrémentent plus, synchro de nuit en valeur absolue, arrêt si CSV TransAlp absent), fusionnée par Hugo. La synchro du 16 a quand même raté 40 références : TransAlp a déposé son CSV 47 min après le passage à 2 h. Sur la branche `julien/fix-synchro-stocks`, le cron tourne maintenant à 2 h, 4 h et 6 h avec mail à Karim si le CSV manque toujours à 6 h (commit `d7c2e41`, 15 tests passent), la synchro du 17/11 a été relancée à la main (40 références corrigées), et la PR #96 « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte avec Hugo en relecteur. (de: équipe, agent; source: ses-st-3, ses-st-2, ses-st-1, src-pr87)\n\n- [en-cours] PR #96 ouverte, relecture d'Hugo en attente (de: agent; source: ses-st-3)\n- [prochaine-étape] attendre l'approbation puis la fusion de #96 (de: agent; source: ses-st-3)\n- [essai-raté] premier passage des tests : reprise « 4 h » tombait à 5 h à Paris, heures du cron lues en UTC ; fuseau `Europe/Paris` fixé, 15 tests passent (de: agent; source: ses-st-3)\n- [question] confirmation de la date de livraison du 2 décembre aux Galeries Brotteaux (de: connecteur; source: src-mail-brotteaux)\n- [décision] pas de réservation Brotteaux dans le script, Claire gère ça avec eux (de: toi; source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 (de: toi; source: u1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1556,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4293,
+    "sortie": 498,
+    "reflexion": 0,
+    "cache": 960,
+    "cout": 0.00192771
+  },
+  "cout": 0.00192771,
+  "latenceMs": 3945,
+  "fournisseur": "Z.AI"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:10:59.198Z",
+  "reponse": "## What you did\n- Built Ilan Barak's Thursday interview plan: 90 minutes, a Terraform exercise with Noa, a live incident based on the 12/11 ingest outage, on-call questions and a scoring rubric. You also wrote it up for Noa [1].\n- Drafted your reply to Dana confirming Thursday 15:00 with you and Noa on the panel, and asking for more profiles [1].\n\n## What changed\n- Yoav withdrew to accept a counter-offer, and Elena declined over pay. You read this as two of your last four declines tied to compensation [1].\n- Ilan is now the only active candidate [1].\n- Noa confirmed she will prepare the Terraform exercise tomorrow [3].\n\n## What is still open\n- Eitan wants the SRE shortlist before Friday for the board deck going out Monday [4].\n- Propose raising the SRE band to ₪42–48k at Monday's leadership sync. This is still to do [1].\n- Ask Talentbridge for three more profiles by end of next week. The session doesn't show the Dana reply was sent [1].\n- Send the interview plan to Noa yourself. Nothing has been shared yet [1].",
+  "rendu": "## What you did\n- Built Ilan Barak's Thursday interview plan: 90 minutes, a Terraform exercise with Noa, a live incident based on the 12/11 ingest outage, on-call questions and a scoring rubric. You also wrote it up for Noa [1].\n- Drafted your reply to Dana confirming Thursday 15:00 with you and Noa on the panel, and asking for more profiles [1].\n\n## What changed\n- Yoav withdrew to accept a counter-offer, and Elena declined over pay. You read this as two of your last four declines tied to compensation [1].\n- Ilan is now the only active candidate [1].\n- Noa confirmed she will prepare the Terraform exercise tomorrow [3].\n\n## What is still open\n- Eitan wants the SRE shortlist before Friday for the board deck going out Monday [4].\n- Propose raising the SRE band to ₪42–48k at Monday's leadership sync. This is still to do [1].\n- Ask Talentbridge for three more profiles by end of next week. The session doesn't show the Dana reply was sent [1].\n- Send the interview plan to Noa yourself. Nothing has been shared yet [1].",
+  "mesures": {
+    "mots": 175,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5901,
+    "sortie": 1793,
+    "reflexion": 1401,
+    "cache": 0,
+    "cout": 0.0014866
+  },
+  "cout": 0.0014866,
+  "latenceMs": 9140,
+  "fournisseur": "Claude Platform on AWS"
+}

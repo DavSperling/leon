@@ -1,0 +1,33 @@
+{
+  "id": "verdier-saone-avant-noel",
+  "titre": "Table Saône commandée maintenant : quand part-elle, peut-on promettre Noël ? Trois sources à croiser, une date périmée et un leurre « garanti avant Noël »",
+  "langue": "fr",
+  "entree": {
+    "corpus": "corpus-verdier",
+    "question": "Une cliente hésite à prendre la grande table Saône cette semaine, elle reçoit sa famille le 24 décembre. Est-ce qu'on peut lui promettre qu'elle l'aura ?"
+  },
+  "attendu": {
+    "sources": ["notion-reponses-types-saone", "slack-logistique-saone", "gmail-boisetfils-saone-retard"],
+    "faits": [
+      { "id": "f1", "texte": "Dit qu'une commande passée maintenant ne sera expédiée qu'à partir du 14 décembre.", "poids": 3 },
+      { "id": "f2", "texte": "Dit qu'on ne peut pas lui garantir une livraison avant Noël (c'est la réponse type du service client).", "poids": 3 },
+      { "id": "f3", "texte": "Explique le retard : le chêne a séché moins vite chez Bois & Fils, qui livre 18 tables le 27 novembre et les 12 autres le 11 décembre.", "poids": 2 },
+      { "id": "f4", "texte": "Dit qu'il ne reste que 7 tables pour les nouvelles commandes, ensuite rupture jusqu'en janvier.", "poids": 2 },
+      { "id": "f5", "texte": "Indique que la livraison prend ensuite 3 à 5 jours ouvrés avec le transporteur.", "poids": 1 },
+      { "id": "f6", "texte": "Dit que le geste commercial (code SAONE10 ou remboursement) est réservé aux précommandes retardées, pas aux nouvelles commandes.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Promet ou garantit une livraison avant le 24 décembre." },
+      { "id": "i2", "texte": "Annonce une expédition la semaine du 30 novembre pour une nouvelle commande (réservée aux précommandes passées jusqu'au 6 novembre)." },
+      { "id": "i3", "texte": "Annonce que les 30 tables arrivent le 27 novembre (date périmée du mail du 5 novembre)." },
+      { "id": "i4", "texte": "S'appuie sur la « dernière commande garantie avant Noël le 14 décembre » du plan de fin d'année, qui exclut justement la Saône." },
+      { "id": "i5", "texte": "Propose le code SAONE10 à cette nouvelle cliente." }
+    ],
+    "pieges": [
+      "Croiser : la date d'arrivée vient du fil avec Bois & Fils, la règle d'expédition du fil Slack #logistique, la phrase à dire au client de la page Notion des réponses types.",
+      "Périmé : le mail du 5/11 annonçait les 30 tables pour le 27/11 ; celui du 13/11 coupe la livraison en deux lots.",
+      "Leurre : le plan de fin d'année garantit Noël pour une commande passée avant le 14/12, mais « hors précommandes et Saône ».",
+      "Vocabulaire : « elle reçoit sa famille le 24 », « promettre qu'elle l'aura » au lieu de Noël, expédition, précommande."
+    ]
+  }
+}

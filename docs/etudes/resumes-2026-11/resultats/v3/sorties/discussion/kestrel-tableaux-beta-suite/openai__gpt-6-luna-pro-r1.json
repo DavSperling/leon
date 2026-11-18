@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:04:13.849Z",
+  "reponse": "The first part—chart builder and saved views—is planned to open to five design-partner customers on December 9. Other customers are expected to wait until general availability, targeted for late January; that date isn’t committed [3].",
+  "rendu": "The first part—chart builder and saved views—is planned to open to five design-partner customers on December 9. Other customers are expected to wait until general availability, targeted for late January; that date isn’t committed [3].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22417,
+    "sortie": 1335,
+    "reflexion": 1073,
+    "cache": 13795,
+    "cout": 0.00166925
+  },
+  "latenceMs": 20075,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards first part customers try availability launch date beta rollout\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}"
+  ],
+  "cout": 0.00166925
+}

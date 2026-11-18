@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:28:58.629Z",
+  "reponse": "## Où j'en suis\nReal SAML login works on staging with Fernhill’s IdP. JIT provisioning creates users as `viewer`; PR #415 is merged, while PR #421, containing short RelayState and per-tenant group-to-role mapping, is open. The full test suite passed (1,301 passed, 3 skipped). (source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421)\n\n- [en-cours] Fernhill IT still needs to add the groups claim; until then, the admin mapping cannot be verified end to end. (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Confirm the groups claim is in place, then test with a Fernhill admin account before Thursday’s 10:00 ET demo. (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The initial SP-initiated login failed because Fernhill’s ADFS rejected the 143-byte RelayState as too long; the fix stores the return URL in Redis and sends a short opaque ID instead. (source: s3-02, s3-04)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled; the team will revisit the role with Maya. (source: s3-07)",
+  "rendu": "## Où j'en suis\nReal SAML login works on staging with Fernhill’s IdP. JIT provisioning creates users as `viewer`; PR #415 is merged, while PR #421, containing short RelayState and per-tenant group-to-role mapping, is open. The full test suite passed (1,301 passed, 3 skipped). (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#415, kestrel-analytics/platform#421)\n\n- [en-cours] Fernhill IT still needs to add the groups claim; until then, the admin mapping cannot be verified end to end. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Confirm the groups claim is in place, then test with a Fernhill admin account before Thursday’s 10:00 ET demo. (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] The initial SP-initiated login failed because Fernhill’s ADFS rejected the 143-byte RelayState as too long; the fix stores the return URL in Redis and sends a short opaque ID instead. (de: agent; source: s3-02, s3-04)\n- [décision] Keep `viewer` as the default role and leave SP-initiated login enabled; the team will revisit the role with Maya. (de: toi; source: s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1143,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4453,
+    "sortie": 389,
+    "reflexion": 92,
+    "cache": 0,
+    "cout": 0.00075105
+  },
+  "cout": 0.00075105,
+  "latenceMs": 4474,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:37.999Z",
+  "reponse": "Ein bestätigter Liefertermin für die Ersatzschalter liegt noch nicht vor. Tai Shan hat den Eingang der Reklamation bestätigt und einen Liefertermin angekündigt, aber noch nicht genannt [2]. Der Einkauf erwartet eine Antwort bis Freitag, sonst wird an den Sales Director eskaliert [3]. Die Planung rechnet vorsorglich mit 6 Wochen ab Bestellung, ausdrücklich als nicht abgestimmte Annahme [5]. Der Kunde hatte einen bestätigten Termin bis zum 20. November verlangt [1]. Die Auftragsbestätigung AB-77812 betrifft Kohlebürsten, nicht die Schalter [4].",
+  "rendu": "Ein bestätigter Liefertermin für die Ersatzschalter liegt noch nicht vor. Tai Shan hat den Eingang der Reklamation bestätigt und einen Liefertermin angekündigt, aber noch nicht genannt [2]. Der Einkauf erwartet eine Antwort bis Freitag, sonst wird an den Sales Director eskaliert [3]. Die Planung rechnet vorsorglich mit 6 Wochen ab Bestellung, ausdrücklich als nicht abgestimmte Annahme [5]. Der Kunde hatte einen bestätigten Termin bis zum 20. November verlangt [1]. Die Auftragsbestätigung AB-77812 betrifft Kohlebürsten, nicht die Schalter [4].",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1775,
+    "sortie": 797,
+    "reflexion": 528,
+    "cache": 0,
+    "cout": 0.000576
+  },
+  "cout": 0.000576,
+  "latenceMs": 3686,
+  "fournisseur": "Google"
+}

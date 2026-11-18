@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-photos-cloture",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:53.817Z",
+  "reponse": "## Où j'en suis\nLe 17/11, le fil « photos et clôture » a changé de cap : la compression des photos dans le navigateur est abandonnée et remplacée par l'envoi des photos en arrière-plan avec un état « clôture en attente » (PR #224 en brouillon, branche thomas/photos-envoi, commits 9e41b07 et d2c5a18), testé en mode avion sur iPhone et sur Android. La PR #221 (3 photos obligatoires avant clôture) est fusionnée et en prod. Restent la relecture de Lucas et une 4e photo obligatoire demandée par Franck pour l'audit. (source: src-pr224, fs3)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente » en brouillon, relecteur Lucas (source: src-pr224, p3-12)\n- [prochaine-étape] ajouter « raccordement électrique » aux photos obligatoires (4 au lieu de 3) avant le 8/12 (source: src-slack-franck)\n- [prochaine-étape] relecture par Lucas à son retour lundi (source: p3-11)\n- [essai-raté] compression dans le navigateur (canvas, JPEG puis WebP 0,6) : sur iPhone les HEIC donnent une image noire, createImageBitmap ne les lit pas ; approche abandonnée au profit de l'envoi différé et du redimensionnement serveur (source: p2-06, p2-08, src-pr224)\n- [décision] les photos restent sur le téléphone et partent en arrière-plan au retour du réseau, la clôture est enregistrée tout de suite, redimensionnement côté serveur (source: p3-05, src-pr224)\n- [décision] la clôture ne compte comme faite qu'à l'arrivée des photos obligatoires : état cloture_en_attente, migration 0043 (source: p3-07, 9e41b07)\n- [décision] trois photos obligatoires avant clôture : unité extérieure, unité intérieure, plaque signalétique (source: p1-03, src-pr221)\n- [décision] ne pas supprimer la branche lucas/photos-compression, Lucas verra (source: p3-13)\n- [question] la note de projet annonce encore la compression WebP 0,6 comme validée alors qu'elle est abandonnée : à corriger (source: src-note, src-pr224)",
+  "rendu": "## Où j'en suis\nLe 17/11, le fil « photos et clôture » a changé de cap : la compression des photos dans le navigateur est abandonnée et remplacée par l'envoi des photos en arrière-plan avec un état « clôture en attente » (PR #224 en brouillon, branche thomas/photos-envoi, commits 9e41b07 et d2c5a18), testé en mode avion sur iPhone et sur Android. La PR #221 (3 photos obligatoires avant clôture) est fusionnée et en prod. Restent la relecture de Lucas et une 4e photo obligatoire demandée par Franck pour l'audit. (de: équipe, agent; source: src-pr224, fs3)\n\n- [en-cours] PR #224 « envoi des photos en arrière-plan, clôture en attente » en brouillon, relecteur Lucas (de: équipe, agent; source: src-pr224, p3-12)\n- [prochaine-étape] ajouter « raccordement électrique » aux photos obligatoires (4 au lieu de 3) avant le 8/12 (de: connecteur; source: src-slack-franck)\n- [prochaine-étape] relecture par Lucas à son retour lundi (de: toi; source: p3-11)\n- [essai-raté] compression dans le navigateur (canvas, JPEG puis WebP 0,6) : sur iPhone les HEIC donnent une image noire, createImageBitmap ne les lit pas ; approche abandonnée au profit de l'envoi différé et du redimensionnement serveur (de: équipe, agent; source: p2-06, p2-08, src-pr224)\n- [décision] les photos restent sur le téléphone et partent en arrière-plan au retour du réseau, la clôture est enregistrée tout de suite, redimensionnement côté serveur (de: toi, équipe; source: p3-05, src-pr224)\n- [décision] la clôture ne compte comme faite qu'à l'arrivée des photos obligatoires : état cloture_en_attente, migration 0043 (de: toi, équipe; source: p3-07, 9e41b07)\n- [décision] trois photos obligatoires avant clôture : unité extérieure, unité intérieure, plaque signalétique (de: toi, équipe; source: p1-03, src-pr221)\n- [décision] ne pas supprimer la branche lucas/photos-compression, Lucas verra (de: toi; source: p3-13)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1885,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4999,
+    "sortie": 3340,
+    "reflexion": 2739,
+    "cache": 1024,
+    "cout": 0.002982597
+  },
+  "cout": 0.002982597,
+  "latenceMs": 16559,
+  "fournisseur": "Cohere"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:49.583Z",
+  "reponse": "## Où j'en suis\nL'exercice take-home SRE a été créé dans un dépôt privé séparé sans Kubernetes, avec Docker Compose (build depuis les sources), trois problèmes plantés et une grille d'évaluation. Le dossier a été supprimé de la branche d'infrastructure sans PR.\n\n- [prochaine-étape] envoyer l'exercice au candidat après l'appel de jeudi\n- [décision] suppression du seuil de score : les notes servent de support pour la discussion du panel, et Noa est le second examinateur (source: t10)\n- [décision] pas de Kubernetes et un temps limité à 3 heures maximum (source: t03)\n- [décision] placement de l'exercice dans son propre dépôt privé pour masquer l'historique d'infrastructure (source: t12)\n- [décision] suppression du dossier de l'infra et aucun commit ni PR ouverte dans le dépôt principal (source: t14)\n- [décision] l'envoi de l'exercice au candidat est géré directement après l'appel de jeudi, pas d'envoi automatique par l'agent (source: t16)",
+  "rendu": "## Où j'en suis\nL'exercice take-home SRE a été créé dans un dépôt privé séparé sans Kubernetes, avec Docker Compose (build depuis les sources), trois problèmes plantés et une grille d'évaluation. Le dossier a été supprimé de la branche d'infrastructure sans PR.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] envoyer l'exercice au candidat après l'appel de jeudi\n- [décision] suppression du seuil de score : les notes servent de support pour la discussion du panel, et Noa est le second examinateur (source: t10)\n- [décision] pas de Kubernetes et un temps limité à 3 heures maximum (source: t03)\n- [décision] placement de l'exercice dans son propre dépôt privé pour masquer l'historique d'infrastructure (source: t12)\n- [décision] suppression du dossier de l'infra et aucun commit ni PR ouverte dans le dépôt principal (source: t14)\n- [décision] l'envoi de l'exercice au candidat est géré directement après l'appel de jeudi, pas d'envoi automatique par l'agent (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1044,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3877,
+    "sortie": 259,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0018106
+  },
+  "cout": 0.0018106,
+  "latenceMs": 1400,
+  "fournisseur": "Google"
+}

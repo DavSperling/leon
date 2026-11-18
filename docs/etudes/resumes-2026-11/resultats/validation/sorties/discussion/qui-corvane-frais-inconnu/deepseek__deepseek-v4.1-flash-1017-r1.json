@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:26:24.150Z",
+  "reponse": "There's no agreed figure yet. Our planning assumption is that Corvane's per-item ACH fee stays at **$0.08** in 2027, but that's an assumption in the Q1 pricing memo, not a signed rate — and the memo flags that if the per-item fee goes above $0.10 the bottom pricing tier has to be revisited [9]. The current Corvane agreement only runs to March 31, 2027, and renewal talks were to be opened in November [9]. More recently, Marcus said Corvane's RM hinted they want to raise the per-item fee after the Nov 10 reject mess, with \"nothing on paper yet\"; the call slipped to the week of Nov 23 [10].\n\nFor context on the current cost: Corvane's October fee invoice was $14,212.40 for 177,655 ACH items [8].",
+  "rendu": "There's no agreed figure yet. Our planning assumption is that Corvane's per-item ACH fee stays at **$0.08** in 2027, but that's an assumption in the Q1 pricing memo, not a signed rate — and the memo flags that if the per-item fee goes above $0.10 the bottom pricing tier has to be revisited [9]. The current Corvane agreement only runs to March 31, 2027, and renewal talks were to be opened in November [9]. More recently, Marcus said Corvane's RM hinted they want to raise the per-item fee after the Nov 10 reject mess, with \"nothing on paper yet\"; the call slipped to the week of Nov 23 [10].\n\nFor context on the current cost: Corvane's October fee invoice was $14,212.40 for 177,655 ACH items [8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23166,
+    "sortie": 594,
+    "reflexion": 172,
+    "cache": 15104,
+    "cout": 0.001997287
+  },
+  "latenceMs": 6210,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"Corvane prix par payout tarif\"}",
+    "chercher {\"requete\":\"Corvane pricing per payout\"}",
+    "lire {\"sourceId\":\"9\"}",
+    "lire {\"sourceId\":\"10\"}",
+    "lire {\"passageId\":\"drive-q1-pricing-memo-1\"}",
+    "lire {\"passageId\":\"slack-finance-corvane-1\"}"
+  ],
+  "cout": 0.001997287
+}

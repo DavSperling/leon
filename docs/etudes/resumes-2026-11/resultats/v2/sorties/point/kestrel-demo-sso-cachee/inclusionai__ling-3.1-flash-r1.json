@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:12.125Z",
+  "reponse": "## What you did\n- Shipped SAML assertion signature verification for Fernhill's Okta in PR #418: signxml verifies the signature on the assertion (not the response) against per-tenant IdP certificates (migration 0142), SHA-256 and above only — you refused the legacy SHA-1 flag — plus replay protection rejecting a repeated assertion ID [2].\n- Fixed the flaky `test_acs_rejects_expired_assertion`: the 3-second clock skew made the 2-second expiry margin timing-dependent, so you froze time with freezegun instead of sleeping, and converted the two other sleeping tests [1].\n- Cleaned up `kestrel/auth` for ruff 0.8 and mypy (a missing Issuer/Subject is now a 401 validation error, not a 500), and split the 900-line `saml_utils.py` into a `saml/` package — assertions, metadata, bindings — behind a shim so old imports keep working; full suite green, lint and types clean [1].\n\n## What changed\n- Maya approved #418 (one non-blocking nit on an error message) and merged it on 17 Nov; it goes out with that night's staging deploy, so signature validation is on staging ahead of the Wednesday EOD deadline [3].\n- Tom requested changes on your cleanup PR #423: split the `saml/` module move from the lint fixes, since the 1,900-line diff hides the real changes — he said he'd approve both PRs the same day [4].\n\n## What is still open\n- Fernhill end-to-end SSO walkthrough on staging, Thursday 10am NY with their Okta tenant; Priya runs the demo, you just need to be on the call — unblocked by the #418 merge [1][3].\n- Split #423 into two PRs (module move vs lint fixes) as Tom asked [4].\n- Move the replay cache off the per-process TTLCache to Redis (SET NX EX keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew) before production — it was on your list for today [1][2].",
+  "rendu": "## What you did\n- Shipped SAML assertion signature verification for Fernhill's Okta in PR #418: signxml verifies the signature on the assertion (not the response) against per-tenant IdP certificates (migration 0142), SHA-256 and above only — you refused the legacy SHA-1 flag — plus replay protection rejecting a repeated assertion ID [2].\n- Fixed the flaky `test_acs_rejects_expired_assertion`: the 3-second clock skew made the 2-second expiry margin timing-dependent, so you froze time with freezegun instead of sleeping, and converted the two other sleeping tests [1].\n- Cleaned up `kestrel/auth` for ruff 0.8 and mypy (a missing Issuer/Subject is now a 401 validation error, not a 500), and split the 900-line `saml_utils.py` into a `saml/` package — assertions, metadata, bindings — behind a shim so old imports keep working; full suite green, lint and types clean [1].\n\n## What changed\n- Maya approved #418 (one non-blocking nit on an error message) and merged it on 17 Nov; it goes out with that night's staging deploy, so signature validation is on staging ahead of the Wednesday EOD deadline [3].\n- Tom requested changes on your cleanup PR #423: split the `saml/` module move from the lint fixes, since the 1,900-line diff hides the real changes — he said he'd approve both PRs the same day [4].\n\n## What is still open\n- Fernhill end-to-end SSO walkthrough on staging, Thursday 10am NY with their Okta tenant; Priya runs the demo, you just need to be on the call — unblocked by the #418 merge [1][3].\n- Split #423 into two PRs (module move vs lint fixes) as Tom asked [4].\n- Move the replay cache off the per-process TTLCache to Redis (SET NX EX keyed by tenant + assertion ID, TTL = NotOnOrAfter + skew) before production — it was on your list for today [1][2].",
+  "mesures": {
+    "mots": 282,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6365,
+    "sortie": 4690,
+    "reflexion": 4202,
+    "cache": 0,
+    "cout": 0.000919575
+  },
+  "cout": 0.000919575,
+  "latenceMs": 47069,
+  "fournisseur": "Novita"
+}

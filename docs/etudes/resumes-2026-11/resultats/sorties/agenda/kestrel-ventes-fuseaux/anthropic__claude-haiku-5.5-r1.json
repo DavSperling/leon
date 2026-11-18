@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:30:01.521Z",
+  "reponse": "{\"n\": 9, \"titre\": \"Appel Pathwise – partenariat revendeur\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"Inès Duval\"}\n{\"n\": 20, \"titre\": \"Déjeuner au Comptoir Vivienne\", \"debut\": \"2026-11-17T12:30\", \"avec\": \"Camille Brunet\"}\n{\"n\": 6, \"titre\": \"Deal review – extension Fernhill\", \"debut\": \"2026-11-18T12:00\", \"fin\": \"2026-11-18T12:45\", \"avec\": \"Maya Cohen, Priya Shah\"}\n{\"n\": 7, \"titre\": \"Renouvellement Orbitly – appel\", \"debut\": \"2026-11-18T17:00\", \"fin\": \"2026-11-18T17:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 3, \"titre\": \"Kickoff technique SAML SSO Kestrel x Fernhill\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T16:00\", \"avec\": \"Oliver Grant\"}\n{\"n\": 1, \"titre\": \"Discovery call analytics produit\", \"debut\": \"2026-11-20T17:00\", \"fin\": \"2026-11-20T17:30\", \"avec\": \"Marcus Hale\"}",
+  "rendu": "2026-11-16T10:00 Appel Pathwise – partenariat revendeur (avec Inès Duval)\n2026-11-17T12:30 Déjeuner au Comptoir Vivienne (avec Camille Brunet)\n2026-11-18T12:00→2026-11-18T12:45 Deal review – extension Fernhill (avec Maya Cohen, Priya Shah)\n2026-11-18T17:00→2026-11-18T17:30 Renouvellement Orbitly – appel (avec Jenna Park)\n2026-11-19T15:00→2026-11-19T16:00 Kickoff technique SAML SSO Kestrel x Fernhill (avec Oliver Grant)\n2026-11-20T17:00→2026-11-20T17:30 Discovery call analytics produit (avec Marcus Hale)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4921,
+    "sortie": 2416,
+    "reflexion": 1988,
+    "cache": 0,
+    "cout": 0.0017001
+  },
+  "cout": 0.0017001,
+  "latenceMs": 10126,
+  "fournisseur": "Claude Platform on AWS"
+}

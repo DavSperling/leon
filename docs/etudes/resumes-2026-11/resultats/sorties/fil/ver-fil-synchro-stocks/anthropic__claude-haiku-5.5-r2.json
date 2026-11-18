@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:43.151Z",
+  "reponse": "## Où j'en suis\nLa PR #96 (reprises de synchro à 4 h et 6 h, alerte si le CSV TransAlp manque) est ouverte et attend la relecture d'Hugo. Le stock du site a été corrigé à la main le 17/11 (40 références, 0 erreur). La PR #87 est fusionnée. (source: ses-st-3, u3-08, u3-09, u3-06, src-pr87)\n\n- [en-cours] Relecture de la PR #96 par Hugo ; la branche est à jour avec le commit d7c2e41 (source: maison-verdier/boutique#96, d7c2e41)\n- [prochaine-étape] Vérifier la passe de 6 h et le mail à Karim lors du prochain retard de TransAlp (source: u3-03, u3-04)\n- [prochaine-étape] Traiter avec Lucie les 3 commandes de Saône survendues (source: ses-st-1)\n- [essai-raté] Dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (source: u1-01)\n- [essai-raté] Les heures du cron étaient lues en UTC, la reprise de 4 h tombait à 5 h à Paris ; fuseau Europe/Paris fixé (source: u3-04, d7c2e41)\n- [question] Galeries Brotteaux demande 2 tables Saône chêne 180 réservées sur le réassort du 2 décembre et une date de livraison : à traiter hors du script, par la personne qui gère ce client (source: src-mail-brotteaux)\n- [question] Commande #1041 annulée alors que la Saône était affichée en stock ; un bon d'achat de 50 € a été proposé à la cliente (source: src-zendesk-1041)\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit écrit, en valeur absolue (source: u1-02, 5e12aa8)\n- [décision] Seuil d'alerte stock bas à 3 unités (source: u1-04)\n- [décision] Pas de réservation dans le script de synchro pour les Galeries Brotteaux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa PR #96 (reprises de synchro à 4 h et 6 h, alerte si le CSV TransAlp manque) est ouverte et attend la relecture d'Hugo. Le stock du site a été corrigé à la main le 17/11 (40 références, 0 erreur). La PR #87 est fusionnée. (de: toi, équipe, agent; source: ses-st-3, u3-08, u3-09, u3-06, src-pr87)\n\n- [en-cours] Relecture de la PR #96 par Hugo ; la branche est à jour avec le commit d7c2e41 (de: équipe; source: maison-verdier/boutique#96, d7c2e41)\n- [prochaine-étape] Vérifier la passe de 6 h et le mail à Karim lors du prochain retard de TransAlp (de: toi, agent; source: u3-03, u3-04)\n- [prochaine-étape] Traiter avec Lucie les 3 commandes de Saône survendues (de: agent; source: ses-st-1)\n- [essai-raté] Dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (de: agent; source: u1-01)\n- [essai-raté] Les heures du cron étaient lues en UTC, la reprise de 4 h tombait à 5 h à Paris ; fuseau Europe/Paris fixé (de: équipe, agent; source: u3-04, d7c2e41)\n- [question] Galeries Brotteaux demande 2 tables Saône chêne 180 réservées sur le réassort du 2 décembre et une date de livraison : à traiter hors du script, par la personne qui gère ce client (de: connecteur; source: src-mail-brotteaux)\n- [question] Commande #1041 annulée alors que la Saône était affichée en stock ; un bon d'achat de 50 € a été proposé à la cliente (de: connecteur; source: src-zendesk-1041)\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit écrit, en valeur absolue (de: toi, équipe; source: u1-02, 5e12aa8)\n- [décision] Seuil d'alerte stock bas à 3 unités (de: toi; source: u1-04)\n- [décision] Pas de réservation dans le script de synchro pour les Galeries Brotteaux (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1802,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5897,
+    "sortie": 1610,
+    "reflexion": 848,
+    "cache": 0,
+    "cout": 0.0013947
+  },
+  "cout": 0.0013947,
+  "latenceMs": 7670,
+  "fournisseur": "Claude Platform on AWS"
+}

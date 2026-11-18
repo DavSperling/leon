@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:29:08.786Z",
+  "reponse": "## What you did\n\n- Prepared the prod PG15 → PG17 cutover on RDS blue/green: Terraform on `envs/prod/rds.tf` (no destroy/recreate, the read replica now follows the blue/green instead of being replaced), plus `runbooks/pg17-cutover.md`; opened PR #321 with Maya as reviewer. [1][3]\n- Rehearsed the whole blue/green on a snapshot clone: 74 s of write downtime, no row-count mismatch, then tore the clone down so it stops costing money. [1]\n\n## What changed\n\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya confirmed it with Sam, told the CSMs, and unblocked #321 — which she had approved but held pending that confirmation. [8][3]\n- Daniel Levi is on call for the API side on Sunday and wants to be pinged when you start the switchover. [7]\n\n## What is still open\n\n- Rollback rehearsal on a fresh clone on **Thursday 19/11** — still a TODO in the runbook; after switchover blue is renamed `-old1` and diverges, so rollback means accepting data loss or replaying writes, not switching back. [1]\n- The runbook still says Saturday 21/11 02:00–04:00 UTC; it needs the new date before you merge #321. [8][10]\n- Lior Ben-David (KES-530) confirms ingest workers need no change (they read `DATABASE_URL` from SSM), but asks for **30 minutes notice** before the switchover to pause consumers cleanly. [9]\n- Renovate's AWS provider bump 5.80 → 5.82 (#320) is still open with automerge disabled. [4]",
+  "rendu": "## What you did\n\n- Prepared the prod PG15 → PG17 cutover on RDS blue/green: Terraform on `envs/prod/rds.tf` (no destroy/recreate, the read replica now follows the blue/green instead of being replaced), plus `runbooks/pg17-cutover.md`; opened PR #321 with Maya as reviewer. [1][3]\n- Rehearsed the whole blue/green on a snapshot clone: 74 s of write downtime, no row-count mismatch, then tore the clone down so it stops costing money. [1]\n\n## What changed\n\n- The window moved to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya confirmed it with Sam, told the CSMs, and unblocked #321 — which she had approved but held pending that confirmation. [8][3]\n- Daniel Levi is on call for the API side on Sunday and wants to be pinged when you start the switchover. [7]\n\n## What is still open\n\n- Rollback rehearsal on a fresh clone on **Thursday 19/11** — still a TODO in the runbook; after switchover blue is renamed `-old1` and diverges, so rollback means accepting data loss or replaying writes, not switching back. [1]\n- The runbook still says Saturday 21/11 02:00–04:00 UTC; it needs the new date before you merge #321. [8][10]\n- Lior Ben-David (KES-530) confirms ingest workers need no change (they read `DATABASE_URL` from SSM), but asks for **30 minutes notice** before the switchover to pause consumers cleanly. [9]\n- Renovate's AWS provider bump 5.80 → 5.82 (#320) is still open with automerge disabled. [4]",
+  "mesures": {
+    "mots": 227,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4960,
+    "sortie": 1618,
+    "reflexion": 1217,
+    "cache": 184,
+    "cout": 0.001520964
+  },
+  "cout": 0.001520964,
+  "latenceMs": 31353,
+  "fournisseur": "Wafer"
+}

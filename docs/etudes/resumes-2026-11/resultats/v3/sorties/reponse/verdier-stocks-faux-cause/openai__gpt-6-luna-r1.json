@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:00:36.595Z",
+  "reponse": "Le stock pouvait être décrémenté deux fois quand un produit avait deux emplacements Shopify et que le webhook était traité pour chacun [1]. Ce problème a été corrigé par une déduplication, fusionnée le 17 novembre [1]. Le stock négatif de la variante Saône semble toutefois avoir une autre cause : l’import nocturne a écrasé le stock avec un CSV de Bois & Fils [5].",
+  "rendu": "Le stock pouvait être décrémenté deux fois quand un produit avait deux emplacements Shopify et que le webhook était traité pour chacun [1]. Ce problème a été corrigé par une déduplication, fusionnée le 17 novembre [1]. Le stock négatif de la variante Saône semble toutefois avoir une autre cause : l’import nocturne a écrasé le stock avec un CSV de Bois & Fils [5].",
+  "mesures": {
+    "mots": 62,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1018,
+    "sortie": 90,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001468
+  },
+  "cout": 0.0001468,
+  "latenceMs": 1793,
+  "fournisseur": "Azure"
+}

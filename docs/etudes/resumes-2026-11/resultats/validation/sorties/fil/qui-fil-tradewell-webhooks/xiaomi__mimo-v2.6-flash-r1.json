@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:28:03.932Z",
+  "reponse": "## Où j'en suis\nWH-17 and WH-31 are fixed on `jake/tradewell-webhook-cert`, but nothing is pushed yet: WH-17 is committed, the fresh-timestamp signing for WH-31 is written with unit tests green, and the retry integration test in `tests/retry.rs` still checks the old header. The certification re-run is blocked because Tradewell's sandbox API key expired on 2026-11-17. (source: ses-tw-3, w3-08, w3-10)\n\n- [en-cours] WH-31 fresh-timestamp signing: code and unit tests done, the `tests/retry.rs` integration test still asserts the old signature and must be rewritten before committing; the `signature_header` column was left in place (dropping it needs a migration) (source: w3-06, w3-10)\n- [prochaine-étape] Rewrite and run the integration test, push, then open the PR against main — but not before (source: w3-11)\n- [prochaine-étape] Re-run `./scripts/tradewell-cert.sh --env sandbox` once Ellen reissues the sandbox API key; deadline is Friday, JIRA QPAY-2310 due 2026-11-20 (source: w3-08, w3-09, src-jira-2310)\n- [essai-raté] The cert run on 2026-11-18 failed with 401 Unauthorized: sandbox API key expired 2026-11-17, so nothing was actually tested (source: w3-08)\n- [question] Ellen's #ext-tradewell recap claims agreement on mTLS and `payout.updated` for go-live; Jake doesn't recall agreeing and it isn't in their spec — pending Jake's check with Sofia (source: src-slack-tradewell, w3-09)\n- [décision] Sign each delivery attempt at send time with a fresh timestamp rather than asking Tradewell to widen the 300 s tolerance (source: w3-05)\n- [décision] Fix WH-17 and WH-31 on a new branch, not on PR #1468 (source: w3-03)",
+  "rendu": "## Où j'en suis\nWH-17 and WH-31 are fixed on `jake/tradewell-webhook-cert`, but nothing is pushed yet: WH-17 is committed, the fresh-timestamp signing for WH-31 is written with unit tests green, and the retry integration test in `tests/retry.rs` still checks the old header. The certification re-run is blocked because Tradewell's sandbox API key expired on 2026-11-17. (de: agent; source: ses-tw-3, w3-08, w3-10)\n\n- [en-cours] WH-31 fresh-timestamp signing: code and unit tests done, the `tests/retry.rs` integration test still asserts the old signature and must be rewritten before committing; the `signature_header` column was left in place (dropping it needs a migration) (de: agent; source: w3-06, w3-10)\n- [prochaine-étape] Rewrite and run the integration test, push, then open the PR against main — but not before (de: toi; source: w3-11)\n- [prochaine-étape] Re-run `./scripts/tradewell-cert.sh --env sandbox` once Ellen reissues the sandbox API key; deadline is Friday, JIRA QPAY-2310 due 2026-11-20 (de: toi, connecteur, agent; source: w3-08, w3-09, src-jira-2310)\n- [essai-raté] The cert run on 2026-11-18 failed with 401 Unauthorized: sandbox API key expired 2026-11-17, so nothing was actually tested (de: agent; source: w3-08)\n- [question] Ellen's #ext-tradewell recap claims agreement on mTLS and `payout.updated` for go-live; Jake doesn't recall agreeing and it isn't in their spec — pending Jake's check with Sofia (de: toi, connecteur; source: src-slack-tradewell, w3-09)\n- [décision] Sign each delivery attempt at send time with a fresh timestamp rather than asking Tradewell to widen the 300 s tolerance (de: toi; source: w3-05)\n- [décision] Fix WH-17 and WH-31 on a new branch, not on PR #1468 (de: toi; source: w3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1738,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6202,
+    "sortie": 535,
+    "reflexion": 8,
+    "cache": 992,
+    "cout": 0.000882176
+  },
+  "cout": 0.000882176,
+  "latenceMs": 3859,
+  "fournisseur": "Cohere"
+}

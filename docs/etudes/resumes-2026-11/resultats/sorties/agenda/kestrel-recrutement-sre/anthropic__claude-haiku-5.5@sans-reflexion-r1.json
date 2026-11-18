@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:12.252Z",
+  "reponse": "{\"n\": 2, \"titre\": \"Entretien final Yael Mizrahi avec Maya\", \"debut\": \"2026-11-24T11:00\", \"fin\": \"2026-11-24T12:00\", \"avec\": \"Yael Mizrahi, Maya Cohen\"}\n{\"n\": 4, \"titre\": \"PG17 cutover – go/no-go planning\", \"debut\": \"2026-11-22T10:00\", \"fin\": \"2026-11-22T11:00\", \"avec\": \"Maya Cohen, Daniel Levi, Lior Ben-David\"}\n{\"n\": 5, \"titre\": \"Entretien Senior SRE avec Ben Carter\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T10:00\", \"avec\": \"Ben Carter, Shira Katz\"}\n{\"n\": 10, \"titre\": \"Postmortem – ingest outage 12 Nov\", \"debut\": \"2026-11-16T16:00\", \"fin\": \"2026-11-16T17:00\", \"avec\": \"Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim\"}\n{\"n\": 13, \"titre\": \"Revue upgrade PG17 avec Lumenstack\", \"debut\": \"2026-11-19T08:30\", \"fin\": \"2026-11-19T09:15\", \"avec\": \"Grace Whitfield, Daniel Levi\"}\n{\"n\": 15, \"titre\": \"Entretien system design Yael Mizrahi\", \"debut\": \"2026-11-17T15:00\", \"fin\": \"2026-11-17T16:00\", \"avec\": \"Yael Mizrahi, Daniel Levi\"}\n{\"n\": 16, \"titre\": \"Entretien technique Senior SRE avec Ben Carter\", \"debut\": \"2026-11-19T09:00\", \"fin\": \"2026-11-19T10:00\", \"avec\": \"Ben Carter, Shira Katz\"}\n{\"n\": 20, \"titre\": \"pg_upgrade dry run\", \"debut\": \"2026-11-16T11:00\", \"avec\": \"Daniel Levi\"}\n{\"n\": 21, \"titre\": \"pg_upgrade dry run\", \"debut\": \"2026-11-16T11:00\", \"avec\": \"Daniel Levi\"}",
+  "rendu": "2026-11-16T11:00 pg_upgrade dry run (avec Daniel Levi)\n2026-11-16T16:00→2026-11-16T17:00 Postmortem – ingest outage 12 Nov (avec Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim)\n2026-11-17T15:00→2026-11-17T16:00 Entretien system design Yael Mizrahi (avec Yael Mizrahi, Daniel Levi)\n2026-11-19T08:30→2026-11-19T09:15 Revue upgrade PG17 avec Lumenstack (avec Grace Whitfield, Daniel Levi)\n2026-11-19T09:00→2026-11-19T10:00 Entretien technique Senior SRE avec Ben Carter (avec Ben Carter, Shira Katz)\n2026-11-20T09:00→2026-11-20T10:00 Entretien Senior SRE avec Ben Carter (avec Ben Carter, Shira Katz)\n2026-11-22T10:00→2026-11-22T11:00 PG17 cutover – go/no-go planning (avec Maya Cohen, Daniel Levi, Lior Ben-David)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "2026-11-16T11:00 pg_upgrade dry run | 2026-11-16T16:00 Postmortem – ingest outage 12 Nov | 2026-11-17T15:00 Entretien system design Yael Mizrahi | 2026-11-19T08:30 Revue upgrade PG17 avec Lumenstack | 2026-11-19T09:00 Entretien technique Senior SRE avec Ben Carter | 2026-11-20T09:00 Entretien Senior SRE avec Ben Carter | 2026-11-22T10:00 PG17 cutover – go/no-go planning",
+    "manques": "2026-11-16T10:00 pg_upgrade dry run with Daniel | 2026-11-16T15:00 Postmortem – ingest outage 12 Nov | 2026-11-17T14:00 Interview Yael Mizrahi – system design | 2026-11-19T17:30 Lumenstack – Postgres 17 upgrade review | 2026-11-20T15:00 Interview Ben Carter – Senior SRE | 2026-11-22T09:00 PG17 cutover – go/no-go planning",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4563,
+    "sortie": 735,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008238
+  },
+  "cout": 0.0008238,
+  "latenceMs": 2832,
+  "fournisseur": "Claude Platform on AWS"
+}

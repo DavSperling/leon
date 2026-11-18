@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:09.182Z",
+  "reponse": "## Où j'en suis\nLe remplacement des webhooks par du polling HubSpot est en place et poussé sur la PR #409, avec automerge activé, mais un check e2e échoue et la PR n'est donc pas fusionnée (elle reste open).\n\n- [en-cours] Correction du test e2e `test_admin_accounts.py::test_accounts_table_shows_owner` : il attend 3 lignes avec owner, le nouveau filtre `arr > 0` exclut la company trial du fixture → 2 lignes.\n- [prochaine-étape] Choisir la correction du fixture (donner ARR > 0 à la 3e company, ou s'attendre à 2 lignes), pousser, surveiller `gh pr checks 409 --watch` jusqu'au merge.\n- [prochaine-étape] Noa doit mettre `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod (en attente de la personne).\n- [essai-raté] Abonnement webhook HubSpot via API : 401, les tokens de type private app ne peuvent pas gérer les subscriptions ; #405 fermée.\n- [essai-raté] `pytest tests/integrations/test_hubspot_sync.py` d'abord en échec sur `test_initial_backfill_pages_all` (limite 10 000 résultats de la search API) ; corrigé par le paging en fenêtres.\n- [décision] Passer au polling toutes les 15 min et fermer #405 (source: t04)\n- [décision] Synchroniser uniquement les companies avec ARR > 0, exclure les trials (source: t10)\n- [décision] Ouvrir la PR et activer l'automerge (source: t12)",
+  "rendu": "## Où j'en suis\nLe remplacement des webhooks par du polling HubSpot est en place et poussé sur la PR #409, avec automerge activé, mais un check e2e échoue et la PR n'est donc pas fusionnée (elle reste open).\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Correction du test e2e `test_admin_accounts.py::test_accounts_table_shows_owner` : il attend 3 lignes avec owner, le nouveau filtre `arr > 0` exclut la company trial du fixture → 2 lignes.\n- [prochaine-étape] Choisir la correction du fixture (donner ARR > 0 à la 3e company, ou s'attendre à 2 lignes), pousser, surveiller `gh pr checks 409 --watch` jusqu'au merge.\n- [prochaine-étape] Noa doit mettre `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod (en attente de la personne).\n- [essai-raté] Abonnement webhook HubSpot via API : 401, les tokens de type private app ne peuvent pas gérer les subscriptions ; #405 fermée.\n- [essai-raté] `pytest tests/integrations/test_hubspot_sync.py` d'abord en échec sur `test_initial_backfill_pages_all` (limite 10 000 résultats de la search API) ; corrigé par le paging en fenêtres.\n- [décision] Passer au polling toutes les 15 min et fermer #405 (source: t04)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1312,
+    "decisions": 1,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3660,
+    "sortie": 453,
+    "reflexion": 40,
+    "cache": 0,
+    "cout": 0.00063924
+  },
+  "cout": 0.00063924,
+  "latenceMs": 16198,
+  "fournisseur": "Xiaomi"
+}

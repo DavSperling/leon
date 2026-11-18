@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:32.560Z",
+  "reponse": "## Où j'en suis\nL'intégration TransAlp est faite en sandbox : client OAuth2 avec jeton gardé en mémoire, étiquette PDF, et `choix.ts` envoie Lyon et Paris vers TransAlp, le reste vers Rapidis. Les colis de plus de 30 kg partent chez Rapidis, même à Lyon ou Paris. Lint propre, PR brouillon ouverte, en attente de relecture par Julien.\n\n- [en-cours] PR brouillon sur la branche hugo/transalp-etiquettes, en attente de relecture par Julien.\n- [prochaine-étape] Demander au support TransAlp si l'étiquette ZPL est disponible en production, pour la Zebra de l'entrepôt.\n- [essai-raté] ZPL refusé en sandbox (400 unsupported_format) : le PDF reste le format par défaut, avec un paramètre `format` prêt pour le ZPL.\n- [question] Le ZPL sera-t-il disponible en production, et quand Julien décidera-t-il de brancher la production ?\n- [décision] Sandbox seulement, Lyon et Paris vers TransAlp, le reste chez Rapidis (source: t01)\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, pas de résiliation, et les colis de plus de 30 kg y vont même à Lyon et Paris (source: t13)",
+  "rendu": "## Où j'en suis\nL'intégration TransAlp est faite en sandbox : client OAuth2 avec jeton gardé en mémoire, étiquette PDF, et `choix.ts` envoie Lyon et Paris vers TransAlp, le reste vers Rapidis. Les colis de plus de 30 kg partent chez Rapidis, même à Lyon ou Paris. Lint propre, PR brouillon ouverte, en attente de relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR brouillon sur la branche hugo/transalp-etiquettes, en attente de relecture par Julien.\n- [prochaine-étape] Demander au support TransAlp si l'étiquette ZPL est disponible en production, pour la Zebra de l'entrepôt.\n- [essai-raté] ZPL refusé en sandbox (400 unsupported_format) : le PDF reste le format par défaut, avec un paramètre `format` prêt pour le ZPL.\n- [question] Le ZPL sera-t-il disponible en production, et quand Julien décidera-t-il de brancher la production ?\n- [décision] Sandbox seulement, Lyon et Paris vers TransAlp, le reste chez Rapidis (source: t01)\n- [décision] Rapidis reste en secours au moins jusqu'à la fin des soldes, pas de résiliation, et les colis de plus de 30 kg y vont même à Lyon et Paris (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1203,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5046,
+    "sortie": 1492,
+    "reflexion": 1001,
+    "cache": 0,
+    "cout": 0.0012506
+  },
+  "cout": 0.0012506,
+  "latenceMs": 7201,
+  "fournisseur": "Google"
+}

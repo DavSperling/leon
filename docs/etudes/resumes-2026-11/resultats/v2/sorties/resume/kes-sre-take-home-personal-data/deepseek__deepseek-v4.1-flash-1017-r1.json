@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:23:11.463Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home`, pushed as a subtree split so no infra history leaks. The exercise: compose (flaky-svc built from source, no prebuilt image), a renamed-metric alert rule that never fires, a connection leak, an over-broad IAM policy, a 3-hour time box, plus a rubric scored 0–3 in four areas with no cut-off. `hiring/` was removed from the infra branch but not committed, since that branch will be dropped.\n\n- [en-cours] the removal of `hiring/` from `maya/sre-take-home` exists only in the working tree, uncommitted\n- [prochaine-étape] after Thursday's 4pm call, invite Ethan as collaborator and send him the repo and README yourself\n- [essai-raté] multi-arch `buildx --load` fails (\"docker exporter does not currently support exporting manifest lists\"), which is why compose builds from source\n- [décision] no Kubernetes, 3 hours max, terraform + compose only (source: t03)\n- [décision] no pass threshold; scores are input, Noa is second reviewer (source: t10)\n- [décision] exercise in its own private repo, delete from infra branch, no PR (source: t14)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home`, pushed as a subtree split so no infra history leaks. The exercise: compose (flaky-svc built from source, no prebuilt image), a renamed-metric alert rule that never fires, a connection leak, an over-broad IAM policy, a 3-hour time box, plus a rubric scored 0–3 in four areas with no cut-off. `hiring/` was removed from the infra branch but not committed, since that branch will be dropped.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] the removal of `hiring/` from `maya/sre-take-home` exists only in the working tree, uncommitted\n- [prochaine-étape] after Thursday's 4pm call, invite Ethan as collaborator and send him the repo and README yourself\n- [essai-raté] multi-arch `buildx --load` fails (\"docker exporter does not currently support exporting manifest lists\"), which is why compose builds from source\n- [décision] no Kubernetes, 3 hours max, terraform + compose only (source: t03)\n- [décision] no pass threshold; scores are input, Noa is second reviewer (source: t10)\n- [décision] exercise in its own private repo, delete from infra branch, no PR (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1246,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 501,
+    "reflexion": 189,
+    "cache": 0,
+    "cout": 0.00102924
+  },
+  "cout": 0.00102924,
+  "latenceMs": 1977,
+  "fournisseur": "Nebius"
+}

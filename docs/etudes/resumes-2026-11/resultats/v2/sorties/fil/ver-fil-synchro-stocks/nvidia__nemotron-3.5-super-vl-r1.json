@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:29:42.773Z",
+  "reponse": "## Où j'en suis\nLa synchro de nuit a été relancée manuellement pour le 17/11 : 1 204 lignes lues, 40 références corrigées, 0 erreur, le stock du site est à jour. La PR #87 est fusionnée. La PR #96 (reprises à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h) est ouverte et attend la relecture d'Hugo. Rien n'est ajouté au script pour les Galeries Brotteaux. (source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 : reprises à 4 h et 6 h, alerte si CSV manquant à 6 h, en attente de relecture d'Hugo (source: ses-st-3)\n- [prochaine-étape] faire relire et merger la PR #96 par Hugo (source: ses-st-3)\n- [essai-raté] premier test de reprise à 4 h : 1 appel au lieu de 2, les heures du cron étaient lues en UTC (5 h à Paris au lieu de 4 h) (source: u3-04)\n- [décision] les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue, et s'arrête si le CSV manque (source: src-pr87, u1-02)\n- [décision] seuil d'alerte stock bas à 3 unités (source: u1-04)\n- [décision] pas de réservation des 2 tables Saône dans le script pour les Galeries Brotteaux ; ce point est traité avec Claire séparément (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa synchro de nuit a été relancée manuellement pour le 17/11 : 1 204 lignes lues, 40 références corrigées, 0 erreur, le stock du site est à jour. La PR #87 est fusionnée. La PR #96 (reprises à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h) est ouverte et attend la relecture d'Hugo. Rien n'est ajouté au script pour les Galeries Brotteaux. (de: équipe, agent; source: ses-st-3, src-pr87)\n\n- [en-cours] PR #96 : reprises à 4 h et 6 h, alerte si CSV manquant à 6 h, en attente de relecture d'Hugo (de: agent; source: ses-st-3)\n- [prochaine-étape] faire relire et merger la PR #96 par Hugo (de: agent; source: ses-st-3)\n- [essai-raté] premier test de reprise à 4 h : 1 appel au lieu de 2, les heures du cron étaient lues en UTC (5 h à Paris au lieu de 4 h) (de: agent; source: u3-04)\n- [décision] les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue, et s'arrête si le CSV manque (de: toi, équipe; source: src-pr87, u1-02)\n- [décision] seuil d'alerte stock bas à 3 unités (de: toi; source: u1-04)\n- [décision] pas de réservation des 2 tables Saône dans le script pour les Galeries Brotteaux ; ce point est traité avec Claire séparément (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1224,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4589,
+    "sortie": 3904,
+    "reflexion": 3514,
+    "cache": 0,
+    "cout": 0.00252323
+  },
+  "cout": 0.00252323,
+  "latenceMs": 7739,
+  "fournisseur": "CoreWeave"
+}

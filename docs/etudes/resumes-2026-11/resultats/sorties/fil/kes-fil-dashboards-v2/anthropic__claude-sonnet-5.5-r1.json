@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:26:54.090Z",
+  "reponse": "## Où j'en suis\nLa PR #418 (grille v2 déplaçable/redimensionnable) est fusionnée. Sur la branche tom/dashboard-keyboard, la PR #423 (déplacement/redimensionnement au clavier + anneau de focus, suites de la review de Priya) est ouverte, relecture demandée à Priya. Le flag dashboards_v2 est activé sur staging pour zest-grocers afin de répéter la démo. La prod reste off. (source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 en attente de la review de Priya, commit 8f1a2c7 (useGridKeyboard, annonces aria-live, focus ring), 11 tests verts (source: ses-db-4, 8f1a2c7)\n- [prochaine-étape] Activer dashboards_v2 en prod soi-même le matin du 24 pour la démo Zest (source: d4-06)\n- [essai-raté] @dnd-kit/core KeyboardSensor avec react-grid-layout : chaque déplacement appliqué deux fois et deux onLayoutChange par drag souris ; le contourner imposerait de réécrire la grille, donc retiré (source: d4-02, d4-04)\n- [décision] Gestionnaire clavier maison au-dessus de l'état du layout, sans dnd-kit (source: d4-04)\n- [décision] On garde recharts, #401 (visx) est fermée définitivement ; pas de deux bibliothèques de graphiques (source: c3-03, kestrel-analytics/platform#401)\n- [décision] Flag activé uniquement pour le workspace de Zest ; les anciens dashboards restent derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: b2-04)",
+  "rendu": "## Où j'en suis\nLa PR #418 (grille v2 déplaçable/redimensionnable) est fusionnée. Sur la branche tom/dashboard-keyboard, la PR #423 (déplacement/redimensionnement au clavier + anneau de focus, suites de la review de Priya) est ouverte, relecture demandée à Priya. Le flag dashboards_v2 est activé sur staging pour zest-grocers afin de répéter la démo. La prod reste off. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 en attente de la review de Priya, commit 8f1a2c7 (useGridKeyboard, annonces aria-live, focus ring), 11 tests verts (de: équipe, agent; source: ses-db-4, 8f1a2c7)\n- [prochaine-étape] Activer dashboards_v2 en prod soi-même le matin du 24 pour la démo Zest (de: toi; source: d4-06)\n- [essai-raté] @dnd-kit/core KeyboardSensor avec react-grid-layout : chaque déplacement appliqué deux fois et deux onLayoutChange par drag souris ; le contourner imposerait de réécrire la grille, donc retiré (de: toi, agent; source: d4-02, d4-04)\n- [décision] Gestionnaire clavier maison au-dessus de l'état du layout, sans dnd-kit (de: toi; source: d4-04)\n- [décision] On garde recharts, #401 (visx) est fermée définitivement ; pas de deux bibliothèques de graphiques (de: toi, équipe; source: c3-03, kestrel-analytics/platform#401)\n- [décision] Flag activé uniquement pour le workspace de Zest ; les anciens dashboards restent derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1493,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6882,
+    "sortie": 629,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020054
+  },
+  "cout": 0.020054,
+  "latenceMs": 4691,
+  "fournisseur": "Claude Platform on AWS"
+}

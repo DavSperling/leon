@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:20:50.543Z",
+  "reponse": "## Où j'en suis\nBuilt the Dashboards v2 grid (drag + resize via react-grid-layout, behind the `dashboards_v2` flag), with server-side layout persistence (`PUT /dashboards/:id/layout`) plus a localStorage fallback, widget sizing via a ResizeObserver hook (iOS 15 Safari doesn't support container queries), the `DashboardTile` → `WidgetCard` rename, and the Storybook build fix. Draft PR opened with a final commit for rename + Storybook fix, awaiting Priya's UX review before the Zest demo on Tuesday the 24th.\n\n- [en-cours] PR #418 open (draft), waiting on Priya's UX review on the iPad tomorrow\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only in the flags admin before the demo\n- [essai-raté] Container queries for widget sizing: ignored by iOS 15 Safari, replaced by a `useWidgetSize()` ResizeObserver hook\n- [essai-raté] Storybook build failed on CSS import from `node_modules` subpath; fixed by moving the import to `.storybook/preview.ts` and adding `react-grid-layout` to `optimizeDeps.include`\n- [décision] Layout persisted server-side via `PUT /dashboards/:id/layout` (source: t03)\n- [décision] Single sizing system: ResizeObserver, container queries dropped (source: t09)\n- [décision] v1 dashboards stay behind the flag until January; nothing removed now (source: t15)",
+  "rendu": "## Où j'en suis\nBuilt the Dashboards v2 grid (drag + resize via react-grid-layout, behind the `dashboards_v2` flag), with server-side layout persistence (`PUT /dashboards/:id/layout`) plus a localStorage fallback, widget sizing via a ResizeObserver hook (iOS 15 Safari doesn't support container queries), the `DashboardTile` → `WidgetCard` rename, and the Storybook build fix. Draft PR opened with a final commit for rename + Storybook fix, awaiting Priya's UX review before the Zest demo on Tuesday the 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 open (draft), waiting on Priya's UX review on the iPad tomorrow\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace only in the flags admin before the demo\n- [essai-raté] Container queries for widget sizing: ignored by iOS 15 Safari, replaced by a `useWidgetSize()` ResizeObserver hook\n- [essai-raté] Storybook build failed on CSS import from `node_modules` subpath; fixed by moving the import to `.storybook/preview.ts` and adding `react-grid-layout` to `optimizeDeps.include`\n- [décision] Layout persisted server-side via `PUT /dashboards/:id/layout` (source: t03)\n- [décision] Single sizing system: ResizeObserver, container queries dropped (source: t09)\n- [décision] v1 dashboards stay behind the flag until January; nothing removed now (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1439,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3471,
+    "sortie": 335,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00411671
+  },
+  "cout": 0.00411671,
+  "latenceMs": 5304,
+  "fournisseur": "DigitalOcean"
+}

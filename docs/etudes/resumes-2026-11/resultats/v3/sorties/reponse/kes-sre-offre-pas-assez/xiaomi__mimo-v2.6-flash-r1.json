@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:09.028Z",
+  "reponse": "No salary has been offered to Yael Mizrahi yet — the team agreed to wait until after her final round before discussing numbers [3][4], and that final with Maya is still upcoming, scheduled for November 24, 2026 [1]. For reference, the Senior SRE L5 band is 520–600k ILS base in Tel Aviv (or $170–190k in New York), with anything above the band requiring CEO approval [2]. Yael hasn't stated a figure herself, only that she expects something \"competitive with big tech\" [4]. The offer letter template is still in progress [5].",
+  "rendu": "No salary has been offered to Yael Mizrahi yet — the team agreed to wait until after her final round before discussing numbers [3][4], and that final with Maya is still upcoming, scheduled for November 24, 2026 [1]. For reference, the Senior SRE L5 band is 520–600k ILS base in Tel Aviv (or $170–190k in New York), with anything above the band requiring CEO approval [2]. Yael hasn't stated a figure herself, only that she expects something \"competitive with big tech\" [4]. The offer letter template is still in progress [5].",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1076,
+    "sortie": 247,
+    "reflexion": 103,
+    "cache": 0,
+    "cout": 0.00030165
+  },
+  "cout": 0.00030165,
+  "latenceMs": 5937,
+  "fournisseur": "Makora"
+}

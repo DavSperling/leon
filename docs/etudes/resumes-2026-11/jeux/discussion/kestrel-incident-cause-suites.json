@@ -1,0 +1,33 @@
+{
+  "id": "kestrel-incident-cause-suites",
+  "titre": "L'incident d'ingestion du 12/11 : cause, absence de perte et suites, à croiser entre Slack, le postmortem et Linear",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-kestrel",
+    "question": "What actually broke in the event pipeline last Thursday? Did we lose any customer data, and what are we changing so it doesn't happen again?"
+  },
+  "attendu": {
+    "sources": ["notion-postmortem-ingest-1112", "slack-incidents-1112", "linear-kes-431"],
+    "faits": [
+      { "id": "f1", "texte": "Says the cause was the ingest v2.14.0 deploy, which raised the default batch size (max_batch_bytes) from 1 MB to 10 MB, so the workers ran out of memory and crash-looped.", "poids": 3 },
+      { "id": "f2", "texte": "Says no events or customer data were lost: they were processed late (checked by the reconciliation of November 13).", "poids": 3 },
+      { "id": "f3", "texte": "Says dashboards were delayed for about 3h40 (08:47 to 12:27 UTC on November 12).", "poids": 2 },
+      { "id": "f4", "texte": "Mentions the alert on consumer lag above 5 minutes (KES-431, Noa) and says it is not finished yet (threshold still being tuned).", "poids": 3 },
+      { "id": "f5", "texte": "Mentions that ingest configuration changes will go to a canary pool first (KES-432, Daniel).", "poids": 2 },
+      { "id": "f6", "texte": "Mentions raising the worker memory limit and adding a load test on batch sizes (KES-433, Lior).", "poids": 2 },
+      { "id": "f7", "texte": "Says it was fixed by rolling back to v2.13.3 (the default was then reverted in ingest#419).", "poids": 1 },
+      { "id": "f8", "texte": "Says detection took 27 minutes because there was no alert on consumer lag.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Says events or customer data were lost." },
+      { "id": "i2", "texte": "Gives the Kafka brokers' disk as the cause (an early hypothesis, ruled out at 09:41)." },
+      { "id": "i3", "texte": "Says the consumer-lag alert follow-up is complete." },
+      { "id": "i4", "texte": "Blames the database or the Postgres upgrade for the incident." }
+    ],
+    "pieges": [
+      "Croiser : la cause est dans Slack et le postmortem, l'absence de perte dans la réconciliation du 13/11, l'état réel des suites dans Linear (KES-431 pas fini alors que le postmortem le donne pour le 20/11).",
+      "Fausse piste : « Kafka broker disk ? » lancé à 09:26, écarté à 09:41.",
+      "Vocabulaire : « event pipeline », « last Thursday » (le 12/11) au lieu de ingest, incident, SEV2 ; la date relative se lit depuis le mercredi 18/11."
+    ]
+  }
+}

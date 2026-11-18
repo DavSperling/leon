@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:46:37.266Z",
+  "reponse": "The two things Martin raised on the Nov 12 sync [1]:\n\n1. **Webhooks failing signature verification** — Ellen's team saw almost every `payout.paid` / `seller.verified` event fail HMAC verification on sandbox, roughly 1 in 20 passing, and they'd turned verification off there [1]. Jake took it the same day and asked for failing event IDs [1][5]. Cause: the Rust core signs canonical sorted JSON while the TS delivery worker re-serializes and adds fields [9]. Fixed in core#1187, merged and deployed to sandbox, going to production with release 2026.47 on Tue Nov 24 [9][18]. Ellen confirmed on Nov 17 that verification is back on and 300+ events all verify [5]. So yes, picked up and closed.\n\n2. **Per-seller payout schedules** — net-7 for ~200 top sellers, net-30 for everyone else [4]. This one was *not* picked up for December: Tomer estimated 3–4 weeks because it means splitting batches and changing how the ledger computes available balances [4], and Avi ruled it out of Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", moved to Backlog, target 2027-Q1, with Owen asked to set expectations with Martin [4]. Owen committed to a clear answer by Friday Nov 20 [5], but as of Nov 17 Martin was still asking for an update saying they need it for their seller comms [5]. No answer is recorded yet.",
+  "rendu": "The two things Martin raised on the Nov 12 sync [1]:\n\n1. **Webhooks failing signature verification** — Ellen's team saw almost every `payout.paid` / `seller.verified` event fail HMAC verification on sandbox, roughly 1 in 20 passing, and they'd turned verification off there [1]. Jake took it the same day and asked for failing event IDs [1][5]. Cause: the Rust core signs canonical sorted JSON while the TS delivery worker re-serializes and adds fields [9]. Fixed in core#1187, merged and deployed to sandbox, going to production with release 2026.47 on Tue Nov 24 [9][18]. Ellen confirmed on Nov 17 that verification is back on and 300+ events all verify [5]. So yes, picked up and closed.\n\n2. **Per-seller payout schedules** — net-7 for ~200 top sellers, net-30 for everyone else [4]. This one was *not* picked up for December: Tomer estimated 3–4 weeks because it means splitting batches and changing how the ledger computes available balances [4], and Avi ruled it out of Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", moved to Backlog, target 2027-Q1, with Owen asked to set expectations with Martin [4]. Owen committed to a clear answer by Friday Nov 20 [5], but as of Nov 17 Martin was still asking for an update saying they need it for their seller comms [5]. No answer is recorded yet.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 26239,
+    "sortie": 945,
+    "reflexion": 322,
+    "cache": 15872,
+    "cout": 0.004339332
+  },
+  "latenceMs": 5880,
+  "fournisseur": "CoreWeave",
+  "trace": [
+    "chercher {\"requete\":\"Martin Kobayashi Tradewell weekly sync flagged concerns\"}",
+    "chercher {\"requete\":\"Tradewell go-live December 7 risks blockers\"}",
+    "lire {\"passageId\":\"gong-tradewell-1112-2\"}",
+    "lire {\"sourceId\":\"jira-qpay-2362\"}",
+    "chercher {\"requete\":\"core#1187 webhook signature fix merged deploy status\",\"outil\":\"github\"}",
+    "chercher {\"requete\":\"Owen Martin payout schedule expectations answer Friday\",\"depuis\":\"2026-11-16\"}"
+  ],
+  "cout": 0.004339332
+}

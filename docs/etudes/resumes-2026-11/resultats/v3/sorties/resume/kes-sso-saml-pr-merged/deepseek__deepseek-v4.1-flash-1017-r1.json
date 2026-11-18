@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:57:55.079Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is finished: signature verification and condition checks are implemented with `signxml` (python3-saml was dropped), the old `saml_utils` now lives in `api/auth/saml/verify.py`, and lint, mypy and the full suite pass. PR #412 is merged into `main`; the only work left is the staging metadata exchange for Thursday's demo.\n\n- [en-cours] Fernhill's staging IdP metadata is not loaded yet.\n- [prochaine-étape] Load that metadata and send Fernhill our staging SP metadata by Wednesday EOD, ahead of the demo Thursday 10:00 NY; then open a separate ticket for enforcing SSO / disabling password login.\n- [essai-raté] python3-saml on the Alpine image: lxml/xmlsec libxml2 version mismatch, and building lxml from source took 9 min and still failed on a missing crypto module.\n- [décision] Go with signxml, remove python3-saml and xmlsec from the Dockerfile, write the condition checks ourselves and read attributes only from `signed_xml` (source: t08)\n- [décision] Clock skew set to 120 s per Fernhill's contract annex; password login untouched, separate ticket (source: t12)\n- [décision] No `--admin` and no `--auto` merge; the person pings Maya for review (source: t21)",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint for Fernhill is finished: signature verification and condition checks are implemented with `signxml` (python3-saml was dropped), the old `saml_utils` now lives in `api/auth/saml/verify.py`, and lint, mypy and the full suite pass. PR #412 is merged into `main`; the only work left is the staging metadata exchange for Thursday's demo.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill's staging IdP metadata is not loaded yet.\n- [prochaine-étape] Load that metadata and send Fernhill our staging SP metadata by Wednesday EOD, ahead of the demo Thursday 10:00 NY; then open a separate ticket for enforcing SSO / disabling password login.\n- [essai-raté] python3-saml on the Alpine image: lxml/xmlsec libxml2 version mismatch, and building lxml from source took 9 min and still failed on a missing crypto module.\n- [décision] Go with signxml, remove python3-saml and xmlsec from the Dockerfile, write the condition checks ourselves and read attributes only from `signed_xml` (source: t08)\n- [décision] Clock skew set to 120 s per Fernhill's contract annex; password login untouched, separate ticket (source: t12)\n- [décision] No `--admin` and no `--auto` merge; the person pings Maya for review (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1348,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4616,
+    "sortie": 826,
+    "reflexion": 506,
+    "cache": 0,
+    "cout": 0.00089379
+  },
+  "cout": 0.00089379,
+  "latenceMs": 6017,
+  "fournisseur": "InferenceNet"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:13:42.822Z",
+  "reponse": "Rien à signaler.",
+  "rendu": "Rien à signaler.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2381,
+    "sortie": 72,
+    "reflexion": 60,
+    "cache": 1443,
+    "cout": 0.000167605
+  },
+  "cout": 0.000167605,
+  "latenceMs": 2547,
+  "fournisseur": "OpenAI"
+}

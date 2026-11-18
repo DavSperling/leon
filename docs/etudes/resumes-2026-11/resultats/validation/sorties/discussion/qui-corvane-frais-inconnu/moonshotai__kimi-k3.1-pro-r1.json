@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:26.934Z",
+  "reponse": "It’s not settled yet. The working assumption is **$0.08 per ACH payout in 2027**, with the current agreement running through March 31, 2027 [2]. Corvane’s relationship manager has hinted at an increase, but as of November 16 nothing was on paper; the renewal call was moved to the week of November 23 [8].",
+  "rendu": "It’s not settled yet. The working assumption is **$0.08 per ACH payout in 2027**, with the current agreement running through March 31, 2027 [2]. Corvane’s relationship manager has hinted at an increase, but as of November 16 nothing was on paper; the renewal call was moved to the week of November 23 [8].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18141,
+    "sortie": 628,
+    "reflexion": 308,
+    "cache": 7936,
+    "cout": 0.028277200000000002
+  },
+  "latenceMs": 8189,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"Corvane per payout pricing next year\"}",
+    "chercher {\"requete\":\"Corvane payout fee renewal\"}",
+    "lire {\"sourceId\":\"drive-q1-pricing-memo\"}",
+    "lire {\"sourceId\":\"slack-finance-corvane\"}",
+    "chercher {\"requete\":\"Corvane renewal per-item ACH fee proposal 2027 Paula Brandt\"}"
+  ],
+  "cout": 0.028277200000000002
+}

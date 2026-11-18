@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:21:56.411Z",
+  "reponse": "## Où j'en suis\n\nPostmortem action item 3 is well advanced: `cmd/replay` is written and tested (per-partition ordering fix, rejects file for schema-v2 lines, hard allowlist on `events.replay.v3`), and a dry run over the 12/11 window completed cleanly with 18,442,107 events to replay and 3,118 rejects. PR #233 is open with Daniel as reviewer; the real replay has not run yet.\n\n- [en-cours] PR #233 awaiting Daniel's review\n- [prochaine-étape] Run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [décision] No age cutoff; never produce to `events.v3`, only `events.replay.v3` (source: t05)\n- [décision] Batch size 5k, memory limit untouched (namespace quota capped by Noa) (source: t13)\n- [décision] Malformed lines written to the rejects prefix, not skipped silently (source: t15)\n- [essai-raté] `--batch 50000` dry run OOMKilled at the 2Gi limit; re-run at 5k succeeded\n- [question] Nothing left open: no draft for Rachel (source: t19)",
+  "rendu": "## Où j'en suis\nPostmortem action item 3 is well advanced: `cmd/replay` is written and tested (per-partition ordering fix, rejects file for schema-v2 lines, hard allowlist on `events.replay.v3`), and a dry run over the 12/11 window completed cleanly with 18,442,107 events to replay and 3,118 rejects. PR #233 is open with Daniel as reviewer; the real replay has not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 awaiting Daniel's review\n- [prochaine-étape] Run the real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [décision] No age cutoff; never produce to `events.v3`, only `events.replay.v3` (source: t05)\n- [décision] Batch size 5k, memory limit untouched (namespace quota capped by Noa) (source: t13)\n- [décision] Malformed lines written to the rejects prefix, not skipped silently (source: t15)\n- [essai-raté] `--batch 50000` dry run OOMKilled at the 2Gi limit; re-run at 5k succeeded\n- [question] Nothing left open: no draft for Rachel (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1177,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4492,
+    "sortie": 357,
+    "reflexion": 18,
+    "cache": 0,
+    "cout": 0.00072884
+  },
+  "cout": 0.00072884,
+  "latenceMs": 4282,
+  "fournisseur": "DeepInfra"
+}

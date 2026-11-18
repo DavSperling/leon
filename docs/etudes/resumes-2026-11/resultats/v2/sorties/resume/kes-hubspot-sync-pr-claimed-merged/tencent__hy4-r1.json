@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:21:40.829Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3561,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 0,
+    "cout": 0.006486937
+  },
+  "cout": 0.006486937,
+  "latenceMs": 43271,
+  "fournisseur": "Tencent"
+}

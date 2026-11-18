@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:35.231Z",
+  "reponse": "## What is still open\n\n- **Tanguy, dépôt avant lundi 23** : les travaux commencent lundi et le dossier doit être déposé avant, sinon elle perd la prime. Elle a envoyé son avis d'imposition [3] — il reste à déposer, en suivant la nouvelle procédure courriel [2].\n- **Dépôts par courriel avant le 20/11** [2] : un message du service accompagnement annonce que les dossiers MaPrimeRénov' sont temporairement à transmettre par courriel (pièces + RIB), sinon ils ne seront pas instruits cette année.\n- **Liste des dossiers déposés pour Patrick Hamon** avant le 25/11 (client, date de dépôt, prime attendue) pour l'avance de trésorerie du Crédit Ligérien [5].\n- **Guillou** : le RIB manque toujours ; tu comptais le relancer le 17 [1]. **Morvan** : l'attestation RGE est valable pour ses travaux du 7/12, mais son renouvellement dépend de l'audit de décembre [1].\n\n## What changed\n\n- **Peltier a signé son devis** : Camille l'a mis dans le Drive et indique que tu peux déposer [4].\n- **Tanguy a envoyé son avis d'imposition** avec ses excuses, et confirme que les travaux commencent bien lundi 23 [3].\n\n## What you did\n\n- Tu as fait l'état des lieux des 5 dossiers MaPrimeRénov' : seul Bréhier était complet, tu l'as déposé le 16/11 [1].\n- Tu as envoyé à Mme Tanguy une relance ferme avec la date limite et l'enjeu de la prime, préparé un récap des statuts pour Hélène, et uniformisé le nom des pièces (47 fichiers) [1].",
+  "rendu": "## What is still open\n\n- **Tanguy, dépôt avant lundi 23** : les travaux commencent lundi et le dossier doit être déposé avant, sinon elle perd la prime. Elle a envoyé son avis d'imposition [3] — il reste à déposer, en suivant la nouvelle procédure courriel [2].\n- **Dépôts par courriel avant le 20/11** [2] : un message du service accompagnement annonce que les dossiers MaPrimeRénov' sont temporairement à transmettre par courriel (pièces + RIB), sinon ils ne seront pas instruits cette année.\n- **Liste des dossiers déposés pour Patrick Hamon** avant le 25/11 (client, date de dépôt, prime attendue) pour l'avance de trésorerie du Crédit Ligérien [5].\n- **Guillou** : le RIB manque toujours ; tu comptais le relancer le 17 [1]. **Morvan** : l'attestation RGE est valable pour ses travaux du 7/12, mais son renouvellement dépend de l'audit de décembre [1].\n\n## What changed\n\n- **Peltier a signé son devis** : Camille l'a mis dans le Drive et indique que tu peux déposer [4].\n- **Tanguy a envoyé son avis d'imposition** avec ses excuses, et confirme que les travaux commencent bien lundi 23 [3].\n\n## What you did\n\n- Tu as fait l'état des lieux des 5 dossiers MaPrimeRénov' : seul Bréhier était complet, tu l'as déposé le 16/11 [1].\n- Tu as envoyé à Mme Tanguy une relance ferme avec la date limite et l'enjeu de la prime, préparé un récap des statuts pour Hélène, et uniformisé le nom des pièces (47 fichiers) [1].",
+  "mesures": {
+    "mots": 227,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3722,
+    "sortie": 940,
+    "reflexion": 512,
+    "cache": 0,
+    "cout": 0.00105612
+  },
+  "cout": 0.00105612,
+  "latenceMs": 19785,
+  "fournisseur": "Inceptron"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:27.800Z",
+  "reponse": "## Où j'en suis\nLa PR #87 (synchro de nuit, webhooks qui ne touchent plus au stock) est fusionnée. Le 16/11, le CSV de TransAlp est arrivé 47 minutes après le passage de la synchro, et 40 références sont restées fausses sur le site toute la journée. Le 17/11, la synchro relancée à la main les a corrigées. La PR #96 (reprises à 4 h et 6 h, alerte mail) est ouverte et attend la relecture d'Hugo. (source: ses-st-3, maison-verdier/boutique#87, maison-verdier/boutique#96)\n\n- [en-cours] PR #96 ouverte, relecture par Hugo en attente (source: maison-verdier/boutique#96)\n- [prochaine-étape] Relecture de la PR #96 par Hugo (source: u3-08)\n- [prochaine-étape] Traiter avec Lucie les 3 commandes de Saône survendues (source: ses-st-1)\n- [essai-raté] Dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (source: u1-01)\n- [essai-raté] Cron lu en UTC : la reprise de 4 h tombait à 5 h à Paris. Fuseau Europe/Paris fixé dans le planificateur (source: u3-04)\n- [question] Date de livraison à confirmer aux Galeries Brotteaux pour les 2 tables Saône du réassort du 2 décembre (source: src-mail-brotteaux)\n- [question] Geste pour la commande #1041 annulée : un bon d'achat de 50 € a été proposé, son suivi n'est pas noté (source: src-zendesk-1041)\n- [décision] Les webhooks ne touchent plus au stock ; la synchro de nuit écrit la valeur absolue (source: u1-02)\n- [décision] Seuil d'alerte stock bas à 3 (source: u1-04)\n- [décision] Pas de précommande pour la Saône : elle revient de chez bois & fils le 2 décembre, rien avant (source: u1-06)\n- [décision] Reprises à 4 h et 6 h ; mail à Karim si le CSV manque encore à 6 h (source: u3-03)\n- [décision] Pas de réservation Saône dans le script : c'est l'équipe commerciale qui la gère avec les Galeries Brotteaux (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa PR #87 (synchro de nuit, webhooks qui ne touchent plus au stock) est fusionnée. Le 16/11, le CSV de TransAlp est arrivé 47 minutes après le passage de la synchro, et 40 références sont restées fausses sur le site toute la journée. Le 17/11, la synchro relancée à la main les a corrigées. La PR #96 (reprises à 4 h et 6 h, alerte mail) est ouverte et attend la relecture d'Hugo. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#87, maison-verdier/boutique#96)\n\n- [en-cours] PR #96 ouverte, relecture par Hugo en attente (de: équipe; source: maison-verdier/boutique#96)\n- [prochaine-étape] Relecture de la PR #96 par Hugo (de: agent; source: u3-08)\n- [prochaine-étape] Traiter avec Lucie les 3 commandes de Saône survendues (de: agent; source: ses-st-1)\n- [essai-raté] Dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (de: agent; source: u1-01)\n- [essai-raté] Cron lu en UTC : la reprise de 4 h tombait à 5 h à Paris. Fuseau Europe/Paris fixé dans le planificateur (de: agent; source: u3-04)\n- [question] Date de livraison à confirmer aux Galeries Brotteaux pour les 2 tables Saône du réassort du 2 décembre (de: connecteur; source: src-mail-brotteaux)\n- [question] Geste pour la commande #1041 annulée : un bon d'achat de 50 € a été proposé, son suivi n'est pas noté (de: connecteur; source: src-zendesk-1041)\n- [décision] Les webhooks ne touchent plus au stock ; la synchro de nuit écrit la valeur absolue (de: toi; source: u1-02)\n- [décision] Seuil d'alerte stock bas à 3 (de: toi; source: u1-04)\n- [décision] Pas de précommande pour la Saône : elle revient de chez bois & fils le 2 décembre, rien avant (de: toi; source: u1-06)\n- [décision] Reprises à 4 h et 6 h ; mail à Karim si le CSV manque encore à 6 h (de: toi; source: u3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1860,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5938,
+    "sortie": 2715,
+    "reflexion": 1861,
+    "cache": 0,
+    "cout": 0.0019513
+  },
+  "cout": 0.0019513,
+  "latenceMs": 16901,
+  "fournisseur": "Amazon Bedrock"
+}

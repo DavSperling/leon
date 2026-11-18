@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:18:33.635Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5298,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 1664,
+    "cout": 0.011554322
+  },
+  "cout": 0.011554322,
+  "latenceMs": 76264,
+  "fournisseur": "Tencent"
+}

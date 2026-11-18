@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:00.953Z",
+  "reponse": "## Où j'en suis\nTom's branch `tom/dashboard-keyboard` adds keyboard move/resize and a visible focus ring to the dashboard grid, as the follow-up to PR #418 (merged). Keyboard support is implemented in `useGridKeyboard()` with 11 new tests passing, committed as `8f1a2c7`, and PR #423 is open with Priya requested as reviewer. The `dashboards_v2` flag is on for zest-grocers in staging only; production is untouched. (source: ses-db-4, d4-05, d4-07, kestrel-analytics/platform#423, 8f1a2c7)\n\n- [en-cours] Priya's review of PR #423 (keyboard move/resize and focus ring) (source: kestrel-analytics/platform#423)\n- [prochaine-étape] Get PR #423 reviewed and merged (source: kestrel-analytics/platform#423)\n- [prochaine-étape] Priya rehearses the Zest demo on staging (source: d4-06)\n- [prochaine-étape] Flip `dashboards_v2` on in production the morning of the 24th, for Zest only (source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor applied every move twice and broke the mouse drag test, and fixing that meant rewriting the grid; removed (source: d4-02, d4-04)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16) (source: b2-01)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (source: d4-04)\n- [décision] Keep recharts, visx migration abandoned, PR #401 closed (source: c3-03, kestrel-analytics/platform#401)\n- [décision] ResizeObserver instead of container queries, all `@container` rules removed (source: b2-02)\n- [décision] Flag on for Zest only, legacy v1 dashboards stay behind the flag until January, nothing removed now (source: b2-04)",
+  "rendu": "## Où j'en suis\nTom's branch `tom/dashboard-keyboard` adds keyboard move/resize and a visible focus ring to the dashboard grid, as the follow-up to PR #418 (merged). Keyboard support is implemented in `useGridKeyboard()` with 11 new tests passing, committed as `8f1a2c7`, and PR #423 is open with Priya requested as reviewer. The `dashboards_v2` flag is on for zest-grocers in staging only; production is untouched. (de: équipe, agent; source: ses-db-4, d4-05, d4-07, kestrel-analytics/platform#423, 8f1a2c7)\n\n- [en-cours] Priya's review of PR #423 (keyboard move/resize and focus ring) (de: équipe; source: kestrel-analytics/platform#423)\n- [prochaine-étape] Get PR #423 reviewed and merged (de: équipe; source: kestrel-analytics/platform#423)\n- [prochaine-étape] Priya rehearses the Zest demo on staging (de: toi; source: d4-06)\n- [prochaine-étape] Flip `dashboards_v2` on in production the morning of the 24th, for Zest only (de: toi; source: d4-06, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor applied every move twice and broke the mouse drag test, and fixing that meant rewriting the grid; removed (de: toi, agent; source: d4-02, d4-04)\n- [essai-raté] CSS container queries do nothing on Zest's iPads (iOS 15, Safari < 16) (de: agent; source: b2-01)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts, visx migration abandoned, PR #401 closed (de: toi, équipe; source: c3-03, kestrel-analytics/platform#401)\n- [décision] ResizeObserver instead of container queries, all `@container` rules removed (de: toi; source: b2-02)\n- [décision] Flag on for Zest only, legacy v1 dashboards stay behind the flag until January, nothing removed now (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1741,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6882,
+    "sortie": 1441,
+    "reflexion": 751,
+    "cache": 0,
+    "cout": 0.0014087
+  },
+  "cout": 0.0014087,
+  "latenceMs": 6768,
+  "fournisseur": "Claude Platform on AWS"
+}

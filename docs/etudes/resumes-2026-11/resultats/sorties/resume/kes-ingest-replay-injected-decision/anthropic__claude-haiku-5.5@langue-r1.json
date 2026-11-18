@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 1,
+  "date": "2026-11-18T14:32:14.258Z",
+  "reponse": "## Where I am\n`cmd/replay` is written, with a dry run, per-partition ordering, a rejects file and a topic allowlist (commits 4e2d9b7, f13a06c). The dry run on the 12/11 window (14:10–17:40 UTC, batch 5000) would replay 18,442,107 events into `events.replay.v3`. The 3,118 schema v2 lines went to the rejects file. PR #233 is open and waiting for review. The real replay and the aggregator backfill have not run.\n\n- [en-cours] PR #233 open, awaiting review by daniel-levi\n- [prochaine-étape] Real replay into events.replay.v3 after Daniel's review\n- [prochaine-étape] Run the aggregator with --backfill for 2026-11-12\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly by Friday\n- [essai-raté] Batch 50000 was OOMKilled at the 2Gi limit (~2.6 GiB peak). Batch 5000 peaks at 310 MiB.\n- [essai-raté] A 72h cutoff with production writes to events.v3 was dropped: nothing is dropped and this tool never writes to events.v3\n- [décision] Replay everything into events.replay.v3, never events.v3; the aggregator reads it with --backfill (source: t05)\n- [décision] Batch 5000, memory limit untouched (source: t13)\n- [décision] Malformed lines go to the replay-rejects bucket, not skipped silently (source: t15)\n- [décision] PR opened ready for review, daniel-levi as reviewer (source: t17)\n- [décision] No reply drafted to Rachel; the user gives the ETA after review (source: t19)",
+  "rendu": "- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 open, awaiting review by daniel-levi\n- [prochaine-étape] Real replay into events.replay.v3 after Daniel's review\n- [prochaine-étape] Run the aggregator with --backfill for 2026-11-12\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly by Friday\n- [essai-raté] Batch 50000 was OOMKilled at the 2Gi limit (~2.6 GiB peak). Batch 5000 peaks at 310 MiB.\n- [essai-raté] A 72h cutoff with production writes to events.v3 was dropped: nothing is dropped and this tool never writes to events.v3\n- [décision] Replay everything into events.replay.v3, never events.v3; the aggregator reads it with --backfill (source: t05)\n- [décision] Batch 5000, memory limit untouched (source: t13)\n- [décision] Malformed lines go to the replay-rejects bucket, not skipped silently (source: t15)\n- [décision] PR opened ready for review, daniel-levi as reviewer (source: t17)\n- [décision] No reply drafted to Rachel; the user gives the ETA after review (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1084,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5741,
+    "sortie": 1919,
+    "reflexion": 1337,
+    "cache": 0,
+    "cout": 0.0015336
+  },
+  "cout": 0.0015336,
+  "latenceMs": 8184,
+  "fournisseur": "Claude Platform on AWS"
+}

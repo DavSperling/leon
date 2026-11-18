@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:29.216Z",
+  "reponse": "## Où j'en suis\nLe test en recette est validé : ZPL par défaut avec `^CI28`, accents contrôlés par Karim, commits `3e8b1d0` et `a90c4f7` poussés ; la bascule est préparée via `TRANSALP_DEBUT` au 1er décembre, Rapidis inchangé, et la PR #91 attend la relecture de Julien. (source: h2-04, h2-05, h2-06, 3e8b1d0, h2-08, a90c4f7, h2-09, maison-verdier/boutique#91, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, poussée, relecture de Julien en attente (source: maison-verdier/boutique#91, h2-11, h2-12, src-pr91)\n- [prochaine-étape] Ajouter la clé de production dans les secrets (source: h2-07)\n- [prochaine-étape] Faire relire la PR #91 puis activer la bascule le 1er décembre pour Lyon et Paris (source: h2-12, maison-verdier/boutique#91, src-slack-julien, h2-08)\n- [essai-raté] ZPL non disponible en sandbox, seulement en recette et production (source: ses-tr-1, h2-01)\n- [décision] Passer en ZPL par défaut, testé en recette (source: h2-01, h2-02)\n- [décision] TransAlp pour Lyon/Paris dès le 1er décembre ; reste France et colis >30 kg chez Rapidis jusqu’au 15 janvier, pas de Premium (source: src-slack-julien, h2-09)\n- [décision] Rien ne s’active avant le 1er décembre et Rapidis n’est pas désactivé (source: h2-07, h2-09)",
+  "rendu": "## Où j'en suis\nLe test en recette est validé : ZPL par défaut avec `^CI28`, accents contrôlés par Karim, commits `3e8b1d0` et `a90c4f7` poussés ; la bascule est préparée via `TRANSALP_DEBUT` au 1er décembre, Rapidis inchangé, et la PR #91 attend la relecture de Julien. (de: toi, équipe, agent; source: h2-04, h2-05, h2-06, 3e8b1d0, h2-08, a90c4f7, h2-09, maison-verdier/boutique#91, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, poussée, relecture de Julien en attente (de: toi, équipe, agent; source: maison-verdier/boutique#91, h2-11, h2-12, src-pr91)\n- [prochaine-étape] Ajouter la clé de production dans les secrets (de: toi; source: h2-07)\n- [prochaine-étape] Faire relire la PR #91 puis activer la bascule le 1er décembre pour Lyon et Paris (de: équipe, connecteur, agent; source: h2-12, maison-verdier/boutique#91, src-slack-julien, h2-08)\n- [essai-raté] ZPL non disponible en sandbox, seulement en recette et production (de: toi, agent; source: ses-tr-1, h2-01)\n- [décision] Passer en ZPL par défaut, testé en recette (de: toi, agent; source: h2-01, h2-02)\n- [décision] TransAlp pour Lyon/Paris dès le 1er décembre ; reste France et colis >30 kg chez Rapidis jusqu’au 15 janvier, pas de Premium (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] Rien ne s’active avant le 1er décembre et Rapidis n’est pas désactivé (de: toi; source: h2-07, h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1381,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4113,
+    "sortie": 5727,
+    "reflexion": 5247,
+    "cache": 0,
+    "cout": 0.00330864
+  },
+  "cout": 0.00330864,
+  "latenceMs": 106761,
+  "fournisseur": "Alibaba"
+}

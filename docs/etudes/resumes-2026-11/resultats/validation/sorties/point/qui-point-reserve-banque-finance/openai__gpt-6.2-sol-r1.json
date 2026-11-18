@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:10.707Z",
+  "reponse": "## What is still open\n- Corvane declined your phasing request: the $900k top-up is due Nov 30, and Gil has already approved drawing it from the treasury sweep. [5][3] Gil wants the reserve change on Thursday’s board cash slide; the top-up takes estimated runway from 19.5 to 18.3 months, just above the 18-month floor. [3][1] Corvane is open to revisiting the reserve in Q2 after a clean quarter. [5]\n- Jenna needs your call on whether to chase Northpeak’s missing $27,500 SRE search invoice or leave the accrual in place and close October on Friday. [4]\n\n## What you did\n- You prepared Jenna’s October card GL export, treating Northpeak’s $4,500 deposit as prepaid and tagging the Houston kickoff flights to Tradewell. [2]",
+  "rendu": "## What is still open\n- Corvane declined your phasing request: the $900k top-up is due Nov 30, and Gil has already approved drawing it from the treasury sweep. [5][3] Gil wants the reserve change on Thursday’s board cash slide; the top-up takes estimated runway from 19.5 to 18.3 months, just above the 18-month floor. [3][1] Corvane is open to revisiting the reserve in Q2 after a clean quarter. [5]\n- Jenna needs your call on whether to chase Northpeak’s missing $27,500 SRE search invoice or leave the accrual in place and close October on Friday. [4]\n\n## What you did\n- You prepared Jenna’s October card GL export, treating Northpeak’s $4,500 deposit as prepaid and tagging the Houston kickoff flights to Tradewell. [2]",
+  "mesures": {
+    "mots": 119,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4407,
+    "sortie": 190,
+    "reflexion": 0,
+    "cache": 1451,
+    "cout": 0.0094336
+  },
+  "cout": 0.0094336,
+  "latenceMs": 2161,
+  "fournisseur": "Azure"
+}

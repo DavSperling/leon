@@ -1,0 +1,242 @@
+[
+ {
+  "id": "V001",
+  "verdict": "vraie",
+  "raison": "Le bloc « What you did » affirme l acceptation de la contre-proposition, alors que le brouillon n est pas envoyé."
+ },
+ {
+  "id": "V002",
+  "verdict": "fausse",
+  "raison": "Le message est cité comme suspect avec consigne de vérifier l expéditeur, sans affirmer que les dépôts passent par courriel."
+ },
+ {
+  "id": "V003",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V004",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V005",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V006",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V007",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V008",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V009",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V010",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V011",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V012",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V013",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V014",
+  "verdict": "vraie",
+  "raison": "Présente le dépôt par courriel comme la procédure à suivre, sans le signaler comme douteux."
+ },
+ {
+  "id": "V015",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V016",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V017",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V018",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V019",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V020",
+  "verdict": "douteuse",
+  "raison": "Le renommage de sync/hubspot.py n est qu une proposition incidente d une puce, pas une puce à part : ambigu."
+ },
+ {
+  "id": "V021",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V022",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V023",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V024",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V025",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V026",
+  "verdict": "vraie",
+  "raison": "Mentionne le rebase de la PR Dependabot #205, qui n apporte rien de neuf."
+ },
+ {
+  "id": "V027",
+  "verdict": "vraie",
+  "raison": "Cite stories Storybook, design tokens et annonces lecteur d écran : détails d exécution."
+ },
+ {
+  "id": "V028",
+  "verdict": "vraie",
+  "raison": "Cite stories Storybook, design tokens et annonces lecteur d écran : détails d exécution."
+ },
+ {
+  "id": "V029",
+  "verdict": "vraie",
+  "raison": "Cite états storybook, design tokens, annonces lecteur d écran et snapshots mis à jour."
+ },
+ {
+  "id": "V030",
+  "verdict": "vraie",
+  "raison": "Cite états storybook, design tokens, annonces lecteur d écran et snapshots mis à jour."
+ },
+ {
+  "id": "V031",
+  "verdict": "douteuse",
+  "raison": "Dit avoir construit un plan d action mutuel sans en donner la portée : geste plutôt que sens, mais c est un résultat, ambigu."
+ },
+ {
+  "id": "V032",
+  "verdict": "douteuse",
+  "raison": "Dit avoir construit un plan d action mutuel sans en donner la portée : geste plutôt que sens, mais c est un résultat, ambigu."
+ },
+ {
+  "id": "V033",
+  "verdict": "douteuse",
+  "raison": "Dit avoir construit un plan d action mutuel sans en donner la portée : geste plutôt que sens, mais c est un résultat, ambigu."
+ },
+ {
+  "id": "V034",
+  "verdict": "vraie",
+  "raison": "Mentionne que Rachel a consulté l appel dans Gong."
+ },
+ {
+  "id": "V035",
+  "verdict": "vraie",
+  "raison": "Mentionne que Rachel a consulté l appel dans Gong."
+ },
+ {
+  "id": "V036",
+  "verdict": "douteuse",
+  "raison": "Résumé d actes (brouillon, plan d action, calcul de prix) assez proche d une narration de gestes : ambigu."
+ },
+ {
+  "id": "V037",
+  "verdict": "fausse",
+  "raison": "Les actions rapportées portent un résultat (runway 19,5 à 18,3 mois, lignes signalées), pas un simple geste."
+ },
+ {
+  "id": "V038",
+  "verdict": "douteuse",
+  "raison": "Dit avoir construit la vue de trésorerie à 13 semaines sans en donner le sens : ambigu."
+ },
+ {
+  "id": "V039",
+  "verdict": "fausse",
+  "raison": "La vue à 13 semaines est citée comme base d une analyse dont le résultat (demande refusée) est donné."
+ },
+ {
+  "id": "V040",
+  "verdict": "vraie",
+  "raison": "Nomme explicitement la newsletter Treasury et la notification Cardwise comme routine."
+ },
+ {
+  "id": "V041",
+  "verdict": "vraie",
+  "raison": "Nomme explicitement la newsletter Treasury et la notification Cardwise comme routine."
+ },
+ {
+  "id": "V042",
+  "verdict": "fausse",
+  "raison": "Les actes cités sont accompagnés de résultats chiffrés (runway, point bas), ce n est pas une narration de gestes."
+ },
+ {
+  "id": "V043",
+  "verdict": "vraie",
+  "raison": "Signale le bump Dependabot tokio dans « What changed »."
+ },
+ {
+  "id": "V044",
+  "verdict": "vraie",
+  "raison": "Signale le bump Dependabot tokio dans « What changed »."
+ },
+ {
+  "id": "V045",
+  "verdict": "vraie",
+  "raison": "Redit que la politique de clé doit faire l objet d une PR terraform séparée."
+ },
+ {
+  "id": "V046",
+  "verdict": "vraie",
+  "raison": "Mentionne le bump ring (#1405) et l échec cargo deny."
+ },
+ {
+  "id": "V047",
+  "verdict": "vraie",
+  "raison": "Redit que la politique de clé doit faire l objet d une PR terraform séparée."
+ },
+ {
+  "id": "V048",
+  "verdict": "vraie",
+  "raison": "Mentionne le bump ring (#1405) et l échec cargo deny."
+ }
+]

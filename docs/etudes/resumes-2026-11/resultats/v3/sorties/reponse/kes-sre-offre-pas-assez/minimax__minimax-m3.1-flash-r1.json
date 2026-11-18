@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:09.026Z",
+  "reponse": "No offer has been made to Yael Mizrahi yet. As of Nov 17, 2026 she had just advanced to the final round with Maya Cohen on Nov 24 [1], and the team agreed to wait for the finals before discussing numbers [4]. The only figure she gave was an expectation of something \"competitive with big tech\", without a number [4]. The published band for this Senior SRE role (L5) is 520–600k ILS base in Tel Aviv or $170–190k base in New York, plus equity, with anything above the band requiring CEO approval [2]. Slack also noted a reminder that there should be no offer discussion with candidates until after the final round [3], and the offer letter template was still in progress [5].",
+  "rendu": "No offer has been made to Yael Mizrahi yet. As of Nov 17, 2026 she had just advanced to the final round with Maya Cohen on Nov 24 [1], and the team agreed to wait for the finals before discussing numbers [4]. The only figure she gave was an expectation of something \"competitive with big tech\", without a number [4]. The published band for this Senior SRE role (L5) is 520–600k ILS base in Tel Aviv or $170–190k base in New York, plus equity, with anything above the band requiring CEO approval [2]. Slack also noted a reminder that there should be no offer discussion with candidates until after the final round [3], and the offer letter template was still in progress [5].",
+  "mesures": {
+    "mots": 123,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1142,
+    "sortie": 233,
+    "reflexion": 71,
+    "cache": 128,
+    "cout": 0.00029382
+  },
+  "cout": 0.00029382,
+  "latenceMs": 1938,
+  "fournisseur": "Parasail"
+}

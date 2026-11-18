@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:25:58.815Z",
+  "reponse": "## Où j'en suis\nClient TransAlp branché en sandbox : OAuth2 client_credentials avec jeton gardé en mémoire, étiquette PDF obtenue sur la commande de test 1052. `choix.ts` envoie Lyon (69) et Paris (75) vers TransAlp, sauf les colis de plus de 30 kg qui restent chez Rapidis comme le reste. PR brouillon #91 ouverte, lint et tests (18/18) verts, en attente de relecture par Julien.\n\n- [essai-raté] clé API envoyée directement en en-tête : 401, l'API exige un jeton OAuth2\n- [essai-raté] ZPL refusé par la sandbox (400 unsupported_format), PDF conservé par défaut\n- [prochaine-étape] demander à TransAlp si le ZPL est disponible en production (la Zebra imprime uniquement du ZPL)\n- [prochaine-étape] relecture de la PR #91 (draft) par Julien\n- [décision] colis > 30 kg → Rapidis partout, Rapidis gardé en secours, aucune résiliation (source: t13)\n- [décision] sandbox seulement, Julien décide du passage en production (source: t15)",
+  "rendu": "## Où j'en suis\nClient TransAlp branché en sandbox : OAuth2 client_credentials avec jeton gardé en mémoire, étiquette PDF obtenue sur la commande de test 1052. `choix.ts` envoie Lyon (69) et Paris (75) vers TransAlp, sauf les colis de plus de 30 kg qui restent chez Rapidis comme le reste. PR brouillon #91 ouverte, lint et tests (18/18) verts, en attente de relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [essai-raté] clé API envoyée directement en en-tête : 401, l'API exige un jeton OAuth2\n- [essai-raté] ZPL refusé par la sandbox (400 unsupported_format), PDF conservé par défaut\n- [prochaine-étape] demander à TransAlp si le ZPL est disponible en production (la Zebra imprime uniquement du ZPL)\n- [prochaine-étape] relecture de la PR #91 (draft) par Julien\n- [décision] colis > 30 kg → Rapidis partout, Rapidis gardé en secours, aucune résiliation (source: t13)\n- [décision] sandbox seulement, Julien décide du passage en production (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1046,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3950,
+    "sortie": 3427,
+    "reflexion": 3109,
+    "cache": 0,
+    "cout": 0.000640395
+  },
+  "cout": 0.000640395,
+  "latenceMs": 32987,
+  "fournisseur": "Novita"
+}

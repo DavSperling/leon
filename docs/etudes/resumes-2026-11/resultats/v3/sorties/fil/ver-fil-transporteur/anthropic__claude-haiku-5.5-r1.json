@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:39.522Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp et l'étiquette ZPL sont au point sur la recette : l'accentuation est corrigée par `^CI28` et Karim a confirmé l'impression. La config de bascule (`TRANSALP_DEBUT`, 1er décembre) est prête, sans rien d'activé avant cette date. La PR #91 est ouverte en brouillon, à la relecture de Julien. (source: ses-tr-2, h2-05, h2-08, h2-12, src-pr91)\n\n- [en-cours] Clé de production : Julien la met dans les secrets avant le 1er décembre, rien ne s'active avant (source: h2-07)\n- [prochaine-étape] Relecture de la PR #91 par Julien, puis passage hors brouillon (source: src-pr91)\n- [prochaine-étape] Karim forme l'équipe au nouveau poste d'impression avant la bascule (source: src-slack-julien)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox : il n'existe qu'en recette et en production (source: h2-01, src-mail-transalp)\n- [essai-raté] Accents en bouillie sur la Zebra (CP850) : résolu par `^CI28` (source: h2-03, h2-04, 3e8b1d0)\n- [essai-raté] Désactiver Rapidis à partir du 1er décembre : refusé par la personne (source: h2-08, h2-09)\n- [question] Que devient Rapidis après le 15 janvier ? Point prévu après les soldes (source: src-slack-julien)\n- [décision] Bascule de Lyon et Paris vers TransAlp le mardi 1er décembre, et non le 23 novembre (source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg, jusqu'au 15 janvier ; pas de résiliation (source: src-slack-julien, h2-09, h1-03)",
+  "rendu": "## Où j'en suis\nLe client TransAlp et l'étiquette ZPL sont au point sur la recette : l'accentuation est corrigée par `^CI28` et Karim a confirmé l'impression. La config de bascule (`TRANSALP_DEBUT`, 1er décembre) est prête, sans rien d'activé avant cette date. La PR #91 est ouverte en brouillon, à la relecture de Julien. (de: toi, équipe, agent; source: ses-tr-2, h2-05, h2-08, h2-12, src-pr91)\n\n- [en-cours] Clé de production : Julien la met dans les secrets avant le 1er décembre, rien ne s'active avant (de: toi; source: h2-07)\n- [prochaine-étape] Relecture de la PR #91 par Julien, puis passage hors brouillon (de: équipe; source: src-pr91)\n- [prochaine-étape] Karim forme l'équipe au nouveau poste d'impression avant la bascule (de: connecteur; source: src-slack-julien)\n- [essai-raté] Clé dans l'en-tête X-Api-Key : 401, l'API exige un jeton OAuth2 (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox : il n'existe qu'en recette et en production (de: toi, connecteur; source: h2-01, src-mail-transalp)\n- [essai-raté] Accents en bouillie sur la Zebra (CP850) : résolu par `^CI28` (de: toi, équipe, agent; source: h2-03, h2-04, 3e8b1d0)\n- [essai-raté] Désactiver Rapidis à partir du 1er décembre : refusé par la personne (de: toi, agent; source: h2-08, h2-09)\n- [question] Que devient Rapidis après le 15 janvier ? Point prévu après les soldes (de: connecteur; source: src-slack-julien)\n- [décision] Bascule de Lyon et Paris vers TransAlp le mardi 1er décembre, et non le 23 novembre (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg, jusqu'au 15 janvier ; pas de résiliation (de: toi, connecteur; source: src-slack-julien, h2-09, h1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1735,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5434,
+    "sortie": 1793,
+    "reflexion": 1067,
+    "cache": 0,
+    "cout": 0.0014399
+  },
+  "cout": 0.0014399,
+  "latenceMs": 8683,
+  "fournisseur": "Google"
+}

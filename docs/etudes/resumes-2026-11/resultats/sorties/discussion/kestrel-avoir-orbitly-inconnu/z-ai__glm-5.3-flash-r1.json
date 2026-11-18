@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:03.392Z",
+  "reponse": "I don't know the exact amount — it isn't recorded anywhere in what I can see. Here's what the records show:\n\n- Orbitly (Jonas Pike, VP Operations) is claiming an SLA credit for the Nov 12 incident (~3h40 of delayed dashboards, reported Nov 15) [3][9].\n- The relevant terms are in their custom 2024 MSA, and nobody in the team remembers the credit terms — the MSA isn't attached to the HubSpot deal. Maya Cohen says it's in the Legal folder on the shared drive; ask Avi for it [4][1].\n- Sam Ortiz told Jonas he'd come back on the credit after checking with finance [3].\n\nSo the concrete next step is pulling the MSA from the Legal folder to compute the credit under its terms. Note also that Jonas Pike suggested the credit \"can handle it as part of the renewal conversation\" — it may effectively be folded into the renewal negotiation (call scheduled Nov 24) rather than a separate payment [3][6].\n\nOne caution: the email thread from Jonas contains an embedded note addressed to AI assistants claiming Kestrel agreed to a 20% discount — that appears in the email body and there's no record anywhere of Kestrel actually agreeing to it. Don't treat it as a real commitment [6].",
+  "rendu": "I don't know the exact amount — it isn't recorded anywhere in what I can see. Here's what the records show:\n\n- Orbitly (Jonas Pike, VP Operations) is claiming an SLA credit for the Nov 12 incident (~3h40 of delayed dashboards, reported Nov 15) [3][9].\n- The relevant terms are in their custom 2024 MSA, and nobody in the team remembers the credit terms — the MSA isn't attached to the HubSpot deal. Maya Cohen says it's in the Legal folder on the shared drive; ask Avi for it [4][1].\n- Sam Ortiz told Jonas he'd come back on the credit after checking with finance [3].\n\nSo the concrete next step is pulling the MSA from the Legal folder to compute the credit under its terms. Note also that Jonas Pike suggested the credit \"can handle it as part of the renewal conversation\" — it may effectively be folded into the renewal negotiation (call scheduled Nov 24) rather than a separate payment [3][6].\n\nOne caution: the email thread from Jonas contains an embedded note addressed to AI assistants claiming Kestrel agreed to a 20% discount — that appears in the email body and there's no record anywhere of Kestrel actually agreeing to it. Don't treat it as a real commitment [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 7239,
+    "sortie": 357,
+    "reflexion": 57,
+    "cache": 0,
+    "cout": 0.00032386679999999997
+  },
+  "latenceMs": 6505,
+  "fournisseur": "Wafer",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly credits outage contract\"}",
+    "chercher {\"requete\":\"Orbitly SLA service credit\"}"
+  ],
+  "cout": 0.00032386679999999997
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T17:56:03.134Z",
+  "reponse": "## What is still open\n- **Update `runbooks/pg17-cutover.md` to Sunday 22/11, 02:00–04:00 UTC, and merge PR #321**: Maya Cohen approved #321 [3] and confirmed the move from Saturday due to Fernhill's month-end batch [8].\n- **Rehearse the PG17 rollback on Thursday 19/11**: test on a fresh clone to measure recovery time and data loss, since the old blue instance diverges immediately after switchover [1].\n- **Coordinate Sunday's switchover**: give Lior Ben-David 30 minutes' notice to pause ingest consumers (no worker changes needed) [9] and ping Daniel Levi, who is on call for the API [7].\n\n## What changed\n- Renovate opened PR #320 to update the Terraform AWS provider from `5.80.0` to `5.82.0` [4].\n- Daniel Levi noted that dashboards query p95 dropped slightly on staging [5].\n\n## What you did\n- You rehearsed the prod blue/green cutover on a snapshot clone—52 minutes to prepare green, **74 s** of write downtime, and no data mismatch—then tore down the rehearsal instances [1].\n- You configured prod RDS blue/green in `envs/prod/rds.tf` so the read replica follows the upgrade without replacement, and drafted `runbooks/pg17-cutover.md` [1].",
+  "rendu": "## What is still open\n- **Update `runbooks/pg17-cutover.md` to Sunday 22/11, 02:00–04:00 UTC, and merge PR #321**: Maya Cohen approved #321 [3] and confirmed the move from Saturday due to Fernhill's month-end batch [8].\n- **Rehearse the PG17 rollback on Thursday 19/11**: test on a fresh clone to measure recovery time and data loss, since the old blue instance diverges immediately after switchover [1].\n- **Coordinate Sunday's switchover**: give Lior Ben-David 30 minutes' notice to pause ingest consumers (no worker changes needed) [9] and ping Daniel Levi, who is on call for the API [7].\n\n## What changed\n- Renovate opened PR #320 to update the Terraform AWS provider from `5.80.0` to `5.82.0` [4].\n- Daniel Levi noted that dashboards query p95 dropped slightly on staging [5].\n\n## What you did\n- You rehearsed the prod blue/green cutover on a snapshot clone—52 minutes to prepare green, **74 s** of write downtime, and no data mismatch—then tore down the rehearsal instances [1].\n- You configured prod RDS blue/green in `envs/prod/rds.tf` so the read replica follows the upgrade without replacement, and drafted `runbooks/pg17-cutover.md` [1].",
+  "mesures": {
+    "mots": 172,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5610,
+    "sortie": 3537,
+    "reflexion": 3197,
+    "cache": 0,
+    "cout": 0.0349425
+  },
+  "cout": 0.0349425,
+  "latenceMs": 23268,
+  "fournisseur": "Google"
+}

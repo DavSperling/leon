@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:12.479Z",
+  "reponse": "Personne n'a été pris pour l'instant, d'après ce que j'ai trouvé.\n\n- L'annonce est en ligne depuis le 2/11. Elle a reçu 11 candidatures [1].\n- Quatre candidats ont été retenus pour des entretiens à l'atelier de Carquefou avec Yannick. Ce sont Kevin Le Roux et Mathis Le Gac le jeudi 19/11, puis Dylan Perrot et Inès Carré le vendredi 20/11 [3].\n- Mathis Le Gac a retiré sa candidature le 18/11, car il a accepté une offre près de Vannes [7]. Il reste donc trois candidats convoqués.\n- Le CODIR du 16/11 visait une offre la semaine suivante, pour une arrivée début janvier [6]. Aurélie a aussi préparé un modèle de promesse d'embauche en CDI [2]. Je n'ai trouvé aucune offre envoyée ni aucun retour sur les entretiens.",
+  "rendu": "Personne n'a été pris pour l'instant, d'après ce que j'ai trouvé.\n\n- L'annonce est en ligne depuis le 2/11. Elle a reçu 11 candidatures [1].\n- Quatre candidats ont été retenus pour des entretiens à l'atelier de Carquefou avec Yannick. Ce sont Kevin Le Roux et Mathis Le Gac le jeudi 19/11, puis Dylan Perrot et Inès Carré le vendredi 20/11 [3].\n- Mathis Le Gac a retiré sa candidature le 18/11, car il a accepté une offre près de Vannes [7]. Il reste donc trois candidats convoqués.\n- Le CODIR du 16/11 visait une offre la semaine suivante, pour une arrivée début janvier [6]. Aurélie a aussi préparé un modèle de promesse d'embauche en CDI [2]. Je n'ai trouvé aucune offre envoyée ni aucun retour sur les entretiens.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9408,
+    "sortie": 552,
+    "reflexion": 48,
+    "cache": 0,
+    "cout": 0.024336000000000003
+  },
+  "latenceMs": 5536,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidat embauche\",\"depuis\":\"3m\"}",
+    "chercher {\"requete\":\"installateur recrutement Aurélie Jaouen Yannick Moreau entretien\"}"
+  ],
+  "cout": 0.024336000000000003
+}

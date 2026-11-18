@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:42.461Z",
+  "reponse": "## Où j'en suis\nPrepared the Postgres 17 blue/green upgrade on the analytics RDS, staging first, on branch noa/rds-pg17. Parameter group family is now derived from the engine major version with create_before_destroy, blue/green enabled on staging (16.4 → 17.2), and prod is prepared but disabled behind `pg17_enabled = false` (plan shows no changes). AWS provider pinned to ~> 5.82.0 after v6 broke the plan; tflint is clean. Staging plan: 1 to add, 1 to change. Nothing applied — plan only, per instruction. Draft PR kestrel-analytics/infra#57 is open with pg_partman and dbt lock noted in the description.\n\n- [en-cours] Staging upgrade ready to apply, but blocked on pg_partman 4.7.4 → 5.1.0 upgrade first (ALTER EXTENSION on 16.4, then verify run_maintenance_proc() on events_raw / events_daily)\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging (explicitly deferred, nothing run against the DB)\n- [prochaine-étape] Apply staging blue/green after pg_partman is fixed\n- [prochaine-étape] Pick production cutover window after Maya's sign-off\n- [essai-raté] AWS provider v6 (from init -upgrade with >= 5.60.0) caused 37 unrelated changes (S3 ACL, aws_eip.vpc); reverted to pin ~> 5.82.0 (source: t04)\n- [essai-raté] Proposed cutover Sat 28 Nov 02:00 UTC with apply_immediately = true; rejected — 02:00 falls inside the dbt lock, apply_immediately reverted to false (source: t14)\n- [question] Production window: candidates Sat/Sun 04:00–06:00 UTC, pending Maya's sign-off\n- [décision] No v6 provider in this PR, aws pinned to 5.82 (source: t04)\n- [décision] pg_partman upgrade handled as separate step, no DB writes beyond read-only select (source: t10)\n- [décision] No prod date until Maya signs off; apply_immediately stays false (source: t14)",
+  "rendu": "## Où j'en suis\nPrepared the Postgres 17 blue/green upgrade on the analytics RDS, staging first, on branch noa/rds-pg17. Parameter group family is now derived from the engine major version with create_before_destroy, blue/green enabled on staging (16.4 → 17.2), and prod is prepared but disabled behind `pg17_enabled = false` (plan shows no changes). AWS provider pinned to ~> 5.82.0 after v6 broke the plan; tflint is clean. Staging plan: 1 to add, 1 to change. Nothing applied — plan only, per instruction. Draft PR kestrel-analytics/infra#57 is open with pg_partman and dbt lock noted in the description.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Staging upgrade ready to apply, but blocked on pg_partman 4.7.4 → 5.1.0 upgrade first (ALTER EXTENSION on 16.4, then verify run_maintenance_proc() on events_raw / events_daily)\n- [prochaine-étape] Upgrade pg_partman to 5.x on staging (explicitly deferred, nothing run against the DB)\n- [prochaine-étape] Apply staging blue/green after pg_partman is fixed\n- [prochaine-étape] Pick production cutover window after Maya's sign-off",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1175,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3786,
+    "sortie": 535,
+    "reflexion": 25,
+    "cache": 0,
+    "cout": 0.00075968
+  },
+  "cout": 0.00075968,
+  "latenceMs": 2405,
+  "fournisseur": "Particle AI"
+}

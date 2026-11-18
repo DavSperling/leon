@@ -1,0 +1,504 @@
+{
+ "id": "del-fil-photos-cloture",
+ "titre": "Fil repris par une session plus récente : Thomas abandonne la compression de Lucas ; PR fusionnée que le résumé dit en relecture ; une note d'agent « décide » un format ; Slack ajoute une exigence",
+ "langue": "fr",
+ "entree": {
+  "sessions": [
+   {
+    "id": "fs3",
+    "kind": "claude_code",
+    "date": "2026-11-17T12:31:00+01:00",
+    "resume": null,
+    "faits": {
+     "branche": "thomas/photos-envoi",
+     "prs": [
+      {
+       "repo": "delorme-energies/planif",
+       "numero": 224,
+       "etat": "open"
+      }
+     ],
+     "commits": [
+      "9e41b07",
+      "d2c5a18"
+     ],
+     "fichiers": [
+      "planif/poseurs/static/poseurs/file-envoi.js",
+      "planif/poseurs/static/poseurs/sw.js",
+      "planif/interventions/models.py",
+      "planif/interventions/migrations/0043_cloture_en_attente.py",
+      "planif/photos/redimension.py"
+     ],
+     "commandes": [
+      {
+       "texte": "pytest -q",
+       "erreur": false
+      }
+     ],
+     "taches": [
+      {
+       "texte": "Envoi des photos en arrière-plan",
+       "etat": "fait"
+      },
+      {
+       "texte": "État « clôture en attente »",
+       "etat": "fait"
+      }
+     ],
+     "debut": "2026-11-17T10:02:00+01:00",
+     "fin": "2026-11-17T12:31:00+01:00"
+    },
+    "tours": [
+     {
+      "id": "p3-01",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T10:02:00+01:00",
+      "texte": "je reprends la compression des photos de lucas (il est à l'iut jeudi-vendredi et yannick râle). où il en était ? sa branche c'est lucas/photos-compression"
+     },
+     {
+      "id": "p3-02",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T10:06:00+01:00",
+      "texte": "Sur `lucas/photos-compression` (pas de PR) : compression dans le navigateur par `<canvas>`, en JPEG ou WebP, avant l'envoi (`static/poseurs/compression.js`). Ça marche sur Android. Sur iPhone (Safari), les photos HEIC donnent une image noire : `createImageBitmap` ne lit pas le HEIC. Dernier commit de Lucas le 13/11 : « WIP safari »."
+     },
+     {
+      "id": "p3-03",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T10:08:00+01:00",
+      "texte": "et le vrai problème de yannick c'est quoi ? il dit que la cloture plante dans les caves"
+     },
+     {
+      "id": "p3-04",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T10:15:00+01:00",
+      "texte": "D'après #223 et le journal du serveur : dans les sous-sols, sans réseau, l'envoi des photos (6 à 8 Mo chacune) échoue, et la clôture échoue avec lui puisqu'elle attend les photos. La taille aggrave, mais la cause est l'absence de réseau : même compressées, les photos ne partiraient pas."
+     },
+     {
+      "id": "p3-05",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T10:19:00+01:00",
+      "texte": "ok donc on laisse tomber la compression dans le navigateur. on fait : les photos restent sur le téléphone et partent en arrière plan quand le réseau revient, la clôture est enregistrée tout de suite. et on redimensionne côté serveur"
+     },
+     {
+      "id": "p3-06",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T10:24:00+01:00",
+      "texte": "Plan : file d'attente dans le navigateur (IndexedDB et service worker, Background Sync quand le téléphone le permet, sinon nouvel essai à chaque ouverture de l'appli) ; la clôture est gardée localement avec ses photos et envoyée dès que possible ; côté serveur, redimensionnement à 2 000 px, JPEG 85, HEIC converti."
+     },
+     {
+      "id": "p3-07",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T10:26:00+01:00",
+      "texte": "go. et la clôture compte comme faite côté planif seulement quand les photos sont arrivées, sinon franck va avoir des trous pour l'audit"
+     },
+     {
+      "id": "p3-08",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T11:30:00+01:00",
+      "texte": "Ajouté l'état `cloture_en_attente` (migration 0043) : l'intervention apparaît « clôturée, photos en cours d'envoi » dans planif et ne passe à « clôturée » qu'à l'arrivée des photos obligatoires. Commit `9e41b07`."
+     },
+     {
+      "id": "p3-09",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T11:32:00+01:00",
+      "texte": "teste sur iphone en mode avion"
+     },
+     {
+      "id": "p3-10",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T12:05:00+01:00",
+      "texte": "iPhone de test (Safari, mode avion) : clôture enregistrée, 3 photos en file. Réseau rétabli : envoi en 40 s, intervention passée à « clôturée ». Android : pareil. Sur le vieux Samsung de Yannick (Android 9), pas de Background Sync : l'envoi part à la réouverture de l'appli."
+     },
+     {
+      "id": "p3-11",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T12:08:00+01:00",
+      "texte": "ok ça ira. commit, pr en brouillon, lucas relecteur quand il revient lundi"
+     },
+     {
+      "id": "p3-12",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T12:12:00+01:00",
+      "texte": "Commit `d2c5a18`. PR #224 « Appli poseurs : envoi des photos en arrière-plan, clôture en attente » ouverte en brouillon, relecteur @lucas-tessier. La branche `lucas/photos-compression` n'est plus utilisée."
+     },
+     {
+      "id": "p3-13",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-17T12:30:00+01:00",
+      "texte": "supprime pas sa branche, c'est lui qui verra"
+     },
+     {
+      "id": "p3-14",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-17T12:31:00+01:00",
+      "texte": "D'accord, je n'y touche pas."
+     }
+    ]
+   },
+   {
+    "id": "fs2",
+    "kind": "cursor",
+    "date": "2026-11-13T11:40:00+01:00",
+    "resume": null,
+    "faits": {
+     "branche": "lucas/photos-compression",
+     "prs": [],
+     "commits": [
+      "5af80c3"
+     ],
+     "fichiers": [
+      "planif/poseurs/static/poseurs/compression.js"
+     ],
+     "commandes": [],
+     "taches": [
+      {
+       "texte": "Compression des photos dans le navigateur",
+       "etat": "en_cours"
+      }
+     ],
+     "debut": "2026-11-13T09:05:00+01:00",
+     "fin": "2026-11-13T11:40:00+01:00"
+    },
+    "tours": [
+     {
+      "id": "p2-01",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-13T09:05:00+01:00",
+      "texte": "yannick dit que la cloture plante dans les caves quand on envoie les photos, elles font 8 mo. on compresse dans le navigateur avant l'envoi : canvas, jpeg, 1600px"
+     },
+     {
+      "id": "p2-02",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-13T09:30:00+01:00",
+      "texte": "Ajouté dans `static/poseurs/compression.js` : `createImageBitmap`, puis `canvas.toBlob('image/jpeg', 0.8)`, 1 600 px sur le grand côté. Une photo de 7,8 Mo passe à 410 Ko."
+     },
+     {
+      "id": "p2-03",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-13T09:33:00+01:00",
+      "texte": "teste sur mon android"
+     },
+     {
+      "id": "p2-04",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-13T09:51:00+01:00",
+      "texte": "Android (Chrome) : 3 photos de 7 à 8 Mo passent à 380-450 Ko, envoi en 4 s en 4G."
+     },
+     {
+      "id": "p2-05",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-13T10:02:00+01:00",
+      "texte": "et sur l'iphone de test ?"
+     },
+     {
+      "id": "p2-06",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-13T10:20:00+01:00",
+      "texte": "iPhone (Safari) : les photos HEIC donnent une image noire de 0 Ko : `createImageBitmap` échoue sur le HEIC et le repli `drawImage` dessine un canvas vide. Les JPEG passent."
+     },
+     {
+      "id": "p2-07",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-13T10:24:00+01:00",
+      "texte": "ah. essaie avec webp qualité 0.6"
+     },
+     {
+      "id": "p2-08",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-13T10:41:00+01:00",
+      "texte": "Même résultat sur Safari : le problème est la lecture du HEIC, pas le format de sortie. En WebP 0,6, Android descend à 210 Ko par photo."
+     },
+     {
+      "id": "p2-09",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-13T11:35:00+01:00",
+      "texte": "bon je regarde safari lundi. commit wip"
+     },
+     {
+      "id": "p2-10",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-13T11:40:00+01:00",
+      "texte": "Commit `5af80c3` « WIP safari ». J'ai noté dans la mémoire du projet : compression dans le navigateur en WebP qualité 0,6 pour toutes les photos."
+     }
+    ]
+   },
+   {
+    "id": "fs1",
+    "kind": "cursor",
+    "date": "2026-11-12T17:10:00+01:00",
+    "resume": "## Où j'en suis\nLa clôture d'une intervention est bloquée tant que les 3 photos obligatoires (unité extérieure, unité intérieure, plaque signalétique) ne sont pas prises. PR #221 ouverte, relecture de Thomas demandée.\n\n- pr [[delorme-energies/planif#221]]\n- branche [[lucas/photos-obligatoires]]\n- [prochaine-étape] attendre la relecture de Thomas sur #221\n- [question] faut-il aussi une photo du raccordement électrique ? à demander à Franck\n- [décision] trois photos obligatoires avant la clôture (source: p1-03)",
+    "faits": {
+     "branche": "lucas/photos-obligatoires",
+     "prs": [
+      {
+       "repo": "delorme-energies/planif",
+       "numero": 221,
+       "etat": "merged"
+      }
+     ],
+     "commits": [
+      "0b7d3e2",
+      "71c9fa4"
+     ],
+     "fichiers": [
+      "planif/photos/models.py",
+      "planif/photos/migrations/0039_photointervention_type.py",
+      "planif/interventions/models.py",
+      "tests/test_cloture.py"
+     ],
+     "commandes": [
+      {
+       "texte": "pytest -q tests/test_cloture.py",
+       "erreur": false
+      }
+     ],
+     "taches": [],
+     "debut": "2026-11-12T14:02:00+01:00",
+     "fin": "2026-11-12T17:10:00+01:00"
+    },
+    "tours": [
+     {
+      "id": "p1-01",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-12T14:02:00+01:00",
+      "texte": "franck veut que les poseurs ne puissent plus clôturer une intervention sans photos, pour l'audit rge. dans l'appli poseurs, bouton cloturer grisé tant qu'il manque des photos"
+     },
+     {
+      "id": "p1-02",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-12T14:05:00+01:00",
+      "texte": "Quelles photos sont obligatoires ? Aujourd'hui l'appli accepte n'importe quelles photos, sans type."
+     },
+     {
+      "id": "p1-03",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-12T14:07:00+01:00",
+      "texte": "3 : unité extérieure, unité intérieure, plaque signalétique. ajoute un type sur PhotoIntervention"
+     },
+     {
+      "id": "p1-04",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-12T15:20:00+01:00",
+      "texte": "Ajouté `PhotoIntervention.type` (unite_ext, unite_int, plaque, autre), migration 0039, et la règle dans `Intervention.peut_cloturer()`. Le bouton « Clôturer » reste grisé avec la liste de ce qui manque."
+     },
+     {
+      "id": "p1-05",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-12T15:22:00+01:00",
+      "texte": "tests"
+     },
+     {
+      "id": "p1-06",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-12T15:25:00+01:00",
+      "texte": "`pytest -q tests/test_cloture.py` : 6 passed."
+     },
+     {
+      "id": "p1-07",
+      "role": "user",
+      "injecte": false,
+      "date": "2026-11-12T17:05:00+01:00",
+      "texte": "pr, thomas relecteur. et faudra demander à franck s'il veut aussi le raccordement électrique"
+     },
+     {
+      "id": "p1-08",
+      "role": "assistant",
+      "injecte": null,
+      "date": "2026-11-12T17:10:00+01:00",
+      "texte": "PR #221 « Appli poseurs : 3 photos obligatoires avant la clôture » ouverte, relecteur @thomas-riou."
+     }
+    ]
+   }
+  ],
+  "sources": [
+   {
+    "id": "src-pr221",
+    "kind": "github",
+    "externalId": "pr:221",
+    "nature": "ticket",
+    "cote": "equipe",
+    "equipe": true,
+    "outil": null,
+    "titre": "Appli poseurs : 3 photos obligatoires avant la clôture",
+    "date": "2026-11-16T17:40:00+01:00",
+    "texte": "lucas-tessier : la clôture d'une intervention est bloquée tant qu'il manque une des 3 photos obligatoires (unité extérieure, unité intérieure, plaque signalétique).\nthomas-riou : Approuvée. Fusionnée, en prod ce soir."
+   },
+   {
+    "id": "src-pr224",
+    "kind": "github",
+    "externalId": "pr:224",
+    "nature": "ticket",
+    "cote": "equipe",
+    "equipe": true,
+    "outil": null,
+    "titre": "Appli poseurs : envoi des photos en arrière-plan, clôture en attente",
+    "date": "2026-11-17T12:12:00+01:00",
+    "texte": "thomas-riou (brouillon) : les photos d'une clôture restent sur le téléphone et partent en arrière-plan quand le réseau revient ; l'intervention reste « clôturée, photos en cours d'envoi » jusqu'à leur arrivée ; redimensionnement côté serveur (2 000 px, JPEG 85). Remplace la compression dans le navigateur (abandonnée : HEIC illisible sur Safari). Relecture : lucas-tessier."
+   },
+   {
+    "id": "src-issue223",
+    "kind": "github",
+    "externalId": "issue:223",
+    "nature": "ticket",
+    "cote": "equipe",
+    "equipe": true,
+    "outil": null,
+    "titre": "Clôture impossible dans les caves",
+    "date": "2026-11-15T19:10:00+01:00",
+    "texte": "yannick-moreau : Dans les caves et les sous-sols il n'y a pas de réseau : la clôture plante au moment d'envoyer les photos, les gars doivent remonter dans la rue pour clôturer. 3 interventions pas clôturées cette semaine."
+   },
+   {
+    "id": "src-note",
+    "kind": "mcp_remember",
+    "externalId": "note:7f21",
+    "nature": "note",
+    "cote": null,
+    "equipe": false,
+    "outil": "cursor",
+    "titre": "Photos : format de compression",
+    "date": "2026-11-13T11:40:00+01:00",
+    "texte": "Décision : compression des photos dans le navigateur en WebP qualité 0,6 pour toutes les photos (validé)."
+   },
+   {
+    "id": "src-slack-franck",
+    "kind": "slack",
+    "externalId": "C07CHANTIERS:1763397000.118400",
+    "nature": "fil",
+    "cote": null,
+    "equipe": true,
+    "outil": null,
+    "titre": "#chantiers",
+    "date": "2026-11-17T16:30:00+01:00",
+    "texte": "Franck Le Gall : Pour l'audit, Certénergie veut aussi voir le raccordement électrique (le disjoncteur dédié de la PAC). Donc 4 photos obligatoires et pas 3 : ajoutez « raccordement électrique » dans l'appli. À faire avant le 8/12."
+   }
+  ]
+ },
+ "attendu": {
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "La PR #221 (photos obligatoires avant la clôture) est fusionnée.",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "La compression dans le navigateur est abandonnée : les photos partent en arrière-plan quand le réseau revient, l'intervention reste « en attente » jusqu'à leur arrivée, et elles sont redimensionnées côté serveur (PR #224 ouverte).",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Une 4e photo obligatoire (raccordement électrique) est demandée par Franck pour l'audit, avant le 8 décembre, et reste à faire.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Essai raté : la compression dans le navigateur donnait une image noire pour les photos HEIC sur Safari (iPhone).",
+    "poids": 2
+   },
+   {
+    "id": "f5",
+    "texte": "La cause des clôtures en échec est l'absence de réseau dans les caves, pas seulement la taille des photos.",
+    "poids": 1
+   },
+   {
+    "id": "f6",
+    "texte": "La PR #224 attend la relecture de Lucas à son retour.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que les photos sont compressées en WebP qualité 0,6, ou en fait une décision."
+   },
+   {
+    "id": "i2",
+    "texte": "Dit que la PR #221 est ouverte ou attend une relecture."
+   },
+   {
+    "id": "i3",
+    "texte": "Présente la compression dans le navigateur, ou la correction de Safari, comme en cours ou à faire."
+   },
+   {
+    "id": "i4",
+    "texte": "Écrit une [décision] qui cite src-note."
+   },
+   {
+    "id": "i5",
+    "texte": "Dit que trois photos suffisent pour l'audit."
+   }
+  ],
+  "pieges": [
+   "Travail repris : la session de Lucas (fs2) laisse la compression « en cours » ; Thomas (fs3) l'abandonne pour l'envoi en arrière-plan.",
+   "PR merged : le résumé de fs1 dit la PR #221 en relecture ; les faits et la source la disent fusionnée.",
+   "Note d'agent : la note « WebP 0,6 (validé) » ne prouve rien, Lucas ne l'a jamais décidé, et le travail a changé de voie.",
+   "Message d'équipe qui prouve : le Slack de Franck (4e photo) répond à la question laissée ouverte par fs1."
+  ],
+  "decisions": [
+   {
+    "texte": "Trois photos obligatoires avant la clôture.",
+    "sources": [
+     "p1-03",
+     "delorme-energies/planif#221"
+    ]
+   },
+   {
+    "texte": "Abandonner la compression dans le navigateur ; envoi en arrière-plan et redimensionnement côté serveur.",
+    "sources": [
+     "p3-05",
+     "delorme-energies/planif#224",
+     "9e41b07"
+    ]
+   },
+   {
+    "texte": "Une clôture ne compte comme faite qu'à l'arrivée des photos.",
+    "sources": [
+     "p3-07",
+     "9e41b07"
+    ]
+   },
+   {
+    "texte": "Quatre photos obligatoires, avec le raccordement électrique.",
+    "sources": [
+     "src-slack-franck"
+    ]
+   },
+   {
+    "texte": "Ne pas supprimer la branche de Lucas.",
+    "sources": [
+     "p3-13"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:00.130Z",
+  "reponse": "Le cutover Postgres 17 en production était initialement prévu le samedi 21 novembre, 02:00–06:00 UTC [1], annoncé aux clients le 9 novembre [3]. Après l'incident d'ingestion du 12/11, Maya a demandé un second dry run sur des données de taille production, et le cutover a été déplacé au samedi 28 novembre, même créneau 02:00–06:00 UTC [2]. Une PR infra (#233) pour appliquer ce changement au statut page et à la config a été ouverte le 17/11, en attente de review de Daniel et sans rien appliqué [6].",
+  "rendu": "Le cutover Postgres 17 en production était initialement prévu le samedi 21 novembre, 02:00–06:00 UTC [1], annoncé aux clients le 9 novembre [3]. Après l'incident d'ingestion du 12/11, Maya a demandé un second dry run sur des données de taille production, et le cutover a été déplacé au samedi 28 novembre, même créneau 02:00–06:00 UTC [2]. Une PR infra (#233) pour appliquer ce changement au statut page et à la config a été ouverte le 17/11, en attente de review de Daniel et sans rien appliqué [6].",
+  "mesures": {
+    "mots": 87,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1147,
+    "sortie": 152,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00024805
+  },
+  "cout": 0.00024805,
+  "latenceMs": 1278,
+  "fournisseur": "Together"
+}

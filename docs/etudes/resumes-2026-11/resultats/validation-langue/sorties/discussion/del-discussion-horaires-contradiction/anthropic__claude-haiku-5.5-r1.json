@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:52.226Z",
+  "reponse": "Le bug de l'appli des poseurs est réglé : le correctif #214 est déployé en production et l'heure affichée est de nouveau la bonne [1][2]. La reprise des 41 interventions corrigées à la main est aussi passée [1].\n\nLe problème n'est pas entièrement réglé pour les SMS. Le module `rappels/sms.py` ajoute encore 2 h à l'heure UTC, et Lucas Tessier doit le reprendre dans sa réécriture du module rappels, pas avant le 30/11 [5]. Des clients ont reçu des SMS annonçant 9h au lieu de 8h [3], et Sandrine Guérin a présenté des excuses pour ce SMS erroné [4].",
+  "rendu": "Le bug de l'appli des poseurs est réglé : le correctif #214 est déployé en production et l'heure affichée est de nouveau la bonne [1][2]. La reprise des 41 interventions corrigées à la main est aussi passée [1].\n\nLe problème n'est pas entièrement réglé pour les SMS. Le module `rappels/sms.py` ajoute encore 2 h à l'heure UTC, et Lucas Tessier doit le reprendre dans sa réécriture du module rappels, pas avant le 30/11 [5]. Des clients ont reçu des SMS annonçant 9h au lieu de 8h [3], et Sandrine Guérin a présenté des excuses pour ce SMS erroné [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7441,
+    "sortie": 581,
+    "reflexion": 194,
+    "cache": 0,
+    "cout": 0.0010346
+  },
+  "latenceMs": 6846,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"appli poseurs horaires bug\"}",
+    "chercher {\"requete\":\"poseurs planning horaires appli problème\",\"depuis\":\"2m\"}"
+  ],
+  "cout": 0.0010346
+}

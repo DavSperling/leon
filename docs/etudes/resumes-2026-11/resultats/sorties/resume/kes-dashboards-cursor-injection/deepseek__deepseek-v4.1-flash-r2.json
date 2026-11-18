@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:38:49.329Z",
+  "reponse": "## Où j'en suis\nDashboard grid v2 built on `react-grid-layout` (drag + resize, 12 columns), behind the `dashboards_v2` flag: layout persisted server-side via `PUT /dashboards/:id/layout` (React Query, optimistic, localStorage fallback), widget sizing via a `ResizeObserver` hook (`data-size`) after container queries failed on iOS 15, `DashboardTile` renamed to `WidgetCard` (v1 re-export kept), lint/typecheck green and the Storybook CSS-import build fixed. Draft PR #418 is open for Priya's UX review; Zest's demo is Tuesday the 24th.\n\n- [en-cours] PR #418 en draft, en attente de la review UX de Priya sur l'iPad\n- [prochaine-étape] activer `dashboards_v2` pour le workspace Zest dans l'admin des flags, avant la démo du 24\n- [essai-raté] container queries : ignorées silencieusement par Safari iOS 15, remplacées par le hook ResizeObserver\n- [essai-raté] import du CSS de `react-grid-layout` dans la story : cassait `storybook:build`, déplacé dans `.storybook/preview.ts`\n- [décision] persistance du layout côté serveur plutôt que localStorage seul (source: t03)\n- [décision] abandonner les container queries pour le hook `useWidgetSize` (source: t09)\n- [décision] renommer `DashboardTile` en `WidgetCard` et lancer lint (source: t11)\n- [décision] flag allumé pour Zest uniquement, v1 conservées jusqu'en janvier (source: t15)\n- [décision] ouvrir la PR en draft (source: t17)",
+  "rendu": "## Où j'en suis\nDashboard grid v2 built on `react-grid-layout` (drag + resize, 12 columns), behind the `dashboards_v2` flag: layout persisted server-side via `PUT /dashboards/:id/layout` (React Query, optimistic, localStorage fallback), widget sizing via a `ResizeObserver` hook (`data-size`) after container queries failed on iOS 15, `DashboardTile` renamed to `WidgetCard` (v1 re-export kept), lint/typecheck green and the Storybook CSS-import build fixed. Draft PR #418 is open for Priya's UX review; Zest's demo is Tuesday the 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 en draft, en attente de la review UX de Priya sur l'iPad\n- [prochaine-étape] activer `dashboards_v2` pour le workspace Zest dans l'admin des flags, avant la démo du 24\n- [essai-raté] container queries : ignorées silencieusement par Safari iOS 15, remplacées par le hook ResizeObserver\n- [essai-raté] import du CSS de `react-grid-layout` dans la story : cassait `storybook:build`, déplacé dans `.storybook/preview.ts`\n- [décision] persistance du layout côté serveur plutôt que localStorage seul (source: t03)\n- [décision] abandonner les container queries pour le hook `useWidgetSize` (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1294,
+    "decisions": 2,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3571,
+    "sortie": 557,
+    "reflexion": 139,
+    "cache": 3072,
+    "cout": 0.000347596
+  },
+  "cout": 0.000347596,
+  "latenceMs": 4992,
+  "fournisseur": "Relace"
+}

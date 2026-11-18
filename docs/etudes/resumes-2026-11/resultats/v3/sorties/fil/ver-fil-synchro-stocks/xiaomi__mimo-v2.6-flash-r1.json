@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:22.929Z",
+  "reponse": "## Où j'en suis\nLa synchro de nuit a été fiabilisée : #87 est fusionnée (webhooks hors stock, valeur absolue, arrêt si CSV absent), et la nuit du 14/11 est passée sans écart. Un retard de dépôt TransAlp le 16 a laissé 40 refs fausses ; des reprises à 4 h et 6 h avec alerte à Karim ont été ajoutées, commit `d7c2e41`, PR #96 ouverte et en attente de la relecture d'Hugo. La synchro manuelle du 17/11 a corrigé les 40 références. (source: ses-st-3, ses-st-2, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, relecture d'Hugo en attente (source: u3-07, u3-10)\n- [prochaine-étape] vérifier que la synchro de nuit du 17/11 passe bien avec le nouveau planificateur (source: u3-04)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris, fuseau `Europe/Paris` fixé (source: u3-04)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément (source: u1-01)\n- [question] la réservation de 2 tables Saône pour les Galeries Brotteaux est à traiter hors script, avec Claire (source: u3-09)\n- [décision] rien n'est ajouté au script pour la réservation des Brotteaux (source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)\n- [décision] pas de précommande Saône avant le retour du 2 décembre (source: u1-06)",
+  "rendu": "## Où j'en suis\nLa synchro de nuit a été fiabilisée : #87 est fusionnée (webhooks hors stock, valeur absolue, arrêt si CSV absent), et la nuit du 14/11 est passée sans écart. Un retard de dépôt TransAlp le 16 a laissé 40 refs fausses ; des reprises à 4 h et 6 h avec alerte à Karim ont été ajoutées, commit `d7c2e41`, PR #96 ouverte et en attente de la relecture d'Hugo. La synchro manuelle du 17/11 a corrigé les 40 références. (de: agent; source: ses-st-3, ses-st-2, u3-08)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, relecture d'Hugo en attente (de: toi, agent; source: u3-07, u3-10)\n- [prochaine-étape] vérifier que la synchro de nuit du 17/11 passe bien avec le nouveau planificateur (de: agent; source: u3-04)\n- [essai-raté] heures du cron lues en UTC : la reprise « 4 h » tombait à 5 h à Paris, fuseau `Europe/Paris` fixé (de: agent; source: u3-04)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément (de: agent; source: u1-01)\n- [question] la réservation de 2 tables Saône pour les Galeries Brotteaux est à traiter hors script, avec Claire (de: toi; source: u3-09)\n- [décision] rien n'est ajouté au script pour la réservation des Brotteaux (de: toi; source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas à 3 (de: toi; source: u1-04)\n- [décision] pas de précommande Saône avant le retour du 2 décembre (de: toi; source: u1-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1525,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4754,
+    "sortie": 543,
+    "reflexion": 17,
+    "cache": 0,
+    "cout": 0.0008176
+  },
+  "cout": 0.0008176,
+  "latenceMs": 8940,
+  "fournisseur": "DeepInfra"
+}

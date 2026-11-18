@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:34.835Z",
+  "reponse": "Zwei österreichische Händler haben Geräte aus Charge 26-38 bekommen, laut Kundenstamm: Bauprofi Huber GmbH in Linz (Kundennr. 40117) und Eisen-Mayr KG in Graz (40342) [2]. Im Portal-Export (Stand 16.11.) stehen für 40117 116 Stück und für 40342 60 Stück [1]. Lieferungen vom 12.11. fehlten dort, weil der SAP-Nachtlauf ausgefallen war. Manuell nachgetragen wurden 120 Stück für 40117 und 60 Stück für 40342 [1]. Das ergibt 236 Geräte bei Bauprofi Huber und 120 bei Eisen-Mayr, zusammen 356 Geräte (eigene Addition aus [1]). Die Lieferung von 40 Stück an 40117 gehört zur Charge 26-39 und ist nicht mitgezählt [1]. Der Händler 40388 (Innsbruck) taucht in den Chargendaten nicht auf [1][2].",
+  "rendu": "Zwei österreichische Händler haben Geräte aus Charge 26-38 bekommen, laut Kundenstamm: Bauprofi Huber GmbH in Linz (Kundennr. 40117) und Eisen-Mayr KG in Graz (40342) [2]. Im Portal-Export (Stand 16.11.) stehen für 40117 116 Stück und für 40342 60 Stück [1]. Lieferungen vom 12.11. fehlten dort, weil der SAP-Nachtlauf ausgefallen war. Manuell nachgetragen wurden 120 Stück für 40117 und 60 Stück für 40342 [1]. Das ergibt 236 Geräte bei Bauprofi Huber und 120 bei Eisen-Mayr, zusammen 356 Geräte (eigene Addition aus [1]). Die Lieferung von 40 Stück an 40117 gehört zur Charge 26-39 und ist nicht mitgezählt [1]. Der Händler 40388 (Innsbruck) taucht in den Chargendaten nicht auf [1][2].",
+  "mesures": {
+    "mots": 108,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2159,
+    "sortie": 374,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.008058
+  },
+  "cout": 0.008058,
+  "latenceMs": 3441,
+  "fournisseur": "Amazon Bedrock"
+}

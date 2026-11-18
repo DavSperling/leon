@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:27:18.894Z",
+  "reponse": "## Où j'en suis\nReal replay into `events.replay.v3` is complete (18,442,107 events produced, 3,118 rejects) and `kestrel-analytics/ingest#233` is merged; the aggregator backfill for 2026-11-12 is running (61%, ~14.9M ClickHouse rows vs ~20.5M expected), and the incident stays open until counts match. PR #241 from the fork is not being merged. (source: ses-rp-2, kestrel-analytics/ingest#233, r2-04, r2-06, r2-07, r2-09)\n\n- [en-cours] Aggregator backfill 2026-11-12 (hours 00–14 done, 15–23 in progress) (source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour with 1% tolerance, then close the incident (source: ses-rp-2, r2-10)\n- [essai-raté] Dry run with 50k batches OOMKilled (2 Gi limit); 5k batches work (source: ses-rp-1, r1-03, src-sentry-oom)\n- [décision] Incident stays open until ClickHouse counts match (source: r2-07, src-slack-incident)\n- [décision] Do not merge PR #241 from the fork; Daniel handles the CI check (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nReal replay into `events.replay.v3` is complete (18,442,107 events produced, 3,118 rejects) and `kestrel-analytics/ingest#233` is merged; the aggregator backfill for 2026-11-12 is running (61%, ~14.9M ClickHouse rows vs ~20.5M expected), and the incident stays open until counts match. PR #241 from the fork is not being merged. (de: toi, équipe, agent; source: ses-rp-2, kestrel-analytics/ingest#233, r2-04, r2-06, r2-07, r2-09)\n\n- [en-cours] Aggregator backfill 2026-11-12 (hours 00–14 done, 15–23 in progress) (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to reach 100%, compare ClickHouse counts hour by hour with 1% tolerance, then close the incident (de: agent; source: ses-rp-2, r2-10)\n- [essai-raté] Dry run with 50k batches OOMKilled (2 Gi limit); 5k batches work (de: connecteur, agent; source: ses-rp-1, r1-03, src-sentry-oom)\n- [décision] Incident stays open until ClickHouse counts match (de: toi, connecteur; source: r2-07, src-slack-incident)\n- [décision] Do not merge PR #241 from the fork; Daniel handles the CI check (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1140,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4194,
+    "sortie": 4620,
+    "reflexion": 4229,
+    "cache": 0,
+    "cout": 0.0028005
+  },
+  "cout": 0.0028005,
+  "latenceMs": 8125,
+  "fournisseur": "CoreWeave"
+}

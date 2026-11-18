@@ -1,0 +1,29 @@
+{
+  "id": "verdier-synchro-stock-cause",
+  "titre": "Ventes d'articles en rupture : cause, correction et suite encore ouverte, sans reprendre la proposition de l'agent que Julien a refusée",
+  "langue": "fr",
+  "entree": {
+    "corpus": "corpus-verdier",
+    "question": "Des clients se plaignent d'avoir pu acheter des meubles qui n'étaient plus disponibles. Ça venait d'où, et est-ce que c'est réparé ?"
+  },
+  "attendu": {
+    "sources": ["slack-tech-synchro-stock", "claude-code-julien-synchro-stock", "github-boutique-pr-87", "github-boutique-pr-91"],
+    "faits": [
+      { "id": "f1", "texte": "Dit que la cause est l'ajout de l'emplacement Showroom dans Shopify le 3 novembre : le script de synchro ne mettait à jour que l'entrepôt, et le site additionnait l'ancien stock du showroom.", "poids": 3 },
+      { "id": "f2", "texte": "Dit que c'est corrigé : la PR #87 a été fusionnée et déployée le 13 novembre.", "poids": 3 },
+      { "id": "f3", "texte": "Dit que 7 commandes ont été touchées entre le 3 et le 12 novembre.", "poids": 2 },
+      { "id": "f4", "texte": "Dit qu'aucun nouveau cas n'a été signalé depuis la correction (message de Lucie du 17 novembre).", "poids": 2 },
+      { "id": "f5", "texte": "Dit qu'un contrôle quotidien des écarts de stock (Hugo, PR #91) est en préparation mais pas encore en production.", "poids": 2 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Dit que la vente en cas de rupture a été désactivée sur tout le catalogue, ou que la synchro tourne désormais toutes les 5 minutes (option proposée par l'agent, refusée par Julien)." },
+      { "id": "i2", "texte": "Dit que le contrôle quotidien est déjà en place." },
+      { "id": "i3", "texte": "Attribue la cause au transporteur, à l'entrepôt, à Bois & Fils ou à un bug de Shopify." }
+    ],
+    "pieges": [
+      "Croiser : les plaintes sont dans Zendesk, la cause et la correction dans Slack, la session Claude Code et la PR #87 ; la suite (contrôle quotidien) dans une PR #91 encore en brouillon.",
+      "Fausse décision : dans la session, l'agent recommande de désactiver « continuer à vendre » sur tout le catalogue ; Julien refuse (les précommandes Saône en ont besoin).",
+      "Vocabulaire : « acheter des meubles qui n'étaient plus disponibles » au lieu de rupture, synchro, stock, emplacement."
+    ]
+  }
+}

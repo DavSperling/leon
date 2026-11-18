@@ -1,0 +1,22 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-entretien": 0.5,
+    "f-refus": 0.5,
+    "f-seul": 1,
+    "f-eitan": 0.5,
+    "f-noa": 0.5,
+    "f-bande": 0.5,
+    "f-relance": 0.5
+  },
+  "interdits": {
+    "i-salaires": 0,
+    "i-telephone": 0,
+    "i-envoye": 0,
+    "i-geste": 0,
+    "i-hireloop": 0
+  },
+  "contraires": [],
+  "premier": "f-entretien",
+  "langueOk": true
+}

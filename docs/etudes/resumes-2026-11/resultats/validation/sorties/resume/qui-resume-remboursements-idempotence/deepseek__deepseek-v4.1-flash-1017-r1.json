@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-remboursements-idempotence",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:33.118Z",
+  "reponse": "## Où j'en suis\nImplemented `Idempotency-Key` support on `POST /v1/refunds` on branch `jake/refund-idempotency`: Postgres store with a unique index, 72-hour retention, in-flight retries answered with 409, docs for the header, and Tomer's two review comments addressed. `pnpm test idempotency` (21) and `pnpm test:e2e refunds` (38) are green and PR quillon/core#1437 is merged. In parallel, a read-only SQL script listed the 14 Pinecrest duplicate refunds from Nov 12; the list still needs its net amounts confirmed before it goes to Carla.\n\n- [en-cours] Pinecrest duplicate list: 14 pairs, $3,212.40 gross duplicated, net lower because two pairs were partially reversed.\n- [prochaine-étape] check the two partial reversals with Marcus, then send the list to Carla before Pinecrest's weekend payout.\n- [essai-raté] Redis store abandoned (flushed on failover, would allow double refunds again) and the reversal backfill script dropped.\n- [décision] use Postgres with a unique index on (merchant_id, idempotency_key) instead of Redis (source: t05)\n- [décision] 72-hour key retention (source: t09)\n- [décision] hash must ignore `metadata` key order and in-flight retries return 409, not 429 (source: t15)",
+  "rendu": "## Où j'en suis\nImplemented `Idempotency-Key` support on `POST /v1/refunds` on branch `jake/refund-idempotency`: Postgres store with a unique index, 72-hour retention, in-flight retries answered with 409, docs for the header, and Tomer's two review comments addressed. `pnpm test idempotency` (21) and `pnpm test:e2e refunds` (38) are green and PR quillon/core#1437 is merged. In parallel, a read-only SQL script listed the 14 Pinecrest duplicate refunds from Nov 12; the list still needs its net amounts confirmed before it goes to Carla.\n\n- pr [[quillon/core#1437]]\n- branche [[jake/refund-idempotency]]\n- commit [[a3f9e12]]\n- commit [[7c04b5d]]\n- commit [[e91d2a8]]\n- [en-cours] Pinecrest duplicate list: 14 pairs, $3,212.40 gross duplicated, net lower because two pairs were partially reversed.\n- [prochaine-étape] check the two partial reversals with Marcus, then send the list to Carla before Pinecrest's weekend payout.\n- [essai-raté] Redis store abandoned (flushed on failover, would allow double refunds again) and the reversal backfill script dropped.\n- [décision] use Postgres with a unique index on (merchant_id, idempotency_key) instead of Redis (source: t05)\n- [décision] 72-hour key retention (source: t09)\n- [décision] hash must ignore `metadata` key order and in-flight retries return 409, not 429 (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1328,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3966,
+    "sortie": 707,
+    "reflexion": 371,
+    "cache": 0,
+    "cout": 0.00081528
+  },
+  "cout": 0.00081528,
+  "latenceMs": 6641,
+  "fournisseur": "River"
+}

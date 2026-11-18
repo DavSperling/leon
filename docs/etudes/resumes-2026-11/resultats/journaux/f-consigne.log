@@ -1,0 +1,12 @@
+[1/10] point/kestrel-rien-que-du-bruit anthropic/claude-sonnet-5.5@consigne r1 : 0.0078 $ (total 0.008 $)
+[2/10] point/kestrel-entretien-sre anthropic/claude-sonnet-5.5@consigne r1 : 0.0177 $ (total 0.025 $)
+[3/10] point/kestrel-demo-sso-cachee anthropic/claude-sonnet-5.5@consigne r1 : 0.0224 $ (total 0.048 $)
+[4/10] point/kestrel-pg17-fenetre-deplacee anthropic/claude-sonnet-5.5@consigne r1 : 0.0210 $ (total 0.069 $)
+[5/10] point/kestrel-dedupe-regle-neuf anthropic/claude-sonnet-5.5@consigne r1 : 0.0209 $ (total 0.090 $)
+[6/10] point/kestrel-tableaux-injection anthropic/claude-sonnet-5.5@consigne r1 : 0.0241 $ (total 0.114 $)
+[7/10] point/verdier-reponse-revendeur anthropic/claude-sonnet-5.5@consigne r1 : 0.0189 $ (total 0.133 $)
+[8/10] point/verdier-synchro-stocks anthropic/claude-sonnet-5.5@consigne r1 : 0.0196 $ (total 0.152 $)
+[9/10] point/verdier-soldes-trois-sessions anthropic/claude-sonnet-5.5@consigne r1 : 0.0211 $ (total 0.173 $)
+[10/10] point/verdier-transalp-alternant anthropic/claude-sonnet-5.5@consigne r1 : 0.0214 $ (total 0.195 $)
+
+Fini : 10 sorties, 0 échecs ou sautées, 0.195 $ dépensés.

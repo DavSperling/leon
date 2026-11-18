@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:58:50.033Z",
+  "reponse": "## Where I am\nThe real replay into `events.replay.v3` is complete: 18,442,107 events were produced, with 3,118 rejects. The aggregator backfill for 2026-11-12 was still in progress at 61%, and ClickHouse had 14.9M rows in the incident window versus about 20.5M expected. The incident remains open until the counts match. PR #233 is merged. (source: ses-rp-2, r2-06, kestrel-analytics/ingest#233)\n\n- [en-cours] Finish the aggregator backfill for 2026-11-12. (source: ses-rp-2)\n- [prochaine-étape] Wait for the backfill to finish, compare ClickHouse counts against expectations, and close the incident only once they match. (source: r2-07, r2-10)\n- [essai-raté] A dry run using 50k batches was OOMKilled under the 2 Gi memory limit; 5k batches worked. (source: ses-rp-1, r1-03, r1-05)\n- [question] None recorded.",
+  "rendu": "- [en-cours] Finish the aggregator backfill for 2026-11-12. (de: agent; source: ses-rp-2)\n- [prochaine-étape] Wait for the backfill to finish, compare ClickHouse counts against expectations, and close the incident only once they match. (de: toi, agent; source: r2-07, r2-10)\n- [essai-raté] A dry run using 50k batches was OOMKilled under the 2 Gi memory limit; 5k batches worked. (de: agent; source: ses-rp-1, r1-03, r1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 423,
+    "lignesRetirees": 1,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3659,
+    "sortie": 255,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005848
+  },
+  "cout": 0.0005848,
+  "latenceMs": 6208,
+  "fournisseur": "Azure"
+}

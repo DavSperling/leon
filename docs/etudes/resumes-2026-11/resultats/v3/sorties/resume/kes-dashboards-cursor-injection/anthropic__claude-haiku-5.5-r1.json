@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:08.901Z",
+  "reponse": "## Où j'en suis\nThe dashboard grid (react-grid-layout, 12 columns) is built behind the `dashboards_v2` flag, with layout saved server-side through `PUT /dashboards/:id/layout` and a localStorage fallback. Widget sizing uses a ResizeObserver hook because container queries don't apply on iOS 15 Safari. Draft PR #418 is open, awaiting Priya's UX review on iPad before the Zest demo on Tuesday the 24th.\n\n- [en-cours] Priya's UX review on iPad (iOS 15) is pending on the draft PR.\n- [prochaine-étape] Get Priya's UX review, then enable `dashboards_v2` for the Zest workspace in the flags admin before the 24th.\n- [essai-raté] Container queries did nothing on iOS 15 Safari (needs Safari 16+, and it fails silently), so they were replaced by `useWidgetSize()`.\n- [décision] Layout is persisted server-side via `PUT /dashboards/:id/layout`, not only in localStorage (source: t03)\n- [décision] Container queries are removed entirely, to keep a single sizing system (source: t09)\n- [décision] Legacy v1 dashboards stay available behind the flag until January, nothing is removed now (source: t15)\n- [décision] Draft PR opened for review (source: t17)",
+  "rendu": "## Où j'en suis\nThe dashboard grid (react-grid-layout, 12 columns) is built behind the `dashboards_v2` flag, with layout saved server-side through `PUT /dashboards/:id/layout` and a localStorage fallback. Widget sizing uses a ResizeObserver hook because container queries don't apply on iOS 15 Safari. Draft PR #418 is open, awaiting Priya's UX review on iPad before the Zest demo on Tuesday the 24th.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Priya's UX review on iPad (iOS 15) is pending on the draft PR.\n- [prochaine-étape] Get Priya's UX review, then enable `dashboards_v2` for the Zest workspace in the flags admin before the 24th.\n- [essai-raté] Container queries did nothing on iOS 15 Safari (needs Safari 16+, and it fails silently), so they were replaced by `useWidgetSize()`.\n- [décision] Layout is persisted server-side via `PUT /dashboards/:id/layout`, not only in localStorage (source: t03)\n- [décision] Container queries are removed entirely, to keep a single sizing system (source: t09)\n- [décision] Legacy v1 dashboards stay available behind the flag until January, nothing is removed now (source: t15)\n- [décision] Draft PR opened for review (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1283,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5180,
+    "sortie": 979,
+    "reflexion": 521,
+    "cache": 0,
+    "cout": 0.0010075
+  },
+  "cout": 0.0010075,
+  "latenceMs": 11538,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:23.387Z",
+  "reponse": "## Où j'en suis\nIntégration API étiquettes TransAlp en sandbox terminée sur la branche hugo/transalp-etiquettes : client OAuth2 (jeton en mémoire, `client_credentials`), étiquette PDF A4 fonctionnelle sur la commande 1052, `choix.ts` routant Lyon (69) et Paris (75) vers TransAlp sauf colis de plus de 30 kg qui partent chez Rapidis partout. Tests (18/18) et lint propres, deux commits faits, PR brouillon ouverte pour relecture de Julien, aucune variable de production renseignée.\n\n- [en-cours] PR #91 en draft, en attente de la relecture de Julien\n- [prochaine-étape] Demander à Marc (TransAlp) si le format ZPL est disponible en production : la Zebra de l'entrepôt n'imprime que ça, la sandbox renvoie 400 sur ce format\n- [prochaine-étape] Décision de Julien sur le passage en production, pas avant\n- [essai-raté] Clé d'API envoyée directement en en-tête → 401, il fallait l'échange OAuth2 ; correction faite\n- [essai-raté] ZPL testé sur la sandbox → 400 unsupported_format, le PDF reste par défaut avec le paramètre `format` prêt\n- [question] Le ZPL fonctionne-t-il en production chez TransAlp ?\n- [décision] Rien n'est résilié : Rapidis reste en secours au moins jusqu'à la fin des soldes, et tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris (source: t13)\n- [décision] PDF par défaut en attendant, on verra avec Marc pour le ZPL (source: t09)\n- [décision] Lint + PR draft pour relecture de Julien ; la prod n'est branchée que quand Julien le décide (source: t15)",
+  "rendu": "## Où j'en suis\nIntégration API étiquettes TransAlp en sandbox terminée sur la branche hugo/transalp-etiquettes : client OAuth2 (jeton en mémoire, `client_credentials`), étiquette PDF A4 fonctionnelle sur la commande 1052, `choix.ts` routant Lyon (69) et Paris (75) vers TransAlp sauf colis de plus de 30 kg qui partent chez Rapidis partout. Tests (18/18) et lint propres, deux commits faits, PR brouillon ouverte pour relecture de Julien, aucune variable de production renseignée.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR #91 en draft, en attente de la relecture de Julien\n- [prochaine-étape] Demander à Marc (TransAlp) si le format ZPL est disponible en production : la Zebra de l'entrepôt n'imprime que ça, la sandbox renvoie 400 sur ce format\n- [prochaine-étape] Décision de Julien sur le passage en production, pas avant\n- [essai-raté] Clé d'API envoyée directement en en-tête → 401, il fallait l'échange OAuth2 ; correction faite\n- [essai-raté] ZPL testé sur la sandbox → 400 unsupported_format, le PDF reste par défaut avec le paramètre `format` prêt\n- [question] Le ZPL fonctionne-t-il en production chez TransAlp ?",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1216,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3684,
+    "sortie": 777,
+    "reflexion": 307,
+    "cache": 0,
+    "cout": 0.00073332
+  },
+  "cout": 0.00073332,
+  "latenceMs": 29817,
+  "fournisseur": "Xiaomi"
+}

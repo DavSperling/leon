@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:03.935Z",
+  "reponse": "## Where I stand\n\nDone: `cmd/replay` built on branch lior/replay-12-11 with dry-run, per-partition ordering (committed 4e2d9b7), rejects file for malformed lines (committed f13a06c), and a hard allowlist of `events.replay.v3`. Dry run on the 12/11 window completed: 18,442,107 events would be replayed, 3,118 schema-v2 lines written to the rejects prefix. PR #233 is open with Daniel as reviewer.\n\n- [en-cours] Real replay into `events.replay.v3` and the aggregator `--backfill` for 2026-11-12 are not run yet; waiting on Daniel's review of PR #233.\n- [prochaine-étape] After review: run the real replay, then the backfill, then verify ClickHouse numbers for 12/11.\n- [essai-raté] `--batch 50000` OOMKilled the pod (2Gi limit, ~2.6 GiB peak); rerun at `--batch 5000` completed in 19m42s at 310 MiB.\n- [essai-raté] First test run failed on out-of-order events within a partition (4 workers interleaving); fixed by splitting workers by partition key.\n- [question] ETA for Fernhill and Orbitly: the person will give Rachel an ETA themselves, after Daniel's review — no draft from the agent.\n- [décision] Replay everything for 12/11 with no age cutoff, into `events.replay.v3` only, never `events.v3` directly (source: t05).\n- [décision] Batch size 5k, memory limit untouched (namespace quota capped by Noa) (source: t13).\n- [décision] Malformed lines must be written to a rejects file in the bucket for the data team, not skipped silently (source: t15).",
+  "rendu": "- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Real replay into `events.replay.v3` and the aggregator `--backfill` for 2026-11-12 are not run yet; waiting on Daniel's review of PR #233.\n- [prochaine-étape] After review: run the real replay, then the backfill, then verify ClickHouse numbers for 12/11.\n- [essai-raté] `--batch 50000` OOMKilled the pod (2Gi limit, ~2.6 GiB peak); rerun at `--batch 5000` completed in 19m42s at 310 MiB.\n- [essai-raté] First test run failed on out-of-order events within a partition (4 workers interleaving); fixed by splitting workers by partition key.\n- [question] ETA for Fernhill and Orbitly: the person will give Rachel an ETA themselves, after Daniel's review — no draft from the agent.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 801,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4438,
+    "sortie": 512,
+    "reflexion": 52,
+    "cache": 0,
+    "cout": 0.00076468
+  },
+  "cout": 0.00076468,
+  "latenceMs": 17847,
+  "fournisseur": "Xiaomi"
+}

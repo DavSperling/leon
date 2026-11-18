@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:58.684Z",
+  "reponse": "## Où j'en suis\n\nSAML ACS verification for Fernhill is implemented on branch `daniel/saml-acs` using signxml, after python3-saml could not build on the Alpine base image. Signature and condition checks, replay protection and a 120 s clock skew are in place, and the auth tests pass. PR #412 is merged.\n\n- [en-cours] Loading Fernhill's staging IdP metadata and sending them our staging SP metadata\n- [prochaine-étape] Send Fernhill staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine base: xmlsec and lxml libxml2 versions clash, and a source build of lxml did not fix it\n- [décision] Use signxml, drop python3-saml and xmlsec, and write the SAML condition checks ourselves (source: t08)\n- [décision] Clock skew is 120 s, per the Fernhill contract annex (source: t12)",
+  "rendu": "## Où j'en suis\nSAML ACS verification for Fernhill is implemented on branch `daniel/saml-acs` using signxml, after python3-saml could not build on the Alpine base image. Signature and condition checks, replay protection and a 120 s clock skew are in place, and the auth tests pass. PR #412 is merged.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Loading Fernhill's staging IdP metadata and sending them our staging SP metadata\n- [prochaine-étape] Send Fernhill staging SP metadata by Wednesday EOD, for the Thursday 10:00 New York demo\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [essai-raté] python3-saml on the Alpine base: xmlsec and lxml libxml2 versions clash, and a source build of lxml did not fix it\n- [décision] Use signxml, drop python3-saml and xmlsec, and write the SAML condition checks ourselves (source: t08)\n- [décision] Clock skew is 120 s, per the Fernhill contract annex (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1069,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6560,
+    "sortie": 1338,
+    "reflexion": 968,
+    "cache": 0,
+    "cout": 0.001325
+  },
+  "cout": 0.001325,
+  "latenceMs": 9753,
+  "fournisseur": "Amazon Bedrock"
+}

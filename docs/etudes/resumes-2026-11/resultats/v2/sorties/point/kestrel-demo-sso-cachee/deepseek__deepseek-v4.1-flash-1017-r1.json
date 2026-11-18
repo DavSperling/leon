@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:10:04.474Z",
+  "reponse": "## What you did\n- Cleared the ruff 0.8 backlog and two mypy errors in `kestrel/auth`, then split the 900-line `saml_utils.py` into a `saml/` package (assertions, metadata, bindings) with a shim keeping the old imports working — opened as PR #423 [1][4].\n- Made the flaky SAML ACS tests deterministic with freezegun instead of sleeps: 50/50 green on repeat, and the file runs about 2s faster [1].\n- A missing Issuer or Subject in an assertion is now a 401 with a clear error instead of an `AttributeError` surfacing as a 500 [1].\n\n## What changed\n- Maya approved and merged #418 (Fernhill assertion signatures); it goes out with tonight's staging deploy, so signature validation is on staging before Wednesday EOD [3].\n- Tom requested changes on #423: he wants the module move split from the lint fixes, two PRs, and he'll approve both today [4].\n- Zest Grocers' CSV export (#424) times out at ~230k rows; Tom took it and is moving the export to the job queue with an emailed link [5].\n\n## What is still open\n- #423 has to be split into two PRs before Tom can approve [4].\n- Thursday 10:00 NY (16:00 Paris): Fernhill end-to-end SSO walkthrough on staging against their Okta tenant — Priya runs the demo, you only need to be on the call [1].\n- The assertion-ID replay cache is still per-process; moving it to Redis is what closes replay across the three API pods — the work you lined up for today [1][2].",
+  "rendu": "## What you did\n- Cleared the ruff 0.8 backlog and two mypy errors in `kestrel/auth`, then split the 900-line `saml_utils.py` into a `saml/` package (assertions, metadata, bindings) with a shim keeping the old imports working — opened as PR #423 [1][4].\n- Made the flaky SAML ACS tests deterministic with freezegun instead of sleeps: 50/50 green on repeat, and the file runs about 2s faster [1].\n- A missing Issuer or Subject in an assertion is now a 401 with a clear error instead of an `AttributeError` surfacing as a 500 [1].\n\n## What changed\n- Maya approved and merged #418 (Fernhill assertion signatures); it goes out with tonight's staging deploy, so signature validation is on staging before Wednesday EOD [3].\n- Tom requested changes on #423: he wants the module move split from the lint fixes, two PRs, and he'll approve both today [4].\n- Zest Grocers' CSV export (#424) times out at ~230k rows; Tom took it and is moving the export to the job queue with an emailed link [5].\n\n## What is still open\n- #423 has to be split into two PRs before Tom can approve [4].\n- Thursday 10:00 NY (16:00 Paris): Fernhill end-to-end SSO walkthrough on staging against their Okta tenant — Priya runs the demo, you only need to be on the call [1].\n- The assertion-ID replay cache is still per-process; moving it to Redis is what closes replay across the three API pods — the work you lined up for today [1][2].",
+  "mesures": {
+    "mots": 238,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5732,
+    "sortie": 1786,
+    "reflexion": 1395,
+    "cache": 0,
+    "cout": 0.00158084
+  },
+  "cout": 0.00158084,
+  "latenceMs": 9655,
+  "fournisseur": "Relace"
+}

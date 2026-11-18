@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-tri-candidatures",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:11.869Z",
+  "reponse": "## Où j'en suis\nLes 11 candidatures aux deux postes d'installateur PAC ont été dépouillées (deux sous-agents, puis lecture manuelle des deux CV scannés) et le tableau `recrutement/candidats-installateurs.xlsx` consolidé ; quatre candidats sont retenus, leurs convocations et la grille d'entretien sont rédigées, et `recrutement/suivi.md` note le déroulé prévu. Rien n'a été envoyé : c'est la personne qui envoie les convocations depuis Gmail dans l'après-midi du 17/11.\n\n- [prochaine-étape] Entretiens jeudi 19/11 (14h, 15h) et vendredi 20/11 (9h, 10h) à l'atelier de Carquefou, 45 min avec Yannick.\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11.\n- [décision] Personne n'est écarté pour un arrêt maladie, et la colonne prétentions est supprimée du tableau (source: t06)\n- [décision] L'attestation fluides n'est pas éliminatoire (formation payée) : convoquer Le Roux, Le Gac, Perrot et Carré, pas Haddou qui cherche en Mayenne (source: t10)\n- [décision] Créneaux attribués dans l'ordre du tableau, 45 min, avec Yannick (source: t12)\n- [décision] Convocations envoyées par la personne depuis Gmail, réponse aux non-retenus avant le 27/11 (source: t16)",
+  "rendu": "## Où j'en suis\nLes 11 candidatures aux deux postes d'installateur PAC ont été dépouillées (deux sous-agents, puis lecture manuelle des deux CV scannés) et le tableau `recrutement/candidats-installateurs.xlsx` consolidé ; quatre candidats sont retenus, leurs convocations et la grille d'entretien sont rédigées, et `recrutement/suivi.md` note le déroulé prévu. Rien n'a été envoyé : c'est la personne qui envoie les convocations depuis Gmail dans l'après-midi du 17/11.\n\n- [prochaine-étape] Entretiens jeudi 19/11 (14h, 15h) et vendredi 20/11 (9h, 10h) à l'atelier de Carquefou, 45 min avec Yannick.\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11.\n- [décision] Personne n'est écarté pour un arrêt maladie, et la colonne prétentions est supprimée du tableau (source: t06)\n- [décision] L'attestation fluides n'est pas éliminatoire (formation payée) : convoquer Le Roux, Le Gac, Perrot et Carré, pas Haddou qui cherche en Mayenne (source: t10)\n- [décision] Créneaux attribués dans l'ordre du tableau, 45 min, avec Yannick (source: t12)\n- [décision] Convocations envoyées par la personne depuis Gmail, réponse aux non-retenus avant le 27/11 (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1180,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3386,
+    "sortie": 1151,
+    "reflexion": 754,
+    "cache": 0,
+    "cout": 0.0009588
+  },
+  "cout": 0.0009588,
+  "latenceMs": 8088,
+  "fournisseur": "River"
+}

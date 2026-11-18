@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:05.361Z",
+  "reponse": "La cause racine de l'incident du 12 novembre : le disque du broker Kafka ingest-kafka-2 s'est rempli après le changement de rétention de l'infra PR #221 (suppression de la rétention basée sur la taille, uniquement temporelle sur 7 jours), rendant le broker read-only à 09:38 UTC et bloquant les consommateurs [2]. L'impact a duré 2h47 (09:38–12:25 UTC), avec des événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le déploiement du PR #388 (taille de batch) a d'abord été suspecté puis réverté, mais sans effet — c'était un red herring, le changement de batch a été réappliqué ensuite [1][3][5]. Des action items ont été fixées : alerte à 80% de disque, restauration de la rétention par taille, template status page [5].",
+  "rendu": "La cause racine de l'incident du 12 novembre : le disque du broker Kafka ingest-kafka-2 s'est rempli après le changement de rétention de l'infra PR #221 (suppression de la rétention basée sur la taille, uniquement temporelle sur 7 jours), rendant le broker read-only à 09:38 UTC et bloquant les consommateurs [2]. L'impact a duré 2h47 (09:38–12:25 UTC), avec des événements retardés jusqu'à 2h47 mais aucun perdu [2]. Le déploiement du PR #388 (taille de batch) a d'abord été suspecté puis réverté, mais sans effet — c'était un red herring, le changement de batch a été réappliqué ensuite [1][3][5]. Des action items ont été fixées : alerte à 80% de disque, restauration de la rétention par taille, template status page [5].",
+  "mesures": {
+    "mots": 117,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1203,
+    "sortie": 215,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0000648557
+  },
+  "cout": 0.0000648557,
+  "latenceMs": 1943,
+  "fournisseur": "Relace"
+}

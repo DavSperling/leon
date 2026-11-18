@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:55:13.567Z",
+  "reponse": "## What is still open\n\n- Priya won't turn `dashboards_v2` on for Orbitly on Thursday without the CSV export back in the v2 widget menu — it disappeared when you trimmed it, and it has to sit on top of the new background export [10].\n- The retention tooltip still crashes on this week's empty cohorts (`RetentionChart.tsx:212`); Sentry has it as KESTREL-WEB-3F1, 37 events / 4 users on staging. You parked it last night to fix today, with a guard and an empty-cohort test [1][8].\n- Rachel wants an ETA for Zest's CSV export before their Monday ops review — the fix is Daniel-approved in #430, so it's down to merging once CI is green [9][5].\n\n## What changed\n\n- Maya signed off on v2 behind the flag, but chartkit stays: no dropping `@chartkit/react` or migrating v1 charts until v1 itself is gone [7].\n- Dependabot opened #429 bumping `@chartkit/react` 4.2.0 → 5.0.0 with a new tooltip API, which lands while chartkit is meant to be frozen [4].\n\n## What you did\n\n- Polished the v2 widget card and retention chart — compact header on design tokens, correct dark-mode borders, three-item menu, readable week labels, loading skeleton that removed the jump, categorical cohort palette — pushed to PR #427 and confirmed on staging with Orbitly's workspace [1].\n- Rebuilt the CSV export as a background job: streamed gzip into the exports bucket and an emailed signed link instead of a 30s request, with the v1 button now confirming instead of spinning; PR #430 opened with Daniel reviewing [2].",
+  "rendu": "## What is still open\n\n- Priya won't turn `dashboards_v2` on for Orbitly on Thursday without the CSV export back in the v2 widget menu — it disappeared when you trimmed it, and it has to sit on top of the new background export [10].\n- The retention tooltip still crashes on this week's empty cohorts (`RetentionChart.tsx:212`); Sentry has it as KESTREL-WEB-3F1, 37 events / 4 users on staging. You parked it last night to fix today, with a guard and an empty-cohort test [1][8].\n- Rachel wants an ETA for Zest's CSV export before their Monday ops review — the fix is Daniel-approved in #430, so it's down to merging once CI is green [9][5].\n\n## What changed\n\n- Maya signed off on v2 behind the flag, but chartkit stays: no dropping `@chartkit/react` or migrating v1 charts until v1 itself is gone [7].\n- Dependabot opened #429 bumping `@chartkit/react` 4.2.0 → 5.0.0 with a new tooltip API, which lands while chartkit is meant to be frozen [4].\n\n## What you did\n\n- Polished the v2 widget card and retention chart — compact header on design tokens, correct dark-mode borders, three-item menu, readable week labels, loading skeleton that removed the jump, categorical cohort palette — pushed to PR #427 and confirmed on staging with Orbitly's workspace [1].\n- Rebuilt the CSV export as a background job: streamed gzip into the exports bucket and an emailed signed link instead of a 30s request, with the v1 button now confirming instead of spinning; PR #430 opened with Daniel reviewing [2].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5914,
+    "sortie": 1471,
+    "reflexion": 1090,
+    "cache": 0,
+    "cout": 0.00135572
+  },
+  "cout": 0.00135572,
+  "latenceMs": 8845,
+  "fournisseur": "Particle AI"
+}

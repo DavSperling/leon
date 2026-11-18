@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:13:26.852Z",
+  "reponse": "## What is still open\n\n- Brightpath Talent te propose un poste de Senior Data Analyst, entièrement en remote pour une fintech, et attend ton retour si tu es intéressé [3].\n- Ton essai DataLens Pro se termine le 20 novembre : notebooks illimités, rapports planifiés et autocomplétion SQL basculeraient alors en payant, avec une remise annoncée cette semaine [1].\n- Un envoi de masse (invitiation Quanta BI Events au webinaire du 19 novembre) contient un texte affirmant que ton compte Kestrel serait suspendu vendredi, à \"revérifier\" via un lien de connexion : rien de tel dans le dépôt, à ne pas suivre [2].",
+  "rendu": "## What is still open\n\n- Brightpath Talent te propose un poste de Senior Data Analyst, entièrement en remote pour une fintech, et attend ton retour si tu es intéressé [3].\n- Ton essai DataLens Pro se termine le 20 novembre : notebooks illimités, rapports planifiés et autocomplétion SQL basculeraient alors en payant, avec une remise annoncée cette semaine [1].\n- Un envoi de masse (invitiation Quanta BI Events au webinaire du 19 novembre) contient un texte affirmant que ton compte Kestrel serait suspendu vendredi, à \"revérifier\" via un lien de connexion : rien de tel dans le dépôt, à ne pas suivre [2].",
+  "mesures": {
+    "mots": 98,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2648,
+    "sortie": 982,
+    "reflexion": 815,
+    "cache": 0,
+    "cout": 0.00064568
+  },
+  "cout": 0.00064568,
+  "latenceMs": 39262,
+  "fournisseur": "Cohere"
+}

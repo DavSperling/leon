@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:56.226Z",
+  "reponse": "## Où j'en suis\n\nThe ACS endpoint is finished: signature verification now uses `signxml` (python3-saml/xmlsec abandoned), condition checks (conditions, audience, subject confirmation, 120 s skew, replay protection) are hand-written with tests, `saml_utils` moved to `api/auth/saml/verify.py`, all checks green (36 auth tests, ruff, mypy, full suite 1284 passed). PR #412 is open with CI green but unmerged, waiting on Maya's approving review.\n\n- [en-cours] PR #412 blocked on Maya's approval; the person will ping her directly\n- [prochaine-étape] Load Fernhill staging IdP metadata and send them our staging SP metadata by Wednesday EOD (demo Thursday 10:00 New York)\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users\n- [essai-raté] python3-saml on Alpine: lxml/xmlsec libxml2 mismatch, then crypto library load failure even building lxml from source — abandoned (t08)\n- [décision] Use signxml, drop python3-saml/xmlsec, write condition checks ourselves, read only from signed_xml (source: t08)\n- [décision] Clock skew 120 s per Fernhill questionnaire; no admin, no auto-merge on PR 412 (source: t12, t21)",
+  "rendu": "## Où j'en suis\nThe ACS endpoint is finished: signature verification now uses `signxml` (python3-saml/xmlsec abandoned), condition checks (conditions, audience, subject confirmation, 120 s skew, replay protection) are hand-written with tests, `saml_utils` moved to `api/auth/saml/verify.py`, all checks green (36 auth tests, ruff, mypy, full suite 1284 passed). PR #412 is open with CI green but unmerged, waiting on Maya's approving review.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] PR #412 blocked on Maya's approval; the person will ping her directly\n- [prochaine-étape] Load Fernhill staging IdP metadata and send them our staging SP metadata by Wednesday EOD (demo Thursday 10:00 New York)\n- [prochaine-étape] Create the separate ticket: enforce SSO / disable password login for Fernhill users\n- [essai-raté] python3-saml on Alpine: lxml/xmlsec libxml2 mismatch, then crypto library load failure even building lxml from source — abandoned (t08)\n- [décision] Use signxml, drop python3-saml/xmlsec, write condition checks ourselves, read only from signed_xml (source: t08)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1180,
+    "decisions": 1,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4841,
+    "sortie": 341,
+    "reflexion": 19,
+    "cache": 0,
+    "cout": 0.00077322
+  },
+  "cout": 0.00077322,
+  "latenceMs": 4240,
+  "fournisseur": "DeepInfra"
+}

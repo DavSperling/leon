@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:14.841Z",
+  "reponse": "La table Saône est en rupture depuis le 28 octobre [4], avec un retour estimé fin novembre à confirmer [4]. Le service client annonce une livraison sous environ 6 semaines [3]. Une précommande doit être ouverte par Sophie Garnier avec la mention « expédition à partir du 3 décembre » [5]. Attention : les 25 pièces du 1er décembre et les 15 suivantes mi-décembre concernent les plateaux Saône de Bois & Fils [1][2], pas la table Saône de Maison Verdier.",
+  "rendu": "La table Saône est en rupture depuis le 28 octobre [4], avec un retour estimé fin novembre à confirmer [4]. Le service client annonce une livraison sous environ 6 semaines [3]. Une précommande doit être ouverte par Sophie Garnier avec la mention « expédition à partir du 3 décembre » [5]. Attention : les 25 pièces du 1er décembre et les 15 suivantes mi-décembre concernent les plateaux Saône de Bois & Fils [1][2], pas la table Saône de Maison Verdier.",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1105,
+    "sortie": 229,
+    "reflexion": 116,
+    "cache": 0,
+    "cout": 0.00030315
+  },
+  "cout": 0.00030315,
+  "latenceMs": 1600,
+  "fournisseur": "Makora"
+}

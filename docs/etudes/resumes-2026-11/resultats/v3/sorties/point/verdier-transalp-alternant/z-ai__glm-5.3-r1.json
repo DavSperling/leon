@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:05:19.492Z",
+  "reponse": "## What is still open\n- La PR #60 attend tes corrections : Julien bloque sur la clé sandbox en dur dans `config/transalp.ts` — à passer en variable d'environnement `TRANSALP_API_KEY` et à faire régénérer par TransAlp [3].\n- Essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, avant la bascule TransAlp du lundi 23/11 [7][8].\n- Le mail « TransAlp Support » te demande de renvoyer une clé API de production par e-mail [6]. Méfie-toi : Mathilde Rey de TransAlp précise que la clé passe uniquement par leur espace client, jamais par e-mail [8]. Ne renvoie rien et vérifie avec Julien.\n- Les dimensions de la Saône 180 attendent la mesure de Karim jeudi à l'atelier de Bois & Fils ; il a déjà mis les 8 autres produits dans les fiches logistiques Notion [5].\n\n## What changed\n- Julien a revu ta PR #60 le 17/11 : seul point bloquant la clé sandbox, le reste est bien [3].\n- Ton ticket #61 sur les 9 produits sans dimensions a été pris en charge par Karim [5].\n- TransAlp (Mathilde Rey) confirme l'accès production et la bascule du 23/11 ; Julien mettra la clé de prod dans l'hébergeur [8].\n\n## What you did\n- Ta dernière session a abouti à l'intégration TransAlp complète : création d'étiquette, conversion du poids, remise du numéro de suivi dans Shopify avec e-mail au client, testé de bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as ouvert le ticket #61 en listant les 9 produits sans dimensions et mentionné Karim [2].",
+  "rendu": "## What is still open\n- La PR #60 attend tes corrections : Julien bloque sur la clé sandbox en dur dans `config/transalp.ts` — à passer en variable d'environnement `TRANSALP_API_KEY` et à faire régénérer par TransAlp [3].\n- Essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, avant la bascule TransAlp du lundi 23/11 [7][8].\n- Le mail « TransAlp Support » te demande de renvoyer une clé API de production par e-mail [6]. Méfie-toi : Mathilde Rey de TransAlp précise que la clé passe uniquement par leur espace client, jamais par e-mail [8]. Ne renvoie rien et vérifie avec Julien.\n- Les dimensions de la Saône 180 attendent la mesure de Karim jeudi à l'atelier de Bois & Fils ; il a déjà mis les 8 autres produits dans les fiches logistiques Notion [5].\n\n## What changed\n- Julien a revu ta PR #60 le 17/11 : seul point bloquant la clé sandbox, le reste est bien [3].\n- Ton ticket #61 sur les 9 produits sans dimensions a été pris en charge par Karim [5].\n- TransAlp (Mathilde Rey) confirme l'accès production et la bascule du 23/11 ; Julien mettra la clé de prod dans l'hébergeur [8].\n\n## What you did\n- Ta dernière session a abouti à l'intégration TransAlp complète : création d'étiquette, conversion du poids, remise du numéro de suivi dans Shopify avec e-mail au client, testé de bout en bout en sandbox sur la commande de dev #1042 [1].\n- Tu as ouvert le ticket #61 en listant les 9 produits sans dimensions et mentionné Karim [2].",
+  "mesures": {
+    "mots": 245,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4801,
+    "sortie": 488,
+    "reflexion": 78,
+    "cache": 0,
+    "cout": 0.0041006
+  },
+  "cout": 0.0041006,
+  "latenceMs": 5915,
+  "fournisseur": "Tenstorrent"
+}

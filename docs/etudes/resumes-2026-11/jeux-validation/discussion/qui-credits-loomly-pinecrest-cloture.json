@@ -1,0 +1,33 @@
+{
+  "id": "qui-credits-loomly-pinecrest-cloture",
+  "titre": "Les gestes commerciaux après le retard des virements : montants, forme et comptabilisation de novembre, à croiser entre Slack, Zendesk, un mail et une conversation ChatGPT",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-quillon",
+    "question": "what are we giving loomly and pinecrest for the late payouts thing, and is it already in the november books?"
+  },
+  "attendu": {
+    "sources": ["slack-finance-credits", "zendesk-48213", "gmail-pinecrest-credit", "chatgpt-marcus-nov-close", "drive-november-close-checklist"],
+    "faits": [
+      { "id": "f1", "texte": "Says Loomly gets a credit of $18,400 (its full November platform fees).", "poids": 3 },
+      { "id": "f2", "texte": "Says Pinecrest gets a credit of $6,200 (its full November platform fees).", "poids": 3 },
+      { "id": "f3", "texte": "Says both are credits on their December invoices, not cash refunds.", "poids": 2 },
+      { "id": "f4", "texte": "Says the $24,600 goes into the November close as an accrual that reduces revenue (contra-revenue), not as an expense.", "poids": 3 },
+      { "id": "f5", "texte": "Says the accrual is not done yet: it is in progress on the close checklist, with Jenna to post the entry (books lock on December 7).", "poids": 1 },
+      { "id": "f6", "texte": "Says Loomly's extra request to reimburse its sellers' overdraft fees (214 sellers, $7,690) is still undecided and is not accrued in November.", "poids": 2 },
+      { "id": "f7", "texte": "Says Loomly was promised an answer on the overdraft fees by November 25.", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "Gives 50% of November fees (about $9.2k for Loomly, $3.1k for Pinecrest) as what was granted." },
+      { "id": "i2", "texte": "Says the customers get cash refunds." },
+      { "id": "i3", "texte": "Says the sellers' overdraft fees will be reimbursed, or that they are included in the November accrual." },
+      { "id": "i4", "texte": "Says the credits are booked as an operating expense (\"customer concessions\")." }
+    ],
+    "pieges": [
+      "Croiser au moins quatre sources : la décision dans #finance (13/11), les montants annoncés aux clients (ticket Zendesk de Loomly, mail à Pinecrest), le traitement comptable dans la conversation ChatGPT de Marcus (17/11) et la liste de clôture.",
+      "Périmé : la première proposition de Rachel (50 % des frais, 12/11) et le brouillon Claude du mail à Pinecrest qui la reprend, remplacés le 13/11 par 100 % des frais de novembre.",
+      "Fausse piste : le premier réflexe de Marcus (une charge « customer concessions ») est écarté au profit d'une baisse du chiffre d'affaires.",
+      "Reste ouvert : les frais de découvert des vendeurs de Loomly (7 690 $), sans décision, réponse promise pour le 25/11 ; vocabulaire de la question (« late payouts thing », « november books ») différent des sources."
+    ]
+  }
+}

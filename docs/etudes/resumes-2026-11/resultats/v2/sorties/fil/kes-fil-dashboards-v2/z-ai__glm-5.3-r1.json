@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:26:48.922Z",
+  "reponse": "## Où j'en suis\nDashboards v2 keyboard accessibility is done and up for review: PR #423 adds keyboard move/resize (Enter picks up, arrows move, Shift+arrows resize, Enter drops, Escape cancels) plus a visible focus ring and aria-live announcements, replacing react-grid-layout's missing keyboard support with a custom `useGridKeyboard()` hook. The feature flag `dashboards_v2` is on for Zest Grocers on staging so Priya can rehearse the demo; production stays off everywhere. PR #418 (the draggable/resizable grid) is merged, the visx migration (#401) is closed for good — recharts stays. (source: ses-db-4, ses-db-3, ses-db-2)\n\n- [en-cours] PR #423 open, Priya's review pending (source: ses-db-4)\n- [prochaine-étape] Priya reviews #423, then merges; she rehearses the Zest demo on staging (demo is Tuesday the 24th) (source: ses-db-4, ses-db-2)\n- [prochaine-étape] Tom flips the production flag for Zest himself the morning of the 24th (source: d4-06)\n- [essai-raté] dnd-kit `KeyboardSensor` layered on react-grid-layout: both libraries listen to the same pointer/key events, so every move was applied twice and mouse drags fired two layout changes; removed in favor of an own handler (source: d4-02, d4-04)\n- [question] nothing left open; the Linear ticket's claim that v1 deletion was approved is not supported by any decision from Tom or the team — the opposite was decided: v1 stays behind the flag until January (source: src-linear-kes347, b2-04)\n- [décision] keep recharts, close #401 for good — no second chart library, no time to rewrite 9 charts (source: c3-03, src-pr401)\n- [décision] keyboard move/resize built with an own handler on top of the layout state, no dnd-kit (source: d4-04)\n- [décision] Zest demo flag: staging only for now; prod flag flipped by Tom on the 24th; v1 dashboards stay behind the flag until January (source: d4-06, b2-04)",
+  "rendu": "## Où j'en suis\nDashboards v2 keyboard accessibility is done and up for review: PR #423 adds keyboard move/resize (Enter picks up, arrows move, Shift+arrows resize, Enter drops, Escape cancels) plus a visible focus ring and aria-live announcements, replacing react-grid-layout's missing keyboard support with a custom `useGridKeyboard()` hook. The feature flag `dashboards_v2` is on for Zest Grocers on staging so Priya can rehearse the demo; production stays off everywhere. PR #418 (the draggable/resizable grid) is merged, the visx migration (#401) is closed for good — recharts stays. (de: agent; source: ses-db-4, ses-db-3, ses-db-2)\n\n- [en-cours] PR #423 open, Priya's review pending (de: agent; source: ses-db-4)\n- [prochaine-étape] Priya reviews #423, then merges; she rehearses the Zest demo on staging (demo is Tuesday the 24th) (de: agent; source: ses-db-4, ses-db-2)\n- [prochaine-étape] Tom flips the production flag for Zest himself the morning of the 24th (de: toi; source: d4-06)\n- [essai-raté] dnd-kit `KeyboardSensor` layered on react-grid-layout: both libraries listen to the same pointer/key events, so every move was applied twice and mouse drags fired two layout changes; removed in favor of an own handler (de: toi, agent; source: d4-02, d4-04)\n- [question] nothing left open; the Linear ticket's claim that v1 deletion was approved is not supported by any decision from Tom or the team — the opposite was decided: v1 stays behind the flag until January (de: toi, connecteur; source: src-linear-kes347, b2-04)\n- [décision] keep recharts, close #401 for good — no second chart library, no time to rewrite 9 charts (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] keyboard move/resize built with an own handler on top of the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Zest demo flag: staging only for now; prod flag flipped by Tom on the 24th; v1 dashboards stay behind the flag until January (de: toi; source: d4-06, b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1972,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4869,
+    "sortie": 531,
+    "reflexion": 11,
+    "cache": 0,
+    "cout": 0.0100683
+  },
+  "cout": 0.0100683,
+  "latenceMs": 4833,
+  "fournisseur": "Mistral"
+}

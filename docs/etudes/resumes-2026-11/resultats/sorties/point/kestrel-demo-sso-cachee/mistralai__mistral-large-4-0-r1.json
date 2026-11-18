@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T14:26:13.961Z",
+  "reponse": "## What you did\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping the old imports working; full suite green (1,284 passed), ruff and mypy clean across `kestrel/` — pushed on branch `daniel/auth-cleanup` as PR #423 [1]\n- Fixed the flaky `test_acs_rejects_expired_assertion`: it slept 2.1s against a 2s `NotOnOrAfter` inside a 3s clock-skew allowance, so it was pure timing — froze the clock with freezegun instead and converted the two other sleep-based ACS tests; 50/50 green on repeat [1]\n- Cleared the ruff 0.8 warnings in `kestrel/auth` (auto-fixes plus manual B904/RUF012/PLW2901) and fixed two mypy errors: a missing Issuer/Subject in an assertion now returns a clean 401 instead of a 500 [1]\n\n## What changed\n- PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" — the signature verification you built on Nov 13 (signxml on the assertion, per-tenant IdP certs, SHA-256+ only) — was approved by Maya and merged last night, and ships with tonight's staging deploy [2][3]. That meets the Wed EOD deadline she set: the Fernhill IT end-to-end SSO walkthrough on staging is tomorrow (Thursday) 10am NY time with their Okta tenant — Priya runs the demo, you just need to be on the call [1]\n\n## What is still open\n- PR #423 (your cleanup branch): Tom Becker requested changes — split the 1,900-line diff into two PRs, the `saml/` module move separate from the lint/test fixes; he'll approve both today [4]\n- The assertion-ID replay cache is still in-memory only (`TTLCache`): with 3 API pods behind the load balancer, a replayed assertion could still pass on another pod. You flagged moving it to Redis for today — `SET NX EX` keyed by tenant + assertion ID, TTL = `NotOnOrAfter` + skew; the Redis client is already in `kestrel/cache.py` [1]",
+  "rendu": "## What you did\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` with a shim keeping the old imports working; full suite green (1,284 passed), ruff and mypy clean across `kestrel/` — pushed on branch `daniel/auth-cleanup` as PR #423 [1]\n- Fixed the flaky `test_acs_rejects_expired_assertion`: it slept 2.1s against a 2s `NotOnOrAfter` inside a 3s clock-skew allowance, so it was pure timing — froze the clock with freezegun instead and converted the two other sleep-based ACS tests; 50/50 green on repeat [1]\n- Cleared the ruff 0.8 warnings in `kestrel/auth` (auto-fixes plus manual B904/RUF012/PLW2901) and fixed two mypy errors: a missing Issuer/Subject in an assertion now returns a clean 401 instead of a 500 [1]\n\n## What changed\n- PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" — the signature verification you built on Nov 13 (signxml on the assertion, per-tenant IdP certs, SHA-256+ only) — was approved by Maya and merged last night, and ships with tonight's staging deploy [2][3]. That meets the Wed EOD deadline she set: the Fernhill IT end-to-end SSO walkthrough on staging is tomorrow (Thursday) 10am NY time with their Okta tenant — Priya runs the demo, you just need to be on the call [1]\n\n## What is still open\n- PR #423 (your cleanup branch): Tom Becker requested changes — split the 1,900-line diff into two PRs, the `saml/` module move separate from the lint/test fixes; he'll approve both today [4]\n- The assertion-ID replay cache is still in-memory only (`TTLCache`): with 3 API pods behind the load balancer, a replayed assertion could still pass on another pod. You flagged moving it to Redis for today — `SET NX EX` keyed by tenant + assertion ID, TTL = `NotOnOrAfter` + skew; the Redis client is already in `kestrel/cache.py` [1]",
+  "mesures": {
+    "mots": 276,
+    "tropLong": true,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5421,
+    "sortie": 4248,
+    "reflexion": 3739,
+    "cache": 0,
+    "cout": 0.0127155
+  },
+  "cout": 0.0127155,
+  "latenceMs": 133024,
+  "fournisseur": "Mistral"
+}

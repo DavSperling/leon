@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:57:37.099Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 upgrade for the analytics RDS is written and verified plan-only on staging: the parameter group family is now derived from the major version, blue/green is enabled on `analytics-staging` (16.4 → 17.2), the AWS provider is pinned to `~> 5.82.0`, and prod is prepared behind `pg17_enabled = false` with an empty plan. Three commits on `noa/rds-pg17`, and draft PR #57 is open with the pg_partman and dbt-lock caveats in its description; nothing was applied anywhere.\n\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4 and check `run_maintenance_proc()` on `events_raw`/`events_daily` before the switchover, or green won't even be created.\n- [prochaine-étape] Get Maya's sign-off, then pick the prod window outside the 01:00–03:30 UTC dbt lock (Saturday or Sunday 04:00–06:00 UTC are the candidates).\n- [essai-raté] `terraform init` refused the 5.31.0 lock file; `init -upgrade` pulled AWS provider v6 and produced 37 unrelated breaking changes, so it was reverted.\n- [décision] AWS provider stays `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] The pg_partman upgrade is a separate todo, nothing run against the database (source: t10)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false and 02:00 UTC is out because of the dbt lock (source: t14)",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 upgrade for the analytics RDS is written and verified plan-only on staging: the parameter group family is now derived from the major version, blue/green is enabled on `analytics-staging` (16.4 → 17.2), the AWS provider is pinned to `~> 5.82.0`, and prod is prepared behind `pg17_enabled = false` with an empty plan. Three commits on `noa/rds-pg17`, and draft PR #57 is open with the pg_partman and dbt-lock caveats in its description; nothing was applied anywhere.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging 16.4 and check `run_maintenance_proc()` on `events_raw`/`events_daily` before the switchover, or green won't even be created.\n- [prochaine-étape] Get Maya's sign-off, then pick the prod window outside the 01:00–03:30 UTC dbt lock (Saturday or Sunday 04:00–06:00 UTC are the candidates).\n- [essai-raté] `terraform init` refused the 5.31.0 lock file; `init -upgrade` pulled AWS provider v6 and produced 37 unrelated breaking changes, so it was reverted.\n- [décision] AWS provider stays `~> 5.82.0`, no v6 in this PR (source: t04)\n- [décision] The pg_partman upgrade is a separate todo, nothing run against the database (source: t10)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false and 02:00 UTC is out because of the dbt lock (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1459,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4023,
+    "sortie": 1390,
+    "reflexion": 990,
+    "cache": 0,
+    "cout": 0.00172494
+  },
+  "cout": 0.00172494,
+  "latenceMs": 7535,
+  "fournisseur": "DigitalOcean"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:30:00.685Z",
+  "reponse": "## What you did\n\n- Tu as préparé le passage de la prod en PG17 avec RDS blue/green : Terraform, runbook `runbooks/pg17-cutover.md`, et une répétition sur un clone de snapshot qui donne 74 s d'indisponibilité en écriture. Le replica suit le blue/green au lieu d'être recréé. Le clone de répétition est supprimé [1].\n\n## What changed\n\n- Maya a déplacé la fenêtre au dimanche 22/11, 02:00–04:00 UTC, à cause du batch de fin de mois de Fernhill, qui tourne samedi soir jusqu'à ~06:00 UTC. Les CSM sont prévenus. Elle te demande de mettre le runbook à jour et de merger #321 [8].\n- La PR #321 est approuvée par Maya, avec la réserve de ne pas merger avant la confirmation de la fenêtre avec Fernhill [3]. La confirmation est arrivée dans le message ci-dessus [8].\n- Daniel sera d'astreinte côté API et veut que tu le préviennes au début du switchover [7].\n- Lior (KES-530) n'a rien à changer côté workers, mais il demande 30 min de préavis pour mettre les consumers en pause proprement [9].\n\n## What is still open\n\n- Le runbook et le ticket parlent encore de samedi 21/11. Il faut corriger la date en dimanche 22/11 avant de merger [1][8].\n- Il manque la répétition du rollback sur un clone neuf, prévue jeudi 19/11. Après le switchover, l'ancienne instance ne reçoit plus d'écritures, donc revenir en arrière n'est pas un simple retour. C'est un TODO dans le runbook [1][3].",
+  "rendu": "## What you did\n\n- Tu as préparé le passage de la prod en PG17 avec RDS blue/green : Terraform, runbook `runbooks/pg17-cutover.md`, et une répétition sur un clone de snapshot qui donne 74 s d'indisponibilité en écriture. Le replica suit le blue/green au lieu d'être recréé. Le clone de répétition est supprimé [1].\n\n## What changed\n\n- Maya a déplacé la fenêtre au dimanche 22/11, 02:00–04:00 UTC, à cause du batch de fin de mois de Fernhill, qui tourne samedi soir jusqu'à ~06:00 UTC. Les CSM sont prévenus. Elle te demande de mettre le runbook à jour et de merger #321 [8].\n- La PR #321 est approuvée par Maya, avec la réserve de ne pas merger avant la confirmation de la fenêtre avec Fernhill [3]. La confirmation est arrivée dans le message ci-dessus [8].\n- Daniel sera d'astreinte côté API et veut que tu le préviennes au début du switchover [7].\n- Lior (KES-530) n'a rien à changer côté workers, mais il demande 30 min de préavis pour mettre les consumers en pause proprement [9].\n\n## What is still open\n\n- Le runbook et le ticket parlent encore de samedi 21/11. Il faut corriger la date en dimanche 22/11 avant de merger [1][8].\n- Il manque la répétition du rollback sur un clone neuf, prévue jeudi 19/11. Après le switchover, l'ancienne instance ne reçoit plus d'écritures, donc revenir en arrière n'est pas un simple retour. C'est un TODO dans le runbook [1][3].",
+  "mesures": {
+    "mots": 232,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7277,
+    "sortie": 598,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020534
+  },
+  "cout": 0.020534,
+  "latenceMs": 4602,
+  "fournisseur": "Claude Platform on AWS"
+}

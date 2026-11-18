@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-pricing-q1",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:27:55.721Z",
+  "reponse": "## Où j'en suis\nThe Q1 tiered pricing is modelled per customer and the notice drafted; nothing has been sent. Exceptions in `model/exceptions.csv`: Loomly and Pinecrest Rentals keep 0.50% + $0.25 to 31 March 2027, Tradewell excluded, everyone else 1 January; the rerun gives +$351k annualized, 5 customers above +10% from Jan 1. `notice/q1-pricing-notice.md` has a standard and a variant version (instant payout line removed), 38 notices for 38 active customers. Gil reviews Friday 10:00 with Rachel, then the Salesforce send before 1 December. (source: ses-px-3, p3-09, src-slack-gil)\n\n- [en-cours] Sending the 38 notices from Salesforce: drafted and counted, not sent (source: p3-08, p3-10)\n- [prochaine-étape] Fri Nov 20, 10:00 Austin review with Gil and Rachel: bring `model/impact_by_customer.csv` and the notice; out by Dec 1 whatever happens (source: src-slack-gil)\n- [prochaine-étape] Mon: Hartley & Moss answer on the MSA and instant payouts (source: p3-05)\n- [essai-raté] Salesforce export lacked October volume for 5 customers (KeyError Pinecrest Rentals); billing CSV used for everyone (source: p2-02)\n- [essai-raté] benchmark sub-agent's flat 0.40% + $0.30 recommendation rejected as backwards (source: p1-05)\n- [question] instant +1% surcharge on existing contracts: answer due Mon, nothing goes out before then; a note claims it is decided, no team decision backs it (source: p3-05, src-note-instant)\n- [question] Loomly's CFO writes her company stays on the old rate for all of 2027; the exception holds it only to 31 March 2027 (source: src-mail-loomly, p3-01)\n- [décision] tiers 0.55% under $5M monthly, 0.45% $5M–25M, 0.35% above, $0.25 per payout unchanged (source: p2-03)\n- [décision] Loomly + Pinecrest old rate to 31 March 2027 then their tier, Tradewell excluded, everyone else 1 January (source: p3-01)\n- [décision] nothing about instant payouts in the notice before the MSA answer (source: p3-05)",
+  "rendu": "## Où j'en suis\nThe Q1 tiered pricing is modelled per customer and the notice drafted; nothing has been sent. Exceptions in `model/exceptions.csv`: Loomly and Pinecrest Rentals keep 0.50% + $0.25 to 31 March 2027, Tradewell excluded, everyone else 1 January; the rerun gives +$351k annualized, 5 customers above +10% from Jan 1. `notice/q1-pricing-notice.md` has a standard and a variant version (instant payout line removed), 38 notices for 38 active customers. Gil reviews Friday 10:00 with Rachel, then the Salesforce send before 1 December. (de: toi, connecteur, agent; source: ses-px-3, p3-09, src-slack-gil)\n\n- [en-cours] Sending the 38 notices from Salesforce: drafted and counted, not sent (de: agent; source: p3-08, p3-10)\n- [prochaine-étape] Fri Nov 20, 10:00 Austin review with Gil and Rachel: bring `model/impact_by_customer.csv` and the notice; out by Dec 1 whatever happens (de: connecteur; source: src-slack-gil)\n- [prochaine-étape] Mon: Hartley & Moss answer on the MSA and instant payouts (de: toi; source: p3-05)\n- [essai-raté] Salesforce export lacked October volume for 5 customers (KeyError Pinecrest Rentals); billing CSV used for everyone (de: agent; source: p2-02)\n- [essai-raté] benchmark sub-agent's flat 0.40% + $0.30 recommendation rejected as backwards (de: toi; source: p1-05)\n- [question] instant +1% surcharge on existing contracts: answer due Mon, nothing goes out before then; a note claims it is decided, no team decision backs it (de: toi, agent; source: p3-05, src-note-instant)\n- [question] Loomly's CFO writes her company stays on the old rate for all of 2027; the exception holds it only to 31 March 2027 (de: toi, connecteur; source: src-mail-loomly, p3-01)\n- [décision] tiers 0.55% under $5M monthly, 0.45% $5M–25M, 0.35% above, $0.25 per payout unchanged (de: toi; source: p2-03)\n- [décision] Loomly + Pinecrest old rate to 31 March 2027 then their tier, Tradewell excluded, everyone else 1 January (de: toi; source: p3-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1966,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5081,
+    "sortie": 5615,
+    "reflexion": 4994,
+    "cache": 0,
+    "cout": 0.00228354
+  },
+  "cout": 0.00228354,
+  "latenceMs": 66589,
+  "fournisseur": "DeepInfra"
+}

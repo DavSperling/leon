@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:29:04.450Z",
+  "reponse": "## Where things stand\n\nReal SAML login now works end to end on staging against Fernhill's IdP: the SP-initiated flow failed at their ADFS because our RelayState was the full return URL, and it is now a short opaque ID with the URL stored server-side in Redis for 10 minutes. JIT provisioning is merged (#415); group-to-role mapping and the RelayState fix live in PR #421, still open. The only blocker for Thursday's demo is on Fernhill's side: their IT has to add the `groups` claim, so admins can be told apart from regular users. (source: ses-sso-3, src-pr415)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, with commits 6d0e2b8 and f4a91c7 on branch daniel/saml-sso-fernhill; full suite green (1301 passed, 3 skipped) (source: ses-sso-3)\n- [en-cours] Fernhill IT still has to add the `groups` claim to their assertion; Daniel is emailing them (source: s3-05, src-linear-kes311)\n- [en-cours] SSO enforcement for all Fernhill users on Dec 1 (password login disabled for the fernhill tenant) is written down only as a note (source: src-note-enforce)\n- [prochaine-étape] get #421 reviewed and merged (source: s3-11)\n- [prochaine-étape] confirm the groups claim is live on their side, then run the demo with `kestrel.test1` plus one admin test account, Thursday Nov 19 10:00 ET (source: s3-08, src-linear-kes311)\n- [essai-raté] SP-initiated login with the full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS with `MSIS7042: RelayState parameter is too long`; truncating would break deep links (source: s3-02)\n- [essai-raté] first JIT test run failed on a domain-case mismatch (`Daniel@Fernhill-Bank.example` vs lowercase domain list); fixed by normalizing to lowercase (source: s2-02)\n- [question] Fernhill IT wrote in Slack that the groups claim will be added *after* the demo — will it exist in time for Thursday, and should the admin mapping be demoed without it? (source: src-slack-fernhill, s3-05)\n- [question] how is SSO enforcement on Dec 1 to be implemented — is it part of #421 or a separate change? (source: src-note-enforce)\n- [décision] RelayState is a short opaque ID; the return URL is stored in Redis with a 600 s TTL and deleted on use (source: s3-03)\n- [décision] per-tenant group mapping `Fernhill-Kestrel-Admins` → `admin`, everything else `viewer`, applied on every login so group changes take effect (source: s3-05)\n- [décision] default role stays `viewer` and SP-initiated login stays on, rejecting Fernhill IT's request for an `analyst` default and IdP-initiated only (source: s3-07)\n- [décision] JIT creates a user only when the email domain is verified; never from an unverified domain even if the IdP asserts it (source: s2-03)\n- [décision] SAML only for Fernhill, with both SP-initiated and IdP-initiated flows supported (source: s1-03)\n- [décision] new users get the `viewer` role by default (least privilege, bank context) (source: s1-05)",
+  "rendu": "- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, with commits 6d0e2b8 and f4a91c7 on branch daniel/saml-sso-fernhill; full suite green (1301 passed, 3 skipped) (de: agent; source: ses-sso-3)\n- [en-cours] Fernhill IT still has to add the `groups` claim to their assertion; Daniel is emailing them (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [en-cours] SSO enforcement for all Fernhill users on Dec 1 (password login disabled for the fernhill tenant) is written down only as a note (de: agent; source: src-note-enforce)\n- [prochaine-étape] get #421 reviewed and merged (de: agent; source: s3-11)\n- [prochaine-étape] confirm the groups claim is live on their side, then run the demo with `kestrel.test1` plus one admin test account, Thursday Nov 19 10:00 ET (de: connecteur, agent; source: s3-08, src-linear-kes311)\n- [essai-raté] SP-initiated login with the full return URL as RelayState (143 bytes) was rejected by Fernhill's ADFS with `MSIS7042: RelayState parameter is too long`; truncating would break deep links (de: agent; source: s3-02)\n- [essai-raté] first JIT test run failed on a domain-case mismatch (`Daniel@Fernhill-Bank.example` vs lowercase domain list); fixed by normalizing to lowercase (de: agent; source: s2-02)\n- [question] Fernhill IT wrote in Slack that the groups claim will be added *after* the demo — will it exist in time for Thursday, and should the admin mapping be demoed without it? (de: toi, connecteur; source: src-slack-fernhill, s3-05)\n- [question] how is SSO enforcement on Dec 1 to be implemented — is it part of #421 or a separate change? (de: agent; source: src-note-enforce)\n- [décision] RelayState is a short opaque ID; the return URL is stored in Redis with a 600 s TTL and deleted on use (de: toi; source: s3-03)\n- [décision] per-tenant group mapping `Fernhill-Kestrel-Admins` → `admin`, everything else `viewer`, applied on every login so group changes take effect (de: toi; source: s3-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1974,
+    "lignesRetirees": 4,
+    "decisions": 2,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4585,
+    "sortie": 1743,
+    "reflexion": 946,
+    "cache": 184,
+    "cout": 0.001537839
+  },
+  "cout": 0.001537839,
+  "latenceMs": 7575,
+  "fournisseur": "Wafer"
+}

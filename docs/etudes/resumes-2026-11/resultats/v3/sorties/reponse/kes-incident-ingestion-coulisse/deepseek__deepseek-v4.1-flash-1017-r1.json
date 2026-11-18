@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:59:48.207Z",
+  "reponse": "The root cause was disk exhaustion on Kafka broker ingest-kafka-2, after the retention change in infra PR #221 removed size-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2]. Slack confirms the disk at 100% and the broker read-only [3]. The earlier suspect, PR #388's batch-size change, was a red herring: reverting it did not stop the lag [1][3], and the batch size was later called fine and re-applied [5]. Impact was up to 2h47m of delay with no event lost [2].",
+  "rendu": "The root cause was disk exhaustion on Kafka broker ingest-kafka-2, after the retention change in infra PR #221 removed size-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2]. Slack confirms the disk at 100% and the broker read-only [3]. The earlier suspect, PR #388's batch-size change, was a red herring: reverting it did not stop the lag [1][3], and the batch size was later called fine and re-applied [5]. Impact was up to 2h47m of delay with no event lost [2].",
+  "mesures": {
+    "mots": 85,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1271,
+    "sortie": 228,
+    "reflexion": 100,
+    "cache": 0,
+    "cout": 0.00019159
+  },
+  "cout": 0.00019159,
+  "latenceMs": 3137,
+  "fournisseur": "DeepInfra"
+}

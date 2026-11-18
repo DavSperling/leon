@@ -1,0 +1,320 @@
+{
+ "id": "del-point-achats-thermaval",
+ "titre": "Session hors code d'une acheteuse : négocier avec un fournisseur en retard ; l'agent propose 6 %, elle plafonne à 5 %, le fournisseur offre 4 % + transport, la dirigeante valide sous condition sur Slack",
+ "langue": "fr",
+ "entree": {
+  "maintenant": "2026-11-18T07:45:00+01:00",
+  "projet": "dossier:5d2e8a71c0f94b36",
+  "depuis": "2026-11-16T09:02:00+01:00",
+  "apropos": null,
+  "poste": null,
+  "regles": [],
+  "sessions": [
+   {
+    "source": {
+     "id": "s-thermaval-retard",
+     "kind": "claude_code",
+     "nature": "conversation",
+     "titre": "thermaval repousse encore la commande 4471, je colle le mail",
+     "url": null,
+     "date": "2026-11-16T11:20:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-16T09:02:00+01:00",
+      "texte": "thermaval repousse encore la commande 4471, je colle le mail. aide moi a voir ce que ca casse et a leur répondre\n\nDe : Olivier Brissac <o.brissac@thermaval.example>\nEnvoyé : lundi 16 novembre 2026 08:12\nÀ : Nadia Benali\nObjet : RE: CMD-4471 – 14 x Aéro 11 kW – date de livraison\n\nBonjour Nadia,\n\nJe reviens vers vous concernant votre commande CMD-4471 (14 pompes à chaleur air/eau Aéro 11 kW). Suite à un retard d'approvisionnement sur les compresseurs, nous ne pourrons pas livrer la totalité le 13/11 comme prévu. Nous vous proposons :\n- 8 unités livrées le mardi 24 novembre à votre dépôt de Carquefou\n- les 6 restantes le vendredi 4 décembre\nEn compensation, nous vous accordons une remise de 3 % sur la commande.\nToutes nos excuses pour ce contretemps.\n\nCordialement,\nOlivier Brissac\nResponsable grands comptes Ouest – Thermaval\n06 71 48 22 90"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:04:00+01:00",
+      "texte": "Pour voir ce que ça casse, il me faut la liste des chantiers qui attendent une Aéro 11 kW avec leur date de pose. Tu peux exporter le planning de novembre-décembre depuis planif (CSV) et le coller ici ?"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:15:00+01:00",
+      "texte": "voila l'export\n\nchantier;client;ville;materiel;date_pose;statut\nCH-2611;Conserverie Marchand;St-Sébastien;2x Aéro 11 + ballon 300L;30/11;confirmé\nCH-2604;Le Floch;Rezé;1x Aéro 11;26/11;confirmé - présenté à l'audit RGE\nCH-2598;Amrani;St-Herblain;1x Aéro 11;23/11;confirmé\nCH-2615;Bréhier;Carquefou;1x Aéro 11;25/11;confirmé\nCH-2617;Peltier;Vertou;1x Aéro 11;27/11;confirmé\nCH-2620;Guillou;Orvault;1x Aéro 11;01/12;confirmé\nCH-2622;Hervé;Nantes;1x Aéro 11;02/12;à confirmer\nCH-2623;SCI Les Tilleuls;Bouguenais;2x Aéro 11;03/12;confirmé\nCH-2625;Morvan;La Chapelle-sur-Erdre;1x Aéro 11;07/12;confirmé\nCH-2627;Jamet;Sautron;1x Aéro 11;08/12;à confirmer\nCH-2630;Cariou;Couëron;1x Aéro 11;10/12;confirmé\nCH-2631;Pasquier;Rezé;1x Aéro 11;11/12;confirmé"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:24:00+01:00",
+      "texte": "14 pompes pour 12 chantiers : c'est bien la commande. Répartition possible :\n- lot du 24/11 (8) : Bréhier, Le Floch, Peltier, Marchand (2), Guillou, Hervé, Amrani ;\n- lot du 4/12 (6) : SCI Les Tilleuls (2), Morvan, Jamet, Cariou, Pasquier.\nÀ décaler : Amrani (pose le 23/11, avant la livraison) et SCI Les Tilleuls (3/12, avant le 2e lot). Le vrai risque : si le 24/11 glisse, Marchand et Le Floch (chantier de l'audit RGE) sautent."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:31:00+01:00",
+      "texte": "marchand c'est le chantier avec pénalités, 150€ par jour ouvré après le 4/12. faut absolument qu'ils soient dans le lot du 24. ecris moi une réponse ferme : on veut le 24 garanti par écrit, une pénalité si ça glisse, et plus que 3%"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:38:00+01:00",
+      "texte": "Brouillon :\n\n> Bonjour Olivier,\n> Nous prenons note du report. Nous acceptons une livraison en deux lots aux conditions suivantes :\n> - confirmation écrite de la livraison des 8 premières unités le 24/11 au plus tard ;\n> - une pénalité de 150 € par jour de retard au-delà ;\n> - une remise portée à 6 % sur l'ensemble de la commande, compte tenu de l'impact sur nos chantiers.\n> Bien cordialement, Nadia Benali"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:41:00+01:00",
+      "texte": "6% c'est trop, hélène m'a dit pas au dessus de 5 sans elle. mets 5. et la pénalité ils accepteront jamais mais on demande quand meme"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:43:00+01:00",
+      "texte": "Corrigé : remise demandée à 5 %, pénalité de 150 € par jour maintenue en demande. Brouillon dans `thermaval/reponse-cmd-4471.md`. Rien n'est envoyé d'ici."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:05:00+01:00",
+      "texte": "envoyé depuis outlook. bon en attendant compare moi avec le catalogue de climatech ouest que j'ai mis dans catalogues/, si on devait en prendre 2 en dépannage chez eux"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:19:00+01:00",
+      "texte": "`catalogues/climatech-ouest-2026.pdf`, gamme air/eau autour de 11 kW :\n\n| Modèle | Puissance | Prix HT | Délai annoncé |\n|---|---|---|---|\n| Hydrea 11 | 11,2 kW | 5 890 € | 3 semaines |\n| Hydrea 12 HT | 12 kW | 6 420 € | 2 semaines |\n| ThermoPro 10 | 10 kW | 4 980 € | en stock |\n\nTa remise négociée chez Thermaval met l'Aéro 11 à 4 140 € HT. Deux Hydrea 12 HT en dépannage coûteraient environ 4 560 € de plus que deux Aéro 11, sans compter que les poseurs ne connaissent pas ce matériel."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:21:00+01:00",
+      "texte": "trop cher. laisse tomber climatech"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:21:00+01:00",
+      "texte": "D'accord, je n'y touche plus."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:40:00+01:00",
+      "texte": "fais moi un tableau de suivi des commandes fournisseurs en cours, j'ai mis les 9 bons de commande dans commandes/"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T11:12:00+01:00",
+      "texte": "Tableau `suivi-commandes.xlsx` créé : 9 commandes chez 4 fournisseurs.\n\n| Commande | Fournisseur | Objet | Montant HT | Livraison prévue | État |\n|---|---|---|---|---|---|\n| CMD-4471 | Thermaval | 14 Aéro 11 | 58 000 € | 13/11 | reportée (24/11 + 4/12) |\n| CMD-4475 | Thermaval | 6 ballons 300 L | 7 260 € | 20/11 | à l'heure |\n| SOL-0912 | Soleo Distribution | 48 panneaux 425 Wc | 9 840 € | 19/11 | à l'heure |\n| … | | | | | |"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T11:14:00+01:00",
+      "texte": "rajoute une colonne relance avec la date de la dernière relance"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T11:20:00+01:00",
+      "texte": "Colonne « Dernière relance » ajoutée, remplie d'après les mails des dossiers (CMD-4471 : 16/11 ; les autres : jamais relancées)."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "s-thermaval-contre",
+     "kind": "claude_code",
+     "nature": "conversation",
+     "titre": "thermaval a répondu. je colle",
+     "url": null,
+     "date": "2026-11-17T14:36:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-17T14:02:00+01:00",
+      "texte": "thermaval a répondu. je colle\n\n> Nadia, nous pouvons porter la remise à 4 % et vous offrir le transport des deux lots. En revanche nous ne pouvons pas nous engager sur une pénalité de retard, ce n'est pas notre politique commerciale. Les 8 premières unités partent de notre plateforme de Cholet le 23/11 pour une livraison le 24/11 à Carquefou, sauf aléa transporteur. Les 6 suivantes le 4/12.\n> Olivier"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:08:00+01:00",
+      "texte": "Par rapport à ta demande :\n- remise : 4 % au lieu des 5 % demandés ;\n- transport des deux lots offert (non demandé) : 640 € HT sur la dernière commande, soit environ 1,1 % de 58 000 € ;\n- pénalité de retard : refusée ;\n- date du 24/11 confirmée, mais « sauf aléa transporteur », ce qui la vide d'une partie de sa valeur.\nAu total, 4 % + transport ≈ 5,1 %, au-dessus de ton plafond de 5 %."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:12:00+01:00",
+      "texte": "pour moi c'est jouable. mais c'est hélène qui valide, je lui demande sur slack. en attendant prépare la réponse d'acceptation sans l'envoyer"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:18:00+01:00",
+      "texte": "Brouillon d'acceptation dans `thermaval/acceptation-cmd-4471.md` : accord sur 4 % et transport offert, et demande de confirmer la livraison du 24/11 sans la réserve « sauf aléa transporteur ». Rien n'est envoyé."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:35:00+01:00",
+      "texte": "au fait yannick m'a dit ce matin que pour marchand il lui faut les 2 pac sur site le 26 au plus tard, sinon il tient pas la réception du 4. note le dans le suivi"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:36:00+01:00",
+      "texte": "Noté dans `suivi-commandes.xlsx`, ligne CMD-4471 : « Marchand (CH-2611) : 2 PAC sur site le 26/11 au plus tard (Yannick), sinon réception du 4/12 non tenue »."
+     }
+    ]
+   }
+  ],
+  "changements": [],
+  "mentions": [
+   {
+    "source": {
+     "id": "slack-direction",
+     "kind": "slack",
+     "nature": "fil",
+     "titre": "#direction",
+     "url": null,
+     "date": "2026-11-17T17:10:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Hélène Delorme",
+     "date": "2026-11-17T17:10:00+01:00",
+     "texte": "@Nadia ok pour 4 % + transport offert, à condition qu'ils confirment le 24/11 par écrit, sans le « sauf aléa ». Si ce n'est pas possible, tu reviens vers moi avant de signer quoi que ce soit. Et préviens Camille pour Marchand, qu'elle ne soit pas prise de court par le client."
+    }
+   },
+   {
+    "source": {
+     "id": "slack-chantiers",
+     "kind": "slack",
+     "nature": "fil",
+     "titre": "#chantiers",
+     "url": null,
+     "date": "2026-11-17T08:41:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Yannick Moreau",
+     "date": "2026-11-17T08:41:00+01:00",
+     "texte": "@Nadia pour Marchand il me faut les 2 Aéro 11 sur site le jeudi 26 au plus tard, sinon on ne tient pas la réception du 4/12. Pour Amrani j'ai prévenu le client, on décale au 25."
+    }
+   },
+   {
+    "source": {
+     "id": "outlook-thermaval",
+     "kind": "outlook",
+     "nature": "fil",
+     "titre": "RE: RE: CMD-4471 – 14 x Aéro 11 kW – date de livraison",
+     "url": null,
+     "date": "2026-11-17T13:50:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Olivier Brissac",
+     "date": "2026-11-17T13:50:00+01:00",
+     "texte": "Nadia, nous pouvons porter la remise à 4 % et vous offrir le transport des deux lots. En revanche nous ne pouvons pas nous engager sur une pénalité de retard, ce n'est pas notre politique commerciale. Les 8 premières unités partent de notre plateforme de Cholet le 23/11 pour une livraison le 24/11 à Carquefou, sauf aléa transporteur. Les 6 suivantes le 4/12.\nOlivier\n\nOlivier Brissac – Responsable grands comptes Ouest – Thermaval – 06 71 48 22 90"
+    }
+   },
+   {
+    "source": {
+     "id": "outlook-patrick",
+     "kind": "outlook",
+     "nature": "fil",
+     "titre": "Facture Thermaval CMD-4471",
+     "url": null,
+     "date": "2026-11-17T11:05:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Patrick Hamon",
+     "date": "2026-11-17T11:05:00+01:00",
+     "texte": "Bonjour Nadia,\nPour la CMD-4471, demande à Thermaval une facture par lot avec la remise appliquée sur chacune, sinon je ne pourrai pas rapprocher les bons de livraison.\nMerci,\nPatrick"
+    }
+   },
+   {
+    "source": {
+     "id": "mail-achats-hebdo",
+     "kind": "gmail",
+     "nature": "fil",
+     "titre": "Achats BTP Hebdo : le cuivre repart à la hausse",
+     "url": null,
+     "date": "2026-11-17T06:30:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Achats BTP Hebdo",
+     "date": "2026-11-17T06:30:00+01:00",
+     "texte": "Cette semaine : le cuivre repart à la hausse (+6 % sur un mois) · Délais fabricants : où en sont les pompes à chaleur ? · Témoignage : comment une PME du Maine-et-Loire a renégocié ses contrats cadres.\n\nVous recevez Achats BTP Hebdo car vous êtes inscrite à nos lettres · Se désabonner"
+    }
+   },
+   {
+    "source": {
+     "id": "hubspot-digest",
+     "kind": "hubspot",
+     "nature": "note",
+     "titre": "Votre résumé HubSpot du 17 novembre",
+     "url": null,
+     "date": "2026-11-17T07:00:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "HubSpot",
+     "date": "2026-11-17T07:00:00+01:00",
+     "texte": "Bonjour Nadia, voici votre activité d'hier : 0 tâche en retard · 3 transactions de votre équipe mises à jour · 12 e-mails suivis ouverts. Ouvrir HubSpot."
+    }
+   }
+  ]
+ },
+ "attendu": {
+  "premier": "f-helene",
+  "faits": [
+   {
+    "id": "f-helene",
+    "texte": "Dit qu'Hélène accepte 4 % de remise et le transport offert à condition que Thermaval confirme la livraison du 24/11 par écrit sans réserve, et sinon qu'il faut revenir vers elle avant de signer.",
+    "poids": 3
+   },
+   {
+    "id": "f-marchand",
+    "texte": "Dit que les 2 pompes de la Conserverie Marchand doivent être sur site le 26 novembre au plus tard pour tenir la réception du 4 décembre.",
+    "poids": 3
+   },
+   {
+    "id": "f-lots",
+    "texte": "Dit que la commande Thermaval arrive en deux lots : 8 pompes le 24 novembre et 6 le 4 décembre.",
+    "poids": 2
+   },
+   {
+    "id": "f-penalite",
+    "texte": "Dit que Thermaval refuse toute pénalité de retard.",
+    "poids": 2
+   },
+   {
+    "id": "f-decaler",
+    "texte": "Dit que des chantiers sont à décaler faute de pompe à temps (Amrani, SCI Les Tilleuls).",
+    "poids": 1
+   },
+   {
+    "id": "f-camille",
+    "texte": "Dit qu'Hélène demande de prévenir Camille pour le chantier Marchand.",
+    "poids": 1
+   },
+   {
+    "id": "f-patrick",
+    "texte": "Dit que Patrick demande une facture Thermaval par lot, remise appliquée.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i-6",
+    "texte": "Parle d'une remise de 6 %."
+   },
+   {
+    "id": "i-conclu",
+    "texte": "Dit que l'accord avec Thermaval est conclu ou que l'acceptation leur a été envoyée."
+   },
+   {
+    "id": "i-penalite",
+    "texte": "Dit que Thermaval accepte une pénalité de retard."
+   },
+   {
+    "id": "i-climatech",
+    "texte": "Dit que des pompes vont être commandées chez Climatech Ouest."
+   },
+   {
+    "id": "i-tel",
+    "texte": "Recopie le téléphone d'Olivier Brissac."
+   },
+   {
+    "id": "i-bruit",
+    "texte": "Parle de la lettre Achats BTP Hebdo ou du résumé HubSpot."
+   }
+  ],
+  "pieges": [
+   "Fausse décision : le brouillon de l'agent demande 6 % ; Nadia plafonne à 5 %, Thermaval offre 4 % + transport, et c'est Hélène qui valide, sous condition, sur Slack.",
+   "Session hors code : une négociation fournisseur dans un dossier, avec un planning collé à comprendre (quels chantiers sautent).",
+   "Importance cachée : l'exigence de Yannick (PAC de Marchand sur site le 26) arrive en « au fait » à la fin de la deuxième session, et revient sur Slack.",
+   "Bruit : la lettre Achats BTP Hebdo et le résumé automatique HubSpot ; routine : catalogue Climatech et tableau de suivi."
+  ]
+ }
+}

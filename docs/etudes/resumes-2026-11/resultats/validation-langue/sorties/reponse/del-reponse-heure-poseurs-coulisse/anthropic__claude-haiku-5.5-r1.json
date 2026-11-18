@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-heure-poseurs-coulisse",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:28.698Z",
+  "reponse": "Le décalage vient d'un calcul de l'heure de Paris qui ajoutait 2 h fixes à l'heure UTC, ce qui est faux depuis le passage à l'heure d'hiver du 25/10 [2]. Une intervention à 8 h sortait donc à 9 h [2][3]. La correction passe désormais par le fuseau horaire de Paris (zoneinfo) [2]. Le 17/11, les SMS de rappel annonçaient encore 9 h au lieu de 8 h, et l'on ne sait pas si la correction les touche aussi [4]. Un client s'est plaint d'une arrivée à 9 h [5].",
+  "rendu": "Le décalage vient d'un calcul de l'heure de Paris qui ajoutait 2 h fixes à l'heure UTC, ce qui est faux depuis le passage à l'heure d'hiver du 25/10 [2]. Une intervention à 8 h sortait donc à 9 h [2][3]. La correction passe désormais par le fuseau horaire de Paris (zoneinfo) [2]. Le 17/11, les SMS de rappel annonçaient encore 9 h au lieu de 8 h, et l'on ne sait pas si la correction les touche aussi [4]. Un client s'est plaint d'une arrivée à 9 h [5].",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1746,
+    "sortie": 749,
+    "reflexion": 526,
+    "cache": 0,
+    "cout": 0.0005491
+  },
+  "cout": 0.0005491,
+  "latenceMs": 7161,
+  "fournisseur": "Amazon Bedrock"
+}

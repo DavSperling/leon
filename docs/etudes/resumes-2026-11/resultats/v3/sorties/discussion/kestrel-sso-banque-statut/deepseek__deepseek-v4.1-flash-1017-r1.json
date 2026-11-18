@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:03:53.414Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 39113,
+    "sortie": 791,
+    "reflexion": 352,
+    "cache": 24704,
+    "cout": 0.002576282
+  },
+  "latenceMs": 10490,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"bank support login company accounts December 1 SSO\"}",
+    "chercher {\"requete\":\"SAML SSO identity provider enterprise login deadline\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "chercher {\"requete\":\"Fernhill support ticket December 1 login company accounts\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"Fernhill JIT provisioning \\\"Require SSO\\\" remaining work before go-live\"}",
+    "activite {\"depuis\":\"7j\"}"
+  ],
+  "cout": 0.002576282
+}

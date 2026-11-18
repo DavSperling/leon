@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.907Z",
+  "reponse": "## Où j'en suis\nLa nouvelle grille de dashboards v2 est construite derrière le flag `dashboards_v2` : drag/resize via `react-grid-layout`, layout persisté côté serveur (`PUT /dashboards/:id/layout`, fallback localStorage), redimensionnement des widgets via ResizeObserver, et renommage `DashboardTile` → `WidgetCard`. PR #418 ouverte en draft, commit `d2286a0`. Il reste la revue UX de Priya sur iPad et l'activation du flag pour Zest.\n\n- [en-cours] Revue UX de Priya sur l'iPad (BrowserStack, iOS 15) sur la PR #418\n- [prochaine-étape] Activer `dashboards_v2` pour le workspace Zest dans l'admin des flags, avant la démo du mardi 24\n- [essai-raté] Container queries pour adapter le contenu des widgets : ignorées par Safari iOS 15, donc abandonnées au profit d'un hook ResizeObserver\n- [décision] Utiliser `react-grid-layout`, tout derrière le flag `dashboards_v2` (source: t01)\n- [décision] Persister le layout côté serveur plutôt qu'en localStorage seul (source: t03)\n- [décision] Abandonner les container queries et utiliser un seul système basé sur ResizeObserver (source: t09)\n- [décision] Renommer `DashboardTile` en `WidgetCard` partout, puis lancer le lint (source: t11)\n- [décision] Flag activé uniquement pour le workspace Zest ; les v1 restent disponibles derrière le flag jusqu'en janvier, on ne supprime rien (source: t15)\n- [décision] Ouvrir la PR en draft, Priya fera la revue UX (source: t17)",
+  "rendu": "## Où j'en suis\nLa nouvelle grille de dashboards v2 est construite derrière le flag `dashboards_v2` : drag/resize via `react-grid-layout`, layout persisté côté serveur (`PUT /dashboards/:id/layout`, fallback localStorage), redimensionnement des widgets via ResizeObserver, et renommage `DashboardTile` → `WidgetCard`. PR #418 ouverte en draft, commit `d2286a0`. Il reste la revue UX de Priya sur iPad et l'activation du flag pour Zest.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Revue UX de Priya sur l'iPad (BrowserStack, iOS 15) sur la PR #418\n- [prochaine-étape] Activer `dashboards_v2` pour le workspace Zest dans l'admin des flags, avant la démo du mardi 24\n- [essai-raté] Container queries pour adapter le contenu des widgets : ignorées par Safari iOS 15, donc abandonnées au profit d'un hook ResizeObserver\n- [décision] Utiliser `react-grid-layout`, tout derrière le flag `dashboards_v2` (source: t01)\n- [décision] Persister le layout côté serveur plutôt qu'en localStorage seul (source: t03)\n- [décision] Abandonner les container queries et utiliser un seul système basé sur ResizeObserver (source: t09)\n- [décision] Renommer `DashboardTile` en `WidgetCard` partout, puis lancer le lint (source: t11)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1318,
+    "decisions": 4,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3571,
+    "sortie": 662,
+    "reflexion": 247,
+    "cache": 0,
+    "cout": 0.00075952
+  },
+  "cout": 0.00075952,
+  "latenceMs": 6201,
+  "fournisseur": "Relace"
+}

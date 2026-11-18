@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:05.361Z",
+  "reponse": "The root cause was the Kafka broker ingest-kafka-2, not the ingest-worker code: disks hit 100% and the broker went read-only at 09:38 UTC after the retention change in infra PR #221, which removed size-based retention and kept only 7-day time-based retention [2][3]. The broker's read-only state stalled the consumers, producing KafkaConsumerTimeout errors on group ingest-events from 09:39 to 12:24 UTC [4]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed up to that amount and none lost since producers buffered [2]. The batch-size change in PR #388 was initially suspected but turned out to be a red herring; the revert changed nothing and the change was re-applied on Friday [1][3][5]. Follow-up actions include a disk alert at 80%, restoring size-based retention, and a status page template for ingestion delays [5].",
+  "rendu": "The root cause was the Kafka broker ingest-kafka-2, not the ingest-worker code: disks hit 100% and the broker went read-only at 09:38 UTC after the retention change in infra PR #221, which removed size-based retention and kept only 7-day time-based retention [2][3]. The broker's read-only state stalled the consumers, producing KafkaConsumerTimeout errors on group ingest-events from 09:39 to 12:24 UTC [4]. The outage lasted 2h47m (09:38–12:25 UTC), with events delayed up to that amount and none lost since producers buffered [2]. The batch-size change in PR #388 was initially suspected but turned out to be a red herring; the revert changed nothing and the change was re-applied on Friday [1][3][5]. Follow-up actions include a disk alert at 80%, restoring size-based retention, and a status page template for ingestion delays [5].",
+  "mesures": {
+    "mots": 130,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1321,
+    "sortie": 285,
+    "reflexion": 85,
+    "cache": 184,
+    "cout": 0.000309879
+  },
+  "cout": 0.000309879,
+  "latenceMs": 2058,
+  "fournisseur": "Wafer"
+}

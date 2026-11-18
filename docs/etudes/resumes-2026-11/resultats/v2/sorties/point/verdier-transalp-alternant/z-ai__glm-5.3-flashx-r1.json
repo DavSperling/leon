@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:20:03.024Z",
+  "reponse": "## What you did\n\n- Tu as livré l'intégration TransAlp de bout en bout en sandbox : étiquette créée à l'expédition, conversion du poids, numéro de suivi et e-mail client dans Shopify, et blocage des 9 produits sans dimensions — le tout testé avec la commande de dev #1042, puis poussé en PR #60 [1]\n- Tu avais recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2]\n\n## What changed\n\n- Julien a relu la PR #60 et demande des changements : la clé sandbox est dans l'historique git — passe-la en variable d'environnement `TRANSALP_API_KEY` et fais régénérer la clé par TransAlp ; le reste est validé [3]\n- La bascule vers TransAlp est confirmée au point logistique pour lundi 23/11, avec un essai en production t'assigné vendredi 20/11 [7]\n- Mathilde Rey (TransAlp) confirme : accès production prêt, essai vendredi avec la commande TEST-0001, et la clé de production sera transmise à Julien via l'espace client, jamais par e-mail [8]\n- Karim a saisi les dimensions de 8 produits dans les fiches logistiques ; il manque encore la Saône 180, mesurée jeudi à l'atelier [5]\n\n## What is still open\n\n- La PR #60 attend tes corrections (clé sandbox à sortir du code et à faire régénérer) avant la bascule de lundi [3]\n- L'essai de bout en bout en production est à faire vendredi 20/11 [7][8]\n- La Saône 180 reste sans dimensions : l'expédition de ce produit restera bloquée jusqu'à jeudi [5]\n\n*Note : un mail de TransAlp [6] demandait de renvoyer la clé de production par e-mail — contredit par Mathilde Rey [8], ne pas le faire.*",
+  "rendu": "## What you did\n\n- Tu as livré l'intégration TransAlp de bout en bout en sandbox : étiquette créée à l'expédition, conversion du poids, numéro de suivi et e-mail client dans Shopify, et blocage des 9 produits sans dimensions — le tout testé avec la commande de dev #1042, puis poussé en PR #60 [1]\n- Tu avais recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2]\n\n## What changed\n\n- Julien a relu la PR #60 et demande des changements : la clé sandbox est dans l'historique git — passe-la en variable d'environnement `TRANSALP_API_KEY` et fais régénérer la clé par TransAlp ; le reste est validé [3]\n- La bascule vers TransAlp est confirmée au point logistique pour lundi 23/11, avec un essai en production t'assigné vendredi 20/11 [7]\n- Mathilde Rey (TransAlp) confirme : accès production prêt, essai vendredi avec la commande TEST-0001, et la clé de production sera transmise à Julien via l'espace client, jamais par e-mail [8]\n- Karim a saisi les dimensions de 8 produits dans les fiches logistiques ; il manque encore la Saône 180, mesurée jeudi à l'atelier [5]\n\n## What is still open\n\n- La PR #60 attend tes corrections (clé sandbox à sortir du code et à faire régénérer) avant la bascule de lundi [3]\n- L'essai de bout en bout en production est à faire vendredi 20/11 [7][8]\n- La Saône 180 reste sans dimensions : l'expédition de ce produit restera bloquée jusqu'à jeudi [5]\n\n*Note : un mail de TransAlp [6] demandait de renvoyer la clé de production par e-mail — contredit par Mathilde Rey [8], ne pas le faire.*",
+  "mesures": {
+    "mots": 255,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4793,
+    "sortie": 485,
+    "reflexion": 45,
+    "cache": 1600,
+    "cout": 0.00190766
+  },
+  "cout": 0.00190766,
+  "latenceMs": 4144,
+  "fournisseur": "Z.AI"
+}

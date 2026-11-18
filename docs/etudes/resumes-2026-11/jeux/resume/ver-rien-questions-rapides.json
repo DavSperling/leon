@@ -1,0 +1,141 @@
+{
+  "id": "ver-rien-questions-rapides",
+  "titre": "Session Claude Code de Julien faite de questions vite réglées (version de la CLI, regex de SKU) sans suite : la seule bonne sortie est « rien à retenir »",
+  "langue": "fr",
+  "entree": {
+    "faits": {
+      "branche": "main",
+      "prs": [],
+      "commits": [],
+      "fichiers": [],
+      "commandes": [
+        {
+          "texte": "shopify version",
+          "erreur": false
+        },
+        {
+          "texte": "node -e \"const r=/^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$/; for (const s of ['SAONE-CHENE-180','RHONE-NOYER-90','CROIX-ROUSSE-BLANC']) console.log(s, r.test(s))\"",
+          "erreur": false
+        }
+      ],
+      "taches": [],
+      "debut": "2026-11-17T07:48:00Z",
+      "fin": "2026-11-17T08:06:00Z"
+    },
+    "tours": [
+      {
+        "id": "t01",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T07:48:00Z",
+        "texte": "c'est quoi deja la commande pour voir quelle version de la cli shopify j'ai"
+      },
+      {
+        "id": "t02",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T07:48:20Z",
+        "texte": "```\n$ shopify version\nCurrent Shopify CLI version: 3.69.0\n💡 Version 3.70.1 available! Run `pnpm add -D @shopify/cli@latest`\n```\n\nTu es en 3.69.0, la 3.70.1 est disponible."
+      },
+      {
+        "id": "t03",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T07:49:00Z",
+        "texte": "et pour changer la boutique de dev par defaut"
+      },
+      {
+        "id": "t04",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T07:49:35Z",
+        "texte": "`shopify app dev --reset` : la prochaine fois que tu lances `shopify app dev`, la CLI te redemande l'organisation, l'appli et la boutique de dev, et oublie les choix enregistrés dans `.shopify/project.json`."
+      },
+      {
+        "id": "t05",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T07:55:00Z",
+        "texte": "ok. et une regex pour matcher un sku genre SAONE-CHENE-180"
+      },
+      {
+        "id": "t06",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T07:56:12Z",
+        "texte": "Si le format est « MODÈLE-FINITION-TAILLE » avec une taille de 2 ou 3 chiffres :\n\n```\n^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$\n```\n\n- `[A-Z]+` : le modèle,\n- `(?:-[A-Z]+)*` : une ou plusieurs finitions (CHENE, NOYER-HUILE…),\n- `-\\d{2,3}$` : la taille à la fin."
+      },
+      {
+        "id": "t07",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T07:58:00Z",
+        "texte": "teste sur RHONE-NOYER-90 et CROIX-ROUSSE-BLANC"
+      },
+      {
+        "id": "t08",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T07:58:40Z",
+        "texte": "```\nSAONE-CHENE-180 true\nRHONE-NOYER-90 true\nCROIX-ROUSSE-BLANC false\n```\n\n`CROIX-ROUSSE-BLANC` ne passe pas : il n'a pas de taille à la fin. Si certains SKU n'ont pas de taille (rangement, luminaires), il faut rendre la taille facultative : `^[A-Z]+(?:-[A-Z]+)*(?:-\\d{2,3})?$`.\n\nTu veux que j'ajoute cette regex dans un `scripts/stock/sku.ts` avec des tests, et que je l'utilise pour valider le CSV de TransAlp ?"
+      },
+      {
+        "id": "t09",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T08:02:00Z",
+        "texte": "ah oui normal y'a pas de taille sur les rangements. non laisse tomber c'etait juste pour voir un truc"
+      },
+      {
+        "id": "t10",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T08:02:15Z",
+        "texte": "D'accord, je n'ajoute rien. Rien n'a été modifié dans le dépôt."
+      },
+      {
+        "id": "t11",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-17T08:06:00Z",
+        "texte": "merci"
+      },
+      {
+        "id": "t12",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-17T08:06:05Z",
+        "texte": "Avec plaisir."
+      }
+    ]
+  },
+  "attendu": {
+    "rien": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La sortie est exactement « rien à retenir ».",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Écrire une [décision] (par exemple « ne pas ajouter la regex »)."
+      },
+      {
+        "id": "i2",
+        "texte": "Écrire une [prochaine-étape] ou un [en-cours] : ajouter la regex dans scripts/stock/sku.ts, valider le CSV de TransAlp, mettre à jour la CLI."
+      },
+      {
+        "id": "i3",
+        "texte": "Écrire un résumé « ## Où j'en suis » de la session."
+      }
+    ],
+    "pieges": [
+      "Rien à dire : des questions vite réglées, aucun fichier, aucun commit, aucune suite ; 6 tours tapés, donc Leon appelle bien le modèle.",
+      "Fausse suite : l'agent propose un fichier sku.ts et une mise à jour de la CLI ; Julien laisse tomber."
+    ],
+    "decisions": []
+  }
+}

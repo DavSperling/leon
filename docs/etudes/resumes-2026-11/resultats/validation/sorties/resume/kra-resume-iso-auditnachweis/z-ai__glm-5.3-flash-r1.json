@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-iso-auditnachweis",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:19.959Z",
+  "reponse": "## Où j'en suis\n\nISO-9001-Überwachungsaudit (Händlerportal, Kap. 8.5.6) vorbereitet: 23 produktive Releases seit Nov. 2025 erfasst, mit Jira-Change-Tickets (CSV-Export, da der API-Zugriff scheiterte) abgeglichen und der Änderungsnachweis inkl. Abweichungen als PDF fertiggestellt. Alles nur lokal unter `docs/iso/`, nichts committet.\n\n- [en-cours] PDF soll von der Person selbst in SharePoint QM/Nachweise abgelegt werden\n- [prochaine-étape] Übersicht bis Freitag, 20.11. an Anja Lindner liefern; Auditor kommt schon Dienstag, 24.11. (nicht 25.11.)\n- [essai-raté] Direkter Jira-API-Zugriff per curl scheiterte mit 401 (Token abgelaufen/ohne ITS-Zugriff); Ersatz: CSV-Export `jira-export-2026-11-16.csv` (nicht committen)\n- [décision] Kein Rückdatieren der beiden Hotfix-Tickets — stattdessen offen als Abweichung mit Notfall-Change-Prozess (Freigabe binnen 2 Arbeitstagen) dokumentiert (source: a09)\n- [décision] Die 3 Releases mit Freigabe nach Deployment ebenfalls als Abweichung aufnehmen; zusätzlich ab Dezember Branch Protection auf GitHub mit verlinktem Change-Ticket (Beschluss mit Jonas) (source: a13)\n- [question] Keine — Person bestätigte: „passt so“",
+  "rendu": "## Où j'en suis\nISO-9001-Überwachungsaudit (Händlerportal, Kap. 8.5.6) vorbereitet: 23 produktive Releases seit Nov. 2025 erfasst, mit Jira-Change-Tickets (CSV-Export, da der API-Zugriff scheiterte) abgeglichen und der Änderungsnachweis inkl. Abweichungen als PDF fertiggestellt. Alles nur lokal unter `docs/iso/`, nichts committet.\n\n- branche [[docs/iso-audit-2026]]\n- [en-cours] PDF soll von der Person selbst in SharePoint QM/Nachweise abgelegt werden\n- [prochaine-étape] Übersicht bis Freitag, 20.11. an Anja Lindner liefern; Auditor kommt schon Dienstag, 24.11. (nicht 25.11.)\n- [essai-raté] Direkter Jira-API-Zugriff per curl scheiterte mit 401 (Token abgelaufen/ohne ITS-Zugriff); Ersatz: CSV-Export `jira-export-2026-11-16.csv` (nicht committen)\n- [décision] Kein Rückdatieren der beiden Hotfix-Tickets — stattdessen offen als Abweichung mit Notfall-Change-Prozess (Freigabe binnen 2 Arbeitstagen) dokumentiert (source: a09)\n- [décision] Die 3 Releases mit Freigabe nach Deployment ebenfalls als Abweichung aufnehmen; zusätzlich ab Dezember Branch Protection auf GitHub mit verlinktem Change-Ticket (Beschluss mit Jonas) (source: a13)\n- [question] Keine — Person bestätigte: „passt so“",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1193,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3675,
+    "sortie": 361,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00073175
+  },
+  "cout": 0.00073175,
+  "latenceMs": 4463,
+  "fournisseur": "Together"
+}

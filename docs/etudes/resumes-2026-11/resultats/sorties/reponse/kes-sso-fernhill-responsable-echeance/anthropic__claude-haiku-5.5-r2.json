@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:10.539Z",
+  "reponse": "Daniel Levi est responsable de SAML de bout en bout [3] et il est assigné au ticket KES-430 [1]. La date interne est le 27 novembre 2026 [1], avant l'engagement contractuel de mise en production au 1er décembre 2026 [2]. Le ticket est bloqué : les métadonnées IdP de production de Fernhill ne arriveront le 26 novembre au plus tôt, après leur comité de changement [1][6]. Daniel a indiqué que l'échange se ferait le jour même [6].",
+  "rendu": "Daniel Levi est responsable de SAML de bout en bout [3] et il est assigné au ticket KES-430 [1]. La date interne est le 27 novembre 2026 [1], avant l'engagement contractuel de mise en production au 1er décembre 2026 [2]. Le ticket est bloqué : les métadonnées IdP de production de Fernhill ne arriveront le 26 novembre au plus tôt, après leur comité de changement [1][6]. Daniel a indiqué que l'échange se ferait le jour même [6].",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1871,
+    "sortie": 665,
+    "reflexion": 483,
+    "cache": 0,
+    "cout": 0.0005196
+  },
+  "cout": 0.0005196,
+  "latenceMs": 3471,
+  "fournisseur": "Claude Platform on AWS"
+}

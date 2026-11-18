@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:23.782Z",
+  "reponse": "## Où j'en suis\nSession de questions ponctuelles résolues : version de la CLI Shopify (3.69.0, 3.70.1 disponible), commande `shopify app dev --reset` pour changer de boutique de dev par défaut, et construction d'une regex de SKU testée avec succès. Aucun fichier modifié dans le dépôt.\n\n- [décision] Ne rien ajouter au dépôt, la regex n'était qu'un test ponctuel (source: t09).\n- [essai-raté] `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` ne matche pas `CROIX-ROUSSE-BLANC` (pas de taille) ; variante à taille facultative : `^[A-Z]+(?:-[A-Z]+)*(?:-\\d{2,3})?$`.",
+  "rendu": "## Où j'en suis\nSession de questions ponctuelles résolues : version de la CLI Shopify (3.69.0, 3.70.1 disponible), commande `shopify app dev --reset` pour changer de boutique de dev par défaut, et construction d'une regex de SKU testée avec succès. Aucun fichier modifié dans le dépôt.\n\n- branche [[main]]\n- [essai-raté] `^[A-Z]+(?:-[A-Z]+)*-\\d{2,3}$` ne matche pas `CROIX-ROUSSE-BLANC` (pas de taille) ; variante à taille facultative : `^[A-Z]+(?:-[A-Z]+)*(?:-\\d{2,3})?$`.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 473,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1949,
+    "sortie": 434,
+    "reflexion": 255,
+    "cache": 512,
+    "cout": 0.00048363
+  },
+  "cout": 0.00048363,
+  "latenceMs": 2462,
+  "fournisseur": "Together"
+}

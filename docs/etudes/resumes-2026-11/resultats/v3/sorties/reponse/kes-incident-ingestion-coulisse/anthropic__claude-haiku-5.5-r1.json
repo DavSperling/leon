@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:50.266Z",
+  "reponse": "The root cause was the disk filling up on Kafka broker ingest-kafka-2 after infra PR #221 removed size-based retention, leaving only 7-day time-based retention [2]. The broker went read-only at 09:38 UTC, and consumers stalled for 2h47m, until 12:25 UTC [2][4]. No events were lost because producers buffered them [2]. The earlier theory blaming PR #388's batch size change was wrong. The postmortem calls it a red herring, and reverting it changed nothing [5][3][1].",
+  "rendu": "The root cause was the disk filling up on Kafka broker ingest-kafka-2 after infra PR #221 removed size-based retention, leaving only 7-day time-based retention [2]. The broker went read-only at 09:38 UTC, and consumers stalled for 2h47m, until 12:25 UTC [2][4]. No events were lost because producers buffered them [2]. The earlier theory blaming PR #388's batch size change was wrong. The postmortem calls it a red herring, and reverting it changed nothing [5][3][1].",
+  "mesures": {
+    "mots": 74,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1794,
+    "sortie": 814,
+    "reflexion": 636,
+    "cache": 0,
+    "cout": 0.0005864
+  },
+  "cout": 0.0005864,
+  "latenceMs": 6365,
+  "fournisseur": "Amazon Bedrock"
+}

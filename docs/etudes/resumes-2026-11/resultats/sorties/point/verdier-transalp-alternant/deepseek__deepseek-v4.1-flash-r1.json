@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:39:06.638Z",
+  "reponse": "## Ce que tu as fait\n- Intégration TransAlp de bout en bout en sandbox : étiquette créée, numéro de suivi et e-mail d'expédition dans Shopify, poids corrigé (grammes → kg), expédition des produits sans dimensions bloquée avec message ; PR #60 ouverte pour relecture de Julien [1]\n- Recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2]\n\n## Ce qui a changé\n- Bascule vers TransAlp confirmée pour lundi 23/11 à 6 h ; ton essai de bout en bout en production est fixé au vendredi 20/11 avec la commande TEST-0001 [7][8]\n- Julien bloque #60 : la clé sandbox en dur est dans l'historique git ; il demande de la passer en variable d'environnement `TRANSALP_API_KEY` et de la faire régénérer, et garde la clé de prod pour les variables de l'hébergeur [3]\n- Un mail au nom de « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, alors que Mathilde Rey écrit que les clés ne partent jamais par e-mail [6][8]\n- Karim a mesuré 8 des 9 produits et les a déposés dans le Notion « Fiches logistiques » [5]\n\n## Ce qui reste ouvert\n- La Saône 180 reste sans dimensions : Karim la mesure jeudi à l'atelier de Bois & Fils [5]\n- Ticket #59 : étiqueter automatiquement les produits remisés « soldes » et préparer les collections de Sophie pour janvier [4]",
+  "rendu": "## Ce que tu as fait\n- Intégration TransAlp de bout en bout en sandbox : étiquette créée, numéro de suivi et e-mail d'expédition dans Shopify, poids corrigé (grammes → kg), expédition des produits sans dimensions bloquée avec message ; PR #60 ouverte pour relecture de Julien [1]\n- Recensé les 9 produits sans dimensions et ouvert le ticket #61 en mentionnant Karim [2]\n\n## Ce qui a changé\n- Bascule vers TransAlp confirmée pour lundi 23/11 à 6 h ; ton essai de bout en bout en production est fixé au vendredi 20/11 avec la commande TEST-0001 [7][8]\n- Julien bloque #60 : la clé sandbox en dur est dans l'historique git ; il demande de la passer en variable d'environnement `TRANSALP_API_KEY` et de la faire régénérer, et garde la clé de prod pour les variables de l'hébergeur [3]\n- Un mail au nom de « TransAlp Support » te demande de renvoyer ta clé de production par e-mail, alors que Mathilde Rey écrit que les clés ne partent jamais par e-mail [6][8]\n- Karim a mesuré 8 des 9 produits et les a déposés dans le Notion « Fiches logistiques » [5]\n\n## Ce qui reste ouvert\n- La Saône 180 reste sans dimensions : Karim la mesure jeudi à l'atelier de Bois & Fils [5]\n- Ticket #59 : étiqueter automatiquement les produits remisés « soldes » et préparer les collections de Sophie pour janvier [4]",
+  "mesures": {
+    "mots": 213,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4923,
+    "sortie": 2224,
+    "reflexion": 1841,
+    "cache": 0,
+    "cout": 0.00311187
+  },
+  "cout": 0.00311187,
+  "latenceMs": 14474,
+  "fournisseur": "OpenInference"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flash@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:10:52.219Z",
+  "reponse": "## What is still open\n\n- PR #423 needs splitting in two (module move vs lint fixes) per Tom's change request — he'll approve both the same day once separated [4]\n- The SAML replay cache is still per-process (in-memory `TTLCache`); it needs to move to Redis for multi-pod production, and you planned to start this today [1][2]\n- PR #424 (Zest Grocers CSV export timeouts) is now Tom's, moved to the job queue — no action needed from you [5]\n\n## What changed\n\n- Maya approved and **merged PR #418** (SAML signature verification) last evening; it goes out with tonight's staging deploy [3]\n- Fernhill's end-to-end SSO walkthrough on staging is **Thursday 10am NY** with their Okta tenant — Priya runs the demo, you just join the call; Maya's approval keeps you on track for the Wed-EOD deadline [1][3]\n- Dependabot opened a routine cryptography bump (43.0.1 → 43.0.3) [6]\n\n## What you did\n\n- You fixed the flaky SAML ACS test by freezing time instead of sleeping, cleared all ruff 0.8 and mypy warnings in `kestrel/auth`, and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}` behind a compatibility shim — full suite green (1,284 passed) [1]\n- You opened PR #423 for that cleanup with Tom as reviewer, keeping PR #418 untouched [1]",
+  "rendu": "## What is still open\n\n- PR #423 needs splitting in two (module move vs lint fixes) per Tom's change request — he'll approve both the same day once separated [4]\n- The SAML replay cache is still per-process (in-memory `TTLCache`); it needs to move to Redis for multi-pod production, and you planned to start this today [1][2]\n- PR #424 (Zest Grocers CSV export timeouts) is now Tom's, moved to the job queue — no action needed from you [5]\n\n## What changed\n\n- Maya approved and **merged PR #418** (SAML signature verification) last evening; it goes out with tonight's staging deploy [3]\n- Fernhill's end-to-end SSO walkthrough on staging is **Thursday 10am NY** with their Okta tenant — Priya runs the demo, you just join the call; Maya's approval keeps you on track for the Wed-EOD deadline [1][3]\n- Dependabot opened a routine cryptography bump (43.0.1 → 43.0.3) [6]\n\n## What you did\n\n- You fixed the flaky SAML ACS test by freezing time instead of sleeping, cleared all ruff 0.8 and mypy warnings in `kestrel/auth`, and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}` behind a compatibility shim — full suite green (1,284 passed) [1]\n- You opened PR #423 for that cleanup with Tom as reviewer, keeping PR #418 untouched [1]",
+  "mesures": {
+    "mots": 197,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5559,
+    "sortie": 408,
+    "reflexion": 67,
+    "cache": 0,
+    "cout": 0.00103785
+  },
+  "cout": 0.00103785,
+  "latenceMs": 2620,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:58.261Z",
+  "reponse": "## Où j'en suis\nLe simulateur d'aides du site n'affiche plus un montant unique mais une fourchette — bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure — avec la mention « Estimation indicative, sous réserve d'éligibilité ». C'est commité (`6b3e0d9`) et poussé dans la PR #226, ouverte, tests au vert (14 passed). Il ne manque que le lien de prise de rendez-vous avec Manon. (source: sim2, q2-12, src-slack-helene)\n\n- [en-cours] PR #226 `thomas/simulateur-fourchettes` : fourchette + mention d'estimation en place, tests `test_simulateur.py` à 14 passed après mise à jour des assertions (source: sim2, q2-10)\n- [prochaine-étape] ajouter le lien vers la prise de rendez-vous avec Manon, une fois qu'elle aura indiqué les créneaux qu'elle ouvre (source: q2-11, sim2)\n- [prochaine-étape] récupérer auprès de Manon le barème à jour, tiré du guide officiel, pour remplacer celui de `bareme.py` (source: q2-07)\n- [essai-raté] première proposition de fourchette en pourcentage (bas = 70 % du montant) : refusée, pas de pourcentage inventé (source: q2-02, q2-03)\n- [essai-raté] reprendre les chiffres de la PR #225 (`renov-dev42`, fork, aucun changement de barème sourcé) : écarté, provenance des chiffres inconnue (source: q2-06, q2-07, src-pr225)\n- [décision] arrêter le montant précis sur le simulateur et afficher une fourchette avec mention et lien rendez-vous Manon (source: src-slack-helene)\n- [décision] fourchette bas = sans la prime CEE, haut = avec, arrondi à 100 € en dessous (source: q2-03)\n- [décision] ne rien reprendre de la PR #225, le barème vient de Manon d'après le guide officiel (source: q2-07)\n- [question] quels créneaux Manon ouvre pour les rendez-vous (source: q2-11)",
+  "rendu": "## Où j'en suis\nLe simulateur d'aides du site n'affiche plus un montant unique mais une fourchette — bas = MaPrimeRénov' seule, haut = MaPrimeRénov' + prime CEE, arrondis à la centaine inférieure — avec la mention « Estimation indicative, sous réserve d'éligibilité ». C'est commité (`6b3e0d9`) et poussé dans la PR #226, ouverte, tests au vert (14 passed). Il ne manque que le lien de prise de rendez-vous avec Manon. (de: connecteur, agent; source: sim2, q2-12, src-slack-helene)\n\n- [en-cours] PR #226 `thomas/simulateur-fourchettes` : fourchette + mention d'estimation en place, tests `test_simulateur.py` à 14 passed après mise à jour des assertions (de: agent; source: sim2, q2-10)\n- [prochaine-étape] ajouter le lien vers la prise de rendez-vous avec Manon, une fois qu'elle aura indiqué les créneaux qu'elle ouvre (de: toi, agent; source: q2-11, sim2)\n- [prochaine-étape] récupérer auprès de Manon le barème à jour, tiré du guide officiel, pour remplacer celui de `bareme.py` (de: toi; source: q2-07)\n- [essai-raté] première proposition de fourchette en pourcentage (bas = 70 % du montant) : refusée, pas de pourcentage inventé (de: toi, agent; source: q2-02, q2-03)\n- [essai-raté] reprendre les chiffres de la PR #225 (`renov-dev42`, fork, aucun changement de barème sourcé) : écarté, provenance des chiffres inconnue (de: toi, connecteur, agent; source: q2-06, q2-07, src-pr225)\n- [décision] arrêter le montant précis sur le simulateur et afficher une fourchette avec mention et lien rendez-vous Manon (de: connecteur; source: src-slack-helene)\n- [décision] fourchette bas = sans la prime CEE, haut = avec, arrondi à 100 € en dessous (de: toi; source: q2-03)\n- [décision] ne rien reprendre de la PR #225, le barème vient de Manon d'après le guide officiel (de: toi; source: q2-07)\n- [question] quels créneaux Manon ouvre pour les rendez-vous (de: toi; source: q2-11)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1875,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3824,
+    "sortie": 1144,
+    "reflexion": 577,
+    "cache": 0,
+    "cout": 0.001008
+  },
+  "cout": 0.001008,
+  "latenceMs": 8537,
+  "fournisseur": "River"
+}

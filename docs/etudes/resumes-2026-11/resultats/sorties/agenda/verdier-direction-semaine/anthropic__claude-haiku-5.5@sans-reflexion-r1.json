@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-direction-semaine",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:12.418Z",
+  "reponse": "```json\n{\"n\": 1, \"titre\": \"Réunion stand (mercredi 15h)\", \"debut\": \"2026-11-18T15:00\", \"avec\": \"Sophie Garnier, Julien Morel\"}\n{\"n\": 7, \"titre\": \"Rendez-vous financement stand et trésorerie\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:00\", \"avec\": \"Mathieu Lambert\"}\n{\"n\": 10, \"titre\": \"Préparation stand Maison&Objet\", \"debut\": \"2026-11-17T15:00\", \"fin\": \"2026-11-17T16:00\", \"avec\": \"Sophie Garnier, Julien Morel\"}\n{\"n\": 13, \"titre\": \"Point transporteur à l'entrepôt\", \"debut\": \"2026-11-17T08:45\", \"avec\": \"Karim Haddad\"}\n{\"n\": 4, \"titre\": \"Entretien annuel\", \"debut\": \"2026-11-23T10:00\", \"fin\": \"2026-11-23T11:00\", \"avec\": \"Lucie Fontaine\"}\n{\"n\": 6, \"titre\": \"Point clôture trimestrielle\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T17:00\", \"avec\": \"Antoine Roussel\"}\n{\"n\": 15, \"titre\": \"Visite showroom\", \"debut\": \"2026-11-16T11:30\", \"avec\": \"Hélène Vasseur\"}\n{\"n\": 21, \"titre\": \"Visite showroom\", \"debut\": \"2026-11-16T11:00\", \"avec\": \"Hélène Vasseur\"}\n{\"n\": 22, \"titre\": \"Visite showroom\", \"debut\": \"2026-11-16T11:00\", \"avec\": \"Hélène Vasseur\"}\n{\"n\": 19, \"titre\": \"Visite de l'atelier\", \"debut\": \"2026-11-20T10:00\", \"avec\": \"Paul Besson, Karim Haddad\"}\n{\"n\": 20, \"titre\": \"Visite de l'atelier\", \"debut\": \"2026-11-20T10:00\", \"avec\": \"Paul Besson\"}\n{\"n\": 23, \"titre\": \"Déjeuner\", \"debut\": \"2026-11-19T12:30\", \"avec\": \"Marc Delaunay\"}\n{\"n\": 24, \"titre\": \"Déjeuner au Bouchon des Cordeliers\", \"debut\": \"2026-11-19T12:30\", \"avec\": \"Marc Delaunay\"}\n```",
+  "rendu": "2026-11-16T11:00 Visite showroom (avec Hélène Vasseur)\n2026-11-16T11:30 Visite showroom (avec Hélène Vasseur)\n2026-11-17T08:45 Point transporteur à l'entrepôt (avec Karim Haddad)\n2026-11-17T15:00→2026-11-17T16:00 Préparation stand Maison&Objet (avec Sophie Garnier, Julien Morel)\n2026-11-18T15:00 Réunion stand (mercredi 15h) (avec Sophie Garnier, Julien Morel)\n2026-11-18T16:00→2026-11-18T17:00 Point clôture trimestrielle (avec Antoine Roussel)\n2026-11-19T12:30 Déjeuner (avec Marc Delaunay)\n2026-11-19T12:30 Déjeuner au Bouchon des Cordeliers (avec Marc Delaunay)\n2026-11-19T14:00→2026-11-19T15:00 Rendez-vous financement stand et trésorerie (avec Mathieu Lambert)\n2026-11-20T10:00 Visite de l'atelier (avec Paul Besson, Karim Haddad)",
+  "mesures": {
+    "trouves": 10,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.6,
+    "f1": 0.75,
+    "faux": "2026-11-16T11:00 Visite showroom | 2026-11-17T15:00 Préparation stand Maison&Objet | 2026-11-19T12:30 Déjeuner | 2026-11-19T12:30 Déjeuner au Bouchon des Cordeliers",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4508,
+    "sortie": 815,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008583
+  },
+  "cout": 0.0008583,
+  "latenceMs": 3139,
+  "fournisseur": "Claude Platform on AWS"
+}

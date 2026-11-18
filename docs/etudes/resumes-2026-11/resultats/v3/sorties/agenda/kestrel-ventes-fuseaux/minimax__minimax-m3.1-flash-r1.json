@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:01:28.317Z",
+  "reponse": "{\"n\": 1, \"titre\": \"30 Minute Discovery Call – Marcus Hale\", \"debut\": \"2026-11-20T16:00\", \"fin\": \"2026-11-20T16:30\", \"avec\": \"Marcus Hale\"}\n{\"n\": 3, \"titre\": \"Kestrel x Fernhill – SAML SSO technical kickoff\", \"debut\": \"2026-11-19T15:00\", \"fin\": \"2026-11-19T16:00\", \"avec\": \"Oliver Grant, Hannah Doyle, Daniel Levi, Priya Shah\"}\n{\"n\": 6, \"titre\": \"Deal review – Fernhill expansion (Tier 2 seats)\", \"debut\": \"2026-11-18T12:00\", \"fin\": \"2026-11-18T12:45\", \"avec\": \"Maya Cohen, Priya Shah\"}\n{\"n\": 7, \"titre\": \"Orbitly renewal – quick call\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T16:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 9, \"titre\": \"Pathwise x Kestrel – reseller partnership\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"Inès Duval\"}\n{\"n\": 20, \"titre\": \"Déjeuner au Comptoir Vivienne\", \"debut\": \"2026-11-17T12:30\", \"avec\": \"Camille Brunet\"}",
+  "rendu": "2026-11-16T10:00 Pathwise x Kestrel – reseller partnership (avec Inès Duval)\n2026-11-17T12:30 Déjeuner au Comptoir Vivienne (avec Camille Brunet)\n2026-11-18T12:00→2026-11-18T12:45 Deal review – Fernhill expansion (Tier 2 seats) (avec Maya Cohen, Priya Shah)\n2026-11-18T16:00→2026-11-18T16:30 Orbitly renewal – quick call (avec Jenna Park)\n2026-11-19T15:00→2026-11-19T16:00 Kestrel x Fernhill – SAML SSO technical kickoff (avec Oliver Grant, Hannah Doyle, Daniel Levi, Priya Shah)\n2026-11-20T16:00→2026-11-20T16:30 30 Minute Discovery Call – Marcus Hale (avec Marcus Hale)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 4,
+    "rappel": 0.667,
+    "precision": 0.667,
+    "f1": 0.667,
+    "faux": "2026-11-18T16:00 Orbitly renewal – quick call | 2026-11-20T16:00 30 Minute Discovery Call – Marcus Hale",
+    "manques": "2026-11-18T17:00 Orbitly renewal call | 2026-11-20T17:00 Discovery call with Marcus Hale (Brightloop)",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3190,
+    "sortie": 904,
+    "reflexion": 569,
+    "cache": 640,
+    "cout": 0.0009345
+  },
+  "cout": 0.0009345,
+  "latenceMs": 4470,
+  "fournisseur": "Parasail"
+}

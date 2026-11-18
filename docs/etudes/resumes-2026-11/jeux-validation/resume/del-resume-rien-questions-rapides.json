@@ -1,0 +1,137 @@
+{
+ "id": "del-resume-rien-questions-rapides",
+ "titre": "Session sans suite : quatre questions de mémo (Django, git, pytest) vite réglées, une offre de l'agent déclinée ; rien à retenir",
+ "langue": "fr",
+ "entree": {
+  "faits": {
+   "branche": "lucas/sync-hubspot-doublons",
+   "prs": [],
+   "commits": [],
+   "fichiers": [],
+   "commandes": [
+    {
+     "texte": "python manage.py showmigrations chantiers",
+     "erreur": false
+    }
+   ],
+   "taches": [],
+   "debut": "2026-11-18T08:10:00+01:00",
+   "fin": "2026-11-18T08:20:00+01:00"
+  },
+  "tours": [
+   {
+    "id": "t01",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:10:00+01:00",
+    "texte": "c'est quoi deja la commande pour voir les migrations pas appliquées"
+   },
+   {
+    "id": "t02",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:10:00+01:00",
+    "texte": "`python manage.py showmigrations` : les migrations appliquées ont `[X]`, les autres `[ ]`. Pour une seule app : `python manage.py showmigrations chantiers`.\n\n```\n$ python manage.py showmigrations chantiers\nchantiers\n [X] 0040_intervention_verrouillee\n [X] 0041_supprime_doublons_chantiers\n [X] 0042_chantier_hubspot_deal_id\n```"
+   },
+   {
+    "id": "t03",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:12:00+01:00",
+    "texte": "et pour revenir en arriere sur une migration ?"
+   },
+   {
+    "id": "t04",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:12:00+01:00",
+    "texte": "`python manage.py migrate chantiers 0040` ramène l'app `chantiers` à la 0040, en défaisant 0041 et 0042. Attention : une migration de données qui a supprimé des lignes ne les recrée pas en revenant en arrière. Tu veux que je le fasse sur ta base de dev ?"
+   },
+   {
+    "id": "t05",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:13:00+01:00",
+    "texte": "non non c'est juste pour savoir. et git, annuler le dernier commit pas poussé en gardant les modifs ?"
+   },
+   {
+    "id": "t06",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:14:00+01:00",
+    "texte": "`git reset --soft HEAD~1` : le commit disparaît, les modifications restent indexées. Avec `--mixed` (par défaut), elles restent mais désindexées."
+   },
+   {
+    "id": "t07",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:16:00+01:00",
+    "texte": "ok. et voir le diff d'un fichier entre main et ma branche"
+   },
+   {
+    "id": "t08",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:16:00+01:00",
+    "texte": "`git diff main...lucas/sync-hubspot-doublons -- sync/hubspot_deals.py` (trois points : ce qui a changé sur ta branche depuis qu'elle est partie de main)."
+   },
+   {
+    "id": "t09",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:19:00+01:00",
+    "texte": "top. derniere : comment on met un breakpoint dans un test pytest déjà"
+   },
+   {
+    "id": "t10",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:19:00+01:00",
+    "texte": "Mets `breakpoint()` dans le test, puis lance `pytest -s tests/test_x.py::test_y` (`-s` pour garder la console). Ou `pytest --pdb` pour t'arrêter au premier échec."
+   },
+   {
+    "id": "t11",
+    "role": "user",
+    "injecte": false,
+    "date": "2026-11-18T08:20:00+01:00",
+    "texte": "merci"
+   },
+   {
+    "id": "t12",
+    "role": "assistant",
+    "injecte": null,
+    "date": "2026-11-18T08:20:00+01:00",
+    "texte": "Avec plaisir."
+   }
+  ]
+ },
+ "attendu": {
+  "rien": true,
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "La sortie est exactement « rien à retenir ».",
+    "poids": 3
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Écrit une [décision] (par exemple « ne pas revenir en arrière sur la migration »)."
+   },
+   {
+    "id": "i2",
+    "texte": "Écrit une [prochaine-étape] ou un [en-cours] : revenir à la migration 0040, annuler un commit, déboguer un test."
+   },
+   {
+    "id": "i3",
+    "texte": "Écrit un résumé « ## Où j'en suis » de la session."
+   }
+  ],
+  "pieges": [
+   "Rien à dire : des questions de mémo, une seule commande en lecture, aucun fichier ni commit ; 6 tours tapés, donc Leon appelle bien le modèle.",
+   "Fausse suite : l'agent propose de revenir en arrière sur la base de dev, Lucas décline."
+  ],
+  "decisions": []
+ }
+}

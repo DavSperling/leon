@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:01:59.708Z",
+  "reponse": "{\"n\": 7, \"titre\": \"Réunion lancement TransAlp\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T15:30\", \"avec\": \"Bruno Ferrand, Nadia Ouali\"}\n{\"n\": 7, \"titre\": \"Déjeuner avec Bruno après enlèvement test\", \"debut\": \"2026-11-20T12:30\", \"avec\": \"Bruno Ferrand\"}\n{\"n\": 3, \"titre\": \"Réunion soldes d'hiver – logistique\", \"debut\": \"2026-11-18T11:30\", \"avec\": \"Claire Verdier, Sophie Garnier\"}\n{\"n\": 9, \"titre\": \"Visio mousses et tissus collection 2027\", \"debut\": \"2026-11-18T16:00\", \"avec\": \"Rui Carvalho\"}\n{\"n\": 5, \"titre\": \"Appel – distribution au Québec\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Geneviève Tremblay\"}\n{\"n\": 14, \"titre\": \"Point téléphonique rupture Saône\", \"debut\": \"2026-11-19T09:00\", \"avec\": \"Paul Besson\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T15:30 Réunion lancement TransAlp (avec Bruno Ferrand, Nadia Ouali)\n2026-11-18T11:30 Réunion soldes d'hiver – logistique (avec Claire Verdier, Sophie Garnier)\n2026-11-18T16:00 Visio mousses et tissus collection 2027 (avec Rui Carvalho)\n2026-11-19T09:00 Point téléphonique rupture Saône (avec Paul Besson)\n2026-11-19T16:00 Appel – distribution au Québec (avec Geneviève Tremblay)\n2026-11-20T12:30 Déjeuner avec Bruno après enlèvement test (avec Bruno Ferrand)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2993,
+    "sortie": 1819,
+    "reflexion": 1474,
+    "cache": 0,
+    "cout": 0.00092834
+  },
+  "cout": 0.00092834,
+  "latenceMs": 6944,
+  "fournisseur": "Cohere"
+}

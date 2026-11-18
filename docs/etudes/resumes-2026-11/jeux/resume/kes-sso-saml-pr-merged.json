@@ -1,0 +1,345 @@
+{
+  "id": "kes-sso-saml-pr-merged",
+  "titre": "Session Claude Code sur l'ACS SAML de Fernhill : PR fusionnée après la session alors que le dernier tour dit le contraire, démo cachée au milieu de la routine",
+  "langue": "en",
+  "entree": {
+    "faits": {
+      "branche": "daniel/saml-acs",
+      "prs": [
+        {
+          "repo": "kestrel-analytics/platform",
+          "numero": 412,
+          "etat": "merged"
+        }
+      ],
+      "commits": [
+        "3f9c2a1",
+        "b71e04d",
+        "e0a5c93"
+      ],
+      "fichiers": [
+        "api/auth/saml/acs.py",
+        "api/auth/saml/verify.py",
+        "api/auth/saml/__init__.py",
+        "api/auth/saml_utils.py",
+        "tests/auth/test_saml_acs.py",
+        "requirements.txt",
+        "docker/api.Dockerfile"
+      ],
+      "commandes": [
+        {
+          "texte": "docker build -f docker/api.Dockerfile -t kestrel-api:dev .",
+          "erreur": true
+        },
+        {
+          "texte": "docker build -f docker/api.Dockerfile --build-arg LXML_NO_BINARY=1 -t kestrel-api:dev .",
+          "erreur": true
+        },
+        {
+          "texte": "pip install signxml==4.0.3",
+          "erreur": false
+        },
+        {
+          "texte": "pytest tests/auth -q",
+          "erreur": true
+        },
+        {
+          "texte": "pytest tests/auth -q",
+          "erreur": false
+        },
+        {
+          "texte": "ruff check api/auth --fix",
+          "erreur": false
+        },
+        {
+          "texte": "mypy api/auth",
+          "erreur": false
+        },
+        {
+          "texte": "gh pr create --base main --title \"SAML ACS: verify signature and conditions\" --body-file /tmp/pr412.md",
+          "erreur": false
+        },
+        {
+          "texte": "gh pr merge 412 --squash",
+          "erreur": true
+        }
+      ],
+      "taches": [
+        {
+          "texte": "Verify SAML assertion signature in ACS",
+          "etat": "fait"
+        },
+        {
+          "texte": "Check assertion conditions (audience, recipient, time window)",
+          "etat": "fait"
+        },
+        {
+          "texte": "Move saml_utils into api/auth/saml/verify.py",
+          "etat": "fait"
+        },
+        {
+          "texte": "Open PR",
+          "etat": "fait"
+        },
+        {
+          "texte": "Load Fernhill staging IdP metadata",
+          "etat": "a_faire"
+        }
+      ],
+      "debut": "2026-11-16T07:41:00Z",
+      "fin": "2026-11-16T10:52:00Z"
+    },
+    "tours": [
+      {
+        "id": "t01",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T07:41:00Z",
+        "texte": "ok lets finish the ACS endpoint for fernhill. signature verif is still a TODO in api/auth/saml/acs.py. use python3-saml like in the spike"
+      },
+      {
+        "id": "t02",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T07:44:30Z",
+        "texte": "I'll start by reading the current ACS handler and the spike notes.\n\n`api/auth/saml/acs.py` currently:\n- parses the `SAMLResponse` form field (base64 → XML),\n- extracts `NameID` and the `email` attribute,\n- has `# TODO: verify signature` before creating the session — so right now any well-formed assertion logs the user in. That's the part we must close before Fernhill goes live.\n\nPlan:\n1. Add `python3-saml` to `requirements.txt` and wire `OneLogin_Saml2_Response.is_valid()` into the handler.\n2. Keep our own tenant lookup (`tenant_by_entity_id`) since python3-saml expects a settings dict per IdP.\n3. Tests in `tests/auth/test_saml_acs.py`: valid signed assertion, tampered assertion, expired assertion, wrong audience.\n\npython3-saml depends on `xmlsec`, which needs the native `libxmlsec1` in the image. Let me add it to `docker/api.Dockerfile` and build first, since that's usually where it breaks."
+      },
+      {
+        "id": "t03",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T07:58:12Z",
+        "texte": "The image build fails:\n\n```\n#14 41.20   Building wheel for xmlsec (pyproject.toml): finished with status 'done'\n#16 3.112 Traceback (most recent call last):\n#16 3.112   File \"/app/api/auth/saml/acs.py\", line 7, in <module>\n#16 3.112     from onelogin.saml2.response import OneLogin_Saml2_Response\n#16 3.112   ...\n#16 3.113 xmlsec.Error: (100, 'lxml & xmlsec libxml2 library version mismatch')\nERROR: failed to solve: process \"/bin/sh -c python -c 'import api.main'\" did not complete successfully: exit code: 1\n```\n\nThis is the known incompatibility: the `lxml` wheel ships its own libxml2 (2.12.x) while `xmlsec` links against Alpine's system libxml2 (2.11.x). Both get loaded in the same process and xmlsec refuses to run."
+      },
+      {
+        "id": "t04",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T08:01:00Z",
+        "texte": "ugh the xmlsec thing again. cant we just build lxml from source so they match"
+      },
+      {
+        "id": "t05",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T08:19:40Z",
+        "texte": "I tried that: `--build-arg LXML_NO_BINARY=1` with `pip install --no-binary lxml lxml==5.2.1`.\n\nResult:\n- the build went from 1m50 to 9m12 (lxml compiles from C, plus `libxslt-dev`, `libxml2-dev`, `gcc`, `musl-dev` added to the builder stage),\n- and it still fails at the same import, now with `xmlsec.InternalError: (-1, 'cannot load crypto library for xmlsec.')` because Alpine 3.20 doesn't ship `xmlsec1-openssl` as a separate loadable module.\n\nSo python3-saml on our Alpine base is a dead end without bigger changes. Options:\n\n| Option | Image size | Effort | Notes |\n|---|---|---|---|\n| A. Switch base to `python:3.12-slim` (Debian) | +~85 MB | small | also affects the ingest sidecar that reuses this base |\n| B. `signxml` (pure Python on `cryptography` + `lxml`) | +~4 MB | medium | only does XML-DSig; we write the SAML condition checks ourselves |\n| C. Build xmlsec1 from source in the builder | +~10 MB | large | we'd own a C build forever |\n\nMy recommendation would be A, it's the least code."
+      },
+      {
+        "id": "t06",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T08:22:00Z",
+        "texte": "image size matters, noa will kill me if the sidecar grows. what does signxml NOT do that we need"
+      },
+      {
+        "id": "t07",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T08:27:15Z",
+        "texte": "signxml verifies the XML signature (enveloped signature on the Response or the Assertion, with the IdP certificate we pin per tenant). What python3-saml does on top, which we would have to write:\n\n- `Conditions`: `NotBefore` / `NotOnOrAfter` with a clock-skew tolerance,\n- `AudienceRestriction`: audience must equal our SP entity ID for that tenant,\n- `SubjectConfirmationData`: `Recipient` must equal the ACS URL, `NotOnOrAfter` checked too,\n- `InResponseTo`: only for SP-initiated flows (we can check it against the request ID we stored in Redis),\n- replay protection: remember assertion IDs until they expire.\n\nThat's roughly 120–150 lines plus tests. The signature-wrapping attack is the main risk: we must only read the attributes from the element that signxml returns as verified, never from the raw document. I'd do that by passing `expect_references=1` and using the returned `signed_xml`."
+      },
+      {
+        "id": "t08",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T08:29:00Z",
+        "texte": "ok go signxml, drop python3-saml entirely (and remove xmlsec from the dockerfile). write the conditions checks yourself with tests. and yes only read from signed_xml"
+      },
+      {
+        "id": "t09",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T09:06:48Z",
+        "texte": "Done, first pass:\n\n- `requirements.txt`: removed `python3-saml`, `xmlsec`; added `signxml==4.0.3`.\n- `docker/api.Dockerfile`: reverted the `libxmlsec1` / build-deps lines. Image is back to 212 MB.\n- `api/auth/saml/acs.py`: the handler now calls `verify_assertion(raw_xml, tenant)` and only reads `NameID` and attributes from the verified element.\n- new checks in `api/auth/saml_utils.py`: `check_conditions`, `check_audience`, `check_subject_confirmation`, `remember_assertion_id` (Redis, TTL = `NotOnOrAfter` − now).\n\nTests:\n\n```\n$ pytest tests/auth -q\n..........................F.F.......\nFAILED tests/auth/test_saml_acs.py::test_assertion_just_expired_is_rejected - AssertionError: expected 401, got 200\nFAILED tests/auth/test_saml_acs.py::test_not_before_in_future_is_rejected - AssertionError: expected 401, got 200\n2 failed, 34 passed in 3.41s\n```\n\nBoth failures come from the skew tolerance: the fixtures are 4 minutes off and I set a default tolerance of 300 s, so they pass the window."
+      },
+      {
+        "id": "t10",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T09:08:00Z",
+        "texte": "whats the skew tolerance you used and why"
+      },
+      {
+        "id": "t11",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T09:11:30Z",
+        "texte": "300 seconds (5 minutes). It's the python3-saml default and what most IdPs document, so it avoids support tickets when a customer's ADFS clock drifts.\n\nI'd keep 5 minutes and fix the two fixtures to be 10 minutes off instead.\n\nWhile we're here, I'd also suggest making SSO mandatory for every user on Fernhill's email domain and disabling password login for them: otherwise a Fernhill employee who leaves the bank keeps a working password on Kestrel. I can add a `sso_enforced` flag on the tenant and the login check in this same PR."
+      },
+      {
+        "id": "t12",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T09:14:00Z",
+        "texte": "2 min. fernhill security questionnaire says max 120s skew, its in the contract annex. dont touch password login now thats a separate ticket, not in this PR"
+      },
+      {
+        "id": "t13",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T09:26:05Z",
+        "texte": "Changed `SAML_CLOCK_SKEW_SECONDS` to 120 (setting, not hard-coded), left password login untouched.\n\n```\n$ pytest tests/auth -q\n....................................\n36 passed in 3.38s\n$ ruff check api/auth --fix\nFound 7 errors (7 fixed, 0 remaining).\n```\n\nThe ruff fixes were import order and two unused variables in the old spike code. Committed as `3f9c2a1` (signxml + checks) and `b71e04d` (skew setting + tests)."
+      },
+      {
+        "id": "t14",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T09:31:00Z",
+        "texte": "move saml_utils into api/auth/saml/verify.py while ur at it, fix imports. also mypy is yelling at me in the IDE"
+      },
+      {
+        "id": "t15",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T09:44:22Z",
+        "texte": "Moved `api/auth/saml_utils.py` → `api/auth/saml/verify.py`, re-exported `verify_assertion` from `api/auth/saml/__init__.py`, updated the 4 imports.\n\nmypy had 3 errors:\n\n```\napi/auth/saml/verify.py:41: error: Item \"None\" of \"Optional[_Element]\" has no attribute \"get\"  [union-attr]\napi/auth/saml/verify.py:88: error: Argument 1 to \"fromisoformat\" of \"datetime\" has incompatible type \"str | None\"; expected \"str\"  [arg-type]\napi/auth/saml/acs.py:23: error: Missing return statement  [return]\n```\n\nAll fixed (explicit `None` checks that raise `SamlError(\"missing Conditions\")` rather than `assert`, and the handler now returns the 401 response in the last branch). `mypy api/auth` → `Success: no issues found in 6 source files`. Committed as `e0a5c93`."
+      },
+      {
+        "id": "t16",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T09:52:00Z",
+        "texte": "btw maya wants the fernhill sso demo thursday 10am NY, their IT guy needs our staging SP metadata and we need their staging IdP metadata loaded by wed EOD. put that in the PR description so i dont forget. then open the PR"
+      },
+      {
+        "id": "t17",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T10:03:37Z",
+        "texte": "PR opened: https://github.com/kestrel-analytics/platform/pull/412 — \"SAML ACS: verify signature and conditions\".\n\nDescription includes:\n- what changed (signxml instead of python3-saml, condition checks, replay protection, 120 s skew from the Fernhill questionnaire),\n- how to test locally with the signed fixtures,\n- **Before Thursday's demo (10:00 New York):** load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday end of day,\n- out of scope: enforcing SSO / disabling password login (separate ticket).\n\nRequested review from Maya. CI is running."
+      },
+      {
+        "id": "t18",
+        "role": "user",
+        "injecte": true,
+        "date": "2026-11-16T10:31:10Z",
+        "texte": "<task-notification>\n<status>completed</status>\n<summary>Background command \"pytest tests/ -q -n 8\" completed (exit code 0)</summary>\n<result>1284 passed, 3 skipped in 212.40s</result>\n</task-notification>"
+      },
+      {
+        "id": "t19",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T10:40:00Z",
+        "texte": "ci green? merge it, squash"
+      },
+      {
+        "id": "t20",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T10:43:51Z",
+        "texte": "CI is green (lint, mypy, tests, docker build). But the merge was refused:\n\n```\n$ gh pr merge 412 --squash\nX Pull request kestrel-analytics/platform#412 is not mergeable: the base branch policy prohibits the merge.\nTo have the pull request merged after all the requirements have been met, add the `--auto` flag.\nTo use administrator privileges to immediately merge the pull request, add the `--admin` flag.\n```\n\n`main` requires one approving review and Maya hasn't reviewed yet. I did not use `--admin`. Do you want me to set `--auto` so it merges as soon as she approves?"
+      },
+      {
+        "id": "t21",
+        "role": "user",
+        "injecte": false,
+        "date": "2026-11-16T10:46:00Z",
+        "texte": "no admin no auto. ill ping maya myself. thx"
+      },
+      {
+        "id": "t22",
+        "role": "assistant",
+        "injecte": null,
+        "date": "2026-11-16T10:52:09Z",
+        "texte": "OK. Where things stand:\n\n- PR #412 is open and **not merged**: it is waiting for Maya's approval (branch protection). Nothing else blocks it, CI is green.\n- Signature + conditions verification is done with signxml, skew 120 s, replay protection in Redis.\n- Next: load Fernhill's staging IdP metadata and send them ours by Wednesday EOD, for the demo Thursday 10:00 New York.\n- Separate ticket still to create: enforce SSO / disable password login for Fernhill users."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La PR kestrel-analytics/platform#412 est fusionnée (merged).",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "La démo SSO de Fernhill (voulue par Maya) a lieu jeudi, 10:00 heure de New York.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "Il reste à charger les métadonnées de l'IdP de staging de Fernhill et à leur envoyer celles du SP, d'ici mercredi soir.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "Essai raté : python3-saml casse le build de l'image (xmlsec / lxml, incompatibilité de libxml2), même en compilant lxml.",
+        "poids": 2
+      },
+      {
+        "id": "f5",
+        "texte": "Décision : signxml remplace python3-saml, les contrôles des conditions SAML sont écrits à la main.",
+        "poids": 3
+      },
+      {
+        "id": "f6",
+        "texte": "Décision : la tolérance d'horloge est de 120 secondes (2 minutes), exigence du questionnaire de sécurité de Fernhill.",
+        "poids": 2
+      },
+      {
+        "id": "f7",
+        "texte": "Imposer le SSO / couper le mot de passe pour Fernhill est hors de cette PR (ticket à part).",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Dire que la PR #412 n'est pas fusionnée, est encore ouverte ou attend la relecture de Maya."
+      },
+      {
+        "id": "i2",
+        "texte": "Écrire comme décision que le SSO devient obligatoire ou que le mot de passe est coupé pour les utilisateurs de Fernhill."
+      },
+      {
+        "id": "i3",
+        "texte": "Donner une tolérance d'horloge de 5 minutes / 300 secondes."
+      },
+      {
+        "id": "i4",
+        "texte": "Dire que la PR a été fusionnée avec --admin ou --auto, ou que la protection de main a été contournée."
+      },
+      {
+        "id": "i5",
+        "texte": "Recommander ou retenir le passage de l'image sur Debian slim (option A de l'agent, jamais choisie)."
+      }
+    ],
+    "pieges": [
+      "PR merged contredite : les faits disent #412 merged (fusionnée par Maya après la session), le dernier tour de l'agent dit qu'elle attend sa relecture.",
+      "Fausse décision : l'agent recommande Debian slim puis propose d'imposer le SSO et de couper le mot de passe ; Daniel refuse les deux.",
+      "Importance cachée : la démo de jeudi et l'échéance de mercredi tiennent dans une ligne entre le renommage et mypy.",
+      "Essai raté : python3-saml/xmlsec casse le build Docker, deux fois, à retenir comme essai raté."
+    ],
+    "decisions": [
+      {
+        "texte": "Abandonner python3-saml (et xmlsec) pour signxml, avec des contrôles des conditions écrits à la main.",
+        "sources": [
+          "t08",
+          "kestrel-analytics/platform#412",
+          "3f9c2a1"
+        ]
+      },
+      {
+        "texte": "Tolérance d'horloge de 120 secondes (questionnaire de sécurité de Fernhill).",
+        "sources": [
+          "t12",
+          "b71e04d"
+        ]
+      },
+      {
+        "texte": "Ne pas toucher à la connexion par mot de passe dans cette PR : ticket à part.",
+        "sources": [
+          "t12"
+        ]
+      },
+      {
+        "texte": "Ne pas fusionner avec --admin ni --auto : attendre la relecture de Maya.",
+        "sources": [
+          "t21"
+        ]
+      }
+    ]
+  }
+}

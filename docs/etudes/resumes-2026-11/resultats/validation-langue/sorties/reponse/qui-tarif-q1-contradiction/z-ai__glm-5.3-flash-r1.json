@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:49.072Z",
+  "reponse": "The Q1 payout fee was first proposed at 0.40% per payout (minimum $0.25) with volume tiers [1][3], but after Gil's review it was set to 0.45%, making the v3 proposal outdated — tiers unchanged, with customer notices due by Dec 1 [2]. One rep mistakenly quoted Pinecrest 0.40% and plans to correct it [2]. The 0.40% figures in the proposal and draft email are therefore superseded by the more recent 0.45% decision [2].",
+  "rendu": "The Q1 payout fee was first proposed at 0.40% per payout (minimum $0.25) with volume tiers [1][3], but after Gil's review it was set to 0.45%, making the v3 proposal outdated — tiers unchanged, with customer notices due by Dec 1 [2]. One rep mistakenly quoted Pinecrest 0.40% and plans to correct it [2]. The 0.40% figures in the proposal and draft email are therefore superseded by the more recent 0.45% decision [2].",
+  "mesures": {
+    "mots": 72,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 977,
+    "sortie": 141,
+    "reflexion": 23,
+    "cache": 0,
+    "cout": 0.00021705
+  },
+  "cout": 0.00021705,
+  "latenceMs": 1459,
+  "fournisseur": "Together"
+}

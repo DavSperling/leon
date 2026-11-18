@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:19.680Z",
+  "reponse": "## Où j'en suis\nLe take-home SRE est terminé et placé dans son propre dépôt privé `kestrel-analytics/sre-take-home` : compose construit depuis les sources (arm64 et amd64), règle d'alerte cassée, fuite de connexions, politique IAM trop large, limite de 3 heures, sans Kubernetes. La rubrique à 4 critères notés de 0 à 3 est en place, sans seuil de passage : les notes alimentent la discussion du jury (toi et Noa). Le dossier `hiring/` a été retiré de la branche infra, sans PR. Rien n'a été envoyé au candidat : c'est toi qui enverras l'exercice après l'appel de jeudi à 16h (heure de Tel Aviv).\n\n- [prochaine-étape] Appeler le candidat jeudi à 16h (heure de Tel Aviv), puis lui envoyer l'exercice toi-même avec l'invitation au dépôt privé\n- [prochaine-étape] Inviter Noa comme deuxième évaluatrice de la rubrique\n- [décision] Pas de seuil de passage : les notes sont une donnée d'entrée, le jury décide (source: t10)\n- [décision] Le dépôt est séparé de l'infra pour que le candidat ne voie pas nos vrais modules (source: t12)\n- [décision] Ne rien envoyer au candidat : l'envoi se fera après l'appel, par toi (source: t16)",
+  "rendu": "## Où j'en suis\nLe take-home SRE est terminé et placé dans son propre dépôt privé `kestrel-analytics/sre-take-home` : compose construit depuis les sources (arm64 et amd64), règle d'alerte cassée, fuite de connexions, politique IAM trop large, limite de 3 heures, sans Kubernetes. La rubrique à 4 critères notés de 0 à 3 est en place, sans seuil de passage : les notes alimentent la discussion du jury (toi et Noa). Le dossier `hiring/` a été retiré de la branche infra, sans PR. Rien n'a été envoyé au candidat : c'est toi qui enverras l'exercice après l'appel de jeudi à 16h (heure de Tel Aviv).\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Appeler le candidat jeudi à 16h (heure de Tel Aviv), puis lui envoyer l'exercice toi-même avec l'invitation au dépôt privé\n- [prochaine-étape] Inviter Noa comme deuxième évaluatrice de la rubrique\n- [décision] Pas de seuil de passage : les notes sont une donnée d'entrée, le jury décide (source: t10)\n- [décision] Le dépôt est séparé de l'infra pour que le candidat ne voie pas nos vrais modules (source: t12)\n- [décision] Ne rien envoyer au candidat : l'envoi se fera après l'appel, par toi (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1219,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5096,
+    "sortie": 501,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007601
+  },
+  "cout": 0.0007601,
+  "latenceMs": 2851,
+  "fournisseur": "Claude Platform on AWS"
+}

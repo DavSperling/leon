@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:21.162Z",
+  "reponse": "## Où j'en suis\nLe fil porte sur la synchro de nuit des stocks de la boutique (branche `julien/fix-synchro-stocks`). Le correctif de #87 est fusionné et vérifié : la nuit du 13 au 14/11 s'est passée sans écart (1 204 lignes lues, 0 écart). Le 16/11, le CSV TransAlp est arrivé 47 min après le passage du script ; la sécurité de #87 (CSV absent → rien écrit) a annulé la synchro et 40 références reçues à l'entrepôt le 15/11 sont restées fausses sur le site toute la journée. La reprise a été ajoutée au cron (2 h, 4 h, 6 h, heure de Paris, mail à Karim si le CSV manque à 6 h), la synchro du 17/11 a été relancée à la main (40 références corrigées), et la PR #96 attend la relecture d'Hugo. (source: ses-st-3, u3-02, u3-06, src-pr87)\n\n- [en-cours] PR #96 ouverte, « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », Hugo en relecteur (source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] relecture puis fusion de #96 par Hugo (source: u3-10, ses-st-3)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé dans le planificateur (source: u3-04, ses-st-3)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (source: u1-01, ses-st-1)\n- [décision] reprises de la synchro à 4 h et 6 h, et mail à Karim si le CSV manque toujours à 6 h (source: u3-03, ses-st-3)\n- [décision] pas de réservation des 2 tables Saône dans le script : Claire voit ça avec les Galeries Brotteaux (source: u3-09, ses-st-3)\n- [décision] les webhooks de commande ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (source: u1-02, src-pr87)",
+  "rendu": "## Où j'en suis\nLe fil porte sur la synchro de nuit des stocks de la boutique (branche `julien/fix-synchro-stocks`). Le correctif de #87 est fusionné et vérifié : la nuit du 13 au 14/11 s'est passée sans écart (1 204 lignes lues, 0 écart). Le 16/11, le CSV TransAlp est arrivé 47 min après le passage du script ; la sécurité de #87 (CSV absent → rien écrit) a annulé la synchro et 40 références reçues à l'entrepôt le 15/11 sont restées fausses sur le site toute la journée. La reprise a été ajoutée au cron (2 h, 4 h, 6 h, heure de Paris, mail à Karim si le CSV manque à 6 h), la synchro du 17/11 a été relancée à la main (40 références corrigées), et la PR #96 attend la relecture d'Hugo. (de: équipe, agent; source: ses-st-3, u3-02, u3-06, src-pr87)\n\n- [en-cours] PR #96 ouverte, « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », Hugo en relecteur (de: équipe, agent; source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] relecture puis fusion de #96 par Hugo (de: agent; source: u3-10, ses-st-3)\n- [essai-raté] heures du cron lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris ; fuseau Europe/Paris fixé dans le planificateur (de: agent; source: u3-04, ses-st-3)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, orders/create et orders/updated ont des identifiants différents (de: agent; source: u1-01, ses-st-1)\n- [décision] reprises de la synchro à 4 h et 6 h, et mail à Karim si le CSV manque toujours à 6 h (de: toi, agent; source: u3-03, ses-st-3)\n- [décision] pas de réservation des 2 tables Saône dans le script : Claire voit ça avec les Galeries Brotteaux (de: toi, agent; source: u3-09, ses-st-3)\n- [décision] les webhooks de commande ne touchent plus au stock, seule la synchro de nuit corrige en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1848,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4417,
+    "sortie": 1563,
+    "reflexion": 955,
+    "cache": 0,
+    "cout": 0.00224049
+  },
+  "cout": 0.00224049,
+  "latenceMs": 8253,
+  "fournisseur": "Fireworks"
+}

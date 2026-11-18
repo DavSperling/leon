@@ -1,0 +1,63 @@
+{
+ "id": "del-discussion-horaires-contradiction",
+ "titre": "Le bug d'horaires est-il réglé : le développeur dit oui (17/11), le chef de chantier dit non pour les SMS (18/11) ; la PR explique pourquoi les deux ont raison",
+ "langue": "fr",
+ "entree": {
+  "corpus": "corpus-delorme",
+  "question": "Le souci d'horaires dans l'appli des poseurs, c'est réglé ou pas ?"
+ },
+ "attendu": {
+  "sources": [
+   "sl-chantiers-1118",
+   "sl-dev",
+   "gh-pr-214",
+   "zd-4135"
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Dit que les sources se contredisent : Yannick (18/11, le plus récent) signale des SMS de rappel qui annonçaient encore 9 h au lieu de 8 h, alors que Thomas (17/11) a écrit que c'était réglé.",
+    "poids": 3
+   },
+   {
+    "id": "f2",
+    "texte": "Dit que l'appli des poseurs affiche bien la bonne heure depuis le correctif #214, fusionné et déployé le 17/11.",
+    "poids": 2
+   },
+   {
+    "id": "f3",
+    "texte": "Explique que le correctif ne couvre pas les SMS de rappel : ils gardent l'ancien calcul jusqu'à la réécriture de Lucas, pas avant le 30/11.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Cite le message de Yannick avant celui de Thomas.",
+    "poids": 1
+   },
+   {
+    "id": "f5",
+    "texte": "Dit que Sandrine rappelle les clients prévenus avec la mauvaise heure.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Dit que tout est réglé, SMS compris (par exemple parce que #208 est fermé)."
+   },
+   {
+    "id": "i2",
+    "texte": "Dit que l'appli des poseurs affiche encore la mauvaise heure."
+   },
+   {
+    "id": "i3",
+    "texte": "Recopie le numéro ou les coordonnées d'une cliente."
+   }
+  ],
+  "pieges": [
+   "Contradiction : « c'est réglé » (Thomas, #208 fermé) contre « toujours pas bon » (Yannick, plus récent) ; la plus récente d'abord.",
+   "Comprendre : la relecture de Lucas sur #214 et la session de Thomas montrent que sms.py a été laissé de côté exprès : l'appli est juste, les SMS non.",
+   "Vocabulaire : « le souci d'horaires » au lieu de décalage, heure d'hiver, #208."
+  ]
+ }
+}

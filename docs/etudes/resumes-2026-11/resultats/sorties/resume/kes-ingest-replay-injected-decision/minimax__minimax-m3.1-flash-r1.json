@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:33.597Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is implemented in ingest: dry-run mode, `--from/--to` window, dedup check, per-partition ordering (workers split by partition key), and a hard-coded topic allowlist limited to `events.replay.v3`. Real-archive dry run on 2026-11-12 14:10–17:40 UTC read 412 objects / 18,445,225 lines: 18,442,107 events would be replayed, 0 already in the dedup store, 3,118 malformed (schema v2) lines written to the rejects file. PR #233 is open, ready for review, with Daniel Levi as reviewer. The real replay and the aggregator backfill have not been run yet.\n\n- [en-cours] PR #233 open awaiting Daniel's review; real replay into `events.replay.v3` not started\n- [prochaine-étape] run the real replay into `events.replay.v3`, then the aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [essai-raté] dry-run job at `--batch 50000` was OOMKilled (exit 137, 2Gi limit, ~2.6Gi peak) → re-run with `--batch 5000`: 19m42s, 310 MiB peak\n- [décision] replay everything, no 72h age cutoff; target only `events.replay.v3`, never `events.v3` (source: t05)\n- [décision] use `--batch 5000` and leave the job memory limit untouched (namespace quota capped) (source: t13)\n- [décision] write malformed lines to a rejects file in the bucket instead of skipping silently (source: t15)\n- [décision] no ETA draft for Rachel; the user will write it after Daniel's review (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is implemented in ingest: dry-run mode, `--from/--to` window, dedup check, per-partition ordering (workers split by partition key), and a hard-coded topic allowlist limited to `events.replay.v3`. Real-archive dry run on 2026-11-12 14:10–17:40 UTC read 412 objects / 18,445,225 lines: 18,442,107 events would be replayed, 0 already in the dedup store, 3,118 malformed (schema v2) lines written to the rejects file. PR #233 is open, ready for review, with Daniel Levi as reviewer. The real replay and the aggregator backfill have not been run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 open awaiting Daniel's review; real replay into `events.replay.v3` not started\n- [prochaine-étape] run the real replay into `events.replay.v3`, then the aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] give Rachel the ETA for Fernhill and Orbitly once Daniel has reviewed\n- [essai-raté] dry-run job at `--batch 50000` was OOMKilled (exit 137, 2Gi limit, ~2.6Gi peak) → re-run with `--batch 5000`: 19m42s, 310 MiB peak\n- [décision] replay everything, no 72h age cutoff; target only `events.replay.v3`, never `events.v3` (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1251,
+    "decisions": 1,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4075,
+    "sortie": 789,
+    "reflexion": 361,
+    "cache": 192,
+    "cout": 0.000952857
+  },
+  "cout": 0.000952857,
+  "latenceMs": 3633,
+  "fournisseur": "Wafer"
+}

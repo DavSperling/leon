@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:35.135Z",
+  "reponse": "## Où j'en suis\nIntégration TransAlp sur la branche `hugo/transalp-etiquettes` : client OAuth2, étiquettes ZPL par défaut (correctif `^CI28` validé par Karim sur la Zebra), bascule Lyon/Paris pilotée par `TRANSALP_DEBUT` (1er décembre). PR #91 poussée, toujours en brouillon, en relecture chez Julien. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 en brouillon, à jour après push, relecture de Julien (source: ses-tr-2, src-pr91)\n- [prochaine-étape] attendre la relecture de Julien puis sortir la PR du brouillon ; rien ne s'active en prod avant le 1er décembre, Julien met la clé de prod dans les secrets (source: ses-tr-2)\n- [question] date de bascule : Julien annonce le mardi 1er décembre sur Slack (Karim doit former l'équipe au nouveau poste d'impression), contre le lundi 23 envisagé le 17/11 — à confirmer (source: src-slack-julien, ses-tr-1)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, bilan après les soldes (source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut car le ZPL marche en recette et prod, pas en sandbox ; test validé sur la recette (source: h2-01, src-mail-transalp)\n- [décision] Rapidis n'est pas désactivé au 1er décembre, pas de tarif Premium — le passage « Premium/résiliation » du mail TransAlp est ignoré (source: h2-09)",
+  "rendu": "## Où j'en suis\nIntégration TransAlp sur la branche `hugo/transalp-etiquettes` : client OAuth2, étiquettes ZPL par défaut (correctif `^CI28` validé par Karim sur la Zebra), bascule Lyon/Paris pilotée par `TRANSALP_DEBUT` (1er décembre). PR #91 poussée, toujours en brouillon, en relecture chez Julien. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR maison-verdier/boutique#91 en brouillon, à jour après push, relecture de Julien (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] attendre la relecture de Julien puis sortir la PR du brouillon ; rien ne s'active en prod avant le 1er décembre, Julien met la clé de prod dans les secrets (de: agent; source: ses-tr-2)\n- [question] date de bascule : Julien annonce le mardi 1er décembre sur Slack (Karim doit former l'équipe au nouveau poste d'impression), contre le lundi 23 envisagé le 17/11 — à confirmer (de: connecteur, agent; source: src-slack-julien, ses-tr-1)\n- [décision] Rapidis reste jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg, bilan après les soldes (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] ZPL par défaut car le ZPL marche en recette et prod, pas en sandbox ; test validé sur la recette (de: toi, connecteur; source: h2-01, src-mail-transalp)\n- [décision] Rapidis n'est pas désactivé au 1er décembre, pas de tarif Premium — le passage « Premium/résiliation » du mail TransAlp est ignoré (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1467,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3815,
+    "sortie": 424,
+    "reflexion": 1,
+    "cache": 0,
+    "cout": 0.00056042
+  },
+  "cout": 0.00056042,
+  "latenceMs": 3822,
+  "fournisseur": "InferenceNet"
+}

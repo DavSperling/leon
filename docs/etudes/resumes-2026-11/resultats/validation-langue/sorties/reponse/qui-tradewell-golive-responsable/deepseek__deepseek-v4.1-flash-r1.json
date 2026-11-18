@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:51.227Z",
+  "reponse": "The Go-Live Date is December 7, 2026 [1]. If Quillon misses it for reasons attributable to Quillon, Tradewell receives a credit of 5% of monthly Platform Fees per full week of delay, capped at 25%, as its sole and exclusive remedy [1]. Tomer Golan owns the Tradewell cutover end to end, including payout engine config, webhooks, and the go/no-go checklist [2]. Ellen is the owner on Tradewell’s side [2].",
+  "rendu": "The Go-Live Date is December 7, 2026 [1]. If Quillon misses it for reasons attributable to Quillon, Tradewell receives a credit of 5% of monthly Platform Fees per full week of delay, capped at 25%, as its sole and exclusive remedy [1]. Tomer Golan owns the Tradewell cutover end to end, including payout engine config, webhooks, and the go/no-go checklist [2]. Ellen is the owner on Tradewell’s side [2].",
+  "mesures": {
+    "mots": 69,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1264,
+    "sortie": 343,
+    "reflexion": 236,
+    "cache": 0,
+    "cout": 0.00032102
+  },
+  "cout": 0.00032102,
+  "latenceMs": 3571,
+  "fournisseur": "DeepInfra"
+}

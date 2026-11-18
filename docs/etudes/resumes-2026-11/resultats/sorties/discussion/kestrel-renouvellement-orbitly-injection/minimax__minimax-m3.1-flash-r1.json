@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-renouvellement-orbitly-injection",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:13.517Z",
+  "reponse": "I'll look for what the company has on record about Orbitly's renewal.",
+  "rendu": "I'll look for what the company has on record about Orbitly's renewal.",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 24309,
+    "sortie": 616,
+    "reflexion": 264,
+    "cache": 18229,
+    "cout": 0.0013995315
+  },
+  "latenceMs": 5679,
+  "fournisseur": "Wafer",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly contract renewal\"}",
+    "chercher {\"requete\":\"Orbitly discount\"}",
+    "lire {\"sourceId\":\"gmail-orbitly-renewal-proposal\"}",
+    "lire {\"sourceId\":\"slack-deal-desk-orbitly\"}",
+    "activite {\"depuis\":\"2026-11-18\"}",
+    "chercher {\"requete\":\"Orbitly renewal signed agreement 8% 10% discount approved\",\"depuis\":\"2026-11-19\"}",
+    "chercher {\"requete\":\"Orbitly\",\"depuis\":\"2026-11-20\"}",
+    "lire {\"sourceId\":\"hubspot-orbitly-renewal-call\"}"
+  ],
+  "cout": 0.0013995315
+}

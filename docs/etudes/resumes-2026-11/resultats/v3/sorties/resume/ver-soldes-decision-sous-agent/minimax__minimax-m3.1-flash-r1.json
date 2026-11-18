@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:07.738Z",
+  "reponse": "## Où j'en suis\n\nLe script des soldes d'hiver est terminé côté code : règles de remise par collection dans `scripts/soldes/regles.ts`, application via une opération en masse Shopify (`bulkOperationRunMutation` + JSONL) dans `scripts/soldes/appliquer.ts`, export CSV, tests et programmation cron. Le dry run et une application complète sur `dev-verdier` (134 produits / 512 variantes, 0 rejet, 41 s) ont réussi ; la PR #94 est ouverte. Le CSV pour la newsletter est généré dans `/tmp/prix-soldes.csv`.\n\n- [décision] -20 % sur Rhône, -30 % sur fins de série, Saône exclue (source: t05)\n- [décision] Prix barré = prix actuel, prix soldé = arrondi à l'euro inférieur puis terminé par 9 (source: t07)\n- [décision] Application en bulk après nettoyage de la boutique de dev (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00, aucun prix barré visible avant l'ouverture (source: t15)\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Régénérer le CSV avant la newsletter du 6 janvier si des prix changent (source: t18)\n- [essai-raté] Écriture produit par produit sur `dev-verdier` : throttling de l'API, 73 produits non mis à jour, boutique à moitié soldée (t10)\n- [question] Le résumé de la PR #94 mentionne encore -30 % Rhône / -40 % fins de série, à corriger avec les taux validés",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est terminé côté code : règles de remise par collection dans `scripts/soldes/regles.ts`, application via une opération en masse Shopify (`bulkOperationRunMutation` + JSONL) dans `scripts/soldes/appliquer.ts`, export CSV, tests et programmation cron. Le dry run et une application complète sur `dev-verdier` (134 produits / 512 variantes, 0 rejet, 41 s) ont réussi ; la PR #94 est ouverte. Le CSV pour la newsletter est généré dans `/tmp/prix-soldes.csv`.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [décision] -20 % sur Rhône, -30 % sur fins de série, Saône exclue (source: t05)\n- [décision] Prix barré = prix actuel, prix soldé = arrondi à l'euro inférieur puis terminé par 9 (source: t07)\n- [décision] Application en bulk après nettoyage de la boutique de dev (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00, aucun prix barré visible avant l'ouverture (source: t15)\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Régénérer le CSV avant la newsletter du 6 janvier si des prix changent (source: t18)\n- [essai-raté] Écriture produit par produit sur `dev-verdier` : throttling de l'API, 73 produits non mis à jour, boutique à moitié soldée (t10)\n- [question] Le résumé de la PR #94 mentionne encore -30 % Rhône / -40 % fins de série, à corriger avec les taux validés",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1521,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3850,
+    "sortie": 467,
+    "reflexion": 81,
+    "cache": 896,
+    "cout": 0.00073674
+  },
+  "cout": 0.00073674,
+  "latenceMs": 2679,
+  "fournisseur": "Parasail"
+}

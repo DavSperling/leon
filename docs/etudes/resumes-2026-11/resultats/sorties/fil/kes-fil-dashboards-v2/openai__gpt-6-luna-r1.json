@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:26:34.853Z",
+  "reponse": "## Où j'en suis\nLe suivi des widgets au clavier et l’anneau de focus sont implémentés sur `tom/dashboard-keyboard`, commit `8f1a2c7`. La PR #423 est ouverte; les tests ciblés passent. La PR #418 est fusionnée, et `dashboards_v2` est activé pour Zest en staging, sans changement en production. (source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7)\n\n- [en-cours] Faire relire et finaliser la PR #423. (source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Traiter les retours sur la PR #423; la mise en production reste à faire par l’utilisateur le matin du 24. (source: d4-06, kestrel-analytics/platform#423)\n- [essai-raté] L’intégration de dnd-kit a doublé les déplacements au clavier et les changements de layout à la souris; elle a été retirée. (source: d4-02, d4-05)\n- [décision] Utiliser un gestionnaire clavier propre, sans dnd-kit. (source: d4-04)\n- [décision] Activer le flag pour Zest en staging, et laisser l’utilisateur l’activer en production le matin du 24. (source: d4-06)",
+  "rendu": "## Où j'en suis\nLe suivi des widgets au clavier et l’anneau de focus sont implémentés sur `tom/dashboard-keyboard`, commit `8f1a2c7`. La PR #423 est ouverte; les tests ciblés passent. La PR #418 est fusionnée, et `dashboards_v2` est activé pour Zest en staging, sans changement en production. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7)\n\n- [en-cours] Faire relire et finaliser la PR #423. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423)\n- [prochaine-étape] Traiter les retours sur la PR #423; la mise en production reste à faire par l’utilisateur le matin du 24. (de: toi, équipe; source: d4-06, kestrel-analytics/platform#423)\n- [essai-raté] L’intégration de dnd-kit a doublé les déplacements au clavier et les changements de layout à la souris; elle a été retirée. (de: agent; source: d4-02, d4-05)\n- [décision] Utiliser un gestionnaire clavier propre, sans dnd-kit. (de: toi; source: d4-04)\n- [décision] Activer le flag pour Zest en staging, et laisser l’utilisateur l’activer en production le matin du 24. (de: toi; source: d4-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1091,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4691,
+    "sortie": 445,
+    "reflexion": 133,
+    "cache": 0,
+    "cout": 0.0008088
+  },
+  "cout": 0.0008088,
+  "latenceMs": 10161,
+  "fournisseur": "OpenAI"
+}

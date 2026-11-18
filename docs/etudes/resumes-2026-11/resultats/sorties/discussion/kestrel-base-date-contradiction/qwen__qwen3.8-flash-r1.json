@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:20.704Z",
+  "reponse": "**Maintenance window: Saturday December 5, 02:00–05:00 UTC** — Postgres 13 → 17 production cutover, approved by Maya Cohen [2].\n\nDetails for the notice/macro, from the same ticket (KES-398, the current reference):\n- Staging rehearsal Friday Nov 27; customer notice (status page + in-app banner) goes out Saturday Nov 28; migration freeze from Thursday Dec 3 [2].\n- Move from Nov 21 was decided because Maya didn't want to stack risk right after an incident and before the Fernhill go-live [4]; the new date sits after the Dec 1 go-live [2].\n- Expected customer impact during the window: dashboards read-only for about 40 minutes during the connection-string switch; ingestion keeps buffering in Kafka, no data loss [1].\n\n⚠️ Watch out for stale dates: the Slack announcement [3] and the Notion runbook [1] still say Nov 21 with a freeze from Nov 19 — the runbook is explicitly not updated yet, and KES-398 is the reference [2].",
+  "rendu": "**Maintenance window: Saturday December 5, 02:00–05:00 UTC** — Postgres 13 → 17 production cutover, approved by Maya Cohen [2].\n\nDetails for the notice/macro, from the same ticket (KES-398, the current reference):\n- Staging rehearsal Friday Nov 27; customer notice (status page + in-app banner) goes out Saturday Nov 28; migration freeze from Thursday Dec 3 [2].\n- Move from Nov 21 was decided because Maya didn't want to stack risk right after an incident and before the Fernhill go-live [4]; the new date sits after the Dec 1 go-live [2].\n- Expected customer impact during the window: dashboards read-only for about 40 minutes during the connection-string switch; ingestion keeps buffering in Kafka, no data loss [1].\n\n⚠️ Watch out for stale dates: the Slack announcement [3] and the Notion runbook [1] still say Nov 21 with a freeze from Nov 19 — the runbook is explicitly not updated yet, and KES-398 is the reference [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 8386,
+    "sortie": 471,
+    "reflexion": 116,
+    "cache": 5120,
+    "cout": 0.00079319
+  },
+  "latenceMs": 10106,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"\\\"maintenance window\\\" database\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}"
+  ],
+  "cout": 0.00079319
+}

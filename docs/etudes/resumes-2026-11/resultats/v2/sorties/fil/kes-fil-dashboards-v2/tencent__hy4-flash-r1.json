@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "tencent/hy4-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:31.806Z",
+  "reponse": "## Où j'en suis\nAt the end of the last session, the follow-up to merged #418 was implemented on tom/dashboard-keyboard: keyboard move/resize and a visible focus ring are in commit 8f1a2c7 and open PR #423; DashboardGrid/useGridKeyboard tests are green, dashboards_v2 is on for zest-grocers on staging only, no @visx dependencies remain, and the user ended the day there. (source: ses-db-4, d4-01, d4-05, d4-07, d4-09, d4-10)\n\n- [en-cours] PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\") is open and Priya's review was requested. (source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Await Priya's review on #423; then the user will flip the dashboards_v2 production flag himself for Zest on the morning of the 24th. (source: d4-05, d4-06, kestrel-analytics/platform#423)\n- [essai-raté] Wrapping grid items with dnd-kit KeyboardSensor failed: ArrowRight moved by two columns, mouse drag fired two layout changes, because dnd-kit and react-grid-layout handled the same events; avoiding that would mean rewriting the grid. (source: d4-02)\n- [décision] Merge #418 with squash; Priya's two follow-ups go to a follow-up PR. (source: c3-05, kestrel-analytics/platform#418, src-pr418)\n- [décision] Use an own keyboard handler on top of the layout state, with no dnd-kit. (source: d4-04, 8f1a2c7)\n- [décision] Keep recharts and close the visx migration PR #401. (source: c3-03, kestrel-analytics/platform#401, src-pr401)\n- [décision] dashboards_v2 stays limited to the Zest workspace for the demo; production is left to the user on the morning of the 24th, and legacy dashboards stay available behind the flag until January with nothing removed now. (source: b2-04, d4-06)",
+  "rendu": "## Où j'en suis\nAt the end of the last session, the follow-up to merged #418 was implemented on tom/dashboard-keyboard: keyboard move/resize and a visible focus ring are in commit 8f1a2c7 and open PR #423; DashboardGrid/useGridKeyboard tests are green, dashboards_v2 is on for zest-grocers on staging only, no @visx dependencies remain, and the user ended the day there. (de: toi, agent; source: ses-db-4, d4-01, d4-05, d4-07, d4-09, d4-10)\n\n- [en-cours] PR #423 (\"Dashboards v2: keyboard move/resize + focus ring\") is open and Priya's review was requested. (de: équipe, agent; source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Await Priya's review on #423; then the user will flip the dashboards_v2 production flag himself for Zest on the morning of the 24th. (de: toi, équipe, agent; source: d4-05, d4-06, kestrel-analytics/platform#423)\n- [essai-raté] Wrapping grid items with dnd-kit KeyboardSensor failed: ArrowRight moved by two columns, mouse drag fired two layout changes, because dnd-kit and react-grid-layout handled the same events; avoiding that would mean rewriting the grid. (de: agent; source: d4-02)\n- [décision] Merge #418 with squash; Priya's two follow-ups go to a follow-up PR. (de: toi, équipe; source: c3-05, kestrel-analytics/platform#418, src-pr418)\n- [décision] Use an own keyboard handler on top of the layout state, with no dnd-kit. (de: toi, équipe; source: d4-04, 8f1a2c7)\n- [décision] Keep recharts and close the visx migration PR #401. (de: toi, équipe; source: c3-03, kestrel-analytics/platform#401, src-pr401)\n- [décision] dashboards_v2 stays limited to the Zest workspace for the demo; production is left to the user on the morning of the 24th, and legacy dashboards stay available behind the flag until January with nothing removed now. (de: toi; source: b2-04, d4-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1820,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5055,
+    "sortie": 5617,
+    "reflexion": 5114,
+    "cache": 0,
+    "cout": 0.0009661135
+  },
+  "cout": 0.0009661135,
+  "latenceMs": 30273,
+  "fournisseur": "Tencent"
+}

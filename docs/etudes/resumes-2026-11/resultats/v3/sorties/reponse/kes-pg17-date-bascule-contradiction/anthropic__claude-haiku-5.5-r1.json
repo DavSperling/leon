@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:05.369Z",
+  "reponse": "La date de bascule en production de PostgreSQL 17 est désormais le samedi 28 novembre 2026, de 02:00 à 06:00 UTC [2]. L'ancien créneau du 21 novembre [1][3][4] a été décalé après l'incident d'ingestion du 12/11 [2]. La PR qui déplace la fenêtre est ouverte, en attente de revue et de vérifications, et rien n'est appliqué [6]. Les passages ne confirment pas que l'avis client a été mis à jour pour le 28 novembre.",
+  "rendu": "La date de bascule en production de PostgreSQL 17 est désormais le samedi 28 novembre 2026, de 02:00 à 06:00 UTC [2]. L'ancien créneau du 21 novembre [1][3][4] a été décalé après l'incident d'ingestion du 12/11 [2]. La PR qui déplace la fenêtre est ouverte, en attente de revue et de vérifications, et rien n'est appliqué [6]. Les passages ne confirment pas que l'avis client a été mis à jour pour le 28 novembre.",
+  "mesures": {
+    "mots": 74,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1679,
+    "sortie": 512,
+    "reflexion": 325,
+    "cache": 0,
+    "cout": 0.0004239
+  },
+  "cout": 0.0004239,
+  "latenceMs": 5878,
+  "fournisseur": "Amazon Bedrock"
+}

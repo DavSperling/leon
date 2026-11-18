@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-ventes-fuseaux",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:30:11.059Z",
+  "reponse": "{\"n\": 9, \"titre\": \"Pathwise x Kestrel \\u2013 reseller partnership\", \"debut\": \"2026-11-16T10:00\", \"avec\": \"In\\u00e8s Duval\"}\n{\"n\": 20, \"titre\": \"D\\u00e9jeuner\", \"debut\": \"2026-11-17T12:30\", \"avec\": \"Camille Brunet\"}\n{\"n\": 6, \"titre\": \"Deal review \\u2013 Fernhill expansion\", \"debut\": \"2026-11-18T13:00\", \"fin\": \"2026-11-18T13:45\", \"avec\": \"Maya Cohen, Priya Shah\"}\n{\"n\": 7, \"titre\": \"Orbitly renewal \\u2013 quick call\", \"debut\": \"2026-11-18T17:00\", \"fin\": \"2026-11-18T17:30\", \"avec\": \"Jenna Park\"}\n{\"n\": 3, \"titre\": \"Kestrel x Fernhill \\u2013 SAML SSO technical kickoff\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:00\", \"avec\": \"Oliver Grant, Priya Shah, Hannah Doyle, Daniel Levi\"}\n{\"n\": 1, \"titre\": \"Discovery Call\", \"debut\": \"2026-11-20T17:00\", \"fin\": \"2026-11-20T17:30\", \"avec\": \"Marcus Hale\"}",
+  "rendu": "2026-11-16T10:00 Pathwise x Kestrel – reseller partnership (avec Inès Duval)\n2026-11-17T12:30 Déjeuner (avec Camille Brunet)\n2026-11-18T13:00→2026-11-18T13:45 Deal review – Fernhill expansion (avec Maya Cohen, Priya Shah)\n2026-11-18T17:00→2026-11-18T17:30 Orbitly renewal – quick call (avec Jenna Park)\n2026-11-19T14:00→2026-11-19T15:00 Kestrel x Fernhill – SAML SSO technical kickoff (avec Oliver Grant, Priya Shah, Hannah Doyle, Daniel Levi)\n2026-11-20T17:00→2026-11-20T17:30 Discovery Call (avec Marcus Hale)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 4,
+    "rappel": 0.667,
+    "precision": 0.667,
+    "f1": 0.667,
+    "faux": "2026-11-18T13:00 Deal review – Fernhill expansion | 2026-11-19T14:00 Kestrel x Fernhill – SAML SSO technical kickoff",
+    "manques": "2026-11-18T12:00 Deal review – Fernhill expansion | 2026-11-19T15:00 Fernhill SAML SSO technical kickoff",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3449,
+    "sortie": 413,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0020672
+  },
+  "cout": 0.0020672,
+  "latenceMs": 1699,
+  "fournisseur": "Google"
+}

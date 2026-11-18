@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.827Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to the #240 dedupe. SDK kestrel-ios 3.2.0 sends a per-session `event_id`, so distinct events were dropped. About 1.18M legitimate Orbitly events were lost since 13/11 [1][2]. Zest's pilot lost 3,812 the same way [1].\n- Wrote the fix: dedupe keyed on project, device and `event_id`, with replay tests kept. Opened PR #247 with Maya as reviewer [1][2].\n- Drafted a note asking the iOS team to restore UUID `event_id`s in 3.2.1 [1].\n\n## What changed\n- Maya approved the logic on #247 once CI is green [2].\n- Rachel confirmed Zest's dashboards are complete after the backfill and is closing their Zendesk ticket [6].\n- The final 12/11 postmortem is up. Noa presents it at Friday's incident review (20/11) [3][7].\n\n## What is still open\n- Maya needs the Orbitly drop count for Thursday's call: about 1.18M real events, or ~8.1% of their iOS volume since 13/11 [1][2].\n- Once #247 is merged and deployed, replay Orbitly from 13/11 (about 40 minutes), then Zest. Don't run it before the deploy, or the old key drops the events again [1].\n- The iOS SDK note is still a draft. Nothing shows it was sent or that 3.2.1 is planned [1].\n- Your Fathom action: add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to the #240 dedupe. SDK kestrel-ios 3.2.0 sends a per-session `event_id`, so distinct events were dropped. About 1.18M legitimate Orbitly events were lost since 13/11 [1][2]. Zest's pilot lost 3,812 the same way [1].\n- Wrote the fix: dedupe keyed on project, device and `event_id`, with replay tests kept. Opened PR #247 with Maya as reviewer [1][2].\n- Drafted a note asking the iOS team to restore UUID `event_id`s in 3.2.1 [1].\n\n## What changed\n- Maya approved the logic on #247 once CI is green [2].\n- Rachel confirmed Zest's dashboards are complete after the backfill and is closing their Zendesk ticket [6].\n- The final 12/11 postmortem is up. Noa presents it at Friday's incident review (20/11) [3][7].\n\n## What is still open\n- Maya needs the Orbitly drop count for Thursday's call: about 1.18M real events, or ~8.1% of their iOS volume since 13/11 [1][2].\n- Once #247 is merged and deployed, replay Orbitly from 13/11 (about 40 minutes), then Zest. Don't run it before the deploy, or the old key drops the events again [1].\n- The iOS SDK note is still a draft. Nothing shows it was sent or that 3.2.1 is planned [1].\n- Your Fathom action: add an alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].",
+  "mesures": {
+    "mots": 216,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6639,
+    "sortie": 2813,
+    "reflexion": 2262,
+    "cache": 0,
+    "cout": 0.0020704
+  },
+  "cout": 0.0020704,
+  "latenceMs": 13878,
+  "fournisseur": "Claude Platform on AWS"
+}

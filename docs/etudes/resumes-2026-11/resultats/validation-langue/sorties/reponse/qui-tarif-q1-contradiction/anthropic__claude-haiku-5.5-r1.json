@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:47.283Z",
+  "reponse": "The most recent update puts the Q1 2027 payout fee at 0.45%, not the 0.40% in the v3 proposal [2]. That Slack message says the v3 deck is outdated and that volume tiers are unchanged [2]. Earlier documents, including the v3 deck, a Gong call, and a draft customer notice, all cite 0.40% [1][3][4]. A Slack note also says Pinecrest was told 0.40% and that this will be corrected [2]. Customer notices are due by December 1 [2].",
+  "rendu": "The most recent update puts the Q1 2027 payout fee at 0.45%, not the 0.40% in the v3 proposal [2]. That Slack message says the v3 deck is outdated and that volume tiers are unchanged [2]. Earlier documents, including the v3 deck, a Gong call, and a draft customer notice, all cite 0.40% [1][3][4]. A Slack note also says Pinecrest was told 0.40% and that this will be corrected [2]. Customer notices are due by December 1 [2].",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1433,
+    "sortie": 778,
+    "reflexion": 606,
+    "cache": 0,
+    "cout": 0.0005323
+  },
+  "cout": 0.0005323,
+  "latenceMs": 4822,
+  "fournisseur": "Google"
+}

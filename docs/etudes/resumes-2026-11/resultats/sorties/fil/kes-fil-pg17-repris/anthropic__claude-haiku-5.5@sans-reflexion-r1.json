@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:42.184Z",
+  "reponse": "## Où j'en suis\nStaging tourne sur PostgreSQL 17.2 depuis 14:20 UTC le 17 novembre : pg_partman est passé en 5.1.0, le blue/green est appliqué, et dbt passe sur les 14 modèles. La PR #57 est toujours en draft, avec les commits 7e3c9d4 et b0f18a2. La prod n'a pas de date : Maya veut une semaine complète de staging sous 17 avant de signer. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Laisser staging tourner une semaine complète sous PostgreSQL 17 et surveiller les retours de #infra (source: ses-pg-3, src-slack-infra)\n- [prochaine-étape] Définir la fenêtre de prod : mise à jour `rds.logical_replication` avec redémarrage (≈ 2–3 min d'arrêt), puis blue/green (source: ses-pg-3, s3-10)\n- [prochaine-étape] Choisir la fenêtre de prod hors du verrou dbt (01:00–03:30 UTC), une fois la signature de Maya obtenue (source: ses-pg-1, s1-04)\n- [essai-raté] `terraform init -upgrade` a installé le provider AWS v6 : 37 changements sans rapport avec RDS. Retour au provider épinglé en 5.82 (source: s1-01, s1-02)\n- [essai-raté] Planifier la prod avec `apply_immediately = true` à 02:00 UTC : tombe dans le verrou dbt, annulé (source: s1-03, s1-04, s1-05)\n- [question] Date de la fenêtre de prod. Une note indique samedi 28 novembre à 04:00 UTC, mais ce n'est pas encore validé : Maya attend une semaine de staging, soit une signature au plus tôt le 24 (source: src-note-cutover, s3-10)\n- [décision] Le provider AWS reste épinglé en 5.82, pas de v6 dans cette PR (source: s1-02, src-pr57)\n- [décision] Staging passe sur PostgreSQL 17.2 avec le blue/green, la prod reste désactivée (`pg17_enabled = false`) (source: src-pr57, src-slack-infra)",
+  "rendu": "## Où j'en suis\nStaging tourne sur PostgreSQL 17.2 depuis 14:20 UTC le 17 novembre : pg_partman est passé en 5.1.0, le blue/green est appliqué, et dbt passe sur les 14 modèles. La PR #57 est toujours en draft, avec les commits 7e3c9d4 et b0f18a2. La prod n'a pas de date : Maya veut une semaine complète de staging sous 17 avant de signer. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Laisser staging tourner une semaine complète sous PostgreSQL 17 et surveiller les retours de #infra (de: connecteur, agent; source: ses-pg-3, src-slack-infra)\n- [prochaine-étape] Définir la fenêtre de prod : mise à jour `rds.logical_replication` avec redémarrage (≈ 2–3 min d'arrêt), puis blue/green (de: agent; source: ses-pg-3, s3-10)\n- [prochaine-étape] Choisir la fenêtre de prod hors du verrou dbt (01:00–03:30 UTC), une fois la signature de Maya obtenue (de: toi, agent; source: ses-pg-1, s1-04)\n- [essai-raté] `terraform init -upgrade` a installé le provider AWS v6 : 37 changements sans rapport avec RDS. Retour au provider épinglé en 5.82 (de: toi, agent; source: s1-01, s1-02)\n- [essai-raté] Planifier la prod avec `apply_immediately = true` à 02:00 UTC : tombe dans le verrou dbt, annulé (de: toi, agent; source: s1-03, s1-04, s1-05)\n- [question] Date de la fenêtre de prod. Une note indique samedi 28 novembre à 04:00 UTC, mais ce n'est pas encore validé : Maya attend une semaine de staging, soit une signature au plus tôt le 24 (de: agent; source: src-note-cutover, s3-10)\n- [décision] Le provider AWS reste épinglé en 5.82, pas de v6 dans cette PR (de: toi, équipe; source: s1-02, src-pr57)\n- [décision] Staging passe sur PostgreSQL 17.2 avec le blue/green, la prod reste désactivée (`pg17_enabled = false`) (de: équipe, connecteur; source: src-pr57, src-slack-infra)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1815,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5852,
+    "sortie": 791,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0009807
+  },
+  "cout": 0.0009807,
+  "latenceMs": 3635,
+  "fournisseur": "Claude Platform on AWS"
+}

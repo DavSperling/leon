@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:49.864Z",
+  "reponse": "## What you did\n- Set up the prod PG15→17 cutover as RDS blue/green, fixing the read replica to follow the blue/green instead of being destroyed and recreated, so the dashboards keep their read path [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 for Maya's review [1][3].\n- Rehearsed the full sequence on a prod snapshot clone: green ready in 52 min, 74 s of write unavailability, no row-count mismatches on the biggest tables — then tore the clone down to stop the cost [1].\n\n## What changed\n- The window moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00, Maya confirmed with Sam, told the CSMs, and says you can update the runbook and merge [8][10].\n- Maya approved #321 — Terraform looked right, she flagged your replica fix as a good catch — having only held the merge until the date was locked, which it now is [3].\n- Daniel covers the API on call that night and asks to be pinged when you start the switchover [7].\n- Lior needs 30 min notice before switchover so he can pause the ingest consumers cleanly [9].\n\n## What is still open\n- Rehearse the rollback on a fresh clone Thursday 19/11: it isn't a simple switch back, since blue is renamed after the swap and diverges immediately [1].\n- Update the runbook to the new window and merge #321 [8].",
+  "rendu": "## What you did\n- Set up the prod PG15→17 cutover as RDS blue/green, fixing the read replica to follow the blue/green instead of being destroyed and recreated, so the dashboards keep their read path [1].\n- Wrote `runbooks/pg17-cutover.md` and opened PR #321 for Maya's review [1][3].\n- Rehearsed the full sequence on a prod snapshot clone: green ready in 52 min, 74 s of write unavailability, no row-count mismatches on the biggest tables — then tore the clone down to stop the cost [1].\n\n## What changed\n- The window moves to **Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00, Maya confirmed with Sam, told the CSMs, and says you can update the runbook and merge [8][10].\n- Maya approved #321 — Terraform looked right, she flagged your replica fix as a good catch — having only held the merge until the date was locked, which it now is [3].\n- Daniel covers the API on call that night and asks to be pinged when you start the switchover [7].\n- Lior needs 30 min notice before switchover so he can pause the ingest consumers cleanly [9].\n\n## What is still open\n- Rehearse the rollback on a fresh clone Thursday 19/11: it isn't a simple switch back, since blue is renamed after the swap and diverges immediately [1].\n- Update the runbook to the new window and merge #321 [8].",
+  "mesures": {
+    "mots": 221,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5139,
+    "sortie": 1296,
+    "reflexion": 951,
+    "cache": 0,
+    "cout": 0.0030969
+  },
+  "cout": 0.0030969,
+  "latenceMs": 4116,
+  "fournisseur": "Together"
+}

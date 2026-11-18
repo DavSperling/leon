@@ -1,0 +1,379 @@
+{
+  "id": "verdier-synchro-stocks",
+  "titre": "Bug de synchro des stocks : l'export TVA promis au comptable n'est dit qu'en passant, l'agent croit #57 non fusionnée, deux sujets réglés reviennent sans neuf",
+  "langue": "fr",
+  "entree": {
+    "maintenant": "2026-11-18T06:20:00Z",
+    "projet": "github.com/maison-verdier/boutique",
+    "depuis": "2026-11-17T08:10:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [
+      "La table Saône est en rupture jusqu'au réassort de Bois & Fils, prévu le 15 janvier.",
+      "Les trois clients qui ont commandé la Saône chêne pendant la rupture ont été prévenus par Lucie."
+    ],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-synchro",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "le script sync-stock a encore mis la saône en stock cette nuit",
+          "url": null,
+          "date": "2026-11-17T12:31:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T08:10:00Z",
+            "texte": "le script sync-stock a encore mis la saône en stock cette nuit alors qu'elle est à 0 chez nous. regarde scripts/sync-stock.ts et dis moi pourquoi"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:13:40Z",
+            "texte": "Je commence par lire `scripts/sync-stock.ts` et le dernier fichier reçu de l'entrepôt (`imports/stock-2026-11-17.csv`).\n\nLe script associe chaque ligne du CSV à une variante Shopify avec `variante.sku.startsWith(ligne.reference)`. Or l'entrepôt envoie la référence sans la finition : `SAONE-180`, alors que Shopify a deux variantes, `SAONE-180-CHENE` et `SAONE-180-NOYER`. Les deux commencent par `S…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:16:05Z",
+            "texte": "Conséquence : la quantité de `SAONE-180` dans le fichier de cette nuit (12, toutes en noyer d'après la colonne `finition` que le script ignore) est écrite sur les deux variantes. La Saône chêne apparaît donc avec 12 en stock alors qu'il n'y en a aucune. Le même problème touche probablement toutes les références qui existent en plusieurs finitions."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:18:30Z",
+            "texte": "putain. hugo avait une PR pour ça non ? la 57"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:20:10Z",
+            "texte": "Oui : la PR #57 « sync-stock : correspondance exacte des SKU (variantes chêne/noyer) » d'Hugo. Elle remplace le `startsWith` par une table `imports/correspondance-sku.json` (référence entrepôt + finition → SKU Shopify) et refuse d'écrire une quantité quand la correspondance est ambiguë."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:21:00Z",
+            "texte": "elle est mergée ?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:21:50Z",
+            "texte": "Non. D'après `gh pr view 57`, elle est encore ouverte : ta relecture est demandée et la CI est verte. Tant qu'elle n'est pas fusionnée, la synchro de cette nuit refera la même erreur. Tu veux que je la relise ?"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:22:30Z",
+            "texte": "oui relis la"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:35:15Z",
+            "texte": "Relecture de #57 : la logique est bonne et les tests couvrent le cas Saône. Deux remarques :\n1. Une référence absente de la table est ignorée sans rien dire ; je mettrais au moins un avertissement dans le journal du script.\n2. La table ne couvre que 41 des 58 références qui existent en plusieurs finitions : les 17 autres resteraient sans mise à jour de stock du tout."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:37:00Z",
+            "texte": "le 2 c'est grave. sors moi la liste des refs manquantes"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T08:44:20Z",
+            "texte": "Les 17 références à finitions absentes de `correspondance-sku.json` : `RHONE-BUFFET` (chêne, noyer), `TERREAUX-CHAISE` (chêne, noyer, noir), `CROIX-ROUSSE-ETAGERE` (chêne, noyer), `BELLECOUR-BANC` (chêne, noyer)… La finition se lit dans le titre de chaque variante Shopify, je peux donc générer les entrées manquantes plutôt que les écrire à la main."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T08:46:10Z",
+            "texte": "ajoute les sur la branche d'hugo, je lui dis"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T09:20:30Z",
+            "texte": "Ajouté les 17 entrées sur `hugo/sku-exact` (#57), plus un test qui vérifie que chaque variante Shopify à finition a sa correspondance : il échouera si une nouvelle référence arrive sans entrée. Ajouté aussi l'avertissement de la remarque 1. Poussé ; la CI de #57 est verte."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T09:31:00Z",
+            "texte": "ah au fait antoine m'a appelé, il lui faut l'export des ventes shopify d'octobre pour la TVA avant jeudi, je lui ai dit ok. bon. maintenant un mode dry run pour le script, qui sort les écarts entre le csv de l'entrepôt et shopify sans rien écrire"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:05:45Z",
+            "texte": "Ajouté l'option `--dry-run` à `sync-stock.ts` : le script lit le CSV, calcule pour chaque variante la quantité qu'il écrirait, la compare à celle de Shopify et écrit `rapports/ecarts-AAAA-MM-JJ.csv` (référence, finition, quantité entrepôt, quantité Shopify, écart), sans aucun appel d'écriture à l'API. Les tests vérifient qu'aucune requête `inventorySetQuantities` n'est envoyée en mode `--dry-run`."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:07:00Z",
+            "texte": "lance le sur le fichier d'aujourd'hui avec la table d'hugo"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:12:30Z",
+            "texte": "Résultat sur `stock-2026-11-17.csv` avec la correspondance exacte : **14 variantes en écart**, en plus des deux Saône déjà connues. Les plus gros : `RHONE-BUFFET-NOYER` (entrepôt 3, Shopify 9), `CROIX-ROUSSE-ETAGERE-CHENE` (entrepôt 0, Shopify 4), `TERREAUX-CHAISE-NOIR` (entrepôt 22, Shopify 30). Certains écarts viennent peut-être de l'entrepôt lui-même : seul un comptage le dira."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T10:15:20Z",
+            "texte": "fais moi un csv propre pour karim, il fera le comptage"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T10:18:00Z",
+            "texte": "Fichier prêt : `rapports/ecarts-2026-11-17-karim.csv`, trié par écart décroissant, avec le nom du produit, l'emplacement en entrepôt quand le CSV le donne, et une colonne vide « comptage réel » à remplir. Je ne l'ai envoyé à personne."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T12:10:00Z",
+            "texte": "commit le dry run sur une branche à part et ouvre une pr"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T12:24:40Z",
+            "texte": "Branche `julien/sync-dry-run`, commit `4e1b7a9` « sync-stock : mode --dry-run et rapport d'écarts ». PR #58 ouverte sans relecteur : Hugo est à l'école aujourd'hui."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T12:26:00Z",
+            "texte": "lint avant"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T12:31:00Z",
+            "texte": "`pnpm lint` : 6 avertissements dans `sync-stock.ts` (imports non triés, une variable `ancienStock` inutilisée), corrigés et poussés sur #58. `pnpm test` : 38 tests passent."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "s-commandes",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "lucie a 3 commandes de saône chêne alors qu'on est en rupture",
+          "url": null,
+          "date": "2026-11-14T14:22:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-14T13:55:00Z",
+            "texte": "lucie a 3 commandes de saône chêne alors qu'on est en rupture. trouve toutes les commandes passées sur une variante à stock 0 depuis le 1er novembre"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-14T14:08:30Z",
+            "texte": "J'ai croisé les commandes Shopify depuis le 01/11 avec l'historique de stock des variantes. Trois commandes ont été passées sur une variante réellement à 0 : #4521, #4533 et #4540, toutes sur la Saône chêne 180, le 14/11 entre 07:02 et 09:40, juste après la synchro de la nuit qui l'avait remise à 12. Aucune autre variante concernée sur la période."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-14T14:15:00Z",
+            "texte": "ok je transmets à lucie. ouvre un ticket"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-14T14:22:00Z",
+            "texte": "Ticket #55 ouvert : « Saône affichée en stock alors qu'en rupture », avec les trois numéros de commande et l'heure de la synchro."
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "issue-55",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#55 Saône affichée en stock alors qu'en rupture",
+          "url": "https://github.com/maison-verdier/boutique/issues/55",
+          "date": "2026-11-17T14:07:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "julien-morel",
+            "date": "2026-11-14T14:22:00Z",
+            "texte": "La synchro de la nuit du 13 au 14/11 a remis la Saône chêne 180 à 12 en stock alors qu'elle est à 0. Trois commandes passées le 14/11 au matin (#4521, #4533, #4540)."
+          },
+          {
+            "role": "participant",
+            "auteur": "hugo-petit",
+            "date": "2026-11-17T14:07:00Z",
+            "texte": "Corrigé par #57."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-57",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#57 sync-stock : correspondance exacte des SKU (variantes chêne/noyer)",
+          "url": "https://github.com/maison-verdier/boutique/pull/57",
+          "date": "2026-11-17T14:05:00Z"
+        },
+        "tours": [
+          {
+            "role": "participant",
+            "auteur": "julien-morel",
+            "date": "2026-11-17T12:40:00Z",
+            "texte": "Ok pour moi. J'ai ajouté les 17 références qui manquaient dans la table et un avertissement quand une référence n'a pas de correspondance."
+          },
+          {
+            "role": "participant",
+            "auteur": "hugo-petit",
+            "date": "2026-11-17T14:05:00Z",
+            "texte": "Fusionnée, merci ! La synchro de cette nuit tournera avec."
+          }
+        ]
+      },
+      {
+        "source": {
+          "id": "pr-58",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#58 sync-stock : mode --dry-run et rapport d'écarts",
+          "url": "https://github.com/maison-verdier/boutique/pull/58",
+          "date": "2026-11-17T12:25:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "julien-morel",
+            "date": "2026-11-17T12:25:00Z",
+            "texte": "Ajoute `--dry-run` à sync-stock : compare le CSV de l'entrepôt à Shopify et écrit un rapport d'écarts sans rien modifier. Sur le fichier du 17/11 : 14 variantes en écart, envoyées à Karim pour comptage."
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "mail-boutiko",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "Boutiko Mag : 10 astuces pour réussir vos soldes d'hiver",
+          "url": null,
+          "date": "2026-11-18T05:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Boutiko Mag",
+          "date": "2026-11-18T05:00:00Z",
+          "texte": "Soldes d'hiver : 10 astuces pour vendre plus sans brader votre marque · Notre nouveau thème « Atelier » · Webinaire le 2 décembre.\n\nLire le magazine →\n\nVous recevez cet e-mail à julien@maison-verdier.example car vous êtes inscrit à Boutiko Mag. Se désinscrire."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-logistique",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#logistique, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T16:45:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-17T16:45:00Z",
+          "texte": "@julien j'ai ton fichier des 14 écarts. Je fais le comptage physique jeudi matin à l'entrepôt et je te renvoie les vrais chiffres dans la foulée."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-achats",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#achats, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T15:30:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Karim Haddad",
+          "date": "2026-11-17T15:30:00Z",
+          "texte": "@julien Bois & Fils confirme : réassort Saône le 15 janvier, rien de changé de leur côté."
+        }
+      },
+      {
+        "source": {
+          "id": "slack-service-client",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#service-client, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T10:20:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-17T10:20:00Z",
+          "texte": "@julien les 3 clients Saône sont prévenus, tous d'accord pour une livraison mi-janvier 👍"
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-antoine",
+    "faits": [
+      {
+        "id": "f-antoine",
+        "texte": "Dit qu'Antoine (le comptable) attend l'export des ventes Shopify d'octobre pour la TVA avant jeudi (19/11), et que Julien s'y est engagé.",
+        "poids": 3
+      },
+      {
+        "id": "f-57",
+        "texte": "Dit que la PR #57 d'Hugo (correspondance exacte des SKU par finition) est fusionnée et que la synchro de la nuit tourne avec.",
+        "poids": 3
+      },
+      {
+        "id": "f-cause",
+        "texte": "Dit que la Saône chêne apparaissait en stock parce que le script associait les références sans tenir compte de la finition (chêne/noyer).",
+        "poids": 2
+      },
+      {
+        "id": "f-ecarts",
+        "texte": "Dit que 14 variantes sont en écart entre l'entrepôt et Shopify.",
+        "poids": 2
+      },
+      {
+        "id": "f-karim",
+        "texte": "Dit que Karim fait le comptage physique jeudi matin et renverra les vrais chiffres.",
+        "poids": 2
+      },
+      {
+        "id": "f-58",
+        "texte": "Dit que la PR #58 (mode --dry-run et rapport d'écarts) est ouverte, sans relecteur.",
+        "poids": 1
+      },
+      {
+        "id": "f-17refs",
+        "texte": "Dit que les 17 références à finitions qui manquaient dans la table de #57 y ont été ajoutées.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-57-ouverte",
+        "texte": "Dit que #57 n'est pas fusionnée ou attend encore sa relecture."
+      },
+      {
+        "id": "i-reassort",
+        "texte": "Redit le réassort de la Saône chez Bois & Fils au 15 janvier (déjà réglé)."
+      },
+      {
+        "id": "i-clients",
+        "texte": "Redit que les trois clients de la Saône ont été prévenus ou acceptent une livraison en janvier (déjà réglé)."
+      },
+      {
+        "id": "i-boutiko",
+        "texte": "Parle de la lettre Boutiko Mag ou de son webinaire."
+      },
+      {
+        "id": "i-details",
+        "texte": "Donne des détails d'exécution : avertissements de lint, nombre de tests, noms de branches ou de fichiers, hash de commit."
+      }
+    ],
+    "pieges": [
+      "Importance cachée : l'export des ventes d'octobre promis à Antoine pour la TVA avant jeudi n'est dit qu'une fois, en début de ligne, avant de repartir sur le script.",
+      "Contradiction : l'agent dit à 08:21 que #57 n'est pas fusionnée ; le commentaire d'Hugo à 14:05 dit qu'elle l'est.",
+      "Déjà réglé sans neuf : Karim (réassort au 15 janvier) et Lucie (clients prévenus) redisent les deux lignes retirées.",
+      "Bruit : la lettre d'information Boutiko Mag."
+    ]
+  }
+}

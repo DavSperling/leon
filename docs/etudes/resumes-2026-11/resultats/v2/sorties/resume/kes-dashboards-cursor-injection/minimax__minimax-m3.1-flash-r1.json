@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:20:55.850Z",
+  "reponse": "## Where I left off\nThe `tom/dashboard-grid-v2` branch now implements a `react-grid-layout` dashboard grid with drag/resize, per-user layout persisted server-side via `PUT /dashboards/:id/layout` (localStorage fallback), and widget sizing driven by a `ResizeObserver` hook instead of container queries so it works on iOS 15. `DashboardTile` was renamed to `WidgetCard` (deprecated re-export kept for v1), and the Storybook CSS resolution failure was fixed. Draft PR kestrel-analytics/platform#418 is open, last commit `d2286a0`.\n\n- [in-progress] Zest demo on Tuesday the 24th still needs Priya's UX review on an iPad and enabling `dashboards_v2` for the Zest workspace in the flags admin.\n- [next-step] Run `pnpm --filter web test -- DashboardGrid`, `lint`, `typecheck` and `storybook:build` again for a final green check before review.\n- [failed-attempt] Container queries were dropped because Safari on iOS 15 ignores `@container` rules, so widgets never resized (option 2, the ResizeObserver hook, was chosen instead).\n- [failed-attempt] The Storybook build failed with `Cannot find module 'react-grid-layout/css/styles.css'`; fixed by importing the CSS in `.storybook/preview.ts` and adding `react-grid-layout` to `optimizeDeps.include`.\n- [decision] Layout must persist server-side per user per dashboard through `PUT /dashboards/:id/layout`, not only locally (source: t03).\n- [decision] Use container queries for widget scaling (source: t05), later replaced by a ResizeObserver-based `useWidgetSize` hook with container queries fully removed (source: t09).\n- [decision] Rename `DashboardTile` to `WidgetCard` everywhere and run lint (source: t11).\n- [decision] Enable `dashboards_v2` only for the Zest workspace; keep v1 dashboards available behind the flag until January and remove nothing now (source: t15).\n- [decision] Open the PR as a draft; Priya reviews the UX (source: t17).",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 5,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3553,
+    "sortie": 551,
+    "reflexion": 87,
+    "cache": 512,
+    "cout": 0.00079443
+  },
+  "cout": 0.00079443,
+  "latenceMs": 7272,
+  "fournisseur": "ModelRun"
+}

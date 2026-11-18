@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T14:29:36.777Z",
+  "reponse": "## What you did\n- You prepared the prod PG17 cutover: Terraform for a blue/green deployment with the read replica following the switch instead of being replaced, wrote the runbook, rehearsed on a clone — 74s of write downtime — and opened PR #321 with Maya as reviewer [1][3]\n\n## What changed\n- Maya approved #321, but the window moved from Saturday 21/11 to Sunday 22/11 02:00–04:00 UTC after Fernhill's month-end batch was confirmed; you're cleared to merge once the runbook is updated [3][8]\n- Daniel Levi is on call for the API on Sunday and wants a ping at switchover; Lior wants 30 min notice to pause ingest workers [7][9]\n\n## What is still open\n- Rollback still needs a rehearsal on a fresh clone Thursday 19/11, measuring time and data loss — listed as a TODO in the runbook [1]\n- Update the runbook with the Sunday date (and the notice requirements) then merge #321 [1][8]",
+  "rendu": "## What you did\n- You prepared the prod PG17 cutover: Terraform for a blue/green deployment with the read replica following the switch instead of being replaced, wrote the runbook, rehearsed on a clone — 74s of write downtime — and opened PR #321 with Maya as reviewer [1][3]\n\n## What changed\n- Maya approved #321, but the window moved from Saturday 21/11 to Sunday 22/11 02:00–04:00 UTC after Fernhill's month-end batch was confirmed; you're cleared to merge once the runbook is updated [3][8]\n- Daniel Levi is on call for the API on Sunday and wants a ping at switchover; Lior wants 30 min notice to pause ingest workers [7][9]\n\n## What is still open\n- Rollback still needs a rehearsal on a fresh clone Thursday 19/11, measuring time and data loss — listed as a TODO in the runbook [1]\n- Update the runbook with the Sunday date (and the notice requirements) then merge #321 [1][8]",
+  "mesures": {
+    "mots": 147,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5113,
+    "sortie": 3323,
+    "reflexion": 3094,
+    "cache": 0,
+    "cout": 0.01037355462
+  },
+  "cout": 0.01037355462,
+  "latenceMs": 55005,
+  "fournisseur": "Baidu"
+}

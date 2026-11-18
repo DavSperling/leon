@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-logistique-transporteur",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:31:01.576Z",
+  "reponse": "{\"n\": 13, \"titre\": \"Réunion de lancement – passage chez TransAlp Logistique\", \"debut\": \"2026-11-16T14:00\", \"fin\": \"2026-11-16T15:30\", \"avec\": \"Bruno Ferrand et Nadia Ouali\"}\n{\"n\": 11, \"titre\": \"Réunion de préparation logistique des soldes\", \"debut\": \"2026-11-18T11:30\", \"avec\": \"Claire Verdier, Sophie Garnier\"}\n{\"n\": 10, \"titre\": \"Visio – mousses et tissus collection 2027\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T17:00\", \"avec\": \"Rui Carvalho\"}\n{\"n\": 17, \"titre\": \"Point téléphonique rupture de la Saône\", \"debut\": \"2026-11-19T09:00\", \"avec\": \"Paul Besson\"}\n{\"n\": 6, \"titre\": \"Appel – distribution au Québec\", \"debut\": \"2026-11-19T16:00\", \"avec\": \"Geneviève Tremblay\"}\n{\"n\": 15, \"titre\": \"Enlèvement test TransAlp Logistique\", \"debut\": \"2026-11-20T09:00\", \"fin\": \"2026-11-20T11:00\"}\n{\"n\": 8, \"titre\": \"Déjeuner\", \"debut\": \"2026-11-20T12:30\", \"avec\": \"Bruno Ferrand\"}",
+  "rendu": "2026-11-16T14:00→2026-11-16T15:30 Réunion de lancement – passage chez TransAlp Logistique (avec Bruno Ferrand et Nadia Ouali)\n2026-11-18T11:30 Réunion de préparation logistique des soldes (avec Claire Verdier, Sophie Garnier)\n2026-11-18T16:00→2026-11-18T17:00 Visio – mousses et tissus collection 2027 (avec Rui Carvalho)\n2026-11-19T09:00 Point téléphonique rupture de la Saône (avec Paul Besson)\n2026-11-19T16:00 Appel – distribution au Québec (avec Geneviève Tremblay)\n2026-11-20T09:00→2026-11-20T11:00 Enlèvement test TransAlp Logistique\n2026-11-20T12:30 Déjeuner (avec Bruno Ferrand)",
+  "mesures": {
+    "trouves": 7,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 0.857,
+    "f1": 0.923,
+    "faux": "2026-11-20T09:00 Enlèvement test TransAlp Logistique",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2846,
+    "sortie": 420,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0019038
+  },
+  "cout": 0.0019038,
+  "latenceMs": 1656,
+  "fournisseur": "Google"
+}

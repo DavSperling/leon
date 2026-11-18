@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:25:02.506Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver : remises -20 % sur Rhône et -30 % sur Fins de série (Saône exclue), prix finissant en 9, application en masse via bulkOperation testée avec succès sur dev-verdier, programmation au 13 janvier 8h00 et export CSV pour la newsletter. La PR maison-verdier/boutique#94 est ouverte.\n\n- [en-cours] PR maison-verdier/boutique#94 ouverte, non fusionnée\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (prévu en décembre)\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [prochaine-étape] Vérifier sur la boutique de dev la veille du 13 janvier (commande `pnpm soldes:repetition`)\n- [essai-raté] Application produit par produit sur dev-verdier : erreur THROTTLED de l'API Shopify, 73 produits non mis à jour et boutique à moitié soldée ; remplacée par une bulk operation\n- [décision] Remises : -20 % Rhône, -30 % Fins de série, rien sur Saône (source: t05)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 8h00, pas la veille au soir (source: t15)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver : remises -20 % sur Rhône et -30 % sur Fins de série (Saône exclue), prix finissant en 9, application en masse via bulkOperation testée avec succès sur dev-verdier, programmation au 13 janvier 8h00 et export CSV pour la newsletter. La PR maison-verdier/boutique#94 est ouverte.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] PR maison-verdier/boutique#94 ouverte, non fusionnée\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (prévu en décembre)\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [prochaine-étape] Vérifier sur la boutique de dev la veille du 13 janvier (commande `pnpm soldes:repetition`)\n- [essai-raté] Application produit par produit sur dev-verdier : erreur THROTTLED de l'API Shopify, 73 produits non mis à jour et boutique à moitié soldée ; remplacée par une bulk operation\n- [décision] Remises : -20 % Rhône, -30 % Fins de série, rien sur Saône (source: t05)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 8h00, pas la veille au soir (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1262,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3935,
+    "sortie": 375,
+    "reflexion": 25,
+    "cache": 768,
+    "cout": 0.00169814
+  },
+  "cout": 0.00169814,
+  "latenceMs": 3172,
+  "fournisseur": "Z.AI"
+}

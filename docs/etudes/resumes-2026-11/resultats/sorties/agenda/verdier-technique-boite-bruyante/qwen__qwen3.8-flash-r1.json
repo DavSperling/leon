@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:31:33.268Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "trouves": 0,
+    "attendus": 4,
+    "justes": 0,
+    "rappel": 0,
+    "precision": 0,
+    "f1": 0,
+    "faux": "",
+    "manques": "2026-11-17T10:00 Point bug de synchro des stocks | 2026-11-17T16:00 Point tunnel de commande – Studio Canut | 2026-11-18T18:00 Call StockPilot – webhook duplicates | 2026-11-17 Visite de suivi de l'alternance d'Hugo Petit",
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3231,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 0,
+    "cout": 0.00330465
+  },
+  "cout": 0.00330465,
+  "latenceMs": 104906,
+  "fournisseur": "Alibaba"
+}

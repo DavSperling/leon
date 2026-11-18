@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:14:39.360Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5486,
+    "sortie": 8000,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0136458
+  },
+  "cout": 0.0136458,
+  "latenceMs": 37934,
+  "fournisseur": "Cohere"
+}

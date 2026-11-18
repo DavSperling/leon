@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:04.652Z",
+  "reponse": "**La cause** : le script `sync-stock` (cron toutes les 15 min) ne mettait à jour qu'un seul emplacement Shopify, « Entrepôt Vénissieux » [1]. Or l'emplacement « Showroom » (pièces d'expo rue Auguste-Comte) a été ajouté le 3/11 : à sa création Shopify y a copié les quantités du moment, et comme le site affiche la somme des emplacements, le showroom conservait un ancien stock même quand l'entrepôt passait à 0 — le site affichait donc du stock inexistant [1][11]. Le script tournait pourtant bien, ce n'était pas une panne de cron [1].\n\n**Le correctif** : la PR #87 fait lire à la synchro les deux onglets de l'export (« Stock » et « Showroom ») avec un appel `inventorySetQuantities` par emplacement, plus 3 tests [1][17]. Relue et testée en local par Hugo Petit le 13/11, fusionnée et déployée le 13/11, avec une resynchronisation de tout le catalogue [17][11]. À noter : l'assistant technique proposait aussi de désactiver « continuer à vendre en cas de rupture », écarté par Julien car les précommandes Saône en dépendent [1].\n\n**Est-ce réparé ?** Oui, à ce jour : Julien confirme le 13/11 que « les quantités sont bonnes » [11], et Lucie signale le 17/11 « aucun nouveau cas depuis vendredi » [11]. 7 commandes avaient été touchées entre le 3 et le 12/11, avec la liste chez Lucie [11]. Côté clients, les commandes annulées (banc Rhône #4806, buffet Croix-Rousse #4812, chaises Fourvière #4825) ont été remboursées intégralement, avec gestes commerciaux (livraison offerte, alerte au retour en stock) [12][13][16].\n\n**Reste à faire** : un contrôle quotidien (script à 7 h comparant le stock Shopify par emplacement à l'export de l'entrepôt, avec alerte sur #tech) est en cours — PR #91 encore à l'état de brouillon, il manque le cron, la gestion des SKU archivés, l'ignorance des produits en précommande et le seuil d'écart [18][11].",
+  "rendu": "**La cause** : le script `sync-stock` (cron toutes les 15 min) ne mettait à jour qu'un seul emplacement Shopify, « Entrepôt Vénissieux » [1]. Or l'emplacement « Showroom » (pièces d'expo rue Auguste-Comte) a été ajouté le 3/11 : à sa création Shopify y a copié les quantités du moment, et comme le site affiche la somme des emplacements, le showroom conservait un ancien stock même quand l'entrepôt passait à 0 — le site affichait donc du stock inexistant [1][11]. Le script tournait pourtant bien, ce n'était pas une panne de cron [1].\n\n**Le correctif** : la PR #87 fait lire à la synchro les deux onglets de l'export (« Stock » et « Showroom ») avec un appel `inventorySetQuantities` par emplacement, plus 3 tests [1][17]. Relue et testée en local par Hugo Petit le 13/11, fusionnée et déployée le 13/11, avec une resynchronisation de tout le catalogue [17][11]. À noter : l'assistant technique proposait aussi de désactiver « continuer à vendre en cas de rupture », écarté par Julien car les précommandes Saône en dépendent [1].\n\n**Est-ce réparé ?** Oui, à ce jour : Julien confirme le 13/11 que « les quantités sont bonnes » [11], et Lucie signale le 17/11 « aucun nouveau cas depuis vendredi » [11]. 7 commandes avaient été touchées entre le 3 et le 12/11, avec la liste chez Lucie [11]. Côté clients, les commandes annulées (banc Rhône #4806, buffet Croix-Rousse #4812, chaises Fourvière #4825) ont été remboursées intégralement, avec gestes commerciaux (livraison offerte, alerte au retour en stock) [12][13][16].\n\n**Reste à faire** : un contrôle quotidien (script à 7 h comparant le stock Shopify par emplacement à l'export de l'entrepôt, avec alerte sur #tech) est en cours — PR #91 encore à l'état de brouillon, il manque le cron, la gestion des SKU archivés, l'ignorance des produits en précommande et le seuil d'écart [18][11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15694,
+    "sortie": 987,
+    "reflexion": 285,
+    "cache": 7424,
+    "cout": 0.0018231739999999999
+  },
+  "latenceMs": 15521,
+  "fournisseur": "Alibaba",
+  "trace": [
+    "chercher {\"requete\":\"clients ont pu acheter des meubles non disponibles stock\"}",
+    "chercher {\"requete\":\"rupture de stock vente article indisponible correction\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "lire {\"sourceId\":\"slack-tech-synchro-stock\"}"
+  ],
+  "cout": 0.0018231739999999999
+}

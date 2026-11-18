@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:25:19.198Z",
+  "reponse": "**Short answer: on track, but at risk.** The December 1 date depends on Fernhill switching their identity provider to SHA-256 by November 24. As of the latest records (November 17), that hasn't happened.\n\n- **The blocker:** Fernhill's IdP signs assertions with SHA-1. Staging accepts their IdP-initiated login, but SP-initiated login fails because we reject anything weaker than SHA-256 [2][8]. The team decided not to allow SHA-1 for the bank, even temporarily, for pen-test and SOC 2 reasons [8][9].\n- **What's left:**\n  - Helen Marsh's change board meets November 24 to approve switching Fernhill to SHA-256 [8]. Helen's November 17 email says the board already approved the Kestrel application, so the signing-algorithm change is the open item [3].\n  - Joint end-to-end test with Helen on November 25 at 16:00 Tel Aviv time [3][8].\n  - Admin SSO settings page: it was on staging as of November 10, but the copy still needed Priya's review [2].\n- **Fallback:** If the board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill that same day that December 1 is at risk [8].\n- **Scope:** December 1 covers SP- and IdP-initiated SAML login, just-in-time provisioning with Viewer as the default role, a \"Require SSO\" setting, and metadata upload. SCIM deprovisioning is out of scope and planned for Q1 2027 [2].\n\nI found nothing newer than November 17, so check with Priya or Daniel for the current status before replying to the bank.",
+  "rendu": "**Short answer: on track, but at risk.** The December 1 date depends on Fernhill switching their identity provider to SHA-256 by November 24. As of the latest records (November 17), that hasn't happened.\n\n- **The blocker:** Fernhill's IdP signs assertions with SHA-1. Staging accepts their IdP-initiated login, but SP-initiated login fails because we reject anything weaker than SHA-256 [2][8]. The team decided not to allow SHA-1 for the bank, even temporarily, for pen-test and SOC 2 reasons [8][9].\n- **What's left:**\n  - Helen Marsh's change board meets November 24 to approve switching Fernhill to SHA-256 [8]. Helen's November 17 email says the board already approved the Kestrel application, so the signing-algorithm change is the open item [3].\n  - Joint end-to-end test with Helen on November 25 at 16:00 Tel Aviv time [3][8].\n  - Admin SSO settings page: it was on staging as of November 10, but the copy still needed Priya's review [2].\n- **Fallback:** If the board doesn't approve on the 24th, Sam Ortiz is to tell Fernhill that same day that December 1 is at risk [8].\n- **Scope:** December 1 covers SP- and IdP-initiated SAML login, just-in-time provisioning with Viewer as the default role, a \"Require SSO\" setting, and metadata upload. SCIM deprovisioning is out of scope and planned for Q1 2027 [2].\n\nI found nothing newer than November 17, so check with Priya or Daniel for the current status before replying to the bank.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20037,
+    "sortie": 1459,
+    "reflexion": 677,
+    "cache": 0,
+    "cout": 0.0027332
+  },
+  "latenceMs": 9315,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise 1er décembre\"}",
+    "chercher {\"requete\":\"SSO banque déploiement décembre\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}"
+  ],
+  "cout": 0.0027332
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:54.333Z",
+  "reponse": "Ein bestätigter Liefertermin für die Ersatzschalter liegt nicht vor. Tai Shan hat den Eingang der Reklamation bestätigt und kündigte einen Liefertermin erst an [2]. Laut Einkauf steht der Termin noch aus, und eine Antwort wird bis Freitag erwartet [3]. Die Planung rechnet vorerst mit sechs Wochen ab Bestellung, was jedoch nur eine nicht abgestimmte Annahme ist [5]. Die gewünschten 2.000 Ersatzschalter sollten bis zum 20. November bestätigt werden [1].",
+  "rendu": "Ein bestätigter Liefertermin für die Ersatzschalter liegt nicht vor. Tai Shan hat den Eingang der Reklamation bestätigt und kündigte einen Liefertermin erst an [2]. Laut Einkauf steht der Termin noch aus, und eine Antwort wird bis Freitag erwartet [3]. Die Planung rechnet vorerst mit sechs Wochen ab Bestellung, was jedoch nur eine nicht abgestimmte Annahme ist [5]. Die gewünschten 2.000 Ersatzschalter sollten bis zum 20. November bestätigt werden [1].",
+  "mesures": {
+    "mots": 69,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1820,
+    "sortie": 220,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000292
+  },
+  "cout": 0.000292,
+  "latenceMs": 1614,
+  "fournisseur": "Google"
+}

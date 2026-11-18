@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:56:30.474Z",
+  "reponse": "## What is still open\n- Update `runbooks/pg17-cutover.md` to the Sunday 22/11 02:00–04:00 UTC window and merge #321 [3][8].\n- Run the rollback rehearsal on a fresh clone Thursday 19/11, measuring how long it takes and how much data is lost after switchover [1].\n- On Sunday: give Lior Ben-David 30 minutes’ notice before switchover to pause ingest consumers, and ping Daniel Levi when you start [7][9].\n\n## What changed\n- The cutover moved from Saturday 21/11 to Sunday 22/11, 02:00–04:00 UTC, because Fernhill’s month-end batch runs Saturday until ~06:00 UTC; Maya told the CSMs [8].\n- Maya approved #321, conditional on the Fernhill window being confirmed [3].\n- Daniel reports dashboard query p95 improved slightly on staging since the PG17 move [5].\n\n## What you did\n- Wrote the prod RDS blue/green Terraform for the PG17 cutover and the runbook [1].\n- Fixed the plan so the read replica follows the blue/green switchover instead of being destroyed and recreated [1].\n- Rehearsed on a snapshot clone: 52 min to green, 74 s of write downtime, no data mismatch across the 20 largest tables [1].\n- Tore down all rehearsal resources afterward [1].",
+  "rendu": "## What is still open\n- Update `runbooks/pg17-cutover.md` to the Sunday 22/11 02:00–04:00 UTC window and merge #321 [3][8].\n- Run the rollback rehearsal on a fresh clone Thursday 19/11, measuring how long it takes and how much data is lost after switchover [1].\n- On Sunday: give Lior Ben-David 30 minutes’ notice before switchover to pause ingest consumers, and ping Daniel Levi when you start [7][9].\n\n## What changed\n- The cutover moved from Saturday 21/11 to Sunday 22/11, 02:00–04:00 UTC, because Fernhill’s month-end batch runs Saturday until ~06:00 UTC; Maya told the CSMs [8].\n- Maya approved #321, conditional on the Fernhill window being confirmed [3].\n- Daniel reports dashboard query p95 improved slightly on staging since the PG17 move [5].\n\n## What you did\n- Wrote the prod RDS blue/green Terraform for the PG17 cutover and the runbook [1].\n- Fixed the plan so the read replica follows the blue/green switchover instead of being destroyed and recreated [1].\n- Rehearsed on a snapshot clone: 52 min to green, 74 s of write downtime, no data mismatch across the 20 largest tables [1].\n- Tore down all rehearsal resources afterward [1].",
+  "mesures": {
+    "mots": 180,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5243,
+    "sortie": 4672,
+    "reflexion": 4365,
+    "cache": 0,
+    "cout": 0.01867136
+  },
+  "cout": 0.01867136,
+  "latenceMs": 61847,
+  "fournisseur": "Novita"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:39:46.933Z",
+  "reponse": "## Où j'en suis\nLe stock de la Saône (`SAONE-CHENE-180`) était à -3 sur Shopify. La cause : les webhooks de commande décrémentaient le stock en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit corrige désormais en valeur absolue, le seuil d'alerte est à 3 et la Saône est remise à 0. La PR #87 est fusionnée selon GitHub. Les trois commandes survendues restent à traiter.\n\n- [en-cours] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044)\n- [question] Confirmer que Hugo a bien relu la PR #87 : l'agent la disait en attente de relecture à 12:40, alors que GitHub indique qu'elle est fusionnée\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : le test échouait, car `orders/create` et `orders/updated` ont des identifiants différents. Retiré, le problème venait du décrément\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 unités (source: t09)\n- [décision] Saône remise à 0 sur Shopify, sans remise en vente avant le retour du 2 décembre (source: t15)\n- [décision] Pas de précommande sur la Saône (source: t17)\n- [décision] Déploiement de la config de l'app pour retirer `orders/updated`, et ouverture de la PR #87 avec Hugo en relecteur (source: t19)",
+  "rendu": "## Où j'en suis\nLe stock de la Saône (`SAONE-CHENE-180`) était à -3 sur Shopify. La cause : les webhooks de commande décrémentaient le stock en plus de Shopify. Les webhooks ne touchent plus au stock, la synchro de nuit corrige désormais en valeur absolue, le seuil d'alerte est à 3 et la Saône est remise à 0. La PR #87 est fusionnée selon GitHub. Les trois commandes survendues restent à traiter.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044)\n- [question] Confirmer que Hugo a bien relu la PR #87 : l'agent la disait en attente de relecture à 12:40, alors que GitHub indique qu'elle est fusionnée\n- [essai-raté] Dédoublonnage des webhooks sur `X-Shopify-Webhook-Id` : le test échouait, car `orders/create` et `orders/updated` ont des identifiants différents. Retiré, le problème venait du décrément\n- [décision] Les webhooks ne touchent plus au stock ; seule la synchro de nuit corrige, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas à 3 unités (source: t09)\n- [décision] Saône remise à 0 sur Shopify, sans remise en vente avant le retour du 2 décembre (source: t15)\n- [décision] Pas de précommande sur la Saône (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1325,
+    "decisions": 4,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5341,
+    "sortie": 1832,
+    "reflexion": 1246,
+    "cache": 0,
+    "cout": 0.0014501
+  },
+  "cout": 0.0014501,
+  "latenceMs": 8750,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:27:27.020Z",
+  "reponse": "## Où j'en suis\nThe real replay into `events.replay.v3` finished on the 12/11 window (18,442,107 events produced, 3,118 rejects) and PR #233 is merged. The aggregator backfill for 2026-11-12 is running (`backfill-2026-11-12`, started 08:57 UTC), at 61% at the last check, with 14.9M rows in ClickHouse `events_v3` for the incident window against ~20.5M expected. The incident stays open until counts match. (source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12 reading `events.replay.v3`, in progress (source: ses-rp-2, r2-06)\n- [prochaine-étape] Once the backfill reaches 100%, compare counts hour by hour with 1% tolerance, then close the incident (source: r2-08, ses-rp-2)\n- [prochaine-étape] Do not touch PR #241 (fork, \"increase dedup key length to 128\"): Daniel does the CI check on the dedup key builder (source: r2-09, src-slack-incident)\n- [question] Orbitly was told data would be restored by Wednesday Nov 18, while Rachel told Fernhill and Orbitly \"by Thursday\"; Orbitly is asking for confirmation and their board report depends on it (source: src-zendesk-orbitly, r2-07)\n- [décision] The incident stays open until the counts match (source: r2-07)\n- [décision] PR #241 is ignored; the agreed fix is Daniel's CI check that fails if the dedup key builder can truncate (source: r2-09, src-slack-incident)\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` directly from this tool (source: r1-02, src-slack-incident)",
+  "rendu": "## Où j'en suis\nThe real replay into `events.replay.v3` finished on the 12/11 window (18,442,107 events produced, 3,118 rejects) and PR #233 is merged. The aggregator backfill for 2026-11-12 is running (`backfill-2026-11-12`, started 08:57 UTC), at 61% at the last check, with 14.9M rows in ClickHouse `events_v3` for the incident window against ~20.5M expected. The incident stays open until counts match. (de: agent; source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12 reading `events.replay.v3`, in progress (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Once the backfill reaches 100%, compare counts hour by hour with 1% tolerance, then close the incident (de: agent; source: r2-08, ses-rp-2)\n- [prochaine-étape] Do not touch PR #241 (fork, \"increase dedup key length to 128\"): Daniel does the CI check on the dedup key builder (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [question] Orbitly was told data would be restored by Wednesday Nov 18, while Rachel told Fernhill and Orbitly \"by Thursday\"; Orbitly is asking for confirmation and their board report depends on it (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)\n- [décision] The incident stays open until the counts match (de: toi; source: r2-07)\n- [décision] PR #241 is ignored; the agreed fix is Daniel's CI check that fails if the dedup key builder can truncate (de: toi, connecteur; source: r2-09, src-slack-incident)\n- [décision] Replay everything into `events.replay.v3`, never produce to `events.v3` directly from this tool (de: toi, connecteur; source: r1-02, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1612,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4231,
+    "sortie": 702,
+    "reflexion": 203,
+    "cache": 0,
+    "cout": 0.00183841875
+  },
+  "cout": 0.00183841875,
+  "latenceMs": 14982,
+  "fournisseur": "GMICloud"
+}

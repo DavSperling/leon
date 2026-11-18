@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:14.100Z",
+  "reponse": "La table Saône devrait être de nouveau disponible à partir du 3 décembre, date d'expédition annoncée pour la précommande [2][5]. Les 25 premiers plateaux doivent arriver le 1er décembre, et les 15 suivants vers la mi-décembre [1]. Un ticket client parle en revanche d'une livraison sous 6 semaines environ pour le chêne clair, ce qui ne correspond pas à ces dates [3]. La fiche Notion, plus ancienne, annonçait un retour fin novembre, à confirmer [4].",
+  "rendu": "La table Saône devrait être de nouveau disponible à partir du 3 décembre, date d'expédition annoncée pour la précommande [2][5]. Les 25 premiers plateaux doivent arriver le 1er décembre, et les 15 suivants vers la mi-décembre [1]. Un ticket client parle en revanche d'une livraison sous 6 semaines environ pour le chêne clair, ce qui ne correspond pas à ces dates [3]. La fiche Notion, plus ancienne, annonçait un retour fin novembre, à confirmer [4].",
+  "mesures": {
+    "mots": 75,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1532,
+    "sortie": 983,
+    "reflexion": 791,
+    "cache": 0,
+    "cout": 0.0006447
+  },
+  "cout": 0.0006447,
+  "latenceMs": 4582,
+  "fournisseur": "Claude Platform on AWS"
+}

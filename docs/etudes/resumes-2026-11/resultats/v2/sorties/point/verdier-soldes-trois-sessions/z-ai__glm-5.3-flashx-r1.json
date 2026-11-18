@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:17:12.701Z",
+  "reponse": "## What you did\n- PR #63 « soldes » ouverte : script qui applique la grille de Sophie le 6 janvier à 8 h (prix arrondis, 3 variantes déjà en promo laissées de côté, 7 lignes sans produit signalées) et restaure les prix le 3 février ; les deux déclenchements planifiés sont testés sur la boutique de dev. Hugo relit. [1][4]\n- Tickets #52 (widget Zendesk sur les pages produit) et #59 (étiquette `soldes` automatique) fusionnés ; Lucie confirme que le widget est déjà utilisé par les clients. [7][9]\n\n## What changed\n- Claire a tranché dans #direction : pas de Saône en soldes malgré la grille (-20 %), elle est en rupture avec des précommandes au plein prix — même question soulevée par Hugo sur la PR. La grille et le script sont à corriger avant fusion. [4][10]\n- Sophie décale le shooting soldes au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11 au lieu de vendredi. [11]\n- Nouveaux tickets de Sophie : #65 relancer le flux Google Shopping juste après le script des soldes (sinon annonces refusées) et #64 corriger la bannière soldes qui cache le bouton « Ajouter au panier » sur mobile, avant le shooting. [5][6]\n\n## What is still open\n- Retirer la Saône de la grille (et du dry-run) avant que Hugo ne fusionne la PR #63, et répondre à sa question. [4][10]\n- Prévoir la regeneration du flux Google Shopping après le 6 janvier (#65) et la correction mobile de la bannière (#64) pour le 30/11. [5][6]",
+  "rendu": "## What you did\n- PR #63 « soldes » ouverte : script qui applique la grille de Sophie le 6 janvier à 8 h (prix arrondis, 3 variantes déjà en promo laissées de côté, 7 lignes sans produit signalées) et restaure les prix le 3 février ; les deux déclenchements planifiés sont testés sur la boutique de dev. Hugo relit. [1][4]\n- Tickets #52 (widget Zendesk sur les pages produit) et #59 (étiquette `soldes` automatique) fusionnés ; Lucie confirme que le widget est déjà utilisé par les clients. [7][9]\n\n## What changed\n- Claire a tranché dans #direction : pas de Saône en soldes malgré la grille (-20 %), elle est en rupture avec des précommandes au plein prix — même question soulevée par Hugo sur la PR. La grille et le script sont à corriger avant fusion. [4][10]\n- Sophie décale le shooting soldes au 2 décembre et veut les prix soldés dans Shopify pour le lundi 30/11 au lieu de vendredi. [11]\n- Nouveaux tickets de Sophie : #65 relancer le flux Google Shopping juste après le script des soldes (sinon annonces refusées) et #64 corriger la bannière soldes qui cache le bouton « Ajouter au panier » sur mobile, avant le shooting. [5][6]\n\n## What is still open\n- Retirer la Saône de la grille (et du dry-run) avant que Hugo ne fusionne la PR #63, et répondre à sa question. [4][10]\n- Prévoir la regeneration du flux Google Shopping après le 6 janvier (#65) et la correction mobile de la bannière (#64) pour le 30/11. [5][6]",
+  "mesures": {
+    "mots": 240,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4736,
+    "sortie": 464,
+    "reflexion": 57,
+    "cache": 1536,
+    "cout": 0.0018792
+  },
+  "cout": 0.0018792,
+  "latenceMs": 4019,
+  "fournisseur": "Z.AI"
+}

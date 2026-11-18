@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:08.541Z",
+  "reponse": "## Où j'en suis\nThe dashboard grid supports dragging and resizing, persists layouts server-side with a local fallback, and uses `ResizeObserver` for widget sizing on iOS 15. Draft PR `kestrel-analytics/platform#418` is open; lint, typecheck, tests, and the final Storybook build passed.\n\n- [en-cours] Awaiting Priya’s UX review on iPad.\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin, then proceed with the Tuesday 24th demo.\n- [décision] Enable the flag only for Zest and keep the old dashboards available behind the flag until January (source: t15).",
+  "rendu": "## Où j'en suis\nThe dashboard grid supports dragging and resizing, persists layouts server-side with a local fallback, and uses `ResizeObserver` for widget sizing on iOS 15. Draft PR `kestrel-analytics/platform#418` is open; lint, typecheck, tests, and the final Storybook build passed.\n\n- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] Awaiting Priya’s UX review on iPad.\n- [prochaine-étape] Enable `dashboards_v2` for the Zest workspace in the flags admin, then proceed with the Tuesday 24th demo.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 602,
+    "decisions": 0,
+    "decisionsRetirees": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 12280,
+    "sortie": 662,
+    "reflexion": 298,
+    "cache": 6758,
+    "cout": 0.00095078
+  },
+  "cout": 0.00095078,
+  "latenceMs": 5755,
+  "fournisseur": "Azure"
+}

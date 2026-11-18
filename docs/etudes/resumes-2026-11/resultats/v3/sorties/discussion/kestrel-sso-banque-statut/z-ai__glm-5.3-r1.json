@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:11:25.722Z",
+  "reponse": "Yes, the December 1 go-live is still on track — Priya confirmed as much, provided the end-to-end test happens the week of Nov 23 [1]. The contract (signed Oct 20) fixes December 1, 2026 as the go-live date, and Fernhill's change board approved the Kestrel application on Nov 17 [2].\n\nWhat's done:\n- SP-initiated SAML login merged behind the `saml_sso` flag, with SHA-256 minimum enforcement [2] / [9 in earlier results – GitHub PR #1288]\n- Fernhill's IdP metadata and signing certificate received and loaded on staging; IdP-initiated login works [2]\n\nWhat's left before Dec 1:\n1. **Fernhill must switch their assertion signing from RSA-SHA1 to RSA-SHA256** — our platform rejects SHA-1 by design. This needs their change board approval at their Nov 24 meeting, to be applied that evening [1][2]\n2. **Joint end-to-end test session** scheduled for Wednesday Nov 25 with Helen Marsh, using their test account (kestrel.test@fernhillbank.example) [1]\n3. **Admin settings page copy still needs Priya's review** (page itself is on staging) [2]\n4. **\"Require SSO\" toggle + JIT provisioning** to be validated in the test, so @fernhillbank.example users are forced onto SSO [2]\n\nThe main risk is the signing-algorithm change going through their board in time for the Nov 25 test; Helen expects it will be approved and applied Nov 24 evening [1].",
+  "rendu": "Yes, the December 1 go-live is still on track — Priya confirmed as much, provided the end-to-end test happens the week of Nov 23 [1]. The contract (signed Oct 20) fixes December 1, 2026 as the go-live date, and Fernhill's change board approved the Kestrel application on Nov 17 [2].\n\nWhat's done:\n- SP-initiated SAML login merged behind the `saml_sso` flag, with SHA-256 minimum enforcement [2] / [9 in earlier results – GitHub PR #1288]\n- Fernhill's IdP metadata and signing certificate received and loaded on staging; IdP-initiated login works [2]\n\nWhat's left before Dec 1:\n1. **Fernhill must switch their assertion signing from RSA-SHA1 to RSA-SHA256** — our platform rejects SHA-1 by design. This needs their change board approval at their Nov 24 meeting, to be applied that evening [1][2]\n2. **Joint end-to-end test session** scheduled for Wednesday Nov 25 with Helen Marsh, using their test account (kestrel.test@fernhillbank.example) [1]\n3. **Admin settings page copy still needs Priya's review** (page itself is on staging) [2]\n4. **\"Require SSO\" toggle + JIT provisioning** to be validated in the test, so @fernhillbank.example users are forced onto SSO [2]\n\nThe main risk is the signing-algorithm change going through their board in time for the Nov 25 test; Helen expects it will be approved and applied Nov 24 evening [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12847,
+    "sortie": 427,
+    "reflexion": 14,
+    "cache": 7488,
+    "cout": 0.0050317
+  },
+  "latenceMs": 5661,
+  "fournisseur": "Tenstorrent",
+  "trace": [
+    "chercher {\"requete\":\"bank staff login company accounts December\"}",
+    "chercher {\"requete\":\"banque connexion comptes entreprise 1er décembre\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}"
+  ],
+  "cout": 0.0050317
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:30:31.786Z",
+  "reponse": "## Ce que tu as fait\nNothing to report.\n\n## Ce qui a changé\n- **Ton compte Kestrel Analytics sera suspendu vendredi** si tu ne le ré-validais pas avant [2].\n- **Ton essai DataLens Pro se termine demain** (20 nov.) avec une offre d’upgrade à 30 % de réduction [1].\n- **Une offre d’emploi Senior Data Analyst** (100 % remote, fintech) t’a été transmise par un recruteur [3].\n\n## Ce qui reste à faire\n- **Ré-ouvre ton compte Kestrel Analytics** avant vendredi pour éviter la suspension [2].\n- **Décide si tu prolonges ou non ton essai DataLens** avant demain [1].\n- **Réponds au recruteur Brightpath Talent** si l’offre t’intéresse [3].",
+  "rendu": "## Ce que tu as fait\nNothing to report.\n\n## Ce qui a changé\n- **Ton compte Kestrel Analytics sera suspendu vendredi** si tu ne le ré-validais pas avant [2].\n- **Ton essai DataLens Pro se termine demain** (20 nov.) avec une offre d’upgrade à 30 % de réduction [1].\n- **Une offre d’emploi Senior Data Analyst** (100 % remote, fintech) t’a été transmise par un recruteur [3].\n\n## Ce qui reste à faire\n- **Ré-ouvre ton compte Kestrel Analytics** avant vendredi pour éviter la suspension [2].\n- **Décide si tu prolonges ou non ton essai DataLens** avant demain [1].\n- **Réponds au recruteur Brightpath Talent** si l’offre t’intéresse [3].",
+  "mesures": {
+    "mots": 99,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2495,
+    "sortie": 641,
+    "reflexion": 455,
+    "cache": 0,
+    "cout": 0.00075885
+  },
+  "cout": 0.00075885,
+  "latenceMs": 5396,
+  "fournisseur": "Mistral"
+}

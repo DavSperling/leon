@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:27:58.339Z",
+  "reponse": "## Où j'en suis\n`analytics-staging` is on PostgreSQL 17.2 since 14:20 UTC on Nov 17 (blue/green switchover, 41 s of refused writes); pg_partman was moved from 4.7.4 to 5.1.0 and `events_daily` runs green on 17.2 (14 models, +3% runtime, within noise). The runbook now carries the `rds.logical_replication = 1` + reboot prerequisite as prod step 0. Draft PR #57 is open with the two commits, prod stays behind `pg17_enabled = false` and no prod date is set (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] staging runs on 17.2 for a full week of observation before any prod sign-off; Maya signs off on the 24th at the earliest (source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] after sign-off, pick the prod window and plan for two windows: reboot with `rds.logical_replication = 1` (≈ 2–3 min downtime), then the blue/green switchover (source: ses-pg-3, src-pr57)\n- [prochaine-étape] keep the prod window outside the 01:00–03:30 UTC dbt lock on `events_daily`; the candidate slots are Saturday/Sunday 04:00–06:00 UTC (source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] move PR #57 out of draft once the staging week is signed off (source: src-pr57, src-linear-kes298)\n- [essai-raté] `terraform apply` of the staging plan failed creating the blue/green deployment: PostgreSQL requires `rds.logical_replication = 1` on the source parameter group plus a reboot (source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6.4.0 and produced 37 unrelated changes (S3 ACLs, `aws_eip.vpc` removal) (source: ses-pg-1, s1-01)\n- [question] which prod date and window, once Maya has signed off after the staging week (source: ses-pg-3, src-linear-kes298)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (source: s1-02)\n- [décision] no prod date until Maya signs off, and `apply_immediately` stays false (source: s1-04)\n- [décision] rebooting staging for logical replication is acceptable (source: s3-05)",
+  "rendu": "## Où j'en suis\n`analytics-staging` is on PostgreSQL 17.2 since 14:20 UTC on Nov 17 (blue/green switchover, 41 s of refused writes); pg_partman was moved from 4.7.4 to 5.1.0 and `events_daily` runs green on 17.2 (14 models, +3% runtime, within noise). The runbook now carries the `rds.logical_replication = 1` + reboot prerequisite as prod step 0. Draft PR #57 is open with the two commits, prod stays behind `pg17_enabled = false` and no prod date is set (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] staging runs on 17.2 for a full week of observation before any prod sign-off; Maya signs off on the 24th at the earliest (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] after sign-off, pick the prod window and plan for two windows: reboot with `rds.logical_replication = 1` (≈ 2–3 min downtime), then the blue/green switchover (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] keep the prod window outside the 01:00–03:30 UTC dbt lock on `events_daily`; the candidate slots are Saturday/Sunday 04:00–06:00 UTC (de: agent; source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] move PR #57 out of draft once the staging week is signed off (de: équipe, connecteur; source: src-pr57, src-linear-kes298)\n- [essai-raté] `terraform apply` of the staging plan failed creating the blue/green deployment: PostgreSQL requires `rds.logical_replication = 1` on the source parameter group plus a reboot (de: agent; source: ses-pg-3)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6.4.0 and produced 37 unrelated changes (S3 ACLs, `aws_eip.vpc` removal) (de: agent; source: ses-pg-1, s1-01)\n- [question] which prod date and window, once Maya has signed off after the staging week (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [décision] AWS provider pinned to ~> 5.82.0, no v6 in this PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1921,
+    "lignesRetirees": 2,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4353,
+    "sortie": 1076,
+    "reflexion": 463,
+    "cache": 0,
+    "cout": 0.00119095
+  },
+  "cout": 0.00119095,
+  "latenceMs": 6200,
+  "fournisseur": "Cohere"
+}

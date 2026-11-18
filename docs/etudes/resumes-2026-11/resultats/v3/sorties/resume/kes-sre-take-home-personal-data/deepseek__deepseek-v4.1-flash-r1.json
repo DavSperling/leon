@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:44.637Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home was built and scoped to 3 hours with no Kubernetes: docker compose (flaky-svc built from source, Prometheus, Alertmanager, loadgen), a planted renamed-metric alert bug, a connection leak, an over-broad IAM policy, a README and a 4-area rubric. It was moved out of the infra repo into its own private repo `kestrel-analytics/sre-take-home`, carrying only the exercise commits. Nothing has been sent to the candidate; the session ended with the exercise ready and waiting on Thursday's call.\n\n- [en-cours] `hiring/` removed from the infra branch working tree, not committed since the branch will be dropped\n- [prochaine-étape] send the exercise after Thursday's call, invite the candidate as collaborator, drop the infra branch\n- [essai-raté] multi-arch `buildx --load` (docker can't load manifest lists) and the amd64-only prebuilt image (exec format error on Apple Silicon)\n- [décision] no Kubernetes, 3h max, Terraform + compose only (source: t03)\n- [décision] scores feed the panel, no cut-off, Noa second reviewer (source: t10)\n- [décision] no email to anyone, Maya sends it herself after the call (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home was built and scoped to 3 hours with no Kubernetes: docker compose (flaky-svc built from source, Prometheus, Alertmanager, loadgen), a planted renamed-metric alert bug, a connection leak, an over-broad IAM policy, a README and a 4-area rubric. It was moved out of the infra repo into its own private repo `kestrel-analytics/sre-take-home`, carrying only the exercise commits. Nothing has been sent to the candidate; the session ended with the exercise ready and waiting on Thursday's call.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] `hiring/` removed from the infra branch working tree, not committed since the branch will be dropped\n- [prochaine-étape] send the exercise after Thursday's call, invite the candidate as collaborator, drop the infra branch\n- [essai-raté] multi-arch `buildx --load` (docker can't load manifest lists) and the amd64-only prebuilt image (exec format error on Apple Silicon)\n- [décision] no Kubernetes, 3h max, Terraform + compose only (source: t03)\n- [décision] scores feed the panel, no cut-off, Noa second reviewer (source: t10)\n- [décision] no email to anyone, Maya sends it herself after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1244,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 1279,
+    "reflexion": 976,
+    "cache": 0,
+    "cout": 0.00131417
+  },
+  "cout": 0.00131417,
+  "latenceMs": 6399,
+  "fournisseur": "CoreWeave"
+}

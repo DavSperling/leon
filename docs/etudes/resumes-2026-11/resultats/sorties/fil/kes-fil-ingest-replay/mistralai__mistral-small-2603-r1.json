@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:27:02.270Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4167,
+    "sortie": 1166,
+    "reflexion": 1165,
+    "cache": 928,
+    "cout": 0.001319307
+  },
+  "cout": 0.001319307,
+  "latenceMs": 6811,
+  "fournisseur": "Mistral"
+}

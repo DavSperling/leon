@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:05.361Z",
+  "reponse": "The root cause was a full disk on Kafka broker ingest-kafka-2, after infra PR #221 removed size-based retention [2]. The broker went read-only at 09:38 UTC and consumers stalled until 12:25 UTC, an outage of 2h47m with no events lost because producers buffered them [2][4]. An early agent note blamed the batch size change in #388 [1], but the team later called that a red herring [5], and Slack confirms the revert changed nothing while the disk was full [3]. Follow-up actions include alerting at 80% disk usage and restoring size-based retention [5].",
+  "rendu": "The root cause was a full disk on Kafka broker ingest-kafka-2, after infra PR #221 removed size-based retention [2]. The broker went read-only at 09:38 UTC and consumers stalled until 12:25 UTC, an outage of 2h47m with no events lost because producers buffered them [2][4]. An early agent note blamed the batch size change in #388 [1], but the team later called that a red herring [5], and Slack confirms the revert changed nothing while the disk was full [3]. Follow-up actions include alerting at 80% disk usage and restoring size-based retention [5].",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1777,
+    "sortie": 871,
+    "reflexion": 675,
+    "cache": 0,
+    "cout": 0.0006132
+  },
+  "cout": 0.0006132,
+  "latenceMs": 5165,
+  "fournisseur": "Claude Platform on AWS"
+}

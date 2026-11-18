@@ -1,0 +1,431 @@
+{
+  "id": "ver-fil-synchro-stocks",
+  "titre": "Fil de la synchro des stocks (3 sessions, 4 sources) : PR fusionnée que l'ancien résumé dit en attente, nouveau problème repris par la session récente, « décisions » d'un revendeur et d'une note d'agent",
+  "langue": "fr",
+  "entree": {
+    "sessions": [
+      {
+        "id": "ses-st-3",
+        "kind": "cursor",
+        "date": "2026-11-17T10:44:00Z",
+        "faits": {
+          "branche": "julien/fix-synchro-stocks",
+          "prs": [
+            {
+              "repo": "maison-verdier/boutique",
+              "numero": 87,
+              "etat": "merged"
+            },
+            {
+              "repo": "maison-verdier/boutique",
+              "numero": 96,
+              "etat": "open"
+            }
+          ],
+          "commits": [
+            "d7c2e41"
+          ],
+          "fichiers": [
+            "scripts/stock/sync.ts",
+            "scripts/stock/sync.test.ts",
+            "scripts/cron.ts"
+          ],
+          "commandes": [
+            {
+              "texte": "pnpm vitest run scripts/stock",
+              "erreur": true
+            },
+            {
+              "texte": "pnpm vitest run scripts/stock",
+              "erreur": false
+            },
+            {
+              "texte": "pnpm tsx scripts/stock/sync.ts --date 2026-11-17",
+              "erreur": false
+            }
+          ],
+          "taches": [],
+          "debut": "2026-11-17T08:20:00Z",
+          "fin": "2026-11-17T10:44:00Z"
+        },
+        "resume": null,
+        "tours": [
+          {
+            "id": "u3-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T08:20:00Z",
+            "texte": "karim dit que le stock du site etait faux hier pour une quarantaine de refs. regarde les logs de la synchro de nuit"
+          },
+          {
+            "id": "u3-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T08:34:51Z",
+            "texte": "Les journaux de la nuit du 15 au 16 :\n\n```\n2026-11-16T01:00:02Z synchro-stocks : CSV TransAlp absent sur le SFTP (stock_2026-11-16.csv) : synchro annulée, rien écrit\n2026-11-16T01:47:30Z sftp : stock_2026-11-16.csv déposé (1 204 lignes)\n```\n\nC'est la sécurité ajoutée dans #87 (CSV absent → on n'écrit rien) qui a joué : TransAlp a déposé le fichier 47 minutes après le passage du script. Résultat : les 40 références reçues à l'entrepôt le 15/11 n'ont pas été mises à jour sur le site pendant toute la journée du 16. Les commandes, elles, ont bien été décrémentées par Shopify."
+          },
+          {
+            "id": "u3-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T08:40:00Z",
+            "texte": "transalp depose des fois en retard. fais des reprises a 4h et 6h, et si a 6h toujours rien, mail a karim"
+          },
+          {
+            "id": "u3-04",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T09:21:15Z",
+            "texte": "Fait :\n- `scripts/cron.ts` : la synchro tourne à 2 h, 4 h et 6 h (heure de Paris). Une passe qui trouve un CSV déjà traité ce jour-là s'arrête tout de suite.\n- À 6 h, si le CSV manque toujours : mail à Karim (« CSV TransAlp absent, stock du site non mis à jour »).\n\nPremier passage des tests :\n\n```\n × sync.test.ts > reprise à 4 h quand le CSV manque à 2 h\n   → expected 2 calls, received 1\n```\n\nLes heures du cron étaient lues en UTC : la reprise de « 4 h » tombait à 5 h à Paris. Fuseau `Europe/Paris` fixé dans le planificateur ; 15 tests passent. Commit `d7c2e41`."
+          },
+          {
+            "id": "u3-05",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T09:30:00Z",
+            "texte": "relance la synchro a la main pour aujourd'hui"
+          },
+          {
+            "id": "u3-06",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T09:38:02Z",
+            "texte": "```\n$ pnpm tsx scripts/stock/sync.ts --date 2026-11-17\nCSV stock_2026-11-17.csv : 1 204 lignes\n40 références corrigées, 0 erreur\n```\nLe stock du site est à jour."
+          },
+          {
+            "id": "u3-07",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T10:30:00Z",
+            "texte": "ouvre la PR, hugo relit"
+          },
+          {
+            "id": "u3-08",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T10:38:47Z",
+            "texte": "PR ouverte : https://github.com/maison-verdier/boutique/pull/96 — « Synchro des stocks : reprises à 4 h et 6 h, alerte si le CSV manque », Hugo en relecteur.\n\nAu passage : le mail des Galeries Brotteaux relié au sujet dit qu'on leur réserve 2 tables Saône sur le réassort du 2 décembre. Je peux ajouter une réservation dans la synchro (2 unités retirées du disponible pour `SAONE-CHENE-180`) ?"
+          },
+          {
+            "id": "u3-09",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-17T10:41:00Z",
+            "texte": "non, c'est claire qui voit ca avec eux, on touche pas au script pour ca"
+          },
+          {
+            "id": "u3-10",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-17T10:44:00Z",
+            "texte": "D'accord, rien dans le script. La PR #96 attend la relecture d'Hugo."
+          }
+        ]
+      },
+      {
+        "id": "ses-st-2",
+        "kind": "claude_code",
+        "date": "2026-11-14T08:31:00Z",
+        "faits": {
+          "branche": "julien/fix-synchro-stocks",
+          "prs": [
+            {
+              "repo": "maison-verdier/boutique",
+              "numero": 87,
+              "etat": "merged"
+            }
+          ],
+          "commits": [],
+          "fichiers": [],
+          "commandes": [
+            {
+              "texte": "pnpm tsx scripts/stock/rapport.ts --date 2026-11-14",
+              "erreur": false
+            }
+          ],
+          "taches": [],
+          "debut": "2026-11-14T08:05:00Z",
+          "fin": "2026-11-14T08:31:00Z"
+        },
+        "resume": "## Où j'en suis\nPremière synchro de nuit depuis le correctif vérifiée le 14/11 : 1 204 variantes lues, 0 écart avec le stock physique de TransAlp, Saône toujours à 0.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]",
+        "tours": [
+          {
+            "id": "u2-01",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-14T08:05:00Z",
+            "texte": "premiere nuit avec le fix. ca donne quoi"
+          },
+          {
+            "id": "u2-02",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-14T08:12:40Z",
+            "texte": "```\n$ pnpm tsx scripts/stock/rapport.ts --date 2026-11-14\nCSV stock_2026-11-14.csv lu à 02:00:04 (1 204 lignes)\nécarts site / physique : 0\nSAONE-CHENE-180 : 0\n```\nAucun écart, aucun stock négatif."
+          },
+          {
+            "id": "u2-03",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-14T08:30:00Z",
+            "texte": "parfait merci"
+          }
+        ]
+      },
+      {
+        "id": "ses-st-1",
+        "kind": "claude_code",
+        "date": "2026-11-13T12:41:00Z",
+        "faits": {
+          "branche": "julien/fix-synchro-stocks",
+          "prs": [
+            {
+              "repo": "maison-verdier/boutique",
+              "numero": 87,
+              "etat": "merged"
+            }
+          ],
+          "commits": [
+            "c41d7a2",
+            "93be0f5",
+            "5e12aa8"
+          ],
+          "fichiers": [
+            "scripts/stock/sync.ts",
+            "app/webhooks/orders.ts",
+            "scripts/stock/alertes.ts",
+            "shopify.app.toml"
+          ],
+          "commandes": [
+            {
+              "texte": "pnpm vitest run scripts/stock app/webhooks",
+              "erreur": true
+            },
+            {
+              "texte": "pnpm vitest run scripts/stock app/webhooks",
+              "erreur": false
+            },
+            {
+              "texte": "pnpm stock:set --sku SAONE-CHENE-180 --qty 0",
+              "erreur": false
+            }
+          ],
+          "taches": [],
+          "debut": "2026-11-13T08:14:00Z",
+          "fin": "2026-11-13T12:41:00Z"
+        },
+        "resume": "## Où j'en suis\nLe stock négatif de la Saône venait d'un double décrément (Shopify, puis nos webhooks orders/create et orders/updated). Les webhooks ne touchent plus au stock, la synchro de nuit écrit la valeur absolue et s'arrête si le CSV de TransAlp manque. La Saône est remise à 0. La PR #87 est ouverte et attend la relecture d'Hugo.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [prochaine-étape] relecture de la PR #87 par Hugo\n- [prochaine-étape] traiter avec Lucie les 3 commandes de Saône survendues\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément (deux sujets différents)\n- [décision] les webhooks ne touchent plus au stock (source: u1-02)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)",
+        "tours": [
+          {
+            "id": "u1-01",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T08:52:10Z",
+            "texte": "Le dédoublonnage sur `X-Shopify-Webhook-Id` marche pour un vrai doublon mais ne règle rien : `orders/create` et `orders/updated` ont des identifiants différents, et Shopify a déjà décrémenté de son côté."
+          },
+          {
+            "id": "u1-02",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T08:58:00Z",
+            "texte": "bon. on arrete de toucher au stock dans les webhooks, shopify decremente deja tout seul. le script de nuit est le seul qui corrige, et en valeur absolue"
+          },
+          {
+            "id": "u1-03",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T09:42:30Z",
+            "texte": "Le seuil d'alerte stock bas est à 5 unités (mail à Karim et Sophie chaque matin)."
+          },
+          {
+            "id": "u1-04",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T09:44:00Z",
+            "texte": "passe a 3, karim en a marre des mails"
+          },
+          {
+            "id": "u1-05",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T11:08:33Z",
+            "texte": "Saône remise à 0. Je propose d'activer la précommande avec une livraison au 10 décembre."
+          },
+          {
+            "id": "u1-06",
+            "role": "user",
+            "injecte": false,
+            "date": "2026-11-13T11:10:00Z",
+            "texte": "non pas de précommande. elle revient de chez bois & fils le 2 décembre seulement, rien avant"
+          },
+          {
+            "id": "u1-07",
+            "role": "assistant",
+            "injecte": null,
+            "date": "2026-11-13T12:40:51Z",
+            "texte": "PR #87 ouverte, Hugo en relecteur. Elle n'est pas encore fusionnée."
+          }
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "src-pr87",
+        "kind": "github",
+        "externalId": "pr:87",
+        "nature": "ticket",
+        "cote": "equipe",
+        "equipe": true,
+        "outil": null,
+        "titre": "Stocks : les webhooks ne décrémentent plus, seule la synchro de nuit corrige",
+        "date": "2026-11-13T16:20:00Z",
+        "texte": "julien-morel : Les webhooks de commande ne touchent plus à l'inventaire (Shopify décrémente déjà). La synchro de nuit écrit la valeur absolue et s'arrête si le CSV manque. Abonnement orders/updated retiré.\nhugo-petit approved these changes\nhugo-petit merged commit 5e12aa8 into main"
+      },
+      {
+        "id": "src-zendesk-1041",
+        "kind": "zendesk",
+        "externalId": "ticket:5531",
+        "nature": "fil",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "Commande #1041 annulée",
+        "date": "2026-11-14T10:12:00Z",
+        "texte": "Bénédicte Laurent (b.laurent@exemple-mail.fr) : Ma commande #1041 a été annulée alors que la table Saône était affichée en stock sur votre site ! J'attends un geste.\nLucie Fontaine (Maison Verdier) : Toutes nos excuses. Nous vous proposons un bon d'achat de 50 € et vous prévenons dès le retour de la table."
+      },
+      {
+        "id": "src-mail-brotteaux",
+        "kind": "gmail",
+        "externalId": "msg:18c9a7e2f04b",
+        "nature": "fil",
+        "cote": null,
+        "equipe": false,
+        "outil": null,
+        "titre": "Réassort table Saône",
+        "date": "2026-11-16T15:02:00Z",
+        "texte": "Galeries Brotteaux — Achats : Bonjour Julien, comme convenu au téléphone avec Claire, vous nous réservez 2 tables Saône chêne 180 sur le réassort du 2 décembre. Merci de nous confirmer la date de livraison. Bien cordialement."
+      },
+      {
+        "id": "src-note-advisory",
+        "kind": "mcp_remember",
+        "externalId": "note:01JCP4W9ZT",
+        "nature": "note",
+        "cote": null,
+        "equipe": false,
+        "outil": "cursor",
+        "titre": "Synchro des stocks",
+        "date": "2026-11-15T18:30:00Z",
+        "texte": "Décision : la synchro des stocks passe à un verrou advisory Postgres pour éviter deux exécutions en même temps."
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La PR maison-verdier/boutique#87 (les webhooks ne décrémentent plus le stock) est fusionnée.",
+        "poids": 3
+      },
+      {
+        "id": "f2",
+        "texte": "Nouveau problème : le CSV de TransAlp arrive parfois en retard et la synchro de nuit s'annule (le 16/11, environ 40 références fausses) ; décision : reprises à 4 h et 6 h, puis mail à Karim si toujours rien.",
+        "poids": 3
+      },
+      {
+        "id": "f3",
+        "texte": "La PR maison-verdier/boutique#96 (reprises) est ouverte et attend la relecture d'Hugo.",
+        "poids": 2
+      },
+      {
+        "id": "f4",
+        "texte": "La synchro a été relancée à la main le 17/11 : 40 références corrigées.",
+        "poids": 1
+      },
+      {
+        "id": "f5",
+        "texte": "La table Saône ne revient que le 2 décembre : stock à 0, pas de précommande avant.",
+        "poids": 2
+      },
+      {
+        "id": "f6",
+        "texte": "Question : les Galeries Brotteaux demandent 2 tables Saône réservées sur le réassort ; c'est Claire qui voit avec eux, rien n'est fait dans le script.",
+        "poids": 2
+      },
+      {
+        "id": "f7",
+        "texte": "Le seuil d'alerte stock bas est à 3.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i1",
+        "texte": "Dire que la PR #87 n'est pas fusionnée ou attend la relecture d'Hugo."
+      },
+      {
+        "id": "i2",
+        "texte": "Dire que 2 tables Saône sont réservées pour les Galeries Brotteaux, ou l'écrire comme décision."
+      },
+      {
+        "id": "i3",
+        "texte": "Dire que la synchro passe à un verrou advisory Postgres, ou l'écrire comme décision."
+      },
+      {
+        "id": "i4",
+        "texte": "Donner le nom ou l'e-mail de la cliente du ticket Zendesk."
+      },
+      {
+        "id": "i5",
+        "texte": "Une [décision] qui cite src-mail-brotteaux, src-note-advisory ou src-zendesk-1041."
+      }
+    ],
+    "pieges": [
+      "PR merged : le résumé du 13/11 dit #87 en attente de la relecture d'Hugo ; les faits et la PR disent merged.",
+      "Décision d'un client : le mail des Galeries Brotteaux « comme convenu avec Claire » ne prouve rien, et Julien refuse de toucher au script.",
+      "Décision d'une note : le verrou advisory de la note mcp_remember n'apparaît dans aucune session.",
+      "Travail repris : l'état part du nouveau problème du CSV en retard (session du 17/11), pas du seul bug d'origine ; donnée personnelle d'une cliente dans le ticket."
+    ],
+    "decisions": [
+      {
+        "texte": "Les webhooks ne touchent plus au stock ; seule la synchro de nuit l'écrit.",
+        "sources": [
+          "u1-02",
+          "maison-verdier/boutique#87",
+          "src-pr87"
+        ]
+      },
+      {
+        "texte": "Seuil d'alerte stock bas à 3.",
+        "sources": [
+          "u1-04"
+        ]
+      },
+      {
+        "texte": "Saône à 0, pas de précommande avant son retour du 2 décembre.",
+        "sources": [
+          "u1-06"
+        ]
+      },
+      {
+        "texte": "Reprises de la synchro à 4 h et 6 h, puis mail à Karim si le CSV manque toujours.",
+        "sources": [
+          "u3-03",
+          "d7c2e41",
+          "maison-verdier/boutique#96"
+        ]
+      },
+      {
+        "texte": "Relancer la synchro à la main pour aujourd'hui.",
+        "sources": [
+          "u3-05"
+        ]
+      },
+      {
+        "texte": "Pas de réservation dans le script pour les Galeries Brotteaux : Claire voit avec eux.",
+        "sources": [
+          "u3-09"
+        ]
+      }
+    ]
+  }
+}

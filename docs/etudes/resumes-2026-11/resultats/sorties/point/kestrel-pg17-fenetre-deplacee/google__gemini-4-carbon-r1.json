@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "google/gemini-4-carbon",
+  "rep": 1,
+  "date": "2026-11-18T14:30:08.985Z",
+  "reponse": "## What you did\n- Rehearsed the prod PG17 RDS blue/green switchover on a snapshot clone — recording 74 seconds of write downtime with clean pgbouncer reconnects — and tore down all rehearsal instances afterward [1].\n\n## What changed\n- **Cutover moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night, so Maya shifted the window and approved PR #321 (prod blue/green Terraform, read-replica lifecycle fix, and cutover runbook), clearing you to update the date and merge [1][3][8] (the Notion page also still shows Saturday [10]).\n- **Switchover coordination**: Lior Ben-David confirmed ingest workers need no config changes (KES-530) and asked for 30 minutes' notice before switchover to pause consumers [9]; Daniel Levi is Sunday's API on-call and asked for a ping when you start [7].\n- Renovate opened PR #320 to bump the `hashicorp/aws` Terraform provider from 5.80.0 to 5.82.0 [4].\n\n## What is still open\n- **Rollback rehearsal (Thursday 19/11)**: still to run on a fresh prod clone before the Sunday window to measure recovery time and data loss, since the old blue instance receives no writes after switchover [1][3].",
+  "rendu": "## What you did\n- Rehearsed the prod PG17 RDS blue/green switchover on a snapshot clone — recording 74 seconds of write downtime with clean pgbouncer reconnects — and tore down all rehearsal instances afterward [1].\n\n## What changed\n- **Cutover moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night, so Maya shifted the window and approved PR #321 (prod blue/green Terraform, read-replica lifecycle fix, and cutover runbook), clearing you to update the date and merge [1][3][8] (the Notion page also still shows Saturday [10]).\n- **Switchover coordination**: Lior Ben-David confirmed ingest workers need no config changes (KES-530) and asked for 30 minutes' notice before switchover to pause consumers [9]; Daniel Levi is Sunday's API on-call and asked for a ping when you start [7].\n- Renovate opened PR #320 to bump the `hashicorp/aws` Terraform provider from 5.80.0 to 5.82.0 [4].\n\n## What is still open\n- **Rollback rehearsal (Thursday 19/11)**: still to run on a fresh prod clone before the Sunday window to measure recovery time and data loss, since the old blue instance receives no writes after switchover [1][3].",
+  "mesures": {
+    "mots": 174,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5557,
+    "sortie": 2948,
+    "reflexion": 2630,
+    "cache": 0,
+    "cout": 0.040594
+  },
+  "cout": 0.040594,
+  "latenceMs": 57270,
+  "fournisseur": "Google AI Studio"
+}

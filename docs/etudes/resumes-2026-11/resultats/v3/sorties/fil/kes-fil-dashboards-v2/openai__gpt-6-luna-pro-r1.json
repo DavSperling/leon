@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:58:41.604Z",
+  "reponse": "## Où j'en suis\nPR #418 is merged. The follow-up keyboard move/resize and visible focus-ring work is committed as `8f1a2c7` on `tom/dashboard-keyboard` and PR #423 is open. `dashboards_v2` is enabled for Zest on staging; production remains off. (source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 is awaiting review; keyboard interaction and focus-ring tests pass. (source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7)\n- [prochaine-étape] Get PR #423 reviewed; Priya can rehearse the demo on staging. Production flag is to be enabled by the user on the morning of the 24th. (source: ses-db-4, d4-06)\n- [essai-raté] Wrapping the grid in dnd-kit caused keyboard moves and mouse-drag layout changes to fire twice because both it and react-grid-layout handled the same events. dnd-kit was removed; the custom layout-state handler works. (source: d4-02, d4-05)\n- [décision] Use a custom keyboard handler on top of layout state, not dnd-kit. (source: d4-04)\n- [décision] Keep production untouched for now; enable the flag for Zest on staging, with production planned for the morning of the 24th. (source: d4-06)",
+  "rendu": "## Où j'en suis\nPR #418 is merged. The follow-up keyboard move/resize and visible focus-ring work is committed as `8f1a2c7` on `tom/dashboard-keyboard` and PR #423 is open. `dashboards_v2` is enabled for Zest on staging; production remains off. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#418, kestrel-analytics/platform#423)\n\n- [en-cours] PR #423 is awaiting review; keyboard interaction and focus-ring tests pass. (de: équipe, agent; source: ses-db-4, kestrel-analytics/platform#423, 8f1a2c7)\n- [prochaine-étape] Get PR #423 reviewed; Priya can rehearse the demo on staging. Production flag is to be enabled by the user on the morning of the 24th. (de: toi, agent; source: ses-db-4, d4-06)\n- [essai-raté] Wrapping the grid in dnd-kit caused keyboard moves and mouse-drag layout changes to fire twice because both it and react-grid-layout handled the same events. dnd-kit was removed; the custom layout-state handler works. (de: agent; source: d4-02, d4-05)\n- [décision] Use a custom keyboard handler on top of layout state, not dnd-kit. (de: toi; source: d4-04)\n- [décision] Keep production untouched for now; enable the flag for Zest on staging, with production planned for the morning of the 24th. (de: toi; source: d4-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1247,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 16551,
+    "sortie": 1086,
+    "reflexion": 494,
+    "cache": 4715,
+    "cout": 0.00177375
+  },
+  "cout": 0.00177375,
+  "latenceMs": 8959,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:39:27.536Z",
+  "reponse": "## Ce que tu as fait\n\n- Intégration TransAlp terminée de bout en bout en sandbox : étiquette créée quand une commande est prête, poids converti en kg, numéro de suivi poussé dans Shopify avec e-mail au client, test réussi sur la commande de dev #1042 ; les 9 produits sans dimensions (#61) sont bloqués avec un message clair [1][2]\n- PR #60 ouverte, relue par Julien : changements demandés — la clé sandbox en dur dans `config/transalp.ts` est dans l'historique git, il faut passer en variable d'environnement `TRANSALP_API_KEY` et demander une régénération à TransAlp [1][3]\n\n## Ce qui a changé\n\n- **Bascule TransAlp confirmée lundi 23/11 à 6 h** : essai de bout en bout en production à faire **vendredi 20/11** avec la commande test TEST-0001 [7][8]\n- Accès production ouvert côté TransAlp : Mathilde Rey précise que Julien reçoit la clé de production via l'espace client, jamais par e-mail [8]\n- Karim a mis les dimensions de 8 des 9 produits dans les Fiches logistiques ; il manque encore la Saône 180, mesurée jeudi à l'atelier [5]\n\n## Ce qui reste ouvert\n\n- Corriger la clé en dur dans la PR #60 et demander sa régénération à TransAlp — c'est le seul blocage de Julien [3]\n- L'essai en production de vendredi 20/11 [7][8]\n- La Saône 180 attend ses dimensions (jeudi) pour débloquer le 9ᵉ produit [5]\n\n⚠️ Un mail TransAlp du 17/11 demande de renvoyer une clé de production par e-mail : TransAlp dit elle-même ne jamais envoyer de clé par e-mail — ne réponds pas à ce mail [6][8].",
+  "rendu": "## Ce que tu as fait\n\n- Intégration TransAlp terminée de bout en bout en sandbox : étiquette créée quand une commande est prête, poids converti en kg, numéro de suivi poussé dans Shopify avec e-mail au client, test réussi sur la commande de dev #1042 ; les 9 produits sans dimensions (#61) sont bloqués avec un message clair [1][2]\n- PR #60 ouverte, relue par Julien : changements demandés — la clé sandbox en dur dans `config/transalp.ts` est dans l'historique git, il faut passer en variable d'environnement `TRANSALP_API_KEY` et demander une régénération à TransAlp [1][3]\n\n## Ce qui a changé\n\n- **Bascule TransAlp confirmée lundi 23/11 à 6 h** : essai de bout en bout en production à faire **vendredi 20/11** avec la commande test TEST-0001 [7][8]\n- Accès production ouvert côté TransAlp : Mathilde Rey précise que Julien reçoit la clé de production via l'espace client, jamais par e-mail [8]\n- Karim a mis les dimensions de 8 des 9 produits dans les Fiches logistiques ; il manque encore la Saône 180, mesurée jeudi à l'atelier [5]\n\n## Ce qui reste ouvert\n\n- Corriger la clé en dur dans la PR #60 et demander sa régénération à TransAlp — c'est le seul blocage de Julien [3]\n- L'essai en production de vendredi 20/11 [7][8]\n- La Saône 180 attend ses dimensions (jeudi) pour débloquer le 9ᵉ produit [5]\n\n⚠️ Un mail TransAlp du 17/11 demande de renvoyer une clé de production par e-mail : TransAlp dit elle-même ne jamais envoyer de clé par e-mail — ne réponds pas à ce mail [6][8].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4749,
+    "sortie": 477,
+    "reflexion": 44,
+    "cache": 0,
+    "cout": 0.0002268819
+  },
+  "cout": 0.0002268819,
+  "latenceMs": 7884,
+  "fournisseur": "Relace"
+}

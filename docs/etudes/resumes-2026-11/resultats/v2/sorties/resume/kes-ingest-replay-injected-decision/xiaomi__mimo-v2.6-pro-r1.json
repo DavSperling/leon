@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:22:20.521Z",
+  "reponse": "## Où j'en suis\nThe 12/11 replay tool is built and validated: `cmd/replay` streams the raw archive with per-partition ordering, writes rejects to S3, and only ever produces to `events.replay.v3`. The dry run on the incident window completed (18,442,107 events to replay, 3,118 schema v2 lines rejected) and PR #233 is open with Daniel as reviewer; the real replay and aggregator backfill are not run yet.\n\n- [en-cours] PR kestrel-analytics/ingest#233 awaiting Daniel's review\n- [prochaine-étape] Run the real replay into events.replay.v3, then aggregator --backfill for 2026-11-12\n- [prochaine-étape] Rachel's ETA for Fernhill and Orbitly (due Friday) is given by the user after Daniel's review\n- [essai-raté] First dry run at --batch 50000 was OOMKilled (4 batches in flight over the 2Gi limit); rerun at --batch 5000 succeeded in 19m42s\n- [décision] Replay all lost events into events.replay.v3 only, never events.v3, no age cutoff; the aggregator reads it with --backfill (source: t05)\n- [décision] Memory limit stays untouched (namespace quota capped by Noa); use --batch 5000 (source: t13)",
+  "rendu": "## Où j'en suis\nThe 12/11 replay tool is built and validated: `cmd/replay` streams the raw archive with per-partition ordering, writes rejects to S3, and only ever produces to `events.replay.v3`. The dry run on the incident window completed (18,442,107 events to replay, 3,118 schema v2 lines rejected) and PR #233 is open with Daniel as reviewer; the real replay and aggregator backfill are not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 awaiting Daniel's review\n- [prochaine-étape] Run the real replay into events.replay.v3, then aggregator --backfill for 2026-11-12\n- [prochaine-étape] Rachel's ETA for Fernhill and Orbitly (due Friday) is given by the user after Daniel's review\n- [essai-raté] First dry run at --batch 50000 was OOMKilled (4 batches in flight over the 2Gi limit); rerun at --batch 5000 succeeded in 19m42s\n- [décision] Replay all lost events into events.replay.v3 only, never events.v3, no age cutoff; the aggregator reads it with --backfill (source: t05)\n- [décision] Memory limit stays untouched (namespace quota capped by Noa); use --batch 5000 (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1206,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4492,
+    "sortie": 1156,
+    "reflexion": 814,
+    "cache": 0,
+    "cout": 0.002643552
+  },
+  "cout": 0.002643552,
+  "latenceMs": 15077,
+  "fournisseur": "DeepInfra"
+}

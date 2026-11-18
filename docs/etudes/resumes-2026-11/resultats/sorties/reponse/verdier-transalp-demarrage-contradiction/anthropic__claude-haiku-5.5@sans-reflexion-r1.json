@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:10.875Z",
+  "reponse": "Le démarrage a été fixé à deux dates. Le plan Notion et la réunion du 16/11 visaient le 1er décembre [1][4], et Slack le confirme [3]. Mais le mail de TransAlp du 17/11 annonce les enlèvements réguliers le mardi 8 décembre, car l'agence de Vénissieux ne peut pas absorber les volumes plus tôt [2]. Le contrat Rapid'Colis prend fin le 30 novembre [5], ce qui laisse une semaine sans enlèvement régulier si la date du 8 décembre est la bonne.",
+  "rendu": "Le démarrage a été fixé à deux dates. Le plan Notion et la réunion du 16/11 visaient le 1er décembre [1][4], et Slack le confirme [3]. Mais le mail de TransAlp du 17/11 annonce les enlèvements réguliers le mardi 8 décembre, car l'agence de Vénissieux ne peut pas absorber les volumes plus tôt [2]. Le contrat Rapid'Colis prend fin le 30 novembre [5], ce qui laisse une semaine sans enlèvement régulier si la date du 8 décembre est la bonne.",
+  "mesures": {
+    "mots": 80,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1549,
+    "sortie": 204,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002569
+  },
+  "cout": 0.0002569,
+  "latenceMs": 1542,
+  "fournisseur": "Claude Platform on AWS"
+}

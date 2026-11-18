@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:04:28.113Z",
+  "reponse": "Je ne sais pas le nombre exact : Antoine doit encore recouper les chiffres et a prévu de les transmettre d’ici au 25 novembre. [4] À défaut, Karim se souvient d’environ deux fois plus de commandes que d’habitude sur la semaine, mais c’est une estimation. [8] Côté service client, l’équipe avait été débordée l’an dernier, avec des tickets restés jusqu’à quatre jours sans réponse. [8]",
+  "rendu": "Je ne sais pas le nombre exact : Antoine doit encore recouper les chiffres et a prévu de les transmettre d’ici au 25 novembre. [4] À défaut, Karim se souvient d’environ deux fois plus de commandes que d’habitude sur la semaine, mais c’est une estimation. [8] Côté service client, l’équipe avait été débordée l’an dernier, avec des tickets restés jusqu’à quatre jours sans réponse. [8]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 23294,
+    "sortie": 1918,
+    "reflexion": 1499,
+    "cache": 13912,
+    "cout": 0.002109095
+  },
+  "latenceMs": 26739,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday commandes volume commandes service client\",\"depuis\":\"2024-01-01\"}",
+    "lire {\"sourceId\":\"outlook-antoine-chiffres-bf-2025\"}",
+    "lire {\"sourceId\":\"slack-sav-renfort-bf\"}",
+    "lire {\"sourceId\":\"tldv-point-marketing-1110\"}"
+  ],
+  "cout": 0.002109095
+}

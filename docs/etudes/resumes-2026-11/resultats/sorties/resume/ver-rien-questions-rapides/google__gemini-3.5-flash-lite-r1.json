@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:25:33.815Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1958,
+    "sortie": 4,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005974
+  },
+  "cout": 0.0005974,
+  "latenceMs": 817,
+  "fournisseur": "Google"
+}

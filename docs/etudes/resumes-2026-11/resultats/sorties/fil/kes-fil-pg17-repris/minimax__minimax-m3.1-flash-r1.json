@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:33.977Z",
+  "reponse": "## Où j'en suis\nStaging is fully migrated: `analytics-staging` runs PostgreSQL 17.2 since the blue/green switchover (14:20 UTC, 41 s of refused writes), after pg_partman was upgraded 4.7.4 → 5.1.0 on staging 16.4 and maintenance ran green on `events_raw`/`events_daily`. dbt on 17.2 passed 14/14 models in 21m12s (vs 20m35s on 16.4, within noise). Two commits landed on `noa/rds-pg17` — `7e3c9d4` (logical replication in the module) and `b0f18a2` (staging engine 17.2) — and the runbook `runbooks/pg17-upgrade.md` now documents, as prod step 0, setting `rds.logical_replication = 1` and rebooting the source instance in its own window (~2–3 min downtime) before creating the blue/green deployment. Prod is prepared but disabled (`pg17_enabled = false`); no production date is set, pending Maya's sign-off after a full week on 17 without incident. PR #57 is still an open draft. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Watching staging on 17.2 for a full week without incident before the prod go/no-go; announcement posted in #infra (source: ses-pg-3, src-slack-infra)\n- [en-cours] Runbook updated with the `rds.logical_replication` + reboot step for prod, prod date left empty (source: s3-10, s3-09)\n- [prochaine-étape] Earliest sign-off on 24 Nov; only then pick the prod window, outside the 01:00–03:30 UTC dbt lock on `events_daily` (source: s3-10, s1-05)\n- [prochaine-étape] Prod cutover needs two windows: parameter change + instance reboot, then blue/green switchover with `apply_immediately = false` (source: s3-04, s1-04)\n- [prochaine-étape] Publish PR #57 (still draft) once the prod plan is confirmed (source: src-pr57, s1-07)\n- [essai-raté] First staging apply failed creating the blue/green deployment: `InvalidParameterCombination` — PostgreSQL blue/green requires `rds.logical_replication = 1` on the source; fixed by the param group change + reboot (1m48s) (source: s3-04)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6.4.0 and produced 37 unrelated plan changes; provider pinned to ~> 5.82.0 (source: s1-01, s1-02)\n- [question] Exact prod date and window, once Maya signs off after the full staging week (source: src-linear-kes298, s3-09)\n- [décision] No prod date until Maya signs off, and `apply_immediately` stays false (source: s1-04, s3-09)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] Prod cutover scheduled Saturday 28 Nov, 04:00 UTC, blue/green, `apply_immediately=false` (source: src-note-cutover)",
+  "rendu": "## Où j'en suis\nStaging is fully migrated: `analytics-staging` runs PostgreSQL 17.2 since the blue/green switchover (14:20 UTC, 41 s of refused writes), after pg_partman was upgraded 4.7.4 → 5.1.0 on staging 16.4 and maintenance ran green on `events_raw`/`events_daily`. dbt on 17.2 passed 14/14 models in 21m12s (vs 20m35s on 16.4, within noise). Two commits landed on `noa/rds-pg17` — `7e3c9d4` (logical replication in the module) and `b0f18a2` (staging engine 17.2) — and the runbook `runbooks/pg17-upgrade.md` now documents, as prod step 0, setting `rds.logical_replication = 1` and rebooting the source instance in its own window (~2–3 min downtime) before creating the blue/green deployment. Prod is prepared but disabled (`pg17_enabled = false`); no production date is set, pending Maya's sign-off after a full week on 17 without incident. PR #57 is still an open draft. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Watching staging on 17.2 for a full week without incident before the prod go/no-go; announcement posted in #infra (de: connecteur, agent; source: ses-pg-3, src-slack-infra)\n- [en-cours] Runbook updated with the `rds.logical_replication` + reboot step for prod, prod date left empty (de: toi, agent; source: s3-10, s3-09)\n- [prochaine-étape] Earliest sign-off on 24 Nov; only then pick the prod window, outside the 01:00–03:30 UTC dbt lock on `events_daily` (de: agent; source: s3-10, s1-05)\n- [prochaine-étape] Prod cutover needs two windows: parameter change + instance reboot, then blue/green switchover with `apply_immediately = false` (de: toi, agent; source: s3-04, s1-04)\n- [prochaine-étape] Publish PR #57 (still draft) once the prod plan is confirmed (de: équipe, agent; source: src-pr57, s1-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1774,
+    "lignesRetirees": 6,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4225,
+    "sortie": 1101,
+    "reflexion": 330,
+    "cache": 128,
+    "cout": 0.00127707
+  },
+  "cout": 0.00127707,
+  "latenceMs": 5497,
+  "fournisseur": "Nebius"
+}

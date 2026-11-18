@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:33:37.198Z",
+  "reponse": "Le démarrage des enlèvements réguliers chez TransAlp est prévu le mardi 8 décembre [2]. Cependant, plusieurs sources indiquaient initialement le 1er décembre [1][3][4].",
+  "rendu": "Le démarrage des enlèvements réguliers chez TransAlp est prévu le mardi 8 décembre [2]. Cependant, plusieurs sources indiquaient initialement le 1er décembre [1][3][4].",
+  "mesures": {
+    "mots": 23,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1016,
+    "sortie": 494,
+    "reflexion": 447,
+    "cache": 464,
+    "cout": 0.00038616
+  },
+  "cout": 0.00038616,
+  "latenceMs": 3556,
+  "fournisseur": "Mistral"
+}

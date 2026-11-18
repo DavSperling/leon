@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:17.704Z",
+  "reponse": "## Where I am\nHubSpot owner + ARR sync was reworked from webhooks to a CRM search polling job running every 15 minutes, with windowed paging to pass the 10k search limit and a server-side filter for `arr > 0` so trials are skipped. PR #409 was opened with auto-merge enabled, but per the captured GitHub state it is still open: the e2e check `test_admin_accounts.py::test_accounts_table_shows_owner` fails because the fixture's third company has no ARR, so only 2 rows show an owner. PR #405 was closed as superseded by the polling approach.\n\n- [in-progress] Fix the e2e fixture in `tests/e2e/test_admin_accounts.py` (give the third company ARR > 0 or expect 2 rows)\n- [next-step] Re-run the e2e checks on PR #409 and let auto-merge land\n- [next-step] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging and prod\n- [failed] `POST /webhooks/v3/{appId}/subscriptions` returned 401 — private app tokens cannot manage webhook subscriptions\n- [failed] First paging implementation hit the 10,000-result search cap on the initial backfill; fixed by windowed queries on `hs_lastmodifieddate`\n- [decision] Use polling every 15 minutes instead of webhooks; new branch was fine (source: t04)\n- [decision] Sync only companies with ARR > 0, skipping trials entirely (source: t10)",
+  "rendu": "- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [décision] Use polling every 15 minutes instead of webhooks; new branch was fine (source: t04)\n- [décision] Sync only companies with ARR > 0, skipping trials entirely (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 365,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3506,
+    "sortie": 351,
+    "reflexion": 18,
+    "cache": 0,
+    "cout": 0.0007365
+  },
+  "cout": 0.0007365,
+  "latenceMs": 2017,
+  "fournisseur": "Together"
+}

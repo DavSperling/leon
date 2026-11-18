@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:48.505Z",
+  "reponse": "## Où j'en suis\nLe fil Marchand porte sur l'avenant n°1 au contrat de travaux : l'avenant signé par Hélène le 17/11 (réception reportée du 4 au 11 décembre, pénalités suspendues sur la semaine puis reprise au-delà du 11, première année du contrat d'entretien offerte) est parti chez Gilles Marchand, en attente de sa signature ; le 18/11 il a répondu en évoquant un accord sur 3 ans d'entretien, ce que Camille conteste, Hélène n'ayant rien dit de tel et le point de lundi portant sur 1 an. L'avenant reste donc à 1 an, la réponse d'attente annonçant l'avenant définitif dans la journée a été envoyée, et le risque de pénalités de l'article 9 (150 € HT par jour ouvré après le 4 décembre, plafonnées à 4 320 € HT) reste entier tant que rien n'est signé (source: mc3, mc2, src-mail-gilles).\n\n- [en-cours] avenant n°1 signé par Hélène et envoyé à Gilles le 17/11, en attente de sa signature (source: mc2, m2-07)\n- [en-cours] réponse d'attente envoyée à Gilles, annonçant l'avenant définitif dans la journée (source: mc3, m3-09)\n- [prochaine-étape] obtenir d'Hélène la confirmation sur la durée de l'entretien avant de modifier quoi que ce soit à l'avenant (source: mc3, m3-03)\n- [prochaine-étape] envoyer l'avenant définitif à Gilles pour signature, conformément à la réponse d'attente (source: mc3, m3-08)\n- [question] entretien offert : 1 an (version signée par Hélène) ou 3 ans (réclamation de Gilles) ? (source: mc3, src-mail-gilles)\n- [décision] avenant Marchand : réception le 11 décembre, sans pénalités, première année d'entretien offerte, « pas plus » (source: src-tldv)\n- [décision] Hélène a relu et signé l'avenant, puis il a été envoyé à Gilles avec le mail d'accompagnement (source: mc2, m2-07)\n- [décision] ne rien envoyer au client avant d'avoir vu Hélène (source: mc1, m1-05)",
+  "rendu": "- [en-cours] avenant n°1 signé par Hélène et envoyé à Gilles le 17/11, en attente de sa signature (de: toi, agent; source: mc2, m2-07)\n- [en-cours] réponse d'attente envoyée à Gilles, annonçant l'avenant définitif dans la journée (de: toi, agent; source: mc3, m3-09)\n- [prochaine-étape] obtenir d'Hélène la confirmation sur la durée de l'entretien avant de modifier quoi que ce soit à l'avenant (de: toi, agent; source: mc3, m3-03)\n- [prochaine-étape] envoyer l'avenant définitif à Gilles pour signature, conformément à la réponse d'attente (de: agent; source: mc3, m3-08)\n- [question] entretien offert : 1 an (version signée par Hélène) ou 3 ans (réclamation de Gilles) ? (de: connecteur, agent; source: mc3, src-mail-gilles)\n- [décision] avenant Marchand : réception le 11 décembre, sans pénalités, première année d'entretien offerte, « pas plus » (de: connecteur; source: src-tldv)\n- [décision] Hélène a relu et signé l'avenant, puis il a été envoyé à Gilles avec le mail d'accompagnement (de: toi, agent; source: mc2, m2-07)\n- [décision] ne rien envoyer au client avant d'avoir vu Hélène (de: toi, agent; source: mc1, m1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1128,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4111,
+    "sortie": 1648,
+    "reflexion": 1058,
+    "cache": 1024,
+    "cout": 0.001474558
+  },
+  "cout": 0.001474558,
+  "latenceMs": 6124,
+  "fournisseur": "CoreWeave"
+}

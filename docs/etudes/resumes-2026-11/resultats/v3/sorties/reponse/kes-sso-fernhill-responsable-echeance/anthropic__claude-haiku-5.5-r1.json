@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:14.984Z",
+  "reponse": "Daniel Levi owns SAML end to end [3][1]. The Linear ticket lists November 27 as the internal due date, which leaves a buffer before the contractual go-live [1]. That go-live is December 1, 2026, and missing it triggers a 10% credit on the Q1 invoice [2]. The Notion design doc that lists the owner as TBD is from October 20, so it's outdated [4]. Production go-live may slip, since Fernhill's change board meets on November 26 and the production IdP metadata can't be exchanged before then [6].",
+  "rendu": "Daniel Levi owns SAML end to end [3][1]. The Linear ticket lists November 27 as the internal due date, which leaves a buffer before the contractual go-live [1]. That go-live is December 1, 2026, and missing it triggers a 10% credit on the Q1 invoice [2]. The Notion design doc that lists the owner as TBD is from October 20, so it's outdated [4]. Production go-live may slip, since Fernhill's change board meets on November 26 and the production IdP metadata can't be exchanged before then [6].",
+  "mesures": {
+    "mots": 87,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1915,
+    "sortie": 458,
+    "reflexion": 277,
+    "cache": 0,
+    "cout": 0.0004205
+  },
+  "cout": 0.0004205,
+  "latenceMs": 3101,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:29:19.582Z",
+  "reponse": "## Où j'en suis\nLa PR #87 est fusionnée : les webhooks ne touchent plus au stock, et la synchro de nuit écrit la valeur absolue. La dernière session (17/11) a ajouté des reprises à 4 h et 6 h, un mail à Karim si le CSV de TransAlp manque à 6 h, et corrigé le fuseau horaire du cron. Les 40 références du réassort ont été remises à jour à la main. La PR #96 est ouverte et attend la relecture d'Hugo. (source: ses-st-3, maison-verdier/boutique#87, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] relecture de la PR #96 par Hugo (source: maison-verdier/boutique#96)\n- [prochaine-étape] traiter avec Lucie les 3 commandes de Saône survendues (source: ses-st-1)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (source: u1-01)\n- [question] qui confirme à Galeries Brotteaux la date de livraison des 2 tables Saône du réassort (source: src-mail-brotteaux)\n- [décision] les webhooks ne touchent plus au stock, la synchro de nuit corrige seule (source: u1-02, maison-verdier/boutique#87)\n- [décision] seuil d'alerte stock bas à 3 (source: u1-04)\n- [décision] pas de précommande pour la Saône : réassort chez bois & fils le 2 décembre seulement (source: u1-06)\n- [décision] synchro à 2 h, 4 h et 6 h, mail à Karim si le CSV manque à 6 h (source: u3-03, d7c2e41)\n- [décision] rien dans le script pour la réservation des tables Saône, la personne qui gère le client s'en charge (source: u3-09)",
+  "rendu": "## Où j'en suis\nLa PR #87 est fusionnée : les webhooks ne touchent plus au stock, et la synchro de nuit écrit la valeur absolue. La dernière session (17/11) a ajouté des reprises à 4 h et 6 h, un mail à Karim si le CSV de TransAlp manque à 6 h, et corrigé le fuseau horaire du cron. Les 40 références du réassort ont été remises à jour à la main. La PR #96 est ouverte et attend la relecture d'Hugo. (de: équipe, agent; source: ses-st-3, maison-verdier/boutique#87, maison-verdier/boutique#96, d7c2e41)\n\n- [en-cours] PR #96 ouverte, en attente de la relecture d'Hugo (de: équipe, agent; source: maison-verdier/boutique#96, u3-08)\n- [prochaine-étape] relecture de la PR #96 par Hugo (de: équipe; source: maison-verdier/boutique#96)\n- [prochaine-étape] traiter avec Lucie les 3 commandes de Saône survendues (de: agent; source: ses-st-1)\n- [essai-raté] dédoublonnage par X-Shopify-Webhook-Id : ne règle pas le double décrément, car orders/create et orders/updated ont des identifiants différents (de: agent; source: u1-01)\n- [question] qui confirme à Galeries Brotteaux la date de livraison des 2 tables Saône du réassort (de: connecteur; source: src-mail-brotteaux)\n- [décision] les webhooks ne touchent plus au stock, la synchro de nuit corrige seule (de: toi, équipe; source: u1-02, maison-verdier/boutique#87)\n- [décision] seuil d'alerte stock bas à 3 (de: toi; source: u1-04)\n- [décision] pas de précommande pour la Saône : réassort chez bois & fils le 2 décembre seulement (de: toi; source: u1-06)\n- [décision] synchro à 2 h, 4 h et 6 h, mail à Karim si le CSV manque à 6 h (de: toi, équipe; source: u3-03, d7c2e41)\n- [décision] rien dans le script pour la réservation des tables Saône, la personne qui gère le client s'en charge (de: toi; source: u3-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1758,
+    "lignesRetirees": 0,
+    "decisions": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5938,
+    "sortie": 2066,
+    "reflexion": 1340,
+    "cache": 0,
+    "cout": 0.0016268
+  },
+  "cout": 0.0016268,
+  "latenceMs": 9465,
+  "fournisseur": "Claude Platform on AWS"
+}

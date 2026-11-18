@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:25:42.599Z",
+  "reponse": "## Où j'en suis\nLe script de soldes applique les remises en masse, la programmation est fixée au 13 janvier 2027 à 8 h (Europe/Paris) et la PR #94 est ouverte. La boutique de dev a été remise à ses prix d'origine, le test bulk a réussi et un CSV a été exporté dans `/tmp/prix-soldes.csv`.\n\n- [en-cours] Le script de retour aux prix d'origine à la fin des soldes reste à faire.\n- [prochaine-étape] Créer le script de retour aux prix d'origine, puis régénérer le CSV avant la newsletter du 6 janvier si les prix changent.\n- [essai-raté] La première application sur la boutique de dev a été interrompue par une erreur Shopify `THROTTLED` après 61 produits, laissant la boutique à moitié soldée. La boutique a ensuite été remise en état et l’application bulk a réussi.\n- [décision] Remises de 20 % sur Rhône et 30 % sur les fins de série, Saône exclue. (source: t05)\n- [décision] Les prix soldés finissent par 9 après arrondi à l’euro inférieur. (source: t07)\n- [décision] Programmer l’application au mercredi 13 janvier à 8 h, et vérifier la boutique de dev la veille. (source: t15)",
+  "rendu": "## Où j'en suis\nLe script de soldes applique les remises en masse, la programmation est fixée au 13 janvier 2027 à 8 h (Europe/Paris) et la PR #94 est ouverte. La boutique de dev a été remise à ses prix d'origine, le test bulk a réussi et un CSV a été exporté dans `/tmp/prix-soldes.csv`.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Le script de retour aux prix d'origine à la fin des soldes reste à faire.\n- [prochaine-étape] Créer le script de retour aux prix d'origine, puis régénérer le CSV avant la newsletter du 6 janvier si les prix changent.\n- [essai-raté] La première application sur la boutique de dev a été interrompue par une erreur Shopify `THROTTLED` après 61 produits, laissant la boutique à moitié soldée. La boutique a ensuite été remise en état et l’application bulk a réussi.\n- [décision] Remises de 20 % sur Rhône et 30 % sur les fins de série, Saône exclue. (source: t05)\n- [décision] Les prix soldés finissent par 9 après arrondi à l’euro inférieur. (source: t07)\n- [décision] Programmer l’application au mercredi 13 janvier à 8 h, et vérifier la boutique de dev la veille. (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1219,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3645,
+    "sortie": 445,
+    "reflexion": 138,
+    "cache": 0,
+    "cout": 0.00067805
+  },
+  "cout": 0.00067805,
+  "latenceMs": 6738,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:03.860Z",
+  "reponse": "The production cutover was moved to Saturday November 28, 02:00–06:00 UTC, after a request for a second dry run on prod-sized data following the 12/11 ingest incident [2], and the infra PR updating the window to 2026-11-28 is still open, not applied [6]. This contradicts the earlier plan of November 21 [1], which the customer notice of November 9 and the Linear ticket still state [3][4].",
+  "rendu": "The production cutover was moved to Saturday November 28, 02:00–06:00 UTC, after a request for a second dry run on prod-sized data following the 12/11 ingest incident [2], and the infra PR updating the window to 2026-11-28 is still open, not applied [6]. This contradicts the earlier plan of November 21 [1], which the customer notice of November 9 and the Linear ticket still state [3][4].",
+  "mesures": {
+    "mots": 66,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1195,
+    "sortie": 157,
+    "reflexion": 56,
+    "cache": 0,
+    "cout": 0.00034829
+  },
+  "cout": 0.00034829,
+  "latenceMs": 1384,
+  "fournisseur": "Ionstream"
+}

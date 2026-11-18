@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:58.406Z",
+  "reponse": "## Où j'en suis\nStaging is fully on PostgreSQL 17.2: pg_partman was upgraded to 5.1.0, the blue/green switchover completed at 14:20 UTC (41 s of refused writes), dbt passed 14/14 models on 17.2, and the runbook now documents the logical_replication + reboot prerequisite for prod. The work now waits on a full week of staging before a production window is picked; PR #57 is still open on `noa/rds-pg17`. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] A full week of staging on 17 before prod sign-off (source: src-linear-kes298, s3-09)\n- [prochaine-étape] Pick the production window, avoiding the dbt lock on events_daily (01:00–03:30 UTC) (source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] On prod: set `rds.logical_replication = 1` and reboot (its own window, ≈2–3 min) before creating the blue/green deployment — step 0 of the runbook (source: s3-10, s3-04)\n- [prochaine-étape] Merge or advance PR #57 once sign-off lands (source: src-pr57)\n- [essai-raté] The first staging apply failed: blue/green on PostgreSQL requires logical replication on the source instance (source: s3-04)\n- [essai-raté] `terraform init -upgrade` took AWS provider v6: 37 unrelated changes in the plan (source: s1-01)\n- [question] No production date yet — window to be chosen after the staging week (source: s3-09, s3-10)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false; the 02:00 slot was rejected (dbt lock) (source: s1-04)\n- [décision] Prod sign-off comes after a full week of staging on 17 without incident; window picked then (source: src-linear-kes298)",
+  "rendu": "## Où j'en suis\nStaging is fully on PostgreSQL 17.2: pg_partman was upgraded to 5.1.0, the blue/green switchover completed at 14:20 UTC (41 s of refused writes), dbt passed 14/14 models on 17.2, and the runbook now documents the logical_replication + reboot prerequisite for prod. The work now waits on a full week of staging before a production window is picked; PR #57 is still open on `noa/rds-pg17`. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] A full week of staging on 17 before prod sign-off (de: toi, connecteur; source: src-linear-kes298, s3-09)\n- [prochaine-étape] Pick the production window, avoiding the dbt lock on events_daily (01:00–03:30 UTC) (de: agent; source: ses-pg-3, ses-pg-1)\n- [prochaine-étape] On prod: set `rds.logical_replication = 1` and reboot (its own window, ≈2–3 min) before creating the blue/green deployment — step 0 of the runbook (de: agent; source: s3-10, s3-04)\n- [prochaine-étape] Merge or advance PR #57 once sign-off lands (de: équipe; source: src-pr57)\n- [essai-raté] The first staging apply failed: blue/green on PostgreSQL requires logical replication on the source instance (de: agent; source: s3-04)\n- [essai-raté] `terraform init -upgrade` took AWS provider v6: 37 unrelated changes in the plan (de: agent; source: s1-01)\n- [question] No production date yet — window to be chosen after the staging week (de: toi, agent; source: s3-09, s3-10)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false; the 02:00 slot was rejected (dbt lock) (de: toi; source: s1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1665,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4593,
+    "sortie": 1109,
+    "reflexion": 559,
+    "cache": 0,
+    "cout": 0.00130675
+  },
+  "cout": 0.00130675,
+  "latenceMs": 8543,
+  "fournisseur": "Makora"
+}

@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:10.746Z",
+  "reponse": "Le cutover a été reprogrammé : il est fixé au **samedi 5 décembre, 02:00–05:00 UTC** (après le go-live Fernhill du 1er décembre), approuvé par Maya [2].\n\nDétails pour ta communication :\n- **Avis client** (status page + bannière in-app) : samedi 28 novembre [2]\n- **Freeze de migration** : à partir du jeudi 3 décembre [2]\n- **Rehearsal sur staging** : vendredi 27 novembre [2]\n- Attention : le runbook Notion n'est pas encore mis à jour — le ticket KES-398 est la référence officielle de la fenêtre de maintenance [2]\n\nJe n'ai pas trouvé de macro support mise à jour pour cette nouvelle date : la dernière mention est celle de Rachel, qui prévoyait une notice et une macro « pour le 14e » dans #eng-announce du 3 novembre [3] — à vérifier, elle semble dater d'un créneau antérieur. Je peux chercher plus spécifiquement si tu veux.",
+  "rendu": "Le cutover a été reprogrammé : il est fixé au **samedi 5 décembre, 02:00–05:00 UTC** (après le go-live Fernhill du 1er décembre), approuvé par Maya [2].\n\nDétails pour ta communication :\n- **Avis client** (status page + bannière in-app) : samedi 28 novembre [2]\n- **Freeze de migration** : à partir du jeudi 3 décembre [2]\n- **Rehearsal sur staging** : vendredi 27 novembre [2]\n- Attention : le runbook Notion n'est pas encore mis à jour — le ticket KES-398 est la référence officielle de la fenêtre de maintenance [2]\n\nJe n'ai pas trouvé de macro support mise à jour pour cette nouvelle date : la dernière mention est celle de Rachel, qui prévoyait une notice et une macro « pour le 14e » dans #eng-announce du 3 novembre [3] — à vérifier, elle semble dater d'un créneau antérieur. Je peux chercher plus spécifiquement si tu veux.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17240,
+    "sortie": 727,
+    "reflexion": 353,
+    "cache": 12928,
+    "cout": 0.0008434384
+  },
+  "latenceMs": 28023,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"upgrade de la base fenêtre de maintenance\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}",
+    "chercher {\"requete\":\"support macro database upgrade status page notice\"}"
+  ],
+  "cout": 0.0008434384
+}

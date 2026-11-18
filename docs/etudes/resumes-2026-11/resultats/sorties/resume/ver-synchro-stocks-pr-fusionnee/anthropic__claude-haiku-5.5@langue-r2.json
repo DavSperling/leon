@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:39:50.129Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône venait du décrément fait par nos webhooks de commande, en plus de celui de Shopify. Les webhooks ne touchent plus au stock, et seule la synchro de nuit corrige, en valeur absolue. Le seuil d'alerte est passé à 3, la Saône est remise à 0 dans Shopify, le lint et le renommage sont faits, et les 96 tests passent. La PR #87 est fusionnée, et la config de l'app est déployée sans `orders/updated`. Reste à traiter avec Lucie les 3 commandes survendues.\n\n- [en-cours] Traitement des commandes survendues #1041, #1043 et #1044 (Saône chêne 180) avec Lucie.\n- [prochaine-étape] Vérifier que la synchro de nuit remet la Saône à jour quand TransAlp la recevra en stock physique.\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : sans effet, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémentait déjà de son côté. Retiré.\n- [décision] Les webhooks ne touchent plus au stock ; le script de nuit corrige seul, en valeur absolue (source: t05).\n- [décision] Seuil d'alerte stock bas à 3 (source: t09).\n- [décision] Saône remise à 0 dans Shopify (source: t15).\n- [décision] Pas de précommande sur la Saône (source: t17).",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône venait du décrément fait par nos webhooks de commande, en plus de celui de Shopify. Les webhooks ne touchent plus au stock, et seule la synchro de nuit corrige, en valeur absolue. Le seuil d'alerte est passé à 3, la Saône est remise à 0 dans Shopify, le lint et le renommage sont faits, et les 96 tests passent. La PR #87 est fusionnée, et la config de l'app est déployée sans `orders/updated`. Reste à traiter avec Lucie les 3 commandes survendues.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traitement des commandes survendues #1041, #1043 et #1044 (Saône chêne 180) avec Lucie.\n- [prochaine-étape] Vérifier que la synchro de nuit remet la Saône à jour quand TransAlp la recevra en stock physique.\n- [essai-raté] Dédoublonnage sur `X-Shopify-Webhook-Id` : sans effet, car `orders/create` et `orders/updated` ont des identifiants différents et Shopify décrémentait déjà de son côté. Retiré.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1046,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5365,
+    "sortie": 1782,
+    "reflexion": 1254,
+    "cache": 0,
+    "cout": 0.0014275
+  },
+  "cout": 0.0014275,
+  "latenceMs": 8179,
+  "fournisseur": "Claude Platform on AWS"
+}

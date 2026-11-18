@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "z-ai/glm-5.3-flash@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:09:40.497Z",
+  "reponse": "## What is still open\n- PR #247 awaits Maya's approval: she'll approve once CI is green, and she wants the number of dropped Orbitly events for Thursday's call with them — you have it: ~1.18M [2][1]\n- Once #247 is merged and deployed, run the replay from landing for Orbitly (~1.18M events, ~40 min) and Zest from 13/11, then check that the dedupe drop counter for Orbitly stays near zero [1]\n- The note to the iOS team is still to send: kestrel-ios 3.2.1 must go back to UUIDs for `event_id`, or this will happen again [1]\n- Before Friday's incident review (20/11), you're on the hook to add an alert when the ingest dead-letter queue goes above 1,000 messages [7]\n\n## What changed\n- The 12/11 postmortem is final; Noa will present it at Friday's incident review, action items are in the Fathom notes [3]\n- Zest confirmed their dashboards are complete again and is closing their Zendesk ticket [6]\n- CI and the Dockerfile now run Go 1.23.4 (merged, no code change) [4]\n\n## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's dedupe: the iOS SDK 3.2.0 sends `event_id` as a per-session counter instead of a UUID, so ~1.18M legitimate Orbitly events (and 3,812 Zest pilot ones) were dropped since 13/11 [1]\n- You opened PR #247, keying the dedupe on (project, device, event_id) — genuine replays are still caught — with Maya as reviewer [1][2]",
+  "rendu": "## What is still open\n- PR #247 awaits Maya's approval: she'll approve once CI is green, and she wants the number of dropped Orbitly events for Thursday's call with them — you have it: ~1.18M [2][1]\n- Once #247 is merged and deployed, run the replay from landing for Orbitly (~1.18M events, ~40 min) and Zest from 13/11, then check that the dedupe drop counter for Orbitly stays near zero [1]\n- The note to the iOS team is still to send: kestrel-ios 3.2.1 must go back to UUIDs for `event_id`, or this will happen again [1]\n- Before Friday's incident review (20/11), you're on the hook to add an alert when the ingest dead-letter queue goes above 1,000 messages [7]\n\n## What changed\n- The 12/11 postmortem is final; Noa will present it at Friday's incident review, action items are in the Fathom notes [3]\n- Zest confirmed their dashboards are complete again and is closing their Zendesk ticket [6]\n- CI and the Dockerfile now run Go 1.23.4 (merged, no code change) [4]\n\n## What you did\n- You traced Orbitly's ~8% iOS funnel drop to #240's dedupe: the iOS SDK 3.2.0 sends `event_id` as a per-session counter instead of a UUID, so ~1.18M legitimate Orbitly events (and 3,812 Zest pilot ones) were dropped since 13/11 [1]\n- You opened PR #247, keying the dedupe on (project, device, event_id) — genuine replays are still caught — with Maya as reviewer [1][2]",
+  "mesures": {
+    "mots": 229,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4706,
+    "sortie": 877,
+    "reflexion": 486,
+    "cache": 0,
+    "cout": 0.0011444
+  },
+  "cout": 0.0011444,
+  "latenceMs": 5092,
+  "fournisseur": "Cohere"
+}

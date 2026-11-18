@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T17:54:20.935Z",
+  "reponse": "## What is still open\n- PR #423: Tom Becker is requesting changes — split the 1,900-line diff into two PRs (module move vs. lint fixes) — and says he'll approve both today [4].\n- The assertion-ID replay cache is still in-memory only (`TTLCache`); you planned to move it to Redis today so a replay can't succeed across the 3 API pods (Redis client already in `kestrel/cache.py`) [1][2].\n- Fernhill end-to-end SSO walkthrough on staging Thursday 10am NY with their Okta tenant: Priya runs the demo, you're on the call [1].\n\n## What changed\n- PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" — which you built on 13/11 [2] — was approved by Maya Cohen and merged at 19:02 yesterday; it ships with tonight's staging deploy, covering the Wed-EOD requirement ahead of the Fernhill demo [3].\n\n## What you did\n- Fixed the flaky `test_acs_rejects_expired_assertion` by freezing time with freezegun instead of sleeping, and converted the two other sleep-based ACS tests — 50/50 green on repeat runs [1].\n- Brought `kestrel/auth` clean under ruff 0.8 (auto-fixes plus manual B904/RUF012/PLW2901; skipped the `SPConfig` dataclass) and fixed 2 mypy errors: a missing Issuer/Subject now returns 401 instead of a 500 [1].\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/` (assertions, metadata, bindings) with a shim keeping old imports working; full suite 1,284 passed, ruff and mypy clean; pushed as two commits on `daniel/auth-cleanup` [1].",
+  "rendu": "## What is still open\n- PR #423: Tom Becker is requesting changes — split the 1,900-line diff into two PRs (module move vs. lint fixes) — and says he'll approve both today [4].\n- The assertion-ID replay cache is still in-memory only (`TTLCache`); you planned to move it to Redis today so a replay can't succeed across the 3 API pods (Redis client already in `kestrel/cache.py`) [1][2].\n- Fernhill end-to-end SSO walkthrough on staging Thursday 10am NY with their Okta tenant: Priya runs the demo, you're on the call [1].\n\n## What changed\n- PR #418 \"SAML: verify assertion signatures (Fernhill SSO)\" — which you built on 13/11 [2] — was approved by Maya Cohen and merged at 19:02 yesterday; it ships with tonight's staging deploy, covering the Wed-EOD requirement ahead of the Fernhill demo [3].\n\n## What you did\n- Fixed the flaky `test_acs_rejects_expired_assertion` by freezing time with freezegun instead of sleeping, and converted the two other sleep-based ACS tests — 50/50 green on repeat runs [1].\n- Brought `kestrel/auth` clean under ruff 0.8 (auto-fixes plus manual B904/RUF012/PLW2901; skipped the `SPConfig` dataclass) and fixed 2 mypy errors: a missing Issuer/Subject now returns 401 instead of a 500 [1].\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/` (assertions, metadata, bindings) with a shim keeping old imports working; full suite 1,284 passed, ruff and mypy clean; pushed as two commits on `daniel/auth-cleanup` [1].",
+  "mesures": {
+    "mots": 217,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5470,
+    "sortie": 4262,
+    "reflexion": 3857,
+    "cache": 0,
+    "cout": 0.0127792
+  },
+  "cout": 0.0127792,
+  "latenceMs": 117918,
+  "fournisseur": "Mistral"
+}

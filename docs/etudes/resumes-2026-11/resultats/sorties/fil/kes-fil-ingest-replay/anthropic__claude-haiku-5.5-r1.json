@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:26:54.852Z",
+  "reponse": "## Où j'en suis\nLe replay réel a tourné dans `events.replay.v3` : 18 442 107 événements produits, 3 118 rejets écrits dans S3 (r2-04). Le backfill de l'agrégateur pour le 12/11 a démarré à 08:57 UTC. À 09:52 il en était à 61 %, avec 14,9 M lignes dans la fenêtre contre environ 20,5 M attendues (r2-06). Le dernier état connu date de 09:52, rien après. PR #233 est merged (ses-rp-2, ses-rp-1). (source: ses-rp-2, r2-04, r2-06, ses-rp-1)\n\n- [en-cours] Backfill `backfill-2026-11-12` de l'agrégateur, à 61 % au dernier relevé (source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure avec 1 % de tolérance dans ClickHouse `events_v3`, puis clore l'incident (source: r2-08, r2-10)\n- [essai-raté] Dry run avec des lots de 50 000 : OOMKilled à la limite de 2 Gi. Passage à des lots de 5 000 ; ne pas toucher à la limite mémoire, le quota du namespace est plafonné (source: r1-03, r1-04, src-sentry-oom)\n- [question] Date de restauration annoncée : Rachel a dit à Fernhill et Orbitly « jeudi » (r2-07), mais Orbitly a écrit « aujourd'hui, mercredi 18 » et attend une confirmation (source: r2-07, src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3` depuis cet outil ; pas d'abandon de données (source: r1-02, src-slack-incident)\n- [décision] La PR fork #241 n'est pas mergée ; Daniel fait le check CI sur la longueur de la clé de déduplication (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nLe replay réel a tourné dans `events.replay.v3` : 18 442 107 événements produits, 3 118 rejets écrits dans S3 (r2-04). Le backfill de l'agrégateur pour le 12/11 a démarré à 08:57 UTC. À 09:52 il en était à 61 %, avec 14,9 M lignes dans la fenêtre contre environ 20,5 M attendues (r2-06). Le dernier état connu date de 09:52, rien après. PR #233 est merged (ses-rp-2, ses-rp-1). (de: agent; source: ses-rp-2, r2-04, r2-06, ses-rp-1)\n\n- [en-cours] Backfill `backfill-2026-11-12` de l'agrégateur, à 61 % au dernier relevé (de: agent; source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure avec 1 % de tolérance dans ClickHouse `events_v3`, puis clore l'incident (de: agent; source: r2-08, r2-10)\n- [essai-raté] Dry run avec des lots de 50 000 : OOMKilled à la limite de 2 Gi. Passage à des lots de 5 000 ; ne pas toucher à la limite mémoire, le quota du namespace est plafonné (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [question] Date de restauration annoncée : Rachel a dit à Fernhill et Orbitly « jeudi » (r2-07), mais Orbitly a écrit « aujourd'hui, mercredi 18 » et attend une confirmation (de: toi, connecteur; source: r2-07, src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3` depuis cet outil ; pas d'abandon de données (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] La PR fork #241 n'est pas mergée ; Daniel fait le check CI sur la longueur de la clé de déduplication (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1584,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5138,
+    "sortie": 1520,
+    "reflexion": 811,
+    "cache": 0,
+    "cout": 0.0012738
+  },
+  "cout": 0.0012738,
+  "latenceMs": 7416,
+  "fournisseur": "Claude Platform on AWS"
+}

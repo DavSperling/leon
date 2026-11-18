@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:54:41.345Z",
+  "reponse": "## What is still open\n- Ilan Barak is your only active SRE candidate. His technical interview is Thursday 19/11 at 15:00, with you and Noa on the panel. He asked who will be on it, and your reply to Dana confirming this is drafted but not sent [1]. Noa confirmed and will prepare the Terraform exercise (the RDS parameter group one) [3]. The plan and rubric are written, but you still have to send them to Noa yourself [1].\n- Eitan asks for the SRE shortlist before Friday, because the board deck goes out Monday and he wants a hiring update in it [4]. With Yoav and Elena out, Ilan is the only name you can give him [1].\n- You plan to propose raising the SRE band to ₪42–48k to Eitan at Monday's leadership sync. Elena declined over pay, and Yoav took a counter-offer [1].\n- You want 3 more profiles from Talentbridge by end of next week, ideally people who have done on-call for US customers [1].\n\n## What changed\n- Yoav Mizrahi withdrew after accepting a counter-offer from his current employer [1].\n- Elena Petrova declined because the band was below her current package [1].\n\n## What you did\n- You built a 90-minute interview plan for Ilan covering Terraform, incident response based on the 12/11 ingest incident, and on-call design. It includes a question on cutting Noa's ~30 pages a week and a scoring rubric [1].\n- You removed candidates' pay figures and phone numbers from your hiring notes, so they stay only in the ATS [1].",
+  "rendu": "## What is still open\n- Ilan Barak is your only active SRE candidate. His technical interview is Thursday 19/11 at 15:00, with you and Noa on the panel. He asked who will be on it, and your reply to Dana confirming this is drafted but not sent [1]. Noa confirmed and will prepare the Terraform exercise (the RDS parameter group one) [3]. The plan and rubric are written, but you still have to send them to Noa yourself [1].\n- Eitan asks for the SRE shortlist before Friday, because the board deck goes out Monday and he wants a hiring update in it [4]. With Yoav and Elena out, Ilan is the only name you can give him [1].\n- You plan to propose raising the SRE band to ₪42–48k to Eitan at Monday's leadership sync. Elena declined over pay, and Yoav took a counter-offer [1].\n- You want 3 more profiles from Talentbridge by end of next week, ideally people who have done on-call for US customers [1].\n\n## What changed\n- Yoav Mizrahi withdrew after accepting a counter-offer from his current employer [1].\n- Elena Petrova declined because the band was below her current package [1].\n\n## What you did\n- You built a 90-minute interview plan for Ilan covering Terraform, incident response based on the 12/11 ingest incident, and on-call design. It includes a question on cutting Noa's ~30 pages a week and a scoring rubric [1].\n- You removed candidates' pay figures and phone numbers from your hiring notes, so they stay only in the ATS [1].",
+  "mesures": {
+    "mots": 251,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5914,
+    "sortie": 519,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017018
+  },
+  "cout": 0.017018,
+  "latenceMs": 3975,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:01:02.199Z",
+  "reponse": "## What is still open\n\n- **Soldes — PR #63** : Claire exclut la Saône des soldes malgré les −20 % de la grille ; Hugo demande confirmation et a validé le test en boutique de dev. Sophie attend les prix dans Shopify pour ses visuels le **30 novembre**, alors que l’application est programmée le 6 janvier. Le dry-run laisse aussi trois variantes en promotion de côté et signale sept lignes sans produit. [1][4][10][11]\n- **Flux Google Shopping — #65** : Sophie te demande si tu peux le relancer après le script des soldes, pour éviter un décalage de prix dans les annonces. [5]\n- **Bannière mobile — #64** : elle masque l’ajout au panier sur les petits téléphones ; correction attendue avant le shooting. [6]\n\n## What changed\n\n- **Étiquettes soldes — #59** : Hugo a relu et fusionné la PR. [7]\n- **Widget Zendesk — #52** : Lucie indique que les clients l’utilisent déjà, avec 23 conversations ouvertes depuis les pages produit cette semaine. [9]",
+  "rendu": "## What is still open\n\n- **Soldes — PR #63** : Claire exclut la Saône des soldes malgré les −20 % de la grille ; Hugo demande confirmation et a validé le test en boutique de dev. Sophie attend les prix dans Shopify pour ses visuels le **30 novembre**, alors que l’application est programmée le 6 janvier. Le dry-run laisse aussi trois variantes en promotion de côté et signale sept lignes sans produit. [1][4][10][11]\n- **Flux Google Shopping — #65** : Sophie te demande si tu peux le relancer après le script des soldes, pour éviter un décalage de prix dans les annonces. [5]\n- **Bannière mobile — #64** : elle masque l’ajout au panier sur les petits téléphones ; correction attendue avant le shooting. [6]\n\n## What changed\n\n- **Étiquettes soldes — #59** : Hugo a relu et fusionné la PR. [7]\n- **Widget Zendesk — #52** : Lucie indique que les clients l’utilisent déjà, avec 23 conversations ouvertes depuis les pages produit cette semaine. [9]",
+  "mesures": {
+    "mots": 147,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4497,
+    "sortie": 603,
+    "reflexion": 354,
+    "cache": 1451,
+    "cout": 0.0068943
+  },
+  "cout": 0.0068943,
+  "latenceMs": 6797,
+  "fournisseur": "Azure"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:12:42.418Z",
+  "reponse": "## What you did\n- You prepared the prod PG17 blue/green cutover: the Terraform plan now shows 2 changes and no destruction, the runbook is written, the rehearsal on a snapshot clone measured 74 seconds of write downtime with no data mismatch, and you tore down the rehearsal clone to stop costs. [1]\n\n## What changed\n- The cutover window moved from Saturday 21/11 to Sunday 22/11, 02:00–04:00 UTC, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed this with Sam and said you can update the runbook and merge #321. [8]\n- Renovate opened PR #320 to upgrade the AWS Terraform provider from 5.80 to 5.82; automerge is disabled. [4]\n\n## What is still open\n- Merge PR #321 after updating the runbook for the new Sunday window; Maya approved it but asked to wait until the window was confirmed with Fernhill. [3][8]\n- Ping Daniel Levi when you start the switchover: he is on call for the API side on Sunday. [7]\n- Give Lior Ben-David 30 minutes' notice before the switchover so he can pause ingest consumers; his workers read DATABASE_URL from SSM and need no change. [9]\n- Rehearse rollback on a fresh clone Thursday 19/11 and add it to the runbook: after switchover the old instance is renamed and diverges, so rolling back is not just switching back. [1]",
+  "rendu": "## What you did\n- You prepared the prod PG17 blue/green cutover: the Terraform plan now shows 2 changes and no destruction, the runbook is written, the rehearsal on a snapshot clone measured 74 seconds of write downtime with no data mismatch, and you tore down the rehearsal clone to stop costs. [1]\n\n## What changed\n- The cutover window moved from Saturday 21/11 to Sunday 22/11, 02:00–04:00 UTC, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed this with Sam and said you can update the runbook and merge #321. [8]\n- Renovate opened PR #320 to upgrade the AWS Terraform provider from 5.80 to 5.82; automerge is disabled. [4]\n\n## What is still open\n- Merge PR #321 after updating the runbook for the new Sunday window; Maya approved it but asked to wait until the window was confirmed with Fernhill. [3][8]\n- Ping Daniel Levi when you start the switchover: he is on call for the API side on Sunday. [7]\n- Give Lior Ben-David 30 minutes' notice before the switchover so he can pause ingest consumers; his workers read DATABASE_URL from SSM and need no change. [9]\n- Rehearse rollback on a fresh clone Thursday 19/11 and add it to the runbook: after switchover the old instance is renamed and diverges, so rolling back is not just switching back. [1]",
+  "mesures": {
+    "mots": 217,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5533,
+    "sortie": 4663,
+    "reflexion": 4351,
+    "cache": 0,
+    "cout": 0.00302156
+  },
+  "cout": 0.00302156,
+  "latenceMs": 12411,
+  "fournisseur": "CoreWeave"
+}

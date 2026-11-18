@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T17:53:56.816Z",
+  "reponse": "## What is still open\n\n- **Fernhill SSO:** Maya merged signature-validation PR #418, scheduled for last night’s staging deploy; confirm it is on staging by Wednesday EOD. Be on the Thursday 10 a.m. New York time walkthrough; Priya is running it. [1][3]\n- **Auth cleanup PR #423:** Tom requested separate PRs for the module move and lint fixes so he can review them. The cleanup also fixes flaky SAML tests and missing issuer/subject handling. [1][4]\n- **Replay protection:** Replace the process-local assertion ID cache with Redis for multi-pod protection before production; you planned to tackle this today. [1][2]",
+  "rendu": "## What is still open\n\n- **Fernhill SSO:** Maya merged signature-validation PR #418, scheduled for last night’s staging deploy; confirm it is on staging by Wednesday EOD. Be on the Thursday 10 a.m. New York time walkthrough; Priya is running it. [1][3]\n- **Auth cleanup PR #423:** Tom requested separate PRs for the module move and lint fixes so he can review them. The cleanup also fixes flaky SAML tests and missing issuer/subject handling. [1][4]\n- **Replay protection:** Replace the process-local assertion ID cache with Redis for multi-pod protection before production; you planned to tackle this today. [1][2]",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5398,
+    "sortie": 353,
+    "reflexion": 203,
+    "cache": 1451,
+    "cout": 0.00677055
+  },
+  "cout": 0.00677055,
+  "latenceMs": 4897,
+  "fournisseur": "Azure"
+}

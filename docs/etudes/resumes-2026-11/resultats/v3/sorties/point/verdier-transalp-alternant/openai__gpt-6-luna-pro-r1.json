@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:56:50.159Z",
+  "reponse": "## What is still open\n- La PR #60 est bloquée jusqu’à ce que tu remplaces la clé sandbox codée en dur par `TRANSALP_API_KEY` et demandes sa régénération. Le test sandbox de la commande #1042 a validé l’étiquette et le suivi Shopify ; fais l’essai production avec TEST-0001 vendredi 20 avant la bascule du lundi 23. N’envoie pas de clé par e-mail : TransAlp indique que Julien la recevra via l’espace client. [3][7][8][6]\n- Pour le ticket #61, Karim a renseigné les dimensions de 8 produits ; il reste la Saône 180, qu’il doit mesurer jeudi. [5]\n\n## What changed\n- Le ticket #59 demande l’ajout automatique du tag `soldes` aux produits remisés et son retrait à la fin des soldes, pour préparer les collections de janvier. [4]",
+  "rendu": "## What is still open\n- La PR #60 est bloquée jusqu’à ce que tu remplaces la clé sandbox codée en dur par `TRANSALP_API_KEY` et demandes sa régénération. Le test sandbox de la commande #1042 a validé l’étiquette et le suivi Shopify ; fais l’essai production avec TEST-0001 vendredi 20 avant la bascule du lundi 23. N’envoie pas de clé par e-mail : TransAlp indique que Julien la recevra via l’espace client. [3][7][8][6]\n- Pour le ticket #61, Karim a renseigné les dimensions de 8 produits ; il reste la Saône 180, qu’il doit mesurer jeudi. [5]\n\n## What changed\n- Le ticket #59 demande l’ajout automatique du tag `soldes` aux produits remisés et son retrait à la fin des soldes, pour préparer les collections de janvier. [4]",
+  "mesures": {
+    "mots": 120,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 17831,
+    "sortie": 4201,
+    "reflexion": 3788,
+    "cache": 9054,
+    "cout": 0.00306874
+  },
+  "cout": 0.00306874,
+  "latenceMs": 41114,
+  "fournisseur": "Azure"
+}

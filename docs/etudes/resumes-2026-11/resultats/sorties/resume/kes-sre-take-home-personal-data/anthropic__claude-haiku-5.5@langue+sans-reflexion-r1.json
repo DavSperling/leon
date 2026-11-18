@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:22.534Z",
+  "reponse": "## Where I'm at\nMaya set up a 3-hour SRE take-home for a candidate and moved it into its own private repo, `kestrel-analytics/sre-take-home`, so the infra history stays clean. The exercise is built with Terraform and docker compose: a broken alert rule, a connection leak in `flaky-svc`, and an over-broad IAM policy. The rubric is in place with four areas scored 0–3 and no pass cut-off; Maya and Noa review independently and the panel decides. Nothing has been sent to the candidate. Maya will send the exercise herself after the Thursday 4pm call.\n\n- [en-cours] Maya's Thursday 4pm (Tel Aviv time) call with the candidate, then Maya sends the exercise herself\n- [prochaine-étape] Maya sends the exercise to the candidate after the call; invite the collaborator to `kestrel-analytics/sre-take-home` when she decides\n- [essai-raté] Multi-arch `docker buildx --load` failed (\"docker exporter does not currently support exporting manifest lists\"); fixed by building `flaky-svc` from source in compose, so it builds natively on any architecture\n- [question] Whether the infra branch `maya/sre-take-home` gets dropped (its `hiring/` folder is already removed from the working tree, uncommitted)\n- [décision] No pass threshold in the rubric; scores are input for the panel discussion (source: t10)\n- [décision] Noa is the second reviewer, scoring independently with Maya before the panel decides together (source: t10)\n- [décision] The exercise lives in its own private repo, not in infra, so candidates can't see the real modules (source: t12)\n- [décision] No email goes out from the assistant; Maya sends the exercise herself after the call (source: t16)",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Maya's Thursday 4pm (Tel Aviv time) call with the candidate, then Maya sends the exercise herself\n- [prochaine-étape] Maya sends the exercise to the candidate after the call; invite the collaborator to `kestrel-analytics/sre-take-home` when she decides\n- [essai-raté] Multi-arch `docker buildx --load` failed (\"docker exporter does not currently support exporting manifest lists\"); fixed by building `flaky-svc` from source in compose, so it builds natively on any architecture\n- [question] Whether the infra branch `maya/sre-take-home` gets dropped (its `hiring/` folder is already removed from the working tree, uncommitted)\n- [décision] No pass threshold in the rubric; scores are input for the panel discussion (source: t10)\n- [décision] Noa is the second reviewer, scoring independently with Maya before the panel decides together (source: t10)\n- [décision] The exercise lives in its own private repo, not in infra, so candidates can't see the real modules (source: t12)\n- [décision] No email goes out from the assistant; Maya sends the exercise herself after the call (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1196,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5122,
+    "sortie": 596,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008102
+  },
+  "cout": 0.0008102,
+  "latenceMs": 3356,
+  "fournisseur": "Claude Platform on AWS"
+}

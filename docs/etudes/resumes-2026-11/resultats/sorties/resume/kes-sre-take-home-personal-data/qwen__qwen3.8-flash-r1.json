@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:52.026Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "rien": false,
+    "vide": true,
+    "caracteres": 0,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 3848,
+    "sortie": 4000,
+    "reflexion": 4000,
+    "cache": 0,
+    "cout": 0.0024572
+  },
+  "cout": 0.0024572,
+  "latenceMs": 54901,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-synchro-stocks",
+  "modele": "google/gemini-4-carbon",
+  "rep": 1,
+  "date": "2026-11-18T14:38:28.106Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5413,
+    "sortie": 8000,
+    "reflexion": 7997,
+    "cache": 0,
+    "cout": 0.090826
+  },
+  "cout": 0.090826,
+  "latenceMs": 136477,
+  "fournisseur": "Google AI Studio"
+}

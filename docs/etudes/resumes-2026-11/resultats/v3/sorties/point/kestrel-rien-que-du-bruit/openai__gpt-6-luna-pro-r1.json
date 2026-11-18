@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:55:05.158Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8732,
+    "sortie": 314,
+    "reflexion": 277,
+    "cache": 4806,
+    "cout": 0.00059766
+  },
+  "cout": 0.00059766,
+  "latenceMs": 5268,
+  "fournisseur": "Azure"
+}

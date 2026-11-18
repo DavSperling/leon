@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:04:03.913Z",
+  "reponse": "**Short answer:** Dec 1 is still the target, but it's at risk. It depends on Fernhill changing its signing algorithm, which they can't do before Nov 24.\n\n**What's done**\n- SP-initiated login is merged behind the `saml_sso` flag, with a SHA-256 minimum that applies to all tenants [4].\n- The IdP-initiated flow and the metadata upload are built [2][12].\n- The admin SSO page is on staging. Its copy still needs Priya's review [2].\n- Fernhill's board approved the Kestrel application on Nov 17. Helen Marsh sent the metadata XML, the signing certificate and a test user [1].\n- On staging, IdP-initiated login works [1][6].\n\n**The blocker**\n- SP-initiated login fails because Fernhill's IdP signs assertions with SHA-1. We only accept SHA-256 or stronger [6][1].\n- Maya refused to allow SHA-1 for Fernhill, even temporarily. Her reasons were their pen test and our SOC 2 audit [6].\n- So we're waiting for Fernhill's change board on Nov 24 to switch them to SHA-256 [6].\n\n**What's left**\n1. Fernhill's change board approves the SHA-256 switch on Nov 24 [6].\n2. Joint end-to-end test with Helen on Wed Nov 25, 16:00 Tel Aviv time (14:00 London) [1][6].\n3. Daniel lands the remaining SAML migrations before the migration freeze on Dec 3 [13].\n4. Sam Ortiz checks in with Helen's manager on Nov 24. If the board doesn't approve that day, Sam tells Fernhill straight away that Dec 1 is at risk [6].\n\nDec 1 is the go-live date written in the contract [2]. When you reply to the bank, I'd say we're on track only if they approve the SHA-256 change on Nov 24. I found no record that this has happened.",
+  "rendu": "**Short answer:** Dec 1 is still the target, but it's at risk. It depends on Fernhill changing its signing algorithm, which they can't do before Nov 24.\n\n**What's done**\n- SP-initiated login is merged behind the `saml_sso` flag, with a SHA-256 minimum that applies to all tenants [4].\n- The IdP-initiated flow and the metadata upload are built [2][12].\n- The admin SSO page is on staging. Its copy still needs Priya's review [2].\n- Fernhill's board approved the Kestrel application on Nov 17. Helen Marsh sent the metadata XML, the signing certificate and a test user [1].\n- On staging, IdP-initiated login works [1][6].\n\n**The blocker**\n- SP-initiated login fails because Fernhill's IdP signs assertions with SHA-1. We only accept SHA-256 or stronger [6][1].\n- Maya refused to allow SHA-1 for Fernhill, even temporarily. Her reasons were their pen test and our SOC 2 audit [6].\n- So we're waiting for Fernhill's change board on Nov 24 to switch them to SHA-256 [6].\n\n**What's left**\n1. Fernhill's change board approves the SHA-256 switch on Nov 24 [6].\n2. Joint end-to-end test with Helen on Wed Nov 25, 16:00 Tel Aviv time (14:00 London) [1][6].\n3. Daniel lands the remaining SAML migrations before the migration freeze on Dec 3 [13].\n4. Sam Ortiz checks in with Helen's manager on Nov 24. If the board doesn't approve that day, Sam tells Fernhill straight away that Dec 1 is at risk [6].\n\nDec 1 is the go-live date written in the contract [2]. When you reply to the bank, I'd say we're on track only if they approve the SHA-256 change on Nov 24. I found no record that this has happened.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21773,
+    "sortie": 1009,
+    "reflexion": 151,
+    "cache": 0,
+    "cout": 0.053636
+  },
+  "latenceMs": 10854,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"SSO login company accounts December 1st bank\"}",
+    "chercher {\"requete\":\"SSO SAML OIDC 1er décembre banque\",\"depuis\":\"3m\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.053636
+}

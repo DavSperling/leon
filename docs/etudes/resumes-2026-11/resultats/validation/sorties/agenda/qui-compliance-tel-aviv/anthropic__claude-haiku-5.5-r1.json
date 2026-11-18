@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "qui-compliance-tel-aviv",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:33.186Z",
+  "reponse": "{\"n\": 15, \"titre\": \"Quillon PCI DSS scoping walkthrough\", \"debut\": \"2026-11-18T15:00\", \"fin\": \"2026-11-18T16:30\", \"avec\": \"Victor Lindqvist\"}\n{\"n\": 6, \"titre\": \"Annual third-party oversight review: Quillon\", \"debut\": \"2026-11-19T16:00\", \"fin\": \"2026-11-19T17:00\", \"avec\": \"Monique Tran\"}\n{\"n\": 5, \"titre\": \"Audit & risk committee prep\", \"debut\": \"2026-11-22T08:30\", \"fin\": \"2026-11-22T09:30\", \"avec\": \"Gil Shamir, Avi Kessler\"}\n{\"n\": 12, \"titre\": \"1:1 avec Avi\", \"debut\": \"2026-11-16T13:00\", \"fin\": \"2026-11-16T13:30\", \"avec\": \"Avi Kessler\"}\n{\"n\": 13, \"titre\": \"Entretien Noga Elbaz (analyste conformité)\", \"debut\": \"2026-11-17T12:30\", \"fin\": \"2026-11-17T13:15\", \"avec\": \"Noga Elbaz\"}",
+  "rendu": "2026-11-16T13:00→2026-11-16T13:30 1:1 avec Avi (avec Avi Kessler)\n2026-11-17T12:30→2026-11-17T13:15 Entretien Noga Elbaz (analyste conformité) (avec Noga Elbaz)\n2026-11-18T15:00→2026-11-18T16:30 Quillon PCI DSS scoping walkthrough (avec Victor Lindqvist)\n2026-11-19T16:00→2026-11-19T17:00 Annual third-party oversight review: Quillon (avec Monique Tran)\n2026-11-22T08:30→2026-11-22T09:30 Audit & risk committee prep (avec Gil Shamir, Avi Kessler)",
+  "mesures": {
+    "trouves": 5,
+    "attendus": 5,
+    "justes": 5,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4321,
+    "sortie": 3340,
+    "reflexion": 2957,
+    "cache": 0,
+    "cout": 0.0021021
+  },
+  "cout": 0.0021021,
+  "latenceMs": 18455,
+  "fournisseur": "Amazon Bedrock"
+}

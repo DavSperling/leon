@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-salaire-support-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:25:01.154Z",
+  "reponse": "No approved salary band for the Austin Support Engineer role appears in these results. The job description and hiring plan both point to a comp sheet for compensation [1][5], but that sheet isn't in the results. A recruiter from Northpeak is asking Carla for the band because Austin candidates want it upfront [4]. The only figure is a general market estimate of $75,000–$95,000 base, which the source itself says is not your company's band [2]. The approved band in #hiring is for the Tel Aviv SRE role, so it doesn't apply here [3].",
+  "rendu": "No approved salary band for the Austin Support Engineer role appears in these results. The job description and hiring plan both point to a comp sheet for compensation [1][5], but that sheet isn't in the results. A recruiter from Northpeak is asking Carla for the band because Austin candidates want it upfront [4]. The only figure is a general market estimate of $75,000–$95,000 base, which the source itself says is not your company's band [2]. The approved band in #hiring is for the Tel Aviv SRE role, so it doesn't apply here [3].",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1628,
+    "sortie": 600,
+    "reflexion": 423,
+    "cache": 0,
+    "cout": 0.0004628
+  },
+  "cout": 0.0004628,
+  "latenceMs": 3571,
+  "fournisseur": "Google"
+}

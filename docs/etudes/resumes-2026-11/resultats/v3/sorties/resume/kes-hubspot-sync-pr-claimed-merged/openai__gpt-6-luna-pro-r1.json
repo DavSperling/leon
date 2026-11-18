@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:57:20.444Z",
+  "reponse": "## Où j'en suis\nPR #405 was closed, and #409 was merged with the HubSpot polling sync: every 15 minutes, paginated past the 10k search limit, and restricted to companies with ARR > 0. However, CI’s e2e check failed, so the test fixture still needs updating; the merge status is reported as merged in the session facts.\n\n- [en-cours] Fix `tests/e2e/test_admin_accounts.py`: its trial-company fixture is excluded by the ARR filter, causing the expected 3 rows but only 2 to appear.\n- [prochaine-étape] Update the fixture to give the third company ARR > 0, or change the expected count to 2; rerun the e2e check.\n- [prochaine-étape] Ask Noa to add `HUBSPOT_TOKEN` to Secrets Manager for staging and production.\n- [essai-raté] `gh pr checks 409 --watch` failed because `test_accounts_table_shows_owner` failed; lint, unit, and docker-build passed.\n- [question] Which e2e fix should be used: give the fixture company ARR > 0, or expect 2 rows?",
+  "rendu": "## Où j'en suis\nPR #405 was closed, and #409 was merged with the HubSpot polling sync: every 15 minutes, paginated past the 10k search limit, and restricted to companies with ARR > 0. However, CI’s e2e check failed, so the test fixture still needs updating; the merge status is reported as merged in the session facts.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix `tests/e2e/test_admin_accounts.py`: its trial-company fixture is excluded by the ARR filter, causing the expected 3 rows but only 2 to appear.\n- [prochaine-étape] Update the fixture to give the third company ARR > 0, or change the expected count to 2; rerun the e2e check.\n- [prochaine-étape] Ask Noa to add `HUBSPOT_TOKEN` to Secrets Manager for staging and production.\n- [essai-raté] `gh pr checks 409 --watch` failed because `test_accounts_table_shows_owner` failed; lint, unit, and docker-build passed.\n- [question] Which e2e fix should be used: give the fixture company ARR > 0, or expect 2 rows?",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1121,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 11982,
+    "sortie": 506,
+    "reflexion": 0,
+    "cache": 6654,
+    "cout": 0.00085234
+  },
+  "cout": 0.00085234,
+  "latenceMs": 4534,
+  "fournisseur": "Azure"
+}

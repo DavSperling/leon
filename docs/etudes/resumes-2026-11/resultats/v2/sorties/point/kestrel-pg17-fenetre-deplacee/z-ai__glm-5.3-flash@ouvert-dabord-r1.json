@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "z-ai/glm-5.3-flash@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:13:17.878Z",
+  "reponse": "## What is still open\n- Rollback rehearsal on a fresh clone is scheduled for **Thursday 19/11**: you need to measure how long it takes and what data would be lost — rollback is not a simple switch-back since the old instance diverges right after switchover [1].\n- PR #321 (blue/green Terraform + runbook) is approved by Maya but not merged: update the runbook date first, then merge [3][8].\n- The runbook still shows the old Saturday window; it needs the update to Sunday before merging [8].\n\n## What changed\n- **The cutover window moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and told the CSMs [8][10].\n- Daniel will be on call for the API side on Sunday — ping him when you start the switchover [7]. Lior asks for **30 min notice** before the switchover so he can pause the ingest consumers cleanly [9].\n\n## What you did\n- You prepared the full prod PG17 cutover: blue/green Terraform (replica now follows the switchover instead of being destroyed, plan clean at 0 destroys), the runbook, and PR #321 with Maya as reviewer [1][3].\n- You rehearsed the cutover on a snapshot clone: 74 s of write downtime, replicas lag under 1 s, no data mismatch — then tore the clone down [1].",
+  "rendu": "## What is still open\n- Rollback rehearsal on a fresh clone is scheduled for **Thursday 19/11**: you need to measure how long it takes and what data would be lost — rollback is not a simple switch-back since the old instance diverges right after switchover [1].\n- PR #321 (blue/green Terraform + runbook) is approved by Maya but not merged: update the runbook date first, then merge [3][8].\n- The runbook still shows the old Saturday window; it needs the update to Sunday before merging [8].\n\n## What changed\n- **The cutover window moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00 UTC; Maya confirmed with Sam and told the CSMs [8][10].\n- Daniel will be on call for the API side on Sunday — ping him when you start the switchover [7]. Lior asks for **30 min notice** before the switchover so he can pause the ingest consumers cleanly [9].\n\n## What you did\n- You prepared the full prod PG17 cutover: blue/green Terraform (replica now follows the switchover instead of being destroyed, plan clean at 0 destroys), the runbook, and PR #321 with Maya as reviewer [1][3].\n- You rehearsed the cutover on a snapshot clone: 74 s of write downtime, replicas lag under 1 s, no data mismatch — then tore the clone down [1].",
+  "mesures": {
+    "mots": 210,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5064,
+    "sortie": 490,
+    "reflexion": 155,
+    "cache": 0,
+    "cout": 0.0010046
+  },
+  "cout": 0.0010046,
+  "latenceMs": 3789,
+  "fournisseur": "Together"
+}

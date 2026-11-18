@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:04.286Z",
+  "reponse": "Depuis la PR #447, les flags sont lus via l'API : il faut exécuter `make dev-flags FLAGS=dashboards_v2` avec l'API démarrée, puis recharger la page [2][3]. L'ancienne méthode `FEATURE_FLAGS=new_dash` dans `.env.local` est désormais ignorée [2], et c'est ce qui explique qu'elle ne fonctionne plus [3]. Vous pouvez vérifier avec `curl localhost:8000/api/flags` [3].",
+  "rendu": "Depuis la PR #447, les flags sont lus via l'API : il faut exécuter `make dev-flags FLAGS=dashboards_v2` avec l'API démarrée, puis recharger la page [2][3]. L'ancienne méthode `FEATURE_FLAGS=new_dash` dans `.env.local` est désormais ignorée [2], et c'est ce qui explique qu'elle ne fonctionne plus [3]. Vous pouvez vérifier avec `curl localhost:8000/api/flags` [3].",
+  "mesures": {
+    "mots": 50,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1169,
+    "sortie": 151,
+    "reflexion": 35,
+    "cache": 0,
+    "cout": 0.00020594
+  },
+  "cout": 0.00020594,
+  "latenceMs": 3264,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:28:03.042Z",
+  "reponse": "## What you did\n- Ilan Barak is your only remaining SRE candidate: Yoav Mizrahi withdrew for a counter-offer, Elena Petrova declined on pay [1].\n- His technical interview tomorrow 19/11 at 15:00 is fully scripted — 90 min, Terraform with Noa, the 12/11 ingest incident as the live scenario, TLV night coverage for NY customers and PagerDuty noise, plus a 4-criteria rubric [1].\n- Compensation looks like the real blocker to closing this hire: 2 of the last 4 declines trace back to the band, and Ilan already sits above its top [1].\n\n## What changed\n- Eitan wants the SRE shortlist before Friday — your hiring update goes into Monday's board deck [4].\n- Noa confirmed tomorrow 15:00 and is preparing the Terraform exercise today [3].\n\n## What is still open\n- The plan + rubric doc for Noa is written but not sent [1].\n- Dana's reply is still a draft: confirm the panel (you + Noa) and ask for 3 more profiles with US-customer on-call experience by end of next week [1].\n- Propose raising the SRE band to ₪42–48k to Eitan at Monday's leadership sync — worth aligning with the shortlist he asked for [1][4].",
+  "rendu": "## What you did\n- Ilan Barak is your only remaining SRE candidate: Yoav Mizrahi withdrew for a counter-offer, Elena Petrova declined on pay [1].\n- His technical interview tomorrow 19/11 at 15:00 is fully scripted — 90 min, Terraform with Noa, the 12/11 ingest incident as the live scenario, TLV night coverage for NY customers and PagerDuty noise, plus a 4-criteria rubric [1].\n- Compensation looks like the real blocker to closing this hire: 2 of the last 4 declines trace back to the band, and Ilan already sits above its top [1].\n\n## What changed\n- Eitan wants the SRE shortlist before Friday — your hiring update goes into Monday's board deck [4].\n- Noa confirmed tomorrow 15:00 and is preparing the Terraform exercise today [3].\n\n## What is still open\n- The plan + rubric doc for Noa is written but not sent [1].\n- Dana's reply is still a draft: confirm the panel (you + Noa) and ask for 3 more profiles with US-customer on-call experience by end of next week [1].\n- Propose raising the SRE band to ₪42–48k to Eitan at Monday's leadership sync — worth aligning with the shortlist he asked for [1][4].",
+  "mesures": {
+    "mots": 184,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4252,
+    "sortie": 1993,
+    "reflexion": 1682,
+    "cache": 0,
+    "cout": 0.014579175
+  },
+  "cout": 0.014579175,
+  "latenceMs": 42063,
+  "fournisseur": "Alibaba"
+}

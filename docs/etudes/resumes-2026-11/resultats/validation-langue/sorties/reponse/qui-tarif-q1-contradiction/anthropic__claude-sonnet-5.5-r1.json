@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:46.884Z",
+  "reponse": "The most recent figure puts the Q1 payout fee at 0.45%, not 0.40%, after Gil's review. The v3 deck is described as outdated, and the Slack post says tiers are unchanged and customer notices go out by Dec 1 [2]. The earlier v3 proposal, dated Nov 9, had 0.40% per payout (today 0.50%), with a $0.25 minimum, and tiers of −0.05 pt above $5M/month and −0.10 pt above $20M/month. It also said Tradewell keeps its contracted rate until December 2027 [1]. The draft customer notice still says 0.40%, so it conflicts with the update [4]. Pinecrest was told 0.40% during its QBR, and a sales team member said they would correct this with Rob this week [3][2].",
+  "rendu": "The most recent figure puts the Q1 payout fee at 0.45%, not 0.40%, after Gil's review. The v3 deck is described as outdated, and the Slack post says tiers are unchanged and customer notices go out by Dec 1 [2]. The earlier v3 proposal, dated Nov 9, had 0.40% per payout (today 0.50%), with a $0.25 minimum, and tiers of −0.05 pt above $5M/month and −0.10 pt above $20M/month. It also said Tradewell keeps its contracted rate until December 2027 [1]. The draft customer notice still says 0.40%, so it conflicts with the update [4]. Pinecrest was told 0.40% during its QBR, and a sales team member said they would correct this with Rob this week [3][2].",
+  "mesures": {
+    "mots": 117,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1433,
+    "sortie": 263,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005496
+  },
+  "cout": 0.005496,
+  "latenceMs": 2748,
+  "fournisseur": "Amazon Bedrock"
+}

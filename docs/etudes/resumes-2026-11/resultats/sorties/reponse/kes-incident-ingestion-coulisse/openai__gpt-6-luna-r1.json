@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:32:09.643Z",
+  "reponse": "La cause racine était le disque plein du broker Kafka ingest-kafka-2, après la suppression de la rétention basée sur la taille dans le changement d’infrastructure #221. Le broker est passé en lecture seule à 09:38 UTC, bloquant les consommateurs pendant 2 h 47 ; aucun événement n’a été perdu, les producteurs les ayant mis en tampon. [2] Le changement #388 sur la taille des lots était une fausse piste : son annulation n’a pas réduit le retard. [3][5]",
+  "rendu": "La cause racine était le disque plein du broker Kafka ingest-kafka-2, après la suppression de la rétention basée sur la taille dans le changement d’infrastructure #221. Le broker est passé en lecture seule à 09:38 UTC, bloquant les consommateurs pendant 2 h 47 ; aucun événement n’a été perdu, les producteurs les ayant mis en tampon. [2] Le changement #388 sur la taille des lots était une fausse piste : son annulation n’a pas réduit le retard. [3][5]",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1148,
+    "sortie": 114,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000200425
+  },
+  "cout": 0.000200425,
+  "latenceMs": 2185,
+  "fournisseur": "OpenAI"
+}

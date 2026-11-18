@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:49.039Z",
+  "reponse": "## Où j'en suis\nL'avenant n°1 au contrat Marchand (réception reportée du 4 au 11 décembre, pénalités levées entre les deux dates, 1re année d'entretien offerte) a été rédigé, relu et signé par Hélène le 17/11, puis envoyé à Gilles Marchand avec le mail d'accompagnement (source: m2-02, m2-07, m2-08). Le 18/11, Gilles répond que, après échange avec Hélène la veille au soir, l'accord serait réception le 11/12 et contrat d'entretien offert pendant 3 ans, et demande l'avenant corrigé pour signature (source: m3-01, src-mail-gilles). L'avenant actuel ne prévoit qu'1 an ; Camille a bloqué toute modification tant qu'Hélène n'a pas confirmé l'accord à 3 ans, et a envoyé à Gilles une réponse d'attente promettant l'avenant définitif dans la journée (source: m3-03, m3-09, m3-08). En cas d'échec de signature et de dépassement du 4 décembre, l'article 9 prévoit 150 € HT par jour ouvré, plafonnés à 4 320 € HT, sans exonération pour retard fournisseur (source: m3-06, src-drive-contrat).\n\n- [en-cours] avenant à corriger en attente de confirmation d'Hélène : passer l'article 2 de 1 an à 3 ans d'entretien offert (écart de 960 € HT, 1 440 € HT au total contre 480 € HT) avant envoi à Gilles pour signature (source: m3-02, m3-04)\n- [prochaine-étape] obtenir le feu vert ou le démenti d'Hélène sur les 3 ans, puis envoyer l'avenant définitif à Gilles dans la journée du 18/11 comme promis (source: m3-03, m3-07, m3-08)\n- [question] qui est exact : Gilles (3 ans, échange avec Hélène le 17 au soir) ou le point chantiers et l'avenant signé par Hélène (1 an, « Pas plus ») ? L'avenant envoyé ne prévoit qu'1 an et la réunion du 17/11 fixait 1 an (source: m3-01, m2-07, src-tldv)\n- [décision] proposition d'avenant validée au point chantiers du 17/11 : réception le 11/12, pas de pénalités, 1re année d'entretien offerte, Camille prépare et Hélène signe (source: src-tldv, m2-01)",
+  "rendu": "- [en-cours] avenant à corriger en attente de confirmation d'Hélène : passer l'article 2 de 1 an à 3 ans d'entretien offert (écart de 960 € HT, 1 440 € HT au total contre 480 € HT) avant envoi à Gilles pour signature (de: agent; source: m3-02, m3-04)\n- [prochaine-étape] obtenir le feu vert ou le démenti d'Hélène sur les 3 ans, puis envoyer l'avenant définitif à Gilles dans la journée du 18/11 comme promis (de: toi, agent; source: m3-03, m3-07, m3-08)\n- [question] qui est exact : Gilles (3 ans, échange avec Hélène le 17 au soir) ou le point chantiers et l'avenant signé par Hélène (1 an, « Pas plus ») ? L'avenant envoyé ne prévoit qu'1 an et la réunion du 17/11 fixait 1 an (de: toi, connecteur; source: m3-01, m2-07, src-tldv)\n- [décision] proposition d'avenant validée au point chantiers du 17/11 : réception le 11/12, pas de pénalités, 1re année d'entretien offerte, Camille prépare et Hélène signe (de: toi, connecteur; source: src-tldv, m2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 954,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3999,
+    "sortie": 749,
+    "reflexion": 96,
+    "cache": 0,
+    "cout": 0.00100685
+  },
+  "cout": 0.00100685,
+  "latenceMs": 13558,
+  "fournisseur": "Inceptron"
+}

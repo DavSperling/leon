@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:24:56.432Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est écrit et fonctionnel : remises par collection (Rhône -20 %, Fins de série -30 %, Saône exclue), arrondi au premier prix finissant par 9, application via bulk operation Shopify (après échec d'écriture variante par variante throttling), et programmation le 13 janvier 2027 à 8h00 via cron. PR #94 ouverte sur maison-verdier/boutique. La boutique de dev a été remise propre puis sert à la répétition.\n\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (prévu en décembre, par l'utilisatrice).\n- [prochaine-étape] Régénérer le CSV prix soldes avant la newsletter du 6 janvier si des prix changent (fichier actuel : /tmp/prix-soldes.csv).\n- [prochaine-étape] Vérifier sur dev-verdier la veille du 13 janvier (commande `pnpm soldes:repetition`).\n- [essai-raté] Écriture variante par variante : THROTTLED à mi-course, boutique de dev à moitié soldée ; remplacé par bulkOperationRunMutation (JSONL), dév remise propre depuis le CSV du dry run.\n- [décision] Remises finales : -20 % Rhône, -30 % fins de série, Saône exclue (source: t05).\n- [décision] Programmation le 13 janvier 2027 à 8h00 pile, pas la veille au soir (source: t15).\n- [décision] Arrondi : euro au dessous puis descendu au prix finissant par 9 (source: t07).",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est écrit et fonctionnel : remises par collection (Rhône -20 %, Fins de série -30 %, Saône exclue), arrondi au premier prix finissant par 9, application via bulk operation Shopify (après échec d'écriture variante par variante throttling), et programmation le 13 janvier 2027 à 8h00 via cron. PR #94 ouverte sur maison-verdier/boutique. La boutique de dev a été remise propre puis sert à la répétition.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Écrire le script de retour aux prix d'origine (prévu en décembre, par l'utilisatrice).\n- [prochaine-étape] Régénérer le CSV prix soldes avant la newsletter du 6 janvier si des prix changent (fichier actuel : /tmp/prix-soldes.csv).\n- [prochaine-étape] Vérifier sur dev-verdier la veille du 13 janvier (commande `pnpm soldes:repetition`).\n- [essai-raté] Écriture variante par variante : THROTTLED à mi-course, boutique de dev à moitié soldée ; remplacé par bulkOperationRunMutation (JSONL), dév remise propre depuis le CSV du dry run.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1140,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3935,
+    "sortie": 402,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00473057
+  },
+  "cout": 0.00473057,
+  "latenceMs": 3502,
+  "fournisseur": "DigitalOcean"
+}

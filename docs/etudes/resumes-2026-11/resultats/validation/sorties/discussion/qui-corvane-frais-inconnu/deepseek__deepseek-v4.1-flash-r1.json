@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:25.574Z",
+  "reponse": "Je ne sais pas : aucun chiffre confirmé n'existe pour l'année prochaine.\n\nCe que j'ai trouvé : le coût bancaire retenu dans le budget est que le frais Corvane par item ACH reste à 0,08 $ en 2027, l'accord actuel courant jusqu'au 31 mars 2027 [1]. La facture d'octobre va dans ce sens : 14 212,40 $ pour 177 655 items ACH [13].\n\nPour la suite, Marcus Oyelaran rapporte le 16/11 que Corvane (via Paula Brandt, notre RM) laisse entendre qu'ils veulent augmenter le frais par item après l'incident du rejet du 10 novembre, mais rien n'est encore sur papier et l'appel de renouvellement a été décalé à la semaine du 23 novembre [6]. Le mémo prévoit de revoir le tier inférieur si le frais dépasse 0,10 $ [1].\n\nRecherches faites : « Corvane pricing per payout » et « Corvane frais par paiement tarif », puis lecture du mémo de pricing Q1 2027 [1] et du fil #finance [6]. Pour le chiffre 2027, il faudra attendre l'issue des discussions de renouvellement.",
+  "rendu": "Je ne sais pas : aucun chiffre confirmé n'existe pour l'année prochaine.\n\nCe que j'ai trouvé : le coût bancaire retenu dans le budget est que le frais Corvane par item ACH reste à 0,08 $ en 2027, l'accord actuel courant jusqu'au 31 mars 2027 [1]. La facture d'octobre va dans ce sens : 14 212,40 $ pour 177 655 items ACH [13].\n\nPour la suite, Marcus Oyelaran rapporte le 16/11 que Corvane (via Paula Brandt, notre RM) laisse entendre qu'ils veulent augmenter le frais par item après l'incident du rejet du 10 novembre, mais rien n'est encore sur papier et l'appel de renouvellement a été décalé à la semaine du 23 novembre [6]. Le mémo prévoit de revoir le tier inférieur si le frais dépasse 0,10 $ [1].\n\nRecherches faites : « Corvane pricing per payout » et « Corvane frais par paiement tarif », puis lecture du mémo de pricing Q1 2027 [1] et du fil #finance [6]. Pour le chiffre 2027, il faudra attendre l'issue des discussions de renouvellement.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 14844,
+    "sortie": 668,
+    "reflexion": 202,
+    "cache": 9472,
+    "cout": 0.0010724223999999999
+  },
+  "latenceMs": 10065,
+  "fournisseur": "DeepInfra",
+  "trace": [
+    "chercher {\"requete\":\"Corvane pricing per payout\"}",
+    "chercher {\"requete\":\"Corvane frais par paiement tarif\"}",
+    "lire {\"passageId\":\"drive-q1-pricing-memo-1\"}",
+    "lire {\"sourceId\":\"slack-finance-corvane\"}"
+  ],
+  "cout": 0.0010724223999999999
+}

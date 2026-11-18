@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:25:23.860Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 19969,
+    "sortie": 506,
+    "reflexion": 155,
+    "cache": 12581,
+    "cout": 0.00130201
+  },
+  "latenceMs": 8241,
+  "fournisseur": "OpenAI",
+  "trace": [
+    "chercher {\"requete\":\"bank support staff company accounts log in December 1st\",\"type\":\"fil\"}",
+    "lire {\"sourceId\":\"gmail-fernhill-sso-config\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}",
+    "chercher {\"requete\":\"Fernhill Bank SSO December 1 go live remaining tasks test certificate SHA-1 SHA-256\",\"depuis\":\"2026-11-01\"}",
+    "chercher {\"requete\":\"bank wrote support can staff log in company accounts December 1\",\"depuis\":\"2026-11-01\"}",
+    "chercher {\"requete\":\"Fernhill support \\\"December 1\\\" staff login company accounts\",\"outil\":\"Gmail\"}",
+    "chercher {\"requete\":\"Fernhill bank support inquiry December 1 SSO staff login\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"KES-412 Fernhill SSO go live checklist production flag enable Require SSO test\",\"outil\":\"Linear\"}"
+  ],
+  "cout": 0.00130201
+}

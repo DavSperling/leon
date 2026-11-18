@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:23:08.965Z",
+  "reponse": "**Cause :** Le 3/11, un emplacement « Showroom » a été ajouté à Shopify. Le script de synchro ne mettait à jour que l'entrepôt, donc quand l'entrepôt tombait à 0, le showroom gardait son ancien stock et le site additionnait les deux [2][7]. Julien Morel a identifié ce problème le 12/11 [2][7].\n\n**Est-ce réparé ?** Le correctif est en place : la PR #87 (mise à jour de tous les emplacements) a été fusionnée et déployée le 13/11 [12]. Je n'ai trouvé aucun cas de commande annulée pour rupture postérieur à cette date, mais cela ne prouve pas que le problème est totalement résolu. Les cas recensés (#4806, #4812, #4825) datent d'avant le correctif [3][4][6].\n\nDeux points restent ouverts :\n- Un script de contrôle quotidien des écarts entre Shopify et l'entrepôt (PR #91) est encore en brouillon au 17/11 et n'est pas fusionné [5].\n- Le Slack #tech du 10/11 montre que l'équipe avait déjà repéré le problème, mais je n'ai pas trouvé de suivi après le déploiement [7].",
+  "rendu": "**Cause :** Le 3/11, un emplacement « Showroom » a été ajouté à Shopify. Le script de synchro ne mettait à jour que l'entrepôt, donc quand l'entrepôt tombait à 0, le showroom gardait son ancien stock et le site additionnait les deux [2][7]. Julien Morel a identifié ce problème le 12/11 [2][7].\n\n**Est-ce réparé ?** Le correctif est en place : la PR #87 (mise à jour de tous les emplacements) a été fusionnée et déployée le 13/11 [12]. Je n'ai trouvé aucun cas de commande annulée pour rupture postérieur à cette date, mais cela ne prouve pas que le problème est totalement résolu. Les cas recensés (#4806, #4812, #4825) datent d'avant le correctif [3][4][6].\n\nDeux points restent ouverts :\n- Un script de contrôle quotidien des écarts entre Shopify et l'entrepôt (PR #91) est encore en brouillon au 17/11 et n'est pas fusionné [5].\n- Le Slack #tech du 10/11 montre que l'équipe avait déjà repéré le problème, mais je n'ai pas trouvé de suivi après le déploiement [7].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 23388,
+    "sortie": 1039,
+    "reflexion": 420,
+    "cache": 0,
+    "cout": 0.0028583000000000003
+  },
+  "latenceMs": 8209,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"produit indisponible achat stock commande rupture\"}",
+    "chercher {\"requete\":\"stock négatif vente meuble disponibilité bug\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}"
+  ],
+  "cout": 0.0028583000000000003
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:53.060Z",
+  "reponse": "Ein bestätigter Liefertermin für die Ersatzschalter liegt noch nicht vor [3]. Tai Shan hat den Eingang der Reklamation QR-2611 bestätigt und will die D3-Maßnahmen sowie einen Lieferplan so bald wie möglich nachreichen [2]. In der Planung wird bislang mit sechs Wochen ab Bestellung gerechnet, ausdrücklich nur als nicht abgestimmte Annahme [5]. Die Anforderung von 2.000 Ersatzschaltern bis 20. November ist damit nicht terminlich bestätigt [1]. Kommt bis Freitag keine Antwort, ist eine Eskalation an den Sales Director vorgesehen [3].",
+  "rendu": "Ein bestätigter Liefertermin für die Ersatzschalter liegt noch nicht vor [3]. Tai Shan hat den Eingang der Reklamation QR-2611 bestätigt und will die D3-Maßnahmen sowie einen Lieferplan so bald wie möglich nachreichen [2]. In der Planung wird bislang mit sechs Wochen ab Bestellung gerechnet, ausdrücklich nur als nicht abgestimmte Annahme [5]. Die Anforderung von 2.000 Ersatzschaltern bis 20. November ist damit nicht terminlich bestätigt [1]. Kommt bis Freitag keine Antwort, ist eine Eskalation an den Sales Director vorgesehen [3].",
+  "mesures": {
+    "mots": 79,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1199,
+    "sortie": 476,
+    "reflexion": 325,
+    "cache": 0,
+    "cout": 0.00065163
+  },
+  "cout": 0.00065163,
+  "latenceMs": 4089,
+  "fournisseur": "Fireworks"
+}

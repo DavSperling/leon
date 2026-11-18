@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:33:29.087Z",
+  "reponse": "Le stock Shopify pouvait être faux car un webhook de mise à jour d'inventaire était traité deux fois pour les produits ayant deux emplacements, un problème corrigé par déduplication [1][2]. Un autre incident a causé un stock négatif et un affichage erroné à cause de l'import nocturne qui écrasait le stock avec un ancien fichier CSV avant les commandes [3][4][5].",
+  "rendu": "Le stock Shopify pouvait être faux car un webhook de mise à jour d'inventaire était traité deux fois pour les produits ayant deux emplacements, un problème corrigé par déduplication [1][2]. Un autre incident a causé un stock négatif et un affichage erroné à cause de l'import nocturne qui écrasait le stock avec un ancien fichier CSV avant les commandes [3][4][5].",
+  "mesures": {
+    "mots": 60,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1083,
+    "sortie": 88,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005449
+  },
+  "cout": 0.0005449,
+  "latenceMs": 1306,
+  "fournisseur": "Google"
+}

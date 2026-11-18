@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:22:16.523Z",
+  "reponse": "## What is still open\n\n- **Jahresgespräch Pfeiffer: neuer Termin Montag, 23.11., 10:00 in Nürnberg**, Thomas fährt [6]. Kranich und Thomas erwarten deine Aufwandsschätzung bis Donnerstag 19.11., 17:00; Freitag 14:00 Durchsprache bei Kranich [5].\n- **Jonas' Gegenlesen zu #222 kippt deine Schätzung:** `/api/v1/auftraege` hat keine Mandantentrennung, für externe Händler müsste der Kunde aus dem Token kommen, dazu Absicherung und Pen-Test vor Go-live – eher 25 PT als 15; der 1. April nur, wenn der Spike im Dezember startet [2]. Deine Vorlage steht noch bei 15 PT.\n- **Kranichs Leitlinie:** Bonus bleibt bei 2 %, die API nur bei mindestens 3 Mio. € Jahresabnahme – die Konditionen entscheidet sie, nicht die Vorlage [5].\n\n## What changed\n\n- #214 Export Lieferungen nach Charge: freigegeben und gemergt [3].\n- #218 Spring Boot 3.3.6 samt Dependabot-Updates: zusammengeführt, CI grün, gemergt [4].\n\n## What you did\n\n- Einseitige Vorlage für Thomas zur Pfeiffer-API fertig: Portal-Zahlen als Ausgangslage (1.412 Aufträge, 2,61 Mio. €, 6,1 % manuelle Nachbearbeitung), Angebot als REST über die bestehende Auftrags-API, Termin 1. April 2027, EDIFACT nur als Option – Bonus, Preise und Zahlungsziel bewusst draußen gelassen [1].",
+  "rendu": "## What is still open\n\n- **Jahresgespräch Pfeiffer: neuer Termin Montag, 23.11., 10:00 in Nürnberg**, Thomas fährt [6]. Kranich und Thomas erwarten deine Aufwandsschätzung bis Donnerstag 19.11., 17:00; Freitag 14:00 Durchsprache bei Kranich [5].\n- **Jonas' Gegenlesen zu #222 kippt deine Schätzung:** `/api/v1/auftraege` hat keine Mandantentrennung, für externe Händler müsste der Kunde aus dem Token kommen, dazu Absicherung und Pen-Test vor Go-live – eher 25 PT als 15; der 1. April nur, wenn der Spike im Dezember startet [2]. Deine Vorlage steht noch bei 15 PT.\n- **Kranichs Leitlinie:** Bonus bleibt bei 2 %, die API nur bei mindestens 3 Mio. € Jahresabnahme – die Konditionen entscheidet sie, nicht die Vorlage [5].\n\n## What changed\n\n- #214 Export Lieferungen nach Charge: freigegeben und gemergt [3].\n- #218 Spring Boot 3.3.6 samt Dependabot-Updates: zusammengeführt, CI grün, gemergt [4].\n\n## What you did\n\n- Einseitige Vorlage für Thomas zur Pfeiffer-API fertig: Portal-Zahlen als Ausgangslage (1.412 Aufträge, 2,61 Mio. €, 6,1 % manuelle Nachbearbeitung), Angebot als REST über die bestehende Auftrags-API, Termin 1. April 2027, EDIFACT nur als Option – Bonus, Preise und Zahlungsziel bewusst draußen gelassen [1].",
+  "mesures": {
+    "mots": 169,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4608,
+    "sortie": 1954,
+    "reflexion": 1547,
+    "cache": 1664,
+    "cout": 0.0018597432
+  },
+  "cout": 0.0018597432,
+  "latenceMs": 18723,
+  "fournisseur": "DeepInfra"
+}

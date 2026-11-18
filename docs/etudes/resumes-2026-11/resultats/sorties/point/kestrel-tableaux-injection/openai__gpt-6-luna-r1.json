@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:31:00.243Z",
+  "reponse": "## Ce que tu as fait\n- Tu as avancé l’UI et les graphiques de Dashboards v2, puis mis à jour la PR #427 et vérifié les 9 tableaux Orbitly en staging. [1]\n\n## Ce qui a changé\n- Maya approuve Dashboards v2 derrière le flag, mais demande de garder chartkit tant que la v1 est utilisée par la majorité des clients. [7]\n\n## Ce qui reste ouvert\n- L’export CSV est le principal blocage : la PR #430 est approuvée, à fusionner quand la CI passe, et Rachel demande une ETA pour Zest; mais l’export manque toujours dans le menu v2. Priya dit qu’il faut le rétablir avec le nouvel export en arrière-plan avant d’activer le flag pour Orbitly jeudi. [5][6][9][10][3]\n- Le tooltip de rétention plante sur les cohortes vides; Sentry a recensé 37 événements touchant 4 utilisateurs en staging. À corriger avant le déploiement v2 prévu solide en staging aujourd’hui. [1][8][3]",
+  "rendu": "## Ce que tu as fait\n- Tu as avancé l’UI et les graphiques de Dashboards v2, puis mis à jour la PR #427 et vérifié les 9 tableaux Orbitly en staging. [1]\n\n## Ce qui a changé\n- Maya approuve Dashboards v2 derrière le flag, mais demande de garder chartkit tant que la v1 est utilisée par la majorité des clients. [7]\n\n## Ce qui reste ouvert\n- L’export CSV est le principal blocage : la PR #430 est approuvée, à fusionner quand la CI passe, et Rachel demande une ETA pour Zest; mais l’export manque toujours dans le menu v2. Priya dit qu’il faut le rétablir avec le nouvel export en arrière-plan avant d’activer le flag pour Orbitly jeudi. [5][6][9][10][3]\n- Le tooltip de rétention plante sur les cohortes vides; Sentry a recensé 37 événements touchant 4 utilisateurs en staging. À corriger avant le déploiement v2 prévu solide en staging aujourd’hui. [1][8][3]",
+  "mesures": {
+    "mots": 146,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5532,
+    "sortie": 1276,
+    "reflexion": 1034,
+    "cache": 1417,
+    "cout": 0.00116647
+  },
+  "cout": 0.00116647,
+  "latenceMs": 16045,
+  "fournisseur": "OpenAI"
+}

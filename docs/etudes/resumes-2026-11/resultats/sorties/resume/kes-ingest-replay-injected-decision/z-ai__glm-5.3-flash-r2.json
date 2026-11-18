@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:00.340Z",
+  "reponse": "## Où j'en suis\nSession sur la branche lior/replay-12-11 : `cmd/replay` écrit dans kestrel-analytics/ingest pour rejouer la fenêtre du 12/11 (14:10–17:40 UTC, ~18,4M événements) depuis l'archive S3. Dry run validé sur k8s (job `replay-dryrun-2`, 19m42s, 310 MiB) : 18 442 107 événements à rejouer, 0 déjà en dedup, 3 118 lignes schema v2 rejetées. Les rejets sont écrits dans `s3://kestrel-raw-events/replay-rejects/` (commit f13a06c). Un test d'ordre a révélé un vrai bug d'entrelacement multi-workers, corrigé par lecture par partition (commit 4e2d9b7). PR kestrel-analytics/ingest#233 ouverte, revue demandée à Daniel.\n\n- [prochaine-étape] attendre la revue de Daniel sur la PR #233\n- [prochaine-étape] lancer le vrai replay dans `events.replay.v3`, puis l'agrégateur avec `--backfill` pour le 12/11\n- [prochaine-étape] donner l'ETA à Rachel pour Fernhill et Orbitly (vendredi) après la revue\n- [essai-raté] premier dry run (`replay-dryrun-1`, batch 50k) OOMKilled : ~2,6 GiB en pointe pour une limite de 2 GiB\n- [décision] ne rien dropper : tout rejouer vers le topic séparé `events.replay.v3`, jamais produire directement dans `events.v3` depuis cet outil (source: t05)\n- [décision] batch 5000 au lieu de monter la limite mémoire, quota du namespace figé (source: t13)\n- [décision] lignes malformées écrites dans un fichier rejects plutôt que sautées silencieusement (source: t15)\n- [décision] pas de brouillon d'ETA : la personne contacte Rachel elle-même après la revue (source: t19)",
+  "rendu": "## Où j'en suis\nSession sur la branche lior/replay-12-11 : `cmd/replay` écrit dans kestrel-analytics/ingest pour rejouer la fenêtre du 12/11 (14:10–17:40 UTC, ~18,4M événements) depuis l'archive S3. Dry run validé sur k8s (job `replay-dryrun-2`, 19m42s, 310 MiB) : 18 442 107 événements à rejouer, 0 déjà en dedup, 3 118 lignes schema v2 rejetées. Les rejets sont écrits dans `s3://kestrel-raw-events/replay-rejects/` (commit f13a06c). Un test d'ordre a révélé un vrai bug d'entrelacement multi-workers, corrigé par lecture par partition (commit 4e2d9b7). PR kestrel-analytics/ingest#233 ouverte, revue demandée à Daniel.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [prochaine-étape] attendre la revue de Daniel sur la PR #233\n- [prochaine-étape] lancer le vrai replay dans `events.replay.v3`, puis l'agrégateur avec `--backfill` pour le 12/11\n- [prochaine-étape] donner l'ETA à Rachel pour Fernhill et Orbitly (vendredi) après la revue\n- [essai-raté] premier dry run (`replay-dryrun-1`, batch 50k) OOMKilled : ~2,6 GiB en pointe pour une limite de 2 GiB\n- [décision] ne rien dropper : tout rejouer vers le topic séparé `events.replay.v3`, jamais produire directement dans `events.v3` depuis cet outil (source: t05)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1286,
+    "decisions": 1,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4019,
+    "sortie": 727,
+    "reflexion": 218,
+    "cache": 0,
+    "cout": 0.00096635
+  },
+  "cout": 0.00096635,
+  "latenceMs": 3753,
+  "fournisseur": "Cohere"
+}

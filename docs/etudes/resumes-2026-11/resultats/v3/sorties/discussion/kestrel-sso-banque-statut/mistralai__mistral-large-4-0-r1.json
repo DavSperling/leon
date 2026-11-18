@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:11:31.385Z",
+  "reponse": "Yes — as of the latest updates (Nov 17), we're still aiming for December 1, 2026, which is the go-live date written into the Fernhill Bank contract [1]. But the date now hinges on one external dependency.\n\n**Where things stand**\n- SP-initiated SAML login is merged in code, behind the `saml_sso` flag, with SHA-256 as a global minimum for assertion signatures [1][3]\n- IdP-initiated login and the IdP metadata upload endpoint were committed Nov 9 (platform#1296) [6]\n- The admin SSO settings page (metadata upload, \"Require SSO\" toggle, test-login button) is on staging; its copy still needs Priya's review [1]\n- Fernhill's IdP metadata and signing certificate arrived Nov 17 and are loaded on staging — IdP-initiated login already works there [1][2]\n\n**The blocker and what's left**\n- SP-initiated login currently fails because Fernhill's IdP signs assertions with RSA-SHA1, and we reject anything weaker than SHA-256 by design [1][10]. Maya explicitly ruled out temporarily allowing SHA-1 for a bank (pen-test and SOC 2 risk), so we're waiting for Fernhill's change advisory board on Nov 24 to switch them to SHA-256 [10]\n- Joint end-to-end test with Helen Marsh (Fernhill IAM lead) is scheduled for Wednesday Nov 25, 16:00 TLV time [2][10]\n- If Fernhill's board doesn't approve on Nov 24, Sam Ortiz will tell Fernhill the same day that Dec 1 is at risk [10]\n- After a successful test: enable the `saml_sso` flag and \"Require SSO\" for the Fernhill workspace in production, and verify just-in-time provisioning (default role Viewer) works for their staff [1]\n\nSo the honest answer to the bank: on track only if their change board approves the SHA-256 switch on Nov 24 and the Nov 25 joint test passes; otherwise Dec 1 is at risk and they'll be told on the 24th.",
+  "rendu": "Yes — as of the latest updates (Nov 17), we're still aiming for December 1, 2026, which is the go-live date written into the Fernhill Bank contract [1]. But the date now hinges on one external dependency.\n\n**Where things stand**\n- SP-initiated SAML login is merged in code, behind the `saml_sso` flag, with SHA-256 as a global minimum for assertion signatures [1][3]\n- IdP-initiated login and the IdP metadata upload endpoint were committed Nov 9 (platform#1296) [6]\n- The admin SSO settings page (metadata upload, \"Require SSO\" toggle, test-login button) is on staging; its copy still needs Priya's review [1]\n- Fernhill's IdP metadata and signing certificate arrived Nov 17 and are loaded on staging — IdP-initiated login already works there [1][2]\n\n**The blocker and what's left**\n- SP-initiated login currently fails because Fernhill's IdP signs assertions with RSA-SHA1, and we reject anything weaker than SHA-256 by design [1][10]. Maya explicitly ruled out temporarily allowing SHA-1 for a bank (pen-test and SOC 2 risk), so we're waiting for Fernhill's change advisory board on Nov 24 to switch them to SHA-256 [10]\n- Joint end-to-end test with Helen Marsh (Fernhill IAM lead) is scheduled for Wednesday Nov 25, 16:00 TLV time [2][10]\n- If Fernhill's board doesn't approve on Nov 24, Sam Ortiz will tell Fernhill the same day that Dec 1 is at risk [10]\n- After a successful test: enable the `saml_sso` flag and \"Require SSO\" for the Fernhill workspace in production, and verify just-in-time provisioning (default role Viewer) works for their staff [1]\n\nSo the honest answer to the bank: on track only if their change board approves the SHA-256 switch on Nov 24 and the Nov 25 joint test passes; otherwise Dec 1 is at risk and they'll be told on the 24th.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 35080,
+    "sortie": 927,
+    "reflexion": 266,
+    "cache": 13568,
+    "cout": 0.019750346
+  },
+  "latenceMs": 36714,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"banque connexion comptes entreprise SSO login 1er décembre 1 December staff employés banque\"}",
+    "chercher {\"requete\":\"bank employees company accounts sign in SSO integration December 1st deadline on track\"}",
+    "chercher {\"requete\":\"support ticket banque demande accès comptes société identité fédérée SAML OIDC identité\"}",
+    "chercher {\"requete\":\"KES-412 remaining subtasks status go-live checklist flag enable production Fernhill SSO rollout plan just-in-time provisioning default role\"}",
+    "chercher {\"requete\":\"support ticket Fernhill bank login December 1 question staff access zendesk help center\"}",
+    "activite {\"depuis\":\"7j\",\"outil\":\"linear\"}",
+    "lire {\"sourceId\":\"linear-kes-412\"}",
+    "lire {\"sourceId\":\"slack-eng-sso-sha1\"}"
+  ],
+  "cout": 0.019750346
+}

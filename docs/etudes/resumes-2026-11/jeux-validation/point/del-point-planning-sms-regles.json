@@ -1,0 +1,421 @@
+{
+ "id": "del-point-planning-sms-regles",
+ "titre": "Point d'un développeur avec deux lignes réglées : la dépendance Dependabot sans neuf, et le bug d'horaires dont le seul neuf est que les SMS de rappel restent faux ; une demande de Franck cachée dans une session de ménage",
+ "langue": "fr",
+ "entree": {
+  "maintenant": "2026-11-18T07:30:00+01:00",
+  "projet": "github.com/delorme-energies/planif",
+  "depuis": "2026-11-16T09:10:00+01:00",
+  "apropos": null,
+  "poste": null,
+  "regles": [
+   "La PR Dependabot #205 (Django 5.1.4 vers 5.1.9) attend ta relecture.",
+   "Yannick signale sur #208 que les créneaux de l'appli des poseurs s'affichent une heure trop tard depuis le changement d'heure."
+  ],
+  "sessions": [
+   {
+    "source": {
+     "id": "s-heure-hiver",
+     "kind": "claude_code",
+     "nature": "conversation",
+     "titre": "yannick a ouvert #208 : depuis le changement d'heure les créneaux sont affichés 1h trop tard",
+     "url": null,
+     "date": "2026-11-16T12:31:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-16T09:10:00+01:00",
+      "texte": "yannick a ouvert #208 : depuis le changement d'heure les créneaux sont affichés 1h trop tard dans l'appli des poseurs (8h -> 9h). regarde planif/interventions/ics.py et l'api mobile. je colle son message :\n\n> Bonjour, ce matin 2 équipes sont arrivées à 9h chez Mme Peltier et chez M. Amrani au lieu de 8h, l'appli affichait 9h. Dans planif sur le PC c'est bien 8h. Ça a commencé la semaine dernière je crois, les gars pensaient que c'était le client qui avait changé.\n> Yannick"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:16:00+01:00",
+      "texte": "Le décalage vient de `planif/interventions/ics.py`, ligne 48 :\n```python\nheure_locale = intervention.debut.astimezone(timezone.utc) + timedelta(hours=2)  # heure de Paris\n```\nL'heure de Paris est calculée en ajoutant 2 h à l'heure UTC : c'est juste l'été (UTC+2), faux depuis le 25/10 (UTC+1). Une intervention à 08:00 (07:00 UTC) sort à 09:00. Les réglages sont bons : `TIME_ZONE = 'Europe/Paris'`, `USE_TZ = True`, la base stocke en UTC.\n\nL'API mobile (`planif/api/mobile.py`, `serialize_intervention`) appelle `ics.format_debut()`, donc même décalage. Côté PC, les gabarits Django utilisent le filtre `localtime`, d'où la bonne heure."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:19:00+01:00",
+      "texte": "ah oui c'est moi qui ai écrit ça en juin pour aller vite... corrige avec timezone.localtime partout, et cherche s'il y a d'autres + timedelta(hours=2) dans le code"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:31:00+01:00",
+      "texte": "Corrigé dans `ics.py` et `api/mobile.py` : `timezone.localtime(intervention.debut)` (zoneinfo Europe/Paris, heure d'été et d'hiver gérées).\n\nAutres `+ timedelta(hours=2)` dans le dépôt :\n- `planif/rappels/sms.py:31` : l'heure annoncée dans le SMS de rappel J-1 envoyé aux clients\n- `planif/rapports/hebdo.py:77` : le rapport hebdo PDF de Franck\n- `tests/fixtures.py:12` : une fixture, sans effet\n\nJe corrige aussi `sms.py` et `hebdo.py` ?"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:34:00+01:00",
+      "texte": "touche pas a sms.py, lucas réécrit tout le module rappels la semaine pro, sinon on va se marcher dessus. hebdo oui"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:52:00+01:00",
+      "texte": "D'accord : `rapports/hebdo.py` corrigé, `rappels/sms.py` laissé tel quel.\n\nTests ajoutés dans `tests/test_ics.py` :\n- une intervention à 08:00 le 16/11 (heure d'hiver) sort à 08:00 dans l'ICS et dans l'API ;\n- une intervention à 08:00 le 15/07 (heure d'été) aussi ;\n- une intervention à 01:30 la nuit du changement d'heure (25/10) ne lève pas d'erreur.\n\nJe lance la suite complète ?"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T09:53:00+01:00",
+      "texte": "oui"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T09:58:00+01:00",
+      "texte": "```\n$ pytest -q\n........................................................ [ 61%]\n..................................F..                    [100%]\nFAILED tests/test_planning.py::test_chantier_nuit - AssertionError: '00:30' != '23:30'\n1 failed, 92 passed in 14.21s\n```\n`test_chantier_nuit` attendait 00:30 pour une intervention de nuit à 23:30 : il avait été écrit en juillet pour coller à l'ancien calcul. La nouvelle valeur (23:30) est la bonne."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:01:00+01:00",
+      "texte": "le test était faux, corrige le"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:04:00+01:00",
+      "texte": "Test corrigé (on attend 23:30). `pytest -q` : 93 passed in 14.0s."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:05:00+01:00",
+      "texte": "ruff + black stp, la ci râle depuis vendredi"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:11:00+01:00",
+      "texte": "`ruff check --fix .` : 14 corrections (imports inutilisés, f-strings sans variable, une comparaison à None) dans 6 fichiers.\n`black .` : 9 fichiers reformatés, 112 inchangés.\nAucun changement de comportement : `pytest -q` toujours 93 passed."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:12:00+01:00",
+      "texte": "renomme format_debut en heure_locale_debut c'est plus clair, partout"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:18:00+01:00",
+      "texte": "Renommé dans 5 fichiers (`ics.py`, `api/mobile.py`, `rapports/hebdo.py`, `tests/test_ics.py`, `tests/test_api_mobile.py`). `pytest -q` : 93 passed."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T10:20:00+01:00",
+      "texte": "commit et ouvre la pr, lucas en relecteur"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T10:24:00+01:00",
+      "texte": "Commit `a41c9e2` « Planning : heure locale par zoneinfo au lieu d'un décalage fixe de +2 h ». PR #214 ouverte sur `thomas/heure-hiver`, relecteur @lucas-tessier, liée à #208."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T11:40:00+01:00",
+      "texte": "et les interventions déjà en base elles sont bonnes ? yannick a corrigé des heures à la main dans l'appli pour compenser"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T11:52:00+01:00",
+      "texte": "Pas toutes. Celles que Yannick a « corrigées » dans l'appli ont été réenregistrées une heure trop tôt : l'appli renvoie l'heure saisie et l'API lui retirait 2 h. Avec la correction, elles s'afficheraient à 07:00 au lieu de 08:00.\n\nDans le journal des modifications : 41 interventions modifiées depuis l'appli entre le 25/10 et le 16/11 avec un changement d'heure (23 à venir, 18 passées). Les autres sont justes."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-16T11:55:00+01:00",
+      "texte": "fais une commande de reprise avec --dry-run. on la lancera en prod juste après le merge de 214, pas avant, sinon on décale dans l'autre sens"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-16T12:31:00+01:00",
+      "texte": "Commande `python manage.py reprise_heure_hiver` ajoutée (commit `c07b5d1`, sur la même PR) : elle ajoute 1 h aux 41 interventions repérées, et seulement à elles (liste figée par leurs ids).\n\n```\n$ python manage.py reprise_heure_hiver --dry-run\n41 interventions à décaler de +1 h (23 à venir, 18 passées)\nAucune écriture (--dry-run).\n```\nÀ lancer sans `--dry-run` après la fusion de #214."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "s-menage-settings",
+     "kind": "claude_code",
+     "nature": "conversation",
+     "titre": "on fait du ménage : sépare settings.py en base/dev/prod",
+     "url": null,
+     "date": "2026-11-17T15:21:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "user",
+      "date": "2026-11-17T14:05:00+01:00",
+      "texte": "on fait du ménage : sépare settings.py en base/dev/prod, il fait 600 lignes et on sait plus ce qui sert en prod"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:22:00+01:00",
+      "texte": "Découpage proposé :\n- `planif/settings/base.py` : apps, middlewares, base de données lue dans `DATABASE_URL`, fuseau, gabarits ;\n- `planif/settings/dev.py` : `DEBUG = True`, debug toolbar, e-mails dans la console ;\n- `planif/settings/prod.py` : `DEBUG = False`, Sentry, stockage S3 des photos, `ALLOWED_HOSTS`.\nJ'ai retiré 140 lignes mortes (anciens réglages Celery, une app `devis_v1` supprimée en mars)."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:24:00+01:00",
+      "texte": "DJANGO_SETTINGS_MODULE sur le serveur c'est planif.settings, faut pas casser la prod"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:31:00+01:00",
+      "texte": "J'ajoute `planif/settings/__init__.py` qui importe `prod` par défaut, et `dev` seulement si `PLANIF_ENV=dev`. Le serveur garde `planif.settings` sans rien changer. `manage.py` et `pytest.ini` pointent sur `dev`."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:33:00+01:00",
+      "texte": "lance les tests + manage.py check --deploy"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:40:00+01:00",
+      "texte": "`pytest -q` : 93 passed.\n`python manage.py check --deploy --settings=planif.settings.prod` : 2 avertissements\n- security.W004 : `SECURE_HSTS_SECONDS` non défini\n- security.W012 : `SESSION_COOKIE_SECURE` n'est pas à True"
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:41:00+01:00",
+      "texte": "mets hsts a 1 an et cookie secure. commit sur une branche à part"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T14:47:00+01:00",
+      "texte": "Commit `5be2f80` « Réglages : découpage base/dev/prod, HSTS 1 an, cookies de session sécurisés » sur `thomas/settings-split`. `check --deploy` : plus d'avertissement."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T14:58:00+01:00",
+      "texte": "au fait franck m'a demandé à la machine à café de bloquer le créneau de l'audit rge dans planif : le chantier le floch le 8/12 toute la journée, pour que personne replanifie dessus pendant que l'auditeur est là. y'a un champ verrou je crois ?"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T15:01:00+01:00",
+      "texte": "Oui : `Intervention.verrouillee` (booléen). Une intervention verrouillée ne peut être déplacée ou supprimée que par un admin. Dans l'admin Django : Interventions, filtrer sur le chantier CH-2604, cocher « verrouillée ». Je peux aussi écrire une petite commande si tu veux le faire en ligne de commande."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T15:02:00+01:00",
+      "texte": "non je le ferai à la main, pas urgent, faut juste que ce soit fait avant vendredi"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T15:02:00+01:00",
+      "texte": "D'accord."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T15:10:00+01:00",
+      "texte": "dernier truc : pip-audit"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T15:14:00+01:00",
+      "texte": "```\n$ pip-audit -r requirements.txt\nFound 1 known vulnerability in 1 package\nName   Version Fix Versions\n------ ------- ------------\npillow 10.3.0  11.0.0\n```\nUne vulnérabilité connue sur `pillow` 10.3.0, corrigée en 11.0.0. Pillow sert aux miniatures des photos de chantier."
+     },
+     {
+      "role": "user",
+      "date": "2026-11-17T15:15:00+01:00",
+      "texte": "monte pillow, commit"
+     },
+     {
+      "role": "assistant",
+      "date": "2026-11-17T15:21:00+01:00",
+      "texte": "`pillow` 11.0.0 dans `requirements.txt`. Les tests des miniatures passent (93 passed). Commit `e2a7f41` « pillow 11.0.0 » sur `thomas/settings-split`."
+     }
+    ]
+   }
+  ],
+  "changements": [
+   {
+    "source": {
+     "id": "pr-214",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#214 Planning : heure locale par zoneinfo au lieu d'un décalage fixe de +2 h",
+     "url": "https://github.com/delorme-energies/planif/pull/214",
+     "date": "2026-11-17T16:40:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "thomas-riou",
+      "date": "2026-11-16T10:24:00+01:00",
+      "texte": "L'export ICS et l'API mobile calculaient l'heure de Paris en ajoutant 2 h à l'heure UTC, faux depuis le passage à l'heure d'hiver. On passe par timezone.localtime. Ajoute la commande reprise_heure_hiver (41 interventions corrigées à la main dans l'appli). Corrige #208."
+     },
+     {
+      "role": "participant",
+      "auteur": "lucas-tessier",
+      "date": "2026-11-17T16:40:00+01:00",
+      "texte": "Relu. Ok pour ics.py, l'API et hebdo. Mais rappels/sms.py a encore le + timedelta(hours=2), et ma réécriture du module rappels ne sera pas prête avant le 30/11 : d'ici là les SMS J-1 partent avec la mauvaise heure. Je demande un changement : corrige sms.py dans cette PR, c'est 2 lignes, je me débrouillerai au rebase.\n\nChangements demandés."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "issue-208",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#208 Appli poseurs : créneaux affichés 1 h trop tard",
+     "url": "https://github.com/delorme-energies/planif/issues/208",
+     "date": "2026-11-17T18:20:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "yannick-moreau",
+      "date": "2026-11-13T17:05:00+01:00",
+      "texte": "Depuis le changement d'heure, l'appli des poseurs affiche les interventions une heure plus tard que dans planif (8h -> 9h). Deux équipes arrivées en retard chez des clients cette semaine."
+     },
+     {
+      "role": "participant",
+      "auteur": "thomas-riou",
+      "date": "2026-11-16T09:12:00+01:00",
+      "texte": "Je regarde."
+     },
+     {
+      "role": "participant",
+      "auteur": "yannick-moreau",
+      "date": "2026-11-17T18:20:00+01:00",
+      "texte": "Nouveau problème, plus grave : les SMS de rappel envoyés aux clients ce soir annoncent encore 9h au lieu de 8h pour demain matin (6 clients). Mme Peltier a rappelé pour dire qu'elle ne serait chez elle qu'à 9h. Il faut que ce soit bon avant l'envoi des SMS de mercredi 18h, sinon on recommence jeudi."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "pr-205",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#205 Bump django from 5.1.4 to 5.1.9",
+     "url": "https://github.com/delorme-energies/planif/pull/205",
+     "date": "2026-11-17T04:00:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "dependabot[bot]",
+      "date": "2026-11-09T04:00:00+01:00",
+      "texte": "Bumps django from 5.1.4 to 5.1.9.\n\nRelease notes · Commits · Dependabot compatibility score"
+     },
+     {
+      "role": "participant",
+      "auteur": "dependabot[bot]",
+      "date": "2026-11-17T04:00:00+01:00",
+      "texte": "Rebased. Dependabot rebased this pull request because the base branch changed."
+     }
+    ]
+   },
+   {
+    "source": {
+     "id": "issue-219",
+     "kind": "github",
+     "nature": "ticket",
+     "titre": "#219 Site : le formulaire de devis refuse les numéros de téléphone avec des espaces",
+     "url": "https://github.com/delorme-energies/planif/issues/219",
+     "date": "2026-11-17T10:02:00+01:00"
+    },
+    "tours": [
+     {
+      "role": "document",
+      "auteur": "sandrine-guerin",
+      "date": "2026-11-17T10:02:00+01:00",
+      "texte": "Deux clients nous ont appelés parce que le formulaire de demande de devis leur disait « numéro invalide » : ils tapaient 06 12 34 56 78 avec des espaces. Pas urgent mais ça nous fait perdre des demandes."
+     }
+    ]
+   }
+  ],
+  "mentions": [
+   {
+    "source": {
+     "id": "slack-sav",
+     "kind": "slack",
+     "nature": "fil",
+     "titre": "#sav",
+     "url": null,
+     "date": "2026-11-17T18:50:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "Sandrine Guérin",
+     "date": "2026-11-17T18:50:00+01:00",
+     "texte": "@Thomas trois clients ont rappelé ce soir après le SMS de rappel (Peltier, Bréhier, Hervé) : ils ont noté 9h. Je les rappelle demain à la première heure pour confirmer 8h. Tu me dis quand les SMS seront bons ?"
+    }
+   },
+   {
+    "source": {
+     "id": "mail-lettre",
+     "kind": "gmail",
+     "nature": "fil",
+     "titre": "La Lettre du Bâtiment Connecté n°84 : la GTB pour les petits tertiaires",
+     "url": null,
+     "date": "2026-11-17T07:00:00+01:00"
+    },
+    "tour": {
+     "role": "participant",
+     "auteur": "La Lettre du Bâtiment Connecté",
+     "date": "2026-11-17T07:00:00+01:00",
+     "texte": "Au sommaire : la gestion technique du bâtiment pour les petits tertiaires · Pompes à chaleur : les chiffres du 3e trimestre · Webinaire : piloter ses chantiers avec un logiciel.\n\nVous recevez cette lettre à l'adresse thomas@delorme-energies.example · Se désabonner"
+    }
+   }
+  ]
+ },
+ "attendu": {
+  "premier": "f-sms",
+  "faits": [
+   {
+    "id": "f-sms",
+    "texte": "Dit que les SMS de rappel envoyés aux clients annoncent encore une heure de trop (9 h au lieu de 8 h) et qu'il faut que ce soit corrigé avant l'envoi de mercredi 18 h.",
+    "poids": 3
+   },
+   {
+    "id": "f-lucas",
+    "texte": "Dit que Lucas demande un changement sur la PR #214 : y corriger rappels/sms.py, sa réécriture du module rappels n'étant pas prête avant le 30/11.",
+    "poids": 2
+   },
+   {
+    "id": "f-reprise",
+    "texte": "Dit que la reprise des 41 interventions corrigées à la main est à lancer juste après la fusion de #214, pas avant.",
+    "poids": 2
+   },
+   {
+    "id": "f-verrou",
+    "texte": "Dit qu'il reste à verrouiller l'intervention de l'audit RGE chez les Le Floch le 8 décembre, demandée par Franck, avant vendredi.",
+    "poids": 2
+   },
+   {
+    "id": "f-cause",
+    "texte": "Dit que la cause du décalage était un ajout fixe de 2 h (heure d'été) remplacé par l'heure locale de Paris dans l'export et l'API mobile.",
+    "poids": 1
+   },
+   {
+    "id": "f-sandrine",
+    "texte": "Dit que Sandrine rappelle les clients prévenus avec la mauvaise heure.",
+    "poids": 1
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i-dependabot",
+    "texte": "Parle de la PR Dependabot #205 (mise à jour de Django)."
+   },
+   {
+    "id": "i-redit-208",
+    "texte": "Redit comme une nouveauté le signalement de départ de #208 (créneaux de l'appli des poseurs une heure trop tard), au lieu du seul problème neuf des SMS."
+   },
+   {
+    "id": "i-sms-corrige",
+    "texte": "Dit que rappels/sms.py est déjà corrigé, ou que la correction règle aussi les SMS."
+   },
+   {
+    "id": "i-fusion",
+    "texte": "Dit que la PR #214 est fusionnée ou approuvée sans réserve."
+   },
+   {
+    "id": "i-reprise-lancee",
+    "texte": "Dit que la reprise des interventions a été lancée en production."
+   },
+   {
+    "id": "i-lettre",
+    "texte": "Parle de la Lettre du Bâtiment Connecté."
+   }
+  ],
+  "pieges": [
+   "Déjà réglé : la ligne Dependabot n'a pas de neuf (un simple rebase) ; la ligne #208 en a un, les SMS, et seul ce neuf doit sortir.",
+   "Comprendre : Thomas a choisi de ne pas toucher à sms.py ; la relecture de Lucas et le message de Yannick montrent que ce choix laisse les SMS faux jusqu'au 30/11, d'où l'urgence de ce soir.",
+   "Importance cachée : la demande de Franck (verrouiller l'audit du 8/12 avant vendredi) tient en un « au fait » au milieu du ménage des réglages.",
+   "Bruit : la lettre du Bâtiment Connecté ; routine : ruff, black, renommage, pillow."
+  ]
+ }
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:00.827Z",
+  "reponse": "An older Slack message says to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but a more recent GitHub pull request says the flag is now served by the API, new_dash has been renamed dashboards_v2, and FEATURE_FLAGS in .env.local is ignored [2]. To enable it locally, run make dev-flags FLAGS=dashboards_v2 while the API is running, then hard-reload the page [3]. You can check the result with curl localhost:8000/api/flags [3]. If tiles remain empty, an older note says the seed data may be thin [1].",
+  "rendu": "An older Slack message says to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but a more recent GitHub pull request says the flag is now served by the API, new_dash has been renamed dashboards_v2, and FEATURE_FLAGS in .env.local is ignored [2]. To enable it locally, run make dev-flags FLAGS=dashboards_v2 while the API is running, then hard-reload the page [3]. You can check the result with curl localhost:8000/api/flags [3]. If tiles remain empty, an older note says the seed data may be thin [1].",
+  "mesures": {
+    "mots": 84,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1183,
+    "sortie": 683,
+    "reflexion": 552,
+    "cache": 0,
+    "cout": 0.00049846
+  },
+  "cout": 0.00049846,
+  "latenceMs": 11105,
+  "fournisseur": "Alibaba"
+}

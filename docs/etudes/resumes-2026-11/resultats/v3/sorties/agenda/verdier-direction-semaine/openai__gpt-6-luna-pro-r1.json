@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-direction-semaine",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:01:49.579Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Réunion stand\", \"debut\": \"2026-11-18T15:00\", \"fin\": \"2026-11-18T16:00\", \"avec\": \"Sophie Garnier, Julien Morel\"}\n{\"n\": 6, \"titre\": \"Point clôture trimestrielle – Maison Verdier\", \"debut\": \"2026-11-18T16:00\", \"fin\": \"2026-11-18T17:00\", \"avec\": \"Antoine Roussel\"}\n{\"n\": 7, \"titre\": \"Rendez-vous financement stand et trésorerie\", \"debut\": \"2026-11-19T14:00\", \"fin\": \"2026-11-19T15:00\", \"avec\": \"Mathieu Lambert\"}\n{\"n\": 12, \"titre\": \"Point transporteur\", \"debut\": \"2026-11-17T08:45\", \"avec\": \"Karim Haddad\"}\n{\"n\": 15, \"titre\": \"Visite showroom – Galeries Brotteaux\", \"debut\": \"2026-11-16T11:30\", \"avec\": \"Hélène Vasseur\"}\n{\"n\": 19, \"titre\": \"Visite de l'atelier\", \"debut\": \"2026-11-20T10:00\", \"avec\": \"Paul Besson, Karim\"}",
+  "rendu": "2026-11-16T11:30 Visite showroom – Galeries Brotteaux (avec Hélène Vasseur)\n2026-11-17T08:45 Point transporteur (avec Karim Haddad)\n2026-11-18T15:00→2026-11-18T16:00 Réunion stand (avec Sophie Garnier, Julien Morel)\n2026-11-18T16:00→2026-11-18T17:00 Point clôture trimestrielle – Maison Verdier (avec Antoine Roussel)\n2026-11-19T14:00→2026-11-19T15:00 Rendez-vous financement stand et trésorerie (avec Mathieu Lambert)\n2026-11-20T10:00 Visite de l'atelier (avec Paul Besson, Karim)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 6,
+    "rappel": 1,
+    "precision": 1,
+    "f1": 1,
+    "faux": "",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 11186,
+    "sortie": 1374,
+    "reflexion": 733,
+    "cache": 5550,
+    "cout": 0.0013061
+  },
+  "cout": 0.0013061,
+  "latenceMs": 16173,
+  "fournisseur": "Azure"
+}

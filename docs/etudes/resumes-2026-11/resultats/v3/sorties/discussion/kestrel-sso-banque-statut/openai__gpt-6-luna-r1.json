@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-sso-banque-statut",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:03:58.880Z",
+  "reponse": "It’s still targeted for December 1, but I wouldn’t call it fully on track yet: as of November 17, IdP-initiated login works on staging, while SP-initiated login fails because Fernhill is signing with RSA-SHA1; the team asked them to switch to SHA-256. [1]\n\nBefore launch, Fernhill needs to make that change, then both login paths need end-to-end validation. [1] The SSO settings page is on staging, but its copy still needs review; JIT provisioning is part of the December 1 scope, and I don’t see confirmation that it’s complete. [1] The ticket sets December 1, 2026 as the go-live date. [1]",
+  "rendu": "It’s still targeted for December 1, but I wouldn’t call it fully on track yet: as of November 17, IdP-initiated login works on staging, while SP-initiated login fails because Fernhill is signing with RSA-SHA1; the team asked them to switch to SHA-256. [1]\n\nBefore launch, Fernhill needs to make that change, then both login paths need end-to-end validation. [1] The SSO settings page is on staging, but its copy still needs review; JIT provisioning is part of the December 1 scope, and I don’t see confirmation that it’s complete. [1] The ticket sets December 1, 2026 as the go-live date. [1]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.333,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21836,
+    "sortie": 677,
+    "reflexion": 314,
+    "cache": 18166,
+    "cout": 0.000978385
+  },
+  "latenceMs": 14963,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"bank support staff log in company accounts December 1\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"Fernhill SSO IdP initiated provisioning December 1 remaining blockers\",\"outil\":\"linear\"}",
+    "lire {\"passageId\":\"linear-kes-412-1\"}",
+    "lire {\"passageId\":\"linear-kes-412-4\"}",
+    "chercher {\"requete\":\"Fernhill bank SSO RSA-SHA1 SHA-256 Helen switch SP initiated JIT provisioning\",\"outil\":\"linear\"}",
+    "chercher {\"requete\":\"Fernhill SSO end to end test JIT provisioning Require SSO December 2026\",\"outil\":\"linear\"}"
+  ],
+  "cout": 0.000978385
+}

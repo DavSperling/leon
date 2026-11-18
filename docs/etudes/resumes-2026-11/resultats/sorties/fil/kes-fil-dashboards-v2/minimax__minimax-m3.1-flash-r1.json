@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:53.794Z",
+  "reponse": "## Où j'en suis\nLa PR #423 (branche `tom/dashboard-keyboard`, commit `8f1a2c7`) est ouverte et attend la revue de Priya : elle porte le déplacement et le redimensionnement des widgets au clavier plus un anneau de focus visible, en suite de #418 déjà mergée. Le flag `dashboards_v2` est activé en staging pour le workspace `zest-grocers` uniquement, la production restant off. Le fil est clos pour la journée du 18/11. (source: ses-db-4, d4-05, d4-07, d4-10)\n\n- [en-cours] PR #423 ouverte, revue de Priya demandée (source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] merger #423 après la revue (source: d4-05)\n- [prochaine-étape] Tom active `dashboards_v2` en prod lui-même le matin du 24 (source: d4-06)\n- [essai-raté] `@dnd-kit/core` (KeyboardSensor) par-dessus react-grid-layout : les deux bibliothèques écoutent les mêmes événements, chaque déplacement est appliqué deux fois et le drag souris déclenche deux `onLayoutChange` ; dnd-kit a été retiré (source: d4-02, d4-04)\n- [question] date de suppression des dashboards v1 non arrêtée côté équipe : une note interne évoque le 5 janvier, mais la seule décision documentée est de ne rien supprimer pour l'instant (source: b2-04, src-note-v1)\n- [décision] pas de dnd-kit : gestionnaire clavier maison `useGridKeyboard()` par-dessus l'état de layout (source: d4-04)\n- [décision] on garde recharts, la PR #401 est fermée pour de bon (source: c3-03, src-pr401)\n- [décision] pas de container queries, on passe par un hook `useWidgetSize()` avec ResizeObserver (source: b2-02)\n- [décision] `dashboards_v2` activé seulement pour le workspace Zest, les dashboards v1 restent derrière le flag jusqu'en janvier (source: b2-04)",
+  "rendu": "## Où j'en suis\nLa PR #423 (branche `tom/dashboard-keyboard`, commit `8f1a2c7`) est ouverte et attend la revue de Priya : elle porte le déplacement et le redimensionnement des widgets au clavier plus un anneau de focus visible, en suite de #418 déjà mergée. Le flag `dashboards_v2` est activé en staging pour le workspace `zest-grocers` uniquement, la production restant off. Le fil est clos pour la journée du 18/11. (de: toi, agent; source: ses-db-4, d4-05, d4-07, d4-10)\n\n- [en-cours] PR #423 ouverte, revue de Priya demandée (de: équipe, agent; source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] merger #423 après la revue (de: agent; source: d4-05)\n- [prochaine-étape] Tom active `dashboards_v2` en prod lui-même le matin du 24 (de: toi; source: d4-06)\n- [essai-raté] `@dnd-kit/core` (KeyboardSensor) par-dessus react-grid-layout : les deux bibliothèques écoutent les mêmes événements, chaque déplacement est appliqué deux fois et le drag souris déclenche deux `onLayoutChange` ; dnd-kit a été retiré (de: toi, agent; source: d4-02, d4-04)\n- [question] date de suppression des dashboards v1 non arrêtée côté équipe : une note interne évoque le 5 janvier, mais la seule décision documentée est de ne rien supprimer pour l'instant (de: toi, agent; source: b2-04, src-note-v1)\n- [décision] pas de dnd-kit : gestionnaire clavier maison `useGridKeyboard()` par-dessus l'état de layout (de: toi; source: d4-04)\n- [décision] on garde recharts, la PR #401 est fermée pour de bon (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] pas de container queries, on passe par un hook `useWidgetSize()` avec ResizeObserver (de: toi; source: b2-02)\n- [décision] `dashboards_v2` activé seulement pour le workspace Zest, les dashboards v1 restent derrière le flag jusqu'en janvier (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1813,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4874,
+    "sortie": 1493,
+    "reflexion": 1011,
+    "cache": 197,
+    "cout": 0.0014402745
+  },
+  "cout": 0.0014402745,
+  "latenceMs": 9596,
+  "fournisseur": "Wafer"
+}

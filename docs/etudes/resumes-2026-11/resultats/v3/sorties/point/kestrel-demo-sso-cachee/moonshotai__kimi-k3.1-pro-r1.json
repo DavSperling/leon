@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:54:01.807Z",
+  "reponse": "## What is still open\n\n- Join Fernhill’s end-to-end Okta SSO walkthrough on staging **Thursday at 10am New York time**; Priya runs the demo, you only need to attend. The prerequisite is cleared: Maya approved and merged **#418**, which went out with Tuesday night’s staging deploy. [1][3]\n- Split **#423** into separate PRs for the module move and lint fixes. Tom requested this because the 1,900-line diff obscures the substantive changes; the cleanup also includes the stabilized SAML timing tests and mypy fixes. [1][4]\n- Replace the process-local SAML assertion replay cache with Redis for multi-pod deployment. The current cache still permits cross-pod replays; use tenant + assertion ID with expiry at `NotOnOrAfter` plus clock skew. [1][2]\n\n## What you did\n\n- Implemented SAML assertion signature verification in **#418**: per-tenant IdP certificates, signed real fixtures, rejection of unsigned/wrong-certificate/signature-wrapping assertions, and SHA-256-or-stronger algorithms only. [2]",
+  "rendu": "## What is still open\n\n- Join Fernhill’s end-to-end Okta SSO walkthrough on staging **Thursday at 10am New York time**; Priya runs the demo, you only need to attend. The prerequisite is cleared: Maya approved and merged **#418**, which went out with Tuesday night’s staging deploy. [1][3]\n- Split **#423** into separate PRs for the module move and lint fixes. Tom requested this because the 1,900-line diff obscures the substantive changes; the cleanup also includes the stabilized SAML timing tests and mypy fixes. [1][4]\n- Replace the process-local SAML assertion replay cache with Redis for multi-pod deployment. The current cache still permits cross-pod replays; use tenant + assertion ID with expiry at `NotOnOrAfter` plus clock skew. [1][2]\n\n## What you did\n\n- Implemented SAML assertion signature verification in **#418**: per-tenant IdP certificates, signed real fixtures, rejection of unsigned/wrong-certificate/signature-wrapping assertions, and SHA-256-or-stronger algorithms only. [2]",
+  "mesures": {
+    "mots": 137,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5880,
+    "sortie": 1293,
+    "reflexion": 1051,
+    "cache": 0,
+    "cout": 0.02469
+  },
+  "cout": 0.02469,
+  "latenceMs": 10910,
+  "fournisseur": "DigitalOcean"
+}

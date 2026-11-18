@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:38.913Z",
+  "reponse": "Le dossier de Mme Peltier (Vertou) est déposé depuis le 17/11, avec accusé de réception reçu, et il est en instruction ; les travaux sont prévus le 27/11 [1]. Le devis a été signé le 16/11 et un acompte est enregistré, pour une pose de PAC air/eau prévue le 27/11 [1][4]. Une version antérieure du suivi indiquait au contraire un devis non signé et un dossier à déposer [1]. Une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. Odile Peltier demande justement si elle peut commencer sans attendre la réponse [2].",
+  "rendu": "Le dossier de Mme Peltier (Vertou) est déposé depuis le 17/11, avec accusé de réception reçu, et il est en instruction ; les travaux sont prévus le 27/11 [1]. Le devis a été signé le 16/11 et un acompte est enregistré, pour une pose de PAC air/eau prévue le 27/11 [1][4]. Une version antérieure du suivi indiquait au contraire un devis non signé et un dossier à déposer [1]. Une fois le dossier déposé, les travaux peuvent commencer, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. Odile Peltier demande justement si elle peut commencer sans attendre la réponse [2].",
+  "mesures": {
+    "mots": 103,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1108,
+    "sortie": 379,
+    "reflexion": 201,
+    "cache": 0,
+    "cout": 0.00046766
+  },
+  "cout": 0.00046766,
+  "latenceMs": 2563,
+  "fournisseur": "Ionstream"
+}

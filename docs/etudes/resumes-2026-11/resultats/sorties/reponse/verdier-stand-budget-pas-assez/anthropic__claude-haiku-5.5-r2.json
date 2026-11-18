@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:41:16.011Z",
+  "reponse": "Les résultats ne suffisent pas pour répondre. Le budget prévisionnel de 25 k€ figure dans Notion [3], et Antoine Roussel écrit qu'il passera la dépense en charges une fois le devis signé [4], mais aucun passage ne dit qui a validé ce budget.",
+  "rendu": "Les résultats ne suffisent pas pour répondre. Le budget prévisionnel de 25 k€ figure dans Notion [3], et Antoine Roussel écrit qu'il passera la dépense en charges une fois le devis signé [4], mais aucun passage ne dit qui a validé ce budget.",
+  "mesures": {
+    "mots": 43,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1506,
+    "sortie": 472,
+    "reflexion": 367,
+    "cache": 0,
+    "cout": 0.0003866
+  },
+  "cout": 0.0003866,
+  "latenceMs": 3335,
+  "fournisseur": "Claude Platform on AWS"
+}

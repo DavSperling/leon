@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:21:33.107Z",
+  "reponse": "## Où j'en suis\nOn branch daniel/hubspot-owner-sync, webhooks were replaced with a 15-minute HubSpot CRM search poll, syncing only companies with ARR > 0. PR #405 was closed as superseded; PR #409 is open with auto-merge requested but blocked by a failing e2e check. The HubSpot token still needs to be added to AWS Secrets Manager by Noa.\n\n- [en-cours] PR #409 blocked by failing e2e check; auto-merge pending.\n- [prochaine-étape] Fix e2e fixture in tests/e2e/test_admin_accounts.py so the third account still shows an owner.\n- [prochaine-étape] Re-run checks so #409 merges via squash.\n- [prochaine-étape] Noa adds HUBSPOT_TOKEN to AWS Secrets Manager for staging and prod.\n- [essai-raté] HubSpot webhook subscription API returned 401: private app tokens cannot manage subscriptions.\n- [décision] Close #405 as superseded by the polling approach (source: t04)",
+  "rendu": "## Où j'en suis\nOn branch daniel/hubspot-owner-sync, webhooks were replaced with a 15-minute HubSpot CRM search poll, syncing only companies with ARR > 0. PR #405 was closed as superseded; PR #409 is open with auto-merge requested but blocked by a failing e2e check. The HubSpot token still needs to be added to AWS Secrets Manager by Noa.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 blocked by failing e2e check; auto-merge pending.\n- [prochaine-étape] Fix e2e fixture in tests/e2e/test_admin_accounts.py so the third account still shows an owner.\n- [prochaine-étape] Re-run checks so #409 merges via squash.\n- [prochaine-étape] Noa adds HUBSPOT_TOKEN to AWS Secrets Manager for staging and prod.\n- [essai-raté] HubSpot webhook subscription API returned 401: private app tokens cannot manage subscriptions.\n- [décision] Close #405 as superseded by the polling approach (source: t04)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1044,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3736,
+    "sortie": 3805,
+    "reflexion": 3552,
+    "cache": 0,
+    "cout": 0.00234875
+  },
+  "cout": 0.00234875,
+  "latenceMs": 7720,
+  "fournisseur": "CoreWeave"
+}

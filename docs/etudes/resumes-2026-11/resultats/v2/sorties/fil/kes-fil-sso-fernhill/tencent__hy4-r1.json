@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:29:05.427Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 0,
+    "decisions": 0,
+    "formatRespecte": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4716,
+    "sortie": 6000,
+    "reflexion": 6000,
+    "cache": 960,
+    "cout": 0.009089412
+  },
+  "cout": 0.009089412,
+  "latenceMs": 67946,
+  "fournisseur": "Tencent"
+}

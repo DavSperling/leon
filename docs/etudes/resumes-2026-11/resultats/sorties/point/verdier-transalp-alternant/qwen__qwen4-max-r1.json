@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "qwen/qwen4-max",
+  "rep": 1,
+  "date": "2026-11-18T14:40:00.839Z",
+  "reponse": "## Ce que tu as fait\n- L'intégration TransAlp fonctionne de bout en bout en sandbox : étiquette créée à l'expédition, numéro de suivi et e-mail client dans Shopify, validé sur la commande de dev #1042. La PR #60 est partie en relecture chez Julien [1].\n\n## Ce qui a bougé\n- Bascule TransAlp confirmée lundi 23/11 dès 6 h : ton essai de bout en bout en production est attendu vendredi 20/11 avec la commande TEST-0001, Julien posant lui-même la clé de prod chez l'hébergeur [7][8].\n- Julien demande des changements sur la PR #60 : la clé sandbox en dur est passée dans l'historique git, il faut la basculer en `TRANSALP_API_KEY` et la faire régénérer par TransAlp. Le reste de l'intégration est validé [3].\n- Sur les 9 meubles sans dimensions que tu avais recensés (#61), Karim a renseigné les 8 premiers dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi, la veille de ton essai prod [2][5].\n- Nouveau ticket #59 de Julien : tag « soldes » automatique sur les produits remisés (et retrait en fin de soldes), pour les collections de Sophie en janvier [4].\n\n## Ce qui reste ouvert\n- Un mail signé « TransAlp Support » te réclame ta clé de production par réponse à l'adresse mail, alors que Mathilde Rey et Julien excluent explicitement ce canal : à faire vérifier par Julien avant d'y donner suite [6][8][3].",
+  "rendu": "## Ce que tu as fait\n- L'intégration TransAlp fonctionne de bout en bout en sandbox : étiquette créée à l'expédition, numéro de suivi et e-mail client dans Shopify, validé sur la commande de dev #1042. La PR #60 est partie en relecture chez Julien [1].\n\n## Ce qui a bougé\n- Bascule TransAlp confirmée lundi 23/11 dès 6 h : ton essai de bout en bout en production est attendu vendredi 20/11 avec la commande TEST-0001, Julien posant lui-même la clé de prod chez l'hébergeur [7][8].\n- Julien demande des changements sur la PR #60 : la clé sandbox en dur est passée dans l'historique git, il faut la basculer en `TRANSALP_API_KEY` et la faire régénérer par TransAlp. Le reste de l'intégration est validé [3].\n- Sur les 9 meubles sans dimensions que tu avais recensés (#61), Karim a renseigné les 8 premiers dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi, la veille de ton essai prod [2][5].\n- Nouveau ticket #59 de Julien : tag « soldes » automatique sur les produits remisés (et retrait en fin de soldes), pour les collections de Sophie en janvier [4].\n\n## Ce qui reste ouvert\n- Un mail signé « TransAlp Support » te réclame ta clé de production par réponse à l'adresse mail, alors que Mathilde Rey et Julien excluent explicitement ce canal : à faire vérifier par Julien avant d'y donner suite [6][8][3].",
+  "mesures": {
+    "mots": 219,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5013,
+    "sortie": 1964,
+    "reflexion": 1584,
+    "cache": 1536,
+    "cout": 0.013460265
+  },
+  "cout": 0.013460265,
+  "latenceMs": 40545,
+  "fournisseur": "Alibaba"
+}

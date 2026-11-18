@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:26:12.713Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 30881,
+    "sortie": 880,
+    "reflexion": 391,
+    "cache": 23040,
+    "cout": 0.001519943
+  },
+  "latenceMs": 5308,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"dossier aide client refusé\"}",
+    "chercher {\"requete\":\"refus aide client motif\",\"depuis\":\"2026-01-01\"}",
+    "chercher {\"requete\":\"dossiers refusés Anah 2026 bilan\"}",
+    "chercher {\"requete\":\"refus prime MaPrimeRénov' client motif inéligibilité\",\"outil\":\"notion\"}",
+    "lire {\"sourceId\":\"12\"}",
+    "chercher {\"requete\":\"\\\"refus\\\" dossier prime\",\"depuis\":\"3m\"}",
+    "lire {\"passageId\":\"dr-suivi-mpr-1\"}",
+    "lire {\"passageId\":\"tldv-codir-16-4\"}"
+  ],
+  "cout": 0.001519943
+}

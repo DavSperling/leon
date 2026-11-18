@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:51.046Z",
+  "reponse": "Daniel Levi owns the Fernhill SAML work end to end [3], and he is the assignee on ticket KES-430 [1]. The internal due date is Nov 27 [1], while the contract commits to SAML live in production by December 1, 2026 [2]. Be aware that the production IdP metadata from Fernhill's side is only expected on the 26th at the earliest, after their change board [6], so the timeline is tight.",
+  "rendu": "Daniel Levi owns the Fernhill SAML work end to end [3], and he is the assignee on ticket KES-430 [1]. The internal due date is Nov 27 [1], while the contract commits to SAML live in production by December 1, 2026 [2]. Be aware that the production IdP metadata from Fernhill's side is only expected on the 26th at the earliest, after their change board [6], so the timeline is tight.",
+  "mesures": {
+    "mots": 71,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1317,
+    "sortie": 177,
+    "reflexion": 69,
+    "cache": 512,
+    "cout": 0.0001636936
+  },
+  "cout": 0.0001636936,
+  "latenceMs": 4980,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:23.351Z",
+  "reponse": "## Où j'en suis\nWork on postmortem action item 3: `cmd/replay` in kestrel-analytics/ingest re-ingests the 12/11 lost events window (14:10–17:40 UTC) from the S3 raw archive. Dry run is complete and validated; PR #233 is open awaiting Daniel's review, and the real replay has not run yet.\n\n- [en-cours] PR kestrel-analytics/ingest#233 open, waiting for Daniel's review before proceeding\n- [prochaine-étape] After review approval: run the real replay into `events.replay.v3` (nothing goes to `events.v3`, hard-coded allowlist)\n- [prochaine-étape] Then run aggregator with `--backfill` for 2026-11-12 to recompute aggregates\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly yourself once Daniel has reviewed (by Friday)\n- [décision] Replay everything, no age cutoff: aggregator recomputes 12/11 aggregates via backfill (source: t05)\n- [décision] Batch size 5k, never raise memory limits (namespace quota capped by Noa) (source: t13)\n- [essai-raté] `replay-dryrun-1` OOMKilled at `--batch 50000` (~2.6 GiB peak vs 2 GiB limit); fixed with `--batch 5000` (~310 MiB)\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed: 4 parallel workers interleaved same-partition events out of order; fixed by assigning workers per partition key (commit 4e2d9b7)",
+  "rendu": "## Où j'en suis\nWork on postmortem action item 3: `cmd/replay` in kestrel-analytics/ingest re-ingests the 12/11 lost events window (14:10–17:40 UTC) from the S3 raw archive. Dry run is complete and validated; PR #233 is open awaiting Daniel's review, and the real replay has not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 open, waiting for Daniel's review before proceeding\n- [prochaine-étape] After review approval: run the real replay into `events.replay.v3` (nothing goes to `events.v3`, hard-coded allowlist)\n- [prochaine-étape] Then run aggregator with `--backfill` for 2026-11-12 to recompute aggregates\n- [prochaine-étape] Give Rachel the ETA for Fernhill and Orbitly yourself once Daniel has reviewed (by Friday)\n- [décision] Replay everything, no age cutoff: aggregator recomputes 12/11 aggregates via backfill (source: t05)\n- [décision] Batch size 5k, never raise memory limits (namespace quota capped by Noa) (source: t13)\n- [essai-raté] `replay-dryrun-1` OOMKilled at `--batch 50000` (~2.6 GiB peak vs 2 GiB limit); fixed with `--batch 5000` (~310 MiB)\n- [essai-raté] `TestStreamWindow_OrderWithinPartition` failed: 4 parallel workers interleaved same-partition events out of order; fixed by assigning workers per partition key (commit 4e2d9b7)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1380,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4072,
+    "sortie": 380,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008008
+  },
+  "cout": 0.0008008,
+  "latenceMs": 2515,
+  "fournisseur": "Together"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-haiku-5.5@langue+sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:22.692Z",
+  "reponse": "## Where I'm at\n\nSAML ACS signature and condition verification is implemented with signxml (python3-saml and xmlsec were dropped because of the Alpine image incompatibility). Skew tolerance is 120 s per Fernhill's questionnaire, with replay protection in Redis. PR #412 is open and CI is green, but it is not merged: it is waiting for Maya's approval under branch protection. Loading Fernhill's staging IdP metadata and sending them our staging SP metadata is still to do before Wednesday EOD for the Thursday 10:00 New York demo.\n\n- [en-cours] Load Fernhill staging IdP metadata and send our staging SP metadata to their IT contact\n- [prochaine-étape] Get Maya's review on PR #412, then merge it (squash), without `--admin` or `--auto`\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [décision] Use signxml instead of python3-saml, and drop xmlsec from the Dockerfile (source: t08)\n- [décision] Set SAML clock skew to 120 seconds, per the Fernhill contract annex (source: t12)\n- [décision] Keep password login unchanged in this PR; handle SSO enforcement as a separate ticket (source: t12)\n- [décision] Merge PR #412 only after Maya approves, no admin override (source: t21)\n- [question] None open beyond the items above",
+  "rendu": "- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Load Fernhill staging IdP metadata and send our staging SP metadata to their IT contact\n- [prochaine-étape] Get Maya's review on PR #412, then merge it (squash), without `--admin` or `--auto`\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users\n- [décision] Use signxml instead of python3-saml, and drop xmlsec from the Dockerfile (source: t08)\n- [décision] Set SAML clock skew to 120 seconds, per the Fernhill contract annex (source: t12)\n- [décision] Keep password login unchanged in this PR; handle SSO enforcement as a separate ticket (source: t12)\n- [décision] Merge PR #412 only after Maya approves, no admin override (source: t21)\n- [question] None open beyond the items above",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 882,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6504,
+    "sortie": 482,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0008914
+  },
+  "cout": 0.0008914,
+  "latenceMs": 2821,
+  "fournisseur": "Claude Platform on AWS"
+}

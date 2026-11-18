@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:34.584Z",
+  "reponse": "## Où j'en suis\n\nLe travail sur TransAlp est poussé : branche `hugo/transalp-etiquettes`, PR #91 à jour et toujours en brouillon, en attente de la relecture de Julien. L'étiquette ZPL fonctionne en recette avec `^CI28` (accents corrigés, Karim a validé), et la bascule est programmée au 1er décembre via `TRANSALP_DEBUT` sans toucher à Rapidis. (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, relecture par Julien non encore faite ; la clé de prod doit être mise dans les secrets par Julien, rien ne s'active avant le 1er décembre (source: h2-12, h2-07)\n- [prochaine-étape] Faire relire/fusionner la PR #91 par Julien, puis vérifier que `TRANSALP_DEBUT` est bien renseigné en prod le moment venu (source: src-pr91, h2-08)\n- [essai-raté] Authentification par en-tête X-Api-Key refusée en 401 : l'API exige OAuth2 client_credentials (source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox ; testé en recette à la place, puis accents corrigés par l'insertion de `^CI28` après `^XA` (source: h2-02, h2-04)\n- [question] Le reste de la France et les +30 kg restent chez Rapidis jusqu'au 15 janvier ; point à refaire après les soldes (source: src-slack-julien)\n- [décision] Bascule au mardi 1er décembre, Lyon et Paris seulement, pas le 23 novembre (source: src-slack-julien)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier ; rien ne s'active avant le 1er décembre et la clé de prod est posée par Julien (source: h2-07, h2-09)\n- [décision] Aucun tarif Premium : ignorer ce passage du mail TransAlp (source: h2-09)",
+  "rendu": "## Où j'en suis\nLe travail sur TransAlp est poussé : branche `hugo/transalp-etiquettes`, PR #91 à jour et toujours en brouillon, en attente de la relecture de Julien. L'étiquette ZPL fonctionne en recette avec `^CI28` (accents corrigés, Karim a validé), et la bascule est programmée au 1er décembre via `TRANSALP_DEBUT` sans toucher à Rapidis. (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 ouverte en brouillon, relecture par Julien non encore faite ; la clé de prod doit être mise dans les secrets par Julien, rien ne s'active avant le 1er décembre (de: toi, agent; source: h2-12, h2-07)\n- [prochaine-étape] Faire relire/fusionner la PR #91 par Julien, puis vérifier que `TRANSALP_DEBUT` est bien renseigné en prod le moment venu (de: équipe, agent; source: src-pr91, h2-08)\n- [essai-raté] Authentification par en-tête X-Api-Key refusée en 401 : l'API exige OAuth2 client_credentials (de: agent; source: ses-tr-1)\n- [essai-raté] ZPL refusé en sandbox ; testé en recette à la place, puis accents corrigés par l'insertion de `^CI28` après `^XA` (de: agent; source: h2-02, h2-04)\n- [question] Le reste de la France et les +30 kg restent chez Rapidis jusqu'au 15 janvier ; point à refaire après les soldes (de: connecteur; source: src-slack-julien)\n- [décision] Bascule au mardi 1er décembre, Lyon et Paris seulement, pas le 23 novembre (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier ; rien ne s'active avant le 1er décembre et la clé de prod est posée par Julien (de: toi; source: h2-07, h2-09)\n- [décision] Aucun tarif Premium : ignorer ce passage du mail TransAlp (de: toi; source: h2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1729,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4196,
+    "sortie": 574,
+    "reflexion": 18,
+    "cache": 896,
+    "cout": 0.0006252288
+  },
+  "cout": 0.0006252288,
+  "latenceMs": 4640,
+  "fournisseur": "Xiaomi"
+}

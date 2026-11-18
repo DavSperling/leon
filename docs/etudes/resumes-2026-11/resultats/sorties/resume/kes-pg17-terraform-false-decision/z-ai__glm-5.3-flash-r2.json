@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:09.074Z",
+  "reponse": "## Où j'en suis\nSession on Postgres 17 upgrade of the analytics RDS (blue/green, staging first, plan only). Parameter group family made dynamic, blue/green enabled on staging, AWS provider pinned to ~>5.82.0, tflint clean. Prod prepared but disabled behind `pg17_enabled = false` with no changes in plan. Draft PR opened; nothing applied, no DB changes beyond a read-only select.\n\n- [en-cours] Staging upgrade not applied yet: plan is clean (1 to add, 1 to change) but execution was explicitly not requested (plan only, source: t01)\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging (16.4) via `ALTER EXTENSION`, then verify `run_maintenance_proc()` on `events_raw` / `events_daily` before any blue/green switchover (source: t10)\n- [prochaine-étape] Get Maya's sign-off before scheduling any production cutover (source: t14)\n- [prochaine-étape] Pick a prod window avoiding the dbt lock on `events_daily` (01:00–03:30 UTC); low-traffic candidates: Sat/Sun 04:00–06:00 UTC (source: t14)\n- [essai-raté] `terraform init` failed with lock file on aws 5.31.0 vs constraint >=5.60.0; fixed with `init -upgrade` (source: t03)\n- [essai-raté] `init -upgrade` pulled aws v6.4.0, plan showed 37 unrelated breaking changes (S3 ACL, EIP); user rejected v6, provider pinned to ~5.82 instead (source: t04)\n- [essai-raté] Agent proposed prod cutover Sat 28 Nov 02:00 UTC with `apply_immediately = true`; rejected — 02:00 falls inside the dbt lock and no date until Maya signs off; both reverted (source: t14)\n- [décision] Pin AWS provider to ~>5.82.0, no v6 in this PR (source: t04)\n- [décision] pg_partman upgrade is a separate step; agent must not run anything against the DB (source: t10)\n- [décision] No prod date until Maya signs off; `apply_immediately` stays false (source: t14)",
+  "rendu": "## Où j'en suis\nSession on Postgres 17 upgrade of the analytics RDS (blue/green, staging first, plan only). Parameter group family made dynamic, blue/green enabled on staging, AWS provider pinned to ~>5.82.0, tflint clean. Prod prepared but disabled behind `pg17_enabled = false` with no changes in plan. Draft PR opened; nothing applied, no DB changes beyond a read-only select.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Staging upgrade not applied yet: plan is clean (1 to add, 1 to change) but execution was explicitly not requested (plan only, source: t01)\n- [prochaine-étape] Upgrade pg_partman 4.7.4 → 5.1.0 on staging (16.4) via `ALTER EXTENSION`, then verify `run_maintenance_proc()` on `events_raw` / `events_daily` before any blue/green switchover (source: t10)\n- [prochaine-étape] Get Maya's sign-off before scheduling any production cutover (source: t14)\n- [prochaine-étape] Pick a prod window avoiding the dbt lock on `events_daily` (01:00–03:30 UTC); low-traffic candidates: Sat/Sun 04:00–06:00 UTC (source: t14)\n- [essai-raté] `terraform init` failed with lock file on aws 5.31.0 vs constraint >=5.60.0; fixed with `init -upgrade` (source: t03)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1257,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3786,
+    "sortie": 594,
+    "reflexion": 57,
+    "cache": 0,
+    "cout": 0.0008649
+  },
+  "cout": 0.0008649,
+  "latenceMs": 3664,
+  "fournisseur": "Mistral"
+}

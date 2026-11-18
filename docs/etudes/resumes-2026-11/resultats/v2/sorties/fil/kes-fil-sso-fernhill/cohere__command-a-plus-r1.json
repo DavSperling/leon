@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:29:15.281Z",
+  "reponse": "## Where am I\nReal SAML login works on staging with Fernhill's IdP after RelayState fix; JIT creates users as viewer; group‑to‑role mapping is pending Fernhill IT adding the groups claim (source: ses-sso-3, s3-11)\n\n- [en-cours] Real login on staging with Fernhill IdP works and JIT provisions users as viewer (source: ses-sso-3, s3-11)\n- [prochaine-étape] Wait for Fernhill IT to add the groups claim; then create admin test account for demo and merge PR #421 to apply mapping (source: ses-sso-3, kestrel-analytics/platform#421)\n- [essai-raté] Proposal to set default role to analyst and disable SP‑initiated login was rejected; default remains viewer and SP‑initiated stays on (source: ses-sso-3, s3-07)\n- [décision] Default role stays viewer, SP‑initiated login remains enabled, and Fernhill‑Kestrel‑Admins group maps to admin role (source: ses-sso-3, s3-07)",
+  "rendu": "- [en-cours] Real login on staging with Fernhill IdP works and JIT provisions users as viewer (de: agent; source: ses-sso-3, s3-11)\n- [prochaine-étape] Wait for Fernhill IT to add the groups claim; then create admin test account for demo and merge PR #421 to apply mapping (de: équipe, agent; source: ses-sso-3, kestrel-analytics/platform#421)\n- [essai-raté] Proposal to set default role to analyst and disable SP‑initiated login was rejected; default remains viewer and SP‑initiated stays on (de: toi, agent; source: ses-sso-3, s3-07)\n- [décision] Default role stays viewer, SP‑initiated login remains enabled, and Fernhill‑Kestrel‑Admins group maps to admin role (de: toi, agent; source: ses-sso-3, s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 707,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4365,
+    "sortie": 4051,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.007386
+  },
+  "cout": 0.007386,
+  "latenceMs": 21186,
+  "fournisseur": "Cohere"
+}

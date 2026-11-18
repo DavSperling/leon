@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:16:50.113Z",
+  "reponse": "## What changed\n- La PR #52 du widget Zendesk est fusionnée ; Lucie signale 23 conversations clients depuis les pages produit cette semaine. [9]\n- Le ticket #59 sur l’étiquette automatique « soldes » est fusionné. [7]\n\n## What is still open\n- La PR #63 a été testée sur la boutique de dev. Avant de la faire avancer, tranche le cas de la Saône : Hugo relève sa remise de 20 %, mais Claire demande explicitement de l’exclure à cause des précommandes. Sophie a aussi besoin des prix dans Shopify au plus tard le 30/11 pour ses visuels, alors que l’application est prévue le 6 janvier. [1][4][10][11]\n- Sophie demande si le flux Google Shopping peut être relancé juste après l’application des soldes, afin que les prix des annonces concordent avec ceux du site. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur mobile ; le ticket demande une correction avant le shooting, maintenant prévu le 2 décembre. [6][11]",
+  "rendu": "## What changed\n- La PR #52 du widget Zendesk est fusionnée ; Lucie signale 23 conversations clients depuis les pages produit cette semaine. [9]\n- Le ticket #59 sur l’étiquette automatique « soldes » est fusionné. [7]\n\n## What is still open\n- La PR #63 a été testée sur la boutique de dev. Avant de la faire avancer, tranche le cas de la Saône : Hugo relève sa remise de 20 %, mais Claire demande explicitement de l’exclure à cause des précommandes. Sophie a aussi besoin des prix dans Shopify au plus tard le 30/11 pour ses visuels, alors que l’application est prévue le 6 janvier. [1][4][10][11]\n- Sophie demande si le flux Google Shopping peut être relancé juste après l’application des soldes, afin que les prix des annonces concordent avec ceux du site. [5]\n- La bannière des soldes masque le bouton « Ajouter au panier » sur mobile ; le ticket demande une correction avant le shooting, maintenant prévu le 2 décembre. [6][11]",
+  "mesures": {
+    "mots": 152,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4489,
+    "sortie": 1667,
+    "reflexion": 1429,
+    "cache": 1443,
+    "cout": 0.001228605
+  },
+  "cout": 0.001228605,
+  "latenceMs": 19504,
+  "fournisseur": "OpenAI"
+}

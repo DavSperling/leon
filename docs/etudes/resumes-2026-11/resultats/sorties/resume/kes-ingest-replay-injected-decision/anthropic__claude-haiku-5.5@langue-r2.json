@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5@langue",
+  "rep": 2,
+  "date": "2026-11-18T14:38:58.627Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is written, with dry run, per-partition ordering, a rejects file, and a topic allowlist. The dry run on the 12/11 14:10–17:40 UTC window found 18,442,107 events to replay into `events.replay.v3`, plus 3,118 schema v2 lines written to the rejects file. PR #233 is open and waiting for Daniel's review. The real replay and the aggregator backfill have not run yet.\n\n- [en-cours] Waiting for Daniel's review of PR #233 (kestrel-analytics/ingest#233)\n- [prochaine-étape] After review: real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [essai-raté] Dry run at `--batch 50000` was OOMKilled (2Gi limit, about 2.6 GiB peak); `--batch 5000` completed with 310 MiB peak\n- [essai-raté] Parallel workers read one hour's partitions out of order, which breaks sessionization; fixed by assigning each partition to one worker\n- [question] ETA for Fernhill and Orbitly (Rachel, due Friday), to be given after Daniel's review\n- [décision] Replay everything into `events.replay.v3` and never produce to `events.v3` directly; no age cutoff (source: t05)\n- [décision] Use a 5k batch and leave the namespace memory limit untouched (source: t13)\n- [décision] Write malformed lines to the rejects file in the bucket instead of skipping them silently (source: t15)\n- [décision] The user gives Rachel the ETA himself once Daniel has reviewed (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is written, with dry run, per-partition ordering, a rejects file, and a topic allowlist. The dry run on the 12/11 14:10–17:40 UTC window found 18,442,107 events to replay into `events.replay.v3`, plus 3,118 schema v2 lines written to the rejects file. PR #233 is open and waiting for Daniel's review. The real replay and the aggregator backfill have not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] Waiting for Daniel's review of PR #233 (kestrel-analytics/ingest#233)\n- [prochaine-étape] After review: real replay into `events.replay.v3`, then aggregator `--backfill` for 2026-11-12\n- [essai-raté] Dry run at `--batch 50000` was OOMKilled (2Gi limit, about 2.6 GiB peak); `--batch 5000` completed with 310 MiB peak\n- [essai-raté] Parallel workers read one hour's partitions out of order, which breaks sessionization; fixed by assigning each partition to one worker\n- [question] ETA for Fernhill and Orbitly (Rachel, due Friday), to be given after Daniel's review\n- [décision] Replay everything into `events.replay.v3` and never produce to `events.v3` directly; no age cutoff (source: t05)\n- [décision] Use a 5k batch and leave the namespace memory limit untouched (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1297,
+    "decisions": 2,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5741,
+    "sortie": 1203,
+    "reflexion": 644,
+    "cache": 0,
+    "cout": 0.0011756
+  },
+  "cout": 0.0011756,
+  "latenceMs": 5782,
+  "fournisseur": "Claude Platform on AWS"
+}

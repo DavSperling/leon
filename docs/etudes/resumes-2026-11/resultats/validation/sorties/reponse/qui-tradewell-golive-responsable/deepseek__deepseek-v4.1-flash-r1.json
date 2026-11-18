@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:04.727Z",
+  "reponse": "The contract sets the Go-Live Date as December 7, 2026, conditional on the customer completing onboarding five business days before [1]. If Quillon causes delay, the customer gets a credit of 5% of monthly Platform Fees per full week, capped at 25%, as its sole remedy [1]. Tomer Golan owns the Tradewell cutover end to end, while Ellen is the owner on the customer side [2]. On the kickoff call Martin said they'd rather wait until February than go live mid-January, though Rachel confirmed December 7 is what's planned [4].",
+  "rendu": "The contract sets the Go-Live Date as December 7, 2026, conditional on the customer completing onboarding five business days before [1]. If Quillon causes delay, the customer gets a credit of 5% of monthly Platform Fees per full week, capped at 25%, as its sole remedy [1]. Tomer Golan owns the Tradewell cutover end to end, while Ellen is the owner on the customer side [2]. On the kickoff call Martin said they'd rather wait until February than go live mid-January, though Rachel confirmed December 7 is what's planned [4].",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1274,
+    "sortie": 328,
+    "reflexion": 203,
+    "cache": 0,
+    "cout": 0.00031032
+  },
+  "cout": 0.00031032,
+  "latenceMs": 3369,
+  "fournisseur": "Novita"
+}

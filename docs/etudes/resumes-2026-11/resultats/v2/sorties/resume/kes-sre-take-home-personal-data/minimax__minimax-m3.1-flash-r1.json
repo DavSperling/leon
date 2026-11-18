@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:26.845Z",
+  "reponse": "## Where I left off\n\nThe SRE take-home exercise for Ethan Moradi was built from scratch, scoped to a 3-hour box with Terraform + docker compose only (no Kubernetes), and moved into its own private repo `kestrel-analytics/sre-take-home` via a subtree split so infra history is not exposed. A rubric was added with four areas scored 0–3 by two independent reviewers (Maya and Noa), with no pass threshold — the panel decides. The `hiring/` folder was removed from the `maya/sre-take-home` branch and no PR was opened in infra; the exercise has not been sent to the candidate.\n\n- [done] Scenario: broken alert rule (`http_requests_total` vs `http_server_requests_total`), connection leak in flaky-svc, over-broad `s3:*` IAM policy\n- [done] Compose builds flaky-svc from source (multi-stage golang → distroless), so no prebuilt image and works on Apple Silicon\n- [done] `RUBRIC.md` with 4 areas, no cut-off, Noa as second reviewer\n- [done] Private repo created and subtree pushed (3 commits, exercise paths only)\n- [en-cours] Nothing running; the exercise is ready for a collaborator invite\n- [next-step] Call with the candidate Thursday 4pm Tel Aviv time, then Maya sends the exercise herself\n- [essai-raté] Multi-arch `docker buildx --load` failed (exporter can't load manifest lists); prebuilt amd64 image gave `exec format error` on arm64 — solved by building from source (source: t05)\n- [decision] No Kubernetes part, 3 hours max, terraform + compose only (source: t03)\n- [decision] Compose must build flaky-svc from source, no published image (source: t06)\n- [decision] No score threshold; panel decides, Noa is second reviewer (source: t10)\n- [decision] Exercise lives in its own private repo, deleted from infra branch, no infra PR (source: t12, t14)\n- [decision] Maya sends the exercise herself after the call; the agent must not email anyone (source: t16)",
+  "rendu": "- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] Nothing running; the exercise is ready for a collaborator invite\n- [essai-raté] Multi-arch `docker buildx --load` failed (exporter can't load manifest lists); prebuilt amd64 image gave `exec format error` on arm64 — solved by building from source (source: t05)\n- [décision] No Kubernetes part, 3 hours max, terraform + compose only (source: t03)\n- [décision] Compose must build flaky-svc from source, no published image (source: t06)\n- [décision] No score threshold; panel decides, Noa is second reviewer (source: t10)\n- [décision] Maya sends the exercise herself after the call; the agent must not email anyone (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 734,
+    "decisions": 4,
+    "decisionsRetirees": 1,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3622,
+    "sortie": 473,
+    "reflexion": 7,
+    "cache": 174,
+    "cout": 0.00080361
+  },
+  "cout": 0.00080361,
+  "latenceMs": 3314,
+  "fournisseur": "Fireworks"
+}

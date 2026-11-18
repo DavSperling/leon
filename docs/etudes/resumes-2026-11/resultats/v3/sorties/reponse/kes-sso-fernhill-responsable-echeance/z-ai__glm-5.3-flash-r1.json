@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:11.249Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [1][3]. The Linear ticket KES-430 is due November 27, an internal buffer before the contractual deadline [1]. The contract commits SSO live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Work is progressing: the ACS endpoint and signature validation were merged on Nov 14, and staging login works against Fernhill's test IdP [1][5]. The remaining blocker is Fernhill's production IdP metadata, expected on November 26 at the earliest after their change board [1][6].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [1][3]. The Linear ticket KES-430 is due November 27, an internal buffer before the contractual deadline [1]. The contract commits SSO live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Work is progressing: the ACS endpoint and signature validation were merged on Nov 14, and staging login works against Fernhill's test IdP [1][5]. The remaining blocker is Fernhill's production IdP metadata, expected on November 26 at the earliest after their change board [1][6].",
+  "mesures": {
+    "mots": 90,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1269,
+    "sortie": 135,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00026919
+  },
+  "cout": 0.00026919,
+  "latenceMs": 4067,
+  "fournisseur": "Inceptron"
+}

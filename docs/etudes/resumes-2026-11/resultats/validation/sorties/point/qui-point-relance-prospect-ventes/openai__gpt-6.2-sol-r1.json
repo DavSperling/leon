@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:27:07.549Z",
+  "reponse": "## What is still open\n\n- Your Hearthly follow-up needs two changes before it goes to Nadia and Tom: Sofia says CAD payouts are Q2 2027 at the earliest and asks you not to put a date in writing; Rachel wants to talk before you send pricing, since your proposed 15% discount for a two-year commitment requires her sign-off. [1][3][6]\n- Your SIG Lite is still due Monday, Nov 23. Nadia confirmed Hearthly won’t keep you in the final round without it, and you still need to confirm whether Shira can own it. [1][4]\n- Your mutual action plan needs to reflect Hearthly’s decision moving from Dec 4 to Dec 2. You’re still waiting on Tom’s monthly payout volumes by country. [1][4]\n- You still need a similarly sized marketplace for Hearthly’s reference call; you planned to ask Rachel who’s available. [1]",
+  "rendu": "## What is still open\n\n- Your Hearthly follow-up needs two changes before it goes to Nadia and Tom: Sofia says CAD payouts are Q2 2027 at the earliest and asks you not to put a date in writing; Rachel wants to talk before you send pricing, since your proposed 15% discount for a two-year commitment requires her sign-off. [1][3][6]\n- Your SIG Lite is still due Monday, Nov 23. Nadia confirmed Hearthly won’t keep you in the final round without it, and you still need to confirm whether Shira can own it. [1][4]\n- Your mutual action plan needs to reflect Hearthly’s decision moving from Dec 4 to Dec 2. You’re still waiting on Tom’s monthly payout volumes by country. [1][4]\n- You still need a similarly sized marketplace for Hearthly’s reference call; you planned to ask Rachel who’s available. [1]",
+  "mesures": {
+    "mots": 137,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3678,
+    "sortie": 262,
+    "reflexion": 63,
+    "cache": 1451,
+    "cout": 0.0083311
+  },
+  "cout": 0.0083311,
+  "latenceMs": 3156,
+  "fournisseur": "Azure"
+}

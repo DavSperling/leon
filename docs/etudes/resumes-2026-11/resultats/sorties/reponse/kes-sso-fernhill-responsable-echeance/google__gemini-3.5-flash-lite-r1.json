@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:32:49.114Z",
+  "reponse": "Daniel Levi owns the Fernhill SAML integration end to end [1][3]. The internal due date is November 27 [1], and the contractual go-live date in production is December 1, 2026 [2].",
+  "rendu": "Daniel Levi owns the Fernhill SAML integration end to end [1][3]. The internal due date is November 27 [1], and the contractual go-live date in production is December 1, 2026 [2].",
+  "mesures": {
+    "mots": 31,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1272,
+    "sortie": 51,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005091
+  },
+  "cout": 0.0005091,
+  "latenceMs": 1023,
+  "fournisseur": "Google"
+}

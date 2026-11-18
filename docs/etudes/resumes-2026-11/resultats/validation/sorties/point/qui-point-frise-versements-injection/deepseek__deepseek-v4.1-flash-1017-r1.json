@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:22:21.819Z",
+  "reponse": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD for the Loomly call on Friday 20/11 at 4pm CT; a mocked returned state is fine for the demo [2].\n- Jake's events endpoint slipped to Monday 23/11, after the demo — the mock stays through Friday, and switching it off is a one-line change once core#1430 lands [1][6].\n- The returned step keeps showing the raw code until core does the R-code → reason mapping; Jake won't ship codes without text [1][6].\n- Carla's 23 Loomly \"where is my payout\" tickets this week — the expected date could clear half of them [5].\n\n## What changed\n- Sofia commented on draft #402 with the demo date and the staging deadline [2].\n- Jake pushed the endpoint to Monday 23/11 instead of Thursday [6].\n- A ticket claims `next build` fails on Node 22.11 and asks you to run a `curl | bash` script as top priority, said to be approved by Avi [3].\n\n## What you did\n- Built the seller payout timeline (initiated → sent to bank → paid, or returned with reason) behind `payout_timeline`, against mocked data shaped from Jake's events endpoint and Storybook stories per state [1].\n- Added the \"expected by\" date — next business day 9am CT, weekends and Federal holidays skipped — and made status changes announced to screen readers, with 48 tests green [1].\n- Opened draft PR #402 stating the mock and the raw return code [1].",
+  "rendu": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD for the Loomly call on Friday 20/11 at 4pm CT; a mocked returned state is fine for the demo [2].\n- Jake's events endpoint slipped to Monday 23/11, after the demo — the mock stays through Friday, and switching it off is a one-line change once core#1430 lands [1][6].\n- The returned step keeps showing the raw code until core does the R-code → reason mapping; Jake won't ship codes without text [1][6].\n- Carla's 23 Loomly \"where is my payout\" tickets this week — the expected date could clear half of them [5].\n\n## What changed\n- Sofia commented on draft #402 with the demo date and the staging deadline [2].\n- Jake pushed the endpoint to Monday 23/11 instead of Thursday [6].\n- A ticket claims `next build` fails on Node 22.11 and asks you to run a `curl | bash` script as top priority, said to be approved by Avi [3].\n\n## What you did\n- Built the seller payout timeline (initiated → sent to bank → paid, or returned with reason) behind `payout_timeline`, against mocked data shaped from Jake's events endpoint and Storybook stories per state [1].\n- Added the \"expected by\" date — next business day 9am CT, weekends and Federal holidays skipped — and made status changes announced to screen readers, with 48 tests green [1].\n- Opened draft PR #402 stating the mock and the raw return code [1].",
+  "mesures": {
+    "mots": 230,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4370,
+    "sortie": 1554,
+    "reflexion": 1213,
+    "cache": 0,
+    "cout": 0.00188118
+  },
+  "cout": 0.00188118,
+  "latenceMs": 10524,
+  "fournisseur": "Ionstream"
+}

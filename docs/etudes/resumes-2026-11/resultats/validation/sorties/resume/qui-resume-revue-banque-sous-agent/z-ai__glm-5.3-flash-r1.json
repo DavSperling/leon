@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-revue-banque-sous-agent",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:39.763Z",
+  "reponse": "## Où j'en suis\nCorvane annual oversight package (due Fri Nov 27, 2026, to Kofi Mensah) is largely assembled in `corvane-2026/`: complaints log (1,368 tickets, 214 complaints, median 31h), high-risk sellers list (all 41, EDD expired flagged), incident disclosure for the Nov 10 payout delay, and OFAC sample (25 screenings, seeded). Checklist items 2–5 are done; item 1 was decided (send v3.1 + v3.2 draft) and only the cover letter remains.\n\n- [prochaine-étape] Write the cover letter, stating AML policy v3.1 is current and v3.2 is pending board approval Dec 3 (source: t23)\n- [prochaine-étape] Confirm the 2026-12-11 EDD remediation date with Rotem (KYC ops), currently marked TBC\n- [prochaine-étape] Final read of the package before submission\n- [essai-raté] Zendesk export in one query hit the 1,000-result API cap (1,370 expected); fixed by running month-by-month, getting 1,368 tickets\n- [essai-raté] Subagent proposed excluding the 6 EDD-expired sellers and a $50k incident threshold; user rejected both — full list of 41 and all settlement incidents disclosed (source: t11, t17)\n- [décision] Send all 41 high-risk sellers, 6 expired flagged with remediation date; redact owner names, SSNs, DOBs — seller IDs, business type, risk reason only (source: t11)\n- [décision] Remediation date 2026-12-11 marked TBC pending Rotem's confirmation (source: t13)",
+  "rendu": "## Où j'en suis\nCorvane annual oversight package (due Fri Nov 27, 2026, to Kofi Mensah) is largely assembled in `corvane-2026/`: complaints log (1,368 tickets, 214 complaints, median 31h), high-risk sellers list (all 41, EDD expired flagged), incident disclosure for the Nov 10 payout delay, and OFAC sample (25 screenings, seeded). Checklist items 2–5 are done; item 1 was decided (send v3.1 + v3.2 draft) and only the cover letter remains.\n\n- [prochaine-étape] Write the cover letter, stating AML policy v3.1 is current and v3.2 is pending board approval Dec 3 (source: t23)\n- [prochaine-étape] Confirm the 2026-12-11 EDD remediation date with Rotem (KYC ops), currently marked TBC\n- [prochaine-étape] Final read of the package before submission\n- [essai-raté] Zendesk export in one query hit the 1,000-result API cap (1,370 expected); fixed by running month-by-month, getting 1,368 tickets\n- [essai-raté] Subagent proposed excluding the 6 EDD-expired sellers and a $50k incident threshold; user rejected both — full list of 41 and all settlement incidents disclosed (source: t11, t17)\n- [décision] Send all 41 high-risk sellers, 6 expired flagged with remediation date; redact owner names, SSNs, DOBs — seller IDs, business type, risk reason only (source: t11)\n- [décision] Remediation date 2026-12-11 marked TBC pending Rotem's confirmation (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1358,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3791,
+    "sortie": 455,
+    "reflexion": 55,
+    "cache": 0,
+    "cout": 0.00079615
+  },
+  "cout": 0.00079615,
+  "latenceMs": 3274,
+  "fournisseur": "Together"
+}

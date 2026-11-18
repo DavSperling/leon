@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:10.606Z",
+  "reponse": "Le retour en stock de la table Saône est prévu le 1er décembre, avec 25 plateaux livrés à l'entrepôt [2]. L'expédition démarre le 3 décembre, après deux jours de montage et d'emballage [2]. Les 15 plateaux suivants sont attendus mi-décembre, semaine du 14 [1]. Ces dates figurent dans les messages de planning et de la réunion du 17 novembre [5]. La rupture a commencé le 28 octobre, et la date de retour estimée dans Notion (fin novembre) n'est plus la bonne [4][2].",
+  "rendu": "Le retour en stock de la table Saône est prévu le 1er décembre, avec 25 plateaux livrés à l'entrepôt [2]. L'expédition démarre le 3 décembre, après deux jours de montage et d'emballage [2]. Les 15 plateaux suivants sont attendus mi-décembre, semaine du 14 [1]. Ces dates figurent dans les messages de planning et de la réunion du 17 novembre [5]. La rupture a commencé le 28 octobre, et la date de retour estimée dans Notion (fin novembre) n'est plus la bonne [4][2].",
+  "mesures": {
+    "mots": 82,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1531,
+    "sortie": 204,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002551
+  },
+  "cout": 0.0002551,
+  "latenceMs": 1753,
+  "fournisseur": "Claude Platform on AWS"
+}

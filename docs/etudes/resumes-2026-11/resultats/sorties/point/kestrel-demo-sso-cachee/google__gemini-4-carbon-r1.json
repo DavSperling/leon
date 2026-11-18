@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "google/gemini-4-carbon",
+  "rep": 1,
+  "date": "2026-11-18T14:26:37.004Z",
+  "reponse": "## What changed\n\n- Maya approved and merged PR #418 (SAML assertion signature verification, with one non-blocking wording nit), putting it in last night's staging deploy ahead of tomorrow's 10am ET Fernhill IT Okta walkthrough on staging (Priya runs the demo; you join the call) [1][2][3].\n\n## What is still open\n\n- Tom Becker requested changes on PR #423: split the `saml_utils.py` move into `kestrel/auth/saml/` into a separate PR from your `freezegun` flaky-test fixes and `ruff`/`mypy` fixes (including rejecting missing `Issuer`/`Subject` instead of crashing with a 500), and he will approve both today [1][4].\n- Move the SAML assertion ID replay cache from the in-memory `TTLCache` to Redis so replay protection holds across multiple API pods in production, as you queued up for today [1][2].",
+  "rendu": "## What changed\n\n- Maya approved and merged PR #418 (SAML assertion signature verification, with one non-blocking wording nit), putting it in last night's staging deploy ahead of tomorrow's 10am ET Fernhill IT Okta walkthrough on staging (Priya runs the demo; you join the call) [1][2][3].\n\n## What is still open\n\n- Tom Becker requested changes on PR #423: split the `saml_utils.py` move into `kestrel/auth/saml/` into a separate PR from your `freezegun` flaky-test fixes and `ruff`/`mypy` fixes (including rejecting missing `Issuer`/`Subject` instead of crashing with a 500), and he will approve both today [1][4].\n- Move the SAML assertion ID replay cache from the in-memory `TTLCache` to Redis so replay protection holds across multiple API pods in production, as you queued up for today [1][2].",
+  "mesures": {
+    "mots": 120,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6128,
+    "sortie": 3920,
+    "reflexion": 3707,
+    "cache": 0,
+    "cout": 0.051456
+  },
+  "cout": 0.051456,
+  "latenceMs": 75315,
+  "fournisseur": "Google AI Studio"
+}

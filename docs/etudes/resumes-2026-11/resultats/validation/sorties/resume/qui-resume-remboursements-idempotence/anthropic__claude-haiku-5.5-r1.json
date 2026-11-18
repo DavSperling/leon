@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-remboursements-idempotence",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:37.261Z",
+  "reponse": "## Where I am\n\nIdempotency-Key support on `POST /v1/refunds` is merged as quillon/core#1437, with a Postgres store, 72-hour key retention, 409 on in-flight retries, and updated docs. The read-only SQL lists 14 duplicate refunds from 2026-11-12, totalling $3,212.40 before partial reversals. Nothing has been sent to Carla yet.\n\n- [en-cours] Listing the 14 Pinecrest duplicate refunds for Carla; the CSV is saved locally, not committed.\n- [prochaine-étape] Check the net amounts of the 2 partial reversals with Marcus, then send the list to Carla before Friday.\n- [essai-raté] Redis store failed on CROSSSLOT in cluster mode, and as a cache it could lose keys on failover, which would cause double refunds; moved to Postgres.\n- [décision] Idempotency store in Postgres with a unique index on (merchant_id, idempotency_key), not Redis (source: t05)\n- [décision] Keys kept 72 hours, since Pinecrest's client retries for up to 48 hours (source: t09)\n- [décision] No script moves money; the Pinecrest reconciliation stays read-only SQL (source: t19)",
+  "rendu": "- pr [[quillon/core#1437]]\n- branche [[jake/refund-idempotency]]\n- commit [[a3f9e12]]\n- commit [[7c04b5d]]\n- commit [[e91d2a8]]\n- [en-cours] Listing the 14 Pinecrest duplicate refunds for Carla; the CSV is saved locally, not committed.\n- [prochaine-étape] Check the net amounts of the 2 partial reversals with Marcus, then send the list to Carla before Friday.\n- [essai-raté] Redis store failed on CROSSSLOT in cluster mode, and as a cache it could lose keys on failover, which would cause double refunds; moved to Postgres.\n- [décision] Idempotency store in Postgres with a unique index on (merchant_id, idempotency_key), not Redis (source: t05)\n- [décision] Keys kept 72 hours, since Pinecrest's client retries for up to 48 hours (source: t09)\n- [décision] No script moves money; the Pinecrest reconciliation stays read-only SQL (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 844,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5372,
+    "sortie": 1702,
+    "reflexion": 1282,
+    "cache": 0,
+    "cout": 0.0013882
+  },
+  "cout": 0.0013882,
+  "latenceMs": 7862,
+  "fournisseur": "Google"
+}

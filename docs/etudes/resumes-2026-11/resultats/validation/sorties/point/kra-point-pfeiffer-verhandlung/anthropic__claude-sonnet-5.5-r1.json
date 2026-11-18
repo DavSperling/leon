@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:22:20.469Z",
+  "reponse": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas. Am Freitag um 14 Uhr gehen sie alles bei ihr durch [5]. Die Vorlage für Thomas (Ausgangslage, REST-Angebot, 15 PT, Go-live 1. April 2027, EDI nur auf Anfrage) ist fertig, die Konditionen hast du bewusst herausgenommen [1]. Sie ist aber noch nicht verschickt [1] und die 15 PT sind überholt (siehe unten).\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben, Abfahrt 8:00 Uhr bei euch, Thomas fährt [6].\n- Frau Kranich setzt Grenzen für die Konditionen: Jahresbonus bleibt bei 2 %, die API gibt es nur bei einer Mindestabnahme von 3 Mio. € pro Jahr [5]. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € netto [1]. Das ist ihre Entscheidung, nicht deine [1].\n\n## What changed\n\n- Jonas (#222) widerspricht deiner Schätzung: `/api/v1/auftraege` hat keine Mandantentrennung, die Kundennummer kommt aus dem Request. Für externe Händler braucht es Ableitung aus dem Token, Absicherung aller Abfragen und einen Pen-Test vor dem Go-live. Er rechnet eher mit 25 PT statt 15, und der 1. April geht nur, wenn der Spike im Dezember startet [2].\n- #214 (Export Lieferungen nach Charge für die Rückrufprüfung) und #218 (Spring Boot 3.3.6 mit Dependabot-Updates) sind gemergt [3][4].",
+  "rendu": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas. Am Freitag um 14 Uhr gehen sie alles bei ihr durch [5]. Die Vorlage für Thomas (Ausgangslage, REST-Angebot, 15 PT, Go-live 1. April 2027, EDI nur auf Anfrage) ist fertig, die Konditionen hast du bewusst herausgenommen [1]. Sie ist aber noch nicht verschickt [1] und die 15 PT sind überholt (siehe unten).\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben, Abfahrt 8:00 Uhr bei euch, Thomas fährt [6].\n- Frau Kranich setzt Grenzen für die Konditionen: Jahresbonus bleibt bei 2 %, die API gibt es nur bei einer Mindestabnahme von 3 Mio. € pro Jahr [5]. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € netto [1]. Das ist ihre Entscheidung, nicht deine [1].\n\n## What changed\n\n- Jonas (#222) widerspricht deiner Schätzung: `/api/v1/auftraege` hat keine Mandantentrennung, die Kundennummer kommt aus dem Request. Für externe Händler braucht es Ableitung aus dem Token, Absicherung aller Abfragen und einen Pen-Test vor dem Go-live. Er rechnet eher mit 25 PT statt 15, und der 1. April geht nur, wenn der Spike im Dezember startet [2].\n- #214 (Export Lieferungen nach Charge für die Rückrufprüfung) und #218 (Spring Boot 3.3.6 mit Dependabot-Updates) sind gemergt [3][4].",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6991,
+    "sortie": 686,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020842
+  },
+  "cout": 0.020842,
+  "latenceMs": 4847,
+  "fournisseur": "Amazon Bedrock"
+}

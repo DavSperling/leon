@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:40.209Z",
+  "reponse": "## What you did\n\n- Implemented SAML assertion signature verification with signxml: assertion-level signatures only, SHA-256+ (no legacy SHA-1 flag), per-tenant IdP certificates, rejection of unsigned/wrapped assertions, plus replay protection on assertion IDs via an in-memory cache [2]\n- Made the SAML ACS tests deterministic with freezegun instead of sleeps, cleared ruff 0.8 and mypy on `kestrel/auth`, and made a missing Issuer or Subject return a 401 instead of a 500 [1]\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` behind a compatibility shim, with the full suite green (1,284 passed) [1]\n\n## What changed\n\n- Maya approved and merged #418; it goes out with tonight's staging deploy, so Fernhill's signature validation is no longer blocked on review [3]\n\n## What is still open\n\n- #423 needs rework: Tom Becker asked to split the module move from the lint fixes into two separate PRs — he'll approve both today [4]\n- Fernhill's end-to-end SSO walkthrough is Thursday 10am NY with their Okta tenant; Priya runs the demo and you're on the call, so confirm signature validation is live on staging after tonight's deploy [1][3]\n- The replay cache for assertion IDs is still process-local: it needs Redis (`SET NX EX`, keyed by tenant + assertion ID, TTL `NotOnOrAfter` + skew) before multi-pod protection holds — the task you set for today [1]",
+  "rendu": "## What you did\n\n- Implemented SAML assertion signature verification with signxml: assertion-level signatures only, SHA-256+ (no legacy SHA-1 flag), per-tenant IdP certificates, rejection of unsigned/wrapped assertions, plus replay protection on assertion IDs via an in-memory cache [2]\n- Made the SAML ACS tests deterministic with freezegun instead of sleeps, cleared ruff 0.8 and mypy on `kestrel/auth`, and made a missing Issuer or Subject return a 401 instead of a 500 [1]\n- Split the 900-line `saml_utils.py` into `kestrel/auth/saml/{assertions,metadata,bindings}.py` behind a compatibility shim, with the full suite green (1,284 passed) [1]\n\n## What changed\n\n- Maya approved and merged #418; it goes out with tonight's staging deploy, so Fernhill's signature validation is no longer blocked on review [3]\n\n## What is still open\n\n- #423 needs rework: Tom Becker asked to split the module move from the lint fixes into two separate PRs — he'll approve both today [4]\n- Fernhill's end-to-end SSO walkthrough is Thursday 10am NY with their Okta tenant; Priya runs the demo and you're on the call, so confirm signature validation is live on staging after tonight's deploy [1][3]\n- The replay cache for assertion IDs is still process-local: it needs Redis (`SET NX EX`, keyed by tenant + assertion ID, TTL `NotOnOrAfter` + skew) before multi-pod protection holds — the task you set for today [1]",
+  "mesures": {
+    "mots": 207,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5477,
+    "sortie": 1496,
+    "reflexion": 1157,
+    "cache": 1536,
+    "cout": 0.00151179
+  },
+  "cout": 0.00151179,
+  "latenceMs": 7763,
+  "fournisseur": "Together"
+}

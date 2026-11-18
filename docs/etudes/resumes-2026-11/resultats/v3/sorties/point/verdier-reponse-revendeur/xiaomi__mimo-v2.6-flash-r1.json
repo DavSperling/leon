@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:55:37.445Z",
+  "reponse": "## What is still open\n- Envoyer ce matin ta réponse à Bertrand : Claire a validé 10 % sur les 4 tables et la réservation de 4 Saône chêne sur le réassort de janvier [4] — son message attendait l'envoi dès hier matin, et le brouillon est prêt dans `brouillons/galeries-brotteaux-2026-11-17.md`, rien n'est parti [1].\n- Si le geste prend la forme d'un avoir, préviens Antoine avant de l'émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas [5].\n- Le service client a renvoyé Galeries Brotteaux vers toi et attend que tu reviennes vers eux [6].\n\n## What changed\n- Hugo a approuvé la PR #62 et a relancé sur le fichier du 10/11 : la Saône chêne sort bien à 0 [2].\n\n## What you did\n- Cause identifiée : l'export comptait `on_hand`, réservations web comprises, depuis mars — même défaut que l'incident de septembre sur le buffet Rhône [1].\n- Corrigé l'export sur `available` avec un test couvrant les deux incidents, et ouvert la PR #62 avec Hugo en relecteur [1].\n- Préparé la réponse à Bertrand (erreur reconnue, sans jargon, retour d'ici vendredi) et envoyé à Claire le résumé cause/correction/options [1].",
+  "rendu": "## What is still open\n- Envoyer ce matin ta réponse à Bertrand : Claire a validé 10 % sur les 4 tables et la réservation de 4 Saône chêne sur le réassort de janvier [4] — son message attendait l'envoi dès hier matin, et le brouillon est prêt dans `brouillons/galeries-brotteaux-2026-11-17.md`, rien n'est parti [1].\n- Si le geste prend la forme d'un avoir, préviens Antoine avant de l'émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon la TVA ne passe pas [5].\n- Le service client a renvoyé Galeries Brotteaux vers toi et attend que tu reviennes vers eux [6].\n\n## What changed\n- Hugo a approuvé la PR #62 et a relancé sur le fichier du 10/11 : la Saône chêne sort bien à 0 [2].\n\n## What you did\n- Cause identifiée : l'export comptait `on_hand`, réservations web comprises, depuis mars — même défaut que l'incident de septembre sur le buffet Rhône [1].\n- Corrigé l'export sur `available` avec un test couvrant les deux incidents, et ouvert la PR #62 avec Hugo en relecteur [1].\n- Préparé la réponse à Bertrand (erreur reconnue, sans jargon, retour d'ici vendredi) et envoyé à Claire le résumé cause/correction/options [1].",
+  "mesures": {
+    "mots": 186,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4511,
+    "sortie": 1200,
+    "reflexion": 827,
+    "cache": 0,
+    "cout": 0.00096754
+  },
+  "cout": 0.00096754,
+  "latenceMs": 29718,
+  "fournisseur": "DeepInfra"
+}

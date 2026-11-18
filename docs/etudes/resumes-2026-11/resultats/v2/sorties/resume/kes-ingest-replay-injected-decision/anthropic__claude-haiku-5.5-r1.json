@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:21:48.446Z",
+  "reponse": "## Où j'en suis\nThe `cmd/replay` tool is written, with dry-run mode, per-partition ordering, a rejects file and a topic allowlist (commits 4e2d9b7 and f13a06c). The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay and 3,118 schema v2 lines to reject. The real replay has not run yet.\n\n- [en-cours] PR #233 is open and waiting for Daniel's review.\n- [prochaine-étape] Run the real replay into `events.replay.v3` with `--batch 5000`.\n- [prochaine-étape] Then run the aggregator with `--backfill` for 2026-11-12.\n- [essai-raté] A batch of 50000 was OOMKilled at the 2Gi limit; the memory limit stays as is because of the namespace quota.\n- [décision] Replay everything into `events.replay.v3`, with no 72h cutoff, and never produce to `events.v3` from this tool (source: t05).\n- [décision] Malformed schema v2 lines go to a rejects file in the bucket, not skipped silently (source: t15).",
+  "rendu": "## Où j'en suis\nThe `cmd/replay` tool is written, with dry-run mode, per-partition ordering, a rejects file and a topic allowlist (commits 4e2d9b7 and f13a06c). The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay and 3,118 schema v2 lines to reject. The real replay has not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR #233 is open and waiting for Daniel's review.\n- [prochaine-étape] Run the real replay into `events.replay.v3` with `--batch 5000`.\n- [prochaine-étape] Then run the aggregator with `--backfill` for 2026-11-12.\n- [essai-raté] A batch of 50000 was OOMKilled at the 2Gi limit; the memory limit stays as is because of the namespace quota.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 777,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5796,
+    "sortie": 1703,
+    "reflexion": 1320,
+    "cache": 0,
+    "cout": 0.0014311
+  },
+  "cout": 0.0014311,
+  "latenceMs": 7792,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:43.105Z",
+  "reponse": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. The earlier advice to set `FEATURE_FLAGS=new_dash` in `.env.local` is outdated: since PR #447 the front end reads flags from the API (`GET /api/flags`), the flag was renamed to `dashboards_v2`, and `FEATURE_FLAGS` is now ignored [2][3]. That explains the empty tiles you saw even with the old env var set [3]. Rollout is staged: internal workspaces Nov 16, Fernhill and Orbitly beta Nov 30, general availability in January [4].",
+  "rendu": "Run `make dev-flags FLAGS=dashboards_v2` with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. The earlier advice to set `FEATURE_FLAGS=new_dash` in `.env.local` is outdated: since PR #447 the front end reads flags from the API (`GET /api/flags`), the flag was renamed to `dashboards_v2`, and `FEATURE_FLAGS` is now ignored [2][3]. That explains the empty tiles you saw even with the old env var set [3]. Rollout is staged: internal workspaces Nov 16, Fernhill and Orbitly beta Nov 30, general availability in January [4].",
+  "mesures": {
+    "mots": 87,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1270,
+    "sortie": 168,
+    "reflexion": 12,
+    "cache": 192,
+    "cout": 0.00026538
+  },
+  "cout": 0.00026538,
+  "latenceMs": 1861,
+  "fournisseur": "Fireworks"
+}

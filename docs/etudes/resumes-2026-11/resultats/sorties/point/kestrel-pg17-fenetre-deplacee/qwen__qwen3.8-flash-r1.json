@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:28:52.987Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 5539,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 1024,
+    "cout": 0.004453634
+  },
+  "cout": 0.004453634,
+  "latenceMs": 116058,
+  "fournisseur": "Alibaba"
+}

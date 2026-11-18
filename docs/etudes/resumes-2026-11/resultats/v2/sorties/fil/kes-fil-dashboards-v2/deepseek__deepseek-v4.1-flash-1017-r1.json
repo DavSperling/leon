@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:26:27.422Z",
+  "reponse": "## Où j'en suis\nThe dashboards v2 thread stands at two PRs: #418 is merged into main (draggable, resizable widgets behind `dashboards_v2`, approved by Priya on the iPad), and its follow-up #423 is open with keyboard move/resize plus a visible focus ring (`8f1a2c7`), sent to Priya for review at the end of the Nov 18 session. `dashboards_v2` is on for the zest-grocers workspace on staging only, production is untouched, and all charts remain on recharts. (source: kestrel-analytics/platform#418, ses-db-4)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring, 11 new tests green, mouse drag still works) is open and waiting on Priya's review (source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Priya's review of #423, then her demo rehearsal on staging with the zest-grocers flag on (source: d4-05, d4-06)\n- [prochaine-étape] Tom flips the `dashboards_v2` production flag himself on the morning of the 24th (source: d4-06, d4-07)\n- [essai-raté] dnd-kit's `KeyboardSensor` on top of react-grid-layout: both react to the same pointer/key events, each move applied twice and mouse drags firing two layout changes; `@dnd-kit/core` was removed (source: d4-02, d4-05)\n- [décision] Write our own keyboard handler on the layout state (`useGridKeyboard`), no dnd-kit (source: d4-04)\n- [décision] Keep recharts, close the visx migration PR #401 for good — no rewriting the 9 remaining charts (source: c3-03, src-pr401)\n- [décision] Widget sizing via a ResizeObserver hook, container queries dropped entirely (source: b2-02)\n- [décision] v1 dashboards stay available behind the flag until January; nothing removed now (source: b2-04)\n- [question] Nothing is settled on retiring v1 dashboards: a note mentions a Jan 5 deletion, but no team source confirms it and the last recorded instruction was to remove nothing yet (source: src-note-v1, b2-04)",
+  "rendu": "## Où j'en suis\nThe dashboards v2 thread stands at two PRs: #418 is merged into main (draggable, resizable widgets behind `dashboards_v2`, approved by Priya on the iPad), and its follow-up #423 is open with keyboard move/resize plus a visible focus ring (`8f1a2c7`), sent to Priya for review at the end of the Nov 18 session. `dashboards_v2` is on for the zest-grocers workspace on staging only, production is untouched, and all charts remain on recharts. (de: équipe, agent; source: kestrel-analytics/platform#418, ses-db-4)\n\n- [en-cours] PR #423 (keyboard move/resize + focus ring, 11 new tests green, mouse drag still works) is open and waiting on Priya's review (de: équipe, agent; source: kestrel-analytics/platform#423, d4-05)\n- [prochaine-étape] Priya's review of #423, then her demo rehearsal on staging with the zest-grocers flag on (de: toi, agent; source: d4-05, d4-06)\n- [prochaine-étape] Tom flips the `dashboards_v2` production flag himself on the morning of the 24th (de: toi, agent; source: d4-06, d4-07)\n- [essai-raté] dnd-kit's `KeyboardSensor` on top of react-grid-layout: both react to the same pointer/key events, each move applied twice and mouse drags firing two layout changes; `@dnd-kit/core` was removed (de: agent; source: d4-02, d4-05)\n- [décision] Write our own keyboard handler on the layout state (`useGridKeyboard`), no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts, close the visx migration PR #401 for good — no rewriting the 9 remaining charts (de: toi, équipe; source: c3-03, src-pr401)\n- [décision] Widget sizing via a ResizeObserver hook, container queries dropped entirely (de: toi; source: b2-02)\n- [décision] v1 dashboards stay available behind the flag until January; nothing removed now (de: toi; source: b2-04)\n- [question] Nothing is settled on retiring v1 dashboards: a note mentions a Jan 5 deletion, but no team source confirms it and the last recorded instruction was to remove nothing yet (de: toi, agent; source: src-note-v1, b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1997,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5062,
+    "sortie": 1371,
+    "reflexion": 830,
+    "cache": 0,
+    "cout": 0.0015819
+  },
+  "cout": 0.0015819,
+  "latenceMs": 10315,
+  "fournisseur": "SiliconFlow"
+}

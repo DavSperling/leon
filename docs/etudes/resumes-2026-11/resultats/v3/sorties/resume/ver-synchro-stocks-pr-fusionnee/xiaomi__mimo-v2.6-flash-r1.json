@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:16.863Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif de la Saône est traitée : les webhooks de commande ne décrémentent plus, seule la synchro de nuit corrige, en valeur absolue ; seuil d'alerte bas passé à 3, `syncStock` renommée `synchroniserStocks`, stock de la Saône remis à 0 sur Shopify, config de l'app déployée sans `orders/updated`, et la PR #87 est fusionnée.\n\n- [en-cours] Traitement des 3 commandes survendues (#1041, #1043, #1044) avec Lucie\n- [prochaine-étape] Attendre le réassort de la Saône (retour Bois & Fils le 2 décembre) avant toute remise en vente\n- [question] faut-il un suivi du bon de livraison Bois & Fils avant de remettre la Saône en vente ?\n- [décision] aucun stock touché dans les webhooks, synchro de nuit seule juge en valeur absolue ; pas de précommande pour la Saône avant le bon de livraison (source: t05)\n- [décision] seuil d'alerte stock bas à 3 unités (source: t09)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône est traitée : les webhooks de commande ne décrémentent plus, seule la synchro de nuit corrige, en valeur absolue ; seuil d'alerte bas passé à 3, `syncStock` renommée `synchroniserStocks`, stock de la Saône remis à 0 sur Shopify, config de l'app déployée sans `orders/updated`, et la PR #87 est fusionnée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Traitement des 3 commandes survendues (#1041, #1043, #1044) avec Lucie\n- [prochaine-étape] Attendre le réassort de la Saône (retour Bois & Fils le 2 décembre) avant toute remise en vente\n- [question] faut-il un suivi du bon de livraison Bois & Fils avant de remettre la Saône en vente ?\n- [décision] aucun stock touché dans les webhooks, synchro de nuit seule juge en valeur absolue ; pas de précommande pour la Saône avant le bon de livraison (source: t05)\n- [décision] seuil d'alerte stock bas à 3 unités (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1032,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4111,
+    "sortie": 340,
+    "reflexion": 38,
+    "cache": 0,
+    "cout": 0.00067074
+  },
+  "cout": 0.00067074,
+  "latenceMs": 16214,
+  "fournisseur": "Cohere"
+}

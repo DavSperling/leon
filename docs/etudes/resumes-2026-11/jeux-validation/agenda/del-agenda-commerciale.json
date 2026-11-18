@@ -1,0 +1,263 @@
+{
+ "id": "del-agenda-commerciale",
+ "titre": "Boîte d'une commerciale : rendez-vous client déplacé au vendredi, signature repoussée hors période, visite annulée, « mardi prochain », réunion périodique, et messages qui n'en sont pas (webinaire, message vocal, tâche)",
+ "langue": "fr",
+ "entree": {
+  "periode": {
+   "first": "2026-11-16",
+   "last": "2026-11-22"
+  },
+  "mails": [
+   {
+    "sourceId": "ol-avenant",
+    "title": "RE: RE: Signature de l'avenant",
+    "author": "Camille Ferrand",
+    "at": "2026-11-18T08:05",
+    "text": "Bonjour Monsieur Marchand,\n\nC'est noté pour lundi 23 à 9h, dans vos bureaux. J'apporte deux exemplaires.\n\nBien cordialement,\nCamille Ferrand"
+   },
+   {
+    "sourceId": "ol-avenant",
+    "title": "RE: Signature de l'avenant",
+    "author": "Gilles Marchand",
+    "at": "2026-11-18T07:40",
+    "text": "Camille,\n\nFinalement vendredi 16h30 ne m'arrange pas, j'ai mon comité de direction qui a été déplacé. Pouvons-nous signer lundi 23 à 9h, dans nos bureaux ?\n\nGilles Marchand"
+   },
+   {
+    "sourceId": "ol-avenant",
+    "title": "Signature de l'avenant",
+    "author": "Gilles Marchand",
+    "at": "2026-11-17T16:00",
+    "text": "Bonjour Camille,\n\nD'accord sur le principe de l'avenant. Pouvez-vous passer le signer vendredi 20 à 16h30 à la conserverie ?\n\nGilles Marchand\nDirecteur général – Conserverie Marchand"
+   },
+   {
+    "sourceId": "ol-hubspot",
+    "title": "Tâche à échéance : relancer le devis SCI Les Tilleuls",
+    "author": "HubSpot",
+    "at": "2026-11-17T09:10",
+    "text": "Rappel : la tâche « Relancer le devis SCI Les Tilleuls » arrive à échéance le vendredi 20 novembre 2026.\n\nOuvrir la tâche dans HubSpot"
+   },
+   {
+    "sourceId": "ol-lemoine",
+    "title": "RE: RE: Rendez-vous devis panneaux",
+    "author": "Camille Ferrand",
+    "at": "2026-11-17T08:30",
+    "text": "Bonjour Madame Lemoine,\n\nBien sûr : vendredi 20 à 18h chez vous, à la même adresse.\n\nBien cordialement,\nCamille Ferrand\nConseillère commerciale – Delorme Énergies"
+   },
+   {
+    "sourceId": "ol-aircall",
+    "title": "Nouveau message vocal – Rachid Amrani",
+    "author": "Aircall",
+    "at": "2026-11-17T07:15",
+    "text": "Message vocal reçu le 17/11/2026 à 07:12 (durée 0:38).\nTranscription : « Bonjour madame Ferrand, c'est monsieur Amrani. Je voulais savoir si on peut décaler la pose de la pompe, je ne serai pas là le 23. Rappelez-moi quand vous pouvez. Merci. »\n\nÉcouter le message dans Aircall"
+   },
+   {
+    "sourceId": "ol-lemoine",
+    "title": "RE: Rendez-vous devis panneaux",
+    "author": "Colette Lemoine",
+    "at": "2026-11-16T20:15",
+    "text": "Bonjour Madame Ferrand,\n\nJe suis désolée, je ne pourrai pas être là mardi, ma fille arrive plus tôt que prévu. Pouvez-vous venir vendredi à la même heure ?\n\nColette Lemoine"
+   },
+   {
+    "sourceId": "ol-tilleuls",
+    "title": "Visite technique mercredi",
+    "author": "Camille Ferrand",
+    "at": "2026-11-16T16:45",
+    "text": "Bonjour Monsieur Lebreton,\n\nJe vous confirme notre visite technique mercredi 18 novembre à 17h au bâtiment B, avec Hélène Delorme, notre dirigeante.\n\nBien cordialement,\nCamille Ferrand"
+   },
+   {
+    "sourceId": "ol-bouvier",
+    "title": "Annulation de la visite",
+    "author": "Nadège Bouvier",
+    "at": "2026-11-16T10:30",
+    "text": "Bonjour,\n\nJe préfère annuler la visite de mercredi 11h : nous avons finalement signé avec une autre entreprise. Merci quand même pour votre réactivité.\n\nNadège Bouvier"
+   },
+   {
+    "sourceId": "ol-mag",
+    "title": "Le Mag des Pros du Solaire – novembre",
+    "author": "Le Mag des Pros du Solaire",
+    "at": "2026-11-16T06:00",
+    "text": "Ce mois-ci : autoconsommation, les chiffres 2026 · Le point sur les onduleurs hybrides · Rencontre : un installateur breton raconte sa reconversion.\n\nLire le magazine · Se désabonner"
+   },
+   {
+    "sourceId": "ol-formation",
+    "title": "Formation produit Aéro 11 – webinaire mardi 17 novembre à 14h",
+    "author": "Thermaval Formation",
+    "at": "2026-11-15T09:00",
+    "text": "Bonjour,\n\nThermaval vous invite à sa formation produit en ligne sur la gamme Aéro (mise en service, mode nuit, codes défaut) le mardi 17 novembre à 14h. Durée 1 h. Inscription en un clic.\n\nL'équipe formation Thermaval"
+   },
+   {
+    "sourceId": "ol-salon",
+    "title": "Salon de l'Habitat de Nantes : réservez votre stand",
+    "author": "Salon de l'Habitat de Nantes",
+    "at": "2026-11-14T11:00",
+    "text": "Le Salon de l'Habitat revient du 5 au 7 mars 2027 au parc des expositions. Tarifs exposants préférentiels jusqu'au 15 décembre.\n\nRéserver un stand"
+   },
+   {
+    "sourceId": "ol-josse",
+    "title": "RE: Partenariat prêts travaux",
+    "author": "Camille Ferrand",
+    "at": "2026-11-13T18:20",
+    "text": "Bonjour Bertrand,\n\nAvec plaisir, mercredi 12h30 au Quai 7.\n\nCamille"
+   },
+   {
+    "sourceId": "ol-josse",
+    "title": "Partenariat prêts travaux",
+    "author": "Bertrand Josse",
+    "at": "2026-11-13T17:05",
+    "text": "Bonjour Madame Ferrand,\n\nHélène Delorme m'a parlé de vous. Je vous propose un déjeuner mercredi 18 novembre à 12h30 au restaurant Le Quai 7, pour parler d'un partenariat de prêts travaux pour vos clients particuliers.\n\nBertrand Josse\nConseiller entreprises – Crédit Ligérien"
+   },
+   {
+    "sourceId": "ol-lemoine",
+    "title": "Rendez-vous devis panneaux",
+    "author": "Colette Lemoine",
+    "at": "2026-11-13T10:12",
+    "text": "Bonjour Madame Ferrand,\n\nJe vous confirme notre rendez-vous de mardi 17 à 18h chez moi pour le devis des panneaux solaires.\n\nColette Lemoine"
+   },
+   {
+    "sourceId": "ol-legoff",
+    "title": "RE: Visite technique",
+    "author": "Camille Ferrand",
+    "at": "2026-11-12T16:40",
+    "text": "Bonjour Monsieur Le Goff,\n\nParfait, je serai chez vous jeudi 19 à 10h avec Franck Le Gall, notre directeur technique, pour le relevé.\n\nCamille Ferrand"
+   },
+   {
+    "sourceId": "ol-legoff",
+    "title": "Visite technique",
+    "author": "Yves Le Goff",
+    "at": "2026-11-12T15:55",
+    "text": "Bonjour,\n\nPour la visite technique de notre maison à Basse-Goulaine, jeudi 19 à 10h nous convient.\n\nYves Le Goff"
+   },
+   {
+    "sourceId": "ol-herve",
+    "title": "Rendez-vous pompe à chaleur",
+    "author": "Jean-Luc Hervé",
+    "at": "2026-11-12T14:20",
+    "text": "Bonjour Madame Ferrand,\n\nComme convenu au téléphone, je vous attends mardi prochain à 14h pour parler de la pompe à chaleur.\n\nJean-Luc Hervé"
+   },
+   {
+    "sourceId": "ol-hebdo",
+    "title": "Invitation : Réunion commerciale hebdo",
+    "author": "Hélène Delorme",
+    "at": "2026-11-11T17:00",
+    "text": "Hélène Delorme vous invite à une réunion périodique.\n\nRéunion commerciale hebdo\nQuand : tous les lundis de 09:00 à 10:00 (heure de Paris), à partir du lundi 16 novembre 2026\nOù : salle de réunion, Carquefou\n\nAccepter · Provisoire · Refuser"
+   },
+   {
+    "sourceId": "ol-bouvier",
+    "title": "Visite technique mercredi 18 novembre",
+    "author": "Camille Ferrand",
+    "at": "2026-11-10T12:00",
+    "text": "Bonjour Madame Bouvier,\n\nJe vous confirme la visite technique mercredi 18 novembre à 11h pour votre projet de pompe à chaleur.\n\nBien cordialement,\nCamille Ferrand"
+   }
+  ]
+ },
+ "attendu": {
+  "rdv": [
+   {
+    "n": 19,
+    "debut": "2026-11-16T09:00",
+    "fin": "2026-11-16T10:00",
+    "titre": "Réunion commerciale hebdo",
+    "avec": "Hélène Delorme"
+   },
+   {
+    "n": 18,
+    "debut": "2026-11-17T14:00",
+    "titre": "Rendez-vous pompe à chaleur",
+    "avec": "Jean-Luc Hervé"
+   },
+   {
+    "n": 13,
+    "autresN": [
+     14
+    ],
+    "debut": "2026-11-18T12:30",
+    "titre": "Déjeuner partenariat prêts travaux",
+    "avec": "Bertrand Josse"
+   },
+   {
+    "n": 8,
+    "debut": "2026-11-18T17:00",
+    "titre": "Visite technique SCI Les Tilleuls",
+    "avec": "M. Lebreton, Hélène Delorme"
+   },
+   {
+    "n": 16,
+    "autresN": [
+     17
+    ],
+    "debut": "2026-11-19T10:00",
+    "titre": "Visite technique Le Goff",
+    "avec": "Yves Le Goff, Franck Le Gall"
+   },
+   {
+    "n": 5,
+    "autresN": [
+     7
+    ],
+    "debut": "2026-11-20T18:00",
+    "titre": "Rendez-vous devis panneaux solaires",
+    "avec": "Colette Lemoine"
+   }
+  ],
+  "faits": [
+   {
+    "id": "f1",
+    "texte": "Réunion commerciale hebdo le lundi 16 novembre de 09:00 à 10:00, rendue une seule fois.",
+    "poids": 2
+   },
+   {
+    "id": "f2",
+    "texte": "Rendez-vous avec M. Hervé le mardi 17 novembre à 14:00 (« mardi prochain » d'un mail du jeudi 12).",
+    "poids": 3
+   },
+   {
+    "id": "f3",
+    "texte": "Déjeuner avec Bertrand Josse le mercredi 18 novembre à 12:30.",
+    "poids": 2
+   },
+   {
+    "id": "f4",
+    "texte": "Visite technique à la SCI Les Tilleuls le mercredi 18 novembre à 17:00.",
+    "poids": 2
+   },
+   {
+    "id": "f5",
+    "texte": "Visite technique chez M. Le Goff le jeudi 19 novembre à 10:00, rendue une seule fois.",
+    "poids": 2
+   },
+   {
+    "id": "f6",
+    "texte": "Rendez-vous chez Mme Lemoine le vendredi 20 novembre à 18:00 (déplacé du mardi).",
+    "poids": 3
+   }
+  ],
+  "interdits": [
+   {
+    "id": "i1",
+    "texte": "Rend le rendez-vous Lemoine le mardi 17 à 18:00 (déplacé)."
+   },
+   {
+    "id": "i2",
+    "texte": "Rend la visite chez Mme Bouvier du mercredi 18 à 11:00 (annulée)."
+   },
+   {
+    "id": "i3",
+    "texte": "Rend la signature de l'avenant le vendredi 20 à 16:30 (déplacée) ou le lundi 23 à 09:00 (hors période)."
+   },
+   {
+    "id": "i4",
+    "texte": "Rend comme rendez-vous le webinaire Thermaval du mardi 17, le message vocal de M. Amrani, la tâche HubSpot ou le salon de mars."
+   },
+   {
+    "id": "i5",
+    "texte": "Recopie une adresse e-mail ou un numéro de téléphone dans « avec »."
+   }
+  ],
+  "pieges": [
+   "Déplacé hors période : la signature de l'avenant passe du vendredi 20 au lundi 23 ; elle ne doit pas sortir du tout.",
+   "Déplacé et annulé : Mme Lemoine passe du mardi au vendredi « même heure » ; Mme Bouvier annule.",
+   "Date relative et doublons : « mardi prochain » écrit le jeudi 12 ; Le Goff et Josse confirmés dans deux mails ; réunion périodique rendue une fois dans la période.",
+   "Pas des rendez-vous : webinaire, message vocal Aircall, tâche HubSpot à échéance, salon, magazine."
+  ]
+ }
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-rien-que-du-bruit",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:59.232Z",
+  "reponse": "Nothing to report.",
+  "rendu": "Nothing to report.",
+  "mesures": {
+    "mots": 3,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2524,
+    "sortie": 34,
+    "reflexion": 28,
+    "cache": 0,
+    "cout": 0.0004205
+  },
+  "cout": 0.0004205,
+  "latenceMs": 2297,
+  "fournisseur": "Inceptron"
+}

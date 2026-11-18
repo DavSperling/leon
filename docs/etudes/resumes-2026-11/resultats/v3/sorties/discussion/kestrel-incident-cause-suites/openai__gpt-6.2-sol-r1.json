@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:09:25.278Z",
+  "reponse": "- **What broke:** On Thursday, Nov 12, `ingest v2.14.0` raised the default batch limit from 1 MB to 10 MB and rolled it out to all workers at once. The first large batch pushed workers past their 512 MiB memory limit, and they repeatedly crashed. Customer dashboards were stale across all workspaces from 08:47 to 12:27 UTC. The rollback finished at 10:05 UTC, and the backlog cleared by 12:27 UTC [1][5].\n- **Did we lose customer data?** No. Kafka kept receiving events while processing was stalled. The Nov 13 reconciliation matched each workspace’s event counts against Kafka offsets for 08:00–13:00 UTC: events were late, not lost [1][5].\n- **What’s changing:** A patch restoring the 1 MB default and adding a memory guard merged Nov 13 [16]. The on-call alert for processing lag is in place, but the five-minute threshold is still being tuned because nightly backfills trigger it [6]. The remaining follow-ups are to roll out ingestion config changes to a small canary pool first, raise worker memory to 1 GiB, and load-test large batches [1].",
+  "rendu": "- **What broke:** On Thursday, Nov 12, `ingest v2.14.0` raised the default batch limit from 1 MB to 10 MB and rolled it out to all workers at once. The first large batch pushed workers past their 512 MiB memory limit, and they repeatedly crashed. Customer dashboards were stale across all workspaces from 08:47 to 12:27 UTC. The rollback finished at 10:05 UTC, and the backlog cleared by 12:27 UTC [1][5].\n- **Did we lose customer data?** No. Kafka kept receiving events while processing was stalled. The Nov 13 reconciliation matched each workspace’s event counts against Kafka offsets for 08:00–13:00 UTC: events were late, not lost [1][5].\n- **What’s changing:** A patch restoring the 1 MB default and adding a memory guard merged Nov 13 [16]. The on-call alert for processing lag is in place, but the five-minute threshold is still being tuned because nightly backfills trigger it [6]. The remaining follow-ups are to roll out ingestion config changes to a small canary pool first, raise worker memory to 1 GiB, and load-test large batches [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 40803,
+    "sortie": 495,
+    "reflexion": 0,
+    "cache": 30441,
+    "cout": 0.0338916
+  },
+  "latenceMs": 11893,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident Thursday customer data postmortem data loss\"}",
+    "chercher {\"requete\":\"\\\"event pipeline\\\" incident outage root cause replay data loss\"}",
+    "chercher {\"requete\":\"Thursday ingestion incident events customer data lost prevention remediation\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"slack-incidents-1112\"}",
+    "lire {\"sourceId\":\"linear-kes-431\"}",
+    "chercher {\"requete\":\"\\\"KES-432\\\" \\\"KES-433\\\" canary worker memory load test\"}",
+    "lire {\"sourceId\":\"github-ingest-419\"}"
+  ],
+  "cout": 0.0338916
+}

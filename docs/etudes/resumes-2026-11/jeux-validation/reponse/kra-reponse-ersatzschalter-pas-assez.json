@@ -1,0 +1,125 @@
+{
+  "id": "kra-reponse-ersatzschalter-pas-assez",
+  "titre": "Question en allemand sur la date de livraison confirmée des interrupteurs de remplacement : les résultats parlent de la réclamation, d'une hypothèse de 6 semaines et d'une date pour une autre pièce ; la seule bonne sortie est la phrase française « pas assez », non traduite",
+  "langue": "de",
+  "entree": {
+    "recherche": "Bis wann liefert Tai Shan die Ersatzschalter für die WS 125 Pro?",
+    "resultats": [
+      {
+        "id": "mail-qr2611-anfrage",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "Complaint QR-2611 – switch TS-KS-220 sticking (WS 125 Pro)",
+        "url": null,
+        "date": "2026-11-13T09:45:00Z",
+        "passages": [
+          {
+            "id": "qa-1",
+            "auteur": "Petra Schuster",
+            "date": "2026-11-13T09:45:00Z",
+            "texte": "Dear Mr. Lin,\nwe have received three field complaints about the on/off switch TS-KS-220 sticking in the ON position (lot TS-2607, delivered July 2026). Please send us an 8D report and a confirmed delivery date for 2,000 replacement switches by November 20.\nBest regards,\nPetra Schuster\nHead of Purchasing, Kranich Werkzeuge GmbH"
+          }
+        ]
+      },
+      {
+        "id": "mail-qr2611-antwort",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "RE: Complaint QR-2611 – switch TS-KS-220 sticking (WS 125 Pro)",
+        "url": null,
+        "date": "2026-11-16T03:10:00Z",
+        "passages": [
+          {
+            "id": "qb-1",
+            "auteur": "Kevin Lin",
+            "date": "2026-11-16T03:10:00Z",
+            "texte": "Dear Ms. Schuster,\nwe acknowledge receipt of complaint QR-2611. Our engineering team is analyzing the returned samples. We will come back to you with the D3 containment actions and a delivery schedule for replacement parts as soon as possible.\nKind regards,\nKevin Lin, Quality Manager, Tai Shan Precision Switch Co., Ltd."
+          }
+        ]
+      },
+      {
+        "id": "jira-qm-41-einkauf",
+        "kind": "jira",
+        "nature": "ticket",
+        "titre": "QM-41 Rückrufprüfung WS 125 Pro – Charge 26-38",
+        "url": "https://kranich.atlassian.net/browse/QM-41",
+        "date": "2026-11-17T10:05:00Z",
+        "passages": [
+          {
+            "id": "qc-1",
+            "auteur": "Petra Schuster",
+            "date": "2026-11-17T10:05:00Z",
+            "texte": "Stand Einkauf: Tai Shan hat den Eingang der Reklamation bestätigt, ein Liefertermin für die Ersatzschalter steht noch aus. Ich rechne mit einer Antwort bis Freitag. Wenn bis dahin nichts kommt, eskaliere ich an deren Sales Director."
+          }
+        ]
+      },
+      {
+        "id": "mail-breuer-ab",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "Auftragsbestätigung AB-77812 – Kohlebürsten WS 125 Pro",
+        "url": null,
+        "date": "2026-11-12T11:20:00Z",
+        "passages": [
+          {
+            "id": "qd-1",
+            "auteur": "Kohlenstoff-Technik Breuer GmbH",
+            "date": "2026-11-12T11:20:00Z",
+            "texte": "Sehr geehrte Frau Schuster,\nwir bestätigen Ihre Bestellung 4500018823: 5.000 Stück Kohlebürsten KB-6x10 für WS 125 Pro. Liefertermin: 27.11.2026, frei Haus Stuttgart.\nMit freundlichen Grüßen\nAuftragsabwicklung"
+          }
+        ]
+      },
+      {
+        "id": "mail-anja-planung",
+        "kind": "outlook",
+        "nature": "mail",
+        "titre": "AW: Rückruf WS 125 Pro – Planung Ersatzteile",
+        "url": null,
+        "date": "2026-11-17T15:30:00Z",
+        "passages": [
+          {
+            "id": "qe-1",
+            "auteur": "Dr. Anja Lindner",
+            "date": "2026-11-17T15:30:00Z",
+            "texte": "Für die Entscheidung am Freitag wäre ein Termin für die Ersatzschalter wichtig. Solange Tai Shan nichts bestätigt, rechnen wir in der Planung mit 6 Wochen ab Bestellung. Das ist nur eine Annahme, nicht abgestimmt."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "pasAssez": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La sortie est exactement « Les résultats ne suffisent pas pour répondre. », en français, sans autre texte.",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x-27",
+        "texte": "Donne le 27/11/2026 (date des balais de charbon de Breuer) comme date de livraison des interrupteurs."
+      },
+      {
+        "id": "x-6wochen",
+        "texte": "Donne 6 semaines comme délai confirmé ou annoncé par Tai Shan."
+      },
+      {
+        "id": "x-uebersetzt",
+        "texte": "Traduit la phrase en allemand (« Die Ergebnisse reichen nicht aus… ») au lieu de l'écrire en français."
+      },
+      {
+        "id": "x-resume",
+        "texte": "Répond par un résumé de l'état (réclamation reçue, réponse attendue vendredi…) au lieu de la phrase seule."
+      }
+    ],
+    "pieges": [
+      "Pas assez : aucun résultat ne donne de date confirmée ; tous disent qu'elle manque.",
+      "Date tentante : le 27/11 concerne une autre pièce (balais de charbon) d'un autre fournisseur, pour le même appareil.",
+      "Hypothèse tentante : les 6 semaines d'Anja sont une hypothèse de planification, pas un délai du fournisseur.",
+      "Langue : la recherche est en allemand, mais la phrase doit rester mot pour mot en français (l'interface la traduit)."
+    ],
+    "cites": []
+  }
+}

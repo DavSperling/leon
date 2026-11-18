@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:33.403Z",
+  "reponse": "## Où j'en suis\n\nLa vérification de signature SAML de l'ACS est terminée : python3-saml/xmlsec abandonnés (incompatibilité libxml2/xmlsec sur Alpine), remplacés par signxml avec les contrôles d'assertion écrits à la main (conditions, audience, SubjectConfirmation, anti-replay Redis), skew à 120 s, code déplacé dans api/auth/saml/verify.py, lint et mypy au vert, 36 tests passants. La PR #412 a été ouverte, CI verte, et elle est fusionnée.\n\n- [en-cours] Rien en cours : le travail de la session est clos avec la fusion de #412.\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP avant mercredi fin de journée, pour la démo jeudi 10h New York.\n- [prochaine-étape] Créer le ticket séparé : forcer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill.\n- [essai-raté] python3-saml sur Alpine : build depuis les sources de lxml (9 min) puis échec « cannot load crypto library for xmlsec » — abandonné au profit de signxml (source: t08).\n- [décision] Utiliser signxml et supprimer python3-saml/xmlsec du Dockerfile (source: t08).\n- [décision] Tolérance d'horloge de 120 s, exigée par l'annexe du questionnaire de sécurité Fernhill (source: t12).\n- [décision] Ne pas toucher à la connexion mot de passe ici, ticket séparé (source: t12).\n- [décision] Pas d'`--admin`, pas d'`--auto` sur la merge : la personne ping elle-même Maya (source: t21).",
+  "rendu": "## Où j'en suis\nLa vérification de signature SAML de l'ACS est terminée : python3-saml/xmlsec abandonnés (incompatibilité libxml2/xmlsec sur Alpine), remplacés par signxml avec les contrôles d'assertion écrits à la main (conditions, audience, SubjectConfirmation, anti-replay Redis), skew à 120 s, code déplacé dans api/auth/saml/verify.py, lint et mypy au vert, 36 tests passants. La PR #412 a été ouverte, CI verte, et elle est fusionnée.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Rien en cours : le travail de la session est clos avec la fusion de #412.\n- [prochaine-étape] Charger les métadonnées IdP de staging de Fernhill et leur envoyer nos métadonnées SP avant mercredi fin de journée, pour la démo jeudi 10h New York.\n- [prochaine-étape] Créer le ticket séparé : forcer le SSO et désactiver le mot de passe pour les utilisateurs Fernhill.\n- [essai-raté] python3-saml sur Alpine : build depuis les sources de lxml (9 min) puis échec « cannot load crypto library for xmlsec » — abandonné au profit de signxml (source: t08).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1135,
+    "decisions": 0,
+    "decisionsRetirees": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4787,
+    "sortie": 504,
+    "reflexion": 63,
+    "cache": 4736,
+    "cout": 0.0001615208
+  },
+  "cout": 0.0001615208,
+  "latenceMs": 17249,
+  "fournisseur": "Xiaomi"
+}

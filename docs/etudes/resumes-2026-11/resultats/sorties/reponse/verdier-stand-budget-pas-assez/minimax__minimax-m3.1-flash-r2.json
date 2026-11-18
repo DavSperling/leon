@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stand-budget-pas-assez",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:16.443Z",
+  "reponse": "Aucune validation du budget n'apparaît dans les passages. Le devis du stand s'élève à 18 400 € HT pour 24 m² [1], annoncé comme reçu sur Slack [2], et le budget prévisionnel du salon est de 25 k€ (stand, transport des pièces, hébergement de 4 personnes) [3]. Antoine Roussel indique qu'il passera la dépense en charges sur janvier et demande le devis signé, sans confirmer la validation [4]. Les résultats ne suffisent pas pour répondre.",
+  "rendu": "Aucune validation du budget n'apparaît dans les passages. Le devis du stand s'élève à 18 400 € HT pour 24 m² [1], annoncé comme reçu sur Slack [2], et le budget prévisionnel du salon est de 25 k€ (stand, transport des pièces, hébergement de 4 personnes) [3]. Antoine Roussel indique qu'il passera la dépense en charges sur janvier et demande le devis signé, sans confirmer la validation [4]. Les résultats ne suffisent pas pour répondre.",
+  "mesures": {
+    "mots": 74,
+    "tropLong": false,
+    "pasAssez": true,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1102,
+    "sortie": 160,
+    "reflexion": 51,
+    "cache": 384,
+    "cout": 0.00020946
+  },
+  "cout": 0.00020946,
+  "latenceMs": 1313,
+  "fournisseur": "Makora"
+}

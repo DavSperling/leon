@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T18:01:47.653Z",
+  "reponse": "## What is still open\n- Claire Verdier exclut la Saône des soldes : la grille la met à -20 % alors qu'elle est en rupture jusqu'à mi-janvier avec des précommandes au plein prix. Il faut retirer la ligne de la grille (ou l'ignorer dans le script) avant que la PR #63 soit fusionnée — Hugo pose d'ailleurs la question de cette remise dans sa relecture [1][10][4].\n- Répondre à Hugo sur la PR #63 : il a validé le fonctionnement en dev et attend juste confirmation sur la Saône [4].\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30 novembre (shooting décalé au 2 décembre) — pense à ajuster ton calendrier en conséquence [11].\n- Ticket #65 ouvert par Sophie : le flux Google Shopping ne se régénère qu'une fois par nuit et doit afficher les prix soldés dès le 6 janvier, sinon les annonces sont refusées. Il faudra relancer le flux juste après le script de soldes [5].\n- Ticket #64 de Sophie : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].\n\n## What changed\n- Ta PR #59 sur le tag « soldes » automatique a été relue par Hugo et fusionnée [7].\n- Le widget Zendesk (#52) est fusionné et utilisé : 23 conversations ouvertes depuis les pages produit cette semaine, Lucie te remercie [9].\n\n## What you did\n- Tu as mis en place les soldes de janvier à partir de la grille de Sophie : script qui applique les remises le 6 janvier à 8 h, prix arrondis à l'euro inférieur, prix d'origine restaurés le 3 février, et 7 lignes de la grille signalées comme sans produit (archivés en septembre). PR #63 ouverte avec le dry-run prod en description, les deux déclenchements testés en dev [1][4].\n- Le dry-run a montré 3 variantes déjà en promo moins chères que le prix soldé calculé ; tu les as laissées de côté [1].",
+  "rendu": "## What is still open\n- Claire Verdier exclut la Saône des soldes : la grille la met à -20 % alors qu'elle est en rupture jusqu'à mi-janvier avec des précommandes au plein prix. Il faut retirer la ligne de la grille (ou l'ignorer dans le script) avant que la PR #63 soit fusionnée — Hugo pose d'ailleurs la question de cette remise dans sa relecture [1][10][4].\n- Répondre à Hugo sur la PR #63 : il a validé le fonctionnement en dev et attend juste confirmation sur la Saône [4].\n- Sophie a besoin des prix soldés dans Shopify pour le lundi 30 novembre (shooting décalé au 2 décembre) — pense à ajuster ton calendrier en conséquence [11].\n- Ticket #65 ouvert par Sophie : le flux Google Shopping ne se régénère qu'une fois par nuit et doit afficher les prix soldés dès le 6 janvier, sinon les annonces sont refusées. Il faudra relancer le flux juste après le script de soldes [5].\n- Ticket #64 de Sophie : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].\n\n## What changed\n- Ta PR #59 sur le tag « soldes » automatique a été relue par Hugo et fusionnée [7].\n- Le widget Zendesk (#52) est fusionné et utilisé : 23 conversations ouvertes depuis les pages produit cette semaine, Lucie te remercie [9].\n\n## What you did\n- Tu as mis en place les soldes de janvier à partir de la grille de Sophie : script qui applique les remises le 6 janvier à 8 h, prix arrondis à l'euro inférieur, prix d'origine restaurés le 3 février, et 7 lignes de la grille signalées comme sans produit (archivés en septembre). PR #63 ouverte avec le dry-run prod en description, les deux déclenchements testés en dev [1][4].\n- Le dry-run a montré 3 variantes déjà en promo moins chères que le prix soldé calculé ; tu les as laissées de côté [1].",
+  "mesures": {
+    "mots": 307,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4744,
+    "sortie": 589,
+    "reflexion": 99,
+    "cache": 0,
+    "cout": 0.0092332
+  },
+  "cout": 0.0092332,
+  "latenceMs": 4631,
+  "fournisseur": "Together"
+}

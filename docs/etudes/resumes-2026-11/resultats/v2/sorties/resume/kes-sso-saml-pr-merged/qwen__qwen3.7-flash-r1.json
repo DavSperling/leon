@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "qwen/qwen3.7-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:47.027Z",
+  "reponse": "## Où j'en suis\nThe ACS endpoint now verifies SAML signatures using signxml instead of python3-saml, with custom logic for audience, recipient, and condition validation (120s clock skew) plus Redis-based replay protection. All checks, formatting, and typing are resolved, and the changes have been merged. The focus now shifts to coordinating the staging environment setup for the client demo.\n\n- [en-cours] PR #412 is merged on main; verification uses signxml with a strict 120s skew tolerance and replay guard.\n- [prochaine-étape] Load Fernhill's staging IdP metadata and provide our SP metadata to their IT team by Wednesday EOD for Thursday's demo.\n- [essai-raté] Building python3-saml with xmlsec on Alpine failed repeatedly due to libxml2 version mismatches and missing crypto libraries.\n- [décision] Drop python3-saml entirely and enforce a maximum 120s timestamp skew to match Fernhill's security contract (source: t12)",
+  "rendu": "## Où j'en suis\nThe ACS endpoint now verifies SAML signatures using signxml instead of python3-saml, with custom logic for audience, recipient, and condition validation (120s clock skew) plus Redis-based replay protection. All checks, formatting, and typing are resolved, and the changes have been merged. The focus now shifts to coordinating the staging environment setup for the client demo.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] PR #412 is merged on main; verification uses signxml with a strict 120s skew tolerance and replay guard.\n- [prochaine-étape] Load Fernhill's staging IdP metadata and provide our SP metadata to their IT team by Wednesday EOD for Thursday's demo.\n- [essai-raté] Building python3-saml with xmlsec on Alpine failed repeatedly due to libxml2 version mismatches and missing crypto libraries.\n- [décision] Drop python3-saml entirely and enforce a maximum 120s timestamp skew to match Fernhill's security contract (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1060,
+    "decisions": 1,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4875,
+    "sortie": 3545,
+    "reflexion": 3321,
+    "cache": 0,
+    "cout": 0.0006071
+  },
+  "cout": 0.0006071,
+  "latenceMs": 33091,
+  "fournisseur": "Alibaba"
+}

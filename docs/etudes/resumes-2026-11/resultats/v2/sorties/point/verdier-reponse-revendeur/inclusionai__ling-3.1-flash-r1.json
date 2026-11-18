@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "inclusionai/ling-3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:15:25.609Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4664,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 0,
+    "cout": 0.00128988
+  },
+  "cout": 0.00128988,
+  "latenceMs": 80984,
+  "fournisseur": "Novita"
+}

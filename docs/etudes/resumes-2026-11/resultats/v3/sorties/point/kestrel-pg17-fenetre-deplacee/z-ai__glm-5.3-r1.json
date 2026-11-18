@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T17:56:26.406Z",
+  "reponse": "## What is still open\n- The cutover window has moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — update the runbook and merge the approved #321 [8][3].\n- Rollback rehearsal on a fresh clone is due **Thursday 19/11**; the runbook records it as a TODO — measure duration and data loss, since rollback is not a simple switch-back [1].\n- Give Lior Ben-David 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly [9], and ping Daniel Levi (on call for the API side) when you start [7].\n\n## What changed\n- Maya approved #321 and cleared it for merge once the window is confirmed — now it is [3][8].\n- Daniel reports staging on PG17 has been smooth since Thursday, with dashboards p95 slightly down [5].\n\n## What you did\n- You prepared the prod PG15 → PG17 cutover as an RDS blue/green deployment: Terraform changes on prod with the PG17 parameter group, and the key fix that the read replica follows the blue/green rather than being destroyed and recreated. The plan is clean: 2 changes, 0 destroys [1].\n- You wrote the runbook for the cutover, including freeze, switchover, verification and rollback steps [1].\n- A full rehearsal on a snapshot clone went well: 74 seconds of write downtime, API pods reconnected without restarts, no data mismatch. You then tore down all rehearsal instances [1].\n- You opened #321 for review and cleaned up lint (removed the now-unused replica engine version variable) [1].",
+  "rendu": "## What is still open\n- The cutover window has moved: Fernhill's month-end batch runs Saturday night, so the cutover is now **Sunday 22/11, 02:00–04:00 UTC** — update the runbook and merge the approved #321 [8][3].\n- Rollback rehearsal on a fresh clone is due **Thursday 19/11**; the runbook records it as a TODO — measure duration and data loss, since rollback is not a simple switch-back [1].\n- Give Lior Ben-David 30 minutes' notice before the switchover so he can pause the ingest consumers cleanly [9], and ping Daniel Levi (on call for the API side) when you start [7].\n\n## What changed\n- Maya approved #321 and cleared it for merge once the window is confirmed — now it is [3][8].\n- Daniel reports staging on PG17 has been smooth since Thursday, with dashboards p95 slightly down [5].\n\n## What you did\n- You prepared the prod PG15 → PG17 cutover as an RDS blue/green deployment: Terraform changes on prod with the PG17 parameter group, and the key fix that the read replica follows the blue/green rather than being destroyed and recreated. The plan is clean: 2 changes, 0 destroys [1].\n- You wrote the runbook for the cutover, including freeze, switchover, verification and rollback steps [1].\n- A full rehearsal on a snapshot clone went well: 74 seconds of write downtime, API pods reconnected without restarts, no data mismatch. You then tore down all rehearsal instances [1].\n- You opened #321 for review and cleaned up lint (removed the now-unused replica engine version variable) [1].",
+  "mesures": {
+    "mots": 242,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5072,
+    "sortie": 388,
+    "reflexion": 12,
+    "cache": 1536,
+    "cout": 0.00341208
+  },
+  "cout": 0.00341208,
+  "latenceMs": 4065,
+  "fournisseur": "SiliconFlow"
+}

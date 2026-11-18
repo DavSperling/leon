@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:09:52.777Z",
+  "reponse": "What broke: the ingestion pipeline on Thursday Nov 12. A deploy of ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the 512 Mi memory limit, the ingest-worker pods hit out-of-memory on the first large batch and crash-looped, so events piled up in Kafka and dashboards went stale from 08:47 to 12:27 UTC (3h40) [1][3][9]. The deploy went to all pods at once, and we had no consumer-lag alert, so the first signal was a Sentry OOM alert 27 minutes later [1].\n\nNo customer data was lost. Events kept arriving in Kafka and were processed late; a reconciliation on Nov 13 confirmed per-workspace event counts matched Kafka offsets for 08:00–13:00 UTC [1][3]. The incident report to customers stated the same: \"received and processed late; none were lost\" [2].\n\nWhat we're changing, per the postmortem and incident report:\n- KES-431: page on-call when consumer lag exceeds 5 minutes (due Nov 20) [1][10].\n- KES-432: ingest config changes go to a small canary pool first (due Nov 27) [1].\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes (due Nov 27) [1].\n- The immediate fix, ingest#419, already reverted the default back to 1 MB and added a guard that refuses batches larger than 25% of container memory [6].",
+  "rendu": "What broke: the ingestion pipeline on Thursday Nov 12. A deploy of ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB; with the 512 Mi memory limit, the ingest-worker pods hit out-of-memory on the first large batch and crash-looped, so events piled up in Kafka and dashboards went stale from 08:47 to 12:27 UTC (3h40) [1][3][9]. The deploy went to all pods at once, and we had no consumer-lag alert, so the first signal was a Sentry OOM alert 27 minutes later [1].\n\nNo customer data was lost. Events kept arriving in Kafka and were processed late; a reconciliation on Nov 13 confirmed per-workspace event counts matched Kafka offsets for 08:00–13:00 UTC [1][3]. The incident report to customers stated the same: \"received and processed late; none were lost\" [2].\n\nWhat we're changing, per the postmortem and incident report:\n- KES-431: page on-call when consumer lag exceeds 5 minutes (due Nov 20) [1][10].\n- KES-432: ingest config changes go to a small canary pool first (due Nov 27) [1].\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes (due Nov 27) [1].\n- The immediate fix, ingest#419, already reverted the default back to 1 MB and added a guard that refuses batches larger than 25% of container memory [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17116,
+    "sortie": 1100,
+    "reflexion": 578,
+    "cache": 6912,
+    "cout": 0.016623616
+  },
+  "latenceMs": 16539,
+  "fournisseur": "Novita",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline broke incident\"}",
+    "chercher {\"requete\":\"event pipeline failure data loss\"}",
+    "chercher {\"requete\":\"\\\"event pipeline\\\" outage\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}"
+  ],
+  "cout": 0.016623616
+}

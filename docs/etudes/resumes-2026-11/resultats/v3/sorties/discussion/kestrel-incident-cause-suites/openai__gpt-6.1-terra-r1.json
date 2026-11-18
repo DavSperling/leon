@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:09:14.915Z",
+  "reponse": "- **What broke:** On Thursday, November 12, ingest v2.14.0 raised the default batch size from 1 MB to 10 MB. Ingest workers with a 512 MiB memory limit ran out of memory and repeatedly crashed. The change had gone to every worker at once, and there was no consumer-lag alert; the first signal was an out-of-memory alert 27 minutes after deployment. [1]\n- **Customer impact:** All workspaces saw stale dashboards from 08:47 to 12:27 UTC. The team rolled back at 10:05, and the backlog finished draining at 12:27. Events continued arriving in Kafka; reconciliation the next day matched workspace event counts to Kafka offsets and found **no lost events**. [1][5]\n- **What’s changing:** The 1 MB default and a guard rejecting batches over 25% of container memory were merged on November 13. The follow-ups are canary-first configuration changes, raising worker memory to 1 GiB, and batch-size load testing. A consumer-lag alert is in place and routed to on-call, but the five-minute threshold is still being tuned because nightly backfills trigger it. [13][1][11]",
+  "rendu": "- **What broke:** On Thursday, November 12, ingest v2.14.0 raised the default batch size from 1 MB to 10 MB. Ingest workers with a 512 MiB memory limit ran out of memory and repeatedly crashed. The change had gone to every worker at once, and there was no consumer-lag alert; the first signal was an out-of-memory alert 27 minutes after deployment. [1]\n- **Customer impact:** All workspaces saw stale dashboards from 08:47 to 12:27 UTC. The team rolled back at 10:05, and the backlog finished draining at 12:27. Events continued arriving in Kafka; reconciliation the next day matched workspace event counts to Kafka offsets and found **no lost events**. [1][5]\n- **What’s changing:** The 1 MB default and a guard rejecting batches over 25% of container memory were merged on November 13. The follow-ups are canary-first configuration changes, raising worker memory to 1 GiB, and batch-size load testing. A consumer-lag alert is in place and routed to on-call, but the five-minute threshold is still being tuned because nightly backfills trigger it. [13][1][11]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 18219,
+    "sortie": 572,
+    "reflexion": 98,
+    "cache": 9769,
+    "cout": 0.0139087
+  },
+  "latenceMs": 10358,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"event pipeline\\\" incident Thursday customer data\"}",
+    "chercher {\"requete\":\"event pipeline outage data loss incident postmortem\"}",
+    "chercher {\"requete\":\"events ingestion incident Thursday data loss\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"sourceId\":\"slack-incidents-1112\"}",
+    "lire {\"sourceId\":\"github-ingest-419\"}",
+    "lire {\"sourceId\":\"linear-kes-431\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}"
+  ],
+  "cout": 0.0139087
+}

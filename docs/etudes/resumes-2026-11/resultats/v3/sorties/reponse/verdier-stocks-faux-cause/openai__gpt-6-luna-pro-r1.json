@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:37.343Z",
+  "reponse": "Un double traitement des webhooks `inventory_levels/update` décrémentait deux fois le stock des produits ayant deux emplacements ; la déduplication a été intégrée dans la PR #87 [1]. Mais le stock négatif de la variante Saône n’était pas lié à cette PR : l’import nocturne a écrasé le stock avec un CSV de Bois & Fils [5].",
+  "rendu": "Un double traitement des webhooks `inventory_levels/update` décrémentait deux fois le stock des produits ayant deux emplacements ; la déduplication a été intégrée dans la PR #87 [1]. Mais le stock négatif de la variante Saône n’était pas lié à cette PR : l’import nocturne a écrasé le stock avec un CSV de Bois & Fils [5].",
+  "mesures": {
+    "mots": 53,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4588,
+    "sortie": 446,
+    "reflexion": 270,
+    "cache": 0,
+    "cout": 0.0006818
+  },
+  "cout": 0.0006818,
+  "latenceMs": 6288,
+  "fournisseur": "Azure"
+}

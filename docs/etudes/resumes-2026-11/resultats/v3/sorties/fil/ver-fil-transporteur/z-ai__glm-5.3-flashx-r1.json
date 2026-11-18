@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:59:31.803Z",
+  "reponse": "## Où j'en suis\nClient API TransAlp branché sur `hugo/transalp-etiquettes`, PR #91 ouverte en brouillon (relecture de Julien) et poussée. ZPL testé avec succès en recette, défaut encodage corrigé, bascule configuée au 1er décembre via `TRANSALP_DEBUT` (commit `a90c4f7`). Rapidis reste en secours jusqu'au 15 janvier pour le reste de la France et +30 kg. (source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] PR #91 en brouillon, relue par Julien, toujours ouverte (source: ses-tr-2, src-pr91)\n- [prochaine-étape] Karim doit confirmer le bon rendu des étiquettes ZPL (accents) sur l'imprimante Zebra (source: ses-tr-2, h2-04)\n- [essai-raté] ZPL indisponible en sandbox : il a fallu tester en recette (source: src-mail-transalp, ses-tr-2)\n- [essai-raté] Encodage ZPL : sans `^CI28`, la Zebra lit les octets en CP850 et les accents sortaient en bouillie ; corrigé dans `zpl.ts`, commit `3e8b1d0` (source: ses-tr-2, h2-04, h2-06)\n- [essai-raté] Proposition de résilier Rapidis au 1er déc. et d'activer un « Premium » : refusé, Rapidis reste jusqu'au 15 janvier et il n'y a pas de Premium (source: h2-09, h2-10)\n- [décision] ZPL par défaut (PDF encore possible) après validation de l'essai en recette (source: ses-tr-2, h2-01, h2-02)\n- [décision] Bascule Lyon/Paris chez TransAlp au mardi 1er décembre, pas le 23 ; Karim doit former l'équipe avant (source: src-slack-julien, h2-01)\n- [décision] Rapidis reste en secours pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, point après les soldes (source: src-slack-julien, h2-09, h1-03)\n- [question] Rien ne s'active en prod avant le 1er décembre ; c'est Julien qui mettra la clé de prod dans les secrets (source: h2-07)",
+  "rendu": "## Où j'en suis\nClient API TransAlp branché sur `hugo/transalp-etiquettes`, PR #91 ouverte en brouillon (relecture de Julien) et poussée. ZPL testé avec succès en recette, défaut encodage corrigé, bascule configuée au 1er décembre via `TRANSALP_DEBUT` (commit `a90c4f7`). Rapidis reste en secours jusqu'au 15 janvier pour le reste de la France et +30 kg. (de: équipe, connecteur, agent; source: ses-tr-2, src-pr91, src-slack-julien)\n\n- [en-cours] PR #91 en brouillon, relue par Julien, toujours ouverte (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] Karim doit confirmer le bon rendu des étiquettes ZPL (accents) sur l'imprimante Zebra (de: agent; source: ses-tr-2, h2-04)\n- [essai-raté] ZPL indisponible en sandbox : il a fallu tester en recette (de: connecteur, agent; source: src-mail-transalp, ses-tr-2)\n- [essai-raté] Encodage ZPL : sans `^CI28`, la Zebra lit les octets en CP850 et les accents sortaient en bouillie ; corrigé dans `zpl.ts`, commit `3e8b1d0` (de: agent; source: ses-tr-2, h2-04, h2-06)\n- [essai-raté] Proposition de résilier Rapidis au 1er déc. et d'activer un « Premium » : refusé, Rapidis reste jusqu'au 15 janvier et il n'y a pas de Premium (de: toi, agent; source: h2-09, h2-10)\n- [décision] ZPL par défaut (PDF encore possible) après validation de l'essai en recette (de: toi, agent; source: ses-tr-2, h2-01, h2-02)\n- [décision] Bascule Lyon/Paris chez TransAlp au mardi 1er décembre, pas le 23 ; Karim doit former l'équipe avant (de: toi, connecteur; source: src-slack-julien, h2-01)\n- [décision] Rapidis reste en secours pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, point après les soldes (de: toi, connecteur; source: src-slack-julien, h2-09, h1-03)\n- [question] Rien ne s'active en prod avant le 1er décembre ; c'est Julien qui mettra la clé de prod dans les secrets (de: toi; source: h2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1876,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3844,
+    "sortie": 591,
+    "reflexion": 0,
+    "cache": 960,
+    "cout": 0.00187783
+  },
+  "cout": 0.00187783,
+  "latenceMs": 3943,
+  "fournisseur": "Z.AI"
+}

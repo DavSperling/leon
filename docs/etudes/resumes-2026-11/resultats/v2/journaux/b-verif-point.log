@@ -1,0 +1,38 @@
+point/kestrel-dedupe-regle-neuf : 2 sorties vérifiées (0.003 $)
+point/kestrel-demo-sso-cachee : 6 sorties vérifiées (0.012 $)
+point/kestrel-dedupe-regle-neuf : 6 sorties vérifiées (0.019 $)
+point/kestrel-dedupe-regle-neuf : 6 sorties vérifiées (0.028 $)
+point/kestrel-dedupe-regle-neuf : 6 sorties vérifiées (0.038 $)
+point/kestrel-demo-sso-cachee : 6 sorties vérifiées (0.048 $)
+point/kestrel-entretien-sre : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-pg17-fenetre-deplacee : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-pg17-fenetre-deplacee : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-pg17-fenetre-deplacee : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-pg17-fenetre-deplacee : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-tableaux-injection : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-tableaux-injection : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-tableaux-injection : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-tableaux-injection : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-demo-sso-cachee : 2 sorties vérifiées (0.049 $)
+point/verdier-reponse-revendeur : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-reponse-revendeur : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-reponse-revendeur : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-soldes-trois-sessions : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-soldes-trois-sessions : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-soldes-trois-sessions : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-soldes-trois-sessions : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-synchro-stocks : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-synchro-stocks : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-synchro-stocks : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-synchro-stocks : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-transalp-alternant : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-transalp-alternant : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-transalp-alternant : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/verdier-transalp-alternant : ÉCHEC HTTP 402 {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"re
+point/kestrel-demo-sso-cachee : 6 sorties vérifiées (0.058 $)
+point/kestrel-entretien-sre : 6 sorties vérifiées (0.067 $)
+point/kestrel-entretien-sre : 6 sorties vérifiées (0.076 $)
+point/kestrel-entretien-sre : 6 sorties vérifiées (0.086 $)
+point/verdier-reponse-revendeur : 6 sorties vérifiées (0.095 $)
+
+64 sorties vérifiées par openai/gpt-6.1-terra, 0.095 $.

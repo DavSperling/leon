@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:34.413Z",
+  "reponse": "## Où j'en suis\nLe fil porte sur la grille de dashboards v2 (branche `tom/dashboard-keyboard`). La PR #418 (grille draggable et redimensionnable) est fusionnée. La PR #423 ajoute le déplacement et le redimensionnement au clavier, avec un anneau de focus visible ; elle est ouverte et Priya l'a demandée en relecture. Le flag `dashboards_v2` est activé en staging pour l'espace Zest Grocers, la production n'est pas touchée. La migration visx (#401) a été fermée : on garde recharts. (source: ses-db-4, ses-db-3, ses-db-2, ses-db-1)\n\n- [en-cours] Déplacement et redimensionnement au clavier de la grille, anneau de focus visible, et annonces pour lecteurs d'écran : commit 8f1a2c7, PR #423 ouverte (source: ses-db-4)\n- [prochaine-étape] Relecture de la PR #423 par Priya, puis répétition de la démo Zest sur staging (source: ses-db-4)\n- [prochaine-étape] Activation du flag `dashboards_v2` en production le matin du 24, faite par Tom lui-même (source: ses-db-4)\n- [essai-raté] Utiliser `@dnd-kit/core` avec react-grid-layout : les deux bibliothèques traitent les mêmes événements, chaque déplacement est appliqué deux fois et le glisser-déposer à la souris déclenche deux changements de layout ; dnd-kit retiré (source: ses-db-4)\n- [essai-raté] Les container queries CSS ne fonctionnent pas sur les iPad de Zest (iOS 15, Safari < 16) (source: ses-db-2)\n- [décision] La grille v2 utilise ResizeObserver (hook `useWidgetSize`) au lieu des container queries, et toutes les règles `@container` sont supprimées (source: b2-02)\n- [décision] Les dashboards v1 restent disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (source: src-pr418 et b2-04)\n- [décision] Recharts reste la seule bibliothèque de graphiques ; la migration visx est abandonnée et #401 fermée (source: src-pr401 et c3-03)",
+  "rendu": "## Où j'en suis\nLe fil porte sur la grille de dashboards v2 (branche `tom/dashboard-keyboard`). La PR #418 (grille draggable et redimensionnable) est fusionnée. La PR #423 ajoute le déplacement et le redimensionnement au clavier, avec un anneau de focus visible ; elle est ouverte et Priya l'a demandée en relecture. Le flag `dashboards_v2` est activé en staging pour l'espace Zest Grocers, la production n'est pas touchée. La migration visx (#401) a été fermée : on garde recharts. (de: agent; source: ses-db-4, ses-db-3, ses-db-2, ses-db-1)\n\n- [en-cours] Déplacement et redimensionnement au clavier de la grille, anneau de focus visible, et annonces pour lecteurs d'écran : commit 8f1a2c7, PR #423 ouverte (de: agent; source: ses-db-4)\n- [prochaine-étape] Relecture de la PR #423 par Priya, puis répétition de la démo Zest sur staging (de: agent; source: ses-db-4)\n- [prochaine-étape] Activation du flag `dashboards_v2` en production le matin du 24, faite par Tom lui-même (de: agent; source: ses-db-4)\n- [essai-raté] Utiliser `@dnd-kit/core` avec react-grid-layout : les deux bibliothèques traitent les mêmes événements, chaque déplacement est appliqué deux fois et le glisser-déposer à la souris déclenche deux changements de layout ; dnd-kit retiré (de: agent; source: ses-db-4)\n- [essai-raté] Les container queries CSS ne fonctionnent pas sur les iPad de Zest (iOS 15, Safari < 16) (de: agent; source: ses-db-2)\n- [décision] La grille v2 utilise ResizeObserver (hook `useWidgetSize`) au lieu des container queries, et toutes les règles `@container` sont supprimées (de: toi; source: b2-02)\n- [décision] Les dashboards v1 restent disponibles derrière le flag jusqu'en janvier, rien n'est supprimé maintenant (de: toi, équipe; source: src-pr418, b2-04)\n- [décision] Recharts reste la seule bibliothèque de graphiques ; la migration visx est abandonnée et #401 fermée (de: toi, équipe; source: src-pr401, c3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1914,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6881,
+    "sortie": 799,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0010876
+  },
+  "cout": 0.0010876,
+  "latenceMs": 3759,
+  "fournisseur": "Claude Platform on AWS"
+}

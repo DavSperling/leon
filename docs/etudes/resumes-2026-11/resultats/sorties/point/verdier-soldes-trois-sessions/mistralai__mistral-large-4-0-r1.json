@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T14:36:16.819Z",
+  "reponse": "## Ce que tu as fait\n- Script des soldes et workflow terminés : `scripts/prix-soldes.ts` applique la grille de Sophie le 6 janvier à 8 h (prix barré = prix actuel, prix remisé arrondi à l'euro inférieur) et restaure les prix le 3 février ; dry-run sur la prod en lecture seule (212 variantes, 57 produits) et les deux crons testés avec succès sur la boutique de dev. PR #63 ouverte, relecteur Hugo. [1]\n\n## Ce qui a bougé\n- Sophie a décalé le shooting au 2 décembre : elle a besoin des prix soldés dans Shopify dès le lundi 30/11, alors que le cron les applique le 6 janvier. [11][1]\n- #52 (widget Zendesk sur les pages produit) fusionnée ; Lucie confirme qu'il est déjà utilisé (23 conversations ouvertes cette semaine). [9]\n- #59 fusionnée par Hugo : le tag `soldes` sera posé automatiquement sur les produits remisés et retiré à la fin des soldes. [7]\n\n## Ce qui reste ouvert\n- La Saône ne part pas en soldes : Hugo demande sur #63 si le -20 % est voulu, et Claire a tranché non sur #direction (rupture jusqu'à mi-janvier, précommandes au plein prix) — à exclure de la grille/du script et à répondre à Hugo. [4][10]\n- Flux Google Shopping (#65) : Sophie te demande si on peut relancer le flux juste après le script des soldes le 6 janvier, sinon les annonces sont refusées pour prix différent du site — question sans réponse pour l'instant. [5]\n- Bannière « Soldes d'hiver » trop haute sur mobile : elle cache le bouton « Ajouter au panier » sur les pages produit (#64), à corriger avant le shooting. [6]",
+  "rendu": "## Ce que tu as fait\n- Script des soldes et workflow terminés : `scripts/prix-soldes.ts` applique la grille de Sophie le 6 janvier à 8 h (prix barré = prix actuel, prix remisé arrondi à l'euro inférieur) et restaure les prix le 3 février ; dry-run sur la prod en lecture seule (212 variantes, 57 produits) et les deux crons testés avec succès sur la boutique de dev. PR #63 ouverte, relecteur Hugo. [1]\n\n## Ce qui a bougé\n- Sophie a décalé le shooting au 2 décembre : elle a besoin des prix soldés dans Shopify dès le lundi 30/11, alors que le cron les applique le 6 janvier. [11][1]\n- #52 (widget Zendesk sur les pages produit) fusionnée ; Lucie confirme qu'il est déjà utilisé (23 conversations ouvertes cette semaine). [9]\n- #59 fusionnée par Hugo : le tag `soldes` sera posé automatiquement sur les produits remisés et retiré à la fin des soldes. [7]\n\n## Ce qui reste ouvert\n- La Saône ne part pas en soldes : Hugo demande sur #63 si le -20 % est voulu, et Claire a tranché non sur #direction (rupture jusqu'à mi-janvier, précommandes au plein prix) — à exclure de la grille/du script et à répondre à Hugo. [4][10]\n- Flux Google Shopping (#65) : Sophie te demande si on peut relancer le flux juste après le script des soldes le 6 janvier, sinon les annonces sont refusées pour prix différent du site — question sans réponse pour l'instant. [5]\n- Bannière « Soldes d'hiver » trop haute sur mobile : elle cache le bouton « Ajouter au panier » sur les pages produit (#64), à corriger avant le shooting. [6]",
+  "mesures": {
+    "mots": 254,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4447,
+    "sortie": 5917,
+    "reflexion": 5511,
+    "cache": 0,
+    "cout": 0.0155386
+  },
+  "cout": 0.0155386,
+  "latenceMs": 190713,
+  "fournisseur": "Mistral"
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-tri-candidatures",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:12.263Z",
+  "reponse": "## Où j'en suis\nTri de 11 candidatures pour 2 postes d'installateur PAC à Carquefou : le tableau de synthèse est établi dans `recrutement/candidats-installateurs.xlsx` (les deux CV scannés illisibles ont été lus à la main), quatre candidats sont retenus pour entretien, leurs convocations sont rédigées dans `recrutement/convocations/` et la grille d'entretien (6 questions techniques + une mise en situation) est prête. À la fin de la session, rien n'est encore envoyé : la personne envoie elle-même les convocations depuis Gmail dans l'après-midi.\n\n- [prochaine-étape] envoyer les quatre convocations depuis Gmail\n- [prochaine-étape] tenir les entretiens jeudi 19 et vendredi 20/11 à l'atelier de Carquefou, puis répondre à tous les non-retenus avant le 27/11\n- [essai-raté] extraction automatique des deux CV scannés, illisibles : lus à la main\n- [décision] aucune exclusion pour un arrêt maladie, remarque supprimée du tableau et colonne prétentions retirée (source: t06)\n- [décision] attestation fluides non éliminatoire (formation payée si le reste est bon), quatre candidats convoqués (source: t10)\n- [décision] réponse à tous les candidats non retenus avant le 27/11 (source: t16)",
+  "rendu": "## Où j'en suis\nTri de 11 candidatures pour 2 postes d'installateur PAC à Carquefou : le tableau de synthèse est établi dans `recrutement/candidats-installateurs.xlsx` (les deux CV scannés illisibles ont été lus à la main), quatre candidats sont retenus pour entretien, leurs convocations sont rédigées dans `recrutement/convocations/` et la grille d'entretien (6 questions techniques + une mise en situation) est prête. À la fin de la session, rien n'est encore envoyé : la personne envoie elle-même les convocations depuis Gmail dans l'après-midi.\n\n- [prochaine-étape] envoyer les quatre convocations depuis Gmail\n- [prochaine-étape] tenir les entretiens jeudi 19 et vendredi 20/11 à l'atelier de Carquefou, puis répondre à tous les non-retenus avant le 27/11\n- [essai-raté] extraction automatique des deux CV scannés, illisibles : lus à la main\n- [décision] aucune exclusion pour un arrêt maladie, remarque supprimée du tableau et colonne prétentions retirée (source: t06)\n- [décision] attestation fluides non éliminatoire (formation payée si le reste est bon), quatre candidats convoqués (source: t10)\n- [décision] réponse à tous les candidats non retenus avant le 27/11 (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1188,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3386,
+    "sortie": 1384,
+    "reflexion": 1024,
+    "cache": 0,
+    "cout": 0.00133978
+  },
+  "cout": 0.00133978,
+  "latenceMs": 6911,
+  "fournisseur": "CoreWeave"
+}

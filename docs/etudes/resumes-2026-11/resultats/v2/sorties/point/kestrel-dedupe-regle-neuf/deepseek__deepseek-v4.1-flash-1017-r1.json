@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:09:12.504Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to your own #240 dedupe: kestrel-ios 3.2.0 switched `event_id` to a per-session counter, so distinct events were discarded as duplicates — ~1.18M legitimate Orbitly events (≈8.1% of their iOS volume), plus 3,812 for Zest's pilot store app [1].\n- Rekeyed the dedupe on project:device:event_id (genuine replays still dropped), opened PR #247 with Maya as reviewer, and drafted the note asking the iOS team to restore UUIDs in 3.2.1 [1].\n\n## What changed\n- Maya says the logic looks right and will approve on green CI, but wants the dropped-event count for Thursday's call with Orbitly — you have it: ~1.18M, 8.1% of iOS volume [2][1].\n- From the 12/11 incident review prep: you owe an alert on the ingest dead-letter queue above 1,000 messages, before Friday's review [7].\n- Noa's final postmortem is up and credits your root-cause section; she presents it at Friday's incident review [3].\n- Rachel closed Zest's Zendesk ticket, their dashboards confirmed complete [6].\n\n## What is still open\n- #247 must merge and deploy *before* the rebackfill: then replay prj_0rb1 (≈40 min) and prj_z3st from 13/11 out of landing, and check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero — the reminder you asked for [1].\n- The iOS-team note on `event_id` is still a draft; it needs sending [1].",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to your own #240 dedupe: kestrel-ios 3.2.0 switched `event_id` to a per-session counter, so distinct events were discarded as duplicates — ~1.18M legitimate Orbitly events (≈8.1% of their iOS volume), plus 3,812 for Zest's pilot store app [1].\n- Rekeyed the dedupe on project:device:event_id (genuine replays still dropped), opened PR #247 with Maya as reviewer, and drafted the note asking the iOS team to restore UUIDs in 3.2.1 [1].\n\n## What changed\n- Maya says the logic looks right and will approve on green CI, but wants the dropped-event count for Thursday's call with Orbitly — you have it: ~1.18M, 8.1% of iOS volume [2][1].\n- From the 12/11 incident review prep: you owe an alert on the ingest dead-letter queue above 1,000 messages, before Friday's review [7].\n- Noa's final postmortem is up and credits your root-cause section; she presents it at Friday's incident review [3].\n- Rachel closed Zest's Zendesk ticket, their dashboards confirmed complete [6].\n\n## What is still open\n- #247 must merge and deploy *before* the rebackfill: then replay prj_0rb1 (≈40 min) and prj_z3st from 13/11 out of landing, and check `ingest_dedupe_dropped_total{project=\"prj_0rb1\"}` stays near zero — the reminder you asked for [1].\n- The iOS-team note on `event_id` is still a draft; it needs sending [1].",
+  "mesures": {
+    "mots": 208,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4826,
+    "sortie": 1742,
+    "reflexion": 1351,
+    "cache": 0,
+    "cout": 0.00141528
+  },
+  "cout": 0.00141528,
+  "latenceMs": 13391,
+  "fournisseur": "River"
+}

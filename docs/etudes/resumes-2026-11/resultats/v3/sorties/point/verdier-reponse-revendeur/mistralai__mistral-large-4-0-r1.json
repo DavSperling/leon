@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:00:53.069Z",
+  "reponse": "## What is still open\n- Envoyer ta réponse à Bertrand Lemaire (Galeries Brotteaux) avec le geste validé par Claire : elle veut que ça parte ce matin, et sans proposition avant vendredi ils suspendent leurs réassorts pour les soldes ; ils ont d'ailleurs aussi appelé le service client, très remontés, et Lucie leur a dit que tu reviens vers eux [1][4][6].\n- Si le geste passe par un avoir, prévenir Antoine Roussel avant de l'émettre et le rattacher à la facture FA-2026-1187 du 10/11, sinon il ne passe pas correctement en TVA [5].\n\n## What changed\n- Claire a validé le geste sur #direction : 10 % sur les 4 tables Saône vendues, et 4 Saône chêne réservées sur le réassort de janvier [4].\n- La PR #62 est approuvée par Hugo, qui a revérifié sur le fichier du 10/11 que la Saône chêne sort bien à 0 [2].\n\n## What you did\n- Diagnostiqué l'incident Galeries Brotteaux : `scripts/export-revendeurs.ts` exportait `on_hand` (réservations des commandes web comprises) au lieu de `available` — le même défaut qu'en septembre pour le buffet Rhône, présent depuis la création du script ; 11 autres références étaient surévaluées dans le fichier du 10/11 [1].\n- Corrigé le script pour n'exporter que le stock disponible, jamais négatif, avec des tests sur les deux cas (Saône du 10/11, buffet Rhône de septembre) [1].\n- Rédigé le brouillon de réponse à Bertrand (reconnaissance de l'erreur, correction annoncée, proposition à venir d'ici vendredi) et envoyé à Claire le résumé avec les deux options [1].",
+  "rendu": "## What is still open\n- Envoyer ta réponse à Bertrand Lemaire (Galeries Brotteaux) avec le geste validé par Claire : elle veut que ça parte ce matin, et sans proposition avant vendredi ils suspendent leurs réassorts pour les soldes ; ils ont d'ailleurs aussi appelé le service client, très remontés, et Lucie leur a dit que tu reviens vers eux [1][4][6].\n- Si le geste passe par un avoir, prévenir Antoine Roussel avant de l'émettre et le rattacher à la facture FA-2026-1187 du 10/11, sinon il ne passe pas correctement en TVA [5].\n\n## What changed\n- Claire a validé le geste sur #direction : 10 % sur les 4 tables Saône vendues, et 4 Saône chêne réservées sur le réassort de janvier [4].\n- La PR #62 est approuvée par Hugo, qui a revérifié sur le fichier du 10/11 que la Saône chêne sort bien à 0 [2].\n\n## What you did\n- Diagnostiqué l'incident Galeries Brotteaux : `scripts/export-revendeurs.ts` exportait `on_hand` (réservations des commandes web comprises) au lieu de `available` — le même défaut qu'en septembre pour le buffet Rhône, présent depuis la création du script ; 11 autres références étaient surévaluées dans le fichier du 10/11 [1].\n- Corrigé le script pour n'exporter que le stock disponible, jamais négatif, avec des tests sur les deux cas (Saône du 10/11, buffet Rhône de septembre) [1].\n- Rédigé le brouillon de réponse à Bertrand (reconnaissance de l'erreur, correction annoncée, proposition à venir d'ici vendredi) et envoyé à Claire le résumé avec les deux options [1].",
+  "mesures": {
+    "mots": 239,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3828,
+    "sortie": 5236,
+    "reflexion": 4835,
+    "cache": 0,
+    "cout": 0.01504272
+  },
+  "cout": 0.01504272,
+  "latenceMs": 194817,
+  "fournisseur": "Mistral"
+}

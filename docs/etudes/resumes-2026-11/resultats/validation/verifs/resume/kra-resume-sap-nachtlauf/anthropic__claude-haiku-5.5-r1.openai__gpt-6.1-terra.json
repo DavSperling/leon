@@ -1,0 +1,21 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-ursache": 0,
+    "f-idempotenz": 0,
+    "f-startzeit": 0.5,
+    "f-essai": 0.5,
+    "f-storno": 0.5,
+    "f-pr": 1
+  },
+  "interdits": {
+    "i-0330": 0,
+    "i-retry5": 0,
+    "i-merge": 0,
+    "i-kolb": 0,
+    "i-decision-agent": 0
+  },
+  "contraires": [],
+  "premier": null,
+  "langueOk": true
+}

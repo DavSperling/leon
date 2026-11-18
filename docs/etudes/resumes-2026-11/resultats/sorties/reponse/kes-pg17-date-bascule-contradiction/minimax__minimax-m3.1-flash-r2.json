@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-pg17-date-bascule-contradiction",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:08.958Z",
+  "reponse": "La date de cutover production de Postgres 17 est désormais planifiée au samedi 28 novembre 2026, même fenêtre de 02:00–06:00 UTC [2][6]. Le déplacement depuis le 21 novembre n’est toutefois pas encore appliqué : la PR est ouverte, en attente de revue, avec les vérifications en cours [6].",
+  "rendu": "La date de cutover production de Postgres 17 est désormais planifiée au samedi 28 novembre 2026, même fenêtre de 02:00–06:00 UTC [2][6]. Le déplacement depuis le 21 novembre n’est toutefois pas encore appliqué : la PR est ouverte, en attente de revue, avec les vérifications en cours [6].",
+  "mesures": {
+    "mots": 47,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.5,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1241,
+    "sortie": 106,
+    "reflexion": 30,
+    "cache": 512,
+    "cout": 0.00018063
+  },
+  "cout": 0.00018063,
+  "latenceMs": 1401,
+  "fournisseur": "Together"
+}

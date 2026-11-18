@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:18.027Z",
+  "reponse": "Je ne sais pas combien de dossiers d'aide ont été refusés cette année, ni pourquoi. Je n'ai trouvé aucun décompte ni aucune liste de refus.\n\nVoici ce que j'ai trouvé :\n- Un dossier Anah (Cariou) est toujours en instruction. L'Anah a demandé une pièce complémentaire, l'attestation de propriété, et Manon Pichon l'a envoyée [7]. Ce n'est pas un refus.\n- Manon Pichon a demandé à ChatGPT comment contester un refus MaPrimeRénov'. C'était pour écrire une fiche de procédure, et la réponse décrit le recours gracieux [4]. Cela ne dit pas combien de refus nous avons eus.\n- Une newsletter du secteur annonce une enquête sur la hausse des refus de primes dans trois régions [5]. Elle ne parle pas de nos propres dossiers.\n\nJ'ai fait deux recherches, sur les dossiers d'aide refusés et leurs raisons et sur les refus de subvention. Je n'ai lu que les extraits qu'elles ont renvoyés. Pour aller plus loin, vous pouvez regarder le canal Slack #aides, le suivi des dossiers de Manon Pichon ou les courriers de l'Anah et de MaPrimeRénov'. Je peux aussi relancer une recherche sur une période, un organisme ou un client précis.",
+  "rendu": "Je ne sais pas combien de dossiers d'aide ont été refusés cette année, ni pourquoi. Je n'ai trouvé aucun décompte ni aucune liste de refus.\n\nVoici ce que j'ai trouvé :\n- Un dossier Anah (Cariou) est toujours en instruction. L'Anah a demandé une pièce complémentaire, l'attestation de propriété, et Manon Pichon l'a envoyée [7]. Ce n'est pas un refus.\n- Manon Pichon a demandé à ChatGPT comment contester un refus MaPrimeRénov'. C'était pour écrire une fiche de procédure, et la réponse décrit le recours gracieux [4]. Cela ne dit pas combien de refus nous avons eus.\n- Une newsletter du secteur annonce une enquête sur la hausse des refus de primes dans trois régions [5]. Elle ne parle pas de nos propres dossiers.\n\nJ'ai fait deux recherches, sur les dossiers d'aide refusés et leurs raisons et sur les refus de subvention. Je n'ai lu que les extraits qu'elles ont renvoyés. Pour aller plus loin, vous pouvez regarder le canal Slack #aides, le suivi des dossiers de Manon Pichon ou les courriers de l'Anah et de MaPrimeRénov'. Je peux aussi relancer une recherche sur une période, un organisme ou un client précis.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 9350,
+    "sortie": 644,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.02514
+  },
+  "latenceMs": 5829,
+  "fournisseur": "Amazon Bedrock",
+  "trace": [
+    "chercher {\"requete\":\"dossiers d'aide refusés clients raisons du refus\",\"depuis\":\"2025-01-01\"}",
+    "chercher {\"requete\":\"refus subvention dossier client refusé\"}"
+  ],
+  "cout": 0.02514
+}

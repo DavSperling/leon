@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:41.727Z",
+  "reponse": "## What is still open\n\n- The cutover window **moved to Sunday 22/11, 02:00–04:00 UTC** (Fernhill's month-end batch runs Saturday night): update the runbook and merge #321 — Maya approved it and cleared you to do both [3][8]\n- **Rollback rehearsal on a fresh clone is due Thursday 19/11**: rollback is not a simple switch (the blue instance diverges after switchover); it's a TODO in the runbook, you'll need to measure duration and data loss [1]\n- Give Lior 30 min notice before the switchover so he can pause the ingest consumers, and ping Daniel on Sunday — he's on call for the API side [9][7]\n\n## What changed\n\n- Maya confirmed the new Sunday window with Sam and told the CSMs; the Notion page still shows Saturday and needs the update [8][10]\n- #321 got Maya's approval with the condition above; Renovate opened #320 bumping the AWS provider to 5.82 [3][4]\n\n## What you did\n\n- You prepared the prod cutover: blue/green Terraform (replica follows the swap instead of being replaced — plan is 2 changes, 0 destroys) and a runbook; PR #321 is open [1]\n- You rehearsed the full blue/green on a snapshot clone: 74 s of write downtime, clean reconnect through pgbouncer, no data mismatch; the rehearsal clone has since been torn down [1]",
+  "rendu": "## What is still open\n\n- The cutover window **moved to Sunday 22/11, 02:00–04:00 UTC** (Fernhill's month-end batch runs Saturday night): update the runbook and merge #321 — Maya approved it and cleared you to do both [3][8]\n- **Rollback rehearsal on a fresh clone is due Thursday 19/11**: rollback is not a simple switch (the blue instance diverges after switchover); it's a TODO in the runbook, you'll need to measure duration and data loss [1]\n- Give Lior 30 min notice before the switchover so he can pause the ingest consumers, and ping Daniel on Sunday — he's on call for the API side [9][7]\n\n## What changed\n\n- Maya confirmed the new Sunday window with Sam and told the CSMs; the Notion page still shows Saturday and needs the update [8][10]\n- #321 got Maya's approval with the condition above; Renovate opened #320 bumping the AWS provider to 5.82 [3][4]\n\n## What you did\n\n- You prepared the prod cutover: blue/green Terraform (replica follows the swap instead of being replaced — plan is 2 changes, 0 destroys) and a runbook; PR #321 is open [1]\n- You rehearsed the full blue/green on a snapshot clone: 74 s of write downtime, clean reconnect through pgbouncer, no data mismatch; the rehearsal clone has since been torn down [1]",
+  "mesures": {
+    "mots": 205,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5072,
+    "sortie": 377,
+    "reflexion": 44,
+    "cache": 0,
+    "cout": 0.0009493
+  },
+  "cout": 0.0009493,
+  "latenceMs": 2391,
+  "fournisseur": "Mistral"
+}

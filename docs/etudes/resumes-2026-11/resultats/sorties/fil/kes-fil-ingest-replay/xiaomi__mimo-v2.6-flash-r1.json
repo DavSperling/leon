@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:03.392Z",
+  "reponse": "## Où j'en suis\nLe replay réel est terminé : 18 442 107 événements rejoués dans `events.replay.v3` (job `replay-1`, 47 min, 3 118 rejets en fichier) après la fusion de #233, et le backfill aggregator `backfill-2026-11-12` tourne depuis 08:57 UTC — 61 % fait (heures 00–14 terminées), 14,9 M de lignes `events_v3` dans la fenêtre d'incident contre ~20,5 M attendus. L'incident reste ouvert jusqu'à ce que les comptes concordent. (source: ses-rp-2, r2-04)\n\n- [en-cours] Backfill `backfill-2026-11-12` en cours (heures 15–23 en cours, 14,9 M / ~20,5 M attendus dans la fenêtre d'incident) (source: r2-06)\n- [prochaine-étape] Attendre 100 % du backfill, comparer les comptes heure par heure avec 1 % de tolérance, puis clore l'incident (source: r2-08, r2-10)\n- [essai-raté] Batch 50k en dry run OOMKilled (limite 2Gi, quota namespace plafonné par Noa) → passage en 5k, 310 MiB de pic (source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly réclame une confirmation que les données du 12/11 sont restaurées aujourd'hui ; Rachel doit confirmer la date exacte (source: src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3` depuis cet outil (source: r1-02)\n- [décision] Le backfill se fait en lots de 5k, sans toucher à la limite mémoire (source: r1-04)\n- [décision] L'incident ne se clôt que quand les comptes concordent (source: r2-07)\n- [décision] PR #241 ignorée : Daniel fait le check CI, c'est la seule correction officielle du 12/11 (source: r2-09, src-slack-incident)",
+  "rendu": "## Où j'en suis\nLe replay réel est terminé : 18 442 107 événements rejoués dans `events.replay.v3` (job `replay-1`, 47 min, 3 118 rejets en fichier) après la fusion de #233, et le backfill aggregator `backfill-2026-11-12` tourne depuis 08:57 UTC — 61 % fait (heures 00–14 terminées), 14,9 M de lignes `events_v3` dans la fenêtre d'incident contre ~20,5 M attendus. L'incident reste ouvert jusqu'à ce que les comptes concordent. (de: agent; source: ses-rp-2, r2-04)\n\n- [en-cours] Backfill `backfill-2026-11-12` en cours (heures 15–23 en cours, 14,9 M / ~20,5 M attendus dans la fenêtre d'incident) (de: agent; source: r2-06)\n- [prochaine-étape] Attendre 100 % du backfill, comparer les comptes heure par heure avec 1 % de tolérance, puis clore l'incident (de: agent; source: r2-08, r2-10)\n- [essai-raté] Batch 50k en dry run OOMKilled (limite 2Gi, quota namespace plafonné par Noa) → passage en 5k, 310 MiB de pic (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [question] Orbitly réclame une confirmation que les données du 12/11 sont restaurées aujourd'hui ; Rachel doit confirmer la date exacte (de: connecteur; source: src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3` depuis cet outil (de: toi; source: r1-02)\n- [décision] Le backfill se fait en lots de 5k, sans toucher à la limite mémoire (de: toi; source: r1-04)\n- [décision] L'incident ne se clôt que quand les comptes concordent (de: toi; source: r2-07)\n- [décision] PR #241 ignorée : Daniel fait le check CI, c'est la seule correction officielle du 12/11 (de: toi, connecteur; source: r2-09, src-slack-incident)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1638,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4201,
+    "sortie": 1048,
+    "reflexion": 464,
+    "cache": 0,
+    "cout": 0.00088158
+  },
+  "cout": 0.00088158,
+  "latenceMs": 30583,
+  "fournisseur": "Xiaomi"
+}

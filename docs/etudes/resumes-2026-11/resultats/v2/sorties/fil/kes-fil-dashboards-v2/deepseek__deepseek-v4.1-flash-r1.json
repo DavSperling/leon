@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:39.018Z",
+  "reponse": "## Où j'en suis\nDashboards v2 is out of review and in the demo run-up: PR #418 (draggable/resizable widgets behind `dashboards_v2`, layout persisted per user) was approved by Priya and merged as `4c0e9b3`; its two follow-ups (keyboard move/resize, visible focus ring) are done on branch `tom/dashboard-keyboard` and sit in PR #423, still open with Priya requested. The flag is on for the Zest workspace in staging only; production is untouched. The visx migration is dead — recharts stays. (source: src-pr418, ses-db-4)\n\n- [en-cours] PR #423 open: keyboard move/resize via `useGridKeyboard()` (Tab/Enter/arrows/Shift+arrows/Escape, aria-live announcements) and a `:focus-visible` ring, commit `8f1a2c7`, 11 new tests green (source: d4-05, ses-db-4)\n- [prochaine-étape] Priya's review of #423, then the Zest demo on Nov 24 (source: d4-05, d4-06)\n- [prochaine-étape] Rehearse on staging, where `dashboards_v2` is on for workspace zest-grocers (source: d4-06, d4-07)\n- [prochaine-étape] Flip `dashboards_v2` on in production on the morning of the 24th (source: d4-06)\n- [prochaine-étape] Delete the legacy v1 dashboards (DashboardList, DashboardTile re-export) on Jan 5 (source: src-note-v1)\n- [essai-raté] Wrapping grid items with dnd-kit's `KeyboardSensor`: both libraries listen to the same pointer/key events, so every move is applied twice and mouse drags fire two layout changes (source: d4-02)\n- [essai-raté] CSS container queries: ignored on Zest's iOS 15 iPads, everything stayed in the small layout (source: b2-01)\n- [essai-raté] Finishing the visx migration: +181 KB (+52 KB gzip) for a partial move, or 9 charts to rewrite for the full one (source: c3-02)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (source: d4-04)\n- [décision] Turn `dashboards_v2` on for zest-grocers in staging only; production flipped by hand on the 24th (source: d4-06)\n- [décision] Drop container queries entirely, use the ResizeObserver `useWidgetSize()` hook (source: b2-02)\n- [décision] Close #401 and keep recharts — no second chart library, no rewriting 9 charts (source: c3-03, src-pr401)\n- [décision] Merge #418 (squash) and take Priya's two remaining comments as a follow-up PR (source: c3-05, src-pr418)\n- [décision] v1 dashboards stay available behind the flag until January, nothing removed now (source: b2-04)",
+  "rendu": "## Où j'en suis\nDashboards v2 is out of review and in the demo run-up: PR #418 (draggable/resizable widgets behind `dashboards_v2`, layout persisted per user) was approved by Priya and merged as `4c0e9b3`; its two follow-ups (keyboard move/resize, visible focus ring) are done on branch `tom/dashboard-keyboard` and sit in PR #423, still open with Priya requested. The flag is on for the Zest workspace in staging only; production is untouched. The visx migration is dead — recharts stays. (de: équipe, agent; source: src-pr418, ses-db-4)\n\n- [en-cours] PR #423 open: keyboard move/resize via `useGridKeyboard()` (Tab/Enter/arrows/Shift+arrows/Escape, aria-live announcements) and a `:focus-visible` ring, commit `8f1a2c7`, 11 new tests green (de: agent; source: d4-05, ses-db-4)\n- [prochaine-étape] Priya's review of #423, then the Zest demo on Nov 24 (de: toi, agent; source: d4-05, d4-06)\n- [prochaine-étape] Rehearse on staging, where `dashboards_v2` is on for workspace zest-grocers (de: toi, agent; source: d4-06, d4-07)\n- [prochaine-étape] Flip `dashboards_v2` on in production on the morning of the 24th (de: toi; source: d4-06)\n- [prochaine-étape] Delete the legacy v1 dashboards (DashboardList, DashboardTile re-export) on Jan 5 (de: agent; source: src-note-v1)\n- [essai-raté] Wrapping grid items with dnd-kit's `KeyboardSensor`: both libraries listen to the same pointer/key events, so every move is applied twice and mouse drags fire two layout changes (de: agent; source: d4-02)\n- [essai-raté] CSS container queries: ignored on Zest's iOS 15 iPads, everything stayed in the small layout (de: agent; source: b2-01)\n- [essai-raté] Finishing the visx migration: +181 KB (+52 KB gzip) for a partial move, or 9 charts to rewrite for the full one (de: agent; source: c3-02)\n- [décision] Own keyboard handler on top of the layout state, no dnd-kit (de: toi; source: d4-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1877,
+    "lignesRetirees": 5,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5062,
+    "sortie": 1983,
+    "reflexion": 1259,
+    "cache": 0,
+    "cout": 0.001711186
+  },
+  "cout": 0.001711186,
+  "latenceMs": 10536,
+  "fournisseur": "InferenceNet"
+}

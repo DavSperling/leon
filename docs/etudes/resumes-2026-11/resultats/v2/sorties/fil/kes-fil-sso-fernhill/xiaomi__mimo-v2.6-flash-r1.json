@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:36.797Z",
+  "reponse": "## Où j'en suis\nSAML SSO for Fernhill works end to end on staging: the short RelayState fix (opaque ID in Redis, 600 s) let a real login succeed through their IdP, JIT creates users as `viewer`, and the group-to-role mapping is implemented and tested in PR #421, which is open. PR #415 (JIT provisioning) is merged. The branch is waiting on Fernhill IT to add the `groups` claim before Thursday's demo (ses-sso-3, ses-sso-2, src-linear-kes311).\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged (source: ses-sso-3)\n- [prochaine-étape] Get a review on #421 so the mapping lands (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim, then create an admin test account and verify `Fernhill-Kestrel-Admins` → admin (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Demo with Fernhill IT, Thursday Nov 19, 10:00 New York (source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Sending the full return URL as RelayState (143 bytes) failed: their ADFS rejects it with MSIS7042, over the 80-byte cap — replaced by a server-side stored URL keyed by a short opaque ID (source: ses-sso-3)\n- [essai-raté] First JIT test run failed on email domain casing; normalized to lowercase (source: ses-sso-2)\n- [question] Fernhill IT asked (Slack) for `analyst` as default role and IdP-initiated only; both declined pending Maya's conversation — nothing to do unless that changes (source: src-slack-fernhill, ses-sso-3)\n- [décision] Short opaque RelayState ID, return URL stored in Redis for 10 minutes (source: s3-03)\n- [décision] Map `Fernhill-Kestrel-Admins` to admin, everything else viewer, per-tenant config (source: s3-05)\n- [décision] `viewer` stays the default role and SP-initiated login stays on (source: s3-07, s1-05)\n- [décision] SAML only for Fernhill, no OIDC for now (source: s1-03)\n- [décision] JIT only accepts verified domains; never create a user from an unverified domain (source: s2-03)\n- [décision] SSO enforced for all Fernhill users Dec 1 (source: src-linear-kes311) — note: the enforcement date also appears in a note (src-note-enforce), unconfirmed by the team here (source: src-note-enforce)",
+  "rendu": "- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, not merged (de: agent; source: ses-sso-3)\n- [prochaine-étape] Get a review on #421 so the mapping lands (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim, then create an admin test account and verify `Fernhill-Kestrel-Admins` → admin (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Demo with Fernhill IT, Thursday Nov 19, 10:00 New York (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [essai-raté] Sending the full return URL as RelayState (143 bytes) failed: their ADFS rejects it with MSIS7042, over the 80-byte cap — replaced by a server-side stored URL keyed by a short opaque ID (de: agent; source: ses-sso-3)\n- [essai-raté] First JIT test run failed on email domain casing; normalized to lowercase (de: agent; source: ses-sso-2)\n- [question] Fernhill IT asked (Slack) for `analyst` as default role and IdP-initiated only; both declined pending Maya's conversation — nothing to do unless that changes (de: connecteur, agent; source: src-slack-fernhill, ses-sso-3)\n- [décision] Short opaque RelayState ID, return URL stored in Redis for 10 minutes (de: toi; source: s3-03)\n- [décision] Map `Fernhill-Kestrel-Admins` to admin, everything else viewer, per-tenant config (de: toi; source: s3-05)\n- [décision] `viewer` stays the default role and SP-initiated login stays on (de: toi; source: s3-07, s1-05)\n- [décision] SAML only for Fernhill, no OIDC for now (de: toi; source: s1-03)\n- [décision] JIT only accepts verified domains; never create a user from an unverified domain (de: toi; source: s2-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1666,
+    "lignesRetirees": 1,
+    "decisions": 5,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4990,
+    "sortie": 1089,
+    "reflexion": 414,
+    "cache": 0,
+    "cout": 0.00100352
+  },
+  "cout": 0.00100352,
+  "latenceMs": 23551,
+  "fournisseur": "Cohere"
+}

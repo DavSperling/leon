@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:59.417Z",
+  "reponse": "Le problème venait de l'ajout d'un nouvel emplacement « Showroom » dans Shopify le 3 novembre : le script de synchronisation du stock ne mettait à jour que l'entrepôt, et Shopify additionnait les deux, ce qui faisait que le site affichait de l'ancien stock qui n'existait plus [8][9].\n\nC'est réparé : une modification (PR #87) a été fusionnée et déployée le 13 novembre pour mettre à jour tous les emplacements à partir des onglets de l'export [9].",
+  "rendu": "Le problème venait de l'ajout d'un nouvel emplacement « Showroom » dans Shopify le 3 novembre : le script de synchronisation du stock ne mettait à jour que l'entrepôt, et Shopify additionnait les deux, ce qui faisait que le site affichait de l'ancien stock qui n'existait plus [8][9].\n\nC'est réparé : une modification (PR #87) a été fusionnée et déployée le 13 novembre pour mettre à jour tous les emplacements à partir des onglets de l'export [9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 4912,
+    "sortie": 307,
+    "reflexion": 163,
+    "cache": 0,
+    "cout": 0.0022410999999999998
+  },
+  "latenceMs": 2594,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"meubles disponibles stock rupture achat\"}"
+  ],
+  "cout": 0.0022410999999999998
+}

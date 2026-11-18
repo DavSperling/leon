@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:44.432Z",
+  "reponse": "## Where things stand\n\nThe ACS endpoint now verifies SAML signature and conditions with signxml (python3-saml/xmlsec dropped as a dead end on Alpine), including audience, recipient, time window with a 120 s skew, and Redis replay protection. Code lives in api/auth/saml/verify.py after a move from saml_utils; tests, ruff and mypy are green, commits 3f9c2a1, b71e04d, e0a5c93 pushed, full suite passed (1284 passed).\n\n- [in-progress] PR kestrel-analytics/platform#412 is open, CI green, waiting on Maya's approving review — not merged\n- [next-step] Ping Maya for approval, then squash-merge PR #412\n- [next-step] Load Fernhill staging IdP metadata and send them our staging SP metadata by Wednesday EOD (demo Thursday 10:00 New York)\n- [next-step] Open a separate ticket: enforce SSO / disable password login for Fernhill users\n- [failed-trial] Building lxml from source to match xmlsec versions still failed (crypto library load error); python3-saml on Alpine is a dead end\n- [decision] Use signxml, drop python3-saml/xmlsec, write condition checks by hand, read only from signed_xml (source: t08)\n- [decision] Clock skew set to 120 s per Fernhill contract annex; password login untouched in this PR (source: t12)\n- [decision] No --admin, no --auto on the merge; you will ping Maya yourself (source: t21)",
+  "rendu": "- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [décision] Use signxml, drop python3-saml/xmlsec, write condition checks by hand, read only from signed_xml (source: t08)\n- [décision] Clock skew set to 120 s per Fernhill contract annex; password login untouched in this PR (source: t12)\n- [décision] No --admin, no --auto on the merge; you will ping Maya yourself (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 463,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4841,
+    "sortie": 372,
+    "reflexion": 15,
+    "cache": 0,
+    "cout": 0.0007819
+  },
+  "cout": 0.0007819,
+  "latenceMs": 19366,
+  "fournisseur": "DeepInfra"
+}

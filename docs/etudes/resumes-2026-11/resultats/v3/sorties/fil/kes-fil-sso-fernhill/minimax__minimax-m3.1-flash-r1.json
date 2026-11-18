@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:10.522Z",
+  "reponse": "## Where things stand\nFernhill SAML SSO works end to end on staging: the IdP metadata is loaded, a real login succeeds via a short opaque RelayState stored in Redis, JIT provisioning from the merged PR #415 creates users, and per-tenant group-to-role mapping is implemented in open PR #421. The remaining blocker is the `groups` claim on Fernhill's side; the demo is confirmed for Thursday Nov 19 at 10:00 New York (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [in-progress] PR #421 \"SAML: group to role mapping + short RelayState\" is open with commits 6d0e2b8 and f4a91c7; it needs review/merge (source: ses-sso-3)\n- [next-step] Fernhill IT must add the `groups` claim; the request was to be emailed, and their side of the demo checklist is still pending (source: ses-sso-3, src-linear-kes311)\n- [next-step] Once the claim exists, verify that `Fernhill-Kestrel-Admins` maps to `admin` and that other users land as `viewer`, including on every subsequent login so Fernhill-side role changes take effect (source: s3-05, s3-06)\n- [next-step] Run the Thursday 10:00 ET demo with the `kestrel.test1` account plus an admin test account (source: s3-08, src-linear-kes311)\n- [failed-attempt] Full return URL as RelayState failed against Fernhill's ADFS: `MSIS7042: The RelayState parameter is too long` (143 bytes vs the 80-byte SAML cap); replaced by a 22-char opaque ID mapping to a Redis key with a 600 s TTL, deleted on use (source: s3-02, s3-03)\n- [failed-attempt] The first JIT test run failed on a case mismatch (`Daniel@Fernhill-Bank.example` vs lowercase domain list); fixed by lowercasing domains (source: s2-02)\n- [question] Whether to switch Fernhill's default role to `analyst` and disable SP-initiated login, as Fernhill IT asked — not decided; the user refused pending a conversation with Maya, noting `analyst` is not an existing role (source: s3-06, s3-07, src-slack-fernhill)\n- [decision] RelayState is a short opaque ID with the return URL kept server-side in Redis for 10 minutes (source: s3-03)\n- [decision] `Fernhill-Kestrel-Admins` maps to `admin`, everything else to `viewer`, configured per tenant and applied on every login (source: s3-05)\n- [decision] Default role stays `viewer` and SP-initiated login stays enabled for Fernhill (source: s3-07)\n- [decision] Fernhill uses SAML only, no OIDC for now; both SP-initiated and IdP-initiated flows are supported (source: s1-03)\n- [decision] JIT provisioning creates a user on first SAML login only for verified domains; unverified domains are refused even if the IdP sends them (source: s2-03, src-pr415)",
+  "rendu": "- [question] Whether to switch Fernhill's default role to `analyst` and disable SP-initiated login, as Fernhill IT asked — not decided; the user refused pending a conversation with Maya, noting `analyst` is not an existing role (de: toi, connecteur, agent; source: s3-06, s3-07, src-slack-fernhill)\n- [décision] RelayState is a short opaque ID with the return URL kept server-side in Redis for 10 minutes (de: toi; source: s3-03)\n- [décision] `Fernhill-Kestrel-Admins` maps to `admin`, everything else to `viewer`, configured per tenant and applied on every login (de: toi; source: s3-05)\n- [décision] Default role stays `viewer` and SP-initiated login stays enabled for Fernhill (de: toi; source: s3-07)\n- [décision] Fernhill uses SAML only, no OIDC for now; both SP-initiated and IdP-initiated flows are supported (de: toi; source: s1-03)\n- [décision] JIT provisioning creates a user on first SAML login only for verified domains; unverified domains are refused even if the IdP sends them (de: toi, équipe; source: s2-03, src-pr415)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1034,
+    "lignesRetirees": 6,
+    "decisions": 5,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4571,
+    "sortie": 704,
+    "reflexion": 8,
+    "cache": 1024,
+    "cout": 0.00096981
+  },
+  "cout": 0.00096981,
+  "latenceMs": 4553,
+  "fournisseur": "Together"
+}

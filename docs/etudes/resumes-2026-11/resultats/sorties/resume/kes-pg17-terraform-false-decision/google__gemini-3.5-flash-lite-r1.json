@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:37.232Z",
+  "reponse": "## Où j'en suis\nL'équipe a préparé la mise à jour PostgreSQL 17 pour l'instance RDS d'analyse de staging via un déploiement blue/green et a ouvert une PR brouillon. L'environnement de production a également été préparé avec la mise à jour désactivée par défaut, en attendant les validations et la sélection d'une fenêtre de maintenance évitant les verrous dbt.\n\n- [en-cours] Draft PR [kestrel-analytics/infra#57](https://github.com/kestrel-analytics/infra/pull/57) ouverte pour le passage de staging à PostgreSQL 17.\n- [prochaine-étape] Mettre à niveau pg_partman vers la version 5.x sur staging avant d'appliquer les changements.\n- [prochaine-étape] Choisir la fenêtre de production après la validation de Maya en évitant le verrou dbt (01:00–03:30 UTC).\n- [décision] Épingler le fournisseur AWS à `~> 5.82.0` pour éviter la mise à jour vers la v6 dans cette PR (source: t04).\n- [décision] Garder `apply_immediately` à `false` sur la production (source: t14).",
+  "rendu": "## Où j'en suis\nL'équipe a préparé la mise à jour PostgreSQL 17 pour l'instance RDS d'analyse de staging via un déploiement blue/green et a ouvert une PR brouillon. L'environnement de production a également été préparé avec la mise à jour désactivée par défaut, en attendant les validations et la sélection d'une fenêtre de maintenance évitant les verrous dbt.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] Draft PR [kestrel-analytics/infra#57](https://github.com/kestrel-analytics/infra/pull/57) ouverte pour le passage de staging à PostgreSQL 17.\n- [prochaine-étape] Mettre à niveau pg_partman vers la version 5.x sur staging avant d'appliquer les changements.\n- [prochaine-étape] Choisir la fenêtre de production après la validation de Maya en évitant le verrou dbt (01:00–03:30 UTC).",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 881,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4163,
+    "sortie": 288,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0019689
+  },
+  "cout": 0.0019689,
+  "latenceMs": 1518,
+  "fournisseur": "Google"
+}

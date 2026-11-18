@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-audit-date-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:23.943Z",
+  "reponse": "L'audit était prévu le mardi 8 décembre 2026, de 8h30 à 16h, sur le chantier CH-2604 Le Floch à Rezé [3][1]. Le 17 novembre, Certénergie a signalé un empêchement de l'auditeur et un report au jeudi 10 décembre, sur le même chantier [2]. Ce report attend encore une confirmation écrite de Laure Bihan, et le planning n'a pas été modifié [2]. Une note issue d'une session de code indique aussi que Franck aurait demandé de bloquer le 8/12 dans planif, mais ce n'est pas vérifié [4]. La lettre d'engagement précise que le chantier doit être en cours ou achevé depuis moins de 12 mois [5].",
+  "rendu": "L'audit était prévu le mardi 8 décembre 2026, de 8h30 à 16h, sur le chantier CH-2604 Le Floch à Rezé [3][1]. Le 17 novembre, Certénergie a signalé un empêchement de l'auditeur et un report au jeudi 10 décembre, sur le même chantier [2]. Ce report attend encore une confirmation écrite de Laure Bihan, et le planning n'a pas été modifié [2]. Une note issue d'une session de code indique aussi que Franck aurait demandé de bloquer le 8/12 dans planif, mais ce n'est pas vérifié [4]. La lettre d'engagement précise que le chantier doit être en cours ou achevé depuis moins de 12 mois [5].",
+  "mesures": {
+    "mots": 105,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1610,
+    "sortie": 852,
+    "reflexion": 591,
+    "cache": 0,
+    "cout": 0.000587
+  },
+  "cout": 0.000587,
+  "latenceMs": 4740,
+  "fournisseur": "Google"
+}

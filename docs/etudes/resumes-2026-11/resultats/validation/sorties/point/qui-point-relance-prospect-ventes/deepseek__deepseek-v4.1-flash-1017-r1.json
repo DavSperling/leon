@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:22:33.301Z",
+  "reponse": "## What is still open\n- Your follow-up email to Nadia and Tom hasn't gone out. Sofia says CAD payouts are Q2 at the earliest — Corvane is reviewing the cross-border program — and no date should be written to a prospect, so the Q1 2027 line has to come out first [1][6].\n- The 15% two-year discount you want to propose (~$1.0M/year at their volume) is above the 10% you can give alone: Rachel wants to talk before you send them numbers [1][3].\n- The SIG Lite (~200 questions) is due Mon Nov 23 and Hearthly's security team won't keep a vendor in the final round without it; you still haven't confirmed Shira is the one who fills it [1][4].\n- The reference call has no customer named yet — you were going to ask Rachel who you can use [1].\n\n## What changed\n- Hearthly moved its provider decision to Wed Dec 2 instead of Dec 4 (board meeting moved), which pulls your mutual action plan dates forward [1][4].\n\n## What you did\n- Worked the Hearthly discovery into a follow-up: instant payouts, CAD to Canadian pros and 1099-K filing answered to their three asks, priced at 15% off the 2027 grid for a two-year commit [1].\n- Laid out the mutual action plan working back from their decision date: questionnaire, Tom's volumes by country, proposal, reference call, legal review [1].",
+  "rendu": "## What is still open\n- Your follow-up email to Nadia and Tom hasn't gone out. Sofia says CAD payouts are Q2 at the earliest — Corvane is reviewing the cross-border program — and no date should be written to a prospect, so the Q1 2027 line has to come out first [1][6].\n- The 15% two-year discount you want to propose (~$1.0M/year at their volume) is above the 10% you can give alone: Rachel wants to talk before you send them numbers [1][3].\n- The SIG Lite (~200 questions) is due Mon Nov 23 and Hearthly's security team won't keep a vendor in the final round without it; you still haven't confirmed Shira is the one who fills it [1][4].\n- The reference call has no customer named yet — you were going to ask Rachel who you can use [1].\n\n## What changed\n- Hearthly moved its provider decision to Wed Dec 2 instead of Dec 4 (board meeting moved), which pulls your mutual action plan dates forward [1][4].\n\n## What you did\n- Worked the Hearthly discovery into a follow-up: instant payouts, CAD to Canadian pros and 1099-K filing answered to their three asks, priced at 15% off the 2027 grid for a two-year commit [1].\n- Laid out the mutual action plan working back from their decision date: questionnaire, Tom's volumes by country, proposal, reference call, legal review [1].",
+  "mesures": {
+    "mots": 220,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3925,
+    "sortie": 1527,
+    "reflexion": 1203,
+    "cache": 1536,
+    "cout": 0.00103136376
+  },
+  "cout": 0.00103136376,
+  "latenceMs": 17063,
+  "fournisseur": "DeepInfra"
+}

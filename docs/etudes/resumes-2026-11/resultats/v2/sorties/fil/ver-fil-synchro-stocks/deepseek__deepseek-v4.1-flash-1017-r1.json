@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:29:26.103Z",
+  "reponse": "## Où j'en suis\nLa synchro de nuit du 15 au 16/11 a été annulée faute de CSV TransAlp, déposé 47 minutes après le passage du script, laissant une quarantaine de références non mises à jour sur le site ; des reprises à 4 h et 6 h ont été ajoutées dans `scripts/cron.ts` avec mail à Karim si le CSV manque toujours à 6 h (commit `d7c2e41`, fuseau `Europe/Paris` corrigé après un test rouge), le stock du 17/11 a été resynchronisé à la main, et la PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte avec Hugo en relecteur. La PR #87 (webhooks sans décrément, synchro en valeur absolue) est fusionnée. (source: u3-02, u3-04, u3-06, u3-08, src-pr87, d7c2e41)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, en attente de la relecture d'Hugo (source: u3-08, u3-10)\n- [prochaine-étape] relire puis fusionner la PR #96 une fois l'accord d'Hugo (source: u3-10)\n- [prochaine-étape] suivre avec Lucie les commandes Saône survendues (source: src-zendesk-1041, ses-st-1)\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : ne réglait pas le double décrément, `orders/create` et `orders/updated` ayant des identifiants différents et Shopify décrémentant déjà de son côté (source: u1-01)\n- [décision] pas de réservation des 2 tables Saône pour les Galeries Brotteaux dans la synchro : Claire voit ce point avec eux, on ne touche pas au script (source: u3-09)\n- [décision] les webhooks ne décrémentent plus le stock, la synchro de nuit est seule à corriger, en valeur absolue (source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (source: u1-04)",
+  "rendu": "## Où j'en suis\nLa synchro de nuit du 15 au 16/11 a été annulée faute de CSV TransAlp, déposé 47 minutes après le passage du script, laissant une quarantaine de références non mises à jour sur le site ; des reprises à 4 h et 6 h ont été ajoutées dans `scripts/cron.ts` avec mail à Karim si le CSV manque toujours à 6 h (commit `d7c2e41`, fuseau `Europe/Paris` corrigé après un test rouge), le stock du 17/11 a été resynchronisé à la main, et la PR #96 « reprises à 4 h et 6 h, alerte si le CSV manque » est ouverte avec Hugo en relecteur. La PR #87 (webhooks sans décrément, synchro en valeur absolue) est fusionnée. (de: équipe, agent; source: u3-02, u3-04, u3-06, u3-08, src-pr87, d7c2e41)\n\n- [en-cours] PR maison-verdier/boutique#96 ouverte, en attente de la relecture d'Hugo (de: agent; source: u3-08, u3-10)\n- [prochaine-étape] relire puis fusionner la PR #96 une fois l'accord d'Hugo (de: agent; source: u3-10)\n- [prochaine-étape] suivre avec Lucie les commandes Saône survendues (de: connecteur, agent; source: src-zendesk-1041, ses-st-1)\n- [essai-raté] dédoublonnage par `X-Shopify-Webhook-Id` : ne réglait pas le double décrément, `orders/create` et `orders/updated` ayant des identifiants différents et Shopify décrémentant déjà de son côté (de: agent; source: u1-01)\n- [décision] pas de réservation des 2 tables Saône pour les Galeries Brotteaux dans la synchro : Claire voit ce point avec eux, on ne touche pas au script (de: toi; source: u3-09)\n- [décision] les webhooks ne décrémentent plus le stock, la synchro de nuit est seule à corriger, en valeur absolue (de: toi, équipe; source: u1-02, src-pr87)\n- [décision] seuil d'alerte stock bas ramené à 3 unités (de: toi; source: u1-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1697,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4417,
+    "sortie": 1518,
+    "reflexion": 968,
+    "cache": 0,
+    "cout": 0.001318737
+  },
+  "cout": 0.001318737,
+  "latenceMs": 13042,
+  "fournisseur": "DeepInfra"
+}

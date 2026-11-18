@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:00:18.774Z",
+  "reponse": "PO-2291 porte sur 12 buffets « Rhône » en chêne naturel, à 690 € HT l’unité, soit 8 280 € HT, avec paiement à 60 jours fin de mois [1][2]. Les buffets sont emballés ; l’enlèvement est prévu le 24 novembre et la livraison au magasin le 25, avant la date limite souhaitée du 27 novembre [3][1]. La facturation est prévue à la livraison, avec un encaissement attendu fin janvier [4].",
+  "rendu": "PO-2291 porte sur 12 buffets « Rhône » en chêne naturel, à 690 € HT l’unité, soit 8 280 € HT, avec paiement à 60 jours fin de mois [1][2]. Les buffets sont emballés ; l’enlèvement est prévu le 24 novembre et la livraison au magasin le 25, avant la date limite souhaitée du 27 novembre [3][1]. La facturation est prévue à la livraison, avec un encaissement attendu fin janvier [4].",
+  "mesures": {
+    "mots": 66,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4450,
+    "sortie": 235,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005625
+  },
+  "cout": 0.0005625,
+  "latenceMs": 2938,
+  "fournisseur": "Azure"
+}

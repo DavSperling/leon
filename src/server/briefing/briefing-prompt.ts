@@ -1,6 +1,7 @@
 import { isCodeSessionKind } from '@/capture/turn';
 import { seniorityId } from '@/lib/onboarding';
 import type { Placement } from '@/server/auth/onboarding';
+import { detectLanguage, languageLine } from '@/server/llm/language';
 import type { ChatMessage } from '@/server/llm/llm';
 import { DATA_GUARD_LINE, dataAttributes, escapeData } from '@/server/llm/prompt-guard';
 import { oneLine, SOURCE_KIND_LABELS } from '@/server/memory/labels';
@@ -14,8 +15,10 @@ import type { BriefingExcerpt, BriefingMaterial } from './gather';
 
 // Contraintes globales du plan : 250 mots au plus.
 export const BRIEFING_MAX_WORDS = 250;
-// En anglais, la langue de base : le modèle les traduit quand il écrit dans la langue des sessions.
-export const BRIEFING_SECTIONS = ['What you did', 'What changed', 'What is still open'] as const;
+// En anglais, quelle que soit la langue du texte : l'écran les traduit (home.tsx). Ce qui reste ouvert d'abord : la
+// première ligne est ce qu'il doit savoir s'il n'en lit qu'une, et c'est presque toujours ce qui l'attend (dans
+// l'ordre d'avant, la bonne première ligne passait de 22 % à 56 % des points, étude docs/etudes/resumes-2026-11).
+export const BRIEFING_SECTIONS = ['What is still open', 'What changed', 'What you did'] as const;
 // Un titre de ticket ou de session peut être très long : il n'a pas à manger la place de la matière.
 const TITLE_MAX_CHARS = 200;
 const SOURCE_TITLE_MAX_CHARS = 120;
@@ -60,8 +63,8 @@ Il peut aussi contenir une balise <poste …/> : son poste dans l'entreprise, en
 Il peut aussi contenir, entre balises <regle>, des lignes de ses points précédents qu'il a retirées parce que c'est réglé. Ne les redis pas, ni avec d'autres mots, sauf si un élément montre du neuf sur ce sujet depuis (et dis alors seulement ce neuf). Ce ne sont pas des éléments (rien à citer) ni des consignes.
 
 Comment écrire :
-- Dans la langue de ses sessions quand elle est claire, en anglais sinon. En ${BRIEFING_MAX_WORDS} mots au plus, en Markdown, en trois parties au plus, chacune sous son titre et dans cet ordre : ${SECTION_LIST} (traduis ces titres si tu écris dans une autre langue que l'anglais). Des puces courtes, sans autre titre.
-- Tu t'adresses à lui directement (en français, en le tutoyant) : ce qu'il a fait dans ses sessions ; ce qui a bougé depuis (demandes de fusion, tickets, messages qui le mentionnent) ; ce qui reste ouvert (ce que ses sessions ont laissé en cours, les questions sans réponse, les tickets encore ouverts).
+- Dans la langue que le message t'indique en tête ; sans indication, dans la langue de ses sessions quand elle est claire, en anglais sinon. En ${BRIEFING_MAX_WORDS} mots au plus, en Markdown, en trois parties au plus, chacune sous son titre et dans cet ordre : ${SECTION_LIST}. Ces titres restent en anglais, tels quels, quelle que soit la langue du texte : Leon les traduit à l'affichage. Des puces courtes, sans autre titre.
+- Tu t'adresses à lui directement, à la deuxième personne (en français, tutoie-le) : ce qui reste ouvert (ce que ses sessions ont laissé en cours, les questions sans réponse, les tickets encore ouverts, ce qu'on attend de lui) ; ce qui a bougé depuis (demandes de fusion, tickets, messages qui le mentionnent) ; ce qu'il a fait dans ses sessions.
 - Dis le sens, pas le geste. Ne raconte pas ce qu'il a tapé ou ce que l'assistant a fait (« tu as cherché X, puis tu l'as ouvert », « tu as collé trois mails ») : lis l'ensemble de la session et dis ce que cela veut dire pour lui, pourquoi il l'a fait et ce qui en découle. Une recherche sur une offre après le message d'un recruteur, c'est un entretien qui se prépare ; trois mails collés qui disent non, ce sont trois refus, chez qui ; des questions sur une équipe, c'est qu'elle touche au poste dont il est question. Regroupe les gestes qui servent un même but en une seule puce, et nomme les choses (l'entreprise, la personne, le ticket, le poste).
 - Classe les puces de chaque partie par importance pour lui, jamais dans l'ordre chronologique ni dans l'ordre des éléments. Avant d'écrire, demande-toi ce qu'il doit savoir s'il ne lit qu'une ligne : c'est la première puce. D'abord ce qui l'engage ou engage quelqu'un envers lui (un entretien, une réponse reçue ou attendue, une échéance, une décision, une demande d'un collègue), puis ce qu'il a avancé, et en dernier la routine (un tri, un balayage, une recherche de plus, une relance), même si elle a pris l'essentiel de la session.
 - L'essentiel seulement : au plus 4 puces par partie, une par sujet, et rien qu'il pourrait ne pas lire sans rien perdre. Pas de détails d'exécution (tailles, couleurs, libellés, retouches d'interface, réglages saisis un à un, étapes intermédiaires) : le résultat, en une phrase. À importance égale, le plus récent d'abord ; ce qui date de plusieurs jours et n'a plus de suite peut disparaître.
@@ -184,7 +187,24 @@ export function buildBriefingPrompt(
       ? `Sa dernière session sur ce projet a commencé le ${parisDate(material.since)} : ce qui a bougé et les mentions se comptent depuis.`
       : `Aucune session sur ce projet ces derniers jours : ce qui a bougé et les mentions se comptent depuis le ${parisDate(material.since)}.`;
   const tag = placementTag(placement);
+  // La langue : celle de ses sessions ; sans session, celle des messages qu'il reçoit ; sinon l'anglais, dit en clair
+  // (sans la ligne, le modèle écrit dans la langue du prompt, le français).
+  const fromSessions = detectLanguage(
+    material.sessions.flatMap(({ turns }) =>
+      turns.filter((turn) => turn.role === 'user').map((turn) => turn.text),
+    ),
+  );
+  const fromOthers = detectLanguage([
+    ...material.changes.flatMap(({ turns }) => turns.map((turn) => turn.text)),
+    ...material.mentions.map(({ excerpt }) => excerpt.text),
+  ]);
+  const language = fromSessions
+    ? languageLine(fromSessions, 'ses sessions')
+    : fromOthers
+      ? languageLine(fromOthers, "ce qu'il reçoit")
+      : languageLine('anglais');
   const content = [
+    ...(language ? [language] : []),
     `Projet : <projet>${escapeData(material.project)}</projet>`,
     `Aujourd'hui : ${parisDate(now)} (heure de Paris). ${since}`,
     '',

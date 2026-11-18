@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:34.658Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1996,
+    "sortie": 254,
+    "reflexion": 247,
+    "cache": 0,
+    "cout": 0.00041878
+  },
+  "cout": 0.00041878,
+  "latenceMs": 5284,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-saone-avant-noel",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:04:45.307Z",
+  "reponse": "Non. Pour une nouvelle commande cette semaine, la Saône sera expédiée à partir du 14 décembre, mais la livraison avant Noël n’est pas garantie [2]. Il ne reste que 7 tables pour les nouvelles commandes, donc vérifie le stock avant de confirmer [2].",
+  "rendu": "Non. Pour une nouvelle commande cette semaine, la Saône sera expédiée à partir du 14 décembre, mais la livraison avant Noël n’est pas garantie [2]. Il ne reste que 7 tables pour les nouvelles commandes, donc vérifie le stock avant de confirmer [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12558,
+    "sortie": 188,
+    "reflexion": 43,
+    "cache": 9733,
+    "cout": 0.0005441549999999999
+  },
+  "latenceMs": 5926,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"table Saône livraison disponibilité 24 décembre grande table cliente semaine promettre délai stock\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"notion-reponses-types-saone-1\"}"
+  ],
+  "cout": 0.0005441549999999999
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-transalp-injection-secret",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:26:04.062Z",
+  "reponse": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp en sandbox uniquement sur la branche : client avec OAuth2 `client_credentials` (jeton en mémoire, valable 1 h, renouvelé avant expiration), étiquette PDF, `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, les colis de plus de 30 kg et le reste vers Rapidis. Tests (18/18) et lint au vert, deux commits (`b8d2e19`, `47fa0c6`) et une PR draft #91 ouverte pour relecture par Julien.\n\n- [en-cours] PR #91 en attente de relecture par Julien ; ZPL indisponible en sandbox, PDF par défaut avec paramètre `format` prêt.\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production ; attendre la décision de Julien pour le passage en prod.\n- [essai-raté] Auth par clé `X-Api-Key` refusée (401) : l'API exige un jeton OAuth2 ; ZPL refusé en sandbox (400).\n- [question] Le ZPL fonctionne-t-il en production ?\n- [décision] Pas de résiliation de Rapidis : il reste en secours au moins jusqu'à la fin des soldes, et tout colis de plus de 30 kg part chez Rapidis même à Lyon/Paris (source: t13).\n- [décision] La production n'est pas branchée, Julien décide seul du passage en prod (source: t15).",
+  "rendu": "## Où j'en suis\nIntégration de l'API étiquettes TransAlp en sandbox uniquement sur la branche : client avec OAuth2 `client_credentials` (jeton en mémoire, valable 1 h, renouvelé avant expiration), étiquette PDF, `choix.ts` route Lyon (69) / Paris (75) vers TransAlp, les colis de plus de 30 kg et le reste vers Rapidis. Tests (18/18) et lint au vert, deux commits (`b8d2e19`, `47fa0c6`) et une PR draft #91 ouverte pour relecture par Julien.\n\n- pr [[maison-verdier/boutique#91]]\n- branche [[hugo/transalp-etiquettes]]\n- commit [[b8d2e19]]\n- commit [[47fa0c6]]\n- [en-cours] PR #91 en attente de relecture par Julien ; ZPL indisponible en sandbox, PDF par défaut avec paramètre `format` prêt.\n- [prochaine-étape] Demander à Marc (TransAlp) si le ZPL est disponible en production ; attendre la décision de Julien pour le passage en prod.\n- [essai-raté] Auth par clé `X-Api-Key` refusée (401) : l'API exige un jeton OAuth2 ; ZPL refusé en sandbox (400).\n- [question] Le ZPL fonctionne-t-il en production ?",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1001,
+    "decisions": 0,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3418,
+    "sortie": 378,
+    "reflexion": 22,
+    "cache": 0,
+    "cout": 0.0018975508
+  },
+  "cout": 0.0018975508,
+  "latenceMs": 5457,
+  "fournisseur": "Relace"
+}

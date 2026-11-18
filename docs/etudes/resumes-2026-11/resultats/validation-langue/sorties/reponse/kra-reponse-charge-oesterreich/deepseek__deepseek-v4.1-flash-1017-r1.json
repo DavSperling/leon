@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:45:36.129Z",
+  "reponse": "Aus den Lieferdaten zur Charge 26-38 (Artikel 4012-125P) gingen an Bauprofi Huber GmbH in Linz 116 Geräte, dazu 120 aus der Lieferung vom 12.11., also 236 [1]. An Eisen-Mayr KG in Graz gingen 60, dazu 60 aus der Lieferung vom 12.11., also 120 [1]. Die Zuordnung dieser Kundennummern zu den österreichischen Händlern steht im Kundenstamm [2]. Für Werkzeughaus Tirol in Innsbruck nennt der Auszug keine Stückzahl zur Charge [1][2].",
+  "rendu": "Aus den Lieferdaten zur Charge 26-38 (Artikel 4012-125P) gingen an Bauprofi Huber GmbH in Linz 116 Geräte, dazu 120 aus der Lieferung vom 12.11., also 236 [1]. An Eisen-Mayr KG in Graz gingen 60, dazu 60 aus der Lieferung vom 12.11., also 120 [1]. Die Zuordnung dieser Kundennummern zu den österreichischen Händlern steht im Kundenstamm [2]. Für Werkzeughaus Tirol in Innsbruck nennt der Auszug keine Stückzahl zur Charge [1][2].",
+  "mesures": {
+    "mots": 69,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1477,
+    "sortie": 774,
+    "reflexion": 628,
+    "cache": 0,
+    "cout": 0.00054876
+  },
+  "cout": 0.00054876,
+  "latenceMs": 4995,
+  "fournisseur": "Novita"
+}

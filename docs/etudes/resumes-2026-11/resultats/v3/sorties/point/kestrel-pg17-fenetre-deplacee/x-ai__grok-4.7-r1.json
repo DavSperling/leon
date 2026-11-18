@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T17:56:18.390Z",
+  "reponse": "## What is still open\n\n- Prod PG17 blue/green is ready in #321 (the read replica follows the deployment; plan is 2 changes, 0 destroys; a clone rehearsal showed 74s of write downtime, and that clone is deleted). Maya approved it, then moved the window to Sunday 22/11, 02:00–04:00 UTC because Fernhill’s month-end batch runs Saturday night — update the runbook and merge. [1][3][8]\n- Rollback is still to rehearse on a fresh clone Thursday 19/11: after switchover the old instance gets no writes and diverges, so it is not a switch-back. [1]\n- Daniel is on call Sunday for the API; ping him when you start the switchover. [7]\n- Give Lior 30 minutes’ notice before switchover so he can pause ingest consumers (they read DATABASE_URL from SSM; nothing to change on their side). [9]",
+  "rendu": "## What is still open\n\n- Prod PG17 blue/green is ready in #321 (the read replica follows the deployment; plan is 2 changes, 0 destroys; a clone rehearsal showed 74s of write downtime, and that clone is deleted). Maya approved it, then moved the window to Sunday 22/11, 02:00–04:00 UTC because Fernhill’s month-end batch runs Saturday night — update the runbook and merge. [1][3][8]\n- Rollback is still to rehearse on a fresh clone Thursday 19/11: after switchover the old instance gets no writes and diverges, so it is not a switch-back. [1]\n- Daniel is on call Sunday for the API; ping him when you start the switchover. [7]\n- Give Lior 30 minutes’ notice before switchover so he can pause ingest consumers (they read DATABASE_URL from SSM; nothing to change on their side). [9]",
+  "mesures": {
+    "mots": 130,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6249,
+    "sortie": 4151,
+    "reflexion": 3945,
+    "cache": 1152,
+    "cout": 0.035676
+  },
+  "cout": 0.035676,
+  "latenceMs": 65478,
+  "fournisseur": "xAI"
+}

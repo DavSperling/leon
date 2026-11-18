@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:12.430Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "fin": "limite",
+    "etapes": 8,
+    "vide": true,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 27900,
+    "sortie": 766,
+    "reflexion": 288,
+    "cache": 18944,
+    "cout": 0.0015336199999999999
+  },
+  "latenceMs": 6119,
+  "fournisseur": "InferenceNet",
+  "trace": [
+    "chercher {\"requete\":\"dossier aide client refusé\"}",
+    "chercher {\"requete\":\"refus dossier subvention motif\"}",
+    "chercher {\"requete\":\"refus notification Anah dossier client\",\"depuis\":\"6m\"}",
+    "chercher {\"requete\":\"\\\"refus\\\" prime dossier 2026\",\"outil\":\"slack\"}",
+    "lire {\"sourceId\":\"6\"}",
+    "lire {\"sourceId\":\"12\"}",
+    "lire {\"passageId\":\"sl-aides-2\"}",
+    "lire {\"passageId\":\"dr-suivi-mpr-1\"}"
+  ],
+  "cout": 0.0015336199999999999
+}

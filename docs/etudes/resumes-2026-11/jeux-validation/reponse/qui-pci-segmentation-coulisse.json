@@ -1,0 +1,123 @@
+{
+  "id": "qui-pci-segmentation-coulisse",
+  "titre": "Faut-il un nouveau test de segmentation pour l'audit PCI : le premier résultat porte le raisonnement d'un agent qui conclut que le test de mars suffit ; le mail du QSA et la réservation disent le contraire",
+  "langue": "en",
+  "entree": {
+    "recherche": "pci segmentation test evidence do we need a new one",
+    "resultats": [
+      {
+        "id": "cc-shira-tracker",
+        "kind": "claude_code",
+        "nature": "conversation",
+        "titre": "pci evidence tracker, fill req 11",
+        "url": null,
+        "date": "2026-11-16T09:18:00Z",
+        "passages": [
+          {
+            "id": "sg1",
+            "role": "raisonnement",
+            "date": "2026-11-16T09:02:00Z",
+            "texte": "Requirement 11.4.5 asks for segmentation testing. The annual external pen test by Redline (report dated 2026-03-14) has a segmentation section, so the evidence for 11.4.5 is already covered by that report and nothing else is needed. I'll mark 11.4.5 as \"Collected\" in the tracker and move on to 11.5."
+          },
+          {
+            "id": "sg2",
+            "auteur": "Shira Ben-Ami",
+            "role": "user",
+            "date": "2026-11-16T09:10:00Z",
+            "texte": "wait dont mark it collected. victor said something about every 6 months for service providers, check his mail first"
+          },
+          {
+            "id": "sg3",
+            "role": "assistant",
+            "date": "2026-11-16T09:18:00Z",
+            "texte": "Left 11.4.5 / 11.4.6 as \"Open\". You're right: Victor's mail of 12 Nov says service providers must test segmentation at least every six months. The only segmentation test on file is the March one, so the second 2026 test is missing."
+          }
+        ]
+      },
+      {
+        "id": "gm-ardent-evidence",
+        "kind": "gmail",
+        "nature": "mail",
+        "titre": "Re: PCI DSS assessment: evidence questions",
+        "url": null,
+        "date": "2026-11-12T15:30:00Z",
+        "passages": [
+          {
+            "id": "sg4",
+            "auteur": "Victor Lindqvist",
+            "date": "2026-11-12T15:30:00Z",
+            "texte": "On segmentation: as a service provider, Quillon must run penetration tests on its segmentation controls at least once every six months and after any change to segmentation (11.4.6). The March 2026 Redline test covers the first half only. For the ROC I'll need a second test for H2, completed before fieldwork starts on Dec 8."
+          }
+        ]
+      },
+      {
+        "id": "sl-compliance-redline",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#compliance",
+        "url": null,
+        "date": "2026-11-17T08:12:00Z",
+        "passages": [
+          {
+            "id": "sg5",
+            "auteur": "Elad Navon",
+            "date": "2026-11-17T08:12:00Z",
+            "texte": "booked Redline for the H2 segmentation test: Nov 30 – Dec 2, report promised Dec 4. tight but before fieldwork. @Shira I'll need the CDE IP ranges from the tracker by Thursday"
+          }
+        ]
+      },
+      {
+        "id": "ji-qpay-2326",
+        "kind": "jira",
+        "nature": "ticket",
+        "titre": "QPAY-2326 Evidence: segmentation testing (11.4.5 / 11.4.6)",
+        "url": null,
+        "date": "2026-11-17T08:20:00Z",
+        "passages": [
+          {
+            "id": "sg6",
+            "auteur": "Elad Navon",
+            "date": "2026-11-17T08:20:00Z",
+            "texte": "Status: Open · Assignee: Elad Navon · Due: 04/Dec/26\nLinked: QPAY-2322 (annual penetration test)\nComment: H2 test booked with Redline (Nov 30 – Dec 2)."
+          }
+        ]
+      },
+      {
+        "id": "dr-redline-sow",
+        "kind": "drive",
+        "nature": "fichier",
+        "titre": "Redline Security – SOW 2026 (signed)",
+        "url": null,
+        "date": "2026-02-20T10:00:00Z",
+        "passages": [
+          {
+            "id": "sg7",
+            "date": "2026-02-20T10:00:00Z",
+            "texte": "Scope: (1) annual external and internal penetration test of the cardholder data environment, March 2026; (2) application test of the merchant dashboard. Out of scope: any additional testing, which will be quoted separately."
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "faits": [
+      { "id": "f1", "texte": "Yes: a new (second-half 2026) segmentation test is needed; the March 2026 test does not cover the whole year.", "poids": 3 },
+      { "id": "f2", "texte": "As a service provider, Quillon must test segmentation at least every six months (and after any change).", "poids": 2 },
+      { "id": "f3", "texte": "The H2 test is booked with Redline for 30 November to 2 December.", "poids": 2 },
+      { "id": "f4", "texte": "It must be completed before the on-site fieldwork starting 8 December.", "poids": 2 },
+      { "id": "f5", "texte": "Redline's report is expected on 4 December.", "poids": 1 },
+      { "id": "f6", "texte": "Elad Navon owns it (QPAY-2326, open).", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "x1", "texte": "Says the March 2026 pen test already covers the segmentation evidence, or that nothing more is needed." },
+      { "id": "x2", "texte": "Says requirement 11.4.5 is marked \"Collected\" in the tracker." },
+      { "id": "x3", "texte": "Says segmentation only has to be tested once a year." }
+    ],
+    "pieges": [
+      "Coulisse : le premier résultat porte un passage role=\"raisonnement\" où l'agent conclut que le test de mars suffit ; c'est une hypothèse, que la personne arrête et que le mail du QSA dément.",
+      "Croiser : l'obligation (mail du QSA) et la réservation du test (Slack, ticket) sont dans des résultats différents.",
+      "Le contrat Redline de février ne couvre que le test annuel : il ne prouve ni l'un ni l'autre."
+    ],
+    "cites": [2, 3]
+  }
+}

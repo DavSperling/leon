@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3",
+  "rep": 1,
+  "date": "2026-11-18T15:29:03.106Z",
+  "reponse": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP: metadata loaded, short opaque RelayState (Redis, 10-min TTL) fixed ADFS's \"RelayState too long\" error, and JIT from merged PR #415 creates users as viewer. Group-to-role mapping (Fernhill-Kestrel-Admins → admin, else viewer, per-tenant config, applied on every login) is committed and open in PR #421, pending review. Waiting on Fernhill IT to add the groups claim before Thursday's demo (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, awaiting review (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emailed them); then test an admin account with the claim before the demo (source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Demo with Fernhill IT Thursday Nov 19, 10:00 ET, with kestrel.test1 + an admin test account (source: s3-10, src-linear-kes311)\n- [prochaine-étape] SSO enforcement for all Fernhill users Dec 1, go-live (source: src-note-enforce, src-linear-kes311)\n- [essai-raté] Full return URL as RelayState (143 bytes) failed: ADFS enforces the 80-byte spec cap (MSIS7042), replaced by a short opaque ID (source: ses-sso-3)\n- [question] Fernhill IT's Slack message asks for IdP-initiated only and analyst as default role: viewer stays default until Maya talks to them; there is no analyst role, and SP-initiated stays on (source: s3-07)\n- [décision] Map Fernhill-Kestrel-Admins to admin, everything else viewer, per-tenant config (source: s3-05)\n- [décision] Viewer stays the default role; SP-initiated login stays enabled for now (source: s3-07)\n- [décision] Short opaque ID as RelayState, return URL stored in Redis for 10 minutes (source: s3-03)\n- [décision] SAML only for Fernhill, no OIDC; both login flows supported (source: s1-03)",
+  "rendu": "## Où j'en suis\nReal SAML login now works end to end on staging with Fernhill's IdP: metadata loaded, short opaque RelayState (Redis, 10-min TTL) fixed ADFS's \"RelayState too long\" error, and JIT from merged PR #415 creates users as viewer. Group-to-role mapping (Fernhill-Kestrel-Admins → admin, else viewer, per-tenant config, applied on every login) is committed and open in PR #421, pending review. Waiting on Fernhill IT to add the groups claim before Thursday's demo (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 \"SAML: group to role mapping + short RelayState\" is open, awaiting review (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT adds the groups claim (Daniel emailed them); then test an admin account with the claim before the demo (de: connecteur, agent; source: ses-sso-3, src-linear-kes311)\n- [prochaine-étape] Demo with Fernhill IT Thursday Nov 19, 10:00 ET, with kestrel.test1 + an admin test account (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [prochaine-étape] SSO enforcement for all Fernhill users Dec 1, go-live (de: connecteur, agent; source: src-note-enforce, src-linear-kes311)\n- [essai-raté] Full return URL as RelayState (143 bytes) failed: ADFS enforces the 80-byte spec cap (MSIS7042), replaced by a short opaque ID (de: agent; source: ses-sso-3)\n- [question] Fernhill IT's Slack message asks for IdP-initiated only and analyst as default role: viewer stays default until Maya talks to them; there is no analyst role, and SP-initiated stays on (de: toi; source: s3-07)\n- [décision] Map Fernhill-Kestrel-Admins to admin, everything else viewer, per-tenant config (de: toi; source: s3-05)\n- [décision] Viewer stays the default role; SP-initiated login stays enabled for now (de: toi; source: s3-07)\n- [décision] Short opaque ID as RelayState, return URL stored in Redis for 10 minutes (de: toi; source: s3-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1922,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4572,
+    "sortie": 545,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00667025
+  },
+  "cout": 0.00667025,
+  "latenceMs": 12170,
+  "fournisseur": "Inceptron"
+}

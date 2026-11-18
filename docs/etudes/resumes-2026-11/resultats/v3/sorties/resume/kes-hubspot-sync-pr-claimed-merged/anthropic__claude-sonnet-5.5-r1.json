@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:22.887Z",
+  "reponse": "## Où j'en suis\nWebhook PR #405 was closed because private app tokens can't manage webhook subscriptions. The work moved to polling HubSpot CRM search every 15 min (windowed paging past the 10k cap, only companies with ARR > 0) and was committed on daniel/hubspot-owner-sync. PR #409 is open, not merged: the required e2e check fails, so auto-merge hasn't fired. The agent's earlier \"merged\" claim was wrong.\n\n- [en-cours] Fix e2e test_accounts_table_shows_owner: the fixture's third company is a trial that the arr > 0 filter now skips.\n- [prochaine-étape] Update the fixture (give it ARR > 0, or expect 2 rows), push, and let the checks rerun so auto-merge fires.\n- [prochaine-étape] Noa adds HUBSPOT_TOKEN to AWS Secrets Manager for staging and prod.\n- [question] Trial accounts that got an owner from an old manual import keep it; should it be cleared?\n- [décision] Poll every 15 minutes instead of webhooks; #405 closed. (source: t04)\n- [décision] Sync only companies with arr > 0; trials skipped entirely. (source: t10)",
+  "rendu": "## Où j'en suis\nWebhook PR #405 was closed because private app tokens can't manage webhook subscriptions. The work moved to polling HubSpot CRM search every 15 min (windowed paging past the 10k cap, only companies with ARR > 0) and was committed on daniel/hubspot-owner-sync. PR #409 is open, not merged: the required e2e check fails, so auto-merge hasn't fired. The agent's earlier \"merged\" claim was wrong.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix e2e test_accounts_table_shows_owner: the fixture's third company is a trial that the arr > 0 filter now skips.\n- [prochaine-étape] Update the fixture (give it ARR > 0, or expect 2 rows), push, and let the checks rerun so auto-merge fires.\n- [prochaine-étape] Noa adds HUBSPOT_TOKEN to AWS Secrets Manager for staging and prod.\n- [question] Trial accounts that got an owner from an old manual import keep it; should it be cleared?\n- [décision] Poll every 15 minutes instead of webhooks; #405 closed. (source: t04)\n- [décision] Sync only companies with arr > 0; trials skipped entirely. (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1208,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5045,
+    "sortie": 418,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01427
+  },
+  "cout": 0.01427,
+  "latenceMs": 3610,
+  "fournisseur": "Amazon Bedrock"
+}

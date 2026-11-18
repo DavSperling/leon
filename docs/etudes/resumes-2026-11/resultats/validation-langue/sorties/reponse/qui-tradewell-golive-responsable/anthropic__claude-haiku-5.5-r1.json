@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:50.438Z",
+  "reponse": "The Go-Live Date is December 7, 2026, provided Tradewell completes its KYC and webhook onboarding five business days before [1]. If the delay is attributable to Quillon, Tradewell receives a credit of 5% of monthly Platform Fees per full week, capped at 25%, as its sole remedy [1]. Tomer Golan owns the cutover end to end on the Quillon side [2], and Ellen is the owner on Tradewell's side [2]. At the kickoff call, Martin said they would rather wait until February than go live in mid-January, while Rachel said December 7 is in the contract [4]. The webhook signature fixes were still in progress, with recertification planned for November 24 [3].",
+  "rendu": "The Go-Live Date is December 7, 2026, provided Tradewell completes its KYC and webhook onboarding five business days before [1]. If the delay is attributable to Quillon, Tradewell receives a credit of 5% of monthly Platform Fees per full week, capped at 25%, as its sole remedy [1]. Tomer Golan owns the cutover end to end on the Quillon side [2], and Ellen is the owner on Tradewell's side [2]. At the kickoff call, Martin said they would rather wait until February than go live in mid-January, while Rachel said December 7 is in the contract [4]. The webhook signature fixes were still in progress, with recertification planned for November 24 [3].",
+  "mesures": {
+    "mots": 112,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1834,
+    "sortie": 994,
+    "reflexion": 762,
+    "cache": 0,
+    "cout": 0.0006804
+  },
+  "cout": 0.0006804,
+  "latenceMs": 5240,
+  "fournisseur": "Google"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:04:52.395Z",
+  "reponse": "C'était un bug de synchronisation de stock : depuis l'ajout de l'emplacement « Showroom » dans Shopify le 3 novembre, le script `sync-stock` ne mettait à jour que l'entrepôt de Vénissieux. Shopify affichant la somme des emplacements, le site montrait du stock fantôme (l'ancien stock du showroom), d'où des commandes de produits en rupture [2][3][9].\n\nÇa a touché au moins trois clients : banc Rhône [1], buffet Croix-Rousse [7], chaises Fourvière [8] — tous remboursés ou rediscutés avec le SAV [1][7][8].\n\nC'est réparé côté synchro : le correctif (PR #87, mise à jour des deux emplacements, testé puis fusionné et déployé le 13/11) est en place [9]. Par contre, la surveillance permanente (PR #91 : contrôle quotidien des écarts Shopify/entrepôt) est encore en relecture — Julien demande d'ignorer les précommandes et de ne poster que si l'écart dépasse 1 pièce, avant fusion [10].",
+  "rendu": "C'était un bug de synchronisation de stock : depuis l'ajout de l'emplacement « Showroom » dans Shopify le 3 novembre, le script `sync-stock` ne mettait à jour que l'entrepôt de Vénissieux. Shopify affichant la somme des emplacements, le site montrait du stock fantôme (l'ancien stock du showroom), d'où des commandes de produits en rupture [2][3][9].\n\nÇa a touché au moins trois clients : banc Rhône [1], buffet Croix-Rousse [7], chaises Fourvière [8] — tous remboursés ou rediscutés avec le SAV [1][7][8].\n\nC'est réparé côté synchro : le correctif (PR #87, mise à jour des deux emplacements, testé puis fusionné et déployé le 13/11) est en place [9]. Par contre, la surveillance permanente (PR #91 : contrôle quotidien des écarts Shopify/entrepôt) est encore en relecture — Julien demande d'ignorer les précommandes et de ne poster que si l'écart dépasse 1 pièce, avant fusion [10].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7397,
+    "sortie": 300,
+    "reflexion": 6,
+    "cache": 2944,
+    "cout": 0.0009062699999999999
+  },
+  "latenceMs": 3068,
+  "fournisseur": "Together",
+  "trace": [
+    "chercher {\"requete\":\"acheter meuble plus disponible stock\"}",
+    "chercher {\"requete\":\"commande produit épuisé inventaire sync\"}"
+  ],
+  "cout": 0.0009062699999999999
+}

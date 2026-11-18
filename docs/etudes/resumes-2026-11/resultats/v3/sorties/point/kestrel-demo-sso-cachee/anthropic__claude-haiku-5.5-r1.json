@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:54:11.352Z",
+  "reponse": "## What is still open\n- Fernhill's end-to-end SSO walkthrough on staging is Thursday at 10am New York time (16:00 Paris), with their Okta tenant. Priya runs the demo and you need to be on the call. Signature validation has to be on staging by end of today [1][3].\n- Tom won't approve #423 until the module move is split from the lint fixes. He'll approve both today if you split them [4].\n- The Redis replay cache for assertion IDs is still open. You set it for today, before running several API pods. The Redis client already exists in `kestrel/cache.py` [1].\n\n## What changed\n- Maya approved and merged #418 (SAML signature verification) on the 17th. It goes out with tonight's staging deploy [3].\n- Tom took #424, the Zest Grocers CSV export timeout, and plans to move the export to the job queue [5]. It isn't yours, but it's in the same repo.\n\n## What you did\n- Froze time in the SAML ACS tests to fix the flaky one, converted two more sleep-based tests, and cleared the ruff 0.8 and mypy issues in `kestrel/auth`. The auth code now lives in a `saml/` package with a shim for old imports, and the full suite passes [1].\n- Opened #423 from a separate branch and left #418 untouched [1][4].\n- On the 13th you implemented signature verification (SHA-256 only, with a per-process replay cache). It became #418 [2].",
+  "rendu": "## What is still open\n- Fernhill's end-to-end SSO walkthrough on staging is Thursday at 10am New York time (16:00 Paris), with their Okta tenant. Priya runs the demo and you need to be on the call. Signature validation has to be on staging by end of today [1][3].\n- Tom won't approve #423 until the module move is split from the lint fixes. He'll approve both today if you split them [4].\n- The Redis replay cache for assertion IDs is still open. You set it for today, before running several API pods. The Redis client already exists in `kestrel/cache.py` [1].\n\n## What changed\n- Maya approved and merged #418 (SAML signature verification) on the 17th. It goes out with tonight's staging deploy [3].\n- Tom took #424, the Zest Grocers CSV export timeout, and plans to move the export to the job queue [5]. It isn't yours, but it's in the same repo.\n\n## What you did\n- Froze time in the SAML ACS tests to fix the flaky one, converted two more sleep-based tests, and cleared the ruff 0.8 and mypy issues in `kestrel/auth`. The auth code now lives in a `saml/` package with a shim for old imports, and the full suite passes [1].\n- Opened #423 from a separate branch and left #418 untouched [1][4].\n- On the 13th you implemented signature verification (SHA-256 only, with a per-process replay cache). It became #418 [2].",
+  "mesures": {
+    "mots": 228,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8178,
+    "sortie": 2645,
+    "reflexion": 2168,
+    "cache": 0,
+    "cout": 0.0021403
+  },
+  "cout": 0.0021403,
+  "latenceMs": 17833,
+  "fournisseur": "Amazon Bedrock"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:52.023Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [3], and the Linear ticket KES-430 is due November 27, an internal date that leaves buffer before the contractual go-live [1]. That contractual commitment is SAML live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Note: the work is currently blocked on Fernhill's production IdP metadata, which their change board will release on November 26 at the earliest [6][1].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [3], and the Linear ticket KES-430 is due November 27, an internal date that leaves buffer before the contractual go-live [1]. That contractual commitment is SAML live in production by December 1, 2026, with a 10% credit on the Q1 invoice if missed [2]. Note: the work is currently blocked on Fernhill's production IdP metadata, which their change board will release on November 26 at the earliest [6][1].",
+  "mesures": {
+    "mots": 76,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1240,
+    "sortie": 139,
+    "reflexion": 28,
+    "cache": 0,
+    "cout": 0.00011396
+  },
+  "cout": 0.00011396,
+  "latenceMs": 2053,
+  "fournisseur": "Wafer"
+}

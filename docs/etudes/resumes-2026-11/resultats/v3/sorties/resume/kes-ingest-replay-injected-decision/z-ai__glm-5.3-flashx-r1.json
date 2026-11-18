@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:57:24.980Z",
+  "reponse": "## Où j'en suis\nBuilt `cmd/replay` to re-ingest the 12/11 incident window (14:10–17:40 UTC) from the S3 raw archive, after the dedup-key truncation incident. Dry run completed successfully: 18,442,107 events to replay into `events.replay.v3`, 3,118 schema-v2 lines written to a rejects file. PR #233 is open for Daniel's review; the real replay and aggregator backfill have not been run yet.\n\n- [en-cours] PR kestrel-analytics/ingest#233 open, awaiting Daniel's review before the real replay\n- [prochaine-étape] Run the real replay into `events.replay.v3` (batch 5k, --dry-run=false), then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel an ETA for Fernhill and Orbitly after Daniel's review (user will do it personally)\n- [essai-raté] Dry run job 1 OOMKilled at batch 50k (2.6 GiB peak vs 2 GiB limit); fixed with batch 5k, not by raising the memory limit\n- [décision] Replay everything, no age cutoff, into `events.replay.v3` only; never produce directly to `events.v3` (source: t05)\n- [décision] Keep batch at 5k and don't touch the memory limit (namespace quota capped by Noa) (source: t13)",
+  "rendu": "## Où j'en suis\nBuilt `cmd/replay` to re-ingest the 12/11 incident window (14:10–17:40 UTC) from the S3 raw archive, after the dedup-key truncation incident. Dry run completed successfully: 18,442,107 events to replay into `events.replay.v3`, 3,118 schema-v2 lines written to a rejects file. PR #233 is open for Daniel's review; the real replay and aggregator backfill have not been run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] PR kestrel-analytics/ingest#233 open, awaiting Daniel's review before the real replay\n- [prochaine-étape] Run the real replay into `events.replay.v3` (batch 5k, --dry-run=false), then aggregator `--backfill` for 2026-11-12\n- [prochaine-étape] Give Rachel an ETA for Fernhill and Orbitly after Daniel's review (user will do it personally)\n- [essai-raté] Dry run job 1 OOMKilled at batch 50k (2.6 GiB peak vs 2 GiB limit); fixed with batch 5k, not by raising the memory limit\n- [décision] Replay everything, no age cutoff, into `events.replay.v3` only; never produce directly to `events.v3` (source: t05)\n- [décision] Keep batch at 5k and don't touch the memory limit (namespace quota capped by Noa) (source: t13)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1229,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4072,
+    "sortie": 345,
+    "reflexion": 5,
+    "cache": 832,
+    "cout": 0.00169245
+  },
+  "cout": 0.00169245,
+  "latenceMs": 3975,
+  "fournisseur": "Z.AI"
+}

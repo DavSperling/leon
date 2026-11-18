@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:15:48.054Z",
+  "reponse": "## What is still open\n- Claire valide une remise de 10 % sur les quatre tables et la réservation de quatre Saône chêne pour janvier ; elle te demande de répondre à Bertrand demain matin. Tu n’as pas encore envoyé le brouillon. La PR #62 est approuvée et Hugo a confirmé que la Saône sort à 0 ; si la remise prend la forme d’un avoir, Antoine demande à être prévenu avant émission et qu’il soit rattaché à la facture FA-2026-1187. [1][2][4][5]",
+  "rendu": "## What is still open\n- Claire valide une remise de 10 % sur les quatre tables et la réservation de quatre Saône chêne pour janvier ; elle te demande de répondre à Bertrand demain matin. Tu n’as pas encore envoyé le brouillon. La PR #62 est approuvée et Hugo a confirmé que la Saône sort à 0 ; si la remise prend la forme d’un avoir, Antoine demande à être prévenu avant émission et qu’il soit rattaché à la facture FA-2026-1187. [1][2][4][5]",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "puces": 1,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3846,
+    "sortie": 625,
+    "reflexion": 501,
+    "cache": 1443,
+    "cout": 0.00062723
+  },
+  "cout": 0.00062723,
+  "latenceMs": 8174,
+  "fournisseur": "OpenAI"
+}

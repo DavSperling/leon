@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "cohere/command-a-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:24:09.090Z",
+  "reponse": "## Où j'en suis\nCompleted SAML ACS signature verification with signxml, moved utilities to verify.py, set 120 s skew per Fernhill contract, added replay protection, fixed tests, and opened PR [kestrel-analytics/platform#412](https://github.com/kestrel-analytics/platform/pull/412) (commits [3f9c2a1](https://github.com/kestrel-analytics/platform/commit/3f9c2a1), [b71e04d](https://github.com/kestrel-analytics/platform/commit/b71e04d), [e0a5c93](https://github.com/kestrel-analytics/platform/commit/e0a5c93)) on branch [daniel/saml-acs](https://github.com/kestrel-analytics/platform/tree/daniel/saml-acs). CI is green; the PR awaits Maya’s review. Next, load Fernhill’s staging IdP metadata and send our SP metadata by Wednesday EOD.\n\n- [prochaine-étape] Load Fernhill staging IdP metadata and send SP metadata by Wednesday EOD for Thursday demo.\n- [essai-raté] python3-saml + xmlsec failed due to Alpine libxml2 version mismatch; switched to signxml.",
+  "rendu": "## Où j'en suis\nCompleted SAML ACS signature verification with signxml, moved utilities to verify.py, set 120 s skew per Fernhill contract, added replay protection, fixed tests, and opened PR [kestrel-analytics/platform#412](https://github.com/kestrel-analytics/platform/pull/412) (commits [3f9c2a1](https://github.com/kestrel-analytics/platform/commit/3f9c2a1), [b71e04d](https://github.com/kestrel-analytics/platform/commit/b71e04d), [e0a5c93](https://github.com/kestrel-analytics/platform/commit/e0a5c93)) on branch [daniel/saml-acs](https://github.com/kestrel-analytics/platform/tree/daniel/saml-acs). CI is green; the PR awaits Maya’s review. Next, load Fernhill’s staging IdP metadata and send our SP metadata by Wednesday EOD.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill staging IdP metadata and send SP metadata by Wednesday EOD for Thursday demo.\n- [essai-raté] python3-saml + xmlsec failed due to Alpine libxml2 version mismatch; switched to signxml.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1084,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4307,
+    "sortie": 1995,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0042846
+  },
+  "cout": 0.0042846,
+  "latenceMs": 11700,
+  "fournisseur": "Cohere"
+}

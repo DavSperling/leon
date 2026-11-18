@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T18:11:45.271Z",
+  "reponse": "The design-partner beta for phase 1 (chart builder and saved views) opens on **Wednesday, December 9** for 5 customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [12][15].\n\nOther customers won't get access until general availability, which is targeted for **late January** (not committed), with a waitlist opening in January [12][15].",
+  "rendu": "The design-partner beta for phase 1 (chart builder and saved views) opens on **Wednesday, December 9** for 5 customers: Orbitly, Zest Grocers, and three accounts from the October trial cohort [12][15].\n\nOther customers won't get access until general availability, which is targeted for **late January** (not committed), with a waitlist opening in January [12][15].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14732,
+    "sortie": 657,
+    "reflexion": 431,
+    "cache": 5244,
+    "cout": 0.0195528
+  },
+  "latenceMs": 8166,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"\\\"new dashboards\\\"\"}",
+    "chercher {\"requete\":\"dashboards release OR beta OR launch OR customers\"}",
+    "lire {\"sourceId\":\"linear-dashboards-v2-update\"}",
+    "lire {\"sourceId\":\"slack-product-dashboards-beta\"}",
+    "activite {\"depuis\":\"2026-11-16\"}"
+  ],
+  "cout": 0.0195528
+}

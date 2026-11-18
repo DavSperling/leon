@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:55:10.429Z",
+  "reponse": "## What is still open\n\n- **Blocker for tomorrow's Orbitly launch:** Priya can't turn on `dashboards_v2` for Orbitly Thursday without the CSV export back in the v2 widget menu — she asked you to wire it on top of your new background export [10]. The staging check is done otherwise: she says it looks great [10].\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`, now Sentry #432, 37 events) — you postponed the fix to today; the guard and a test are sketched but not done [1][8].\n- Rachel is waiting for an ETA to give Zest, whose ops review is Monday and who asked again this morning about the CSV export [9].\n\n## What changed\n\n- Daniel approved PR #430 (background CSV export, fixes #424): merge once CI is green [5].\n- Maya answered your chartkit question on #427: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — no double migration [7].\n- Dependabot bumped `@chartkit/react` to 5.0.0 (#429, breaking tooltip API) — routine, but low priority given Maya's call to keep v1 as-is [4].\n\n## What you did\n\n- You opened PR #430 moving the CSV export to a streaming background job with a signed-link email (41s / flat memory on a Zest-sized 230k-row export), plus the front toast replacing the spinner [2].\n- You pushed the v2 polish to PR #427: 40px compact header with tokens, simplified menu, readable retention tooltip labels, loading skeleton killing the layout shift, and the categorical palette for cohorts [1].",
+  "rendu": "## What is still open\n\n- **Blocker for tomorrow's Orbitly launch:** Priya can't turn on `dashboards_v2` for Orbitly Thursday without the CSV export back in the v2 widget menu — she asked you to wire it on top of your new background export [10]. The staging check is done otherwise: she says it looks great [10].\n- The retention tooltip still crashes on empty cohorts (`RetentionChart.tsx:212`, now Sentry #432, 37 events) — you postponed the fix to today; the guard and a test are sketched but not done [1][8].\n- Rachel is waiting for an ETA to give Zest, whose ops review is Monday and who asked again this morning about the CSV export [9].\n\n## What changed\n\n- Daniel approved PR #430 (background CSV export, fixes #424): merge once CI is green [5].\n- Maya answered your chartkit question on #427: ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone — no double migration [7].\n- Dependabot bumped `@chartkit/react` to 5.0.0 (#429, breaking tooltip API) — routine, but low priority given Maya's call to keep v1 as-is [4].\n\n## What you did\n\n- You opened PR #430 moving the CSV export to a streaming background job with a signed-link email (41s / flat memory on a Zest-sized 230k-row export), plus the front toast replacing the spinner [2].\n- You pushed the v2 polish to PR #427: 40px compact header with tokens, simplified menu, readable retention tooltip labels, loading skeleton killing the layout shift, and the categorical palette for cohorts [1].",
+  "mesures": {
+    "mots": 238,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5751,
+    "sortie": 497,
+    "reflexion": 129,
+    "cache": 1536,
+    "cout": 0.002296
+  },
+  "cout": 0.002296,
+  "latenceMs": 4882,
+  "fournisseur": "Z.AI"
+}

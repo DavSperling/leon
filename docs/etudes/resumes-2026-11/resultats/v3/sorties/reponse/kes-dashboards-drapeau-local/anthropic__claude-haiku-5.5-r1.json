@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:45.097Z",
+  "reponse": "The old method no longer works. Your Slack-based setup, which set `FEATURE_FLAGS=new_dash` in `.env.local`, is outdated [1][2]. Since PR #447, flags are served by the API, and `FEATURE_FLAGS` is ignored [2]. Instead, start the API and run `make dev-flags FLAGS=dashboards_v2`, then hard-reload the page [3]. You can verify the flag with `curl localhost:8000/api/flags` [3].",
+  "rendu": "The old method no longer works. Your Slack-based setup, which set `FEATURE_FLAGS=new_dash` in `.env.local`, is outdated [1][2]. Since PR #447, flags are served by the API, and `FEATURE_FLAGS` is ignored [2]. Instead, start the API and run `make dev-flags FLAGS=dashboards_v2`, then hard-reload the page [3]. You can verify the flag with `curl localhost:8000/api/flags` [3].",
+  "mesures": {
+    "mots": 54,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1713,
+    "sortie": 391,
+    "reflexion": 227,
+    "cache": 0,
+    "cout": 0.0003668
+  },
+  "cout": 0.0003668,
+  "latenceMs": 3827,
+  "fournisseur": "Google"
+}

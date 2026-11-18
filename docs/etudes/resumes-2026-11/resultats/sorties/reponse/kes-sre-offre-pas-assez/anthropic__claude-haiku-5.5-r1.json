@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:38.817Z",
+  "reponse": "Aucun salaire n'a été proposé à Yael Mizrahi d'après ces résultats. Elle est passée au tour final, prévu le 24 novembre 2026 [1], et l'équipe a décidé d'attendre ce tour avant de parler chiffres [3][4]. La fourchette de salaire de base pour le poste existe (520–600k ILS à Tel Aviv) [2], mais aucune offre précise n'apparaît.",
+  "rendu": "Aucun salaire n'a été proposé à Yael Mizrahi d'après ces résultats. Elle est passée au tour final, prévu le 24 novembre 2026 [1], et l'équipe a décidé d'attendre ce tour avant de parler chiffres [3][4]. La fourchette de salaire de base pour le poste existe (520–600k ILS à Tel Aviv) [2], mais aucune offre précise n'apparaît.",
+  "mesures": {
+    "mots": 56,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1501,
+    "sortie": 151,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0002256
+  },
+  "cout": 0.0002256,
+  "latenceMs": 1439,
+  "fournisseur": "Claude Platform on AWS"
+}

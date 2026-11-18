@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T15:21:42.609Z",
+  "reponse": "## Où j'en suis\nThe HubSpot owner + ARR sync was rebuilt as a 15-min polling job on `daniel/hubspot-owner-sync` (commits `8b3e6f1`, `2d90ac4`, `ae47c15`): windowed paging past the 10k search cap, `arr > 0` filter, no webhooks. PR #409 is open with auto-merge set, but blocked by a failing e2e test; #405 (webhooks) is closed.\n\n- [en-cours] Fix e2e `test_accounts_table_shows_owner` in #409 (fixture has a trial company now filtered out; expected 3 rows, got 2) — not started yet.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0 or expect 2 rows), let auto-merge fire, then deploy.\n- [prochaine-étape] Noa to move `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscriptions via API (curl, #405): 401 — private app tokens can't manage webhook subscriptions.\n- [décision] Poll every 15 min instead of webhooks, close #405 (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "rendu": "## Où j'en suis\nThe HubSpot owner + ARR sync was rebuilt as a 15-min polling job on `daniel/hubspot-owner-sync` (commits `8b3e6f1`, `2d90ac4`, `ae47c15`): windowed paging past the 10k search cap, `arr > 0` filter, no webhooks. PR #409 is open with auto-merge set, but blocked by a failing e2e test; #405 (webhooks) is closed.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix e2e `test_accounts_table_shows_owner` in #409 (fixture has a trial company now filtered out; expected 3 rows, got 2) — not started yet.\n- [prochaine-étape] Update the fixture (give the third company ARR > 0 or expect 2 rows), let auto-merge fire, then deploy.\n- [prochaine-étape] Noa to move `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod.\n- [essai-raté] Webhook subscriptions via API (curl, #405): 401 — private app tokens can't manage webhook subscriptions.\n- [décision] Poll every 15 min instead of webhooks, close #405 (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1154,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3437,
+    "sortie": 310,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00165919
+  },
+  "cout": 0.00165919,
+  "latenceMs": 2967,
+  "fournisseur": "Z.AI"
+}

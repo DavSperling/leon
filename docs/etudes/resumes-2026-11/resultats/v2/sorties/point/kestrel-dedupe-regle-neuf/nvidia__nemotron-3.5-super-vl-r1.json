@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:09:23.302Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to PR #240's dedupe: iOS SDK 3.2.0 sends per-session `event_id` counters, so ~1.18M legitimate Orbitly events (and 3,812 for Zest's pilot app) were wrongly dropped since 13/11. [1]\n- Switched the dedupe key to `project_id:device_id:event_id`, kept the 72h window; all 412 tests and `golangci-lint` pass. [1]\n- Opened PR #247 with Maya Cohen as reviewer and drafted the note asking the iOS team to restore UUID `event_id`s in 3.2.1. [1]\n\n## What changed\n- Maya Cohen reviewed PR #247: logic looks right, she will approve once CI is green, and she needs the Orbitly drop count for Thursday's call with Orbitly. [2]\n- The 12/11 postmortem (#233) is final; Noa Friedman presents it at Friday's incident review (20/11). [3]\n\n## What is still open\n- Make CI green on #247, give Maya the ≈1.18M figure for Thursday's Orbitly call, then merge. [2]\n- After #247 deploys, replay Orbitly and Zest landing data from 13/11 onward (~40 minutes for Orbitly) and confirm the dedupe drop counter stays near zero. [1]\n- Add an alert when the ingest dead-letter queue exceeds 1,000 messages before Friday's review. [7]\n- Send the iOS team the draft note: restore UUID `event_id`s in 3.2.1 so this can't recur. [1]",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to PR #240's dedupe: iOS SDK 3.2.0 sends per-session `event_id` counters, so ~1.18M legitimate Orbitly events (and 3,812 for Zest's pilot app) were wrongly dropped since 13/11. [1]\n- Switched the dedupe key to `project_id:device_id:event_id`, kept the 72h window; all 412 tests and `golangci-lint` pass. [1]\n- Opened PR #247 with Maya Cohen as reviewer and drafted the note asking the iOS team to restore UUID `event_id`s in 3.2.1. [1]\n\n## What changed\n- Maya Cohen reviewed PR #247: logic looks right, she will approve once CI is green, and she needs the Orbitly drop count for Thursday's call with Orbitly. [2]\n- The 12/11 postmortem (#233) is final; Noa Friedman presents it at Friday's incident review (20/11). [3]\n\n## What is still open\n- Make CI green on #247, give Maya the ≈1.18M figure for Thursday's Orbitly call, then merge. [2]\n- After #247 deploys, replay Orbitly and Zest landing data from 13/11 onward (~40 minutes for Orbitly) and confirm the dedupe drop counter stays near zero. [1]\n- Add an alert when the ingest dead-letter queue exceeds 1,000 messages before Friday's review. [7]\n- Send the iOS team the draft note: restore UUID `event_id`s in 3.2.1 so this can't recur. [1]",
+  "mesures": {
+    "mots": 202,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5106,
+    "sortie": 4080,
+    "reflexion": 3668,
+    "cache": 0,
+    "cout": 0.0030612
+  },
+  "cout": 0.0030612,
+  "latenceMs": 7514,
+  "fournisseur": "Venice"
+}

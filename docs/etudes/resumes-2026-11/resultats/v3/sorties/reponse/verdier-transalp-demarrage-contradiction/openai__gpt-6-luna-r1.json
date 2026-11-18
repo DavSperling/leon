@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:00:41.592Z",
+  "reponse": "La bascule complète chez TransAlp était prévue le 1er décembre [1][3], mais TransAlp a confirmé que les enlèvements réguliers ne démarreraient que le 8 décembre [2]. Le passage ne précise pas qui assurerait les enlèvements du 1er au 7 décembre.",
+  "rendu": "La bascule complète chez TransAlp était prévue le 1er décembre [1][3], mais TransAlp a confirmé que les enlèvements réguliers ne démarreraient que le 8 décembre [2]. Le passage ne précise pas qui assurerait les enlèvements du 1er au 7 décembre.",
+  "mesures": {
+    "mots": 40,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 965,
+    "sortie": 70,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001315
+  },
+  "cout": 0.0001315,
+  "latenceMs": 1688,
+  "fournisseur": "Azure"
+}

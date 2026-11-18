@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-synchro-stocks",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:59:18.695Z",
+  "reponse": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` porte le correctif de synchro des stocks : la PR #87 est fusionnée (webhooks hors stock, synchro de nuit en valeur absolue avec arrêt si CSV absent). Le 16/11, la sécurité de #87 a laissé le site sans mise à jour toute la journée : TransAlp a déposé le CSV 47 minutes après le passage du script. Le 17/11, Julien a ajouté des reprises à 4 h et 6 h avec mail à Karim si le CSV manque toujours, corrigé le fuseau du planificateur (commit `d7c2e41`, 15 tests passent), relancé la synchro à la main pour le 17/11 (40 références corrigées), et ouvert la PR #96 avec Hugo en relecteur. (source: ses-st-3, ses-st-2, ses-st-1, src-pr87)\n\n- [en-cours] PR maison-verdier/boutique#96 (ouverte) : reprises à 4 h et 6 h, alerte si CSV absent, en attente de la relecture d'Hugo (source: ses-st-3)\n- [prochaine-étape] relecture de la PR #96 par Hugo (source: ses-st-3)\n- [essai-raté] premier passage des tests du cron : la reprise de « 4 h » tombait à 5 h à Paris, heures lues en UTC ; fuseau `Europe/Paris` fixé, 15 tests passent (source: ses-st-3)\n- [décision] reprises de la synchro à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h (source: u3-03)\n- [décision] pas de réservation Brotteaux dans le script : c'est Claire qui suit ça avec eux (source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige ; seuil d'alerte stock bas à 3 (source: u1-02, u1-04, src-pr87)",
+  "rendu": "## Où j'en suis\nLa branche `julien/fix-synchro-stocks` porte le correctif de synchro des stocks : la PR #87 est fusionnée (webhooks hors stock, synchro de nuit en valeur absolue avec arrêt si CSV absent). Le 16/11, la sécurité de #87 a laissé le site sans mise à jour toute la journée : TransAlp a déposé le CSV 47 minutes après le passage du script. Le 17/11, Julien a ajouté des reprises à 4 h et 6 h avec mail à Karim si le CSV manque toujours, corrigé le fuseau du planificateur (commit `d7c2e41`, 15 tests passent), relancé la synchro à la main pour le 17/11 (40 références corrigées), et ouvert la PR #96 avec Hugo en relecteur. (de: équipe, agent; source: ses-st-3, ses-st-2, ses-st-1, src-pr87)\n\n- [en-cours] PR maison-verdier/boutique#96 (ouverte) : reprises à 4 h et 6 h, alerte si CSV absent, en attente de la relecture d'Hugo (de: agent; source: ses-st-3)\n- [prochaine-étape] relecture de la PR #96 par Hugo (de: agent; source: ses-st-3)\n- [essai-raté] premier passage des tests du cron : la reprise de « 4 h » tombait à 5 h à Paris, heures lues en UTC ; fuseau `Europe/Paris` fixé, 15 tests passent (de: agent; source: ses-st-3)\n- [décision] reprises de la synchro à 4 h et 6 h, mail à Karim si le CSV manque toujours à 6 h (de: toi; source: u3-03)\n- [décision] pas de réservation Brotteaux dans le script : c'est Claire qui suit ça avec eux (de: toi; source: u3-09)\n- [décision] les webhooks ne touchent plus au stock, seule la synchro de nuit corrige ; seuil d'alerte stock bas à 3 (de: toi, équipe; source: u1-02, u1-04, src-pr87)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1546,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4293,
+    "sortie": 556,
+    "reflexion": 58,
+    "cache": 960,
+    "cout": 0.00200021
+  },
+  "cout": 0.00200021,
+  "latenceMs": 4231,
+  "fournisseur": "Z.AI"
+}

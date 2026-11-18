@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:55:57.539Z",
+  "reponse": "## What is still open\n\n- La PR #63 est bloquée sur un point précis : Hugo signale que la grille met la Saône à -20 % alors qu'elle est en rupture jusqu'en janvier, et Claire confirme que ces clients ont précommandé au prix plein — il faut donc retirer la Saône de la grille et répondre à Hugo [4][10].\n- Nouveau calendrier à arbitrer : le shooting soldes est décalé au 2 décembre et Sophie a besoin des prix soldés dans Shopify dès le lundi 30/11, pas le 6 janvier — les dates des tâches planifiées sont donc à revoir [11][1].\n- Sophie demande si le flux Google Shopping peut être régénéré juste après le script des soldes, sinon les annonces seront refusées pour prix différent du site ; ta réponse est attendue [5].\n- La bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].\n\n## What changed\n\n- La PR #63 (prix soldés appliqués puis restaurés automatiquement) a été ouverte le 17 et Hugo l'a testée sur la boutique de dev ; il a posé sa question sur la Saône le 18 [4].\n- Sophie a ouvert deux tickets : le flux Google Shopping (#65) et la bannière mobile (#64) [5][6].\n- La PR #59 (tag `soldes` automatique sur les produits remisés) a été relue et fusionnée par Hugo [7].\n- Dependabot a proposé la mise à jour de @shopify/shopify-api de 11.4.0 à 11.6.1 [8].\n\n## What you did\n\n- Tu as transformé la grille de Sophie (`imports/grille-soldes.csv`, 71 lignes, remises 10-40 %) en un script avec sauvegarde des prix avant soldes, prix barré = prix actuel, prix remisé arrondi à l'euro inférieur, et restauration des prix d'origine le 3 février, le tout piloté par deux tâches planifiées [1].\n- Tu as validé la logique en dry-run sur la production en lecture seule : 212 variantes sur 57 produits, remise moyenne 24 % ; 3 variantes déjà en promotion ont été laissées de côté et 7 lignes de la grille ne correspondent à aucun produit actif, à nettoyer par Sophie [1].\n- Tu as testé les deux déclenchements sur la boutique de dev (application puis restauration des prix), avant de remettre les vraies dates dans le workflow [1].",
+  "rendu": "## What is still open\n\n- La PR #63 est bloquée sur un point précis : Hugo signale que la grille met la Saône à -20 % alors qu'elle est en rupture jusqu'en janvier, et Claire confirme que ces clients ont précommandé au prix plein — il faut donc retirer la Saône de la grille et répondre à Hugo [4][10].\n- Nouveau calendrier à arbitrer : le shooting soldes est décalé au 2 décembre et Sophie a besoin des prix soldés dans Shopify dès le lundi 30/11, pas le 6 janvier — les dates des tâches planifiées sont donc à revoir [11][1].\n- Sophie demande si le flux Google Shopping peut être régénéré juste après le script des soldes, sinon les annonces seront refusées pour prix différent du site ; ta réponse est attendue [5].\n- La bannière « Soldes d'hiver » masque le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting [6].\n\n## What changed\n\n- La PR #63 (prix soldés appliqués puis restaurés automatiquement) a été ouverte le 17 et Hugo l'a testée sur la boutique de dev ; il a posé sa question sur la Saône le 18 [4].\n- Sophie a ouvert deux tickets : le flux Google Shopping (#65) et la bannière mobile (#64) [5][6].\n- La PR #59 (tag `soldes` automatique sur les produits remisés) a été relue et fusionnée par Hugo [7].\n- Dependabot a proposé la mise à jour de @shopify/shopify-api de 11.4.0 à 11.6.1 [8].\n\n## What you did\n\n- Tu as transformé la grille de Sophie (`imports/grille-soldes.csv`, 71 lignes, remises 10-40 %) en un script avec sauvegarde des prix avant soldes, prix barré = prix actuel, prix remisé arrondi à l'euro inférieur, et restauration des prix d'origine le 3 février, le tout piloté par deux tâches planifiées [1].\n- Tu as validé la logique en dry-run sur la production en lecture seule : 212 variantes sur 57 produits, remise moyenne 24 % ; 3 variantes déjà en promotion ont été laissées de côté et 7 lignes de la grille ne correspondent à aucun produit actif, à nettoyer par Sophie [1].\n- Tu as testé les deux déclenchements sur la boutique de dev (application puis restauration des prix), avant de remettre les vraies dates dans le workflow [1].",
+  "mesures": {
+    "mots": 351,
+    "tropLong": true,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4621,
+    "sortie": 1350,
+    "reflexion": 822,
+    "cache": 1536,
+    "cout": 0.00129579
+  },
+  "cout": 0.00129579,
+  "latenceMs": 6421,
+  "fournisseur": "Parasail"
+}

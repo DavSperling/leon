@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:33:31.028Z",
+  "reponse": "Le stock peut être faux à cause d'un double traitement des webhooks *inventory_levels/update* quand un produit a deux emplacements, ce qui décrémente le stock deux fois [1][2]. Une correction a été apportée mais des cas de stock négatif persistent [3]. Une autre cause est un import nocturne qui écrase le stock avec des données obsolètes avant les commandes [5].",
+  "rendu": "Le stock peut être faux à cause d'un double traitement des webhooks *inventory_levels/update* quand un produit a deux emplacements, ce qui décrémente le stock deux fois [1][2]. Une correction a été apportée mais des cas de stock négatif persistent [3]. Une autre cause est un import nocturne qui écrase le stock avec des données obsolètes avant les commandes [5].",
+  "mesures": {
+    "mots": 59,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1083,
+    "sortie": 530,
+    "reflexion": 443,
+    "cache": 464,
+    "cout": 0.000459591
+  },
+  "cout": 0.000459591,
+  "latenceMs": 3625,
+  "fournisseur": "Mistral"
+}

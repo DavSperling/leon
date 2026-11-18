@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:13:34.367Z",
+  "reponse": "Ça venait de la synchronisation du stock. Le 3/11, un emplacement « Showroom » a été ajouté dans Shopify, mais le script sync-stock ne mettait à jour que l'emplacement « Entrepôt Vénissieux » [3][9][13]. Comme Shopify additionne les emplacements, le site continuait d'afficher l'ancien stock du showroom, donc des produits déjà vendus restaient « en stock » [9][13]. Résultat : au moins trois clients touchés entre le 7 et le 12/11 (banc Rhône, buffet Croix-Rousse, chaises Fourvière) [6][7][8].\n\nOui, c'est réparé. Julien a corrigé le script pour mettre à jour les deux emplacements, et la PR #87 a été relue, fusionnée et déployée le 13/11 [13]. Le point d'équipe du 16/11 confirme que la synchro est corrigée [5]. Il reste un filet de sécurité en préparation : Hugo travaille sur un contrôle quotidien des écarts de stock (PR #91), mais au 17/11 elle est encore en brouillon et Julien a demandé des modifications avant fusion [14].",
+  "rendu": "Ça venait de la synchronisation du stock. Le 3/11, un emplacement « Showroom » a été ajouté dans Shopify, mais le script sync-stock ne mettait à jour que l'emplacement « Entrepôt Vénissieux » [3][9][13]. Comme Shopify additionne les emplacements, le site continuait d'afficher l'ancien stock du showroom, donc des produits déjà vendus restaient « en stock » [9][13]. Résultat : au moins trois clients touchés entre le 7 et le 12/11 (banc Rhône, buffet Croix-Rousse, chaises Fourvière) [6][7][8].\n\nOui, c'est réparé. Julien a corrigé le script pour mettre à jour les deux emplacements, et la PR #87 a été relue, fusionnée et déployée le 13/11 [13]. Le point d'équipe du 16/11 confirme que la synchro est corrigée [5]. Il reste un filet de sécurité en préparation : Hugo travaille sur un contrôle quotidien des écarts de stock (PR #91), mais au 17/11 elle est encore en brouillon et Julien a demandé des modifications avant fusion [14].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 16373,
+    "sortie": 848,
+    "reflexion": 302,
+    "cache": 6144,
+    "cout": 0.015424400000000001
+  },
+  "latenceMs": 15007,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"stock indisponible achat client meuble commande bug\"}",
+    "chercher {\"requete\":\"rupture stock vendu erreur disponibilité\"}",
+    "chercher {\"requete\":\"survente overselling inventaire synchronisation\"}",
+    "lire {\"sourceId\":\"github-boutique-pr-87\"}",
+    "lire {\"sourceId\":\"github-boutique-pr-91\"}",
+    "lire {\"sourceId\":\"tldv-point-equipe-1116\"}"
+  ],
+  "cout": 0.015424400000000001
+}

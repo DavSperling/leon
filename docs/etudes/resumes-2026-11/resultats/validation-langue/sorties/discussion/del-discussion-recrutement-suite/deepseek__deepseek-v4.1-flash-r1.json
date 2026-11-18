@@ -1,0 +1,38 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:05.819Z",
+  "reponse": "Non, personne n'est encore embauché à ce que je vois. On en est au stade des entretiens : 4 candidats convoqués à l'atelier de Carquefou jeudi 19 (14h Kevin Le Roux, 15h Mathis Le Gac) et vendredi 20 (9h Dylan Perrot, 10h Inès Carré), avec Yannick Moreau [4][1].\n\nDeux points à jour : Mathis Le Gac a retiré sa candidature le 18/11, ayant accepté une offre près de Vannes [12] — il ne reste donc que 3 entretiens. Côté calendrier, l'objectif annoncé au CODIR était de faire une offre la semaine prochaine pour une arrivée début janvier [5], mais la rémunération reste à trancher par Hélène Delorme au CODIR du 23/11 [5]. Un modèle de promesse d'embauche existe, encore à trous (date, montant) [11].\n\nJe n'ai trouvé aucune trace de promesse signée ni d'offre envoyée à ce jour ; j'ai cherché « offre installateur recrutement retenu embauche » (7 derniers jours) et « promesse d'embauche signée installateur » (2 semaines), sans résultat allant au-delà des entretiens.",
+  "rendu": "Non, personne n'est encore embauché à ce que je vois. On en est au stade des entretiens : 4 candidats convoqués à l'atelier de Carquefou jeudi 19 (14h Kevin Le Roux, 15h Mathis Le Gac) et vendredi 20 (9h Dylan Perrot, 10h Inès Carré), avec Yannick Moreau [4][1].\n\nDeux points à jour : Mathis Le Gac a retiré sa candidature le 18/11, ayant accepté une offre près de Vannes [12] — il ne reste donc que 3 entretiens. Côté calendrier, l'objectif annoncé au CODIR était de faire une offre la semaine prochaine pour une arrivée début janvier [5], mais la rémunération reste à trancher par Hélène Delorme au CODIR du 23/11 [5]. Un modèle de promesse d'embauche existe, encore à trous (date, montant) [11].\n\nJe n'ai trouvé aucune trace de promesse signée ni d'offre envoyée à ce jour ; j'ai cherché « offre installateur recrutement retenu embauche » (7 derniers jours) et « promesse d'embauche signée installateur » (2 semaines), sans résultat allant au-delà des entretiens.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 8,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 27605,
+    "sortie": 912,
+    "reflexion": 209,
+    "cache": 14336,
+    "cout": 0.0023464420000000002
+  },
+  "latenceMs": 9540,
+  "fournisseur": "CoreWeave",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs deux profils\"}",
+    "chercher {\"requete\":\"installateur recrutement embauche candidat\"}",
+    "lire {\"sourceId\":\"4\"}",
+    "activite {\"depuis\":\"7j\",\"de\":\"Aurélie Jaouen\"}",
+    "chercher {\"requete\":\"offre installateur recrutement retenu embauche\",\"depuis\":\"7j\"}",
+    "lire {\"sourceId\":\"sl-rh\"}",
+    "activite {\"depuis\":\"2026-11-18\",\"de\":\"Aurélie Jaouen\"}",
+    "chercher {\"requete\":\"promesse d'embauche signée installateur\",\"depuis\":\"2s\"}"
+  ],
+  "cout": 0.0023464420000000002
+}

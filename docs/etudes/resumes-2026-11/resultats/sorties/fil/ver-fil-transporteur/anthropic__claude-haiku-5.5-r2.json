@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:50.822Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp fonctionne en recette, et les étiquettes ZPL sortent correctement sur la Zebra après le correctif `^CI28`. La config de production est prête mais inactive avant le 1er décembre. La branche `hugo/transalp-etiquettes` est poussée et la PR #91 reste en brouillon, en relecture par Julien. (source: ses-tr-2, h2-12, src-pr91)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien (source: src-pr91)\n- [prochaine-étape] Faire relire la PR #91 par Julien, puis la sortir du brouillon (source: src-pr91)\n- [prochaine-étape] Julien ajoute la clé de production dans les secrets avant le 1er décembre (source: h2-07)\n- [prochaine-étape] Vérifier que `TRANSALP_DEBUT` vaut bien `2026-12-01` au déploiement (source: h2-08, a90c4f7)\n- [essai-raté] Le ZPL est refusé en sandbox ; il ne marche qu'en recette et en production (source: ses-tr-1, src-mail-transalp)\n- [essai-raté] Sans `^CI28`, les accents sortent en bouillie sur la Zebra (« SaÃ´ne chÃªne ») ; corrigé dans `zpl.ts` (source: h2-03, h2-04)\n- [décision] Lyon et Paris partent chez TransAlp à partir du 1er décembre, et non le 23 novembre (source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, sans résiliation (source: h2-09, src-slack-julien)\n- [décision] Les étiquettes sont en ZPL par défaut, avec `PDF` toujours possible (source: h2-01, h2-05, 3e8b1d0)",
+  "rendu": "## Où j'en suis\nLe client TransAlp fonctionne en recette, et les étiquettes ZPL sortent correctement sur la Zebra après le correctif `^CI28`. La config de production est prête mais inactive avant le 1er décembre. La branche `hugo/transalp-etiquettes` est poussée et la PR #91 reste en brouillon, en relecture par Julien. (de: équipe, agent; source: ses-tr-2, h2-12, src-pr91)\n\n- [en-cours] PR #91 en brouillon, en attente de la relecture de Julien (de: équipe; source: src-pr91)\n- [prochaine-étape] Faire relire la PR #91 par Julien, puis la sortir du brouillon (de: équipe; source: src-pr91)\n- [prochaine-étape] Julien ajoute la clé de production dans les secrets avant le 1er décembre (de: toi; source: h2-07)\n- [prochaine-étape] Vérifier que `TRANSALP_DEBUT` vaut bien `2026-12-01` au déploiement (de: équipe, agent; source: h2-08, a90c4f7)\n- [essai-raté] Le ZPL est refusé en sandbox ; il ne marche qu'en recette et en production (de: connecteur, agent; source: ses-tr-1, src-mail-transalp)\n- [essai-raté] Sans `^CI28`, les accents sortent en bouillie sur la Zebra (« SaÃ´ne chÃªne ») ; corrigé dans `zpl.ts` (de: toi, agent; source: h2-03, h2-04)\n- [décision] Lyon et Paris partent chez TransAlp à partir du 1er décembre, et non le 23 novembre (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste pour le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, sans résiliation (de: toi, connecteur; source: h2-09, src-slack-julien)\n- [décision] Les étiquettes sont en ZPL par défaut, avec `PDF` toujours possible (de: toi, équipe; source: h2-01, h2-05, 3e8b1d0)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1598,
+    "lignesRetirees": 0,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5393,
+    "sortie": 1618,
+    "reflexion": 942,
+    "cache": 0,
+    "cout": 0.0013483
+  },
+  "cout": 0.0013483,
+  "latenceMs": 8022,
+  "fournisseur": "Claude Platform on AWS"
+}

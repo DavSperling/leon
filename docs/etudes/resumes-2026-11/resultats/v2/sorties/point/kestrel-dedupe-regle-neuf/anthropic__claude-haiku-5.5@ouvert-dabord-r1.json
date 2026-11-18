@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-haiku-5.5@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:09:34.709Z",
+  "reponse": "## What is still open\n- Orbitly: PR #247 (dedupe keyed on project, device and event_id) waits on Maya's approval once CI is green. She needs the count for Thursday's call: about 1.18M legitimate events dropped, roughly 8.1% of Orbitly's iOS volume, and Zest lost 3,812 [1][2]. After #247 is deployed, replay from landing from 13/11 (about 40 minutes for Orbitly, seconds for Zest) [1].\n- The iOS SDK must go back to UUID event_ids in 3.2.1. The draft note for the iOS team is written, but nothing shows it has been sent [1].\n- Your action item from the incident review: alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].\n\n## What changed\n- The final 12/11 postmortem is up, and Noa presents it at Friday's incident review [3][7].\n- Zest confirmed its dashboards are complete again and is closing its Zendesk ticket [6].\n- The Go toolchain moved to 1.23.4 in CI and the Dockerfile, merged with no code change [4].",
+  "rendu": "## What is still open\n- Orbitly: PR #247 (dedupe keyed on project, device and event_id) waits on Maya's approval once CI is green. She needs the count for Thursday's call: about 1.18M legitimate events dropped, roughly 8.1% of Orbitly's iOS volume, and Zest lost 3,812 [1][2]. After #247 is deployed, replay from landing from 13/11 (about 40 minutes for Orbitly, seconds for Zest) [1].\n- The iOS SDK must go back to UUID event_ids in 3.2.1. The draft note for the iOS team is written, but nothing shows it has been sent [1].\n- Your action item from the incident review: alert when the ingest dead-letter queue exceeds 1,000 messages, before Friday's review [7].\n\n## What changed\n- The final 12/11 postmortem is up, and Noa presents it at Friday's incident review [3][7].\n- Zest confirmed its dashboards are complete again and is closing its Zendesk ticket [6].\n- The Go toolchain moved to 1.23.4 in CI and the Dockerfile, merged with no code change [4].",
+  "mesures": {
+    "mots": 159,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6713,
+    "sortie": 3591,
+    "reflexion": 3210,
+    "cache": 0,
+    "cout": 0.0024668
+  },
+  "cout": 0.0024668,
+  "latenceMs": 16546,
+  "fournisseur": "Claude Platform on AWS"
+}

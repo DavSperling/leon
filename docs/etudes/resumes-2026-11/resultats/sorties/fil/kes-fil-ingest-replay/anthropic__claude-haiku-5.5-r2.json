@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:40:08.130Z",
+  "reponse": "## Où j'en suis\nLe replay réel est terminé : 18 442 107 événements produits dans `events.replay.v3`, et 3 118 lignes rejetées (schéma v2) écrites dans S3 (source: r2-04, kestrel-analytics/ingest#233). La PR #233 est fusionnée. Le backfill de l'agrégateur pour le 12/11 tourne depuis 08:57 UTC. À 09:52, il était à 61 %, avec 14,9 M lignes dans la fenêtre d'incident contre environ 20,5 M attendues (source: r2-06).\n\n- [en-cours] Backfill de l'agrégateur du 2026-11-12, lancé le 18/11 à 08:57 UTC (source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill à 100 %, comparer les comptes heure par heure avec une tolérance de 1 %, puis clore l'incident (source: r2-08, r2-10)\n- [prochaine-étape] Daniel ajoute un check CI qui échoue si la clé de dédoublonnage peut être tronquée (source: src-slack-incident)\n- [essai-raté] Dry run en batchs de 50 000 : OOMKilled (limite 2 Gi). Les batchs de 5 000 passent, pic à 310 MiB (source: src-sentry-oom, r1-05)\n- [question] Date de retour des données : Rachel a annoncé « jeudi » à Fernhill et Orbitly (source: r2-07). Orbitly attend pourtant une confirmation pour aujourd'hui, mercredi 18, et Rachel doit encore la confirmer (source: src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3`, sans rien écarter (source: r1-02, src-slack-incident)\n- [décision] Batchs de 5 000, limite mémoire inchangée (source: r1-04)\n- [décision] L'incident reste ouvert tant que les comptes ne correspondent pas (source: r2-07)\n- [décision] PR #241 ignorée, Daniel fait le check CI (source: r2-09)",
+  "rendu": "- [en-cours] Backfill de l'agrégateur du 2026-11-12, lancé le 18/11 à 08:57 UTC (de: agent; source: r2-06)\n- [prochaine-étape] Attendre la fin du backfill à 100 %, comparer les comptes heure par heure avec une tolérance de 1 %, puis clore l'incident (de: agent; source: r2-08, r2-10)\n- [prochaine-étape] Daniel ajoute un check CI qui échoue si la clé de dédoublonnage peut être tronquée (de: connecteur; source: src-slack-incident)\n- [essai-raté] Dry run en batchs de 50 000 : OOMKilled (limite 2 Gi). Les batchs de 5 000 passent, pic à 310 MiB (de: connecteur, agent; source: src-sentry-oom, r1-05)\n- [question] Date de retour des données : Rachel a annoncé « jeudi » à Fernhill et Orbitly (source: r2-07). Orbitly attend pourtant une confirmation pour aujourd'hui, mercredi 18, et Rachel doit encore la confirmer (de: connecteur; source: src-zendesk-orbitly)\n- [décision] Tout rejouer dans `events.replay.v3`, jamais dans `events.v3`, sans rien écarter (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] Batchs de 5 000, limite mémoire inchangée (de: toi; source: r1-04)\n- [décision] L'incident reste ouvert tant que les comptes ne correspondent pas (de: toi; source: r2-07)\n- [décision] PR #241 ignorée, Daniel fait le check CI (de: toi; source: r2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1274,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5138,
+    "sortie": 2589,
+    "reflexion": 1842,
+    "cache": 0,
+    "cout": 0.0018083
+  },
+  "cout": 0.0018083,
+  "latenceMs": 11140,
+  "fournisseur": "Claude Platform on AWS"
+}

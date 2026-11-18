@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:46.449Z",
+  "reponse": "## Où j'en être — wait, format\n\n## Où j'en suis\n\nThe SRE take-home is built and shipped to its own private repo `kestrel-analytics/sre-take-home` (compose with flaky-svc built from source, planted alert-rule bug, connection leak, over-broad IAM policy, 3-hour box, no k8s), with a 4-area rubric scoring 0–3 each. `hiring/` was removed from the infra branch without any PR; nothing was emailed.\n\n- [décision] You send the exercise to Ethan yourself after the Thursday 4pm Tel Aviv call (source: t16)\n- [décision] No threshold on the rubric: scores are panel input, Noa is second reviewer (source: t10)\n- [prochaine-étape] After Thursday's call, invite Ethan to the private repo and send him the README yourself\n- [prochaine-étape] Drop the `maya/sre-take-home` branch in infra whenever you're ready (source: t14)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is built and shipped to its own private repo `kestrel-analytics/sre-take-home` (compose with flaky-svc built from source, planted alert-rule bug, connection leak, over-broad IAM policy, 3-hour box, no k8s), with a 4-area rubric scoring 0–3 each. `hiring/` was removed from the infra branch without any PR; nothing was emailed.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [décision] You send the exercise to Ethan yourself after the Thursday 4pm Tel Aviv call (source: t16)\n- [décision] No threshold on the rubric: scores are panel input, Noa is second reviewer (source: t10)\n- [prochaine-étape] After Thursday's call, invite Ethan to the private repo and send him the README yourself\n- [prochaine-étape] Drop the `maya/sre-take-home` branch in infra whenever you're ready (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 874,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3859,
+    "sortie": 239,
+    "reflexion": 6,
+    "cache": 0,
+    "cout": 0.00085545
+  },
+  "cout": 0.00085545,
+  "latenceMs": 3812,
+  "fournisseur": "Makora"
+}

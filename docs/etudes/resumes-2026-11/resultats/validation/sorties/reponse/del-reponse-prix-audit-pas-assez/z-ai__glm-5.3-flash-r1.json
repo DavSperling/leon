@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-prix-audit-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:46.014Z",
+  "reponse": "Les résultats ne permettent pas de donner un montant précis. Le devis de l'audit Certénergie était encore attendu mi-novembre : Franck Le Gall note « budget : voir devis Certénergie (à recevoir) » [3], et Certénergie a confirmé l'audit du 8 décembre 2026 en précisant que le devis serait adressé séparément [2]. Patrick demandait d'ailleurs le montant le 16 novembre pour le provisionner, sans réponse visible [1]. On sait seulement que ce sera plus cher que l'an dernier, où seule la redevance annuelle de qualification avait été payée, car il s'agit cette fois d'un audit complet [5].",
+  "rendu": "Les résultats ne permettent pas de donner un montant précis. Le devis de l'audit Certénergie était encore attendu mi-novembre : Franck Le Gall note « budget : voir devis Certénergie (à recevoir) » [3], et Certénergie a confirmé l'audit du 8 décembre 2026 en précisant que le devis serait adressé séparément [2]. Patrick demandait d'ailleurs le montant le 16 novembre pour le provisionner, sans réponse visible [1]. On sait seulement que ce sera plus cher que l'an dernier, où seule la redevance annuelle de qualification avait été payée, car il s'agit cette fois d'un audit complet [5].",
+  "mesures": {
+    "mots": 93,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 948,
+    "sortie": 146,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00017216
+  },
+  "cout": 0.00017216,
+  "latenceMs": 3075,
+  "fournisseur": "River"
+}

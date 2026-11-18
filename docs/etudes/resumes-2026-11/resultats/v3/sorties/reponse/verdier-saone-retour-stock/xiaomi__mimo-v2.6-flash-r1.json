@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:26.450Z",
+  "reponse": "Les 25 premiers plateaux arrivent à l'entrepôt le 1er décembre, et, après montage et emballage, les expéditions démarrent le jeudi 3 décembre, date qui sera affichée sur la précommande [2][5]. C'est plus tard que l'estimation « fin novembre » notée le 10/11, à confirmer avec Bois & Fils [4]. Notez que 15 plateaux supplémentaires seront prêts mi-décembre, semaine du 14 [1], et qu'un client avait reçu une promesse de livraison sous 6 semaines environ [3].",
+  "rendu": "Les 25 premiers plateaux arrivent à l'entrepôt le 1er décembre, et, après montage et emballage, les expéditions démarrent le jeudi 3 décembre, date qui sera affichée sur la précommande [2][5]. C'est plus tard que l'estimation « fin novembre » notée le 10/11, à confirmer avec Bois & Fils [4]. Notez que 15 plateaux supplémentaires seront prêts mi-décembre, semaine du 14 [1], et qu'un client avait reçu une promesse de livraison sous 6 semaines environ [3].",
+  "mesures": {
+    "mots": 72,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1103,
+    "sortie": 268,
+    "reflexion": 118,
+    "cache": 512,
+    "cout": 0.000159316
+  },
+  "cout": 0.000159316,
+  "latenceMs": 4741,
+  "fournisseur": "Cohere"
+}

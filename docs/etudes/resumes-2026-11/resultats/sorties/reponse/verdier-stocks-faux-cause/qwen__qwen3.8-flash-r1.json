@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "qwen/qwen3.8-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:33:30.396Z",
+  "reponse": "Le stock Shopify est faux parce que le script de synchro décrémentait deux fois un produit disposant de deux emplacements, Shopify envoyant un webhook par emplacement [1]. Les logs confirment ce double webhook, avec le même updated_at et deux location_id [2]. La déduplication sur inventory_item_id, location_id et updated_at a été fusionnée dans main [1]. Pour la variante Saône chêne clair devenue négative, la cause indiquée est l’import nocturne CSV qui a écrasé le stock avant les commandes, et non #87 [5]. Un client a vu la table Saône affichée en stock, puis on lui a annoncé un délai [4].",
+  "rendu": "Le stock Shopify est faux parce que le script de synchro décrémentait deux fois un produit disposant de deux emplacements, Shopify envoyant un webhook par emplacement [1]. Les logs confirment ce double webhook, avec le même updated_at et deux location_id [2]. La déduplication sur inventory_item_id, location_id et updated_at a été fusionnée dans main [1]. Pour la variante Saône chêne clair devenue négative, la cause indiquée est l’import nocturne CSV qui a écrasé le stock avant les commandes, et non #87 [5]. Un client a vu la table Saône affichée en stock, puis on lui a annoncé un délai [4].",
+  "mesures": {
+    "mots": 99,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 0.667,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1120,
+    "sortie": 682,
+    "reflexion": 533,
+    "cache": 0,
+    "cout": 0.00048854
+  },
+  "cout": 0.00048854,
+  "latenceMs": 10616,
+  "fournisseur": "Alibaba"
+}

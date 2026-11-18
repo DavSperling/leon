@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "verdier-technique-boite-bruyante",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:33:15.085Z",
+  "reponse": "{\"n\": 1, \"titre\": \"Entretien annuel – Julien Morel\", \"debut\": \"2026-11-30T09:00\", \"fin\": \"2026-11-30T10:00\", \"avec\": \"Claire Verdier\"}\n{\"n\": 6, \"titre\": \"Point tunnel de commande – Studio Canut\", \"debut\": \"2026-11-17T16:00\", \"avec\": \"Mélanie Roche\"}\n{\"n\": 14, \"titre\": \"Point bug de synchro\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 15, \"titre\": \"Point bug de synchro\", \"debut\": \"2026-11-17T10:00\", \"avec\": \"Hugo Petit\"}\n{\"n\": 4, \"titre\": \"Session de debugging webhooks – StockPilot\", \"debut\": \"2026-11-18T09:00\", \"avec\": \"Ryan Okafor\"}\n{\"n\": 5, \"titre\": \"Session de debugging webhooks – StockPilot\", \"debut\": \"2026-11-18T18:00\", \"avec\": \"Ryan Okafor\"}\n{\"n\": 11, \"titre\": \"Démo du nouveau tunnel de commande\", \"debut\": \"2026-11-23T14:00\"}\n{\"n\": 12, \"titre\": \"Démo du nouveau tunnel de commande\", \"debut\": \"2026-11-23T14:00\"}\n{\"n\": 24, \"titre\": \"Visite de suivi en entreprise – Hugo Petit\", \"debut\": \"2026-11-17\", \"avec\": \"Nathalie Delorme\"}\n{\"n\": 25, \"titre\": \"Visite de suivi en entreprise – Hugo Petit\", \"debut\": \"2026-11-17\", \"avec\": \"Nathalie Delorme\"}",
+  "rendu": "2026-11-17 Visite de suivi en entreprise – Hugo Petit (avec Nathalie Delorme)\n2026-11-17T10:00 Point bug de synchro (avec Hugo Petit)\n2026-11-17T16:00 Point tunnel de commande – Studio Canut (avec Mélanie Roche)\n2026-11-18T09:00 Session de debugging webhooks – StockPilot (avec Ryan Okafor)\n2026-11-18T18:00 Session de debugging webhooks – StockPilot (avec Ryan Okafor)",
+  "mesures": {
+    "trouves": 5,
+    "attendus": 4,
+    "justes": 4,
+    "rappel": 1,
+    "precision": 0.8,
+    "f1": 0.889,
+    "faux": "2026-11-18T09:00 Session de debugging webhooks – StockPilot",
+    "manques": "",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4428,
+    "sortie": 578,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0007318
+  },
+  "cout": 0.0007318,
+  "latenceMs": 2454,
+  "fournisseur": "Claude Platform on AWS"
+}

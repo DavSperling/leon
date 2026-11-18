@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-black-friday-2025-inconnu",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:19.922Z",
+  "reponse": "Je ne sais pas pour le chiffre exact : les chiffres du Black Friday 2025 ne sont pas encore dans Leon. Les rapports Shopify de l'an dernier ont disparu au changement d'abonnement [1], et Antoine a promis de sortir le CA et le nombre de commandes d'ici le mercredi 25 novembre [2]. Au point d'équipe du 16, on était « toujours en attente des chiffres 2025 d'Antoine » [7].\n\nCe qu'on garde de l'an dernier, pour dimensionner le SAV :\n- Les commandes avaient à peu près doublé sur la semaine (souvenir de Karim, à confirmer par Antoine) [4].\n- Le SAV avait été débordé : des tickets restaient 4 jours sans réponse [4].\n\nCe qui change cette année :\n- SAV à 3 : Lucie, Inès et Karim l'après-midi ; Inès est un CDD renfort arrivé le 9 novembre [4][5].\n- Objectif de +20 % de CA par rapport au Black Friday 2025 [5], Black Friday du jeudi 26 au lundi 30 novembre [5].\n- Bascule transporteur TransAlp le 1er décembre, donc pendant la préparation des commandes BF, délais annoncés 3 à 5 jours ouvrés [6].",
+  "rendu": "Je ne sais pas pour le chiffre exact : les chiffres du Black Friday 2025 ne sont pas encore dans Leon. Les rapports Shopify de l'an dernier ont disparu au changement d'abonnement [1], et Antoine a promis de sortir le CA et le nombre de commandes d'ici le mercredi 25 novembre [2]. Au point d'équipe du 16, on était « toujours en attente des chiffres 2025 d'Antoine » [7].\n\nCe qu'on garde de l'an dernier, pour dimensionner le SAV :\n- Les commandes avaient à peu près doublé sur la semaine (souvenir de Karim, à confirmer par Antoine) [4].\n- Le SAV avait été débordé : des tickets restaient 4 jours sans réponse [4].\n\nCe qui change cette année :\n- SAV à 3 : Lucie, Inès et Karim l'après-midi ; Inès est un CDD renfort arrivé le 9 novembre [4][5].\n- Objectif de +20 % de CA par rapport au Black Friday 2025 [5], Black Friday du jeudi 26 au lundi 30 novembre [5].\n- Bascule transporteur TransAlp le 1er décembre, donc pendant la préparation des commandes BF, délais annoncés 3 à 5 jours ouvrés [6].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 29732,
+    "sortie": 882,
+    "reflexion": 384,
+    "cache": 18432,
+    "cout": 0.0018805696000000001
+  },
+  "latenceMs": 29729,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"Black Friday nombre de commandes\"}",
+    "chercher {\"requete\":\"\\\"Black Friday\\\" commandes service client volume\"}",
+    "chercher {\"requete\":\"commandes semaine novembre 2025 Shopify bilan\"}",
+    "chercher {\"requete\":\"nombre commandes 2025 statistiques ventes\"}",
+    "activite {\"outil\":\"Outlook\",\"depuis\":\"2026-11-18\"}",
+    "chercher {\"requete\":\"tickets SAV volume pics chiffre d'affaires semaine Black Friday dimensionner\"}"
+  ],
+  "cout": 0.0018805696000000001
+}

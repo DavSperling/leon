@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T17:54:12.720Z",
+  "reponse": "## What is still open\n\n- Maya approved and merged #418 last night, for that night's staging deploy. Signature validation still had to be on staging by Wednesday EOD, and you need to be on Fernhill IT's Okta walkthrough Thursday at 10am New York — Priya runs the demo. [3][1]\n- Tom is holding #423 until you split the `saml_utils` move from the lint and test fixes (frozen-time ACS tests, ruff 0.8, mypy). He said he would approve both that day. [4][1]\n- The assertion-ID replay cache is still in-memory only; you planned to move it to Redis today so a replay cannot succeed on another pod. [1]",
+  "rendu": "## What is still open\n\n- Maya approved and merged #418 last night, for that night's staging deploy. Signature validation still had to be on staging by Wednesday EOD, and you need to be on Fernhill IT's Okta walkthrough Thursday at 10am New York — Priya runs the demo. [3][1]\n- Tom is holding #423 until you split the `saml_utils` move from the lint and test fixes (frozen-time ACS tests, ruff 0.8, mypy). He said he would approve both that day. [4][1]\n- The assertion-ID replay cache is still in-memory only; you planned to move it to Redis today so a replay cannot succeed on another pod. [1]",
+  "mesures": {
+    "mots": 103,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6794,
+    "sortie": 5271,
+    "reflexion": 5112,
+    "cache": 1152,
+    "cout": 0.043486
+  },
+  "cout": 0.043486,
+  "latenceMs": 76436,
+  "fournisseur": "xAI"
+}

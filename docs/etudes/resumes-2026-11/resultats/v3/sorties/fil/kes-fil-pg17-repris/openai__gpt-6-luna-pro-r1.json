@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "openai/gpt-6-luna-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:59:02.443Z",
+  "reponse": "## Où j'en suis\nThe staging upgrade to PostgreSQL 17.2 is complete on branch `noa/rds-pg17` (PR #57 remains open). pg_partman was upgraded, blue/green cutover completed, and the dbt run passed all 14 models. Production is prepared but disabled; its date remains unset pending a full incident-free week on staging and Maya’s sign-off. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Monitor staging on PG 17.2 through the full-week validation period; production is not yet scheduled. (source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] After the full week, get Maya’s sign-off and choose a production window; include the required `rds.logical_replication = 1` change and reboot before blue/green. (source: s3-09, src-linear-kes298, src-slack-infra)\n- [décision] Keep the production date unset until staging has run for a full week on PG 17 and Maya signs off. (source: s3-09, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nThe staging upgrade to PostgreSQL 17.2 is complete on branch `noa/rds-pg17` (PR #57 remains open). pg_partman was upgraded, blue/green cutover completed, and the dbt run passed all 14 models. Production is prepared but disabled; its date remains unset pending a full incident-free week on staging and Maya’s sign-off. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Monitor staging on PG 17.2 through the full-week validation period; production is not yet scheduled. (de: connecteur, agent; source: ses-pg-3, src-linear-kes298)\n- [prochaine-étape] After the full week, get Maya’s sign-off and choose a production window; include the required `rds.logical_replication = 1` change and reboot before blue/green. (de: toi, connecteur; source: s3-09, src-linear-kes298, src-slack-infra)\n- [décision] Keep the production date unset until staging has run for a full week on PG 17 and Maya signs off. (de: toi, connecteur; source: s3-09, src-linear-kes298)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1009,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 14213,
+    "sortie": 852,
+    "reflexion": 319,
+    "cache": 8124,
+    "cout": 0.00111614
+  },
+  "cout": 0.00111614,
+  "latenceMs": 8075,
+  "fournisseur": "Azure"
+}

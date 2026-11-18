@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-tri-candidatures",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:12.372Z",
+  "reponse": "## Où j'en suis\nSession recrutement : 11 CV d'installateurs PAC extraits et fusionnés dans `recrutement/candidats-installateurs.xlsx`, 4 candidats convoqués, convocations rédigées dans `recrutement/convocations/`, grille d'entretien dans `recrutement/grille-entretien.md` (6 questions + mise en situation) et suivi dans `recrutement/suivi.md`. Les convocations ne sont pas encore envoyées : Aurélie s'en charge elle-même depuis Gmail.\n\n- [prochaine-étape] Aurélie envoie les 4 convocations depuis Gmail (prévu le 17/11 après-midi) (source: t16)\n- [prochaine-étape] Entretiens avec Yannick jeudi 19 (14h Le Roux, 15h Le Gac) et vendredi 20 (9h Perrot, 10h Carré), 45 min, atelier de Carquefou (source: t12)\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11 (source: t16)\n- [décision] Ne pas écarter Perrot pour son arrêt maladie, mention supprimée du tableau (source: t06)\n- [décision] Attestation fluides non éliminatoire : formation payée si le reste du profil est bon ; Haddou non convoqué (cherche en Mayenne) (source: t10)",
+  "rendu": "## Où j'en suis\nSession recrutement : 11 CV d'installateurs PAC extraits et fusionnés dans `recrutement/candidats-installateurs.xlsx`, 4 candidats convoqués, convocations rédigées dans `recrutement/convocations/`, grille d'entretien dans `recrutement/grille-entretien.md` (6 questions + mise en situation) et suivi dans `recrutement/suivi.md`. Les convocations ne sont pas encore envoyées : Aurélie s'en charge elle-même depuis Gmail.\n\n- [prochaine-étape] Aurélie envoie les 4 convocations depuis Gmail (prévu le 17/11 après-midi) (source: t16)\n- [prochaine-étape] Entretiens avec Yannick jeudi 19 (14h Le Roux, 15h Le Gac) et vendredi 20 (9h Perrot, 10h Carré), 45 min, atelier de Carquefou (source: t12)\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11 (source: t16)\n- [décision] Ne pas écarter Perrot pour son arrêt maladie, mention supprimée du tableau (source: t06)\n- [décision] Attestation fluides non éliminatoire : formation payée si le reste du profil est bon ; Haddou non convoqué (cherche en Mayenne) (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1053,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3277,
+    "sortie": 335,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00049374
+  },
+  "cout": 0.00049374,
+  "latenceMs": 5128,
+  "fournisseur": "Reka"
+}

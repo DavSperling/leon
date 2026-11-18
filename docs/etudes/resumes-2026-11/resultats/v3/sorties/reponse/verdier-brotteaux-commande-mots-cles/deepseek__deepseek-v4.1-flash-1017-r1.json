@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-brotteaux-commande-mots-cles",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:17.416Z",
+  "reponse": "Le bon de commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT, avec une livraison souhaitée au plus tard le 27 novembre et un paiement à 60 jours fin de mois [1][2]. Les 12 buffets sont emballés, avec un enlèvement par Rapid'Colis le 24/11 et une livraison au magasin le 25 [3]. La facturation se fera à la livraison, donc un encaissement attendu fin janvier [4]. Lors de la visite du showroom, Hélène Vasseur a aussi évoqué 8 tables basses Loire pour le printemps, avec une demande de prix à venir [5].",
+  "rendu": "Le bon de commande PO-2291 des Galeries Brotteaux porte sur 12 buffets « Rhône » chêne naturel à 690 € HT l'unité, soit 8 280 € HT, avec une livraison souhaitée au plus tard le 27 novembre et un paiement à 60 jours fin de mois [1][2]. Les 12 buffets sont emballés, avec un enlèvement par Rapid'Colis le 24/11 et une livraison au magasin le 25 [3]. La facturation se fera à la livraison, donc un encaissement attendu fin janvier [4]. Lors de la visite du showroom, Hélène Vasseur a aussi évoqué 8 tables basses Loire pour le printemps, avec une demande de prix à venir [5].",
+  "mesures": {
+    "mots": 103,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1093,
+    "sortie": 319,
+    "reflexion": 134,
+    "cache": 512,
+    "cout": 0.000253141
+  },
+  "cout": 0.000253141,
+  "latenceMs": 2195,
+  "fournisseur": "InferenceNet"
+}

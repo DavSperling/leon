@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:50.783Z",
+  "reponse": "Phase 1 (chart builder + saved views) hits its design-partner beta on **Wednesday Dec 9**, open to just 5 customers: Orbitly, Zest Grocers and three accounts from the October trial cohort [3][11]. Phase 1 was to be feature-complete behind the `dash_v2` flag by Dec 4 [2].\n\nEveryone else waits: no access before general availability, targeted at late January but not committed, with a waitlist opening in January [3][11]. Priya explicitly asked that no one promise access to customers outside the beta list [11].",
+  "rendu": "Phase 1 (chart builder + saved views) hits its design-partner beta on **Wednesday Dec 9**, open to just 5 customers: Orbitly, Zest Grocers and three accounts from the October trial cohort [3][11]. Phase 1 was to be feature-complete behind the `dash_v2` flag by Dec 4 [2].\n\nEveryone else waits: no access before general availability, targeted at late January but not committed, with a waitlist opening in January [3][11]. Priya explicitly asked that no one promise access to customers outside the beta list [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7570,
+    "sortie": 298,
+    "reflexion": 116,
+    "cache": 3072,
+    "cout": 0.0007217616
+  },
+  "latenceMs": 5708,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"\\\"new dashboards\\\" first release date customers availability\"}",
+    "chercher {\"requete\":\"dashboards v1 release timeline GA date cohort design customers\"}"
+  ],
+  "cout": 0.0007217616
+}

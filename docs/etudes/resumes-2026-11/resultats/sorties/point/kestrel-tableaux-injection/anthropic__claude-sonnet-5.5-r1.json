@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:38.224Z",
+  "reponse": "## What you did\n\n- Tu as poussé sur #427 le widget v2 compact, le menu réduit à Duplicate, Rename et Delete, les libellés « Week of Nov 2 » du tooltip de rétention, le skeleton de chargement et la palette catégorielle [1]. Le menu n'a plus l'export CSV : l'ancien endpoint v1 aurait renvoyé 404 sur les widgets v2 [1].\n\n## What changed\n\n- Priya bloque l'activation du flag pour Orbitly jeudi 19 : l'export CSV a disparu du menu v2, or Zest et Orbitly s'en servent. Elle te demande de le remettre, branché sur le nouvel export en arrière-plan [10].\n- #430 (export CSV en job d'arrière-plan, fixes #424) est approuvée par Daniel, à fusionner quand la CI est verte [5]. Rachel relance : Zest attend un délai, leur revue ops est lundi [6][9].\n- Sentry a ouvert #432 : le crash du tooltip sur les cohortes vides (`RetentionChart.tsx:212`) a touché 4 utilisateurs en staging, 37 événements [8].\n- Maya valide #427 derrière le flag, mais refuse de supprimer chartkit tant que v1 n'est pas retiré [7]. La migration visx que tu voulais demander à Priya est donc écartée pour l'instant.\n\n## What is still open\n\n- Remettre « Export CSV » dans le menu v2, branché sur le job de #430, avant jeudi 19 [10]. Réponds à Rachel avec une date une fois #430 fusionnée [9].\n- Corriger le crash du tooltip : protéger `point?.label`, afficher « No data yet » et ajouter un test avec une cohorte vide [1][8]. Le flag doit être solide en staging aujourd'hui [3].\n- Fusionner #430 après la CI [5].",
+  "rendu": "## What you did\n\n- Tu as poussé sur #427 le widget v2 compact, le menu réduit à Duplicate, Rename et Delete, les libellés « Week of Nov 2 » du tooltip de rétention, le skeleton de chargement et la palette catégorielle [1]. Le menu n'a plus l'export CSV : l'ancien endpoint v1 aurait renvoyé 404 sur les widgets v2 [1].\n\n## What changed\n\n- Priya bloque l'activation du flag pour Orbitly jeudi 19 : l'export CSV a disparu du menu v2, or Zest et Orbitly s'en servent. Elle te demande de le remettre, branché sur le nouvel export en arrière-plan [10].\n- #430 (export CSV en job d'arrière-plan, fixes #424) est approuvée par Daniel, à fusionner quand la CI est verte [5]. Rachel relance : Zest attend un délai, leur revue ops est lundi [6][9].\n- Sentry a ouvert #432 : le crash du tooltip sur les cohortes vides (`RetentionChart.tsx:212`) a touché 4 utilisateurs en staging, 37 événements [8].\n- Maya valide #427 derrière le flag, mais refuse de supprimer chartkit tant que v1 n'est pas retiré [7]. La migration visx que tu voulais demander à Priya est donc écartée pour l'instant.\n\n## What is still open\n\n- Remettre « Export CSV » dans le menu v2, branché sur le job de #430, avant jeudi 19 [10]. Réponds à Rachel avec une date une fois #430 fusionnée [9].\n- Corriger le crash du tooltip : protéger `point?.label`, afficher « No data yet » et ajouter un test avec une cohorte vide [1][8]. Le flag doit être solide en staging aujourd'hui [3].\n- Fusionner #430 après la CI [5].",
+  "mesures": {
+    "mots": 247,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8206,
+    "sortie": 656,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.022972
+  },
+  "cout": 0.022972,
+  "latenceMs": 5694,
+  "fournisseur": "Claude Platform on AWS"
+}

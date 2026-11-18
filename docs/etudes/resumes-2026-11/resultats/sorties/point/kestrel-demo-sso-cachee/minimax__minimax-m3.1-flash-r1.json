@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:34.672Z",
+  "reponse": "## Ce que tu as fait\n- Tu as rendu `test_acs_rejects_expired_assertion` déterministe (freezegun au lieu de `sleep`) et étendu le correctif aux deux autres tests ACS : 50 exécutions repeat vertes [1].\n- Tu as nettoyé `kestrel/auth` pour ruff 0.8 et mypy ; une assertion sans Issuer/Subject renvoie désormais un 401 au lieu d'un 500 [1].\n- Tu as découpé `saml_utils.py` (~900 lignes) en `kestrel/auth/saml/{assertions,metadata,bindings}.py`, les imports existants restant valides via un shim ; suite complète verte [1].\n- Tu as ouvert la PR #423 sur une branche dédiée, sans toucher #418 [1].\n\n## Ce qui a bougé\n- Maya a approuvé puis mergé #418 (vérification de signature SAML) : la feature part dans le déploiement staging de ce soir [3].\n- Tom demande des changements sur #423 : séparer le déplacement de module des correctifs lint en deux PRs, il approuve les deux aujourd'hui [4].\n- Le ticket #424 (export CSV Zest Grocers en timeout) est repris par Tom, qui le bascule en file de jobs — hors de ton périmètre [5].\n- Dependabot propose le bump de `cryptography` 43.0.1 → 43.0.3 [6].\n\n## Ce qui reste ouvert\n- La validation de signature doit être en staging avant la démo SSO end-to-end chez Fernhill IT jeudi 10h (heure de New York) : Priya anime, tu dois être sur l'appel. Ça dépend du déploiement staging de ce soir [1][3].\n- Le cache anti-rejeu des assertion IDs est toujours en mémoire par process : à porter sur Redis avant la prod multi-pods, prévu pour aujourd'hui [1].\n- #423 reste à scinder en deux PRs pour débloquer l'approbation de Tom [4].",
+  "rendu": "## Ce que tu as fait\n- Tu as rendu `test_acs_rejects_expired_assertion` déterministe (freezegun au lieu de `sleep`) et étendu le correctif aux deux autres tests ACS : 50 exécutions repeat vertes [1].\n- Tu as nettoyé `kestrel/auth` pour ruff 0.8 et mypy ; une assertion sans Issuer/Subject renvoie désormais un 401 au lieu d'un 500 [1].\n- Tu as découpé `saml_utils.py` (~900 lignes) en `kestrel/auth/saml/{assertions,metadata,bindings}.py`, les imports existants restant valides via un shim ; suite complète verte [1].\n- Tu as ouvert la PR #423 sur une branche dédiée, sans toucher #418 [1].\n\n## Ce qui a bougé\n- Maya a approuvé puis mergé #418 (vérification de signature SAML) : la feature part dans le déploiement staging de ce soir [3].\n- Tom demande des changements sur #423 : séparer le déplacement de module des correctifs lint en deux PRs, il approuve les deux aujourd'hui [4].\n- Le ticket #424 (export CSV Zest Grocers en timeout) est repris par Tom, qui le bascule en file de jobs — hors de ton périmètre [5].\n- Dependabot propose le bump de `cryptography` 43.0.1 → 43.0.3 [6].\n\n## Ce qui reste ouvert\n- La validation de signature doit être en staging avant la démo SSO end-to-end chez Fernhill IT jeudi 10h (heure de New York) : Priya anime, tu dois être sur l'appel. Ça dépend du déploiement staging de ce soir [1][3].\n- Le cache anti-rejeu des assertion IDs est toujours en mémoire par process : à porter sur Redis avant la prod multi-pods, prévu pour aujourd'hui [1].\n- #423 reste à scinder en deux PRs pour débloquer l'approbation de Tom [4].",
+  "mesures": {
+    "mots": 246,
+    "tropLong": false,
+    "puces": 11,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5447,
+    "sortie": 1330,
+    "reflexion": 912,
+    "cache": 128,
+    "cout": 0.00159777
+  },
+  "cout": 0.00159777,
+  "latenceMs": 6660,
+  "fournisseur": "Nebius"
+}

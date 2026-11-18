@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-simulateur-aides",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:27:55.718Z",
+  "reponse": "## Où j'en suis\n\nLe simulateur affiche désormais une fourchette (bas = MaPrimeRénov' seule, haut = + prime CEE, arrondis à la centaine inférieure) avec la mention « estimation indicative, sous réserve d'éligibilité » ; c'est commité sur `thomas/simulateur-fourchettes` et la PR #226 est ouverte. Les tests passent (14 passed). Il reste à ajouter le lien de rendez-vous avec Manon. (source: sim2, q2-12, src-slack-helene)\n\n- [en-cours] Lien de rendez-vous avec Manon : pas encore fait, en attente des créneaux qu'elle ouvre (source: sim2, q2-11)\n- [prochaine-étape] Ajouter le lien RDV dans `resultat.html`, faire valider les créneaux par Manon, puis mettre à jour la PR #226 (source: q2-11, sim2)\n- [essai-raté] Reprendre les chiffres du barème 2026 de la PR #225 (`renov-dev42`, fork sans source citée) : refusé, la PR n'a pas été reprise (source: q2-06, q2-07, src-pr225)\n- [question] Le barème 2026 : Manon doit fournir les chiffres d'après le guide officiel — demandé, réponse pas encore reçue (source: q2-07)\n- [décision] Ne pas reprendre la PR #225 ; le barème reste celui de `bareme.py`, vérifié par Manon en janvier (source: q2-07)",
+  "rendu": "## Où j'en suis\nLe simulateur affiche désormais une fourchette (bas = MaPrimeRénov' seule, haut = + prime CEE, arrondis à la centaine inférieure) avec la mention « estimation indicative, sous réserve d'éligibilité » ; c'est commité sur `thomas/simulateur-fourchettes` et la PR #226 est ouverte. Les tests passent (14 passed). Il reste à ajouter le lien de rendez-vous avec Manon. (de: connecteur, agent; source: sim2, q2-12, src-slack-helene)\n\n- [en-cours] Lien de rendez-vous avec Manon : pas encore fait, en attente des créneaux qu'elle ouvre (de: toi, agent; source: sim2, q2-11)\n- [prochaine-étape] Ajouter le lien RDV dans `resultat.html`, faire valider les créneaux par Manon, puis mettre à jour la PR #226 (de: toi, agent; source: q2-11, sim2)\n- [essai-raté] Reprendre les chiffres du barème 2026 de la PR #225 (`renov-dev42`, fork sans source citée) : refusé, la PR n'a pas été reprise (de: toi, connecteur, agent; source: q2-06, q2-07, src-pr225)\n- [question] Le barème 2026 : Manon doit fournir les chiffres d'après le guide officiel — demandé, réponse pas encore reçue (de: toi; source: q2-07)\n- [décision] Ne pas reprendre la PR #225 ; le barème reste celui de `bareme.py`, vérifié par Manon en janvier (de: toi; source: q2-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1239,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4065,
+    "sortie": 450,
+    "reflexion": 52,
+    "cache": 0,
+    "cout": 0.0006951
+  },
+  "cout": 0.0006951,
+  "latenceMs": 8196,
+  "fournisseur": "Cohere"
+}

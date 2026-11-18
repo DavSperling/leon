@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:53:58.572Z",
+  "reponse": "## What is still open\n- Maya needs Orbitly's dropped-event count for Thursday's call: about 1.18M real events, roughly 8.1% of their iOS volume. PR #247 is waiting for green CI and her approval. After deploy, replay Orbitly and Zest from 13/11, as you asked [1][2].\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday's review [7].\n\n## What changed\n- The final 12/11 postmortem is up, and Noa presents it at Friday's incident review (20/11) [3][7].\n- Go is bumped to 1.23.4 in CI and the Dockerfile, merged with no code change [4].\n\n## What you did\n- Traced the iOS drop to SDK 3.2.0 sending per-session `event_id`s, which the old dedupe treated as duplicates. You drafted a note asking the iOS team to restore UUIDs in 3.2.1. Nothing shows it has been sent yet [1].",
+  "rendu": "## What is still open\n- Maya needs Orbitly's dropped-event count for Thursday's call: about 1.18M real events, roughly 8.1% of their iOS volume. PR #247 is waiting for green CI and her approval. After deploy, replay Orbitly and Zest from 13/11, as you asked [1][2].\n- Add an alert when the ingest dead-letter queue goes above 1,000 messages, before Friday's review [7].\n\n## What changed\n- The final 12/11 postmortem is up, and Noa presents it at Friday's incident review (20/11) [3][7].\n- Go is bumped to 1.23.4 in CI and the Dockerfile, merged with no code change [4].\n\n## What you did\n- Traced the iOS drop to SDK 3.2.0 sending per-session `event_id`s, which the old dedupe treated as duplicates. You drafted a note asking the iOS team to restore UUIDs in 3.2.1. Nothing shows it has been sent yet [1].",
+  "mesures": {
+    "mots": 135,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6726,
+    "sortie": 4674,
+    "reflexion": 4345,
+    "cache": 0,
+    "cout": 0.0030096
+  },
+  "cout": 0.0030096,
+  "latenceMs": 22952,
+  "fournisseur": "Google"
+}

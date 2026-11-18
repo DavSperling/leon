@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tradewell-golive-responsable",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:25:04.819Z",
+  "reponse": "La date de Go-Live contractuelle avec Tradewell est le 7 décembre 2026 [1], sous réserve que Tradewell complète ses obligations d'onboarding (KYC et certification des webhooks) au plus tard 5 jours ouvrés avant [1]. En cas de retard attribuable à Quillon, des crédits de service de 5 % des frais mensuels par semaine de retard s'appliquent, plafonnés à 25 % [1]. Le cutover est piloté côté Quillon par Tomer Golan, de bout en bout [2] ; côté Tradewell, Ellen est la responsable [2].",
+  "rendu": "La date de Go-Live contractuelle avec Tradewell est le 7 décembre 2026 [1], sous réserve que Tradewell complète ses obligations d'onboarding (KYC et certification des webhooks) au plus tard 5 jours ouvrés avant [1]. En cas de retard attribuable à Quillon, des crédits de service de 5 % des frais mensuels par semaine de retard s'appliquent, plafonnés à 25 % [1]. Le cutover est piloté côté Quillon par Tomer Golan, de bout en bout [2] ; côté Tradewell, Ellen est la responsable [2].",
+  "mesures": {
+    "mots": 80,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1229,
+    "sortie": 143,
+    "reflexion": 3,
+    "cache": 0,
+    "cout": 0.00019038
+  },
+  "cout": 0.00019038,
+  "latenceMs": 1812,
+  "fournisseur": "Reka"
+}

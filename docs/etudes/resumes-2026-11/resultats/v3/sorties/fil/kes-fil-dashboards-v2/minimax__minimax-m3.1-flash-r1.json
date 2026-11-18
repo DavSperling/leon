@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:58:37.894Z",
+  "reponse": "## Where I am\nPR #418 (dashboard grid v2) is merged; the follow-up for keyboard move/resize and a visible focus ring is on branch `tom/dashboard-keyboard`, committed as 8f1a2c7 and open as PR #423 for Priya's review. The `dashboards_v2` flag is on for the Zest Grocers workspace in staging so Priya can rehearse the demo; production is untouched. The visx migration was abandoned: PR #401 is closed and charts remain on recharts. (source: d4-05, d4-07)\n\n- [in-progress] PR #423 \"Dashboards v2: keyboard move/resize + focus ring\" is open and awaiting Priya's review (source: d4-05)\n- [next-step] Merge PR #423 once reviewed, then flip `dashboards_v2` on in production — the user will do that himself on the morning of the 24th (source: d4-06)\n- [failed attempt] dnd-kit `KeyboardSensor` on top of react-grid-layout: both libraries handled the same pointer/key events, so every move applied twice and mouse drags fired two layout changes; the dependency was removed (source: d4-02)\n- [decision] Implement keyboard handling with a custom `useGridKeyboard()` hook over the layout state, no dnd-kit (source: d4-04)\n- [decision] Keep recharts and close the visx migration for good; two chart libraries are not wanted and there is no time to rewrite 9 charts (source: c3-03)\n- [decision] Enable `dashboards_v2` only for the Zest Grocers workspace in staging for the demo; production is handled separately (source: d4-06)",
+  "rendu": "- [décision] Implement keyboard handling with a custom `useGridKeyboard()` hook over the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Keep recharts and close the visx migration for good; two chart libraries are not wanted and there is no time to rewrite 9 charts (de: toi; source: c3-03)\n- [décision] Enable `dashboards_v2` only for the Zest Grocers workspace in staging for the demo; production is handled separately (de: toi; source: d4-06)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 460,
+    "lignesRetirees": 3,
+    "decisions": 3,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4888,
+    "sortie": 473,
+    "reflexion": 96,
+    "cache": 0,
+    "cout": 0.001017
+  },
+  "cout": 0.001017,
+  "latenceMs": 3707,
+  "fournisseur": "Together"
+}

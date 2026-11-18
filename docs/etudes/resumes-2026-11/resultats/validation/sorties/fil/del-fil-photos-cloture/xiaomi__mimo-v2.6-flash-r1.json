@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-photos-cloture",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:27:55.717Z",
+  "reponse": "## Où j'en suis\nLa PR #224 (branche `thomas/photos-envoi`, commits `9e41b07` et `d2c5a18`) est ouverte en brouillon : envoi des photos en arrière-plan via IndexedDB/service worker, état `cloture_en_attente` (migration 0043), redimensionnement côté serveur. Testée sur iPhone en mode avion et Android ; l'envoi part à la réouverture de l'appli sur le vieux Samsung d'Yannick. Relecteur désigné : @lucas-tessier, lundi. La branche `lucas/photos-compression` est conservée, non supprimée. (source: fs3, p3-10, p3-12, p3-13)\n\n- [en-cours] PR #224 en brouillon, en attente de la relecture de Lucas (source: src-pr224, p3-11)\n- [prochaine-étape] Relecture de Lucas lundi sur #224, puis passage en PR prête (source: p3-11, p3-12)\n- [prochaine-étape] Ajouter la 4e photo obligatoire « raccordement électrique » avant le 8/12 (source: src-slack-franck)\n- [essai-raté] Compression dans le navigateur (branch `lucas/photos-compression`) : abandonnée, `createImageBitmap` illisible sur les HEIC de Safari (image noire) ; la vraie cause des échecs en cave est l'absence de réseau, pas la taille (source: p2-06, p3-04, src-pr224)\n- [question] Reste à trancher la 4e photo : suite de la demande de Franck (Certénergie) (source: src-slack-franck)\n- [décision] On laisse tomber la compression navigateur : photos en file d'attente côté téléphone, clôture enregistrée tout de suite, redimensionnement côté serveur (source: p3-05)\n- [décision] L'intervention n'apparaît « clôturée » dans planif qu'à l'arrivée des photos obligatoires (source: p3-07)\n- [décision] Trois photos obligatoires avant la clôture, PR #221 fusionnée et en prod (source: p1-03, src-pr221)\n- [décision] Quatre photos obligatoires (ajout du raccordement électrique), avant le 8/12 (source: src-slack-franck)",
+  "rendu": "## Où j'en suis\nLa PR #224 (branche `thomas/photos-envoi`, commits `9e41b07` et `d2c5a18`) est ouverte en brouillon : envoi des photos en arrière-plan via IndexedDB/service worker, état `cloture_en_attente` (migration 0043), redimensionnement côté serveur. Testée sur iPhone en mode avion et Android ; l'envoi part à la réouverture de l'appli sur le vieux Samsung d'Yannick. Relecteur désigné : @lucas-tessier, lundi. La branche `lucas/photos-compression` est conservée, non supprimée. (de: toi, agent; source: fs3, p3-10, p3-12, p3-13)\n\n- [en-cours] PR #224 en brouillon, en attente de la relecture de Lucas (de: toi, équipe; source: src-pr224, p3-11)\n- [prochaine-étape] Relecture de Lucas lundi sur #224, puis passage en PR prête (de: toi, agent; source: p3-11, p3-12)\n- [prochaine-étape] Ajouter la 4e photo obligatoire « raccordement électrique » avant le 8/12 (de: connecteur; source: src-slack-franck)\n- [essai-raté] Compression dans le navigateur (branch `lucas/photos-compression`) : abandonnée, `createImageBitmap` illisible sur les HEIC de Safari (image noire) ; la vraie cause des échecs en cave est l'absence de réseau, pas la taille (de: équipe, agent; source: p2-06, p3-04, src-pr224)\n- [question] Reste à trancher la 4e photo : suite de la demande de Franck (Certénergie) (de: connecteur; source: src-slack-franck)\n- [décision] On laisse tomber la compression navigateur : photos en file d'attente côté téléphone, clôture enregistrée tout de suite, redimensionnement côté serveur (de: toi; source: p3-05)\n- [décision] L'intervention n'apparaît « clôturée » dans planif qu'à l'arrivée des photos obligatoires (de: toi; source: p3-07)\n- [décision] Trois photos obligatoires avant la clôture, PR #221 fusionnée et en prod (de: toi, équipe; source: p1-03, src-pr221)\n- [décision] Quatre photos obligatoires (ajout du raccordement électrique), avant le 8/12 (de: connecteur; source: src-slack-franck)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1911,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5389,
+    "sortie": 858,
+    "reflexion": 247,
+    "cache": 0,
+    "cout": 0.0009947
+  },
+  "cout": 0.0009947,
+  "latenceMs": 8926,
+  "fournisseur": "Cohere"
+}

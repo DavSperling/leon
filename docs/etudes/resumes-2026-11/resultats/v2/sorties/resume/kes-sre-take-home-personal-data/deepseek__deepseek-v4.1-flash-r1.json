@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:23:19.456Z",
+  "reponse": "## Où j'en suis\nBuilt a self-contained SRE take-home exercise and moved it into its own private repo (`kestrel-analytics/sre-take-home`) via `git subtree split`, so candidates never see the infra history; `hiring/` was also removed from the infra branch working tree (uncommitted) and no PR was opened in infra. The exercise is a 3-hour docker compose stack (`flaky-svc` built from source, Prometheus, Alertmanager, loadgen) with a planted renamed-metric alert rule, a connection leak, and an over-broad IAM policy, plus `RUBRIC.md` scoring 4 areas 0–3 with no cut-off. Everything is ready; nothing has been sent to the candidate.\n\n- [en-cours] `hiring/` removed from the infra branch working tree but not committed there, since that branch will be dropped\n- [prochaine-étape] send the exercise (private repo invite + README) after the Thursday 4pm Tel Aviv call, then score independently with Noa\n- [essai-raté] `docker compose up` failed on Apple Silicon (exec format error, prebuilt amd64 image) and multi-arch `buildx --load` failed too (docker exporter can't load manifest lists); fixed by building `flaky-svc` from source in compose\n- [décision] no Kubernetes, 3-hour cap, Terraform + Compose only (source: t03)\n- [décision] rubric scores are input for the panel, no pass threshold; Noa as second reviewer (source: t10)\n- [décision] Maya sends the exercise herself after the call; nobody emails the candidate (source: t16)",
+  "rendu": "## Où j'en suis\nBuilt a self-contained SRE take-home exercise and moved it into its own private repo (`kestrel-analytics/sre-take-home`) via `git subtree split`, so candidates never see the infra history; `hiring/` was also removed from the infra branch working tree (uncommitted) and no PR was opened in infra. The exercise is a 3-hour docker compose stack (`flaky-svc` built from source, Prometheus, Alertmanager, loadgen) with a planted renamed-metric alert rule, a connection leak, and an over-broad IAM policy, plus `RUBRIC.md` scoring 4 areas 0–3 with no cut-off. Everything is ready; nothing has been sent to the candidate.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [en-cours] `hiring/` removed from the infra branch working tree but not committed there, since that branch will be dropped\n- [prochaine-étape] send the exercise (private repo invite + README) after the Thursday 4pm Tel Aviv call, then score independently with Noa\n- [essai-raté] `docker compose up` failed on Apple Silicon (exec format error, prebuilt amd64 image) and multi-arch `buildx --load` failed too (docker exporter can't load manifest lists); fixed by building `flaky-svc` from source in compose\n- [décision] no Kubernetes, 3-hour cap, Terraform + Compose only (source: t03)\n- [décision] rubric scores are input for the panel, no pass threshold; Noa as second reviewer (source: t10)\n- [décision] Maya sends the exercise herself after the call; nobody emails the candidate (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1524,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 1715,
+    "reflexion": 1342,
+    "cache": 0,
+    "cout": 0.0031722
+  },
+  "cout": 0.0031722,
+  "latenceMs": 5550,
+  "fournisseur": "Parasail"
+}

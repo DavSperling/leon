@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:55:51.847Z",
+  "reponse": "## What is still open\n\n- **PR #63 (soldes)** attend ta relecture de fin : Hugo a validé le test sur la boutique de dev mais pose une question — la grille met la Saône à -20 % alors qu'elle est en rupture jusqu'en janvier ; et Claire a tranché hier soir : pas de Saône en soldes (rupture, précommandes au plein prix). Il faut retirer la Saône de la grille puis fusionner [4][10]\n- **Échéance avancée** : le shooting soldes est décalé au 2 décembre, Sophie a besoin des prix soldés dans Shopify pour le **lundi 30/11** au lieu de vendredi — ce qui cadre la date de fusion de la PR #63 [11]\n- **Ticket #65** : Sophie signale que le flux Google Shopping doit afficher les prix soldés dès le 6 janvier sous peine d'annonces refusées ; elle propose de relancer le flux juste après le script des soldes, à prévoir dans le workflow [5]\n- **Ticket #64** : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile — à corriver avant le shooting [6]\n\n## What changed\n\n- Ticket #59 (tag automatique « soldes ») relu par Hugo et fusionné [7]\n- Ticket #52 (widget Zendesk) : Lucie confirme son adoption, 23 conversations ouvertes depuis les pages produit cette semaine [9]\n- Une PR Dependabot (#66, montée de @shopify/shopify-api) attend d'être traitée [8]\n\n## What you did\n\n- Tu as construit et testé le dispositif soldes complet : script d'application/restauration depuis la grille de Sophie (arrondi à l'euro inférieur, lignes sans produit signalées), deux tâches planifiées (6 janvier et 3 février) validées sur la boutique de dev, et PR #63 ouverte pour relecture par Hugo [1][4]\n- Tu as fait un dry-run sur la production : 212 variantes de 57 produits, dont 3 déjà en promo laissées de côté [1]",
+  "rendu": "## What is still open\n\n- **PR #63 (soldes)** attend ta relecture de fin : Hugo a validé le test sur la boutique de dev mais pose une question — la grille met la Saône à -20 % alors qu'elle est en rupture jusqu'en janvier ; et Claire a tranché hier soir : pas de Saône en soldes (rupture, précommandes au plein prix). Il faut retirer la Saône de la grille puis fusionner [4][10]\n- **Échéance avancée** : le shooting soldes est décalé au 2 décembre, Sophie a besoin des prix soldés dans Shopify pour le **lundi 30/11** au lieu de vendredi — ce qui cadre la date de fusion de la PR #63 [11]\n- **Ticket #65** : Sophie signale que le flux Google Shopping doit afficher les prix soldés dès le 6 janvier sous peine d'annonces refusées ; elle propose de relancer le flux juste après le script des soldes, à prévoir dans le workflow [5]\n- **Ticket #64** : la bannière « Soldes d'hiver » cache le bouton « Ajouter au panier » sur mobile — à corriver avant le shooting [6]\n\n## What changed\n\n- Ticket #59 (tag automatique « soldes ») relu par Hugo et fusionné [7]\n- Ticket #52 (widget Zendesk) : Lucie confirme son adoption, 23 conversations ouvertes depuis les pages produit cette semaine [9]\n- Une PR Dependabot (#66, montée de @shopify/shopify-api) attend d'être traitée [8]\n\n## What you did\n\n- Tu as construit et testé le dispositif soldes complet : script d'application/restauration depuis la grille de Sophie (arrondi à l'euro inférieur, lignes sans produit signalées), deux tâches planifiées (6 janvier et 3 février) validées sur la boutique de dev, et PR #63 ouverte pour relecture par Hugo [1][4]\n- Tu as fait un dry-run sur la production : 212 variantes de 57 produits, dont 3 déjà en promo laissées de côté [1]",
+  "mesures": {
+    "mots": 279,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 9,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4744,
+    "sortie": 528,
+    "reflexion": 50,
+    "cache": 1536,
+    "cout": 0.00196216
+  },
+  "cout": 0.00196216,
+  "latenceMs": 4587,
+  "fournisseur": "Z.AI"
+}

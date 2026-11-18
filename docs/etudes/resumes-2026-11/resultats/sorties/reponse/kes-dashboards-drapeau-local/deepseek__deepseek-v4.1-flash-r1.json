@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:00.516Z",
+  "reponse": "The old way was to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but that's no longer valid: the flag was renamed dashboards_v2 and flags are now served by the API, so FEATURE_FLAGS is ignored [2]. Instead run `make dev-flags FLAGS=dashboards_v2` to enable it for the dev workspace [2], with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. The rollout plan also lists the flag as dashboards_v2 [4].",
+  "rendu": "The old way was to set FEATURE_FLAGS=new_dash in .env.local and restart vite [1], but that's no longer valid: the flag was renamed dashboards_v2 and flags are now served by the API, so FEATURE_FLAGS is ignored [2]. Instead run `make dev-flags FLAGS=dashboards_v2` to enable it for the dev workspace [2], with the API running, then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [3]. The rollout plan also lists the flag as dashboards_v2 [4].",
+  "mesures": {
+    "mots": 74,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1183,
+    "sortie": 247,
+    "reflexion": 118,
+    "cache": 0,
+    "cout": 0.00026052
+  },
+  "cout": 0.00026052,
+  "latenceMs": 3769,
+  "fournisseur": "River"
+}

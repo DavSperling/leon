@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:29:04.488Z",
+  "reponse": "## What you did\n- The prod PG17 cutover is ready: blue/green Terraform on prod (the read replica follows the deployment instead of being replaced), the runbook is written, and PR #321 is open with Maya as reviewer [1][3].\n- You rehearsed the full blue/green on a snapshot clone: green ready in 52 min, **74 s of write downtime**, no data mismatch, and the clone is now torn down [1].\n\n## What changed\n- **The cutover window moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00. Maya says you can update the runbook and merge #321 [8].\n- Maya approved #321, on condition that the window be confirmed before merging [3].\n- Daniel will be on call for the API on Sunday — ping him at switchover [7] — and Lior asks for 30 min notice so he can pause the ingest consumers cleanly [9].\n- Renovate opened #320 (aws provider 5.80 → 5.82), not merged [4].\n\n## What is still open\n- **Rollback rehearsal on a fresh clone, Thursday 19/11**: after switchover the blue instance gets no writes, so rollback is not a simple switch back. It's a TODO in the runbook [1].\n- The runbook (and the Notion page) still say Saturday — they need the new Sunday date before you merge #321 [8][10].",
+  "rendu": "## What you did\n- The prod PG17 cutover is ready: blue/green Terraform on prod (the read replica follows the deployment instead of being replaced), the runbook is written, and PR #321 is open with Maya as reviewer [1][3].\n- You rehearsed the full blue/green on a snapshot clone: green ready in 52 min, **74 s of write downtime**, no data mismatch, and the clone is now torn down [1].\n\n## What changed\n- **The cutover window moved to Sunday 22/11, 02:00–04:00 UTC**: Fernhill's month-end batch runs Saturday night until ~06:00. Maya says you can update the runbook and merge #321 [8].\n- Maya approved #321, on condition that the window be confirmed before merging [3].\n- Daniel will be on call for the API on Sunday — ping him at switchover [7] — and Lior asks for 30 min notice so he can pause the ingest consumers cleanly [9].\n- Renovate opened #320 (aws provider 5.80 → 5.82), not merged [4].\n\n## What is still open\n- **Rollback rehearsal on a fresh clone, Thursday 19/11**: after switchover the blue instance gets no writes, so rollback is not a simple switch back. It's a TODO in the runbook [1].\n- The runbook (and the Notion page) still say Saturday — they need the new Sunday date before you merge #321 [8][10].",
+  "mesures": {
+    "mots": 206,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5020,
+    "sortie": 856,
+    "reflexion": 522,
+    "cache": 0,
+    "cout": 0.001181
+  },
+  "cout": 0.001181,
+  "latenceMs": 4295,
+  "fournisseur": "Cohere"
+}

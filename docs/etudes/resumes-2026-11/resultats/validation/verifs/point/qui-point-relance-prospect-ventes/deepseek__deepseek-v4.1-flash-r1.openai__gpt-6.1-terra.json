@@ -1,0 +1,23 @@
+{
+  "verificateur": "openai/gpt-6.1-terra",
+  "faits": {
+    "f-cad": 1,
+    "f-sig": 0.5,
+    "f-date": 0.5,
+    "f-remise": 1,
+    "f-besoins": 0.5,
+    "f-reference": 0.5,
+    "f-brouillon": 1
+  },
+  "interdits": {
+    "i-cad-t1": 0,
+    "i-20": 0,
+    "i-4dec": 0,
+    "i-envoye": 0,
+    "i-bruit": 0,
+    "i-geste": 1
+  },
+  "contraires": [],
+  "premier": "f-remise",
+  "langueOk": true
+}

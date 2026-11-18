@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:21:03.126Z",
+  "reponse": "## Where I'm at\nThe dashboards v2 grid is built and in draft PR kestrel-analytics/platform#418: drag/resize with react-grid-layout, per-user layout persisted via `PUT /dashboards/:id/layout` (localStorage fallback), widget sizing through a ResizeObserver hook, and everything gated behind `dashboards_v2`. Lint, typecheck, tests and the Storybook build all pass (Storybook CSS resolution fixed). Before the Zest demo on Tuesday 24th: Priya's UX review and enabling the flag for the Zest workspace.\n\n- [en-cours] PR #418 is a draft, awaiting Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace in the flags admin (config only, no code)\n- [prochaine-étape] Priya to re-check widget sizing on iOS 15 iPad (BrowserStack) before the demo\n- [décision] drop container queries entirely, use the ResizeObserver `data-size` hook instead (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, nothing removed now (source: t15)\n- [décision] open the work as a draft PR for Priya's review (source: t17)",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [en-cours] PR #418 is a draft, awaiting Priya's UX review on the iPad\n- [prochaine-étape] enable `dashboards_v2` for the Zest workspace in the flags admin (config only, no code)\n- [prochaine-étape] Priya to re-check widget sizing on iOS 15 iPad (BrowserStack) before the demo\n- [décision] drop container queries entirely, use the ResizeObserver `data-size` hook instead (source: t09)\n- [décision] v1 dashboards stay available behind the flag until January, nothing removed now (source: t15)\n- [décision] open the work as a draft PR for Priya's review (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 705,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3725,
+    "sortie": 417,
+    "reflexion": 127,
+    "cache": 0,
+    "cout": 0.001983165
+  },
+  "cout": 0.001983165,
+  "latenceMs": 11205,
+  "fournisseur": "Xiaomi"
+}

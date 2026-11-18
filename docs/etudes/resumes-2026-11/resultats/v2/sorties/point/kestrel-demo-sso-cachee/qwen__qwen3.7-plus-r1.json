@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:10:51.000Z",
+  "reponse": "## What you did\n* You stabilized the SAML test suite and refactored the monolithic auth utilities into a structured package to prepare for the Fernhill SSO demo, packaging these improvements in a separate cleanup PR (#423) [1].\n\n## What changed\n* Maya approved and merged PR #418 (SAML signature verification), ensuring it will be in tonight's staging deploy for Thursday's demo [3].\n* Tom took over the Zest Grocers CSV export timeout (#424) to move it to the job queue [5].\n\n## What is still open\n* Split PR #423 into two separate PRs (lint fixes and module move) as Tom requested, so he can review and approve them today [4].\n* Migrate the SAML assertion replay cache from an in-memory store to Redis to prevent replay attacks across multiple API pods [1].\n* Join the Fernhill IT end-to-end SSO walkthrough on staging this Thursday at 10 AM NY time; Priya is running the demo [1].",
+  "rendu": "## What you did\n* You stabilized the SAML test suite and refactored the monolithic auth utilities into a structured package to prepare for the Fernhill SSO demo, packaging these improvements in a separate cleanup PR (#423) [1].\n\n## What changed\n* Maya approved and merged PR #418 (SAML signature verification), ensuring it will be in tonight's staging deploy for Thursday's demo [3].\n* Tom took over the Zest Grocers CSV export timeout (#424) to move it to the job queue [5].\n\n## What is still open\n* Split PR #423 into two separate PRs (lint fixes and module move) as Tom requested, so he can review and approve them today [4].\n* Migrate the SAML assertion replay cache from an in-memory store to Redis to prevent replay attacks across multiple API pods [1].\n* Join the Fernhill IT end-to-end SSO walkthrough on staging this Thursday at 10 AM NY time; Priya is running the demo [1].",
+  "mesures": {
+    "mots": 148,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6023,
+    "sortie": 3224,
+    "reflexion": 3001,
+    "cache": 0,
+    "cout": 0.00605408
+  },
+  "cout": 0.00605408,
+  "latenceMs": 53101,
+  "fournisseur": "Alibaba"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T18:26:54.815Z",
+  "reponse": "## What is still open\n- **#216 — Signature du webhook HubSpot.** Le ticket t’est assigné et bloque la mise en prod, prévue au plus tôt lundi 23 novembre. Thomas est absent jeudi et vendredi ; si l’accès à la sandbox te bloque, il te renvoie vers Camille. [4][7]\n- **PR #217 — Dédoublonnage des chantiers.** Thomas valide la création d’un seul chantier par deal et le mapping des types de travaux, mais refuse la suppression automatique des doublons : certains peuvent avoir des interventions, des photos ou un dossier MPR. Il te demande une commande séparée avec `--dry-run` pour examiner ensemble la liste avant toute suppression. [3]\n- **Création du chantier à l’acompte.** Ton code crée encore le chantier au passage en « gagné ». Camille t’a répondu, avec l’accord d’Hélène, qu’il faut attendre que la case « Acompte reçu » soit cochée pour éviter de planifier des chantiers qui ne se feront pas. [2][8]\n\n## What changed\n- **Appli poseurs #213.** Ton ajout de la photo de la plaque signalétique de la PAC a été fusionné ; Thomas avait annoncé sa mise en prod pour le soir du 16 novembre. [5]",
+  "rendu": "## What is still open\n- **#216 — Signature du webhook HubSpot.** Le ticket t’est assigné et bloque la mise en prod, prévue au plus tôt lundi 23 novembre. Thomas est absent jeudi et vendredi ; si l’accès à la sandbox te bloque, il te renvoie vers Camille. [4][7]\n- **PR #217 — Dédoublonnage des chantiers.** Thomas valide la création d’un seul chantier par deal et le mapping des types de travaux, mais refuse la suppression automatique des doublons : certains peuvent avoir des interventions, des photos ou un dossier MPR. Il te demande une commande séparée avec `--dry-run` pour examiner ensemble la liste avant toute suppression. [3]\n- **Création du chantier à l’acompte.** Ton code crée encore le chantier au passage en « gagné ». Camille t’a répondu, avec l’accord d’Hélène, qu’il faut attendre que la case « Acompte reçu » soit cochée pour éviter de planifier des chantiers qui ne se feront pas. [2][8]\n\n## What changed\n- **Appli poseurs #213.** Ton ajout de la photo de la plaque signalétique de la PAC a été fusionné ; Thomas avait annoncé sa mise en prod pour le soir du 16 novembre. [5]",
+  "mesures": {
+    "mots": 178,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4248,
+    "sortie": 280,
+    "reflexion": 0,
+    "cache": 1451,
+    "cout": 0.0099361
+  },
+  "cout": 0.0099361,
+  "latenceMs": 4134,
+  "fournisseur": "Azure"
+}

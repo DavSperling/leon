@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-avoir-orbitly-inconnu",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:07:29.314Z",
+  "reponse": "I don't know the amount — the credit terms in Orbitly's signed MSA aren't in what I could find.\n\nWhat I did establish:\n- The Nov 12 incident (08:47–12:27 UTC, ~3h40) caused stale dashboard data from an ingestion-service config change; all events were processed late, none lost [7].\n- Jonas Pike (VP Operations) is claiming the service credit under **section 7 of their MSA**, and Sam told him he'd come back on the credit after checking terms with finance [7].\n- Their MSA was **negotiated custom in 2024**, so generic 99.9%-SLA credit tiers can't be assumed. Sam couldn't find it attached to the HubSpot deal; Maya says it's in the **legal folder on the shared drive — ask Avi** [3][1].\n\nOne caveat worth flagging before settling: this incident was delayed/stale data, not full unavailability, and contracts often only count full unavailability as downtime — so section 7's definitions of \"Downtime\" and \"Service Credit\" determine whether a credit is owed at all [1][7].\n\nSearches run: Orbitly contract/outage/SLA credits, Orbitly signed MSA service credit terms, Orbitly MSA section 7. Sources read: the incident-report email thread, #deal-desk Slack thread, and Sam's SLA-terms conversation. The next step is pulling section 7 of the signed MSA from Avi to calculate the actual figure.",
+  "rendu": "I don't know the amount — the credit terms in Orbitly's signed MSA aren't in what I could find.\n\nWhat I did establish:\n- The Nov 12 incident (08:47–12:27 UTC, ~3h40) caused stale dashboard data from an ingestion-service config change; all events were processed late, none lost [7].\n- Jonas Pike (VP Operations) is claiming the service credit under **section 7 of their MSA**, and Sam told him he'd come back on the credit after checking terms with finance [7].\n- Their MSA was **negotiated custom in 2024**, so generic 99.9%-SLA credit tiers can't be assumed. Sam couldn't find it attached to the HubSpot deal; Maya says it's in the **legal folder on the shared drive — ask Avi** [3][1].\n\nOne caveat worth flagging before settling: this incident was delayed/stale data, not full unavailability, and contracts often only count full unavailability as downtime — so section 7's definitions of \"Downtime\" and \"Service Credit\" determine whether a credit is owed at all [1][7].\n\nSearches run: Orbitly contract/outage/SLA credits, Orbitly signed MSA service credit terms, Orbitly MSA section 7. Sources read: the incident-report email thread, #deal-desk Slack thread, and Sam's SLA-terms conversation. The next step is pulling section 7 of the signed MSA from Avi to calculate the actual figure.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 20676,
+    "sortie": 614,
+    "reflexion": 58,
+    "cache": 9728,
+    "cout": 0.029981599999999997
+  },
+  "latenceMs": 8310,
+  "fournisseur": "DigitalOcean",
+  "trace": [
+    "chercher {\"requete\":\"Orbitly contract outage credits SLA last week\"}",
+    "chercher {\"requete\":\"Orbitly signed MSA 2024 service credit terms downtime SLA\"}",
+    "lire {\"sourceId\":\"gmail-incident-report-orbitly\"}",
+    "chercher {\"requete\":\"Orbitly MSA section 7 service credit\"}"
+  ],
+  "cout": 0.029981599999999997
+}

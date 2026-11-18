@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4-pro",
+  "rep": 1,
+  "date": "2026-11-18T17:53:53.646Z",
+  "reponse": "## What is still open\n- Maya needs the dropped-event count for Thursday's Orbitly call: about **1.18M** Orbitly events and **3,812** Zest pilot events [1][2].\n- #247 still has to pass CI/Maya’s approval and be deployed; then the landing replay for Orbitly/Zest from 13/11 onward must run and the dedupe drop counter checked [1][2].\n- Add the dead-letter queue alert at >1,000 messages before Friday’s incident review (20/11) [7].\n- The iOS team note asking to restore UUID `event_id` in kestrel-ios 3.2.1 is still only drafted [1].\n\n## What changed\n- Noa finalized the 12/11 postmortem in #233 and will present it at Friday’s incident review [3].\n- The Go 1.23.4 CI bump #245 was merged [4].\n\n## What you did\n- Traced the Orbitly iOS funnel drop to kestrel-ios 3.2.0’s per-session `event_id` counters colliding with #240’s event_id-only dedupe [1].\n- Implemented and tested the `project_id:device_id:event_id` dedupe key [1].\n- Confirmed the after-deploy landing replay restores ~1.18M Orbitly events and skips the 4,352 genuine replays [1].",
+  "rendu": "## What is still open\n- Maya needs the dropped-event count for Thursday's Orbitly call: about **1.18M** Orbitly events and **3,812** Zest pilot events [1][2].\n- #247 still has to pass CI/Maya’s approval and be deployed; then the landing replay for Orbitly/Zest from 13/11 onward must run and the dedupe drop counter checked [1][2].\n- Add the dead-letter queue alert at >1,000 messages before Friday’s incident review (20/11) [7].\n- The iOS team note asking to restore UUID `event_id` in kestrel-ios 3.2.1 is still only drafted [1].\n\n## What changed\n- Noa finalized the 12/11 postmortem in #233 and will present it at Friday’s incident review [3].\n- The Go 1.23.4 CI bump #245 was merged [4].\n\n## What you did\n- Traced the Orbitly iOS funnel drop to kestrel-ios 3.2.0’s per-session `event_id` counters colliding with #240’s event_id-only dedupe [1].\n- Implemented and tested the `project_id:device_id:event_id` dedupe key [1].\n- Confirmed the after-deploy landing replay restores ~1.18M Orbitly events and skips the 4,352 genuine replays [1].",
+  "mesures": {
+    "mots": 154,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4887,
+    "sortie": 6964,
+    "reflexion": 6654,
+    "cache": 0,
+    "cout": 0.0240832
+  },
+  "cout": 0.0240832,
+  "latenceMs": 94401,
+  "fournisseur": "Novita"
+}

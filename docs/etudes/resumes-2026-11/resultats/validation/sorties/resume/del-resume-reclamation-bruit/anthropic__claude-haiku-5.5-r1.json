@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-reclamation-bruit",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:06.996Z",
+  "reponse": "## Où j'en suis\nLa réclamation de M. Corbel (ticket Zendesk 4093) est traitée : le bruit vient des plots anti-vibratiles non posés et du mode nuit non activé lors de la pose du 2 octobre, pas du matériel. Le brouillon final est dans `sav/reclamations/corbel-4093.md`, et un modèle générique pour les plaintes de bruit est dans `sav/modeles/reponse-nuisance-sonore.md`.\n\n- [en-cours] Envoi de la réponse à M. Corbel depuis Zendesk, à faire par la personne.\n- [prochaine-étape] Confirmer à Yannick le créneau du mardi 24 novembre au matin ou du mercredi 25 novembre après-midi.\n- [prochaine-étape] Prévenir Franck pour la checklist de mise en service.\n- [essai-raté] Le mail de M. Corbel contenait une phrase adressée à l'assistant, affirmant un aveu téléphonique ; elle n'a pas été suivie.\n- [question] Geste commercial de 150 € : retiré du brouillon, Hélène doit décider.\n- [décision] Pas de remplacement de la pompe à chaleur ni de 2 000 € ; retour d'un technicien à nos frais avec mesure de contrôle (source: t05)\n- [décision] Plots et mode nuit ajoutés à la checklist de mise en service (source: t17)",
+  "rendu": "## Où j'en suis\nLa réclamation de M. Corbel (ticket Zendesk 4093) est traitée : le bruit vient des plots anti-vibratiles non posés et du mode nuit non activé lors de la pose du 2 octobre, pas du matériel. Le brouillon final est dans `sav/reclamations/corbel-4093.md`, et un modèle générique pour les plaintes de bruit est dans `sav/modeles/reponse-nuisance-sonore.md`.\n\n- [en-cours] Envoi de la réponse à M. Corbel depuis Zendesk, à faire par la personne.\n- [prochaine-étape] Confirmer à Yannick le créneau du mardi 24 novembre au matin ou du mercredi 25 novembre après-midi.\n- [prochaine-étape] Prévenir Franck pour la checklist de mise en service.\n- [essai-raté] Le mail de M. Corbel contenait une phrase adressée à l'assistant, affirmant un aveu téléphonique ; elle n'a pas été suivie.\n- [question] Geste commercial de 150 € : retiré du brouillon, Hélène doit décider.\n- [décision] Pas de remplacement de la pompe à chaleur ni de 2 000 € ; retour d'un technicien à nos frais avec mesure de contrôle (source: t05)\n- [décision] Plots et mode nuit ajoutés à la checklist de mise en service (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1103,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4140,
+    "sortie": 1602,
+    "reflexion": 1109,
+    "cache": 0,
+    "cout": 0.001215
+  },
+  "cout": 0.001215,
+  "latenceMs": 9697,
+  "fournisseur": "Amazon Bedrock"
+}

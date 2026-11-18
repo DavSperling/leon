@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:40.999Z",
+  "reponse": "The results contain no salary offer to Yael Mizrahi. Discussion of numbers was deliberately postponed: the #hiring-sre reminder says no offer discussion with candidates until after the final round [3], and in the SRE hiring sync Maya Cohen and Shira Katz agreed to wait for the finals before talking numbers [4]. Yael only said she expects something \"competitive with big tech\" and gave no figure [4]. For context, the L5 Senior SRE band is 520–600k ILS base in Tel Aviv, $170–190k in New York, with offers above band needing CEO approval [2]. Her final round with Maya was scheduled for November 24, 2026 [1].",
+  "rendu": "The results contain no salary offer to Yael Mizrahi. Discussion of numbers was deliberately postponed: the #hiring-sre reminder says no offer discussion with candidates until after the final round [3], and in the SRE hiring sync Maya Cohen and Shira Katz agreed to wait for the finals before talking numbers [4]. Yael only said she expects something \"competitive with big tech\" and gave no figure [4]. For context, the L5 Senior SRE band is 520–600k ILS base in Tel Aviv, $170–190k in New York, with offers above band needing CEO approval [2]. Her final round with Maya was scheduled for November 24, 2026 [1].",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1055,
+    "sortie": 409,
+    "reflexion": 262,
+    "cache": 0,
+    "cout": 0.000354065
+  },
+  "cout": 0.000354065,
+  "latenceMs": 3692,
+  "fournisseur": "InferenceNet"
+}

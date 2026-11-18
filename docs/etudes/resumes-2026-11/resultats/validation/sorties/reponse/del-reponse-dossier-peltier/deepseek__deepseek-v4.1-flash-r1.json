@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:40.603Z",
+  "reponse": "Le dossier Peltier (Vertou) est en instruction : devis signé le 16/11, déposé le 17/11, accusé de réception reçu le même jour, travaux prévus le 27/11 [1]. Le suivi du 10/11 indiquait encore un devis non signé et un dépôt à faire [1] ; c'est le plus récent qui prime. Odile Peltier demande si elle peut commencer les travaux avant réponse [2]. Une note interne rappelle qu'une fois le dossier déposé les travaux peuvent commencer, la prime n'étant versée qu'après la fin des travaux, sur facture [3]. Le dossier est gagné, acompte reçu, PAC air/eau, suivi par Camille Ferrand, pose le 27/11 [4].",
+  "rendu": "Le dossier Peltier (Vertou) est en instruction : devis signé le 16/11, déposé le 17/11, accusé de réception reçu le même jour, travaux prévus le 27/11 [1]. Le suivi du 10/11 indiquait encore un devis non signé et un dépôt à faire [1] ; c'est le plus récent qui prime. Odile Peltier demande si elle peut commencer les travaux avant réponse [2]. Une note interne rappelle qu'une fois le dossier déposé les travaux peuvent commencer, la prime n'étant versée qu'après la fin des travaux, sur facture [3]. Le dossier est gagné, acompte reçu, PAC air/eau, suivi par Camille Ferrand, pose le 27/11 [4].",
+  "mesures": {
+    "mots": 101,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1108,
+    "sortie": 367,
+    "reflexion": 179,
+    "cache": 0,
+    "cout": 0.000334324
+  },
+  "cout": 0.000334324,
+  "latenceMs": 1796,
+  "fournisseur": "InferenceNet"
+}

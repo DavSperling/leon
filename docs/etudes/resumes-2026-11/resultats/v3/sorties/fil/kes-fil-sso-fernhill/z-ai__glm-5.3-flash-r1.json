@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:04.539Z",
+  "reponse": "## Où j'en suis\nFernhill SAML SSO on branch `daniel/saml-sso-fernhill`: JIT provisioning shipped via #415 (merged by Maya, commit `2be41f0`), and a real staging login now works end to end after fixing the RelayState limit — the return URL is stored in Redis (TTL 600 s) behind a short opaque ID (commit `6d0e2b8`). Group-to-role mapping (Fernhill-Kestrel-Admins → admin, everyone else viewer, applied at every login) is in open PR #421 (commit `f4a91c7`); full test suite passes (1301 passed). Demo is Thursday Nov 19, 10:00 ET; go-live Dec 1. (source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 (group to role mapping + short RelayState) is open and unmerged (source: ses-sso-3)\n- [prochaine-étape] Fernhill IT must add the `groups` attribute in their ADFS assertion; until then every login maps to viewer, so the admin mapping can't be exercised — Daniel is emailing them (source: ses-sso-3)\n- [prochaine-étape] get #421 merged, then run Thursday's demo with `kestrel.test1` plus an admin test account once the claim exists (source: ses-sso-3)\n- [décision] JIT only creates users from verified tenant domains, never from unverified ones (source: ses-sso-2, s2-03, src-pr415)\n- [décision] SAML only for Fernhill, no OIDC; both SP- and IdP-initiated flows (source: ses-sso-1, s1-03)\n- [décision] default role is viewer, least privilege; their admins upgrade people (source: ses-sso-1, s1-05)\n- [décision] Daniel rejected Fernhill IT's Slack request (all users as `analyst`, IdP-initiated only): viewer stays the default and SP-initiated login stays on until Maya talks to them — no analyst role exists (source: ses-sso-3, s3-07, src-slack-fernhill)\n- [question] how to resolve the conflict between Fernhill IT's Slack requests (analyst default, IdP-initiated only) and the current configuration — waiting on Maya (source: src-slack-fernhill, ses-sso-3)",
+  "rendu": "## Où j'en suis\nFernhill SAML SSO on branch `daniel/saml-sso-fernhill`: JIT provisioning shipped via #415 (merged by Maya, commit `2be41f0`), and a real staging login now works end to end after fixing the RelayState limit — the return URL is stored in Redis (TTL 600 s) behind a short opaque ID (commit `6d0e2b8`). Group-to-role mapping (Fernhill-Kestrel-Admins → admin, everyone else viewer, applied at every login) is in open PR #421 (commit `f4a91c7`); full test suite passes (1301 passed). Demo is Thursday Nov 19, 10:00 ET; go-live Dec 1. (de: équipe, connecteur, agent; source: ses-sso-3, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 (group to role mapping + short RelayState) is open and unmerged (de: agent; source: ses-sso-3)\n- [prochaine-étape] Fernhill IT must add the `groups` attribute in their ADFS assertion; until then every login maps to viewer, so the admin mapping can't be exercised — Daniel is emailing them (de: agent; source: ses-sso-3)\n- [prochaine-étape] get #421 merged, then run Thursday's demo with `kestrel.test1` plus an admin test account once the claim exists (de: agent; source: ses-sso-3)\n- [décision] JIT only creates users from verified tenant domains, never from unverified ones (de: toi, équipe, agent; source: ses-sso-2, s2-03, src-pr415)\n- [décision] SAML only for Fernhill, no OIDC; both SP- and IdP-initiated flows (de: toi, agent; source: ses-sso-1, s1-03)\n- [décision] default role is viewer, least privilege; their admins upgrade people (de: toi, agent; source: ses-sso-1, s1-05)\n- [décision] Daniel rejected Fernhill IT's Slack request (all users as `analyst`, IdP-initiated only): viewer stays the default and SP-initiated login stays on until Maya talks to them — no analyst role exists (de: toi, connecteur, agent; source: ses-sso-3, s3-07, src-slack-fernhill)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1816,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4573,
+    "sortie": 579,
+    "reflexion": 20,
+    "cache": 0,
+    "cout": 0.00097545
+  },
+  "cout": 0.00097545,
+  "latenceMs": 9959,
+  "fournisseur": "BaseTen"
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:17.520Z",
+  "reponse": "The Postgres 17 database upgrade production cutover is scheduled for Saturday, December 5, 2026, from 02:00 to 05:00 UTC [2]. \n\nKey dates for the maintenance window:\n- Staging rehearsal: Friday, November 27, 2026 [2]\n- Customer notice (status page + in-app banner): Saturday, November 28, 2026 [2]\n- Migration freeze starting from Thursday, December 3, 2026 [2]",
+  "rendu": "The Postgres 17 database upgrade production cutover is scheduled for Saturday, December 5, 2026, from 02:00 to 05:00 UTC [2]. \n\nKey dates for the maintenance window:\n- Staging rehearsal: Friday, November 27, 2026 [2]\n- Customer notice (status page + in-app banner): Saturday, November 28, 2026 [2]\n- Migration freeze starting from Thursday, December 3, 2026 [2]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.333,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7372,
+    "sortie": 216,
+    "reflexion": 51,
+    "cache": 0,
+    "cout": 0.0027516
+  },
+  "latenceMs": 3179,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"Postgres 17 upgrade December cutover window\"}"
+  ],
+  "cout": 0.0027516
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-stocks-faux-cause",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:00:35.296Z",
+  "reponse": "Deux causes distinctes apparaissent. D'abord, quand un produit a deux emplacements, Shopify envoie un webhook inventory_levels/update par emplacement et le script de synchro décrémentait le stock deux fois, d'où un correctif de déduplication sur (inventory_item_id, location_id, updated_at), fusionné le 17 novembre [1][2]. Ensuite, le stock négatif de la variante SAO-180-CC vient non pas de cette PR mais de l'import nocturne (scripts/stock/import-csv.ts), qui a écrasé le stock avec le CSV de Bois & Fils de la veille avant deux commandes [5][3]. Un client se plaint par ailleurs d'avoir commandé une table Saône affichée en stock [4].",
+  "rendu": "Deux causes distinctes apparaissent. D'abord, quand un produit a deux emplacements, Shopify envoie un webhook inventory_levels/update par emplacement et le script de synchro décrémentait le stock deux fois, d'où un correctif de déduplication sur (inventory_item_id, location_id, updated_at), fusionné le 17 novembre [1][2]. Ensuite, le stock négatif de la variante SAO-180-CC vient non pas de cette PR mais de l'import nocturne (scripts/stock/import-csv.ts), qui a écrasé le stock avec le CSV de Bois & Fils de la veille avant deux commandes [5][3]. Un client se plaint par ailleurs d'avoir commandé une table Saône affichée en stock [4].",
+  "mesures": {
+    "mots": 94,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1167,
+    "sortie": 265,
+    "reflexion": 84,
+    "cache": 512,
+    "cout": 0.000224771
+  },
+  "cout": 0.000224771,
+  "latenceMs": 2046,
+  "fournisseur": "InferenceNet"
+}

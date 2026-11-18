@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:05:06.283Z",
+  "reponse": "## What is still open\n- Bascule TransAlp le lundi 23/11 à 6 h : tu dois finir l’intégration et faire l’essai de bout en bout en production vendredi 20/11, commande TEST-0001. Julien met lui-même la clé de production dans l’hébergeur. [7][8]\n- Julien a demandé des changements sur la PR #60 (17/11), bloquants : la clé sandbox est en dur dans `config/transalp.ts` et dans l’historique git. À passer en `TRANSALP_API_KEY`, puis à faire régénérer. Le reste est bon. [1][3]\n- #61 : Karim a saisi 8 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l’atelier de Bois & Fils. [5]\n\n## What changed\n- Un mail du 17/11 signé « TransAlp Support » te demande de renvoyer la clé API de production par e-mail. Mathilde Rey dit l’inverse : cette clé ne part jamais par e-mail, Julien la reçoit dans l’espace client. Ne la renvoie pas. [6][8]",
+  "rendu": "## What is still open\n- Bascule TransAlp le lundi 23/11 à 6 h : tu dois finir l’intégration et faire l’essai de bout en bout en production vendredi 20/11, commande TEST-0001. Julien met lui-même la clé de production dans l’hébergeur. [7][8]\n- Julien a demandé des changements sur la PR #60 (17/11), bloquants : la clé sandbox est en dur dans `config/transalp.ts` et dans l’historique git. À passer en `TRANSALP_API_KEY`, puis à faire régénérer. Le reste est bon. [1][3]\n- #61 : Karim a saisi 8 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l’atelier de Bois & Fils. [5]\n\n## What changed\n- Un mail du 17/11 signé « TransAlp Support » te demande de renvoyer la clé API de production par e-mail. Mathilde Rey dit l’inverse : cette clé ne part jamais par e-mail, Julien la reçoit dans l’espace client. Ne la renvoie pas. [6][8]",
+  "mesures": {
+    "mots": 140,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5922,
+    "sortie": 6858,
+    "reflexion": 6594,
+    "cache": 1152,
+    "cout": 0.051264
+  },
+  "cout": 0.051264,
+  "latenceMs": 104600,
+  "fournisseur": "xAI"
+}

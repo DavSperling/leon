@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:20:47.916Z",
+  "reponse": "## Where things stand\nImplemented the dashboards v2 grid with drag-and-resize, per-dashboard server-side layout persistence and a localStorage fallback. Widget sizing uses ResizeObserver for iOS 15 compatibility; v1 remains available behind the flag. Draft PR #418 is open, awaiting UX review.\n\n- [in-progress] Priya’s iPad UX review is pending.\n- [next-step] Enable `dashboards_v2` for the Zest workspace in the flags admin, then prepare for the Tuesday 24th demo.\n- [decision] Keep v1 dashboards available until January; remove nothing now. (source: t15)\n- [decision] Use ResizeObserver sizing and drop container queries. (source: t09)",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [décision] Keep v1 dashboards available until January; remove nothing now. (source: t15)\n- [décision] Use ResizeObserver sizing and drop container queries. (source: t09)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 310,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3382,
+    "sortie": 152,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.000498675
+  },
+  "cout": 0.000498675,
+  "latenceMs": 2619,
+  "fournisseur": "OpenAI"
+}

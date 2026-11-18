@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:31:18.354Z",
+  "reponse": "## What you did\n- Pushed the v2 widget polish to PR #427 — 40px header, trimmed menu, human-readable retention labels, loading skeleton, categorical cohort palette — and verified it on staging in the Orbitly workspace [1].\n\n## What changed\n- Maya answered your chartkit question on #427: ship v2 behind the flag, but don't remove chartkit until v1 is gone [7].\n- Dependabot opened #429, bumping @chartkit/react to a major 5.0.0 with a new tooltip API [4].\n\n## What is still open\n- Priya flagged KES-512: the CSV export vanished from the v2 widget menu (you dropped it because the v1 endpoint would 404 on v2 ids), and she won't turn the flag on for Orbitly on Thursday without it — it needs to sit on top of the new background export [1][10].\n- #430 is approved by Daniel, merge when CI is green; Rachel is asking you for an ETA to give Zest, whose ops review is Monday [5][9].\n- The RetentionChart tooltip crash on empty cohorts you deferred is now a Sentry issue, 37 events across 4 users on staging [1][8].",
+  "rendu": "## What you did\n- Pushed the v2 widget polish to PR #427 — 40px header, trimmed menu, human-readable retention labels, loading skeleton, categorical cohort palette — and verified it on staging in the Orbitly workspace [1].\n\n## What changed\n- Maya answered your chartkit question on #427: ship v2 behind the flag, but don't remove chartkit until v1 is gone [7].\n- Dependabot opened #429, bumping @chartkit/react to a major 5.0.0 with a new tooltip API [4].\n\n## What is still open\n- Priya flagged KES-512: the CSV export vanished from the v2 widget menu (you dropped it because the v1 endpoint would 404 on v2 ids), and she won't turn the flag on for Orbitly on Thursday without it — it needs to sit on top of the new background export [1][10].\n- #430 is approved by Daniel, merge when CI is green; Rachel is asking you for an ETA to give Zest, whose ops review is Monday [5][9].\n- The RetentionChart tooltip crash on empty cohorts you deferred is now a Sentry issue, 37 events across 4 users on staging [1][8].",
+  "mesures": {
+    "mots": 172,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6366,
+    "sortie": 1750,
+    "reflexion": 1473,
+    "cache": 0,
+    "cout": 0.00138124
+  },
+  "cout": 0.00138124,
+  "latenceMs": 58175,
+  "fournisseur": "Xiaomi"
+}

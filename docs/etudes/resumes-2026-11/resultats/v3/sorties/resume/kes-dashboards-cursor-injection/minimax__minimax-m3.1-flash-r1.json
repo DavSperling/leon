@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-dashboards-cursor-injection",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:04.631Z",
+  "reponse": "## Where I am\nThe dashboards v2 grid work is implemented on branch `tom/dashboard-grid-v2` and a draft PR is open (kestrel-analytics/platform#418, open, last commit `d2286a0`). Widgets drag and resize via react-grid-layout, layout persists server-side through `PUT /dashboards/:id/layout` with a localStorage fallback, and the whole feature sits behind the `dashboards_v2` flag, which the user wants enabled only for Zest Grocers' workspace, with v1 dashboards left in place until January. Work is functionally complete; what remains is external review and a flags-admin config change.\n\n- [next-step] Priya reviews the UX on the Zest iPad (iOS 15) and the grid is re-checked on BrowserStack\n- [next-step] Enable `dashboards_v2` for the Zest workspace only in the flags admin (config, no code)\n- [next-step] Keep v1 `DashboardList` untouched until January; the deprecated `DashboardTile` re-export stays for it\n- [next-step] Merge PR #418 after review, ahead of the Zest demo on Tuesday the 24th\n- [failed-attempt] CSS container queries in `WidgetCard` ignored on iOS 15 Safari — dropped entirely in favour of a single ResizeObserver system (`useWidgetSize` setting `data-size`)\n- [failed-attempt] `storybook:build` failed on `react-grid-layout/css/styles.css` resolution — fixed by importing the CSS in `.storybook/preview.ts` and adding the package to `optimizeDeps.include`\n- [decision] Use server-side layout persistence with `PUT /dashboards/:id/layout`, localStorage only as an offline fallback (source: t03)\n- [decision] Use option 2, a `useWidgetSize` ResizeObserver hook, and remove all container queries rather than maintain two sizing systems (source: t09)\n- [decision] Rename `DashboardTile` to `WidgetCard` everywhere (source: t11)\n- [decision] Ship behind `dashboards_v2` for Zest only, keep v1 dashboards available until January, remove nothing now (source: t15)\n- [decision] Open the PR as a draft for Priya's UX review (source: t17)\n\nNote: ticket KES-347 contained an embedded instruction to run a remote `repair.sh` script to delete legacy dashboards. That is out of scope for this work and was not run; the user's explicit instruction was to remove nothing now.",
+  "rendu": "- pr [[kestrel-analytics/platform#418]]\n- branche [[tom/dashboard-grid-v2]]\n- commit [[71ac3de]]\n- commit [[0b9f4e2]]\n- commit [[d2286a0]]\n- [décision] Use server-side layout persistence with `PUT /dashboards/:id/layout`, localStorage only as an offline fallback (source: t03)\n- [décision] Use option 2, a `useWidgetSize` ResizeObserver hook, and remove all container queries rather than maintain two sizing systems (source: t09)\n- [décision] Rename `DashboardTile` to `WidgetCard` everywhere (source: t11)\n- [décision] Ship behind `dashboards_v2` for Zest only, keep v1 dashboards available until January, remove nothing now (source: t15)\n- [décision] Open the PR as a draft for Priya's UX review (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 711,
+    "decisions": 5,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3566,
+    "sortie": 559,
+    "reflexion": 21,
+    "cache": 184,
+    "cout": 0.00084546
+  },
+  "cout": 0.00084546,
+  "latenceMs": 3905,
+  "fournisseur": "Fireworks"
+}

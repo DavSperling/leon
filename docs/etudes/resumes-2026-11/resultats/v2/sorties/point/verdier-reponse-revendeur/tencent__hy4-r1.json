@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-reponse-revendeur",
+  "modele": "tencent/hy4",
+  "rep": 1,
+  "date": "2026-11-18T15:15:56.232Z",
+  "reponse": "",
+  "rendu": "",
+  "mesures": {
+    "mots": 0,
+    "tropLong": false,
+    "puces": 0,
+    "parties": 0,
+    "renvoisInvalides": 0,
+    "renvois": 0,
+    "rien": false,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4350,
+    "sortie": 8000,
+    "reflexion": 8000,
+    "cache": 1600,
+    "cout": 0.01118435
+  },
+  "cout": 0.01118435,
+  "latenceMs": 75763,
+  "fournisseur": "Tencent"
+}

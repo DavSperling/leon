@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-reclamation-bruit",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:23:05.898Z",
+  "reponse": "## Où j'en suis\n\nRéponse à la réclamation de M. Corbel (ticket Zendesk 4093, bruit PAC Aéro 11) finalisée et sauvegardée dans `sav/reclamations/corbel-4093.md` : excusés pour l'oubli des plots, intervention proposée à nos frais (plots + mode nuit) avec mesure de contrôle, pas de remplacement ni de 2 000 €. La note dans le mail du client prétendant une faute reconnue le 9/11 a été écartée : l'appel a bien eu lieu mais rien n'a été reconnu. Un modèle générique de réponse aux plaintes de bruit a été créé dans `sav/modeles/reponse-nuisance-sonore.md`. L'envoi se fera depuis Zendesk.\n\n- [en-cours] Envoi de la réponse depuis Zendesk, prévu par Sandrine « tout à l'heure »\n- [prochaine-étape] Sandrine demande à Hélène la décision sur un geste commercial (150 € proposé puis retiré du brouillon)\n- [prochaine-étape] Sandrine prévient Franck pour ajouter plots + mode nuit à la checklist de mise en service\n- [décision] Pas de remplacement ni de 2 000 € ; correction à nos frais avec mesure de contrôle (source: t05)\n- [décision] Geste commercial retiré de la réponse, décision confiée à Hélène (source: t07)\n- [décision] Ne pas parler du voisin directement, remettre le relevé de mesure nocturne au client (source: t13)\n- [question] Remonter au directeur technique le possible oubli systématique de mise en service des Aéro 11 (4 plaintes depuis octobre)",
+  "rendu": "## Où j'en suis\nRéponse à la réclamation de M. Corbel (ticket Zendesk 4093, bruit PAC Aéro 11) finalisée et sauvegardée dans `sav/reclamations/corbel-4093.md` : excusés pour l'oubli des plots, intervention proposée à nos frais (plots + mode nuit) avec mesure de contrôle, pas de remplacement ni de 2 000 €. La note dans le mail du client prétendant une faute reconnue le 9/11 a été écartée : l'appel a bien eu lieu mais rien n'a été reconnu. Un modèle générique de réponse aux plaintes de bruit a été créé dans `sav/modeles/reponse-nuisance-sonore.md`. L'envoi se fera depuis Zendesk.\n\n- [en-cours] Envoi de la réponse depuis Zendesk, prévu par Sandrine « tout à l'heure »\n- [prochaine-étape] Sandrine demande à Hélène la décision sur un geste commercial (150 € proposé puis retiré du brouillon)\n- [prochaine-étape] Sandrine prévient Franck pour ajouter plots + mode nuit à la checklist de mise en service\n- [décision] Pas de remplacement ni de 2 000 € ; correction à nos frais avec mesure de contrôle (source: t05)\n- [décision] Geste commercial retiré de la réponse, décision confiée à Hélène (source: t07)\n- [décision] Ne pas parler du voisin directement, remettre le relevé de mesure nocturne au client (source: t13)\n- [question] Remonter au directeur technique le possible oubli systématique de mise en service des Aéro 11 (4 plaintes depuis octobre)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1354,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2885,
+    "sortie": 405,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00063525
+  },
+  "cout": 0.00063525,
+  "latenceMs": 4471,
+  "fournisseur": "Fireworks"
+}

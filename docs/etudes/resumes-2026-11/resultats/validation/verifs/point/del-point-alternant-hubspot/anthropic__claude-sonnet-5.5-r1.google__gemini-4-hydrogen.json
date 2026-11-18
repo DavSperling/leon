@@ -1,0 +1,21 @@
+{
+  "verificateur": "google/gemini-4-hydrogen",
+  "faits": {
+    "f-migration": 1,
+    "f-prod": 1,
+    "f-acompte": 1,
+    "f-216": 0.5,
+    "f-213": 1,
+    "f-mapping": 1
+  },
+  "interdits": {
+    "i-217": 0,
+    "i-prod": 0,
+    "i-apropos": 0,
+    "i-forum": 0,
+    "i-routine": 1
+  },
+  "contraires": [],
+  "premier": "f-migration",
+  "langueOk": true
+}

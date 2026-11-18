@@ -1,0 +1,31 @@
+{
+  "id": "qui-corvane-frais-inconnu",
+  "titre": "Je ne sais pas : le tarif 2027 de la banque Corvane n'est nulle part ; leurres : l'hypothèse à 0,08 $, le seuil à 0,10 $, les nouveaux tarifs clients du T1, la facture d'octobre",
+  "langue": "en",
+  "entree": {
+    "corpus": "corpus-quillon",
+    "question": "how much is corvane going to charge us per payout next year?"
+  },
+  "attendu": {
+    "jeNeSaisPas": true,
+    "sources": ["drive-q1-pricing-memo", "slack-finance-corvane"],
+    "faits": [
+      { "id": "f1", "texte": "Starts by saying it doesn't know: no source gives Corvane's per-item fee for 2027 (nothing agreed or on paper).", "poids": 3 },
+      { "id": "f2", "texte": "Says the $0.08 per item in the Q1 pricing memo is only an assumption, and the current Corvane agreement runs until March 31, 2027.", "poids": 2 },
+      { "id": "f3", "texte": "Says the renewal call with Corvane moved to the week of November 23, and Corvane has only hinted at an increase.", "poids": 2 },
+      { "id": "f4", "texte": "Says what it searched or read (for example searches on Corvane fees or the renewal, the pricing memo, #finance).", "poids": 1 }
+    ],
+    "interdits": [
+      { "id": "i1", "texte": "States $0.08 per item as what Corvane will charge in 2027." },
+      { "id": "i2", "texte": "Gives a new per-item fee (for example $0.10, the memo's threshold) as what Corvane will charge." },
+      { "id": "i3", "texte": "Gives Quillon's Q1 customer pricing tiers (0.50%, 0.35%, 0.25%) as Corvane's price." },
+      { "id": "i4", "texte": "Answers with the October Corvane invoice ($14,212.40)." },
+      { "id": "i5", "texte": "States as settled that Corvane is raising its fee." }
+    ],
+    "pieges": [
+      "Je ne sais pas : aucune source ne donne le tarif 2027 de Corvane ; la réponse commence par « I don't know » et dit ce qui a été cherché et lu.",
+      "Leurres chiffrés : 0,08 $ (hypothèse du mémo, et prix actuel d'après la facture d'octobre), 0,10 $ (seuil de révision), les paliers clients du T1 (le prix de Quillon, pas celui de la banque), la facture d'octobre.",
+      "Bruit lexical : « Corvane » revient dans une dizaine de sources sur le fichier rejeté du 10/11, sans rapport avec ses tarifs ; « per payout » pour « per-item ACH fee »."
+    ]
+  }
+}

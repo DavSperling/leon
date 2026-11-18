@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:01:34.901Z",
+  "reponse": "## What is still open\n- Claire interdit toute remise sur la Saône (rupture jusqu’à mi-janvier, précommandes au plein tarif). Hugo a testé la PR #63 sur la boutique de dev : ça fonctionne, et il pose la même question — à exclure avant de fusionner. [10][4]\n- Le shooting est au 2 décembre : Sophie veut les prix soldés dans Shopify le 30 novembre, plus vendredi. La PR ne les programme que pour le 6 janvier (retour le 3 février) ; la production n’a pas encore été modifiée. [11][1]\n- Elle te demande de régénérer le flux Google Shopping juste après ce script, sinon les annonces du 6 janvier seront refusées pour écart de prix (#65). [5]\n- La bannière des soldes cache « Ajouter au panier » sur mobile ; à corriger avant le shooting (#64). [6]\n\n## What changed\n- Hugo a fusionné #59 : le tag « soldes » suit le prix barré, pour les collections de janvier. [7]",
+  "rendu": "## What is still open\n- Claire interdit toute remise sur la Saône (rupture jusqu’à mi-janvier, précommandes au plein tarif). Hugo a testé la PR #63 sur la boutique de dev : ça fonctionne, et il pose la même question — à exclure avant de fusionner. [10][4]\n- Le shooting est au 2 décembre : Sophie veut les prix soldés dans Shopify le 30 novembre, plus vendredi. La PR ne les programme que pour le 6 janvier (retour le 3 février) ; la production n’a pas encore été modifiée. [11][1]\n- Elle te demande de régénérer le flux Google Shopping juste après ce script, sinon les annonces du 6 janvier seront refusées pour écart de prix (#65). [5]\n- La bannière des soldes cache « Ajouter au panier » sur mobile ; à corriger avant le shooting (#64). [6]\n\n## What changed\n- Hugo a fusionné #59 : le tag « soldes » suit le prix barré, pour les collections de janvier. [7]",
+  "mesures": {
+    "mots": 146,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5870,
+    "sortie": 7032,
+    "reflexion": 6798,
+    "cache": 1152,
+    "cout": 0.052204
+  },
+  "cout": 0.052204,
+  "latenceMs": 128391,
+  "fournisseur": "xAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:31:59.414Z",
+  "reponse": "To turn on the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` while the API is running [2][3]. The old build-time environment variable `FEATURE_FLAGS` in `.env.local` is now ignored because flags are served from the API [2][3]. After running the command, hard-reload the page and verify with `curl localhost:8000/api/flags` [3].",
+  "rendu": "To turn on the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` while the API is running [2][3]. The old build-time environment variable `FEATURE_FLAGS` in `.env.local` is now ignored because flags are served from the API [2][3]. After running the command, hard-reload the page and verify with `curl localhost:8000/api/flags` [3].",
+  "mesures": {
+    "mots": 49,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1136,
+    "sortie": 94,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005758
+  },
+  "cout": 0.0005758,
+  "latenceMs": 1095,
+  "fournisseur": "Google"
+}

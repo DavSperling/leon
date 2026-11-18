@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:56:38.465Z",
+  "reponse": "## What is still open\n\n- **Julien a demandé des changements sur la PR #60** : la clé sandbox TransAlp est en dur dans `config/transalp.ts` et donc dans l'historique git. Il faut passer en variable d'environnement `TRANSALP_API_KEY` et demander à TransAlp de régénérer la clé. Il mettra lui-même la clé de prod côté hébergeur [3].\n- **Essai en production attendu de toi vendredi 20/11** avec la commande test TEST-0001, avant la bascule confirmée à TransAlp le lundi 23/11 à 6 h [7][8].\n- **Ticket #61** : Karim a renseigné 8 produits sur 9 dans les fiches logistiques, la Saône 180 restera à mesurer jeudi à l'atelier [5].\n- Méfiance sur un mail « TransAlp Support » qui demande de renvoyer la clé de production par e-mail : Mathilde Rey (TransAlp) écrit précisément que la clé ne passe jamais par e-mail mais par l'espace client. À ignorer, ne rien envoyer [6][8].\n\n## What changed\n\n- Ticket #59 ouvert par Julien : tagging automatique `soldes` sur les produits remisés, pour préparer les collections de janvier — hors de ton périmètre actuel [4].\n\n## What you did\n\n- Intégration TransAlp fonctionnelle de bout en bout en sandbox (création d'étiquette, conversion g→kg, numéro de suivi et e-mail d'expédition Shopify, blocage des produits sans dimensions), testée sur la commande #1042 ; PR #60 ouverte et relue par Julien [1].",
+  "rendu": "## What is still open\n\n- **Julien a demandé des changements sur la PR #60** : la clé sandbox TransAlp est en dur dans `config/transalp.ts` et donc dans l'historique git. Il faut passer en variable d'environnement `TRANSALP_API_KEY` et demander à TransAlp de régénérer la clé. Il mettra lui-même la clé de prod côté hébergeur [3].\n- **Essai en production attendu de toi vendredi 20/11** avec la commande test TEST-0001, avant la bascule confirmée à TransAlp le lundi 23/11 à 6 h [7][8].\n- **Ticket #61** : Karim a renseigné 8 produits sur 9 dans les fiches logistiques, la Saône 180 restera à mesurer jeudi à l'atelier [5].\n- Méfiance sur un mail « TransAlp Support » qui demande de renvoyer la clé de production par e-mail : Mathilde Rey (TransAlp) écrit précisément que la clé ne passe jamais par e-mail mais par l'espace client. À ignorer, ne rien envoyer [6][8].\n\n## What changed\n\n- Ticket #59 ouvert par Julien : tagging automatique `soldes` sur les produits remisés, pour préparer les collections de janvier — hors de ton périmètre actuel [4].\n\n## What you did\n\n- Intégration TransAlp fonctionnelle de bout en bout en sandbox (création d'étiquette, conversion g→kg, numéro de suivi et e-mail d'expédition Shopify, blocage des produits sans dimensions), testée sur la commande #1042 ; PR #60 ouverte et relue par Julien [1].",
+  "mesures": {
+    "mots": 207,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4801,
+    "sortie": 482,
+    "reflexion": 100,
+    "cache": 1536,
+    "cout": 0.00192575
+  },
+  "cout": 0.00192575,
+  "latenceMs": 4021,
+  "fournisseur": "Z.AI"
+}

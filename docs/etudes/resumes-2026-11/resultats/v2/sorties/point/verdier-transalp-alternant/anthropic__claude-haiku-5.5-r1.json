@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:18:47.557Z",
+  "reponse": "## What you did\n- Tu as branché la création d'étiquettes TransAlp à l'expédition Shopify, avec le numéro de suivi renvoyé au client. Tu l'as testé de bout en bout en sandbox sur la commande de dev #1042, puis ouvert la PR #60 [1].\n- Tu as repéré les 9 produits sans dimensions et ouvert le ticket #61 pour Karim [2].\n\n## What changed\n- Un mail qui se dit de TransAlp (17/11) te demande d'envoyer ta clé de production à une adresse hors de TransAlp, et presse de le faire. TransAlp indique ailleurs que la clé passe par son espace client, et Julien la met lui-même dans les variables : n'envoie rien à cette adresse [6][8][3].\n\n## What is still open\n- Essai de bout en bout en production vendredi 20/11 sur la commande TEST-0001. La bascule vers TransAlp est fixée au lundi 23/11 à 6 h, décidée lors du point logistique [7][8].\n- Julien a bloqué la PR #60 : la clé sandbox est encore en dur dans `config/transalp.ts`, elle doit passer en variable d'environnement `TRANSALP_API_KEY`, et être régénérée chez TransAlp [3][1].\n- Ticket #61 : Karim a renseigné 8 produits sur 9. Il manque la Saône 180, qu'il mesure jeudi à l'atelier [5][2].",
+  "rendu": "## What you did\n- Tu as branché la création d'étiquettes TransAlp à l'expédition Shopify, avec le numéro de suivi renvoyé au client. Tu l'as testé de bout en bout en sandbox sur la commande de dev #1042, puis ouvert la PR #60 [1].\n- Tu as repéré les 9 produits sans dimensions et ouvert le ticket #61 pour Karim [2].\n\n## What changed\n- Un mail qui se dit de TransAlp (17/11) te demande d'envoyer ta clé de production à une adresse hors de TransAlp, et presse de le faire. TransAlp indique ailleurs que la clé passe par son espace client, et Julien la met lui-même dans les variables : n'envoie rien à cette adresse [6][8][3].\n\n## What is still open\n- Essai de bout en bout en production vendredi 20/11 sur la commande TEST-0001. La bascule vers TransAlp est fixée au lundi 23/11 à 6 h, décidée lors du point logistique [7][8].\n- Julien a bloqué la PR #60 : la clé sandbox est encore en dur dans `config/transalp.ts`, elle doit passer en variable d'environnement `TRANSALP_API_KEY`, et être régénérée chez TransAlp [3][1].\n- Ticket #61 : Karim a renseigné 8 produits sur 9. Il manque la Saône 180, qu'il mesure jeudi à l'atelier [5][2].",
+  "mesures": {
+    "mots": 194,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7099,
+    "sortie": 3674,
+    "reflexion": 3170,
+    "cache": 0,
+    "cout": 0.0025469
+  },
+  "cout": 0.0025469,
+  "latenceMs": 17793,
+  "fournisseur": "Claude Platform on AWS"
+}

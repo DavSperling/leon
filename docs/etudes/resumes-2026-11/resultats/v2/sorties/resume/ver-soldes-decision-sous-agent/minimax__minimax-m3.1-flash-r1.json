@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:59.937Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est codé, testé et PR ouverte : règles de remise par collection, écriture en masse via l'API Shopify, export CSV et programmation cron. La branche `julien/script-soldes-hiver` contient trois commits (e5a90b3, 1c7d2f8, 9af3e61) et la PR maison-verdier/boutique#94 est ouverte. Il reste le script de retour aux prix d'origine, prévu pour décembre par la personne.\n\n- [décision] -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] Arrondi à l'euro inférieur puis prix terminant par 9 (1 290 → 1 029) ; prix sous 20 € non touchés (source: t07)\n- [décision] Passage en bulk operation après nettoyage de la boutique de dev (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00, pas de prix barrés visibles avant l'ouverture (source: t15)\n- [prochaine-étape] Script de retour aux prix d'origine à écrire en décembre\n- [question] Le CSV `/tmp/prix-soldes.csv` pour la newsletter du 6 janvier est à régénérer si les prix changent d'ici là\n- [essai-raté] L'appel API produit par produit a échoué sur throttling (73 produits non mis à jour, boutique de dev à moitié soldée), d'où le passage au bulk",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est codé, testé et PR ouverte : règles de remise par collection, écriture en masse via l'API Shopify, export CSV et programmation cron. La branche `julien/script-soldes-hiver` contient trois commits (e5a90b3, 1c7d2f8, 9af3e61) et la PR maison-verdier/boutique#94 est ouverte. Il reste le script de retour aux prix d'origine, prévu pour décembre par la personne.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [décision] -20 % sur Rhône, -30 % sur les fins de série, Saône exclue (source: t05)\n- [décision] Arrondi à l'euro inférieur puis prix terminant par 9 (1 290 → 1 029) ; prix sous 20 € non touchés (source: t07)\n- [décision] Passage en bulk operation après nettoyage de la boutique de dev (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00, pas de prix barrés visibles avant l'ouverture (source: t15)\n- [prochaine-étape] Script de retour aux prix d'origine à écrire en décembre\n- [question] Le CSV `/tmp/prix-soldes.csv` pour la newsletter du 6 janvier est à régénérer si les prix changent d'ici là\n- [essai-raté] L'appel API produit par produit a échoué sur throttling (73 produits non mis à jour, boutique de dev à moitié soldée), d'où le passage au bulk",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1335,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3850,
+    "sortie": 409,
+    "reflexion": 61,
+    "cache": 0,
+    "cout": 0.0008229
+  },
+  "cout": 0.0008229,
+  "latenceMs": 2733,
+  "fournisseur": "Makora"
+}

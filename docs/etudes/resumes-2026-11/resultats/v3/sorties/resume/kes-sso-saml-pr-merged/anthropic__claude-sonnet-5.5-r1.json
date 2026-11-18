@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:58:00.470Z",
+  "reponse": "## Où j'en suis\nThe SAML ACS endpoint now verifies the assertion signature with signxml (python3-saml dropped), checks conditions, audience and recipient, and has replay protection in Redis, with a 120 s clock skew. Commits 3f9c2a1, b71e04d and e0a5c93 are in PR kestrel-analytics/platform#412. The facts show it as merged, although the last merge attempt was refused for lack of a review. Loading Fernhill's staging IdP metadata is still to do.\n\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday end of day.\n- [prochaine-étape] Be ready for the Fernhill SSO demo on Thursday at 10:00 New York.\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml failed on Alpine: lxml/xmlsec libxml2 mismatch, and building lxml from source still failed (9 min build, no crypto module).\n- [décision] Use signxml, drop python3-saml and xmlsec, and read data only from signed_xml (source: t08)\n- [décision] Skew set to 120 s per the Fernhill contract annex; password login left out of this PR (source: t12)",
+  "rendu": "## Où j'en suis\nThe SAML ACS endpoint now verifies the assertion signature with signxml (python3-saml dropped), checks conditions, audience and recipient, and has replay protection in Redis, with a 120 s clock skew. Commits 3f9c2a1, b71e04d and e0a5c93 are in PR kestrel-analytics/platform#412. The facts show it as merged, although the last merge attempt was refused for lack of a review. Loading Fernhill's staging IdP metadata is still to do.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [prochaine-étape] Load Fernhill's staging IdP metadata and send them our staging SP metadata by Wednesday end of day.\n- [prochaine-étape] Be ready for the Fernhill SSO demo on Thursday at 10:00 New York.\n- [prochaine-étape] Create a separate ticket to enforce SSO and disable password login for Fernhill users.\n- [essai-raté] python3-saml failed on Alpine: lxml/xmlsec libxml2 mismatch, and building lxml from source still failed (9 min build, no crypto module).\n- [décision] Use signxml, drop python3-saml and xmlsec, and read data only from signed_xml (source: t08)\n- [décision] Skew set to 120 s per the Fernhill contract annex; password login left out of this PR (source: t12)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1262,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6560,
+    "sortie": 447,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01759
+  },
+  "cout": 0.01759,
+  "latenceMs": 3476,
+  "fournisseur": "Amazon Bedrock"
+}

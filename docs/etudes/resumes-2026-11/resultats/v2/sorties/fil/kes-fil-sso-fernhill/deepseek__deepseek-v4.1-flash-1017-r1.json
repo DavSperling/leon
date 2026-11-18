@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:28:35.703Z",
+  "reponse": "## Où j'en suis\nReal SP-initiated SAML login now works end to end on staging with Fernhill's IdP: their staging metadata is loaded for the `fernhill` tenant, RelayState is a short opaque ID backed by Redis, and JIT provisioning (merged as #415) creates users with the `viewer` role. Group-to-role mapping is written and open as #421, but their assertion carries no `groups` attribute yet, so everyone still lands as `viewer`; Fernhill IT has to add the claim before the demo (Thursday Nov 19, 10:00 ET) and the Dec 1 go-live. (source: s3-04, s3-11, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 open: per-tenant `saml_role_mapping` (Fernhill-Kestrel-Admins → admin, default viewer) applied on every login, plus the short RelayState fix (source: s3-06, s3-04)\n- [prochaine-étape] Fernhill IT adds the groups claim; then a second (admin) test account next to `kestrel.test1` (source: s3-08, src-linear-kes311)\n- [prochaine-étape] demo with Fernhill IT Thu Nov 19 10:00 ET, then Dec 1 go-live (source: s3-10, src-linear-kes311)\n- [essai-raté] full return URL as RelayState: their ADFS rejected it (MSIS7042, over the 80-byte cap); replaced by a server-side Redis entry, TTL 10 min, deleted on use (source: s3-02, s3-03)\n- [décision] `viewer` stays the default role until Maya talks to them, and SP-initiated login stays on (source: s3-07)\n- [décision] SAML only, no OIDC, both flows kept (source: s1-03)\n- [décision] JIT only from the tenant's verified domains, never an unverified one even if the IdP sends it (source: s2-03)\n- [question] Fernhill IT's Slack ask (analyst default, IdP-initiated only) contradicts what we built and was declined for now; still to settle with the customer (source: src-slack-fernhill, s3-07)\n- [question] disabling password login for the `fernhill` tenant on Dec 1 only appears in an agent note, never confirmed by Daniel or Maya (source: src-note-enforce)",
+  "rendu": "## Où j'en suis\nReal SP-initiated SAML login now works end to end on staging with Fernhill's IdP: their staging metadata is loaded for the `fernhill` tenant, RelayState is a short opaque ID backed by Redis, and JIT provisioning (merged as #415) creates users with the `viewer` role. Group-to-role mapping is written and open as #421, but their assertion carries no `groups` attribute yet, so everyone still lands as `viewer`; Fernhill IT has to add the claim before the demo (Thursday Nov 19, 10:00 ET) and the Dec 1 go-live. (de: équipe, connecteur, agent; source: s3-04, s3-11, src-pr415, src-linear-kes311)\n\n- [en-cours] PR #421 open: per-tenant `saml_role_mapping` (Fernhill-Kestrel-Admins → admin, default viewer) applied on every login, plus the short RelayState fix (de: agent; source: s3-06, s3-04)\n- [prochaine-étape] Fernhill IT adds the groups claim; then a second (admin) test account next to `kestrel.test1` (de: connecteur, agent; source: s3-08, src-linear-kes311)\n- [prochaine-étape] demo with Fernhill IT Thu Nov 19 10:00 ET, then Dec 1 go-live (de: toi, connecteur; source: s3-10, src-linear-kes311)\n- [essai-raté] full return URL as RelayState: their ADFS rejected it (MSIS7042, over the 80-byte cap); replaced by a server-side Redis entry, TTL 10 min, deleted on use (de: toi, agent; source: s3-02, s3-03)\n- [décision] `viewer` stays the default role until Maya talks to them, and SP-initiated login stays on (de: toi; source: s3-07)\n- [décision] SAML only, no OIDC, both flows kept (de: toi; source: s1-03)\n- [décision] JIT only from the tenant's verified domains, never an unverified one even if the IdP sends it (de: toi; source: s2-03)\n- [question] Fernhill IT's Slack ask (analyst default, IdP-initiated only) contradicts what we built and was declined for now; still to settle with the customer (de: toi, connecteur; source: src-slack-fernhill, s3-07)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1876,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4716,
+    "sortie": 1588,
+    "reflexion": 914,
+    "cache": 0,
+    "cout": 0.00135992
+  },
+  "cout": 0.00135992,
+  "latenceMs": 7582,
+  "fournisseur": "Relace"
+}

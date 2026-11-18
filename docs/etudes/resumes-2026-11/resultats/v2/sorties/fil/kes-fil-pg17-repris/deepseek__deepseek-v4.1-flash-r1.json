@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:10.237Z",
+  "reponse": "## Où j'en suis\n`analytics-staging` has been on PostgreSQL 17.2 since 14:20 UTC on Nov 17 (blue/green, 41 s of refused writes), pg_partman is at 5.1.0 with maintenance green on `events_raw`/`events_daily`, and the post-upgrade dbt run passed (14 models, +3% runtime, within noise). PR #57 is still open as a draft; prod stays behind `pg17_enabled = false`, and the runbook now carries the logical-replication + reboot step prod will need. Prod is held until Maya signs off after a full week on staging (s3-06, s3-08, s3-10, src-pr57, src-slack-infra)\n\n- [en-cours] A full week of staging on 17.2 without incident, as the condition for prod sign-off (s3-09, src-linear-kes298)\n- [prochaine-étape] Get Maya's sign-off, then pick the prod window outside the 01:00–03:30 UTC dbt lock (s3-09, s1-05, s1-04)\n- [prochaine-étape] On prod: step 0 is set `rds.logical_replication = 1` and reboot, before creating the blue/green deployment (s3-10, s3-06)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 and produced 37 unrelated changes in the plan; abandoned (s1-01, s1-02)\n- [essai-raté] Applying the staging plan failed — blue/green needs `rds.logical_replication = 1` on the source parameter group; fixed by adding it and rebooting (s3-04, s3-06)\n- [question] Which production window to take once sign-off arrives (s3-10, s1-05)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (s1-02)\n- [décision] `apply_immediately` stays false and no prod date until Maya signs off (s1-04)",
+  "rendu": "",
+  "mesures": {
+    "vide": true,
+    "caracteres": 0,
+    "lignesRetirees": 8,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4353,
+    "sortie": 1481,
+    "reflexion": 1002,
+    "cache": 0,
+    "cout": 0.0030831
+  },
+  "cout": 0.0030831,
+  "latenceMs": 7876,
+  "fournisseur": "Parasail"
+}

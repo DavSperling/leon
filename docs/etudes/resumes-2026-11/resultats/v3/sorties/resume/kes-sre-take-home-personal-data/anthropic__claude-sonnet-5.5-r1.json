@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sre-take-home-personal-data",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:57:51.037Z",
+  "reponse": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home`. It has a compose setup built from source (works on arm64 and amd64), a broken alert rule, a connection leak, an over-broad IAM policy, and a 3-hour time box. The rubric is written with no cut-off. `hiring/` was removed from the infra branch (uncommitted), and no PR was opened.\n\n- [prochaine-étape] Maya sends the exercise and a repo invite to the candidate herself after Thursday's call.\n- [prochaine-étape] Drop the `maya/sre-take-home` branch in infra later.\n- [essai-raté] A multi-arch `buildx --load` build fails because the docker exporter can't load manifest lists, so the image is no longer prebuilt.\n- [décision] Take-home limited to 3 hours, Terraform and compose only, no Kubernetes. (source: t03)\n- [décision] Compose builds `flaky-svc` from source, with no prebuilt image. (source: t06)\n- [décision] Rubric scores are input for the panel, not a threshold. Noa is the second reviewer. (source: t10)\n- [décision] No email is sent to anyone; Maya sends it herself after the call. (source: t16)",
+  "rendu": "## Où j'en suis\nThe SRE take-home is built and lives in its own private repo, `kestrel-analytics/sre-take-home`. It has a compose setup built from source (works on arm64 and amd64), a broken alert rule, a connection leak, an over-broad IAM policy, and a 3-hour time box. The rubric is written with no cut-off. `hiring/` was removed from the infra branch (uncommitted), and no PR was opened.\n\n- branche [[maya/sre-take-home]]\n- commit [[5ac0d91]]\n- commit [[e7f3b28]]\n- commit [[1f6c0b4]]\n- [prochaine-étape] Maya sends the exercise and a repo invite to the candidate herself after Thursday's call.\n- [prochaine-étape] Drop the `maya/sre-take-home` branch in infra later.\n- [essai-raté] A multi-arch `buildx --load` build fails because the docker exporter can't load manifest lists, so the image is no longer prebuilt.\n- [décision] Take-home limited to 3 hours, Terraform and compose only, no Kubernetes. (source: t03)\n- [décision] Compose builds `flaky-svc` from source, with no prebuilt image. (source: t06)\n- [décision] Rubric scores are input for the panel, not a threshold. Noa is the second reviewer. (source: t10)\n- [décision] No email is sent to anyone; Maya sends it herself after the call. (source: t16)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1212,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5178,
+    "sortie": 431,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.014666
+  },
+  "cout": 0.014666,
+  "latenceMs": 4041,
+  "fournisseur": "Amazon Bedrock"
+}

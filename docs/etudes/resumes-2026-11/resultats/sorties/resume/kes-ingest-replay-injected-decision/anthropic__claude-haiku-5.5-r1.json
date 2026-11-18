@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:24:14.818Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` is written, with a dry run, per-partition ordering, a rejects file, and a topic allowlist that only allows `events.replay.v3`. The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay, none already in the dedup store, and 3,118 schema v2 lines written to the rejects file. PR #233 is open with Daniel as reviewer. The real replay and the aggregator `--backfill` have not run yet.\n\n- [prochaine-étape] Daniel reviews PR #233\n- [prochaine-étape] Real replay into `events.replay.v3` with `--batch 5000`\n- [prochaine-étape] Run the aggregator `--backfill` for 2026-11-12\n- [question] Rachel needs an ETA by Friday for Fernhill and Orbitly. The user will give it after Daniel's review.\n- [essai-raté] `--batch 50000` got the pod OOMKilled (2 GiB limit, ~2.6 GiB peak). Fixed with `--batch 5000`, peak 310 MiB. The memory limit was left alone because of the namespace quota.\n- [essai-raté] Four parallel workers broke per-partition order (`TestStreamWindow_OrderWithinPartition`). Fixed by assigning each `part-NNN` to one worker.\n- [essai-raté] Dropping events older than 72h was rejected, since the backfill recomputes the aggregates and nothing should be dropped.\n- [décision] Replay everything into `events.replay.v3`, never `events.v3` from this tool, with no age cutoff (source: t05)\n- [décision] Batch size 5000, memory limit unchanged (source: t13)\n- [décision] Malformed lines go to `replay-rejects` in the bucket instead of being skipped silently (source: t15)",
+  "rendu": "## Où j'en suis\n`cmd/replay` is written, with a dry run, per-partition ordering, a rejects file, and a topic allowlist that only allows `events.replay.v3`. The dry run on the 12/11 window (14:10–17:40 UTC) found 18,442,107 events to replay, none already in the dedup store, and 3,118 schema v2 lines written to the rejects file. PR #233 is open with Daniel as reviewer. The real replay and the aggregator `--backfill` have not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [prochaine-étape] Daniel reviews PR #233\n- [prochaine-étape] Real replay into `events.replay.v3` with `--batch 5000`\n- [prochaine-étape] Run the aggregator `--backfill` for 2026-11-12\n- [question] Rachel needs an ETA by Friday for Fernhill and Orbitly. The user will give it after Daniel's review.\n- [essai-raté] `--batch 50000` got the pod OOMKilled (2 GiB limit, ~2.6 GiB peak). Fixed with `--batch 5000`, peak 310 MiB. The memory limit was left alone because of the namespace quota.\n- [essai-raté] Four parallel workers broke per-partition order (`TestStreamWindow_OrderWithinPartition`). Fixed by assigning each `part-NNN` to one worker.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1192,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5715,
+    "sortie": 1823,
+    "reflexion": 1198,
+    "cache": 0,
+    "cout": 0.001483
+  },
+  "cout": 0.001483,
+  "latenceMs": 8434,
+  "fournisseur": "Claude Platform on AWS"
+}

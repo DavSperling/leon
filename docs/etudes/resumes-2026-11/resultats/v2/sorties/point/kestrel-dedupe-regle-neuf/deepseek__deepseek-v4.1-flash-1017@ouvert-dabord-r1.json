@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash-1017@ouvert-dabord",
+  "rep": 1,
+  "date": "2026-11-18T15:09:45.590Z",
+  "reponse": "## What is still open\n\n- Maya will approve #247 once CI is green, but she wants the Orbitly loss figure for Thursday's call with Orbitly — about 1.18M real events since 13/11, ~8.1% of their iOS volume [2][1].\n- The replay can only run after #247 is deployed, otherwise the old key drops the events again; landing keeps 30 days, so Orbitly's window closes around 13/12 [1].\n- You owe an alert on the ingest dead-letter queue above 1,000 messages before Friday's incident review (20/11) [7].\n- The note to the iOS team asking for UUIDs back in 3.2.1 is drafted but not sent [1].\n\n## What changed\n\n- Noa's final postmortem #233 is up; he presents it at Friday's incident review and credits your root-cause section [3].\n- Rachel confirmed Zest's dashboards are complete again after the backfill and closed their Zendesk ticket [6].\n- #245 merged: Go bumped to 1.23.4 in CI and the Dockerfile [4].\n\n## What you did\n\n- Traced Orbitly's iOS funnel drop back to your own SDK: kestrel-ios 3.2.0 turned `event_id` into a per-session counter, so #240's event_id-only dedupe counted event 17 of one session as a duplicate of event 17 of another device's session [1].\n- Rekeyed the dedupe on `project_id:device_id:event_id`, tests and lint green, opened PR #247 with Maya as reviewer [1].\n- Found Zest's pilot store app on 3.2.0 lost 3,812 events the same way, and verified the replay is feasible from landing for both projects [1].",
+  "rendu": "## What is still open\n\n- Maya will approve #247 once CI is green, but she wants the Orbitly loss figure for Thursday's call with Orbitly — about 1.18M real events since 13/11, ~8.1% of their iOS volume [2][1].\n- The replay can only run after #247 is deployed, otherwise the old key drops the events again; landing keeps 30 days, so Orbitly's window closes around 13/12 [1].\n- You owe an alert on the ingest dead-letter queue above 1,000 messages before Friday's incident review (20/11) [7].\n- The note to the iOS team asking for UUIDs back in 3.2.1 is drafted but not sent [1].\n\n## What changed\n\n- Noa's final postmortem #233 is up; he presents it at Friday's incident review and credits your root-cause section [3].\n- Rachel confirmed Zest's dashboards are complete again after the backfill and closed their Zendesk ticket [6].\n- #245 merged: Go bumped to 1.23.4 in CI and the Dockerfile [4].\n\n## What you did\n\n- Traced Orbitly's iOS funnel drop back to your own SDK: kestrel-ios 3.2.0 turned `event_id` into a per-session counter, so #240's event_id-only dedupe counted event 17 of one session as a duplicate of event 17 of another device's session [1].\n- Rekeyed the dedupe on `project_id:device_id:event_id`, tests and lint green, opened PR #247 with Maya as reviewer [1].\n- Found Zest's pilot store app on 3.2.0 lost 3,812 events the same way, and verified the replay is feasible from landing for both projects [1].",
+  "mesures": {
+    "mots": 233,
+    "tropLong": false,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4826,
+    "sortie": 2206,
+    "reflexion": 1817,
+    "cache": 0,
+    "cout": 0.00175499968
+  },
+  "cout": 0.00175499968,
+  "latenceMs": 14930,
+  "fournisseur": "PrimeIntellect"
+}

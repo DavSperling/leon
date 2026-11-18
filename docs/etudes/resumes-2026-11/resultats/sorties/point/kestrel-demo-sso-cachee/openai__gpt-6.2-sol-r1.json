@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "openai/gpt-6.2-sol",
+  "rep": 1,
+  "date": "2026-11-18T14:26:35.211Z",
+  "reponse": "## What changed\n- Maya approved and merged #418, putting SAML signature validation on the Nov 17 staging deploy schedule. It needs to be live by Wednesday EOD for Thursday’s 10 a.m. New York time SSO walkthrough with Fernhill IT on their Okta tenant. Priya is running the demo; you’re joining the call. [1][3]\n\n## What is still open\n- Tom requested changes on #423: he wants the SAML module move separated from the lint fixes and offered to approve both PRs that day. Your cleanup also stabilizes the flaky ACS tests and handles missing SAML fields without a 500. [1][4]\n- Your next task is to move the SAML assertion replay cache to Redis so replay protection is shared across API pods. [1][2]",
+  "rendu": "## What changed\n- Maya approved and merged #418, putting SAML signature validation on the Nov 17 staging deploy schedule. It needs to be live by Wednesday EOD for Thursday’s 10 a.m. New York time SSO walkthrough with Fernhill IT on their Okta tenant. Priya is running the demo; you’re joining the call. [1][3]\n\n## What is still open\n- Tom requested changes on #423: he wants the SAML module move separated from the lint fixes and offered to approve both PRs that day. Your cleanup also stabilizes the flaky ACS tests and handles missing SAML fields without a 500. [1][4]\n- Your next task is to move the SAML assertion replay cache to Redis so replay protection is shared across API pods. [1][2]",
+  "mesures": {
+    "mots": 119,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5349,
+    "sortie": 171,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0150825
+  },
+  "cout": 0.0150825,
+  "latenceMs": 1792,
+  "fournisseur": "Amazon Bedrock"
+}

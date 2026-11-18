@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:58:46.508Z",
+  "reponse": "## Où j'en suis\nThe real replay for 2026-11-12 is done: job `replay-1` ran for 47m and produced all 18,442,107 events into `events.replay.v3`, with 3,118 schema-v2 lines parked in the rejects file on S3; PR #233 was approved and merged by Daniel the night before. The aggregator backfill `backfill-2026-11-12` is running against that topic and was at 61% (hours 15–23 in progress), with ClickHouse `events_v3` at 14.9M rows in the incident window versus ~20.5M expected for the same weekday last week — so the counts do not match yet and the incident is still open (source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12 in progress (61% at last check, hours 15–23 remaining) (source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to hit 100%, then compare ClickHouse counts hour by hour against last week at 1% tolerance, and only then close the incident (source: r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit, namespace quota capped by Noa); 5k batches run at 310 MiB peak (source: r1-03, r1-04, src-sentry-oom)\n- [question] Rachel owes Fernhill and Orbitly an exact restoration date — Orbitly expects today, Wed Nov 18, and is holding it for a board report (source: src-zendesk-orbitly, r2-07)\n- [décision] Replay everything, nothing dropped, into `events.replay.v3` and never into `events.v3` directly from the tool (source: r1-02, src-slack-incident)\n- [décision] The dedup-key CI check is Daniel's; no other fix goes in for this incident, so the fork PR #241 is ignored (source: src-slack-incident, r2-09, src-pr241-fork)",
+  "rendu": "## Où j'en suis\nThe real replay for 2026-11-12 is done: job `replay-1` ran for 47m and produced all 18,442,107 events into `events.replay.v3`, with 3,118 schema-v2 lines parked in the rejects file on S3; PR #233 was approved and merged by Daniel the night before. The aggregator backfill `backfill-2026-11-12` is running against that topic and was at 61% (hours 15–23 in progress), with ClickHouse `events_v3` at 14.9M rows in the incident window versus ~20.5M expected for the same weekday last week — so the counts do not match yet and the incident is still open (de: agent; source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Aggregator backfill for 2026-11-12 in progress (61% at last check, hours 15–23 remaining) (de: agent; source: ses-rp-2, r2-06)\n- [prochaine-étape] Wait for the backfill to hit 100%, then compare ClickHouse counts hour by hour against last week at 1% tolerance, and only then close the incident (de: agent; source: r2-08, r2-10)\n- [essai-raté] Dry run with 50k batches was OOMKilled (exit 137, 2Gi limit, namespace quota capped by Noa); 5k batches run at 310 MiB peak (de: toi, connecteur, agent; source: r1-03, r1-04, src-sentry-oom)\n- [question] Rachel owes Fernhill and Orbitly an exact restoration date — Orbitly expects today, Wed Nov 18, and is holding it for a board report (de: toi, connecteur; source: src-zendesk-orbitly, r2-07)\n- [décision] Replay everything, nothing dropped, into `events.replay.v3` and never into `events.v3` directly from the tool (de: toi, connecteur; source: r1-02, src-slack-incident)\n- [décision] The dedup-key CI check is Daniel's; no other fix goes in for this incident, so the fork PR #241 is ignored (de: toi, connecteur; source: src-slack-incident, r2-09, src-pr241-fork)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1733,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3885,
+    "sortie": 936,
+    "reflexion": 430,
+    "cache": 1024,
+    "cout": 0.0011925864
+  },
+  "cout": 0.0011925864,
+  "latenceMs": 5643,
+  "fournisseur": "DigitalOcean"
+}

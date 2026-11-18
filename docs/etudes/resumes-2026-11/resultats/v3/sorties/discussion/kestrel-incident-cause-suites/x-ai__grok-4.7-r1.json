@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "x-ai/grok-4.7",
+  "rep": 1,
+  "date": "2026-11-18T18:09:45.203Z",
+  "reponse": "Last Thursday (Nov 12) the ingestion pipeline stalled for 3h40, from 08:47 to 12:27 UTC. Customer dashboards showed stale data; events kept arriving in Kafka and were only processed late. No customer data was lost. [1]\n\nWhat broke: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB and shipped to every pod at once. With a 512 Mi memory limit, ingest-worker pods OOM-looped on the first large batch and crash-looped. [1][3] There was no consumer-lag alert; the first signal was a Sentry out-of-memory alert at 09:14, 27 minutes after the deploy. An early guess about Kafka broker disk was ruled out at 09:41 (disk at 62%). [1][3] Rollback to v2.13.3 finished at 10:05; lag drained by 12:27. [1] A Nov 13 reconciliation confirmed no events were lost, and Maya told Orbitly the same. [1][2]\n\nWhat is changing:\n- ingest#419 (merged Nov 13, shipped as v2.14.1 via canary) puts the default back to 1 MB, refuses a batch larger than 25% of the container memory limit, and keeps 10 MB only for the bulk-import path on the 2 Gi pool. [12]\n- KES-431: page on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20). [1]\n- KES-432: ingest config changes go to the canary pool first (Daniel, due Nov 27). [1]\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27). [1]",
+  "rendu": "Last Thursday (Nov 12) the ingestion pipeline stalled for 3h40, from 08:47 to 12:27 UTC. Customer dashboards showed stale data; events kept arriving in Kafka and were only processed late. No customer data was lost. [1]\n\nWhat broke: ingest v2.14.0 (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB and shipped to every pod at once. With a 512 Mi memory limit, ingest-worker pods OOM-looped on the first large batch and crash-looped. [1][3] There was no consumer-lag alert; the first signal was a Sentry out-of-memory alert at 09:14, 27 minutes after the deploy. An early guess about Kafka broker disk was ruled out at 09:41 (disk at 62%). [1][3] Rollback to v2.13.3 finished at 10:05; lag drained by 12:27. [1] A Nov 13 reconciliation confirmed no events were lost, and Maya told Orbitly the same. [1][2]\n\nWhat is changing:\n- ingest#419 (merged Nov 13, shipped as v2.14.1 via canary) puts the default back to 1 MB, refuses a batch larger than 25% of the container memory limit, and keeps 10 MB only for the bulk-import path on the 2 Gi pool. [12]\n- KES-431: page on-call when consumer lag exceeds 5 minutes (Noa, due Nov 20). [1]\n- KES-432: ingest config changes go to the canary pool first (Daniel, due Nov 27). [1]\n- KES-433: raise the worker memory limit to 1 Gi and add a load test on batch sizes (Lior, due Nov 27). [1]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.667,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 17048,
+    "sortie": 610,
+    "reflexion": 92,
+    "cache": 9984,
+    "cout": 0.02278
+  },
+  "latenceMs": 12158,
+  "fournisseur": "xAI",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline broke last Thursday data loss\",\"depuis\":\"14j\"}",
+    "chercher {\"requete\":\"\\\"event pipeline\\\" incident OR outage OR broke OR failure\",\"depuis\":\"1m\"}",
+    "lire {\"sourceId\":\"notion-postmortem-ingest-1112\"}",
+    "lire {\"passageId\":\"gmail-incident-report-orbitly-1\"}",
+    "lire {\"sourceId\":\"github-ingest-419\"}",
+    "lire {\"passageId\":\"slack-incidents-1112-3\"}"
+  ],
+  "cout": 0.02278
+}

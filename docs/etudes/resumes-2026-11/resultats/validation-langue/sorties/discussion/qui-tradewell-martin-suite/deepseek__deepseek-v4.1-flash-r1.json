@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:46:35.310Z",
+  "reponse": "Martin flagged two things on the Nov 12 sync [1].\n\n1. **Webhook signatures failing on sandbox.** Ellen's team couldn't verify any `payout.paid` / `seller.verified` event (~1 in 20 passed), and they had turned verification off on sandbox [1]. Jake took it on the call [1], got the failing event IDs from Ellen the same evening [4], and found the cause: the Rust core signs the canonical event JSON while the TypeScript worker re-serializes the body before sending [5][6]. Fixed in core#1187, merged and deployed to sandbox on Nov 16 [6], going to production with release 2026.47 on Tue Nov 24 [6][16]. Ellen switched verification back on and confirmed 300+ events verifying on Nov 17 [4]. That one is picked up and closed out.\n\n2. **Per-seller payout schedules.** Tradewell's ~200 top sellers are on net-7, everyone else on net-30, and Quillon only offers one schedule per platform [1]. Owen said on the call he didn't want to promise anything and would come back with a clear answer [1]; he told Martin in writing he'd have an answer by Friday Nov 20 [4]. It was scoped as QPAY-2362, where Tomer estimated 3-4 weeks of work [7] and Avi ruled it out for Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", earliest late January, moved to Backlog, target 2027-Q1, with a request that Owen set expectations with Martin [7]. So it's picked up internally, but as of the latest source (Nov 17) Martin is still asking for the update and hasn't been given the answer yet [4].",
+  "rendu": "Martin flagged two things on the Nov 12 sync [1].\n\n1. **Webhook signatures failing on sandbox.** Ellen's team couldn't verify any `payout.paid` / `seller.verified` event (~1 in 20 passed), and they had turned verification off on sandbox [1]. Jake took it on the call [1], got the failing event IDs from Ellen the same evening [4], and found the cause: the Rust core signs the canonical event JSON while the TypeScript worker re-serializes the body before sending [5][6]. Fixed in core#1187, merged and deployed to sandbox on Nov 16 [6], going to production with release 2026.47 on Tue Nov 24 [6][16]. Ellen switched verification back on and confirmed 300+ events verifying on Nov 17 [4]. That one is picked up and closed out.\n\n2. **Per-seller payout schedules.** Tradewell's ~200 top sellers are on net-7, everyone else on net-30, and Quillon only offers one schedule per platform [1]. Owen said on the call he didn't want to promise anything and would come back with a clear answer [1]; he told Martin in writing he'd have an answer by Friday Nov 20 [4]. It was scoped as QPAY-2362, where Tomer estimated 3-4 weeks of work [7] and Avi ruled it out for Dec 7 — \"we're not touching the batcher three weeks before a contractual go-live\", earliest late January, moved to Backlog, target 2027-Q1, with a request that Owen set expectations with Martin [7]. So it's picked up internally, but as of the latest source (Nov 17) Martin is still asking for the update and hasn't been given the answer yet [4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 39359,
+    "sortie": 1528,
+    "reflexion": 774,
+    "cache": 14208,
+    "cout": 0.008571168
+  },
+  "latenceMs": 39095,
+  "fournisseur": "Venice",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell weekly sync Martin Kobayashi flagged\",\"type\":\"reunion\"}",
+    "chercher {\"requete\":\"Tradewell KYC import sellers verified\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "chercher {\"requete\":\"Tradewell per-seller payout schedules Martin Owen set expectations\",\"depuis\":\"2026-11-16\"}",
+    "chercher {\"requete\":\"webhook signature fix deployed sandbox core#1187\",\"depuis\":\"2026-11-16\"}",
+    "lire {\"sourceId\":\"slack-ext-tradewell\"}",
+    "activite {\"depuis\":\"2026-11-18\"}"
+  ],
+  "cout": 0.008571168
+}

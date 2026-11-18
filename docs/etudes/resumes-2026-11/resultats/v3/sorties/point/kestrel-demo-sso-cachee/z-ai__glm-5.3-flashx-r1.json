@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:54:02.172Z",
+  "reponse": "## What is still open\n- PR #423 needs splitting: Tom requested changes because the 1,900-line diff mixes the saml_utils move with the lint fixes — he'll approve both today if you separate them into two PRs [4][1].\n- The SAML replay cache is still in-memory only, so multi-pod deployments leave a replay window; you planned to move it to Redis today (`SET NX EX` keyed by tenant + assertion ID) [1][2].\n\n## What changed\n- PR #418 was approved and merged by Maya last evening — signature validation ships with the night's staging deploy, clearing the path for the Fernhill Okta walkthrough Thursday 10am NY (Priya runs the demo, you're on the call) [3][1].\n- Dependabot bumped cryptography to 43.0.3 (metadata and LibreSSL build fixes) [6].\n- Rachel opened ticket #424: CSV export times out for Zest Grocers' 230k-row dashboard; Tom is taking it and moving the export to the job queue — likely nothing for you unless he asks [5].\n\n## What you did\n- You unblocked and hardened the auth stack ahead of the Fernhill deadline: fixed the flaky ACS expiry test with freezegun, cleared all ruff 0.8 and mypy warnings in `kestrel/auth`, and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` with a compatibility shim — full suite green [1].",
+  "rendu": "## What is still open\n- PR #423 needs splitting: Tom requested changes because the 1,900-line diff mixes the saml_utils move with the lint fixes — he'll approve both today if you separate them into two PRs [4][1].\n- The SAML replay cache is still in-memory only, so multi-pod deployments leave a replay window; you planned to move it to Redis today (`SET NX EX` keyed by tenant + assertion ID) [1][2].\n\n## What changed\n- PR #418 was approved and merged by Maya last evening — signature validation ships with the night's staging deploy, clearing the path for the Fernhill Okta walkthrough Thursday 10am NY (Priya runs the demo, you're on the call) [3][1].\n- Dependabot bumped cryptography to 43.0.3 (metadata and LibreSSL build fixes) [6].\n- Rachel opened ticket #424: CSV export times out for Zest Grocers' 230k-row dashboard; Tom is taking it and moving the export to the job queue — likely nothing for you unless he asks [5].\n\n## What you did\n- You unblocked and hardened the auth stack ahead of the Fernhill deadline: fixed the flaky ACS expiry test with freezegun, cleared all ruff 0.8 and mypy warnings in `kestrel/auth`, and split the 900-line `saml_utils.py` into `saml/{assertions,metadata,bindings}.py` with a compatibility shim — full suite green [1].",
+  "mesures": {
+    "mots": 198,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5567,
+    "sortie": 373,
+    "reflexion": 50,
+    "cache": 0,
+    "cout": 0.00252604
+  },
+  "cout": 0.00252604,
+  "latenceMs": 3583,
+  "fournisseur": "Z.AI"
+}

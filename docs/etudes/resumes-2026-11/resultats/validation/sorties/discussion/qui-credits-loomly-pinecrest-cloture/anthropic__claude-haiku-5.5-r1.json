@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-credits-loomly-pinecrest-cloture",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:26:34.995Z",
+  "reponse": "We're giving **Loomly $18,400** and **Pinecrest Rentals $6,200**, for **$24,600** total. Both are credit memos on their December invoices, with no cash refund [5][8][2]. Those amounts replace the earlier 50% proposal, which Rachel raised to Loomly and then moved to 100% of November fees [5][4]. Loomly's $18,400 was confirmed to them in the support ticket [1].\n\nIt's planned for the November close, but I can't confirm it's posted. Marcus said he would accrue it in November [5]. The draft journal entry describes a November contra-revenue accrual, reversed when the credit memos are issued [2]. The November close checklist lists \"Service credits accrual - payout incident\" as Marcus's item, in progress as of Nov 16 [7].\n\nSeparately, Loomly's claim for sellers' overdraft fees ($7,690 across 214 sellers) isn't covered by these credits. It was sent to Marcus and Rachel for a decision, with an answer promised by Nov 25 [1].",
+  "rendu": "We're giving **Loomly $18,400** and **Pinecrest Rentals $6,200**, for **$24,600** total. Both are credit memos on their December invoices, with no cash refund [5][8][2]. Those amounts replace the earlier 50% proposal, which Rachel raised to Loomly and then moved to 100% of November fees [5][4]. Loomly's $18,400 was confirmed to them in the support ticket [1].\n\nIt's planned for the November close, but I can't confirm it's posted. Marcus said he would accrue it in November [5]. The draft journal entry describes a November contra-revenue accrual, reversed when the credit memos are issued [2]. The November close checklist lists \"Service credits accrual - payout incident\" as Marcus's item, in progress as of Nov 16 [7].\n\nSeparately, Loomly's claim for sellers' overdraft fees ($7,690 across 214 sellers) isn't covered by these credits. It was sent to Marcus and Rachel for a decision, with an answer promised by Nov 25 [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13215,
+    "sortie": 927,
+    "reflexion": 458,
+    "cache": 0,
+    "cout": 0.001785
+  },
+  "latenceMs": 7611,
+  "fournisseur": "Google",
+  "trace": [
+    "chercher {\"requete\":\"Loomly Pinecrest late payout compensation\"}",
+    "chercher {\"requete\":\"Pinecrest late payouts november accrual\"}"
+  ],
+  "cout": 0.001785
+}

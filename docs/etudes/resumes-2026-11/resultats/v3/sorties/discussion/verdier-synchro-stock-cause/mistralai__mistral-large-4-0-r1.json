@@ -1,0 +1,36 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "mistralai/mistral-large-4-0",
+  "rep": 1,
+  "date": "2026-11-18T18:13:42.382Z",
+  "reponse": "Ça venait d'un bug de synchronisation du stock, et oui, il est corrigé.\n\n**La cause** : le 3 novembre, un deuxième emplacement « Showroom » a été ajouté dans Shopify [4]. Le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux » ; comme Shopify additionne les stocks de tous les emplacements pour l'affichage, le site continuait d'afficher l'ancien stock du showroom même quand l'entrepôt était à zéro [5][4]. Résultat : des clients achetaient des meubles déjà vendus — au moins 3 tickets SAV (banc Rhône #4806, buffet Croix-Rousse #4812, chaises Fourvière #4825) [3][8][9], et 7 commandes au total touchées entre le 3 et le 12 novembre [4].\n\n**Le correctif** : la PR #87 fait désormais mettre à jour les deux emplacements à partir des onglets de l'export entrepôt, testée par Hugo et fusionnée/déployée le 13 novembre ; Julien a repassé tout le catalogue et les quantités sont bonnes [1][4]. La solution plus radicale (désactiver « continuer à vendre en cas de rupture » sur tout le catalogue) a été écartée parce que les précommandes de la table Saône en ont besoin [5].\n\n**Depuis** : je ne trouve aucune nouvelle annulation pour rupture dans les tickets après le 13/11. En revanche, un contrôle préventif est en préparation : la PR #91, un script quotidien (7 h) qui compare le stock Shopify à l'export entrepôt et poste les écarts dans #tech — mais au 17 novembre elle n'était pas encore en production, il restait le cron et la gestion des SKU archivés à finaliser [2][4].",
+  "rendu": "Ça venait d'un bug de synchronisation du stock, et oui, il est corrigé.\n\n**La cause** : le 3 novembre, un deuxième emplacement « Showroom » a été ajouté dans Shopify [4]. Le script `sync-stock` ne mettait à jour que l'emplacement « Entrepôt Vénissieux » ; comme Shopify additionne les stocks de tous les emplacements pour l'affichage, le site continuait d'afficher l'ancien stock du showroom même quand l'entrepôt était à zéro [5][4]. Résultat : des clients achetaient des meubles déjà vendus — au moins 3 tickets SAV (banc Rhône #4806, buffet Croix-Rousse #4812, chaises Fourvière #4825) [3][8][9], et 7 commandes au total touchées entre le 3 et le 12 novembre [4].\n\n**Le correctif** : la PR #87 fait désormais mettre à jour les deux emplacements à partir des onglets de l'export entrepôt, testée par Hugo et fusionnée/déployée le 13 novembre ; Julien a repassé tout le catalogue et les quantités sont bonnes [1][4]. La solution plus radicale (désactiver « continuer à vendre en cas de rupture » sur tout le catalogue) a été écartée parce que les précommandes de la table Saône en ont besoin [5].\n\n**Depuis** : je ne trouve aucune nouvelle annulation pour rupture dans les tickets après le 13/11. En revanche, un contrôle préventif est en préparation : la PR #91, un script quotidien (7 h) qui compare le stock Shopify à l'export entrepôt et poste les écarts dans #tech — mais au 17 novembre elle n'était pas encore en production, il restait le cron et la gestion des SKU archivés à finaliser [2][4].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 6,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 21815,
+    "sortie": 871,
+    "reflexion": 315,
+    "cache": 0,
+    "cout": 0.0170996
+  },
+  "latenceMs": 30455,
+  "fournisseur": "Mistral",
+  "trace": [
+    "chercher {\"requete\":\"achat meuble non disponible stock rupture clients ont pu commander indisponible\",\"type\":\"ticket\"}",
+    "chercher {\"requete\":\"bug panier commande article plus en stock quantité disponible inventaire\"}",
+    "chercher {\"requete\":\"plainte client acheter produit indisponible meubles stock épuisé\"}",
+    "chercher {\"requete\":\"race condition stock décrémenté deux commandes simultanées oversell\"}",
+    "chercher {\"requete\":\"\\\"continuer à vendre\\\" rupture désactivé Shopify paramètre vente en rupture bloquer commande stock 0\"}",
+    "chercher {\"depuis\":\"2026-11-13\",\"requete\":\"commande annulée rupture stock affiché encore incident récurrent après correctif\"}"
+  ],
+  "cout": 0.0170996
+}

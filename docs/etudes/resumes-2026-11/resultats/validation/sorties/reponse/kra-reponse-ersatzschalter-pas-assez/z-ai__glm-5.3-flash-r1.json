@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-ersatzschalter-pas-assez",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:53.675Z",
+  "reponse": "Tai Shan hat bisher keinen bestätigten Liefertermin für die 2.000 Ersatzschalter genannt [3]. Kranich hatte ursprünglich bis zum 20. November ein bestätigtes Datum angefordert [1], Tai Shan bestätigte nur den Eingang der Reklamation und kündigte einen Lieferplan an, ohne Termin [2]. Intern rechnet der Einkauf mit einer Antwort bis Freitag und plant vorläufig mit 6 Wochen ab Bestellung – eine unbestätigte Annahme [3][5].",
+  "rendu": "Tai Shan hat bisher keinen bestätigten Liefertermin für die 2.000 Ersatzschalter genannt [3]. Kranich hatte ursprünglich bis zum 20. November ein bestätigtes Datum angefordert [1], Tai Shan bestätigte nur den Eingang der Reklamation und kündigte einen Lieferplan an, ohne Termin [2]. Intern rechnet der Einkauf mit einer Antwort bis Freitag und plant vorläufig mit 6 Wochen ab Bestellung – eine unbestätigte Annahme [3][5].",
+  "mesures": {
+    "mots": 62,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1137,
+    "sortie": 115,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.00022805
+  },
+  "cout": 0.00022805,
+  "latenceMs": 1180,
+  "fournisseur": "Mistral"
+}

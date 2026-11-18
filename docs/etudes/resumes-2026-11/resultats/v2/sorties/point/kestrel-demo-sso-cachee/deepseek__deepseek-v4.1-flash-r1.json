@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:10:14.132Z",
+  "reponse": "## What you did\n\n- Fernhill SSO is unblocked: your SAML assertion signature verification [2] was approved and merged by Maya, and it ships with tonight's staging deploy [3] — in time for Thursday's 10am NY walkthrough with Fernhill IT's Okta tenant, where Priya demos and you only need to be on the call [1].\n- You cleaned up `kestrel/auth`: the flaky ACS tests now freeze time instead of sleeping, the ruff 0.8 and mypy issues are fixed (a missing Issuer/Subject now returns 401, not 500), and `saml_utils.py` is split into a `saml/` package behind a shim that keeps old imports working [1].\n\n## What changed\n\n- #424, Zest Grocers' CSV export timing out on their 230k-row retention dashboard, was picked up by Tom; he's moving the export to the job queue and emailing a link instead of running it in the request [5].\n\n## What is still open\n\n- #423 is blocked on your side: Tom requested changes, asking you to split the module move from the lint fixes into two PRs so the real changes are reviewable, and he'll approve both today [4].\n- The assertion replay cache is still process-local, so it won't hold across the three API pods — it needs to move to Redis before production [1][2].",
+  "rendu": "## What you did\n\n- Fernhill SSO is unblocked: your SAML assertion signature verification [2] was approved and merged by Maya, and it ships with tonight's staging deploy [3] — in time for Thursday's 10am NY walkthrough with Fernhill IT's Okta tenant, where Priya demos and you only need to be on the call [1].\n- You cleaned up `kestrel/auth`: the flaky ACS tests now freeze time instead of sleeping, the ruff 0.8 and mypy issues are fixed (a missing Issuer/Subject now returns 401, not 500), and `saml_utils.py` is split into a `saml/` package behind a shim that keeps old imports working [1].\n\n## What changed\n\n- #424, Zest Grocers' CSV export timing out on their 230k-row retention dashboard, was picked up by Tom; he's moving the export to the job queue and emailing a link instead of running it in the request [5].\n\n## What is still open\n\n- #423 is blocked on your side: Tom requested changes, asking you to split the module move from the lint fixes into two PRs so the real changes are reviewable, and he'll approve both today [4].\n- The assertion replay cache is still process-local, so it won't hold across the three API pods — it needs to move to Redis before production [1][2].",
+  "mesures": {
+    "mots": 202,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5732,
+    "sortie": 2011,
+    "reflexion": 1709,
+    "cache": 0,
+    "cout": 0.00239623
+  },
+  "cout": 0.00239623,
+  "latenceMs": 13033,
+  "fournisseur": "Wafer"
+}

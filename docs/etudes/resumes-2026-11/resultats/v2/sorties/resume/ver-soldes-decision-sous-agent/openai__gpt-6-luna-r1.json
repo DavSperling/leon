@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:24:50.697Z",
+  "reponse": "## Où j'en suis\nLe script de soldes est prêt : remises par collection, application en masse, programmation au 13 janvier 2027 à 08:00 (Europe/Paris) et export CSV généré pour Sophie dans `/tmp/prix-soldes.csv`. La PR #94 est ouverte ; les tests du dossier soldes ont réussi.\n\n- [en-cours] Le script de retour aux prix d'origine reste à faire.\n- [prochaine-étape] Créer le script de restauration, puis régénérer le CSV avant la newsletter si les prix changent.\n- [essai-raté] L’application initiale sur la boutique de dev a été interrompue par une limitation Shopify ; l’application en masse a ensuite réussi, sans rejet.\n- [décision] Rhône à -20 %, fins de série à -30 %, Saône exclue (source: t05)\n- [décision] Les prix soldés finissent par 9 après arrondi à l’euro inférieur (source: t07)\n- [décision] Programmer l’application le 13 janvier à 08:00, sans prix barrés visibles avant l’ouverture (source: t15)",
+  "rendu": "## Où j'en suis\nLe script de soldes est prêt : remises par collection, application en masse, programmation au 13 janvier 2027 à 08:00 (Europe/Paris) et export CSV généré pour Sophie dans `/tmp/prix-soldes.csv`. La PR #94 est ouverte ; les tests du dossier soldes ont réussi.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [en-cours] Le script de retour aux prix d'origine reste à faire.\n- [prochaine-étape] Créer le script de restauration, puis régénérer le CSV avant la newsletter si les prix changent.\n- [essai-raté] L’application initiale sur la boutique de dev a été interrompue par une limitation Shopify ; l’application en masse a ensuite réussi, sans rejet.\n- [décision] Rhône à -20 %, fins de série à -30 %, Saône exclue (source: t05)\n- [décision] Les prix soldés finissent par 9 après arrondi à l’euro inférieur (source: t07)\n- [décision] Programmer l’application le 13 janvier à 08:00, sans prix barrés visibles avant l’ouverture (source: t15)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1049,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3693,
+    "sortie": 401,
+    "reflexion": 146,
+    "cache": 0,
+    "cout": 0.00066205
+  },
+  "cout": 0.00066205,
+  "latenceMs": 5732,
+  "fournisseur": "OpenAI"
+}

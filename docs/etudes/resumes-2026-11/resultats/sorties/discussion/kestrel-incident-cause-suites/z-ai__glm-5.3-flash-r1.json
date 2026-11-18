@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:24:48.214Z",
+  "reponse": "Here's what happened (the Nov 12 ingest incident, this past Thursday):\n\n**What broke:** The v2.14.0 deploy at 08:47 UTC (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, and the ingest-worker pods (512 Mi memory limit) started OOM-looping [3]. Consumer lag exceeded 500,000 messages, with out-of-memory errors in `ingest/worker/batch.go:118` [9]. Result: customer dashboards showed stale data from 08:47 to 12:27 UTC (3h40, SEV2) [1][3].\n\n**Data loss:** No. Events kept arriving in Kafka and were processed late; reconciliation on Nov 13 confirmed no event was lost [1]. Maya's customer-facing note to Orbitly says the same [2].\n\n**Changes being made:**\n- Revert default `max_batch_bytes` to 1 MB, add a guard refusing batches larger than 25% of the container memory limit; bulk import keeps 10 MB via explicit config on the 2 Gi pool (ingest#419) [6]\n- New alert routed to on-call when ingest-events consumer lag exceeds 5 minutes of events (KES-431, due Nov 20) [10]\n- Alerts when processing falls more than 5 min behind, and config changes go to a canary group first (per the customer comms) [2]\n\nOne follow-up to be aware of: Orbitly is claiming an SLA service credit under section 7 of their MSA; Sam is checking the terms — the signed MSA isn't attached to the HubSpot deal, and it was a custom 2024 negotiation [2][7]. Also note the Postgres 17 cutover planned for Nov 21 was postponed after the incident [5].",
+  "rendu": "Here's what happened (the Nov 12 ingest incident, this past Thursday):\n\n**What broke:** The v2.14.0 deploy at 08:47 UTC (PR ingest#412) raised the default `max_batch_bytes` from 1 MB to 10 MB, and the ingest-worker pods (512 Mi memory limit) started OOM-looping [3]. Consumer lag exceeded 500,000 messages, with out-of-memory errors in `ingest/worker/batch.go:118` [9]. Result: customer dashboards showed stale data from 08:47 to 12:27 UTC (3h40, SEV2) [1][3].\n\n**Data loss:** No. Events kept arriving in Kafka and were processed late; reconciliation on Nov 13 confirmed no event was lost [1]. Maya's customer-facing note to Orbitly says the same [2].\n\n**Changes being made:**\n- Revert default `max_batch_bytes` to 1 MB, add a guard refusing batches larger than 25% of the container memory limit; bulk import keeps 10 MB via explicit config on the 2 Gi pool (ingest#419) [6]\n- New alert routed to on-call when ingest-events consumer lag exceeds 5 minutes of events (KES-431, due Nov 20) [10]\n- Alerts when processing falls more than 5 min behind, and config changes go to a canary group first (per the customer comms) [2]\n\nOne follow-up to be aware of: Orbitly is claiming an SLA service credit under section 7 of their MSA; Sam is checking the terms — the signed MSA isn't attached to the HubSpot deal, and it was a custom 2024 negotiation [2][7]. Also note the Postgres 17 cutover planned for Nov 21 was postponed after the incident [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7057,
+    "sortie": 432,
+    "reflexion": 10,
+    "cache": 0,
+    "cout": 0.0009770712
+  },
+  "latenceMs": 4842,
+  "fournisseur": "Relace",
+  "trace": [
+    "chercher {\"requete\":\"event pipeline incident broke\"}",
+    "chercher {\"requete\":\"\\\"data loss\\\" pipeline customer data incident postmortem\"}"
+  ],
+  "cout": 0.0009770712
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:54:08.452Z",
+  "reponse": "## What is still open\n- The Fernhill end-to-end SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant; Priya runs the demo, you just need to be on the call [1].\n- Tom wants PR #423 split: the `saml_utils` module move separated from the lint fixes, as two PRs he'd approve today — the frozen-clock tests, ruff/mypy fixes and the split all sit in that one 1,900-line diff [1][4].\n- Replay protection is still a per-process in-memory cache: move it to Redis (keyed by tenant + assertion ID, TTL to NotOnOrAfter + skew) so a replayed assertion can't land on another pod [1].\n\n## What changed\n- Maya approved and merged #418 (SAML signature verification) last night; it goes out with tonight's staging deploy [3].\n\n## What you did\n- Made the three flaky SAML ACS tests deterministic with freezegun instead of sleeps — `test_acs_rejects_expired_assertion` is stable again (50/50 on repeat) and the file runs ~2s faster [1].\n- Cleared the ruff 0.8 and mypy backlog in `kestrel/auth`, including a missing Issuer/Subject now rejected with a 401 instead of crashing into a 500, covered by a new test [1].",
+  "rendu": "## What is still open\n- The Fernhill end-to-end SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant; Priya runs the demo, you just need to be on the call [1].\n- Tom wants PR #423 split: the `saml_utils` module move separated from the lint fixes, as two PRs he'd approve today — the frozen-clock tests, ruff/mypy fixes and the split all sit in that one 1,900-line diff [1][4].\n- Replay protection is still a per-process in-memory cache: move it to Redis (keyed by tenant + assertion ID, TTL to NotOnOrAfter + skew) so a replayed assertion can't land on another pod [1].\n\n## What changed\n- Maya approved and merged #418 (SAML signature verification) last night; it goes out with tonight's staging deploy [3].\n\n## What you did\n- Made the three flaky SAML ACS tests deterministic with freezegun instead of sleeps — `test_acs_rejects_expired_assertion` is stable again (50/50 on repeat) and the file runs ~2s faster [1].\n- Cleared the ruff 0.8 and mypy backlog in `kestrel/auth`, including a missing Issuer/Subject now rejected with a 401 instead of crashing into a 500, covered by a new test [1].",
+  "mesures": {
+    "mots": 180,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6106,
+    "sortie": 2227,
+    "reflexion": 1918,
+    "cache": 0,
+    "cout": 0.00200065
+  },
+  "cout": 0.00200065,
+  "latenceMs": 37871,
+  "fournisseur": "Makora"
+}

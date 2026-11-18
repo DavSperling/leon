@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "anthropic/claude-haiku-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:24:34.315Z",
+  "reponse": "## Où j'en suis\nLe travail Terraform de l'upgrade Postgres 17 en blue/green du RDS analytics est en draft PR #57 (branche noa/rds-pg17). Le groupe de paramètres est dérivé de la version majeure, le blue/green est activé sur staging (16.4 → 17.2), le provider AWS est épinglé sur ~> 5.82.0, et la prod est préparée derrière `pg17_enabled = false`. Seuls des plans ont été lancés, rien n'est appliqué : staging 1 à ajouter / 1 à modifier, prod sans changement.\n\n- [en-cours] Upgrade de pg_partman 4.7.4 → 5.1.0 sur staging, pas encore commencé\n- [prochaine-étape] Upgrader pg_partman sur staging, puis vérifier `run_maintenance_proc()` sur events_raw et events_daily\n- [prochaine-étape] Choisir la fenêtre de prod hors du verrou dbt sur events_daily (01:00–03:30 UTC) ; samedi ou dimanche 04:00–06:00 UTC sont des pistes\n- [essai-raté] `terraform init` sans `-upgrade` échoue sur le lock file (aws 5.31.0 vs >= 5.60.0) ; passer à v6 donnait 37 changements sans rapport avec RDS, donc épinglage sur 5.82\n- [question] Quelle fenêtre de prod, et validation de Maya en attente\n- [décision] Plan seulement, rien d'appliqué (source: t01)\n- [décision] Provider AWS reste en 5.82, pas de v6 dans cette PR (source: t04)\n- [décision] L'upgrade pg_partman est une étape séparée, suivie comme tâche, rien lancé sur la base (source: t10)\n- [décision] Pas de date de prod avant la validation de Maya ; `apply_immediately` reste à false (source: t14)",
+  "rendu": "## Où j'en suis\nLe travail Terraform de l'upgrade Postgres 17 en blue/green du RDS analytics est en draft PR #57 (branche noa/rds-pg17). Le groupe de paramètres est dérivé de la version majeure, le blue/green est activé sur staging (16.4 → 17.2), le provider AWS est épinglé sur ~> 5.82.0, et la prod est préparée derrière `pg17_enabled = false`. Seuls des plans ont été lancés, rien n'est appliqué : staging 1 à ajouter / 1 à modifier, prod sans changement.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [décision] Plan seulement, rien d'appliqué (source: t01)\n- [décision] Provider AWS reste en 5.82, pas de v6 dans cette PR (source: t04)\n- [décision] L'upgrade pg_partman est une étape séparée, suivie comme tâche, rien lancé sur la base (source: t10)\n- [décision] Pas de date de prod avant la validation de Maya ; `apply_immediately` reste à false (source: t14)\n- [en-cours] Upgrade de pg_partman 4.7.4 → 5.1.0 sur staging, pas encore commencé\n- [prochaine-étape] Upgrader pg_partman sur staging, puis vérifier `run_maintenance_proc()` sur events_raw et events_daily\n- [prochaine-étape] Choisir la fenêtre de prod hors du verrou dbt sur events_daily (01:00–03:30 UTC) ; samedi ou dimanche 04:00–06:00 UTC sont des pistes",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1307,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5448,
+    "sortie": 1899,
+    "reflexion": 1231,
+    "cache": 0,
+    "cout": 0.0014943
+  },
+  "cout": 0.0014943,
+  "latenceMs": 8144,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:55.686Z",
+  "reponse": "## Où j'en suis\nLe bug de stock négatif de la Saône est corrigé : la cause était le double décrément (Shopify décrémente déjà + nos webhooks `orders/create` et `orders/updated`). Les webhooks ne touchent plus au stock, `orders/updated` est retiré de `shopify.app.toml` et déployé, la synchro de nuit passe en valeur absolue (`inventorySetQuantities`), le dédoublonnage est supprimé, le seuil d'alerte est à 3 et le code est renommé. La PR #87 est fusionnée. La Saône est remise à 0 dans Shopify.\n\n- [en-cours] Les 3 commandes survendues de la Saône (#1041, #1043, #1044) restent à traiter avec Lucie.\n- [décision] Ne plus décrémenter le stock dans les webhooks, supprimer le dédoublonnage, synchro de nuit en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Remettre la Saône à 0, pas de remise en vente ni de précommande avant son retour de chez Bois & Fils le 2 décembre (source: t15)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config pour virer `orders/updated` (source: t19)\n- [essai-raté] Dédoublonnage par `X-Shopify-Webhook-Id` : ne règle pas la cause racine (create et updated ont des ids différents), retiré.\n- [essai-raté] Proposition de précommande sur la Saône : refusée, Claire ne veut pas promettre de date sans le bon de livraison.",
+  "rendu": "## Où j'en suis\nLe bug de stock négatif de la Saône est corrigé : la cause était le double décrément (Shopify décrémente déjà + nos webhooks `orders/create` et `orders/updated`). Les webhooks ne touchent plus au stock, `orders/updated` est retiré de `shopify.app.toml` et déployé, la synchro de nuit passe en valeur absolue (`inventorySetQuantities`), le dédoublonnage est supprimé, le seuil d'alerte est à 3 et le code est renommé. La PR #87 est fusionnée. La Saône est remise à 0 dans Shopify.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] Les 3 commandes survendues de la Saône (#1041, #1043, #1044) restent à traiter avec Lucie.\n- [décision] Ne plus décrémenter le stock dans les webhooks, supprimer le dédoublonnage, synchro de nuit en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé à 3 (source: t09)\n- [décision] Remettre la Saône à 0, pas de remise en vente ni de précommande avant son retour de chez Bois & Fils le 2 décembre (source: t15)\n- [décision] Ouvrir la PR avec Hugo en relecteur et déployer la config pour virer `orders/updated` (source: t19)\n- [essai-raté] Dédoublonnage par `X-Shopify-Webhook-Id` : ne règle pas la cause racine (create et updated ont des ids différents), retiré.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1332,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3849,
+    "sortie": 767,
+    "reflexion": 336,
+    "cache": 0,
+    "cout": 0.0020751
+  },
+  "cout": 0.0020751,
+  "latenceMs": 2133,
+  "fournisseur": "Together"
+}

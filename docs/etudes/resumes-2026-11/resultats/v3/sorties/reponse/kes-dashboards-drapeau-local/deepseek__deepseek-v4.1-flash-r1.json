@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:42.812Z",
+  "reponse": "The flag was renamed and is no longer read from `.env.local`: set `FEATURE_FLAGS=new_dash` no longer works, since flags are served by the API and `FEATURE_FLAGS` is ignored [2][3]. Instead run `make dev-flags FLAGS=dashboards_v2` for the dev workspace, with the API running, then hard-reload the page [2][3]. You can verify with `curl localhost:8000/api/flags` [3]. The older Slack advice to set `FEATURE_FLAGS=new_dash` is outdated [1]. The rollout plan confirms the flag name is `dashboards_v2` [4].",
+  "rendu": "The flag was renamed and is no longer read from `.env.local`: set `FEATURE_FLAGS=new_dash` no longer works, since flags are served by the API and `FEATURE_FLAGS` is ignored [2][3]. Instead run `make dev-flags FLAGS=dashboards_v2` for the dev workspace, with the API running, then hard-reload the page [2][3]. You can verify with `curl localhost:8000/api/flags` [3]. The older Slack advice to set `FEATURE_FLAGS=new_dash` is outdated [1]. The rollout plan confirms the flag name is `dashboards_v2` [4].",
+  "mesures": {
+    "mots": 73,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1212,
+    "sortie": 230,
+    "reflexion": 87,
+    "cache": 0,
+    "cout": 0.00026628
+  },
+  "cout": 0.00026628,
+  "latenceMs": 2283,
+  "fournisseur": "DeepInfra"
+}

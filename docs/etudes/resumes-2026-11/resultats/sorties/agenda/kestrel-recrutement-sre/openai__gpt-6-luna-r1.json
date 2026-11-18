@@ -1,0 +1,30 @@
+{
+  "etape": "agenda",
+  "cas": "kestrel-recrutement-sre",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:29:26.521Z",
+  "reponse": "{\"n\": 15, \"titre\": \"System design interview with Yael Mizrahi\", \"debut\": \"2026-11-17T14:00\", \"fin\": \"2026-11-17T15:00\", \"avec\": \"Yael Mizrahi, Daniel Levi\"}\n{\"n\": 5, \"titre\": \"Senior SRE technical interview\", \"debut\": \"2026-11-20T15:00\", \"fin\": \"2026-11-20T16:00\", \"avec\": \"Ben Carter\"}\n{\"n\": 4, \"titre\": \"PG17 cutover – go/no-go planning\", \"debut\": \"2026-11-22T09:00\", \"fin\": \"2026-11-22T10:00\", \"avec\": \"Maya Cohen, Daniel Levi, Lior Ben-David\"}\n{\"n\": 10, \"titre\": \"Postmortem – ingest outage 12 Nov\", \"debut\": \"2026-11-16T15:00\", \"fin\": \"2026-11-16T16:00\", \"avec\": \"Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim\"}\n{\"n\": 12, \"titre\": \"Lumenstack x Kestrel – Postgres 17 upgrade review\", \"debut\": \"2026-11-19T17:30\", \"fin\": \"2026-11-19T18:15\", \"avec\": \"Grace Whitfield, Daniel Levi\"}\n{\"n\": 20, \"titre\": \"pg_upgrade dry run\", \"debut\": \"2026-11-16T09:00\", \"avec\": \"Daniel Levi\"}",
+  "rendu": "2026-11-16T09:00 pg_upgrade dry run (avec Daniel Levi)\n2026-11-16T15:00→2026-11-16T16:00 Postmortem – ingest outage 12 Nov (avec Maya Cohen, Lior Ben-David, Daniel Levi, Rachel Kim)\n2026-11-17T14:00→2026-11-17T15:00 System design interview with Yael Mizrahi (avec Yael Mizrahi, Daniel Levi)\n2026-11-19T17:30→2026-11-19T18:15 Lumenstack x Kestrel – Postgres 17 upgrade review (avec Grace Whitfield, Daniel Levi)\n2026-11-20T15:00→2026-11-20T16:00 Senior SRE technical interview (avec Ben Carter)\n2026-11-22T09:00→2026-11-22T10:00 PG17 cutover – go/no-go planning (avec Maya Cohen, Daniel Levi, Lior Ben-David)",
+  "mesures": {
+    "trouves": 6,
+    "attendus": 6,
+    "justes": 5,
+    "rappel": 0.833,
+    "precision": 0.833,
+    "f1": 0.833,
+    "faux": "2026-11-16T09:00 pg_upgrade dry run",
+    "manques": "2026-11-16T10:00 pg_upgrade dry run with Daniel",
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2826,
+    "sortie": 880,
+    "reflexion": 514,
+    "cache": 0,
+    "cout": 0.000793175
+  },
+  "cout": 0.000793175,
+  "latenceMs": 7389,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:40:24.007Z",
+  "reponse": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS: staging (analytics-staging) is now on PG 17.2 since Nov 17, 14:20 UTC, via blue/green switchover (41 s of refused writes). pg_partman was upgraded 4.7.4 → 5.1.0 on staging 16.4 first, maintenance ran green on events_raw and events_daily, and dbt on 17.2 passes 14/14 models (+3% runtime, within noise). Draft PR #57 is open with commits 7e3c9d4 (logical replication in module) and b0f18a2 (staging engine 17.2); runbook `runbooks/pg17-upgrade.md` updated so prod step 0 is set rds.logical_replication = 1 + reboot before the blue/green. (source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] PR kestrel-analytics/infra#57 (draft) on branch noa/rds-pg17, open, awaiting review (source: ses-pg-3, src-pr57)\n- [prochaine-étape] pick the production window: prod needs the rds.logical_replication = 1 + reboot step first, so two windows; must avoid the dbt lock on events_daily (01:00–03:30 UTC), lowest-traffic slots are Sat/Sun 04:00–06:00 UTC (source: ses-pg-3, ses-pg-1, s1-05)\n- [prochaine-étape] Maya signs off on prod only after a full week of staging on 17 without incident — earliest sign-off Nov 24 (source: s3-09, s3-10, src-linear-kes298)\n- [essai-raté] first `terraform apply pg17.plan` failed: blue/green for PostgreSQL requires rds.logical_replication = 1 in the source parameter group + reboot (source: s3-04)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 with 37 unrelated changes; pinned to 5.82 instead (source: s1-01, s1-02)\n- [question] production date and exact windows: no prod date yet, to be chosen after Maya's sign-off (source: s3-09, src-linear-kes298)\n- [décision] no prod date until Maya signs off, and apply_immediately stays false (source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] reboot for rds.logical_replication accepted on staging; runbook updated so prod does the same reboot step before blue/green (source: s3-05, s3-10)",
+  "rendu": "## Où j'en suis\nPostgreSQL 17 upgrade of the analytics RDS: staging (analytics-staging) is now on PG 17.2 since Nov 17, 14:20 UTC, via blue/green switchover (41 s of refused writes). pg_partman was upgraded 4.7.4 → 5.1.0 on staging 16.4 first, maintenance ran green on events_raw and events_daily, and dbt on 17.2 passes 14/14 models (+3% runtime, within noise). Draft PR #57 is open with commits 7e3c9d4 (logical replication in module) and b0f18a2 (staging engine 17.2); runbook `runbooks/pg17-upgrade.md` updated so prod step 0 is set rds.logical_replication = 1 + reboot before the blue/green. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-slack-infra)\n\n- [en-cours] PR kestrel-analytics/infra#57 (draft) on branch noa/rds-pg17, open, awaiting review (de: équipe, agent; source: ses-pg-3, src-pr57)\n- [prochaine-étape] pick the production window: prod needs the rds.logical_replication = 1 + reboot step first, so two windows; must avoid the dbt lock on events_daily (01:00–03:30 UTC), lowest-traffic slots are Sat/Sun 04:00–06:00 UTC (de: agent; source: ses-pg-3, ses-pg-1, s1-05)\n- [prochaine-étape] Maya signs off on prod only after a full week of staging on 17 without incident — earliest sign-off Nov 24 (de: toi, connecteur, agent; source: s3-09, s3-10, src-linear-kes298)\n- [essai-raté] first `terraform apply pg17.plan` failed: blue/green for PostgreSQL requires rds.logical_replication = 1 in the source parameter group + reboot (de: agent; source: s3-04)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 with 37 unrelated changes; pinned to 5.82 instead (de: toi, agent; source: s1-01, s1-02)\n- [question] production date and exact windows: no prod date yet, to be chosen after Maya's sign-off (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [décision] no prod date until Maya signs off, and apply_immediately stays false (de: toi; source: s1-04)\n- [décision] AWS provider pinned to 5.82, no v6 in this PR (de: toi; source: s1-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1986,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4147,
+    "sortie": 683,
+    "reflexion": 54,
+    "cache": 0,
+    "cout": 0.00096355
+  },
+  "cout": 0.00096355,
+  "latenceMs": 2988,
+  "fournisseur": "Mistral"
+}

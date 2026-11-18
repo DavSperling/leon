@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-sso-fernhill",
+  "modele": "anthropic/claude-haiku-5.5@sans-reflexion",
+  "rep": 1,
+  "date": "2026-11-18T14:32:46.344Z",
+  "reponse": "## Où j'en suis\nLe login SAML réel fonctionne sur staging avec l'IdP de Fernhill, après le correctif du RelayState court ; les utilisateurs sont créés en `viewer` (JIT). Le mapping des groupes est en PR #421 (ouverte, pas fusionnée) et attend que l'IT de Fernhill ajoute la revendication `groups`, avant la démo de jeudi 19 novembre à 10h (New York). (source: ses-sso-3, s3-11, src-linear-kes311)\n\n- [en-cours] Mapping des groupes vers les rôles : PR #421 ouverte, en attente de revue (source: ses-sso-3)\n- [en-cours] Revendication `groups` côté Fernhill, à demander par email (source: s3-05, src-linear-kes311)\n- [prochaine-étape] Une fois la revendication ajoutée, tester avec un compte admin de démo pour la démo de jeudi (source: s3-08)\n- [prochaine-étape] Revue et fusion de #421 (source: s3-06)\n- [essai-raté] Premier test du flux SP-initiated : ADFS de Fernhill rejette le RelayState de 143 octets (limite de 80), corrigé par un identifiant opaque stocké dans Redis avec TTL de 600 s (source: s3-02, s3-04)\n- [question] Le flux IdP-initiated uniquement, demandé par l'IT de Fernhill, et le rôle `analyst` par défaut ne sont pas tranchés : `analyst` n'existe pas encore, et la décision de l'équipe est de garder `viewer` et le SP-initiated (source: s3-07, src-slack-fernhill)\n- [question] La note mémorisée indique l'application du SSO obligatoire le 1er décembre, avec désactivation du mot de passe pour le tenant ; cette décision n'est sourcée par aucune PR ni message de l'équipe, à confirmer (source: src-note-enforce)\n- [décision] Rôle par défaut `viewer`, car une banque applique le moindre privilège ; les admins Fernhill montent les gens de rôle (source: s1-05)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC pour l'instant ; les deux flux (SP-initiated et IdP-initiated) (source: s1-03)\n- [décision] Aucun compte créé pour un domaine non vérifié, même si l'IdP l'envoie (source: s2-03, src-pr415)",
+  "rendu": "## Où j'en suis\nLe login SAML réel fonctionne sur staging avec l'IdP de Fernhill, après le correctif du RelayState court ; les utilisateurs sont créés en `viewer` (JIT). Le mapping des groupes est en PR #421 (ouverte, pas fusionnée) et attend que l'IT de Fernhill ajoute la revendication `groups`, avant la démo de jeudi 19 novembre à 10h (New York). (de: connecteur, agent; source: ses-sso-3, s3-11, src-linear-kes311)\n\n- [en-cours] Mapping des groupes vers les rôles : PR #421 ouverte, en attente de revue (de: agent; source: ses-sso-3)\n- [en-cours] Revendication `groups` côté Fernhill, à demander par email (de: toi, connecteur; source: s3-05, src-linear-kes311)\n- [prochaine-étape] Une fois la revendication ajoutée, tester avec un compte admin de démo pour la démo de jeudi (de: agent; source: s3-08)\n- [prochaine-étape] Revue et fusion de #421 (de: agent; source: s3-06)\n- [essai-raté] Premier test du flux SP-initiated : ADFS de Fernhill rejette le RelayState de 143 octets (limite de 80), corrigé par un identifiant opaque stocké dans Redis avec TTL de 600 s (de: agent; source: s3-02, s3-04)\n- [question] Le flux IdP-initiated uniquement, demandé par l'IT de Fernhill, et le rôle `analyst` par défaut ne sont pas tranchés : `analyst` n'existe pas encore, et la décision de l'équipe est de garder `viewer` et le SP-initiated (de: toi, connecteur; source: s3-07, src-slack-fernhill)\n- [question] La note mémorisée indique l'application du SSO obligatoire le 1er décembre, avec désactivation du mot de passe pour le tenant ; cette décision n'est sourcée par aucune PR ni message de l'équipe, à confirmer (de: agent; source: src-note-enforce)\n- [décision] Rôle par défaut `viewer`, car une banque applique le moindre privilège ; les admins Fernhill montent les gens de rôle (de: toi; source: s1-05)\n- [décision] SAML uniquement pour Fernhill, pas d'OIDC pour l'instant ; les deux flux (SP-initiated et IdP-initiated) (de: toi; source: s1-03)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1947,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6361,
+    "sortie": 857,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0010646
+  },
+  "cout": 0.0010646,
+  "latenceMs": 4287,
+  "fournisseur": "Claude Platform on AWS"
+}

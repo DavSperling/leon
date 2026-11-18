@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "mistralai/mistral-small-2603",
+  "rep": 1,
+  "date": "2026-11-18T14:23:53.829Z",
+  "reponse": "## Ce que tu as fait\n- Tu as identifié la cause de la baisse des funnel numbers iOS d’Orbitly : le SDK 3.2.0 utilise un `event_id` incrémental par session, ce qui fait que la déduplication par `event_id` seul supprimait des événements légitimes. Tu as corrigé la clé de déduplication pour inclure `(project_id, device_id, event_id)` et ouvert PR #247 [1].\n- Tu as quantifié l’impact : **1,18 million d’événements Orbitly** et **3 800 événements Zest Grocers** ont été perdus depuis le 13/11 [1].\n\n## Ce qui a bougé\n- PR #247 est ouvert, Maya Cohen demande le nombre exact d’événements perdus pour Orbitly avant d’approuver [2].\n- PR #233 (postmortem 12/11) est finalisé, présentation prévue vendredi [3].\n- PR #245 (bump Go) est mergé [4].\n- Zest Grocers confirme que leurs dashboards sont complets après le backfill [6].\n\n## Ce qui reste ouvert\n- PR #247 est en revue : il te faut le nombre exact d’événements perdus pour Orbitly pour la réunion avec leur PM [2].\n- Tu dois ajouter une alerte sur la dead-letter queue (DLQ) > 1 000 messages avant vendredi [7].\n- Après le déploiement de #247, il faut lancer le replay des événements perdus pour Orbitly et Zest Grocers [1].",
+  "rendu": "## Ce que tu as fait\n- Tu as identifié la cause de la baisse des funnel numbers iOS d’Orbitly : le SDK 3.2.0 utilise un `event_id` incrémental par session, ce qui fait que la déduplication par `event_id` seul supprimait des événements légitimes. Tu as corrigé la clé de déduplication pour inclure `(project_id, device_id, event_id)` et ouvert PR #247 [1].\n- Tu as quantifié l’impact : **1,18 million d’événements Orbitly** et **3 800 événements Zest Grocers** ont été perdus depuis le 13/11 [1].\n\n## Ce qui a bougé\n- PR #247 est ouvert, Maya Cohen demande le nombre exact d’événements perdus pour Orbitly avant d’approuver [2].\n- PR #233 (postmortem 12/11) est finalisé, présentation prévue vendredi [3].\n- PR #245 (bump Go) est mergé [4].\n- Zest Grocers confirme que leurs dashboards sont complets après le backfill [6].\n\n## Ce qui reste ouvert\n- PR #247 est en revue : il te faut le nombre exact d’événements perdus pour Orbitly pour la réunion avec leur PM [2].\n- Tu dois ajouter une alerte sur la dead-letter queue (DLQ) > 1 000 messages avant vendredi [7].\n- Après le déploiement de #247, il faut lancer le replay des événements perdus pour Orbitly et Zest Grocers [1].",
+  "mesures": {
+    "mots": 189,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5061,
+    "sortie": 1570,
+    "reflexion": 1206,
+    "cache": 0,
+    "cout": 0.001871265
+  },
+  "cout": 0.001871265,
+  "latenceMs": 9517,
+  "fournisseur": "Mistral"
+}

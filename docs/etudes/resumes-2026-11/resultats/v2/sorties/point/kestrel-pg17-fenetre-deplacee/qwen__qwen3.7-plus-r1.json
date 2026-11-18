@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "qwen/qwen3.7-plus",
+  "rep": 1,
+  "date": "2026-11-18T15:13:03.751Z",
+  "reponse": "## What you did\n* You prepared the production PostgreSQL 17 cutover via RDS blue/green deployments, ensuring the read replica follows the deployment without replacement [1].\n* You rehearsed the cutover on a clone, measuring 74 seconds of write downtime, and identified the need for a dedicated rollback rehearsal [1].\n* You opened PR #321 with the infrastructure changes and runbook [1].\n\n## What changed\n* Maya moved the cutover window to Sunday 22/11, 02:00–04:00 UTC to avoid Fernhill's month-end batch, and authorized merging the PR [8].\n* Daniel will cover the API on-call during the switchover [7].\n* Lior confirmed ingest workers need no configuration changes, just a 30-minute notice to pause consumers [9].\n\n## What is still open\n* Update the runbook with the new window and merge PR #321 [8].\n* Rehearse the rollback procedure on a fresh clone this Thursday to measure downtime and data loss [1].\n* Notify Daniel and Lior 30 minutes before the Sunday switchover [7][9].",
+  "rendu": "## What you did\n* You prepared the production PostgreSQL 17 cutover via RDS blue/green deployments, ensuring the read replica follows the deployment without replacement [1].\n* You rehearsed the cutover on a clone, measuring 74 seconds of write downtime, and identified the need for a dedicated rollback rehearsal [1].\n* You opened PR #321 with the infrastructure changes and runbook [1].\n\n## What changed\n* Maya moved the cutover window to Sunday 22/11, 02:00–04:00 UTC to avoid Fernhill's month-end batch, and authorized merging the PR [8].\n* Daniel will cover the API on-call during the switchover [7].\n* Lior confirmed ingest workers need no configuration changes, just a 30-minute notice to pause consumers [9].\n\n## What is still open\n* Update the runbook with the new window and merge PR #321 [8].\n* Rehearse the rollback procedure on a fresh clone this Thursday to measure downtime and data loss [1].\n* Notify Daniel and Lior 30 minutes before the Sunday switchover [7][9].",
+  "mesures": {
+    "mots": 151,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5545,
+    "sortie": 3165,
+    "reflexion": 2905,
+    "cache": 1152,
+    "cout": 0.005530688
+  },
+  "cout": 0.005530688,
+  "latenceMs": 52041,
+  "fournisseur": "Alibaba"
+}

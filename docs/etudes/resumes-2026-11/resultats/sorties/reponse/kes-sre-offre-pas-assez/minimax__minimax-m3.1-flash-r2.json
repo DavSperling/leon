@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:41:10.361Z",
+  "reponse": "Aucune offre n'a été faite à Yael Mizrahi à ce jour : le processus en est seulement à l'entretien final avec Maya Cohen, prévu le 24 novembre 2026 [1]. L'équipe a explicitement demandé de ne pas discuter chiffres ou salaire avec les candidats avant cette étape finale [3], et Maya a confirmé qu'il valait mieux attendre les entretiens finaux pour en parler avec Yael [4]. Elle a seulement indiqué attendre une rémunération « competitive with big tech », sans donner de montant [4]. À titre de référence, la bande pour le poste de Senior SRE (L5) est de 520–600k ILS de base à Tel-Aviv ou 170–190k USD de base à New York, plus des equity selon le guide de leveling ; un montant au-delà de la bande exige l'approbation du CEO [2].",
+  "rendu": "Aucune offre n'a été faite à Yael Mizrahi à ce jour : le processus en est seulement à l'entretien final avec Maya Cohen, prévu le 24 novembre 2026 [1]. L'équipe a explicitement demandé de ne pas discuter chiffres ou salaire avec les candidats avant cette étape finale [3], et Maya a confirmé qu'il valait mieux attendre les entretiens finaux pour en parler avec Yael [4]. Elle a seulement indiqué attendre une rémunération « competitive with big tech », sans donner de montant [4]. À titre de référence, la bande pour le poste de Senior SRE (L5) est de 520–600k ILS de base à Tel-Aviv ou 170–190k USD de base à New York, plus des equity selon le guide de leveling ; un montant au-delà de la bande exige l'approbation du CEO [2].",
+  "mesures": {
+    "mots": 128,
+    "tropLong": true,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1130,
+    "sortie": 188,
+    "reflexion": 10,
+    "cache": 512,
+    "cout": 0.00021318
+  },
+  "cout": 0.00021318,
+  "latenceMs": 1554,
+  "fournisseur": "Nebius"
+}

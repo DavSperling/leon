@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:59:40.190Z",
+  "reponse": "To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` (with the API running), then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. The old method of setting `FEATURE_FLAGS=new_dash` in `.env.local` no longer works, since #447 renamed the flag to `dashboards_v2` and flags are now served by the API instead of the build-time env [2][3]. Note that new workspaces with no events show a blank grid until the empty state ships [5].",
+  "rendu": "To enable the new dashboards locally, run `make dev-flags FLAGS=dashboards_v2` (with the API running), then hard-reload the page; you can verify with `curl localhost:8000/api/flags` [2][3]. The old method of setting `FEATURE_FLAGS=new_dash` in `.env.local` no longer works, since #447 renamed the flag to `dashboards_v2` and flags are now served by the API instead of the build-time env [2][3]. Note that new workspaces with no events show a blank grid until the empty state ships [5].",
+  "mesures": {
+    "mots": 74,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1135,
+    "sortie": 134,
+    "reflexion": 5,
+    "cache": 0,
+    "cout": 0.00023725
+  },
+  "cout": 0.00023725,
+  "latenceMs": 1108,
+  "fournisseur": "Together"
+}

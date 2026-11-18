@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:57.124Z",
+  "reponse": "## What is still open\n- Lucas demande un changement sur ta PR #214 : corriger aussi `rappels/sms.py` dans celle-ci (il rebasera lui-même), alors que tu avais choisi de ne pas y toucher — sans ça, les SMS de rappel partent encore avec une heure de trop [3].\n- Échéance : les SMS doivent être bons avant l'envoi de mercredi 18h, sinon les clients manquent encore leurs rendez-vous jeudi [4].\n- La commande `reprise_heure_hiver` (41 interventions faussées) est prête en dry-run : à lancer en prod sans `--dry-run` juste après la fusion de #214 [1].\n- Verrouiller le créneau de l'audit RGE (chantier Le Floch, 8/12) dans l'admin avant vendredi, comme Franck te l'a demandé [2].\n\n## What changed\n- Yannick confirme sur #208 que les SMS d'hier soir ont annoncé 9h au lieu de 8h à 6 clients ; Sandrine a eu trois rappels (Peltier, Bréhier, Hervé) et attend de toi une confirmation quand les SMS seront corrigés [4][7].\n- Nouveau ticket #209→#219 de Sandrine : le formulaire de devis en ligne refuse les téléphones avec espaces, ça fait perdre des demandes [6].\n- La PR Dependabot #205 (Django) a été rebasée sur la branche de base [5].\n\n## What you did\n- Tu as corrigé le bug d'heure d'hiver (calcul fixe +2 h remplacé par `timezone.localtime`) dans l'ICS, l'API mobile et le rapport hebdo, avec tests au vert ; PR #214 ouverte, Lucas en relecteur [1][3].\n- Tu as séparé `settings.py` en base/dev/prod sans casser la prod, fermé les avertissements de `check --deploy` (HSTS, cookies) et monté pillow 11.0.0 suite à pip-audit, sur la branche `thomas/settings-split` [2].",
+  "rendu": "## What is still open\n- Lucas demande un changement sur ta PR #214 : corriger aussi `rappels/sms.py` dans celle-ci (il rebasera lui-même), alors que tu avais choisi de ne pas y toucher — sans ça, les SMS de rappel partent encore avec une heure de trop [3].\n- Échéance : les SMS doivent être bons avant l'envoi de mercredi 18h, sinon les clients manquent encore leurs rendez-vous jeudi [4].\n- La commande `reprise_heure_hiver` (41 interventions faussées) est prête en dry-run : à lancer en prod sans `--dry-run` juste après la fusion de #214 [1].\n- Verrouiller le créneau de l'audit RGE (chantier Le Floch, 8/12) dans l'admin avant vendredi, comme Franck te l'a demandé [2].\n\n## What changed\n- Yannick confirme sur #208 que les SMS d'hier soir ont annoncé 9h au lieu de 8h à 6 clients ; Sandrine a eu trois rappels (Peltier, Bréhier, Hervé) et attend de toi une confirmation quand les SMS seront corrigés [4][7].\n- Nouveau ticket #209→#219 de Sandrine : le formulaire de devis en ligne refuse les téléphones avec espaces, ça fait perdre des demandes [6].\n- La PR Dependabot #205 (Django) a été rebasée sur la branche de base [5].\n\n## What you did\n- Tu as corrigé le bug d'heure d'hiver (calcul fixe +2 h remplacé par `timezone.localtime`) dans l'ICS, l'API mobile et le rapport hebdo, avec tests au vert ; PR #214 ouverte, Lucas en relecteur [1][3].\n- Tu as séparé `settings.py` en base/dev/prod sans casser la prod, fermé les avertissements de `check --deploy` (HSTS, cookies) et monté pillow 11.0.0 suite à pip-audit, sur la branche `thomas/settings-split` [2].",
+  "mesures": {
+    "mots": 250,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6040,
+    "sortie": 668,
+    "reflexion": 197,
+    "cache": 0,
+    "cout": 0.00124
+  },
+  "cout": 0.00124,
+  "latenceMs": 4387,
+  "fournisseur": "Together"
+}

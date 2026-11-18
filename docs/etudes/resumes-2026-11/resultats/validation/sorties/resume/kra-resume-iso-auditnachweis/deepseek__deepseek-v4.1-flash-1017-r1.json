@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kra-resume-iso-auditnachweis",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:23:17.504Z",
+  "reponse": "## Où j'en suis\nFür das Überwachungsaudit ISO 9001 (Stichprobe zur Lenkung von Änderungen, 8.5.6, jetzt Di 24.11. in der IT) wurde die Release-Übersicht seit November 2025 erstellt – 23 Releases von `v2025.11.4` bis `v2026.11.2` –, mit den Jira-Change-Tickets abgeglichen und in `docs/iso/aenderungsnachweis-2026.md` mit zwei Abweichungen und Maßnahmen dokumentiert; das PDF (6 Seiten) liegt fertig vor, committet wurde nichts. Offen ist nur noch die Ablage und der Versand an die Person, die die Unterlagen vorab an den Auditor weiterleitet.\n\n- [en-cours] PDF in SharePoint unter QM/Nachweise ablegen (macht die Person selbst)\n- [prochaine-étape] Übersicht bis Freitag, 20.11., bei Anja Lindner abliefern\n- [essai-raté] Jira-API-Zugriff scheiterte mit 401; Abgleich stattdessen über den lokalen CSV-Export\n- [décision] Keine rückdatierten Tickets; die beiden Hotfixes offen als Abweichung mit Notfall-Change-Prozess aufnehmen (source: a09)\n- [décision] Gleiche Maßnahme für die drei Nachfreigaben, zusätzlich Branch Protection ab Dezember (source: a13)\n- [décision] PDF erzeugen, selbst in SharePoint ablegen, nichts committen (source: a17)",
+  "rendu": "## Où j'en suis\nFür das Überwachungsaudit ISO 9001 (Stichprobe zur Lenkung von Änderungen, 8.5.6, jetzt Di 24.11. in der IT) wurde die Release-Übersicht seit November 2025 erstellt – 23 Releases von `v2025.11.4` bis `v2026.11.2` –, mit den Jira-Change-Tickets abgeglichen und in `docs/iso/aenderungsnachweis-2026.md` mit zwei Abweichungen und Maßnahmen dokumentiert; das PDF (6 Seiten) liegt fertig vor, committet wurde nichts. Offen ist nur noch die Ablage und der Versand an die Person, die die Unterlagen vorab an den Auditor weiterleitet.\n\n- branche [[docs/iso-audit-2026]]\n- [en-cours] PDF in SharePoint unter QM/Nachweise ablegen (macht die Person selbst)\n- [prochaine-étape] Übersicht bis Freitag, 20.11., bei Anja Lindner abliefern\n- [essai-raté] Jira-API-Zugriff scheiterte mit 401; Abgleich stattdessen über den lokalen CSV-Export\n- [décision] Keine rückdatierten Tickets; die beiden Hotfixes offen als Abweichung mit Notfall-Change-Prozess aufnehmen (source: a09)\n- [décision] Gleiche Maßnahme für die drei Nachfreigaben, zusätzlich Branch Protection ab Dezember (source: a13)\n- [décision] PDF erzeugen, selbst in SharePoint ablegen, nichts committen (source: a17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1175,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3812,
+    "sortie": 790,
+    "reflexion": 425,
+    "cache": 0,
+    "cout": 0.00129032
+  },
+  "cout": 0.00129032,
+  "latenceMs": 8108,
+  "fournisseur": "Ionstream"
+}

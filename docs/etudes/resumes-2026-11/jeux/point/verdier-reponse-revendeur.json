@@ -1,0 +1,277 @@
+{
+  "id": "verdier-reponse-revendeur",
+  "titre": "Session hors code : préparer la réponse à un revendeur mécontent ; l'agent propose un avoir de 15 % que Julien retire, Claire décide ensuite d'autre chose sur Slack",
+  "langue": "fr",
+  "entree": {
+    "maintenant": "2026-11-18T06:15:00Z",
+    "projet": "github.com/maison-verdier/boutique",
+    "depuis": "2026-11-17T13:30:00Z",
+    "apropos": null,
+    "poste": null,
+    "regles": [],
+    "sessions": [
+      {
+        "source": {
+          "id": "s-brotteaux",
+          "kind": "claude_code",
+          "nature": "conversation",
+          "titre": "galeries brotteaux nous allume, je colle le mail",
+          "url": null,
+          "date": "2026-11-17T16:40:00Z"
+        },
+        "tours": [
+          {
+            "role": "user",
+            "date": "2026-11-17T13:30:00Z",
+            "texte": "galeries brotteaux nous allume, je colle le mail :\n\nDe : Bertrand Lemaire <b.lemaire@galeries-brotteaux.example>\nÀ : julien@maison-verdier.example, claire@maison-verdier.example\nObjet : Stock Saône – deuxième incident\n\nBonjour,\nVotre fichier de stock revendeurs du 10/11 annonçait 6 tables Saône chêne 180 disponibles. Nous en avons vendu 4 à nos clients en magasin, et vous nous dites aujourd'hui qu'elles sont en rupture jusqu'à mi-janvier. C'est le deuxième incident de ce type ce trimestre.\nNous attendons une explication et une proposition commerciale avant vendredi. À défaut, nous suspendrons nos commandes de réassort pour les soldes.\nCordialement,\nBertrand Lemaire\nAcheteur mobilier – Galeries Brotteaux\n\nregarde scripts/export-revendeurs.ts, pourquoi le fichier disait 6"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:34:30Z",
+            "texte": "Je lis `scripts/export-revendeurs.ts` et le fichier envoyé le 10/11 (`exports/revendeurs-2026-11-10.csv`).\n\nLe script exporte la quantité `on_hand` de chaque variante, c'est-à-dire tout ce qui est physiquement en entrepôt, y compris les unités déjà réservées par des commandes web pas encore expédiées (`committed`). La quantité qu'un revendeur peut vraiment commander, c'est `available` = `on_hand`…"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:39:10Z",
+            "texte": "Pour la Saône chêne 180 le 10/11 : `on_hand` = 6, `committed` = 6 (six précommandes passées sur le site), donc `available` = 0. Le fichier a annoncé aux revendeurs 6 tables qui étaient toutes déjà vendues en ligne. Ce jour-là, 11 autres références étaient surestimées de la même façon, de 1 à 3 unités."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T13:42:00Z",
+            "texte": "ils disent 2e incident. c'était pareil en septembre ?"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T13:48:20Z",
+            "texte": "Oui. Le fichier du 22/09 a le même défaut : le buffet Rhône noyer y était à `on_hand` 4 et `committed` 3, et il a été annoncé à 4. C'est très probablement le premier incident dont ils parlent. Le script exporte `on_hand` depuis sa création en mars : ce n'est pas une régression récente."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T13:50:00Z",
+            "texte": "corrige : available et pas on_hand. et un test"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:20:40Z",
+            "texte": "Corrigé : le script exporte maintenant `available`, jamais négatif. Test ajouté avec le cas Saône du 10/11 (6 en stock, 6 réservées → 0 exporté) et le cas du buffet Rhône de septembre. Relancé sur l'état d'aujourd'hui : 12 références baissent dans le fichier, aucune ne monte."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:22:00Z",
+            "texte": "ouvre la pr, hugo relit"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:25:30Z",
+            "texte": "PR #62 « export revendeurs : n'exporter que le stock disponible (hors réservé) » ouverte, relecteur @hugo-petit."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:40:00Z",
+            "texte": "maintenant aide moi a répondre à bertrand. ton pro, on reconnait l'erreur, on explique sans jargon, on dit que c'est corrigé"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:46:50Z",
+            "texte": "Brouillon :\n\n> Bonjour Monsieur Lemaire,\n> Vous avez raison et nous vous prions de nous excuser. Notre fichier de stock comptait comme disponibles des tables déjà réservées par des commandes de notre site, comme en septembre pour le buffet Rhône. C’est corrigé depuis aujourd’hui.\n> Pour compenser, nous vous proposons un avoir de 15 % sur votre prochaine commande de réassort.\n> Bien cordialement,…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T14:49:30Z",
+            "texte": "enlève l'avoir, c'est claire qui décide des gestes commerciaux. mets juste qu'on revient vers eux avec une proposition d'ici vendredi"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T14:51:10Z",
+            "texte": "Retiré. La fin du brouillon devient : « Claire Verdier reviendra vers vous d'ici vendredi avec une proposition pour les quatre tables concernées. » Le reste est inchangé."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T15:30:00Z",
+            "texte": "et dire qu'on peut leur réserver des saône sur le réassort de janvier ? non attends je demande à claire d'abord"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T15:31:00Z",
+            "texte": "D'accord, je n'ajoute rien sur le réassort tant que Claire n'a pas validé. Le brouillon est dans `brouillons/galeries-brotteaux-2026-11-17.md` ; rien n'a été envoyé."
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T16:30:00Z",
+            "texte": "écris moi un message court pour claire qui résume : cause, correction, et les 2 options (remise sur les 4 tables, leur réserver des saône en janvier)"
+          },
+          {
+            "role": "assistant",
+            "date": "2026-11-17T16:33:20Z",
+            "texte": "« Claire, Galeries Brotteaux : le fichier revendeurs annonçait 6 Saône chêne qui étaient déjà réservées par des commandes web (le script comptait le stock réservé, même cause qu'en septembre). C'est corrigé (#62). Ils veulent une proposition avant vendredi, sinon ils suspendent leurs réassorts pour les soldes. Options : une remise sur les 4 tables vendues, et/ou leur réserver des Saône sur le réa…"
+          },
+          {
+            "role": "user",
+            "date": "2026-11-17T16:40:00Z",
+            "texte": "parfait je lui envoie"
+          }
+        ]
+      }
+    ],
+    "changements": [
+      {
+        "source": {
+          "id": "pr-62",
+          "kind": "github",
+          "nature": "ticket",
+          "titre": "#62 export revendeurs : n'exporter que le stock disponible (hors réservé)",
+          "url": "https://github.com/maison-verdier/boutique/pull/62",
+          "date": "2026-11-18T05:40:00Z"
+        },
+        "tours": [
+          {
+            "role": "document",
+            "auteur": "julien-morel",
+            "date": "2026-11-17T14:25:00Z",
+            "texte": "Le fichier de stock envoyé aux revendeurs exportait la quantité en entrepôt, réservations des commandes web comprises. Il exporte maintenant le disponible (en stock moins réservé). Cause des incidents Galeries Brotteaux du 22/09 (buffet Rhône) et du 10/11 (Saône chêne)."
+          },
+          {
+            "role": "participant",
+            "auteur": "hugo-petit",
+            "date": "2026-11-18T05:40:00Z",
+            "texte": "Approuvée. J'ai relancé sur le fichier du 10/11 : la Saône chêne sort bien à 0."
+          }
+        ]
+      }
+    ],
+    "mentions": [
+      {
+        "source": {
+          "id": "mail-promeuble",
+          "kind": "gmail",
+          "nature": "mail",
+          "titre": "ProMeuble Hebdo : les tendances du salon, les prix du chêne",
+          "url": null,
+          "date": "2026-11-18T05:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "ProMeuble Hebdo",
+          "date": "2026-11-18T05:00:00Z",
+          "texte": "Cette semaine : le prix du chêne massif encore en hausse de 4 % · Les tendances couleur 2027 · Annuaire des transporteurs spécialisés meubles.\n\nLire en ligne · Vous recevez ProMeuble Hebdo à l'adresse julien@maison-verdier.example · Se désabonner"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-direction",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#direction, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T18:05:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Claire Verdier",
+          "date": "2026-11-17T18:05:00Z",
+          "texte": "@julien merci pour le résumé. Ok pour un geste : 10 % sur les 4 tables, et on leur réserve 4 Saône chêne sur le réassort de janvier. Tu peux répondre à Bertrand avec ça ? Je veux que ça parte demain matin."
+        }
+      },
+      {
+        "source": {
+          "id": "outlook-antoine",
+          "kind": "outlook",
+          "nature": "mail",
+          "titre": "Avoir Galeries Brotteaux",
+          "url": null,
+          "date": "2026-11-17T17:00:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Antoine Roussel",
+          "date": "2026-11-17T17:00:00Z",
+          "texte": "À : julien@maison-verdier.example\nCc : claire@maison-verdier.example\n\nBonjour Julien,\nClaire m'a parlé d'un geste pour Galeries Brotteaux. S'il prend la forme d'un avoir, prévenez-moi avant de l'émettre : il doit être rattaché à la facture FA-2026-1187 du 10/11, sinon je ne peux pas le passer correctement en TVA.\nBien à vous,\nAntoine Roussel"
+        }
+      },
+      {
+        "source": {
+          "id": "slack-service-client",
+          "kind": "slack",
+          "nature": "fil",
+          "titre": "#service-client, 17/11/2026",
+          "url": null,
+          "date": "2026-11-17T15:10:00Z"
+        },
+        "tour": {
+          "role": "participant",
+          "auteur": "Lucie Fontaine",
+          "date": "2026-11-17T15:10:00Z",
+          "texte": "@julien Galeries Brotteaux a aussi appelé le service client ce matin, ils sont vraiment remontés. Je leur ai dit que tu reviens vers eux."
+        }
+      }
+    ]
+  },
+  "attendu": {
+    "premier": "f-reponse",
+    "faits": [
+      {
+        "id": "f-reponse",
+        "texte": "Dit que la réponse à Galeries Brotteaux reste à envoyer et que Claire veut qu'elle parte ce matin.",
+        "poids": 3
+      },
+      {
+        "id": "f-geste",
+        "texte": "Dit que Claire accorde 10 % sur les 4 tables vendues.",
+        "poids": 3
+      },
+      {
+        "id": "f-reserve",
+        "texte": "Dit que Claire leur réserve 4 Saône chêne sur le réassort de janvier.",
+        "poids": 2
+      },
+      {
+        "id": "f-menace",
+        "texte": "Dit que Galeries Brotteaux menace de suspendre ses commandes de réassort pour les soldes sans proposition avant vendredi.",
+        "poids": 2
+      },
+      {
+        "id": "f-cause",
+        "texte": "Dit que le fichier de stock revendeurs comptait comme disponibles des tables déjà réservées par des commandes web (même cause qu'en septembre).",
+        "poids": 2
+      },
+      {
+        "id": "f-62",
+        "texte": "Dit que la correction de l'export (#62) est approuvée par Hugo.",
+        "poids": 1
+      },
+      {
+        "id": "f-antoine",
+        "texte": "Dit qu'Antoine veut être prévenu avant l'émission d'un avoir, à rattacher à la facture du 10/11.",
+        "poids": 1
+      }
+    ],
+    "interdits": [
+      {
+        "id": "i-15",
+        "texte": "Parle d'un avoir ou d'une remise de 15 %."
+      },
+      {
+        "id": "i-qui-decide",
+        "texte": "Présente le geste commercial comme décidé par Julien ou proposé par l'assistant, et non par Claire."
+      },
+      {
+        "id": "i-envoyee",
+        "texte": "Dit que la réponse à Galeries Brotteaux a déjà été envoyée."
+      },
+      {
+        "id": "i-geste",
+        "texte": "Raconte les gestes au lieu du sens, par exemple « tu as collé le mail de Bertrand » ou « tu as demandé un brouillon »."
+      },
+      {
+        "id": "i-promeuble",
+        "texte": "Parle de la lettre ProMeuble Hebdo."
+      }
+    ],
+    "pieges": [
+      "Fausse décision : le brouillon de l'agent propose un avoir de 15 % ; Julien le retire parce que c'est Claire qui décide, et Claire choisit ensuite 10 % et une réservation en janvier.",
+      "Session hors code : préparer la réponse à un revendeur, avec une cause technique à comprendre et un brouillon qui n'est pas envoyé.",
+      "Croiser et classer : l'ultimatum collé dans la session, la décision de Claire sur Slack et la demande d'Antoine dans Outlook font une seule chose à faire ce matin, avant la correction technique.",
+      "Bruit : la lettre ProMeuble Hebdo."
+    ]
+  }
+}

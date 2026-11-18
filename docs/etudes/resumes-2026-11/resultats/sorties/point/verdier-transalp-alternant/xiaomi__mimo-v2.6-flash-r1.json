@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:39:24.645Z",
+  "reponse": "## Ce que tu as fait\n- Intégration TransAlp livrée dans la PR #60 : étiquette créée quand une commande part, numéro de suivi renvoyé dans Shopify avec e-mail client, testée de bout en bout en sandbox sur la commande de dev #1042 ; les produits sans dimensions sont bloqués avec un message explicite [1]\n- Ticket #61 ouvert avec la liste des 9 produits sans dimensions et Karim mentionné [2]\n\n## Ce qui a bougé\n- Julien a demandé des changements sur la PR #60 : la clé sandbox est en dur dans `config/transalp.ts` et donc dans l'historique git — à passer en variable d'environnement et à faire régénérer par TransAlp ; la clé de prod, il la mettra lui-même dans l'hébergeur. Le reste est validé [3]\n- Bascule TransAlp décidée en point logistique pour lundi 23/11 : ton essai de bout en bout en production est attendu vendredi 20/11 avec la commande TEST-0001 [7][8]\n- Un mail de « TransAlp Support » te demande de répondre avec la clé de production à une adresse e-mail ; or Mathilde Rey (TransAlp) précise que la clé n'est jamais envoyée par e-mail et part à Julien via l'espace client [6][8]\n- Karim a renseigné 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5]\n\n## Ce qui reste ouvert\n- Sortir la clé sandbox du code (variable d'environnement `TRANSALP_API_KEY`) et demander sa régénération à TransAlp — bloquant pour la PR #60 [3]\n- Essai en production vendredi 20/11 avant la bascule de 6 h lundi 23/11 ; la clé de prod vient de Julien, pas d'un e-mail [7][8]\n- Dimensions de la Saône 180, attendues jeudi : le 9ᵉ produit reste sans expédition TransAlp [5]",
+  "rendu": "## Ce que tu as fait\n- Intégration TransAlp livrée dans la PR #60 : étiquette créée quand une commande part, numéro de suivi renvoyé dans Shopify avec e-mail client, testée de bout en bout en sandbox sur la commande de dev #1042 ; les produits sans dimensions sont bloqués avec un message explicite [1]\n- Ticket #61 ouvert avec la liste des 9 produits sans dimensions et Karim mentionné [2]\n\n## Ce qui a bougé\n- Julien a demandé des changements sur la PR #60 : la clé sandbox est en dur dans `config/transalp.ts` et donc dans l'historique git — à passer en variable d'environnement et à faire régénérer par TransAlp ; la clé de prod, il la mettra lui-même dans l'hébergeur. Le reste est validé [3]\n- Bascule TransAlp décidée en point logistique pour lundi 23/11 : ton essai de bout en bout en production est attendu vendredi 20/11 avec la commande TEST-0001 [7][8]\n- Un mail de « TransAlp Support » te demande de répondre avec la clé de production à une adresse e-mail ; or Mathilde Rey (TransAlp) précise que la clé n'est jamais envoyée par e-mail et part à Julien via l'espace client [6][8]\n- Karim a renseigné 8 des 9 produits dans le Notion « Fiches logistiques » ; il mesure la Saône 180 jeudi à l'atelier de Bois & Fils [5]\n\n## Ce qui reste ouvert\n- Sortir la clé sandbox du code (variable d'environnement `TRANSALP_API_KEY`) et demander sa régénération à TransAlp — bloquant pour la PR #60 [3]\n- Essai en production vendredi 20/11 avant la bascule de 6 h lundi 23/11 ; la clé de prod vient de Julien, pas d'un e-mail [7][8]\n- Dimensions de la Saône 180, attendues jeudi : le 9ᵉ produit reste sans expédition TransAlp [5]",
+  "mesures": {
+    "mots": 271,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5235,
+    "sortie": 1324,
+    "reflexion": 812,
+    "cache": 1536,
+    "cout": 0.0008928808
+  },
+  "cout": 0.0008928808,
+  "latenceMs": 14577,
+  "fournisseur": "Xiaomi"
+}

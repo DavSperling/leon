@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "del-resume-tri-candidatures",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:16.697Z",
+  "reponse": "## Où j'en suis\nLes 11 candidatures pour les 2 postes d'installateur PAC (CDI, Carquefou) sont dans `recrutement/candidats-installateurs.xlsx`, sans la remarque santé ni la colonne prétentions. Quatre candidats sont convoqués, les convocations sont rédigées et la grille d'entretien compte 6 questions et une mise en situation. Aurélie envoie elle-même les convocations depuis Gmail le 17/11 après-midi.\n\n- [prochaine-étape] Mener les entretiens avec Yannick : jeudi 19/11 (Le Roux 14h, Le Gac 15h) et vendredi 20/11 (Perrot 9h, Carré 10h).\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11.\n- [décision] L'attestation fluides n'est pas éliminatoire : l'entreprise finance la formation si le reste convient (source: t10)\n- [décision] Convoqués : Le Roux, Le Gac, Perrot, Carré ; Haddou écarté, car il cherche en Mayenne (source: t10)\n- [décision] Aucun candidat n'est écarté pour un arrêt maladie ; la remarque est supprimée du tableau (source: t06)",
+  "rendu": "## Où j'en suis\nLes 11 candidatures pour les 2 postes d'installateur PAC (CDI, Carquefou) sont dans `recrutement/candidats-installateurs.xlsx`, sans la remarque santé ni la colonne prétentions. Quatre candidats sont convoqués, les convocations sont rédigées et la grille d'entretien compte 6 questions et une mise en situation. Aurélie envoie elle-même les convocations depuis Gmail le 17/11 après-midi.\n\n- [prochaine-étape] Mener les entretiens avec Yannick : jeudi 19/11 (Le Roux 14h, Le Gac 15h) et vendredi 20/11 (Perrot 9h, Carré 10h).\n- [prochaine-étape] Répondre à tous les candidats non retenus avant le 27/11.\n- [décision] L'attestation fluides n'est pas éliminatoire : l'entreprise finance la formation si le reste convient (source: t10)\n- [décision] Convoqués : Le Roux, Le Gac, Perrot, Carré ; Haddou écarté, car il cherche en Mayenne (source: t10)\n- [décision] Aucun candidat n'est écarté pour un arrêt maladie ; la remarque est supprimée du tableau (source: t06)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 976,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4613,
+    "sortie": 445,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.013676
+  },
+  "cout": 0.013676,
+  "latenceMs": 3458,
+  "fournisseur": "Amazon Bedrock"
+}

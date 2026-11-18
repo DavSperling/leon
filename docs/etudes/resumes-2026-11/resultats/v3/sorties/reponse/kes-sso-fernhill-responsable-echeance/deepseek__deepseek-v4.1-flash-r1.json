@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:12.023Z",
+  "reponse": "Daniel Levi owns Fernhill SAML end to end [1][3]. The ticket's internal due date is November 27, leaving a buffer before the contractual go-live of December 1, 2026 [1][2]. The production IdP metadata is expected November 26 at the earliest, after Fernhill's change board, which Daniel said is a same-day config swap [6]. The design doc still lists the SSO owner as TBD and targets GA in Q1 2027, which is earlier than the delivery commitments above [4].",
+  "rendu": "Daniel Levi owns Fernhill SAML end to end [1][3]. The ticket's internal due date is November 27, leaving a buffer before the contractual go-live of December 1, 2026 [1][2]. The production IdP metadata is expected November 26 at the earliest, after Fernhill's change board, which Daniel said is a same-day config swap [6]. The design doc still lists the SSO owner as TBD and targets GA in Q1 2027, which is earlier than the delivery commitments above [4].",
+  "mesures": {
+    "mots": 78,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1324,
+    "sortie": 180,
+    "reflexion": 64,
+    "cache": 0,
+    "cout": 0.0006132
+  },
+  "cout": 0.0006132,
+  "latenceMs": 1217,
+  "fournisseur": "Parasail"
+}

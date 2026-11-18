@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "del-fil-avenant-marchand",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:50.413Z",
+  "reponse": "## Où j'en suis\nLe fil porte sur l'avenant n°1 du chantier Conserverie Marchand. Le 17/11, Hélène Delorme a décidé de proposer une réception au 11 décembre, sans pénalités, et la première année du contrat d'entretien offerte. Hélène a signé l'avenant, et il est parti à Gilles Marchand. Le 18/11, Gilles Marchand demande un avenant corrigé avec trois ans d'entretien offerts. Camille a répondu par un message d'attente, et l'avenant définitif reste bloqué jusqu'à la confirmation d'Hélène. (source: m3-09, m2-07, src-tldv, src-mail-gilles)\n\n- [en-cours] Avenant définitif à produire une fois la position d'Hélène connue. Le message d'attente à M. Marchand est parti. (source: m3-07, m3-09)\n- [prochaine-étape] Demander à Hélène si elle accepte trois ans d'entretien offerts (1 440 € HT) à la place d'un an (480 € HT), puis envoyer l'avenant corrigé à M. Marchand. (source: m3-03, m3-04, src-mail-gilles)\n- [essai-raté] Passer l'article 2 à trois ans dans l'avenant : arrêté, car Hélène n'avait rien accordé d'autre qu'un an. (source: m3-02, m3-03)\n- [question] Trois ans d'entretien offerts, ou un an seulement ? Hélène doit trancher. (source: m3-03, src-mail-gilles)\n- [décision] Réception au 11 décembre, sans pénalités entre le 4 et le 11, et première année d'entretien offerte. (source: src-tldv)",
+  "rendu": "## Où j'en suis\nLe fil porte sur l'avenant n°1 du chantier Conserverie Marchand. Le 17/11, Hélène Delorme a décidé de proposer une réception au 11 décembre, sans pénalités, et la première année du contrat d'entretien offerte. Hélène a signé l'avenant, et il est parti à Gilles Marchand. Le 18/11, Gilles Marchand demande un avenant corrigé avec trois ans d'entretien offerts. Camille a répondu par un message d'attente, et l'avenant définitif reste bloqué jusqu'à la confirmation d'Hélène. (de: toi, connecteur; source: m3-09, m2-07, src-tldv, src-mail-gilles)\n\n- [en-cours] Avenant définitif à produire une fois la position d'Hélène connue. Le message d'attente à M. Marchand est parti. (de: toi; source: m3-07, m3-09)\n- [prochaine-étape] Demander à Hélène si elle accepte trois ans d'entretien offerts (1 440 € HT) à la place d'un an (480 € HT), puis envoyer l'avenant corrigé à M. Marchand. (de: toi, connecteur, agent; source: m3-03, m3-04, src-mail-gilles)\n- [essai-raté] Passer l'article 2 à trois ans dans l'avenant : arrêté, car Hélène n'avait rien accordé d'autre qu'un an. (de: toi, agent; source: m3-02, m3-03)\n- [question] Trois ans d'entretien offerts, ou un an seulement ? Hélène doit trancher. (de: toi, connecteur; source: m3-03, src-mail-gilles)\n- [décision] Réception au 11 décembre, sans pénalités entre le 4 et le 11, et première année d'entretien offerte. (de: connecteur; source: src-tldv)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1411,
+    "lignesRetirees": 0,
+    "decisions": 1,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5497,
+    "sortie": 1343,
+    "reflexion": 748,
+    "cache": 0,
+    "cout": 0.0012212
+  },
+  "cout": 0.0012212,
+  "latenceMs": 6821,
+  "fournisseur": "Google"
+}

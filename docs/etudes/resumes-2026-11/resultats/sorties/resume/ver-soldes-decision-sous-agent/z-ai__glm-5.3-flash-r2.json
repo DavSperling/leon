@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:39:41.311Z",
+  "reponse": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver : règles de remise par collection, application en masse via bulkOperation, programmation du lancement et export CSV. Les tests passent et la boutique de dev a été appliquée avec succès (0 rejet). La PR maison-verdier/boutique#94 est ouverte, en attente de relecture.\n\n- [prochaine-étape] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent d'ici là (source: t18)\n- [essai-raté] Application directe variante par variante sur dev-verdier : échec THROTTLED (budget API dépassé à mi-chemin, 73 produits non mis à jour, boutique à moitié soldée) ; remplacé par une opération en masse JSONL (source: t10)\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, rien sur Saône (exclue) — les taux proposés d'après les marges (-30/-40) ont été refusés (source: t05)\n- [décision] Prix soldes arrondis à l'euro au-dessous puis terminés par 9, prix sous 20 € non touchés (source: t07)\n- [décision] Application programmée le mercredi 13 janvier 2027 à 8h00 (Europe/Paris), pas la veille au soir, pour que les prix barrés ne soient pas visibles avant l'ouverture ; vérification sur dev-verdier la veille (source: t15)\n- [décision] Utiliser une opération en masse (bulk) plutôt que des appels séquentiels, et remettre la boutique de dev propre avant (source: t11)",
+  "rendu": "## Où j'en suis\nLe script des soldes d'hiver est prêt sur la branche julien/script-soldes-hiver : règles de remise par collection, application en masse via bulkOperation, programmation du lancement et export CSV. Les tests passent et la boutique de dev a été appliquée avec succès (0 rejet). La PR maison-verdier/boutique#94 est ouverte, en attente de relecture.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [prochaine-étape] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent d'ici là (source: t18)\n- [essai-raté] Application directe variante par variante sur dev-verdier : échec THROTTLED (budget API dépassé à mi-chemin, 73 produits non mis à jour, boutique à moitié soldée) ; remplacé par une opération en masse JSONL (source: t10)\n- [décision] Remises : -20 % sur Rhône, -30 % sur les fins de série, rien sur Saône (exclue) — les taux proposés d'après les marges (-30/-40) ont été refusés (source: t05)\n- [décision] Prix soldes arrondis à l'euro au-dessous puis terminés par 9, prix sous 20 € non touchés (source: t07)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1265,
+    "decisions": 2,
+    "decisionsRetirees": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3882,
+    "sortie": 480,
+    "reflexion": 29,
+    "cache": 768,
+    "cout": 0.00067554
+  },
+  "cout": 0.00067554,
+  "latenceMs": 1933,
+  "fournisseur": "Particle AI"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:56:42.490Z",
+  "reponse": "## What is still open\n- La bascule TransAlp est actée pour le 23/11 à 6 h : tu dois faire l'essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001 [7][8]\n- Clé de production : Julien la pose dans les variables de l'environnement chez l'hébergeur, et TransAlp la délivre via l'espace client, jamais par e-mail — le mail d'activation TransAlp Support qui te demande de la renvoyer par e-mail contredit ça et ne doit pas être suivi tel quel [8][3][6]\n- Ticket #61 : il manque encore les dimensions de la Saône 180, que Karim mesure jeudi à l'atelier de Bois & Fils ; les 8 autres produits sont renseignés [5]\n- Ticket #59 « soldes » : le tag `soldes` automatique (prix barré renseigné, retiré en fin de soldes) est à poser pour les collections de Sophie en janvier [4]\n\n## What changed\n- Julien a relu la PR #60 le 17/11 et bloque : la clé sandbox est en dur dans `config/transalp.ts` et finit dans l'historique git — il demande de la passer en variable d'environnement `TRANSALP_API_KEY` et de faire régénérer la clé par TransAlp ; le reste est validé [3]\n- TransAlp a confirmé l'accès production et demandé un essai bout en bout avec la commande TEST-0001 avant la bascule [8]\n\n## What you did\n- Intégration TransAlp complète : étiquette créée quand une commande part, numéro de suivi remonté dans Shopify avec e-mail d'expédition au client, et annulation de l'envoi TransAlp si Shopify échoue ; conversion du poids Shopify (grammes) vers les kg de TransAlp, et blocage explicite des produits sans dimensions plutôt que l'envoi de dimensions inventées. Validé de bout en bout en sandbox sur la commande de dev #1042, puis PR #60 ouverte pour relecture [1]\n- Diagnostic des 401 de la sandbox : signature HMAC mal calculée (sur les octets envoyés) puis horodatage en millisecondes au lieu de secondes ; le décalage d'horloge venait du VPN de l'école [1]\n- Recensement des 9 produits Shopify sans dimensions et ouverture du ticket #61 avec Karim mentionné [2]",
+  "rendu": "## What is still open\n- La bascule TransAlp est actée pour le 23/11 à 6 h : tu dois faire l'essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001 [7][8]\n- Clé de production : Julien la pose dans les variables de l'environnement chez l'hébergeur, et TransAlp la délivre via l'espace client, jamais par e-mail — le mail d'activation TransAlp Support qui te demande de la renvoyer par e-mail contredit ça et ne doit pas être suivi tel quel [8][3][6]\n- Ticket #61 : il manque encore les dimensions de la Saône 180, que Karim mesure jeudi à l'atelier de Bois & Fils ; les 8 autres produits sont renseignés [5]\n- Ticket #59 « soldes » : le tag `soldes` automatique (prix barré renseigné, retiré en fin de soldes) est à poser pour les collections de Sophie en janvier [4]\n\n## What changed\n- Julien a relu la PR #60 le 17/11 et bloque : la clé sandbox est en dur dans `config/transalp.ts` et finit dans l'historique git — il demande de la passer en variable d'environnement `TRANSALP_API_KEY` et de faire régénérer la clé par TransAlp ; le reste est validé [3]\n- TransAlp a confirmé l'accès production et demandé un essai bout en bout avec la commande TEST-0001 avant la bascule [8]\n\n## What you did\n- Intégration TransAlp complète : étiquette créée quand une commande part, numéro de suivi remonté dans Shopify avec e-mail d'expédition au client, et annulation de l'envoi TransAlp si Shopify échoue ; conversion du poids Shopify (grammes) vers les kg de TransAlp, et blocage explicite des produits sans dimensions plutôt que l'envoi de dimensions inventées. Validé de bout en bout en sandbox sur la commande de dev #1042, puis PR #60 ouverte pour relecture [1]\n- Diagnostic des 401 de la sandbox : signature HMAC mal calculée (sur les octets envoyés) puis horodatage en millisecondes au lieu de secondes ; le décalage d'horloge venait du VPN de l'école [1]\n- Recensement des 9 produits Shopify sans dimensions et ouverture du ticket #61 avec Karim mentionné [2]",
+  "mesures": {
+    "mots": 321,
+    "tropLong": true,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4610,
+    "sortie": 3062,
+    "reflexion": 2554,
+    "cache": 1536,
+    "cout": 0.00232134
+  },
+  "cout": 0.00232134,
+  "latenceMs": 12024,
+  "fournisseur": "Parasail"
+}

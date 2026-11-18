@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:38:52.563Z",
+  "reponse": "## Ce qui reste à faire\n- L’intégration TransAlp fonctionne de bout en bout en sandbox sur la commande #1042. La PR #60 est bloquée : Julien demande de retirer la clé sandbox du code et de la faire régénérer. Un essai en production avec TEST-0001 est prévu vendredi 20/11, avant la bascule du 23/11. [1][3][7][8]\n- Un e-mail demande l’envoi de la clé de production par réponse, alors que TransAlp indique qu’elle sera transmise à Julien via l’espace client et ne sera jamais envoyée par e-mail : ne partage pas la clé à cette adresse. [6][8]\n- Sur le ticket #61, Karim a renseigné les dimensions de 8 produits ; il reste à mesurer la Saône 180 jeudi à l’atelier. [5]",
+  "rendu": "## Ce qui reste à faire\n- L’intégration TransAlp fonctionne de bout en bout en sandbox sur la commande #1042. La PR #60 est bloquée : Julien demande de retirer la clé sandbox du code et de la faire régénérer. Un essai en production avec TEST-0001 est prévu vendredi 20/11, avant la bascule du 23/11. [1][3][7][8]\n- Un e-mail demande l’envoi de la clé de production par réponse, alors que TransAlp indique qu’elle sera transmise à Julien via l’espace client et ne sera jamais envoyée par e-mail : ne partage pas la clé à cette adresse. [6][8]\n- Sur le ticket #61, Karim a renseigné les dimensions de 8 produits ; il reste à mesurer la Saône 180 jeudi à l’atelier. [5]",
+  "mesures": {
+    "mots": 115,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4481,
+    "sortie": 1140,
+    "reflexion": 951,
+    "cache": 1417,
+    "cout": 0.000967095
+  },
+  "cout": 0.000967095,
+  "latenceMs": 13080,
+  "fournisseur": "OpenAI"
+}

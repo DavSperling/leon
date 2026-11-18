@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-ingest-replay",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:26:58.173Z",
+  "reponse": "## Où j'en suis\nLa PR #233 est fusionnée et le rejeu réel des 18 442 107 événements vers `events.replay.v3` est terminé. Le backfill du 12/11 était encore en cours à 61 % ; dans la fenêtre de l’incident, ClickHouse comptait 14,9 M lignes contre environ 20,5 M attendues. (source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Backfill de l’aggregator pour le 12/11 ; les comptes ne correspondent pas encore. (source: ses-rp-2)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure avec une tolérance de 1 %, puis fermer l’incident uniquement s’ils correspondent. (source: r2-07, r2-08, r2-10)\n- [essai-raté] Le dry run par lots de 50 000 a été tué pour dépassement mémoire (OOMKilled, limite de 2 Gi) ; les lots de 5 000 ont fonctionné. (source: r1-03, src-sentry-oom)\n- [décision] L’incident reste ouvert tant que les comptes ne correspondent pas. (source: r2-07)\n- [décision] Ne pas toucher à la PR #241 ; Daniel s’occupe du contrôle CI. (source: r2-09)",
+  "rendu": "## Où j'en suis\nLa PR #233 est fusionnée et le rejeu réel des 18 442 107 événements vers `events.replay.v3` est terminé. Le backfill du 12/11 était encore en cours à 61 % ; dans la fenêtre de l’incident, ClickHouse comptait 14,9 M lignes contre environ 20,5 M attendues. (de: agent; source: ses-rp-2, r2-04, r2-06)\n\n- [en-cours] Backfill de l’aggregator pour le 12/11 ; les comptes ne correspondent pas encore. (de: agent; source: ses-rp-2)\n- [prochaine-étape] Attendre la fin du backfill, comparer les comptes heure par heure avec une tolérance de 1 %, puis fermer l’incident uniquement s’ils correspondent. (de: toi, agent; source: r2-07, r2-08, r2-10)\n- [essai-raté] Le dry run par lots de 50 000 a été tué pour dépassement mémoire (OOMKilled, limite de 2 Gi) ; les lots de 5 000 ont fonctionné. (de: connecteur, agent; source: r1-03, src-sentry-oom)\n- [décision] L’incident reste ouvert tant que les comptes ne correspondent pas. (de: toi; source: r2-07)\n- [décision] Ne pas toucher à la PR #241 ; Daniel s’occupe du contrôle CI. (de: toi; source: r2-09)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1058,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3632,
+    "sortie": 462,
+    "reflexion": 137,
+    "cache": 0,
+    "cout": 0.000684925
+  },
+  "cout": 0.000684925,
+  "latenceMs": 10651,
+  "fournisseur": "OpenAI"
+}

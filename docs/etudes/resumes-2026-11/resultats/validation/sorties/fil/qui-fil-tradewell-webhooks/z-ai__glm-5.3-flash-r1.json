@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:24:32.312Z",
+  "reponse": "## Où j'en suis\nTradewell webhook certification work: PR #1468 (signed delivery + retries, SKIP LOCKED queue, dead-letter after 24h) was approved by Tomer and merged into main (commit 5d1c0aa), and the work moved to a new branch `jake/tradewell-webhook-cert` to fix the two failing cert tests from the first sandbox run (46/48). WH-17 is fixed (commit c41f9a2e: `failure_code`/`failure_message` in `payout.ts`, snapshot updated, tests green). WH-31 (signing at send time with a fresh timestamp) is written in `delivery.rs`, unit tests green, but not committed and the retry integration test in `tests/retry.rs` still needs rewriting. The sandbox cert re-run is blocked: the Tradewell sandbox API key expired on 2026-11-17, Ellen must reissue it. Deadline: passing cert run by Friday Nov 20 (QPAY-2310), for the Dec 7 go-live. (source: ses-tw-3, src-pr1468, src-jira-2310)\n\n- [en-cours] WH-31: fresh-timestamp signing at send time, uncommitted; `tests/retry.rs` integration test still checks the old pre-computed header and needs rewriting — Jake said he'll finish and push it tomorrow morning (source: ses-tw-3)\n- [prochaine-étape] Re-run the Tradewell sandbox certification (`./scripts/tradewell-cert.sh --env sandbox`) once the API key is reissued; a green run is needed before Friday (source: ses-tw-3)\n- [essai-raté] cert script run blocked: 401 Unauthorized, sandbox partner API key expired 2026-11-17, nothing was tested (source: ses-tw-3)\n- [essai-raté] retry scheduler with Postgres advisory locks sent 0.8% duplicate deliveries under k6 load; replaced with a queue table claimed via FOR UPDATE SKIP LOCKED (source: ses-tw-2)\n- [question] Ellen claims agreement on mTLS and payout.updated for go-live, but that's not in the spec and Jake doesn't recall it; on hold until Jake checks with Sofia — build nothing for it (source: ses-tw-3, src-slack-tradewell)\n- [décision] Don't pile cert fixes onto #1468; work on a new branch `jake/tradewell-webhook-cert` (source: ses-tw-3)\n- [décision] Sign each attempt at send time rather than asking Tradewell to raise the 300s tolerance — 300s is their standard for all partners (source: ses-tw-3)\n- [décision] Retry cap at 24h then dead-letter queue visible in the dashboard; spec requires 12h minimum, 24h gives margin (source: ses-tw-2)\n- [décision] Follow the Tradewell spec exactly: HMAC-SHA256 with shared secret, not Ed25519 (source: ses-tw-1)",
+  "rendu": "## Où j'en suis\nTradewell webhook certification work: PR #1468 (signed delivery + retries, SKIP LOCKED queue, dead-letter after 24h) was approved by Tomer and merged into main (commit 5d1c0aa), and the work moved to a new branch `jake/tradewell-webhook-cert` to fix the two failing cert tests from the first sandbox run (46/48). WH-17 is fixed (commit c41f9a2e: `failure_code`/`failure_message` in `payout.ts`, snapshot updated, tests green). WH-31 (signing at send time with a fresh timestamp) is written in `delivery.rs`, unit tests green, but not committed and the retry integration test in `tests/retry.rs` still needs rewriting. The sandbox cert re-run is blocked: the Tradewell sandbox API key expired on 2026-11-17, Ellen must reissue it. Deadline: passing cert run by Friday Nov 20 (QPAY-2310), for the Dec 7 go-live. (de: équipe, connecteur, agent; source: ses-tw-3, src-pr1468, src-jira-2310)\n\n- [en-cours] WH-31: fresh-timestamp signing at send time, uncommitted; `tests/retry.rs` integration test still checks the old pre-computed header and needs rewriting — Jake said he'll finish and push it tomorrow morning (de: agent; source: ses-tw-3)\n- [prochaine-étape] Re-run the Tradewell sandbox certification (`./scripts/tradewell-cert.sh --env sandbox`) once the API key is reissued; a green run is needed before Friday (de: agent; source: ses-tw-3)\n- [essai-raté] cert script run blocked: 401 Unauthorized, sandbox partner API key expired 2026-11-17, nothing was tested (de: agent; source: ses-tw-3)\n- [essai-raté] retry scheduler with Postgres advisory locks sent 0.8% duplicate deliveries under k6 load; replaced with a queue table claimed via FOR UPDATE SKIP LOCKED (de: agent; source: ses-tw-2)\n- [question] Ellen claims agreement on mTLS and payout.updated for go-live, but that's not in the spec and Jake doesn't recall it; on hold until Jake checks with Sofia — build nothing for it (de: connecteur, agent; source: ses-tw-3, src-slack-tradewell)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1962,
+    "lignesRetirees": 4,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5631,
+    "sortie": 681,
+    "reflexion": 11,
+    "cache": 0,
+    "cout": 0.0008888625
+  },
+  "cout": 0.0008888625,
+  "latenceMs": 5967,
+  "fournisseur": "DigitalOcean"
+}

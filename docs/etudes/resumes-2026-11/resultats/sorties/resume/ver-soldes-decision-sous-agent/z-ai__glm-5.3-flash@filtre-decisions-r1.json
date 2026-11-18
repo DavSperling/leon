@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "ver-soldes-decision-sous-agent",
+  "modele": "z-ai/glm-5.3-flash@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:25:50.351Z",
+  "reponse": "## Où j'en suis\nSession consacrée au script des soldes d'hiver sur la branche `julien/script-soldes-hiver` : règles de remise par collection (Rhône −20 %, fins de série −30 %, Saône exclue), arrondi des prix en 9, dry run avec CSV, application en masse sur la boutique de dev via bulkOperation (512 variantes, 0 rejet), programmation du lancement au mercredi 13 janvier 2027 08:00 dans `scripts/cron.ts`, CSV pour Sophie généré dans `/tmp/prix-soldes.csv`, et PR ouverte [[pr id=\"maison-verdier/boutique#94\"]] (open), avec les commits `e5a90b3`, `1c7d2f8` et `9af3e61`.\n\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Fusionner la PR `maison-verdier/boutique#94` après relecture\n- [prochaine-étape] Répétition sur la boutique de dev la veille du 12 janvier (`pnpm soldes:repetition`)\n- [prochaine-étape] Régénérer le CSV pour Sophie avant la newsletter du 6 janvier si des prix changent\n- [essai-raté] Application sur dev-verdier produit par produit : erreur THROTTLED à mi-chemin (budget API), boutique laissée à moitié soldée ; résolu en passant au bulk après remise à zéro des prix\n- [question] Fin des prix en 9 confirmée (arrondi à l'euro au-dessous puis 9), mais à vérifier sur les cas limites des accessoires sous 20 € (non touchés)\n- [décision] Remises : −20 % Rhône, −30 % fins de série uniquement, rien sur Saône (rupture) (source: t05)\n- [décision] Prix soldés arrondis à l'euro au-dessous puis finissant en 9 (ex. 1 032 → 1 029) (source: t07)\n- [décision] Application via bulk operation avec JSONL plutôt que des appels unitaires (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00 pile, pas la veille au soir (source: t15)",
+  "rendu": "## Où j'en suis\nSession consacrée au script des soldes d'hiver sur la branche `julien/script-soldes-hiver` : règles de remise par collection (Rhône −20 %, fins de série −30 %, Saône exclue), arrondi des prix en 9, dry run avec CSV, application en masse sur la boutique de dev via bulkOperation (512 variantes, 0 rejet), programmation du lancement au mercredi 13 janvier 2027 08:00 dans `scripts/cron.ts`, CSV pour Sophie généré dans `/tmp/prix-soldes.csv`, et PR ouverte [[pr id=\"maison-verdier/boutique#94\"]] (open), avec les commits `e5a90b3`, `1c7d2f8` et `9af3e61`.\n\n- pr [[maison-verdier/boutique#94]]\n- branche [[julien/script-soldes-hiver]]\n- commit [[e5a90b3]]\n- commit [[1c7d2f8]]\n- commit [[9af3e61]]\n- [décision] Remises : −20 % Rhône, −30 % fins de série uniquement, rien sur Saône (rupture) (source: t05)\n- [décision] Prix soldés arrondis à l'euro au-dessous puis finissant en 9 (ex. 1 032 → 1 029) (source: t07)\n- [décision] Application via bulk operation avec JSONL plutôt que des appels unitaires (source: t11)\n- [décision] Lancement programmé le mercredi 13 janvier 2027 à 08:00 pile, pas la veille au soir (source: t15)\n- [en-cours] Script de retour aux prix d'origine pour la fin des soldes, prévu en décembre (source: t19)\n- [prochaine-étape] Fusionner la PR `maison-verdier/boutique#94` après relecture",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1323,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3882,
+    "sortie": 618,
+    "reflexion": 35,
+    "cache": 0,
+    "cout": 0.000203343
+  },
+  "cout": 0.000203343,
+  "latenceMs": 6447,
+  "fournisseur": "Relace",
+  "rejoue": true
+}

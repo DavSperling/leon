@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-dossier-peltier",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:45:25.774Z",
+  "reponse": "Le dossier MPR de Peltier (Vertou) a été déposé le 17/11, et l'accusé de réception a été reçu le même jour [1][3]. Il est en instruction, et le devis a été signé le 16/11 [1]. Les travaux sont prévus le 27/11 [1][4]. Une note antérieure indiquait que le devis n'était pas encore signé et que le dossier restait à déposer [1], mais elle est dépassée. Selon un rappel interne, les travaux peuvent commencer après le dépôt, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. La cliente, Odile Peltier, demande justement si elle peut commencer sans attendre la réponse [2].",
+  "rendu": "Le dossier MPR de Peltier (Vertou) a été déposé le 17/11, et l'accusé de réception a été reçu le même jour [1][3]. Il est en instruction, et le devis a été signé le 16/11 [1]. Les travaux sont prévus le 27/11 [1][4]. Une note antérieure indiquait que le devis n'était pas encore signé et que le dossier restait à déposer [1], mais elle est dépassée. Selon un rappel interne, les travaux peuvent commencer après le dépôt, mais la prime n'est versée qu'après la fin des travaux, sur facture [3]. La cliente, Odile Peltier, demande justement si elle peut commencer sans attendre la réponse [2].",
+  "mesures": {
+    "mots": 104,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1522,
+    "sortie": 631,
+    "reflexion": 383,
+    "cache": 0,
+    "cout": 0.0004677
+  },
+  "cout": 0.0004677,
+  "latenceMs": 3943,
+  "fournisseur": "Google"
+}

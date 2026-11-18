@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "qui-fil-tradewell-webhooks",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:24:27.309Z",
+  "reponse": "## Où j'en suis\nThe Tradewell certification work sits on a new branch, `jake/tradewell-webhook-cert`, split off after PR #1468 (signed delivery + retries) was approved by Tomer and merged into main on Nov 17. WH-17 is fixed and committed (c41f9a2e: `failure_code` mapped from our NACHA `return_code`, plus `failure_message`, snapshot updated). WH-31 (re-sign at send time) is written in `delivery.rs` with unit tests green but not committed — the retry integration test still asserts the old behaviour. The certification re-run is blocked: Tradewell's sandbox partner API key expired on Nov 17, so `tradewell-cert.sh` returned 401 and nothing was tested. A green run is needed by Friday Nov 20 (QPAY-2310) to keep their Dec 7 cutover. (source: ses-tw-3, src-pr1468, src-jira-2310, w3-04)\n\n- [en-cours] WH-31: each attempt signs with a fresh `t` and HMAC at send time, `Idempotency-Key` stays the event id; unit test replaced, integration test in `tests/retry.rs` still checks the old header (source: w3-06)\n- [prochaine-étape] Jake finishes the retry integration test tomorrow morning and pushes; PR not to be opened before that (source: w3-11)\n- [prochaine-étape] Ellen reissues the sandbox API key, then re-run `./scripts/tradewell-cert.sh --env sandbox` for the green run before Friday (source: w3-08, w3-09, src-jira-2310)\n- [essai-raté] sandbox cert run aborted with 401 Unauthorized, partner API key expired 2026-11-17; no test executed (source: w3-08)\n- [essai-raté] first cert run scored 46/48: WH-17 missing `failure_code`, WH-31 retry rejected with a 1,822 s timestamp skew against the 300 s tolerance (source: w3-01, src-jira-2310)\n- [question] Ellen's Slack recap claims we agreed to mTLS and `payout.updated` for the Dec 7 go-live; Jake doesn't recall agreeing and it isn't in the spec — he's checking with Sofia, nothing to be built meanwhile (source: src-slack-tradewell, w3-09)\n- [décision] do the certification fixes on a new branch instead of adding them to #1468 (source: w3-03)\n- [décision] re-sign every attempt with a fresh timestamp rather than asking Tradewell to raise the 300 s tolerance, which is their standard for all partners (source: w3-05)\n- [décision] #1468 merged into main (source: src-pr1468)",
+  "rendu": "## Où j'en suis\nThe Tradewell certification work sits on a new branch, `jake/tradewell-webhook-cert`, split off after PR #1468 (signed delivery + retries) was approved by Tomer and merged into main on Nov 17. WH-17 is fixed and committed (c41f9a2e: `failure_code` mapped from our NACHA `return_code`, plus `failure_message`, snapshot updated). WH-31 (re-sign at send time) is written in `delivery.rs` with unit tests green but not committed — the retry integration test still asserts the old behaviour. The certification re-run is blocked: Tradewell's sandbox partner API key expired on Nov 17, so `tradewell-cert.sh` returned 401 and nothing was tested. A green run is needed by Friday Nov 20 (QPAY-2310) to keep their Dec 7 cutover. (de: équipe, connecteur, agent; source: ses-tw-3, src-pr1468, src-jira-2310, w3-04)\n\n- [en-cours] WH-31: each attempt signs with a fresh `t` and HMAC at send time, `Idempotency-Key` stays the event id; unit test replaced, integration test in `tests/retry.rs` still checks the old header (de: agent; source: w3-06)\n- [prochaine-étape] Jake finishes the retry integration test tomorrow morning and pushes; PR not to be opened before that (de: toi; source: w3-11)\n- [prochaine-étape] Ellen reissues the sandbox API key, then re-run `./scripts/tradewell-cert.sh --env sandbox` for the green run before Friday (de: toi, connecteur, agent; source: w3-08, w3-09, src-jira-2310)\n- [essai-raté] sandbox cert run aborted with 401 Unauthorized, partner API key expired 2026-11-17; no test executed (de: agent; source: w3-08)\n- [essai-raté] first cert run scored 46/48: WH-17 missing `failure_code`, WH-31 retry rejected with a 1,822 s timestamp skew against the 300 s tolerance (de: toi, connecteur; source: w3-01, src-jira-2310)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1753,
+    "lignesRetirees": 4,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5823,
+    "sortie": 1475,
+    "reflexion": 825,
+    "cache": 0,
+    "cout": 0.00281352
+  },
+  "cout": 0.00281352,
+  "latenceMs": 5000,
+  "fournisseur": "Mistral"
+}

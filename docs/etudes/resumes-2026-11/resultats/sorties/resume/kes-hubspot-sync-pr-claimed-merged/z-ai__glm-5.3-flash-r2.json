@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:38:54.489Z",
+  "reponse": "## Où j'en suis\nSur la branche daniel/hubspot-owner-sync : le PR webhooks #405 a été fermé (impossible de gérer les subscriptions HubSpot avec un token private app), remplacé par un polling CRM search toutes les 15 min (commits 8b3e6f1, 2d90ac4, ae47c15). Le PR #409 est toujours ouvert : l'auto-merge a été activé mais ne part pas car le check e2e échoue.\n\n- [en-cours] PR #409 ouvert avec auto-merge en attente : le job e2e `test_admin_accounts.py::test_accounts_table_shows_owner` échoue (3 lignes avec owner attendues, 2 obtenues) car le fixture contient une société trial que le filtre `arr > 0` skip\n- [prochaine-étape] Corriger le fixture e2e (donner ARR > 0 à la 3e société ou attendre 2 lignes) pour débloquer l'auto-merge de #409\n- [prochaine-étape] Noa doit ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod\n- [essai-raté] Le PR webhooks #405 : l'API de gestion des subscriptions exige une developer API key d'un compte développeur, pas un token private app (erreur 401)\n- [essai-raté] Test unitaire initial échoué : la CRM search est plafonnée à 10 000 résultats, contourné par du paging par fenêtres (commit 2d90ac4)\n- [décision] Abandonner les webhooks au profit d'un polling toutes les 15 min (source: t04)\n- [décision] Ne synchroniser que les sociétés avec ARR > 0, exclure les trials (source: t10)\n- [décision] Stocker le token dans Secrets Manager via Noa pour staging/prod (source: t12)",
+  "rendu": "## Où j'en suis\nSur la branche daniel/hubspot-owner-sync : le PR webhooks #405 a été fermé (impossible de gérer les subscriptions HubSpot avec un token private app), remplacé par un polling CRM search toutes les 15 min (commits 8b3e6f1, 2d90ac4, ae47c15). Le PR #409 est toujours ouvert : l'auto-merge a été activé mais ne part pas car le check e2e échoue.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 ouvert avec auto-merge en attente : le job e2e `test_admin_accounts.py::test_accounts_table_shows_owner` échoue (3 lignes avec owner attendues, 2 obtenues) car le fixture contient une société trial que le filtre `arr > 0` skip\n- [prochaine-étape] Corriger le fixture e2e (donner ARR > 0 à la 3e société ou attendre 2 lignes) pour débloquer l'auto-merge de #409\n- [prochaine-étape] Noa doit ajouter `HUBSPOT_TOKEN` dans AWS Secrets Manager pour staging/prod\n- [essai-raté] Le PR webhooks #405 : l'API de gestion des subscriptions exige une developer API key d'un compte développeur, pas un token private app (erreur 401)\n- [essai-raté] Test unitaire initial échoué : la CRM search est plafonnée à 10 000 résultats, contourné par du paging par fenêtres (commit 2d90ac4)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1329,
+    "decisions": 0,
+    "decisionsRetirees": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3384,
+    "sortie": 474,
+    "reflexion": 25,
+    "cache": 0,
+    "cout": 0.00058752
+  },
+  "cout": 0.00058752,
+  "latenceMs": 3711,
+  "fournisseur": "Makora"
+}

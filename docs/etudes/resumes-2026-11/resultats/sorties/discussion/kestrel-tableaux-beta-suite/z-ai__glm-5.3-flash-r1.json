@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:26:02.731Z",
+  "reponse": "The first part (phase 1: chart builder + saved views) opens to customers as a design-partner beta on Wednesday Dec 9, for 5 customers including Orbitly and Zest Grocers [3][9]. Phase 1 itself should be feature-complete behind the `dash_v2` flag by Dec 4 [1]. Other customers won't get access before GA, targeted late January [3] — if anyone asks, don't promise access; a waitlist opens in January [9].",
+  "rendu": "The first part (phase 1: chart builder + saved views) opens to customers as a design-partner beta on Wednesday Dec 9, for 5 customers including Orbitly and Zest Grocers [3][9]. Phase 1 itself should be feature-complete behind the `dash_v2` flag by Dec 4 [1]. Other customers won't get access before GA, targeted late January [3] — if anyone asks, don't promise access; a waitlist opens in January [9].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 4905,
+    "sortie": 130,
+    "reflexion": 7,
+    "cache": 0,
+    "cout": 0.0006276000000000001
+  },
+  "latenceMs": 2756,
+  "fournisseur": "Reka",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards beta launch date customers\"}"
+  ],
+  "cout": 0.0006276000000000001
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sre-offre-pas-assez",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:10.600Z",
+  "reponse": "No salary offer to Yael Mizrahi appears in these results. The team agreed to hold off on numbers until her final round, which was scheduled for November 24, 2026 [1][4]. In the November 13 sync, she only said she expected something \"competitive with big tech,\" with no figure given [4]. The Senior SRE compensation band is 520–600k ILS base for Tel Aviv, but that is the role's range, not an offer to her [2]. Offers above the band need CEO approval [2].",
+  "rendu": "No salary offer to Yael Mizrahi appears in these results. The team agreed to hold off on numbers until her final round, which was scheduled for November 24, 2026 [1][4]. In the November 13 sync, she only said she expected something \"competitive with big tech,\" with no figure given [4]. The Senior SRE compensation band is 520–600k ILS base for Tel Aviv, but that is the role's range, not an offer to her [2]. Offers above the band need CEO approval [2].",
+  "mesures": {
+    "mots": 82,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": null,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1518,
+    "sortie": 430,
+    "reflexion": 271,
+    "cache": 0,
+    "cout": 0.0003668
+  },
+  "cout": 0.0003668,
+  "latenceMs": 4835,
+  "fournisseur": "Amazon Bedrock"
+}

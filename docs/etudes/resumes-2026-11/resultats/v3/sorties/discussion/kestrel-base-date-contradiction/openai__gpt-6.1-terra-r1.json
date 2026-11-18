@@ -1,0 +1,37 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "openai/gpt-6.1-terra",
+  "rep": 1,
+  "date": "2026-11-18T18:08:20.618Z",
+  "reponse": "The maintenance window is **Saturday, December 5, 2026, 02:00–05:00 UTC**. The rescheduled cutover was approved, and the Linear ticket is the reference for the window [2].\n\nThe customer notice is planned for **Saturday, November 28**, via the status page and in-app banner [2]. The runbook says dashboards should be read-only for about 40 minutes, with ingestion buffering and no data loss expected; however, it still has the old November 21 date [1][2].",
+  "rendu": "The maintenance window is **Saturday, December 5, 2026, 02:00–05:00 UTC**. The rescheduled cutover was approved, and the Linear ticket is the reference for the window [2].\n\nThe customer notice is planned for **Saturday, November 28**, via the status page and in-app banner [2]. The runbook says dashboards should be read-only for about 40 minutes, with ingestion buffering and no data loss expected; however, it still has the old November 21 date [1][2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 7,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.667,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12027,
+    "sortie": 323,
+    "reflexion": 8,
+    "cache": 6840,
+    "cout": 0.0084385
+  },
+  "latenceMs": 6768,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"\\\"database\\\" \\\"upgrade\\\" maintenance window\"}",
+    "chercher {\"requete\":\"database upgrade customer notice support macro\"}",
+    "chercher {\"requete\":\"database migration maintenance window rescheduled\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}",
+    "lire {\"sourceId\":\"notion-pg17-runbook\"}",
+    "lire {\"sourceId\":\"slack-eng-announce-pg17\"}",
+    "chercher {\"requete\":\"\\\"Postgres\\\" \\\"Dec\\\" cutover maintenance\",\"depuis\":\"2026-11-16\"}"
+  ],
+  "cout": 0.0084385
+}

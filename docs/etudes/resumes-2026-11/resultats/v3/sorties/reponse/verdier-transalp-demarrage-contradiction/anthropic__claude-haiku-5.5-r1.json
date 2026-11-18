@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-transalp-demarrage-contradiction",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:00:43.634Z",
+  "reponse": "Les sources se contredisent. Le plus récent, un mail de TransAlp du 17/11, fixe le démarrage des enlèvements réguliers au mardi 8 décembre, faute de capacité à Vénissieux avant cette date [2]. Auparavant, le plan et la réunion du 16/11 visaient le 1er décembre [1][4], confirmé aussi sur Slack [3]. Rapid'Colis cesse ses enlèvements après le 30 novembre [5].",
+  "rendu": "Les sources se contredisent. Le plus récent, un mail de TransAlp du 17/11, fixe le démarrage des enlèvements réguliers au mardi 8 décembre, faute de capacité à Vénissieux avant cette date [2]. Auparavant, le plan et la réunion du 16/11 visaient le 1er décembre [1][4], confirmé aussi sur Slack [3]. Rapid'Colis cesse ses enlèvements après le 30 novembre [5].",
+  "mesures": {
+    "mots": 59,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1567,
+    "sortie": 686,
+    "reflexion": 521,
+    "cache": 0,
+    "cout": 0.0004997
+  },
+  "cout": 0.0004997,
+  "latenceMs": 3697,
+  "fournisseur": "Google"
+}

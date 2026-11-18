@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T17:56:05.956Z",
+  "reponse": "## What is still open\n- Tu as ouvert la PR #63 après un dry-run en production (212 variantes, 57 produits) et des tests réussis sur la boutique de dev. Avant validation, retire les Saône de la grille : Hugo pose la question, et Claire confirme qu’aucune Saône ne doit être soldée. Les 3 variantes déjà moins chères restent ignorées et 7 lignes ne correspondent à aucun produit actif. [1][4][10]\n- Sophie veut les prix dans Shopify le 30/11 pour le shooting, alors que ton script ne les applique que le 6 janvier : l’échéance ne correspond pas au déclenchement prévu. [1][11]\n\n## What changed\n- Sophie demande de relancer le flux Google Shopping juste après le script des soldes pour éviter un écart de prix dans les annonces. [5]\n- Sophie signale que la bannière des soldes masque « Ajouter au panier » sur mobile et demande une correction avant le shooting. [6]\n- La PR #59, qui ajoute et retire automatiquement le tag `soldes`, a été fusionnée. [7]\n- La PR #52 du widget Zendesk est fusionnée ; Lucie signale 23 conversations depuis les pages produit cette semaine. [9]",
+  "rendu": "## What is still open\n- Tu as ouvert la PR #63 après un dry-run en production (212 variantes, 57 produits) et des tests réussis sur la boutique de dev. Avant validation, retire les Saône de la grille : Hugo pose la question, et Claire confirme qu’aucune Saône ne doit être soldée. Les 3 variantes déjà moins chères restent ignorées et 7 lignes ne correspondent à aucun produit actif. [1][4][10]\n- Sophie veut les prix dans Shopify le 30/11 pour le shooting, alors que ton script ne les applique que le 6 janvier : l’échéance ne correspond pas au déclenchement prévu. [1][11]\n\n## What changed\n- Sophie demande de relancer le flux Google Shopping juste après le script des soldes pour éviter un écart de prix dans les annonces. [5]\n- Sophie signale que la bannière des soldes masque « Ajouter au panier » sur mobile et demande une correction avant le shooting. [6]\n- La PR #59, qui ajoute et retire automatiquement le tag `soldes`, a été fusionnée. [7]\n- La PR #52 du widget Zendesk est fusionnée ; Lucie signale 23 conversations depuis les pages produit cette semaine. [9]",
+  "mesures": {
+    "mots": 178,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4497,
+    "sortie": 1647,
+    "reflexion": 1375,
+    "cache": 1451,
+    "cout": 0.001218685
+  },
+  "cout": 0.001218685,
+  "latenceMs": 17309,
+  "fournisseur": "Azure"
+}

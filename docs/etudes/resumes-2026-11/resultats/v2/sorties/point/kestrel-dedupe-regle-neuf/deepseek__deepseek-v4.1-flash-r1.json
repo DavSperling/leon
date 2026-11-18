@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:09:12.505Z",
+  "reponse": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to your own SDK: kestrel-ios 3.2.0 switched `event_id` to a per-session counter, so #240's event_id-only dedupe silently dropped ~1.18M legitimate Orbitly events (~8.1% of their iOS volume); Zest's pilot app lost 3,812 the same way [1].\n- Fixed it in PR #247, re-keying the dedupe on (project, device, event_id) so replays stay dropped and distinct events survive, with maya as reviewer [1][2].\n- Drafted the note asking the iOS team to restore UUIDs in 3.2.1 before this bites again [1].\n\n## What changed\n- maya confirms the logic is right, will approve once CI is green, and wants your Orbitly drop count for Thursday's call with Orbitly [2].\n- Postmortem #233 is final; Noa presents it at Friday's incident review (20/11) [3].\n\n## What is still open\n- #247 still needs green CI and maya's approval before merge [2].\n- Send maya the figure (~1.18M events) for Thursday's Orbitly call [2].\n- Only once #247 is deployed, replay from landing for `prj_0rb1` (and `prj_z3st`) from 13/11, then confirm `ingest_dedupe_dropped_total` stays near zero [1].\n- Add the alert for the ingest dead-letter queue above 1,000 messages before Friday's review — it's on you from the prep session [7].",
+  "rendu": "## What you did\n- Traced Orbitly's ~8% iOS funnel drop to your own SDK: kestrel-ios 3.2.0 switched `event_id` to a per-session counter, so #240's event_id-only dedupe silently dropped ~1.18M legitimate Orbitly events (~8.1% of their iOS volume); Zest's pilot app lost 3,812 the same way [1].\n- Fixed it in PR #247, re-keying the dedupe on (project, device, event_id) so replays stay dropped and distinct events survive, with maya as reviewer [1][2].\n- Drafted the note asking the iOS team to restore UUIDs in 3.2.1 before this bites again [1].\n\n## What changed\n- maya confirms the logic is right, will approve once CI is green, and wants your Orbitly drop count for Thursday's call with Orbitly [2].\n- Postmortem #233 is final; Noa presents it at Friday's incident review (20/11) [3].\n\n## What is still open\n- #247 still needs green CI and maya's approval before merge [2].\n- Send maya the figure (~1.18M events) for Thursday's Orbitly call [2].\n- Only once #247 is deployed, replay from landing for `prj_0rb1` (and `prj_z3st`) from 13/11, then confirm `ingest_dedupe_dropped_total` stays near zero [1].\n- Add the alert for the ingest dead-letter queue above 1,000 messages before Friday's review — it's on you from the prep session [7].",
+  "mesures": {
+    "mots": 195,
+    "tropLong": false,
+    "puces": 9,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4826,
+    "sortie": 1229,
+    "reflexion": 870,
+    "cache": 0,
+    "cout": 0.00119182
+  },
+  "cout": 0.00119182,
+  "latenceMs": 10781,
+  "fournisseur": "DeepInfra"
+}

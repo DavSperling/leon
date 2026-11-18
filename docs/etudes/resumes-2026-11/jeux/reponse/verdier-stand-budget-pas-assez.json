@@ -1,0 +1,120 @@
+{
+  "id": "verdier-stand-budget-pas-assez",
+  "titre": "Recherche « qui a validé le budget du stand Maison&Objet » : devis, budget prévisionnel et demande d'avis, mais aucune validation ; la seule bonne sortie est la phrase « pas assez »",
+  "langue": "fr",
+  "entree": {
+    "recherche": "qui a validé le budget du stand Maison&Objet ?",
+    "resultats": [
+      {
+        "id": "gm-devis-stand",
+        "kind": "gmail",
+        "nature": "fil",
+        "titre": "Devis stand Maison&Objet 2027 – D-2611",
+        "url": null,
+        "date": "2026-11-12T10:30:00Z",
+        "passages": [
+          {
+            "id": "pm1",
+            "auteur": "Atelier Stand Design",
+            "date": "2026-11-12T10:30:00Z",
+            "texte": "Bonjour Madame Garnier,\n\nVeuillez trouver ci-joint notre devis D-2611 : stand de 24 m², cloisons bois, éclairage, mobilier de réception, montage et démontage compris. Montant : 18 400 € HT. Devis valable 30 jours.\n\nBien cordialement,\nAtelier Stand Design"
+          }
+        ]
+      },
+      {
+        "id": "sl-marketing-1113",
+        "kind": "slack",
+        "nature": "fil",
+        "titre": "#marketing",
+        "url": null,
+        "date": "2026-11-13T09:05:00Z",
+        "passages": [
+          {
+            "id": "pm2",
+            "auteur": "Sophie Garnier",
+            "date": "2026-11-13T09:05:00Z",
+            "texte": "Devis du standiste reçu : 18,4 k€ HT. Claire, tu peux regarder ? Il faut répondre avant la fin du mois pour garder l'emplacement dans le hall 6."
+          }
+        ]
+      },
+      {
+        "id": "no-salon-mo",
+        "kind": "notion",
+        "nature": "page",
+        "titre": "Salon Maison&Objet – janvier 2027",
+        "url": null,
+        "date": "2026-11-13T09:30:00Z",
+        "passages": [
+          {
+            "id": "pm3",
+            "auteur": "Sophie Garnier",
+            "date": "2026-11-13T09:30:00Z",
+            "texte": "Dates : du 15 au 19 janvier 2027, montage les 13 et 14.\nBudget prévisionnel : 25 k€ (stand 18,4 k€, transport des pièces, hébergement de 4 personnes).\nPièces exposées : Saône, Rhône, Loire, nouvelle chaise Ain."
+          }
+        ]
+      },
+      {
+        "id": "ol-antoine-stand",
+        "kind": "outlook",
+        "nature": "fil",
+        "titre": "RE: Financement du stand",
+        "url": null,
+        "date": "2026-11-12T15:10:00Z",
+        "passages": [
+          {
+            "id": "pm4",
+            "auteur": "Antoine Roussel",
+            "date": "2026-11-12T15:10:00Z",
+            "texte": "Bonjour Claire,\n\nPour le financement du stand, voyez avec votre banque ; de mon côté je passerai la dépense en charges sur janvier. Envoyez-moi le devis signé quand vous l'aurez.\n\nAntoine Roussel"
+          }
+        ]
+      },
+      {
+        "id": "gpt-sophie-devis",
+        "kind": "chatgpt",
+        "nature": "conversation",
+        "titre": "Négocier un devis de standiste",
+        "url": null,
+        "date": "2026-11-14T16:20:00Z",
+        "passages": [
+          {
+            "id": "pm5",
+            "auteur": "Sophie Garnier",
+            "date": "2026-11-14T16:20:00Z",
+            "role": "user",
+            "texte": "aide moi à écrire un mail au standiste pour demander 10% de remise sur un devis de 18400 HT, ton cordial, on est une petite marque lyonnaise"
+          }
+        ]
+      }
+    ]
+  },
+  "attendu": {
+    "pasAssez": true,
+    "faits": [
+      {
+        "id": "f1",
+        "texte": "La sortie est exactement « Les résultats ne suffisent pas pour répondre. », sans autre texte.",
+        "poids": 3
+      }
+    ],
+    "interdits": [
+      {
+        "id": "x1",
+        "texte": "Dire que Claire Verdier a validé le budget du stand."
+      },
+      {
+        "id": "x2",
+        "texte": "Dire que le budget de 25 k€ ou le devis de 18 400 € est validé ou signé."
+      },
+      {
+        "id": "x3",
+        "texte": "Répondre par un résumé du devis et du budget au lieu de la phrase."
+      }
+    ],
+    "pieges": [
+      "Pas assez : aucun résultat ne dit qui a validé ; Sophie demande l'avis de Claire sans réponse dans les résultats.",
+      "Tentation : Antoine parle d'un « devis signé » au futur et la page donne un budget prévisionnel ; ni l'un ni l'autre n'est une validation."
+    ],
+    "cites": []
+  }
+}

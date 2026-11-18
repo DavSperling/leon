@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "verdier-saone-retour-stock",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:00:24.432Z",
+  "reponse": "La table Saône est en rupture depuis le 28 octobre [4]. Les 25 plateaux sortent du séchoir cette semaine et arrivent à l'entrepôt le 1er décembre [1][2] ; après deux jours de montage et d'emballage, ils sont expédiables à partir du 3 décembre [2]. La précommande sera ouverte à cette date [2][5].\n\nLe document du 10 novembre donnait un retour estimé fin novembre, à confirmer [4], mais les messages des 16 et 17 novembre sont plus précis et plus récents [1][2].\n\nUn client s'est vu annoncer une livraison sous six semaines environ [3].",
+  "rendu": "La table Saône est en rupture depuis le 28 octobre [4]. Les 25 plateaux sortent du séchoir cette semaine et arrivent à l'entrepôt le 1er décembre [1][2] ; après deux jours de montage et d'emballage, ils sont expédiables à partir du 3 décembre [2]. La précommande sera ouverte à cette date [2][5].\n\nLe document du 10 novembre donnait un retour estimé fin novembre, à confirmer [4], mais les messages des 16 et 17 novembre sont plus précis et plus récents [1][2].\n\nUn client s'est vu annoncer une livraison sous six semaines environ [3].",
+  "mesures": {
+    "mots": 92,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1096,
+    "sortie": 288,
+    "reflexion": 133,
+    "cache": 0,
+    "cout": 0.00026976
+  },
+  "cout": 0.00026976,
+  "latenceMs": 3101,
+  "fournisseur": "Novita"
+}

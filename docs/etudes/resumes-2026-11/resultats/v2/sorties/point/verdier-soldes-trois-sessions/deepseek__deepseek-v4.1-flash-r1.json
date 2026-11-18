@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:16:48.561Z",
+  "reponse": "## What you did\n- Widget d'aide Zendesk en place sur les pages produit (hors panier) : Lucie signale déjà 23 conversations ouvertes depuis ces pages [3][9].\n- Retrouvé la commande de push du thème qui ne touche pas aux réglages faits par Sophie dans l'éditeur [2].\n\n## What changed\n- Claire tranche la question d'Hugo sur la Saône : pas de Saône en soldes — rupture jusqu'à mi-janvier et précommandes au plein prix [4][10].\n- Sophie décale son shooting au 2 décembre : elle veut les prix soldés dans Shopify pour le lundi 30/11, au lieu de vendredi [11].\n- Le tag « soldes » automatique sur les produits remisés (#59) est fusionné [7].\n\n## What is still open\n- PR #63 (prix soldés appliqués le 6 janvier, restaurés le 3 février) attend la relecture d'Hugo, qui l'a testée OK sur la boutique de dev ; la grille de Sophie reste à corriger (7 lignes sans produit actif) [1][4].\n- Le flux Google Shopping devra afficher les prix soldés dès le 6 janvier : à relancer juste après le script (#65) [5].\n- La bannière soldes du thème cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting (#64) [6].",
+  "rendu": "## What you did\n- Widget d'aide Zendesk en place sur les pages produit (hors panier) : Lucie signale déjà 23 conversations ouvertes depuis ces pages [3][9].\n- Retrouvé la commande de push du thème qui ne touche pas aux réglages faits par Sophie dans l'éditeur [2].\n\n## What changed\n- Claire tranche la question d'Hugo sur la Saône : pas de Saône en soldes — rupture jusqu'à mi-janvier et précommandes au plein prix [4][10].\n- Sophie décale son shooting au 2 décembre : elle veut les prix soldés dans Shopify pour le lundi 30/11, au lieu de vendredi [11].\n- Le tag « soldes » automatique sur les produits remisés (#59) est fusionné [7].\n\n## What is still open\n- PR #63 (prix soldés appliqués le 6 janvier, restaurés le 3 février) attend la relecture d'Hugo, qui l'a testée OK sur la boutique de dev ; la grille de Sophie reste à corriger (7 lignes sans produit actif) [1][4].\n- Le flux Google Shopping devra afficher les prix soldés dès le 6 janvier : à relancer juste après le script (#65) [5].\n- La bannière soldes du thème cache le bouton « Ajouter au panier » sur mobile, à corriger avant le shooting (#64) [6].",
+  "mesures": {
+    "mots": 185,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4908,
+    "sortie": 6316,
+    "reflexion": 5991,
+    "cache": 0,
+    "cout": 0.00362064
+  },
+  "cout": 0.00362064,
+  "latenceMs": 45430,
+  "fournisseur": "Novita"
+}

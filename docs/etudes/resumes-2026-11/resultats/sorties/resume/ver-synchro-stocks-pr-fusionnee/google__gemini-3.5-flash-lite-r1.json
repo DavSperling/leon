@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:26:00.934Z",
+  "reponse": "## Où j'en suis\nLa cause du stock négatif de la Saône a été identifiée et corrigée : les webhooks ne décrémentent plus le stock (seule la synchronisation de nuit le met à jour en valeur absolue), le seuil d'alerte stock bas a été abaissé à 3, la fonction a été renommée, et le stock de la Saône a été remis à 0. Une PR a été ouverte et l'application a été déployée.\n\n- [en-cours] PR maison-verdier/boutique#87 en attente de relecture d'Hugo\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044)\n- [décision] Arrêter de toucher au stock dans les webhooks, seul le script de nuit corrige en valeur absolue (source: t05)\n- [décision] Passer le seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône (source: t17)",
+  "rendu": "## Où j'en suis\nLa cause du stock négatif de la Saône a été identifiée et corrigée : les webhooks ne décrémentent plus le stock (seule la synchronisation de nuit le met à jour en valeur absolue), le seuil d'alerte stock bas a été abaissé à 3, la fonction a été renommée, et le stock de la Saône a été remis à 0. Une PR a été ouverte et l'application a été déployée.\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [en-cours] PR maison-verdier/boutique#87 en attente de relecture d'Hugo\n- [prochaine-étape] Traiter les 3 commandes survendues avec Lucie (#1041, #1043, #1044)\n- [décision] Arrêter de toucher au stock dans les webhooks, seul le script de nuit corrige en valeur absolue (source: t05)\n- [décision] Passer le seuil d'alerte stock bas à 3 (source: t09)\n- [décision] Pas de précommande pour la Saône (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 916,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3965,
+    "sortie": 253,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.001822
+  },
+  "cout": 0.001822,
+  "latenceMs": 1403,
+  "fournisseur": "Google"
+}

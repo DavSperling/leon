@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:12.753Z",
+  "reponse": "The Nov 12 ingest outage was caused by the disks of Kafka broker ingest-kafka-2 filling up after infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2]. The outage lasted 2h47m (09:38–12:25 UTC), delaying events but losing none [2]. An early hypothesis blamed PR #388's batch size increase, but the revert changed nothing and lag kept growing [1][3], and #388 was later confirmed a red herring and re-applied [5]. Sentry shows the matching KafkaConsumerTimeout from 09:39 to 12:24 UTC [4]. Follow-ups: 80% disk alerting and restoring size-based retention [5].",
+  "rendu": "The Nov 12 ingest outage was caused by the disks of Kafka broker ingest-kafka-2 filling up after infra PR #221 removed size-based retention, leaving only 7-day time-based retention; the broker went read-only at 09:38 UTC and consumers stalled [2]. The outage lasted 2h47m (09:38–12:25 UTC), delaying events but losing none [2]. An early hypothesis blamed PR #388's batch size increase, but the revert changed nothing and lag kept growing [1][3], and #388 was later confirmed a red herring and re-applied [5]. Sentry shows the matching KafkaConsumerTimeout from 09:39 to 12:24 UTC [4]. Follow-ups: 80% disk alerting and restoring size-based retention [5].",
+  "mesures": {
+    "mots": 101,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1304,
+    "sortie": 259,
+    "reflexion": 74,
+    "cache": 384,
+    "cout": 0.0002023952
+  },
+  "cout": 0.0002023952,
+  "latenceMs": 3718,
+  "fournisseur": "Xiaomi"
+}

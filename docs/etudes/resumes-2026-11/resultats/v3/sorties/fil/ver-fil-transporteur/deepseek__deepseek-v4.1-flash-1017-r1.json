@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:59:33.755Z",
+  "reponse": "## Où j'en suis\nLe client TransAlp est en place dans `choix.ts` : ZPL par défaut (avec `^CI28` pour les accents), TransAlp retenu pour Lyon et Paris à partir de `TRANSALP_DEBUT` (défaut 2026-12-01), Rapidis inchangé pour le reste et les colis de plus de 30 kg. Tests verts, commits `3e8b1d0` et `a90c4f7` poussés sur `hugo/transalp-etiquettes` ; la PR #91 est à jour mais toujours en brouillon, en attente de la relecture de Julien. Rien n'est activé en production (source: ses-tr-2, src-pr91).\n\n- [en-cours] PR #91 en brouillon, branche poussée, prête pour la relecture de Julien (source: ses-tr-2, src-pr91)\n- [prochaine-étape] relecture de Julien puis sortie du brouillon (source: src-pr91)\n- [prochaine-étape] Julien place la clé de prod dans les secrets, sans activation avant le 1er décembre (source: h2-07)\n- [essai-raté] ZPL refusé en sandbox : disponible en recette et en production seulement (source: h2-01, ses-tr-1)\n- [essai-raté] accents illisibles (« SaÃ´ne ») faute de `^CI28` ; corrigé et testé, Karim a validé (source: h2-03, h2-04)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement, pas le 23 (source: src-slack-julien)\n- [décision] Rapidis reste en secours jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg (source: src-slack-julien, h1-03)\n- [décision] pas de contrat Premium : le passage du mail TransAlp est ignoré (source: h2-09)\n- [décision] ZPL par défaut, PDF reste possible (source: h2-01)",
+  "rendu": "- [en-cours] PR #91 en brouillon, branche poussée, prête pour la relecture de Julien (de: équipe, agent; source: ses-tr-2, src-pr91)\n- [prochaine-étape] relecture de Julien puis sortie du brouillon (de: équipe; source: src-pr91)\n- [prochaine-étape] Julien place la clé de prod dans les secrets, sans activation avant le 1er décembre (de: toi; source: h2-07)\n- [essai-raté] ZPL refusé en sandbox : disponible en recette et en production seulement (de: toi, agent; source: h2-01, ses-tr-1)\n- [essai-raté] accents illisibles (« SaÃ´ne ») faute de `^CI28` ; corrigé et testé, Karim a validé (de: toi, agent; source: h2-03, h2-04)\n- [décision] bascule le mardi 1er décembre, Lyon et Paris seulement, pas le 23 (de: connecteur; source: src-slack-julien)\n- [décision] Rapidis reste en secours jusqu'au 15 janvier pour le reste de la France et les colis de plus de 30 kg (de: toi, connecteur; source: src-slack-julien, h1-03)\n- [décision] pas de contrat Premium : le passage du mail TransAlp est ignoré (de: toi; source: h2-09)\n- [décision] ZPL par défaut, PDF reste possible (de: toi; source: h2-01)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1092,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3979,
+    "sortie": 1168,
+    "reflexion": 659,
+    "cache": 0,
+    "cout": 0.00155975
+  },
+  "cout": 0.00155975,
+  "latenceMs": 6431,
+  "fournisseur": "Ionstream"
+}

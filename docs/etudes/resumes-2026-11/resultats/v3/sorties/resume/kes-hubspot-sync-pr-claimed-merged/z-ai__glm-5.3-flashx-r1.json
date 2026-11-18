@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "z-ai/glm-5.3-flashx",
+  "rep": 1,
+  "date": "2026-11-18T17:57:14.298Z",
+  "reponse": "## Où j'en suis\nThe team moved HubSpot owner/ARR sync from webhooks to polling: #405 was closed (private app tokens can't manage webhook subscriptions) and the polling job was built on `daniel/hubspot-owner-sync` — CRM search every 15 min, windowed paging past the 10k cap, only companies with ARR > 0 (trials skipped). PR #409 is open with auto-merge (squash) enabled, but the required e2e check fails because its fixture contains a trial company the filter now skips.\n\n- [en-cours] Fix e2e `test_admin_accounts.py::test_accounts_table_shows_owner`: expected 3 rows with owner, got 2 (source: t18)\n- [prochaine-étape] Update the e2e fixture (ARR > 0 on third company, or expect 2 rows), let auto-merge fire on #409\n- [prochaine-étape] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod (source: t12)\n- [essai-raté] Webhook subscription API call failed with 401: requires a developer API key, private app token unsupported → switched to polling (t03)\n- [décision] Use polling every 15 min instead of webhooks; close #405 (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "rendu": "## Où j'en suis\nThe team moved HubSpot owner/ARR sync from webhooks to polling: #405 was closed (private app tokens can't manage webhook subscriptions) and the polling job was built on `daniel/hubspot-owner-sync` — CRM search every 15 min, windowed paging past the 10k cap, only companies with ARR > 0 (trials skipped). PR #409 is open with auto-merge (squash) enabled, but the required e2e check fails because its fixture contains a trial company the filter now skips.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Fix e2e `test_admin_accounts.py::test_accounts_table_shows_owner`: expected 3 rows with owner, got 2 (source: t18)\n- [prochaine-étape] Update the e2e fixture (ARR > 0 on third company, or expect 2 rows), let auto-merge fire on #409\n- [prochaine-étape] Noa to add `HUBSPOT_TOKEN` to AWS Secrets Manager for staging/prod (source: t12)\n- [essai-raté] Webhook subscription API call failed with 401: requires a developer API key, private app token unsupported → switched to polling (t03)\n- [décision] Use polling every 15 min instead of webhooks; close #405 (source: t04)\n- [décision] Sync only companies with ARR > 0, skip trials entirely (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1315,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3437,
+    "sortie": 351,
+    "reflexion": 29,
+    "cache": 0,
+    "cout": 0.00171044
+  },
+  "cout": 0.00171044,
+  "latenceMs": 3402,
+  "fournisseur": "Z.AI"
+}

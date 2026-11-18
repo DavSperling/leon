@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T15:26:25.175Z",
+  "reponse": "## Où j'en suis\nDashboards v2 (drag and resize, layout saved per user) is merged in PR #418. Keyboard move/resize and the focus ring are in follow-up PR #423, open and waiting for Priya's review. The `dashboards_v2` flag is on for Zest on staging only; production stays off until the morning of the 24th. (source: ses-db-3, c3-06, ses-db-4, d4-05, d4-07)\n\n- [en-cours] Keyboard move/resize and focus ring, in PR #423 (commit 8f1a2c7) (source: d4-05, 8f1a2c7)\n- [prochaine-étape] Priya's review of PR #423 (source: d4-05)\n- [prochaine-étape] Turn `dashboards_v2` on for Zest in production the morning of the 24th; Priya rehearses the demo on staging (source: d4-06, d4-07, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor applied every move twice and broke mouse drag, so it was removed (source: d4-02, d4-04)\n- [essai-raté] CSS container queries are ignored on Zest's iPads (iOS 15, Safari below 16) (source: b2-01)\n- [question] Deleting the legacy v1 dashboards: the date of January 5 appears only in an agent note and has not been confirmed by the team (source: b2-04, src-note-v1)\n- [décision] Keep recharts and drop visx; PR #401 is closed (source: c3-03)\n- [décision] ResizeObserver instead of container queries (source: b2-02)\n- [décision] Own keyboard handler on the layout state, no dnd-kit (source: d4-04)\n- [décision] Legacy v1 dashboards stay behind the flag until January (source: b2-04)",
+  "rendu": "## Où j'en suis\nDashboards v2 (drag and resize, layout saved per user) is merged in PR #418. Keyboard move/resize and the focus ring are in follow-up PR #423, open and waiting for Priya's review. The `dashboards_v2` flag is on for Zest on staging only; production stays off until the morning of the 24th. (de: agent; source: ses-db-3, c3-06, ses-db-4, d4-05, d4-07)\n\n- [en-cours] Keyboard move/resize and focus ring, in PR #423 (commit 8f1a2c7) (de: équipe, agent; source: d4-05, 8f1a2c7)\n- [prochaine-étape] Priya's review of PR #423 (de: agent; source: d4-05)\n- [prochaine-étape] Turn `dashboards_v2` on for Zest in production the morning of the 24th; Priya rehearses the demo on staging (de: toi, agent; source: d4-06, d4-07, b2-04)\n- [essai-raté] dnd-kit's KeyboardSensor applied every move twice and broke mouse drag, so it was removed (de: toi, agent; source: d4-02, d4-04)\n- [essai-raté] CSS container queries are ignored on Zest's iPads (iOS 15, Safari below 16) (de: agent; source: b2-01)\n- [question] Deleting the legacy v1 dashboards: the date of January 5 appears only in an agent note and has not been confirmed by the team (de: toi, agent; source: b2-04, src-note-v1)\n- [décision] Keep recharts and drop visx; PR #401 is closed (de: toi; source: c3-03)\n- [décision] ResizeObserver instead of container queries (de: toi; source: b2-02)\n- [décision] Own keyboard handler on the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Legacy v1 dashboards stay behind the flag until January (de: toi; source: b2-04)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1533,
+    "lignesRetirees": 0,
+    "decisions": 4,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6925,
+    "sortie": 2317,
+    "reflexion": 1712,
+    "cache": 0,
+    "cout": 0.001851
+  },
+  "cout": 0.001851,
+  "latenceMs": 10243,
+  "fournisseur": "Claude Platform on AWS"
+}

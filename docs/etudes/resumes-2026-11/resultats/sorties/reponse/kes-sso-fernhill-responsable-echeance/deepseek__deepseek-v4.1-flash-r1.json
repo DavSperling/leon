@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-sso-fernhill-responsable-echeance",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:32:49.982Z",
+  "reponse": "Daniel Levi owns the Fernhill SAML work end to end [1][3]. The Linear ticket lists an internal due date of Nov 27, leaving buffer before the contractual go-live [1], while the signed order form commits to SSO in production by December 1, 2026, with a 10% Q1 credit if missed [2]. The work is partly blocked: production IdP metadata from Fernhill isn't expected before their change board meets on the 26th [6].",
+  "rendu": "Daniel Levi owns the Fernhill SAML work end to end [1][3]. The Linear ticket lists an internal due date of Nov 27, leaving buffer before the contractual go-live [1], while the signed order form commits to SSO in production by December 1, 2026, with a 10% Q1 credit if missed [2]. The work is partly blocked: production IdP metadata from Fernhill isn't expected before their change board meets on the 26th [6].",
+  "mesures": {
+    "mots": 72,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1295,
+    "sortie": 185,
+    "reflexion": 80,
+    "cache": 0,
+    "cout": 0.00091575
+  },
+  "cout": 0.00091575,
+  "latenceMs": 1063,
+  "fournisseur": "Parasail"
+}

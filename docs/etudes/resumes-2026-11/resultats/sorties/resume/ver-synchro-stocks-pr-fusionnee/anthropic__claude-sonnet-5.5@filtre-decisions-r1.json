@@ -1,0 +1,29 @@
+{
+  "etape": "resume",
+  "cas": "ver-synchro-stocks-pr-fusionnee",
+  "modele": "anthropic/claude-sonnet-5.5@filtre-decisions",
+  "rep": 1,
+  "date": "2026-11-18T14:26:12.713Z",
+  "reponse": "## Où j'en suis\nLe stock négatif de la Saône (-3) venait du webhook qui décrémentait en plus de Shopify, sur `orders/create` et `orders/updated`. Les webhooks ne touchent plus au stock. La synchro de nuit écrit désormais une valeur absolue, et s'arrête si le CSV est absent ou vide. Le seuil d'alerte est à 3, `syncStock` est renommé `synchroniserStocks`, et la Saône a été remise à 0 sur Shopify. La config de l'app est déployée (`orders/updated` retiré). La PR #87 est fusionnée, d'après les faits (l'agent la disait en attente de relecture).\n\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044).\n- [prochaine-étape] Ne remettre la Saône en vente qu'au retour de chez Bois & Fils, le 2 décembre ; la synchro de nuit la mettra à jour quand TransAlp la recevra.\n- [essai-raté] Dédoublonnage par `X-Shopify-Webhook-Id` : inutile, `create` et `updated` ont des ids différents et Shopify décrémente déjà. Retiré.\n- [décision] Plus aucun décrément dans les webhooks ; la synchro de nuit est la seule à corriger, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 (source: t09)\n- [décision] Pas de précommande de la Saône : Claire ne veut pas promettre de date sans bon de livraison (source: t17)",
+  "rendu": "## Où j'en suis\nLe stock négatif de la Saône (-3) venait du webhook qui décrémentait en plus de Shopify, sur `orders/create` et `orders/updated`. Les webhooks ne touchent plus au stock. La synchro de nuit écrit désormais une valeur absolue, et s'arrête si le CSV est absent ou vide. Le seuil d'alerte est à 3, `syncStock` est renommé `synchroniserStocks`, et la Saône a été remise à 0 sur Shopify. La config de l'app est déployée (`orders/updated` retiré). La PR #87 est fusionnée, d'après les faits (l'agent la disait en attente de relecture).\n\n- pr [[maison-verdier/boutique#87]]\n- branche [[julien/fix-synchro-stocks]]\n- commit [[c41d7a2]]\n- commit [[93be0f5]]\n- commit [[5e12aa8]]\n- [décision] Plus aucun décrément dans les webhooks ; la synchro de nuit est la seule à corriger, en valeur absolue (source: t05)\n- [décision] Seuil d'alerte stock bas passé de 5 à 3 (source: t09)\n- [décision] Pas de précommande de la Saône : Claire ne veut pas promettre de date sans bon de livraison (source: t17)\n- [prochaine-étape] Traiter avec Lucie les 3 commandes survendues (#1041, #1043, #1044).\n- [prochaine-étape] Ne remettre la Saône en vente qu'au retour de chez Bois & Fils, le 2 décembre ; la synchro de nuit la mettra à jour quand TransAlp la recevra.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1252,
+    "decisions": 3,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5341,
+    "sortie": 566,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016342
+  },
+  "cout": 0.016342,
+  "latenceMs": 3792,
+  "fournisseur": "Claude Platform on AWS",
+  "rejoue": true
+}

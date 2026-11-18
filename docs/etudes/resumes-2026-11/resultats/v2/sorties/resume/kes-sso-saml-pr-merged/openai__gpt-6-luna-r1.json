@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-sso-saml-pr-merged",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T15:23:55.658Z",
+  "reponse": "## Où j'en suis\nSAML ACS signature and condition verification is complete, including Redis replay protection and a 120-second clock-skew setting. PR #412 is merged; the full test suite, lint, and mypy passed.\n\n- [en-cours] Fernhill’s staging IdP metadata still needs to be loaded.\n- [prochaine-étape] Load the staging IdP metadata, then send Fernhill our staging SP metadata by Wednesday EOD.\n- [essai-raté] Docker builds with `python3-saml`/`xmlsec` failed on Alpine due to library incompatibilities; switching to `signxml` resolved the issue.\n- [décision] Use 120 seconds of clock skew and keep password-login changes out of this PR (source: t12)\n- [décision] Do not use admin or auto-merge; the user will contact Maya (source: t21)",
+  "rendu": "## Où j'en suis\nSAML ACS signature and condition verification is complete, including Redis replay protection and a 120-second clock-skew setting. PR #412 is merged; the full test suite, lint, and mypy passed.\n\n- pr [[kestrel-analytics/platform#412]]\n- branche [[daniel/saml-acs]]\n- commit [[3f9c2a1]]\n- commit [[b71e04d]]\n- commit [[e0a5c93]]\n- [en-cours] Fernhill’s staging IdP metadata still needs to be loaded.\n- [prochaine-étape] Load the staging IdP metadata, then send Fernhill our staging SP metadata by Wednesday EOD.\n- [essai-raté] Docker builds with `python3-saml`/`xmlsec` failed on Alpine due to library incompatibilities; switching to `signxml` resolved the issue.\n- [décision] Use 120 seconds of clock skew and keep password-login changes out of this PR (source: t12)\n- [décision] Do not use admin or auto-merge; the user will contact Maya (source: t21)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 867,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4391,
+    "sortie": 308,
+    "reflexion": 113,
+    "cache": 0,
+    "cout": 0.0007028
+  },
+  "cout": 0.0007028,
+  "latenceMs": 4331,
+  "fournisseur": "OpenAI"
+}

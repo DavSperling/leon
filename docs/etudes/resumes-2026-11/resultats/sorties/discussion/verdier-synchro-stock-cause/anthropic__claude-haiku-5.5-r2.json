@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 2,
+  "date": "2026-11-18T14:43:04.535Z",
+  "reponse": "**Cause :** Le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script de synchronisation ne mettait à jour que l'entrepôt de Vénissieux. Shopify additionne les emplacements, donc quand l'entrepôt tombait à 0, le showroom gardait son ancien chiffre et le site affichait du stock qui n'existait plus [4][7].\n\n**Est-ce réparé ?** Oui, en grande partie. La correction (PR #87) a été fusionnée et déployée le 13 novembre. Hugo l'a testée avec l'export de la veille, et Julien a revérifié tout le catalogue [14][7]. Le point d'équipe du 16 novembre indique aussi que la synchronisation a été corrigée le vendredi [15].\n\n**Points restants :**\n- Sept commandes ont été touchées entre le 3 et le 12 novembre, et Lucie a la liste [7]. Les cas qu'on a vus sont le banc Rhône [1], le buffet Croix-Rousse [2] et les chaises Fourvière, où le site affichait 9 ensembles alors que 2 seulement pouvaient partir [6]. Les fils ne relient pas explicitement les chaises Fourvière à ce bug, même si le client a reçu un « stock erroné ».\n- Le contrôle quotidien des écarts entre Shopify et l'entrepôt (PR #91) est encore un brouillon le 17 novembre. Il n'est pas fusionné, et Julien demande d'ignorer les précommandes Saône avant de le fusionner [11].",
+  "rendu": "**Cause :** Le 3 novembre, un emplacement « Showroom » a été ajouté dans Shopify. Le script de synchronisation ne mettait à jour que l'entrepôt de Vénissieux. Shopify additionne les emplacements, donc quand l'entrepôt tombait à 0, le showroom gardait son ancien chiffre et le site affichait du stock qui n'existait plus [4][7].\n\n**Est-ce réparé ?** Oui, en grande partie. La correction (PR #87) a été fusionnée et déployée le 13 novembre. Hugo l'a testée avec l'export de la veille, et Julien a revérifié tout le catalogue [14][7]. Le point d'équipe du 16 novembre indique aussi que la synchronisation a été corrigée le vendredi [15].\n\n**Points restants :**\n- Sept commandes ont été touchées entre le 3 et le 12 novembre, et Lucie a la liste [7]. Les cas qu'on a vus sont le banc Rhône [1], le buffet Croix-Rousse [2] et les chaises Fourvière, où le site affichait 9 ensembles alors que 2 seulement pouvaient partir [6]. Les fils ne relient pas explicitement les chaises Fourvière à ce bug, même si le client a reçu un « stock erroné ».\n- Le contrôle quotidien des écarts entre Shopify et l'entrepôt (PR #91) est encore un brouillon le 17 novembre. Il n'est pas fusionné, et Julien demande d'ignorer les précommandes Saône avant de le fusionner [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 25186,
+    "sortie": 1464,
+    "reflexion": 632,
+    "cache": 0,
+    "cout": 0.0032506
+  },
+  "latenceMs": 9177,
+  "fournisseur": "Claude Platform on AWS",
+  "trace": [
+    "chercher {\"requete\":\"stock disponible commande meuble rupture vente\"}",
+    "chercher {\"requete\":\"produit épuisé acheté alors qu'indisponible bug stock\"}",
+    "lire {\"sourceId\":\"claude-code-julien-synchro-stock\"}",
+    "chercher {\"requete\":\"PR #87 synchro stock fusionné déployé showroom\",\"depuis\":\"2026-11-10\"}"
+  ],
+  "cout": 0.0032506
+}

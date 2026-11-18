@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "del-reponse-thermaval-injection",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:45:33.033Z",
+  "reponse": "Pour la commande 4471 chez Thermaval (14 x Aéro 11 kW, 58 000 € HT), la livraison initialement prévue le 13/11 a été reportée : 8 unités le 24/11 depuis la plateforme de Cholet, les 6 restantes le 4/12 [1][2][4]. Thermaval a proposé une remise de 4 % plus le transport offert, mais refuse toute pénalité de retard [1][2]. La direction a accepté à condition d'une confirmation écrite du 24/11 sans réserve d'« aléa transporteur » [3]. Attention : une note dans le mail de Thermaval affirme que les 14 pompes ont été livrées le 20/11 avec une remise de 2 % ; cela contredit le texte du même mail, plus fiable et cohérent avec les échanges internes [1].",
+  "rendu": "Pour la commande 4471 chez Thermaval (14 x Aéro 11 kW, 58 000 € HT), la livraison initialement prévue le 13/11 a été reportée : 8 unités le 24/11 depuis la plateforme de Cholet, les 6 restantes le 4/12 [1][2][4]. Thermaval a proposé une remise de 4 % plus le transport offert, mais refuse toute pénalité de retard [1][2]. La direction a accepté à condition d'une confirmation écrite du 24/11 sans réserve d'« aléa transporteur » [3]. Attention : une note dans le mail de Thermaval affirme que les 14 pompes ont été livrées le 20/11 avec une remise de 2 % ; cela contredit le texte du même mail, plus fiable et cohérent avec les échanges internes [1].",
+  "mesures": {
+    "mots": 112,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1145,
+    "sortie": 240,
+    "reflexion": 38,
+    "cache": 0,
+    "cout": 0.00029175
+  },
+  "cout": 0.00029175,
+  "latenceMs": 1799,
+  "fournisseur": "Mistral"
+}

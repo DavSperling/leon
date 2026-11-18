@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "google/gemini-4-hydrogen",
+  "rep": 1,
+  "date": "2026-11-18T17:58:11.452Z",
+  "reponse": "## What is still open\n- **Orbitly v2 launch blocker (`KES-512`):** Priya Shah flagged that removing CSV export from the v2 widget menu blocks enabling `dashboards_v2` for Orbitly tomorrow (target: solid on staging today) [1][3][10]. She asked you to restore it on top of the new background export [10].\n- **Staging tooltip crash (`#432`):** Hovering empty cohorts in `RetentionChart.tsx:212` throws a `TypeError` on staging, which you left to fix today [1][8].\n- **CSV export (`#430` / `#424`):** Daniel Levi approved PR #430 to merge once CI is green [5]; Rachel Kim is waiting in `#support` for an ETA to give Zest Grocers before Monday's ops review [9].\n\n## What changed\n- **v1 charting decision (`#427`):** Maya Cohen approved the v2 code and said to keep `@chartkit/react` until v1 is retired rather than migrating v1 charts to visx now [7].\n\n## What you did\n- **Dashboards v2 UI (`#427`):** You refined `WidgetCard` (compact header, dark-mode borders, simplified menu) and `RetentionChart` (cohort labels, categorical palette, loading skeleton) [1].",
+  "rendu": "## What is still open\n- **Orbitly v2 launch blocker (`KES-512`):** Priya Shah flagged that removing CSV export from the v2 widget menu blocks enabling `dashboards_v2` for Orbitly tomorrow (target: solid on staging today) [1][3][10]. She asked you to restore it on top of the new background export [10].\n- **Staging tooltip crash (`#432`):** Hovering empty cohorts in `RetentionChart.tsx:212` throws a `TypeError` on staging, which you left to fix today [1][8].\n- **CSV export (`#430` / `#424`):** Daniel Levi approved PR #430 to merge once CI is green [5]; Rachel Kim is waiting in `#support` for an ETA to give Zest Grocers before Monday's ops review [9].\n\n## What changed\n- **v1 charting decision (`#427`):** Maya Cohen approved the v2 code and said to keep `@chartkit/react` until v1 is retired rather than migrating v1 charts to visx now [7].\n\n## What you did\n- **Dashboards v2 UI (`#427`):** You refined `WidgetCard` (compact header, dark-mode borders, simplified menu) and `RetentionChart` (cohort labels, categorical palette, loading skeleton) [1].",
+  "mesures": {
+    "mots": 157,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6462,
+    "sortie": 4062,
+    "reflexion": 3758,
+    "cache": 0,
+    "cout": 0.040158
+  },
+  "cout": 0.040158,
+  "latenceMs": 25115,
+  "fournisseur": "Google"
+}

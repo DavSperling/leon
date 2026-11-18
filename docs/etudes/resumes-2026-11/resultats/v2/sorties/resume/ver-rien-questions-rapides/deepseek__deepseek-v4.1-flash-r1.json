@@ -1,0 +1,24 @@
+{
+  "etape": "resume",
+  "cas": "ver-rien-questions-rapides",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:24:21.509Z",
+  "reponse": "rien à retenir",
+  "rendu": "rien à retenir",
+  "mesures": {
+    "rien": true,
+    "decisions": 0,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1951,
+    "sortie": 149,
+    "reflexion": 142,
+    "cache": 384,
+    "cout": 0.000405057
+  },
+  "cout": 0.000405057,
+  "latenceMs": 2087,
+  "fournisseur": "Cohere"
+}

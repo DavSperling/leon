@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:14:06.116Z",
+  "reponse": "## What you did\n- Polished the v2 dashboard widgets in PR #427 — compact 40px widget header on design tokens, readable retention labels (\"Week of Nov 2\"), a loading skeleton that removes the chart jump, and a categorical cohort palette — then checked it on staging with the Orbitly workspace [1].\n- Reworked the dashboard CSV export (#424) into a background job: the endpoint returns 202, rows are streamed into a gzipped file, and a signed 24h link is emailed; the v1 button now confirms instead of spinning. PR #430 opened for Daniel [2].\n- Set up the `dashboards_v2` per-workspace flag with a 12-column draggable grid, scoped so Orbitly gets it first [3].\n\n## What changed\n- Daniel approved #430 (streaming + 202) — merge once CI is green. That's also the answer Rachel needs for Zest, who asked again this morning ahead of their Monday ops review [5][6][9].\n- Maya answered your chartkit question on #427: code is fine, ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone [7].\n- Dependabot opened #429 bumping `@chartkit/react` to 5.0.0 — a major with a new tooltip API and dropped legacy browsers — which matters since v1 stays on chartkit [4].\n\n## What is still open\n- Priya's rollout blocker on KES-512: the CSV export is gone from the v2 widget menu, and the Orbitly flag can't go on Thursday without it — it needs to come back on top of the new background export [10].\n- The `RetentionChart` tooltip still crashes on empty cohorts (line 212), as you left it last night; Sentry already has 37 events from 4 users on staging, and staging has to be solid by Wednesday [1][8].",
+  "rendu": "## What you did\n- Polished the v2 dashboard widgets in PR #427 — compact 40px widget header on design tokens, readable retention labels (\"Week of Nov 2\"), a loading skeleton that removes the chart jump, and a categorical cohort palette — then checked it on staging with the Orbitly workspace [1].\n- Reworked the dashboard CSV export (#424) into a background job: the endpoint returns 202, rows are streamed into a gzipped file, and a signed 24h link is emailed; the v1 button now confirms instead of spinning. PR #430 opened for Daniel [2].\n- Set up the `dashboards_v2` per-workspace flag with a 12-column draggable grid, scoped so Orbitly gets it first [3].\n\n## What changed\n- Daniel approved #430 (streaming + 202) — merge once CI is green. That's also the answer Rachel needs for Zest, who asked again this morning ahead of their Monday ops review [5][6][9].\n- Maya answered your chartkit question on #427: code is fine, ship v2 behind the flag, but keep `@chartkit/react` until v1 is gone [7].\n- Dependabot opened #429 bumping `@chartkit/react` to 5.0.0 — a major with a new tooltip API and dropped legacy browsers — which matters since v1 stays on chartkit [4].\n\n## What is still open\n- Priya's rollout blocker on KES-512: the CSV export is gone from the v2 widget menu, and the Orbitly flag can't go on Thursday without it — it needs to come back on top of the new background export [10].\n- The `RetentionChart` tooltip still crashes on empty cohorts (line 212), as you left it last night; Sentry already has 37 events from 4 users on staging, and staging has to be solid by Wednesday [1][8].",
+  "mesures": {
+    "mots": 266,
+    "tropLong": true,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 10,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5906,
+    "sortie": 2388,
+    "reflexion": 1971,
+    "cache": 0,
+    "cout": 0.00278244
+  },
+  "cout": 0.00278244,
+  "latenceMs": 7425,
+  "fournisseur": "Nebius"
+}

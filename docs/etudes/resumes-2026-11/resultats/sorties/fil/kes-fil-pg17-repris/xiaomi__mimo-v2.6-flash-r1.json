@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:25.005Z",
+  "reponse": "## Où j'en suis\nLa branche noa/rds-pg17 porte le draft PR #57 (toujours open) : pg_partman passé en 5.1.0 sur staging, apply du plan, blue/green posé après avoir mis `rds.logical_replication = 1` et redémarré l'instance — analytics-staging tourne en PostgreSQL 17.2 depuis 14:20 UTC (41 s d'écritures refusées), dbt events_daily : 14 modèles pass, +3 % de temps, dans le bruit. Runbook mis à jour avec l'étape logique + reboot pour prod, fenêtre prod laissée vide. (source: s3-06, s3-08, s3-10, src-pr57)\n\n- [en-cours] une semaine complète de staging en 17 en cours de déroulement, sans incident constaté pour l'instant (source: s3-09, src-linear-kes298)\n- [prochaine-étape] une fois la semaine écoulée, obtenir le sign-off de Maya sur prod, puis fixer la fenêtre de cutover (source: src-linear-kes298, s3-09)\n- [prochaine-étape] sur prod : appliquer `rds.logical_replication = 1` + redémarrage (≈ 2–3 min, fenêtre dédiée) avant de créer le blue/green — deux fenêtres au total (source: s3-10, src-slack-infra)\n- [essai-raté] premier apply du plan staging refusé : blue/green PostgreSQL exige `rds.logical_replication = 1` (paramètre statique, reboot requis) — réglé et réappliqué (source: s3-04, s3-06)\n- [essai-raté] `terraform init -upgrade` a pris AWS provider v6 : 37 changements hors sujet (source: s1-01)\n- [question] date de la fenêtre prod : aucune n'est retenue tant que Maya n'a pas signé (source: s3-09, s1-04)\n- [décision] pas de provider v6 dans ce PR, AWS épinglé en ~> 5.82.0 (source: s1-02, src-pr57)\n- [décision] `apply_immediately` reste à false en prod ; le créneau 01:00–03:30 UTC est verrouillé par dbt sur events_daily, les créneaux basses affluents sont sam/dim 04:00–06:00 UTC (source: s1-04, s1-05)\n- [décision] sign-off de Maya sur prod seulement après une semaine complète de staging en 17 sans incident, et la fenêtre sera choisie ensuite (source: src-linear-kes298)",
+  "rendu": "## Où j'en suis\nLa branche noa/rds-pg17 porte le draft PR #57 (toujours open) : pg_partman passé en 5.1.0 sur staging, apply du plan, blue/green posé après avoir mis `rds.logical_replication = 1` et redémarré l'instance — analytics-staging tourne en PostgreSQL 17.2 depuis 14:20 UTC (41 s d'écritures refusées), dbt events_daily : 14 modèles pass, +3 % de temps, dans le bruit. Runbook mis à jour avec l'étape logique + reboot pour prod, fenêtre prod laissée vide. (de: équipe, agent; source: s3-06, s3-08, s3-10, src-pr57)\n\n- [en-cours] une semaine complète de staging en 17 en cours de déroulement, sans incident constaté pour l'instant (de: toi, connecteur; source: s3-09, src-linear-kes298)\n- [prochaine-étape] une fois la semaine écoulée, obtenir le sign-off de Maya sur prod, puis fixer la fenêtre de cutover (de: toi, connecteur; source: src-linear-kes298, s3-09)\n- [prochaine-étape] sur prod : appliquer `rds.logical_replication = 1` + redémarrage (≈ 2–3 min, fenêtre dédiée) avant de créer le blue/green — deux fenêtres au total (de: connecteur, agent; source: s3-10, src-slack-infra)\n- [essai-raté] premier apply du plan staging refusé : blue/green PostgreSQL exige `rds.logical_replication = 1` (paramètre statique, reboot requis) — réglé et réappliqué (de: agent; source: s3-04, s3-06)\n- [essai-raté] `terraform init -upgrade` a pris AWS provider v6 : 37 changements hors sujet (de: agent; source: s1-01)\n- [question] date de la fenêtre prod : aucune n'est retenue tant que Maya n'a pas signé (de: toi; source: s3-09, s1-04)\n- [décision] pas de provider v6 dans ce PR, AWS épinglé en ~> 5.82.0 (de: toi, équipe; source: s1-02, src-pr57)\n- [décision] `apply_immediately` reste à false en prod ; le créneau 01:00–03:30 UTC est verrouillé par dbt sur events_daily, les créneaux basses affluents sont sam/dim 04:00–06:00 UTC (de: toi, agent; source: s1-04, s1-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1871,
+    "lignesRetirees": 1,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4563,
+    "sortie": 860,
+    "reflexion": 187,
+    "cache": 0,
+    "cout": 0.00087962
+  },
+  "cout": 0.00087962,
+  "latenceMs": 30854,
+  "fournisseur": "Xiaomi"
+}

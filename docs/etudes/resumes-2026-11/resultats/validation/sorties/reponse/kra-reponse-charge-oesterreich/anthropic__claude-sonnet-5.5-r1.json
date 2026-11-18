@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kra-reponse-charge-oesterreich",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:24:52.567Z",
+  "reponse": "Laut Kundenstamm sind zwei österreichische Händler betroffen: Bauprofi Huber GmbH in Linz (40117) und Eisen-Mayr KG in Graz (40342) [2]. Das Portal zeigte für Charge 26-38 zunächst 116 Stück bei 40117 und 60 bei 40342 [1]. Dazu kommen Lieferungen vom 12.11. aus SAP: +120 an 40117 und +60 an 40342 [1]. Das ergibt 236 Geräte für Bauprofi Huber und 120 für Eisen-Mayr, insgesamt 356 Geräte. Die Lieferung von 40 Stück an 40117 gehört zur Charge 26-39 und ist nicht betroffen [1]. Der Kundenstamm ist ein Auszug vom 01.10.2026, daher ist die Zuordnung weiterer Kundennummern nicht gesichert [2]. Ob ein Rückruf erfolgt, ist noch offen [3].",
+  "rendu": "Laut Kundenstamm sind zwei österreichische Händler betroffen: Bauprofi Huber GmbH in Linz (40117) und Eisen-Mayr KG in Graz (40342) [2]. Das Portal zeigte für Charge 26-38 zunächst 116 Stück bei 40117 und 60 bei 40342 [1]. Dazu kommen Lieferungen vom 12.11. aus SAP: +120 an 40117 und +60 an 40342 [1]. Das ergibt 236 Geräte für Bauprofi Huber und 120 für Eisen-Mayr, insgesamt 356 Geräte. Die Lieferung von 40 Stück an 40117 gehört zur Charge 26-39 und ist nicht betroffen [1]. Der Kundenstamm ist ein Auszug vom 01.10.2026, daher ist die Zuordnung weiterer Kundennummern nicht gesichert [2]. Ob ein Rückruf erfolgt, ist noch offen [3].",
+  "mesures": {
+    "mots": 105,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 2204,
+    "sortie": 350,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.007908
+  },
+  "cout": 0.007908,
+  "latenceMs": 2864,
+  "fournisseur": "Amazon Bedrock"
+}

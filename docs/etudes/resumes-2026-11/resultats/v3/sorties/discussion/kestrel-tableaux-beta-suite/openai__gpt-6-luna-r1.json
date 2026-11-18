@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-tableaux-beta-suite",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T18:04:13.325Z",
+  "reponse": "The first phase—chart builder and saved views—was planned to be feature-complete behind a flag by Dec 4, with a design-partner beta right after. No exact customer start date was set. [5]",
+  "rendu": "The first phase—chart builder and saved views—was planned to be feature-complete behind a flag by Dec 4, with a design-partner beta right after. No exact customer start date was set. [5]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0,
+    "sourcesAttenduesCitees": 0,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12500,
+    "sortie": 256,
+    "reflexion": 89,
+    "cache": 10407,
+    "cout": 0.00049332
+  },
+  "latenceMs": 8190,
+  "fournisseur": "Azure",
+  "trace": [
+    "chercher {\"requete\":\"new dashboards first part customers try release date first part dashboard customers\",\"type\":\"conversation\"}",
+    "chercher {\"requete\":\"dashboards customer beta rollout launch first dashboard\",\"type\":\"reunion\"}",
+    "lire {\"sourceId\":\"5\"}",
+    "lire {\"passageId\":\"fathom-weekly-sync-1112-1\"}"
+  ],
+  "cout": 0.00049332
+}

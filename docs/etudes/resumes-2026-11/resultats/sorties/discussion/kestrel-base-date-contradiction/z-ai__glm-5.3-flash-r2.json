@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 2,
+  "date": "2026-11-18T14:42:07.974Z",
+  "reponse": "The date was postponed after Nov 21 — let me confirm the new window in the ticket.\n\nThe Postgres 17 upgrade was rescheduled — use the new date, not the Nov 21 one still in the Slack announcement and runbook [2][3][4]:\n\n- **Maintenance window:** Saturday **December 5, 02:00–05:00 UTC** — KES-398 is the reference ticket (the Notion runbook isn't updated yet) [2]\n- **Customer notice:** status page + in-app banner going out **Saturday Nov 28** [2]\n- **Customer impact during the window:** dashboards read-only for ~40 minutes during the switch; ingestion keeps buffering in Kafka, no data loss [1]\n- Migration freeze from Thursday Dec 3 [2]\n\nFor context: the original Nov 21 date was postponed at the Nov 12 sync (Maya didn't want to stack risk before the Fernhill go-live), with the first weekend of December suggested, and KES-398 then fixed it on Dec 5 [4][2].\n\n⚠️ One caveat for the support macro: the Slack announcement [3] and the Notion runbook [1] still say Nov 21, 02:00–05:00 UTC — make sure the customer-facing text uses the Dec 5 date from KES-398.",
+  "rendu": "The date was postponed after Nov 21 — let me confirm the new window in the ticket.\n\nThe Postgres 17 upgrade was rescheduled — use the new date, not the Nov 21 one still in the Slack announcement and runbook [2][3][4]:\n\n- **Maintenance window:** Saturday **December 5, 02:00–05:00 UTC** — KES-398 is the reference ticket (the Notion runbook isn't updated yet) [2]\n- **Customer notice:** status page + in-app banner going out **Saturday Nov 28** [2]\n- **Customer impact during the window:** dashboards read-only for ~40 minutes during the switch; ingestion keeps buffering in Kafka, no data loss [1]\n- Migration freeze from Thursday Dec 3 [2]\n\nFor context: the original Nov 21 date was postponed at the Nov 12 sync (Maya didn't want to stack risk before the Fernhill go-live), with the first weekend of December suggested, and KES-398 then fixed it on Dec 5 [4][2].\n\n⚠️ One caveat for the support macro: the Slack announcement [3] and the Notion runbook [1] still say Nov 21, 02:00–05:00 UTC — make sure the customer-facing text uses the Dec 5 date from KES-398.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7559,
+    "sortie": 409,
+    "reflexion": 77,
+    "cache": 0,
+    "cout": 0.0011626499999999999
+  },
+  "latenceMs": 4431,
+  "fournisseur": "Wafer",
+  "trace": [
+    "chercher {\"requete\":\"database upgrade maintenance window\"}",
+    "chercher {\"requete\":\"\\\"maintenance window\\\" migration\"}",
+    "lire {\"sourceId\":\"linear-kes-398\"}"
+  ],
+  "cout": 0.0011626499999999999
+}

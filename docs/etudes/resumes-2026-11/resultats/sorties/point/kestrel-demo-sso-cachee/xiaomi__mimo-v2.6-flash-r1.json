@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:25:21.883Z",
+  "reponse": "## What you did\n\n- Made the flaky `test_acs_rejects_expired_assertion` deterministic by freezing the clock instead of sleeping, then converted the two other timing-dependent SAML ACS tests the same way — 50/50 green on repeat [1]\n- Cleared the ruff 0.8 and mypy backlog in `kestrel/auth` (missing Issuer/Subject now returns a 401 instead of a 500) and split `saml_utils.py` into a `saml/` package with the old imports kept working; full suite green [1]\n- Shipped that cleanup on a separate branch as PR #423, deliberately leaving #418 untouched [1]\n\n## What changed\n\n- Maya approved and merged #418 last night: assertion signature verification ships with the staging deploy [3]\n- The Fernhill end-to-end SSO walkthrough is confirmed for Thursday 10am NY time with their Okta tenant — Priya runs the demo, you just need to be on the call [1]\n\n## What is still open\n\n- #423: Tom Becker requested changes — he wants the module move split from the lint fixes into two PRs (1,900-line diff), and says he'll approve both today [4]\n- The replay cache for assertion IDs is still in-memory only, so an assertion can be replayed against another of the 3 API pods; moving it to Redis was your plan for today [1]",
+  "rendu": "## What you did\n\n- Made the flaky `test_acs_rejects_expired_assertion` deterministic by freezing the clock instead of sleeping, then converted the two other timing-dependent SAML ACS tests the same way — 50/50 green on repeat [1]\n- Cleared the ruff 0.8 and mypy backlog in `kestrel/auth` (missing Issuer/Subject now returns a 401 instead of a 500) and split `saml_utils.py` into a `saml/` package with the old imports kept working; full suite green [1]\n- Shipped that cleanup on a separate branch as PR #423, deliberately leaving #418 untouched [1]\n\n## What changed\n\n- Maya approved and merged #418 last night: assertion signature verification ships with the staging deploy [3]\n- The Fernhill end-to-end SSO walkthrough is confirmed for Thursday 10am NY time with their Okta tenant — Priya runs the demo, you just need to be on the call [1]\n\n## What is still open\n\n- #423: Tom Becker requested changes — he wants the module move split from the lint fixes into two PRs (1,900-line diff), and says he'll approve both today [4]\n- The replay cache for assertion IDs is still in-memory only, so an assertion can be replayed against another of the 3 API pods; moving it to Redis was your plan for today [1]",
+  "mesures": {
+    "mots": 194,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6055,
+    "sortie": 1274,
+    "reflexion": 958,
+    "cache": 0,
+    "cout": 0.00120442
+  },
+  "cout": 0.00120442,
+  "latenceMs": 39537,
+  "fournisseur": "Xiaomi"
+}

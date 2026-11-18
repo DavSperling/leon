@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-soldes-trois-sessions",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:16:24.640Z",
+  "reponse": "## What you did\n\n- Tu as écrit et testé le script de soldes de la grille de Sophie : application le 6 janvier à 8 h, restauration le 3 février, prix arrondis à l'euro inférieur, avec rapport des 7 lignes de la grille sans produit actif [1].\n- Dry-run en lecture seule sur la prod : 212 variantes sur 57 produits, 3 variantes déjà en promotion laissées de côté [1].\n\n## What changed\n\n- La PR #63 t'est ouverte, relecture par Hugo : approuvée « ça marche » sur dev, mais il te demande si le -20 % sur la Saône — en rupture jusqu'en janvier — est voulu [4]. Claire dit non, pas de Saône en soldes, et des précommandes au plein prix : à retirer de la grille [10].\n- Le shooting soldes de Sophie est décalé au 2 décembre : elle a besoin des prix dans Shopify pour le lundi 30 novembre, plus tôt que vendredi [11].\n- Le ticket #65 demande de relancer le flux Google Shopping juste après le script du 6 janvier, sinon les annonces seront refusées pour prix différent [5].\n- #52 est fusionnée : Lucie signale 23 conversations Zendesk ouvertes depuis les pages produit cette semaine [9].\n\n## What is still open\n\n- Sur la Saône : répondre à Hugo sur #63 et sortir la ligne de la grille avant la fusion [4][10].\n- Le script de soldes ne couvre pas la régénération du flux Google Shopping du 6 janvier — le ticket #65 t'attend [5].\n- Le décalage des prix au 30/11 change l'échéance du script [11].\n- La bannière « Soldes d'hiver » qui cache le bouton d'ajout au panier sur mobile est à corriger avant le shooting [6].",
+  "rendu": "## What you did\n\n- Tu as écrit et testé le script de soldes de la grille de Sophie : application le 6 janvier à 8 h, restauration le 3 février, prix arrondis à l'euro inférieur, avec rapport des 7 lignes de la grille sans produit actif [1].\n- Dry-run en lecture seule sur la prod : 212 variantes sur 57 produits, 3 variantes déjà en promotion laissées de côté [1].\n\n## What changed\n\n- La PR #63 t'est ouverte, relecture par Hugo : approuvée « ça marche » sur dev, mais il te demande si le -20 % sur la Saône — en rupture jusqu'en janvier — est voulu [4]. Claire dit non, pas de Saône en soldes, et des précommandes au plein prix : à retirer de la grille [10].\n- Le shooting soldes de Sophie est décalé au 2 décembre : elle a besoin des prix dans Shopify pour le lundi 30 novembre, plus tôt que vendredi [11].\n- Le ticket #65 demande de relancer le flux Google Shopping juste après le script du 6 janvier, sinon les annonces seront refusées pour prix différent [5].\n- #52 est fusionnée : Lucie signale 23 conversations Zendesk ouvertes depuis les pages produit cette semaine [9].\n\n## What is still open\n\n- Sur la Saône : répondre à Hugo sur #63 et sortir la ligne de la grille avant la fusion [4][10].\n- Le script de soldes ne couvre pas la régénération du flux Google Shopping du 6 janvier — le ticket #65 t'attend [5].\n- Le décalage des prix au 30/11 change l'échéance du script [11].\n- La bannière « Soldes d'hiver » qui cache le bouton d'ajout au panier sur mobile est à corriger avant le shooting [6].",
+  "mesures": {
+    "mots": 262,
+    "tropLong": true,
+    "puces": 10,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5258,
+    "sortie": 473,
+    "reflexion": 32,
+    "cache": 0,
+    "cout": 0.00121715
+  },
+  "cout": 0.00121715,
+  "latenceMs": 30907,
+  "fournisseur": "Makora"
+}

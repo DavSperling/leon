@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "nvidia/nemotron-3.5-super-vl",
+  "rep": 1,
+  "date": "2026-11-18T15:22:08.778Z",
+  "reponse": "## Où j'en suis\nThe replay cmd for the 12/11 window is implemented and dry-run validated on the real archive. PR #233 is open and awaiting Daniel's review. The real replay into events.replay.v3 and the aggregator backfill have not run yet.\n\n- [prochaine-étape] Merge PR #233 after Daniel's review, then run the real replay into events.replay.v3 and the aggregator --backfill for 2026-11-12.\n- [prochaine",
+  "rendu": "## Où j'en suis\nThe replay cmd for the 12/11 window is implemented and dry-run validated on the real archive. PR #233 is open and awaiting Daniel's review. The real replay into events.replay.v3 and the aggregator backfill have not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [prochaine-étape] Merge PR #233 after Daniel's review, then run the real replay into events.replay.v3 and the aggregator --backfill for 2026-11-12.",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 502,
+    "decisions": 0,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "length"
+  },
+  "usage": {
+    "entree": 4477,
+    "sortie": 4000,
+    "reflexion": 3882,
+    "cache": 0,
+    "cout": 0.00255155
+  },
+  "cout": 0.00255155,
+  "latenceMs": 6659,
+  "fournisseur": "CoreWeave"
+}

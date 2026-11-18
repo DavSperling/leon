@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "xiaomi/mimo-v2.6-pro",
+  "rep": 1,
+  "date": "2026-11-18T15:21:45.580Z",
+  "reponse": "## Where I stand\nThe HubSpot sync is done via 15-minute polling of the CRM search API (replacing webhooks), with windowed paging past the 10k search limit and a filter syncing only companies with ARR > 0. PR kestrel-analytics/platform#409 is still open with auto-merge enabled, blocked by one failing e2e check (the agent's claim that it merged was wrong); PR #405 was closed as superseded, and commits 8b3e6f1, 2d90ac4, ae47c15 sit on `daniel/hubspot-owner-sync`.\n\n- [en-cours] PR #409 can't merge until `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` passes (expected 3 rows with owner, got 2; fixture fix not yet made)\n- [prochaine-étape] fix that fixture (give the third company ARR > 0, or expect 2 rows), let checks go green so auto-merge fires\n- [prochaine-étape] Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging and prod (user will ask them)\n- [essai-raté] registering the webhook subscription via API failed with 401: private app tokens can't manage webhook subscriptions, which forced the pivot to polling\n- [décision] poll every 15 minutes instead of webhooks (source: t04)\n- [décision] sync only companies with ARR > 0 and skip trials completely (source: t10)",
+  "rendu": "- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] PR #409 can't merge until `tests/e2e/test_admin_accounts.py::test_accounts_table_shows_owner` passes (expected 3 rows with owner, got 2; fixture fix not yet made)\n- [prochaine-étape] fix that fixture (give the third company ARR > 0, or expect 2 rows), let checks go green so auto-merge fires\n- [prochaine-étape] Noa to put `HUBSPOT_TOKEN` in AWS Secrets Manager for staging and prod (user will ask them)\n- [essai-raté] registering the webhook subscription via API failed with 401: private app tokens can't manage webhook subscriptions, which forced the pivot to polling\n- [décision] poll every 15 minutes instead of webhooks (source: t04)\n- [décision] sync only companies with ARR > 0 and skip trials completely (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 921,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3714,
+    "sortie": 1145,
+    "reflexion": 798,
+    "cache": 768,
+    "cout": 0.0022804248
+  },
+  "cout": 0.0022804248,
+  "latenceMs": 23194,
+  "fournisseur": "Xiaomi"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:28:18.116Z",
+  "reponse": "## Où j'en suis\nThe PostgreSQL 17 upgrade for the analytics RDS is complete on staging: pg_partman was upgraded to 5.1.0 with maintenance green on `events_raw` and `events_daily`, the staging instance was rebooted with `rds.logical_replication = 1`, and blue/green switchover put `analytics-staging` on PostgreSQL 17.2 at 14:20 UTC after 41 seconds of refused writes; the follow-up dbt run passed all 14 models with runtime within noise. Draft PR #57 remains open on branch `noa/rds-pg17` with commits `7e3c9d4` and `b0f18a2`. Production is prepared but disabled behind `pg17_enabled = false`; no production date is set because Maya will sign off only after staging has run a full week on 17 without incident. (source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Staging soak on PostgreSQL 17.2 to gather a full week of incident-free operation; sign-off expected no earlier than the 24th, with the production window still to be chosen afterwards (source: src-linear-kes298, s3-10)\n- [prochaine-étape] For production, set `rds.logical_replication = 1` in the source DB parameter group and reboot the instance (~2–3 min downtime) in its own window, before creating the blue/green deployment; this prerequisite is now step 0 in `runbooks/pg17-upgrade.md` (source: s3-09, s3-10)\n- [prochaine-étape] Then apply the production plan and perform the blue/green cutover, keeping `apply_immediately = false` and avoiding the 01:00–03:30 UTC dbt lock on `events_daily` (source: s1-04, s1-05)\n- [essai-raté] The first staging apply failed when creating the blue/green deployment because PostgreSQL blue/green requires logical replication on the source instance; fixed by setting the static parameter and rebooting (source: s3-04, s3-05)\n- [essai-raté] `terraform init -upgrade` pulled AWS provider v6 and introduced 37 unrelated plan changes, so the provider was pinned to 5.82 (source: s1-01, s1-02)\n- [question] Which production window to use after Maya's sign-off; candidate low-traffic slots are weekends 04:00–06:00 UTC, outside the dbt lock, with the reboot and cutover needing separate windows (source: s1-05, s3-10)\n- [décision] AWS provider stays pinned to 5.82, no v6 in this PR (source: s1-02)\n- [décision] Production upgrade proceeds only after staging has run a full week on PostgreSQL 17 without incident; Maya will then pick the window, and `apply_immediately` stays false (source: s1-04, src-linear-kes298)",
+  "rendu": "## Où j'en suis\nThe PostgreSQL 17 upgrade for the analytics RDS is complete on staging: pg_partman was upgraded to 5.1.0 with maintenance green on `events_raw` and `events_daily`, the staging instance was rebooted with `rds.logical_replication = 1`, and blue/green switchover put `analytics-staging` on PostgreSQL 17.2 at 14:20 UTC after 41 seconds of refused writes; the follow-up dbt run passed all 14 models with runtime within noise. Draft PR #57 remains open on branch `noa/rds-pg17` with commits `7e3c9d4` and `b0f18a2`. Production is prepared but disabled behind `pg17_enabled = false`; no production date is set because Maya will sign off only after staging has run a full week on 17 without incident. (de: équipe, connecteur, agent; source: ses-pg-3, src-pr57, src-linear-kes298)\n\n- [en-cours] Staging soak on PostgreSQL 17.2 to gather a full week of incident-free operation; sign-off expected no earlier than the 24th, with the production window still to be chosen afterwards (de: connecteur, agent; source: src-linear-kes298, s3-10)\n- [prochaine-étape] For production, set `rds.logical_replication = 1` in the source DB parameter group and reboot the instance (~2–3 min downtime) in its own window, before creating the blue/green deployment; this prerequisite is now step 0 in `runbooks/pg17-upgrade.md` (de: toi, agent; source: s3-09, s3-10)\n- [prochaine-étape] Then apply the production plan and perform the blue/green cutover, keeping `apply_immediately = false` and avoiding the 01:00–03:30 UTC dbt lock on `events_daily` (de: toi, agent; source: s1-04, s1-05)\n- [essai-raté] The first staging apply failed when creating the blue/green deployment because PostgreSQL blue/green requires logical replication on the source instance; fixed by setting the static parameter and rebooting (de: toi, agent; source: s3-04, s3-05)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1835,
+    "lignesRetirees": 4,
+    "decisions": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4240,
+    "sortie": 678,
+    "reflexion": 14,
+    "cache": 128,
+    "cout": 0.00102552
+  },
+  "cout": 0.00102552,
+  "latenceMs": 3340,
+  "fournisseur": "ModelRun"
+}

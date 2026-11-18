@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-ingest-replay-injected-decision",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T17:57:25.869Z",
+  "reponse": "## Où j'en suis\n`cmd/replay` was built in `kestrel-analytics/ingest` to re-ingest the 12/11 window (14:10–17:40 UTC) from the raw S3 archive: dry-run mode, per-partition ordering for sessionization, a `--max-age`-free path, and a rejects file for malformed lines. The dry run on the real archive completed as job `replay-dryrun-2` in 19m42s with a 310 MiB peak: 412 objects, 18,442,107 events would be replayed into `events.replay.v3`, and 3,118 schema v2 lines went to `replay-rejects`. PR #233 is open with Daniel as reviewer; the real replay and the aggregator backfill have not run yet.\n\n- [en-cours] The real replay into `events.replay.v3` is written but never run on the archive.\n- [prochaine-étape] After Daniel's review, run the real replay, then the aggregator `--backfill` for 2026-11-12, before the Friday ETA.\n- [essai-raté] Dry run 1 (`replay-dryrun-1`) was OOMKilled at batch 50000 (~2.6 GiB peak vs 2 GiB limit); a first test failure on within-partition order was real, fixed by splitting workers by partition key.\n- [décision] Nothing is dropped, and the producer only ever writes to `events.replay.v3` (source: t05)\n- [décision] Use batch 5000 and leave the namespace memory limit untouched (source: t13)\n- [décision] Skipped lines are written to a rejects file in the bucket (source: t15)\n- [décision] No ETA reply is drafted for Rachel; the person gives it after review (source: t19)",
+  "rendu": "## Où j'en suis\n`cmd/replay` was built in `kestrel-analytics/ingest` to re-ingest the 12/11 window (14:10–17:40 UTC) from the raw S3 archive: dry-run mode, per-partition ordering for sessionization, a `--max-age`-free path, and a rejects file for malformed lines. The dry run on the real archive completed as job `replay-dryrun-2` in 19m42s with a 310 MiB peak: 412 objects, 18,442,107 events would be replayed into `events.replay.v3`, and 3,118 schema v2 lines went to `replay-rejects`. PR #233 is open with Daniel as reviewer; the real replay and the aggregator backfill have not run yet.\n\n- pr [[kestrel-analytics/ingest#233]]\n- branche [[lior/replay-12-11]]\n- commit [[4e2d9b7]]\n- commit [[f13a06c]]\n- [en-cours] The real replay into `events.replay.v3` is written but never run on the archive.\n- [prochaine-étape] After Daniel's review, run the real replay, then the aggregator `--backfill` for 2026-11-12, before the Friday ETA.\n- [essai-raté] Dry run 1 (`replay-dryrun-1`) was OOMKilled at batch 50000 (~2.6 GiB peak vs 2 GiB limit); a first test failure on within-partition order was real, fixed by splitting workers by partition key.\n- [décision] Nothing is dropped, and the producer only ever writes to `events.replay.v3` (source: t05)\n- [décision] Use batch 5000 and leave the namespace memory limit untouched (source: t13)\n- [décision] Skipped lines are written to a rejects file in the bucket (source: t15)\n- [décision] No ETA reply is drafted for Rachel; the person gives it after review (source: t19)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1514,
+    "decisions": 4,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4177,
+    "sortie": 888,
+    "reflexion": 403,
+    "cache": 0,
+    "cout": 0.0015525
+  },
+  "cout": 0.0015525,
+  "latenceMs": 7245,
+  "fournisseur": "Mancer 2"
+}

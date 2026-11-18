@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "ver-fil-transporteur",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T15:30:16.369Z",
+  "reponse": "## Où j'en suis\nLe branchement de TransAlp est en place sur la branche `hugo/transalp-etiquettes` : client OAuth2, étiquettes ZPL par défaut (avec `^CI28` pour les accents), et `choix.ts` qui n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut). La config de prod est préparée mais rien ne s'active avant le 1er décembre ; la PR #91 est poussée, toujours en brouillon, en attente de la relecture de Julien (source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, à jour sur la branche, relecture de Julien en cours (source: src-pr91, h2-12)\n- [en-cours] config de production préparée mais inactive avant le 1er décembre ; la clé de prod sera posée par Julien dans les secrets (source: h2-07, h2-08)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis bascule Lyon et Paris chez TransAlp le mardi 1er décembre (source: src-slack-julien, h2-07)\n- [prochaine-étape] Karim forme l'équipe sur le nouveau poste d'impression avant la bascule (source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox chez TransAlp : le format n'est disponible qu'en recette et en production, d'où l'essai mené sur la recette (source: src-mail-transalp, h2-01)\n- [essai-raté] étiquette imprimée avec les accents en bouillie (« SaÃ´ne chÃªne ») faute de `^CI28` : la Zebra lisait l'UTF-8 en CP850 (source: h2-03, h2-04)\n- [décision] on passe en ZPL par défaut, testé sur la recette, le PDF restant possible (source: h2-01)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, on fait le point après les soldes (source: src-slack-julien, h2-09)\n- [décision] bascule le mardi 1er décembre pour Lyon et Paris seulement, pas le 23 novembre (source: src-slack-julien)\n- [décision] le passage du mail TransAlp sur un contrat Premium et une résiliation de Rapidis au 1er décembre est écarté (source: h2-09, src-mail-transalp)",
+  "rendu": "## Où j'en suis\nLe branchement de TransAlp est en place sur la branche `hugo/transalp-etiquettes` : client OAuth2, étiquettes ZPL par défaut (avec `^CI28` pour les accents), et `choix.ts` qui n'envoie Lyon et Paris chez TransAlp qu'à partir de `TRANSALP_DEBUT` (1er décembre par défaut). La config de prod est préparée mais rien ne s'active avant le 1er décembre ; la PR #91 est poussée, toujours en brouillon, en attente de la relecture de Julien (de: équipe, agent; source: ses-tr-2, src-pr91)\n\n- [en-cours] PR #91 en brouillon, à jour sur la branche, relecture de Julien en cours (de: équipe, agent; source: src-pr91, h2-12)\n- [en-cours] config de production préparée mais inactive avant le 1er décembre ; la clé de prod sera posée par Julien dans les secrets (de: toi, agent; source: h2-07, h2-08)\n- [prochaine-étape] Julien met la clé de prod dans les secrets, puis bascule Lyon et Paris chez TransAlp le mardi 1er décembre (de: toi, connecteur; source: src-slack-julien, h2-07)\n- [prochaine-étape] Karim forme l'équipe sur le nouveau poste d'impression avant la bascule (de: connecteur; source: src-slack-julien)\n- [essai-raté] ZPL refusé en sandbox chez TransAlp : le format n'est disponible qu'en recette et en production, d'où l'essai mené sur la recette (de: toi, connecteur; source: src-mail-transalp, h2-01)\n- [essai-raté] étiquette imprimée avec les accents en bouillie (« SaÃ´ne chÃªne ») faute de `^CI28` : la Zebra lisait l'UTF-8 en CP850 (de: toi, agent; source: h2-03, h2-04)\n- [décision] on passe en ZPL par défaut, testé sur la recette, le PDF restant possible (de: toi; source: h2-01)\n- [décision] Rapidis n'est pas résilié : il garde le reste de la France et les colis de plus de 30 kg jusqu'au 15 janvier, on fait le point après les soldes (de: toi, connecteur; source: src-slack-julien, h2-09)\n- [décision] bascule le mardi 1er décembre pour Lyon et Paris seulement, pas le 23 novembre (de: connecteur; source: src-slack-julien)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1952,
+    "lignesRetirees": 1,
+    "decisions": 3,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3979,
+    "sortie": 1208,
+    "reflexion": 566,
+    "cache": 0,
+    "cout": 0.00158598
+  },
+  "cout": 0.00158598,
+  "latenceMs": 8384,
+  "fournisseur": "DigitalOcean"
+}

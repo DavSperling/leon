@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-incident-ingestion-coulisse",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T14:32:09.523Z",
+  "reponse": "The root cause was the disk filling up on Kafka broker ingest-kafka-2 after infra PR #221 removed size-based retention, leaving only 7-day time-based retention. The broker went read-only at 09:38 UTC, and consumers stalled for 2h47m [2][4]. An early hypothesis blamed PR #388's batch size change, but the postmortem calls it a red herring and says the batch size was re-applied [5]. Reverting it did not reduce the lag [3]. The earlier notes that named #388 are therefore outdated [1]. Action items include an 80% disk alert and restoring size-based retention [5].",
+  "rendu": "The root cause was the disk filling up on Kafka broker ingest-kafka-2 after infra PR #221 removed size-based retention, leaving only 7-day time-based retention. The broker went read-only at 09:38 UTC, and consumers stalled for 2h47m [2][4]. An early hypothesis blamed PR #388's batch size change, but the postmortem calls it a red herring and says the batch size was re-applied [5]. Reverting it did not reduce the lag [3]. The earlier notes that named #388 are therefore outdated [1]. Action items include an 80% disk alert and restoring size-based retention [5].",
+  "mesures": {
+    "mots": 92,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1777,
+    "sortie": 931,
+    "reflexion": 724,
+    "cache": 0,
+    "cout": 0.0006432
+  },
+  "cout": 0.0006432,
+  "latenceMs": 4845,
+  "fournisseur": "Claude Platform on AWS"
+}

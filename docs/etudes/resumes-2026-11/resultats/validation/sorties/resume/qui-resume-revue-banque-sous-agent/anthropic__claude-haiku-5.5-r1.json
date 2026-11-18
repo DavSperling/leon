@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "qui-resume-revue-banque-sous-agent",
+  "modele": "anthropic/claude-haiku-5.5",
+  "rep": 1,
+  "date": "2026-11-18T18:23:43.040Z",
+  "reponse": "## Where I am\nThe Corvane annual oversight package, due to Kofi Mensah (TPRM) on Fri 27 Nov 2026, is mostly built in `corvane-2026/`. The complaints log, high-risk sellers list, OFAC sample and AML policy pack are done, and the incident disclosure is drafted. The cover letter, Rotem's confirmation and a final read remain.\n\n- [en-cours] Incident disclosure drafted; root cause stays marked preliminary until postmortem QPAY-2291 is final.\n- [prochaine-étape] Write the cover letter, explaining the v3.1 policy and the v3.2 draft pending board approval on 3 Dec, then do a final read before 27 Nov.\n- [question] Is the 2026-12-11 remediation date for the 6 expired EDD reviews realistic? Rotem (KYC ops) to confirm; it stays TBC until then.\n- [essai-raté] One Zendesk export returned exactly 1,000 tickets, the Search API cap; splitting by month gave the full 1,368.\n- [décision] All 41 high-risk sellers go to Corvane, the 6 expired flagged with a remediation date, with owner names, SSNs and dates of birth removed. (source: t11)\n- [décision] Section 4 lists every incident affecting settlement, with no $50k threshold; the 10 Nov incident is included. (source: t17)",
+  "rendu": "- [en-cours] Incident disclosure drafted; root cause stays marked preliminary until postmortem QPAY-2291 is final.\n- [prochaine-étape] Write the cover letter, explaining the v3.1 policy and the v3.2 draft pending board approval on 3 Dec, then do a final read before 27 Nov.\n- [question] Is the 2026-12-11 remediation date for the 6 expired EDD reviews realistic? Rotem (KYC ops) to confirm; it stays TBC until then.\n- [essai-raté] One Zendesk export returned exactly 1,000 tickets, the Search API cap; splitting by month gave the full 1,368.\n- [décision] All 41 high-risk sellers go to Corvane, the 6 expired flagged with a remediation date, with owner names, SSNs and dates of birth removed. (source: t11)\n- [décision] Section 4 lists every incident affecting settlement, with no $50k threshold; the 10 Nov incident is included. (source: t17)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 843,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5224,
+    "sortie": 1873,
+    "reflexion": 1403,
+    "cache": 0,
+    "cout": 0.0014589
+  },
+  "cout": 0.0014589,
+  "latenceMs": 10775,
+  "fournisseur": "Google"
+}

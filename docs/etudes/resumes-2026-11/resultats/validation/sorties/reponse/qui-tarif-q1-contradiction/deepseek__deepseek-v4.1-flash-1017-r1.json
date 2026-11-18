@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "qui-tarif-q1-contradiction",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T18:25:02.102Z",
+  "reponse": "The Q1 payout fee is 0.45% per payout, after Gil's review; the v3 proposal deck still showing 0.40% is outdated and shouldn't be sent out [2]. The volume tiers are unchanged [2]. An earlier proposal had set the fee at 0.40% with a $0.25 minimum and tiers of −0.05 pt above $5M/month and −0.10 pt above $20M/month, effective January 1, 2027 [1], and a draft customer notice dated November 16 still quotes 0.40% [4]. In a Pinecrest QBR, Owen Park mentioned 0.40% for Q1, and a colleague noted they had already told Pinecrest that figure and would correct it [3][2].",
+  "rendu": "The Q1 payout fee is 0.45% per payout, after Gil's review; the v3 proposal deck still showing 0.40% is outdated and shouldn't be sent out [2]. The volume tiers are unchanged [2]. An earlier proposal had set the fee at 0.40% with a $0.25 minimum and tiers of −0.05 pt above $5M/month and −0.10 pt above $20M/month, effective January 1, 2027 [1], and a draft customer notice dated November 16 still quotes 0.40% [4]. In a Pinecrest QBR, Owen Park mentioned 0.40% for Q1, and a colleague noted they had already told Pinecrest that figure and would correct it [3][2].",
+  "mesures": {
+    "mots": 100,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1044,
+    "sortie": 354,
+    "reflexion": 185,
+    "cache": 512,
+    "cout": 0.000271446
+  },
+  "cout": 0.000271446,
+  "latenceMs": 2034,
+  "fournisseur": "InferenceNet"
+}

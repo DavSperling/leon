@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-base-date-contradiction",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:01.368Z",
+  "reponse": "The upgrade (Postgres 13 → 17 cutover) has been rescheduled twice — here's the current plan:\n\n- **Maintenance window: Saturday December 5, 02:00–05:00 UTC** — moved after Thursday's sync so it lands after the Fernhill go-live of Dec 1, and approved by Maya [2]\n- Customer notice (status page + in-app banner): **Saturday Nov 28** [2]\n- Staging rehearsal: Friday Nov 27; migration freeze from Thursday Dec 3 [2]\n\nFor your notice/macro, useful details from the runbook: dashboards are read-only for ~40 minutes during the switch, ingestion keeps buffering in Kafka with no data loss [1].\n\nTwo caveats: the earlier Nov 21 date in Slack and the Notion runbook is outdated — KES-398 is the reference for the window [3][2]. I found nothing on a support-specific macro; if one exists it wasn't in my searches (terms: maintenance window, database upgrade, cutover Dec 5, Postgres 17).",
+  "rendu": "The upgrade (Postgres 13 → 17 cutover) has been rescheduled twice — here's the current plan:\n\n- **Maintenance window: Saturday December 5, 02:00–05:00 UTC** — moved after Thursday's sync so it lands after the Fernhill go-live of Dec 1, and approved by Maya [2]\n- Customer notice (status page + in-app banner): **Saturday Nov 28** [2]\n- Staging rehearsal: Friday Nov 27; migration freeze from Thursday Dec 3 [2]\n\nFor your notice/macro, useful details from the runbook: dashboards are read-only for ~40 minutes during the switch, ingestion keeps buffering in Kafka with no data loss [1].\n\nTwo caveats: the earlier Nov 21 date in Slack and the Notion runbook is outdated — KES-398 is the reference for the window [3][2]. I found nothing on a support-specific macro; if one exists it wasn't in my searches (terms: maintenance window, database upgrade, cutover Dec 5, Postgres 17).",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 20225,
+    "sortie": 658,
+    "reflexion": 259,
+    "cache": 8128,
+    "cout": 0.001999534
+  },
+  "latenceMs": 22799,
+  "fournisseur": "Makora",
+  "trace": [
+    "chercher {\"requete\":\"maintenance window database upgrade fenêtre de maintenance\"}",
+    "chercher {\"requete\":\"upgrade base de données migration planifié date\"}",
+    "lire {\"sourceId\":\"2\"}",
+    "lire {\"passageId\":\"linear-kes-398-2\"}",
+    "chercher {\"requete\":\"cutover Dec 5 Postgres 17 reportage nouvelle date\",\"depuis\":\"2026-11-16\"}"
+  ],
+  "cout": 0.001999534
+}

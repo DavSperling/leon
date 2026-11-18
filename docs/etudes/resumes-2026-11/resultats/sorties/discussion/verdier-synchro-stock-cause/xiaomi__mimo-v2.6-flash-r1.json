@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "verdier-synchro-stock-cause",
+  "modele": "xiaomi/mimo-v2.6-flash",
+  "rep": 1,
+  "date": "2026-11-18T14:27:06.893Z",
+  "reponse": "**L'origine** : le 3/11, un emplacement « Showroom » a été ajouté dans Shopify, mais le script de synchro (`sync-stock`, toutes les 15 min) ne mettait à jour que l'« Entrepôt Vénissieux ». Shopify additionne les emplacements : le site affichait donc du stock qui n'existait plus [3]. Résultat : commandes annulées pour rupture sur des articles affichés en stock — banc Rhône [1], buffet Croix-Rousse [4], chaises Fourvière [9], soit 7 commandes touchées entre le 3 et le 12/11 [3].\n\n**C'est réparé** : PR #87 (mise à jour des deux emplacements à partir des onglets de l'export, tests, variable `SHOPIFY_LOCATION_SHOWROOM`) fusionnée et déployée le 13/11 [10], relue et testée par Hugo [10]. Julien a repassé tout le catalogue, quantités bonnes, et aucun nouveau cas depuis le vendredi 13/11 [3].\n\nUn point reste en cours : le contrôle quotidien des écarts Shopify/entrepôt (PR #91) est en brouillon — il manque le cron et la gestion des SKU archivés, et les retours de Julien sont à reprendre avant fusion [11].",
+  "rendu": "**L'origine** : le 3/11, un emplacement « Showroom » a été ajouté dans Shopify, mais le script de synchro (`sync-stock`, toutes les 15 min) ne mettait à jour que l'« Entrepôt Vénissieux ». Shopify additionne les emplacements : le site affichait donc du stock qui n'existait plus [3]. Résultat : commandes annulées pour rupture sur des articles affichés en stock — banc Rhône [1], buffet Croix-Rousse [4], chaises Fourvière [9], soit 7 commandes touchées entre le 3 et le 12/11 [3].\n\n**C'est réparé** : PR #87 (mise à jour des deux emplacements à partir des onglets de l'export, tests, variable `SHOPIFY_LOCATION_SHOWROOM`) fusionnée et déployée le 13/11 [10], relue et testée par Hugo [10]. Julien a repassé tout le catalogue, quantités bonnes, et aucun nouveau cas depuis le vendredi 13/11 [3].\n\nUn point reste en cours : le contrôle quotidien des écarts Shopify/entrepôt (PR #91) est en brouillon — il manque le cron et la gestion des SKU archivés, et les retours de Julien sont à reprendre avant fusion [11].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 22558,
+    "sortie": 831,
+    "reflexion": 409,
+    "cache": 14976,
+    "cout": 0.0013360927999999997
+  },
+  "latenceMs": 37104,
+  "fournisseur": "Xiaomi",
+  "trace": [
+    "chercher {\"requete\":\"acheter meuble plus disponible stock rupture\"}",
+    "chercher {\"requete\":\"commande acceptée produit en rupture de stock indisponible\"}",
+    "lire {\"sourceId\":\"3\"}",
+    "lire {\"passageId\":\"slack-tech-synchro-stock-3\"}"
+  ],
+  "cout": 0.0013360927999999997
+}

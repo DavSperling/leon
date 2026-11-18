@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-pg17-repris",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:58:57.073Z",
+  "reponse": "## Où j'en suis\n`analytics-staging` is on PostgreSQL 17.2 after the blue/green switchover on Nov 17 at 14:20 UTC (41 s of refused writes), with pg_partman upgraded to 5.1.0 and `dbt run --select events_daily` passing on 17.2; the runbook now documents the logical-replication + reboot prerequisite, and prod remains behind `pg17_enabled = false` (source: ses-pg-3, s3-06, s3-10, src-pr57, src-slack-infra)\n\n- [en-cours] PR #57 is still open (draft) with `7e3c9d4` (logical replication in the module) and `b0f18a2` (staging engine 17.2) (source: src-pr57, ses-pg-3)\n- [prochaine-étape] let staging run a full week on 17 without incident before Maya's prod sign-off, earliest the 24th (source: src-linear-kes298, s3-09, s3-10)\n- [prochaine-étape] prod cutover needs two windows: first set `rds.logical_replication = 1` and reboot, then the blue/green deployment, outside the 01:00–03:30 UTC dbt lock (source: s3-06, s3-10)\n- [essai-raté] the staging blue/green apply failed with `InvalidParameterCombination`: RDS blue/green for PostgreSQL requires `rds.logical_replication = 1` and a reboot of the source (source: s3-04)\n- [décision] AWS provider pinned to ~> 5.82, no v6 in this PR (source: s1-02, src-pr57)\n- [décision] no prod date until Maya signs off, and `apply_immediately` stays false (source: s1-04)\n- [question] which prod window to book once sign-off lands, given the two-step reboot + blue/green (source: src-linear-kes298, s3-10)",
+  "rendu": "## Où j'en suis\n`analytics-staging` is on PostgreSQL 17.2 after the blue/green switchover on Nov 17 at 14:20 UTC (41 s of refused writes), with pg_partman upgraded to 5.1.0 and `dbt run --select events_daily` passing on 17.2; the runbook now documents the logical-replication + reboot prerequisite, and prod remains behind `pg17_enabled = false` (de: équipe, connecteur, agent; source: ses-pg-3, s3-06, s3-10, src-pr57, src-slack-infra)\n\n- [en-cours] PR #57 is still open (draft) with `7e3c9d4` (logical replication in the module) and `b0f18a2` (staging engine 17.2) (de: équipe, agent; source: src-pr57, ses-pg-3)\n- [prochaine-étape] let staging run a full week on 17 without incident before Maya's prod sign-off, earliest the 24th (de: toi, connecteur, agent; source: src-linear-kes298, s3-09, s3-10)\n- [prochaine-étape] prod cutover needs two windows: first set `rds.logical_replication = 1` and reboot, then the blue/green deployment, outside the 01:00–03:30 UTC dbt lock (de: agent; source: s3-06, s3-10)\n- [essai-raté] the staging blue/green apply failed with `InvalidParameterCombination`: RDS blue/green for PostgreSQL requires `rds.logical_replication = 1` and a reboot of the source (de: agent; source: s3-04)\n- [décision] AWS provider pinned to ~> 5.82, no v6 in this PR (de: toi, équipe; source: s1-02, src-pr57)\n- [décision] no prod date until Maya signs off, and `apply_immediately` stays false (de: toi; source: s1-04)\n- [question] which prod window to book once sign-off lands, given the two-step reboot + blue/green (de: connecteur, agent; source: src-linear-kes298, s3-10)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1590,
+    "lignesRetirees": 0,
+    "decisions": 2,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4353,
+    "sortie": 1117,
+    "reflexion": 647,
+    "cache": 4352,
+    "cout": 0.000571706
+  },
+  "cout": 0.000571706,
+  "latenceMs": 7463,
+  "fournisseur": "Cohere"
+}

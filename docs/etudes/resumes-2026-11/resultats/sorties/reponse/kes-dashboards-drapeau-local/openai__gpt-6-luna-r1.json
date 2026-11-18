@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:31:59.107Z",
+  "reponse": "Lance `make dev-flags FLAGS=dashboards_v2` pour activer les nouveaux tableaux de bord dans l’espace de développement local. [2] L’API doit être en cours d’exécution ; recharge ensuite la page en ignorant le cache. [3] `FEATURE_FLAGS` dans `.env.local` n’est plus pris en compte. [2]",
+  "rendu": "Lance `make dev-flags FLAGS=dashboards_v2` pour activer les nouveaux tableaux de bord dans l’espace de développement local. [2] L’API doit être en cours d’exécution ; recharge ensuite la page en ignorant le cache. [3] `FEATURE_FLAGS` dans `.env.local` n’est plus pris en compte. [2]",
+  "mesures": {
+    "mots": 41,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1063,
+    "sortie": 78,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0001718
+  },
+  "cout": 0.0001718,
+  "latenceMs": 1717,
+  "fournisseur": "OpenAI"
+}

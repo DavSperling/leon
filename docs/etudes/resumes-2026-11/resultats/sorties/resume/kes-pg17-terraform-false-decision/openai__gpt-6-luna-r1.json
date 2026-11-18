@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-pg17-terraform-false-decision",
+  "modele": "openai/gpt-6-luna",
+  "rep": 1,
+  "date": "2026-11-18T14:24:34.476Z",
+  "reponse": "## Où j'en suis\nLe Terraform pour PostgreSQL 17 est préparé sur `noa/rds-pg17` : staging en blue/green, production derrière `pg17_enabled = false`, AWS provider épinglé en 5.82.x. Les plans sont propres (staging : 1 ajout, 1 modification ; prod : aucun changement), `tflint` passe et une PR brouillon est ouverte. Rien n’a été appliqué.\n\n- [en-cours] PR brouillon ouverte ; migration pg_partman et fenêtre de production restent à traiter.\n- [prochaine-étape] Sur staging, mettre pg_partman à niveau vers 5.x et vérifier `run_maintenance_proc()` sur `events_raw` et `events_daily`, avant toute application.\n- [prochaine-étape] Attendre l’accord de Maya avant de choisir la fenêtre de production ; éviter le verrou dbt de `events_daily` entre 01:00 et 03:30 UTC.\n- [décision] Ne rien appliquer ; préparer et planifier seulement (source: t01)\n- [décision] Ne pas fixer de date de production sans l’accord de Maya ; `apply_immediately` reste désactivé (source: t14)",
+  "rendu": "## Où j'en suis\nLe Terraform pour PostgreSQL 17 est préparé sur `noa/rds-pg17` : staging en blue/green, production derrière `pg17_enabled = false`, AWS provider épinglé en 5.82.x. Les plans sont propres (staging : 1 ajout, 1 modification ; prod : aucun changement), `tflint` passe et une PR brouillon est ouverte. Rien n’a été appliqué.\n\n- pr [[kestrel-analytics/infra#57]]\n- branche [[noa/rds-pg17]]\n- commit [[9d41c0e]]\n- commit [[a2b7f55]]\n- commit [[c58e1fa]]\n- [en-cours] PR brouillon ouverte ; migration pg_partman et fenêtre de production restent à traiter.\n- [prochaine-étape] Sur staging, mettre pg_partman à niveau vers 5.x et vérifier `run_maintenance_proc()` sur `events_raw` et `events_daily`, avant toute application.\n- [prochaine-étape] Attendre l’accord de Maya avant de choisir la fenêtre de production ; éviter le verrou dbt de `events_daily` entre 01:00 et 03:30 UTC.\n- [décision] Ne rien appliquer ; préparer et planifier seulement (source: t01)\n- [décision] Ne pas fixer de date de production sans l’accord de Maya ; `apply_immediately` reste désactivé (source: t14)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1087,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3687,
+    "sortie": 265,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0005933
+  },
+  "cout": 0.0005933,
+  "latenceMs": 3323,
+  "fournisseur": "OpenAI"
+}

@@ -1,0 +1,27 @@
+{
+  "etape": "fil",
+  "cas": "kes-fil-dashboards-v2",
+  "modele": "minimax/minimax-m3.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T15:26:49.558Z",
+  "reponse": "## Where I am\nPR #418 (dashboards v2: drag/resize, per-user layout persistence, iPad support) was merged on 2026-11-17; Priya's two non-blocking follow-ups — keyboard move/resize and a visible focus ring — were implemented in a new branch `tom/dashboard-keyboard` (commit 8f1a2c7) and PR #423 is now open for Priya's review. The `dashboards_v2` flag is enabled for the Zest Grocers workspace on staging for Priya's demo rehearsal; production remains untouched for now. The visx migration was abandoned: PR #401 is closed and recharts stays as the only chart library, with no `@visx/*` dependency in `web/package.json`. (source: ses-db-4, ses-db-3, ses-db-2)\n\n- [en-cours] PR #423 \"Dashboards v2: keyboard move/resize + focus ring\" is open, awaiting Priya's review (source: kestrel-analytics/platform#423)\n- [en-cours] Branch `tom/dashboard-keyboard` with commit 8f1a2c7: `useGridKeyboard()` handler (Tab focus, Enter pick-up, arrows move, Shift+arrows resize, Enter drop, Escape cancel/restore, aria-live announcements) plus a 2px `--kes-focus` focus ring (source: 8f1a2c7)\n- [prochaine-étape] Priya reviews PR #423 and it is merged (source: kestrel-analytics/platform#423)\n- [prochaine-étape] Tom flips the `dashboards_v2` production flag himself on the morning of the 24th (source: d4-06)\n- [prochaine-étape] After Zest is fully on v2, delete the legacy v1 dashboards on Jan 5 (source: b2-04)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries handled the same pointer/key events, so moves were applied twice and mouse drags fired two onLayoutChange calls; abandoned with the dependency removed (source: d4-02, d4-04)\n- [essai-raté] CSS container queries were ignored on Zest's iPads (iOS 15 / Safari < 16); replaced by a ResizeObserver hook with no dual system (source: b2-01, b2-02)\n- [essai-raté] Full visx migration would add ~181 KB (gzip +52 KB) for 3 chart types or require rewriting 9 charts to save only ~40 KB (source: c3-02)\n- [question] Whether to schedule the legacy v1 dashboard deletion on Jan 5, once Zest is fully on v2 (source: b2-04)\n- [décision] Keep recharts; close the visx PR #401 for good, no two chart libraries (source: c3-03)\n- [décision] Merge PR #418 with squash merge; remaining comments go to a follow-up PR (source: c3-05)\n- [décision] Implement own keyboard handler over the layout state, no dnd-kit (source: d4-04)\n- [décision] Drop container queries entirely; use ResizeObserver only (source: b2-02)\n- [décision] Enable `dashboards_v2` only for the Zest workspace; old dashboards stay available behind the flag until January (source: b2-04)",
+  "rendu": "- [en-cours] PR #423 \"Dashboards v2: keyboard move/resize + focus ring\" is open, awaiting Priya's review (de: équipe; source: kestrel-analytics/platform#423)\n- [en-cours] Branch `tom/dashboard-keyboard` with commit 8f1a2c7: `useGridKeyboard()` handler (Tab focus, Enter pick-up, arrows move, Shift+arrows resize, Enter drop, Escape cancel/restore, aria-live announcements) plus a 2px `--kes-focus` focus ring (de: équipe; source: 8f1a2c7)\n- [prochaine-étape] Priya reviews PR #423 and it is merged (de: équipe; source: kestrel-analytics/platform#423)\n- [prochaine-étape] Tom flips the `dashboards_v2` production flag himself on the morning of the 24th (de: toi; source: d4-06)\n- [prochaine-étape] After Zest is fully on v2, delete the legacy v1 dashboards on Jan 5 (de: toi; source: b2-04)\n- [essai-raté] dnd-kit KeyboardSensor on top of react-grid-layout: both libraries handled the same pointer/key events, so moves were applied twice and mouse drags fired two onLayoutChange calls; abandoned with the dependency removed (de: toi, agent; source: d4-02, d4-04)\n- [essai-raté] CSS container queries were ignored on Zest's iPads (iOS 15 / Safari < 16); replaced by a ResizeObserver hook with no dual system (de: toi, agent; source: b2-01, b2-02)\n- [essai-raté] Full visx migration would add ~181 KB (gzip +52 KB) for 3 chart types or require rewriting 9 charts to save only ~40 KB (de: agent; source: c3-02)\n- [question] Whether to schedule the legacy v1 dashboard deletion on Jan 5, once Zest is fully on v2 (de: toi; source: b2-04)\n- [décision] Keep recharts; close the visx PR #401 for good, no two chart libraries (de: toi; source: c3-03)\n- [décision] Merge PR #418 with squash merge; remaining comments go to a follow-up PR (de: toi; source: c3-05)\n- [décision] Implement own keyboard handler over the layout state, no dnd-kit (de: toi; source: d4-04)\n- [décision] Drop container queries entirely; use ResizeObserver only (de: toi; source: b2-02)",
+  "mesures": {
+    "vide": false,
+    "caracteres": 1950,
+    "lignesRetirees": 1,
+    "decisions": 4,
+    "formatRespecte": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4888,
+    "sortie": 760,
+    "reflexion": 12,
+    "cache": 512,
+    "cout": 0.00112008
+  },
+  "cout": 0.00112008,
+  "latenceMs": 2381,
+  "fournisseur": "Inferact vLLM"
+}

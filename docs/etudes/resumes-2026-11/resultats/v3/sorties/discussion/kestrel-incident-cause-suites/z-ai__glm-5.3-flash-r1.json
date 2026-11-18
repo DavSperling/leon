@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "kestrel-incident-cause-suites",
+  "modele": "z-ai/glm-5.3-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:03:08.690Z",
+  "reponse": "**What broke:** Last Thursday (Nov 12, 08:47–12:27 UTC, ~3h40), the ingest-worker pods started OOM-looping right after the v2.14.0 deploy, which raised the default `max_batch_bytes` from 1 MB to 10 MB (PR ingest#412) while the pods had only a 512 Mi memory limit [10][1]. Consumer lag exceeded 500,000 messages, with out-of-memory allocation errors in `ingest/worker/batch.go` [4]. Initially suspected Kafka broker disk, but that was ruled out [10]. Customer dashboards showed stale data, up to ~3h40 behind at peak [1][10].\n\n**Data loss:** None. Reconciliation on Nov 13 matched event counts per workspace against Kafka offsets for the affected window — \"nothing lost, just late\" [10][1]. The customer report to Orbitly confirms the same [2].\n\n**What's changing:**\n- A new alert routed to on-call when ingest consumer lag exceeds 5 minutes (Linear KES-431, due Nov 20) [12][2]\n- Configuration changes will go to a small canary group first before full rollout [2]\n- The postmortem also mentions \"mo…\" (likely more items) in Maya's report [2], and the full list is in Lior's postmortem page [1]\n\nSide note: the team also postponed the Nov 21 Postgres 17 cutover to avoid stacking risk right after the incident [3], and Orbitly is claiming an SLA service credit per MSA section 7, which Sam is checking with finance [2].",
+  "rendu": "**What broke:** Last Thursday (Nov 12, 08:47–12:27 UTC, ~3h40), the ingest-worker pods started OOM-looping right after the v2.14.0 deploy, which raised the default `max_batch_bytes` from 1 MB to 10 MB (PR ingest#412) while the pods had only a 512 Mi memory limit [10][1]. Consumer lag exceeded 500,000 messages, with out-of-memory allocation errors in `ingest/worker/batch.go` [4]. Initially suspected Kafka broker disk, but that was ruled out [10]. Customer dashboards showed stale data, up to ~3h40 behind at peak [1][10].\n\n**Data loss:** None. Reconciliation on Nov 13 matched event counts per workspace against Kafka offsets for the affected window — \"nothing lost, just late\" [10][1]. The customer report to Orbitly confirms the same [2].\n\n**What's changing:**\n- A new alert routed to on-call when ingest consumer lag exceeds 5 minutes (Linear KES-431, due Nov 20) [12][2]\n- Configuration changes will go to a small canary group first before full rollout [2]\n- The postmortem also mentions \"mo…\" (likely more items) in Maya's report [2], and the full list is in Lior's postmortem page [1]\n\nSide note: the team also postponed the Nov 21 Postgres 17 cutover to avoid stacking risk right after the incident [3], and Orbitly is claiming an SLA service credit per MSA section 7, which Sam is checking with finance [2].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6739,
+    "sortie": 404,
+    "reflexion": 9,
+    "cache": 0,
+    "cout": 0.00122777
+  },
+  "latenceMs": 5023,
+  "fournisseur": "Inceptron",
+  "trace": [
+    "chercher {\"depuis\":\"2s\",\"requete\":\"event pipeline incident outage last Thursday\"}",
+    "chercher {\"requete\":\"\\\"event pipeline\\\" broke data loss postmortem\"}"
+  ],
+  "cout": 0.00122777
+}

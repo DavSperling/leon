@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-entretien-sre",
+  "modele": "deepseek/deepseek-v4.1-flash-1017",
+  "rep": 1,
+  "date": "2026-11-18T17:54:30.140Z",
+  "reponse": "## What is still open\n\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00, with you and Noa on the panel; the 90-minute plan and rubric are written (Terraform exercise, the 12/11 ingest incident as scenario, on-call questions on TLV nights for NY customers and Noa's ~30 pages a week) but you still have to send it to her [1].\n- Eitan wants the SRE shortlist before Friday, for the board deck going out Monday [4].\n- You're taking a proposal to raise the SRE band to ₪42–48k to Eitan at Monday's leadership sync — pay explains two of the last four declines, and Ilan is already above the current top [1].\n- Dana owes three more profiles by end of next week, ideally people who've done on-call for US customers; Ilan is your only active candidate [1].\n\n## What changed\n\n- Noa confirmed Thursday 15:00 and will prepare the RDS parameter-group Terraform exercise herself [3].\n\n## What you did\n\n- Assessed where the pipeline stands: Yoav withdrew for a counter-offer, Elena declined on compensation, leaving Ilan alone [1].\n- Drafted the reply to Dana confirming Thursday and the panel, and pushing for three more profiles [1].\n- Pulled the candidates' salary figures out of your notes so they stay in the ATS only [1].",
+  "rendu": "## What is still open\n\n- Ilan Barak's technical interview is Thursday 19/11 at 15:00, with you and Noa on the panel; the 90-minute plan and rubric are written (Terraform exercise, the 12/11 ingest incident as scenario, on-call questions on TLV nights for NY customers and Noa's ~30 pages a week) but you still have to send it to her [1].\n- Eitan wants the SRE shortlist before Friday, for the board deck going out Monday [4].\n- You're taking a proposal to raise the SRE band to ₪42–48k to Eitan at Monday's leadership sync — pay explains two of the last four declines, and Ilan is already above the current top [1].\n- Dana owes three more profiles by end of next week, ideally people who've done on-call for US customers; Ilan is your only active candidate [1].\n\n## What changed\n\n- Noa confirmed Thursday 15:00 and will prepare the RDS parameter-group Terraform exercise herself [3].\n\n## What you did\n\n- Assessed where the pipeline stands: Yoav withdrew for a counter-offer, Elena declined on compensation, leaving Ilan alone [1].\n- Drafted the reply to Dana confirming Thursday and the panel, and pushing for three more profiles [1].\n- Pulled the candidates' salary figures out of your notes so they stay in the ATS only [1].",
+  "mesures": {
+    "mots": 204,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4115,
+    "sortie": 1805,
+    "reflexion": 1499,
+    "cache": 0,
+    "cout": 0.00198325
+  },
+  "cout": 0.00198325,
+  "latenceMs": 10051,
+  "fournisseur": "Ionstream"
+}

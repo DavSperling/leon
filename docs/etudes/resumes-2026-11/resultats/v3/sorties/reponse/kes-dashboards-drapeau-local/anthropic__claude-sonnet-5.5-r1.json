@@ -1,0 +1,27 @@
+{
+  "etape": "reponse",
+  "cas": "kes-dashboards-drapeau-local",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-18T17:59:45.781Z",
+  "reponse": "The old method no longer works. An earlier Slack tip said to set FEATURE_FLAGS=new_dash in .env.local [1], but since PR #447 the flag is renamed dashboards_v2 and flags are served by the API, so that env variable is ignored [2]. Instead, with the API running, run `make dev-flags FLAGS=dashboards_v2`, then hard-reload the page [3]. You can verify with `curl localhost:8000/api/flags` [3]. If the tiles stay empty, the seed data may be thin [1], and new workspaces with no events show a blank grid [5].",
+  "rendu": "The old method no longer works. An earlier Slack tip said to set FEATURE_FLAGS=new_dash in .env.local [1], but since PR #447 the flag is renamed dashboards_v2 and flags are served by the API, so that env variable is ignored [2]. Instead, with the API running, run `make dev-flags FLAGS=dashboards_v2`, then hard-reload the page [3]. You can verify with `curl localhost:8000/api/flags` [3]. If the tiles stay empty, the seed data may be thin [1], and new workspaces with no events show a blank grid [5].",
+  "mesures": {
+    "mots": 84,
+    "tropLong": false,
+    "pasAssez": false,
+    "renvoisInvalides": 0,
+    "renvoisAttendusCites": 1,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 1713,
+    "sortie": 197,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.005396
+  },
+  "cout": 0.005396,
+  "latenceMs": 2097,
+  "fournisseur": "Amazon Bedrock"
+}

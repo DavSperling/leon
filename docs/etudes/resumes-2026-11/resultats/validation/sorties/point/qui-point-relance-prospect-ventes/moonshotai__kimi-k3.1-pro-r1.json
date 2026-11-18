@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "moonshotai/kimi-k3.1-pro",
+  "rep": 1,
+  "date": "2026-11-18T18:27:06.743Z",
+  "reponse": "## What is still open\n\n- **Hearthly’s decision is now Wednesday, Dec 2, not Dec 4.** The SIG Lite remains due Monday, Nov 23 and is mandatory to stay in the final round. Confirm ownership with Shira today and rework your mutual action plan around the new decision date. [4][1]\n- **Remove “CAD payouts in Q1 2027” before sending the follow-up.** Sofia confirmed Q2 at the earliest because Corvane is reviewing the cross-border program, and explicitly asked that no date be put in writing to prospects. [6][1]\n- **Get Rachel’s approval before sending pricing.** Your proposal is 15% off the 2027 grid for a two-year commitment—0.323% per payout, roughly $1.0M annually at Hearthly’s volume—and discounts above 10% now require her sign-off. [1][3]\n- **The reference call is still unresolved.** Ask Rachel for a suitable customer: you ruled out approaching Loomly and Pinecrest after their payout delays, and Tradewell is not live yet. [1]",
+  "rendu": "## What is still open\n\n- **Hearthly’s decision is now Wednesday, Dec 2, not Dec 4.** The SIG Lite remains due Monday, Nov 23 and is mandatory to stay in the final round. Confirm ownership with Shira today and rework your mutual action plan around the new decision date. [4][1]\n- **Remove “CAD payouts in Q1 2027” before sending the follow-up.** Sofia confirmed Q2 at the earliest because Corvane is reviewing the cross-border program, and explicitly asked that no date be put in writing to prospects. [6][1]\n- **Get Rachel’s approval before sending pricing.** Your proposal is 15% off the 2027 grid for a two-year commitment—0.323% per payout, roughly $1.0M annually at Hearthly’s volume—and discounts above 10% now require her sign-off. [1][3]\n- **The reference call is still unresolved.** Ask Rachel for a suitable customer: you ruled out approaching Loomly and Pinecrest after their payout delays, and Tradewell is not live yet. [1]",
+  "mesures": {
+    "mots": 148,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4181,
+    "sortie": 665,
+    "reflexion": 417,
+    "cache": 0,
+    "cout": 0.015012
+  },
+  "cout": 0.015012,
+  "latenceMs": 7078,
+  "fournisseur": "River"
+}

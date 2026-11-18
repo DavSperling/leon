@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "deepseek/deepseek-v4.1-flash",
+  "rep": 1,
+  "date": "2026-11-18T18:21:44.037Z",
+  "reponse": "## What is still open\n- Camille a tranché ta question : on ne crée le chantier qu'à « Acompte reçu », pas dès « gagné » (Hélène est d'accord) — la synchro doit donc aussi écouter `acompte_recu` [8].\n- Thomas refuse ta migration 0041 en l'état : en prod un doublon peut porter interventions, photos et dossier MPR, et une migration ne se relit pas. À sortir dans une commande de gestion avec `--dry-run`, à revoir avec lui lundi [3].\n- La synchro ne part pas en prod avant lundi 23, et pas sans #216 (signature du webhook non vérifiée), qui t'est assigné [4][7]. Camille peut te débloquer l'accès sandbox HubSpot [7].\n- #219 : le formulaire de devis rejette les numéros avec des espaces, pas urgent mais ça fait perdre des demandes [6].\n\n## What changed\n- #213 (photo de plaque signalétique dans l'appli poseurs) est fusionnée et part en prod [5].\n- Thomas est en congé jeudi et vendredi [7].\n\n## What you did\n- Tu as réglé les doublons de chantiers : `hubspot_deal_id` unique, `get_or_create` dans le webhook, dédoublonnage des données existantes, tests, et la PR #217 ouverte pour relecture [1][3].\n- Tu as normalisé et mappé le type de travaux HubSpot vers `Chantier.type` — variantes de saisie et vides traités — sur les 364 deals [2].",
+  "rendu": "## What is still open\n- Camille a tranché ta question : on ne crée le chantier qu'à « Acompte reçu », pas dès « gagné » (Hélène est d'accord) — la synchro doit donc aussi écouter `acompte_recu` [8].\n- Thomas refuse ta migration 0041 en l'état : en prod un doublon peut porter interventions, photos et dossier MPR, et une migration ne se relit pas. À sortir dans une commande de gestion avec `--dry-run`, à revoir avec lui lundi [3].\n- La synchro ne part pas en prod avant lundi 23, et pas sans #216 (signature du webhook non vérifiée), qui t'est assigné [4][7]. Camille peut te débloquer l'accès sandbox HubSpot [7].\n- #219 : le formulaire de devis rejette les numéros avec des espaces, pas urgent mais ça fait perdre des demandes [6].\n\n## What changed\n- #213 (photo de plaque signalétique dans l'appli poseurs) est fusionnée et part en prod [5].\n- Thomas est en congé jeudi et vendredi [7].\n\n## What you did\n- Tu as réglé les doublons de chantiers : `hubspot_deal_id` unique, `get_or_create` dans le webhook, dédoublonnage des données existantes, tests, et la PR #217 ouverte pour relecture [1][3].\n- Tu as normalisé et mappé le type de travaux HubSpot vers `Chantier.type` — variantes de saisie et vides traités — sur les 364 deals [2].",
+  "mesures": {
+    "mots": 199,
+    "tropLong": false,
+    "puces": 8,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 4615,
+    "sortie": 2383,
+    "reflexion": 2003,
+    "cache": 1536,
+    "cout": 0.002846691
+  },
+  "cout": 0.002846691,
+  "latenceMs": 13083,
+  "fournisseur": "DigitalOcean"
+}

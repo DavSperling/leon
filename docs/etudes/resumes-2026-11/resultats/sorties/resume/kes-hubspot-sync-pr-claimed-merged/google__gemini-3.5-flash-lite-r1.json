@@ -1,0 +1,28 @@
+{
+  "etape": "resume",
+  "cas": "kes-hubspot-sync-pr-claimed-merged",
+  "modele": "google/gemini-3.5-flash-lite",
+  "rep": 1,
+  "date": "2026-11-18T14:24:02.900Z",
+  "reponse": "## Où j'en suis\nL'équipe a remplacé la synchronisation HubSpot par webhooks (abandonnée car les apps privées ne gèrent pas les abonnements par API) par un système de polling avec recherche CRM, contournant la limite de 10k résultats et filtrant les entreprises avec un ARR supérieur à 0. La PR a été ouverte et fusionnée, mais le test e2e `test_admin_accounts.py` a échoué car la fixture s'attend à ce qu'une entreprise sans ARR (essai) possède un propriétaire.\n\n- [en-cours] Correction du test e2e `test_admin_accounts.py` suite au filtre `arr > 0`.\n- [prochaine-étape] Mettre à jour la fixture du test e2e pour refléter le nouveau comportement ou ajuster le nombre de lignes attendues.\n- [prochaine-étape] Noa doit stocker le token HubSpot dans AWS Secrets Manager.\n- [décision] Remplacer les webhooks par un polling toutes les 15 minutes (source: t04)\n- [décision] Synchroniser uniquement les entreprises avec un ARR supérieur à 0 et ignorer les essais (source: t10)",
+  "rendu": "## Où j'en suis\nL'équipe a remplacé la synchronisation HubSpot par webhooks (abandonnée car les apps privées ne gèrent pas les abonnements par API) par un système de polling avec recherche CRM, contournant la limite de 10k résultats et filtrant les entreprises avec un ARR supérieur à 0. La PR a été ouverte et fusionnée, mais le test e2e `test_admin_accounts.py` a échoué car la fixture s'attend à ce qu'une entreprise sans ARR (essai) possède un propriétaire.\n\n- pr [[kestrel-analytics/platform#405]]\n- pr [[kestrel-analytics/platform#409]]\n- branche [[daniel/hubspot-owner-sync]]\n- commit [[8b3e6f1]]\n- commit [[2d90ac4]]\n- commit [[ae47c15]]\n- [en-cours] Correction du test e2e `test_admin_accounts.py` suite au filtre `arr > 0`.\n- [prochaine-étape] Mettre à jour la fixture du test e2e pour refléter le nouveau comportement ou ajuster le nombre de lignes attendues.\n- [prochaine-étape] Noa doit stocker le token HubSpot dans AWS Secrets Manager.\n- [décision] Remplacer les webhooks par un polling toutes les 15 minutes (source: t04)\n- [décision] Synchroniser uniquement les entreprises avec un ARR supérieur à 0 et ignorer les essais (source: t10)",
+  "mesures": {
+    "rien": false,
+    "vide": false,
+    "caracteres": 1152,
+    "decisions": 2,
+    "decisionsRetirees": 0,
+    "formatRespecte": true,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 3764,
+    "sortie": 268,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0017992
+  },
+  "cout": 0.0017992,
+  "latenceMs": 1411,
+  "fournisseur": "Google"
+}

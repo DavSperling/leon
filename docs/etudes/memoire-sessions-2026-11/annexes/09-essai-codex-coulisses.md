@@ -50,16 +50,6 @@ Un extrait de l'ordre des lignes du fichier d'un sous-agent (le relevé `codex-o
 27 event_msg/task_complete
 ```
 
-L'emplacement des fichiers. Le relevé complet du témoin (non versionné, environ 400 Ko, identifiants masqués par le témoin) liste les trois fichiers de l'essai dans le même dossier du jour, avec `fil` égal à l'identifiant du nom (fait lu par l'orchestrateur le 17/11, dans ce relevé) :
-
-```
-rollouts[0].fichier = 2026/11/13/rollout-2026-11-13T10-55-55-<id n°1, uuid>.jsonl   fil = <id n°1, uuid>
-rollouts[1].fichier = 2026/11/13/rollout-2026-11-13T10-56-39-<id n°39, uuid>.jsonl   fil = <id n°39, uuid>
-rollouts[2].fichier = 2026/11/13/rollout-2026-11-13T10-56-41-<id n°50, uuid>.jsonl   fil = <id n°50, uuid>
-```
-
-Le premier est la session, les deux autres ses sous-agents. Reste non vu : une session qui passe minuit (un sous-agent rangé dans le dossier d'un autre jour).
-
 Et l'extrait de la session, pour un sous-agent lancé puis attendu :
 
 ```
@@ -79,6 +69,16 @@ Autres faits utiles au code :
 - Le message de l'utilisateur est lui aussi écrit deux fois : `response_item` de type `message` (`role: 'user'`) et élément `UserMessage`. Dans le fichier d'un sous-agent, celui de la mère est recopié.
 - `task_complete` porte `last_agent_message`, `duration_ms`, `time_to_first_token_ms`, `turn_id`.
 - Le sous-agent travaille avec `effort: 'medium'` (clé présente dans son `turn_context`) ; celle de la mère est absente.
+
+L'emplacement des fichiers. Le relevé complet du témoin (non versionné, environ 400 Ko, identifiants masqués par le témoin) liste les trois fichiers de l'essai dans le même dossier du jour, avec `fil` égal à l'identifiant du nom (fait lu par l'orchestrateur le 17/11, dans ce relevé) :
+
+```
+rollouts[0].fichier = 2026/11/13/rollout-2026-11-13T10-55-55-<id n°1, uuid>.jsonl   fil = <id n°1, uuid>
+rollouts[1].fichier = 2026/11/13/rollout-2026-11-13T10-56-39-<id n°39, uuid>.jsonl   fil = <id n°39, uuid>
+rollouts[2].fichier = 2026/11/13/rollout-2026-11-13T10-56-41-<id n°50, uuid>.jsonl   fil = <id n°50, uuid>
+```
+
+Le premier est la session, les deux autres ses sous-agents. Reste non vu : une session qui passe minuit (un sous-agent rangé dans le dossier d'un autre jour).
 
 ## La recette ajustée
 

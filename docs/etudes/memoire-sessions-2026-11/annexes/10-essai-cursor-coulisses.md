@@ -71,5 +71,5 @@ Il n'y a rien à relever : `coulisses` n'est ni proposé ni écrit pour Cursor, 
 ## Remise en état
 
 - **Supprimés par Amos** : les sessions d'essai de Cursor et leurs dossiers (le dossier du projet sous `~/.cursor/projects/` et le dépôt jetable).
-- **Les crochets de Cursor** (`~/.cursor/hooks.json`) : fait contrôlé le 17/11, par le nom des fichiers seulement (rien n'a été lu) : ni `~/.cursor/hooks.json` ni `~/.cursor/hooks.json.pause-essai` n'existent. Il n'y avait donc aucun crochet à mettre de côté pour l'essai, et rien n'est à remettre.
+- **Les crochets de Cursor** (`~/.cursor/hooks.json`) : fait contrôlé le 17/11, par le nom des fichiers seulement (rien n'a été lu) : ni `~/.cursor/hooks.json` ni `~/.cursor/hooks.json.pause-essai` n'existent. Rien n'est donc à remettre. Ce contrôle ne dit pas s'il y avait des crochets au moment de l'essai.
 - **Gardés** : le script témoin [`cursor-coulisses.mjs`](../essais/coulisses-autres-outils/cursor-coulisses.mjs), son complément et le relevé de forme, dans [`essais/coulisses-autres-outils/`](../essais/coulisses-autres-outils/). Le script refuse de tourner (code 2) si les chemins ne portent pas `leon-essai-coulisses`.

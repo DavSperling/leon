@@ -100,5 +100,5 @@ C'est celle des amendements du 17/11 du plan (T52 et T63) ; le relevé ci-dessus
 ## Remise en état
 
 - **Supprimés par Amos** : les sessions d'essai d'Antigravity et leurs dossiers (la discussion d'essai, ses sous-agents et le dépôt jetable). **La suppression a été contrôlée par le témoin le 17/11** : plus aucune conversation de l'essai.
-- **Les crochets d'Antigravity** (`~/.gemini/config/hooks.json`) : fait contrôlé par l'orchestrateur le 17/11, par le nom des fichiers seulement (rien n'a été lu) : ni `~/.gemini/config/hooks.json` ni `~/.gemini/config/hooks.json.pause-essai` n'existent. Il n'y avait donc aucun crochet à mettre de côté pour l'essai, et rien n'est à remettre.
+- **Les crochets d'Antigravity** (`~/.gemini/config/hooks.json`) : fait contrôlé par l'orchestrateur le 17/11, par le nom des fichiers seulement (rien n'a été lu) : ni `~/.gemini/config/hooks.json` ni `~/.gemini/config/hooks.json.pause-essai` n'existent. Rien n'est donc à remettre. Ce contrôle ne dit pas s'il y avait des crochets au moment de l'essai.
 - **Gardés** : le script témoin [`antigravity-coulisses.mjs`](../essais/coulisses-autres-outils/antigravity-coulisses.mjs), son complément et le relevé de forme, dans [`essais/coulisses-autres-outils/`](../essais/coulisses-autres-outils/). Le script refuse de tourner (code 2) si le dossier d'essai ne porte pas `leon-essai-coulisses`.

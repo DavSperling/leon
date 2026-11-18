@@ -4,6 +4,7 @@ import { resolveTenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import type { Llm } from '@/server/llm/llm';
 import { logError, safeErrorSummary } from '@/server/log';
+import { wakeQueueAfter } from '@/server/pipeline/queue';
 import { listAboutCandidates, proposeAbout } from './about-suggestion';
 import { BRIEFING_TIME_ZONE } from './briefing-prompt';
 import { briefingIsFresh, refreshBriefing } from './briefings';
@@ -152,7 +153,9 @@ async function registerWorkers(
   await boss.work(
     BRIEFING_QUEUES.refresh,
     { batchSize: 1, localConcurrency: REFRESH_CONCURRENCY, ...polling },
-    async ([job]) => processRefreshJob(job?.data, deps),
+    wakeQueueAfter(boss, BRIEFING_QUEUES.refresh, async ([job]) =>
+      processRefreshJob(job?.data, deps),
+    ),
   );
   // Un tic manqué (serveur arrêté à 6 h) part une fois au redémarrage, pas autant de fois que de jours manqués.
   await boss.schedule(BRIEFING_QUEUES.morning, MORNING_CRON, null, {
@@ -162,7 +165,7 @@ async function registerWorkers(
   await boss.work(
     BRIEFING_QUEUES.morning,
     { batchSize: 1, localConcurrency: 1, ...polling },
-    async () => {
+    wakeQueueAfter(boss, BRIEFING_QUEUES.morning, async () => {
       // Les deux mises en file tournent : l'échec de l'une ne prive pas l'autre de son tic du jour. Chaque échec est
       // journalisé, puis la première erreur est relancée, pour que pg-boss reprenne le tic. Sans modèle, pas de
       // proposition : le job terminé à vide occuperait la fenêtre de trois jours de chaque personne (ABOUT_RETRY_SECONDS).
@@ -178,17 +181,19 @@ async function registerWorkers(
       for (const { part, error } of failures)
         logError('briefing.morning_tick_failed', error, { part });
       if (failures[0]) throw new Error(safeErrorSummary(failures[0].error));
-    },
+    }),
   );
   await boss.work(
     BRIEFING_QUEUES.about,
     { batchSize: 1, localConcurrency: 1, ...polling },
-    async ([job]) => processAboutJob(job?.data, deps),
+    wakeQueueAfter(boss, BRIEFING_QUEUES.about, async ([job]) => processAboutJob(job?.data, deps)),
   );
   await boss.work(
     BRIEFING_QUEUES.agenda,
     { batchSize: 1, localConcurrency: 1, ...polling },
-    async ([job]) => processAgendaJob(job?.data, deps),
+    wakeQueueAfter(boss, BRIEFING_QUEUES.agenda, async ([job]) =>
+      processAgendaJob(job?.data, deps),
+    ),
   );
 }
 

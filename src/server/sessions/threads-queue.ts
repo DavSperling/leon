@@ -1,7 +1,7 @@
 import type { PgBoss } from 'pg-boss';
 import { z } from 'zod';
 import { CODE_SESSION_KINDS, TOOL_KINDS } from '@/capture/turn';
-import { getBoss } from '@/server/pipeline/queue';
+import { ensureQueue, getBoss } from '@/server/pipeline/queue';
 
 // Les trois files des fils de travail (T40 et T42 ; D22 et D34 du plan de la mémoire à disposition) :
 // - `ranger-session` : la route des faits y met chaque session de code reçue, et le worker (threads.ts) la range dans
@@ -38,9 +38,9 @@ const globalForThreads = globalThis as typeof globalThis & { leonThreadsBoss?: P
 export function getThreadsBoss(): Promise<PgBoss> {
   globalForThreads.leonThreadsBoss ??= (async () => {
     const boss = await getBoss();
-    await boss.createQueue(RANGEMENT_QUEUE, QUEUE);
-    await boss.createQueue(FIL_MAJ_QUEUE, QUEUE);
-    await boss.createQueue(LIAISON_QUEUE, QUEUE);
+    await ensureQueue(boss, RANGEMENT_QUEUE, QUEUE);
+    await ensureQueue(boss, FIL_MAJ_QUEUE, QUEUE);
+    await ensureQueue(boss, LIAISON_QUEUE, QUEUE);
     return boss;
   })().catch((error) => {
     globalForThreads.leonThreadsBoss = undefined; // un démarrage raté doit pouvoir être retenté
@@ -50,14 +50,15 @@ export function getThreadsBoss(): Promise<PgBoss> {
 }
 
 // Avec `fin` : le rangement en attente est avancé à maintenant, ou mis en file pour maintenant (comme enqueueResume) ;
-// un `send` serait ignoré par la file tant que celui à 15 min attend. Sans `fin` : dans 15 min, ignoré si un rangement
-// attend déjà.
+// un `send` serait ignoré par la file tant que celui à 15 min attend. `startAfter: 0` : maintenant à l'horloge de la
+// base, qui décide du réveil des lecteurs (une horloge du serveur en avance les laisserait dormir 30 s). Sans `fin` :
+// dans 15 min, ignoré si un rangement attend déjà.
 export async function enqueueRangement(job: ThreadJob, options: { fin: boolean }): Promise<void> {
   const data = ThreadJobSchema.parse(job);
   const boss = await getThreadsBoss();
   const singletonKey = threadKey(data);
   if (options.fin) {
-    await boss.upsert(RANGEMENT_QUEUE, data, { singletonKey, startAfter: new Date() });
+    await boss.upsert(RANGEMENT_QUEUE, data, { singletonKey, startAfter: 0 });
     return;
   }
   await boss.send(RANGEMENT_QUEUE, data, { singletonKey, startAfter: RANGEMENT_IDLE_SECONDS });

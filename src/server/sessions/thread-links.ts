@@ -9,6 +9,7 @@ import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { logError, safeErrorSummary } from '@/server/log';
 import { lockTarget } from '@/server/memory/versions';
+import { wakeQueueAfter } from '@/server/pipeline/queue';
 import { textArray } from '@/server/search/filters-sql';
 import {
   boundMots,
@@ -479,7 +480,7 @@ export function startThreadLinksWorker(deps: { embedder: Embedder | null }): Pro
     await boss.work(
       LIAISON_QUEUE,
       { batchSize: 1, localConcurrency: LIAISON_CONCURRENCY },
-      async ([job]) => processLinkJob(job?.data, deps),
+      wakeQueueAfter(boss, LIAISON_QUEUE, async ([job]) => processLinkJob(job?.data, deps)),
     );
   })().catch((error) => {
     globalForWorker.leonThreadLinksWorker = undefined; // un démarrage raté doit pouvoir être retenté

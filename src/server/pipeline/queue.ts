@@ -1,4 +1,4 @@
-import { PgBoss, type Queue } from 'pg-boss';
+import { PgBoss, type Queue, type Warning, type WorkHandler } from 'pg-boss';
 import { z } from 'zod';
 import { env } from '@/server/env';
 import { logError } from '@/server/log';
@@ -34,6 +34,8 @@ const QUEUE_OPTIONS: Record<string, Omit<Queue, 'name'>> = {
 // pg-boss ne change pas la politique d'une file qui existe (createQueue ne fait rien) : une file créée avec une
 // autre est retirée puis recréée. Ses jobs en attente sont perdus (ceux d'un tic : le suivant les refait) et ses
 // plannings aussi (le worker replanifie ses tics à chaque démarrage).
+// Toutes les files de Leon réveillent leurs lecteurs à chaque envoi (`notify`, voir startBoss) ; une file créée
+// avant, sans, y passe ici.
 export async function ensureQueue(
   boss: PgBoss,
   name: string,
@@ -41,7 +43,36 @@ export async function ensureQueue(
 ): Promise<void> {
   const existing = await boss.getQueue(name);
   if (existing && existing.policy !== (options.policy ?? 'standard')) await boss.deleteQueue(name);
-  await boss.createQueue(name, options);
+  else if (existing && !existing.notify) await boss.updateQueue(name, { notify: true });
+  await boss.createQueue(name, { ...options, notify: true });
+}
+
+// Avec l'écoute, une boucle de pg-boss attend 30 s après chaque job, sauf si un envoi l'a réveillée entre-temps :
+// passé une rafale, le reste de la file ne partirait plus qu'à quelques jobs toutes les 30 s. Chaque job fini
+// réveille donc les boucles de sa file, qui la relisent aussitôt. Une file vide ne lance aucun job, donc plus aucun
+// réveil : les boucles retournent à leur attente.
+export function wakeQueueAfter(
+  boss: PgBoss,
+  name: string,
+  handler: WorkHandler<unknown>,
+): WorkHandler<unknown> {
+  return async (jobs) => {
+    try {
+      return await handler(jobs);
+    } finally {
+      for (const worker of boss.getWipData())
+        if (worker.name === name) boss.notifyWorker(worker.id);
+    }
+  };
+}
+
+// Si la connexion d'écoute échoue au démarrage, pg-boss reste au sondage rapide jusqu'au prochain redémarrage et le
+// trafic de la base remonte : on le dit. Les autres alertes (requêtes lentes) portent du SQL et des valeurs de
+// jobs : on ne journalise jamais leur contenu.
+export function logBossWarning(warning: Warning): void {
+  if ((warning.data as { type?: unknown } | undefined)?.type !== 'listen_notify_unavailable')
+    return;
+  logError('pgboss.listen_unavailable', new Error(warning.message));
 }
 
 // Priorité des jobs de la file `index` (pg-boss lit d'abord la plus grande, puis le plus ancien). Une ingestion
@@ -58,8 +89,15 @@ async function startBoss(): Promise<PgBoss> {
     schema: 'pgboss',
     createSchema: false,
     max: 2, // 10 par défaut : le budget de connexions est expliqué dans db/client.ts
+    // Supabase facture le trafic sortant de la base, et les boucles qui demandaient sans arrêt « une tâche ? » en
+    // faisaient l'essentiel. Postgres réveille désormais les lecteurs quand un job arrive (connexion d'écoute à
+    // part, hors de `max`) et elles ne relisent plus qu'à 30 s. Si l'écoute échoue, pg-boss revient seul au sondage.
+    useListenNotify: true,
+    // Le passage des dépendances entre jobs relit toute la table des files : Leon n'en a pas (ni dependsOn ni flow).
+    flowIntervalSeconds: 300,
   });
   boss.on('error', (error) => logError('pgboss.error', error));
+  boss.on('warning', logBossWarning);
   await boss.start();
   for (const name of LEGACY_QUEUES) await boss.deleteQueue(name);
   for (const name of Object.values(PIPELINE_QUEUES)) {

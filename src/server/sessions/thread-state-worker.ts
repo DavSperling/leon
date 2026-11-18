@@ -14,6 +14,7 @@ import { type Llm, LlmError } from '@/server/llm/llm';
 import { modelForStep } from '@/server/llm/models';
 import { logError, safeErrorSummary } from '@/server/log';
 import { lockTarget, readLatest, writeVersion } from '@/server/memory/versions';
+import { wakeQueueAfter } from '@/server/pipeline/queue';
 import {
   epochToDate,
   LAST_TS_SQL,
@@ -495,7 +496,7 @@ export function startFilStateWorker(deps: { llm: Llm | null }): Promise<void> {
     await boss.work(
       FIL_MAJ_QUEUE,
       { batchSize: 1, localConcurrency: FIL_STATE_CONCURRENCY },
-      async ([job]) => processFilJob(job?.data, deps),
+      wakeQueueAfter(boss, FIL_MAJ_QUEUE, async ([job]) => processFilJob(job?.data, deps)),
     );
   })().catch((error) => {
     globalForWorker.leonFilStateWorker = undefined; // un démarrage raté doit pouvoir être retenté

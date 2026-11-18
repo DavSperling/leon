@@ -7,9 +7,10 @@ import { env } from '../env';
 const globalForPool = globalThis as { leonPool?: Pool };
 
 // Supabase en mode session refuse le 16e client d'un même rôle (EMAXCONNSESSION), et une mise en ligne fait
-// tourner deux instances : 5 ici et 2 pour pg-boss (pipeline/queue.ts), soit 14 au plus pendant le recouvrement.
+// tourner deux instances : 4 ici, 2 pour pg-boss et 1 pour son écoute (pipeline/queue.ts), soit 7 par instance et
+// 14 au plus pendant le recouvrement.
 // shortcut: taillé pour la taille de pool par défaut de Supabase (15), à relever avec elle.
-globalForPool.leonPool ??= new Pool({ connectionString: env.DATABASE_URL, max: 5 });
+globalForPool.leonPool ??= new Pool({ connectionString: env.DATABASE_URL, max: 4 });
 export const pool = globalForPool.leonPool;
 
 export const db = drizzle({ client: pool });

@@ -33,7 +33,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('./resume-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./resume-queue')>()),
   enqueueResume: mocks.enqueueResume,
-  getResumeBoss: async () => ({ work: mocks.work }),
+  getResumeBoss: async () => ({ work: mocks.work, getWipData: () => [] }),
 }));
 vi.mock('./threads-queue', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./threads-queue')>()),

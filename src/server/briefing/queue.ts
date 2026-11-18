@@ -7,7 +7,7 @@ import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
-import { getBoss } from '@/server/pipeline/queue';
+import { ensureQueue, getBoss } from '@/server/pipeline/queue';
 
 // Les files du point du matin (T13), à côté de celles de l'indexation (pipeline/queue.ts) : `point-refresh` refait
 // le point d'un utilisateur sur un projet, `point-matin` est le tic de 6 h (worker.ts). Ce module ne dépend d'aucun
@@ -59,17 +59,17 @@ export const briefingKey = (job: BriefingJob): string =>
 // compile pas.
 const GITHUB = 'github' satisfies SourceKind;
 
-// Les files sont créées une fois par processus (createQueue ne fait rien quand elles existent). Sur globalThis :
+// Les files sont créées ou mises à jour une fois par processus (ensureQueue). Sur globalThis :
 // le rechargement à chaud de Next réimporte ce module.
 const globalForBriefing = globalThis as typeof globalThis & { leonBriefingBoss?: Promise<PgBoss> };
 
 export function getBriefingBoss(): Promise<PgBoss> {
   globalForBriefing.leonBriefingBoss ??= (async () => {
     const boss = await getBoss();
-    await boss.createQueue(BRIEFING_QUEUES.refresh, REFRESH_QUEUE);
-    await boss.createQueue(BRIEFING_QUEUES.morning, MORNING_QUEUE);
-    await boss.createQueue(BRIEFING_QUEUES.about, REFRESH_QUEUE);
-    await boss.createQueue(BRIEFING_QUEUES.agenda, REFRESH_QUEUE);
+    await ensureQueue(boss, BRIEFING_QUEUES.refresh, REFRESH_QUEUE);
+    await ensureQueue(boss, BRIEFING_QUEUES.morning, MORNING_QUEUE);
+    await ensureQueue(boss, BRIEFING_QUEUES.about, REFRESH_QUEUE);
+    await ensureQueue(boss, BRIEFING_QUEUES.agenda, REFRESH_QUEUE);
     return boss;
   })().catch((error) => {
     globalForBriefing.leonBriefingBoss = undefined; // un démarrage raté doit pouvoir être retenté
@@ -96,12 +96,14 @@ export async function enqueueBriefingRefresh(
 // Le point doit être refait maintenant (la lecture n'en a trouvé aucun de montrable) : un recalcul déjà en attente
 // pour la même clé, qu'un signal a mis dans 30 minutes, est avancé à maintenant ; sinon un recalcul est mis en file
 // tout de suite. Un `send` serait ignoré par la file (`stately`) tant que le recalcul retardé attend.
+// `startAfter: 0` : maintenant à l'horloge de la base, qui décide du réveil des lecteurs (une horloge du serveur en
+// avance les laisserait dormir 30 s).
 export async function requestBriefingRefreshNow(job: BriefingJob): Promise<void> {
   const data = BriefingJobSchema.parse(job);
   const boss = await getBriefingBoss();
   await boss.upsert(BRIEFING_QUEUES.refresh, data, {
     singletonKey: briefingKey(data),
-    startAfter: new Date(),
+    startAfter: 0,
   });
 }
 

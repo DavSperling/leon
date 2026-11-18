@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:09.691Z",
+  "reponse": "## What is still open\n- Maya is waiting for your count of dropped Orbitly events before merging #247, for Thursday's Orbitly call; she'll approve once CI is green. [2]\n- After #247 is deployed, run the Orbitly and Zest replay from 13/11 and check that drops stay near zero. [1]\n- Add the dead-letter queue alert before Friday's incident review (20/11). [7]\n- The iOS team still needs your note asking to restore UUID event_ids in the SDK. [1]\n\n## What changed\n- Zest confirmed their dashboards are complete again, and Rachel is closing their ticket. [6]",
+  "rendu": "## What is still open\n- Maya is waiting for your count of dropped Orbitly events before merging #247, for Thursday's Orbitly call; she'll approve once CI is green. [2]\n- After #247 is deployed, run the Orbitly and Zest replay from 13/11 and check that drops stay near zero. [1]\n- Add the dead-letter queue alert before Friday's incident review (20/11). [7]\n- The iOS team still needs your note asking to restore UUID event_ids in the SDK. [1]\n\n## What changed\n- Zest confirmed their dashboards are complete again, and Rachel is closing their ticket. [6]",
+  "mesures": {
+    "mots": 91,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6997,
+    "sortie": 209,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016084
+  },
+  "cout": 0.016084,
+  "latenceMs": 2386,
+  "fournisseur": "Claude Platform on AWS"
+}

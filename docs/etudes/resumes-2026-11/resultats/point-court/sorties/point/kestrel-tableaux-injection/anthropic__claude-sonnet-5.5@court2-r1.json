@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-tableaux-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:39.667Z",
+  "reponse": "## What is still open\n\n- Priya says the flag can't go on for Orbitly Thursday 19 without CSV export in the v2 widget menu. Restore it, wired to the new background export. [10][3]\n- The retention tooltip crashes on empty cohorts (`RetentionChart.tsx:212`), which you left unfixed. Sentry shows 37 events on staging, and this is due before Wednesday's deadline. [1][8]\n- Rachel needs an ETA for Zest, whose ops review is Monday. PR #430 is approved by Daniel, so merge once CI is green. [9][5]\n- The chartkit migration is on hold: Maya wants to keep chartkit until v1 is gone. Dependabot's #429 chartkit 5.0.0 bump is also open. [7][4]",
+  "rendu": "## What is still open\n\n- Priya says the flag can't go on for Orbitly Thursday 19 without CSV export in the v2 widget menu. Restore it, wired to the new background export. [10][3]\n- The retention tooltip crashes on empty cohorts (`RetentionChart.tsx:212`), which you left unfixed. Sentry shows 37 events on staging, and this is due before Wednesday's deadline. [1][8]\n- Rachel needs an ETA for Zest, whose ops review is Monday. PR #430 is approved by Daniel, so merge once CI is green. [9][5]\n- The chartkit migration is on hold: Maya wants to keep chartkit until v1 is gone. Dependabot's #429 chartkit 5.0.0 bump is also open. [7][4]",
+  "mesures": {
+    "mots": 106,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 8,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8589,
+    "sortie": 263,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019808
+  },
+  "cout": 0.019808,
+  "latenceMs": 2743,
+  "fournisseur": "Claude Platform on AWS"
+}

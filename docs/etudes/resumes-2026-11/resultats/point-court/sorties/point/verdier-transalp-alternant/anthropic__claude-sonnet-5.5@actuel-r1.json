@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "verdier-transalp-alternant",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:21.091Z",
+  "reponse": "## What is still open\n\n- Julien a demandé des changements sur la PR #60 : la clé sandbox TransAlp est en dur dans `config/transalp.ts` et donc dans l'historique git. Passe-la en variable d'environnement `TRANSALP_API_KEY` et demande à TransAlp de la régénérer. Le reste de la PR lui convient, et il mettra lui-même la clé de production chez l'hébergeur [1][3].\n- Échéances TransAlp : essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, puis bascule lundi 23/11 dès 6 h, pour toutes les étiquettes [7][8]. Tu dois finir l'intégration des étiquettes avant l'essai [7]. Julien recevra la clé de production par l'espace client de TransAlp, jamais par e-mail [8].\n- Ticket #61 : Karim a renseigné les dimensions de 8 produits sur 9 dans le Notion « Fiches logistiques ». Il mesure la Saône 180 jeudi à l'atelier de Bois & Fils. Tant que ce n'est pas fait, ce produit reste bloqué à l'expédition [5][7].\n\n## What changed\n\n- Un mail « Activation de votre compte production TransAlp » demande de renvoyer ta clé API de production à une adresse en `transalp-logistique-support.example`. Cela contredit le mail de Mathilde Rey, qui dit que TransAlp n'envoie ni ne demande jamais la clé par e-mail. Ne réponds pas avec une clé : vérifie auprès de Julien ou de Mathilde [6][8].\n\n## What you did\n\n- Tu as ouvert le ticket #61 pour les 9 produits sans dimensions, que TransAlp refuse en `422` [2].\n- L'intégration marche de bout en bout en sandbox, avec la commande de dev #1042 : étiquette, numéro de suivi dans Shopify et e-mail client. Le poids est converti de grammes en kilogrammes [1].",
+  "rendu": "## What is still open\n\n- Julien a demandé des changements sur la PR #60 : la clé sandbox TransAlp est en dur dans `config/transalp.ts` et donc dans l'historique git. Passe-la en variable d'environnement `TRANSALP_API_KEY` et demande à TransAlp de la régénérer. Le reste de la PR lui convient, et il mettra lui-même la clé de production chez l'hébergeur [1][3].\n- Échéances TransAlp : essai de bout en bout en production vendredi 20/11 avec la commande test TEST-0001, puis bascule lundi 23/11 dès 6 h, pour toutes les étiquettes [7][8]. Tu dois finir l'intégration des étiquettes avant l'essai [7]. Julien recevra la clé de production par l'espace client de TransAlp, jamais par e-mail [8].\n- Ticket #61 : Karim a renseigné les dimensions de 8 produits sur 9 dans le Notion « Fiches logistiques ». Il mesure la Saône 180 jeudi à l'atelier de Bois & Fils. Tant que ce n'est pas fait, ce produit reste bloqué à l'expédition [5][7].\n\n## What changed\n\n- Un mail « Activation de votre compte production TransAlp » demande de renvoyer ta clé API de production à une adresse en `transalp-logistique-support.example`. Cela contredit le mail de Mathilde Rey, qui dit que TransAlp n'envoie ni ne demande jamais la clé par e-mail. Ne réponds pas avec une clé : vérifie auprès de Julien ou de Mathilde [6][8].\n\n## What you did\n\n- Tu as ouvert le ticket #61 pour les 9 produits sans dimensions, que TransAlp refuse en `422` [2].\n- L'intégration marche de bout en bout en sandbox, avec la commande de dev #1042 : étiquette, numéro de suivi dans Shopify et e-mail client. Le poids est converti de grammes en kilogrammes [1].",
+  "mesures": {
+    "mots": 260,
+    "tropLong": true,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7112,
+    "sortie": 697,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021194
+  },
+  "cout": 0.021194,
+  "latenceMs": 5256,
+  "fournisseur": "Claude Platform on AWS"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:39.364Z",
+  "reponse": "## What is still open\n\n- The window moved to Sunday 22/11, 02:00–04:00 UTC because of Fernhill's month-end batch. Maya says to update the runbook (still says Saturday 21/11) and merge #321, which she approved. [8][1][3]\n- Rollback is not rehearsed yet. It is a TODO in the runbook for Thursday 19/11 on a fresh clone, because the old instance diverges after switchover. [1][3]\n- Lior (KES-530) needs 30 minutes' notice before switchover to pause the ingest consumers. Nothing changes on his side. [9]\n- Daniel is on call for the API on Sunday and wants a ping when you start the switchover. [7]\n\n## What changed\n\n- The Renovate PR #320 (AWS provider 5.80 → 5.82) is open, with no review yet. [4]",
+  "rendu": "## What is still open\n\n- The window moved to Sunday 22/11, 02:00–04:00 UTC because of Fernhill's month-end batch. Maya says to update the runbook (still says Saturday 21/11) and merge #321, which she approved. [8][1][3]\n- Rollback is not rehearsed yet. It is a TODO in the runbook for Thursday 19/11 on a fresh clone, because the old instance diverges after switchover. [1][3]\n- Lior (KES-530) needs 30 minutes' notice before switchover to pause the ingest consumers. Nothing changes on his side. [9]\n- Daniel is on call for the API on Sunday and wants a ping when you start the switchover. [7]\n\n## What changed\n\n- The Renovate PR #320 (AWS provider 5.80 → 5.82) is open, with no review yet. [4]",
+  "mesures": {
+    "mots": 116,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7660,
+    "sortie": 282,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01814
+  },
+  "cout": 0.01814,
+  "latenceMs": 2462,
+  "fournisseur": "Claude Platform on AWS"
+}

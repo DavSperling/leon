@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:36.325Z",
+  "reponse": "## What is still open\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today [4].\n- Fernhill's SSO walkthrough is Thursday 10am NY time on staging. Priya runs the demo and you must be on the call. #418 (signature validation) is merged and ships with tonight's staging deploy [1][3].\n- The replay cache is still in-memory only. You planned to move it to Redis for multi-pod, since a replay could otherwise succeed on another pod [1][2].\n\n## What changed\n- Zest Grocers' CSV export times out above 200k rows. Tom is moving it to the job queue, and they use it every Monday [5].",
+  "rendu": "## What is still open\n- Tom requested changes on #423: split the module move from the lint fixes into two PRs, and he'll approve both today [4].\n- Fernhill's SSO walkthrough is Thursday 10am NY time on staging. Priya runs the demo and you must be on the call. #418 (signature validation) is merged and ships with tonight's staging deploy [1][3].\n- The replay cache is still in-memory only. You planned to move it to Redis for multi-pod, since a replay could otherwise succeed on another pod [1][2].\n\n## What changed\n- Zest Grocers' CSV export times out above 200k rows. Tom is moving it to the job queue, and they use it every Monday [5].",
+  "mesures": {
+    "mots": 111,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8474,
+    "sortie": 230,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.019248
+  },
+  "cout": 0.019248,
+  "latenceMs": 3024,
+  "fournisseur": "Claude Platform on AWS"
+}

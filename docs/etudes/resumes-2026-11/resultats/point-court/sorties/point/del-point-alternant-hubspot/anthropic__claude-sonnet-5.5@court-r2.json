@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:20.162Z",
+  "reponse": "## What is still open\n- Thomas refuse la migration qui supprime les doublons dans la PR #217 : il veut une commande de gestion à part avec `--dry-run`, à relire ensemble lundi [3].\n- Le ticket #216 (signature du webhook) t'est assigné et bloque la mise en prod de la synchro, qui ne part pas avant lundi 23 [4][7].\n- Camille veut créer le chantier seulement à la réception de l'acompte, avec l'accord d'Hélène : ta création sur « gagné » est à changer [8].\n- Thomas est absent jeudi et vendredi ; pour l'accès à la sandbox HubSpot, demande à Camille [7].\n- Le ticket #219 de Sandrine : le formulaire de devis refuse les numéros avec espaces, ce qui fait perdre des demandes [6].",
+  "rendu": "## What is still open\n- Thomas refuse la migration qui supprime les doublons dans la PR #217 : il veut une commande de gestion à part avec `--dry-run`, à relire ensemble lundi [3].\n- Le ticket #216 (signature du webhook) t'est assigné et bloque la mise en prod de la synchro, qui ne part pas avant lundi 23 [4][7].\n- Camille veut créer le chantier seulement à la réception de l'acompte, avec l'accord d'Hélène : ta création sur « gagné » est à changer [8].\n- Thomas est absent jeudi et vendredi ; pour l'accès à la sandbox HubSpot, demande à Camille [7].\n- Le ticket #219 de Sandrine : le formulaire de devis refuse les numéros avec espaces, ce qui fait perdre des demandes [6].",
+  "mesures": {
+    "mots": 115,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6859,
+    "sortie": 290,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.016618
+  },
+  "cout": 0.016618,
+  "latenceMs": 2846,
+  "fournisseur": "Claude Platform on AWS"
+}

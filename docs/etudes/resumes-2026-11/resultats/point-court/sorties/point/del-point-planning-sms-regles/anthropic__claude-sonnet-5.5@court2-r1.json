@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 1,
+  "date": "2026-11-18T19:12:51.642Z",
+  "reponse": "## What is still open\n\n- Les SMS de rappel J-1 partent encore à 9h au lieu de 8h : il faut les corriger avant l'envoi de mercredi 18h, sinon ça recommence jeudi. Lucas bloque #214 tant que `rappels/sms.py` (2 lignes) n'est pas corrigé, car sa réécriture n'arrive que le 30/11 [3][4].\n- Après la fusion de #214, lance `reprise_heure_hiver` sans `--dry-run` pour décaler 41 interventions de +1 h, pas avant [1].\n- Sandrine attend ton signal pour savoir quand les SMS seront bons : Peltier, Bréhier et Hervé ont noté 9h, elle les rappelle demain à la première heure [7].\n- Verrouille dans l'admin le chantier Le Floch (CH-2604) du 8/12, pour l'audit RGE demandé par Franck, avant vendredi [2].\n- #219 : le formulaire de devis refuse les numéros avec espaces, deux clients ont appelé, ce qui fait perdre des demandes [6].\n\n## What changed\n\n- Pillow est monté en 11.0.0 pour une vulnérabilité, avec le découpage des réglages en base/dev/prod, sur `thomas/settings-split` [2].",
+  "rendu": "## What is still open\n\n- Les SMS de rappel J-1 partent encore à 9h au lieu de 8h : il faut les corriger avant l'envoi de mercredi 18h, sinon ça recommence jeudi. Lucas bloque #214 tant que `rappels/sms.py` (2 lignes) n'est pas corrigé, car sa réécriture n'arrive que le 30/11 [3][4].\n- Après la fusion de #214, lance `reprise_heure_hiver` sans `--dry-run` pour décaler 41 interventions de +1 h, pas avant [1].\n- Sandrine attend ton signal pour savoir quand les SMS seront bons : Peltier, Bréhier et Hervé ont noté 9h, elle les rappelle demain à la première heure [7].\n- Verrouille dans l'admin le chantier Le Floch (CH-2604) du 8/12, pour l'audit RGE demandé par Franck, avant vendredi [2].\n- #219 : le formulaire de devis refuse les numéros avec espaces, deux clients ont appelé, ce qui fait perdre des demandes [6].\n\n## What changed\n\n- Pillow est monté en 11.0.0 pour une vulnérabilité, avec le découpage des réglages en base/dev/prod, sur `thomas/settings-split` [2].",
+  "mesures": {
+    "mots": 155,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9089,
+    "sortie": 448,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.022658
+  },
+  "cout": 0.022658,
+  "latenceMs": 3540,
+  "fournisseur": "Claude Platform on AWS"
+}

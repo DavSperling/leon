@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:32.833Z",
+  "reponse": "## What is still open\n\n- Die Aufwandsschätzung zur Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Sabine Kranich und Thomas sein. Am Freitag um 14 Uhr geht Frau Kranich alles mit dir durch [5]. Deine Schätzung von 15 PT und dem Go-live am 1. April 2027 ist überholt: Jonas stellt fest, dass `/api/v1/auftraege` keine Mandantentrennung hat. Der Kunde kommt aus dem Request, für externe Händler müsste er aus dem Token abgeleitet werden. Dazu kämen die Absicherung aller Abfragen und ein Pen-Test vor dem Go-live. Er rechnet eher mit 25 PT, und der 1. April gilt nur, wenn der Spike (#222) noch im Dezember startet [2]. Die einseitige Vorlage für Thomas nennt noch 15 PT [1], sie braucht also eine Korrektur, bevor sie rausgeht.\n- Das Jahresgespräch mit Pfeiffer ist verschoben: Pfeiffer hat für Donnerstag abgesagt. Neuer Termin ist Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt 8:00 Uhr, Thomas fährt [6].\n- Frau Kranich gibt dir die Linie vor: Der Jahresbonus bleibt bei 2 %, und die API gibt es nur bei einer zugesagten Mindestabnahme von 3 Mio. € im Jahr [5]. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € netto [1]. Konditionen entscheiden Thomas und Frau Kranich, du lieferst Technik, Aufwand und Termin [1].\n\n## What changed\n\n- Jonas hat #218 gemergt (Spring Boot 3.3.6 und fünf Dependabot-Updates, CI grün) [4] sowie #214, den Export der Lieferungen nach Charge für die Rückrufprüfung [3].\n\n## What you did\n\n- Du hast für Pfeiffer die Zahlen aus dem Portal gezogen: 1.412 Aufträge, 6,1 % manuell nachbearbeitet [1]. Daraus entstand die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` ohne Konditionen. EDI (EDIFACT ORDERS) steht nur als Option „auf Anfrage“ darin, geschätzt 30 bis 40 PT [1].",
+  "rendu": "## What is still open\n\n- Die Aufwandsschätzung zur Pfeiffer-API muss bis Donnerstag, 19.11., 17 Uhr bei Sabine Kranich und Thomas sein. Am Freitag um 14 Uhr geht Frau Kranich alles mit dir durch [5]. Deine Schätzung von 15 PT und dem Go-live am 1. April 2027 ist überholt: Jonas stellt fest, dass `/api/v1/auftraege` keine Mandantentrennung hat. Der Kunde kommt aus dem Request, für externe Händler müsste er aus dem Token abgeleitet werden. Dazu kämen die Absicherung aller Abfragen und ein Pen-Test vor dem Go-live. Er rechnet eher mit 25 PT, und der 1. April gilt nur, wenn der Spike (#222) noch im Dezember startet [2]. Die einseitige Vorlage für Thomas nennt noch 15 PT [1], sie braucht also eine Korrektur, bevor sie rausgeht.\n- Das Jahresgespräch mit Pfeiffer ist verschoben: Pfeiffer hat für Donnerstag abgesagt. Neuer Termin ist Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt 8:00 Uhr, Thomas fährt [6].\n- Frau Kranich gibt dir die Linie vor: Der Jahresbonus bleibt bei 2 %, und die API gibt es nur bei einer zugesagten Mindestabnahme von 3 Mio. € im Jahr [5]. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € netto [1]. Konditionen entscheiden Thomas und Frau Kranich, du lieferst Technik, Aufwand und Termin [1].\n\n## What changed\n\n- Jonas hat #218 gemergt (Spring Boot 3.3.6 und fünf Dependabot-Updates, CI grün) [4] sowie #214, den Export der Lieferungen nach Charge für die Rückrufprüfung [3].\n\n## What you did\n\n- Du hast für Pfeiffer die Zahlen aus dem Portal gezogen: 1.412 Aufträge, 6,1 % manuell nachbearbeitet [1]. Daraus entstand die Vorlage `docs/vertrieb/pfeiffer-api-2027.md` ohne Konditionen. EDI (EDIFACT ORDERS) steht nur als Option „auf Anfrage“ darin, geschätzt 30 bis 40 PT [1].",
+  "mesures": {
+    "mots": 267,
+    "tropLong": true,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6991,
+    "sortie": 901,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.022992
+  },
+  "cout": 0.022992,
+  "latenceMs": 6559,
+  "fournisseur": "Claude Platform on AWS"
+}

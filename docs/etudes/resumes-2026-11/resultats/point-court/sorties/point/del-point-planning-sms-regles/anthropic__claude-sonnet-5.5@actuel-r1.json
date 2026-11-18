@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 1,
+  "date": "2026-11-18T19:06:32.049Z",
+  "reponse": "## What is still open\n\n- Les SMS de rappel J-1 partent encore avec l'heure fausse (9h au lieu de 8h) : 6 clients touchés hier soir, dont Mme Peltier, et Sandrine en a eu trois au téléphone [4][7]. Il faut que ce soit bon avant l'envoi de mercredi 18h, sinon ça recommence jeudi [4]. Lucas a demandé des changements sur #214 : corrige `rappels/sms.py` dans la PR (2 lignes), car sa réécriture du module n'est pas prête avant le 30/11 [3]. Tu l'avais exclu pour ne pas vous marcher dessus [1], mais Lucas accepte de gérer le rebase [3]. Sandrine attend ton signal pour savoir quand les SMS seront bons [7].\n- Après la fusion de #214, lance `reprise_heure_hiver` en prod sans `--dry-run` : elle décale de +1 h les 41 interventions que Yannick avait corrigées à la main (23 à venir, 18 passées). Pas avant la fusion, sinon le décalage part dans l'autre sens [1][3].\n- Verrouille avant vendredi le chantier Le Floch (CH-2604) du 8/12, pour l'audit RGE demandé par Franck. Tu comptais le faire à la main dans l'admin (case « verrouillée ») [2].\n\n## What changed\n\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec des espaces, deux clients ont appelé et des demandes se perdent. Ce n'est pas urgent [6].\n\n## What you did\n\n- Tu as corrigé le bug d'heure de #208 (+2 h fixe de juin) avec `timezone.localtime` dans l'ICS, l'API mobile et le rapport hebdo, avec tests. La PR #214 est ouverte [1][3].\n- Sur la branche `thomas/settings-split`, tu as découpé `settings.py` en base/dev/prod, activé HSTS à 1 an et les cookies sécurisés, et monté Pillow en 11.0.0 pour une faille connue. Le serveur garde `planif.settings` [2].",
+  "rendu": "## What is still open\n\n- Les SMS de rappel J-1 partent encore avec l'heure fausse (9h au lieu de 8h) : 6 clients touchés hier soir, dont Mme Peltier, et Sandrine en a eu trois au téléphone [4][7]. Il faut que ce soit bon avant l'envoi de mercredi 18h, sinon ça recommence jeudi [4]. Lucas a demandé des changements sur #214 : corrige `rappels/sms.py` dans la PR (2 lignes), car sa réécriture du module n'est pas prête avant le 30/11 [3]. Tu l'avais exclu pour ne pas vous marcher dessus [1], mais Lucas accepte de gérer le rebase [3]. Sandrine attend ton signal pour savoir quand les SMS seront bons [7].\n- Après la fusion de #214, lance `reprise_heure_hiver` en prod sans `--dry-run` : elle décale de +1 h les 41 interventions que Yannick avait corrigées à la main (23 à venir, 18 passées). Pas avant la fusion, sinon le décalage part dans l'autre sens [1][3].\n- Verrouille avant vendredi le chantier Le Floch (CH-2604) du 8/12, pour l'audit RGE demandé par Franck. Tu comptais le faire à la main dans l'admin (case « verrouillée ») [2].\n\n## What changed\n\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec des espaces, deux clients ont appelé et des demandes se perdent. Ce n'est pas urgent [6].\n\n## What you did\n\n- Tu as corrigé le bug d'heure de #208 (+2 h fixe de juin) avec `timezone.localtime` dans l'ICS, l'API mobile et le rapport hebdo, avec tests. La PR #214 est ouverte [1][3].\n- Sur la branche `thomas/settings-split`, tu as découpé `settings.py` en base/dev/prod, activé HSTS à 1 an et les cookies sécurisés, et monté Pillow en 11.0.0 pour une faille connue. Le serveur garde `planif.settings` [2].",
+  "mesures": {
+    "mots": 276,
+    "tropLong": true,
+    "puces": 6,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8793,
+    "sortie": 752,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.025106
+  },
+  "cout": 0.025106,
+  "latenceMs": 5770,
+  "fournisseur": "Claude Platform on AWS"
+}

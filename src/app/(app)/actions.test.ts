@@ -1,9 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSession, requireUserContext, signOutCurrentUser } from '@/server/auth/session';
+import { briefingExists, refreshBriefing } from '@/server/briefing/briefings';
+import { getLlm } from '@/server/llm/get-llm';
+import { LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
 import { fetchPassageContext } from '@/server/search/context';
 import { searchShell } from '@/server/shell/shell';
-import { previewPassageAction, searchShellAction, signOutAction } from './actions';
+import {
+  previewPassageAction,
+  refreshBriefingAction,
+  searchShellAction,
+  signOutAction,
+} from './actions';
 
 vi.mock('@/server/auth/session', () => ({
   getSession: vi.fn(),
@@ -16,6 +24,12 @@ vi.mock('@/server/shell/shell', () => ({
   searchShell: vi.fn(),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
+vi.mock('@/server/briefing/briefings', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/server/briefing/briefings')>()),
+  refreshBriefing: vi.fn(),
+  briefingExists: vi.fn(),
+}));
+vi.mock('@/server/llm/get-llm', () => ({ getLlm: vi.fn() }));
 vi.mock('next/navigation', () => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`NEXT_REDIRECT ${path}`);
@@ -166,5 +180,55 @@ describe('searchShellAction', () => {
     await expect(searchShellAction('karim')).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(searchShell).not.toHaveBeenCalled();
+  });
+});
+
+describe('refreshBriefingAction', () => {
+  const PROJECT = 'github.com/acme/leon';
+  const llm = { streamText: vi.fn(), runAgent: vi.fn() };
+
+  beforeEach(() => {
+    vi.mocked(getLlm).mockReturnValue(llm);
+    vi.mocked(briefingExists).mockResolvedValue(true);
+  });
+
+  it('ne crée pas de point pour un projet qui n’en a pas encore', async () => {
+    vi.mocked(briefingExists).mockResolvedValue(false);
+
+    expect(await refreshBriefingAction(PROJECT)).toBe('erreur');
+    expect(briefingExists).toHaveBeenCalledWith(CTX, PROJECT);
+    expect(refreshBriefing).not.toHaveBeenCalled();
+  });
+
+  it('refait le point tout de suite, sous les droits de la personne connectée, et dit s’il n’y avait rien de neuf', async () => {
+    vi.mocked(refreshBriefing).mockResolvedValueOnce('fait').mockResolvedValueOnce('rien');
+
+    expect(await refreshBriefingAction(PROJECT)).toBe('fait');
+    expect(await refreshBriefingAction(PROJECT)).toBe('rien');
+
+    expect(refreshBriefing).toHaveBeenCalledWith(CTX, PROJECT, { llm });
+  });
+
+  it('dit « plafond » quand le plafond du jour est atteint', async () => {
+    vi.mocked(refreshBriefing).mockResolvedValue('plafond');
+
+    expect(await refreshBriefingAction(PROJECT)).toBe('plafond');
+  });
+
+  it('rend « erreur » sans modèle, ou pour un projet mal formé, sans rien refaire', async () => {
+    for (const bad of [undefined, 42, '', 'pas un projet']) {
+      expect(await refreshBriefingAction(bad as never)).toBe('erreur');
+    }
+    vi.mocked(getLlm).mockReturnValue(null);
+    expect(await refreshBriefingAction(PROJECT)).toBe('erreur');
+
+    expect(refreshBriefing).not.toHaveBeenCalled();
+  });
+
+  it('rend « erreur » à une panne du modèle et la journalise', async () => {
+    vi.mocked(refreshBriefing).mockRejectedValue(new LlmError('erreur du modèle'));
+
+    expect(await refreshBriefingAction(PROJECT)).toBe('erreur');
+    expect(logError).toHaveBeenCalledWith('point.refaire', expect.any(LlmError));
   });
 });

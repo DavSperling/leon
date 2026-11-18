@@ -1,0 +1,6 @@
+{
+  "prefere": "A",
+  "raison": "A indique explicitement que #321 ne peut être fusionnée qu’après la mise à jour du runbook, même si elle contient davantage de détails superflus ; les deux versions omettent l’horaire de Paris.",
+  "aDabord": true,
+  "cout": 0.0020705
+}

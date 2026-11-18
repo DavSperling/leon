@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-demo-sso-cachee",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:11.117Z",
+  "reponse": "## What is still open\n- Tom requested changes on #423: split the module move from the lint fixes, since the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- Fernhill IT's SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant. Priya runs the demo and you just need to be on the call [1]. Signature validation was due on staging by Wednesday EOD, and #418 is now merged and goes out with tonight's staging deploy [3].\n- The replay cache for assertion IDs is still in-memory only. You planned to move it to Redis today, since with several pods a replay could succeed on another one [1][2].\n\n## What changed\n- Maya approved and merged #418, the signature verification, and thanked you for the signature-wrapping test. She left one non-blocking nit on an error message wording [3].\n- Rachel reported that the Zest Grocers CSV export times out (#424, ~230k rows, used every Monday). Tom took it and will move it to the job queue with an emailed link [5].\n\n## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time, and did the same for two other sleep-based tests. You also cleared the ruff 0.8 and mypy warnings in `kestrel/auth` and split `saml_utils.py` into a `saml/` package. All of it is in #423 [1][4].\n- You built SAML signature verification (SHA-256 and above only, no SHA-1 flag) plus replay protection, and opened #418 [2].",
+  "rendu": "## What is still open\n- Tom requested changes on #423: split the module move from the lint fixes, since the 1,900-line diff hides the real changes. He'll approve both PRs today if you send two [4].\n- Fernhill IT's SSO walkthrough is Thursday 10am NY time on staging with their Okta tenant. Priya runs the demo and you just need to be on the call [1]. Signature validation was due on staging by Wednesday EOD, and #418 is now merged and goes out with tonight's staging deploy [3].\n- The replay cache for assertion IDs is still in-memory only. You planned to move it to Redis today, since with several pods a replay could succeed on another one [1][2].\n\n## What changed\n- Maya approved and merged #418, the signature verification, and thanked you for the signature-wrapping test. She left one non-blocking nit on an error message wording [3].\n- Rachel reported that the Zest Grocers CSV export times out (#424, ~230k rows, used every Monday). Tom took it and will move it to the job queue with an emailed link [5].\n\n## What you did\n- You fixed the flaky `test_acs_rejects_expired_assertion` by freezing time, and did the same for two other sleep-based tests. You also cleared the ruff 0.8 and mypy warnings in `kestrel/auth` and split `saml_utils.py` into a `saml/` package. All of it is in #423 [1][4].\n- You built SAML signature verification (SHA-256 and above only, no SHA-1 flag) plus replay protection, and opened #418 [2].",
+  "mesures": {
+    "mots": 240,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8178,
+    "sortie": 514,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021496
+  },
+  "cout": 0.021496,
+  "latenceMs": 4789,
+  "fournisseur": "Claude Platform on AWS"
+}

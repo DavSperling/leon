@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:38.348Z",
+  "reponse": "## What is still open\n\n- Don't send the Hearthly follow-up as drafted. Sofia says CAD payouts are not Q1 (Corvane is reviewing the cross-border program, Q2 at the earliest) and asks that no date be put in writing to a prospect [6]. The draft still says \"available in Q1 2027\" [1]. CAD is a core need for Hearthly, since about 30% of their pros are in Canada [1].\n- The 15% discount needs Rachel's sign-off. She says anything above 10% requires it and wants to talk before you send numbers [3]. Your draft proposes 15% off for a 2-year commit, about $1.0M/year [1].\n- The decision date moved up. Nadia says Hearthly will decide on Wed Dec 2, not Fri Dec 4, because their board meeting moved [4]. Your action plan is built back from Dec 4 [1], so every step needs to be pulled earlier. The reference call and pricing proposal, planned for Dec 1 and Nov 30, are now tight [1][4].\n- The SIG Lite is due Mon Nov 23 and Hearthly's security team won't keep a vendor in the final round without it [4]. It's about 200 questions, and you still need to confirm with Shira that she owns it [1]. Reuse last year's answers where possible [1].\n- You still have no reference customer. Loomly and Pinecrest are off the table after the payout delay and Tradewell isn't live, so ask Rachel who you can use [1]. You can raise it in the same conversation as the discount.\n\n## What changed\n\n- Rachel and one other person viewed the Hearthly discovery call in Gong [2].",
+  "rendu": "## What is still open\n\n- Don't send the Hearthly follow-up as drafted. Sofia says CAD payouts are not Q1 (Corvane is reviewing the cross-border program, Q2 at the earliest) and asks that no date be put in writing to a prospect [6]. The draft still says \"available in Q1 2027\" [1]. CAD is a core need for Hearthly, since about 30% of their pros are in Canada [1].\n- The 15% discount needs Rachel's sign-off. She says anything above 10% requires it and wants to talk before you send numbers [3]. Your draft proposes 15% off for a 2-year commit, about $1.0M/year [1].\n- The decision date moved up. Nadia says Hearthly will decide on Wed Dec 2, not Fri Dec 4, because their board meeting moved [4]. Your action plan is built back from Dec 4 [1], so every step needs to be pulled earlier. The reference call and pricing proposal, planned for Dec 1 and Nov 30, are now tight [1][4].\n- The SIG Lite is due Mon Nov 23 and Hearthly's security team won't keep a vendor in the final round without it [4]. It's about 200 questions, and you still need to confirm with Shira that she owns it [1]. Reuse last year's answers where possible [1].\n- You still have no reference customer. Loomly and Pinecrest are off the table after the payout delay and Tradewell isn't live, so ask Rachel who you can use [1]. You can raise it in the same conversation as the discount.\n\n## What changed\n\n- Rachel and one other person viewed the Hearthly discovery call in Gong [2].",
+  "mesures": {
+    "mots": 262,
+    "tropLong": true,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5680,
+    "sortie": 545,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.01681
+  },
+  "cout": 0.01681,
+  "latenceMs": 4619,
+  "fournisseur": "Claude Platform on AWS"
+}

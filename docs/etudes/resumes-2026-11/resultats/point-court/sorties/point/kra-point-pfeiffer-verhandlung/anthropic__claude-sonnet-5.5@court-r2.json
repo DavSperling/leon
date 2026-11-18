@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 2,
+  "date": "2026-11-18T19:08:23.063Z",
+  "reponse": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die gemeinsame Runde [5].\n- Jonas hält 15 PT für zu knapp (eher 25 PT, Pen-Test nötig); der 1. April klappt nur bei Spike-Start im Dezember. Deine Vorlage nennt noch 15 PT [2][1].\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben, Abfahrt 8:00 [6].\n\n## What changed\n\n- Frau Kranich bietet die API nur gegen eine Mindestabnahme von Pfeiffer an; beim Bonus bleibt es bei 2 % [5].",
+  "rendu": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die gemeinsame Runde [5].\n- Jonas hält 15 PT für zu knapp (eher 25 PT, Pen-Test nötig); der 1. April klappt nur bei Spike-Start im Dezember. Deine Vorlage nennt noch 15 PT [2][1].\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben, Abfahrt 8:00 [6].\n\n## What changed\n\n- Frau Kranich bietet die API nur gegen eine Mindestabnahme von Pfeiffer an; beim Bonus bleibt es bei 2 % [5].",
+  "mesures": {
+    "mots": 91,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7262,
+    "sortie": 303,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017554
+  },
+  "cout": 0.017554,
+  "latenceMs": 2667,
+  "fournisseur": "Claude Platform on AWS"
+}

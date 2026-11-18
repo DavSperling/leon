@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:20.161Z",
+  "reponse": "## What is still open\n\n- Tanguy : son avis d'imposition est arrivé, le dossier peut être déposé avant le début des travaux du lundi 23 [3].\n- Peltier : le devis est signé et dans le Drive, tu peux déposer le dossier [4].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés pour le Crédit Ligérien [5].\n- Guillou : le RIB manque toujours, ta relance était prévue le 17/11 [1].\n- Morvan : dossier à déposer, travaux le 7/12, avec le renouvellement de l'attestation RGE à suivre [1].",
+  "rendu": "## What is still open\n\n- Tanguy : son avis d'imposition est arrivé, le dossier peut être déposé avant le début des travaux du lundi 23 [3].\n- Peltier : le devis est signé et dans le Drive, tu peux déposer le dossier [4].\n- Patrick Hamon attend avant le 25/11 la liste des dossiers déposés pour le Crédit Ligérien [5].\n- Guillou : le RIB manque toujours, ta relance était prévue le 17/11 [1].\n- Morvan : dossier à déposer, travaux le 7/12, avec le renouvellement de l'attestation RGE à suivre [1].",
+  "mesures": {
+    "mots": 83,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5812,
+    "sortie": 220,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.013824
+  },
+  "cout": 0.013824,
+  "latenceMs": 2886,
+  "fournisseur": "Claude Platform on AWS"
+}

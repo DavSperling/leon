@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:42.018Z",
+  "reponse": "## What is still open\n\n- Elad approved #1412 but wants one change before merge: an audit event per batch (id range, count, from/to KEK), not only the final summary, because assessors need per-batch traceability under 10.2 [3]. Avi will LGTM once that is in and wants it merged by Monday so the run can happen Tuesday night [3]. Your current job emits a single end-of-run audit record [1].\n- Prod window is confirmed: Tue 24/11, 22:00–23:30 IL time, with Elad on call. The fallback is Thu 26/11, because the PCI change freeze starts Tue 1/12 [6].\n- Shira needs two things by Wed 25/11, the day after the run: the export of the rotation job's audit log for the prod run and the signed change ticket. Screenshots won't be accepted by the assessor, Victor at Ardent [5]. The per-batch audit events feed directly into that export.\n- The runbook's on-call field is still a placeholder. Elad is now named for the window [2][6].\n\n## What you did\n\n- Built the KEK rotation job for card tokens (PCI 3.7.4) and opened #1412 [1]. A staging dry run initially failed on 2,317 pre-2023 v1 tokens. You fixed it by mapping v1 explicitly to `vault-kek-2022`, and the rerun showed 0 failures out of 1,204,880 [1].\n- Decided that the old keys `vault-kek-2025` and `vault-kek-2022` stay decrypt-only for 30 days and are not deleted. Deletion is a separate decision with Shira [1].\n- Wrote the prod runbook `docs/runbooks/vault-kek-rotation.md`, including the failure and rollback section [2].",
+  "rendu": "## What is still open\n\n- Elad approved #1412 but wants one change before merge: an audit event per batch (id range, count, from/to KEK), not only the final summary, because assessors need per-batch traceability under 10.2 [3]. Avi will LGTM once that is in and wants it merged by Monday so the run can happen Tuesday night [3]. Your current job emits a single end-of-run audit record [1].\n- Prod window is confirmed: Tue 24/11, 22:00–23:30 IL time, with Elad on call. The fallback is Thu 26/11, because the PCI change freeze starts Tue 1/12 [6].\n- Shira needs two things by Wed 25/11, the day after the run: the export of the rotation job's audit log for the prod run and the signed change ticket. Screenshots won't be accepted by the assessor, Victor at Ardent [5]. The per-batch audit events feed directly into that export.\n- The runbook's on-call field is still a placeholder. Elad is now named for the window [2][6].\n\n## What you did\n\n- Built the KEK rotation job for card tokens (PCI 3.7.4) and opened #1412 [1]. A staging dry run initially failed on 2,317 pre-2023 v1 tokens. You fixed it by mapping v1 explicitly to `vault-kek-2022`, and the rerun showed 0 failures out of 1,204,880 [1].\n- Decided that the old keys `vault-kek-2025` and `vault-kek-2022` stay decrypt-only for 30 days and are not deleted. Deletion is a separate decision with Shira [1].\n- Wrote the prod runbook `docs/runbooks/vault-kek-rotation.md`, including the failure and rollback section [2].",
+  "mesures": {
+    "mots": 243,
+    "tropLong": false,
+    "puces": 7,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7704,
+    "sortie": 575,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.021158
+  },
+  "cout": 0.021158,
+  "latenceMs": 4498,
+  "fournisseur": "Claude Platform on AWS"
+}

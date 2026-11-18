@@ -1,0 +1,6 @@
+{
+  "prefere": "A",
+  "raison": "A inclut tous les points importants, alors que B omet le résultat du dry run en staging (0 échec après le mapping des 2 317 tokens v1), même si A contient un élément indésirable sur Dependabot tokio.",
+  "aDabord": true,
+  "cout": 0.0074415
+}

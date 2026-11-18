@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-pg17-fenetre-deplacee",
+  "modele": "anthropic/claude-sonnet-5.5@actuel",
+  "rep": 2,
+  "date": "2026-11-18T19:06:15.419Z",
+  "reponse": "## What is still open\n\n- The cutover window has moved to Sunday 22/11, 02:00–04:00 UTC, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has told the CSMs. Update the runbook, which still says Saturday 21/11, then merge #321, which she approved [8][3][10]. The runbook date is still Saturday in your session [1].\n- Rollback is not rehearsed yet. You decided it needs a rehearsal on a fresh clone on Thursday 19/11, and it is only a TODO in the runbook. The old blue instance diverges right after switchover, so rolling back means data loss or replaying writes [1][3].\n- Two people need a heads-up at switchover time. Lior wants 30 minutes' notice to pause the ingest consumers (nothing else changes on his side) [9]. Daniel will be on call for the API side on Sunday and asked to be pinged when you start [7].\n\n## What changed\n\n- Maya approved #321 (\"good catch on the replica\") and asked you not to merge before the window is confirmed with Fernhill. That is now done [3][8].\n- Renovate opened #320, an AWS provider bump from 5.80 to 5.82. Nothing suggests it is urgent [4].\n\n## What you did\n\n- You prepared the prod PG15 → PG17 cutover with RDS blue/green: the Terraform, the replica fix so it follows the blue/green instead of being recreated, and the runbook, all in #321 [1].\n- You rehearsed the cutover on a clone of last night's snapshot: green was ready after 52 minutes and write downtime was 74 seconds, with no row-count mismatch. The clone has been torn down [1].",
+  "rendu": "## What is still open\n\n- The cutover window has moved to Sunday 22/11, 02:00–04:00 UTC, because Fernhill's month-end batch runs Saturday night until ~06:00 UTC. Maya has told the CSMs. Update the runbook, which still says Saturday 21/11, then merge #321, which she approved [8][3][10]. The runbook date is still Saturday in your session [1].\n- Rollback is not rehearsed yet. You decided it needs a rehearsal on a fresh clone on Thursday 19/11, and it is only a TODO in the runbook. The old blue instance diverges right after switchover, so rolling back means data loss or replaying writes [1][3].\n- Two people need a heads-up at switchover time. Lior wants 30 minutes' notice to pause the ingest consumers (nothing else changes on his side) [9]. Daniel will be on call for the API side on Sunday and asked to be pinged when you start [7].\n\n## What changed\n\n- Maya approved #321 (\"good catch on the replica\") and asked you not to merge before the window is confirmed with Fernhill. That is now done [3][8].\n- Renovate opened #320, an AWS provider bump from 5.80 to 5.82. Nothing suggests it is urgent [4].\n\n## What you did\n\n- You prepared the prod PG15 → PG17 cutover with RDS blue/green: the Terraform, the replica fix so it follows the blue/green instead of being recreated, and the runbook, all in #321 [1].\n- You rehearsed the cutover on a clone of last night's snapshot: green was ready after 52 minutes and write downtime was 74 seconds, with no row-count mismatch. The clone has been torn down [1].",
+  "mesures": {
+    "mots": 257,
+    "tropLong": true,
+    "puces": 7,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 7,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7364,
+    "sortie": 566,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.020388
+  },
+  "cout": 0.020388,
+  "latenceMs": 5103,
+  "fournisseur": "Claude Platform on AWS"
+}

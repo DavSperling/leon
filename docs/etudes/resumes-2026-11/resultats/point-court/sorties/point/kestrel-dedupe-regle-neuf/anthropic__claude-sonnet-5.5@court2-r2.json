@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kestrel-dedupe-regle-neuf",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:36.324Z",
+  "reponse": "## What is still open\n\n- Maya needs the number of Orbitly events lost since #240 before Thursday's Orbitly call: about 1.18M legitimate events, ≈8.1% of their iOS volume, plus 4,352 genuine replays correctly dropped [2][1].\n- PR #247 (dedupe keyed on project, device and event_id) awaits Maya's approval once CI is green. Once it is deployed, run the replay from landing for Orbitly and Zest from 13/11 (about 40 minutes), then check the drop counter [1][2].\n- Before Friday's incident review (20/11), you must add an alert when the ingest dead-letter queue goes above 1,000 messages [7].\n- The iOS team still needs your note asking to restore UUIDs for event_id in SDK 3.2.1; the 3.2.0 counters caused the drops [1].\n\n## What changed\n\n- Zest confirmed their dashboards are complete again, and Rachel is closing their Zendesk ticket [6].",
+  "rendu": "## What is still open\n\n- Maya needs the number of Orbitly events lost since #240 before Thursday's Orbitly call: about 1.18M legitimate events, ≈8.1% of their iOS volume, plus 4,352 genuine replays correctly dropped [2][1].\n- PR #247 (dedupe keyed on project, device and event_id) awaits Maya's approval once CI is green. Once it is deployed, run the replay from landing for Orbitly and Zest from 13/11 (about 40 minutes), then check the drop counter [1][2].\n- Before Friday's incident review (20/11), you must add an alert when the ingest dead-letter queue goes above 1,000 messages [7].\n- The iOS team still needs your note asking to restore UUIDs for event_id in SDK 3.2.1; the 3.2.0 counters caused the drops [1].\n\n## What changed\n\n- Zest confirmed their dashboards are complete again, and Rachel is closing their Zendesk ticket [6].",
+  "mesures": {
+    "mots": 134,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7022,
+    "sortie": 329,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.017334
+  },
+  "cout": 0.017334,
+  "latenceMs": 3241,
+  "fournisseur": "Claude Platform on AWS"
+}

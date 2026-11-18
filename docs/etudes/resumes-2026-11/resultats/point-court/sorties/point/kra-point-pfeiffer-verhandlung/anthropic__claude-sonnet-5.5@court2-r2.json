@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5@court2",
+  "rep": 2,
+  "date": "2026-11-18T19:12:52.559Z",
+  "reponse": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr Besprechung bei ihr. Sie bietet die API nur gegen 3 Mio. € Mindestabnahme pro Jahr an, der Bonus bleibt bei 2 % [5].\n- Die Schätzung in der Vorlage (15 PT, Go-live 1. April 2027) ist überholt: Jonas sieht keine Mandantentrennung in `/api/v1/auftraege`, rechnet mit eher 25 PT inkl. Pen-Test, und der 1. April hält nur bei Spike-Start im Dezember. Vorlage vor dem Versand an Thomas anpassen [2].\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben (statt Donnerstag), Abfahrt 8:00 Uhr bei uns mit Thomas [6].",
+  "rendu": "## What is still open\n\n- Frau Kranich will deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr Besprechung bei ihr. Sie bietet die API nur gegen 3 Mio. € Mindestabnahme pro Jahr an, der Bonus bleibt bei 2 % [5].\n- Die Schätzung in der Vorlage (15 PT, Go-live 1. April 2027) ist überholt: Jonas sieht keine Mandantentrennung in `/api/v1/auftraege`, rechnet mit eher 25 PT inkl. Pen-Test, und der 1. April hält nur bei Spike-Start im Dezember. Vorlage vor dem Versand an Thomas anpassen [2].\n- Das Pfeiffer-Gespräch ist auf Montag, 23.11., 10:00 Uhr in Nürnberg verschoben (statt Donnerstag), Abfahrt 8:00 Uhr bei uns mit Thomas [6].",
+  "mesures": {
+    "mots": 109,
+    "tropLong": false,
+    "puces": 3,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 3,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 371,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.018284
+  },
+  "cout": 0.018284,
+  "latenceMs": 2999,
+  "fournisseur": "Claude Platform on AWS"
+}

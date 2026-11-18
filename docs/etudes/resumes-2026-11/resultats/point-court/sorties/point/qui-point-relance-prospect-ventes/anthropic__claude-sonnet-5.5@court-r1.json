@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5@court",
+  "rep": 1,
+  "date": "2026-11-18T19:08:25.732Z",
+  "reponse": "## What is still open\n- Nadia moved Hearthly's decision to Wed Dec 2; the SIG Lite is still due Mon Nov 23, and you still need to ask Shira to fill it. [4][1]\n- Don't send the follow-up email as drafted: Sofia says CAD payouts are not Q1 (Q2 at the earliest) and asks for no date in writing. [6][1]\n- Rachel must sign off on any discount above 10% before you send numbers, so your 15% offer needs her approval first. [3][1]\n- The reference customer is still undecided; you planned to ask Rachel who you can use. [1]\n\n## What changed\n- Your action plan still works back from Dec 4, so its dates need redoing for Dec 2. [4][1]",
+  "rendu": "## What is still open\n- Nadia moved Hearthly's decision to Wed Dec 2; the SIG Lite is still due Mon Nov 23, and you still need to ask Shira to fill it. [4][1]\n- Don't send the follow-up email as drafted: Sofia says CAD payouts are not Q1 (Q2 at the earliest) and asks for no date in writing. [6][1]\n- Rachel must sign off on any discount above 10% before you send numbers, so your 15% offer needs her approval first. [3][1]\n- The reference customer is still undecided; you planned to ask Rachel who you can use. [1]\n\n## What changed\n- Your action plan still works back from Dec 4, so its dates need redoing for Dec 2. [4][1]",
+  "mesures": {
+    "mots": 116,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5951,
+    "sortie": 249,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.014392
+  },
+  "cout": 0.014392,
+  "latenceMs": 2715,
+  "fournisseur": "Claude Platform on AWS"
+}

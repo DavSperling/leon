@@ -13,8 +13,12 @@ import type { BriefingExcerpt, BriefingMaterial } from './gather';
 // capté ; la matière va dans le message de l'utilisateur, entre balises, derrière la ligne de garde, comme pour la
 // réponse en tête et la discussion. Module pur : ni base, ni réseau.
 
-// Contraintes globales du plan : 250 mots au plus.
-export const BRIEFING_MAX_WORDS = 250;
+// Un point se lit en un coup d'œil : à 250 mots, Sonnet en écrivait 236 en médiane, des puces de 40 mots pleines de
+// détails que la source donne déjà. À 150, avec la règle de ce qu'une puce garde : 124 mots, 90 % de l'essentiel
+// gardé contre 95 % ; à 120 sans chiffres ni pourquoi, il en perdait trop (docs/etudes/resumes-2026-11/point-court.md).
+export const BRIEFING_MAX_WORDS = 150;
+// Au plus, dans tout le point : une puce par sujet, les plus importants seulement.
+export const BRIEFING_MAX_BULLETS = 5;
 // En anglais, quelle que soit la langue du texte : l'écran les traduit (home.tsx). Ce qui reste ouvert d'abord : la
 // première ligne est ce qu'il doit savoir s'il n'en lit qu'une, et c'est presque toujours ce qui l'attend (dans
 // l'ordre d'avant, la bonne première ligne passait de 22 % à 56 % des points, étude docs/etudes/resumes-2026-11).
@@ -22,7 +26,7 @@ export const BRIEFING_SECTIONS = ['What is still open', 'What changed', 'What yo
 // Un titre de ticket ou de session peut être très long : il n'a pas à manger la place de la matière.
 const TITLE_MAX_CHARS = 200;
 const SOURCE_TITLE_MAX_CHARS = 120;
-// Ce que le modèle écrit, au plus (250 mots en font environ 1 700) : le reste est coupé.
+// Ce que le modèle écrit, au plus (120 mots en font environ 850) : le reste est coupé.
 const BODY_MAX_CHARS = 5000;
 // Un lien plus long n'est pas recopié dans la liste des sources : la liste doit tenir sous BRIEFING_RENDER_MAX_CHARS.
 const SOURCE_URL_MAX_CHARS = 200;
@@ -67,11 +71,12 @@ Comment écrire :
 - Tu t'adresses à lui directement, à la deuxième personne (en français, tutoie-le) : ce qui reste ouvert (ce que ses sessions ont laissé en cours, les questions sans réponse, les tickets encore ouverts, ce qu'on attend de lui) ; ce qui a bougé depuis (demandes de fusion, tickets, messages qui le mentionnent) ; ce qu'il a fait dans ses sessions.
 - Dis le sens, pas le geste. Ne raconte pas ce qu'il a tapé ou ce que l'assistant a fait (« tu as cherché X, puis tu l'as ouvert », « tu as collé trois mails ») : lis l'ensemble de la session et dis ce que cela veut dire pour lui, pourquoi il l'a fait et ce qui en découle. Une recherche sur une offre après le message d'un recruteur, c'est un entretien qui se prépare ; trois mails collés qui disent non, ce sont trois refus, chez qui ; des questions sur une équipe, c'est qu'elle touche au poste dont il est question. Regroupe les gestes qui servent un même but en une seule puce, et nomme les choses (l'entreprise, la personne, le ticket, le poste).
 - Classe les puces de chaque partie par importance pour lui, jamais dans l'ordre chronologique ni dans l'ordre des éléments. Avant d'écrire, demande-toi ce qu'il doit savoir s'il ne lit qu'une ligne : c'est la première puce. D'abord ce qui l'engage ou engage quelqu'un envers lui (un entretien, une réponse reçue ou attendue, une échéance, une décision, une demande d'un collègue), puis ce qu'il a avancé, et en dernier la routine (un tri, un balayage, une recherche de plus, une relance), même si elle a pris l'essentiel de la session.
-- L'essentiel seulement : au plus 4 puces par partie, une par sujet, et rien qu'il pourrait ne pas lire sans rien perdre. Pas de détails d'exécution (tailles, couleurs, libellés, retouches d'interface, réglages saisis un à un, étapes intermédiaires) : le résultat, en une phrase. À importance égale, le plus récent d'abord ; ce qui date de plusieurs jours et n'a plus de suite peut disparaître.
+- Court : ${BRIEFING_MAX_BULLETS} puces au plus dans tout le point, une par sujet, chacune en une phrase de 30 mots au plus : le sujet, et ce qu'il doit faire, décider ou savoir. S'il y a plus de sujets, garde les plus importants pour lui ; les autres ne sont pas dits.
+- Dans chaque puce, ce qui la rend importante, et seulement cela : qui attend quoi de lui, l'échéance (date, heure), l'enjeu (ce qui arrive si rien n'est fait), et le chiffre ou la décision qui change ce qu'il doit faire (une remise accordée, un montant exigé, une liste incomplète, un refus). Le reste est dans la source, qu'il ouvre d'un clic : comment on en est arrivé là, l'historique, les étapes, les chiffres de contexte, les noms de fichiers, ce qu'il a fait lui-même pour y arriver. Pas de détails d'exécution (tailles, couleurs, libellés, retouches d'interface, réglages saisis un à un, étapes intermédiaires). À importance égale, le plus récent d'abord ; ce qui date de plusieurs jours et n'a plus de suite disparaît.
 - Ne dis jamais deux fois la même chose : ce qui reste ouvert n'est pas répété dans ce qu'il a fait, et une puce ne redit pas la précédente.
 - Seulement d'après les éléments fournis : rien de ce que tu sais par ailleurs. Le sens doit se lire dans les éléments (ce qu'il a écrit, collé ou demandé) ; s'il ne s'y lit pas, dis le fait sans l'inventer.
 - Après chaque affirmation, le numéro de l'élément qui la prouve, entre crochets, par exemple [2]. Seulement des numéros donnés par l'attribut n ; pour deux éléments, écris [1][3].
-- Chaque sujet n'apparaît qu'une fois dans tout le point, dans la partie où il compte le plus (le plus souvent ce qui reste ouvert) : ce qu'il a fait et ce qui en reste ouvert tiennent dans la même puce. Quand ses sessions touchent plusieurs sujets, chacun a sa puce : un seul sujet ne remplit pas le point.
+- Chaque sujet n'apparaît qu'une fois dans tout le point, dans la partie où il compte le plus (le plus souvent ce qui reste ouvert) : ce qu'il a fait et ce qui en reste ouvert tiennent dans la même puce. « What you did » n'a qu'une puce au plus, souvent aucune : un résultat qui compte et qui n'est dit nulle part ailleurs. Quand ses sessions touchent plusieurs sujets, chacun a sa puce : un seul sujet ne remplit pas le point.
 - Une <mention> qui ne s'adresse pas vraiment à lui (lettre d'information, publicité, offre commerciale ou d'emploi envoyée en masse, notification automatique) n'est rien à rapporter : laisse-la de côté, sans la signaler.
 - Une partie que rien ne remplit ne s'écrit pas, titre compris. Jamais de puce pour dire qu'il n'y a rien (« aucun changement », « rien à signaler », « seulement des newsletters »). S'il n'y a rien du tout à dire, écris seulement « Nothing to report. » (ou sa traduction), sans titre.
 

@@ -163,7 +163,8 @@ function workingDirectory(steps: Step[]): string | null {
 
 type Call = { name: string; args: Record<string, unknown> | null };
 
-// Les appels d'une étape, avec leurs `args` tels que l'étape les donne (sessionSteps les a déjà décodés).
+// Les appels d'une étape, avec leurs `args` tels que l'étape les donne (sessionSteps les a déjà décodés). Des `args`
+// en une seule chaîne JSON sont d'abord parsés.
 function calls(step: Step): Call[] {
   return (step.tool_calls ?? []).map((raw) => {
     const call = ToolCallSchema.safeParse(raw);
@@ -181,15 +182,17 @@ function calls(step: Step): Call[] {
       typeof args === 'object' && args !== null && !Array.isArray(args)
         ? (args as Record<string, unknown>)
         : null;
+    // Une chaîne qui ne se lit pas en objet (coupée ?) : un outil inconnu aussi, sinon une commande y disparaîtrait.
+    if (typeof call.data.args === 'string' && record === null) return { name: '', args: null };
     return { name: call.data.name, args: record };
   });
 }
 
 // Un appel lu dans `transcript.jsonl` (annexe 11). Toutes ses valeurs sont du texte JSON (2.31.0, où une chaîne est
 // écrite entre guillemets) : ses chaînes sont décodées, un nombre ou `true` restent des chaînes, qu'aucun lecteur
-// n'utilise. Sinon, une valeur qui commence par un guillemet (l'appel a l'air écrit en JSON, mais une valeur ne se
-// décode pas : coupée ?) le rend illisible : un outil inconnu, comme un appel hors forme (échec fermé). Sinon, la
-// forme nue de l'ancienne appli (2.0.1) : tel quel.
+// n'utilise. Sinon, une valeur, n'importe laquelle, qui commence par un guillemet (l'appel a l'air écrit en JSON,
+// mais une valeur ne se décode pas : coupée ?) le rend illisible : un outil inconnu, comme un appel hors forme (échec
+// fermé). Sinon, la forme nue de l'ancienne appli (2.0.1) : tel quel.
 // shortcut: une valeur nue de la 2.0.1 qui commence par un guillemet (`"./a b.sh" --x`) rend aussi son appel illisible,
 // donc la session externe ; à revoir si une session de la 2.0.1 se capte encore.
 function decoded(call: Call): Call {

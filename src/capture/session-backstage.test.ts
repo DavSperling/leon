@@ -271,6 +271,8 @@ describe('extractBackstage', () => {
       ['un Grep dans ~/…', 'Grep', { pattern: 'x', path: '~/clients/acme' }],
       ['un LS de $HOME/…', 'LS', { path: '$HOME/.ssh' }],
       ['un Read de %USERPROFILE%\\…', 'Read', { file_path: '%USERPROFILE%\\secret.txt' }],
+      // Un guillemet en tête non plus : « "/Users/demo/x" » passerait pour relatif.
+      ['un Read d’un chemin entre guillemets', 'Read', { file_path: '"/Users/demo/x.txt"' }],
     ])('%s n’a pas de cible', (_cas, name, input) => {
       const [bloc] = appelSeul(name, input);
 

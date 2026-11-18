@@ -53,7 +53,8 @@ peuvent effacer les vecteurs l'une de l'autre. Passer à plusieurs instances ser
 ## En ligne (Railway)
 
 Pour mettre Leon en ligne sur [Railway](https://railway.com) : un seul service, allumé en continu, branché sur la base
-Supabase partagée. Pas de Vercel : ses fonctions s'endorment entre deux requêtes, et les tâches de fond (relève,
+PostgreSQL d'AWS RDS (instance `leon`, Francfort ; venue de Supabase le 18/11/2026, voir
+`docs/etudes/supabase-vers-rds-2026-11/`). Pas de Vercel : ses fonctions s'endorment entre deux requêtes, et les tâches de fond (relève,
 indexation, point du matin) ne tourneraient plus.
 
 - `railway.json` décrit le service : `pnpm build`, les migrations avant chaque mise en ligne (`pnpm db:migrate`, avec
@@ -61,15 +62,19 @@ indexation, point du matin) ne tourneraient plus.
 - Railway démarre la nouvelle version avant d'arrêter l'ancienne. `overlapSeconds: "0"` réduit ce recouvrement au
   temps du démarrage (quelques dizaines de secondes, pendant lesquelles deux instances tournent). Éviter de mettre en
   ligne pendant une relève ou un changement de modèle de vecteurs.
-- Le pooler de Supabase en mode session (port 5432) accepte 15 clients par rôle (la « Pool Size » de ses réglages).
-  Une instance en ouvre 7 au plus (`src/server/db/client.ts`), deux en ouvrent donc 14 pendant le recouvrement. Au-delà,
-  la nouvelle instance s'arrête au démarrage sur `EMAXCONNSESSION` et Railway la déclare en échec au healthcheck.
-- **Tant que le site tourne, personne ne branche son serveur local sur la base Supabase** : ce serait une seconde
+- Une instance ouvre 7 connexions au plus (`src/server/db/client.ts`), deux en ouvrent 14 pendant le recouvrement :
+  loin des ~200 que RDS accepte.
+- **Tant que le site tourne, personne ne branche son serveur local sur la base de production** : ce serait une seconde
   instance (voir plus haut).
+- Base : sauvegardes automatiques gardées 7 jours (restauration à la minute près, vers une **nouvelle** instance dont
+  il faut recopier l'adresse dans Railway), protection contre la suppression, port 5432 ouvert à Internet (Railway n'a
+  pas d'adresse de sortie fixe) mais TLS obligatoire (`rds.force_ssl`). Mot de passe du compte maître dans Secrets
+  Manager ; l'application n'utilise que `leon_owner` (migrations) et `leon_app`.
 - Variables : les mêmes que `.env.example`, collées dans l'éditeur brut des variables du service. En plus :
   `BETTER_AUTH_URL` = l'adresse publique du site, `LEON_IP_HEADER=x-real-ip` (le proxy de Railway le remplace par
-  l'adresse du client), `NODE_ENV=production`. Dans les deux adresses de la base, `sslrootcert` pointe vers le
-  certificat public de Supabase, versionné dans le repo : `sslrootcert=/app/certs/supabase-ca-2021.crt`.
+  l'adresse du client), `NODE_ENV=production`. Les deux adresses de la base sont en `sslmode=verify-full`, et
+  `sslrootcert` pointe vers les certificats publics de RDS Francfort, versionnés dans le repo :
+  `sslrootcert=/app/certs/rds-eu-central-1-bundle.pem` (`supabase-ca-2021.crt` reste pour un retour arrière).
 - L'inscription est ouverte à qui a l'adresse : chaque réponse de l'IA se paie sur notre clé Anthropic.
 
 ## Secrets dans les conversations captées

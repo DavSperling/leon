@@ -11,6 +11,7 @@ import {
   uninstallCodexHook,
 } from './install-codex';
 import {
+  CODEX_COULISSES_LINES,
   COULISSES_LINES,
   LECTURE_LINES,
   NOTER_LINES,
@@ -291,21 +292,22 @@ describe('installCodexHook : les usages', () => {
   const rawEntry = async (tool = 'codex') =>
     JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils[tool];
 
-  it('dans un terminal, après l’accord : lecture, rappel, noter puis resume, avec les mêmes textes, écrits pour Codex seul', async () => {
+  it('dans un terminal, après l’accord : lecture, rappel, noter, coulisses puis resume, écrits pour Codex seul', async () => {
     await writeConsent(home, 'claude_code', 2);
 
     const { code, out, asked } = await install(
-      ['oui', '', 'plus tard', 'plus tard', 'oui'],
+      ['oui', '', 'plus tard', 'plus tard', null, 'oui'],
       false,
       terminal,
     );
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(5);
+    expect(asked).toHaveLength(6);
     expect(asked[1]).toContain('[Y/n]');
     expect(asked[2]).toContain('[Y/n]');
     expect(asked[3]).toContain('[Y/n]');
     expect(asked[4]).toContain('[y/N]');
+    expect(asked[5]).toContain('[y/N]');
     expect(out.indexOf(NOTER_LINES.join('\n'))).toBeGreaterThan(
       out.indexOf(RAPPEL_LINES.join('\n')),
     );
@@ -324,7 +326,7 @@ describe('installCodexHook : les usages', () => {
     await install();
     const hooks = await readFile(hooksPath, 'utf8');
 
-    const { code, out } = await install(['non', 'non', 'non', 'non'], false, terminal);
+    const { code, out } = await install(['non', 'non', 'non', 'non', 'non'], false, terminal);
 
     expect(code).toBe(0);
     expect(out).toContain(`The Leon hooks are already in place in ${hooksPath}.`);
@@ -334,7 +336,7 @@ describe('installCodexHook : les usages', () => {
     );
     expect(await factsConsent(home, 'codex')).toMatchObject({
       usages: [],
-      refus: ['lecture', 'rappel', 'resume', 'noter'],
+      refus: ['lecture', 'rappel', 'resume', 'coulisses', 'noter'],
     });
     expect(await readFile(hooksPath, 'utf8')).toBe(hooks);
 
@@ -359,6 +361,7 @@ describe('installCodexHook : les usages', () => {
 
     expect(asked.length).toBeLessThanOrEqual(1);
     expect(out).not.toContain(LECTURE_LINES[0]);
+    expect(out).not.toContain(COULISSES_LINES[0]);
     expect(await factsConsent(home, 'codex')).toMatchObject({ usages: [], refus: [] });
   });
 
@@ -377,16 +380,49 @@ describe('installCodexHook : les usages', () => {
     });
   });
 
-  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul, tant que la CLI ne relève pas celles de Codex.
-  it('coulisses n’est ni demandé ni écrit pour Codex, même tranché oui dans le passage par Claude Code', async () => {
-    const { out, asked } = await install(['oui', null, null, null, null], false, {
+  // T52 amendée le 17/11 : `coulisses` se demande pour Codex, avec son texte, outil par outil. Un oui donné dans le
+  // passage pour un autre outil ne vaut pas pour lui.
+  it('coulisses : le texte de Codex, mot pour mot, ses deux dernières puces celles de Claude Code', () => {
+    expect(CODEX_COULISSES_LINES.slice(0, 2)).toEqual([
+      'Full capture (usage "coulisses", optional, asked separately):',
+      "  - Once a Codex session is over, the Leon server this computer is connected to also receives what happened behind the exchanges: the summary of the agent's reasoning, when Codex writes one in the session file; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file change, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. A session is over at its end when Codex runs that hook (`codex exec`), otherwise once its file has not changed for 30 minutes: it is then sent in the background the next time Leon's start hook runs on this computer.",
+    ]);
+    expect(CODEX_COULISSES_LINES.slice(2)).toEqual(COULISSES_LINES.slice(2));
+    expect(CODEX_COULISSES_LINES).toHaveLength(4);
+  });
+
+  it('coulisses : demandé en [y/N] avec le texte de Codex, avant resume ; un oui l’écrit pour Codex seul', async () => {
+    const { out, asked } = await install(['oui', null, null, null, 'oui', null], false, terminal);
+
+    expect(asked).toHaveLength(6);
+    expect(asked[4]).toBe(
+      `\nAlso send Leon what happens behind the exchanges of each Codex session: the reasoning, the subagents and the reduced tool calls (recorded in ${join(home, '.leon', 'accord.json')})? [y/N] `,
+    );
+    expect(out).toContain(CODEX_COULISSES_LINES.join('\n'));
+    expect(out).not.toContain(COULISSES_LINES[1]);
+    expect(await factsConsent(home, 'codex')).toMatchObject({ usages: ['coulisses'], refus: [] });
+    expect(await factsConsent(home, 'claude_code')).toBeNull();
+  });
+
+  it('coulisses : un oui tranché dans le passage pour un autre outil ne s’écrit pas, la question est posée', async () => {
+    const { asked } = await install(['oui', null, null, null, null, null], false, {
       ...terminal,
       decisions: new Map([['coulisses', true]]),
     });
 
-    expect(asked).toHaveLength(5);
-    expect(out).not.toContain(COULISSES_LINES[0]);
+    expect(asked).toHaveLength(6);
+    expect(asked[4]).toContain('each Codex session');
     expect(await factsConsent(home, 'codex')).toMatchObject({ usages: [], refus: [] });
+  });
+
+  it('coulisses : un refus est daté et n’est plus proposé', async () => {
+    await install(['oui', null, null, null, 'non', null], false, terminal);
+    expect(await factsConsent(home, 'codex')).toMatchObject({ refus: ['coulisses'] });
+
+    const again = await install([null, null, null, null], false, terminal);
+
+    expect(again.asked).toHaveLength(4);
+    expect(again.asked.some((question) => question.includes('behind the exchanges'))).toBe(false);
   });
 
   it('le retrait efface usages, refus et capture ; une réinstallation dans un terminal les repropose', async () => {
@@ -396,8 +432,8 @@ describe('installCodexHook : les usages', () => {
 
     expect(await rawEntry()).toEqual({ version: 0, installe_le: expect.any(String) });
     expect((await readHooks()).hooks).toBeUndefined();
-    const again = await install(['oui', null, null, null, null], false, terminal);
-    expect(again.asked).toHaveLength(5);
+    const again = await install(['oui', null, null, null, null, null], false, terminal);
+    expect(again.asked).toHaveLength(6);
   });
 });
 

@@ -86,9 +86,10 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` for Claude Code only, \`resume\`)
-                       once for all these tools; when it opens the browser, the authorization page shows \`lecture\`,
-                       \`rappel\` and \`noter\` as boxes, yours to tick or untick.
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\`, \`resume\`) once for all these
+                       tools, except \`coulisses\`, asked for each of Claude Code, Codex and Antigravity with the text
+                       of that tool (never for Cursor); when it opens the browser, the authorization page shows
+                       \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -129,12 +130,16 @@ Commands:
                        receives the message, tried with the app 2.0.6); never without a working folder in the hook JSON;
                        \`tour\` (after each turn) and \`fin\` (end of a session) send the new exchanges of the session,
                        and its actions, if ~/.leon/accord.json allows the capture of this tool, and print only what the
-                       tool expects (Cursor, Antigravity: \`{}\`). Any other tool or event prints nothing
+                       tool expects (Cursor, Antigravity: \`{}\`); \`fin\` also sends, with the \`coulisses\` consent of
+                       Codex, what happened behind the exchanges (reasoning summaries, subagent instructions and
+                       reports, reduced tool calls). Any other tool or event prints nothing
       --entree <file>      (fin) read the hook JSON from this file of ~/.leon/entrees instead, then delete it (what
                            the launcher ~/.leon/bin/leon passes once it has handed control back to Codex)
   rattraper            Catch up the sessions of the code tools whose capture you accepted (Codex, Cursor, Antigravity):
                        send what their hooks missed since the last capture (a session left with /quit, a failed
-                       upload). Only the files changed since that consent are read. Started in the background by
+                       upload), and, with the \`coulisses\` consent of Codex or Antigravity, what happened behind the
+                       exchanges of a session or conversation unchanged for 30 minutes. Only the files changed since
+                       that consent are read. Started in the background by
                        Leon's start hook: at the start of a Claude Code or Codex session, or at the first message of a
                        Cursor or Antigravity conversation
   threads              Print the threads of this repository (the work of your sessions, grouped by branch), the
@@ -178,7 +183,7 @@ Commands:
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
                        after confirmation (only the consent when the hooks are already there); in a terminal, then
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` for Claude Code only, \`resume\`)
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` except for Cursor, \`resume\`)
                        that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
@@ -442,10 +447,13 @@ async function toolCapture(outil: Outil, evenement: 'tour' | 'fin', args: string
         accordLe: consent.installe_le,
         usages: consent.usages,
         send: createFactsSender(fetch, env, { signal }),
+        // Seulement au crochet de fin, avec l'usage `coulisses` (captureToolFile).
+        sendCoulisses: createCoulissesSender(fetch, env, { signal }),
       },
       out: () => {},
       git: gitInDirectory,
       readFile: (path) => readFile(path, 'utf8'),
+      readdir: (path) => readdir(path),
       stat: (path) => stat(path),
       home: homedir(),
       env: process.env,
@@ -467,11 +475,13 @@ async function runCatchUp(): Promise<number> {
   const summary = await catchUp({
     send: createIngestSender(timedFetch, env),
     sendFacts: createFactsSender(timedFetch, env),
+    sendCoulisses: createCoulissesSender(timedFetch, env),
     // Les deux connexions, comme la commande de retrait : un LEON_TOKEN refusé ne bloque pas connexion.json.
     withdraw: connectionWithdrawal(timedFetch, process.env, homedir()),
     out: () => {},
     git: gitInDirectory,
     readFile: (path) => readFile(path, 'utf8'),
+    readdir: (path) => readdir(path),
     stat: (path) => stat(path),
     home: homedir(),
     env: process.env,

@@ -1,7 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { conversationOf, extractAntigravityFacts, parseAntigravitySession } from './antigravity';
+import {
+  type AntigravitySubagents,
+  antigravityReportTurns,
+  conversationOf,
+  extractAntigravityBackstage,
+  extractAntigravityFacts,
+  parseAntigravitySession,
+} from './antigravity';
+import { SECRET_MASK } from './mask-secrets';
 import { SessionFactsSchema } from './session-facts';
+import { isTypedTurn, TURN_TEXT_MAX, TurnSchema } from './turn';
 
 // Fixture inventée, sur la forme d'un transcript d'Antigravity relevée par un lecteur public (jamais une vraie
 // conversation). shortcut: à rejouer sur un transcript de l'essai T31.
@@ -200,6 +209,11 @@ describe('extractAntigravityFacts', () => {
       expect(externe(call('mcp_leon_thread', {}))).toBe(true);
     });
 
+    // Échec fermé : dans transcript.jsonl, une valeur nue qui commence par un guillemet ressemble à une valeur coupée.
+    it('une valeur nue de l’ancienne appli qui commence par un guillemet rend l’appel illisible : oui', () => {
+      expect(externe(call('run_command', { CommandLine: '"./a b.sh" --x' }))).toBe(true);
+    });
+
     it('lire, écrire, chercher, lister, la liste de tâches, les commandes locales, `leon` : non', () => {
       expect(
         externe(
@@ -249,5 +263,1087 @@ describe('extractAntigravityFacts', () => {
       RACINE,
     );
     expect(faits.fichiers).toEqual(['b.ts']);
+  });
+});
+
+// --- La forme de l'appli 2.31.0 (annexe 11) ------------------------------------------------------------------------
+// Fixture inventée dans la forme du relevé de l'annexe 11 : une session qui lance deux sous-agents (l'un lit a.txt,
+// l'autre ouvre le navigateur), un send_message, des commandes ; le résultat d'un appel est l'étape qui le suit.
+const S = '11111111-1111-4111-8111-111111111111';
+const R = '22222222-2222-4222-8222-222222222222'; // le sous-agent qui ne fait que lire
+const N = '33333333-3333-4333-8333-333333333333'; // le sous-agent du navigateur
+const G = '44444444-4444-4444-8444-444444444444'; // un sous-agent de sous-agent
+const ESSAI = '/Users/demo/projets/essai';
+const transcript = (id: string) =>
+  readFileSync(
+    new URL(
+      `./fixtures/antigravity-sous-agents/brain/${id}/.system_generated/logs/transcript_full.jsonl`,
+      import.meta.url,
+    ),
+    'utf8',
+  );
+const SESSION = transcript(S);
+const RECHERCHE = transcript(R);
+const NAVIGATEUR = transcript(N);
+const FICHIER = {
+  path: `/Users/demo/.gemini/antigravity/brain/${S}/.system_generated/logs/transcript_full.jsonl`,
+  mtime: new Date('2026-11-13T12:30:00.000Z'),
+};
+const sousAgents = (
+  named: Record<string, string[]>,
+  transcripts: Record<string, string> = {},
+): AntigravitySubagents => ({
+  named: new Map(Object.entries(named)),
+  transcripts: new Map(Object.entries(transcripts)),
+});
+const FIXTURE = sousAgents({ [S]: [R, N], [R]: [], [N]: [] }, { [R]: RECHERCHE, [N]: NAVIGATEUR });
+const FAUX_SECRET = `ghp_${'a'.repeat(36)}`;
+const TS = '2026-11-06T10:00:00Z';
+
+// Des étapes inventées dans la même forme.
+const etape = (step_index: number, fields: Record<string, unknown>) =>
+  step({ step_index, status: 'DONE', ...fields });
+const appels = (step_index: number, ...calls: [string, unknown][]) =>
+  etape(step_index, {
+    type: 'PLANNER_RESPONSE',
+    tool_calls: calls.map(([name, args]) => ({ name, args })),
+  });
+const resultat = (step_index: number, status = 'DONE', content = 'fait') =>
+  etape(step_index, { type: 'GENERIC', status, content });
+const fin = (step_index: number) =>
+  etape(step_index, { type: 'PLANNER_RESPONSE', content: 'Fini.' });
+// Un sous-agent qui a rendu la main : sa consigne, chaque appel suivi de son résultat, puis une réponse sans appel.
+const sousAgent = (...calls: [string, unknown][]) =>
+  [
+    etape(0, {
+      source: 'SYSTEM',
+      type: 'SYSTEM_MESSAGE',
+      content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+    }),
+    ...calls.flatMap((call, index) => [appels(2 * index + 1, call), resultat(2 * index + 2)]),
+    fin(2 * calls.length + 1),
+  ].join('\n');
+// Une session qui lance un sous-agent, puis répond.
+const LANCE = [appels(1, ['invoke_subagent', { Prompt: 'Cherche.' }]), resultat(2), fin(3)].join(
+  '\n',
+);
+// Une conversation ordinaire, finie, qu'une fiche de sous-agent nommerait : sa première étape est la personne.
+const ORDINAIRE = [
+  etape(0, { source: 'USER_EXPLICIT', type: 'USER_INPUT', content: 'Lis le plan.' }),
+  appels(1, ['read_file', { Path: `${ESSAI}/a.txt` }]),
+  resultat(2),
+  fin(3),
+].join('\n');
+const coupe = (contenu: string) => contenu.trimEnd().split('\n').slice(0, -1).join('\n');
+const illisible = (contenu: string) => contenu.replace('\n', '\n{pas du JSON\n');
+
+describe('Antigravity 2.31.0 (annexe 11)', () => {
+  it('la conversation d’un sous-agent (première étape SYSTEM_MESSAGE) n’est pas une session', () => {
+    expect(parseAntigravitySession(RECHERCHE, FICHIER)).toBeNull();
+    expect(parseAntigravitySession(NAVIGATEUR, FICHIER)).toBeNull();
+    expect(extractAntigravityFacts(NAVIGATEUR, FICHIER, ESSAI).echanges).toBe(0);
+    expect(parseAntigravitySession(SESSION, FICHIER)?.turns.filter(isTypedTurn)).toHaveLength(2);
+  });
+
+  it('relève les gestes de la fixture : le résultat d’un appel est l’étape qui le suit', () => {
+    const faits = extractAntigravityFacts(SESSION, FICHIER, ESSAI, 'main', FIXTURE);
+
+    expect(faits).toEqual({
+      branche: 'main',
+      prs: [],
+      commits: ['9a8b7c6'],
+      fichiers: [],
+      commandes: [
+        { texte: 'ls', erreur: false }, // échoue, mais l'appli ne l'écrit plus : DONE
+        { texte: 'git commit', erreur: false },
+        { texte: 'rm', erreur: true }, // refusée : ERROR
+      ],
+      taches: [],
+      erreurs: 1,
+      externe: true,
+      echanges: 2,
+      debut: '2026-11-13T11:45:00Z',
+      fin: '2026-11-13T11:46:21Z',
+    });
+    expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+
+  it('une commande en ERROR, ou qui cite un code de sortie non nul, est en erreur ; la PR créée se lit dans son résultat', () => {
+    const faits = extractAntigravityFacts(
+      [
+        appels(
+          1,
+          ['run_command', { CommandLine: 'pnpm test' }],
+          ['run_command', { CommandLine: 'pnpm lint' }],
+        ),
+        resultat(2, 'ERROR', 'refusée'),
+        resultat(3, 'DONE', 'Found 2 errors.\nexit code: 1'),
+        appels(4, ['run_command', { CommandLine: 'gh pr create --fill' }]),
+        resultat(5, 'DONE', 'https://github.com/demo/essai/pull/12'),
+        appels(6, ['run_command', { CommandLine: 'git status' }]),
+      ].join('\n'),
+      FICHIER,
+      ESSAI,
+    );
+
+    expect(faits.commandes).toEqual([
+      { texte: 'pnpm test', erreur: true },
+      { texte: 'pnpm lint', erreur: true },
+      { texte: 'gh pr', erreur: false },
+      { texte: 'git status', erreur: false }, // sans étape de résultat
+    ]);
+    expect(faits.erreurs).toBe(2);
+    expect(faits.prs).toEqual([{ repo: 'demo/essai', numero: 12, par: 'gh-pr-create' }]);
+  });
+
+  it('un appel sans étape de résultat ne prend pas celle de l’appel suivant', () => {
+    const faits = extractAntigravityFacts(
+      [
+        appels(1, ['run_command', { CommandLine: 'pnpm test' }]),
+        appels(2, ['run_command', { CommandLine: 'pnpm lint' }]),
+        resultat(3, 'ERROR'),
+      ].join('\n'),
+      FICHIER,
+      ESSAI,
+    );
+
+    expect(faits.commandes).toEqual([
+      { texte: 'pnpm test', erreur: false },
+      { texte: 'pnpm lint', erreur: true },
+    ]);
+  });
+
+  it('une étape de source SYSTEM entre un appel et son résultat n’en est pas le résultat', () => {
+    const contenu = [
+      appels(
+        1,
+        ['run_command', { CommandLine: 'pnpm test' }],
+        ['run_command', { CommandLine: 'pnpm lint' }],
+      ),
+      etape(2, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: '<SYSTEM_MESSAGE>Un sous-agent a fini.</SYSTEM_MESSAGE>',
+      }),
+      resultat(3, 'DONE'),
+      resultat(4, 'ERROR', 'refusée'),
+    ].join('\n');
+    const faits = extractAntigravityFacts(contenu, FICHIER, ESSAI);
+    const blocs = extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({}));
+
+    expect(faits.commandes).toEqual([
+      { texte: 'pnpm test', erreur: false },
+      { texte: 'pnpm lint', erreur: true },
+    ]);
+    expect(faits.erreurs).toBe(1);
+    expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
+      ['1:0', 'ok'],
+      ['1:1', 'erreur'],
+    ]);
+  });
+
+  describe('le sous-agent (T63)', () => {
+    const externe = (contenu: string, sa?: AntigravitySubagents) =>
+      extractAntigravityFacts(contenu, FICHIER, ESSAI, null, sa).externe;
+
+    it('un sous-agent qui va sur le web (le navigateur de la fixture) rend la session externe', () => {
+      expect(externe(SESSION, FIXTURE)).toBe(true);
+    });
+
+    it('des sous-agents qui ne font que lire le dépôt la laissent non externe, send_message et read_file compris', () => {
+      expect(externe(LANCE, sousAgents({ [S]: [R] }, { [R]: RECHERCHE }))).toBe(false);
+      expect(
+        externe(SESSION, sousAgents({ [S]: [R, N] }, { [R]: RECHERCHE, [N]: RECHERCHE })),
+      ).toBe(false);
+    });
+
+    it('sans le chargeur, ou avec moins de sous-agents nommés que d’appels : externe', () => {
+      expect(externe(LANCE)).toBe(true);
+      expect(externe(SESSION, sousAgents({ [S]: [R] }, { [R]: RECHERCHE }))).toBe(true);
+    });
+
+    it.each([
+      ['dont la conversation ne se retrouve pas', undefined],
+      ['dont une ligne est illisible', illisible(RECHERCHE)],
+      ['dont une étape est hors forme', RECHERCHE.replace('\n', '\n{"step_index":1}\n')],
+      ['qui n’a pas rendu la main', coupe(RECHERCHE)],
+      [
+        'dont la dernière étape appelle encore un outil',
+        coupe(coupe(sousAgent(['read_file', { Path: `${ESSAI}/a.txt` }]))),
+      ],
+    ])('un sous-agent %s : externe', (_cas, contenu) => {
+      const transcripts: Record<string, string> = contenu === undefined ? {} : { [R]: contenu };
+      expect(externe(LANCE, sousAgents({ [S]: [R] }, transcripts))).toBe(true);
+    });
+
+    it('un sous-agent de sous-agent suit la même règle', () => {
+      const relais = sousAgent(['invoke_subagent', { Prompt: 'Va plus loin.' }]);
+      const avec = (petit: string) =>
+        externe(LANCE, sousAgents({ [S]: [R], [R]: [G] }, { [R]: relais, [G]: petit }));
+
+      expect(avec(sousAgent(['read_file', { Path: `${ESSAI}/a.txt` }]))).toBe(false);
+      expect(avec(sousAgent(['search_web', { query: 'x' }]))).toBe(true);
+      expect(externe(LANCE, sousAgents({ [S]: [R] }, { [R]: relais }))).toBe(true);
+      // Un sous-agent qui se nomme lui-même, ou nomme la session : rien de plus à juger, et pas de boucle.
+      expect(externe(LANCE, sousAgents({ [S]: [R], [R]: [R] }, { [R]: relais }))).toBe(false);
+      expect(externe(LANCE, sousAgents({ [S]: [R], [R]: [S] }, { [R]: relais }))).toBe(false);
+    });
+
+    it('une conversation ordinaire nommée comme sous-agent (première étape USER_INPUT) : externe', () => {
+      expect(externe(LANCE, sousAgents({ [S]: [R] }, { [R]: ORDINAIRE }))).toBe(true);
+    });
+
+    it('un sous-agent qui lance Leon ne la rend pas externe (D36) ; une commande réseau, si', () => {
+      const avec = (CommandLine: string) =>
+        externe(
+          LANCE,
+          sousAgents({ [S]: [R] }, { [R]: sousAgent(['run_command', { CommandLine }]) }),
+        );
+
+      expect(avec('~/.leon/bin/leon thread')).toBe(false);
+      expect(avec('curl -s https://exemple.test')).toBe(true);
+    });
+
+    it('un appel hors de la forme { name, args } rend la session externe (échec fermé)', () => {
+      expect(externe(etape(1, { type: 'PLANNER_RESPONSE', tool_calls: [{ args: {} }] }))).toBe(
+        true,
+      );
+      expect(externe(etape(1, { type: 'PLANNER_RESPONSE', tool_calls: ['read_file'] }))).toBe(true);
+    });
+  });
+});
+
+describe('extractAntigravityBackstage', () => {
+  const VIDE = sousAgents({});
+  const extraire = (lignes: string[], sa: AntigravitySubagents = VIDE) =>
+    extractAntigravityBackstage(lignes.join('\n'), FICHIER, ESSAI, sa);
+  const appelSeul = (name: string, args: unknown) =>
+    extraire([appels(1, [name, args]), resultat(2)]);
+  const appel = (id: string, ts: string, outil: string, statut: string, cible?: string) => ({
+    role: 'appel_outil',
+    id,
+    ts,
+    outil,
+    ...(cible === undefined ? {} : { cible }),
+    statut,
+  });
+
+  it('relève la fixture dans l’ordre du temps : le raisonnement, les sous-agents et leurs appels', () => {
+    const at = (secondes: string) => `2026-11-13T11:${secondes}Z`;
+
+    expect(extractAntigravityBackstage(SESSION, FICHIER, ESSAI, FIXTURE)).toEqual([
+      {
+        role: 'raisonnement',
+        id: '1',
+        ts: at('45:02'),
+        texte: "Deux tâches indépendantes : un sous-agent lit le fichier, l'autre ouvre la page.",
+      },
+      appel('1:0', at('45:02'), 'invoke_subagent', 'ok'),
+      {
+        role: 'sous_agent',
+        id: '1:0:consigne',
+        ts: at('45:02'),
+        partie: 'consigne',
+        texte: 'Lis a.txt et rends son contenu.',
+      },
+      appel('1:1', at('45:02'), 'invoke_subagent', 'ok'),
+      {
+        role: 'sous_agent',
+        id: '1:1:consigne',
+        ts: at('45:02'),
+        partie: 'consigne',
+        texte: "Ouvre la page d'exemple et dis ce qu'elle affiche.",
+      },
+      appel(`${R}:1:0`, at('45:06'), 'Read', 'ok', 'a.txt'),
+      appel(`${N}:1:0`, at('45:06'), 'webview_browser', 'erreur'),
+      appel(`${R}:3:0`, at('45:08'), 'send_message', 'ok'),
+      {
+        role: 'sous_agent',
+        id: `${R}:rapport`,
+        ts: at('45:08'),
+        partie: 'rapport',
+        texte: 'a.txt contient « bonjour ».',
+      },
+      appel(`${N}:3:0`, at('45:09'), 'send_message', 'ok'),
+      {
+        role: 'raisonnement',
+        id: '7',
+        ts: at('45:13'),
+        texte: "Le lecteur a rendu le contenu, j'attends le navigateur.",
+      },
+      appel(`${N}:7:0`, at('45:22'), 'webview_browser', 'ok'),
+      appel(`${N}:9:0`, at('45:28'), 'send_message', 'ok'),
+      {
+        role: 'sous_agent',
+        id: `${N}:rapport`,
+        ts: at('45:28'),
+        partie: 'rapport',
+        texte: 'La page affiche « Exemple ».',
+      },
+      { role: 'raisonnement', id: '9', ts: at('45:31'), texte: 'Les deux rapports sont arrivés.' },
+      {
+        role: 'raisonnement',
+        id: '11',
+        ts: at('46:02'),
+        texte: "Un message au navigateur d'abord.",
+      },
+      appel('11:0', at('46:02'), 'send_message', 'ok'),
+      { role: 'raisonnement', id: '13', ts: at('46:04'), texte: 'Deux commandes à la suite.' },
+      appel('13:0', at('46:04'), 'Bash', 'ok', 'ls'),
+      appel('13:1', at('46:04'), 'Bash', 'ok', 'git commit'),
+      appel('16:0', at('46:07'), 'Bash', 'erreur', 'rm'),
+    ]);
+  });
+
+  it('sans les conversations des sous-agents, la consigne part seule, sans leurs appels ni leur rapport', () => {
+    const ids = extractAntigravityBackstage(
+      SESSION,
+      FICHIER,
+      ESSAI,
+      sousAgents({ [S]: [R, N] }),
+    ).map(({ id }) => id);
+
+    expect(ids).toEqual([
+      '1',
+      '1:0',
+      '1:0:consigne',
+      '1:1',
+      '1:1:consigne',
+      '7',
+      '9',
+      '11',
+      '11:0',
+      '13',
+      '13:0',
+      '13:1',
+      '16:0',
+    ]);
+  });
+
+  it.each([
+    ['qui n’a pas fini', coupe(RECHERCHE)],
+    ['qui porte une ligne illisible', illisible(RECHERCHE)],
+    ['qui est une conversation ordinaire', ORDINAIRE],
+  ])('un sous-agent %s : la consigne sans rapport, et aucun de ses appels', (_cas, contenu) => {
+    const ids = (sa: AntigravitySubagents) => extraire([LANCE], sa).map(({ id }) => id);
+
+    expect(ids(sousAgents({ [S]: [R] }, { [R]: RECHERCHE }))).toEqual([
+      '1:0',
+      '1:0:consigne',
+      `${R}:1:0`,
+      `${R}:3:0`,
+      `${R}:rapport`,
+    ]);
+    expect(ids(sousAgents({ [S]: [R] }, { [R]: contenu }))).toEqual(['1:0', '1:0:consigne']);
+  });
+
+  it('le rapport est le Message du dernier send_message vers la conversation qui a lancé le sous-agent', () => {
+    const petit = sousAgent(
+      ['send_message', { Message: 'Premier.', Recipient: S }],
+      ['send_message', { Message: 'Rapport.', Recipient: S }],
+      ['send_message', { Message: 'À un autre.', Recipient: N }],
+    );
+
+    const blocs = extraire([LANCE], sousAgents({ [S]: [R] }, { [R]: petit }));
+
+    expect(blocs.filter((bloc) => bloc.role === 'sous_agent')).toEqual([
+      { role: 'sous_agent', id: '1:0:consigne', ts: TS, partie: 'consigne', texte: 'Cherche.' },
+      { role: 'sous_agent', id: `${R}:rapport`, ts: TS, partie: 'rapport', texte: 'Rapport.' },
+    ]);
+  });
+
+  describe('la préparation des textes', () => {
+    const pense = (thinking: string) =>
+      extraire([etape(1, { type: 'PLANNER_RESPONSE', thinking })]);
+
+    it('masque un faux secret et retire un bloc de Leon', () => {
+      expect(pense(`<contexte-leon>Le sommaire.</contexte-leon>Je garde ${FAUX_SECRET}.`)).toEqual([
+        { role: 'raisonnement', id: '1', ts: TS, texte: `Je garde ${SECRET_MASK}.` },
+      ]);
+    });
+
+    it('coupe à 20 000 caractères', () => {
+      const [bloc] = pense('x'.repeat(30_000));
+
+      expect(bloc?.role === 'raisonnement' && bloc.texte.length).toBe(TURN_TEXT_MAX);
+    });
+
+    it('prépare aussi la consigne et le rapport d’un sous-agent', () => {
+      const petit = sousAgent([
+        'send_message',
+        { Message: `<rappel-leon>Rappel.</rappel-leon>Trouvé ${FAUX_SECRET}.`, Recipient: S },
+      ]);
+      const blocs = extraire(
+        [
+          appels(1, ['invoke_subagent', { Prompt: `Cherche ${FAUX_SECRET}.` }]),
+          resultat(2),
+          fin(3),
+        ],
+        sousAgents({ [S]: [R] }, { [R]: petit }),
+      );
+
+      expect(blocs.filter((bloc) => bloc.role === 'sous_agent')).toMatchObject([
+        { id: '1:0:consigne', texte: `Cherche ${SECRET_MASK}.` },
+        { id: `${R}:rapport`, texte: `Trouvé ${SECRET_MASK}.` },
+      ]);
+    });
+
+    it.each([
+      ['vide', ''],
+      ['blanc', '  \n'],
+      ['un bloc de Leon seul', '<contexte-leon>Le sommaire.</contexte-leon>'],
+    ])('un raisonnement %s n’est pas relevé', (_cas, thinking) => {
+      expect(pense(thinking)).toEqual([]);
+    });
+
+    it('le raisonnement d’un sous-agent ne part pas', () => {
+      const blocs = extractAntigravityBackstage(SESSION, FICHIER, ESSAI, FIXTURE);
+
+      expect(blocs.filter((bloc) => bloc.role === 'raisonnement').map(({ id }) => id)).toEqual([
+        '1',
+        '7',
+        '9',
+        '11',
+        '13',
+      ]);
+    });
+  });
+
+  describe('les appels d’outils', () => {
+    it.each([
+      ['curl -u a:X https://exemple.test', 'curl'],
+      ['PGPASSWORD=X psql -h base', 'psql'],
+    ])('run_command « %s » donne Bash, réduit à %s', (CommandLine, cible) => {
+      expect(appelSeul('run_command', { CommandLine })).toEqual([
+        appel('1:0', TS, 'Bash', 'ok', cible),
+      ]);
+    });
+
+    it.each([
+      ['read_file', 'Read', { Path: `${ESSAI}/src/a.ts` }],
+      ['view_file', 'Read', { AbsolutePath: `${ESSAI}/src/a.ts` }],
+      ['write_to_file', 'Write', { TargetFile: `${ESSAI}/src/a.ts`, CodeContent: 'x' }],
+      ['replace_file_content', 'Edit', { TargetFile: `${ESSAI}/src/a.ts` }],
+    ])('%s donne %s, avec le chemin dans le dépôt', (name, outil, args) => {
+      expect(appelSeul(name, args)).toEqual([appel('1:0', TS, outil, 'ok', 'src/a.ts')]);
+    });
+
+    it.each([
+      [
+        'un chemin hors du dépôt',
+        'write_to_file',
+        { TargetFile: '/Users/demo/ailleurs/x.ts' },
+        'Write',
+      ],
+      ['un chemin en ~/…', 'read_file', { Path: '~/.aws/credentials' }, 'Read'],
+      ['un chemin en $HOME/…', 'view_file', { AbsolutePath: '$HOME/.ssh/id' }, 'Read'],
+      [
+        'grep_search, jamais son motif',
+        'grep_search',
+        { Query: 'motif', SearchPath: ESSAI },
+        'Grep',
+      ],
+      ['list_dir', 'list_dir', { DirectoryPath: `${ESSAI}/src` }, 'LS'],
+      ['search_web, jamais sa requête', 'search_web', { query: 'requête' }, 'search_web'],
+      [
+        'read_url_content, jamais son URL',
+        'read_url_content',
+        { Url: 'https://x.test' },
+        'read_url_content',
+      ],
+      ['schedule', 'schedule', { Prompt: 'Relance.' }, 'schedule'],
+      ['un nom inconnu', 'outil_invente', { Path: `${ESSAI}/a.ts` }, '[outil]'],
+      ['un outil MCP', 'mcp_leon_thread', { id: 'x' }, '[outil]'],
+      ['un nom d’outil MCP de Claude Code', 'mcp__linear__get_issue', {}, '[outil]'],
+    ])('%s : sans cible', (_cas, name, args, outil) => {
+      expect(appelSeul(name, args)).toEqual([appel('1:0', TS, outil, 'ok')]);
+    });
+
+    it('les trois statuts : DONE ok, ERROR erreur (un refus), sans étape de résultat sans_resultat', () => {
+      const blocs = extraire([
+        appels(
+          1,
+          ['run_command', { CommandLine: 'pnpm test' }],
+          ['run_command', { BypassSandbox: true, CommandLine: 'rm -rf build' }],
+          ['read_file', { Path: `${ESSAI}/a.txt` }],
+        ),
+        resultat(2, 'DONE'),
+        resultat(3, 'ERROR'),
+        appels(4, ['run_command', { CommandLine: 'pnpm lint' }]),
+      ]);
+
+      expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
+        ['1:0', 'ok'],
+        ['1:1', 'erreur'],
+        ['1:2', 'sans_resultat'],
+        ['4:0', 'sans_resultat'],
+      ]);
+    });
+
+    it('une commande dont le code de sortie écrit n’est pas nul est en erreur, comme dans les faits ; un autre outil non', () => {
+      const blocs = extraire([
+        appels(
+          1,
+          ['run_command', { CommandLine: 'pnpm test' }],
+          ['run_command', { CommandLine: 'pnpm lint' }],
+          ['read_file', { Path: `${ESSAI}/a.txt` }],
+        ),
+        etape(2, { type: 'GENERIC', content: 'FAIL', exit_code: 1 }),
+        resultat(3, 'DONE', 'Found 2 errors.\nexit code: 1'),
+        resultat(4, 'DONE', 'exit code: 1'),
+      ]);
+
+      expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
+        ['1:0', 'erreur'],
+        ['1:1', 'erreur'],
+        ['1:2', 'ok'],
+      ]);
+    });
+
+    it('un appel d’un sous-agent et d’un sous-agent de sous-agent est relevé dans la même forme', () => {
+      const relais = sousAgent(
+        ['write_to_file', { TargetFile: `${ESSAI}/a.ts` }],
+        ['invoke_subagent', { Prompt: 'Va plus loin.' }],
+      );
+      const petit = sousAgent(['replace_file_content', { TargetFile: `${ESSAI}/b.ts` }]);
+
+      expect(
+        extraire([LANCE], sousAgents({ [S]: [R], [R]: [G] }, { [R]: relais, [G]: petit })),
+      ).toEqual([
+        appel('1:0', TS, 'invoke_subagent', 'ok'),
+        { role: 'sous_agent', id: '1:0:consigne', ts: TS, partie: 'consigne', texte: 'Cherche.' },
+        appel(`${R}:1:0`, TS, 'Write', 'ok', 'a.ts'),
+        appel(`${R}:3:0`, TS, 'invoke_subagent', 'ok'),
+        {
+          role: 'sous_agent',
+          id: `${R}:3:0:consigne`,
+          ts: TS,
+          partie: 'consigne',
+          texte: 'Va plus loin.',
+        },
+        appel(`${G}:1:0`, TS, 'Edit', 'ok', 'b.ts'),
+      ]);
+    });
+
+    it('un appel hors de la forme { name, args } ne part pas ; le suivant garde son rang', () => {
+      const blocs = extraire([
+        etape(1, {
+          type: 'PLANNER_RESPONSE',
+          tool_calls: [
+            { args: { Path: 'x' } },
+            { name: 'read_file', args: { Path: `${ESSAI}/a.txt` } },
+          ],
+        }),
+        resultat(2, 'ERROR'),
+        resultat(3),
+      ]);
+
+      expect(blocs).toEqual([appel('1:1', TS, 'Read', 'ok', 'a.txt')]);
+    });
+
+    it('lit aussi l’ancienne forme : les étapes RUN_COMMAND, VIEW_FILE… sont les résultats', () => {
+      const at = (secondes: string) => `2026-11-06T10:00:${secondes}Z`;
+
+      expect(extractAntigravityBackstage(content, FILE, RACINE, VIDE)).toEqual([
+        { role: 'raisonnement', id: '2', ts: at('03'), texte: 'Planifier.' },
+        appel('2:0', at('03'), 'Bash', 'ok', 'git checkout'),
+        appel('4:0', at('06'), 'Read', 'ok', 'src/capture/codex.ts'),
+        appel('4:1', at('06'), 'Write', 'ok', 'src/capture/antigravity.ts'),
+        appel('7:0', at('10'), 'Bash', 'erreur', 'pnpm vitest'), // « exit code: 1 », comme les faits
+        appel('9:0', at('22'), 'Bash', 'ok', 'git commit'),
+      ]);
+    });
+  });
+
+  it('une chaîne témoin dans la sortie d’un outil, l’argument d’un autre et un argument de invoke_subagent autre que Prompt n’apparaît nulle part', () => {
+    const TEMOIN = 'temoin-4b7e2d';
+    const petit = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: `<SYSTEM_MESSAGE>${TEMOIN}</SYSTEM_MESSAGE>`,
+      }),
+      appels(1, ['read_file', { Path: `${ESSAI}/a.txt`, toolSummary: TEMOIN }]),
+      resultat(2, 'DONE', `contenu ${TEMOIN}`),
+      appels(
+        3,
+        ['send_message', { Message: 'Trouvé.', Recipient: S }],
+        ['send_message', { Message: TEMOIN, Recipient: N }],
+      ),
+      resultat(4),
+      resultat(5),
+      fin(6),
+    ].join('\n');
+
+    const blocs = extraire(
+      [
+        appels(
+          1,
+          [
+            'invoke_subagent',
+            { Prompt: 'Cherche.', Role: TEMOIN, TypeName: TEMOIN, Model: TEMOIN },
+          ],
+          ['grep_search', { Query: TEMOIN, SearchPath: `${ESSAI}/src`, toolSummary: TEMOIN }],
+          ['run_command', { CommandLine: `echo ${TEMOIN}`, toolSummary: TEMOIN }],
+          ['send_message', { Message: TEMOIN, Recipient: R }],
+          ['webview_browser', { intention: TEMOIN, observation: TEMOIN, script: TEMOIN }],
+          ['write_to_file', { TargetFile: `~/${TEMOIN}`, CodeContent: TEMOIN }],
+          ['search_web', { query: TEMOIN }],
+        ),
+        resultat(2, 'DONE', `lancé ${TEMOIN}`),
+        etape(3, { type: 'GENERIC', status: 'ERROR', error: TEMOIN, content: TEMOIN }),
+        ...[4, 5, 6, 7, 8].map((index) => resultat(index, 'DONE', TEMOIN)),
+        etape(9, { type: 'PLANNER_RESPONSE', content: TEMOIN }),
+      ],
+      sousAgents({ [S]: [R] }, { [R]: petit }),
+    );
+
+    expect(blocs).toHaveLength(12);
+    expect(JSON.stringify(blocs)).not.toContain(TEMOIN);
+  });
+
+  it('tout identifiant tient dans la forme du contrat, et n’y figure qu’une fois', () => {
+    const ids = extractAntigravityBackstage(SESSION, FICHIER, ESSAI, FIXTURE).map(({ id }) => id);
+
+    expect(ids).toHaveLength(21);
+    for (const id of ids) expect(id).toMatch(/^[A-Za-z0-9_.:-]{1,200}$/);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('une étape relue deux fois n’est relevée qu’une fois', () => {
+    const lignes = [appels(1, ['read_file', { Path: `${ESSAI}/a.txt` }]), resultat(2)];
+
+    expect(extraire([...lignes, ...lignes])).toEqual([appel('1:0', TS, 'Read', 'ok', 'a.txt')]);
+  });
+
+  it('un bloc hors du contrat (un sous-agent nommé hors forme) est écarté, les autres partent', () => {
+    const ids = extraire([LANCE], sousAgents({ [S]: ['a b'] }, { 'a b': RECHERCHE })).map(
+      ({ id }) => id,
+    );
+
+    expect(ids).toEqual(['1:0', '1:0:consigne']);
+  });
+});
+
+// --- Le rapport d'un sous-agent sous l'accord de base (décision d'Amos du 17/11, « Oui, comme Claude Code ») --------
+describe('antigravityReportTurns', () => {
+  const at = (secondes: string) => `2026-11-13T11:${secondes}Z`;
+  const rapport = (sousAgent: string, rang: string, ts: string, text: string) => ({
+    external_id: `${S}:${sousAgent}:${rang}`,
+    role: 'user',
+    text,
+    ts,
+    capture_mode: 'file',
+    injecte: true,
+  });
+  const textes = (sa: AntigravitySubagents) =>
+    antigravityReportTurns(FICHIER, sa).map(({ text }) => text);
+  const ecrit = (Message: unknown, Recipient: unknown = S) =>
+    sousAgent(['send_message', { Message, Recipient }]);
+  const RELAIS = sousAgent(['invoke_subagent', { Prompt: 'Va plus loin.' }]);
+  // Une conversation ordinaire, qu'une fiche nommerait, qui écrit à la session.
+  const ORDINAIRE_QUI_ECRIT = [
+    etape(0, { source: 'USER_EXPLICIT', type: 'USER_INPUT', content: 'Écris au parent.' }),
+    appels(1, ['send_message', { Message: 'Trouvé.', Recipient: S }]),
+    resultat(2),
+    fin(3),
+  ].join('\n');
+
+  it('chaque message d’un sous-agent direct à la session devient un tour user injecté, daté de son étape', () => {
+    const turns = antigravityReportTurns(FICHIER, FIXTURE);
+
+    expect(turns).toEqual([
+      rapport(R, '3:0', at('45:08'), 'a.txt contient « bonjour ».'),
+      rapport(N, '3:0', at('45:09'), "La page ne s'ouvre pas encore, je réessaie."),
+      rapport(N, '9:0', at('45:28'), 'La page affiche « Exemple ».'),
+    ]);
+    // Des identifiants stables, dans la forme du contrat ; aucun n'est un message tapé.
+    expect(antigravityReportTurns(FICHIER, FIXTURE)).toEqual(turns);
+    for (const turn of turns) expect(TurnSchema.parse(turn)).toEqual(turn);
+    expect(turns.filter(isTypedTurn)).toEqual([]);
+  });
+
+  it('sans date à son étape, un tour prend l’heure du fichier de la session', () => {
+    const sansDate = ecrit('Trouvé.').replaceAll('"created_at":"2026-11-06T10:00:00Z",', '');
+
+    expect(antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: sansDate }))).toEqual([
+      rapport(R, '1:0', FICHIER.mtime.toISOString(), 'Trouvé.'),
+    ]);
+  });
+
+  it('un sous-agent qui n’a pas fini donne ses messages envoyés ; le bloc rapport des coulisses, lui, attend sa fin', () => {
+    const enCours = sousAgents({ [S]: [R] }, { [R]: coupe(RECHERCHE) });
+    // Sa dernière étape est l'envoi même, sans résultat ni réponse.
+    const aLEnvoi = sousAgents({ [S]: [N] }, { [N]: coupe(coupe(NAVIGATEUR)) });
+
+    expect(textes(enCours)).toEqual(['a.txt contient « bonjour ».']);
+    expect(textes(aLEnvoi)).toEqual([
+      "La page ne s'ouvre pas encore, je réessaie.",
+      'La page affiche « Exemple ».',
+    ]);
+    const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, enCours);
+    expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+      false,
+    );
+  });
+
+  it.each([
+    ['dont une ligne est illisible', { [S]: [R] }, { [R]: illisible(RECHERCHE) }],
+    ['qui est une conversation ordinaire', { [S]: [R] }, { [R]: ORDINAIRE_QUI_ECRIT }],
+    ['qui est la session elle-même', { [S]: [S] }, { [S]: SESSION }],
+    ['dont la conversation manque', { [S]: [R] }, {}],
+    ['que la session ne nomme pas', { [R]: [] }, { [R]: RECHERCHE }],
+    ['qui écrit à un autre que la session', { [S]: [R] }, { [R]: ecrit('À un autre.', N) }],
+    [
+      'dont l’envoi est en échec',
+      { [S]: [R] },
+      {
+        [R]: [
+          etape(0, {
+            source: 'SYSTEM',
+            type: 'SYSTEM_MESSAGE',
+            content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+          }),
+          appels(1, ['send_message', { Message: 'Jamais reçu.', Recipient: S }]),
+          resultat(2, 'ERROR'),
+          fin(3),
+        ].join('\n'),
+      },
+    ],
+    [
+      'de sous-agent, qui écrit à son parent',
+      { [S]: [R], [R]: [G] },
+      { [R]: RELAIS, [G]: ecrit('Au parent.', R) },
+    ],
+    [
+      'de sous-agent, même s’il écrit à la session',
+      { [S]: [R], [R]: [G] },
+      { [R]: RELAIS, [G]: ecrit('Par-dessus.') },
+    ],
+    [
+      'dont le Message ou le Recipient n’est pas une chaîne',
+      { [S]: [R] },
+      {
+        [R]: sousAgent(
+          ['send_message', { Message: 'Sans destinataire.' }],
+          ['send_message', { Message: 'Un nombre.', Recipient: 42 }],
+          ['send_message', { Message: ['Une liste.'], Recipient: S }],
+        ),
+      },
+    ],
+  ])('un sous-agent %s : aucun tour', (_cas, named, transcripts) => {
+    expect(antigravityReportTurns(FICHIER, sousAgents(named, transcripts))).toEqual([]);
+  });
+
+  // Un sous-agent ne se lit que dans transcript_full.jsonl, où rien n'est entre guillemets : égalité stricte.
+  it.each([
+    ['entre guillemets', `"${S}"`],
+    ['précédé d’une espace', ` ${S}`],
+    ['suivi d’autre chose', `${S}:${N}`],
+    ['dans une phrase', `conversation ${S}`],
+  ])(
+    'un Recipient qui contient l’identifiant de la session %s ne donne ni tour ni bloc rapport',
+    (_cas, Recipient) => {
+      const sa = sousAgents({ [S]: [R] }, { [R]: ecrit('Trouvé.', Recipient) });
+
+      expect(textes(sa)).toEqual([]);
+      const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, sa);
+      expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+        false,
+      );
+    },
+  );
+
+  it('une étape sans step_index prend le rang de sa ligne dans l’identifiant', () => {
+    const sansIndex = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+      }),
+      step({
+        type: 'PLANNER_RESPONSE',
+        status: 'DONE',
+        tool_calls: [{ name: 'send_message', args: { Message: 'Trouvé.', Recipient: S } }],
+      }),
+      resultat(2),
+      fin(3),
+    ].join('\n');
+
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: sansIndex })).map(
+        ({ external_id }) => external_id,
+      ),
+    ).toEqual([`${S}:${R}:1:0`]);
+  });
+
+  it('un autre outil que send_message, même avec un Recipient et un Message, ne donne ni tour ni bloc rapport', () => {
+    const autre = sousAgent(['write_to_file', { Message: 'Pas un message.', Recipient: S }]);
+    const sa = sousAgents({ [S]: [R] }, { [R]: autre });
+
+    expect(antigravityReportTurns(FICHIER, sa)).toEqual([]);
+    const blocs = extractAntigravityBackstage(LANCE, FICHIER, ESSAI, sa);
+    expect(blocs.some((bloc) => bloc.role === 'sous_agent' && bloc.partie === 'rapport')).toBe(
+      false,
+    );
+  });
+
+  describe('la préparation du texte', () => {
+    const avec = (Message: string) => textes(sousAgents({ [S]: [R] }, { [R]: ecrit(Message) }));
+
+    it('masque un faux secret et retire un bloc de Leon', () => {
+      expect(avec(`<rappel-leon>Rappel.</rappel-leon>Trouvé ${FAUX_SECRET}.`)).toEqual([
+        `Trouvé ${SECRET_MASK}.`,
+      ]);
+    });
+
+    it.each([
+      ['vide', ''],
+      ['blanc', '  \n'],
+      ['un bloc de Leon seul', '<contexte-leon>Le sommaire.</contexte-leon>'],
+    ])('un message %s ne donne aucun tour', (_cas, Message) => {
+      expect(avec(Message)).toEqual([]);
+    });
+  });
+
+  it('ni Role, TypeName, Model, ni la sortie d’un outil, ni la consigne, le raisonnement ou la réponse d’un sous-agent, ni le message de la session', () => {
+    const TEMOIN = 'temoin-9c1f4a';
+    const petit = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: `<SYSTEM_MESSAGE>${TEMOIN}</SYSTEM_MESSAGE>`,
+      }),
+      etape(1, {
+        type: 'PLANNER_RESPONSE',
+        content: TEMOIN,
+        thinking: TEMOIN,
+        tool_calls: [{ name: 'read_file', args: { Path: `${ESSAI}/a.txt`, toolSummary: TEMOIN } }],
+      }),
+      resultat(2, 'DONE', `contenu ${TEMOIN}`),
+      appels(3, ['send_message', { Message: 'Trouvé.', Recipient: S, toolSummary: TEMOIN }]),
+      resultat(4, 'DONE', TEMOIN),
+      etape(5, { type: 'PLANNER_RESPONSE', content: TEMOIN, thinking: TEMOIN }),
+    ].join('\n');
+    const session = [
+      appels(1, [
+        'invoke_subagent',
+        { Prompt: TEMOIN, Role: TEMOIN, TypeName: TEMOIN, Model: TEMOIN },
+      ]),
+      resultat(2, 'DONE', TEMOIN),
+      etape(3, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: `<SYSTEM_MESSAGE>${TEMOIN}</SYSTEM_MESSAGE>`,
+      }),
+      appels(4, ['send_message', { Message: TEMOIN, Recipient: R }]),
+      resultat(5, 'DONE', TEMOIN),
+      fin(6),
+    ].join('\n');
+
+    // Tout ce qui part en tours : ceux de la session, puis les rapports.
+    const turns = [
+      ...(parseAntigravitySession(session, FICHIER)?.turns ?? []),
+      ...antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: petit })),
+    ];
+
+    expect(turns.map(({ text }) => text)).toEqual(['Fini.', 'Trouvé.']);
+    expect(JSON.stringify(turns)).not.toContain(TEMOIN);
+  });
+
+  it('tout identifiant tient dans 200 caractères et n’y figure qu’une fois, même relu deux fois', () => {
+    const deuxDansUneEtape = [
+      etape(0, {
+        source: 'SYSTEM',
+        type: 'SYSTEM_MESSAGE',
+        content: '<SYSTEM_MESSAGE>Tâche.</SYSTEM_MESSAGE>',
+      }),
+      appels(
+        1,
+        ['send_message', { Message: 'Un.', Recipient: S }],
+        ['send_message', { Message: 'Deux.', Recipient: S }],
+      ),
+      resultat(2),
+      resultat(3),
+      fin(4),
+    ].join('\n');
+    const turns = antigravityReportTurns(
+      FICHIER,
+      sousAgents(
+        { [S]: [R, N, N] },
+        { [R]: deuxDansUneEtape, [N]: `${NAVIGATEUR}\n${NAVIGATEUR}` },
+      ),
+    );
+    const ids = turns.map(({ external_id }) => external_id);
+
+    expect(ids).toEqual([`${S}:${R}:1:0`, `${S}:${R}:1:1`, `${S}:${N}:3:0`, `${S}:${N}:9:0`]);
+    for (const id of ids) expect(id.length).toBeLessThanOrEqual(200);
+    // Un nom trop long (jamais l'UUID que valide le chargeur) ne donne rien : le serveur refuserait tout le lot.
+    const long = 'x'.repeat(200);
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [long] }, { [long]: RECHERCHE })),
+    ).toEqual([]);
+  });
+});
+
+// --- transcript.jsonl (annexe 11) : chaque valeur des `args` y est écrite comme en JSON, une chaîne entre guillemets --
+// La forme se décide d'après le fichier lu : transcript_full.jsonl n'est jamais décodé, et un sous-agent ne se lit que
+// dans le sien.
+describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
+  const enJson = (args: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(args).map(([cle, valeur]) => [cle, JSON.stringify(valeur)]));
+  const COURT = {
+    ...FICHIER,
+    path: FICHIER.path.replace('transcript_full.jsonl', 'transcript.jsonl'),
+  };
+  const ENV = 'DB_PASSWORD=hunter2secret';
+  const SESSION_CITEE = [
+    appels(
+      1,
+      ['invoke_subagent', enJson({ Prompt: `Cherche.\n${ENV}` })],
+      ['read_file', enJson({ Path: '/Users/demo/.ssh/config' })],
+      ['write_to_file', enJson({ TargetFile: '/Users/demo/autre/secret.txt', CodeContent: 'x' })],
+      ['replace_file_content', enJson({ TargetFile: `${ESSAI}/src/a.ts` })],
+      ['run_command', enJson({ CommandLine: 'pnpm test', WaitMsBeforeAsync: 500 })],
+    ),
+    ...[2, 3, 4, 5, 6].map((index) => resultat(index)),
+    fin(7),
+  ].join('\n');
+  // Le sous-agent se lit dans son transcript_full.jsonl : ses valeurs ont leur type.
+  const SA = sousAgents(
+    { [S]: [R] },
+    { [R]: sousAgent(['send_message', { Message: `Rapport.\n${ENV}\nfin`, Recipient: S }]) },
+  );
+  const MASQUE = `DB_PASSWORD=${SECRET_MASK}`;
+
+  it('les faits : un chemin hors du dépôt n’est pas un fichier, celui du dépôt l’est, la commande se lit', () => {
+    const faits = extractAntigravityFacts(SESSION_CITEE, COURT, ESSAI, null, SA);
+
+    expect(faits.fichiers).toEqual(['src/a.ts']);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false }]);
+    expect(faits.externe).toBe(false);
+  });
+
+  it('une commande réseau rend la session externe', () => {
+    const contenu = appels(1, [
+      'run_command',
+      enJson({ CommandLine: 'curl -s https://exemple.test' }),
+    ]);
+
+    expect(extractAntigravityFacts(contenu, COURT, ESSAI).externe).toBe(true);
+  });
+
+  // La valeur qui ne se décode pas n'a pas à commencer elle-même par un guillemet : il suffit qu'une autre le fasse.
+  it.each([
+    ['coupée', { TargetFile: '"/Users/demo/autre/secret.txt"', CodeContent: '"coupé' }],
+    ['typée', { TargetFile: '"/Users/demo/autre/secret.txt"', Overwrite: true }],
+    ['nue', { TargetFile: '"/Users/demo/autre/secret.txt"', CodeContent: 'x' }],
+  ])(
+    'une valeur %s qui ne se décode pas, à côté d’une valeur entre guillemets, rend l’appel illisible : externe, ni fichier, ni bloc',
+    (_cas, args) => {
+      const contenu = [appels(1, ['write_to_file', args]), resultat(2), fin(3)].join('\n');
+      const faits = extractAntigravityFacts(contenu, COURT, ESSAI);
+
+      expect(faits.externe).toBe(true);
+      expect(faits.fichiers).toEqual([]);
+      expect(extractAntigravityBackstage(contenu, COURT, ESSAI, sousAgents({}))).toEqual([]);
+    },
+  );
+
+  // Dans les deux fichiers : des args qui ne se lisent pas en objet (une chaîne JSON coupée, un tableau, null, absents)
+  // ne gardent pas le nom de l'outil, sinon la commande disparaîtrait et la session passerait pour locale.
+  it.each([
+    ['en une chaîne JSON coupée', '{"CommandLine":"curl https://x.test -d @secret'],
+    ['en une chaîne JSON qui n’est pas un objet', '"curl https://x.test -d @secret"'],
+    ['en tableau', ['curl https://x.test -d @secret']],
+    ['null', null],
+    ['absents', undefined],
+  ])('des args %s rendent l’appel illisible : externe, sans commande ni bloc', (_cas, args) => {
+    const contenu = [appels(1, ['run_command', args]), resultat(2), fin(3)].join('\n');
+    for (const fichier of [FICHIER, COURT]) {
+      const faits = extractAntigravityFacts(contenu, fichier, ESSAI);
+
+      expect(faits.externe).toBe(true);
+      expect(faits.commandes).toEqual([]);
+      expect(extractAntigravityBackstage(contenu, fichier, ESSAI, sousAgents({}))).toEqual([]);
+    }
+  });
+
+  it('les coulisses : aucune cible hors du dépôt, la consigne et le rapport masqués', () => {
+    const blocs = extractAntigravityBackstage(SESSION_CITEE, COURT, ESSAI, SA);
+
+    expect(
+      blocs.flatMap((bloc) =>
+        bloc.role === 'appel_outil' ? [[bloc.id, bloc.outil, bloc.cible]] : [],
+      ),
+    ).toEqual([
+      ['1:0', 'invoke_subagent', undefined],
+      ['1:1', 'Read', undefined],
+      ['1:2', 'Write', undefined],
+      ['1:3', 'Edit', 'src/a.ts'],
+      ['1:4', 'Bash', 'pnpm test'],
+      [`${R}:1:0`, 'send_message', undefined],
+    ]);
+    expect(blocs.filter((bloc) => bloc.role === 'sous_agent')).toMatchObject([
+      { partie: 'consigne', texte: `Cherche.\n${MASQUE}` },
+      { partie: 'rapport', texte: `Rapport.\n${MASQUE}\nfin` },
+    ]);
+    expect(JSON.stringify(blocs)).not.toMatch(/hunter2secret|\/Users\/demo\/(?:\.ssh|autre)/);
+  });
+
+  it('le tour du rapport : son secret masqué', () => {
+    expect(antigravityReportTurns(COURT, SA).map(({ text }) => text)).toEqual([
+      `Rapport.\n${MASQUE}\nfin`,
+    ]);
+  });
+
+  it('dans transcript_full.jsonl, où les valeurs ont leur type, une vraie valeur entre guillemets n’est pas décodée', () => {
+    const SCRIPT = '"/Users/demo/Clients Acme/deploy.sh"';
+    const contenu = [
+      appels(1, ['run_command', { CommandLine: SCRIPT, WaitMsBeforeAsync: 500 }]),
+      resultat(2),
+      fin(3),
+    ].join('\n');
+    const MESSAGE = '"Trouvé : print(\\"a\\nb\\")"';
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).commandes).toEqual([
+      { texte: '[commande]', erreur: false },
+    ]);
+    expect(
+      extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).find(
+        (bloc) => bloc.role === 'appel_outil',
+      ),
+    ).toMatchObject({ outil: 'Bash', cible: '[commande]' });
+    const ecrit = sousAgent(['send_message', { Message: MESSAGE, Recipient: S }]);
+    expect(
+      antigravityReportTurns(FICHIER, sousAgents({ [S]: [R] }, { [R]: ecrit })).map(
+        ({ text }) => text,
+      ),
+    ).toEqual([MESSAGE]);
+  });
+
+  // Jamais décodé, même quand toutes les valeurs sont du texte JSON : la valeur est l'argument même. Un chemin qui
+  // commence par un guillemet ne part ni en fichier ni en cible (repoRelativePath), qu'il sorte du dépôt ou non.
+  it('dans transcript_full.jsonl, un appel dont toutes les valeurs sont du texte JSON n’est pas décodé non plus', () => {
+    const contenu = [
+      appels(
+        1,
+        ['read_file', { Path: '"/Users/demo/autre/secret.txt"' }],
+        ['write_to_file', { TargetFile: '"src/a.ts"' }],
+      ),
+      resultat(2),
+      resultat(3),
+      fin(4),
+    ].join('\n');
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).fichiers).toEqual([]);
+    expect(
+      extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).map(
+        (bloc) => bloc.role === 'appel_outil' && [bloc.outil, bloc.cible],
+      ),
+    ).toEqual([
+      ['Read', undefined],
+      ['Write', undefined],
+    ]);
   });
 });

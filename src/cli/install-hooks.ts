@@ -205,13 +205,35 @@ export const NOTER_LINES = [
 // Le texte de l'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14), testé mot pour
 // mot : ce qu'extractBackstage relève (session-backstage.ts : le raisonnement non vide, la consigne et le rapport final
 // de chaque sous-agent, les appels réduits), comment c'est préparé (masque, blocs de Leon retirés, 20 000 caractères),
-// qui le lit (comme la session, 0057) et où il ne va jamais (D23, QD9). Pour Claude Code seul (usagesToOffer).
+// qui le lit (comme la session, 0057) et où il ne va jamais (D23, QD9). Le texte de Claude Code (COULISSES_TEXTS).
 export const COULISSES_LINES = [
   'Full capture (usage "coulisses", optional, asked separately):',
   "  - At the end of each session, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, when Claude Code writes its text in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument.",
   "  - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and read like it: by you and, on the Leon website, by the managers above you. Leon's search always finds it. It is never placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.",
   '  - Withdrawing your consent stops this sending. What was already sent stays in Leon.',
 ];
+
+// Les textes de `coulisses` de Codex et d'Antigravity (T52 amendée le 17/11, annexes 09 et 11), testés mot pour mot :
+// leur première puce dit ce que relèvent extractCodexBackstage et extractAntigravityBackstage, et quand ça part (le
+// crochet de fin de `codex exec`, sinon le rattrapage après 30 minutes sans changement, catch-up.ts) ; les deux
+// suivantes sont celles de Claude Code.
+export const CODEX_COULISSES_LINES = [
+  ...COULISSES_LINES.slice(0, 1),
+  "  - Once a Codex session is over, the Leon server this computer is connected to also receives what happened behind the exchanges: the summary of the agent's reasoning, when Codex writes one in the session file; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file change, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. A session is over at its end when Codex runs that hook (`codex exec`), otherwise once its file has not changed for 30 minutes: it is then sent in the background the next time Leon's start hook runs on this computer.",
+  ...COULISSES_LINES.slice(2),
+];
+export const ANTIGRAVITY_COULISSES_LINES = [
+  ...COULISSES_LINES.slice(0, 1),
+  "  - Once an Antigravity conversation has not changed for 30 minutes, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, which Antigravity writes in full in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for any other tool, nothing, and a tool Leon does not know, such as an MCP tool, is kept without its name. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. It is sent in the background the next time Leon's start hook runs on this computer.",
+  ...COULISSES_LINES.slice(2),
+];
+// `coulisses` ne se propose qu'aux outils dont la CLI relève les coulisses (outils.ts), chacun avec son texte et le nom
+// de ce qui en part dans sa question. Cursor n'en a pas : son essai est négatif (annexe 10).
+const COULISSES_TEXTS: Partial<Record<ConsentTool, { lines: readonly string[]; each: string }>> = {
+  claude_code: { lines: COULISSES_LINES, each: 'each session' },
+  codex: { lines: CODEX_COULISSES_LINES, each: 'each Codex session' },
+  antigravity: { lines: ANTIGRAVITY_COULISSES_LINES, each: 'each Antigravity conversation' },
+};
 
 export type Json = Record<string, unknown>;
 
@@ -652,7 +674,7 @@ const checkedByDefault = (text: string | null): boolean | null => {
 };
 type Offer = {
   lines: readonly string[];
-  question: (path: string) => string;
+  question: (path: string, each?: string) => string;
   answer: (text: string | null) => boolean | null;
   recorded: string;
   without: string; // ce qui manque sans l'usage
@@ -685,8 +707,8 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   },
   coulisses: {
     lines: COULISSES_LINES,
-    question: (path) =>
-      `\nAlso send Leon what happens behind the exchanges of each session: the reasoning, the subagents and the reduced tool calls (recorded in ${path})? [y/N] `,
+    question: (path, each = 'each session') =>
+      `\nAlso send Leon what happens behind the exchanges of ${each}: the reasoning, the subagents and the reduced tool calls (recorded in ${path})? [y/N] `,
     answer: (text) => (text === null ? null : isYes(text)),
     recorded: 'Full capture recorded',
     without: 'nothing behind the exchanges is sent',
@@ -704,8 +726,8 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
 // Les usages qui restent pour un outil sur son accord de base : manquants et jamais refusés (A16), puis tranchés dans
 // ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
 // Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05). Sauf
-// `coulisses`, pour Claude Code seul (décision 2 d'Amos pour le lot 14) : un « oui » de `leon setup` ne s'écrit pas dans
-// l'accord d'un outil dont la CLI ne relève pas encore les coulisses, qui partiraient sans redemander une fois relevées.
+// `coulisses` (T52 amendée le 17/11) : jamais pour Cursor, et demandé outil par outil, avec le texte de chacun ; une
+// décision du passage ne le tranche donc jamais.
 export function usagesToOffer(
   tool: ConsentTool,
   consent: FactsConsent | null,
@@ -713,9 +735,9 @@ export function usagesToOffer(
 ): (typeof OFFERED)[number][] {
   if (consent === null) return [];
   return OFFERED.filter((usage) => {
-    if (usage === 'coulisses' && tool !== 'claude_code') return false;
+    if (usage === 'coulisses' && !COULISSES_TEXTS[tool]) return false;
     if (consent.usages.includes(usage) || consent.refus.includes(usage)) return false;
-    const decided = options.decisions?.get(usage);
+    const decided = usage === 'coulisses' ? undefined : options.decisions?.get(usage);
     return decided === undefined
       ? options.interactive === true && !options.assumeYes
       : decided !== null;
@@ -740,11 +762,13 @@ export async function offerUsages(
   });
   for (const usage of pending) {
     const offer = OFFERS[usage];
-    let accepted = decisions.get(usage);
+    // La réponse à `coulisses` ne vaut que pour cet outil : son texte diffère d'un outil à l'autre.
+    const own = usage === 'coulisses' ? COULISSES_TEXTS[tool] : undefined;
+    let accepted = own ? undefined : decisions.get(usage);
     if (accepted === undefined) {
-      for (const line of ['', ...offer.lines]) deps.out(line);
-      accepted = offer.answer(await deps.ask(offer.question(path)));
-      decisions.set(usage, accepted);
+      for (const line of ['', ...(own?.lines ?? offer.lines)]) deps.out(line);
+      accepted = offer.answer(await deps.ask(offer.question(path, own?.each)));
+      if (!own) decisions.set(usage, accepted);
       // La réponse du terminal à `noter` vaut aussi pour `remember` (T65) ; une case de la page passe par l'échange du code.
       if (usage === 'noter' && accepted === true) deps.out(NOTES_REOPEN_LINE);
       if (usage === 'noter' && accepted === false && !(await deps.refuseNotes?.())) {

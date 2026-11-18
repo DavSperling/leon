@@ -1570,18 +1570,21 @@ describe('installHooks : les usages tranchés dans le passage', () => {
     });
   });
 
-  it('une réponse du terminal va dans les décisions, pour les outils suivants du passage', async () => {
+  // Sauf `coulisses` (T52 amendée le 17/11) : son texte diffère d'un outil à l'autre, sa réponse ne vaut que pour lui.
+  it('une réponse du terminal va dans les décisions, pour les outils suivants du passage, sauf coulisses', async () => {
     const decisions: UsageDecisions = new Map();
 
-    await install({ interactive: true, decisions, answers: ['oui', '', null, null, null, null] });
+    await install({ interactive: true, decisions, answers: ['oui', '', null, null, 'oui', null] });
 
     expect([...decisions]).toEqual([
       ['lecture', true],
       ['rappel', null],
       ['noter', null],
-      ['coulisses', null],
       ['resume', null],
     ]);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture', 'coulisses'],
+    });
   });
 
   it('demandé sans réponse dans le passage : ni redemandé, ni écrit', async () => {
@@ -1688,6 +1691,19 @@ describe('installHooks : l’usage coulisses', () => {
 
     expect(run.questions).toHaveLength(1);
     expect(run.output).not.toContain(COULISSES_TEXT);
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
+  });
+
+  // T52 amendée le 17/11 : un oui tranché dans le passage pour un autre outil ne vaut pas pour Claude Code.
+  it('un oui tranché dans le passage n’est pas repris : la question est posée avec le texte de Claude Code', async () => {
+    const run = await install({
+      interactive: true,
+      decisions: new Map([['coulisses', true]]),
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, SANS_REPONSE, null, null],
+    });
+
+    expect(run.questions[4]).toBe(coulissesQuestion());
+    expect(run.output).toContain(COULISSES_TEXT);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({ usages: [], refus: [] });
   });
 });

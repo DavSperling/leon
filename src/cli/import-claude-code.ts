@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   API_PATHS,
   COULISSES_BLOCS_MAX,
+  type CoulisseBloc,
   type CoulissesRequest,
   type RetraitRequest,
   type SessionFacts,
@@ -58,8 +59,8 @@ export type ImportDeps = {
   // retirer-crochets` lancé pendant un long import l'arrête, sans autre envoi. La borne d'une heure du résumé
   // (resume-worker.ts) en dépend. Les crochets de fin et le rattrapage le donnent aussi, pour les faits.
   withdrawn?: () => Promise<boolean>;
-  // Le listage d'un dossier, pour lire les sous-agents d'une session Claude Code (subagents.ts, T63). Absent, aucun n'est
-  // lu : leurs appels rendent la session externe.
+  // Le listage d'un dossier, pour lire les sous-agents d'une session (subagents.ts, T63). Absent, aucun n'est lu : leurs
+  // appels rendent la session externe.
   readdir?: (path: string) => Promise<string[]>;
   // Les faits de chaque session (C2), posés seulement quand l'accord couvre les gestes (consent.ts) : `accord` est la
   // version transmise au serveur, `usages` ceux que l'outil a acceptés (C7 révisé), `accordLe` la date de l'accord
@@ -296,8 +297,9 @@ export async function sendSessionFacts(
   }
 }
 
-// Les coulisses d'une session Claude Code (T52), après ses faits, seulement avec l'usage `coulisses` dans
-// `deps.facts.usages` (à l'import, déjà filtrés par `usagesDepuis`). Par lots sous la taille de la route et sous
+// Les coulisses d'une session (T52), après ses faits, seulement avec l'usage `coulisses` dans `deps.facts.usages` (à
+// l'import, déjà filtrés par `usagesDepuis`) : le seul envoi, pour tous les outils. `blocs` : le relevé de l'outil de la
+// session (`kind`, Claude Code par défaut), fait seulement avec l'usage. Par lots sous la taille de la route et sous
 // COULISSES_BLOCS_MAX blocs, les plus récents d'abord : une coupe du délai du crochet laisse les plus anciens à l'import,
 // qui les renvoie sans doublon (identifiants stables). En dryRun, seulement le nombre de blocs par rôle, jamais un
 // texte. Rend false quand le serveur ne les prend pas (404, 400 : COULISSES_REFUSED_MESSAGE) ; un 403 (usage retiré
@@ -305,18 +307,16 @@ export async function sendSessionFacts(
 // une autre session, qu'une session reprise recopie (mêmes identifiants), ne repartent pas.
 export async function sendSessionBackstage(
   session: Pick<CodeSession, 'sessionId'>,
-  source: { content: string; root: string | null; subagents: Subagents; seen?: Set<string> },
-  options: Pick<ImportOptions, 'dryRun'>,
+  source: { blocs: () => CoulisseBloc[]; seen?: Set<string> },
+  options: Pick<ImportOptions, 'dryRun'> & { kind?: CodeSessionKind },
   deps: ImportDeps,
 ): Promise<boolean> {
   const facts = deps.facts;
   if (!facts?.sendCoulisses || !facts.usages?.includes('coulisses')) return true;
-  const blocs = extractBackstage(source.content, source.root, source.subagents).filter(
-    (bloc) => !source.seen?.has(bloc.id),
-  );
+  const blocs = source.blocs().filter((bloc) => !source.seen?.has(bloc.id));
   for (const bloc of blocs) source.seen?.add(bloc.id);
   if (blocs.length === 0) return true;
-  const envelope = { kind: 'claude_code' as const, external_id: session.sessionId };
+  const envelope = { kind: options.kind ?? 'claude_code', external_id: session.sessionId };
   if (options.dryRun) {
     const counts = BACKSTAGE_ROLES.map((role) => [
       role,
@@ -417,7 +417,7 @@ export async function importClaudeCode(
       if (coulissesRefused || !fin) continue;
       coulissesRefused = !(await sendSessionBackstage(
         session,
-        { ...source, seen: seenBlocs },
+        { blocs: () => extractBackstage(content, root, subagents), seen: seenBlocs },
         options,
         factsDeps,
       ));

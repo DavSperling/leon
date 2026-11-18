@@ -2,7 +2,11 @@ import { NextIntlClientProvider } from 'next-intl';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import { COULISSES_LINES } from '@/cli/install-hooks';
+import {
+  ANTIGRAVITY_COULISSES_LINES,
+  CODEX_COULISSES_LINES,
+  COULISSES_LINES,
+} from '@/cli/install-hooks';
 import { pathExists, readText } from '@/test/contracts/files';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -341,13 +345,15 @@ describe('la page Documentation', () => {
     },
   );
 
-  // L'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14) : pour Claude Code seul, demandé
-  // à part dans un terminal, jamais avec --yes ni sur la page ; la page dit, en anglais mot pour mot, ce que dit
-  // COULISSES_LINES : ce qui part, qui le lit, et que le retrait arrête l'envoi sans rien effacer.
+  // L'usage `coulisses` (T52 amendée le 12/11, décisions 2, 3 et 5 d'Amos pour le lot 14 ; amendée le 17/11) : pour
+  // Claude Code, Codex et Antigravity, jamais Cursor, demandé à part pour chacun dans un terminal, jamais avec --yes ni
+  // sur la page ; la page dit, en anglais mot pour mot, le texte de chaque outil : ce qui part et quand, qui le lit, et
+  // que le retrait arrête l'envoi sans rien effacer.
   it.each(LOCALES)(
-    'dit ce que l’usage coulisses envoie, qui le lit, et qu’il est pour Claude Code seul (%s)',
+    'dit ce que l’usage coulisses envoie pour chaque outil, qui le lit, et qu’il n’est pas pour Cursor (%s)',
     (locale, messages) => {
-      const { coulisses, tools } = messages.site.documentation.sent;
+      const { coulisses, coulissesCodex, coulissesAntigravity, tools } =
+        messages.site.documentation.sent;
       const words = (en: string, fr: string) => (locale === 'en' ? en : fr);
 
       for (const term of [
@@ -359,10 +365,26 @@ describe('la page Documentation', () => {
         words('20,000', '20 000'),
       ])
         expect(coulisses, term).toContain(term);
+      const plain = (text: string) => text.replace(/’/g, "'").replace(/<\/?code>/g, '`');
+      const bullet = (line: string | undefined) => (line ?? '').replace(/^ {2}- /, '');
       if (locale === 'en') {
         for (const line of COULISSES_LINES.slice(1))
-          expect(coulisses.replace(/’/g, "'")).toContain(line.replace(/^ {2}- /, ''));
+          expect(plain(coulisses)).toContain(bullet(line));
+        expect(plain(coulissesCodex)).toContain(bullet(CODEX_COULISSES_LINES[1]));
+        expect(plain(coulissesAntigravity)).toContain(bullet(ANTIGRAVITY_COULISSES_LINES[1]));
       }
+      for (const term of ['Codex', 'Antigravity', 'Cursor'])
+        expect(coulisses, term).toContain(term);
+      // Les limites de l'amendement du 17/11 : le retard, et chez Antigravity le raisonnement entier et le statut.
+      expect(coulissesCodex).toContain(words('30 minutes', '30 minutes'));
+      expect(coulissesAntigravity).toContain(words('in full', 'en entier'));
+      expect(coulissesAntigravity).toContain('<code>ok</code>');
+      expect(coulissesCodex).toContain(
+        words(
+          'The rest is the same as for Claude Code',
+          'Le reste est le même que pour Claude Code',
+        ),
+      );
       expect(coulisses).toContain(
         words(
           'by you and, on the Leon website, by the managers above you',
@@ -374,19 +396,23 @@ describe('la page Documentation', () => {
       );
       expect(tools).toContain(
         words(
-          '<code>coulisses</code> is not offered to them',
-          '<code>coulisses</code> ne leur est pas proposé',
+          '<code>coulisses</code> is offered to Codex and Antigravity, each with its own text, never to Cursor',
+          '<code>coulisses</code> est proposé à Codex et à Antigravity, chacun avec son texte, jamais à Cursor',
         ),
       );
-      expect(documentationMarkdown({ locale, messages, ...GIVEN })).toContain(
-        coulisses.replace(/<\/?code>/g, '`'),
-      );
-      expect(textOf(render(locale))).toContain(
+      expect(tools).not.toContain(words('Claude Code only', 'Claude Code seulement'));
+      const markdown = documentationMarkdown({ locale, messages, ...GIVEN });
+      for (const item of [coulisses, coulissesCodex, coulissesAntigravity])
+        expect(markdown).toContain(item.replace(/<\/?code>/g, '`'));
+      const page = textOf(render(locale));
+      expect(page).toContain(
         words(
           'The coulisses usage (full capture) is optional',
           'L’usage coulisses (la capture complète) est facultatif',
         ),
       );
+      expect(page).toContain(words('With Codex', 'Avec Codex'));
+      expect(page).toContain(words('With Antigravity', 'Avec Antigravity'));
     },
   );
 

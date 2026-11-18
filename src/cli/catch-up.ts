@@ -22,6 +22,7 @@ import {
 } from './consent';
 import { OUTILS, type Outil } from './hook-commands';
 import {
+  type CoulissesSender,
   type FactsSender,
   IDLE_MS,
   type ImportDeps,
@@ -103,6 +104,7 @@ export type CatchUpDeps = Omit<ToolCaptureDeps, 'facts'> & {
   env: Record<string, string | undefined>;
   now: () => Date;
   sendFacts: FactsSender;
+  sendCoulisses: CoulissesSender;
   // La route du retrait (T43), pour les retraits que le serveur n'a pas appris.
   withdraw: WithdrawalSender;
 };
@@ -119,16 +121,23 @@ export async function catchUp(deps: CatchUpDeps): Promise<CatchUpSummary> {
   await purgeOldTemoins(deps.home, now);
   const tools = await captureTools(deps.home);
   if (!(await catchUpNeeded(deps.home)) || !(await takeLock(deps.home, now))) return summary;
+  // Un serveur qui refuse les coulisses (400, 404) les refusera pour tous les fichiers : plus aucune du passage.
+  const passage = { coulissesRefusees: false };
   try {
     await catchUpWithdrawals(deps.home, deps.withdraw);
-    for (const outil of tools) await catchUpTool(outil, deps, summary);
+    for (const outil of tools) await catchUpTool(outil, deps, summary, passage);
   } finally {
     await unlink(lockPath(deps.home)).catch(() => {});
   }
   return summary;
 }
 
-async function catchUpTool(outil: Outil, deps: CatchUpDeps, summary: CatchUpSummary) {
+async function catchUpTool(
+  outil: Outil,
+  deps: CatchUpDeps,
+  summary: CatchUpSummary,
+  passage: { coulissesRefusees: boolean },
+) {
   const consent = await factsConsent(deps.home, outil);
   const since = consent?.capture_le;
   if (!consent || !since) return;
@@ -136,27 +145,40 @@ async function catchUpTool(outil: Outil, deps: CatchUpDeps, summary: CatchUpSumm
     // L'accord retiré en cours de route (`leon retirer-crochets`) arrête tout de suite.
     if (await consentWithdrawn(deps.home, outil)) throw new Error(CONSENT_WITHDRAWN_MESSAGE);
     if (file.mtimeMs < since.getTime()) continue;
-    const cursor = await readCursor(deps.home, outil, file.path);
-    if (cursor && cursor.mtime === file.mtimeMs && cursor.taille === file.size) continue;
     // Comme l'import de Claude Code : un usage ne part qu'avec les fichiers modifiés après sa date.
     const usages = consent.usages.filter(
       (usage) => file.mtimeMs >= (consent.usages_le[usage]?.getTime() ?? 0),
     );
+    const fin = deps.now().getTime() - file.mtimeMs >= IDLE_MS;
+    const cursor = await readCursor(deps.home, outil, file.path);
+    // Un fichier inchangé est sauté, sauf s'il doit encore ses coulisses : fini, avec l'usage, sans la marque.
+    // shortcut: le message d'un sous-agent d'Antigravity écrit après la dernière capture attend que la session bouge (le
+    // crochet Stop, ou ce rattrapage) ; regarder aussi l'heure des conversations des sous-agents si un essai montre un
+    // message reçu sans que le fichier de la session change.
+    const owed =
+      fin &&
+      usages.includes('coulisses') &&
+      !cursor?.coulisses &&
+      ADAPTATEURS[outil].coulisses !== undefined &&
+      !passage.coulissesRefusees;
+    if (cursor && cursor.mtime === file.mtimeMs && cursor.taille === file.size && !owed) continue;
     const facts: ImportDeps['facts'] = {
       accord: consent.version,
       accordLe: consent.installe_le,
       usages,
       send: deps.sendFacts,
+      ...(passage.coulissesRefusees ? {} : { sendCoulisses: deps.sendCoulisses }),
     };
     const withdrawn = () => consentWithdrawn(deps.home, outil);
     try {
-      const fin = deps.now().getTime() - file.mtimeMs >= IDLE_MS;
-      if (
-        (await captureToolFile(outil, file.path, { fin }, { ...deps, facts, withdrawn })) ===
-        'capte'
-      ) {
-        summary.sessions += 1;
-      }
+      const capture = await captureToolFile(
+        outil,
+        file.path,
+        { fin },
+        { ...deps, facts, withdrawn },
+      );
+      if (capture !== 'rien') summary.sessions += 1;
+      if (capture === 'coulisses_refusees') passage.coulissesRefusees = true;
     } catch (error) {
       if (error instanceof TokenRefusedError) throw error;
       summary.failures += 1;

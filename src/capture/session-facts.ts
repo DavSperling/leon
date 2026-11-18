@@ -277,9 +277,10 @@ export function factText(text: string, max = Number.POSITIVE_INFINITY): string {
 // Un worktree rangé dans le clone (`.claude/worktrees/<nom>/`, le flux de CLAUDE.md) : ses fichiers sont ceux du dépôt.
 const CLONE_WORKTREE = /^\.claude[\\/]worktrees[\\/][^\\/]+[\\/]/;
 
-// Le dossier personnel ou une variable (« ~/x », « $HOME/x », « %USERPROFILE%\x ») : rien ne les développe ici, ils
+// Le dossier personnel, une variable (« ~/x », « $HOME/x », « %USERPROFILE%\x »), un guillemet ou un blanc en tête
+// (« "/Users/x" », « '/Users/x' », « /Users/x » précédé d'une espace) : rien ne les développe ni ne les retire ici, ils
 // passeraient pour relatifs au dépôt. Un « $ » au milieu reste (une route « app/routes/$id.tsx »).
-const HOME_OR_VARIABLE = /^[~$]|%[A-Za-z_][A-Za-z0-9_]*%/;
+export const HOME_OR_VARIABLE = /^[\s~$"']|%[A-Za-z_][A-Za-z0-9_]*%/;
 
 // Relatif au dépôt, ou null s'il en sort (« ../leon-autre/x.ts », un autre disque, « ~/x ») ou s'il n'y a pas de dépôt.
 export function repoRelativePath(path: string, root: string | null): string | null {

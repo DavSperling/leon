@@ -1,4 +1,4 @@
-import { copyFile, cp, mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { appendFile, copyFile, cp, mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,7 +11,12 @@ import { createApiToken } from '../server/auth/api-tokens';
 import { sources, turns } from '../server/db/schema/memory';
 import { adminDb } from '../test/db';
 import { createTestTenant } from '../test/fixtures';
-import { captureSessionFromHook } from './capture-session';
+import {
+  captureSessionFromHook,
+  captureToolFile,
+  captureToolHook,
+  type ToolCaptureDeps,
+} from './capture-session';
 import { FACTS_VERSION } from './consent';
 import { createCoulissesSender, createFactsSender, createIngestSender } from './import-claude-code';
 import { loadSubagents } from './subagents';
@@ -135,5 +140,163 @@ describe('le crochet de fin et les coulisses, jusqu’en base (T52)', () => {
     const { stored } = await captureAndRead(['lecture']);
 
     expect(new Set(stored.map((turn) => turn.role))).toEqual(new Set(['user', 'assistant']));
+  });
+});
+
+// T52 et T63 amendés le 17/11 : la capture d'un fichier de Codex ou d'Antigravity, ses envois réels passés à l'app en
+// mémoire, puis les tours que le serveur a rangés. Le serveur ne garde une cible que sous le nom commun (`Bash`,
+// `Read`, `Edit`) : la CLI y ramène les outils connus, et un nom inconnu arrive en `[outil]`, sans cible.
+describe('la capture de Codex et d’Antigravity et leurs coulisses, jusqu’en base', () => {
+  const ESSAI = '/Users/demo/projets/essai';
+  const TEMOIN = 'TEMOIN-ARGUMENT-7f3a';
+
+  async function captureToolAndRead(
+    externalId: string,
+    run: (deps: ToolCaptureDeps & { env: Record<string, string | undefined> }) => Promise<unknown>,
+  ) {
+    const { tenantId, members } = await createTestTenant(['Paul']);
+    const [paul] = members;
+    if (!paul) throw new Error('membre de test manquant');
+    const { token } = await createApiToken(paul, 'test');
+    const fetchImpl: typeof fetch = async (url, init) => app.request(url.toString(), init);
+    const server = { url: 'http://localhost:3000', token };
+    const warnings = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await run({
+      send: createIngestSender(fetchImpl, server),
+      facts: {
+        accord: FACTS_VERSION,
+        accordLe: new Date(),
+        usages: ['coulisses'],
+        send: createFactsSender(fetchImpl, server),
+        sendCoulisses: createCoulissesSender(fetchImpl, server),
+      },
+      out: () => {},
+      // Chaque dossier est la racine de son dépôt, sans remote.
+      git: async (args) => (args[0] === 'rev-parse' ? 'true\n' : null),
+      readFile: (path) => readFile(path, 'utf8'),
+      readdir: (path) => readdir(path),
+      stat: (path) => stat(path),
+      home: dir,
+      env: { CODEX_HOME: join(dir, 'codex') },
+    });
+    const messages = warnings.mock.calls.map(([message]) => message);
+    warnings.mockRestore();
+    const [source] = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(and(eq(sources.tenantId, tenantId), eq(sources.externalId, externalId)));
+    if (!source) throw new Error('session absente de la base');
+    const stored = await adminDb
+      .select({ role: turns.role, text: turns.text, injecte: turns.injecte })
+      .from(turns)
+      .where(eq(turns.sourceId, source.id));
+    return { messages, stored };
+  }
+  const appels = (stored: { role: string; text: string }[]) =>
+    stored.filter((turn) => turn.role === 'appel_outil').map((turn) => turn.text);
+
+  it('Codex, au crochet de fin : le raisonnement, les sous-agents et les appels sous le nom commun', async () => {
+    const S = '019a7d2c-1111-7111-8111-111111111111';
+    const day = join(dir, 'codex', 'sessions', '2026', '11', '13');
+    await cp(
+      fileURLToPath(new URL('../capture/fixtures/codex-sous-agents/', import.meta.url)),
+      day,
+      {
+        recursive: true,
+      },
+    );
+    const path = join(day, `rollout-2026-11-13T10-56-00-${S}.jsonl`);
+    // Un changement de fichier, et un élément que le lecteur ne connaît pas, dont un argument est témoin.
+    const item = (ordinal: number, value: Record<string, unknown>) =>
+      `${JSON.stringify({
+        timestamp: `2026-11-13T10:58:0${ordinal - 47}.000Z`,
+        ordinal,
+        type: 'event_msg',
+        payload: { type: 'item_completed', thread_id: S, turn_id: 'tour-2', item: value },
+      })}\n`;
+    await appendFile(
+      path,
+      item(47, {
+        type: 'FileChange',
+        id: 'i-20',
+        changes: { 'a.txt': { type: 'update' } },
+        status: 'completed',
+      }) + item(48, { type: 'OutilNouveau', id: 'i-21', status: 'completed', requete: TEMOIN }),
+    );
+
+    const { messages, stored } = await captureToolAndRead(S, (deps) =>
+      captureToolHook(
+        'codex',
+        'fin',
+        JSON.stringify({ session_id: S, transcript_path: path, cwd: ESSAI }),
+        deps,
+      ),
+    );
+
+    expect(messages).toEqual([]);
+    const of = (role: string) =>
+      stored.filter((turn) => turn.role === role).map((turn) => turn.text);
+    expect(of('raisonnement')).toEqual([
+      'Deux commandes à la suite : un ls qui échouera, puis les tests.',
+    ]);
+    expect(of('sous_agent')).toContain('[consigne]\nLis a.txt et rends son contenu.');
+    expect(of('sous_agent')).toContain('[rapport]\na.txt contient « bonjour ».');
+    expect(appels(stored)).toEqual(
+      expect.arrayContaining([
+        'Bash · ls · erreur',
+        'Bash · pnpm test · ok',
+        'Bash · cat · ok', // l'appel d'un sous-agent
+        'Edit · a.txt · ok',
+        '[outil] · ok',
+      ]),
+    );
+    expect(stored.some((turn) => turn.text.includes(TEMOIN))).toBe(false);
+  });
+
+  it('Antigravity, quand la conversation est finie : les mêmes noms communs, et rien de ses arguments', async () => {
+    const CONVERSATION = '11111111-1111-4111-8111-111111111111';
+    const brain = join(dir, '.gemini', 'antigravity', 'brain');
+    await cp(
+      fileURLToPath(new URL('../capture/fixtures/antigravity-sous-agents/brain/', import.meta.url)),
+      brain,
+      { recursive: true },
+    );
+    const path = join(brain, CONVERSATION, '.system_generated', 'logs', 'transcript_full.jsonl');
+    // Un outil que le lecteur ne connaît pas, dont un argument est témoin, resté sans résultat.
+    await appendFile(
+      path,
+      `${JSON.stringify({
+        step_index: 19,
+        source: 'MODEL',
+        type: 'PLANNER_RESPONSE',
+        status: 'DONE',
+        created_at: '2026-11-13T11:47:00Z',
+        tool_calls: [{ name: 'outil_nouveau', args: { Query: TEMOIN } }],
+      })}\n`,
+    );
+
+    const { messages, stored } = await captureToolAndRead(CONVERSATION, (deps) =>
+      captureToolFile('antigravity', path, { fin: true, dossier: ESSAI }, deps),
+    );
+
+    expect(messages).toEqual([]);
+    // Le message de chaque sous-agent à la session, rangé comme un tour `user` injecté (décision d'Amos du 17/11).
+    for (const text of [
+      'a.txt contient « bonjour ».',
+      "La page ne s'ouvre pas encore, je réessaie.",
+      'La page affiche « Exemple ».',
+    ])
+      expect(stored).toContainEqual({ role: 'user', text, injecte: true });
+    expect(stored.some((turn) => turn.role === 'raisonnement')).toBe(true);
+    expect(stored.map((turn) => turn.text)).toContain('[rapport]\na.txt contient « bonjour ».');
+    expect(appels(stored)).toEqual(
+      expect.arrayContaining([
+        'Bash · ls · ok',
+        'Read · a.txt · ok', // l'appel d'un sous-agent
+        'invoke_subagent · ok',
+        '[outil] · sans_resultat',
+      ]),
+    );
+    expect(stored.some((turn) => turn.text.includes(TEMOIN))).toBe(false);
   });
 });

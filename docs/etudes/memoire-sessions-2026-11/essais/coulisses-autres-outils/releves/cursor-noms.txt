@@ -1,0 +1,47 @@
+
+== fichier 1 (conversation, 5498 octets)
+ligne 1 : {"role":"user"}
+   bloc {"type":"text","text":"chaine(537)"}
+ligne 2 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(130)"}
+   appel GetDynamicTools {"type":"tool_use"} entrée {"namespace":"chaine(6)","toolName":"chaine(4)"}
+ligne 3 : {"role":"assistant"}
+   appel CallDynamicTool {"type":"tool_use"} entrée {"namespace":"chaine(6)","toolName":"chaine(4)","arguments":"object"}
+ligne 4 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(147)"}
+   appel CallDynamicTool {"type":"tool_use"} entrée {"arguments":"object","namespace":"chaine(6)","toolName":"chaine(4)"}
+ligne 5 : {"role":"assistant"}
+   appel CallDynamicTool {"type":"tool_use"} entrée {"arguments":"object","namespace":"chaine(6)","toolName":"chaine(4)"}
+ligne 6 : {"role":"assistant"}
+   appel CallDynamicTool {"type":"tool_use"} entrée {"arguments":"object","namespace":"chaine(6)","toolName":"chaine(4)"}
+ligne 7 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(387)"}
+ligne 8 : {"type":"turn_ended","status":"success"}
+ligne 9 : {"role":"user"}
+   bloc {"type":"text","text":"chaine(235)"}
+ligne 10 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(66)"}
+   appel Shell {"type":"tool_use"} entrée {"command":"chaine(40)","description":"chaine(36)"}
+ligne 11 : {"role":"assistant"}
+   appel Shell {"type":"tool_use"} entrée {"command":"chaine(49)","description":"chaine(34)"}
+ligne 12 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(114)"}
+   appel Shell {"type":"tool_use"} entrée {"command":"chaine(49)","description":"chaine(41)","required_permissions":"tableau[1]"}
+ligne 13 : {"role":"assistant"}
+   bloc {"type":"text","text":"chaine(245)"}
+ligne 14 : {"type":"turn_ended","status":"success"}
+ligne 15 : {"type":"turn_ended","status":"error","error":"chaine(20)"}
+ligne 16 : {"role":"user"}
+   bloc {"type":"text","text":"chaine(624)"}
+
+== fichier 2 (sous-agent, 180 octets)
+ligne 1 : {"type":"turn_ended","status":"error","error":"chaine(130)"}
+
+== fichier 3 (sous-agent, 180 octets)
+ligne 1 : {"type":"turn_ended","status":"error","error":"chaine(130)"}
+
+== fichier 4 (sous-agent, 180 octets)
+ligne 1 : {"type":"turn_ended","status":"error","error":"chaine(130)"}
+
+== fichier 5 (sous-agent, 180 octets)
+ligne 1 : {"type":"turn_ended","status":"error","error":"chaine(130)"}

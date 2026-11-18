@@ -115,6 +115,8 @@ export function documentationMarkdown({
             'rappel',
             'noter',
             'coulisses',
+            'coulissesCodex',
+            'coulissesAntigravity',
             'resume',
           ] as const
         ).map((k) => md(`sent.${k}`)),

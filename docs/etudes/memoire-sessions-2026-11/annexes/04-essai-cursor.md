@@ -45,3 +45,5 @@
 ## Remise en état
 
 `~/.cursor/hooks.json` et sa copie `.avant-temoin` ont été supprimés, puisqu'aucun des deux n'existait avant l'essai. Rien d'autre n'a été changé dans `~/.cursor`. Restent à effacer à la main : `~/.leon-essai/`, le dossier de test, et `~/.cursor/projects/<slug du dossier de test>/`, que Cursor a créé avec les transcripts de l'essai.
+
+La suite de l'essai de Cursor, pour les coulisses (raisonnement, sous-agents, appels d'outils), est dans l'[annexe 10](10-essai-cursor-coulisses.md).

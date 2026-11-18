@@ -70,3 +70,5 @@
 ## Remise en état
 
 `~/.gemini/config/hooks.json` n'existait pas avant l'essai : après `retirer`, il ne contenait que `{}` et a été supprimé. Rien d'autre n'a été changé dans `~/.gemini`. Le journal du témoin (`~/.leon-essai/`) et le dossier de test sont à effacer à la main.
+
+La suite de l'essai d'Antigravity, pour les coulisses (raisonnement, sous-agents, appels d'outils), est dans l'[annexe 11](11-essai-antigravity-coulisses.md).

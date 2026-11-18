@@ -11,6 +11,7 @@ import {
   uninstallAntigravityHooks,
 } from './install-antigravity';
 import {
+  ANTIGRAVITY_COULISSES_LINES,
   COULISSES_LINES,
   LECTURE_LINES,
   NOTER_LINES,
@@ -97,7 +98,12 @@ describe('installAntigravityHooks', () => {
 
     for (const line of ANTIGRAVITY_CONSENT_LINES) expect(out).toContain(line);
     const text = ANTIGRAVITY_CONSENT_LINES.join('\n');
-    expect(text).toContain('labeled as written by Antigravity, not by you');
+    // Décision d'Amos du 17/11 : le rapport d'un sous-agent part sous cet accord, marqué, comme chez Cursor.
+    expect(text).toContain(
+      "the messages Antigravity writes itself in your place, such as a subagent's report, labeled as written by Antigravity, not by you;",
+    );
+    // Amendé le 18/11 : les faits relèvent aussi les commits et les PR, le texte les dit comme celui de Codex.
+    expect(text).toContain('Git (branch, commits, pull requests)');
     expect(text).toContain("so it is given to Antigravity's model");
     expect(text).toContain('(.pb) and its databases are never read');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).
@@ -148,13 +154,13 @@ describe('installAntigravityHooks', () => {
 // T47 (décisions d'Amos du 11/11) : Antigravity propose `lecture`, `rappel` (depuis l'essai de l'appli 2.0.6 du 11/11),
 // puis `resume`, avec les textes de Claude Code, dans un terminal, après l'accord de base et la capture.
 describe('installAntigravityHooks : les usages', () => {
-  it('dans un terminal, après l’accord : lecture, rappel, noter puis resume, écrits pour Antigravity seul', async () => {
-    const { code, out, asked } = await install(['oui', 'oui', 'oui', 'oui', 'non'], {
+  it('dans un terminal, après l’accord : lecture, rappel, noter, coulisses puis resume, écrits pour Antigravity seul', async () => {
+    const { code, out, asked } = await install(['oui', 'oui', 'oui', 'oui', null, 'non'], {
       interactive: true,
     });
 
     expect(code).toBe(0);
-    expect(asked).toHaveLength(5);
+    expect(asked).toHaveLength(6);
     expect(out).toContain(LECTURE_LINES.join('\n'));
     expect(out.indexOf(NOTER_LINES.join('\n'))).toBeGreaterThan(
       out.indexOf(RAPPEL_LINES.join('\n')),
@@ -173,31 +179,72 @@ describe('installAntigravityHooks : les usages', () => {
     await install();
 
     expect((await install([])).out).toContain('nothing to do');
-    const { out, asked } = await install([null, null, null, null], { interactive: true });
-    expect(asked).toHaveLength(4);
+    const { out, asked } = await install([null, null, null, null, null], { interactive: true });
+    expect(asked).toHaveLength(5);
     expect(out).not.toContain('nothing to do');
   });
-  // Lot 14, décision 2 d'Amos : `coulisses` est pour Claude Code seul, tant que la CLI ne relève pas celles d'Antigravity.
-  it('coulisses n’est ni demandé ni écrit pour Antigravity, même tranché oui dans le passage par Claude Code', async () => {
-    const { out, asked } = await install(['oui', null, null, null, null], {
+  // T52 amendée le 17/11 : `coulisses` se demande pour Antigravity, avec son texte, outil par outil. Un oui donné dans
+  // le passage pour un autre outil ne vaut pas pour lui.
+  it('coulisses : le texte d’Antigravity, mot pour mot, ses deux dernières puces celles de Claude Code', () => {
+    expect(ANTIGRAVITY_COULISSES_LINES.slice(0, 2)).toEqual([
+      'Full capture (usage "coulisses", optional, asked separately):',
+      "  - Once an Antigravity conversation has not changed for 30 minutes, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, which Antigravity writes in full in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for any other tool, nothing, and a tool Leon does not know, such as an MCP tool, is kept without its name. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. It is sent in the background the next time Leon's start hook runs on this computer.",
+    ]);
+    expect(ANTIGRAVITY_COULISSES_LINES.slice(2)).toEqual(COULISSES_LINES.slice(2));
+    expect(ANTIGRAVITY_COULISSES_LINES).toHaveLength(4);
+  });
+
+  it('coulisses : demandé en [y/N] avec le texte d’Antigravity, avant resume ; un oui l’écrit pour Antigravity seul', async () => {
+    const { out, asked } = await install(['oui', null, null, null, 'oui', null], {
+      interactive: true,
+    });
+
+    expect(asked).toHaveLength(6);
+    expect(asked[4]).toBe(
+      `\nAlso send Leon what happens behind the exchanges of each Antigravity conversation: the reasoning, the subagents and the reduced tool calls (recorded in ${join(home, '.leon', 'accord.json')})? [y/N] `,
+    );
+    expect(out).toContain(ANTIGRAVITY_COULISSES_LINES.join('\n'));
+    expect(out).not.toContain(COULISSES_LINES[1]);
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({
+      usages: ['coulisses'],
+      refus: [],
+    });
+  });
+
+  it('coulisses : un oui tranché dans le passage pour un autre outil ne s’écrit pas, la question est posée', async () => {
+    const { asked } = await install(['oui', null, null, null, null, null], {
       interactive: true,
       decisions: new Map([['coulisses', true]]),
     });
 
-    expect(asked).toHaveLength(5);
-    expect(out).not.toContain(COULISSES_LINES[0]);
+    expect(asked).toHaveLength(6);
+    expect(asked[4]).toContain('each Antigravity conversation');
+    expect(await factsConsent(home, 'antigravity')).toMatchObject({ usages: [], refus: [] });
+  });
+
+  it('coulisses : ni avec --oui, ni hors terminal', async () => {
+    const outside = await install(['oui', 'oui', 'oui', 'oui', 'oui', 'oui']);
+    expect(outside.asked).toHaveLength(1);
+    expect(outside.out).not.toContain(COULISSES_LINES[0]);
+
+    const out: string[] = [];
+    await installAntigravityHooks(
+      { home, assumeYes: true, interactive: true },
+      { out: (text) => out.push(text), err: () => {}, ask: async () => 'oui' },
+    );
+    expect(out.join('\n')).not.toContain(COULISSES_LINES[0]);
     expect(await factsConsent(home, 'antigravity')).toMatchObject({ usages: [], refus: [] });
   });
   // T49, amendé le 11/11 au soir : PreInvocation reçoit le message dans l'appli 2.0.6 (annexe 05) ; le crochet déjà posé
   // porte le rappel, sans crochet de plus.
   it('rappel : une décision de la page l’écrit pour Antigravity, sans le redemander ni changer ses crochets', async () => {
     await writeHooks(userEntry);
-    const { asked } = await install(['oui', 'non', 'non', 'non'], {
+    const { asked } = await install(['oui', 'non', 'non', null, 'non'], {
       interactive: true,
       decisions: new Map([['rappel', true]]),
     });
 
-    expect(asked).toHaveLength(4);
+    expect(asked).toHaveLength(5);
     expect(asked.some((question) => question.includes('remind'))).toBe(false);
     expect(await factsConsent(home, 'antigravity')).toMatchObject({
       usages: ['rappel'],

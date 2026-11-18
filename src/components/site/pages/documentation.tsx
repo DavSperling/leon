@@ -228,6 +228,8 @@ export function DocumentationPage({
                         'rappel',
                         'noter',
                         'coulisses',
+                        'coulissesCodex',
+                        'coulissesAntigravity',
                         'resume',
                       ] as const
                     ).map((item) => (

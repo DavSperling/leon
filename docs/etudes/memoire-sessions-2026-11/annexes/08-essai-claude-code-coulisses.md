@@ -97,7 +97,7 @@ L'essai a trois limites : seul le mode `claude -p` a tourné (sauf pour le raiso
 - **Un sous-agent continué** par un message après son rapport, et un sous-agent d'une équipe (`teammate`).
 - **Les anciennes versions** de Claude Code : la forme vient de la 2.1.322 seulement.
 - **Un relevé pour le prochain passage**, que le script témoin note depuis la relecture du 12/11, en nombres seulement : les comptes du harnais face aux blocs de `toolUseResult.content` (le dernier bloc est-il le rapport ? `harnessTailCount` n'est pas lu).
-- **Codex, Cursor et Antigravity** : un essai par outil, avec Amos devant chaque appli (décision 2 du 12/11).
+- **Codex, Cursor et Antigravity** : essayés le 13/11, avec Amos devant chaque appli (décision 2 du 12/11) : voir l'[annexe 9](09-essai-codex-coulisses.md) (Codex), l'[annexe 10](10-essai-cursor-coulisses.md) (Cursor) et l'[annexe 11](11-essai-antigravity-coulisses.md) (Antigravity).
 
 ## Remise en état
 

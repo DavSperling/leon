@@ -1,8 +1,10 @@
 import {
   appendFile,
   copyFile,
+  cp,
   mkdir,
   mkdtemp,
+  readdir,
   readFile,
   rm,
   stat,
@@ -10,9 +12,13 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { SessionFactsPayload } from '../capture/api-contract';
+import { extractAntigravityBackstage } from '../capture/antigravity';
+import type { CoulissesRequest, SessionFactsPayload } from '../capture/api-contract';
+import { extractCodexBackstage, parseCodexSession } from '../capture/codex';
+import { parseCursorSession } from '../capture/cursor';
 import type { IngestPayload, IngestResult } from '../capture/turn';
 import {
   captureToolFile,
@@ -21,6 +27,7 @@ import {
   readCursor,
   type ToolCaptureDeps,
   turnsAfter,
+  writeCursor,
 } from './capture-session';
 import {
   type CatchUpDeps,
@@ -39,8 +46,13 @@ import {
   withdrawalToTell,
   writeConsent,
 } from './consent';
-import { IngestResponseError, TokenRefusedError } from './import-claude-code';
+import {
+  COULISSES_REFUSED_MESSAGE,
+  IngestResponseError,
+  TokenRefusedError,
+} from './import-claude-code';
 import { cursorSlug as cursorSlugOf } from './outils';
+import { loadAntigravitySubagents, loadCodexSubagents } from './subagents';
 
 // Toujours dans un HOME temporaire, avec CODEX_HOME à côté : jamais les vraies sessions de Codex ni le vrai ~/.leon.
 const FIXTURE = new URL('../capture/fixtures/codex/rollout-git.jsonl', import.meta.url);
@@ -61,6 +73,7 @@ let codexDir: string;
 let env: Record<string, string | undefined>;
 let sent: IngestPayload[];
 let facts: SessionFactsPayload[];
+let coulisses: CoulissesRequest[];
 let told: string[];
 
 beforeEach(async () => {
@@ -70,6 +83,7 @@ beforeEach(async () => {
   env = { CODEX_HOME: codexDir };
   sent = [];
   facts = [];
+  coulisses = [];
   told = [];
 });
 afterEach(async () => {
@@ -122,6 +136,9 @@ function catchUpDeps(overrides: Partial<CatchUpDeps> = {}): CatchUpDeps {
     ...capture,
     sendFacts: async (payload) => {
       facts.push(payload);
+    },
+    sendCoulisses: async (request) => {
+      coulisses.push(request);
     },
     withdraw: async (outil) => {
       told.push(outil);
@@ -674,6 +691,34 @@ describe('Cursor : capter à chaque stop, rattraper', () => {
     expect(new Set(directories)).toEqual(new Set([workspace]));
   });
 
+  // Annexe 10 : le fichier d'un sous-agent n'a ni message ni appel ; le capter ferait partir une session vide.
+  it('un transcript de sous-agent (`subagents/`) n’est jamais capté comme une session, au crochet comme au rattrapage', async () => {
+    await writeConsent(home, 'cursor', 2, INSTALLE);
+    await recordCapture(home, 'cursor', INSTALLE);
+    const workspace = join(dir, 'projets', 'leon');
+    await mkdir(workspace, { recursive: true });
+    const path = await transcript(cursorSlugOf(workspace), MAINTENANT);
+    const sousAgent = join(
+      dirname(path),
+      'subagents',
+      '9f1c0000-0000-4000-8000-000000000002.jsonl',
+    );
+    await mkdir(dirname(sousAgent), { recursive: true });
+    await copyFile(CURSOR_FIXTURE, sousAgent);
+    const stop = JSON.stringify({ ...JSON.parse(stopJson(workspace)), transcript_path: sousAgent });
+    const readSpy = vi.fn((file: string) => readFile(file, 'utf8'));
+
+    // Le crochet qui le nomme capte la conversation, déduite de son identifiant.
+    await captureToolHook('cursor', 'tour', stop, { ...captureDeps({ readFile: readSpy }), env });
+    expect(sent.map((payload) => payload.source.external_id)).toEqual([CONVERSATION]);
+
+    sent = [];
+    await rm(cursorPath(home, 'cursor', path));
+    await catchUp(catchUpDeps({ readFile: readSpy }));
+    expect(sent.map((payload) => payload.source.external_id)).toEqual([CONVERSATION]);
+    expect(readSpy).not.toHaveBeenCalledWith(sousAgent);
+  });
+
   it('sans accord de capture de Cursor, aucun transcript n’est ouvert', async () => {
     await transcript('Users-x', MAINTENANT);
     const readSpy = vi.fn(async () => '');
@@ -779,5 +824,510 @@ describe('Antigravity : capter quand la conversation est inactive, rattraper', (
 
     expect(await catchUp(catchUpDeps({ git: spyGit }))).toEqual({ sessions: 1, failures: 0 });
     expect(new Set(directories)).toEqual(new Set([workspace]));
+  });
+});
+
+// T52 et T63 amendés le 17/11 : les coulisses de Codex et d'Antigravity, et leurs sous-agents. Elles ne partent qu'une
+// fois la session finie (le crochet de fin de Codex, ou le rattrapage après 30 min sans changement), avec l'usage
+// `coulisses`, puis le curseur porte la marque. Les fixtures inventées des annexes 09 et 11, copiées dans le HOME
+// d'essai.
+describe('les coulisses de Codex et d’Antigravity', () => {
+  const S = '019a7d2c-1111-7111-8111-111111111111'; // la session Codex
+  const L = '019a7d2c-2222-7222-8222-222222222222'; // son sous-agent qui lit le dépôt
+  const W = '019a7d2c-3333-7333-8333-333333333333'; // son sous-agent qui va sur le web
+  const CONVERSATION = '11111111-1111-4111-8111-111111111111'; // la conversation Antigravity
+  const NAVIGATEUR = '33333333-3333-4333-8333-333333333333'; // son sous-agent qui ouvre une page
+  const ESSAI = '/Users/demo/projets/essai';
+  const FINIE = new Date(MAINTENANT.getTime() - 31 * 60_000); // immobile depuis plus de 30 min
+  const codexDay = () => join(codexDir, 'sessions', '2026', '11', '13');
+  const rolloutOf = (thread: string) =>
+    join(
+      codexDay(),
+      `rollout-2026-11-13T10-56-${{ [S]: '00', [L]: '05', [W]: '06' }[thread]}-${thread}.jsonl`,
+    );
+  const brain = () => join(home, '.gemini', 'antigravity', 'brain');
+  const transcriptOf = (conversation: string) =>
+    join(brain(), conversation, '.system_generated', 'logs', 'transcript_full.jsonl');
+  const lecture = { readFile: (path: string) => readFile(path, 'utf8'), readdir };
+
+  // La session Codex et ses deux sous-agents, datés de `modified`. `local` : le sous-agent du web remplacé par celui qui
+  // lit le dépôt (même forme), pour une session qui ne lit que le dépôt.
+  async function codexSession(modified: Date, local = false): Promise<string> {
+    await cp(
+      fileURLToPath(new URL('../capture/fixtures/codex-sous-agents/', import.meta.url)),
+      codexDay(),
+      {
+        recursive: true,
+      },
+    );
+    if (local) await copyFile(rolloutOf(L), rolloutOf(W));
+    for (const thread of [S, L, W]) await utimes(rolloutOf(thread), modified, modified);
+    return rolloutOf(S);
+  }
+
+  // La conversation Antigravity et ses deux sous-agents, datés de `modified`, et son espace de travail dans
+  // history.jsonl (le rattrapage le lit là). `local` : le navigateur remplacé par le lecteur.
+  async function antigravitySession(modified: Date, local = false): Promise<string> {
+    await cp(
+      fileURLToPath(new URL('../capture/fixtures/antigravity-sous-agents/brain/', import.meta.url)),
+      brain(),
+      { recursive: true },
+    );
+    if (local)
+      await copyFile(
+        transcriptOf('22222222-2222-4222-8222-222222222222'),
+        transcriptOf(NAVIGATEUR),
+      );
+    await writeFile(
+      join(home, '.gemini', 'antigravity', 'history.jsonl'),
+      `${JSON.stringify({ conversationId: CONVERSATION, workspace: ESSAI })}\n`,
+    );
+    for (const conversation of [CONVERSATION, '22222222-2222-4222-8222-222222222222', NAVIGATEUR])
+      await utimes(transcriptOf(conversation), modified, modified);
+    return transcriptOf(CONVERSATION);
+  }
+
+  async function consentTo(outil: 'codex' | 'antigravity', coulissesLe = INSTALLE) {
+    await writeConsent(home, outil, 2, INSTALLE);
+    await recordCapture(home, outil, INSTALLE);
+    await addUsage(home, outil, 'coulisses', coulissesLe);
+  }
+
+  // L'ordre des envois, et l'accord de l'outil avec ses usages.
+  function deps(
+    options: {
+      usages?: ('coulisses' | 'resume')[];
+      sendCoulisses?: (request: CoulissesRequest) => Promise<void>;
+      withdrawn?: () => Promise<boolean>;
+    } = {},
+  ) {
+    const events: string[] = [];
+    const base = captureDeps({
+      send: async (payload) => {
+        events.push('tours');
+        sent.push(payload);
+        return RESULT;
+      },
+      facts: {
+        accord: 2,
+        accordLe: INSTALLE,
+        usages: options.usages ?? ['coulisses'],
+        send: async (payload) => {
+          events.push('faits');
+          facts.push(payload);
+        },
+        sendCoulisses:
+          options.sendCoulisses ??
+          (async (request) => {
+            events.push('coulisses');
+            coulisses.push(request);
+          }),
+      },
+      readdir,
+      ...(options.withdrawn ? { withdrawn: options.withdrawn } : {}),
+    });
+    return { deps: { ...base, env }, events };
+  }
+  const codexHook = (path: string) =>
+    JSON.stringify({ session_id: S, transcript_path: path, cwd: ESSAI, hook_event_name: 'Stop' });
+
+  it('Codex : au crochet d’un tour, aucune coulisse ; au crochet de fin, après les faits, le corps de C10 et la marque', async () => {
+    const path = await codexSession(MAINTENANT);
+    const tour = deps();
+
+    await captureToolHook('codex', 'tour', codexHook(path), tour.deps);
+    expect(tour.events).toEqual(['tours', 'faits']);
+    expect((await readCursor(home, 'codex', path))?.coulisses).toBeUndefined();
+
+    const fin = deps();
+    await captureToolHook('codex', 'fin', codexHook(path), fin.deps);
+    expect(fin.events).toEqual(['faits', 'coulisses']);
+    const blocs = extractCodexBackstage(
+      await readFile(path, 'utf8'),
+      ESSAI,
+      await loadCodexSubagents(path, lecture),
+    );
+    expect(coulisses).toEqual<CoulissesRequest[]>([
+      {
+        kind: 'codex',
+        external_id: S,
+        usages: ['coulisses'],
+        accord_le: INSTALLE.toISOString(),
+        blocs,
+      },
+    ]);
+    // Les sous-agents lus par le chargeur : leurs rapports partent.
+    expect(blocs.map((bloc) => bloc.id)).toEqual(
+      expect.arrayContaining([`${L}:rapport`, `${W}:rapport`]),
+    );
+    expect((await readCursor(home, 'codex', path))?.coulisses).toBe(true);
+  });
+
+  it('les faits reçoivent les sous-agents que le chargeur a lus : sans lecture de dossier, aucun, et la session est externe', async () => {
+    const path = await codexSession(MAINTENANT, true);
+
+    await captureToolFile('codex', path, { fin: false }, deps().deps);
+    const { readdir: _sansDossier, ...sansDossier } = deps().deps;
+    await rm(cursorPath(home, 'codex', path));
+    await captureToolFile('codex', path, { fin: false }, sansDossier);
+
+    expect(facts.map((payload) => payload.faits.externe)).toEqual([false, true]);
+  });
+
+  it.each([[[]], [['resume']]] as ('coulisses' | 'resume')[][][])(
+    'sans l’usage (%j), aucun appel à la route, ni marque',
+    async (usages) => {
+      const path = await codexSession(MAINTENANT);
+      const { deps: sansUsage, events } = deps({ usages });
+
+      await captureToolFile('codex', path, { fin: true }, sansUsage);
+
+      expect(events).toEqual(['tours', 'faits']);
+      expect((await readCursor(home, 'codex', path))?.coulisses).toBeUndefined();
+    },
+  );
+
+  it('un 404 n’arrête pas les faits, dit le message fixe et ne pose pas la marque ; un 403 la pose, sans bruit', async () => {
+    const path = await codexSession(MAINTENANT);
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const refusing = (status: number) =>
+      deps({
+        sendCoulisses: async () => {
+          throw new IngestResponseError(status);
+        },
+      }).deps;
+
+    expect(await captureToolFile('codex', path, { fin: true }, refusing(404))).toBe(
+      'coulisses_refusees',
+    );
+    expect(facts).toHaveLength(1);
+    expect(stderr).toHaveBeenCalledWith(`Leon: ${COULISSES_REFUSED_MESSAGE}`);
+    expect((await readCursor(home, 'codex', path))?.coulisses).toBeUndefined();
+
+    stderr.mockClear();
+    expect(await captureToolFile('codex', path, { fin: true }, refusing(403))).toBe('capte');
+    expect(stderr).not.toHaveBeenCalled();
+    expect((await readCursor(home, 'codex', path))?.coulisses).toBe(true);
+    stderr.mockRestore();
+  });
+
+  it('un retrait relu juste avant l’envoi l’empêche', async () => {
+    const path = await codexSession(MAINTENANT);
+    const { deps: retire, events } = deps({ withdrawn: async () => facts.length > 0 });
+
+    await captureToolFile('codex', path, { fin: true }, retire);
+
+    expect(events).toEqual(['tours', 'faits']);
+  });
+
+  it('Cursor n’a pas de coulisses : même avec l’usage, rien ne part', async () => {
+    const workspace = join(dir, 'projets', 'leon');
+    const folder = join(
+      home,
+      '.cursor',
+      'projects',
+      cursorSlugOf(workspace),
+      'agent-transcripts',
+      'c1',
+    );
+    await mkdir(folder, { recursive: true });
+    const path = join(folder, 'c1.jsonl');
+    await copyFile(
+      new URL('../capture/fixtures/cursor/transcript-simple.jsonl', import.meta.url),
+      path,
+    );
+    const { deps: avecUsage, events } = deps();
+
+    await captureToolFile('cursor', path, { fin: true, dossier: workspace }, avecUsage);
+
+    expect(events).toEqual(['tours', 'faits']);
+  });
+
+  it('le rattrapage reprend un fichier inchangé et sans marque après 30 min, envoie ses coulisses, puis le saute', async () => {
+    await consentTo('codex');
+    const path = await codexSession(FINIE);
+    await captureToolHook('codex', 'tour', codexHook(path), deps().deps); // le dernier Stop, sans coulisses
+    const readSpy = vi.fn((file: string) => readFile(file, 'utf8'));
+
+    // Encore récent : sauté, comme avant.
+    await catchUp(
+      catchUpDeps({
+        readFile: readSpy,
+        readdir,
+        now: () => new Date(FINIE.getTime() + 10 * 60_000),
+      }),
+    );
+    expect(readSpy).not.toHaveBeenCalledWith(path);
+    expect(coulisses).toEqual([]);
+
+    // Fini, sans la marque : repris, ses coulisses partent, la marque est posée.
+    await catchUp(catchUpDeps({ readFile: readSpy, readdir }));
+    expect(coulisses.map((request) => [request.kind, request.external_id])).toEqual([['codex', S]]);
+    expect(coulisses[0]?.blocs.map((bloc) => bloc.id)).toContain(`${L}:rapport`);
+    expect((await readCursor(home, 'codex', path))?.coulisses).toBe(true);
+
+    // La marque posée : sauté.
+    readSpy.mockClear();
+    await catchUp(catchUpDeps({ readFile: readSpy, readdir }));
+    expect(readSpy).not.toHaveBeenCalledWith(path);
+    expect(coulisses).toHaveLength(1);
+  });
+
+  it('une session modifiée avant l’acceptation de l’usage n’envoie rien, et reste sautée', async () => {
+    await consentTo('codex', new Date(FINIE.getTime() + 60_000));
+    const path = await codexSession(FINIE);
+    await captureToolHook('codex', 'tour', codexHook(path), deps().deps);
+    const readSpy = vi.fn((file: string) => readFile(file, 'utf8'));
+
+    await catchUp(catchUpDeps({ readFile: readSpy, readdir }));
+
+    expect(coulisses).toEqual([]);
+    expect(readSpy).not.toHaveBeenCalledWith(path);
+  });
+
+  it('Antigravity : le rattrapage d’une conversation finie envoie ses coulisses, ses sous-agents lus, après ses faits', async () => {
+    await consentTo('antigravity');
+    const path = await antigravitySession(FINIE, true);
+    const events: string[] = [];
+
+    await catchUp(
+      catchUpDeps({
+        readdir,
+        sendFacts: async (payload) => {
+          events.push('faits');
+          facts.push(payload);
+        },
+        sendCoulisses: async (request) => {
+          events.push('coulisses');
+          coulisses.push(request);
+        },
+      }),
+    );
+
+    expect(events).toEqual(['faits', 'coulisses']);
+    expect(facts[0]?.faits.externe).toBe(false); // les sous-agents lus, qui ne lisent que le dépôt
+    const blocs = extractAntigravityBackstage(
+      await readFile(path, 'utf8'),
+      { path, mtime: FINIE },
+      ESSAI,
+      await loadAntigravitySubagents(path, lecture),
+    );
+    expect(coulisses).toEqual<CoulissesRequest[]>([
+      {
+        kind: 'antigravity',
+        external_id: CONVERSATION,
+        usages: ['coulisses'],
+        accord_le: INSTALLE.toISOString(),
+        blocs,
+      },
+    ]);
+    expect(blocs.some((bloc) => bloc.role === 'appel_outil' && bloc.outil === 'Read')).toBe(true);
+    expect((await readCursor(home, 'antigravity', path))?.coulisses).toBe(true);
+  });
+
+  it('un 400 ou un 404 arrête les coulisses du passage, sans marque ; le passage suivant réessaie', async () => {
+    await consentTo('codex');
+    await consentTo('antigravity');
+    const codexPath = await codexSession(FINIE);
+    const agyPath = await antigravitySession(FINIE);
+    const stderr = vi.spyOn(console, 'error').mockImplementation(() => {});
+    let calls = 0;
+    const refuse = async () => {
+      calls += 1;
+      throw new IngestResponseError(404);
+    };
+
+    expect(await catchUp(catchUpDeps({ readdir, sendCoulisses: refuse }))).toEqual({
+      sessions: 2,
+      failures: 0,
+    });
+    expect(calls).toBe(1); // Codex d'abord ; Antigravity n'essaie pas
+    expect(facts.map((payload) => payload.kind)).toEqual(['codex', 'antigravity']);
+    expect(
+      stderr.mock.calls.flat().filter((line) => line.includes(COULISSES_REFUSED_MESSAGE)),
+    ).toHaveLength(1);
+    expect((await readCursor(home, 'codex', codexPath))?.coulisses).toBeUndefined();
+    stderr.mockRestore();
+
+    await catchUp(catchUpDeps({ readdir }));
+    expect(coulisses.map((request) => request.kind)).toEqual(['codex', 'antigravity']);
+    expect((await readCursor(home, 'antigravity', agyPath))?.coulisses).toBe(true);
+  });
+
+  // Décision d'Amos du 17/11 (« Oui, comme Claude Code ») : le message d'un sous-agent d'Antigravity à la session part
+  // sous l'accord de base, en tour `user` injecté. Il vient d'un autre fichier : le curseur garde ses identifiants à part.
+  describe('Antigravity : le rapport d’un sous-agent, sous l’accord de base', () => {
+    const LECTEUR = '22222222-2222-4222-8222-222222222222';
+    const RAPPORTS = [
+      `${CONVERSATION}:${LECTEUR}:3:0`,
+      `${CONVERSATION}:${NAVIGATEUR}:3:0`,
+      `${CONVERSATION}:${NAVIGATEUR}:9:0`,
+    ];
+    const injectes = () =>
+      sent
+        .flatMap((payload) => payload.turns)
+        .filter((turn) => turn.injecte === true)
+        .map((turn) => turn.external_id);
+    // L'accord de base seul : ni les faits, ni l'usage ; la lecture des dossiers, elle, est là.
+    const base = (overrides: Partial<ToolCaptureDeps> = {}) =>
+      captureDeps({ facts: undefined, readdir, ...overrides });
+    const stopJson = (path: string) =>
+      JSON.stringify({
+        conversationId: CONVERSATION,
+        transcriptPath: path,
+        workspacePaths: [ESSAI],
+        fullyIdle: true,
+      });
+
+    it('part sans les faits ni l’usage coulisses, au crochet d’un tour, marqué injecté ; ni échange ni titre', async () => {
+      const path = await antigravitySession(MAINTENANT);
+
+      expect(await captureToolFile('antigravity', path, { fin: false }, base())).toBe('capte');
+      expect(injectes()).toEqual(RAPPORTS);
+      expect(sent.flatMap((payload) => payload.turns)).toContainEqual({
+        external_id: RAPPORTS[0],
+        role: 'user',
+        text: 'a.txt contient « bonjour ».',
+        ts: '2026-11-13T11:45:08Z',
+        capture_mode: 'file',
+        injecte: true,
+      });
+      expect(facts).toEqual([]);
+
+      // Au crochet d'un tour, avec les faits mais sans l'usage coulisses : de même, et ni le titre ni les échanges ne
+      // les comptent.
+      sent = [];
+      await rm(cursorPath(home, 'antigravity', path));
+      const { deps: tour, events } = deps({ usages: [] });
+      await captureToolHook('antigravity', 'tour', stopJson(path), tour);
+      expect(events).toEqual(['tours', 'faits']);
+      expect(injectes()).toEqual(RAPPORTS);
+      expect(sent[0]?.source.title).toBe(
+        "Lance deux sous-agents : l'un lit a.txt, l'autre ouvre la page d'exemple.",
+      );
+      expect(facts[0]?.faits.echanges).toBe(2);
+    });
+
+    it('n’est pas renvoyé à la capture suivante ; le curseur garde ses identifiants à part de ses tours', async () => {
+      const path = await antigravitySession(MAINTENANT);
+      await captureToolFile('antigravity', path, { fin: false }, base());
+
+      expect(await readCursor(home, 'antigravity', path)).toEqual({
+        tours: 9,
+        dernier: `${CONVERSATION}:000018`,
+        mtime: MAINTENANT.getTime(),
+        taille: (await stat(path)).size,
+        dossier: ESSAI,
+        rapports: RAPPORTS,
+      });
+      sent = [];
+      await captureToolFile('antigravity', path, { fin: false }, base());
+      expect(sent).toEqual([]);
+    });
+
+    it('un rapport apparu plus tard, daté d’avant des tours déjà envoyés, part quand même, seul', async () => {
+      const path = await antigravitySession(MAINTENANT);
+      const lecteur = await readFile(transcriptOf(LECTEUR), 'utf8');
+      await rm(transcriptOf(LECTEUR));
+      await captureToolFile('antigravity', path, { fin: false }, base());
+      expect(injectes()).toEqual(RAPPORTS.slice(1));
+
+      sent = [];
+      await writeFile(transcriptOf(LECTEUR), lecteur);
+      await captureToolFile('antigravity', path, { fin: false }, base());
+      expect(
+        sent.flatMap((payload) => payload.turns).map((turn) => [turn.external_id, turn.ts]),
+      ).toEqual([[RAPPORTS[0], '2026-11-13T11:45:08Z']]);
+      expect(new Set((await readCursor(home, 'antigravity', path))?.rapports)).toEqual(
+        new Set(RAPPORTS),
+      );
+    });
+
+    it('un curseur d’avant, sans la liste, se lit : les tours déjà envoyés ne repartent pas, les rapports si', async () => {
+      const path = await antigravitySession(MAINTENANT);
+      await writeCursor(home, 'antigravity', path, {
+        tours: 9,
+        dernier: `${CONVERSATION}:000018`,
+        mtime: MAINTENANT.getTime(),
+        taille: (await stat(path)).size,
+        dossier: ESSAI,
+      });
+
+      await captureToolFile('antigravity', path, { fin: false }, base());
+
+      expect(sentIds()).toEqual(RAPPORTS);
+    });
+
+    it('la seconde écriture, celle des coulisses, garde la liste', async () => {
+      const path = await antigravitySession(MAINTENANT);
+
+      await captureToolFile('antigravity', path, { fin: true }, deps().deps);
+
+      expect(coulisses).toHaveLength(1);
+      expect(await readCursor(home, 'antigravity', path)).toMatchObject({
+        coulisses: true,
+        rapports: RAPPORTS,
+      });
+    });
+
+    it('une erreur d’envoi ne marque rien : la capture suivante les envoie', async () => {
+      const path = await antigravitySession(MAINTENANT);
+      const failing = base({
+        send: async () => {
+          throw new IngestResponseError(500);
+        },
+      });
+
+      await expect(captureToolFile('antigravity', path, { fin: false }, failing)).rejects.toThrow();
+      expect(await readCursor(home, 'antigravity', path)).toBeNull();
+
+      await captureToolFile('antigravity', path, { fin: false }, base());
+      expect(injectes()).toEqual(RAPPORTS);
+    });
+
+    it('sans lecture des dossiers, aucun sous-agent n’est lu : rien ne change', async () => {
+      const path = await antigravitySession(MAINTENANT);
+
+      await captureToolFile('antigravity', path, { fin: false }, base({ readdir: undefined }));
+
+      expect(injectes()).toEqual([]);
+      expect(sentIds()).toHaveLength(9);
+      expect(await readCursor(home, 'antigravity', path)).not.toHaveProperty('rapports');
+    });
+
+    it('Codex et Cursor ne changent pas : leurs rapports sont dans leur propre fichier, le curseur n’a pas de liste', async () => {
+      const codexPath = await codexSession(MAINTENANT);
+      await captureToolFile('codex', codexPath, { fin: false }, base());
+
+      expect(sentIds()).toEqual(
+        parseCodexSession(await readFile(codexPath, 'utf8'))?.turns.map((turn) => turn.external_id),
+      );
+      expect(await readCursor(home, 'codex', codexPath)).not.toHaveProperty('rapports');
+
+      sent = [];
+      const workspace = join(dir, 'projets', 'leon');
+      const folder = join(
+        home,
+        '.cursor',
+        'projects',
+        cursorSlugOf(workspace),
+        'agent-transcripts',
+        'c1',
+      );
+      await mkdir(folder, { recursive: true });
+      const cursorFile = join(folder, 'c1.jsonl');
+      await copyFile(
+        new URL('../capture/fixtures/cursor/transcript-simple.jsonl', import.meta.url),
+        cursorFile,
+      );
+      await captureToolFile('cursor', cursorFile, { fin: false, dossier: workspace }, base());
+
+      const lus = parseCursorSession(await readFile(cursorFile, 'utf8'), {
+        path: cursorFile,
+        mtime: (await stat(cursorFile)).mtime,
+      });
+      expect(sentIds()).toEqual(lus?.turns.map((turn) => turn.external_id));
+      expect(await readCursor(home, 'cursor', cursorFile)).not.toHaveProperty('rapports');
+    });
   });
 });

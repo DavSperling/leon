@@ -1,0 +1,319 @@
+
+==== conversation <uuid n°1> (antigravity, messages_de_l_essai)
+  fiche .system_generated/messages/<uuid n°2>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(35)"},"content":"chaine(69)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/<uuid n°3>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"system","priority":"MESSAGE_PRIORITY_LOW","timestamp":"chaine(27)","hideFromUser":"boolean","content":"chaine(408)"}
+  fiche .system_generated/messages/<uuid n°4>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(45)"},"content":"chaine(151)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/<uuid n°5>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(45)"},"content":"chaine(115)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/<uuid n°6>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"system","priority":"MESSAGE_PRIORITY_LOW","timestamp":"chaine(27)","hideFromUser":"boolean","content":"chaine(246)"}
+  fiche .system_generated/messages/<uuid n°7>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"system","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","content":"chaine(158)"}
+  fiche .system_generated/messages/read.json : {"<clé de 36>":"boolean"}
+  fiche .system_generated/subagents/<uuid n°8>.json : {"conversationId":"chaine(36)","subagentDescriptor":{"typeName":"chaine(7)","role":"chaine(22)"},"state":"SUBAGENT_STATE_ALIVE","spawnStepIndex":"number","workspaceUris":"tableau[1]"}
+  fiche .system_generated/subagents/<uuid n°9>.json : {"conversationId":"chaine(36)","subagentDescriptor":{"typeName":"chaine(8)","role":"chaine(11)"},"state":"SUBAGENT_STATE_ALIVE","spawnStepIndex":"number","workspaceUris":"tableau[1]"}
+  .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl : 16452 octets
+  .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl : 16384 octets
+  .system_generated/logs/transcript.jsonl : 16452 octets
+  .system_generated/logs/transcript_full.jsonl : 16384 octets
+  .system_generated/messages/<uuid n°2>.json : 722 octets
+  .system_generated/messages/<uuid n°3>.json : 641 octets
+  .system_generated/messages/<uuid n°4>.json : 5861 octets
+  .system_generated/messages/<uuid n°5>.json : 2531 octets
+  .system_generated/messages/<uuid n°6>.json : 479 octets
+  .system_generated/messages/<uuid n°7>.json : 367 octets
+  .system_generated/messages/read.json : 265 octets
+  .system_generated/steps/15/output.txt : 55 octets
+  .system_generated/steps/2/output.txt : 471 octets
+  .system_generated/steps/22/output.txt : 333 octets
+  .system_generated/steps/23/output.txt : 293 octets
+  .system_generated/steps/3/output.txt : 471 octets
+  .system_generated/subagents/<uuid n°8>.json : 266 octets
+  .system_generated/subagents/<uuid n°9>.json : 256 octets
+  browser_evidence/<uuid n°8>/<nom de 16 caractères>.png : 116306 octets
+
+== .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(872) balises USER_REQUEST,ADDITIONAL_METADATA,USER_SETTINGS_CHANGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)","thinking":"chaine(474)"}
+   appel invoke_subagent args {"Prompt":"chaine(117)","Role":"chaine(13)","TypeName":"chaine(10)"}
+   appel invoke_subagent args {"Model":"chaine(7)","Prompt":"chaine(115)","Role":"chaine(24)","TypeName":"chaine(9)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 4 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(115)","created_at":"chaine(20)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(59)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(371) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(103)","thinking":"chaine(229)"}
+étape 8 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises SYSTEM_MESSAGE"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(58)","thinking":"chaine(101)"}
+étape 10 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(517) balises SYSTEM_MESSAGE"}
+étape 11 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(453) balises SYSTEM_MESSAGE"}
+étape 12 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(411)","thinking":"chaine(290)"}
+étape 13 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(158) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 14 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(91)","thinking":"chaine(138)"}
+   appel send_message args {"Message":"chaine(87)","Recipient":"chaine(38)"}
+étape 15 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 16 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(158)"}
+étape 17 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(679) balises SYSTEM_MESSAGE"}
+étape 18 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 19 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(339)","thinking":"chaine(235)"}
+étape 20 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 21 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(389)"}
+   appel run_command args {"CommandLine":"chaine(23)","WaitMsBeforeAsync":"chaine(4)","toolSummary":"chaine(19)"}
+   appel run_command args {"CommandLine":"chaine(30)","WaitMsBeforeAsync":"chaine(4)","toolSummary":"chaine(20)"}
+étape 22 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(411)"}
+étape 23 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(371)"}
+étape 24 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(97)"}
+   appel run_command args {"BypassSandbox":"chaine(4)","CommandLine":"chaine(30)","WaitMsBeforeAsync":"chaine(5)","toolSummary":"chaine(20)"}
+étape 25 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(343)","created_at":"chaine(20)","content":"chaine(458)"}
+étape 26 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(413)"}
+
+== .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(872) balises USER_REQUEST,ADDITIONAL_METADATA,USER_SETTINGS_CHANGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)","thinking":"chaine(474)"}
+   appel invoke_subagent args {"Prompt":"chaine(115)","Role":"chaine(11)","TypeName":"research"}
+   appel invoke_subagent args {"Model":"chaine(5)","Prompt":"chaine(113)","Role":"chaine(22)","TypeName":"browser"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 4 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(115)","created_at":"chaine(20)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(59)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(371) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(103)","thinking":"chaine(229)"}
+étape 8 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises SYSTEM_MESSAGE"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(58)","thinking":"chaine(101)"}
+étape 10 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(517) balises SYSTEM_MESSAGE"}
+étape 11 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(453) balises SYSTEM_MESSAGE"}
+étape 12 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(411)","thinking":"chaine(290)"}
+étape 13 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(158) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 14 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(91)","thinking":"chaine(138)"}
+   appel send_message args {"Message":"chaine(85)","Recipient":"chaine(36)"}
+étape 15 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 16 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(158)"}
+étape 17 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(679) balises SYSTEM_MESSAGE"}
+étape 18 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 19 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(339)","thinking":"chaine(235)"}
+étape 20 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 21 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(389)"}
+   appel run_command args {"CommandLine":"chaine(21)","WaitMsBeforeAsync":"number","toolSummary":"chaine(17)"}
+   appel run_command args {"CommandLine":"chaine(28)","WaitMsBeforeAsync":"number","toolSummary":"chaine(18)"}
+étape 22 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(411)"}
+étape 23 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(371)"}
+étape 24 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(97)"}
+   appel run_command args {"BypassSandbox":"boolean","CommandLine":"chaine(28)","WaitMsBeforeAsync":"number","toolSummary":"chaine(18)"}
+étape 25 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(343)","created_at":"chaine(20)","content":"chaine(458)"}
+étape 26 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(413)"}
+
+== .system_generated/logs/transcript.jsonl
+étape 0 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(872) balises USER_REQUEST,ADDITIONAL_METADATA,USER_SETTINGS_CHANGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)","thinking":"chaine(474)"}
+   appel invoke_subagent args {"Prompt":"chaine(117)","Role":"chaine(13)","TypeName":"chaine(10)"}
+   appel invoke_subagent args {"Model":"chaine(7)","Prompt":"chaine(115)","Role":"chaine(24)","TypeName":"chaine(9)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 4 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(115)","created_at":"chaine(20)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(59)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(371) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(103)","thinking":"chaine(229)"}
+étape 8 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises SYSTEM_MESSAGE"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(58)","thinking":"chaine(101)"}
+étape 10 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(517) balises SYSTEM_MESSAGE"}
+étape 11 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(453) balises SYSTEM_MESSAGE"}
+étape 12 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(411)","thinking":"chaine(290)"}
+étape 13 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(158) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 14 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(91)","thinking":"chaine(138)"}
+   appel send_message args {"Message":"chaine(87)","Recipient":"chaine(38)"}
+étape 15 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 16 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(158)"}
+étape 17 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(679) balises SYSTEM_MESSAGE"}
+étape 18 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 19 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(339)","thinking":"chaine(235)"}
+étape 20 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 21 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(389)"}
+   appel run_command args {"CommandLine":"chaine(23)","WaitMsBeforeAsync":"chaine(4)","toolSummary":"chaine(19)"}
+   appel run_command args {"CommandLine":"chaine(30)","WaitMsBeforeAsync":"chaine(4)","toolSummary":"chaine(20)"}
+étape 22 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(411)"}
+étape 23 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(371)"}
+étape 24 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(97)"}
+   appel run_command args {"BypassSandbox":"chaine(4)","CommandLine":"chaine(30)","WaitMsBeforeAsync":"chaine(5)","toolSummary":"chaine(20)"}
+étape 25 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(343)","created_at":"chaine(20)","content":"chaine(458)"}
+étape 26 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(413)"}
+
+== .system_generated/logs/transcript_full.jsonl
+étape 0 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(872) balises USER_REQUEST,ADDITIONAL_METADATA,USER_SETTINGS_CHANGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)","thinking":"chaine(474)"}
+   appel invoke_subagent args {"Prompt":"chaine(115)","Role":"chaine(11)","TypeName":"research"}
+   appel invoke_subagent args {"Model":"chaine(5)","Prompt":"chaine(113)","Role":"chaine(22)","TypeName":"browser"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(549)"}
+étape 4 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(115)","created_at":"chaine(20)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(59)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(371) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(103)","thinking":"chaine(229)"}
+étape 8 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises SYSTEM_MESSAGE"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(58)","thinking":"chaine(101)"}
+étape 10 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(517) balises SYSTEM_MESSAGE"}
+étape 11 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(453) balises SYSTEM_MESSAGE"}
+étape 12 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(411)","thinking":"chaine(290)"}
+étape 13 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(158) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 14 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(91)","thinking":"chaine(138)"}
+   appel send_message args {"Message":"chaine(85)","Recipient":"chaine(36)"}
+étape 15 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 16 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(158)"}
+étape 17 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(679) balises SYSTEM_MESSAGE"}
+étape 18 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 19 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(339)","thinking":"chaine(235)"}
+étape 20 : {"step_index":"number","source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"chaine(20)","content":"chaine(430) balises USER_REQUEST,ADDITIONAL_METADATA"}
+étape 21 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(389)"}
+   appel run_command args {"CommandLine":"chaine(21)","WaitMsBeforeAsync":"number","toolSummary":"chaine(17)"}
+   appel run_command args {"CommandLine":"chaine(28)","WaitMsBeforeAsync":"number","toolSummary":"chaine(18)"}
+étape 22 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(411)"}
+étape 23 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(371)"}
+étape 24 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(97)"}
+   appel run_command args {"BypassSandbox":"boolean","CommandLine":"chaine(28)","WaitMsBeforeAsync":"number","toolSummary":"chaine(18)"}
+étape 25 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(343)","created_at":"chaine(20)","content":"chaine(458)"}
+étape 26 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(413)"}
+
+==== conversation <uuid n°8> (antigravity, sous-agent nommé par <uuid n°1>)
+  fiche .system_generated/messages/<uuid n°10>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(25)"},"content":"chaine(85)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/<uuid n°11>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(25)"},"content":"chaine(113)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/read.json : {"<clé de 36>":"boolean"}
+  .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl : 9233 octets
+  .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl : 9183 octets
+  .system_generated/logs/media/<nom de 18 caractères>.png : 116306 octets
+  .system_generated/logs/transcript.jsonl : 9233 octets
+  .system_generated/logs/transcript_full.jsonl : 9183 octets
+  .system_generated/messages/<uuid n°10>.json : 747 octets
+  .system_generated/messages/<uuid n°11>.json : 828 octets
+  .system_generated/messages/read.json : 89 octets
+  .system_generated/steps/10/output.txt : 55 octets
+  .system_generated/steps/4/output.txt : 55 octets
+  browser_sandbox/outputs/<nom de 11 caractères>.json : 308 octets
+  browser_sandbox/outputs/<nom de 14 caractères>.txt : 2027 octets
+  browser_sandbox/screenshots/<nom de 10 caractères>.png : 116306 octets
+
+== .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(415) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(213)"}
+   appel webview_browser args {"intention":"chaine(68)","observation":"chaine(63)","script":"chaine(95)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(481)","created_at":"chaine(20)","content":"chaine(596)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(567)"}
+   appel send_message args {"Message":"chaine(154)","Recipient":"chaine(38)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(387) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(229)"}
+   appel webview_browser args {"intention":"chaine(67)","observation":"chaine(90)","script":"chaine(95)"}
+étape 8 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(2043) balises untrusted_page_content","media":"tableau[1]"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(211)"}
+   appel send_message args {"Message":"chaine(120)","Recipient":"chaine(38)"}
+étape 10 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 11 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(46)"}
+
+== .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(415) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(213)"}
+   appel webview_browser args {"intention":"chaine(66)","observation":"chaine(61)","script":"chaine(91)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(481)","created_at":"chaine(20)","content":"chaine(596)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(567)"}
+   appel send_message args {"Message":"chaine(151)","Recipient":"chaine(36)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(387) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(229)"}
+   appel webview_browser args {"intention":"chaine(65)","observation":"chaine(88)","script":"chaine(91)"}
+étape 8 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(2043) balises untrusted_page_content","media":"tableau[1]"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(211)"}
+   appel send_message args {"Message":"chaine(115)","Recipient":"chaine(36)"}
+étape 10 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 11 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(46)"}
+
+== .system_generated/logs/transcript.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(415) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(213)"}
+   appel webview_browser args {"intention":"chaine(68)","observation":"chaine(63)","script":"chaine(95)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(481)","created_at":"chaine(20)","content":"chaine(596)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(567)"}
+   appel send_message args {"Message":"chaine(154)","Recipient":"chaine(38)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(387) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(229)"}
+   appel webview_browser args {"intention":"chaine(67)","observation":"chaine(90)","script":"chaine(95)"}
+étape 8 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(2043) balises untrusted_page_content","media":"tableau[1]"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(211)"}
+   appel send_message args {"Message":"chaine(120)","Recipient":"chaine(38)"}
+étape 10 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 11 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(46)"}
+
+== .system_generated/logs/transcript_full.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(415) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(213)"}
+   appel webview_browser args {"intention":"chaine(66)","observation":"chaine(61)","script":"chaine(91)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"ERROR","error":"chaine(481)","created_at":"chaine(20)","content":"chaine(596)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(567)"}
+   appel send_message args {"Message":"chaine(151)","Recipient":"chaine(36)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(43)"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(387) balises SYSTEM_MESSAGE"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(229)"}
+   appel webview_browser args {"intention":"chaine(65)","observation":"chaine(88)","script":"chaine(91)"}
+étape 8 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(2043) balises untrusted_page_content","media":"tableau[1]"}
+étape 9 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(211)"}
+   appel send_message args {"Message":"chaine(115)","Recipient":"chaine(36)"}
+étape 10 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 11 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(46)"}
+
+==== conversation <uuid n°9> (antigravity, sous-agent nommé par <uuid n°1>)
+  fiche .system_generated/messages/<uuid n°12>.json : {"id":"chaine(36)","recipient":"chaine(36)","sender":"chaine(36)","priority":"MESSAGE_PRIORITY_HIGH","timestamp":"chaine(27)","renderDetails":{"messageTitle":"chaine(25)"},"content":"chaine(115)","sourceMetadata":{"tool":{"conversationId":"chaine(36)","stepIndex":"number","toolCall":"object"}}}
+  fiche .system_generated/messages/read.json : {"<clé de 36>":"boolean"}
+  .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl : 2870 octets
+  .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl : 2858 octets
+  .system_generated/logs/transcript.jsonl : 2870 octets
+  .system_generated/logs/transcript_full.jsonl : 2858 octets
+  .system_generated/messages/<uuid n°12>.json : 804 octets
+  .system_generated/messages/read.json : 45 octets
+  .system_generated/steps/4/output.txt : 55 octets
+
+== .system_generated/logs/chunks/transcript/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(164)"}
+   appel read_file args {"Path":"chaine(58)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(142)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+   appel send_message args {"Message":"chaine(71)","Recipient":"chaine(38)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(124)","created_at":"chaine(20)","content":"chaine(131)"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(51)","thinking":"chaine(158)"}
+
+== .system_generated/logs/chunks/transcript_full/<nom de 14 caractères>.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(164)"}
+   appel read_file args {"Path":"chaine(56)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(142)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+   appel send_message args {"Message":"chaine(69)","Recipient":"chaine(36)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(124)","created_at":"chaine(20)","content":"chaine(131)"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(51)","thinking":"chaine(158)"}
+
+== .system_generated/logs/transcript.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(164)"}
+   appel read_file args {"Path":"chaine(58)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(142)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+   appel send_message args {"Message":"chaine(71)","Recipient":"chaine(38)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(124)","created_at":"chaine(20)","content":"chaine(131)"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(51)","thinking":"chaine(158)"}
+
+== .system_generated/logs/transcript_full.jsonl
+étape 0 : {"step_index":"number","source":"SYSTEM","type":"SYSTEM_MESSAGE","status":"DONE","created_at":"chaine(20)","content":"chaine(417) balises SYSTEM_MESSAGE"}
+étape 1 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","thinking":"chaine(164)"}
+   appel read_file args {"Path":"chaine(56)"}
+étape 2 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(142)"}
+étape 3 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+   appel send_message args {"Message":"chaine(69)","Recipient":"chaine(36)"}
+étape 4 : {"step_index":"number","source":"MODEL","type":"GENERIC","status":"DONE","created_at":"chaine(20)","content":"chaine(133)"}
+étape 5 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number"}
+étape 6 : {"step_index":"number","source":"SYSTEM","type":"ERROR_MESSAGE","status":"DONE","error":"chaine(124)","created_at":"chaine(20)","content":"chaine(131)"}
+étape 7 : {"step_index":"number","source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"chaine(20)","input_tokens":"number","cache_read_tokens":"number","output_tokens":"number","content":"chaine(51)","thinking":"chaine(158)"}

@@ -100,8 +100,8 @@ export const SessionFactsSchema = z
       )
       .max(TACHES_MAX),
     erreurs: z.number().int().nonnegative(), // erreurs d'outils
-    // a lu du web, du MCP, une commande réseau, ou un sous-agent qui sort du dépôt (T63 ; hors Claude Code, tout
-    // sous-agent, jusqu'à la quatrième PR du lot 14)
+    // a lu du web, du MCP, une commande réseau, ou un sous-agent qui sort du dépôt ou n'a pas fini (T63 amendé le
+    // 17/11 : Claude Code, Codex et Antigravity ; chez Cursor, tout sous-agent, faute de pouvoir lire le sien)
     externe: z.boolean(),
     echanges: z.number().int().nonnegative(), // messages tapés par l'utilisateur
     debut: z.iso.datetime({ offset: true }).nullable(),

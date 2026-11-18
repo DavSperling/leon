@@ -140,6 +140,26 @@ describe('extractCursorFacts', () => {
       expect(externe(tool('Shell', { command: 'cd x && curl -s https://example.com' }))).toBe(true);
     });
 
+    // Annexe 10 : rien ne relie un appel de sous-agent à son fichier, un sous-agent reste externe. `GetDynamicTools` et
+    // `CallDynamicTool` sont les noms vus à l'essai, dans la forme du relevé (namespace, toolName, arguments).
+    it('les outils de sous-agent, Task, GetDynamicTools et CallDynamicTool : oui', () => {
+      const dynamique = { namespace: 'agents', toolName: 'task' };
+      expect(externe(tool('Task', { prompt: 'x' }))).toBe(true);
+      expect(externe(tool('GetDynamicTools', dynamique))).toBe(true);
+      expect(externe(tool('CallDynamicTool', { ...dynamique, arguments: {} }))).toBe(true);
+    });
+
+    // Un appel sans `input` échappait au tri, donc à l'échec fermé.
+    it('un appel sans champ input compte : un outil externe la rend externe, un outil local non', () => {
+      expect(externe({ type: 'tool_use', name: 'GetDynamicTools' })).toBe(true);
+      expect(externe({ type: 'tool_use', name: 'Read' })).toBe(false);
+    });
+
+    it('un appel illisible (sans nom, ou un nom qui n’est pas un texte) la rend externe (échec fermé)', () => {
+      expect(externe({ type: 'tool_use', input: {} })).toBe(true);
+      expect(externe({ type: 'tool_use', name: 123 })).toBe(true);
+    });
+
     // Lire Leon (T44 ; D36, A14) : les outils locaux du serveur `leon`, quand la CLI l'a reconnu à son URL.
     it('un outil local du serveur MCP de Leon reconnu : non ; search, un autre serveur, ou non reconnu : oui', () => {
       const mcp = (name: string, leon: boolean) =>

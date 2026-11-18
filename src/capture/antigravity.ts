@@ -182,8 +182,9 @@ function calls(step: Step): Call[] {
       typeof args === 'object' && args !== null && !Array.isArray(args)
         ? (args as Record<string, unknown>)
         : null;
-    // Une chaîne qui ne se lit pas en objet (coupée ?) : un outil inconnu aussi, sinon une commande y disparaîtrait.
-    if (typeof call.data.args === 'string' && record === null) return { name: '', args: null };
+    // Des args qui ne se lisent pas en objet (une chaîne coupée, un tableau, null, absents) : un outil inconnu aussi,
+    // sinon une commande y disparaîtrait.
+    if (record === null) return { name: '', args: null };
     return { name: call.data.name, args: record };
   });
 }

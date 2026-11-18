@@ -356,7 +356,8 @@ describe('POST /api/v1/faits', () => {
     expect(stored?.metadata).toMatchObject({
       branche: `paul/${SECRET_MASK}`,
       faits: {
-        fichiers: [`src/${SECRET_MASK}.ts`, 'src/nul.ts'],
+        // Un nom de fichier ne contient jamais de caractère nul : celui-là n'est pas un fichier du dépôt (isRepoPath).
+        fichiers: [`src/${SECRET_MASK}.ts`],
         taches: [{ texte: `Coller ${SECRET_MASK}`, etat: 'a_faire' }],
         // Un dépôt masqué ne serait plus une clé de PR : la PR est retirée, le reste des faits reste lisible.
         prs: [{ repo: 'acme/leon', numero: 2, par: 'pr-link' }],
@@ -416,6 +417,9 @@ describe('POST /api/v1/faits', () => {
       '../autre/x.ts',
       'src/../../autre/x.ts',
       'src/a\nb.ts',
+      '\u0085/Users/x/secret.txt',
+      '⁠~/.ssh/id_rsa',
+      'src/.​./.​./etc/passwd',
     ];
     const body = { ...validBody(), faits: facts({ fichiers }) };
 

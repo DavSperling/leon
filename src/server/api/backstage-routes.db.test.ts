@@ -362,6 +362,22 @@ describe('POST /api/v1/coulisses', () => {
       { outil: 'Edit', cible: '\t~/.ssh/id_rsa' },
       'Edit · ok',
     ],
+    // L'affichage efface ces caractères (oneLine) : le chemin se lirait « /Users/x/secret.txt » ou « src/../../x ».
+    [
+      'un chemin absolu après un caractère de contrôle',
+      { outil: 'Read', cible: '\u0001/Users/x/secret.txt' },
+      'Read · ok',
+    ],
+    [
+      'un chemin absolu après une espace de largeur nulle',
+      { outil: 'Read', cible: '​/Users/x/secret.txt' },
+      'Read · ok',
+    ],
+    [
+      'un .. coupé par une espace de largeur nulle',
+      { outil: 'Read', cible: 'src/.​./.​./etc/passwd' },
+      'Read · ok',
+    ],
     [
       'un $ au milieu d’un chemin du dépôt',
       { outil: 'Read', cible: 'app/routes/$id.tsx' },

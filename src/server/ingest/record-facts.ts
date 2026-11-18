@@ -15,9 +15,10 @@ import { sources } from '@/server/db/schema/memory';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { recordProject, upsertSource } from './ingest-turns';
 
-// Un chemin absolu (Unix ou Windows) ou une URL (`schéma:`, qui couvre aussi la lettre de lecteur `C:`) sort du dépôt ;
-// un saut de ligne casserait la ligne du tour.
-const OUTSIDE_REPO = /^(?:[\\/]|[A-Za-z][A-Za-z0-9+.-]*:)|[\r\n]/;
+// Un chemin absolu (Unix ou Windows) ou une URL (`schéma:`, qui couvre aussi la lettre de lecteur `C:`) sort du dépôt.
+// Un caractère de contrôle (saut de ligne compris) ou invisible est refusé partout : l'affichage l'efface (oneLine), et
+// « ​/Users/x » se lirait « /Users/x ».
+const OUTSIDE_REPO = /^(?:[\\/]|[A-Za-z][A-Za-z0-9+.-]*:)|[\p{Cc}\p{Cf}]/u;
 
 // La seconde barrière, après repoRelativePath sur le poste, pour les fichiers des faits et les cibles des coulisses
 // (record-backstage.ts) : un chemin n'est gardé que relatif au dépôt. HOME_OR_VARIABLE est la garde de la CLI (le

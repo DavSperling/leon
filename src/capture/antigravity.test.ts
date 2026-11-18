@@ -775,6 +775,26 @@ describe('extractAntigravityBackstage', () => {
       ]);
     });
 
+    it('une commande dont le code de sortie écrit n’est pas nul est en erreur, comme dans les faits ; un autre outil non', () => {
+      const blocs = extraire([
+        appels(
+          1,
+          ['run_command', { CommandLine: 'pnpm test' }],
+          ['run_command', { CommandLine: 'pnpm lint' }],
+          ['read_file', { Path: `${ESSAI}/a.txt` }],
+        ),
+        etape(2, { type: 'GENERIC', content: 'FAIL', exit_code: 1 }),
+        resultat(3, 'DONE', 'Found 2 errors.\nexit code: 1'),
+        resultat(4, 'DONE', 'exit code: 1'),
+      ]);
+
+      expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
+        ['1:0', 'erreur'],
+        ['1:1', 'erreur'],
+        ['1:2', 'ok'],
+      ]);
+    });
+
     it('un appel d’un sous-agent et d’un sous-agent de sous-agent est relevé dans la même forme', () => {
       const relais = sousAgent(
         ['write_to_file', { TargetFile: `${ESSAI}/a.ts` }],
@@ -824,7 +844,7 @@ describe('extractAntigravityBackstage', () => {
         appel('2:0', at('03'), 'Bash', 'ok', 'git checkout'),
         appel('4:0', at('06'), 'Read', 'ok', 'src/capture/codex.ts'),
         appel('4:1', at('06'), 'Write', 'ok', 'src/capture/antigravity.ts'),
-        appel('7:0', at('10'), 'Bash', 'ok', 'pnpm vitest'),
+        appel('7:0', at('10'), 'Bash', 'erreur', 'pnpm vitest'), // « exit code: 1 », comme les faits
         appel('9:0', at('22'), 'Bash', 'ok', 'git commit'),
       ]);
     });
@@ -1011,9 +1031,8 @@ describe('antigravityReportTurns', () => {
   });
 
   it('dans transcript.jsonl le Recipient est entre guillemets : le message à la session donne un tour, celui à un autre aucun', () => {
-    // shortcut déjà noté dans calls() : le Message garde ses guillemets, ici tel quel.
     expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${S}"`) }))).toEqual([
-      '"Trouvé."',
+      'Trouvé.',
     ]);
     expect(textes(sousAgents({ [S]: [R] }, { [R]: ecrit('"Trouvé."', `"${N}"`) }))).toEqual([]);
   });
@@ -1147,5 +1166,76 @@ describe('antigravityReportTurns', () => {
     expect(
       antigravityReportTurns(FICHIER, sousAgents({ [S]: [long] }, { [long]: RECHERCHE })),
     ).toEqual([]);
+  });
+});
+
+// --- transcript.jsonl (annexe 11) : chaque valeur des `args` y est écrite comme en JSON, une chaîne entre guillemets --
+describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
+  const enJson = (args: Record<string, unknown>) =>
+    Object.fromEntries(Object.entries(args).map(([cle, valeur]) => [cle, JSON.stringify(valeur)]));
+  const ENV = 'DB_PASSWORD=hunter2secret';
+  const SESSION_CITEE = [
+    appels(
+      1,
+      ['invoke_subagent', enJson({ Prompt: `Cherche.\n${ENV}` })],
+      ['read_file', enJson({ Path: '/Users/demo/.ssh/config' })],
+      ['write_to_file', enJson({ TargetFile: '/Users/demo/autre/secret.txt', CodeContent: 'x' })],
+      ['replace_file_content', enJson({ TargetFile: `${ESSAI}/src/a.ts` })],
+      ['run_command', enJson({ CommandLine: 'pnpm test', WaitMsBeforeAsync: 500 })],
+    ),
+    ...[2, 3, 4, 5, 6].map((index) => resultat(index)),
+    fin(7),
+  ].join('\n');
+  const SA = sousAgents(
+    { [S]: [R] },
+    {
+      [R]: sousAgent(['send_message', enJson({ Message: `Rapport.\n${ENV}\nfin`, Recipient: S })]),
+    },
+  );
+  const MASQUE = `DB_PASSWORD=${SECRET_MASK}`;
+
+  it('les faits : un chemin hors du dépôt n’est pas un fichier, celui du dépôt l’est, la commande se lit', () => {
+    const faits = extractAntigravityFacts(SESSION_CITEE, FICHIER, ESSAI, null, SA);
+
+    expect(faits.fichiers).toEqual(['src/a.ts']);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false }]);
+    expect(faits.externe).toBe(false);
+  });
+
+  it('une commande réseau rend la session externe', () => {
+    const contenu = appels(1, [
+      'run_command',
+      enJson({ CommandLine: 'curl -s https://exemple.test' }),
+    ]);
+
+    expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).externe).toBe(true);
+  });
+
+  it('les coulisses : aucune cible hors du dépôt, la consigne et le rapport masqués', () => {
+    const blocs = extractAntigravityBackstage(SESSION_CITEE, FICHIER, ESSAI, SA);
+
+    expect(
+      blocs.flatMap((bloc) =>
+        bloc.role === 'appel_outil' ? [[bloc.id, bloc.outil, bloc.cible]] : [],
+      ),
+    ).toEqual([
+      ['1:0', 'invoke_subagent', undefined],
+      ['1:1', 'Read', undefined],
+      ['1:2', 'Write', undefined],
+      ['1:3', 'Edit', 'src/a.ts'],
+      ['1:4', 'Bash', 'pnpm test'],
+      [`${R}:1:0`, 'send_message', undefined],
+    ]);
+    expect(blocs.filter((bloc) => bloc.role === 'sous_agent')).toMatchObject([
+      { partie: 'consigne', texte: `Cherche.\n${MASQUE}` },
+      { partie: 'rapport', texte: `Rapport.\n${MASQUE}\nfin` },
+    ]);
+    expect(JSON.stringify(blocs)).not.toMatch(/hunter2secret|\/Users\/demo\/(?:\.ssh|autre)/);
+  });
+
+  it('le tour du rapport : le message décodé, son secret masqué', () => {
+    expect(antigravityReportTurns(FICHIER, SA).map(({ text }) => text)).toEqual([
+      `Rapport.\n${MASQUE}\nfin`,
+    ]);
   });
 });

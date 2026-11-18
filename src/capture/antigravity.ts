@@ -163,9 +163,22 @@ function workingDirectory(steps: Step[]): string | null {
 
 type Call = { name: string; args: Record<string, unknown> | null };
 
-// shortcut: dans `transcript.jsonl` (2.31.0), chaque valeur des `args` est une chaîne, entre guillemets semble-t-il
-// (annexe 11) : une commande y passerait pour locale. Le fichier complet se lit d'abord ; décoder ces valeurs le jour
-// où une version n'écrit plus que `transcript.jsonl`.
+// Dans `transcript.jsonl` (2.31.0, annexe 11), chaque valeur des `args` est écrite comme en JSON : une chaîne y est
+// entre guillemets. Décodée ici, sinon un chemin hors du dépôt y passerait pour un chemin du dépôt, un secret ne se
+// masquerait pas, une commande réseau passerait pour locale. Seule une chaîne se décode : un nombre ou `true` restent
+// des chaînes, qu'aucun lecteur n'utilise.
+// shortcut: une valeur entre guillemets qui ne se décode pas (coupée ?) reste telle quelle, jamais vue ; la rejeter
+// le jour où on la voit.
+const unquote = (value: unknown): unknown => {
+  if (typeof value !== 'string' || !/^".*"$/s.test(value)) return value;
+  try {
+    const decoded: unknown = JSON.parse(value);
+    return typeof decoded === 'string' ? decoded : value;
+  } catch {
+    return value;
+  }
+};
+
 function calls(step: Step): Call[] {
   return (step.tool_calls ?? []).map((raw) => {
     const call = ToolCallSchema.safeParse(raw);
@@ -181,7 +194,7 @@ function calls(step: Step): Call[] {
     }
     const record =
       typeof args === 'object' && args !== null && !Array.isArray(args)
-        ? (args as Record<string, unknown>)
+        ? Object.fromEntries(Object.entries(args).map(([key, value]) => [key, unquote(value)]))
         : null;
     return { name: call.data.name, args: record };
   });
@@ -209,7 +222,7 @@ function callsWithResults(steps: Step[]): CallWithResult[] {
 }
 
 // Les messages d'un sous-agent à la conversation qui l'a lancé (annexe 11) : ses appels send_message dont le `Recipient`
-// porte l'identifiant de cette conversation (dans `transcript.jsonl`, écrit entre guillemets : calls()). Le tour de
+// porte l'identifiant de cette conversation (dans `transcript.jsonl`, entre guillemets, que calls() retire). Le tour de
 // chaque message (antigravityReportTurns) et le bloc rapport des coulisses en partent.
 const messagesTo = (parent: string, steps: Step[]) =>
   callsWithResults(steps).filter(
@@ -449,8 +462,14 @@ const TOOL_NAMES = new Map([
 // (READ_TOOLS écarte read_file avant), ils n'ont que TargetFile et AbsolutePath.
 const PATH_KEYS = ['TargetFile', 'AbsolutePath', 'Path'];
 
-const statut = (result: Step | undefined) =>
-  result === undefined ? 'sans_resultat' : result.status === 'ERROR' ? 'erreur' : 'ok';
+// Une commande se juge comme dans les faits (failed) ; un autre outil sur le seul `status`, sa sortie pouvant citer un
+// « exit code ».
+const statut = (result: Step | undefined, command: boolean) =>
+  result === undefined
+    ? 'sans_resultat'
+    : (command ? failed(result, result.content ?? '') : result.status === 'ERROR')
+      ? 'erreur'
+      : 'ok';
 
 // Les coulisses d'une session Antigravity, dans l'ordre du temps : le raisonnement de la session (`thinking`, le texte
 // entier), chaque appel d'outil réduit (nom commun, cible réduite, statut lu sur son étape de résultat), la consigne
@@ -492,7 +511,7 @@ export function extractAntigravityBackstage(
         ts,
         outil,
         ...(cible === undefined ? {} : { cible }),
-        statut: statut(result),
+        statut: statut(result, typeof args?.CommandLine === 'string'),
       });
       const prompt = name === 'invoke_subagent' ? args?.Prompt : undefined;
       const consigne = typeof prompt === 'string' ? prepare(prompt) : null;

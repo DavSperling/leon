@@ -521,7 +521,8 @@ function readItem(reading: Reading, item: Item): void {
     } else if (item.kind !== 'completed') reading.external = true; // une forme non relevée
     return;
   }
-  // L'attente d'un sous-agent, jugé à son lancement ; un autre outil de sous-agent n'est pas relevé (annexe 09).
+  // L'attente d'un sous-agent, jugé à son lancement ; un autre outil de sous-agent, non relevé (annexe 09), la laisse
+  // externe.
   if (item.type === 'CollabAgentToolCall' && item.tool === 'wait') return;
   if (!LOCAL_ITEMS.has(item.type)) {
     reading.external = true;

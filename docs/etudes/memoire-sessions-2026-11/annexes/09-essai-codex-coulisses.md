@@ -87,7 +87,7 @@ C'est celle des amendements du 17/11 du plan (T52 et T63) ; les relevés ci-dess
 1. **Où chercher.** Le fichier d'un sous-agent est `rollout-<date>-<identifiant du fil>.jsonl`, dans le dossier du fichier de la session. On ne cherche pas dans un autre jour. L'essai le prouve pour ses trois fichiers (le relevé complet du témoin, voir « L'emplacement des fichiers »). Une session qui passe minuit n'est pas vue : un sous-agent rangé dans le dossier d'un autre jour n'est pas retrouvé.
 2. **Le lien.** Chaque élément `SubAgentActivity` de `kind: 'started'` donne `agent_thread_id`, l'identifiant du fil du sous-agent. Il est validé (un UUID) avant de servir à un nom de fichier. Le lien ne passe ni par la sortie de `spawn_agent` (elle n'a que `task_name`) ni par un `call_id`.
 3. **Le rapport final.** Un sous-agent a rendu son rapport quand le **dernier** `task_started` de son fichier est suivi d'un `task_complete`. Le premier ne sert pas : c'est celui du tour recopié, jamais fermé.
-4. **La règle de T63.** `SubAgentActivity` et `CollabAgentToolCall` ne rendent plus la session externe à eux seuls. Un sous-agent la rend externe si :
+4. **La règle de T63.** `SubAgentActivity` de `kind: 'started'` ou `'completed'`, et l'attente (`CollabAgentToolCall` de `tool: 'wait'`), ne rendent plus la session externe à eux seuls. Un autre outil de sous-agent ou une autre sorte de `SubAgentActivity` la laisse externe (forme non vue, échec fermé). Un sous-agent la rend externe si :
    - son fichier ne se retrouve pas ;
    - sa première ligne `session_meta` ne dit pas la forme paginée, ou n'a pas `subagent_history_start_ordinal` ;
    - il n'a pas rendu son rapport final ;

@@ -57,6 +57,7 @@ Il n'y a rien à relever : `coulisses` n'est ni proposé ni écrit pour Cursor, 
 1. **Un sous-agent reste externe.** `Task`, `GetDynamicTools` et `CallDynamicTool` rendent la session externe. Un test les nomme ; `GetDynamicTools` et `CallDynamicTool` sont les noms vus à cet essai.
 2. **Un appel sans champ `input` compte.** Les appels du relevé ont tous une entrée, mais un appel sans `input` échappait au tri, donc à l'échec fermé : il rend la session externe.
 3. **Un fichier sous `subagents/` n'est jamais capté comme une session**, au crochet comme au rattrapage. C'est un fichier de sous-agent : il n'a ni message ni appel, et le capter ferait partir une session vide.
+4. **Un appel qu'on ne sait pas lire rend la session externe.** Un bloc `tool_use` sans nom, ou dont le nom n'est pas un texte, était ignoré : il rend maintenant la session externe (échec fermé).
 
 ## Ce qui reste à essayer
 

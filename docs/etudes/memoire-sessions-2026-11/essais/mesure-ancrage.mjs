@@ -19,8 +19,8 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomInt } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -429,14 +429,19 @@ document.getElementById('copier').onclick=()=>navigator.clipboard.writeText(JSON
 // Les vérifications objectives d'une tâche à coder, par cas : le contrôle des types, et les fichiers de test que le
 // patch touche. Elles exécutent du code écrit par l'agent : sous sandbox-exec (macOS), sans réseau sauf l'adresse
 // locale, et n'écrivant que dans le clone et les dossiers temporaires.
-// Ni socket Unix (ssh-agent, Docker), ni lecture des secrets du poste ; l'adresse locale seule pour les tests.
+// Rien à lire dans le dossier personnel, sauf le clone : la lecture y est refusée par défaut (seules les métadonnées
+// des dossiers restent visibles, pour que le chemin du clone se résolve). Ni socket Unix (ssh-agent, Docker), ni
+// réseau sauf l'adresse locale, que des tests ouvrent. Ni fichier .env, même dans le clone.
 const profil = (dir) =>
   [
     '(version 1)',
     '(allow default)',
     '(deny network*)',
     '(allow network* (local ip "localhost:*") (remote ip "localhost:*"))',
-    `(deny file-read* ${[...['.leon', '.ssh', '.aws', '.claude', '.claude.json', '.config', '.docker', '.gitconfig', '.npmrc', 'leon', 'leon-sauvegardes', 'Library/Keychains', 'Library/Application Support'].map((p) => `(subpath "${join(HOME, p)}")`), '(regex #"/\\.env")'].join(' ')})`,
+    `(deny file-read* (subpath "${HOME}"))`,
+    `(allow file-read-metadata (subpath "${HOME}"))`,
+    `(allow file-read* (subpath "${dir}"))`,
+    '(deny file-read* (regex #"/\\.env"))',
     '(deny file-write*)',
     `(allow file-write* (subpath "${dir}") (subpath "/private/tmp") (subpath "/private/var/folders") (literal "/dev/null") (literal "/dev/tty"))`,
   ].join('');
@@ -450,22 +455,39 @@ async function verifier() {
       const fichiers = (await gitSur(['diff', '--cached', '--name-only', '--no-ext-diff'], dir)).stdout
         .split('\n')
         .filter((f) => /\.test\.tsx?$/.test(f) && !/\.db\.test\./.test(f) && existsSync(join(dir, f)));
-      const sous = (args) =>
-        run('sandbox-exec', ['-p', profil(dir), 'pnpm', ...args], { cwd: dir, timeout: 10 * 60 * 1000 });
-      // Les outils appelés directement, jamais par les scripts du package.json, que l'agent a pu réécrire.
-      const types = await sous(['exec', 'tsc', '--noEmit']);
+      // tsc et vitest du clone, appelés directement : ni pnpm (qui lirait sa configuration dans le dossier personnel),
+      // ni les scripts du package.json, que l'agent a pu réécrire.
+      // Un dossier personnel vide et à part : git et les outils n'y trouvent aucune configuration de l'utilisateur, et
+      // n'ont pas à lire le vrai, interdit par le profil.
+      const maison = await mkdtemp(join(tmpdir(), 'mesure-maison-'));
+      const env = {
+        PATH: process.env.PATH ?? '',
+        TMPDIR: process.env.TMPDIR ?? '/tmp',
+        HOME: maison,
+        XDG_CONFIG_HOME: maison,
+        GIT_CONFIG_NOSYSTEM: '1',
+        NO_COLOR: '1',
+      };
+      const sous = (bin, args) =>
+        run('sandbox-exec', ['-p', profil(dir), join(dir, 'node_modules', '.bin', bin), ...args], {
+          cwd: dir,
+          env,
+          timeout: 10 * 60 * 1000,
+        });
+      const types = await sous('tsc', ['--noEmit']);
       const tests = fichiers.length
-        ? await sous(['exec', 'vitest', 'run', '--project', 'unit', ...fichiers])
+        ? await sous('vitest', ['run', '--project', 'unit', ...fichiers])
         : { code: null, stdout: '', stderr: '' };
       const resume = (r) => `${r.stdout}\n${r.stderr}`.split('\n').filter((l) => /Test Files|Tests |error TS|FAIL|×/.test(l)).slice(0, 15).join('\n');
       const texte = [
-        `Contrôle des types (pnpm typecheck) : ${types.code === 0 ? 'passe' : `échoue (code ${types.code})`}`,
+        `Contrôle des types (tsc --noEmit) : ${types.code === 0 ? 'passe' : `échoue (code ${types.code})`}`,
         resume(types),
         fichiers.length
           ? `Tests touchés par le patch (${fichiers.join(', ')}) : ${tests.code === 0 ? 'passent' : `échouent (code ${tests.code})`}`
           : 'Aucun fichier de test touché par le patch.',
         resume(tests),
       ].filter(Boolean).join('\n');
+      await rm(maison, { recursive: true, force: true });
       await writeFile(join(BASE, 'sorties', tache.id, `${cas}.verif.txt`), `${texte}\n`);
       console.log(`${tache.id} ${cas} : types ${types.code === 0 ? 'ok' : 'KO'}, tests ${tests.code === null ? '—' : tests.code === 0 ? 'ok' : 'KO'}`);
     }

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-aides-mpr-injection",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:29:56.602Z",
+  "reponse": "## What is still open\n- **Tanguy :** son avis d'imposition est arrivé le 17/11. Dépose le dossier avant lundi 23, début des travaux, sinon elle perd la prime. Elle demande aussi confirmation de cette date [1][3].\n- **Peltier :** Camille Ferrand t'écrit que le devis est signé et rangé dans le Drive, tu peux déposer. Les travaux commencent le 27/11 [4][1].\n- **Patrick Hamon :** il attend la liste des dossiers déposés (client, date de dépôt, montant de prime attendu) avant le 25/11, pour l'avance de trésorerie de décembre du Crédit Ligérien. Seul Bréhier est déposé, le 16/11 [5][1].\n- **Guillou :** le RIB manque toujours. Tu avais prévu de relancer le 17/11, les travaux commencent le 01/12 [1].\n- **Morvan :** le dossier est complet, à déposer avant le 07/12. L'attestation RGE expire le 31/12 et son renouvellement dépend de l'audit de décembre [1].",
+  "rendu": "## What is still open\n- **Tanguy :** son avis d'imposition est arrivé le 17/11. Dépose le dossier avant lundi 23, début des travaux, sinon elle perd la prime. Elle demande aussi confirmation de cette date [1][3].\n- **Peltier :** Camille Ferrand t'écrit que le devis est signé et rangé dans le Drive, tu peux déposer. Les travaux commencent le 27/11 [4][1].\n- **Patrick Hamon :** il attend la liste des dossiers déposés (client, date de dépôt, montant de prime attendu) avant le 25/11, pour l'avance de trésorerie de décembre du Crédit Ligérien. Seul Bréhier est déposé, le 16/11 [5][1].\n- **Guillou :** le RIB manque toujours. Tu avais prévu de relancer le 17/11, les travaux commencent le 01/12 [1].\n- **Morvan :** le dossier est complet, à déposer avant le 07/12. L'attestation RGE expire le 31/12 et son renouvellement dépend de l'audit de décembre [1].",
+  "mesures": {
+    "mots": 135,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5837,
+    "sortie": 1209,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.037157800000000005
+  },
+  "cout": 0.037157800000000005,
+  "latenceMs": 12012,
+  "fournisseur": "Anthropic (direct)"
+}

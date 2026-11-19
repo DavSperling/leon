@@ -1,0 +1,21 @@
+{
+  "verificateur": "anthropic/claude-sonnet-5.5",
+  "faits": {
+    "f-migration": 1,
+    "f-prod": 1,
+    "f-acompte": 1,
+    "f-216": 0.5,
+    "f-213": 0,
+    "f-mapping": 0
+  },
+  "interdits": {
+    "i-217": 0,
+    "i-prod": 0,
+    "i-apropos": 0,
+    "i-forum": 0,
+    "i-routine": 0
+  },
+  "contraires": [],
+  "premier": "f-migration",
+  "langueOk": true
+}

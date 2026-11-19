@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:05.334Z",
+  "reponse": "Pour l'appli des poseurs, oui : c'est réglé. Le reste ne l'est pas tout à fait, car les SMS aux clients se sont trompés d'heure.\n\n- **Appli :** Thomas Riou a déployé le correctif #214 en prod le 17/11. L'appli affiche de nouveau la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1]. Le ticket #208 (créneaux affichés 1 h trop tard depuis le changement d'heure) est fermé [2]. Yannick Moreau confirme le 18/11 que « dans l'appli c'est bon » [4].\n- **SMS clients :** les SMS envoyés le 17 au soir annonçaient 9h au lieu de 8h à deux clients, Mme Bréhier et M. Hervé. Yannick a demandé à Sandrine de les rappeler [4]. Côté support, Sandrine Guérin a confirmé 8h à un client et s'est excusée du SMS erroné en disant « nous corrigeons le problème » [3].\n\nJe n'ai pas trouvé si la cause des SMS erronés a été corrigée. Les sources ne disent pas non plus si ces deux clients ont bien été rappelés.",
+  "rendu": "Pour l'appli des poseurs, oui : c'est réglé. Le reste ne l'est pas tout à fait, car les SMS aux clients se sont trompés d'heure.\n\n- **Appli :** Thomas Riou a déployé le correctif #214 en prod le 17/11. L'appli affiche de nouveau la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1]. Le ticket #208 (créneaux affichés 1 h trop tard depuis le changement d'heure) est fermé [2]. Yannick Moreau confirme le 18/11 que « dans l'appli c'est bon » [4].\n- **SMS clients :** les SMS envoyés le 17 au soir annonçaient 9h au lieu de 8h à deux clients, Mme Bréhier et M. Hervé. Yannick a demandé à Sandrine de les rappeler [4]. Côté support, Sandrine Guérin a confirmé 8h à un client et s'est excusée du SMS erroné en disant « nous corrigeons le problème » [3].\n\nJe n'ai pas trouvé si la cause des SMS erronés a été corrigée. Les sources ne disent pas non plus si ces deux clients ont bien été rappelés.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6615,
+    "sortie": 564,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0097614
+  },
+  "latenceMs": 4683,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"problème d'horaires appli poseurs\"}",
+    "chercher {\"requete\":\"poseurs horaires bug fuseau\",\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.0097614
+}

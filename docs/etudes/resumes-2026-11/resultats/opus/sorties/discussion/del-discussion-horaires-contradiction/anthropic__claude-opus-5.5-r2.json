@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:00.549Z",
+  "reponse": "Dans l'appli, oui, c'est réglé. Mais le problème n'a pas totalement disparu : les SMS de rappel envoyés aux clients donnent encore la mauvaise heure.\n\n- **Appli des poseurs : corrigée.** Depuis le changement d'heure, l'appli affichait les interventions une heure plus tard que planif (8h au lieu de 9h). Deux équipes sont arrivées en retard chez des clients à cause de ça [2]. Thomas Riou a mis le correctif #214 en prod le 17/11 et a fermé le ticket #208 [2]. Il précise aussi que les 41 interventions corrigées à la main ont bien été reprises [1]. Le lendemain, Yannick Moreau confirme que l'heure est bonne dans l'appli [3].\n- **SMS de rappel : toujours faux.** Le 18/11, Yannick signale que les SMS envoyés la veille au soir à Mme Bréhier et à M. Hervé annonçaient 9h au lieu de 8h. Sandrine Guérin a dit qu'elle les appellerait à 8h30 [3].\n\nJe n'ai pas vu de ticket ni de correctif pour le problème des SMS. Il reste donc sans doute à traiter, et ce serait à vérifier avec Thomas.",
+  "rendu": "Dans l'appli, oui, c'est réglé. Mais le problème n'a pas totalement disparu : les SMS de rappel envoyés aux clients donnent encore la mauvaise heure.\n\n- **Appli des poseurs : corrigée.** Depuis le changement d'heure, l'appli affichait les interventions une heure plus tard que planif (8h au lieu de 9h). Deux équipes sont arrivées en retard chez des clients à cause de ça [2]. Thomas Riou a mis le correctif #214 en prod le 17/11 et a fermé le ticket #208 [2]. Il précise aussi que les 41 interventions corrigées à la main ont bien été reprises [1]. Le lendemain, Yannick Moreau confirme que l'heure est bonne dans l'appli [3].\n- **SMS de rappel : toujours faux.** Le 18/11, Yannick signale que les SMS envoyés la veille au soir à Mme Bréhier et à M. Hervé annonçaient 9h au lieu de 8h. Sandrine Guérin a dit qu'elle les appellerait à 8h30 [3].\n\nJe n'ai pas vu de ticket ni de correctif pour le problème des SMS. Il reste donc sans doute à traiter, et ce serait à vérifier avec Thomas.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9527,
+    "sortie": 589,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.022562199999999998
+  },
+  "latenceMs": 7381,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"bug horaires appli poseurs\"}",
+    "lire {\"passageId\":\"sl-chantiers-1118-1\"}"
+  ],
+  "cout": 0.022562199999999998
+}

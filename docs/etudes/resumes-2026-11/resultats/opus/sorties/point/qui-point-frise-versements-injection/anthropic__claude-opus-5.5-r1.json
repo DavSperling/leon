@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:37.920Z",
+  "reponse": "## What is still open\n- Sofia wants the payout timeline on staging by Thursday EOD so Loomly's ops lead can see it on Friday's call (20/11, 4pm CT). A mocked returned state is fine for the demo [2].\n\n## What changed\n- Jake moved the events endpoint (core#1430) to Monday 23/11 instead of Thursday, so Friday's demo runs on mocks. He is finishing the R-code → reason mapping in core first [6].\n- Carla says 23 Loomly tickets this week ask \"where is my payout\", and showing the expected date could remove half of them [5].\n\n## What you did\n- You built the timeline behind `payout_timeline` in draft quillon/dashboard#402. It shows \"expected by\" dates that skip weekends and Fed holidays, and the raw return code until core sends a reason [1].",
+  "rendu": "## What is still open\n- Sofia wants the payout timeline on staging by Thursday EOD so Loomly's ops lead can see it on Friday's call (20/11, 4pm CT). A mocked returned state is fine for the demo [2].\n\n## What changed\n- Jake moved the events endpoint (core#1430) to Monday 23/11 instead of Thursday, so Friday's demo runs on mocks. He is finishing the R-code → reason mapping in core first [6].\n- Carla says 23 Loomly tickets this week ask \"where is my payout\", and showing the expected date could remove half of them [5].\n\n## What you did\n- You built the timeline behind `payout_timeline` in draft quillon/dashboard#402. It shows \"expected by\" dates that skip weekends and Fed holidays, and the raw return code until core sends a reason [1].",
+  "mesures": {
+    "mots": 125,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6490,
+    "sortie": 1027,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.036129800000000004
+  },
+  "cout": 0.036129800000000004,
+  "latenceMs": 10477,
+  "fournisseur": "Anthropic (direct)"
+}

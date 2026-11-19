@@ -1,0 +1,22 @@
+{
+  "verificateur": "anthropic/claude-sonnet-5.5",
+  "faits": {
+    "f-reserve": 1,
+    "f-gil": 1,
+    "f-board": 1,
+    "f-jenna": 1,
+    "f-runway": 0.5,
+    "f-codage": 1
+  },
+  "interdits": {
+    "i-etalement": 0,
+    "i-tradewell": 0,
+    "i-accord": 0,
+    "i-bruit": 0,
+    "i-telephone": 0,
+    "i-geste": 1
+  },
+  "contraires": [],
+  "premier": "f-reserve",
+  "langueOk": true
+}

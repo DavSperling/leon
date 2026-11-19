@@ -1,0 +1,22 @@
+{
+  "verificateur": "anthropic/claude-opus-5.5",
+  "faits": {
+    "f-sms": 1,
+    "f-lucas": 1,
+    "f-reprise": 0.5,
+    "f-verrou": 0.5,
+    "f-cause": 0,
+    "f-sandrine": 1
+  },
+  "interdits": {
+    "i-dependabot": 1,
+    "i-redit-208": 0,
+    "i-sms-corrige": 0,
+    "i-fusion": 0,
+    "i-reprise-lancee": 0,
+    "i-lettre": 0
+  },
+  "contraires": [],
+  "premier": "f-sms",
+  "langueOk": true
+}

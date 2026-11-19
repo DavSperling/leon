@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:47.995Z",
+  "reponse": "I don't know yet what Corvane will charge in 2027, because nothing is final.\n\n- **Planning assumption:** The pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. The current agreement runs until March 31, 2027, and Marcus is to open renewal talks in November [1]. The memo also mentions a threshold at $0.10, but the passage is cut off before it says what happens above that [1].\n- **Current cost:** October's invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item, my own arithmetic from those two figures.\n- **Risk of an increase:** On Nov 16 Marcus said Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 file rejection. He added that nothing is on paper yet [5]. The renewal call moved to the week of Nov 23 [5].\n\nOnce the renewal call has happened, the #finance thread is the place to look for a real number.",
+  "rendu": "I don't know yet what Corvane will charge in 2027, because nothing is final.\n\n- **Planning assumption:** The pricing memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. The current agreement runs until March 31, 2027, and Marcus is to open renewal talks in November [1]. The memo also mentions a threshold at $0.10, but the passage is cut off before it says what happens above that [1].\n- **Current cost:** October's invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item, my own arithmetic from those two figures.\n- **Risk of an increase:** On Nov 16 Marcus said Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 file rejection. He added that nothing is on paper yet [5]. The renewal call moved to the week of Nov 23 [5].\n\nOnce the renewal call has happened, the #finance thread is the place to look for a real number.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 8116,
+    "sortie": 395,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0110734
+  },
+  "latenceMs": 3754,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Corvane payout fee per payout pricing next year\"}"
+  ],
+  "cout": 0.0110734
+}

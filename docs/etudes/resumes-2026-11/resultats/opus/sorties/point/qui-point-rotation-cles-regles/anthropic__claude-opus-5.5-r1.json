@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:54.869Z",
+  "reponse": "## What is still open\n- Elad approved #1412 on one condition: emit an audit event per batch (id range, count, from/to KEK), since assessors need per-batch traceability under 10.2. Avi wants it merged by Monday 23/11 [3].\n- Shira needs two things from you by Wed 25/11, before the on-site: the export of the prod run's audit log and the signed change ticket. The assessor (Victor, Ardent) won't accept screenshots [5].\n\n## What changed\n- The prod window is confirmed for Tue 24/11, 22:00–23:30 IL time, with Elad on call with you. The only fallback is Thu 26/11, because the freeze starts 1/12. Put Elad in the runbook's on-call placeholder [6][2].\n\n## What you did\n- The staging dry run now has 0 failures, after mapping the legacy v1 tokens to vault-kek-2022. The old keys stay decrypt-only for 30 days, and deletion is a separate decision with Shira [1].",
+  "rendu": "## What is still open\n- Elad approved #1412 on one condition: emit an audit event per batch (id range, count, from/to KEK), since assessors need per-batch traceability under 10.2. Avi wants it merged by Monday 23/11 [3].\n- Shira needs two things from you by Wed 25/11, before the on-site: the export of the prod run's audit log and the signed change ticket. The assessor (Victor, Ardent) won't accept screenshots [5].\n\n## What changed\n- The prod window is confirmed for Tue 24/11, 22:00–23:30 IL time, with Elad on call with you. The only fallback is Thu 26/11, because the freeze starts 1/12. Put Elad in the runbook's on-call placeholder [6][2].\n\n## What you did\n- The staging dry run now has 0 failures, after mapping the legacy v1 tokens to vault-kek-2022. The old keys stay decrypt-only for 30 days, and deletion is a separate decision with Shira [1].",
+  "mesures": {
+    "mots": 143,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8000,
+    "sortie": 1215,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0459298
+  },
+  "cout": 0.0459298,
+  "latenceMs": 11905,
+  "fournisseur": "Anthropic (direct)"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:11.985Z",
+  "reponse": "## What is still open\n- Lucas demande des changements sur #214 : corriger `rappels/sms.py` dans cette PR, sa réécriture n'arrivant pas avant le 30/11. Yannick exige que ce soit bon avant l'envoi des SMS ce mercredi à 18h, et Sandrine attend ta réponse [3][4][7].\n- Juste après la fusion de #214, lance `reprise_heure_hiver` sans `--dry-run` sur les 41 interventions décalées, pas avant [1].\n- Franck veut que tu verrouilles l'intervention du chantier Le Floch du 8/12 (audit RGE) avant vendredi [2].\n- La branche `thomas/settings-split` (découpage des réglages, HSTS, cookies sécurisés, pillow 11.0.0 contre une vulnérabilité) n'a pas encore de PR [2].\n\n## What changed\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec espaces et fait perdre des demandes, sans urgence [6].",
+  "rendu": "## What is still open\n- Lucas demande des changements sur #214 : corriger `rappels/sms.py` dans cette PR, sa réécriture n'arrivant pas avant le 30/11. Yannick exige que ce soit bon avant l'envoi des SMS ce mercredi à 18h, et Sandrine attend ta réponse [3][4][7].\n- Juste après la fusion de #214, lance `reprise_heure_hiver` sans `--dry-run` sur les 41 interventions décalées, pas avant [1].\n- Franck veut que tu verrouilles l'intervention du chantier Le Floch du 8/12 (audit RGE) avant vendredi [2].\n- La branche `thomas/settings-split` (découpage des réglages, HSTS, cookies sécurisés, pillow 11.0.0 contre une vulnérabilité) n'a pas encore de PR [2].\n\n## What changed\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros avec espaces et fait perdre des demandes, sans urgence [6].",
+  "mesures": {
+    "mots": 120,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9089,
+    "sortie": 940,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0447858
+  },
+  "cout": 0.0447858,
+  "latenceMs": 9680,
+  "fournisseur": "Anthropic (direct)"
+}

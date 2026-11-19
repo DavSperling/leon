@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:35.240Z",
+  "reponse": "The PCI on-site was moved to **Tuesday December 15 to Thursday December 17, 2026** at the Austin office. On Nov 16, Victor Lindqvist, the auditor from Ardent, asked to change the date because his second assessor can't make the week of Dec 7. Shira said yes the same day, and Victor said updated invites would follow [2].\n\nSome places still show the old dates, so don't book from those:\n- In #compliance, Avi's reminder from Nov 17 still says **Dec 8–10** and asks TLV people to book their flights by the end of the week [4]. That message came a day after the change, but it seems to repeat the old plan.\n- The original SOW email from Nov 9 and Shira's evidence tracker also say Dec 8–10 [5][1].\n\nThe evidence deadline didn't move: it's still Dec 1 [2]. Before you buy a ticket, you could check with Shira or Avi, or wait for the new invite. That would also clear up Avi's reminder for the rest of the team.",
+  "rendu": "The PCI on-site was moved to **Tuesday December 15 to Thursday December 17, 2026** at the Austin office. On Nov 16, Victor Lindqvist, the auditor from Ardent, asked to change the date because his second assessor can't make the week of Dec 7. Shira said yes the same day, and Victor said updated invites would follow [2].\n\nSome places still show the old dates, so don't book from those:\n- In #compliance, Avi's reminder from Nov 17 still says **Dec 8–10** and asks TLV people to book their flights by the end of the week [4]. That message came a day after the change, but it seems to repeat the old plan.\n- The original SOW email from Nov 9 and Shira's evidence tracker also say Dec 8–10 [5][1].\n\nThe evidence deadline didn't move: it's still Dec 1 [2]. Before you buy a ticket, you could check with Shira or Avi, or wait for the new invite. That would also clear up Avi's reminder for the rest of the team.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 15216,
+    "sortie": 613,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0457982
+  },
+  "latenceMs": 12237,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors onsite visit Austin office dates\"}",
+    "lire {\"sourceId\":\"gmail-ardent-fieldwork\"}",
+    "lire {\"sourceId\":\"drive-pci-evidence-tracker\"}"
+  ],
+  "cout": 0.0457982
+}

@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-audit-pci-dates-contradiction",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:35.076Z",
+  "reponse": "The on-site PCI fieldwork is in Austin from **Tuesday December 15 to Thursday December 17**. Don't go by the Dec 8–10 dates you may have seen elsewhere.\n\n- **The move:** On Nov 16, Victor Lindqvist (the QSA at Ardent Assurance) asked to push the on-site visit back because their second assessor can't make the week of December 7. He proposed Dec 15–17 at the Austin office, in the same format. Shira agreed the same day and asked for updated invites, and Victor said they'd follow [2].\n- **Why you might be confused:** The original plan was Dec 8–10 [5][1]. Avi's reminder in #compliance still says \"Dec 8-10 in Austin\" and asks TLV people to book flights by end of week [4]. That message was posted on Nov 17, the day after the change was agreed. It probably hadn't caught the new dates, but nothing I found shows anyone correcting it.\n- **Unchanged:** The evidence package is still due Dec 1 [2].\n\nYou may want to check with Shira (or look for Ardent's updated calendar invite) before booking. Also, the Austin holiday party is Fri Dec 11 [3], if you're thinking of going.",
+  "rendu": "The on-site PCI fieldwork is in Austin from **Tuesday December 15 to Thursday December 17**. Don't go by the Dec 8–10 dates you may have seen elsewhere.\n\n- **The move:** On Nov 16, Victor Lindqvist (the QSA at Ardent Assurance) asked to push the on-site visit back because their second assessor can't make the week of December 7. He proposed Dec 15–17 at the Austin office, in the same format. Shira agreed the same day and asked for updated invites, and Victor said they'd follow [2].\n- **Why you might be confused:** The original plan was Dec 8–10 [5][1]. Avi's reminder in #compliance still says \"Dec 8-10 in Austin\" and asks TLV people to book flights by end of week [4]. That message was posted on Nov 17, the day after the change was agreed. It probably hadn't caught the new dates, but nothing I found shows anyone correcting it.\n- **Unchanged:** The evidence package is still due Dec 1 [2].\n\nYou may want to check with Shira (or look for Ardent's updated calendar invite) before booking. Also, the Austin holiday party is Fri Dec 11 [3], if you're thinking of going.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 14418,
+    "sortie": 652,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0433862
+  },
+  "latenceMs": 12907,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"PCI auditors onsite visit Austin office dates\"}",
+    "lire {\"sourceId\":\"gmail-ardent-fieldwork\"}"
+  ],
+  "cout": 0.0433862
+}

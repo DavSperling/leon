@@ -1,0 +1,23 @@
+{
+  "verificateur": "anthropic/claude-opus-5.5",
+  "faits": {
+    "f-helene": 1,
+    "f-marchand": 1,
+    "f-lots": 0.5,
+    "f-penalite": 1,
+    "f-decaler": 0.5,
+    "f-camille": 1,
+    "f-patrick": 1
+  },
+  "interdits": {
+    "i-6": 0,
+    "i-conclu": 0,
+    "i-penalite": 0,
+    "i-climatech": 0,
+    "i-tel": 0,
+    "i-bruit": 0
+  },
+  "contraires": [],
+  "premier": "f-helene",
+  "langueOk": true
+}

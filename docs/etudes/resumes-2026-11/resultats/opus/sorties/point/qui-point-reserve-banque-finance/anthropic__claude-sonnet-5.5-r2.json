@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:52.916Z",
+  "reponse": "## What is still open\n\n- Corvane refused phasing: the full $2.4M reserve must be in place by Nov 30. Gil's sign-off already covers moving the $900k from the sweep, so you can go ahead without asking him again. [5][3]\n- Gil wants the reserve change on the cash slide of Thursday's board pack. Your numbers: runway goes from 19.5 to 18.3 months, only 0.3 above the 18-month floor. [3][1]\n- Jenna is waiting on your call: chase Northpeak for the missing $27,500 SRE search invoice, or keep the accrual and close October on Friday. [4]\n\n## What you did\n\n- You coded the October card export for Jenna, with the $4,500 Northpeak deposit in 1450 prepaid, so the deposit may need to be reconciled with the $27,500 invoice she accrued. [2][4]",
+  "rendu": "## What is still open\n\n- Corvane refused phasing: the full $2.4M reserve must be in place by Nov 30. Gil's sign-off already covers moving the $900k from the sweep, so you can go ahead without asking him again. [5][3]\n- Gil wants the reserve change on the cash slide of Thursday's board pack. Your numbers: runway goes from 19.5 to 18.3 months, only 0.3 above the 18-month floor. [3][1]\n- Jenna is waiting on your call: chase Northpeak for the missing $27,500 SRE search invoice, or keep the accrual and close October on Friday. [4]\n\n## What you did\n\n- You coded the October card export for Jenna, with the $4,500 Northpeak deposit in 1450 prepaid, so the deposit may need to be reconciled with the $27,500 invoice she accrued. [2][4]",
+  "mesures": {
+    "mots": 126,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6853,
+    "sortie": 287,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.011390899999999999
+  },
+  "cout": 0.011390899999999999,
+  "latenceMs": 3010,
+  "fournisseur": "Anthropic (direct)"
+}

@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:32:02.344Z",
+  "reponse": "Both were picked up. The webhook issue is fixed. The payout schedule one is decided internally, but Martin hasn't been told yet.\n\n**1. Webhook signatures failing on sandbox.** Ellen's team said nearly every `payout.paid` and `seller.verified` event failed signature verification. Only about 1 in 20 worked, so they had switched verification off on sandbox [1].\n- **Who took it:** Jake Whitfield, on the call [1].\n- **Cause:** we signed one body but sent a different one. The TS worker re-serialized the JSON and added `delivered_at` and `attempt` after signing. The 1 in 20 that worked were retries sent through the old Rust path [2].\n- **Fix:** we now sign the exact bytes we send, and those two fields became headers. That's PR core#1187 [2].\n- **Status:** Jake deployed it to sandbox on Nov 16 [3]. Ellen turned verification back on. On Nov 17 she said 300+ events had all verified [3].\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 payouts and everyone else on net-30. Quillon only supports one schedule per platform. Martin called this \"bigger\": without it, their best sellers get a worse deal on day one [1].\n- **Who took it:** Owen Park took it back to product and engineering [1]. He promised Martin a clear answer by Friday Nov 20 [3]. Sofia opened QPAY-2362 [4].\n- **Estimate:** Tomer put it at 3–4 weeks [4].\n- **Decision:** on Nov 16, Avi said it won't be in the Dec 7 go-live. Earliest is late January, target 2027-Q1, and he asked Owen to tell Martin [4].\n- **Status:** on Nov 17, Martin asked Owen again in #ext-tradewell, because they need it for their seller comms [3]. I don't see a reply from Owen there yet.\n\nSo the open item is making sure Owen tells Martin \"not before late January\" by Nov 20. This doesn't move the Dec 7 date, but Tradewell's seller comms depend on the answer.",
+  "rendu": "Both were picked up. The webhook issue is fixed. The payout schedule one is decided internally, but Martin hasn't been told yet.\n\n**1. Webhook signatures failing on sandbox.** Ellen's team said nearly every `payout.paid` and `seller.verified` event failed signature verification. Only about 1 in 20 worked, so they had switched verification off on sandbox [1].\n- **Who took it:** Jake Whitfield, on the call [1].\n- **Cause:** we signed one body but sent a different one. The TS worker re-serialized the JSON and added `delivered_at` and `attempt` after signing. The 1 in 20 that worked were retries sent through the old Rust path [2].\n- **Fix:** we now sign the exact bytes we send, and those two fields became headers. That's PR core#1187 [2].\n- **Status:** Jake deployed it to sandbox on Nov 16 [3]. Ellen turned verification back on. On Nov 17 she said 300+ events had all verified [3].\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 payouts and everyone else on net-30. Quillon only supports one schedule per platform. Martin called this \"bigger\": without it, their best sellers get a worse deal on day one [1].\n- **Who took it:** Owen Park took it back to product and engineering [1]. He promised Martin a clear answer by Friday Nov 20 [3]. Sofia opened QPAY-2362 [4].\n- **Estimate:** Tomer put it at 3–4 weeks [4].\n- **Decision:** on Nov 16, Avi said it won't be in the Dec 7 go-live. Earliest is late January, target 2027-Q1, and he asked Owen to tell Martin [4].\n- **Status:** on Nov 17, Martin asked Owen again in #ext-tradewell, because they need it for their seller comms [3]. I don't see a reply from Owen there yet.\n\nSo the open item is making sure Owen tells Martin \"not before late January\" by Nov 20. This doesn't move the Dec 7 date, but Tradewell's seller comms depend on the answer.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.6,
+    "sourcesAttenduesCitees": 0.4,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 30325,
+    "sortie": 1213,
+    "reflexion": 0,
+    "cache": 9588,
+    "cout": 0.1091256
+  },
+  "latenceMs": 13230,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell weekly sync Martin Kobayashi flagged issues\"}",
+    "lire {\"sourceId\":\"claude-code-jake-webhook-sig\"}",
+    "lire {\"sourceId\":\"jira-qpay-2362\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "lire {\"sourceId\":\"slack-ext-tradewell\"}"
+  ],
+  "cout": 0.1091256
+}

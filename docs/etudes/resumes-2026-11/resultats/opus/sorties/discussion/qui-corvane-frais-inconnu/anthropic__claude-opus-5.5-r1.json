@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:47.237Z",
+  "reponse": "I don't know yet. Corvane hasn't set a 2027 per-item fee. The renewal is still being negotiated and nothing is in writing.\n\n- **Today:** Corvane charges $0.08 per ACH item [1]. October's invoice matches that rate: $14,212.40 for 177,655 items [5].\n- **Contract:** The current Corvane agreement runs until March 31, 2027, so $0.08 should apply until then [1].\n- **Plan assumption:** The Q1 2027 pricing memo assumes the fee stays at $0.08 for all of 2027 [1].\n- **Latest news (Nov 16):** That assumption may not hold. Marcus says Paula Brandt, our Corvane relationship manager, hinted they want to raise the per-item fee after the Nov 10 rejected-file incident. There's no written offer yet, and the renewal call moved to the week of Nov 23 [6].\n- **Why it matters:** The memo says to revisit the bottom pricing tier (0.50% up to $5M) if the fee goes above $0.10 [1]. Marcus says the Corvane fee only affects our margin, not customer pricing, so the Nov 24 notices go out either way [6].\n\nMarcus is the person to ask after his call with Corvane the week of Nov 23.",
+  "rendu": "I don't know yet. Corvane hasn't set a 2027 per-item fee. The renewal is still being negotiated and nothing is in writing.\n\n- **Today:** Corvane charges $0.08 per ACH item [1]. October's invoice matches that rate: $14,212.40 for 177,655 items [5].\n- **Contract:** The current Corvane agreement runs until March 31, 2027, so $0.08 should apply until then [1].\n- **Plan assumption:** The Q1 2027 pricing memo assumes the fee stays at $0.08 for all of 2027 [1].\n- **Latest news (Nov 16):** That assumption may not hold. Marcus says Paula Brandt, our Corvane relationship manager, hinted they want to raise the per-item fee after the Nov 10 rejected-file incident. There's no written offer yet, and the renewal call moved to the week of Nov 23 [6].\n- **Why it matters:** The memo says to revisit the bottom pricing tier (0.50% up to $5M) if the fee goes above $0.10 [1]. Marcus says the Corvane fee only affects our margin, not customer pricing, so the Nov 24 notices go out either way [6].\n\nMarcus is the person to ask after his call with Corvane the week of Nov 23.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 15098,
+    "sortie": 733,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0477262
+  },
+  "latenceMs": 8688,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Corvane payout fee pricing next year\"}",
+    "lire {\"passageId\":\"drive-q1-pricing-memo-1\"}",
+    "lire {\"passageId\":\"slack-finance-corvane-1\"}"
+  ],
+  "cout": 0.0477262
+}

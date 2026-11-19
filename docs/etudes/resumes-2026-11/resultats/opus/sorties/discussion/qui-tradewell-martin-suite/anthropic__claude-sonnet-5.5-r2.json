@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:32:09.265Z",
+  "reponse": "Martin flagged two things on the Nov 12 sync. The webhook problem is fixed on sandbox, but the payout schedules problem is stuck. [1]\n\n**1. Webhook signatures failing on sandbox.** Ellen Vance said every payout.paid and seller.verified event failed verification, with only about 1 in 20 passing. Jake Whitfield took it on the call. [1]\n- The cause was that we signed a re-serialized body instead of the bytes we actually sent. [19][4]\n- Jake's fix (core#1187) is merged and deployed to sandbox. [19]\n- On Nov 17 Ellen turned verification back on. More than 300 events have verified since. [4]\n- It goes to production with release 2026.47 on Tue Nov 24. [19][20]\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 and everyone else is on net-30, but Quillon only supports one schedule per platform. Martin said that without per-seller schedules they would be downgrading their best sellers on day one. [1]\n- Owen Park didn't commit on the call and told Martin he'd have a clear answer by Friday Nov 20. [1][4]\n- Tomer Golan estimated 3–4 weeks of work, including a dry run with Corvane. [3]\n- Avi Kessler then moved QPAY-2362 to Backlog with a Q1 2027 target. He wrote that the earliest is late January and asked Owen to set expectations with Martin. [3]\n- I found nothing showing that Owen has told Martin yet. Martin said he needs an answer soon, because he has to tell those sellers what happens in December. [1]\n\nThe Dec 7 go-live is not affected by the webhook fix. The payout schedules answer is a risk, because Martin said the date can't move. [1]",
+  "rendu": "Martin flagged two things on the Nov 12 sync. The webhook problem is fixed on sandbox, but the payout schedules problem is stuck. [1]\n\n**1. Webhook signatures failing on sandbox.** Ellen Vance said every payout.paid and seller.verified event failed verification, with only about 1 in 20 passing. Jake Whitfield took it on the call. [1]\n- The cause was that we signed a re-serialized body instead of the bytes we actually sent. [19][4]\n- Jake's fix (core#1187) is merged and deployed to sandbox. [19]\n- On Nov 17 Ellen turned verification back on. More than 300 events have verified since. [4]\n- It goes to production with release 2026.47 on Tue Nov 24. [19][20]\n\n**2. Per-seller payout schedules.** About 200 top sellers are on net-7 and everyone else is on net-30, but Quillon only supports one schedule per platform. Martin said that without per-seller schedules they would be downgrading their best sellers on day one. [1]\n- Owen Park didn't commit on the call and told Martin he'd have a clear answer by Friday Nov 20. [1][4]\n- Tomer Golan estimated 3–4 weeks of work, including a dry run with Corvane. [3]\n- Avi Kessler then moved QPAY-2362 to Backlog with a Q1 2027 target. He wrote that the earliest is late January and asked Owen to set expectations with Martin. [3]\n- I found nothing showing that Owen has told Martin yet. Martin said he needs an answer soon, because he has to tell those sellers what happens in December. [1]\n\nThe Dec 7 go-live is not affected by the webhook fix. The payout schedules answer is a risk, because Martin said the date can't move. [1]",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 25302,
+    "sortie": 975,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0466911
+  },
+  "latenceMs": 7586,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync November 12\"}",
+    "chercher {\"requete\":\"Tradewell Martin flagged issues follow-up\",\"depuis\":\"2026-11-10\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "chercher {\"requete\":\"webhook signature verification HMAC mismatch sandbox\",\"depuis\":\"2026-11-12\"}"
+  ],
+  "cout": 0.0466911
+}

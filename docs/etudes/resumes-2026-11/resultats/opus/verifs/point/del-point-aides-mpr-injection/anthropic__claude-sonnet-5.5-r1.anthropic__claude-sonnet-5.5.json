@@ -1,0 +1,21 @@
+{
+  "verificateur": "anthropic/claude-sonnet-5.5",
+  "faits": {
+    "f-tanguy": 1,
+    "f-peltier": 1,
+    "f-patrick": 1,
+    "f-guillou": 1,
+    "f-rge": 0,
+    "f-brehier": 0
+  },
+  "interdits": {
+    "i-depot-mail": 0,
+    "i-maintenance": 0,
+    "i-relance-tanguy": 0,
+    "i-peltier": 0,
+    "i-renovactu": 0
+  },
+  "contraires": [],
+  "premier": "f-tanguy",
+  "langueOk": true
+}

@@ -1,0 +1,33 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:20.388Z",
+  "reponse": "D'après ce que j'ai trouvé, personne n'a encore été recruté. Je n'ai vu aucune offre ni promesse d'embauche envoyée. Le recrutement en est aux entretiens.\n\n- **Candidatures :** l'annonce est en ligne depuis le 2/11 et 11 candidatures sont arrivées [2].\n- **Présélection :** le 17/11, Aurélie a retenu 4 candidats : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré. Elle a écarté Haddou, qui cherche en Mayenne. Ne pas avoir l'attestation fluides n'élimine pas un candidat, car l'entreprise paie la formation si le reste convient [4].\n- **Entretiens :** Kevin Le Roux et Mathis Le Gac étaient prévus le jeudi 19/11, Dylan Perrot et Inès Carré le vendredi 20/11. Ils se font à l'atelier de Carquefou, avec Yannick Moreau [4].\n- **Désistement :** le 18/11, Mathis Le Gac a retiré sa candidature, car il a accepté une offre près de Vannes [9]. Il reste donc 3 candidats.\n- **Suite prévue :** au CODIR du 16/11, l'objectif était de faire une offre la semaine suivante, pour une arrivée début janvier [1]. Un modèle de promesse d'embauche en CDI est prêt [3]. Les candidats non retenus doivent recevoir une réponse avant le 27/11 [4].\n\nJe n'ai trouvé aucun compte rendu des entretiens des 19 et 20/11. Pour savoir si une offre est partie depuis, le mieux est de demander à Aurélie Jaouen ou à Yannick Moreau.",
+  "rendu": "D'après ce que j'ai trouvé, personne n'a encore été recruté. Je n'ai vu aucune offre ni promesse d'embauche envoyée. Le recrutement en est aux entretiens.\n\n- **Candidatures :** l'annonce est en ligne depuis le 2/11 et 11 candidatures sont arrivées [2].\n- **Présélection :** le 17/11, Aurélie a retenu 4 candidats : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré. Elle a écarté Haddou, qui cherche en Mayenne. Ne pas avoir l'attestation fluides n'élimine pas un candidat, car l'entreprise paie la formation si le reste convient [4].\n- **Entretiens :** Kevin Le Roux et Mathis Le Gac étaient prévus le jeudi 19/11, Dylan Perrot et Inès Carré le vendredi 20/11. Ils se font à l'atelier de Carquefou, avec Yannick Moreau [4].\n- **Désistement :** le 18/11, Mathis Le Gac a retiré sa candidature, car il a accepté une offre près de Vannes [9]. Il reste donc 3 candidats.\n- **Suite prévue :** au CODIR du 16/11, l'objectif était de faire une offre la semaine suivante, pour une arrivée début janvier [1]. Un modèle de promesse d'embauche en CDI est prêt [3]. Les candidats non retenus doivent recevoir une réponse avant le 27/11 [4].\n\nJe n'ai trouvé aucun compte rendu des entretiens des 19 et 20/11. Pour savoir si une offre est partie depuis, le mieux est de demander à Aurélie Jaouen ou à Yannick Moreau.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 3,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13305,
+    "sortie": 898,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0438542
+  },
+  "latenceMs": 9623,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidats entretien embauche\"}",
+    "chercher {\"requete\":\"installateur offre envoyée retenu promesse d'embauche signée\",\"depuis\":\"2026-11-18\"}",
+    "lire {\"sourceId\":\"cc-aurelie-tri\"}"
+  ],
+  "cout": 0.0438542
+}

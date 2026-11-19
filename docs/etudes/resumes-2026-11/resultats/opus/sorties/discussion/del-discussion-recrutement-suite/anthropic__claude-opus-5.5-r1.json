@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:17.493Z",
+  "reponse": "Personne n'a encore été embauché : rien dans ce que j'ai trouvé ne montre une offre faite ou acceptée. Voici où en est le recrutement :\n\n- **Candidatures :** l'annonce est en ligne depuis le 2/11 et a reçu 11 candidatures [1].\n- **Entretiens :** quatre candidats ont été convoqués à l'atelier de Carquefou avec Yannick Moreau [1][3] :\n  - Kevin Le Roux, jeudi 19/11 à 14h ;\n  - Mathis Le Gac, jeudi 19/11 à 15h ;\n  - Dylan Perrot, vendredi 20/11 à 9h ;\n  - Inès Carré, vendredi 20/11 à 10h.\n- **Un désistement :** Mathis Le Gac a retiré sa candidature le 18/11 parce qu'il a accepté une offre près de Vannes [7]. Il reste donc trois candidats pour les deux postes.\n- **Suite prévue :** au CODIR du 16/11, l'objectif était de faire une offre la semaine suivante, pour une arrivée début janvier [6]. Aurélie a préparé un modèle de promesse d'embauche, mais les champs date et salaire sont encore vides [2]. Les candidats non retenus doivent recevoir une réponse avant le 27/11 [3].\n\nJe n'ai trouvé aucun compte rendu des entretiens des 19 et 20/11. Pour savoir qui a été retenu, le mieux est de demander à Aurélie ou à Yannick.",
+  "rendu": "Personne n'a encore été embauché : rien dans ce que j'ai trouvé ne montre une offre faite ou acceptée. Voici où en est le recrutement :\n\n- **Candidatures :** l'annonce est en ligne depuis le 2/11 et a reçu 11 candidatures [1].\n- **Entretiens :** quatre candidats ont été convoqués à l'atelier de Carquefou avec Yannick Moreau [1][3] :\n  - Kevin Le Roux, jeudi 19/11 à 14h ;\n  - Mathis Le Gac, jeudi 19/11 à 15h ;\n  - Dylan Perrot, vendredi 20/11 à 9h ;\n  - Inès Carré, vendredi 20/11 à 10h.\n- **Un désistement :** Mathis Le Gac a retiré sa candidature le 18/11 parce qu'il a accepté une offre près de Vannes [7]. Il reste donc trois candidats pour les deux postes.\n- **Suite prévue :** au CODIR du 16/11, l'objectif était de faire une offre la semaine suivante, pour une arrivée début janvier [6]. Aurélie a préparé un modèle de promesse d'embauche, mais les champs date et salaire sont encore vides [2]. Les candidats non retenus doivent recevoir une réponse avant le 27/11 [3].\n\nJe n'ai trouvé aucun compte rendu des entretiens des 19 et 20/11. Pour savoir qui a été retenu, le mieux est de demander à Aurélie ou à Yannick.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 12178,
+    "sortie": 812,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0376262
+  },
+  "latenceMs": 8955,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidat embauche\"}",
+    "chercher {\"requete\":\"offre installateur acceptée retenu entretien Yannick\",\"depuis\":\"2026-11-17\"}"
+  ],
+  "cout": 0.0376262
+}

@@ -1,0 +1,23 @@
+{
+  "verificateur": "anthropic/claude-sonnet-5.5",
+  "faits": {
+    "f-frist": 1,
+    "f-termin": 1,
+    "f-25pt": 1,
+    "f-sabine": 0.5,
+    "f-april": 0,
+    "f-edi": 0,
+    "f-zahlen": 0.5
+  },
+  "interdits": {
+    "i-bonus25": 0,
+    "i-donnerstag": 0,
+    "i-15pt": 0,
+    "i-zertifikat": 0,
+    "i-audit": 0,
+    "i-bruit": 0
+  },
+  "contraires": [],
+  "premier": "f-frist",
+  "langueOk": true
+}

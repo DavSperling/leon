@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:43.056Z",
+  "reponse": "## What is still open\n- Your follow-up email to Nadia and Tom can't go out as drafted. Sofia says CAD payouts are Q2 at the earliest and asks that no date go in writing to a prospect [1][6].\n- The email offers 15% off for a 2-year commit, but anything above 10% now needs Rachel's sign-off. She wants to talk before you send numbers [1][3].\n- The SIG Lite is due Mon Nov 23, and Hearthly's security team drops vendors from the final round without it. It's about 200 questions, and you still need to confirm Shira owns it [1][4].\n- The reference call is still TBD. Ask Rachel which customer to use, since Loomly and Pinecrest were hit by the payout delay and Tradewell isn't live yet [1].\n\n## What changed\n- Hearthly moved its provider decision to Wed Dec 2. Your mutual action plan, which works back from Dec 4, needs shifting [1][4].",
+  "rendu": "## What is still open\n- Your follow-up email to Nadia and Tom can't go out as drafted. Sofia says CAD payouts are Q2 at the earliest and asks that no date go in writing to a prospect [1][6].\n- The email offers 15% off for a 2-year commit, but anything above 10% now needs Rachel's sign-off. She wants to talk before you send numbers [1][3].\n- The SIG Lite is due Mon Nov 23, and Hearthly's security team drops vendors from the final round without it. It's about 200 questions, and you still need to confirm Shira owns it [1][4].\n- The reference call is still TBD. Ask Rachel which customer to use, since Loomly and Pinecrest were hit by the payout delay and Tradewell isn't live yet [1].\n\n## What changed\n- Hearthly moved its provider decision to Wed Dec 2. Your mutual action plan, which works back from Dec 4, needs shifting [1][4].",
+  "mesures": {
+    "mots": 149,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5976,
+    "sortie": 961,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0327538
+  },
+  "cout": 0.0327538,
+  "latenceMs": 9064,
+  "fournisseur": "Anthropic (direct)"
+}

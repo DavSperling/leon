@@ -9,9 +9,9 @@ import type { PassageHit, SourceHit } from '@/server/search/types';
 // Le prompt de la réponse en tête (T10) : quelques phrases au-dessus des résultats, qui renvoient aux résultats
 // par leur numéro. Le système est fixe et ne contient rien de capté ; la recherche et les passages vont dans le
 // message de l'utilisateur, entre balises, derrière la ligne de garde. Le système fait environ 400 jetons, sous le
-// minimum du cache de prompt de Haiku 5.5 (512 jetons d'après la skill `claude-api`, à confirmer) : le
-// `cache_control` que pose anthropic-llm.ts n'y fait sans doute rien, ce qui coûte peu à ce tarif. À mesurer à
-// l'essai réel (T31) : `cache_read_input_tokens` sur une deuxième requête identique.
+// minimum du cache de prompt (512 jetons au moins selon le modèle, d'après la skill `claude-api`) : le
+// `cache_control` que pose anthropic-llm.ts n'y fait sans doute rien, ce qui coûte peu (0,08 centime avec Sonnet
+// 5.5). À mesurer à l'essai réel (T31) : `cache_read_input_tokens` sur une deuxième requête identique.
 
 // Contraintes globales du plan : 8 passages, 6 000 caractères de passages, 120 mots de réponse au plus.
 export const ANSWER_MAX_PASSAGES = 8;

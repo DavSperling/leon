@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:29:32.859Z",
+  "reponse": "Dans l'appli, oui : c'est réglé. En revanche, le décalage d'une heure continue dans les SMS de rappel envoyés aux clients.\n\n- **Le problème :** depuis le changement d'heure, l'appli des poseurs affichait les interventions une heure plus tard que dans planif (8h au lieu de 9h). Deux équipes sont arrivées en retard chez des clients [2].\n- **Le correctif :** Thomas Riou l'a déployé en prod le 17/11 (#214) et a fermé le ticket #208. Les 41 interventions corrigées à la main ont aussi été reprises [1][2].\n- **Ce qui reste :** le 18/11, Yannick Moreau a écrit « Toujours pas bon ». Les SMS de rappel envoyés la veille au soir annonçaient 9h au lieu de 8h à Mme Bréhier et à M. Hervé, alors que l'appli affichait la bonne heure [3]. Sandrine Guérin devait les rappeler à 8h30 [3].\n\nJe n'ai rien trouvé qui dise si le problème des SMS a été pris en charge ou corrigé depuis.",
+  "rendu": "Dans l'appli, oui : c'est réglé. En revanche, le décalage d'une heure continue dans les SMS de rappel envoyés aux clients.\n\n- **Le problème :** depuis le changement d'heure, l'appli des poseurs affichait les interventions une heure plus tard que dans planif (8h au lieu de 9h). Deux équipes sont arrivées en retard chez des clients [2].\n- **Le correctif :** Thomas Riou l'a déployé en prod le 17/11 (#214) et a fermé le ticket #208. Les 41 interventions corrigées à la main ont aussi été reprises [1][2].\n- **Ce qui reste :** le 18/11, Yannick Moreau a écrit « Toujours pas bon ». Les SMS de rappel envoyés la veille au soir annonçaient 9h au lieu de 8h à Mme Bréhier et à M. Hervé, alors que l'appli affichait la bonne heure [3]. Sandrine Guérin devait les rappeler à 8h30 [3].\n\nJe n'ai rien trouvé qui dise si le problème des SMS a été pris en charge ou corrigé depuis.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9536,
+    "sortie": 605,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.034423800000000004
+  },
+  "latenceMs": 7897,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"bug horaires appli poseurs\"}",
+    "lire {\"passageId\":\"sl-chantiers-1118-1\"}"
+  ],
+  "cout": 0.034423800000000004
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:34.343Z",
+  "reponse": "## What is still open\n\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die Durchsprache bei ihr [5].\n- Jonas korrigiert deine Schätzung im Issue #222: Es fehlt die Mandantentrennung in `/api/v1/auftraege`, daher eher 25 PT statt 15 plus Pen-Test; der 1. April klappt nur, wenn der Spike im Dezember startet [2]. Deine Vorlage für Thomas nennt noch 15 PT [1].\n- Sabine verlangt für die API eine Mindestabnahme von 3 Mio. € im Jahr; Pfeiffer liegt 2026 bei 2,61 Mio. € [1][5]. Der Bonus bleibt bei 2 % [5].\n\n## What changed\n\n- Das Jahresgespräch mit Pfeiffer ist verschoben auf Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt 8:00 Uhr [6].",
+  "rendu": "## What is still open\n\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; Freitag 14 Uhr ist die Durchsprache bei ihr [5].\n- Jonas korrigiert deine Schätzung im Issue #222: Es fehlt die Mandantentrennung in `/api/v1/auftraege`, daher eher 25 PT statt 15 plus Pen-Test; der 1. April klappt nur, wenn der Spike im Dezember startet [2]. Deine Vorlage für Thomas nennt noch 15 PT [1].\n- Sabine verlangt für die API eine Mindestabnahme von 3 Mio. € im Jahr; Pfeiffer liegt 2026 bei 2,61 Mio. € [1][5]. Der Bonus bleibt bei 2 % [5].\n\n## What changed\n\n- Das Jahresgespräch mit Pfeiffer ist verschoben auf Montag, 23.11., 10:00 Uhr in Nürnberg, Abfahrt 8:00 Uhr [6].",
+  "mesures": {
+    "mots": 115,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 394,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0133289
+  },
+  "cout": 0.0133289,
+  "latenceMs": 3572,
+  "fournisseur": "Anthropic (direct)"
+}

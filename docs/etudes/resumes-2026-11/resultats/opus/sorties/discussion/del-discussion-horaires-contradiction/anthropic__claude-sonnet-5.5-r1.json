@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-horaires-contradiction",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:00.764Z",
+  "reponse": "Côté appli, oui : c'est réglé, mais il reste un point ouvert.\n\n- Thomas Riou a déployé le correctif #214 en prod le 17/11. L'appli des poseurs affiche de nouveau la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1]. Le ticket #208, qui décrivait des créneaux affichés 1 h trop tard depuis le changement d'heure, a été fermé [2].\n- Le 18/11, Yannick Moreau confirme que « dans l'appli c'est bon » [4].\n- Les SMS envoyés aux clients la veille au soir annonçaient encore 9h au lieu de 8h. C'était le cas pour Mme Bréhier et M. Hervé, et Yannick a demandé à Sandrine de les rappeler [4]. Sandrine s'est excusée auprès d'un client pour ce SMS erroné et indique que « nous corrigeons le problème » [3].\n\nJe n'ai pas trouvé de confirmation que les SMS sont corrigés à leur tour. Je ne sais pas si le #214 couvre aussi leur envoi.",
+  "rendu": "Côté appli, oui : c'est réglé, mais il reste un point ouvert.\n\n- Thomas Riou a déployé le correctif #214 en prod le 17/11. L'appli des poseurs affiche de nouveau la bonne heure, et les 41 interventions corrigées à la main ont été reprises [1]. Le ticket #208, qui décrivait des créneaux affichés 1 h trop tard depuis le changement d'heure, a été fermé [2].\n- Le 18/11, Yannick Moreau confirme que « dans l'appli c'est bon » [4].\n- Les SMS envoyés aux clients la veille au soir annonçaient encore 9h au lieu de 8h. C'était le cas pour Mme Bréhier et M. Hervé, et Yannick a demandé à Sandrine de les rappeler [4]. Sandrine s'est excusée auprès d'un client pour ce SMS erroné et indique que « nous corrigeons le problème » [3].\n\nJe n'ai pas trouvé de confirmation que les SMS sont corrigés à leur tour. Je ne sais pas si le #214 couvre aussi leur envoi.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 6615,
+    "sortie": 531,
+    "reflexion": 0,
+    "cache": 2397,
+    "cout": 0.0151842
+  },
+  "latenceMs": 4565,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"problème d'horaires appli poseurs\"}",
+    "chercher {\"requete\":\"poseurs horaires bug fuseau\",\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.0151842
+}

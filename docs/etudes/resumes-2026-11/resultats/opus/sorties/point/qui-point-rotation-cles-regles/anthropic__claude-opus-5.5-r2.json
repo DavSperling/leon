@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:55.927Z",
+  "reponse": "## What is still open\n- PR #1412 is approved, but before merge Elad wants an audit event per batch (id range, count, from/to KEK), because a single summary record won't satisfy 10.2; Avi wants it merged by Monday [3].\n- The prod rotation runs Tue 24/11, 22:00–23:30 IL time, with Elad on call; the only fallback is Thu 26/11, before the PCI freeze on 1/12 [6].\n- Shira needs the prod run's audit log export and its signed change ticket by Wed 25/11, for the on-site with Ardent [5].\n- Your prod runbook is written but still has an on-call placeholder, which Elad now fills [2][6].\n\n## What you did\n- The staging dry run passes on all 1,204,880 tokens once legacy v1 envelopes map to vault-kek-2022. The old keys stay decrypt-only for 30 days, and you decide their deletion separately with Shira [1].",
+  "rendu": "## What is still open\n- PR #1412 is approved, but before merge Elad wants an audit event per batch (id range, count, from/to KEK), because a single summary record won't satisfy 10.2; Avi wants it merged by Monday [3].\n- The prod rotation runs Tue 24/11, 22:00–23:30 IL time, with Elad on call; the only fallback is Thu 26/11, before the PCI freeze on 1/12 [6].\n- Shira needs the prod run's audit log export and its signed change ticket by Wed 25/11, for the on-site with Ardent [5].\n- Your prod runbook is written but still has an on-call placeholder, which Elad now fills [2][6].\n\n## What you did\n- The staging dry run passes on all 1,204,880 tokens once legacy v1 envelopes map to vault-kek-2022. The old keys stay decrypt-only for 30 days, and you decide their deletion separately with Shira [1].",
+  "mesures": {
+    "mots": 138,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8000,
+    "sortie": 1094,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0435098
+  },
+  "cout": 0.0435098,
+  "latenceMs": 10189,
+  "fournisseur": "Anthropic (direct)"
+}

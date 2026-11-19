@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "qui-credits-loomly-pinecrest-cloture",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:55.536Z",
+  "reponse": "**What we're giving them:** 100% of their November platform fees, as credit memos on the December invoices, with no cash.\n- **Loomly:** $18,400.\n- **Pinecrest:** $6,200.\n- **Total:** $24,600. [4]\n\nRachel first proposed 50% on Nov 12 [4]. She raised it to 100% for both on Nov 13 after talking to Bianca at Loomly, because 1,312 of the 1,840 late payouts were Loomly's [4]. Marcus agreed the same day [4]. Rachel's email to Pinecrest confirms the $6,200 credit on their December invoice [8], and Grant Holloway thanked her for it [8].\n\n**Open item:** Loomly also sent a list of overdraft fees its sellers paid, covering 214 sellers and $7,690 [2]. That is separate from the credits. It was sent to Marcus and Rachel for a decision, and Loomly was promised an answer by Nov 25 [2]. I found no decision, and the $24,600 doesn't include it.\n\n**Is it in the November books?** It is planned but I can't confirm it's posted.\n- Marcus said on Nov 13 that he'd accrue it in the November close [4].\n- The Nov 16 close checklist shows \"Service credits accrual\" as owned by Marcus, due BD3, and \"In progress\" [6].\n- On Nov 17 Marcus was drafting the journal entry for Jenna [1]. It accrues the $24,600 in November as contra-revenue, a reduction of revenue, and reverses when the credit memos are issued [1].\n- I found nothing showing the entry was actually booked. Check with Marcus or Jenna.",
+  "rendu": "**What we're giving them:** 100% of their November platform fees, as credit memos on the December invoices, with no cash.\n- **Loomly:** $18,400.\n- **Pinecrest:** $6,200.\n- **Total:** $24,600. [4]\n\nRachel first proposed 50% on Nov 12 [4]. She raised it to 100% for both on Nov 13 after talking to Bianca at Loomly, because 1,312 of the 1,840 late payouts were Loomly's [4]. Marcus agreed the same day [4]. Rachel's email to Pinecrest confirms the $6,200 credit on their December invoice [8], and Grant Holloway thanked her for it [8].\n\n**Open item:** Loomly also sent a list of overdraft fees its sellers paid, covering 214 sellers and $7,690 [2]. That is separate from the credits. It was sent to Marcus and Rachel for a decision, and Loomly was promised an answer by Nov 25 [2]. I found no decision, and the $24,600 doesn't include it.\n\n**Is it in the November books?** It is planned but I can't confirm it's posted.\n- Marcus said on Nov 13 that he'd accrue it in the November close [4].\n- The Nov 16 close checklist shows \"Service credits accrual\" as owned by Marcus, due BD3, and \"In progress\" [6].\n- On Nov 17 Marcus was drafting the journal entry for Jenna [1]. It accrues the $24,600 in November as contra-revenue, a reduction of revenue, and reverses when the credit memos are issued [1].\n- I found nothing showing the entry was actually booked. Check with Marcus or Jenna.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 13186,
+    "sortie": 754,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0248034
+  },
+  "latenceMs": 13724,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Loomly Pinecrest late payouts credit compensation\"}",
+    "chercher {\"requete\":\"Loomly Pinecrest late payouts November books accrual\"}"
+  ],
+  "cout": 0.0248034
+}

@@ -42,9 +42,9 @@
 1. Ce plan est fusionné (A3).
 2. Les lots 1, 2, 3 et 5 partent de main tout de suite, chacun dans sa PR. Ils touchent des fichiers différents, sauf `messages/en.json` et `messages/fr.json` (lots 3 et 5) : le second à fusionner se rebase.
 3. Après la fusion du lot 2, Amos crée l'article en brouillon et donne l'identifiant et la clé publique (« Ce qui revient à Amos », geste 6).
-4. Le lot 4 part de main après la fusion des lots 2 et 3. Il se code et s'essaie en local avec l'identifiant de développement (O2), sans attendre l'article ; l'identifiant et la clé du Store y entrent avant sa fusion.
-5. La relecture de Google ne commence qu'avec les lots 1 à 5 fusionnés, déployés, et l'essai réel (W13) réussi.
-6. Le lot 6 attend la publication.
+4. Le lot 4 part de main après la fusion des lots 2 et 3. Il se code et s'essaie en local avec l'identifiant de développement (O2), sans attendre l'article : l'essai local d'Amos (W13 a) a lieu avant sa fusion ; l'identifiant et la clé du Store y entrent avant sa fusion.
+5. La relecture de Google ne commence qu'avec les lots 1 à 5 fusionnés, déployés, les deux essais de W13 réussis et le zip final envoyé (geste 10).
+6. Le lot 6 attend la publication et le contrôle du geste 16.
 
 **Une PR par lot**, jamais empilées. Si la porte de sortie du lot 1 s'ouvre et qu'Amos choisit « ChatGPT seul », un lot de plus retire claude.ai (hôtes, scripts, interrupteurs, titre de l'écran d'accord, description) avant l'envoi.
 
@@ -81,7 +81,7 @@
 - **Une seule histoire partout :** la fiche, l'onglet Privacy, la page /privacy, l'écran d'accord et ce que fait l'extension disent la même chose. Un écart peut aller jusqu'à la suspension de l'éditeur (https://developer.chrome.com/docs/webstore/program-policies/user-data-faq).
 - **Langue :** anglais par défaut, français à côté : `messages/en.json` et `messages/fr.json` pour le site, `t(fr, en)` et `data-en` dans l'extension (`extension/lib/i18n.ts:1-23`), `_locales/en` et `_locales/fr` pour le manifeste.
 - **Le projet :** une PR par lot, jamais empilées ; tests d'abord ; noms de fichiers en ASCII ; aucune dépendance nouvelle ; le plus petit changement complet, sans option « pour plus tard ».
-- **Vérifications** (méthode d'Amos) : après chaque tâche, un validateur ; avant chaque PR, `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` et, pour les lots 3 et 4, `pnpm test:db` (hors sandbox), puis `auditing-runtime-contracts` et `security-review`. Il n'y a pas de CI.
+- **Vérifications** (méthode d'Amos) : après chaque tâche, un validateur ; avant chaque PR, `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` et, pour les lots 3 et 4, `pnpm test:db` (hors sandbox), puis `auditing-runtime-contracts` et `security-review`. Chaque PR passe aussi la CI (`.github/workflows/tests.yml:5-8`, `:32-37`, `:75`) : types, lint, tests unitaires, build et tests en base ; on ne fusionne pas une PR dont la CI est rouge. La CI ne construit pas l'extension : la vérification du zip (W04) reste à la main.
 - **Raccourcis :** tout raccourci connu porte un commentaire `shortcut: <la limite>, <quand passer à mieux>`.
 
 ## Contrats partagés
@@ -89,7 +89,7 @@
 **X1. La variante de la page d'autorisation :** `GET /computer/authorize?extension=<id>&etat=<e>&empreinte=<h>`.
 - `extension` : un identifiant de X2 ; `etat` et `empreinte` : les règles d'aujourd'hui (`computer-authorize.ts:32-33`). Exactement un des deux, `port` ou `extension` ; jamais `usages` avec `extension`.
 - `parseAuthorizeParams` rend l'une ou l'autre forme ; `authorizeQuery`, `authorizePath` et `pathAfterSignIn` (`computer-authorize.ts:40-88`) servent les deux. Ainsi tous les endroits qui relisent ces paramètres suivent : la page (`src/app/(auth)/computer/authorize/page.tsx:40`, `:50`, champs cachés `:67-69`), son action (`actions.ts:13-18`), la connexion (`src/app/(auth)/sign-in/page.tsx:37-40`), la double authentification et les connexions Google, Microsoft et SSO (`src/app/(auth)/actions.ts:114`, `:141`, `:290`).
-- Textes propres à la variante, sous `computer.authorize.extension` : `title`, `question`, `warning`, `invalidText` (EN et FR ; à valider dans la PR). Proposés : « Connecter l'extension » ; « Autoriser l'extension Leon de ce navigateur à envoyer vos conversations claude.ai et ChatGPT à Leon, dans l'espace {space} ? » ; « Si vous n'avez pas cliqué Se connecter dans l'extension Leon vous-même, annulez. » Pas de cases d'usages.
+- Textes propres à la variante, sous `computer.authorize.extension` : `title`, `question`, `warning`, `invalidText` (EN et FR ; à valider dans la PR). Proposés : « Connecter l'extension » ; « Autoriser l'extension Leon de ce navigateur à envoyer vos conversations claude.ai et ChatGPT à Leon, dans l'espace {space}, en tant que {email} ? » (la page a déjà l'e-mail : `getViewerProfile`, `src/app/(auth)/computer/authorize/page.tsx:53`) ; « Si vous ne venez pas d'accepter l'écran de Leon ou de cliquer Se connecter dans l'extension Leon, annulez. » (les deux départs de W11, comme l'avertissement de la CLI couvre les siens, `messages/fr.json:1924`). Pas de cases d'usages.
 
 **X2. Les identifiants acceptés :** `EXTENSION_IDS = { store: <32 lettres a à p> | null, dev: <32 lettres> }`, dans `src/server/auth/computer-authorize.ts`. En production (`env.NODE_ENV === 'production'`, la règle déjà suivie dans `src/server/env.ts:101`) : `store` seul, rien tant qu'il est `null`. Ailleurs : les deux. Les clés publiques (base64, une ligne) : `DEV_PUBLIC_KEY` et `STORE_PUBLIC_KEY` dans `extension/lib/extension-keys.ts`. Seules les clés publiques sont commitées : le chargement non empaqueté n'utilise que `key` (la doc ne parle que de la clé publique, https://developer.chrome.com/docs/extensions/reference/manifest/key) ; la clé privée de développement n'est pas gardée.
 
@@ -105,9 +105,11 @@
 - `apiTokenGuard({ assistant?, extension? })` (`require-api-token.ts:19-35`) refuse un jeton `extension` sauf monté avec `extension: true`, avec le même 401 qu'un jeton inconnu, et pose `c.var.tokenKind`. Monté ainsi sur `POST /ingest`, `GET /me` (`src/server/api/ingest-routes.ts:23-45`) et `DELETE /jeton` (`computer-routes.ts:110-113`), nulle part ailleurs ; `/api/mcp` le refuse.
 - `/ingest` : avec un jeton `extension`, une source autre que `chatgpt` ou `claude_ai` reçoit 403 `{ "error": "Source kind not allowed for this token" }` (aujourd'hui, toute sorte de capture sauf `mcp_remember`, `ingest-routes.ts:16-19`).
 
-**X7. Le stockage de l'extension :** `leon.settings` garde `token` et gagne `account: { space, email } | null`, écrit à l'échange (201 de X5) et rafraîchi par `/me` (`organizationName`, `email`, `ViewerProfileSchema`, `api-contract.ts:45-51`). Le tampon d'envoi ne change pas : il suit déjà un changement de jeton (`extension/lib/outbox.ts:115-140`).
+**X7. Le stockage de l'extension :** `leon.settings` garde `token` et gagne `account: { space, email } | null`, écrit à l'échange (201 de X5) et rafraîchi par `/me` (`organizationName`, `email`, `ViewerProfileSchema`, `api-contract.ts:45-51`). Le tampon d'envoi appartient au compte, pas à l'organisation. Aujourd'hui seul `tenantId` est comparé, et un tampon capté sans jeton part avec le premier jeton venu (`extension/lib/outbox.ts:106-136`, `extension/entrypoints/background.ts:25-30`) : après « Se déconnecter », ou après un 401 puis la connexion d'un autre compte du même espace, les conversations de A partiraient chez B. Deux changements :
+- rien n'est capté sans jeton : `canCapture` exige aussi `settings.token !== null` (`extension/lib/settings.ts:82-84`) ;
+- le tampon note `userId` et `tenantId` (tous deux dans `/me`) : un autre compte, même du même espace, le vide et le compte comme perdu.
 
-**X8. Le paquet :** `extension/lib/manifest.ts` exporte `manifestFor({ serverUrl, store })`, appelée par `extension/wxt.config.ts`. Permissions `storage`, `alarms` (et `identity` au lot 4), `host_permissions` = `CAPTURE_HOSTS` + le serveur, `incognito: 'not_allowed'`, `default_locale: 'en'`, nom et description en `__MSG_extName__` et `__MSG_extDescription__`, `version` écrite dans le code. `key` : la clé du Store si le serveur est `https://leonmemory.com`, sinon celle de développement ; jamais quand `store` est vrai. `pnpm ext:zip` construit avec `https://leonmemory.com` et `store` vrai, et sort le zip dans `extension/.output/` (ignoré, `.gitignore:32`). La version monte à chaque envoi au Store.
+**X8. Le paquet :** `extension/lib/manifest.ts` exporte `manifestFor({ serverUrl, store })`, appelée par `extension/wxt.config.ts`. Permissions `storage`, `alarms` (et `identity` au lot 4), `host_permissions` = `CAPTURE_HOSTS` + le serveur, `incognito: 'not_allowed'`, `default_locale: 'en'`, nom et description en `__MSG_extName__` et `__MSG_extDescription__`, `version` écrite dans le code. `key` : la clé du Store si le serveur est `https://leonmemory.com`, sinon celle de développement ; jamais quand `store` est vrai. `pnpm ext:zip` construit avec `https://leonmemory.com` et `store` vrai, et sort le zip dans `extension/.output/` (ignoré, `.gitignore:32`). La version monte à chaque envoi au Store : `1.0.0` pour le brouillon du geste 6 (W04), `1.0.1` pour le zip final du geste 10 (W10).
 
 **X9. Le contrat d'un analyseur, pour claude.ai :** aujourd'hui `SiteParser.parse` reçoit `requestBody: string | null` et `sseText: string` (`extension/lib/parsers/site-parser.ts:7-16`), et `intercept.ts` lit du texte et rejette toute réponse qui n'est pas `text/event-stream`. Le lot 1 le change selon le choix de W02 (voir W03) ; un analyseur rend toujours un échange, un rejet `format` ou `incomplet` sans contenu, ou rien.
 
@@ -115,7 +117,7 @@
 
 **Ce qui voyage :**
 - La page d'autorisation ne voit que l'empreinte du jeton, jamais le jeton.
-- Le serveur, lui, reçoit le jeton en clair : à l'échange (en-tête `Bearer` de `POST /api/v1/ordinateurs`, `computer-routes.ts:42-47`), puis à chaque envoi vers `/ingest` et `/me` (`extension/lib/api.ts:10-16`). Il n'en garde que le SHA-256 (`api-tokens.ts:82-102`). Cette phrase-là, et pas « le serveur n'en voit que l'empreinte », va dans /privacy et dans la fiche.
+- Le serveur, lui, reçoit le jeton en clair : à l'échange (en-tête `Bearer` de `POST /api/v1/ordinateurs`, `computer-routes.ts:42-47`), puis à chaque envoi vers `/ingest` et `/me` (`extension/lib/api.ts:10-16`). Il n'en garde que le SHA-256, plus les 4 derniers caractères qui servent à reconnaître la carte dans Réglages (`api-tokens.ts:95-96`). Cette phrase-là, et pas « le serveur n'en voit que l'empreinte », va dans /privacy (W14) et dans la fiche (W15).
 
 **Ce qui protège :**
 - **Un code volé ne vaut rien sans le jeton :** il porte l'empreinte du jeton, et l'échange vérifie que le jeton présenté a cette empreinte (`computer-routes.ts:65-66`). Il vit 120 s et ne sert qu'une fois (unicité de `token_hash`, 409).
@@ -125,10 +127,10 @@
 - **La page n'est jamais dans un cadre** et n'est pas indexée (`next.config.ts:25-26`, `src/app/(auth)/computer/authorize/page.tsx:17-20`).
 - **On voit ce qui est branché :** le compte et l'espace dans l'extension (O5) ; la carte « Extension navigateur » dans Réglages ; « Se déconnecter » dans l'extension, « Déconnecter » dans Réglages.
 
-**Le branchement forcé (relevé par la critique) :** une faille XSS sur une page de leonmemory.com ouverte dans la fenêtre de connexion lit l'`etat` et l'empreinte dans l'adresse. L'attaquant, connecté à son propre compte, fait signer un code pour cette empreinte, puis le script envoie la fenêtre vers `https://<id>.chromiumapp.org/?code=…&etat=…`. L'`etat` correspond et l'empreinte aussi : le jeton de l'extension est enregistré sur le compte de l'attaquant, et les conversations de la victime partent chez lui. Le code ne lie que l'empreinte, l'utilisateur, l'espace et la sorte. Ce risque vaut aussi pour les approches écartées. Parades :
-1. l'extension affiche le compte et l'espace branchés : c'est la parade principale ; la victime voit un compte qui n'est pas le sien ;
-2. la victime ne trouve aucune carte « Extension navigateur » dans ses propres Réglages ;
-3. le jeton limité borne ce que fait un jeton forcé ou volé : écrire des conversations, rien lire.
+**Le branchement forcé (relevé par la critique) :** une faille XSS sur une page de leonmemory.com ouverte dans la fenêtre de connexion lit l'`etat` et l'empreinte dans l'adresse. L'attaquant, connecté à son propre compte, fait signer un code pour cette empreinte, puis le script envoie la fenêtre vers `https://<id>.chromiumapp.org/?code=…&etat=…`. L'`etat` correspond et l'empreinte aussi : le jeton de l'extension est enregistré sur le compte de l'attaquant. Le dommage : tant que la victime ne remarque rien, toutes ses conversations ChatGPT et claude.ai partent dans l'espace de l'attaquant, sans date de fin (le jeton n'expire pas). Le jeton limité (X6) n'y change rien : envoyer ces conversations est justement ce qu'il sait faire ; il ne borne qu'un jeton volé. Le code ne lie que l'empreinte, l'utilisateur, l'espace et la sorte. Ce risque vaut aussi pour les approches écartées. Parades :
+1. l'extension affiche le compte et l'espace branchés (O5) : c'est la parade principale, mais elle se trompe facilement, car l'attaquant choisit le nom de son espace (`src/app/(onboarding)/welcome/actions.ts:92`) et peut prendre une adresse qui ressemble à celle de la victime ;
+2. la victime ne trouve aucune carte « Extension navigateur » dans ses propres Réglages.
+La sortie : « Se déconnecter » dans l'extension révoque le jeton, même posé sur le compte de l'attaquant (`DELETE /jeton` révoque le jeton qui fait la requête, `computer-routes.ts:110-113`, `api-tokens.ts:246-253`), et coupe le branchement.
 Il reste que la victime doit regarder. Aucune faille XSS n'est connue ; le site n'a pas de `script-src` dans sa politique de sécurité (seulement `frame-ancestors`, `next.config.ts:26`).
 
 ## Lot 1 : claude.ai
@@ -214,6 +216,8 @@ Il reste que la victime doit regarder. Aucune faille XSS n'est connue ; le site 
 
 **Ce que ça change :** Leon sait autoriser une extension et la montrer dans Réglages. **Dépend de :** ce plan. **N'en fait pas partie :** l'extension elle-même (lot 4), l'identifiant du Store (ajouté au lot 4).
 
+**Ordre des tâches :** W06, W09, W07, W08 : W07 se sert de l'identifiant de développement (`EXTENSION_IDS.dev`) que W09 crée.
+
 ### W06 · La sorte `extension`
 
 **Fichiers :** `src/server/db/migrations/0075-jetons-extension.sql` (nouveau) et son test `.db.test.ts`, `src/server/db/schema/api-tokens.ts`, `src/server/auth/api-tokens.ts`, `src/server/api/require-api-token.ts`, `src/server/api/ingest-routes.ts`, `src/server/api/computer-routes.ts` (garde de `DELETE /jeton`), `src/server/auth/api-tokens.db.test.ts`, `src/server/api/require-api-token.db.test.ts`, `src/server/api/ingest-routes.db.test.ts`.
@@ -231,9 +235,9 @@ Il reste que la victime doit regarder. Aucune faille XSS n'est connue ; le site 
 - sans session : connexion, puis retour sur la même demande, rebâtie, par chacun des chemins de X1 ; sans espace, `/welcome` (`page.tsx:52`) ;
 - en production, l'identifiant de développement est refusé (page d'erreur, aucune redirection).
 
-**Tests :** un identifiant hors de X2, une adresse de retour glissée dans la requête, `port` et `extension` ensemble, `usages` avec `extension` : refusés ; « Autoriser » : redirection vers `https://<dev>.chromiumapp.org/?code=…&etat=…` dont le code se vérifie et porte `k: 'extension'` ; « Annuler » : `refus=1` ; la connexion, la double authentification et `pathAfterSignIn` rendent le chemin de la variante ; un code `k: 'extension'` échangé donne une ligne `extension` nommée `Extension` ; un code d'ordinateur donne toujours `ordinateur` ; le même code deux fois : 409 ; textes EN et FR (`translation-keys.test.ts`).
+**Tests :** un identifiant hors de X2, une adresse de retour glissée dans la requête, `port` et `extension` ensemble, `usages` avec `extension` : refusés ; « Autoriser » : redirection vers `https://<dev>.chromiumapp.org/?code=…&etat=…` dont le code se vérifie et porte `k: 'extension'` ; « Annuler » : `refus=1` ; la connexion, la double authentification et `pathAfterSignIn` rendent le chemin de la variante ; un code `k: 'extension'` échangé donne une ligne `extension` nommée `Extension` ; un code d'ordinateur donne toujours `ordinateur` ; le même code deux fois : 409 ; textes EN et FR (`translation-keys.test.ts`) ; l'avertissement de la variante nomme les deux gestes (accepter l'écran de Leon, cliquer Se connecter), en EN et en FR.
 
-**Essai :** l'agent, sur `pnpm dev`, ouvre l'adresse de la variante avec l'identifiant de développement, se connecte avec un compte de test, clique « Autoriser » : l'adresse finale porte `code` et `etat` (la page de `chromiumapp.org` ne s'affiche pas, c'est attendu). Que la fenêtre de `launchWebAuthFlow` attrape bien la redirection d'une action serveur se voit au lot 4.
+**Essai :** l'agent, sur `pnpm dev`, ouvre l'adresse de la variante avec l'identifiant de développement, se connecte avec un compte de test, clique « Autoriser » : l'adresse finale porte `code` et `etat` (la page de `chromiumapp.org` ne s'affiche pas, c'est attendu). Que la fenêtre de `launchWebAuthFlow` attrape bien la redirection d'une action serveur se voit à l'essai local du lot 4 (W13 a), avant sa fusion.
 
 ### W08 · La carte dans Réglages
 
@@ -259,21 +263,22 @@ Il reste que la victime doit regarder. Aucune faille XSS n'est connue ; le site 
 
 **Fichiers :** `extension/lib/manifest.ts` et son test, `extension/lib/extension-keys.ts` (`STORE_PUBLIC_KEY`), `src/server/auth/computer-authorize.ts` (`EXTENSION_IDS.store`), `src/test/contracts/extension-id.test.ts`.
 
-**Fait quand :** `identity` entre dans les permissions ; `key` suit X8 ; le test de contrat couvre aussi le Store. **Tests :** `store: true` n'a jamais `key` ; un build pour `leonmemory.com` porte la clé du Store, un build pour `localhost` celle de développement.
+**Fait quand :** `identity` entre dans les permissions ; `key` suit X8 ; la version passe à `1.0.1`, car le brouillon du geste 6 est en `1.0.0` et « Each new version that you upload to the Chrome Web Store must have a larger version number than the previous version » (https://developer.chrome.com/docs/webstore/prepare ; la page ne dit pas si un brouillon jamais soumis compte) ; le test de contrat couvre aussi le Store. **Tests :** `store: true` n'a jamais `key` ; version `1.0.1` (le test de W04 suit) ; un build pour `leonmemory.com` porte la clé du Store, un build pour `localhost` celle de développement.
 
 ### W11 · Se connecter, se déconnecter
 
-**Fichiers :** `extension/lib/sign-in.ts` (nouveau, les navigateurs injectés pour les tests) et son test, `extension/lib/api.ts` (l'échange et la révocation), `extension/lib/settings.ts` (X7) et son test, `extension/entrypoints/options/index.html` et `main.ts`, `extension/entrypoints/background.ts` (rafraîchir `account` par `/me`).
+**Fichiers :** `extension/lib/sign-in.ts` (nouveau, les navigateurs injectés pour les tests) et son test, `extension/lib/api.ts` (l'échange et la révocation), `extension/lib/settings.ts` (X7) et son test, `extension/lib/outbox.ts` (X7) et son test, `extension/entrypoints/options/index.html` et `main.ts`, `extension/entrypoints/background.ts` (rafraîchir `account` par `/me`).
 
 **Fait quand :**
 - **Se connecter**, depuis la page d'options seulement (la petite fenêtre se ferme pendant la connexion ; son bouton ouvre les options) : tirer le jeton (`leon_` + 32 octets), l'`etat` (16 octets) et l'empreinte ; `launchWebAuthFlow({ url, interactive: true })` avec X1 et `browser.runtime.id` ; à l'adresse rendue, vérifier l'origine de `browser.identity.getRedirectURL()` et l'`etat`, puis `refus=1` ou `code` ; X5 ; garder le jeton et `account` ; révoquer l'ancien jeton s'il y en avait un (`DELETE /api/v1/jeton`, comme `src/cli/login.ts:191`).
-- « J'accepte et je continue » enregistre l'accord puis lance la connexion (`main.ts:70-76`). Si le clic ne suffit pas à ouvrir la fenêtre après l'écriture de l'accord (non vérifié), le bouton « Se connecter » reste.
+- « J'accepte et je continue » enregistre l'accord puis lance la connexion s'il n'y a pas de jeton enregistré (`main.ts:70-76`) : l'écran d'accord se rouvre aussi à une mise à jour qui monte `CONSENT_VERSION` (`background.ts:84-88`), et une extension déjà connectée ne doit pas changer de jeton. Si le clic ne suffit pas à ouvrir la fenêtre après l'écriture de l'accord (non vérifié), le bouton « Se connecter » reste.
 - **Se déconnecter :** `DELETE /api/v1/jeton`, puis effacer jeton et `account`. Si le serveur ne répond pas, effacer quand même et dire de déconnecter l'extension dans Réglages.
 - **Fenêtre fermée, refus, 401 ou serveur injoignable :** un message, rien d'enregistré.
 - **Personne sans compte :** dans la fenêtre, l'inscription ne garde pas la demande (`src/app/(auth)/sign-up/page.tsx:15-27`), l'adresse doit être vérifiée sans connexion automatique (`src/server/auth/auth.ts:147`, `:151`, `:161-162`), et un compte neuf passe par `/welcome` (`computer/authorize/page.tsx:52`) : la demande est perdue, comme pour la CLI (`login.ts:350`). D'où le texte d'O5 sous le bouton, avec l'hôte du serveur de la version.
-- Le formulaire « Jeton personnel » et le bloc « Adresse du serveur » (`options/index.html:70-91`, `main.ts:34-68`, `:90-127`) laissent la place au bloc de connexion : « Connecté à <espace> en tant que <e-mail> » et « Se déconnecter », ou « Se connecter » et le texte d'O5.
+- Le formulaire « Jeton personnel » et le bloc « Adresse du serveur » (`options/index.html:70-91`, `main.ts:34-68`, `:90-127`) laissent la place au bloc de connexion : « Connecté à <espace> en tant que <e-mail> », la ligne « Pour changer de compte : Se déconnecter, changez de compte sur leonmemory.com, puis Se connecter » et « Se déconnecter », ou « Se connecter » et le texte d'O5.
+- **Le tampon** suit X7 : rien n'est capté sans jeton ; il appartient à `userId` et `tenantId`.
 
-**Tests :** un `etat` différent, une autre origine, `refus=1`, une 401 à l'échange : rien d'enregistré ; une 201 : jeton et `account` gardés, l'ancien jeton révoqué ; la déconnexion efface même sans serveur ; aucun jeton dans une adresse ni un message.
+**Tests :** un `etat` différent, une autre origine, `refus=1`, une 401 à l'échange : rien d'enregistré ; une 201 : jeton et `account` gardés, l'ancien jeton révoqué ; la déconnexion efface même sans serveur ; aucun jeton dans une adresse ni un message ; A se déconnecte, une capture a lieu, B se connecte : rien de A ne part ; après un 401, B du même espace se connecte : le tampon est vidé et compté comme perdu ; A se reconnecte après un 401 : son tampon part ; accord accepté avec un jeton présent : aucune fenêtre ouverte.
 
 ### W12 · Les textes, dans l'extension et sur le site
 
@@ -283,14 +288,16 @@ Il reste que la victime doit regarder. Aucune faille XSS n'est connue ; le site 
 - petite fenêtre : « Connecté » montre le compte et l'espace (`popup/main.ts:20`) ; « collez un jeton dans les options » (`:24-27`) et « Jeton refusé / Collez un nouveau jeton » (`:29-33`) deviennent « Se connecter » et « Déconnecté : reconnectez l'extension » ; la perte « quand le jeton a changé » (`:89-92`) devient « quand le compte a changé » ;
 - Réglages, dans la même PR, pour qu'aucun texte ne renvoie vers un champ disparu : l'étape 3 (`step3`, `tokenLink`, `messages/fr.json:845` et `:816`) et le point 3 de `extensionPrompt` (`:849`) disent « Dans l'extension, cliquez Se connecter » ; les étapes 1 et 2 restent jusqu'au lot 6.
 
-### W13 · L'essai réel (Amos)
+### W13 · Les essais réels (Amos)
 
-Après la fusion et le déploiement des lots 3 et 4, avec l'extension construite pour `leonmemory.com` (clé du Store), chargée à la main tant qu'elle n'est pas publiée, l'ancienne retirée (geste 8) :
-- Chrome : accord, la fenêtre s'ouvre ; voit-on « Autoriser » directement ou la connexion (session partagée, non vérifiée) ; « Autoriser », la fenêtre se ferme ; compte et espace affichés ; la carte dans Réglages ; un échange ChatGPT et un claude.ai captés (journaux : `POST /api/v1/ingest` en 202) ; « Déconnecter » dans Réglages, puis la petite fenêtre redemande la connexion ; « Se connecter » de nouveau, l'ancien jeton est révoqué ; « Annuler » dans la fenêtre ; Google ou Microsoft dans la fenêtre si Amos s'en sert ; l'identifiant de `chrome://extensions` égale celui de la console ;
+**a. En local, avant la fusion du lot 4.** L'agent lance `pnpm dev`, construit l'extension pour `localhost` (clé de développement) et donne à Amos le chemin complet du dossier ; Amos la charge à la main (mode développeur) :
+- Chrome : accord, la fenêtre s'ouvre (le clic sur « J'accepte » suffit-il ?) ; voit-on « Autoriser » directement ou la connexion (session partagée, non vérifiée) ; « Autoriser » : la fenêtre attrape-t-elle la redirection de l'action serveur, se ferme-t-elle ; compte et espace affichés ; la carte dans Réglages ; un échange ChatGPT capté ; « Déconnecter » dans Réglages, puis la petite fenêtre redemande la connexion ; « Se connecter » de nouveau, l'ancien jeton est révoqué ; « Se déconnecter » ; « Annuler » dans la fenêtre ; l'identifiant de `chrome://extensions` égale `EXTENSION_IDS.dev` ;
 - un profil Chrome sans session : la connexion dans la fenêtre, et le texte d'O5 ;
-- Edge (« Allow extensions from other stores ») et Brave : « Se connecter » jusqu'au bout. Si la fenêtre échoue, on le note et Amos décide (O3).
+- Edge (`edge://extensions`, mode développeur) et Brave : « Se connecter » jusqu'au bout.
 
-La PR du lot 4 note chaque résultat.
+La PR du lot 4 note chaque résultat. Si la fenêtre échoue quelque part, Amos tranche O3 avant la fusion.
+
+**b. En production, après la fusion et le déploiement des lots 3 et 4**, l'ancienne extension retirée (geste 8). L'agent construit depuis main l'extension pour `leonmemory.com` (clé du Store) et donne le chemin complet du dossier ; Amos la charge à la main : « Se connecter » jusqu'au bout ; compte et espace affichés ; un échange ChatGPT capté (journaux : `POST /api/v1/ingest` en 202), et claude.ai seulement si le lot 1 est fusionné ; Google ou Microsoft dans la fenêtre si Amos s'en sert ; l'identifiant de `chrome://extensions` égale celui de la console. Les résultats vont en commentaire de la PR du lot 4, déjà fusionnée (une PR de suite s'il faut corriger).
 
 ## Lot 5 : la page de confidentialité et les textes de la fiche
 
@@ -311,11 +318,11 @@ La PR du lot 4 note chaque résultat.
 
 **Fichiers :** `docs/etudes/extension-store-2026-11/fiche.md` (nouveau).
 
-**Fait quand :** prêts à coller, en anglais et en français : la description ; le but unique ; la justification de chaque permission (`storage`, `alarms`, `identity`, `claude.ai`, `chatgpt.com`, `leonmemory.com`, et pourquoi un script tourne dans le monde MAIN) ; « pas de code distant » ; les données collectées ; les instructions pour les relecteurs (le compte de test du geste 10) ; la liste des captures d'écran 1280x800 à faire. **Point pour Amos et son conseil :** le site ne nomme jamais claude.ai ni ChatGPT (publicité comparative, `docs/etudes/founder-pme-2026-10/marketing.md:90`), mais la fiche, /privacy et l'écran d'accord doivent dire quels sites sont lus. Le plan ne tranche pas.
+**Fait quand :** prêts à coller, en anglais et en français : la description ; le but unique ; la justification de chaque permission (`storage`, `alarms`, `identity`, `claude.ai`, `chatgpt.com`, `leonmemory.com`, et pourquoi un script tourne dans le monde MAIN) ; « pas de code distant » ; les données collectées ; les instructions pour les relecteurs, avec des repères à remplacer (`ADRESSE`, `MOT_DE_PASSE`), jamais les vrais identifiants du compte de test du geste 11 (`CLAUDE.md:58`) ; la liste des captures d'écran 1280x800 à faire. **Point pour Amos et son conseil :** le site ne nomme jamais claude.ai ni ChatGPT (publicité comparative, `docs/etudes/founder-pme-2026-10/marketing.md:90`), mais la fiche, /privacy et l'écran d'accord doivent dire quels sites sont lus. Le plan ne tranche pas.
 
 ## Lot 6 : le site renvoie vers le Store
 
-**Ce que ça change :** Réglages propose « Ajouter à Chrome ». **Dépend de :** la publication et le lien de l'article (geste 14).
+**Ce que ça change :** Réglages propose « Ajouter à Chrome ». **Dépend de :** la publication, le lien de l'article (geste 15) et le contrôle du geste 16.
 
 ### W16 · « Ajouter à Chrome »
 
@@ -334,16 +341,18 @@ Des gestes qu'un agent ne peut pas faire, dans l'ordre :
 3. **Puis :** créer le compte développeur : validation en deux étapes, e-mail de contact vérifié, frais d'inscription payés une fois (5 $ selon la note de Google du 30/04/2026, https://developer.chrome.com/docs/extensions/whats-new ; non relu ici), contrat accepté. Source : https://developer.chrome.com/docs/webstore/register.
 4. **À la création du compte :** la déclaration « commerçant ou non » (DSA, O6), avec son conseil. Un commerçant donne son nom légal, une adresse et un téléphone vérifié par SMS, publiés en bas de la fiche ; seul le compte qui a lancé la vérification peut la finir. Recommandation du cadrage : commerçant, au nom de la société, si Leon vend son service (page Tarifs), avec une ligne professionnelle. Sources : https://developer.chrome.com/docs/webstore/program-policies/trader-disclosure, https://developer.chrome.com/docs/webstore/program-policies/trader-verification-faq.
 5. **Au début du lot 1 :** donner son accord pour le témoin dans son Chrome, puis taper et envoyer lui-même les messages de l'étude (W01). Trancher W02 si la porte de sortie s'ouvre.
-6. **Après la fusion du lot 2 :** créer l'article en brouillon : envoyer le zip de `pnpm ext:zip` dans la console, **sans le soumettre** ; copier l'identifiant (32 lettres) et la clé publique (onglet Package, « View public key ») ; les donner à l'agent du lot 4 (ce ne sont pas des secrets). Source : https://developer.chrome.com/docs/extensions/reference/manifest/key.
+6. **Après la fusion du lot 2 :** un agent construit le zip (`pnpm ext:zip`) depuis main à jour et vous donne son chemin complet ; créer l'article en brouillon : envoyer ce zip dans la console, **sans le soumettre** ; copier l'identifiant (32 lettres) et la clé publique (onglet Package, « View public key ») ; les donner à l'agent du lot 4 (ce ne sont pas des secrets). Source : https://developer.chrome.com/docs/extensions/reference/manifest/key.
 7. **Dans les PR des lots 2 et 5 :** valider le mot à mot du texte d'accord (O4), de la description, de /privacy et des textes de la fiche ; le fond RGPD avec son conseil.
-8. **Avant l'essai du lot 4 :** retirer de son Chrome l'extension chargée à la main (`chrome://extensions`, « Supprimer »), puis révoquer son jeton personnel dans Réglages (sa carte, « Révoquer »). Ce n'est pas la même extension (sans `key`, elle a un autre identifiant) et son jeton ouvre presque toute l'API sans expirer (`require-api-token.ts:27`). Un échange envoyé deux fois ne fait pas de doublon (`ingest-turns.ts:29`, `:72`).
-9. **Après la fusion et le déploiement des lots 3 et 4 :** l'essai réel W13 (Chrome, puis Edge et Brave).
-10. **Avant l'envoi :** créer sur leonmemory.com un compte et un espace de test pour les relecteurs de Google, et les noter dans l'onglet « Test instructions ». Source : https://developer.chrome.com/docs/webstore/publish.
-11. **La fiche :** description EN et FR, icône 128x128, au moins une capture 1280x800 (5 au plus ; un agent peut les préparer), catégorie. Source : https://developer.chrome.com/docs/webstore/cws-dashboard-listing.
-12. **L'onglet Privacy :** but unique, justification de chaque permission, « No, I am not using remote code », données collectées et certifications, lien vers /privacy (W15). Source : https://developer.chrome.com/docs/webstore/cws-dashboard-privacy.
-13. **La distribution et l'envoi :** visibilité publique (A2), pays ; soumettre à la relecture en publication différée (case décochée). Garder leonmemory.com en ligne pendant la relecture : un serveur en panne vaut un refus (« Yellow Magnesium »). Sources : https://developer.chrome.com/docs/webstore/cws-dashboard-distribution, https://developer.chrome.com/docs/webstore/troubleshooting, https://developer.chrome.com/docs/webstore/review-process.
-14. **Après l'accord de Google :** cliquer « Publier », dans les 30 jours ; donner le lien de l'article pour le lot 6. Source : https://developer.chrome.com/docs/webstore/update.
-15. **Facultatif :** inviter David comme membre de l'éditeur (gratuit). Source : https://developer.chrome.com/docs/webstore/group-publishers.
+8. **Avant le contrôle en production (W13 b) :** retirer de son Chrome l'extension chargée à la main (`chrome://extensions`, « Supprimer »), puis révoquer son jeton personnel dans Réglages (sa carte, « Révoquer »). Ce n'est pas la même extension (sans `key`, elle a un autre identifiant) et son jeton ouvre presque toute l'API sans expirer (`require-api-token.ts:27`). Un échange envoyé deux fois ne fait pas de doublon (`ingest-turns.ts:29`, `:72`).
+9. **Avant la fusion du lot 4 :** l'essai local W13 a (Chrome, Edge, Brave). **Après la fusion et le déploiement des lots 3 et 4 :** le contrôle en production W13 b.
+10. **Une fois les lots 1 à 5 fusionnés :** un agent lance `pnpm ext:zip` depuis main à jour, relit le `manifest.json` du zip (`identity` présent, aucun `key`, version `1.0.1`) et vous donne le chemin complet du fichier ; vous l'envoyez dans l'onglet Package de l'article (« Upload new package », libellé non vérifié). C'est ce zip-là qui part à la relecture (geste 14).
+11. **Avant l'envoi :** créer sur leonmemory.com un compte et un espace de test pour les relecteurs de Google ; taper l'adresse et le mot de passe seulement dans l'onglet « Test instructions » de la console, jamais dans le dépôt (`fiche.md` n'a que des repères, W15). Source : https://developer.chrome.com/docs/webstore/publish.
+12. **La fiche :** description EN et FR, icône 128x128, au moins une capture 1280x800 (5 au plus ; un agent peut les préparer), catégorie. Source : https://developer.chrome.com/docs/webstore/cws-dashboard-listing.
+13. **L'onglet Privacy :** but unique, justification de chaque permission, « No, I am not using remote code », données collectées et certifications, lien vers /privacy (W15). Source : https://developer.chrome.com/docs/webstore/cws-dashboard-privacy.
+14. **La distribution et l'envoi :** visibilité publique (A2), pays ; soumettre à la relecture (le zip du geste 10) en publication différée (case décochée). Garder leonmemory.com en ligne pendant la relecture : un serveur en panne vaut un refus (« Yellow Magnesium »). Sources : https://developer.chrome.com/docs/webstore/cws-dashboard-distribution, https://developer.chrome.com/docs/webstore/troubleshooting, https://developer.chrome.com/docs/webstore/review-process.
+15. **Après l'accord de Google :** cliquer « Publier », dans les 30 jours ; donner le lien de l'article pour le lot 6. Source : https://developer.chrome.com/docs/webstore/update.
+16. **Juste après la publication :** supprimer la copie chargée à la main (`chrome://extensions`, « Supprimer » : elle porte la clé du Store, donc le même identifiant), cliquer « Ajouter à Chrome » sur la fiche, puis accepter, se connecter et capter un échange. Le lot 6 ne part qu'après ce contrôle.
+17. **Facultatif :** inviter David comme membre de l'éditeur (gratuit). Source : https://developer.chrome.com/docs/webstore/group-publishers.
 
 ## Points de la critique
 
@@ -393,14 +402,15 @@ Des gestes qu'un agent ne peut pas faire, dans l'ordre :
 - les frais de 5 $ (repris du cadrage) ;
 - le nom de la contrainte CHECK de 0049 en base ;
 - qu'une variable du shell l'emporte sur `.env.local` pour `pnpm ext:zip` ;
+- qu'un brouillon jamais soumis compte comme version précédente (la version monte quand même, W10), et le libellé « Upload new package » de la console ;
 - rien n'a été lancé pour écrire ce plan : ni serveur, ni build, ni navigateur, ni extension. Les citations `chemin:ligne` ont été relues sur main (18d68ebd), après la PR #210.
 
 ## Sources
 
-Relues le 19/11 pour ce plan : https://connectrpc.com/docs/protocol, https://protobuf.dev/programming-guides/encoding/, https://developer.chrome.com/docs/extensions/reference/api/identity, https://developer.chrome.com/docs/extensions/reference/manifest/key, https://developer.chrome.com/docs/extensions/reference/api/i18n, https://developer.chrome.com/docs/webstore/cws-dashboard-listing.
+Relues le 19/11 pour ce plan : https://connectrpc.com/docs/protocol, https://protobuf.dev/programming-guides/encoding/, https://developer.chrome.com/docs/extensions/reference/api/identity, https://developer.chrome.com/docs/extensions/reference/manifest/key, https://developer.chrome.com/docs/extensions/reference/api/i18n, https://developer.chrome.com/docs/webstore/cws-dashboard-listing, https://developer.chrome.com/docs/webstore/prepare (la phrase sur la version).
 
 Reprises du cadrage, non relues ici :
 - Extensions : https://developer.chrome.com/docs/extensions/reference/permissions-list, https://developer.chrome.com/docs/extensions/develop/concepts/permission-warnings, https://developer.chrome.com/docs/extensions/reference/manifest/icons, https://developer.chrome.com/docs/extensions/reference/manifest/version, https://developer.chrome.com/docs/extensions/reference/api/storage, https://developer.chrome.com/docs/extensions/whats-new.
-- Store : https://developer.chrome.com/docs/webstore/register, https://developer.chrome.com/docs/webstore/set-up-account, https://developer.chrome.com/docs/webstore/prepare, https://developer.chrome.com/docs/webstore/publish, https://developer.chrome.com/docs/webstore/cws-dashboard-privacy, https://developer.chrome.com/docs/webstore/cws-dashboard-distribution, https://developer.chrome.com/docs/webstore/review-process, https://developer.chrome.com/docs/webstore/troubleshooting, https://developer.chrome.com/docs/webstore/update, https://developer.chrome.com/docs/webstore/group-publishers, https://developer.chrome.com/docs/webstore/using-api.
+- Store : https://developer.chrome.com/docs/webstore/register, https://developer.chrome.com/docs/webstore/set-up-account, https://developer.chrome.com/docs/webstore/publish, https://developer.chrome.com/docs/webstore/cws-dashboard-privacy, https://developer.chrome.com/docs/webstore/cws-dashboard-distribution, https://developer.chrome.com/docs/webstore/review-process, https://developer.chrome.com/docs/webstore/troubleshooting, https://developer.chrome.com/docs/webstore/update, https://developer.chrome.com/docs/webstore/group-publishers, https://developer.chrome.com/docs/webstore/using-api.
 - Règles : https://developer.chrome.com/docs/webstore/program-policies/policies, https://developer.chrome.com/docs/webstore/program-policies/user-data-faq, https://developer.chrome.com/docs/webstore/program-policies/limited-use, https://developer.chrome.com/docs/webstore/program-policies/disclosure-requirements, https://developer.chrome.com/docs/webstore/program-policies/trader-disclosure, https://developer.chrome.com/docs/webstore/program-policies/trader-verification-faq, https://developer.chrome.com/blog/cws-policy-updates-2026.
 - Autres navigateurs et protocoles : https://learn.microsoft.com/en-us/microsoft-edge/extensions/developer-guide/api-support, https://github.com/brave/brave-browser/wiki/Allow-Google-login---Third-Parties-and-Extensions, https://arc.net/faq, https://www.rfc-editor.org/rfc/rfc8628, https://chromium.googlesource.com/chromium/src/+/HEAD/chrome/browser/extensions/api/identity/web_auth_flow.cc, https://groups.google.com/a/chromium.org/g/chromium-extensions/c/x_NBS6_-NKs.

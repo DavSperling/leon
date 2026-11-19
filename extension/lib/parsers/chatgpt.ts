@@ -19,13 +19,15 @@ const RequestSchema = z.object({
 });
 
 // Le message de réponse : assistant, texte, terminé, adressé à tous. Messages tool, system, thoughts, contexte caché
-// (model_editable_context), appels d'outil (recipient autre que all) et messages non terminés écartés par ce schéma.
+// (model_editable_context), appels d'outil (recipient autre que all), préambules (channel autre que final) et
+// messages non terminés écartés par ce schéma.
 const AssistantMessageSchema = z.object({
   id: z.string().min(1),
   author: z.object({ role: z.literal('assistant') }),
   content: z.object({ content_type: z.literal('text'), parts: z.array(z.unknown()) }),
   status: z.literal('finished_successfully'),
   recipient: z.literal('all').optional(),
+  channel: z.literal('final').nullish(),
 });
 
 type Doc = Record<string, unknown>;

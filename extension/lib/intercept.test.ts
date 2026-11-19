@@ -188,6 +188,17 @@ describe('installFetchInterceptor', () => {
     expect(emit).not.toHaveBeenCalled();
   });
 
+  it('ne dit rien quand l’analyseur rend null (une régénération)', async () => {
+    const { target, emit } = setup(
+      () => sseResponse(),
+      fakeParser(async () => null),
+    );
+    const response = await target.fetch(COMPLETION, { method: 'POST', body: '{}' });
+    expect(await response.text()).toBe(SSE);
+    await settle();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
   it('ne casse pas la page quand l’émission lève', async () => {
     const original = sseResponse({ contentType: 'application/json' });
     const target = { fetch: (async () => original) as typeof fetch };

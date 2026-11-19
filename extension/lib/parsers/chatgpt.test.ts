@@ -210,6 +210,24 @@ describe('chatgptParser.parse, format delta v1', () => {
   });
 
   it.each([
+    [
+      'non terminé',
+      [
+        add(message('final', 'in_progress', { channel: 'final' })),
+        { p: '/message/content/parts/0', o: 'append', v: 'Longue réponse' },
+        { p: '/message/status', o: 'replace', v: 'finished_partial_completion' },
+      ],
+    ],
+    ['terminé vide', [add(message('final', 'finished_successfully', { channel: 'final' }))]],
+  ])('ne prend jamais le préambule quand le message final est %s', async (_label, ops) => {
+    const preamble = message('preambule', 'finished_successfully', {
+      channel: 'commentary',
+      ...textOf('Je cherche.'),
+    });
+    expect(await parse(toSse([add(preamble), ...ops]))).toEqual({ rejected: 'format' });
+  });
+
+  it.each([
     ['un message texte non terminé', message('suite', 'in_progress', textOf('Brouil'))],
     [
       'un message adressé à un outil',

@@ -167,9 +167,12 @@ function options(argv) {
   return out;
 }
 
+// Le commit de main du jour. Un fetch en échec arrête tout : sinon, un origin/main ancien ferait mesurer du vieux code.
 async function commitDeMain() {
-  await run('git', ['-C', REPO, 'fetch', '--quiet', 'origin']);
-  const { stdout } = await run('git', ['-C', REPO, 'rev-parse', 'origin/main']);
+  const fetch = await run('git', ['-C', REPO, 'fetch', '--quiet', 'origin']);
+  if (fetch.code !== 0) throw new Error(`git fetch a échoué, rien n'est lancé : ${fetch.stderr.trim().slice(0, 200)}`);
+  const { code, stdout } = await run('git', ['-C', REPO, 'rev-parse', '--verify', 'origin/main^{commit}']);
+  if (code !== 0 || !/^[0-9a-f]{40}$/.test(stdout.trim())) throw new Error('origin/main introuvable, rien n\'est lancé');
   return stdout.trim();
 }
 

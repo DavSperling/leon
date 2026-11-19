@@ -12,7 +12,14 @@
             "email": "david@acme.test"
           },
           "project": {
-            "name": "Site vitrine"
+            "name": "Site vitrine",
+            "teams": {
+              "nodes": [
+                {
+                  "visibility": "public"
+                }
+              ]
+            }
           }
         }
       ],

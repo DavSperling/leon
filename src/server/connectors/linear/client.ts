@@ -11,6 +11,8 @@ export const PAGE_SIZE = 50;
 // 50 tickets × 50 commentaires restent sous la limite de complexité d'une requête (10 000 points,
 // environ 6 600 ici). Au-delà de 50 commentaires, le ticket sort avec ceux que l'outil rend.
 const COMMENTS_MAX = 50;
+// Équipes lues par projet : aucun projet n'en a autant.
+const TEAMS_MAX = 50;
 
 // Où en est le parcours d'un type d'éléments : les éléments modifiés après `from`, rendus du plus
 // récent au plus ancien ; `after` est la position dans le parcours, `top` la modification la plus
@@ -24,7 +26,7 @@ const ISSUES_QUERY = `query Issues($first: Int!, $after: String, $filter: IssueF
     nodes {
       id identifier title description url updatedAt
       creator { name email }
-      team { name }
+      team { name visibility }
       project { name }
       comments(first: ${COMMENTS_MAX}) { nodes { id body createdAt user { name email } } }
     }
@@ -34,13 +36,19 @@ const ISSUES_QUERY = `query Issues($first: Int!, $after: String, $filter: IssueF
 
 const PROJECT_UPDATES_QUERY = `query ProjectUpdates($first: Int!, $after: String, $filter: ProjectUpdateFilter) {
   projectUpdates(first: $first, after: $after, filter: $filter, orderBy: updatedAt) {
-    nodes { id body url updatedAt user { name email } project { name } }
+    nodes {
+      id body url updatedAt user { name email }
+      project { name teams(first: ${TEAMS_MAX}) { nodes { visibility } } }
+    }
     pageInfo { hasNextPage endCursor }
   }
 }`;
 
 const user = z.object({ name: z.string().nullable(), email: z.string().nullable() }).nullable();
 const named = z.object({ name: z.string() });
+// `visibility` : public, private ou restricted (Team.visibility) ; lu en texte pour qu'une valeur nouvelle
+// ne fasse pas échouer la relève (elle compte comme non publique, voir map.ts).
+const visibility = z.object({ visibility: z.string() });
 
 const issue = z.object({
   id: z.string(),
@@ -50,7 +58,7 @@ const issue = z.object({
   url: z.string(),
   updatedAt: z.string(),
   creator: user,
-  team: named,
+  team: named.extend(visibility.shape),
   project: named.nullable(),
   comments: z.object({
     nodes: z.array(z.object({ id: z.string(), body: z.string(), createdAt: z.string(), user })),
@@ -62,7 +70,7 @@ const projectUpdate = z.object({
   url: z.string(),
   updatedAt: z.string(),
   user,
-  project: named,
+  project: named.extend({ teams: z.object({ nodes: z.array(visibility) }) }),
 });
 const connection = <T extends z.ZodType>(node: T) =>
   z.object({

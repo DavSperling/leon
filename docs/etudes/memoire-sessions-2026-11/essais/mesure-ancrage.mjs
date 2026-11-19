@@ -51,6 +51,23 @@ function run(cmd, args, { cwd, input, env, timeout } = {}) {
   });
 }
 
+// Le git du script dans un clone que l'agent a pu toucher : sans moniteur de fichiers, sans crochets, sans diff ni
+// filtre externes ni pager, que son .git/config pourrait faire lancer (l'agent n'a pas le droit d'écrire dans .git,
+// mais le script ne s'y fie pas).
+const GIT_SUR = [
+  '-c',
+  'core.fsmonitor=',
+  '-c',
+  'core.hooksPath=/dev/null',
+  '-c',
+  'diff.external=',
+  '-c',
+  'core.pager=cat',
+  '-c',
+  'core.attributesFile=/dev/null',
+];
+const gitSur = (args, cwd) => run('git', [...GIT_SUR, ...args], { cwd, env: { PATH: process.env.PATH ?? '', HOME } });
+
 // L'environnement des passages : sans LEON_URL ni LEON_TOKEN, qui feraient passer la CLI par un autre compte que la
 // connexion de l'ordinateur (~/.leon/connexion.json), et sans CLAUDE_CONFIG_DIR.
 function envPassage() {
@@ -125,12 +142,20 @@ function refuses() {
     `Bash(${LEON} note:*)`,
     'Bash(~/.leon/bin/leon note:*)',
     ...['Read', 'Grep', 'Glob'].flatMap((outil) =>
-      ['~/.leon/**', '~/.ssh/**', '~/.claude.json', '~/.claude/**', '~/.aws/**', '**/.env.local'].map(
-        (chemin) => `${outil}(${chemin})`,
-      ),
+      SECRETS.map((chemin) => `${outil}(${chemin})`),
     ),
+    // .git : un .git/config modifié ferait lancer une commande au git du script (core.fsmonitor, crochets).
+    ...['Edit', 'Write', 'MultiEdit'].map((outil) => `${outil}(**/.git/**)`),
+    // Les formes de git qui lisent hors du dépôt, et sa configuration.
+    'Bash(git diff --no-index:*)',
+    'Bash(git grep --no-index:*)',
+    'Bash(git config:*)',
   ];
 }
+// Un `git diff -U0 --no-index ~/.leon/…` (option avant --no-index) échappe au préfixe, mais Claude Code 2.1.326 le refuse
+// quand même : son chemin sort du clone et tombe sous un refus de lecture (essayé le 19/11). À réessayer si Claude Code
+// change.
+const SECRETS = ['~/.leon/**', '~/.ssh/**', '~/.claude.json', '~/.claude/**', '~/.aws/**', '**/.env.local'];
 
 async function chargerTaches() {
   return JSON.parse(await readFile(TACHES, 'utf8'));
@@ -218,8 +243,8 @@ async function passage(tache, cas, commit, plan) {
   } catch {
     // Une sortie qui n'est pas du JSON (délai dépassé, erreur) : gardée telle quelle dans le méta.
   }
-  await run('git', ['add', '-A'], { cwd: dir });
-  const patch = (await run('git', ['diff', '--cached'], { cwd: dir })).stdout;
+  await gitSur(['add', '-A'], dir);
+  const patch = (await gitSur(['diff', '--cached', '--no-ext-diff', '--no-textconv'], dir)).stdout;
   const meta = {
     tache: tache.id,
     cas,
@@ -393,12 +418,14 @@ document.getElementById('copier').onclick=()=>navigator.clipboard.writeText(JSON
 // Les vérifications objectives d'une tâche à coder, par cas : le contrôle des types, et les fichiers de test que le
 // patch touche. Elles exécutent du code écrit par l'agent : sous sandbox-exec (macOS), sans réseau sauf l'adresse
 // locale, et n'écrivant que dans le clone et les dossiers temporaires.
+// Ni socket Unix (ssh-agent, Docker), ni lecture des secrets du poste ; l'adresse locale seule pour les tests.
 const profil = (dir) =>
   [
     '(version 1)',
     '(allow default)',
     '(deny network*)',
-    '(allow network* (local ip "localhost:*") (remote ip "localhost:*") (remote unix-socket))',
+    '(allow network* (local ip "localhost:*") (remote ip "localhost:*"))',
+    `(deny file-read* ${['.leon', '.ssh', '.aws', '.claude', '.claude.json', '.config/gh', '.docker'].map((p) => `(subpath "${join(HOME, p)}")`).join(' ')})`,
     '(deny file-write*)',
     `(allow file-write* (subpath "${dir}") (subpath "/private/tmp") (subpath "/private/var/folders") (literal "/dev/null") (literal "/dev/tty"))`,
   ].join('');
@@ -409,12 +436,13 @@ async function verifier() {
     for (const cas of CAS) {
       const dir = join(BASE, 'clones', `${tache.id}-${cas}`);
       if (!existsSync(dir)) continue;
-      const fichiers = (await run('git', ['diff', '--cached', '--name-only'], { cwd: dir })).stdout
+      const fichiers = (await gitSur(['diff', '--cached', '--name-only', '--no-ext-diff'], dir)).stdout
         .split('\n')
         .filter((f) => /\.test\.tsx?$/.test(f) && !/\.db\.test\./.test(f) && existsSync(join(dir, f)));
       const sous = (args) =>
         run('sandbox-exec', ['-p', profil(dir), 'pnpm', ...args], { cwd: dir, timeout: 10 * 60 * 1000 });
-      const types = await sous(['typecheck']);
+      // Les outils appelés directement, jamais par les scripts du package.json, que l'agent a pu réécrire.
+      const types = await sous(['exec', 'tsc', '--noEmit']);
       const tests = fichiers.length
         ? await sous(['exec', 'vitest', 'run', '--project', 'unit', ...fichiers])
         : { code: null, stdout: '', stderr: '' };

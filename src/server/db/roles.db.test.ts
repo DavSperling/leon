@@ -1,5 +1,6 @@
 import { Client } from 'pg';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { assertRlsRole } from '@/server/db/client';
 import { TEST_ENV } from '@/test/test-env';
 
 const client = new Client({ connectionString: TEST_ENV.DATABASE_URL });
@@ -31,5 +32,22 @@ describe('rôle leon_app', () => {
       `select has_schema_privilege('leon_app', 'pgboss', 'CREATE') as ok`,
     );
     expect(rows[0].ok).toBe(true);
+  });
+});
+
+// Le propriétaire des tables passe outre la RLS sans erreur : le démarrage refuse une DATABASE_URL qui le désigne.
+describe('garde du démarrage', () => {
+  it('laisse démarrer leon_app', async () => {
+    await expect(assertRlsRole(client)).resolves.toBeUndefined();
+  });
+
+  it('refuse le propriétaire des tables', async () => {
+    const owner = new Client({ connectionString: TEST_ENV.DATABASE_URL_ADMIN });
+    await owner.connect();
+    try {
+      await expect(assertRlsRole(owner)).rejects.toThrow('« leon_owner », qui possède les tables');
+    } finally {
+      await owner.end();
+    }
   });
 });

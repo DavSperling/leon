@@ -363,16 +363,37 @@ async function range(
       ids = [created];
     }
   }
-  for (const id of ids) {
+  // Les fils d'un autre projet qui ont déjà cette session et une de ses clés : elle a changé de projet (importée d'un
+  // worktree supprimé sous la clé de son dossier, puis réimportée sous celle du dépôt). Ils sont fondus dans le fil
+  // gardé, qui reste du projet courant : sinon la session vivrait dans deux fils, dont un introuvable depuis le dépôt et
+  // remis à jour pour rien. Sans branche ni PR, rien n'est fondu.
+  const prKeys = new Set(prs.map(keyOf));
+  const moved =
+    branch === null && prs.length === 0
+      ? []
+      : (await findFils(tx, ctx, null, [has('sessions', { id: sessionId })]))
+          .filter(
+            (fil) =>
+              fil.metadata.project !== project &&
+              !ids.includes(fil.id) &&
+              ((branch !== null && listOf(fil, 'branches').includes(branch)) ||
+                listOf(fil, 'prs').some((pr) => prKeys.has(keyOf(pr)))),
+          )
+          .map((fil) => fil.id);
+  // Dans l'ordre des ids, comme findFils : deux rangements qui se croisent prennent les verrous dans le même ordre.
+  for (const id of [...ids, ...moved].sort()) {
     if (!(await lockTarget(tx, ctx, id))) throw new Error('fil introuvable');
   }
-  // Relus sous le verrou : ce que T42 ou T43 y a écrit entre-temps n'est pas perdu.
-  const [keeper, ...others] = await tx
+  // Relus sous le verrou : ce que T42 ou T43 y a écrit entre-temps n'est pas perdu. Le gardé est le plus ancien des
+  // fils du projet courant, jamais un fil d'un autre projet.
+  const rows = await tx
     .select({ id: sources.id, metadata: sources.metadata })
     .from(sources)
-    .where(and(eq(sources.tenantId, ctx.tenantId), inArray(sources.id, ids)))
+    .where(and(eq(sources.tenantId, ctx.tenantId), inArray(sources.id, [...ids, ...moved])))
     .orderBy(asc(sources.createdAt), asc(sources.id));
+  const keeper = rows.find((row) => ids.includes(row.id));
   if (!keeper) throw new Error('fil introuvable');
+  const others = rows.filter((row) => row !== keeper);
 
   const entry = {
     id: sessionId,

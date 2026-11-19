@@ -6,7 +6,13 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
-import { gitEnvironment, gitRunner, projectKeyFor, repoRootFor } from './project-key';
+import {
+  gitEnvironment,
+  gitRunner,
+  projectKeyFor,
+  repoRootFor,
+  repoRootOrCloneFor,
+} from './project-key';
 
 const run = promisify(execFile);
 
@@ -145,6 +151,66 @@ describe('projectKeyFor : repli sur le dossier', () => {
 
     expect(key).toBe(dossierKey('/r'));
   });
+});
+
+describe('projectKeyFor : un worktree supprimé prend le dépôt de son clone', () => {
+  // Un git qui ne connaît que le clone : le worktree n'existe plus, git y échoue.
+  const cloneOnly =
+    (remote: string | null, clone = '/Users/demo/leon') =>
+    async (_args: string[], cwd: string) =>
+      cwd === clone ? remote : null;
+
+  it.each([
+    '/Users/demo/leon/.claude/worktrees/lot-13',
+    '/Users/demo/leon/.claude/worktrees/lot-13/src/cli',
+  ])('%s -> le dépôt du clone', async (cwd) => {
+    expect(await projectKeyFor(cwd, cloneOnly('git@github.com:acme/leon.git'))).toBe(
+      'github.com/acme/leon',
+    );
+  });
+
+  it('un worktree encore là garde son propre remote, sans interroger le clone', async () => {
+    const calls: string[] = [];
+    const key = await projectKeyFor(
+      '/Users/demo/leon/.claude/worktrees/lot-13',
+      async (_args, cwd) => {
+        calls.push(cwd);
+        return 'git@github.com:acme/autre.git';
+      },
+    );
+
+    expect(key).toBe('github.com/acme/autre');
+    expect(calls).toEqual(['/Users/demo/leon/.claude/worktrees/lot-13']);
+  });
+
+  it("garde la clé de son propre dossier quand le clone n'est pas sur GitHub ou n'existe plus", async () => {
+    const cwd = '/Users/demo/leon/.claude/worktrees/lot-13';
+
+    expect(await projectKeyFor(cwd, cloneOnly('https://gitlab.com/acme/leon.git'))).toBe(
+      dossierKey(cwd),
+    );
+    expect(await projectKeyFor(cwd, cloneOnly(null))).toBe(dossierKey(cwd));
+  });
+
+  it('un dossier hors de .claude/worktrees ne remonte jamais au dossier parent', async () => {
+    const asked: string[] = [];
+    const key = await projectKeyFor('/Users/demo/leon/worktrees/lot-13', async (_args, cwd) => {
+      asked.push(cwd);
+      return null;
+    });
+
+    expect(key).toBe(dossierKey('/Users/demo/leon/worktrees/lot-13'));
+    expect(asked).toEqual(['/Users/demo/leon/worktrees/lot-13']);
+  });
+
+  it('le dossier .claude/worktrees lui-même, sans nom de worktree, ne remonte pas', async () => {
+    expect(
+      await projectKeyFor(
+        '/Users/demo/leon/.claude/worktrees',
+        cloneOnly('git@github.com:acme/leon.git'),
+      ),
+    ).toBe(dossierKey('/Users/demo/leon/.claude/worktrees'));
+  });
 
   it("repasse sur le dossier quand l'adresse rendrait une clé trop longue", async () => {
     const remote = `https://github.com/acme/${'a'.repeat(300)}.git`;
@@ -203,6 +269,48 @@ describe('gitRunner : avec le vrai git, dans un dossier temporaire', { timeout: 
     expect(await projectKeyFor(dir, realGit)).toBe(dossierKey(dir));
     const absent = join(dir, 'absent');
     expect(await projectKeyFor(absent, realGit)).toBe(dossierKey(absent));
+  });
+
+  it('un worktree supprimé du clone donne la clé du dépôt du clone', async () => {
+    await run('git', ['init', '--quiet'], { cwd: dir });
+    await run('git', ['remote', 'add', 'origin', 'git@github.com:acme/leon.git'], { cwd: dir });
+    const removed = join(dir, '.claude', 'worktrees', 'lot-13');
+
+    expect(await projectKeyFor(removed, realGit)).toBe('github.com/acme/leon');
+    // Et la racine des faits : celle du clone, où les fichiers du worktree se lisent relatifs au dépôt.
+    expect(await repoRootOrCloneFor(join(removed, 'src'), realGit)).toBe(dir);
+  });
+
+  it('un dépôt encore là sous .claude/worktrees, hors GitHub ou sans origin, garde la clé de son dossier', async () => {
+    await run('git', ['init', '--quiet'], { cwd: dir });
+    await run('git', ['remote', 'add', 'origin', 'git@github.com:acme/leon.git'], { cwd: dir });
+    const autre = join(dir, '.claude', 'worktrees', 'autre');
+    const essai = join(dir, '.claude', 'worktrees', 'essai');
+    await run('mkdir', ['-p', autre, essai]);
+    await run('git', ['init', '--quiet'], { cwd: autre });
+    await run('git', ['remote', 'add', 'origin', 'https://gitlab.com/acme/autre.git'], {
+      cwd: autre,
+    });
+    await run('git', ['init', '--quiet'], { cwd: essai });
+
+    expect(await projectKeyFor(autre, realGit)).toBe(dossierKey(autre));
+    expect(await projectKeyFor(essai, realGit)).toBe(dossierKey(essai));
+    expect(await repoRootOrCloneFor(autre, realGit)).toBe(autre);
+  });
+
+  it("un dossier présent mais illisible sous .claude/worktrees n'hérite pas du clone", async () => {
+    await run('git', ['init', '--quiet'], { cwd: dir });
+    await run('git', ['remote', 'add', 'origin', 'git@github.com:acme/leon.git'], { cwd: dir });
+    const worktrees = join(dir, '.claude', 'worktrees');
+    const cache = join(worktrees, 'cache');
+    await run('mkdir', ['-p', cache]);
+    await chmod(worktrees, 0o000);
+    try {
+      expect(await projectKeyFor(cache, realGit)).toBe(dossierKey(cache));
+      expect(await repoRootOrCloneFor(cache, realGit)).toBeNull();
+    } finally {
+      await chmod(worktrees, 0o755);
+    }
   });
 
   // Sous macOS, le dossier temporaire est un lien (/var → /private/var) : la racine garde la forme reçue.

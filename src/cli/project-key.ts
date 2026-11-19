@@ -1,5 +1,6 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { access } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
 
@@ -90,20 +91,62 @@ export async function repoRootFor(cwd: string, git: GitRunner): Promise<string |
   return inside === 'true' ? resolve(cwd, cdup) : null;
 }
 
-// La clé du projet d'un dossier (D9) : le dépôt GitHub de son remote origin (`github.com/<propriétaire>/<dépôt>`,
-// en minuscules), sinon le dossier lui-même (`dossier:` et 16 hexadécimaux du sha256 de son chemin absolu).
-// Ni l'adresse brute du remote ni ce qu'elle contient d'autre que le propriétaire et le dépôt n'en sortent.
-export async function projectKeyFor(cwd: string, git: GitRunner): Promise<string> {
+// La clé GitHub du remote origin d'un dossier, ou null. Ni l'adresse brute du remote ni ce qu'elle contient d'autre
+// que le propriétaire et le dépôt n'en sortent.
+async function githubKeyFor(cwd: string, git: GitRunner): Promise<string | null> {
   let remote: string | null = null;
   try {
     remote = await git(['remote', 'get-url', 'origin'], cwd);
   } catch {
-    // git absent ou en échec : on passe à la clé du dossier. Le message de l'erreur peut citer l'adresse, on l'ignore.
+    // git absent ou en échec : pas de clé GitHub. Le message de l'erreur peut citer l'adresse, on l'ignore.
   }
   const ownerAndRepo = remote === null ? null : githubOwnerAndRepo(remote);
   const github = ownerAndRepo === null ? null : `github.com/${ownerAndRepo}`;
-  if (github !== null && github.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(github)) {
-    return github;
+  return github !== null && github.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(github)
+    ? github
+    : null;
+}
+
+// Un worktree rangé dans son clone (`<clone>/.claude/worktrees/<nom>`, le flux de CLAUDE.md et de Claude Code), ou
+// un de ses sous-dossiers : la première occurrence donne le clone.
+const CLONE_WORKTREE = /^(.+?)[\\/]\.claude[\\/]worktrees[\\/][^\\/]+(?:[\\/].*)?$/;
+
+// Le clone d'un worktree supprimé : `<clone>` quand le dossier absolu est sous `<clone>/.claude/worktrees/<nom>` et
+// n'existe plus. Un dossier encore là n'hérite de rien, même sans remote GitHub : c'est peut-être un autre dépôt, et
+// un crochet, dont le dossier existe toujours, ne paie jamais un second appel à git.
+// shortcut: un autre dépôt cloné sous .claude/worktrees, puis supprimé, prend le dépôt du clone parent ; lire le
+// `gitdir` du worktree dans le clone (.git/worktrees) le jour où ce cas se présente.
+async function deletedWorktreeClone(path: string): Promise<string | null> {
+  const clone = CLONE_WORKTREE.exec(path)?.[1];
+  if (clone === undefined) return null;
+  try {
+    await access(path);
+    return null;
+  } catch (error) {
+    // Seul un dossier absent hérite : un dossier présent mais illisible (EACCES) est peut-être un autre dépôt.
+    const code = (error as NodeJS.ErrnoException).code;
+    return code === 'ENOENT' || code === 'ENOTDIR' ? clone : null;
   }
-  return `dossier:${createHash('sha256').update(resolve(cwd)).digest('hex').slice(0, 16)}`;
+}
+
+// La racine du dépôt d'un dossier (repoRootFor), ou celle du clone d'un worktree supprimé : ses fichiers s'y lisent
+// relatifs au dépôt, `repoRelativePath` (session-facts.ts) retirant `.claude/worktrees/<nom>/`.
+export async function repoRootOrCloneFor(cwd: string, git: GitRunner): Promise<string | null> {
+  const root = await repoRootFor(cwd, git);
+  if (root !== null) return root;
+  const clone = await deletedWorktreeClone(resolve(cwd));
+  return clone === null ? null : repoRootFor(clone, git);
+}
+
+// La clé du projet d'un dossier (D9) : le dépôt GitHub de son remote origin (`github.com/<propriétaire>/<dépôt>`,
+// en minuscules), sinon le dossier lui-même (`dossier:` et 16 hexadécimaux du sha256 de son chemin absolu).
+// Un worktree supprimé depuis prend le dépôt du clone qui le contenait : sinon, ses sessions importées perdent leur
+// dépôt et sortent des fils et de la recherche du projet.
+export async function projectKeyFor(cwd: string, git: GitRunner): Promise<string> {
+  const path = resolve(cwd);
+  const own = await githubKeyFor(path, git);
+  if (own !== null) return own;
+  const clone = await deletedWorktreeClone(path);
+  const inherited = clone === null ? null : await githubKeyFor(clone, git);
+  return inherited ?? `dossier:${createHash('sha256').update(path).digest('hex').slice(0, 16)}`;
 }

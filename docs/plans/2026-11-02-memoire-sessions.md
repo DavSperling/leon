@@ -1075,6 +1075,18 @@ Contrat : `api-contract.db.test.ts`.
 
 **Fait quand :** 10 tâches réelles, dans trois cas : sans bloc, avec le bloc, avec le bloc et le rappel au prompt. Amos les note sans savoir le cas, sur une grille : juste, faux, ou ancré sur un résumé périmé. La conclusion fixe le budget retenu et la recommandation pour T36.
 
+> **Amendé le 19/11 : fait** (annexe 07, script et tâches dans `essais/mesure-ancrage.*`). Ce qui a changé par rapport au texte :
+> - **La notation.** Amos a demandé que Claude note, parce qu'il n'avait pas écrit le code à juger. Elle s'est faite à l'aveugle : deux correcteurs, et un arbitre en cas de désaccord, qui vérifient dans le dépôt.
+> - **Le réglage.** Claude Code 2.1.326, `claude-opus-5-5`, effort `medium`, au commit `4253a0d`, en mode non interactif.
+> - **Le résultat.**
+>   - Les réponses justes : 8 sur 10 sans mémoire, 9 sur 10 avec le bloc, 9 sur 10 avec le bloc et le rappel.
+>   - Deux ancrages sur un fait dépassé sans mémoire, aucun avec.
+>   - Environ 10 % de tokens en moins avec le seul bloc.
+>   - Aucune lecture de fil : la consigne n'est pas suivie.
+> - **Ce qui n'est pas fait.** Les seuils de proximité et du rappel, faute de cas réels. Et les compteurs de versions, puisque la mesure n'écrit rien dans la mémoire.
+> - **La recommandation pour T36 et le niveau 3 (D28), à trancher par Amos.** D'abord réécrire la consigne de lecture pour dire à quoi sert la mémoire, et mesurer la part de sessions qui lisent. Le passage obligé ne vient que si elle reste nulle.
+> - **Les 5 tâches gardées pour T62** : t01, t03, t06, t08 et t09, au même commit.
+
 ## Questions ouvertes
 
 Amos est seul sur ce chantier : le 05/11, il a tranché les questions écrites « pour David », sauf QD2 (et QD13 du nouveau plan), qui touchent la PR #106 de David (passation) et restent ouvertes pour lui.

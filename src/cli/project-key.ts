@@ -122,8 +122,10 @@ async function deletedWorktreeClone(path: string): Promise<string | null> {
   try {
     await access(path);
     return null;
-  } catch {
-    return clone;
+  } catch (error) {
+    // Seul un dossier absent hérite : un dossier présent mais illisible (EACCES) est peut-être un autre dépôt.
+    const code = (error as NodeJS.ErrnoException).code;
+    return code === 'ENOENT' || code === 'ENOTDIR' ? clone : null;
   }
 }
 

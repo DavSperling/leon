@@ -298,6 +298,21 @@ describe('gitRunner : avec le vrai git, dans un dossier temporaire', { timeout: 
     expect(await repoRootOrCloneFor(autre, realGit)).toBe(autre);
   });
 
+  it("un dossier présent mais illisible sous .claude/worktrees n'hérite pas du clone", async () => {
+    await run('git', ['init', '--quiet'], { cwd: dir });
+    await run('git', ['remote', 'add', 'origin', 'git@github.com:acme/leon.git'], { cwd: dir });
+    const worktrees = join(dir, '.claude', 'worktrees');
+    const cache = join(worktrees, 'cache');
+    await run('mkdir', ['-p', cache]);
+    await chmod(worktrees, 0o000);
+    try {
+      expect(await projectKeyFor(cache, realGit)).toBe(dossierKey(cache));
+      expect(await repoRootOrCloneFor(cache, realGit)).toBeNull();
+    } finally {
+      await chmod(worktrees, 0o755);
+    }
+  });
+
   // Sous macOS, le dossier temporaire est un lien (/var → /private/var) : la racine garde la forme reçue.
   it('repoRootFor : la racine du dépôt, sous la forme du chemin reçu ; null hors de tout dépôt', async () => {
     const repo = join(dir, 'depot');

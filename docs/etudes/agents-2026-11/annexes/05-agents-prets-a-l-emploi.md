@@ -210,16 +210,131 @@ Prix en dollars par utilisateur et par mois, facturation annuelle, sauf mention.
 - **Sintra** : « employés IA » pour indépendants. 10,5 M€ d'ARR et 40 000 clients payants en juin 2025 [TIERS]. G2 : 2,4/5 sur 26 avis [TIERS] (https://www.g2.com/products/sintra-ai/reviews).
 - **Microsoft 365 Copilot Business** : 21 $/utilisateur/mois pour les sociétés de moins de 300 personnes (promotion à 18 $) [TIERS] (https://bondconsultingservices.com/blog/microsoft-365-copilot-business-pricing-smb-2026/).
 
-## 2 à 7. Questions transversales
+### Trous de la section 1
 
-(à rédiger après les dernières recherches)
+- Désabonnement : aucun chiffre fiable pour un seul produit de mail ou de réunion. Seule donnée : Granola, 50 % d'usage à dix semaines (2024, vendeur).
+- ARR 2026 non trouvé pour Granola, Fireflies, Lindy, Shortwave, Jace, Cora, tl;dv, Leexi, Modjo, Crisp, folk, Zapier Agents, Make.
+- Avis G2, Reddit et Hacker News : trouvés seulement pour Fyxer, Artisan et Sintra. Aucun fil Reddit n'est remonté.
+- Temps d'installation : mesuré nulle part, seulement affirmé par les vendeurs ou des blogs.
 
-Éléments déjà trouvés :
-- SDR IA : désabonnement annuel de 50 à 70 % cité pour la catégorie, sans mesure neutre ; Bain Capital Ventures (avril 2026) : les SDR autonomes n'ont remplacé les équipes humaines nulle part à grande échelle ; 11x et Artisan se repositionnent en copilotes [TIERS] (https://resources.rework.com/news/sales-tech/ai-sdr-worth-it-2026-hybrid-model-sales-leader, https://naoma.ai/articles/what-is-an-ai-sdr).
-- Rapport a16z/Mercury (octobre 2025) : la plupart des outils payés par les startups sont des copilotes, pas des agents autonomes ; 70 % s'adoptent par un individu avant l'équipe [TIERS] (https://techcrunch.com/2025/10/02/a-new-a16z-report-looks-at-which-ai-companies-startups-are-actually-paying-for).
-- Ramp (novembre 2026) : 1 % des entreprises font 80 % du revenu d'OpenAI et d'Anthropic ; Granola et Sierra dans les listes en hausse [TIERS] (https://ramp.com/data/ai-index-nov-2026).
-- Agences n8n en France : mise en place de 800 à 3 000 € HT pour un premier chantier ; 15 000 à 25 000 € HT la première année pour 3 à 5 scénarios ; maintenance de 59 à 1 200 €/mois [TIERS, pages d'agences] (https://yz-automation.fr/agence-n8n, https://waimia.com/ressources/guides/n8n-prix, https://www.koino.fr/articles/meilleures-agences-automatisation-ia-france-2026).
+## 2. Quelles catégories croissent, lesquelles déçoivent
+
+### À retenir
+Trois catégories ont un revenu prouvé chez les petites équipes : les notes de réunion, l'assistant de boîte mail, et l'agent de support payé à la résolution. Les « commerciaux IA » autonomes et les « employés IA » généralistes déçoivent.
+
+### Faits sourcés
+- Réunions : Otter au-delà de 100 M$ d'ARR (2025), Fathom de 1 à 30 M$ en deux ans, Granola valorisé 1,5 Md$, Fireflies 1 Md$ [TIERS/VENDEUR, voir fiches].
+- Mail : Fyxer de 1 à 32 M$ d'ARR sur la seule année 2025 [VENDEUR].
+- Support : Fin proche de 100 M$ d'ARR à 0,99 $ la résolution ; Decagon 100 M$ ; Sierra 200 à 400 M$ [VENDEUR/TIERS]. Ramp cite le code et les robots de support comme les deux usages clairs en entreprise [TIERS] (https://ramp.com/data/ai-index-nov-2026).
+- Automatisation : n8n de 40 M$ (juillet 2025) à environ 100 M$ d'ARR (avril 2026) [TIERS].
+- SDR IA : désabonnement annuel de 50 à 70 % cité pour la catégorie, 70 à 80 % pour un vendeur, sans mesure neutre. Bain Capital Ventures (avril 2026) : les SDR autonomes n'ont remplacé les équipes humaines nulle part à grande échelle. 11x et Artisan se repositionnent en copilotes. Causes citées : délivrabilité abîmée, textes génériques repérés par les filtres [TIERS] (https://resources.rework.com/news/sales-tech/ai-sdr-worth-it-2026-hybrid-model-sales-leader, https://naoma.ai/articles/what-is-an-ai-sdr).
+- « Employés IA » : Sintra noté 2,4/5 sur G2 ; les tests décrivent des tâches guidées plus que des agents autonomes [TIERS] (https://hopfar.com/sintra-ai-review-2026/). Lindy a quitté ce positionnement. Motion a retiré son palier « AI Employees » de sa page de prix (septembre 2026).
+- Applications IA en général : les abonnés résilient surtout dans les deux premiers mois, avant l'habitude [TIERS, étude liée à RevenueCat] (https://www.readsignal.io/article/revenuecat-2026-ai-apps-annual-churn-activation-retention-playbook).
+- France : 40 % des TPE-PME utilisent l'IA en 2026, contre 13 % en 2024 ; 53 % des PME. Mais 11 % seulement automatisent une tâche et environ 19 % paient un outil d'IA [OFF, baromètre France Num, DGE, 28 septembre 2026] (https://presse.economie.gouv.fr/barometre-france-num-2026-quatre-tpe-pme-sur-dix-utilisent-desormais-lintelligence-artificielle/, https://www.decodeur-ia.com/articles/barometre-france-num-2026-adoption-ia-pme-vrais-chiffres-ou-se-situer). Autres mesures : Insee 18 %, Bpifrance environ 32 %, Banque de France 67 % [TIERS] (https://agentlink.org/intelligence-artificielle-agent-ia/adoption-ia-entreprise-chiffres-officiels-divergents.html).
+
+### Déductions
+- Les indépendants se font racheter en 2025-2026 : Claap par lemlist, Fathom par Superhuman, Fin par Salesforce, Poke par Cognition. Le marché se regroupe en suites [DED].
+- La transcription devient gratuite (Fathom, Circleback depuis août 2026, Zoom, Meet, Notion). La valeur monte vers ce qu'on fait des notes [DED, appuyé par Sacra] (https://sacra.com/research/pocket-at-27m-annualized-revenue/).
+
+### Trous
+- Aucune donnée Ramp, Mercury ou Brex par catégorie pour 2026 n'a été trouvée. Le rapport a16z/Mercury date d'octobre 2025.
+
+## 3. Le point commun des produits qui gagnent
+
+### À retenir
+Les gagnants sont préconfigurés, se branchent en un clic sur Google ou Microsoft, vivent dans l'outil déjà utilisé et laissent l'humain valider. Les constructeurs d'agents gagnent aussi de l'argent, mais auprès de profils techniques et d'agences.
+
+### Faits sourcés
+- Préconfiguré : Fyxer, Granola et Fathom ne demandent qu'une connexion Google ou Microsoft [OFF/TIERS] (https://docs.fyxer.com/resources/support/faqs, https://help.fathom.video/en/articles/448896).
+- Dans l'outil existant : Fyxer et Jace écrivent leurs brouillons dans Gmail ou Outlook ; Poke passe par iMessage [TIERS].
+- Humain qui valide : Jace « rédige mais n'envoie jamais » ; Relay.app vend la validation humaine comme sa différence [TIERS] (https://www.usecarly.com/blog/jace-ai/, https://agent-finder.co/reviews/relay-app).
+- Copilote plutôt qu'autonome : c'est le constat du rapport a16z/Mercury (octobre 2025) ; 70 % des outils du classement s'adoptent par un individu avant l'équipe [TIERS] (https://techcrunch.com/2025/10/02/a-new-a16z-report-looks-at-which-ai-companies-startups-are-actually-paying-for).
+- Proactif : Cora envoie deux briefs par jour ; Superhuman Go et Poke se présentent comme proactifs [TIERS].
+- Prix au résultat pour le support : Fin 0,99 $, HubSpot 0,50 $, Zendesk 1,50 $. HubSpot dit que cela « retire le risque d'adoption » [TIERS] (https://martech.org/hubspot-moves-to-outcome-based-pricing-for-some-breeze-ai-agents/).
+- Contre-exemple : les prix en crédits (Fyxer, Lindy, Gumloop, Make, Clay) nourrissent les plaintes de factures surprises [TIERS].
+
+### Déductions
+- Le brouillon est le bon niveau d'écriture : il rend service sans risque. Les plaintes sur Fyxer portent sur la qualité du brouillon et le tri, pas sur le principe [DED].
+- L'entrée se fait par une personne, pas par un achat d'équipe. Un prix par siège sans minimum et un essai immédiat comptent plus qu'une démonstration [DED].
+
+### Trous
+- Aucune donnée d'usage ne compare proactif et à la demande. Les galeries de modèles de Zapier, Lindy et Relay ne publient pas de compteurs.
+
+## 4. Coût de l'empilement pour 30 personnes
+
+### À retenir
+Équiper 30 personnes en mail, réunions, support et automatisation coûte environ 1 500 à 3 200 $ par mois, soit 50 à 105 $ par personne [DED]. Les suites existent mais restent partielles.
+
+### Calcul [DED, à partir des prix des fiches]
+- Hypothèse basse : Fyxer à 30 $ × 30 = 900 $ ; Granola Business 14 $ × 30 = 420 $ ; Crisp Essentials 95 $ ; Zapier Agents Pro 50 $. Total : environ 1 465 $ par mois, soit 49 $ par personne.
+- Hypothèse haute : Fyxer à 49 $ × 30 = 1 470 $ ; Fathom Business 25 $ × 30 = 750 $ ; Fin, 500 résolutions à 0,99 $ = 495 $ (sièges non comptés) ; Lindy Pro 99,99 $ × 5 = 500 $. Total : environ 3 215 $ par mois, soit 107 $ par personne.
+- Le mail et les réunions font 80 à 90 % de la note, car ils se paient par siège.
+
+### Offres groupées [TIERS]
+- Superhuman : mail, écriture, assistant Go et bientôt Fathom, 33 à 40 $ par utilisateur.
+- Microsoft 365 Copilot Business : 21 $ par utilisateur en plus de l'abonnement de base ; offres groupées à 23,50 $ et 32 $ depuis le 1er juillet 2026 (https://windowsforum.com/news/microsoft-365-business-plans-with-copilot-go-permanent-for-smbs-july-2026.425116/).
+- Notion Business : 20 $ par membre, IA et notes de réunion incluses ; agents sur mesure en crédits, 10 $ les 1 000 (depuis mai 2026). Notion Mail aurait fermé le 22 septembre 2026 [Wikipédia, non recoupé] (https://en.wikipedia.org/wiki/Notion_(productivity_software)).
+- Fyxer regroupe déjà mail et notes de réunion. lemlist regroupe prospection et Claap.
+- Google Workspace avec Gemini : prix non trouvé.
+
+### Déductions
+- Une offre unique à 25 € par siège qui couvrirait mail, réunions et brief serait deux à quatre fois moins chère que l'empilement [DED]. Aucune offre trouvée ne couvre aussi le support et le CRM.
+
+## 5. Agences et intégrateurs (n8n, Make)
+
+### À retenir
+La demande existe et vient surtout de petites sociétés. Les prix sont bas à l'entrée et la maintenance est le point faible.
+
+### Faits sourcés
+- Malt Tech Trends 2026 : 82 % de la demande n8n vient de sociétés de moins de 50 salariés. Usages : automatisation CRM et marketing 35 %, agents IA 25 %. La demande en compétences IA progresse de 60 % entre 2025 et 2026 [TIERS] (https://www.programmez.com/actualites/malt-tech-trends-2026-php-java-et-c-chutent-limportance-de-lia-demande-sur-le-n8n-39401, https://www.lemondeinformatique.fr/actualites/lire-la-demande-en-competence-agentique-bondit-de-60-en-france-99943.html).
+- Tarif journalier n8n : 450 € en moyenne selon Malt ; 675 € médian selon un autre article citant le même rapport [TIERS, contradictoire] (https://tjmetre.fr/blog/ia-levier-tjm-freelance).
+- Mise en place en France : 800 à 3 000 € HT pour un premier chantier ; 15 000 à 25 000 € HT la première année pour 3 à 5 scénarios [TIERS, pages d'agences] (https://yz-automation.fr/agence-n8n, https://waimia.com/ressources/guides/n8n-prix).
+- Abonnement : 59 à 299 € HT par mois chez une agence, 300 à 900 € chez une autre. Trois agences seulement publient un tarif mensuel, de 120 à 1 200 € [TIERS] (https://www.koino.fr/articles/meilleures-agences-automatisation-ia-france-2026).
+- Friction : les agences écrivent elles-mêmes que les automatisations cassent quand une API ou un outil client change, et imposent un contrat de maintenance [TIERS, blogs d'agences] (https://growwstacks.com/blog/is-n8n-dead, https://www.igrowix.com/blog/agency-embedded-ai-workflow-automation-reseller-playbook-2026).
+
+### Trous
+- Aucun taux de désabonnement ni témoignage de client déçu trouvé de source indépendante. Hors de France : aucun prix relevé.
+
+## 6. Lecture seule ou écriture dans les outils
+
+### À retenir
+Les deux agents les mieux vendus (notes de réunion, tri et brouillons de mail) reposent sur des données qu'une mémoire d'entreprise détient déjà. L'écriture exigée est légère : un brouillon, un libellé, un message.
+
+### Classement [DED, à partir des fiches]
+| Agent | Données lues | Écriture exigée |
+|---|---|---|
+| Brief du matin, préparation de réunion | Mail, agenda, CRM, réunions, messagerie | Aucune (envoi d'un message) |
+| Compte-rendu, actions, suivi de réunion | Réunions, agenda, CRM | Brouillon de mail ; mise à jour CRM en option |
+| Tri de boîte et brouillons | Mail, agenda, historique | Libellés et brouillons dans la boîte |
+| Recherche avant rendez-vous commercial | CRM, mail, web | Aucune |
+| Mise à jour du CRM après échange | Mail, réunions | Écriture dans le CRM |
+| Réponse au support | Tickets, base d'aide | Envoi au client, sans validation |
+| Planification d'agenda | Agenda | Création et déplacement d'événements |
+| Prospection autonome | CRM, données achetées | Envoi en masse : catégorie qui déçoit |
+
+### Trous
+- Aucun produit trouvé ne s'appuie sur les conversations avec les assistants d'IA. C'est une donnée sans concurrent, mais aussi sans preuve de demande.
+
+## 7. Les agents qui se vendent le mieux
+
+### À retenir
+Cinq agents reviennent chez presque tous les éditeurs. Le classement est une déduction : aucun éditeur ne publie ses compteurs.
+
+1. **Compte-rendu de réunion avec actions et mail de suivi.** Le plus gros revenu cumulé chez les petites équipes (Otter, Fathom, Granola, Fireflies). Zéro réglage, valeur visible en une heure.
+2. **Tri de boîte et brouillons de réponse.** Fyxer : 32 M$ d'ARR en un an. Le modèle de tri est aussi le plus abouti de Lindy [TIERS] (https://aiproductivity.ai/guides/lindy-ai-employees-guide/).
+3. **Agent de support qui résout seul.** Le seul agent autonome qui se vend bien : la tâche est bornée, la mesure est simple, le prix suit le résultat.
+4. **Recherche et enrichissement de prospects.** Clay à plus de 100 M$ d'ARR ; HubSpot vend le prospect à 1 $. L'agent prépare, l'humain envoie.
+5. **Brief et préparation de réunion.** Présent chez Cora, Superhuman Go, Poke, Pipedrive, folk. Jamais vendu seul : c'est une fonction d'appel, pas un produit [DED].
 
 ## Ce que ça implique pour nous
 
-(à rédiger)
+Interprétation de l'agent, à discuter.
+
+- **Oui, il y a un marché, mais étroit.** L'argent prouvé en petite équipe est dans deux agents : les notes de réunion et la boîte mail. En France, 19 % des TPE-PME paient un outil d'IA et 11 % automatisent une tâche. Les deux agents gagnants ne demandent aucune automatisation à construire.
+- **Le brief du matin ne suffit pas.** Personne ne le vend seul. Chez les autres, il accompagne un agent qui fait gagner du temps chaque jour.
+- **Premier ajout conseillé : le suivi de réunion.** Compte-rendu, actions, brouillon de mail de suivi, proposition de mise à jour du CRM. Nous lisons déjà les réunions, le mail et le CRM. La transcription seule est devenue gratuite : il faut vendre ce que notre mémoire ajoute, c'est-à-dire le contexte du client sur tous les outils.
+- **Deuxième ajout : les brouillons de réponse dans Gmail et Outlook.** C'est le modèle Fyxer, à 30-50 $ par siège. Notre avantage possible : un brouillon nourri par le CRM, les tickets et les réunions, pas seulement par la boîte. Il exige d'écrire des brouillons et des libellés, rien de plus.
+- **Ne pas faire de constructeur d'agents ni de « commercial IA ».** Le premier demande un expert ou une agence. Le second a le pire désabonnement du marché. Rester sur des agents préconfigurés où l'humain valide.
+- **Se loger dans la boîte mail et Slack.** Les gagnants n'imposent pas de nouvelle interface. Le brief et les brouillons doivent arriver là où les gens travaillent déjà.
+- **Le prix de 25 € tient.** L'empilement coûte 50 à 105 $ par personne. Une offre mémoire, suivi de réunion et brouillons à 25 € serait nettement moins chère. Éviter les crédits : ils génèrent des plaintes partout.
+- **Le risque est le regroupement.** Superhuman, Salesforce, Microsoft et Notion assemblent la même suite. Notre différence défendable : l'hébergement en Europe, le français, et une mémoire qui couvre tous les outils et les conversations avec les assistants d'IA.

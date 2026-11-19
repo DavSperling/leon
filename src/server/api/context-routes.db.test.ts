@@ -333,7 +333,7 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
     expect(text).not.toContain('Un état du modèle');
     expect(text).toContain('## Mes fils sur github.com/acme/leon');
     expect(text).toContain(
-      "lis le fil de ta tâche : `~/.leon/bin/leon thread <id>` (sans id : le fil de la branche courante), ou l'outil `thread` de Leon s'il est branché, avec le projet `github.com/acme/leon`.",
+      "lis le fil le plus proche de ta tâche, pour reprendre là où la session précédente s'est arrêtée sans refaire un travail déjà fait ni une erreur déjà commise : `~/.leon/bin/leon thread <id>` (sans id : le fil de la branche courante), ou l'outil `thread` de Leon s'il est branché, avec le projet `github.com/acme/leon`.",
     );
     expect(info.mock.calls.flat()).not.toContain('fil.etat_masque');
     // Le sommaire n'est fait que de clés : rien au journal des lectures (aucun point du matin ici).
@@ -430,7 +430,7 @@ describe('POST /api/v1/contexte : le sommaire des fils', () => {
     expect(sansLecture).toContain(`\n${phrase}\n</contexte-leon>`);
     expect(sansOutil).toBe(avant);
     expect(sansNoter).toBe(avant);
-    expect(avecLecture).toMatch(/lis le fil de ta tâche : .*\n.*note --tool cursor/);
+    expect(avecLecture).toMatch(/lis le fil le plus proche de ta tâche, .*\n.*note --tool cursor/);
     expect(avecLecture).toContain(`\n${phrase}\n</contexte-leon>`);
   });
 

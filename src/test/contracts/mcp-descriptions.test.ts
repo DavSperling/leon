@@ -19,9 +19,9 @@ import {
   SearchInputSchema,
 } from '@/server/mcp/tools/search-tool';
 import { SOURCE_MAX_CHARS } from '@/server/search/context';
+import { BACKSTAGE_ROLE_NAMES_EN } from '@/server/search/parse-query';
 import { queryTerms } from '@/server/search/query-terms';
 import {
-  BACKSTAGE_ROLE_NAMES_EN,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
   readToolFilters,
@@ -105,9 +105,14 @@ describe('description de search', () => {
     }
   });
 
-  // T51 (QD9) : les coulisses d'une session de code se ciblent par `type`, nommées comme les natures.
+  // T51 (QD9) : les coulisses d'une session de code se ciblent par `type`, nommées comme les natures. Décision d'Amos du
+  // 18/11 : la description dit que les appels d'outils ne viennent que demandés ainsi.
   it('liste les trois rôles des coulisses, par des noms que la recherche lit comme rôles', () => {
     const text = description(SearchInputSchema.shape.type);
+    expect(text).toContain(
+      'reasoning and subagent, which search returns anyway, or tool call, which it returns only when asked this way.',
+    );
+    expect(text).not.toContain('always');
 
     for (const [role, name] of Object.entries(BACKSTAGE_ROLE_NAMES_EN)) {
       expect(text).toContain(name);

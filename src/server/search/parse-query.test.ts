@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ITEM_NATURES, TOOL_KINDS } from '@/capture/turn';
 import { HIGHLIGHT_END, HIGHLIGHT_START } from '@/lib/highlight';
 import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
-import { parseQuery } from './parse-query';
+import { BACKSTAGE_ROLE_NAMES_EN, parseQuery } from './parse-query';
 
 const NOW = new Date('2026-10-19T10:00:00Z');
 const parse = (raw: string) => parseQuery(raw, NOW);
@@ -189,6 +189,32 @@ describe('parseQuery : le catalogue des outils et des types', () => {
       expect(parse(`type:${nature}s`).filters.natures, `pluriel ${nature}s`).toEqual([nature]);
     },
   );
+
+  // Décision d'Amos du 18/11 : les appels d'outils se demandent par `type:`, dans la barre et `leon search` comme au MCP,
+  // sous les mêmes noms (BACKSTAGE_ROLE_NAMES_EN et les identifiants).
+  it.each(Object.entries(BACKSTAGE_ROLE_NAMES_EN))(
+    'type: lit le rôle %s par son identifiant et par son nom « %s », au singulier comme au pluriel',
+    (role, name) => {
+      for (const value of [
+        role,
+        `"${name}"`,
+        `"${name}s"`,
+        name.toUpperCase().replaceAll(' ', ''),
+      ]) {
+        const parsed = parse(`type:${value} pnpm`);
+        expect(parsed, value).toEqual({ text: 'pnpm', people: [], filters: { roles: [role] } });
+      }
+    },
+  );
+
+  it('garde une nature comme une nature à côté d’un rôle, et ignore toujours un type inconnu', () => {
+    expect(parse('type:ticket type:"tool call" x').filters).toEqual({
+      natures: ['ticket'],
+      roles: ['appel_outil'],
+    });
+    expect(parse('type:reasoning type:raisonnement').filters.roles).toEqual(['raisonnement']);
+    expect(parse('type:"tool callz" x')).toEqual({ text: 'x', people: [], filters: {} });
+  });
 });
 
 // L'interface anglaise écrit ses propres filtres (menus, exemples, aide) : la barre les lit comme les français.

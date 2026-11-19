@@ -1,4 +1,10 @@
-import { ITEM_NATURES, type ItemNature, type SourceKind, TOOL_KINDS } from '@/capture/turn';
+import {
+  type BackstageRole,
+  ITEM_NATURES,
+  type ItemNature,
+  type SourceKind,
+  TOOL_KINDS,
+} from '@/capture/turn';
 import { stripHighlightMarks } from '@/lib/highlight';
 import { FILTER_ALIASES, NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/server/memory/labels';
 import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
@@ -7,7 +13,7 @@ import { type ParsedQuery, QUERY_MAX_CHARS } from './types';
 //
 //   de:<nom|e-mail|identifiant>   répétable ; une valeur à espaces s'écrit entre guillemets : de:"Julie Martin"
 //   outil:<identifiant|libellé>   répétable : outil:github, outil:"Claude Code"
-//   type:<nature>                 répétable : type:réunion, type:tickets
+//   type:<nature|rôle>            répétable : type:réunion, type:tickets, type:"tool call" (les coulisses, 18/11)
 //   depuis:<N>j|<N>s|<N>m|AAAA-MM-JJ   jours, semaines, mois, ou une date (UTC, incluse)
 //   avant:AAAA-MM-JJ              une date (UTC, exclue)
 //   "phrase exacte"               passe telle quelle au texte
@@ -50,6 +56,20 @@ for (const nature of ITEM_NATURES) {
   NATURE_BY_NAME.set(squash(NATURE_LABELS_EN[nature]), nature);
 }
 
+// Les rôles des coulisses d'une session de code (T51), que `type` lit aussi, nommés en anglais comme les natures, et
+// par leur identifiant. La seule table de ces noms : le paramètre `type` des outils (tool-filters.ts) passe par ici.
+// Décision d'Amos du 18/11 : sans ce filtre, la recherche ne rend jamais un appel d'outil (filters-sql.ts).
+export const BACKSTAGE_ROLE_NAMES_EN: Record<BackstageRole, string> = {
+  raisonnement: 'reasoning',
+  sous_agent: 'subagent',
+  appel_outil: 'tool call',
+};
+const ROLE_BY_NAME = new Map<string, BackstageRole>();
+for (const [role, name] of Object.entries(BACKSTAGE_ROLE_NAMES_EN) as [BackstageRole, string][]) {
+  ROLE_BY_NAME.set(squash(role), role);
+  ROLE_BY_NAME.set(squash(name), role);
+}
+
 function toKind(value: string): SourceKind | null {
   return KIND_BY_NAME.get(squash(value)) ?? null;
 }
@@ -58,6 +78,11 @@ function toKind(value: string): SourceKind | null {
 function toNature(value: string): ItemNature | null {
   const name = squash(value);
   return NATURE_BY_NAME.get(name) ?? NATURE_BY_NAME.get(name.replace(/s$/, '')) ?? null;
+}
+
+function toRole(value: string): BackstageRole | null {
+  const name = squash(value);
+  return ROLE_BY_NAME.get(name) ?? ROLE_BY_NAME.get(name.replace(/s$/, '')) ?? null;
 }
 
 function utcDate(year: number, month: number, day: number): Date | null {
@@ -154,6 +179,7 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
   const people: string[] = [];
   const tools: SourceKind[] = [];
   const natures: ItemNature[] = [];
+  const roles: BackstageRole[] = [];
   let since: Date | null = null;
   let until: Date | null = null;
 
@@ -191,7 +217,9 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
       }
       case 'type': {
         const nature = toNature(value);
+        const role = toRole(value);
         if (nature) pushUnique(natures, nature);
+        if (role) pushUnique(roles, role);
         break;
       }
       case 'depuis':
@@ -210,6 +238,7 @@ export function parseQuery(raw: string, now: Date): ParsedQuery {
     filters: {
       ...(tools.length > 0 ? { tools } : {}),
       ...(natures.length > 0 ? { natures } : {}),
+      ...(roles.length > 0 ? { roles } : {}),
       ...(since ? { since } : {}),
       ...(until ? { until } : {}),
     },

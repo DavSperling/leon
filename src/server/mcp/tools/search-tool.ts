@@ -4,9 +4,9 @@ import { CODE_SESSION_KINDS, PROJECT_INPUT_MAX_CHARS, type SourceKind } from '@/
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
 import { type ReadTool, recordReads } from '@/server/memory/read-log';
+import { BACKSTAGE_ROLE_NAMES_EN } from '@/server/search/parse-query';
 import { searchPassages } from '@/server/search/search';
 import {
-  BACKSTAGE_ROLE_NAMES_EN,
   cleanFilterValue,
   NATURE_NAMES_EN,
   QUERY_SYNTAX_DESCRIPTION_EN,
@@ -60,7 +60,7 @@ export const SearchInputSchema = z.object({
     .max(FILTER_MAX_CHARS)
     .nullish()
     .describe(
-      `Limit to one kind of source: ${NATURE_NAMES_EN.join(', ')}. Or to one part of the backstage of coding sessions, which search always returns too: ${Object.values(BACKSTAGE_ROLE_NAMES_EN).join(', ')}.`,
+      `Limit to one kind of source: ${NATURE_NAMES_EN.join(', ')}. Or to one part of the backstage of coding sessions: ${BACKSTAGE_ROLE_NAMES_EN.raisonnement} and ${BACKSTAGE_ROLE_NAMES_EN.sous_agent}, which search returns anyway, or ${BACKSTAGE_ROLE_NAMES_EN.appel_outil}, which it returns only when asked this way.`,
     ),
   depuis: z
     .string()

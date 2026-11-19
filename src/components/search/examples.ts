@@ -17,6 +17,10 @@ export const SYNTAX = [
     code: 'type:réunion',
     text: 'une sorte de source : ticket, page, mail, fichier, conversation…',
   },
+  {
+    code: 'type:appel_outil',
+    text: 'les appels d’outils des sessions de code, montrés seulement sur demande (sans autre type)',
+  },
   { code: 'depuis:7j', text: 'les 7 derniers jours (j), semaines (s) ou mois (m)' },
   { code: 'avant:2026-10-01', text: 'avant une date' },
   { code: '"phrase exacte"', text: 'les mots tels quels, dans cet ordre' },
@@ -34,6 +38,10 @@ export const SYNTAX_EN = [
   { code: 'from:julie', text: 'what someone wrote (their name or email)' },
   { code: 'tool:github', text: 'a single tool' },
   { code: 'type:meeting', text: 'a kind of source: ticket, page, email, file, conversation…' },
+  {
+    code: 'type:"tool call"',
+    text: 'the tool calls of coding sessions, shown only on request (with no other type)',
+  },
   { code: 'since:7d', text: 'the past 7 days (d), weeks (w), or months (mo)' },
   { code: 'before:2026-10-01', text: 'before a date' },
   { code: '"exact phrase"', text: 'these exact words, in this order' },

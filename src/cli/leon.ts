@@ -146,7 +146,8 @@ Commands:
                        current branch first
   thread [id]          Print a thread: its state, its sessions, PRs and linked sources (no id: the thread of the
                        current branch)
-  search <query>       Search Leon, within this repository only
+  search <query>       Search Leon, within this repository only. The tool calls of your sessions come only when the
+                       query asks for them: leon search 'type:"tool call" pnpm'
   versions <id>        List the readable versions of a thread's state, of a lesson, or of a note saved for this
                        project
       --read <n>           print version n instead (nothing is restored from your computer)

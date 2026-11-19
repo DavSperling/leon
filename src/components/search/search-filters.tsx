@@ -1,19 +1,18 @@
 import { TriangleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import { OFFERED_NATURES } from '@/capture/turn';
+import { type BackstageRole, OFFERED_NATURES } from '@/capture/turn';
 import { Tooltip } from '@/components/verre/ui/menu';
 import { Pill } from '@/components/verre/ui/pill';
 import { formatDate } from '@/lib/format';
 import { NATURE_LABELS_EN, SOURCE_KIND_LABELS } from '@/lib/labels';
-import { parseQuery } from '@/server/search/parse-query';
+import { BACKSTAGE_ROLE_NAMES_EN, parseQuery } from '@/server/search/parse-query';
 import { FilterMenu, type FilterMenuName, type FilterOption, FilterPerson } from './filter-menu';
 import {
   type CanonicalKey,
   canonicalKey,
   type FilterKey,
   filterTokens,
-  hasFilter,
   searchHref,
   withFilter,
   withoutFilter,
@@ -46,6 +45,19 @@ const KEY_LABELS_EN: Record<CanonicalKey, string> = {
   type: 'Type',
   depuis: 'Since',
   avant: 'Before',
+};
+
+// Les rôles des coulisses que `type:` lit aussi (parse-query.ts). Seuls les appels d'outils ont une entrée de menu : la
+// recherche ne les rend que demandés (décision d'Amos du 18/11) ; le raisonnement et les sous-agents viennent sans filtre.
+const ROLE_LABELS: Record<BackstageRole, string> = {
+  raisonnement: 'Raisonnement',
+  sous_agent: 'Sous-agent',
+  appel_outil: 'Appels d’outils',
+};
+const ROLE_LABELS_EN: Record<BackstageRole, string> = {
+  raisonnement: 'Reasoning',
+  sous_agent: 'Subagent',
+  appel_outil: 'Tool calls',
 };
 
 // Les unités de `depuis:` : françaises (7j, 2s, 3m) ou anglaises (7d, 2w, 3mo), que la recherche lit toutes.
@@ -93,7 +105,10 @@ function describeFilter(
     }
     case 'type': {
       const nature = filters.natures?.[0];
-      const labels = locale === 'en' ? NATURE_LABELS_EN : NATURE_LABELS;
+      const role = filters.roles?.[0];
+      const en = locale === 'en';
+      if (role) return { text: (en ? ROLE_LABELS_EN : ROLE_LABELS)[role], recognized: true };
+      const labels = en ? NATURE_LABELS_EN : NATURE_LABELS;
       return { text: nature ? labels[nature] : value, recognized: nature !== undefined };
     }
     case 'depuis':
@@ -140,19 +155,46 @@ const PERIODS_EN: Array<{ value: string; label: string }> = [
   { value: '12mo', label: 'Last 12 months' },
 ];
 
-// Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic.
-function option(q: string, key: FilterKey, value: string, label: string): FilterOption {
-  const active = hasFilter(q, key, value);
+// Ce que `parseQuery` lit dans la valeur d'un `type:` (la date ne compte pas pour lui).
+const typeFilters = (value: string) => parseQuery(`type:"${value}"`, new Date()).filters;
+
+// La nature ou le rôle d'un `type:`, quel que soit le nom écrit : leurs identifiants ne se croisent pas.
+function typeId(value: string): string | undefined {
+  const { natures, roles } = typeFilters(value);
+  return natures?.[0] ?? roles?.[0];
+}
+
+// La requête sans ses `type:` dont la valeur vérifie `test`.
+function withoutTypes(q: string, test: (value: string) => boolean): string {
+  return filterTokens(q)
+    .filter((token) => canonicalKey(token.key) === 'type' && test(token.value))
+    .reduce((rest, token) => withoutFilter(rest, token.key, token.value), q);
+}
+
+// Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic. Une
+// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser). Pour
+// `type:`, c'est le sens qui compte, pas le mot : `type:"tool call"` coche « Appels d’outils » sur le site français, et
+// décocher retire le filtre sous tous ses noms.
+function option(q: string, key: FilterKey, value: string, label: string, base = q): FilterOption {
+  const type = canonicalKey(key) === 'type' ? typeId(value) : undefined;
+  const removed = type
+    ? withoutTypes(q, (written) => typeId(written) === type)
+    : withoutFilter(q, key, value);
+  // Un filtre présent se retire toujours : la requête change.
+  const active = removed !== q;
   return {
     label,
     active,
-    href: searchHref({ q: active ? withoutFilter(q, key, value) : withFilter(q, key, value) }),
+    href: searchHref({ q: active ? removed : withFilter(base, key, value) }),
   };
 }
 
 // En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
 export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
   const en = locale === 'en';
+  // Une nature et les appels d'outils se croisent (un ticket n'a jamais d'appels) : chaque entrée retire l'autre sorte.
+  const noRoles = withoutTypes(q, (value) => typeFilters(value).roles !== undefined);
+  const noNatures = withoutTypes(q, (value) => typeFilters(value).natures !== undefined);
   return [
     {
       name: 'outil',
@@ -164,11 +206,28 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
     {
       name: 'type',
       label: 'Type',
-      options: OFFERED_NATURES.map((nature) =>
+      options: [
+        ...OFFERED_NATURES.map((nature) =>
+          en
+            ? option(
+                q,
+                'type',
+                NATURE_LABELS_EN[nature].toLowerCase(),
+                NATURE_LABELS_EN[nature],
+                noRoles,
+              )
+            : option(q, 'type', nature, NATURE_LABELS[nature], noRoles),
+        ),
         en
-          ? option(q, 'type', NATURE_LABELS_EN[nature].toLowerCase(), NATURE_LABELS_EN[nature])
-          : option(q, 'type', nature, NATURE_LABELS[nature]),
-      ),
+          ? option(
+              q,
+              'type',
+              BACKSTAGE_ROLE_NAMES_EN.appel_outil,
+              ROLE_LABELS_EN.appel_outil,
+              noNatures,
+            )
+          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil, noNatures),
+      ],
     },
     {
       name: 'periode',

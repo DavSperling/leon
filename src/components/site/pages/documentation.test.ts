@@ -363,6 +363,11 @@ describe('la page Documentation', () => {
         '<code>retirer-crochets</code>',
         'Claude Code',
         words('20,000', '20 000'),
+        // Décision d'Amos du 18/11 : les appels d'outils ne viennent dans la recherche que demandés.
+        words(
+          'it shows the tool calls only on request',
+          'elle ne montre les appels d’outils que sur demande',
+        ),
       ])
         expect(coulisses, term).toContain(term);
       const plain = (text: string) => text.replace(/’/g, "'").replace(/<\/?code>/g, '`');

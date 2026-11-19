@@ -89,10 +89,27 @@ describe('buildActiveChips', () => {
     });
     expect(chips('outil:claude_code')[0]).toMatchObject({ label: 'Outil : Claude Code' });
   });
+
+  // Décision d'Amos du 18/11 : `type:` lit aussi un rôle des coulisses, sous ses noms anglais et ses identifiants.
+  it('reconnaît un rôle des coulisses dans type:, en français et en anglais', () => {
+    expect(chips('type:appel_outil x')[0]).toMatchObject({
+      label: 'Type : Appels d’outils',
+      recognized: true,
+    });
+    expect(chips('type:"tool call"')[0]).toMatchObject({ label: 'Type : Appels d’outils' });
+    expect(chips('type:reasoning')[0]).toMatchObject({ label: 'Type : Raisonnement' });
+    expect(buildActiveChips('type:subagent', NOW, 'en')[0]).toMatchObject({
+      label: 'Type: Subagent',
+      recognized: true,
+    });
+    expect(buildActiveChips('type:appel_outil', NOW, 'en')[0]?.label).toBe('Type: Tool calls');
+  });
 });
 
 describe('buildMenus', () => {
   const menu = (q: string, name: string) => buildMenus(q).find((m) => m.name === name);
+  const type = (q: string, locale = 'fr') =>
+    buildMenus(q, locale).find((m) => m.name === 'type')?.options ?? [];
 
   it('propose les outils, les types et les périodes', () => {
     expect(buildMenus('x').map((m) => m.name)).toEqual(['outil', 'type', 'periode']);
@@ -121,6 +138,77 @@ describe('buildMenus', () => {
 
     expect(month).toMatchObject({ active: false, href: '/?q=depuis%3A30j+x' });
   });
+
+  // Décision d'Amos du 18/11 : les appels d'outils ne viennent que demandés ; le menu Type les demande.
+  it('propose les appels d’outils dans Type, qui écrit le filtre dans la requête', () => {
+    const fr = menu('pnpm', 'type')?.options.find((o) => o.label === 'Appels d’outils');
+    expect(fr).toEqual({
+      label: 'Appels d’outils',
+      active: false,
+      href: '/?q=type%3Aappel_outil+pnpm',
+    });
+    expect(menu('type:appel_outil pnpm', 'type')?.options.at(-1)).toMatchObject({
+      label: 'Appels d’outils',
+      active: true,
+      href: '/?q=pnpm',
+    });
+    const en = buildMenus('pnpm', 'en')
+      .find((m) => m.name === 'type')
+      ?.options.find((o) => o.label === 'Tool calls');
+    expect(en?.href).toBe('/?q=type%3A%22tool+call%22+pnpm');
+    expect(parseQuery(queryOf(en?.href ?? ''), NOW).filters).toEqual({ roles: ['appel_outil'] });
+  });
+
+  // Une nature et un rôle se croisent : `type:ticket type:appel_outil` ne rend jamais rien (un ticket n'a pas d'appels
+  // d'outils). Chaque entrée du menu Type retire donc l'autre sorte ; deux natures, elles, s'additionnent toujours.
+  it('ne croise jamais une nature et les appels d’outils', () => {
+    expect(type('type:ticket x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+x');
+    expect(type('type:ticket x', 'en').at(-1)?.href).toBe('/?q=type%3A%22tool+call%22+x');
+    expect(type('type:appel_outil x').find((o) => o.label === 'Ticket')).toMatchObject({
+      active: false,
+      href: '/?q=type%3Aticket+x',
+    });
+    expect(type('type:"tool call" x', 'en').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+x',
+    );
+    expect(type('type:ticket x').find((o) => o.label === 'Réunion')?.href).toBe(
+      '/?q=type%3Areunion+type%3Aticket+x',
+    );
+    // Toutes les natures partent, pas seulement la première ; décocher une nature garde le rôle.
+    expect(type('type:ticket type:reunion x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+x');
+    expect(type('type:ticket type:appel_outil x').find((o) => o.label === 'Ticket')).toMatchObject({
+      active: true,
+      href: '/?q=type%3Aappel_outil+x',
+    });
+    // Seuls les `type:` partent : `outil:note` n'est pas la nature « Note ».
+    expect(type('outil:note x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+outil%3Anote+x');
+    // Tout rôle part avec une nature (pas seulement les appels d'outils) ; un `type:` inconnu n'est ni l'un ni l'autre.
+    expect(type('type:raisonnement x').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+x',
+    );
+    expect(type('type:xyz x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+type%3Axyz+x');
+    expect(type('type:xyz x').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+type%3Axyz+x',
+    );
+  });
+
+  // Le sens compte, pas le mot : un lien venu de l'autre langue, ou l'aide de `leon search`, coche la bonne entrée, et
+  // la décocher retire le filtre sous tous ses noms.
+  it('coche une entrée de Type écrite sous un autre nom, et la retire', () => {
+    expect(type('type:"tool call" pnpm').at(-1)).toMatchObject({ active: true, href: '/?q=pnpm' });
+    expect(type('type:appel_outil pnpm', 'en').at(-1)).toMatchObject({
+      active: true,
+      href: '/?q=pnpm',
+    });
+    expect(type('type:"tool calls" type:appel_outil pnpm').at(-1)).toMatchObject({
+      active: true,
+      href: '/?q=pnpm',
+    });
+    expect(type('type:meeting x').find((o) => o.label === 'Réunion')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+  });
 });
 
 // Les menus, les exemples et l'aide de la page d'accueil écrivent des filtres (`outil:github`, `type:ticket`,
@@ -146,13 +234,17 @@ describe('les entrées des menus de filtre', () => {
         buildActiveChips(q, NOW).map((c) => c.recognized),
         where,
       ).toEqual([true]);
-      // Une seule valeur, rangée là où le menu l'annonce.
-      const expected = ({ outil: 'tools', type: 'natures', periode: 'since' } as const)[menu.name];
-      const found = (['tools', 'natures', 'since'] as const).filter(
+      // Une seule valeur, rangée là où le menu l'annonce : le menu Type écrit une nature, ou le rôle des appels d'outils.
+      const expected = (
+        { outil: ['tools'], type: ['natures', 'roles'], periode: ['since'] } as const
+      )[menu.name];
+      const found = (['tools', 'natures', 'roles', 'since'] as const).filter(
         (key) => parsed[key] !== undefined,
       );
-      expect(found, where).toEqual([expected]);
-      const value = parsed[expected];
+      expect(found, where).toHaveLength(1);
+      const [key] = found as [(typeof found)[number]];
+      expect(expected as readonly string[], where).toContain(key);
+      const value = parsed[key];
       expect(value instanceof Date ? 1 : value?.length, where).toBe(1);
     }
   });
@@ -168,8 +260,9 @@ describe('les entrées des menus de filtre', () => {
       expect(parseQuery(`type:${nature}`, NOW).filters.natures, nature).toEqual([nature]);
     }
     expect(outils?.options).toHaveLength(TOOL_KINDS.length);
-    // Le fil de travail est accepté par le filtre, pas proposé : la recherche ne le rend jamais (D35).
-    expect(types?.options).toHaveLength(OFFERED_NATURES.length);
+    // Le fil de travail est accepté par le filtre, pas proposé : la recherche ne le rend jamais (D35). Les appels
+    // d'outils, en plus des natures.
+    expect(types?.options).toHaveLength(OFFERED_NATURES.length + 1);
     expect(types?.options.map((option) => option.label)).not.toContain('Fil de travail');
   });
 
@@ -207,9 +300,16 @@ describe('les exemples et l’aide de la page d’accueil', () => {
       ).toBe(true);
       expect(item.text, item.code).toMatch(/\S/);
     }
-    // Les cinq filtres de la barre sont tous expliqués (la phrase exacte n'en est pas un).
+    // Les cinq filtres de la barre sont tous expliqués (la phrase exacte n'en est pas un) ; `type:` deux fois, pour une
+    // nature et pour les appels d'outils (18/11).
     const filters = SYNTAX.filter((item) => buildActiveChips(item.code, NOW).length === 1);
-    expect(filters).toHaveLength(FILTER_KEYS.length);
+    expect(filters).toHaveLength(FILTER_KEYS.length + 1);
+    for (const help of [SYNTAX, SYNTAX_EN]) {
+      const calls = help.filter((item) => parseQuery(item.code, NOW).filters.roles !== undefined);
+      expect(calls.map((item) => parseQuery(item.code, NOW).filters.roles)).toEqual([
+        ['appel_outil'],
+      ]);
+    }
   });
 });
 
@@ -287,6 +387,6 @@ describe('les filtres en anglais', () => {
       ).toBe(true);
     }
     const filters = SYNTAX_EN.filter((item) => buildActiveChips(item.code, NOW).length === 1);
-    expect(filters).toHaveLength(FILTER_KEYS.length);
+    expect(filters).toHaveLength(FILTER_KEYS.length + 1);
   });
 });

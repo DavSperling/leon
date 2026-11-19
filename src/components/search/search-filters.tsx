@@ -177,8 +177,7 @@ function withoutKind(q: string, key: CanonicalKey, test: (value: string) => bool
 // entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser). C'est le
 // sens qui compte, pas le mot : `type:"tool call"` coche « Appels d’outils » sur le site français, `outil:note` coche
 // « Note », et décocher retire le filtre sous tous ses noms. La période n'a qu'une valeur : elle est cochée si c'est la
-// date que la recherche retient (la dernière valide), et cocher ou décocher retire toutes les périodes (une période n'a
-// pas de sens à comparer : `meaning` ne rend rien, tous ses filtres partent).
+// date que la recherche retient (la dernière valide), et cocher ou décocher retire toutes les périodes.
 function option(
   q: string,
   key: FilterKey,
@@ -190,9 +189,14 @@ function option(
   const kind = canonicalKey(key);
   const single = kind === 'depuis';
   const sense = meaning(kind, value, now);
-  const removed = withoutKind(q, kind, (written) => meaning(kind, written, now) === sense);
-  const retained = parseQuery(q, now).filters.since?.getTime();
-  const active = single ? retained === filtersOf(kind, value, now).since?.getTime() : removed !== q;
+  const removed = withoutKind(
+    q,
+    kind,
+    (written) => single || meaning(kind, written, now) === sense,
+  );
+  const active = single
+    ? parseQuery(q, now).filters.since?.getTime() === filtersOf(kind, value, now).since?.getTime()
+    : removed !== q;
   return {
     label,
     active,

@@ -365,8 +365,8 @@ describe('la page Documentation', () => {
         words('20,000', '20 000'),
         // Décision d'Amos du 18/11 : les appels d'outils ne viennent dans la recherche que demandés.
         words(
-          'it shows the tool calls only when you ask for them',
-          'elle ne montre les appels d’outils que si vous les demandez',
+          'it shows the tool calls only on request',
+          'elle ne montre les appels d’outils que sur demande',
         ),
       ])
         expect(coulisses, term).toContain(term);

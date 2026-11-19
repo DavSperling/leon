@@ -17,7 +17,7 @@
 //   node mesure-ancrage.mjs bilan        tokens, durée et tours, par tâche et par cas
 //   node mesure-ancrage.mjs aveugle      la page de notation, réponses mélangées, sans dire leur cas
 import { spawn } from 'node:child_process';
-import { randomInt } from 'node:crypto';
+import { createHash, randomInt } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -66,7 +66,11 @@ const GIT_SUR = [
   '-c',
   'core.attributesFile=/dev/null',
 ];
-const gitSur = (args, cwd) => run('git', [...GIT_SUR, ...args], { cwd, env: { PATH: process.env.PATH ?? '', HOME } });
+const ENV_GIT = { PATH: process.env.PATH ?? '', HOME, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
+const gitSur = (args, cwd) => run('git', [...GIT_SUR, ...args], { cwd, env: ENV_GIT });
+// L'empreinte du .git/config écrit par preparer : un passage qui l'a changé n'a pas son patch relevé par git.
+const empreinteConfig = async (dir) =>
+  createHash('sha256').update(await readFile(join(dir, '.git', 'config'))).digest('hex');
 
 // L'environnement des passages : sans LEON_URL ni LEON_TOKEN, qui feraient passer la CLI par un autre compte que la
 // connexion de l'ordinateur (~/.leon/connexion.json), et sans CLAUDE_CONFIG_DIR.
@@ -121,7 +125,6 @@ function permis(cas) {
     'git diff:*',
     'git log:*',
     'git show:*',
-    'git grep:*',
     'git blame:*',
     'ls:*',
     'wc:*',
@@ -148,7 +151,9 @@ function refuses() {
     ...['Edit', 'Write', 'MultiEdit'].map((outil) => `${outil}(**/.git/**)`),
     // Les formes de git qui lisent hors du dépôt, et sa configuration.
     'Bash(git diff --no-index:*)',
-    'Bash(git grep --no-index:*)',
+    'Bash(git grep:*)',
+    'Bash(git * --output*)',
+    'Bash(git * -O*)',
     'Bash(git config:*)',
   ];
 }
@@ -196,6 +201,7 @@ async function preparer(tache, cas, commit) {
     const r = await run('pnpm', ['install', '--frozen-lockfile', '--silent'], { cwd: dir });
     if (r.code !== 0) throw new Error(`pnpm install : ${r.stderr.trim().slice(0, 300)}`);
   }
+  await writeFile(join(BASE, 'clones', `${tache.id}-${cas}.config.sha256`), await empreinteConfig(dir));
   return dir;
 }
 
@@ -246,6 +252,8 @@ async function passage(tache, cas, commit, plan) {
   } catch {
     // Une sortie qui n'est pas du JSON (délai dépassé, erreur) : gardée telle quelle dans le méta.
   }
+  const attendue = await readFile(join(BASE, 'clones', `${tache.id}-${cas}.config.sha256`), 'utf8');
+  if ((await empreinteConfig(dir)) !== attendue) throw new Error('.git/config modifié pendant le passage : patch non relevé');
   await gitSur(['add', '-A'], dir);
   const patch = (await gitSur(['diff', '--cached', '--no-ext-diff', '--no-textconv'], dir)).stdout;
   const meta = {
@@ -428,7 +436,7 @@ const profil = (dir) =>
     '(allow default)',
     '(deny network*)',
     '(allow network* (local ip "localhost:*") (remote ip "localhost:*"))',
-    `(deny file-read* ${['.leon', '.ssh', '.aws', '.claude', '.claude.json', '.config/gh', '.docker'].map((p) => `(subpath "${join(HOME, p)}")`).join(' ')})`,
+    `(deny file-read* ${[...['.leon', '.ssh', '.aws', '.claude', '.claude.json', '.config', '.docker', '.gitconfig', '.npmrc', 'leon', 'leon-sauvegardes', 'Library/Keychains', 'Library/Application Support'].map((p) => `(subpath "${join(HOME, p)}")`), '(regex #"/\\.env")'].join(' ')})`,
     '(deny file-write*)',
     `(allow file-write* (subpath "${dir}") (subpath "/private/tmp") (subpath "/private/var/folders") (literal "/dev/null") (literal "/dev/tty"))`,
   ].join('');

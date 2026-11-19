@@ -6,6 +6,8 @@ Annexes : huit rapports dans [`annexes/`](annexes/). [1 marché](annexes/01-marc
 
 Légende, reprise des annexes : **[OFF]** page de l'éditeur ou de l'organisme ; **[TIERS]** presse, blog, comparatif ; **[VENDEUR]** chiffre déclaré par le vendeur ; **[DED]** déduction d'un agent de recherche ; **[code]** et **[doc]** vu dans notre dépôt. Presque aucun chiffre externe n'a été lu sur sa page d'origine : voir « Méthode et limites » avant d'en citer un.
 
+> **Mise à jour du 19/11, après lecture par David.** Il ne retient pas la prudence de cette synthèse (quatre recettes, en brouillon). La direction choisie est un système d'agents qui agissent, pour tous les services : voir [`systeme-complet.md`](systeme-complet.md). Les constats et les sources ci-dessous restent valables.
+
 ## La question
 
 Leon est une mémoire unifiée pour PME françaises de 20 à 200 salariés. Elle n'a aucun client payant et se vend mal seule. Faut-il y ajouter des agents IA ? Y a-t-il un marché, sont-ils utiles, et que faut-il construire en premier, à quel prix, avec quels risques ?

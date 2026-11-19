@@ -161,6 +161,20 @@ describe('chatgptParser.parse, format delta v1', () => {
     });
   });
 
+  it('dans un lot, une opération sans o reprend celle de la précédente du même lot', async () => {
+    const sseText = toSse([
+      add(message('msg-a', 'en_attente', textOf('Réponse'))),
+      {
+        o: 'patch',
+        v: [
+          { p: '/message/status', o: 'replace', v: 'in_progress' },
+          { p: '/message/status', v: 'finished_successfully' },
+        ],
+      },
+    ]);
+    expect((await exchangeOf(parse(sseText))).assistant.text).toBe('Réponse');
+  });
+
   it('lit en entier un texte en plusieurs jetons : append explicite, puis formes courtes', async () => {
     const sseText = deltaStream(
       { p: '/message/content/parts/0', o: 'append', v: 'Dix jours ' },
@@ -201,6 +215,7 @@ describe('chatgptParser.parse, format delta v1', () => {
       'un message adressé à un outil',
       message('appel', 'finished_successfully', { recipient: 'web.run', ...textOf('OUTIL-CACHE') }),
     ],
+    ['un message texte terminé vide', message('vide', 'finished_successfully')],
   ])('prend le message final même suivi d’%s', async (_label, later) => {
     const sseText = toSse([
       add(message('final', 'finished_successfully', textOf('Réponse finale'))),
@@ -299,6 +314,15 @@ describe('chatgptParser.parse, requêtes non captées', () => {
       b.messages = [];
     });
     expect(await parse(deltaSse, body)).toBeNull();
+  });
+
+  it('renvoie null pour une régénération même si le flux est coupé', async () => {
+    const body = withBody((b) => {
+      b.action = 'variant';
+      b.messages = [];
+    });
+    const cut = toSse([add(message('msg-a', 'in_progress'))]).replace('data: [DONE]\n\n', '');
+    expect(await parse(cut, body)).toBeNull();
   });
 
   it('renvoie null pour un message utilisateur sans texte', async () => {

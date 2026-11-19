@@ -26,16 +26,16 @@ const fakeParser = (parse?: SiteParser['parse']): SiteParser => ({
   parse: parse ?? (async ({ requestBody, sseText }) => exchangeFrom(requestBody, sseText)),
 });
 
-// Flux livré morceau par morceau, comme un vrai SSE. error : levée un peu après le dernier morceau, comme quand la
-// page de ChatGPT annule son appel une fois le flux reçu.
-function sseStream(chunks: string[], error?: Error): ReadableStream<Uint8Array> {
+// Flux livré morceau par morceau, comme un vrai SSE (un morceau en octets peut couper un caractère). error : levée un
+// peu après le dernier morceau, comme quand la page de ChatGPT annule son appel une fois le flux reçu.
+function sseStream(chunks: Array<string | Uint8Array>, error?: Error): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
   let next = 0;
   return new ReadableStream({
     async pull(controller) {
       const chunk = chunks[next++];
       if (chunk !== undefined) {
-        controller.enqueue(encoder.encode(chunk));
+        controller.enqueue(typeof chunk === 'string' ? encoder.encode(chunk) : chunk);
       } else if (error) {
         await new Promise((resolve) => setTimeout(resolve, 5));
         controller.error(error);
@@ -46,7 +46,12 @@ function sseStream(chunks: string[], error?: Error): ReadableStream<Uint8Array> 
   });
 }
 
-type FakeResponse = { status?: number; contentType?: string; chunks?: string[]; error?: Error };
+type FakeResponse = {
+  status?: number;
+  contentType?: string;
+  chunks?: Array<string | Uint8Array>;
+  error?: Error;
+};
 const sseResponse = (init: FakeResponse = {}) =>
   new Response(sseStream(init.chunks ?? ['data: un\n\n', 'data: deux\n\n'], init.error), {
     status: init.status ?? 200,
@@ -127,6 +132,18 @@ describe('installFetchInterceptor', () => {
     );
   });
 
+  it('recolle un caractère coupé entre deux morceaux du flux', async () => {
+    const bytes = new TextEncoder().encode('data: Délais\n\n');
+    // « data: D » fait 7 octets : la coupure tombe entre les deux octets du « é ».
+    const { target, emit } = setup(() =>
+      sseResponse({ chunks: [bytes.subarray(0, 8), bytes.subarray(8)] }),
+    );
+    await target.fetch(COMPLETION, { method: 'POST', body: '{}' });
+    await vi.waitFor(() =>
+      expect(emit).toHaveBeenCalledWith({ exchange: exchangeFrom('{}', 'data: Délais\n\n') }),
+    );
+  });
+
   it("passe à l'analyseur ce qui est arrivé quand le flux est coupé", async () => {
     const parse = vi.fn(fakeParser().parse);
     const { target } = setup(
@@ -143,6 +160,7 @@ describe('installFetchInterceptor', () => {
 
   it("rejette comme incomplet, sans l'analyser, un flux plus gros que la borne", async () => {
     const parse = vi.fn(fakeParser().parse);
+    const cancel = vi.spyOn(ReadableStreamDefaultReader.prototype, 'cancel');
     const half = 'a'.repeat(STREAM_MAX_CHARS / 2 + 1);
     const { target, emit } = setup(
       () => sseResponse({ chunks: [half, half, 'data: fin\n\n'] }),
@@ -154,6 +172,9 @@ describe('installFetchInterceptor', () => {
       expect(emit).toHaveBeenCalledWith({ rejection: { site: 'claude_ai', reason: 'incomplet' } }),
     );
     expect(parse).not.toHaveBeenCalled();
+    // La copie est annulée : sinon elle garderait en file tout ce que la page lit encore.
+    expect(cancel).toHaveBeenCalled();
+    cancel.mockRestore();
   });
 
   it('ne casse pas la page quand le parseur lève', async () => {

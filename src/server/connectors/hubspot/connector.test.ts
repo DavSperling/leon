@@ -26,7 +26,8 @@ const OWNERS = `${ROOT}/crm/owners/2026-03`;
 const ACCOUNT = `${ROOT}/account-info/2026-03/details`;
 const TOKEN = 'pat-eu1-JETONDETEST-0123456789';
 const OAUTH_TOKEN = 'CJoauthJETONDETEST0123456789';
-// Deux façons de se brancher : la clé collée (jeton d'appli privée) ou le bouton (jeton OAuth).
+// Deux façons de se brancher : la clé collée (clé de service ou jeton d'appli privée, tous deux en
+// « pat-… ») ou le bouton (jeton OAuth).
 const config = { authMode: 'key' as const, token: TOKEN };
 const oauthConfig = {
   authMode: 'oauth' as const,
@@ -136,7 +137,7 @@ const bodyOf = (call: { body: unknown } | undefined) => call?.body as Record<str
 describe('hubspot : configuration', () => {
   const schema = hubspotConnector.configSchema;
 
-  it('accepte un jeton d’appli privée, sans les espaces autour, et le prend pour une clé', () => {
+  it('accepte une clé de service ou un jeton d’appli privée, sans les espaces autour, et le prend pour une clé', () => {
     expect(schema.parse({ token: `  ${TOKEN} ` })).toEqual({ authMode: 'key', token: TOKEN });
   });
 
@@ -907,7 +908,18 @@ describe('hubspot : description du bouton', () => {
     expect(entry?.oauthHelp).toMatch(/lecture|lire/);
     // La clé collée reste acceptée, avec son mode d'emploi.
     expect(entry?.keyAccepted ?? true).toBe(true);
-    expect(entry?.keyHelp).toMatch(/Applis héritées/);
+  });
+
+  it('mène un nouveau client à une clé de service, plus à une appli privée qu’il ne peut plus créer', () => {
+    const french = listCatalog('fr').find((item) => item.id === 'hubspot');
+    const english = listCatalog('en').find((item) => item.id === 'hubspot');
+    expect(french?.keyHelp).toMatch(/Clés de service/);
+    expect(english?.keyHelp).toMatch(/Service Keys/);
+    for (const entry of [french, english]) {
+      expect(entry?.keyHelp).not.toMatch(/Legacy apps/);
+      expect(entry?.keyHelp).toMatch(/sales-email-read/);
+      expect(entry?.docsUrl).toMatch(/account-service-keys$/);
+    }
   });
 });
 

@@ -90,20 +90,37 @@ export async function repoRootFor(cwd: string, git: GitRunner): Promise<string |
   return inside === 'true' ? resolve(cwd, cdup) : null;
 }
 
-// La clé du projet d'un dossier (D9) : le dépôt GitHub de son remote origin (`github.com/<propriétaire>/<dépôt>`,
-// en minuscules), sinon le dossier lui-même (`dossier:` et 16 hexadécimaux du sha256 de son chemin absolu).
-// Ni l'adresse brute du remote ni ce qu'elle contient d'autre que le propriétaire et le dépôt n'en sortent.
-export async function projectKeyFor(cwd: string, git: GitRunner): Promise<string> {
+// La clé GitHub du remote origin d'un dossier, ou null. Ni l'adresse brute du remote ni ce qu'elle contient d'autre
+// que le propriétaire et le dépôt n'en sortent.
+async function githubKeyFor(cwd: string, git: GitRunner): Promise<string | null> {
   let remote: string | null = null;
   try {
     remote = await git(['remote', 'get-url', 'origin'], cwd);
   } catch {
-    // git absent ou en échec : on passe à la clé du dossier. Le message de l'erreur peut citer l'adresse, on l'ignore.
+    // git absent ou en échec : pas de clé GitHub. Le message de l'erreur peut citer l'adresse, on l'ignore.
   }
   const ownerAndRepo = remote === null ? null : githubOwnerAndRepo(remote);
   const github = ownerAndRepo === null ? null : `github.com/${ownerAndRepo}`;
-  if (github !== null && github.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(github)) {
-    return github;
-  }
-  return `dossier:${createHash('sha256').update(resolve(cwd)).digest('hex').slice(0, 16)}`;
+  return github !== null && github.length <= KEY_MAX_CHARS && PROJECT_KEY_PATTERN.test(github)
+    ? github
+    : null;
+}
+
+// Un worktree rangé dans son clone (`<clone>/.claude/worktrees/<nom>`, le flux de CLAUDE.md et de Claude Code), ou
+// un de ses sous-dossiers : la première occurrence donne le clone.
+const CLONE_WORKTREE = /^(.+?)[\\/]\.claude[\\/]worktrees[\\/][^\\/]+(?:[\\/].*)?$/;
+
+// La clé du projet d'un dossier (D9) : le dépôt GitHub de son remote origin (`github.com/<propriétaire>/<dépôt>`,
+// en minuscules), sinon le dossier lui-même (`dossier:` et 16 hexadécimaux du sha256 de son chemin absolu).
+// Un worktree supprimé depuis (git ne le lit plus) prend le dépôt du clone qui le contenait : sinon, ses sessions
+// importées perdent leur dépôt et sortent des fils et de la recherche du projet.
+// shortcut: un autre dépôt cloné sous .claude/worktrees, puis supprimé, prendrait le dépôt du clone parent ; lire le
+// `gitdir` du worktree dans le clone (.git/worktrees) le jour où ce cas se présente.
+export async function projectKeyFor(cwd: string, git: GitRunner): Promise<string> {
+  const path = resolve(cwd);
+  const own = await githubKeyFor(path, git);
+  if (own !== null) return own;
+  const clone = CLONE_WORKTREE.exec(path)?.[1];
+  const inherited = clone === undefined ? null : await githubKeyFor(clone, git);
+  return inherited ?? `dossier:${createHash('sha256').update(path).digest('hex').slice(0, 16)}`;
 }

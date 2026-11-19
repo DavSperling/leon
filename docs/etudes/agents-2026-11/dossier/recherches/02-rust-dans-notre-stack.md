@@ -2,7 +2,7 @@
 
 État des lieux au 19 novembre 2026. Note de recherche pour le dossier de conception « agents ».
 
-> PREMIER JET EN COURS. Les versions ci-dessous sont vérifiées sur crates.io et npm le 19 novembre 2026. Les sections suivantes sont complétées au fil de la recherche.
+> Version finale. Les versions des sections 1.1 et 1.2 sont vérifiées sur crates.io et npm le 19 novembre 2026.
 
 ## Comment lire cette note
 
@@ -112,20 +112,362 @@ Les versions viennent de l'API de crates.io (`https://crates.io/api/v1/crates/NO
 | json-schema-to-typescript | 16.0.0 | 2026-08-28 | >= 16 |
 | zod | 4.6.7 | 2026-10-12 | n.c. |
 
-## Notes brutes de recherche (provisoire, sera réécrit en sections)
+## 2. Les trois voies pour introduire Rust
 
-- Rust stable : 1.100.0, sorti le 12 novembre 2026 (tiers : https://endoflife.date/rust ; https://en.wikipedia.org/wiki/Rust_(programming_language)). Attention aux scripts qui comparent « 1.100 » et « 1.99 » comme du texte (tiers : https://github.com/CyberNative-AI/what-breaks-next/releases/tag/2026-11-12-rust-1-100).
-- sqlx 0.9.0 sorti le 2026-05-06, 0.9.1 le 2026-11-18. Nouveautés PgListener : `next_buffered()`, reconnexion immédiate dans `try_recv`, `impl Acquire`. Cassures : `sqlx.toml` par crate, trait `Migrate`, macros Postgres (nullabilité). 0.9.1 : `PGHOSTADDR` ne remplace plus `host` (officiel : https://docs.rs/crate/sqlx/latest/source/CHANGELOG.md ; https://github.com/launchbadge/sqlx/blob/main/CHANGELOG.md).
-- napi-rs v3 : cible `wasm32-wasip1-threads` en repli WebAssembly (officiel : https://napi.rs/blog/announce-v3 ; https://napi.rs/docs/concepts/webassembly).
-- Next.js 16 + Turbopack + sortie `standalone` : bogues signalés avec `serverExternalPackages` (paquets absents de `.next/standalone/node_modules`) en 16.1.x et 16.2.0 (officiel, tickets : https://github.com/vercel/next.js/issues/88844 ; https://github.com/vercel/next.js/issues/91654).
-- pg-boss : la doc dit qu'on peut écrire dans les tables internes depuis un autre client ou un trigger (`INSERT` ou `COPY`), seul `name` est obligatoire, la file doit exister (`SELECT pgboss.create_queue(name, options)`) (officiel : https://pgboss.io/sql/job-table ; https://github.com/timgit/pg-boss/releases/tag/10.0.0).
-- Railway : réseau privé `<service>.railway.internal`, IPv4 et IPv6 pour les environnements créés après le 16 octobre 2025, écouter sur `::` (officiel : https://docs.railway.com/private-networking). Tarifs : 10 $ par Go de RAM et par mois, 20 $ par vCPU et par mois (officiel : https://docs.railway.com/pricing/plans).
-- Railway : « Config as Code » (`railway.toml`, `railway.json`) est déprécié, lu jusqu'au 2026-12-01 pour les services existants ; remplaçant : `.railway/railway.ts` appliqué par `railway config apply` (officiel : https://docs.railway.com/reference/config-as-code).
-- rmcp : SDK Rust officiel de MCP, version 3.x, implémente la spécification MCP 2026-07-28, transport `transport-streamable-http-server`, service Tower à monter sur axum (officiel : https://github.com/modelcontextprotocol/rust-sdk).
-- Anthropic : pas de SDK Rust officiel. Appel HTTP direct : `POST https://api.anthropic.com/v1/messages`, en-têtes `x-api-key`, `anthropic-version: 2026-10-21`, `content-type: application/json`. Comptage : `POST /v1/messages/count_tokens`. Ne pas utiliser tiktoken pour Claude.
-- wasmtime : 36 est une version LTS (jusqu'en août 2027) ; WASI 0.3 activé par défaut à partir de wasmtime 46 (officiel : https://wasi.dev/roadmap ; https://github.com/bytecodealliance/wasmtime/releases).
-- apalis 1.0.0 sorti en octobre 2026 (officiel : https://apalis.dev/blog/introducing-v1-2026-10-16) ; `apalis-postgres` dépend de sqlx 0.9.
-- graphile_worker (Rust) : « mostly compatible » avec la version Node, même schéma, `graphile_worker.add_job` en SQL (officiel : https://docs.rs/graphile_worker).
-- pgmq : installation « SQL seul » possible sans extension (utile sur RDS) (officiel : https://github.com/pgmq/pgmq/blob/main/INSTALLATION.md).
+### 2.1 Comparaison
 
-(Suite de la note en cours de rédaction.)
+| Critère | Module natif (napi-rs) | WebAssembly | Service séparé (axum + tokio) |
+|---|---|---|---|
+| Où ça tourne | Dans le processus Node | Dans le processus Node (ou ailleurs) | Autre processus, autre conteneur |
+| Appels depuis TS | Directs, rapides, async possible | Directs, copie mémoire en entrée et sortie | HTTP ou gRPC, réseau privé |
+| E/S réseau, Postgres | Possible mais mal adapté (tokio dans Node) | Quasi impossible (pas de sockets en général) | Natif, c'est son métier |
+| Build | `napi build` par plateforme (gnu, musl) | `wasm32-wasip1-threads` ou `wasm-bindgen` | Dockerfile Rust, indépendant |
+| Risque Next.js | Réel : traçage `standalone`, `serverExternalPackages` | Faible | Nul (aucun lien avec le bundler) |
+| Panne | Un plantage natif tue le processus Node | Isolé (bac à sable) | Isolé, redémarrage séparé |
+| Bon pour | Calcul pur : découpage, comptage de jetons, regex | Code non fiable, greffons | Passerelle, workers, tout ce qui fait des E/S |
+
+(déduit, à partir des sources ci-dessous.)
+
+### 2.2 Module natif avec napi-rs
+
+- Versions : crate `napi` 3.16.2, `napi-derive` 3.7.1, `napi-build` 2.6.0 ; CLI `@napi-rs/cli` 3.10.12 (officiel, registres, 19 nov. 2026).
+- napi-rs v3 ajoute la cible `wasm32-wasip1-threads` : le même code peut servir de repli WebAssembly quand le binaire natif manque (officiel : https://napi.rs/blog/announce-v3 ; https://napi.rs/docs/concepts/webassembly).
+- Le chargeur généré détecte plateforme, architecture et libc. Ordre : fichier local `addon.linux-x64-gnu.node`, puis paquet optionnel `@scope/addon-linux-x64-gnu`, puis WASI (officiel : https://napi.rs/docs/more/integrations).
+- Next.js : à utiliser seulement en runtime Node (pas Edge, pas composant client). Déclarer le paquet dans `serverExternalPackages` (officiel : https://napi.rs/docs/more/integrations).
+- Piège Next.js 16 : avec Turbopack et la sortie `standalone`, des paquets externalisés manquent dans `.next/standalone/node_modules` (officiel, tickets : https://github.com/vercel/next.js/issues/88844 ; https://github.com/vercel/next.js/issues/91654, vus en 16.1.x et 16.2.0). Je n'ai pas vérifié l'état en 16.4.6. Parade : `outputFileTracingIncludes` pour copier le paquet de la plateforme (tiers : https://segar.me/blog/posts/pdf_extraction.html, cas de `@napi-rs/canvas`).
+- Conteneur : choisir la libc. Image Debian (`node:24-bookworm-slim`) = cible `x86_64-unknown-linux-gnu`. Image Alpine = musl, cible séparée. Construire la bonne, pas les deux, en prod.
+- Construction : `napi build --platform --release --use-napi-cross` (glibc) ou `-x` (musl). Les images Docker `ghcr.io/napi-rs/napi-rs/nodejs-rust` sont dépréciées (officiel : https://napi.rs/docs/cross-build ; https://napi.rs/docs/cli/build).
+- Node 24 : le CLI exige `^20.17 || ^22.13 || >=23.5`, donc compatible (officiel, npm).
+- Verdict : utile seulement pour du calcul pur appelé en boucle depuis TS. Pas pour la passerelle ni les workers. Coût caché : binaire natif à publier et à tracer dans le build Next.js.
+
+### 2.3 WebAssembly
+
+- `wasm-bindgen` 0.2.130, `wasm-pack` 0.15.1 (officiel, registres). Bon pour du code pur sans E/S.
+- Pas de gain évident sur Node : on a déjà V8, et la copie des chaînes entre JS et Wasm coûte.
+- Vrai intérêt : exécuter du code non fiable (voir 3.9, wasmtime) ou des greffons (extism 1.41.0).
+- Verdict : pas de module Wasm « maison » au départ.
+
+### 2.4 Service séparé (axum + tokio)
+
+- Pile mûre : axum 0.8.9, tokio 1.54.1, tower 0.5.3, tower-http 0.7.1, hyper 1.12.0 (officiel, crates.io).
+- Aucun lien avec le bundler Next.js. Déploiement indépendant. Mémoire et plantages isolés.
+- Coût : un service de plus sur Railway, un contrat d'interface à tenir, une chaîne de build de plus.
+- Verdict : c'est la seule voie adaptée à la passerelle de webhooks et au moteur d'envoi (E/S, longue durée, concurrence).
+
+## 3. Crates recommandées par besoin
+
+Toutes les versions : voir tableau 1.1.
+
+### 3.1 Passerelle de webhooks
+
+- `axum` 0.8.9, `tower` 0.5.3, `tower-http` 0.7.1 (limite de taille, timeout, trace, compression).
+- Signature : `hmac` 0.13.0 + `sha2` 0.11.1, comparaison par `verify_slice` (temps constant). `subtle` 2.6.1 (dernière version 2024-06) si comparaison manuelle.
+- Règle d'or : prendre le corps brut (`Bytes`) avant tout `Json<T>`, vérifier, puis parser. Les extracteurs qui re-sérialisent changent les octets (tiers : https://www.svix.com/guides/receiving/receive-webhooks-with-rust-axum/ ; https://guard-api.com/guides/how-to-fix-insecure-webhooks-in-axum/).
+- Piège : un exemple compare des chaînes hex avec `!=`, pas en temps constant (tiers : https://dev.to/gokulnh/webhook-signature-verification-in-node-python-and-rust-the-raw-body-trap-l4c). À éviter.
+- Décoder le hex de l'en-tête en octets avant `verify_slice` (tiers : https://oneuptime.com/blog/post/2026-01-25-webhook-handlers-signature-verification-rust/view).
+- Ajouter une fenêtre de temps (horodatage signé) contre le rejeu. Chaque éditeur a son format : à lire dans la doc de chaque connecteur.
+- Limite de débit entrante : `tower_governor` 0.8.0 (dernière publication août 2025).
+- Principe : la passerelle vérifie, écrit une ligne dans une boîte d'envoi (3.3), répond 2xx vite. Le traitement se fait ailleurs.
+
+### 3.2 Postgres
+
+| Crate | Version | Remarque |
+|---|---|---|
+| sqlx | 0.9.1 (2026-11-18) | Async, requêtes vérifiées à la compilation, `PgListener`. Rust 1.94 minimum. |
+| tokio-postgres | 0.7.18 | Plus bas niveau, léger. |
+| deadpool-postgres | 0.14.2 | Pool pour tokio-postgres. |
+| pgvector | 0.4.2 | Types `Vector` pour sqlx et tokio-postgres. |
+
+- sqlx 0.9 : `PgListener` gagne `next_buffered()` et la reconnexion immédiate dans `try_recv` ; cassures : `sqlx.toml` par crate, trait `Migrate`, macros Postgres (nullabilité). 0.9.1 : `PGHOSTADDR` ne remplace plus `host` (officiel : https://github.com/launchbadge/sqlx/blob/main/CHANGELOG.md).
+- LISTEN/NOTIFY : `PgListener::connect_with(&pool)` puis `listen("canal")` et `recv()`. Connexion dédiée, hors pool, directe (pas via un pooleur en mode transaction). À vérifier. Les notifications se perdent pendant une coupure : toujours relire la table au redémarrage.
+- Sécurité par ligne (RLS) et variables de session : le pool réutilise les connexions. Faire `set_config('app.tenant_id', $1, true)` (équivalent à `SET LOCAL`) et les requêtes protégées dans une seule transaction (`pool.begin()`), jamais en appels séparés. Un `set_config(..., false)` oublié fuit vers la requête suivante. Le rôle applicatif ne doit être ni propriétaire des tables ni `BYPASSRLS`, ou alors `FORCE ROW LEVEL SECURITY` (tiers, général, pas propre à sqlx : https://patotski.com/blog/postgres-row-level-security-multi-tenant/ ; https://encore.dev/articles/postgres-row-level-security-multi-tenant). Je n'ai pas trouvé d'exemple sqlx précis : déduit.
+- Recommandation : sqlx 0.9.1. Compatible avec le même schéma que Drizzle ; les migrations restent côté Drizzle (une seule source), sqlx n'y touche pas. Pour les macros `query!`, prévoir le mode hors ligne (`cargo sqlx prepare`, fichiers `.sqlx/` commités) pour que le build Docker n'ait pas besoin de base. À vérifier.
+
+### 3.3 Files de tâches sur Postgres
+
+| Option | Version | Verdict |
+|---|---|---|
+| pgmq (client) | 0.33.7 (0.34.0-alpha.7) | Installation SQL seule possible sans extension, donc compatible RDS (officiel : https://github.com/pgmq/pgmq/blob/main/INSTALLATION.md). File simple, sans planification riche. |
+| apalis + apalis-postgres | 1.2.0 / 1.1.1 | 1.0 sorti le 2026-10-16 (officiel : https://apalis.dev/blog/introducing-v1-2026-10-16). Dépend de sqlx 0.9. Récent. |
+| underway | 0.2.0 (2025-07) | Peu actif. À éviter. |
+| graphile_worker | 0.14.2 (2026-11-10) | « Mostly compatible » avec la version Node, même schéma, `graphile_worker.add_job` en SQL (officiel : https://docs.rs/graphile_worker). Autre système que pg-boss. |
+| sqlxmq | 0.6.0 (2025-05) | Peu actif. |
+| pgboss (client Rust) | 0.1.0-rc5 | Pas de stable, 88 téléchargements. Non. |
+
+- Écrire dans pg-boss depuis Rust : oui, c'est permis. La doc dit qu'un autre client ou un trigger peut faire `INSERT` ou `COPY` dans la table des jobs ; seul `name` est obligatoire ; la file doit exister (`SELECT pgboss.create_queue(name, options)`) (officiel : https://pgboss.io/sql/job-table ; https://github.com/timgit/pg-boss/releases/tag/10.0.0). pg-boss 12.38.2 est la version actuelle.
+- Risque : le schéma interne de pg-boss change entre versions majeures. Une écriture directe lie Rust à une version précise.
+- Recommandation : une table de boîte d'envoi à nous (`outbox`), avec clé d'idempotence unique. Rust y écrit dans la même transaction que le reste. Un petit relais côté Node (ou un trigger) la transforme en job pg-boss. On garde ainsi un contrat à nous, stable. Déduit.
+
+### 3.4 HTTP sortant
+
+- `reqwest` 0.13.5 (rustls par défaut à vérifier), `reqwest-middleware` 0.5.2, `reqwest-retry` 0.9.1.
+- Débit : `governor` 0.10.4 (algorithme GCRA), un limiteur par fournisseur et par compte. Utile pour respecter les quotas des API d'outils.
+- Reprises : respecter `Retry-After`. Prévoir des timeouts explicites.
+
+### 3.5 Découpage de texte et comptage de jetons
+
+- `text-splitter` 0.33.3 (Rust 1.90) : découpe par caractères, jetons ou Markdown.
+- `tokenizers` 0.23.2 : Hugging Face. `tiktoken-rs` 0.12.1 : jetons OpenAI.
+- Pour Claude, ne pas utiliser tiktoken : le comptage exact passe par `POST /v1/messages/count_tokens` de l'API Anthropic. Dans le code, utiliser une estimation, puis l'API quand c'est critique.
+- Ce besoin existe aussi en TS. Gain de Rust : vitesse sur gros volumes. À mesurer avant.
+
+### 3.6 Secrets et motifs
+
+- `regex` 1.13.2 (temps linéaire, pas de rétroparcours catastrophique), `aho-corasick` 1.1.5 (nombreux mots-clés à la fois).
+- Pour un détecteur de secrets : un `RegexSet` de motifs connus (préfixes de clés), plus entropie. Pas de crate dédiée trouvée : non trouvé.
+- Intérêt réel : la sécurité face aux regex malveillantes (ReDoS), contrairement aux regex JavaScript.
+
+### 3.7 Plein texte
+
+- `tantivy` 0.27.0 (2026-10-17). Moteur embarqué, index sur disque.
+- Sur Railway, un index sur disque demande un volume, et la source de vérité reste Postgres. Postgres a déjà `tsvector`. Non recommandé au départ.
+
+### 3.8 Vecteurs
+
+- `pgvector` 0.4.2 : fournit `pgvector::Vector` pour sqlx. Suffit si on reste sur Postgres.
+- `qdrant-client` 1.20.0 : seulement si on adopte Qdrant. Non recommandé : une base de plus à opérer.
+
+### 3.9 PDF et documents bureautiques
+
+| Crate | Version | Usage |
+|---|---|---|
+| pdf-extract | 0.12.1 | Texte simple |
+| lopdf | 0.47.0 | Structure du PDF |
+| pdfium-render | 0.9.5 | Liaison PDFium (bibliothèque native à embarquer) |
+| pdf_oxide | 0.3.78 | Pur Rust, jeune |
+| calamine | 0.38.0 | Excel, ODS : mature |
+| docx-rs | 0.4.22 | Écriture surtout |
+| kreuzberg | 4.10.4 | Multi-formats |
+| extractous | 0.3.0 (2024-12) | Abandonné ? |
+
+- Qualité de l'extraction : non évaluée par moi (pas de test). Les PDF scannés demandent de l'OCR : hors sujet ici.
+
+### 3.10 Exécution isolée de code
+
+- `wasmtime` 50.0.3 (2026-11-19, Rust 1.97 minimum). Une branche LTS 36.0.23 existe, soutenue jusqu'en août 2027 (officiel : https://github.com/bytecodealliance/wasmtime/releases). WASI 0.3 par défaut à partir de wasmtime 46 (officiel : https://wasi.dev/roadmap).
+- Limites à fixer : mémoire, « carburant » (`consume_fuel`) ou interruption par époque, aucun accès réseau ni fichier par défaut.
+- Rust 1.100.0 est sorti le 12 novembre 2026 (tiers : https://endoflife.date/rust). Le minimum 1.97 de wasmtime est donc couvert.
+- Pour un agent qui exécute du code, un bac à sable Wasm ne lance ni Python natif ni shell. Si on veut ça, il faut un conteneur isolé : autre sujet.
+
+### 3.11 Appels aux modèles de langage
+
+- Pas de SDK Rust officiel d'Anthropic (état au 19 nov. 2026 ; je n'en ai pas trouvé).
+- Communautaires : `anthropic-ai-sdk` 0.2.27 (6,4 k téléchargements), `async-anthropic` 0.6.0 (non maintenu depuis mai 2025). Multi-fournisseurs : `rig-core` 0.46.0, `genai` 0.7.5.
+- Appel direct avec `reqwest` : `POST https://api.anthropic.com/v1/messages`, en-têtes `x-api-key`, `anthropic-version: 2026-10-21` (valeur relevée dans mes notes, à vérifier sur la doc officielle), `content-type: application/json`.
+- Recommandation : garder les appels aux modèles en TypeScript avec `@anthropic-ai/sdk` 1.11.0 (officiel, maintenu par l'éditeur). Ne pas les mettre en Rust.
+
+### 3.12 MCP
+
+- `rmcp` 3.11.0 : SDK Rust officiel du protocole, implémente la spécification MCP 2026-07-28. Transport `transport-streamable-http-server`, service Tower à monter dans axum (officiel : https://github.com/modelcontextprotocol/rust-sdk).
+- Côté TS : `@modelcontextprotocol/sdk` 1.32.2.
+- Un serveur MCP en Rust n'apporte rien tant que le moteur d'agents est en TS.
+
+### 3.13 Télémétrie
+
+- `tracing` 0.1.44, `tracing-subscriber` 0.3.23, `tracing-opentelemetry` 0.34.0, `opentelemetry` / `opentelemetry_sdk` / `opentelemetry-otlp` 0.33.1, `sentry` et `sentry-tracing` 0.49.6.
+- Les crates OpenTelemetry doivent avoir la même version entre elles ; `tracing-opentelemetry` doit viser la même ligne (0.34 ↔ 0.33). À vérifier à la compilation.
+
+## 4. Partage de types entre TypeScript et Rust
+
+| Outil | Version | Verdict |
+|---|---|---|
+| schemars | 1.2.3 | Produit du JSON Schema depuis les structures Rust. Le contrat neutre. |
+| jsonschema | 0.61.2 | Valide du JSON contre un schéma côté Rust. |
+| json-schema-to-typescript | 16.0.0 (npm) | JSON Schema vers types TS. |
+| zod | 4.6.7 (npm) | Déjà dans la pile TS probablement. |
+| ts-rs | 12.0.1 | Rust vers `.ts`. Simple, stable. |
+| specta | 2.0.0-rc.28 | Encore en candidate. Éviter. |
+| typeshare | 1.0.5 | 1Password. Correct, plus limité. |
+| prost / tonic | 0.14.6 / 0.14.9 | Protobuf et gRPC : lourd pour deux personnes. |
+| utoipa | 6.0.0 | OpenAPI depuis axum. |
+
+Recommandation (déduite) : un seul sens, de Rust vers TS. `schemars` produit les schémas JSON des messages (fiches d'agent, événements de la passerelle), un script `json-schema-to-typescript` génère les types, et le CI échoue si le résultat diffère de ce qui est commité. Alternative plus simple : `ts-rs` si seuls les types TS sont voulus.
+
+## 5. Mise en ligne sur Railway
+
+- Un dépôt, plusieurs services : un service par dossier, chacun avec son Dockerfile. Railway cherche un fichier nommé `Dockerfile` (D majuscule) à la racine de la source ; la variable `RAILWAY_DOCKERFILE_PATH` désigne un autre chemin (officiel : https://docs.railway.com/builds/dockerfiles). Pour un dépôt partagé, le personnel de Railway conseille de laisser le dossier racine vide et de fixer cette variable (tiers, forum, ancien : https://station.railway.com/questions/how-to-use-dockerfiles-in-a-shared-monor-b986ee3f). À vérifier dans la doc actuelle.
+- BuildKit est utilisé et les montages de cache sont pris en charge (officiel : https://docs.railway.com/builds/dockerfiles). Donc cargo-chef ou `--mount=type=cache` fonctionnent.
+- Config as code : `railway.toml` et `railway.json` sont dépréciés, lus jusqu'au 2026-12-01 pour les services existants ; remplaçant `.railway/railway.ts` appliqué par `railway config apply` (officiel : https://docs.railway.com/reference/config-as-code). Donc ne pas bâtir sur `railway.toml` : utiliser les variables du service.
+- Réseau privé : `<service>.railway.internal`, IPv4 et IPv6 pour les environnements créés après le 16 octobre 2025 ; écouter sur `::` (officiel : https://docs.railway.com/private-networking). Dans le conteneur : `TcpListener::bind("[::]:PORT")`.
+- Tarifs : 10 $ par Go de RAM et par mois, 20 $ par vCPU et par mois (officiel : https://docs.railway.com/pricing/plans). Un service axum tient en 50 à 150 Mo de RAM au repos (déduit, non mesuré), soit environ 1 à 2 $ par mois pour la mémoire.
+- Taille d'image : binaire Rust release lié statiquement aux libs Rust, base `debian:bookworm-slim` ou `gcr.io/distroless/cc` : image de l'ordre de 30 à 80 Mo (déduit, non mesuré). Le build, lui, est lent.
+- Postgres reste sur AWS RDS à Francfort : prévoir la latence réseau entre Railway et RDS, et la liste d'adresses autorisées. Non évalué ici.
+- Compilation sur Railway : durée et mémoire du build non trouvées. Un build Rust à froid de plusieurs minutes est probable (déduit). Option : construire l'image dans GitHub Actions et la déployer depuis un registre. Non vérifié pour Railway.
+
+## 6. Intégration continue GitHub Actions
+
+- Base : `Swatinem/rust-cache` (cache des dépendances, enregistrement en fin de job). Il ne met pas les crates du workspace en cache sauf option `cache-workspace-crates: true` (v2.8.0 et plus, à vérifier) (tiers : https://dev.to/skipbox/why-rust-cache-doesnt-make-your-rust-ci-fast-tauri-246-s-to-53-s-1g88).
+- `sccache` 0.19.0 (Rust 1.91) en complément, avec `CARGO_INCREMENTAL=0` ; gain non garanti (tiers : https://github.com/cubeyard/cube/pull/180 ; https://corrode.dev/blog/tips-for-faster-ci-builds/). Conseil d'un guide 2026 : l'ajouter au-delà de dix minutes de build.
+- Limite de GitHub : 10 Go de cache par dépôt. Enregistrer le cache seulement depuis `main` (tiers : https://dev.to/eme_gug_0821b41b948be6516/taming-rust-compile-times-in-2026-a-practical-playbook-with-cargo-timings-cranelift-mold-and-3fgl).
+- Étapes : `cargo fmt --check`, `cargo clippy -- -D warnings`, `cargo test`, `cargo sqlx prepare --check`.
+- Durée mesurée pour notre cas : non trouvée. Ordre de grandeur pour un petit service axum + sqlx : 2 à 4 minutes avec cache, 6 à 10 à froid (déduit, non mesuré).
+
+## 7. Coûts honnêtes
+
+- **Compilation** : plus lente que TypeScript, surtout sqlx avec macros, tokio, reqwest. Pour des agents de code, chaque boucle attend le compilateur (tiers : https://www.stork.ai/blog/rust-is-quietly-taking-over-ai ).
+- **Courbe d'apprentissage** : réelle pour deux fondateurs venus de TypeScript. Les erreurs de durée de vie et de propriété en async sont les plus pénibles. Déduit.
+- **Rust écrit par des agents en 2026** : le compilateur sert d'arbitre déterministe, ce qui aide. Un récit cite une migration de 430 000 lignes de TypeScript vers Rust en 14,5 semaines avec 1,7 % d'erreurs liées à l'emprunt ; je n'ai pas trouvé la source primaire, donc fragile (tiers : https://www.mlabs.city/blog/rust-for-ai-assisted-development, non lu en entier). Autre point de vue : les modèles tournent en rond sur les erreurs d'emprunt dans le code async (tiers : https://devtoolsreview.com/best-for/best-ai-coding-tools-rust/). Les deux se contredisent en degré, pas en sens. La plupart des sources sont du contenu commercial.
+- **Relecture** : l'autre fondateur doit pouvoir relire du Rust. Un code Rust qu'un seul des deux comprend est un risque.
+- **Maintenance** : deux chaînes de dépendances (npm et cargo), des mises à jour de sécurité (`cargo audit`, `cargo deny`) à suivre.
+
+## 8. Squelette
+
+### 8.1 Arborescence
+
+```
+leon/
+  apps/web/                  (Next.js, existant)
+  services/
+    gateway/                 (nouveau, Rust)
+      src/main.rs
+      Dockerfile
+  crates/
+    common/                  (types partagés, schemars)
+      Cargo.toml
+      src/lib.rs
+  Cargo.toml                 (espace de travail)
+  Cargo.lock
+  rust-toolchain.toml
+  .sqlx/                     (requêtes préparées, si macros)
+```
+
+(Si `services/gateway` a son propre `Cargo.toml`, la racine liste `members = ["services/gateway", "crates/common"]`.)
+
+### 8.2 Cargo.toml racine
+
+Versions du 19 novembre 2026 (tableau 1.1). Assemblage non compilé par moi : à vérifier.
+
+```toml
+[workspace]
+resolver = "3"
+members = ["services/gateway", "crates/common"]
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.94"
+
+[workspace.dependencies]
+axum = "0.8.9"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "signal"] }
+tower = "0.5.3"
+tower-http = { version = "0.7.1", features = ["trace", "limit", "timeout"] }
+hmac = "0.13.0"
+sha2 = "0.11.1"
+hex = "0.4.3"
+sqlx = { version = "0.9.1", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "uuid", "chrono", "json", "macros"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+uuid = { version = "1.29.3", features = ["v7", "serde"] }
+anyhow = "1.0.104"
+thiserror = "2.0.21"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
+schemars = "1.2.3"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+```
+
+`services/gateway/Cargo.toml` : `[dependencies]` avec `axum.workspace = true`, etc. Le nom des fonctionnalités de sqlx 0.9 (`tls-rustls`) est à vérifier.
+
+### 8.3 Dockerfile (plusieurs étapes, cargo-chef)
+
+```dockerfile
+FROM rust:1.100-bookworm AS chef
+RUN cargo install cargo-chef --version 0.1.78 --locked
+WORKDIR /app
+
+FROM chef AS planner
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
+COPY services ./services
+COPY crates ./crates
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
+COPY Cargo.toml Cargo.lock ./
+COPY services ./services
+COPY crates ./crates
+COPY .sqlx ./.sqlx
+ENV SQLX_OFFLINE=true
+RUN cargo build --release -p gateway
+
+FROM gcr.io/distroless/cc-debian12:nonroot
+COPY --from=builder /app/target/release/gateway /usr/local/bin/gateway
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/gateway"]
+```
+
+Sur Railway : `RAILWAY_DOCKERFILE_PATH=services/gateway/Dockerfile`, racine du service = racine du dépôt (le contexte doit contenir `crates/`). À vérifier. Distroless n'a pas de shell : pas de `healthcheck` par commande ; utiliser le contrôle HTTP de Railway.
+
+### 8.4 axum : HMAC puis insertion
+
+Table : `create table webhook_inbox (id uuid primary key, source text not null, delivery_id text not null, payload jsonb not null, received_at timestamptz not null default now(), unique (source, delivery_id));`
+
+```rust
+use axum::{body::Bytes, extract::State, http::{HeaderMap, StatusCode}, routing::post, Router};
+use hmac::{Hmac, KeyInit, Mac}; // hmac 0.13 : KeyInit à importer (à vérifier)
+use sha2::Sha256;
+use sqlx::{postgres::PgPoolOptions, PgPool};
+
+#[derive(Clone)]
+struct AppState { pool: PgPool, secret: std::sync::Arc<Vec<u8>> }
+
+async fn webhook(State(s): State<AppState>, headers: HeaderMap, body: Bytes)
+    -> Result<StatusCode, StatusCode>
+{
+    // Corps brut : on vérifie avant tout parsing.
+    let sig = headers.get("x-signature-256").and_then(|v| v.to_str().ok())
+        .and_then(|v| v.strip_prefix("sha256=")).ok_or(StatusCode::UNAUTHORIZED)?;
+    let sig = hex::decode(sig).map_err(|_| StatusCode::UNAUTHORIZED)?;
+    let mut mac = Hmac::<Sha256>::new_from_slice(&s.secret).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    mac.update(&body);
+    mac.verify_slice(&sig).map_err(|_| StatusCode::UNAUTHORIZED)?; // temps constant
+
+    let payload: serde_json::Value = serde_json::from_slice(&body).map_err(|_| StatusCode::BAD_REQUEST)?;
+    let delivery = headers.get("x-delivery-id").and_then(|v| v.to_str().ok()).ok_or(StatusCode::BAD_REQUEST)?;
+    sqlx::query("insert into webhook_inbox (id, source, delivery_id, payload) values ($1, 'demo', $2, $3) on conflict do nothing")
+        .bind(uuid::Uuid::now_v7()).bind(delivery).bind(payload)
+        .execute(&s.pool).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(StatusCode::ACCEPTED)
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt().json().init();
+    let pool = PgPoolOptions::new().max_connections(10)
+        .connect(&std::env::var("DATABASE_URL")?).await?;
+    let secret = std::sync::Arc::new(std::env::var("WEBHOOK_SECRET")?.into_bytes());
+    let app = Router::new().route("/hooks/demo", post(webhook)).with_state(AppState { pool, secret });
+    let listener = tokio::net::TcpListener::bind("[::]:8080").await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+```
+
+Ce code vient de mémoire et de motifs lus dans les guides cités en 3.1 : je ne l'ai pas compilé. Les noms d'en-têtes (`x-signature-256`, `x-delivery-id`) sont des exemples, pas ceux d'un éditeur précis. Ajouter `tower_http::limit::RequestBodyLimitLayer` pour borner le corps.
+
+## Ce que je recommande
+
+1. **Ne pas introduire Rust dans le processus Node (napi-rs, Wasm) au départ.** Raison : risque réel sur le traçage `standalone` de Next.js 16 (tickets ouverts), binaire natif à gérer, gain faible pour des tâches surtout d'E/S.
+2. **Si Rust, un seul service : la passerelle de webhooks (axum 0.8.9 + sqlx 0.9.1).** Raison : c'est le seul besoin où Rust apporte une vraie valeur (charge, robustesse, mémoire basse), et il est isolé du reste.
+3. **Passerelle = vérifier, écrire dans une boîte d'envoi, répondre vite.** Pas d'écriture directe dans les tables internes de pg-boss, même si c'est permis : le schéma interne change entre versions majeures.
+4. **Garder en TypeScript** : les appels aux modèles (SDK Anthropic officiel 1.11.0), le moteur d'agents, le découpage et les jetons, MCP. Raison : SDK officiels, une seule langue pour deux fondateurs.
+5. **Types** : `schemars` vers JSON Schema, puis `json-schema-to-typescript`, avec contrôle en CI.
+6. **Déploiement** : Dockerfile cargo-chef, un service Railway distinct, réseau privé. Ne pas miser sur `railway.toml` (déprécié).
+7. **Décision de départ prudente** : si le temps manque, démarrer la passerelle en TypeScript (Hono) derrière la même boîte d'envoi, et garder le contrat identique pour pouvoir la réécrire en Rust plus tard. Mesurer d'abord la charge réelle.
+
+## Ce que je n'ai pas trouvé
+
+- Aucun retour d'expérience 2025-2026 précis sur napi-rs avec Next.js 16 en sortie `standalone` dans un conteneur ; état des tickets 88844 et 91654 en Next.js 16.4.6 non vérifié.
+- Durées réelles de build Rust sur Railway et sur GitHub Actions pour ce type de service : seulement des ordres de grandeur déduits.
+- Taille d'image et consommation mémoire mesurées d'un service axum + sqlx : non mesurées.
+- Exemple officiel de sqlx avec RLS et `set_config` : non trouvé (déduit du comportement de Postgres).
+- Source primaire des chiffres « 430 000 lignes, 14,5 semaines, 1,7 % » (migration par agents) : non trouvée.
+- Qualité d'extraction comparée des crates PDF : non évaluée.
+- Détecteur de secrets en Rust prêt à l'emploi : non trouvé.
+- Valeur actuelle exacte de l'en-tête `anthropic-version` : issue de mes notes, non reconfirmée.
+- Fonctionnalités exactes de sqlx 0.9 (`tls-rustls`) et API `KeyInit` de hmac 0.13 : à vérifier à la compilation.

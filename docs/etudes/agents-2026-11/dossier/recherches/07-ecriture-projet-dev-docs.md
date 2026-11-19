@@ -16,7 +16,7 @@ Sujet : ce qu'un agent peut écrire dans chaque outil avec la connexion OAuth d'
 Limites de cette recherche :
 
 - Les pages officielles n'ont pas pu être ouvertes (réseau restreint). Les faits [O] viennent des résumés de recherche qui citent ces pages. Relire la page avant de coder un point sensible.
-- 54 requêtes de recherche ont abouti. Le quota de recherche partagé s'est épuisé avant les deux dernières (débit Notion, publication d'une intégration Sentry).
+- Première passe (Linear, Jira, Confluence) : 54 requêtes. Seconde passe, le 19 novembre 2026 : 18 requêtes pour les autres outils (Asana à Miro) ; les fiches de la seconde passe sont plus courtes et marquent [V] ce qui vient de la mémoire.
 - Les versions des SDK viennent du registre npm, relevé le 19 novembre 2026.
 
 ## L'essentiel
@@ -310,4 +310,283 @@ Sources Confluence :
 - C4 https://dev.to/yamuno/confluence-rest-api-create-and-update-pages-2l6i
 - C5 https://github.com/pchuri/confluence-cli
 
-<!-- SUITE -->
+### Asana
+
+- API : REST. Base `https://app.asana.com/api/1.0` [O](A1). OAuth 2.0 ou jeton personnel [O](A1).
+- Créer une tâche : `POST /tasks`, portée `tasks:write` [O](A1). Corps `{ "data": { ... } }`. Les champs non donnés prennent leur valeur par défaut. Une tâche vit dans un espace de travail (workspace), non modifiable ensuite. On peut omettre `workspace` si on donne `projects` ou `parent` [O](A1).
+- Portées fines de type `tasks:read`, `tasks:write`, `tasks:delete`, `stories:write` : forme confirmée pour `tasks:write` seulement. Le reste est [V].
+
+| Action | Méthode et point d'API | Champs obligatoires | Portée | Idempotence | Annulation |
+|---|---|---|---|---|---|
+| Créer une tâche | `POST /tasks` [O](A1) | `workspace` ou `projects` ou `parent` ; `name` en pratique [V] | `tasks:write` [O](A1) | Pas d'en-tête. Champ `external` (`gid`, `data`) comme clé naturelle [V] | `DELETE /tasks/{task_gid}` : corbeille 30 jours [V] |
+| Modifier / terminer | `PUT /tasks/{task_gid}` (`completed: true`, `assignee`, `due_on`) [V] | `task_gid` | `tasks:write` [V] | Naturelle [D] | Compensation : réécrire l'état lu avant [D] |
+| Commenter | `POST /tasks/{task_gid}/stories` avec `text` ou `html_text` [V] | `text` | `stories:write` [V] | Non trouvée | `DELETE /stories/{story_gid}` (seulement ses propres commentaires) [V] |
+| Ajouter à une section | `POST /sections/{section_gid}/addTask` [O](A2) | `task` | `tasks:write` [V] | Naturelle [D] | Remettre dans l'ancienne section [D] |
+| Lier une source | Pas de lien distant dédié trouvé. Mettre le lien dans `html_text` ou dans un champ personnalisé de type texte [D] | | | | |
+
+**Débit.** Les sources se contredisent [T](A3) : 1 500 requêtes par minute par jeton (payant), 150 par minute (gratuit), ou 150 pour la plupart des applications, ou 100 (ancien). Concurrence : 50 lectures et 15 écritures en parallèle [T]. Réponse 429 avec `Retry-After` [T]. Relire la page officielle des limites avant de dimensionner.
+
+**Pièges.** L'écriture se fait au nom de l'utilisateur [D]. La tâche créée sans projet n'est visible que de son créateur [V]. Revue de l'application par l'éditeur : non trouvée.
+
+Sources Asana :
+- A1 https://developers.asana.com/reference/createtask
+- A2 https://developers.asana.com/reference/addtaskforsection
+- A3 https://unified.to/blog/how_to_integrate_with_asana et https://jentic.com/apis/asana.com/asana
+
+### ClickUp
+
+- API : REST v2, base `https://api.clickup.com/api/v2` [T](CU1). OAuth 2.0 sans portées : le jeton donne les droits de l'utilisateur sur les espaces qu'il a autorisés [T](CU2) [V].
+- Créer une tâche : `POST /api/v2/list/{list_id}/task` [T](CU1). Champ obligatoire : `name` [V].
+- Supprimer une tâche : `DELETE /api/v2/task/{task_id}` [T](CU1). Corbeille ou suppression définitive : non trouvé.
+- Commentaire : `POST /api/v2/task/{task_id}/comment` (`comment_text`) [V]. Suppression : `DELETE /api/v2/comment/{comment_id}` [V]. Les résultats de recherche n'ont pas confirmé la suppression d'un commentaire.
+- Modifier : `PUT /api/v2/task/{task_id}` [V]. Statut : champ `status` (nom du statut de la liste) [V].
+- Idempotence : non trouvée.
+- **Débit** [T](CU3) : 100 requêtes par minute et par jeton (plans Free, Unlimited, Business) ; 1 000 par minute en Business Plus ; un guide ancien dit 900. Un jeton OAuth compte sur le quota de l'utilisateur. 429 avec `Retry-After` [T].
+- Pièges : pas de portées, donc pas de moindre privilège possible [T]. Un statut inconnu de la liste est refusé [V].
+
+Sources : CU1 https://ones.com/blog/the-clickup-api-reference-explained-endpoints-limits-and-examples/ ; CU2 https://www.scalekit.com/blog/clickup-mcp-vs-api ; CU3 https://www.hashlogics.com/stack/clickup
+
+### monday.com (GraphQL)
+
+- API : GraphQL `POST https://api.monday.com/v2` [V]. En-tête `API-Version: 2026-10` ou la version courante [V] : numéro exact non trouvé.
+- OAuth : portées `boards:read`, `boards:write` (créer, modifier, supprimer éléments et valeurs de colonnes) [O](M1)[T](M3). Aussi `updates:write` pour les commentaires [V]. Anciens jetons OAuth coupés le 1er octobre 2026 [O] (cité par le brouillon de la recherche précédente, non revérifié ici).
+
+| Action | Mutation | Champs obligatoires | Portée | Idempotence | Annulation |
+|---|---|---|---|---|---|
+| Créer un élément | `create_item(board_id, item_name, group_id, column_values)` [V] | `board_id`, `item_name` | `boards:write` [O](M1) | Non trouvée. Coût d'une mutation : 10 000 points d'après un guide [O](M2) (peut être périmé) | `delete_item(item_id)` ; `archive_item` [V] |
+| Modifier colonnes | `change_multiple_column_values(item_id, board_id, column_values)` [V] | | `boards:write` | Naturelle [D] | Réécrire l'ancien état [D] |
+| Commenter | `create_update(item_id, body)` [V] | `item_id`, `body` | `updates:write` [V] | Non trouvée | `delete_update(id)` [V] |
+
+- **Débit** [O](M1) : budget de complexité par minute (5 M points pour un jeton standard ; la page « Build with AI » cite 20 M pour les agents) ; plafond de 5 M par requête (`REQUEST_MAX_COMPLEXITY_EXCEEDED`) ; plafond quotidien selon le plan. Un blog donne 10 M [T]. Ajouter le champ `complexity` à la mutation pour mesurer.
+- Pièges : ne pas lancer de mutations simultanées sur le même tableau [O](M2). `column_values` est une chaîne JSON dont le format dépend du type de colonne [V].
+
+Sources : M1 https://developer.monday.com/api-reference/docs/rate-limits ; M2 https://developer.monday.com/apps/docs/development-best-practices ; M3 https://developer.monday.com/api-reference/docs/build-on-monday-with-ai
+
+### Trello
+
+- API : REST, base `https://api.trello.com/1` [O](T1). OAuth 2.0 (3LO) : disponible depuis le 15 septembre 2026 d'après un seul agrégateur [T](T4) ; la page officielle « OAuth 2.0 Client Configuration » existe [O](T3). Un guide dit encore OAuth 1.0 : périmé d'après la doc Atlassian [T].
+- Portées : `read:board:trello`, `write:board:trello` couvrent cartes et listes [O](T3). Une liste de dix portées fines est citée par un seul tiers [T](T4).
+- Créer une carte : `POST /1/cards`, champs `idList` (obligatoire) et `name` [V]. Commenter : `POST /1/cards/{id}/actions/comments` (`text`) [V]. Déplacer : `PUT /1/cards/{id}` avec `idList` [V]. Archiver : `closed=true` [V]. Supprimer : `DELETE /1/cards/{id}` : définitif [V]. Lien : `POST /1/cards/{id}/attachments` (`url`) [V].
+- Idempotence : non trouvée.
+- **Débit** [T](T2) : 300 requêtes par 10 secondes par clé, 100 par 10 secondes par jeton. 429 en dépassement. Les sources se contredisent sur la présence d'en-têtes de débit : tester.
+- Annulation : l'archivage est réversible (`closed=false`) [V]. La suppression ne l'est pas.
+
+Sources : T1 https://developer.atlassian.com/cloud/trello/rest/api-group-cards/ ; T2 https://www.lilachbullock.com/does-trello-have-an-api/ ; T3 https://developer.atlassian.com/cloud/trello/guides/rest-api/oauth-2-client-configuration/ ; T4 https://apis.io/providers/trello/
+
+### Basecamp (3 et 4)
+
+- API : REST JSON, `https://3.basecampapi.com/{account_id}/...` [V]. OAuth 2.0 obligatoire, Basic retiré [O](B1). Pas de portées [T](B2) [V]. Il faut un en-tête `User-Agent` avec nom et contact [V].
+- Commentaire : `POST /buckets/{projectId}/recordings/{recordingId}/comments.json` (`content` en HTML) [V]. Tâche : `POST /buckets/{projectId}/todolists/{todolistId}/todos.json` (`content`) [V]. Les chemins exacts n'ont pas été confirmés dans cette recherche.
+- Annulation : mise à la corbeille `PUT /buckets/{projectId}/recordings/{recordingId}/status/trashed.json` [V] ; la matrice du CLI officiel parle d'une suppression douce [O](B3). Restauration par `status/active.json` [V].
+- Idempotence : non trouvée.
+- **Débit** [O](B1) : 50 requêtes par 10 secondes depuis la même IP pour le même compte. 429 avec `Retry-After`. Des tiers disent « par jeton » [T] : deux sources, prendre la plus stricte.
+- Piège : l'IP de sortie compte. Dans un service unique, tous les clients partagent la même IP : une file par compte Basecamp [D].
+
+Sources : B1 https://github.com/basecamp/bc3-api ; B2 https://rollout.com/integration-guides/basecamp-3/api-essentials ; B3 https://github.com/basecamp/basecamp-cli/blob/main/API-COVERAGE.md
+
+### Shortcut
+
+- API : REST v3, `POST https://api.app.shortcut.com/api/v3/stories` [O](S1). Authentification : en-tête `Shortcut-Token` avec un jeton personnel. Les jetons n'ont pas de portées et donnent tout l'accès au compte [O](S1)[T]. OAuth 2.0 pour applications tierces : non trouvé dans cette recherche.
+- Créer une histoire : exactement un champ parmi `workflow_state_id` et `project_id` (refus si les deux ou aucun) ; `workflow_state_id` conseillé, les Projects étant retirés [O](S1). `name` obligatoire [V].
+- Commentaire : `POST /api/v3/stories/{story-public-id}/comments` (`text`) [V]. Suppression : `DELETE /api/v3/stories/{id}` et `.../comments/{id}` [V]. Lien : champ `external_links` ou `story-links` [V].
+- Idempotence : non trouvée. Champ `external_id` sur l'histoire : clé naturelle possible [V].
+- **Débit** [O](S1) : 200 requêtes par minute, 429 au-delà.
+- Piège : jeton personnel seulement = l'utilisateur doit en créer un et le coller. Pas de flux d'autorisation propre : [D] à confirmer.
+
+Source : S1 https://developer.shortcut.com/api/rest/v3
+
+### Plane
+
+- API : REST. `POST /api/v1/workspaces/{workspace_slug}/projects/{project_id}/work-items/`, portée `projects.work_items:write` [O](P1). Authentification : `X-API-Key` ou jeton OAuth `Bearer` [O](P1).
+- Champs : `name` obligatoire [V]. Commentaire : `.../work-items/{id}/comments/` [V]. Suppression : `DELETE .../work-items/{id}/` [V].
+- Idempotence : non trouvée (champs `external_id` et `external_source` existent chez Plane [V], utiles comme clé naturelle).
+- **Débit** [O](P1) : 60 requêtes par minute par clé, en-têtes `X-RateLimit-Remaining` et `X-RateLimit-Reset`. Hébergé chez soi : variable `API_KEY_RATE_LIMIT` (défaut `60/minute`). Limite propre aux jetons OAuth : non trouvée.
+
+Source : P1 https://developers.plane.so/api-reference/issue/add-issue et https://developers.plane.so/api-reference/introduction
+
+### Airtable
+
+- API : `https://api.airtable.com/v0/{baseId}/{tableIdOrName}` [O](AT1). OAuth 2.0 avec PKCE [V].
+- Portées : `data.records:read`, `data.records:write` (créer, modifier, supprimer des enregistrements) [T](AT2). `schema.bases:read` pour lire les champs [V].
+- Créer : `POST` avec `records: [{fields}]`, 10 enregistrements au plus par requête [T](AT2). Modifier : `PATCH` ou `PUT`. Supprimer : `DELETE ...?records[]=rec...`, 10 au plus [T](AT2).
+- **Idempotence : oui, par upsert.** `performUpsert: { fieldsToMergeOn: [...] }` sur la requête de mise à jour multiple, avec `id` facultatif [O](AT1). Méthode : la doc officielle donne PATCH, un guide donne POST : prendre PATCH [O].
+- Annulation : pas de corbeille d'enregistrement par l'API trouvée ; la suppression est définitive côté API [D]. Historique des révisions dans l'interface seulement [V].
+- **Débit** [T](AT3) : 5 requêtes par seconde et par base, quel que soit le plan. Au-delà : 429, base bloquée 30 secondes. L'éditeur peut traiter l'upsert autrement [O](AT1).
+
+Sources : AT1 https://airtable.com/developers/web/api/update-multiple-records ; AT2 https://hyperops.fr/en/blog/use-the-airtable-api ; AT3 https://www.zite.com/benchmarks/airtable
+
+### Notion
+
+- API : `https://api.notion.com/v1`, en-tête `Notion-Version: 2026-03-11` [O](N1). Changements de cette version : `archived` remplacé par `in_trash` dans les requêtes et les réponses ; le paramètre `after` d'« Append block children » remplacé par un objet `position` [O](N1)(N2).
+- La version `2026-03-11` existe : confirmé par la page officielle « Upgrade guide » [O](N2).
+- OAuth : pas de portées. Des « capacités » sont réglées sur l'intégration : lecture, modification, insertion de contenu ; lecture et insertion de commentaires. Les capacités de commentaire sont désactivées par défaut. Sans « insert comment », `POST /v1/comments` renvoie 403 [O](N3). Dans une intégration publique, l'utilisateur choisit les pages partagées (sélecteur de pages) [V] : non confirmé dans cette recherche.
+- Si l'utilisateur perd le droit d'écrire sur une page, l'intégration devient en lecture seule sur cette page [T](N4).
+
+| Action | Méthode et point d'API | Champs obligatoires | Capacité | Idempotence | Annulation |
+|---|---|---|---|---|---|
+| Créer une page | `POST /v1/pages` [T](N5) | `parent` (page, source de données ou espace) ; `properties` (titre) [V] ; `children` facultatif | Insert content | Non trouvée | `PATCH /v1/pages/{id}` avec `in_trash: true` ; restauration avec `in_trash: false` [O](N1) |
+| Ajouter des blocs | `PATCH /v1/blocks/{block_id}/children` avec `children` et `position` [O](N1) | `children` (100 blocs au plus par appel [V]) | Insert content | Non trouvée | `DELETE /v1/blocks/{id}` (mise en corbeille) [V] |
+| Commenter | `POST /v1/comments` : `parent.page_id`, ou `parent.block_id`, ou `discussion_id` pour répondre [O](N3) | `rich_text` + un des trois parents | Insert comments [O](N3) | Non trouvée | Suppression d'un commentaire via l'API : non trouvée [V] |
+| Modifier propriétés | `PATCH /v1/pages/{id}` [V] | | Update content | Naturelle [D] | Compensation [D] |
+
+- **Débit** : 3 requêtes par seconde en moyenne par intégration, rafales tolérées, 429 avec `Retry-After` [T](N4). Un tableau tiers parle de 10 par seconde pour Business et Enterprise : non vérifié [T]. Depuis peu, tout 429 ou 529 avec `Retry-After` répète l'attente dans le corps [O](N1). Page officielle sur le débit : non rouverte.
+- Pièges : le grand nombre de blocs impose plusieurs appels ; le texte brut doit passer en `rich_text` ; l'ancien champ `archived` est refusé en `2026-03-11` [O](N1).
+- Revue de l'intégration publique par l'éditeur : non trouvé.
+
+Sources : N1 https://developers.notion.com/page/changelog ; N2 https://developers.notion.com/guides/get-started/upgrade-guide-2026-03-11 ; N3 https://developers.notion.com/reference/create-a-comment ; N4 https://github.com/FroeMic/notion-cli/blob/main/docs/02-capabilities-and-limits.md ; N5 https://freeapihub.com/apis/notion-api
+
+### Google Drive et Google Docs
+
+- Docs : `POST https://docs.googleapis.com/v1/documents` ne traite que le titre. Tout le contenu passe par `POST /v1/documents/{id}:batchUpdate` [T](G3). `batchUpdate` accepte les portées `documents`, `drive` ou `drive.file` [O](G1).
+- Par défaut le document est créé à la racine du Drive. Pour le ranger : créer par Drive `files.create` avec `mimeType: application/vnd.google-apps.document` et `parents: [folderId]` [V], ou déplacer ensuite avec `files.update` (`addParents`) [T](G3). Sous `drive.file`, comportement avec `parents` : non trouvé.
+- `drive.file` : « voir, modifier, créer et supprimer seulement les fichiers Drive que vous utilisez avec cette application » [O](G1). Portée non sensible : pas d'évaluation de sécurité [T](G4).
+- Portée restreinte (`drive`, `drive.readonly`) : évaluation CASA, à refaire tous les 12 mois, environ six semaines, laboratoire à partir d'environ 540 dollars par an d'après un blog [T](G4)(G5). Le forum Google confirme que les portées restreintes de Drive exigent CASA [T](G5).
+
+| Action | Méthode et point d'API | Champs | Portée | Idempotence | Annulation |
+|---|---|---|---|---|---|
+| Créer un document | `POST /drive/v3/files` (mimeType Docs) ou `POST /v1/documents` | `name` ou `title` | `drive.file` [O](G1) | Non trouvée. Pas de clé native. Marquer par `appProperties` [V] | `PATCH /drive/v3/files/{id}` avec `trashed: true` [V] (le MCP Drive du poste propose `trash_file`) |
+| Écrire dans le document | `POST /v1/documents/{id}:batchUpdate` (`insertText`, `insertTable`, `updateTextStyle`...) [O](G2) | `requests[]` | `drive.file` [O](G1) | `writeControl.requiredRevisionId` : refus si le document a changé [V] | Réécriture inverse ; `files.revisions` pour restaurer [V] |
+| Modifier un document existant | idem | | `drive.file` seulement si l'application l'a créé ou l'utilisateur l'a ouvert avec elle (Google Picker) [D](G1) | | |
+
+- Limites de l'accès `drive.file` : l'agent ne voit pas les documents que l'utilisateur n'a pas choisis. Pour les connecteurs de lecture existants, c'est une autre portée : à ne pas mélanger [D].
+- Débit : Docs et Drive ont des quotas par minute et par utilisateur ; chiffres non trouvés dans cette recherche.
+
+Sources : G1 https://developers.google.com/workspace/docs/api/auth ; G2 https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/batchUpdate ; G3 https://www.rapidevelopers.com/api-automations/how-to-automate-google-docs-reports-using-the-api ; G4 https://yurudeep.com/posts/aicoding/2026/20260717/en/ ; G5 https://discuss.google.dev/t/is-casa-required-for-all-access-restricted-scopes/340650
+
+### GitLab
+
+- API : REST v4, `https://gitlab.com/api/v4` [V]. Créer un ticket : `POST /projects/:id/issues`, seul `title` est obligatoire [O](GL1). Commentaire : `POST /projects/:id/issues/:issue_iid/notes` (`body`) [V]. Modifier : `PUT /projects/:id/issues/:issue_iid` (`state_event=close`, `assignee_ids`, `labels`) [V]. Supprimer : `DELETE /projects/:id/issues/:issue_iid` : définitif, droit propriétaire [V].
+- Portées OAuth : `api` donne la lecture et l'écriture complètes ; `read_api` ne lit que. Aucune portée plus fine pour les tickets [T](GL2). `write_repository` ne sert qu'à pousser du Git [V].
+- Idempotence : non trouvée.
+- Annulation : réouvrir (`state_event=reopen`) pour une clôture [V] ; une note se supprime avec `DELETE .../notes/:note_id` [V].
+- **Débit** [O](GL3) : 2 000 requêtes par minute et par utilisateur authentifié (jeton personnel ou OAuth). Changement annoncé : des plafonds horaires par plan (Free 5 000, Premium 15 000, Ultimate 25 000) [T](GL4), appliqués à partir du 19 octobre 2026 pour le Free et le non authentifié, janvier 2027 pour Premium et Ultimate d'après les tiers. Non authentifié : 60 par heure par IP [T]. La page officielle trouvée ne décrit pas les plafonds horaires : deux sources en désaccord, à relire. 429 avec `Retry-After` et `RateLimit-*` [T].
+- Revue : une application OAuth GitLab.com ne demande pas de revue de l'éditeur d'après ce qui a été trouvé : non confirmé.
+
+Sources : GL1 https://docs.gitlab.com/api/issues/ ; GL2 https://thelinuxcode.com/how-to-access-the-gitlab-api-rest-v4-base-urls-tokens-pagination-and-practical-scripts/ ; GL3 https://docs.gitlab.com/user/gitlab_com/rate_limits/ ; GL4 https://workos.com/blog/gitlab-rate-limits-authenticated-automation et https://prflow.dev/blog/gitlab-com-rate-limits/
+
+### Sentry
+
+- API : `https://sentry.io/api/0/`. Modifier un problème : `PUT /api/0/organizations/{org}/issues/{issue_id}/` avec `status` (`resolved`, `unresolved`, `ignored`) et `assignedTo` (nom d'utilisateur, courriel ou `team:<id>`) [O](SE1)[T](SE2). Résoudre dans la prochaine version : `{"status":"resolved","statusDetails":{"inNextRelease":true}}` [T](SE2).
+- Portées : la page « Permissions & Scopes » dit que GET demande des portées de lecture, PUT/POST des portées d'écriture, DELETE des portées d'admin ; `event:read`, `event:write`, `event:admin` ne couvrent que mise à jour et suppression de problèmes [O](SE3). Un guide tiers associe la gestion des problèmes à `event:write` [T](SE4).
+- Commentaire sur un problème : `POST /api/0/organizations/{org}/issues/{id}/comments/` [V]. Non confirmé par cette recherche.
+- Lier un ticket externe : Sentry « Issue Linking » passe par une application Sentry (intégration) et `external-issues` [V] : non confirmé.
+- Idempotence : non trouvée. Mise à jour d'état naturellement idempotente [D].
+- Annulation : remettre `status: unresolved` ; réassigner [D].
+- Débit : non trouvé. Revue d'une intégration publique par l'éditeur : non trouvée (le quota de recherche a limité ce point).
+- Piège : les jetons OAuth d'une application publique Sentry sont liés à une installation d'organisation, pas à un utilisateur seul [V].
+
+Sources : SE1 https://docs.sentry.io/api/events/update-an-issue ; SE2 https://getsentry-sentry.mintlify.app/api/projects/issues ; SE3 https://docs.sentry.io/api/permissions ; SE4 https://github.com/Streaming-Tech/sentry-mcp
+
+### Productboard
+
+- API v2 : `POST https://api.productboard.com/v2/notes` [O](PB1). `fields.name` obligatoire pour tout type de note. Types créables : `textNote` et `conversationNote`. `opportunityNote` n'est pas créable. Lire `/v2/notes/configurations` pour les champs de chaque type [O](PB1).
+- OAuth : flux code d'autorisation, et flux serveur à serveur JWT Bearer [O](PB2). Portée `notes:create` [O](PB2). L'utilisateur ne peut autoriser que les portées permises par son rôle [O](PB2). Lien exact entre `notes:create` et `POST /v2/notes` : non confirmé.
+- Idempotence : non trouvée. Annulation : suppression d'une note par `DELETE /v2/notes/{id}` [V].
+- **Débit** [O](PB3) : 50 requêtes par seconde par jeton, 429, en-têtes `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `Retry-After`. Un tiers dit 1 000 par minute [T] : l'officiel fait foi.
+- Nango sait gérer Productboard [T](PB4).
+- Piège : un guide cite un en-tête `X-Version: 1` pour l'ancienne API [T] ; la v2 n'en parle pas dans ce qui a été trouvé.
+
+Sources : PB1 https://developer.productboard.com/reference/createnote ; PB2 https://developer.productboard.com/v1.0.0/docs/how-to-integrate-with-productboard-via-oauth2-developer-documentation ; PB3 https://developer.productboard.com/reference/rate-limits ; PB4 https://docs.nango.dev/integrations/all/productboard
+
+### Miro
+
+- API REST v2. Créer une note : `POST /v2/boards/{board_id}/sticky_notes`, portée `boards:write`, niveau de débit 2 [O](MI1). Création en lot : jusqu'à 20 éléments par appel, facturés par élément au niveau 2 [O](MI1).
+- Débit : niveau 2 = 100 crédits par appel ; plafond de 100 000 crédits par minute (soit environ 1 000 appels de niveau 2). La page citée est écrite pour le SDK Web : à confirmer pour REST [O](MI2).
+- Idempotence et annulation (`DELETE /v2/boards/{board_id}/items/{item_id}`) : suppression [V]. Pas de corbeille trouvée.
+- Utilité pour un agent : poser des notes ou connecteurs sur un tableau depuis un compte rendu ; intérêt moyen.
+
+Sources : MI1 https://developers.miro.com/reference/create-sticky-note-item-1 ; MI2 https://developers.miro.com/docs/rate-limiting
+
+### Outils de réunion : écriture utile ?
+
+Réponse courte : non. Aucun outil de réunion ne propose une écriture utile à un agent d'action.
+
+- Fireflies : API GraphQL avec jeton Bearer ; elle rend transcriptions, tours de parole, résumés ; webhook de fin de traitement [T](R1). Les écritures connues servent à envoyer un enregistrement ou à faire rejoindre un bot (`addToLiveMeeting`, [V]). Pas d'écriture de contenu utile. Limite gratuite : 50 appels par jour [T](R1).
+- Gong : API REST plafonnée à 3 requêtes par seconde [T](R1). Les écritures servent à importer des appels [V].
+- Fathom, tl;dv, Leexi : détails d'écriture non trouvés. Fathom serait en lecture seule [T] (déjà noté plus haut, non revérifié).
+- Conséquence : les réunions sont une source de déclencheurs (voir note 05), pas une cible d'écriture. Les actions se font dans les outils de tâches.
+
+Source : R1 https://overloop.com/blog/best-ai-note-takers et https://tldv.io/blog/fireflies-review/
+
+## Tableau de synthèse
+
+Effort : S = demi-journée, M = une journée, L = deux à trois jours (échelle définie plus haut). Annulable : oui = l'éditeur sait restaurer ; compensable = réécrire l'état d'avant ; non = définitif ou notifications parties.
+
+| Outil | Action | Méthode et point d'API | Portée | Annulable | Effort |
+|---|---|---|---|---|---|
+| Linear | Créer un ticket | GraphQL `issueCreate` | `issues:create` ou `write` | oui (corbeille 30 j, `issueDelete`) | S |
+| Linear | Modifier | `issueUpdate` | `write` | compensable | S |
+| Linear | Commenter | `commentCreate` | `comments:create` | non (notification partie) | S |
+| Linear | Lier une source | `attachmentCreate` (clé naturelle url + ticket) | `write` | oui (`attachmentDelete`) | S |
+| Linear | Agir en tant qu'agent | `actor=app`, `agentActivityCreate` | `app:assignable`, `app:mentionable` | compensable | L |
+| Jira | Créer | `POST /rest/api/3/issue` | `write:jira-work` | non (suppression définitive) | M |
+| Jira | Commenter | `POST .../issue/{id}/comment` | `write:comment:jira` | non | M |
+| Jira | Transition | `POST .../issue/{id}/transitions` | `write:issue:jira` | compensable (si transition inverse) | M |
+| Jira | Lier tickets | `POST /rest/api/3/issueLink` | `write:jira-work` | oui (`DELETE issueLink`) | S |
+| Jira | Lier une source | `POST .../issue/{id}/remotelink` | `write:jira-work` | oui | S |
+| Confluence | Créer une page | `POST /wiki/api/v2/pages` | `write:page:confluence` | oui (corbeille) | M |
+| Confluence | Modifier | `PUT /wiki/api/v2/pages/{id}` (version + 1) | `write:page:confluence` | compensable | M |
+| Asana | Créer une tâche | `POST /tasks` | `tasks:write` | oui (corbeille 30 j) [V] | S |
+| Asana | Commenter | `POST /tasks/{gid}/stories` | `stories:write` [V] | oui (propre commentaire) | S |
+| ClickUp | Créer une tâche | `POST /api/v2/list/{id}/task` | aucune (jeton entier) | non établi | S |
+| ClickUp | Commenter | `POST /api/v2/task/{id}/comment` [V] | aucune | `DELETE .../comment/{id}` [V] | S |
+| monday | Créer un élément | `create_item` (GraphQL) | `boards:write` | oui (`archive_item`) [V] | M |
+| monday | Commenter | `create_update` | `updates:write` [V] | oui (`delete_update`) [V] | S |
+| Trello | Créer une carte | `POST /1/cards` | `write:board:trello` | oui (archiver) | S |
+| Trello | Commenter | `POST /1/cards/{id}/actions/comments` | `write:board:trello` | oui [V] | S |
+| Basecamp | Tâche, commentaire | `POST .../todos.json`, `.../comments.json` [V] | aucune | oui (corbeille) | S |
+| Shortcut | Créer une histoire | `POST /api/v3/stories` | jeton complet | non établi | S |
+| Plane | Créer un work item | `POST /api/v1/workspaces/{slug}/projects/{id}/work-items/` | `projects.work_items:write` | `DELETE` [V] | S |
+| Notion | Créer une page | `POST /v1/pages` | capacité Insert content | oui (`in_trash`) | M |
+| Notion | Ajouter des blocs | `PATCH /v1/blocks/{id}/children` | Insert content | oui (corbeille du bloc) [V] | M |
+| Notion | Commenter | `POST /v1/comments` | Insert comments | non établi | S |
+| Airtable | Créer ou mettre à jour | `POST` / `PATCH /v0/{base}/{table}` + `performUpsert` | `data.records:write` | non (suppression définitive) | M |
+| Google Docs | Créer et écrire | `POST /v1/documents`, `:batchUpdate` | `drive.file` | oui (corbeille Drive, révisions) | L |
+| GitLab | Créer un ticket | `POST /projects/:id/issues` | `api` | compensable (fermer) | S |
+| GitLab | Commenter | `POST /projects/:id/issues/:iid/notes` [V] | `api` | oui (`DELETE note`) [V] | S |
+| Sentry | Assigner, résoudre | `PUT /api/0/organizations/{org}/issues/{id}/` | `event:write` [T] | compensable | S |
+| Sentry | Lier un ticket externe | `external-issues` | `event:write` [O] | non établi | M |
+| Productboard | Note de retour | `POST /v2/notes` | `notes:create` | `DELETE` [V] | S |
+| Miro | Note sur tableau | `POST /v2/boards/{id}/sticky_notes` | `boards:write` | suppression d'élément | S |
+
+## Versions de paquets (registre npm, 19 novembre 2026)
+
+| Paquet | Version |
+|---|---|
+| `@linear/sdk` | 103.0.0 |
+| `jira.js` | 6.4.0 (relevé 27 oct. 2026) |
+| `confluence.js` | 3.3.1 (relevé 13 oct. 2026) |
+| `@notionhq/client` | 5.31.1 |
+| `asana` | 3.4.0 |
+| `@gitbeaker/rest` | 44.1.5 |
+| `airtable` | 0.12.2 |
+| `googleapis` | 190.0.0 |
+| `@sentry/api` | 2.16.0 |
+
+Pour les autres outils, il n'y a pas de SDK à adopter : un client `fetch` maison dans le moteur d'actions suffit [D].
+
+## Ce que je recommande
+
+1. **Un journal d'actions maison pour tout le monde** (voir « Règles communes »). Aucune API n'offre de clé d'idempotence générale. Raison : sans lui, une reprise après erreur réseau crée des doublons.
+2. **Premier lot d'actions : Linear, Jira, Notion, Google Docs, Asana.** Ce sont les outils les plus répandus dans des sociétés de 20 à 200 salariés, avec une portée d'écriture claire et une annulation ou une compensation possible. Les autres (ClickUp, monday, Trello, Basecamp, Shortcut, Plane) suivent avec le même contrat d'action, un client `fetch` de quelques dizaines de lignes chacun.
+3. **Google : `drive.file` seulement.** Portée non sensible, pas de CASA. Le prix : l'agent ne modifie que les documents qu'il a créés ou que l'utilisateur a choisis. Garder `drive` restreint pour plus tard, après évaluation de sécurité.
+4. **Notifications = irréversible.** Marquer les commentaires et les assignations « non annulables » et les mettre derrière le curseur « propose » par défaut. Les créations avec corbeille peuvent passer en « agit et prévient ».
+5. **Linear en mode agent (`actor=app`)** à étudier à part : c'est le seul outil avec un statut d'agent. Les autres sont signés au nom de l'utilisateur : ajouter une mention « écrit par l'agent » dans le texte.
+6. **Une file par couple (outil, jeton)**, avec les plafonds ci-dessus. Plus bas : Plane 60 par minute, ClickUp 100 par minute, Airtable 5 par seconde et par base, Trello 100 par 10 secondes par jeton, Shortcut 200 par minute, Notion environ 3 par seconde.
+7. **Basecamp : une file par compte**, la limite est comptée par IP d'après l'éditeur.
+8. **Lire avant d'écrire** : Jira (transitions, champs obligatoires), Confluence (version), Notion (propriétés), pour avoir l'état d'avant utile à l'annulation.
+9. **Jira et Confluence : `jira.js` et `confluence.js` ou `fetch`.** Prévoir le renouvellement du jeton rotatif et le `cloudId`. Prévoir aussi les quotas en points depuis mars 2026.
+10. **GitLab : surveiller la nouvelle politique de limites** (octobre 2026 et janvier 2027).
+
+## Ce que je n'ai pas trouvé
+
+- Clé d'idempotence officielle pour Linear, Jira, Asana, ClickUp, monday, Trello, Basecamp, Shortcut, Plane, Notion, Google, GitLab, Sentry, Productboard, Miro : aucune trouvée.
+- Débit officiel de Notion (page rouverte) ; Sentry ; Google Docs et Drive ; Jira par ticket (source tierce seulement).
+- Portée exacte de Sentry pour commenter, et chemin exact : une source tierce donne `POST /api/0/issues/{id}/notes/` [T], non confirmé. `external-issues` exige `event:write` [O].
+- Procédure de revue d'une application publique : Linear, Notion, Asana, ClickUp, monday, Trello, Basecamp, Shortcut, Plane, GitLab, Sentry, Airtable, Miro : non trouvée. Jira : partage par lien sans approbation [T] ; Google : évaluation CASA pour portées restreintes [T].
+- OAuth public de Shortcut (jeton personnel seulement trouvé).
+- Numéro de version actuelle de l'API monday.
+- Chemins exacts de Basecamp, ClickUp (suppression de commentaire), Plane (commentaires), Trello (OAuth 2.0 général : un seul tiers) : de mémoire [V].
+- Écritures des outils de réunion : détail par éditeur non trouvé.
+- Documentation de Nango, Pipedream et Composio sur ces écritures : seule la page Nango de Productboard est apparue. Une revue de leur catalogue d'actions reste à faire.
+

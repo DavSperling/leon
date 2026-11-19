@@ -1,6 +1,6 @@
 # Recherche 06 : écrire dans le mail, l'agenda, la messagerie, le CRM et le support depuis un agent
 
-19 novembre 2026 · note de recherche pour le dossier de conception · **en cours d'écriture, sections ajoutées au fil de l'eau**
+19 novembre 2026 · note de recherche pour le dossier de conception · **version complète**
 
 Sujet : ce qu'un agent peut écrire dans chaque outil avec la connexion OAuth (ou la clé) d'un utilisateur. Pour chaque action : méthode et point d'API, champs obligatoires, portée, idempotence, annulation, débit, pièges.
 
@@ -419,4 +419,326 @@ Nous n'avons pas de connecteur Teams [code]. Deux voies très différentes exist
 
 ---
 
-(suite en cours : CRM, support, tableau final, recommandations)
+## 7. HubSpot
+
+Base : `https://api.hubapi.com`. Jeton OAuth en `Authorization: Bearer`. Le brouillon n'avait pas encore cette fiche : elle est complétée ici.
+
+### Les actions
+
+| Action | Méthode et point d'API | Champs obligatoires | Portée | Annulable |
+|---|---|---|---|---|
+| Créer un contact | `POST /crm/v3/objects/contacts` | `properties` (en pratique `email`) ; `associations` possible à la création | `crm.objects.contacts.write` | Oui : `DELETE /crm/v3/objects/contacts/{id}` (corbeille ; restauration par l'interface, 90 jours [MEM]) |
+| Modifier un contact | `PATCH /crm/v3/objects/contacts/{id}` (ou `?idProperty=email`) | `properties` changées | idem | Oui, en gardant les anciennes valeurs |
+| Créer une société | `POST /crm/v3/objects/companies` | `properties` (`name`, `domain`) | `crm.objects.companies.write` | Oui : `DELETE` |
+| Créer une affaire | `POST /crm/v3/objects/deals` | `properties.dealname`, `pipeline`, `dealstage` [MEM] | `crm.objects.deals.write` [OFF, par résumé] | Oui : `DELETE` |
+| Créer une note | `POST /crm/v3/objects/notes` (la doc de novembre 2026 montre aussi `/crm/objects/2026-09/notes`) | `properties.hs_note_body`, `properties.hs_timestamp` ; `associations` | pas de portée « notes » trouvée ; en pratique les portées d'écriture de l'objet associé [MEM, à vérifier] | Oui : `DELETE` |
+| Créer une tâche | `POST /crm/v3/objects/tasks` | `properties.hs_timestamp`, `hs_task_subject` ; `hs_task_status`, `hs_task_type` | idem [MEM, à vérifier] | Oui : `DELETE` |
+| Associer deux objets | `PUT /crm/v4/objects/{type}/{id}/associations/{toType}/{toId}` avec un corps de types d'association | `associationCategory`, `associationTypeId` | portée d'écriture des deux objets | Oui : `DELETE` sur le même chemin |
+| Créer ou mettre à jour par clé | `POST /crm/v3/objects/contacts/batch/upsert` (clé `email` ou propriété unique) | `inputs[].idProperty`, `id`, `properties` | écriture | partiel |
+
+Sources : points d'API et associations [OFF, par résumé] https://developers.hubspot.com/docs/api-reference/crm-associations-v4/guide ; https://developers.hubspot.com/docs/api-reference/latest/crm/activities/notes/guide ; https://developers.hubspot.com/docs/api-reference/crm-tasks-v3/guide ; portées https://developers.hubspot.com/docs/apps/legacy-apps/authentication/scopes. Les pages mélangent des versions : `/crm/v3/...` (ancien, toujours là), `/crm/objects/2026-09/...` et `/crm/associations/2026-03/...` (versions datées). **Choisir une version, la figer, et la relire sur la page.** Le point `batch/upsert` : [MEM, à vérifier].
+
+Ordre à garder : les identifiants `associationTypeId` par défaut (ex. note vers contact) se lisent sur la page des associations ou par `GET /crm/v4/associations/{from}/{to}/labels` [MEM, à vérifier].
+
+### Débit
+
+- Applis publiques OAuth : 110 requêtes par 10 secondes **par compte client qui installe l'appli** ; l'option « API limit increase » achetée par le client ne joue pas pour les applis de la place de marché. La recherche CRM a sa propre limite de 5 requêtes par seconde et par compte. Pas d'en-têtes de quota journalier pour OAuth [TIERS, citant la doc] https://appnigma.ai/blogs/hubspot-api-rate-limits-guide/. Un autre tiers donne l'ancien chiffre de 100 par 10 secondes : la page officielle fait foi.
+- Applis privées (jeton d'accès par compte) : 100 à 190 requêtes par 10 secondes et 250 000 à 1 000 000 par jour selon l'offre [TIERS] https://pipeline.zoominfo.com/sales/hubspot-api. L'ancien guide des associations cite 500 000 par jour pour Professional et Enterprise [OFF, par résumé].
+- Lots : jusqu'à 100 enregistrements par appel `batch` [MEM] ; 2 000 entrées par appel pour les associations en lot [OFF, par résumé].
+
+### Idempotence et pièges
+
+- **Pas de clé d'idempotence trouvée** pour la création. Le contact est unique par `email` : un second `POST` avec le même mail rend `409 Conflict` ; l'identifiant existant est **dans le texte de l'erreur**, pas dans un champ structuré, et la forme de la réponse a changé avec le temps. Une création ou un `batch/upsert` en lot est refusé en entier si un seul courriel existe déjà. Le bon réflexe : chercher par courriel (`POST /crm/v3/objects/contacts/search`), puis `PATCH` si trouvé, sinon `POST`, sans fusion automatique [TIERS, forum HubSpot] https://community.hubspot.com/t/409-conflict-on-createorupdate-call/140754 ; https://dev.to/flowpaja/a-hubspot-409-is-a-record-matching-problem-1a86. Pour les sociétés, pas d'unicité native sauf propriété unique ; chercher d'abord par `domain` via `POST /crm/v3/objects/companies/search` (5 par seconde).
+- Une note ou une tâche rejouée crée un doublon. Garder l'`id` rendu dans notre ligne d'action.
+- La note ne se voit sur la fiche que si elle est **associée** au contact, à la société ou à l'affaire. Sans association, elle existe mais reste invisible [MEM].
+- `hs_timestamp` est obligatoire sur notes et tâches ; format ISO 8601 ou millisecondes [MEM].
+- **Revue de l'éditeur** : une appli publique OAuth n'a pas besoin d'être sur la place de marché pour fonctionner. L'inscription à la place de marché (obligatoire pour être listée) passe par une revue avec un minimum d'installations actives [MEM, non confirmé ici].
+- La conformité : les données sensibles (portées `crm.objects.contacts.sensitive.*`) demandent un accord à part [MEM, à vérifier].
+
+---
+
+## 8. Pipedrive (API version 2)
+
+Base : `https://api.pipedrive.com/api/v2` (OAuth : le domaine de la société est donné au retour d'OAuth, `api_domain`) [MEM].
+
+- État de la v2 : Activités, Affaires, Organisations, Personnes (avec leurs « followers ») et Champs sont en v2 ; **les notes n'ont pas d'équivalent v2 confirmé** : un guide de migration tiers dit de rester sur `POST /api/v1/notes` ; un autre parle d'une route v2. Les deux se contredisent [OFF, par résumé] https://pipedrive.readme.io/docs/pipedrive-api-v2 ; [TIERS] https://www.innovaty.co/guide/pipedrive-api-v2-migration. Les points v1 sont annoncés en fin de vie sans date trouvée.
+
+| Action | Méthode et point d'API | Champs obligatoires | Portée | Annulable |
+|---|---|---|---|---|
+| Créer une personne | `POST /api/v2/persons` | `name` [MEM] | `contacts:full` [MEM, à vérifier] | Oui : `DELETE /api/v2/persons/{id}` (restauration 30 jours par l'interface [MEM]) |
+| Créer une organisation | `POST /api/v2/organizations` | `name` | `contacts:full` | Oui : `DELETE` |
+| Créer une affaire | `POST /api/v2/deals` | `title` | `deals:full` | Oui : `DELETE` |
+| Modifier une affaire | `PATCH /api/v2/deals/{id}` | champs changés | `deals:full` | Oui, en gardant l'ancienne valeur |
+| Créer une activité (tâche, appel) | `POST /api/v2/activities` | `subject` ; `type`, `due_date` | `activities:full` | Oui : `DELETE` |
+| Créer une note | `POST /api/v1/notes` (v1) | `content` + un de `deal_id`, `person_id`, `org_id`, `lead_id` | `deals:full` couvre les notes d'affaire [OFF, par résumé] https://github.com/pipedrive/client-nodejs/blob/master/docs/v2.md | Oui : `DELETE /api/v1/notes/{id}` |
+
+- Débit : système de « jetons » par appel : lecture d'un objet 2, liste 20, mise à jour 10, suppression 6, recherche 40 ; limite de rafale par jeton d'API sur 2 secondes [OFF, par résumé] https://pipedrive.readme.io/docs/core-api-concepts-rate-limiting. Budget journalier de société : 30 000 jetons × multiplicateur d'offre × nombre de licences [TIERS, non confirmé] https://aibrevo.com/research/crm-api-rate-limits-compared-2026/. La v2 est annoncée moins chère que la v1 ; le chiffre de 50 % n'est pas officiel.
+- Idempotence : rien trouvé.
+- Revue : une appli publique doit être validée par Pipedrive pour la place de marché ; une appli privée par client fonctionne sans [MEM, à vérifier].
+
+---
+
+## 9. Attio
+
+Base : `https://api.attio.com/v2`. OAuth ou jeton de compte de travail, `Authorization: Bearer`. Un jeton neuf n'a aucune portée par défaut [TIERS].
+
+| Action | Méthode et point d'API | Champs obligatoires | Portée | Annulable |
+|---|---|---|---|---|
+| Créer un enregistrement | `POST /v2/objects/{object}/records` | `data.values` | `record_permission:read-write` [OFF, par résumé] https://docs.attio.com/rest-api/endpoint-reference/workspaces/create-a-workspace-record | Oui : `DELETE /v2/objects/{object}/records/{id}` |
+| **Créer ou mettre à jour (assert)** | `PUT /v2/objects/{object}/records?matching_attribute={slug}` | `data.values`, dont la valeur de l'attribut de rapprochement | idem | Partiel : la mise à jour demande l'ancienne valeur |
+| Modifier | `PATCH /v2/objects/{object}/records/{id}` | `data.values` ; **attention** : sur un attribut à valeurs multiples, `PATCH` ajoute, `PUT` remplace [MEM, à vérifier] | idem | Oui |
+| Note | `POST /v2/notes` | `parent_object`, `parent_record_id`, `title`, `format`, `content` [MEM, à vérifier] | portée de notes (nom non trouvé) | Oui : `DELETE /v2/notes/{id}` [MEM] |
+| Tâche | `POST /v2/tasks` | `content`, `format`, `deadline_at`, `is_completed`, `linked_records`, `assignees` [MEM, à vérifier] | portée de tâches (nom non trouvé) | Oui : `DELETE /v2/tasks/{id}` [MEM] |
+
+- **L'assert est la seule vraie idempotence du lot** : même valeur d'attribut unique (courriel pour les personnes, domaine pour les sociétés) donne la même fiche, sans doublon. Si la valeur manque dans le corps, Attio crée une nouvelle fiche [TIERS] https://www.craftt.io/blog/building-against-the-attio-api ; https://getmembrane.com/integrations/attio.
+- Débit : 100 requêtes par seconde en lecture, 25 par seconde en écriture ; `429` avec `Retry-After` (format contesté : une date pour une source, des secondes pour d'autres) [TIERS, concordants] https://pipeline.zoominfo.com/sales/attio-api ; https://www.coffee.ai/articles/attio-crm-public-api-docs/.
+- Revue : pas de revue trouvée pour une appli OAuth ; les applis se déclarent dans le portail développeur [non trouvé].
+- Noms exacts des portées de notes et de tâches : **non trouvé**.
+
+---
+
+## 10. Close
+
+Base : `https://api.close.com/api/v1`. Clé d'API en Basic (clé comme nom d'utilisateur) ou OAuth 2 [MEM].
+
+| Action | Méthode et point d'API | Champs obligatoires | Portée | Annulable |
+|---|---|---|---|---|
+| Note sur un lead | `POST /api/v1/activity/note/` | `lead_id`, `note` | OAuth : `all.full_access` ou `offline_access` [MEM, à vérifier] | Oui : `DELETE /api/v1/activity/note/{id}/` |
+| Tâche | `POST /api/v1/task/` | `lead_id`, `text` ; `date` | idem | Oui : `DELETE /api/v1/task/{id}/` |
+| Créer un lead | `POST /api/v1/lead/` | `name` | idem | Oui : `DELETE` |
+| Modifier un lead | `PUT /api/v1/lead/{id}/` | champs changés | idem | Oui |
+
+- Point confirmé : `POST /api/v1/activity/note/` [TIERS] https://getknit.dev/blog/close-api-directory-bjpPxE/. Les autres chemins viennent de la mémoire.
+- Débit : limite par groupe de points d'API, par organisation et par clé ; chaque `429` porte les en-têtes `ratelimit` et `retry-after` [OFF] https://developer.close.com/topics/rate-limits/. Les chiffres d'un tiers varient de 60 par minute à 20 par seconde : **ne pas s'y fier**, lire l'en-tête.
+- Idempotence : rien trouvé.
+- Portées OAuth : aucune portée fine trouvée ; la forme semble « tout ou rien » [DED, à vérifier].
+
+---
+
+## 11. folk
+
+Base : `https://api.folk.app/v1` [MEM]. Clé d'API en `Bearer`.
+
+- Débit officiel : 600 requêtes par minute et par utilisateur ; rafale de 20 par 2 secondes ; `429` avec `Retry-After` [OFF] https://developer.folk.app/api-reference/rate-limits ; https://developer.folk.app/changelog. Un tiers de 2025 donne 10 par seconde : l'officiel fait foi.
+- Points d'API trouvés : créer, modifier, lire une personne ; groupes ; utilisateurs ; suppression en lot (100 personnes) ; affaires (liste) [OFF, par résumé] https://developer.folk.app/api-reference/deals/list-deals. **Notes et rappels : non trouvés.**
+- Accès à l'API : conflit entre sources (offre Premium à 48 $ par utilisateur et par mois contre offre Enterprise seulement) [TIERS] https://github.com/api-evangelist/folk ; https://damgun.com/folk-crm-review.html. À vérifier sur la page de tarifs.
+- Auth : clé d'API, pas d'OAuth trouvé [TIERS]. Donc pas de « droits OAuth déjà accordés » : il faudra demander une clé à chaque client.
+- Annulation : `DELETE` des objets créés [MEM]. Idempotence : rien trouvé.
+
+## 12. Zendesk
+
+Base : `https://{sous-domaine}.zendesk.com/api/v2`. OAuth 2 ou jeton d'API.
+
+| Action | Méthode et point d'API | Champs obligatoires | Annulable |
+|---|---|---|---|
+| Réponse publique | `PUT /api/v2/tickets/{id}.json` avec `{"ticket":{"comment":{"body":"…","public":true}}}` | `comment.body`, `comment.public: true` | **Non** (le client l'a reçue). Un commentaire public ne se rend plus privé après coup [OFF, par résumé] https://support.zendesk.com/hc/en-us/articles/4408835109018 |
+| Note interne | même appel avec `"public": false` (ou sans `public`) | idem | Pas de suppression simple d'un commentaire ; l'API ne l'offre qu'en cas particuliers [MEM, à vérifier] |
+| Assigner | même appel, `ticket.assignee_id` (ou `group_id`) | | Oui : remettre l'ancienne valeur |
+| Étiquettes | même appel : `ticket.additional_tags` (ajoute) ; `ticket.remove_tags` (retire) ; `ticket.tags` **remplace tout** [MEM, à vérifier] | | Oui |
+| Statut | même appel, `ticket.status` (`open`, `pending`, `hold`, `solved`) | | Oui, tant que le ticket n'est pas « closed » (clos : non modifiable) [MEM] |
+| Créer un ticket | `POST /api/v2/tickets.json` | `ticket.comment.body` ou `description` ; `subject` | Oui : `DELETE /api/v2/tickets/{id}.json` (corbeille 30 jours [MEM]) |
+
+- **Un seul commentaire par appel** : une réponse publique et une note interne demandent deux appels [OFF, par résumé] https://community.zendesk.com/support-7/adding-comments-via-api-can-you-include-a-public-and-private-comment-15080. Statut, assigné et étiquettes peuvent partir dans le même appel que le commentaire.
+- **Idempotence : oui, à la création de ticket.** En-tête `Idempotency-Key: {clé}`. Même clé et même corps dans les 2 heures : la réponse en mémoire revient (en-tête `x-idempotency-lookup: hit`) ; même clé avec un autre corps : `400 IdempotentRequestError`. Tous les points d'API ne le prennent pas en charge ; **pas de preuve pour `PUT` d'un ticket** [OFF, par résumé] https://developer.zendesk.com/api-reference/ticketing/introduction/ ; [TIERS] https://www.eesel.ai/blog/zendesk-api-idempotency-keys. Un rapport d'un tiers signale que des pièces jointes recopiées changent le corps et cassent le rejeu : https://github.com/fiscaltec/zendesk-mcp/issues/91.
+- **Rejouer un `PUT` avec `comment` ajoute un second commentaire.** Pour la réponse publique (non annulable), toujours relire les commentaires du ticket avant de rejouer (`GET /api/v2/tickets/{id}/comments.json`) [DED].
+- **Débit** (par compte et par minute) : Team 200, Growth et Professional 400, Enterprise 700, avec l'option « High Volume » 2 500 [OFF, par résumé] https://support.zendesk.com/hc/en-us/articles/4408836402074-Managing-API-usage-in-your-Zendesk-account. Tiers : 30 mises à jour par ticket, par utilisateur et par 10 minutes [TIERS] https://www.eesel.ai/blog/zendesk-api-rate-limit-requests-per-minute. `429` avec `Retry-After`.
+- Portées OAuth : `read` (GET) et `write` (POST, PUT, DELETE) sur tout ; portées fines par ressource : `tickets:read` (contenu, commentaires, étiquettes) et `tickets:write` (créer, modifier, supprimer, suppression définitive comprise). On peut les combiner. `impersonate` : un administrateur agit au nom d'utilisateurs finaux [OFF, par résumé] https://developer.zendesk.com/api-reference/ticketing/oauth/grant_type_tokens/ ; https://support.zendesk.com/hc/en-us/articles/11093380955674-Announcing-more-granular-OAuth-client-scopes. Les portées permises du client plafonnent celles des jetons. Piège : avec OAuth, l'auteur du commentaire est l'utilisateur qui a donné l'accord.
+- Revue : une appli OAuth globale doit être enregistrée dans l'administration ; la place de marché a sa propre revue [MEM, à vérifier].
+
+---
+
+## 13. Intercom
+
+Base : `https://api.intercom.io` (ou `api.eu.intercom.io` pour l'Europe [MEM]). En-tête `Intercom-Version: 2.14` ou plus récent ; les exemples de la doc montrent 2.17 [OFF, par résumé] https://developers.intercom.com/docs/references/rest-api/api.intercom.io/conversations/replyconversation. Sans l'en-tête, la version de l'appli s'applique.
+
+| Action | Méthode et point d'API | Champs obligatoires | Annulable |
+|---|---|---|---|
+| Réponse au client | `POST /conversations/{id}/reply` | `message_type: "comment"`, `type: "admin"`, `admin_id`, `body` | **Non** |
+| Note interne | même point, `message_type: "note"`, `type: "admin"`, `admin_id`, `body` | | Pas de suppression de note par l'API trouvée |
+| Assigner, fermer, mettre en attente | `POST /conversations/{id}/parts` avec `message_type: "assignment"`, `"close"`, `"snoozed"`, `"open"` ; `admin_id`, `assignee_id`, `body` selon le cas | `admin_id` | Oui : ouvrir à nouveau, ré-assigner |
+| Étiquette | `POST /conversations/{id}/tags` `{ "id": tag_id, "admin_id" }` ; retrait : `DELETE /conversations/{id}/tags/{tag_id}` | | Oui |
+
+Source : [OFF, par résumé] https://developers.intercom.com/docs/references/rest-api/api.intercom.io/conversations/manageconversation ; https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs. Les chemins `/parts` et `/tags` : [MEM, à vérifier].
+
+- **`admin_id` est obligatoire** pour tout ce qui écrit : le message part au nom d'un administrateur existant. Avec OAuth, prendre l'identifiant de l'utilisateur qui a donné l'accord (`GET /me`) [MEM].
+- Débit : appli publique 10 000 appels par minute et par appli, 25 000 par minute par espace de travail ; appli privée : 10 000 par minute par espace, partagés ; `429` ; en-têtes `X-RateLimit-*` [OFF] https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs. Les guides tiers qui disent 1 000 par minute sont périmés.
+- Idempotence : rien trouvé pour les réponses [DED]. Portées OAuth : cases à cocher du type « lire et écrire les conversations » ; noms exacts **non trouvés**.
+- Revue : une appli publique qui va à la place de marché Intercom est revue par Intercom ; une appli privée de client : non [MEM, à vérifier].
+
+---
+
+## 14. Front
+
+Base : `https://api2.frontapp.com`. Jeton d'API ou OAuth ; Front propose aussi un serveur MCP en bêta ouverte (OAuth 2.1 avec PKCE, par collègue) [TIERS] https://www.getmacha.com/blog/how-to-use-the-front-api.
+
+| Action | Méthode et point d'API | Portée | Annulable |
+|---|---|---|---|
+| Brouillon de réponse | `POST /conversations/{conversation_id}/drafts` : répond au dernier message, **pas envoyé** ; `author_id` optionnel (sans lui, le brouillon est au nom du jeton) ; `mode` : `private` ou `shared` | `drafts:write` [OFF, par résumé] https://dev.frontapp.com/reference/create-draft-reply | Oui : suppression du brouillon `DELETE /drafts/{id}` [MEM] |
+| Note interne | `POST /conversations/{id}/comments` | portée de commentaires (nom non trouvé) | Pas de suppression trouvée |
+| Assigner | `PUT /conversations/{id}/assignee` `{ "assignee_id": … ou null }` [MEM] | | Oui |
+| Étiqueter | `POST /conversations/{id}/tags` [MEM, à vérifier] | | Oui |
+| Envoyer un message | `POST /channels/{id}/messages` ou `POST /conversations/{id}/messages` | | **Non** |
+
+- **Front est le seul outil du lot, avec Help Scout, Missive et Gmail, qui sait faire un vrai brouillon de réponse dans la boîte partagée** : le collègue le voit dans Front et l'envoie. C'est le meilleur « propose » pour le support par courriel [DED].
+- Débit : par entreprise (pas par jeton). 50 requêtes par minute (Starter), 100 (Professional), 200 (Enterprise) ; option de 100 de plus par module acheté ; `429` avec `Retry-After`, même si `X-RateLimit-Remaining` est positif (gardes par route) [OFF, par résumé] https://help.front.com/en/articles/2438 ; https://dev.frontapp.com/docs/rate-limiting. L'en-tête `x-ratelimit-burst-limit` est déprécié. Un ancien guide parle d'offres Starter, Growth, Scale : périmé. **50 par minute est très bas** pour un agent qui lit et écrit : prévoir une file avec plafond par client. Idempotence : non trouvée. Noms des portées OAuth : non trouvés.
+- Les brouillons de commentaire ou de discussion interne ne se créent pas par l'API (fil de 2022) [TIERS, ancien] https://community.front.com/developer-q-a-37/create-a-new-internal-discussion-draft-287.
+
+---
+
+## 15. Freshdesk
+
+Base : `https://{domaine}.freshdesk.com/api/v2`. Clé d'API (Basic) ; OAuth ouvert aux applis Freshworks.
+
+| Action | Méthode et point d'API | Champs obligatoires | Annulable |
+|---|---|---|---|
+| Note (privée par défaut) | `POST /api/v2/tickets/{id}/notes` | `body` ; `private` (`false` pour publique) | Oui : `DELETE /api/v2/conversations/{id}` [MEM] |
+| Réponse au client | `POST /api/v2/tickets/{id}/reply` | `body` | **Non** |
+| Modifier (statut, priorité, agent, étiquettes) | `PUT /api/v2/tickets/{id}` | champs changés ; `status` : 2 ouvert, 3 en attente, 4 résolu, 5 clos [MEM] ; `responder_id` ; `tags` (**remplace tout**) [MEM] | Oui |
+
+- Portées OAuth pour les notes : `freshdesk.conversations.create` et `freshdesk.tickets.view` [OFF, par résumé] https://developers.freshdesk.com/api/.
+- Débit par compte et par minute, toutes clés comprises. Chiffres contradictoires : Growth 100 ou 200, Pro 400, Enterprise 700 ; essai 50 [TIERS] https://www.getmacha.com/blog/freshdesk-api-explained ; https://partnersupport.freshworks.com/support/solutions/articles/225439-what-are-the-rate-limits-for-the-api-calls-to-freshdesk-. L'en-tête `X-RateLimit-Remaining` n'arrive qu'une fois la limite atteinte [TIERS].
+- Idempotence : rien trouvé. Pas de brouillon de réponse : seul « note privée » joue le rôle de « propose » [DED].
+
+---
+
+## 16. Help Scout
+
+Base : `https://api.helpscout.net/v2`. OAuth 2 ; jeton valable 2 jours selon un tiers [TIERS, à vérifier] https://www.getmacha.com/blog/how-to-use-the-help-scout-api.
+
+| Action | Méthode et point d'API | Champs obligatoires | Annulable |
+|---|---|---|---|
+| **Brouillon de réponse** | `POST /v2/conversations/{id}/reply` avec `draft: true` | `customer`, `text` ; `draft: true` | Oui : le brouillon se supprime ou se remplace [MEM] |
+| Réponse envoyée | même point, sans `draft` | idem | **Non** |
+| Note interne | `POST /v2/conversations/{id}/notes` | `text` ; pas de brouillon possible pour une note | Pas de suppression trouvée |
+| Statut | `status` accepté sur réponse et note (depuis 2019) ; ou `PATCH /v2/conversations/{id}` [MEM] | | Oui |
+| Étiquettes | `PUT /v2/conversations/{id}/tags` (**remplace tout**) [MEM, à vérifier] | | Oui |
+
+Source : [OFF, par résumé] https://developer.helpscout.com/mailbox-api/endpoints/conversations/threads/reply/ ; https://developer.helpscout.com/mailbox-api/changelog/. Piège : un fil de conversation tient 100 messages au plus ; au-delà, `412`.
+
+- Débit : **non trouvé** (400 par minute [MEM], non confirmé). Idempotence : rien trouvé.
+
+---
+
+## 17. Crisp
+
+Base : `https://api.crisp.chat/v1`. Authentification en Basic (identifiant et clé) avec l'en-tête `X-Crisp-Tier: plugin` pour une extension [OFF, par résumé] https://docs.crisp.chat/guides/rest-api/quickstart/. Pas d'OAuth au sens habituel : un jeton de « plugin » par installation [DED].
+
+| Action | Méthode et point d'API | Portée | Annulable |
+|---|---|---|---|
+| Message ou note | `POST /v1/website/{website_id}/conversation/{session_id}/message` ; `type: "note"` pour la note interne [MEM, à vérifier] ; corps `type`, `from`, `origin`, `content` | `website:conversation:messages` [OFF] https://docs.crisp.chat/references/rest-api/v1/ | Non trouvé |
+
+- Débit, idempotence, étiquettes, statut : **non trouvés**. La référence est la seule bonne source ; le portage Python date de la révision de janvier 2023.
+
+---
+
+## 18. Missive
+
+Base : `https://public.missiveapp.com/v1` [MEM]. Jeton d'API personnel.
+
+| Action | Méthode et point d'API | Remarque | Annulable |
+|---|---|---|---|
+| Brouillon (nouveau ou réponse) | `POST /v1/drafts` | e-mail, SMS, WhatsApp, chat ; envoyable tout de suite ou à éditer dans l'appli ; 25 pièces jointes, corps de 10 Mo au plus [OFF, par résumé] https://missiveapp.com/docs/developers/rest-api/endpoints | Oui : suppression du brouillon [MEM] |
+| Message ou « post » interne | `POST /v1/posts` [MEM, à vérifier] | note visible de l'équipe | Non trouvé |
+
+- Débit : 5 requêtes simultanées, 300 par minute, 900 par 15 minutes en fenêtre glissante [TIERS, citant missiveapp.com]. Idempotence, portées : non trouvées ; pas d'OAuth trouvé.
+
+---
+
+## 19. Plain
+
+API GraphQL : `https://core-api.uk.plain.com/graphql/v1` [MEM, à vérifier]. Clé d'API d'un « utilisateur machine », avec des permissions fines [OFF, par résumé] https://www.plain.com/docs/agents/support-agent.
+
+| Action | Mutation | Permission | Annulable |
+|---|---|---|---|
+| Créer un fil | `createThread` (statut `TODO`) ; `externalId` possible | `thread:create`, `thread:read` | Non trouvé |
+| Répondre | `replyToThread` ; e-mail, chat, Slack, Teams | `thread:reply` | **Non** |
+| Note interne | `createNote` | `note:create` (+ `thread:read`, `customer:read`) | Non trouvé |
+| Assigner | `assignThread` / `unassignThread` [MEM] | `thread:assign`, `thread:unassign` | Oui |
+
+- **Les permissions sont fines et la séparation « note » et « réponse » est tenue par la clé** : on peut créer un utilisateur machine sans `thread:reply`. Un « propose » garanti par l'éditeur, comme Microsoft [DED].
+- Une réponse peut partir au nom d'un humain si celui-ci est sur la liste d'usurpation de la clé [OFF, par résumé] même page. Le défaut : au nom de l'utilisateur machine.
+- Débit : non trouvé. Idempotence : `externalId` sur `createThread` sert de clé de rapprochement [OFF] https://www.plain.com/docs/graphql-reference/mutations/createThread.
+
+---
+
+## 20. Passerelles : Nango, Pipedream, Composio
+
+- **Nango** : gère l'OAuth, le renouvellement des jetons et le proxy ; **les actions d'écriture sont à coder soi-même** en fonctions TypeScript [TIERS] https://nango.dev/blog/best-tools-to-trigger-ai-agents-from-email/ ; https://composio.dev/content/nango-alternatives-ai-agents (source partisane : Composio).
+- **Composio** : catalogue d'outils prêts (environ 1 000 à 1 600 selon la source) dont HubSpot. En mai 2026, HubSpot a annoncé un accès non autorisé aux systèmes de Composio, avec des identifiants OAuth et des clés exposés ; HubSpot dit avoir fait tourner les siens [TIERS, résumé] même page. Un fait à peser pour confier des jetons clients à un tiers.
+- **Pipedream** : plus de 10 000 actions ; un article de 2026 annonce son rachat par Workday [TIERS] https://peliqan.io/blog/pipedream-alternatives/. Nous l'utilisons déjà pour Gmail et Slack [code]. À suivre : la direction du produit après le rachat.
+- Aucune de ces sources ne liste les actions d'écriture par outil : **non trouvé**. Pour un agent, les actions ci-dessus (une dizaine de points d'API par outil) sont assez peu nombreuses pour être écrites à la main sur un client HTTP à nous.
+
+---
+
+## Tableau final
+
+Effort : S = une demi-journée ou moins ; M = un à deux jours ; L = plus (revue de l'éditeur ou outillage lourd). Annulable : O = oui par l'API ; N = non ; P = partiel.
+
+| Outil | Action | Méthode et point d'API | Portée | Annulable | Effort |
+|---|---|---|---|---|---|
+| Gmail | Brouillon en réponse | `POST /gmail/v1/users/me/drafts` (`raw`, `threadId`) | `gmail.compose` | O (`DELETE /drafts/{id}`) | M |
+| Gmail | Envoyer un brouillon | `POST /drafts/send` | `gmail.compose` | N | S |
+| Gmail | Libellé, archiver | `POST /threads/{id}/modify` | `gmail.modify` | O | S |
+| Google Agenda | Créer (id fourni) | `POST /calendar/v3/calendars/primary/events?sendUpdates=none` | `calendar.events` | O (mais invitations parties : N) | M |
+| Google Agenda | Disponibilités | `POST /calendar/v3/freeBusy` | `calendar.freebusy` | sans objet | M (calcul des créneaux à écrire) |
+| Outlook | Brouillon de réponse | `POST /me/messages/{id}/createReply` puis `PATCH` | `Mail.ReadWrite` | O | S |
+| Outlook | Envoyer | `POST /me/messages/{id}/send` | `Mail.Send` | N | S (+ nouvel accord admin) |
+| Outlook | Catégories | `PATCH /me/messages/{id}` | `Mail.ReadWrite` | O | S |
+| Outlook | Événement | `POST /me/events` (`transactionId`) | `Calendars.ReadWrite` | O / P | M |
+| Outlook | Créneaux | `POST /me/findMeetingTimes` | `Calendars.Read.Shared` | sans objet | M (nouvel accord) |
+| Slack | Message, boutons | `chat.postMessage` + `blocks` | `chat:write` (bot) | O (`chat.delete`) | M (appli propre) |
+| Slack | Clic | POST vers l'URL d'interactivité | aucune | sans objet | M |
+| Teams | Message au nom de l'utilisateur | `POST /chats/{id}/messages` | `ChatMessage.Send` | P (suppression douce) | M |
+| Teams | Carte avec boutons | bot Teams, `Action.Execute` | appli Teams | O (remplacer la carte) | L |
+| HubSpot | Contact | `POST /crm/v3/objects/contacts` | `crm.objects.contacts.write` | O | S |
+| HubSpot | Affaire | `POST /crm/v3/objects/deals` | `crm.objects.deals.write` | O | S |
+| HubSpot | Note, tâche | `POST /crm/v3/objects/notes` et `/tasks` | à vérifier | O | S |
+| HubSpot | Association | `PUT /crm/v4/objects/{a}/{id}/associations/{b}/{id}` | écriture des deux | O | S |
+| Pipedrive | Affaire, personne | `POST /api/v2/deals`, `/persons` | `deals:full`, `contacts:full` | O | S |
+| Pipedrive | Note | `POST /api/v1/notes` | `deals:full` | O | S |
+| Attio | Assert (upsert) | `PUT /v2/objects/{o}/records?matching_attribute=` | `record_permission:read-write` | P | S |
+| Attio | Note, tâche | `POST /v2/notes`, `/v2/tasks` | non trouvé | O | S |
+| Close | Note, tâche | `POST /api/v1/activity/note/`, `/task/` | non trouvé | O | S |
+| folk | Personne | `POST /v1/people` [MEM] | clé d'API | O | S (notes non trouvées) |
+| Zendesk | Note interne | `PUT /api/v2/tickets/{id}.json` `comment.public=false` | `tickets:write` | P | S |
+| Zendesk | Réponse publique | idem, `public=true` | `tickets:write` | N | S |
+| Zendesk | Assigné, étiquettes, statut | idem | `tickets:write` | O | S |
+| Intercom | Note, réponse | `POST /conversations/{id}/reply` | non trouvé | P / N | S |
+| Front | Brouillon de réponse | `POST /conversations/{id}/drafts` | `drafts:write` | O | S |
+| Front | Note interne | `POST /conversations/{id}/comments` | non trouvé | P | S |
+| Freshdesk | Note privée | `POST /api/v2/tickets/{id}/notes` | `freshdesk.conversations.create` | O | S |
+| Help Scout | Brouillon de réponse | `POST /v2/conversations/{id}/reply` `draft:true` | OAuth | O | S |
+| Help Scout | Note | `POST /v2/conversations/{id}/notes` | OAuth | P | S |
+| Crisp | Message ou note | `POST /v1/website/{w}/conversation/{s}/message` | `website:conversation:messages` | non trouvé | S |
+| Missive | Brouillon | `POST /v1/drafts` | jeton | O | S |
+| Plain | Note, réponse | `createNote`, `replyToThread` (GraphQL) | `note:create`, `thread:reply` | P / N | S |
+
+---
+
+## Ce que je recommande
+
+1. **Séparer les actions en trois classes dans le code** : lecture, écriture annulable, envoi externe non annulable. Le curseur d'autonomie s'applique par classe : l'envoi externe reste « propose » par défaut. Raison : aucune API ne rappelle un envoi.
+2. **Pour le mail, écrire des brouillons dans la boîte de l'utilisateur** (Gmail `drafts.create`, Outlook `createReply`). Le brouillon se voit dans l'outil de l'utilisateur, s'annule par `DELETE`. Raison : zéro interface à construire pour valider.
+3. **Outlook : ne pas demander `Mail.Send` au départ.** Garder `Mail.ReadWrite` : Microsoft garantit alors qu'aucun envoi n'est possible. Gmail n'offre pas cette garantie : `gmail.compose` envoie aussi ; l'interdit doit venir de notre code.
+4. **Gmail : prévoir CASA dès que nous aurons notre appli Google** (portée restreinte, évaluation annuelle, 4 à 12 semaines). Tant que Pipedream porte l'appli, ne rien changer.
+5. **Une table « actions » en base avec une clé unique, écrite avant l'appel**, avec l'ancienne valeur et l'identifiant créé. C'est la seule idempotence générale, car presque aucune API n'en a. Exceptions à exploiter : Google Agenda (`id` fourni), Outlook (`transactionId`), Zendesk (`Idempotency-Key` à la création), Attio (assert), Plain (`externalId`), HubSpot (rapprochement par courriel).
+6. **Slack : créer notre appli avec un jeton de bot** (`chat:write`, `im:write`, `users:read.email`) et valider en message direct. Pas besoin du Marketplace pour écrire. Vérifier `payload.user.id` à chaque clic.
+7. **Teams : repousser le bot.** Pour une première version, un lien « Ouvrir dans Leon » dans un message Graph suffit ; les boutons exigent un bot, une ressource Azure et l'installation par chaque administrateur. Raison : effort L pour un gain faible.
+8. **CRM : commencer par HubSpot, Pipedrive et Attio** (OAuth, API claires, débit confortable). Close et folk ensuite ; folk n'a ni OAuth ni notes trouvées.
+9. **Support : Zendesk d'abord** (le plus répandu, idempotence à la création, portées fines). Pour le « propose » du support : Front et Help Scout ont de vrais brouillons ; Zendesk, Intercom, Freshdesk n'ont que la note interne ; Plain donne la garantie par la clé.
+10. **Plafonner le débit par client dans pg-boss** : Front 50 à 200 par minute, Zendesk 200 à 700, Freshdesk 100 à 700, HubSpot 110 par 10 secondes. Respecter `Retry-After` partout.
+11. **Écrire à la main les 30 actions du tableau** sur le client HTTP existant. Elles sont courtes. Les passerelles prêtes à l'emploi n'apportent que le OAuth, que Pipedream et Nango fournissent déjà ; l'incident Composio de mai 2026 plaide pour ne pas leur confier plus de jetons.
+
+---
+
+## Ce que je n'ai pas trouvé
+
+- Aucune page d'éditeur ouverte directement : tout vient de résumés de recherche. Les chiffres de débit tiers sont signalés comme tels et se contredisent parfois (Close, Freshdesk, Pipedrive, Missive).
+- **Portées exactes** : HubSpot pour notes et tâches ; Attio pour notes et tâches ; Close ; Intercom ; Front (hors `drafts:write`) ; Pipedrive (noms `contacts:full`, `activities:full` de mémoire) ; Help Scout ; Missive ; folk.
+- **Débit** : Help Scout, Crisp, Plain, Intercom (par point d'API), Pipedrive (budget officiel).
+- **Idempotence** : confirmée pour Google Agenda, Outlook (événements), Zendesk (création), Attio (assert), Plain (`externalId`) ; rien trouvé ailleurs, et rien pour `PUT` Zendesk.
+- **Annulation** de notes et commentaires (Zendesk, Intercom, Front, Close hors `DELETE`) : à tester sur un compte d'essai.
+- **Revue par l'éditeur** : chiffres seulement pour Google (CASA), Slack (Marketplace) et Microsoft (éditeur vérifié). HubSpot, Pipedrive, Zendesk, Intercom, Front, Attio : non trouvé ou de mémoire.
+- Prix et offres donnant accès à l'API de folk, Front, Zendesk : contradictoires ou non vérifiés.
+- Restauration d'un événement Google Agenda supprimé par l'API ; chemin exact de l'envoi proactif d'un bot Teams ; manifeste Slack contre la référence à jour.
+- Versions de paquets : non vérifiées dans cette passe (pas de paquet cité). Aucune commande npm lancée.

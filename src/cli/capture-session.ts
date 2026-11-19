@@ -54,7 +54,7 @@ import {
 } from './import-claude-code';
 import { leonMcpRecognized } from './leon-mcp';
 import { ADAPTATEURS, sessionFileFrom } from './outils';
-import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
+import { type GitRunner, projectKeyFor, repoRootOrCloneFor } from './project-key';
 import { loadSubagents } from './subagents';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
@@ -212,7 +212,7 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
   if (!deps.facts) return; // sans accord, pas même git pour la racine du dépôt
   // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt). Ni l'un
   // ni l'autre ne lève : les sous-agents illisibles sont laissés de côté.
-  const root = await repoRootFor(start, deps.git);
+  const root = await repoRootOrCloneFor(start, deps.git);
   const subagents = await loadSubagents(input.transcript_path, deps);
   try {
     const leonMcp = await leonMcpRecognized('claude_code', {
@@ -446,7 +446,7 @@ export async function captureToolFile<O extends Outil>(
   await writeCursor(deps.home, outil, file, written);
   if (!deps.facts) return 'capte';
   // Les fichiers relevés sont relatifs à la racine du dépôt du dossier de départ (aucun hors de tout dépôt).
-  const root = start === null ? null : await repoRootFor(start, deps.git);
+  const root = start === null ? null : await repoRootOrCloneFor(start, deps.git);
   const branch =
     session.branche === null && start !== null ? await branchAtCapture(start, deps.git) : null;
   const leonMcp = await leonMcpRecognized(adapter.kind, {

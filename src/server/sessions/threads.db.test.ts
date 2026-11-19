@@ -357,6 +357,70 @@ describe('fileSession', () => {
     expect(await filsOf(paul)).toHaveLength(2);
   });
 
+  it('une session qui change de projet : son fil d’un autre projet, qui a sa branche, est fondu dans celui du dépôt', async () => {
+    const { paul } = await team();
+    const externalId = `session-${randomUUID()}`;
+    // Importée d'un worktree supprimé sous la clé de son dossier, puis réimportée sous celle du dépôt.
+    const send = (project: string, branche: string) =>
+      recordFacts(
+        paul,
+        {
+          kind: 'claude_code',
+          external_id: externalId,
+          project,
+          accord: 2,
+          faits: facts({ branche }),
+          fin: true,
+        },
+        crypto.randomUUID(),
+      );
+    const { sourceId } = await send('dossier:0123456789abcdef', 'paul/lot-13');
+    await file(paul, sourceId);
+    const [old] = await kept(paul);
+    expect(old?.metadata.project).toBe('dossier:0123456789abcdef');
+
+    await send(PROJECT, 'paul/lot-13');
+    expect(await file(paul, sourceId)).toBe('range');
+
+    // Le gardé est le fil du dépôt, même plus récent ; l'ancien reste, marqué absorbé.
+    const [keeper, ...rest] = await kept(paul);
+    expect(rest).toEqual([]);
+    expect(keeper?.metadata.project).toBe(PROJECT);
+    expect(keeper?.id).not.toBe(old?.id);
+    expect(sessionIds(keeper)).toEqual([sourceId]);
+    expect(keeper?.metadata.absorbes).toEqual([old?.id]);
+    const absorbed = (await filsOf(paul)).find((fil) => fil.id === old?.id);
+    expect(absorbed?.metadata.absorbe_par).toBe(keeper?.id);
+  });
+
+  it('une session qui change de projet et de branche : son fil d’un autre projet, sans clé commune, reste à part', async () => {
+    const { paul } = await team();
+    const externalId = `session-${randomUUID()}`;
+    const send = (project: string, branche: string) =>
+      recordFacts(
+        paul,
+        {
+          kind: 'claude_code',
+          external_id: externalId,
+          project,
+          accord: 2,
+          faits: facts({ branche }),
+          fin: true,
+        },
+        crypto.randomUUID(),
+      );
+    const { sourceId } = await send('dossier:0123456789abcdef', 'paul/a');
+    await file(paul, sourceId);
+
+    await send(PROJECT, 'paul/b');
+    await file(paul, sourceId);
+
+    const fils = await kept(paul);
+    expect(fils.map((fil) => fil.metadata.project).sort()).toEqual(
+      ['dossier:0123456789abcdef', PROJECT].sort(),
+    );
+  });
+
   it('une session de collègue partagée avec moi n’entre jamais dans mon fil', async () => {
     const { paul, marie } = await team();
     await file(paul, await session(paul));

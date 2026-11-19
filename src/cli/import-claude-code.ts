@@ -27,7 +27,7 @@ import { BATCH_MAX_BYTES, batchTurns, COULISSES_BATCH_MAX_BYTES } from './batch-
 import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
-import { type GitRunner, projectKeyFor, repoRootFor } from './project-key';
+import { type GitRunner, projectKeyFor, repoRootOrCloneFor } from './project-key';
 import { loadSubagents } from './subagents';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
@@ -246,7 +246,7 @@ export async function importSession(
 }
 
 // Les faits d'une session (C2), après ses tours, quand l'accord le permet (`deps.facts`). `root` est la racine du
-// dépôt du dossier de départ (repoRootFor) : les fichiers écrits ailleurs sont retirés, et tous hors de tout dépôt
+// dépôt du dossier de départ (repoRootOrCloneFor) : les fichiers écrits ailleurs sont retirés, et tous hors de tout dépôt
 // (null), comme le promet le texte de l'accord (« paths in the repository »). Rend false quand le serveur ne les
 // prend pas (FACTS_REFUSED_MESSAGE) ; toute autre erreur remonte. Sans `faits`, ceux d'une session Claude Code, lus
 // dans `content` ; un autre outil donne les siens (`kind`, `faits`), relevés par son lecteur.
@@ -395,7 +395,7 @@ export async function importClaudeCode(
       );
       const fin = Date.now() - mtimeMs >= IDLE_MS;
       // Sans git (essais), la racine reste le dossier de départ.
-      const root = deps.git ? await repoRootFor(start, deps.git) : start;
+      const root = deps.git ? await repoRootOrCloneFor(start, deps.git) : start;
       const subagents = await loadSubagents(file, {
         readFile: (path) => readFile(path, 'utf8'),
         readdir: deps.readdir,

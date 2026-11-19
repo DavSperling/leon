@@ -6,7 +6,13 @@ import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { PROJECT_KEY_PATTERN } from '../capture/turn';
-import { gitEnvironment, gitRunner, projectKeyFor, repoRootFor } from './project-key';
+import {
+  gitEnvironment,
+  gitRunner,
+  projectKeyFor,
+  repoRootFor,
+  repoRootOrCloneFor,
+} from './project-key';
 
 const run = promisify(execFile);
 
@@ -271,6 +277,25 @@ describe('gitRunner : avec le vrai git, dans un dossier temporaire', { timeout: 
     const removed = join(dir, '.claude', 'worktrees', 'lot-13');
 
     expect(await projectKeyFor(removed, realGit)).toBe('github.com/acme/leon');
+    // Et la racine des faits : celle du clone, où les fichiers du worktree se lisent relatifs au dépôt.
+    expect(await repoRootOrCloneFor(join(removed, 'src'), realGit)).toBe(dir);
+  });
+
+  it('un dépôt encore là sous .claude/worktrees, hors GitHub ou sans origin, garde la clé de son dossier', async () => {
+    await run('git', ['init', '--quiet'], { cwd: dir });
+    await run('git', ['remote', 'add', 'origin', 'git@github.com:acme/leon.git'], { cwd: dir });
+    const autre = join(dir, '.claude', 'worktrees', 'autre');
+    const essai = join(dir, '.claude', 'worktrees', 'essai');
+    await run('mkdir', ['-p', autre, essai]);
+    await run('git', ['init', '--quiet'], { cwd: autre });
+    await run('git', ['remote', 'add', 'origin', 'https://gitlab.com/acme/autre.git'], {
+      cwd: autre,
+    });
+    await run('git', ['init', '--quiet'], { cwd: essai });
+
+    expect(await projectKeyFor(autre, realGit)).toBe(dossierKey(autre));
+    expect(await projectKeyFor(essai, realGit)).toBe(dossierKey(essai));
+    expect(await repoRootOrCloneFor(autre, realGit)).toBe(autre);
   });
 
   // Sous macOS, le dossier temporaire est un lien (/var → /private/var) : la racine garde la forme reçue.

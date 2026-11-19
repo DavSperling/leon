@@ -125,6 +125,17 @@ Les tokens comptent surtout le contexte relu depuis le cache. Les tâches à cod
 - **Le niveau 3 (D28) : pas encore de pousser plus de texte d'office.** La recommandation pour T36, à trancher par Amos : l'agent ne lit pas ce qu'on lui montre déjà. Avant tout passage obligé, il faut réécrire la consigne de lecture pour dire à quoi sert la mémoire (« reprendre là où l'outil précédent s'est arrêté, sans refaire ce qui a échoué ») plutôt que comment s'en servir. C'était aussi la conclusion de l'article d'Anthropic du 6/11. Il faut ensuite mesurer la part de sessions qui lisent. Si elle reste nulle, le niveau 3 se justifie, par exemple en mettant d'office l'état du fil de la branche dans le bloc.
 - **Les sessions externes** effacent presque tout le récit de la mémoire : 199 sessions sur 202. L'import ne lit pas la configuration MCP : c'est la tâche t04, dont les trois patchs de la mesure sont justes et peuvent servir de départ. Et les anciennes sessions datent d'avant la règle des sous-agents. Les corriger rendrait l'état des fils bien plus riche.
 
+## La consigne réécrite ne suffit pas (19/11, après #213)
+
+Décision d'Amos du 19/11 : la consigne dit désormais à quoi sert la mémoire avant de dire comment la lire (#213, D28 amendée). Le cas B a été refait sur les dix tâches, une fois #213 déployée, au même réglage et au même commit.
+- Une sonde a d'abord vérifié que la nouvelle consigne arrive bien à l'agent : elle la recopie mot pour mot.
+- **Aucune lecture, comme avant** : `read_log` est vide sur la fenêtre de la mesure (21 h 21 à 21 h 28 UTC). Aucune réponse ne cite un fil, et aucune commande de Leon n'a été tentée.
+- La durée et les tokens sont du même ordre que le cas B de la première mesure (820 s et 9,4 M, contre 912 s et 9,6 M).
+
+**Conclusion.** En mode non interactif, sur une branche neuve et avec une consigne de tâche précise, l'agent ne va pas lire sa mémoire, qu'on lui dise comment ou pourquoi. D'après D28 amendée, le niveau 3 se conçoit donc : un lot à part, en option éteinte par défaut, avec son propre accord. Une limite reste : une session interactive sur une branche qui a déjà son fil n'est pas mesurée ici.
+
+Les sorties de ce passage sont sous `~/leon-mesure-consigne`, hors du dépôt.
+
 ## Ce qui reste
 
 - **Refaire t01, t03, t06, t08 et t09 après le rêve (T62)**, au même réglage et au même commit :

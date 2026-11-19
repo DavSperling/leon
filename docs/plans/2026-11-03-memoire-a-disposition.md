@@ -282,6 +282,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
   - Aucune écriture de plus. Amendé le 04/11 par D38 : hormis `leon noter`, le brouillon privé de l'agent, sous l'usage `noter` (D30). Tranché le 05/11 : la restauration d'une version ne passe plus par le poste, seulement par le site (D33).
 - **D28. Le niveau 3 (passage obligé) n'est pas construit ici.** Le lot 11 mesure d'abord si les niveaux 1 et 2 suffisent. S'il le faut, un lot à part le conçoit, en option éteinte par défaut, avec son propre accord.
   - Amendé le 19/11 (décision d'Amos, après la mesure du lot 11, annexe 07 de l'étude). Aucun des 20 passages qui avaient le bloc n'a lu un fil. La consigne de lecture (D24) dit désormais à quoi sert la mémoire avant de dire comment la lire : reprendre là où la session précédente s'est arrêtée, sans refaire un travail déjà fait ni une erreur déjà commise. Une nouvelle mesure compte la part de sessions qui lisent. Le niveau 3 ne se conçoit que si elle reste nulle. Amos a laissé le choix (« le plus propre, le plus solide »).
+  - Mesuré le 19/11, après le déploiement de #213 (annexe 07, « La consigne réécrite ne suffit pas »). Sur dix passages avec le bloc, l'agent reçoit bien la nouvelle consigne, et aucun ne lit un fil. Le niveau 3 se conçoit donc, dans un lot à part.
 - **D29. La capture complète.**
   - En plus des messages et des faits, la CLI envoie :
     - le raisonnement de l'agent, quand le transcript en porte le texte ;

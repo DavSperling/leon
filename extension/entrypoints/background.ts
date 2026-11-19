@@ -2,7 +2,7 @@ import { browser, defineBackground } from '#imports';
 import { ViewerProfileSchema } from '../../src/capture/api-contract';
 import { getMe, postIngest } from '../lib/api';
 import { browserStore as store } from '../lib/browser-store';
-import { recordExchange } from '../lib/capture';
+import { recordExchange, recordRejection } from '../lib/capture';
 import type { Site } from '../lib/exchange';
 import {
   countPending,
@@ -95,7 +95,9 @@ export default defineBackground(() => {
 
   browser.runtime.onMessage.addListener((message) => {
     enqueueTask(async () => {
+      // Un rejet est seulement noté pour la petite fenêtre : il ne part jamais au serveur.
       if (await recordExchange(store, message)) await flush();
+      else await recordRejection(store, message);
     });
   });
 

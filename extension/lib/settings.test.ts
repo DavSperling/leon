@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { createMemoryStore } from './memory-store';
 import {
+  type CaptureStatus,
   CONSENT_VERSION,
   canCapture,
   hasConsent,
   loadSettings,
+  rejectionToShow,
   SETTINGS_KEY,
   type Settings,
   saveSettings,
@@ -84,6 +86,39 @@ describe('canCapture', () => {
     expect(settings.consentVersion).toBe(0);
     expect(canCapture(settings, 'claude_ai')).toBe(false);
     expect(canCapture(settings, 'chatgpt')).toBe(false);
+  });
+});
+
+describe('rejectionToShow', () => {
+  const status = (patch: Partial<CaptureStatus>): CaptureStatus => ({
+    lastCaptureAt: {},
+    lastRejection: { chatgpt: { reason: 'format', at: '2026-11-19T10:00:00.000Z' } },
+    connection: 'connected',
+    pending: 0,
+    ...patch,
+  });
+
+  it('montre le dernier rejet quand rien n’a été capté depuis', () => {
+    expect(rejectionToShow(status({}), 'chatgpt')).toBe('format');
+    expect(
+      rejectionToShow(
+        status({ lastCaptureAt: { chatgpt: '2026-11-19T09:59:59.999Z' } }),
+        'chatgpt',
+      ),
+    ).toBe('format');
+  });
+
+  it('ne montre plus le rejet une fois une capture faite après', () => {
+    expect(
+      rejectionToShow(
+        status({ lastCaptureAt: { chatgpt: '2026-11-19T10:00:00.001Z' } }),
+        'chatgpt',
+      ),
+    ).toBeNull();
+  });
+
+  it('ne montre que le rejet du site', () => {
+    expect(rejectionToShow(status({}), 'claude_ai')).toBeNull();
   });
 });
 

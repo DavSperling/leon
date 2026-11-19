@@ -1,6 +1,9 @@
-import type { CapturedExchange, Site } from '../exchange';
+import type { CapturedExchange, RejectReason, Site } from '../exchange';
 
-// Un parseur par site capté : reconnaît la requête de complétion, puis lit l'échange terminé.
+export type Rejection = { rejected: RejectReason };
+
+// Un parseur par site capté : reconnaît la requête de complétion, puis lit l'échange terminé. Il rend l'échange, ou
+// un rejet avec sa raison (sans contenu), ou null quand il n'y a rien à capter (une régénération, par exemple).
 export type SiteParser = {
   site: Site;
   matchesRequest(url: URL, method: string): boolean;
@@ -9,7 +12,7 @@ export type SiteParser = {
     requestBody: string | null;
     sseText: string;
     now: Date;
-  }): Promise<CapturedExchange | null>;
+  }): Promise<CapturedExchange | Rejection | null>;
 };
 
 // Corps de requête et données SSE viennent du site : un JSON illisible vaut absence, jamais une exception.

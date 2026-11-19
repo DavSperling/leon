@@ -6,7 +6,7 @@ const CONVERSATION_PATHS = ['/backend-api/conversation', '/backend-api/f/convers
 
 // Seules les parties texte comptent : images et pièces jointes (metadata.attachments) ne sont jamais lues.
 const RequestSchema = z.object({
-  conversation_id: z.string().min(1).optional(),
+  conversation_id: z.string().min(1).nullish(),
   messages: z
     .array(
       z.object({
@@ -18,19 +18,24 @@ const RequestSchema = z.object({
     .optional(),
 });
 
-// Messages tool, system et thoughts (content_type « thoughts ») écartés par ce schéma.
+// Le message de réponse : assistant, texte, terminé, adressé à tous. Messages tool, system, thoughts, contexte caché
+// (model_editable_context), appels d'outil (recipient autre que all) et messages non terminés écartés par ce schéma.
 const AssistantMessageSchema = z.object({
   id: z.string().min(1),
   author: z.object({ role: z.literal('assistant') }),
   content: z.object({ content_type: z.literal('text'), parts: z.array(z.unknown()) }),
-  status: z.string(),
+  status: z.literal('finished_successfully'),
+  recipient: z.literal('all').optional(),
 });
 
 type Doc = Record<string, unknown>;
 // Chaque document est un événement { message, conversation_id } ; les opérations s'appliquent au dernier.
+// path et op : ceux de la dernière opération de premier niveau, que la forme courte reprend.
 type StreamState = {
   docs: Doc[];
-  lastPath: string;
+  path: string;
+  op: string;
+  complete: boolean;
   conversationId: string | null;
   title: string | null;
 };
@@ -74,38 +79,59 @@ function applyAtPath(doc: Doc, path: string, kind: string, value: unknown): void
   }
 }
 
-// Format delta v1 : { p, o, v } ; « patch » porte un lot ; la forme compacte { v } ajoute au dernier chemin.
-function applyOperation(state: StreamState, op: Doc): void {
-  const path = typeof op.p === 'string' ? op.p : state.lastPath;
-  const kind = typeof op.o === 'string' ? op.o : 'append';
-  if (kind === 'patch') {
-    const batch: unknown[] = Array.isArray(op.v) ? op.v : [];
-    for (const inner of batch) {
-      if (isDoc(inner)) applyOperation(state, inner);
-    }
-    return;
-  }
+// add sur le chemin vide : un nouveau document (message) ; add et replace ailleurs : écrire la valeur ; append :
+// concaténer. Le reste (remove, append d'un objet) est ignoré : sans effet sur le texte.
+function applyOperation(state: StreamState, path: string, op: string, value: unknown): void {
   if (path === '') {
-    if (kind === 'add' && isDoc(op.v)) pushDoc(state, op.v);
+    if (op === 'add' && isDoc(value)) pushDoc(state, value);
     return;
   }
-  state.lastPath = path;
   const doc = state.docs.at(-1);
-  if (doc) applyAtPath(doc, path, kind, op.v);
+  if (doc) applyAtPath(doc, path, op, value);
+}
+
+// Format delta v1 : { p, o, v }. Une opération sans p (ou sans o) reprend le chemin (ou l'opération) de la
+// précédente de même niveau : premier niveau du flux, ou même lot. Ainsi { v: { message } } après un add ajoute un
+// message, et { v: [...] } après un patch est un lot. Les opérations d'un lot ne changent pas le premier niveau.
+function applyEvent(state: StreamState, event: Doc): void {
+  state.path = typeof event.p === 'string' ? event.p : state.path;
+  state.op = typeof event.o === 'string' ? event.o : state.op;
+  if (state.op !== 'patch') {
+    applyOperation(state, state.path, state.op, event.v);
+    return;
+  }
+  let path = '';
+  let op = 'append';
+  for (const inner of Array.isArray(event.v) ? event.v : []) {
+    if (!isDoc(inner)) continue;
+    path = typeof inner.p === 'string' ? inner.p : path;
+    op = typeof inner.o === 'string' ? inner.o : op;
+    applyOperation(state, path, op, inner.v);
+  }
 }
 
 function replayStream(sseText: string): StreamState {
-  const state: StreamState = { docs: [], lastPath: '', conversationId: null, title: null };
+  const state: StreamState = {
+    docs: [],
+    path: '',
+    op: 'append',
+    complete: false,
+    conversationId: null,
+    title: null,
+  };
   for (const { data } of parseSseText(sseText)) {
+    // La marque de fin : sans elle, la réponse a pu être coupée sur un message intermédiaire.
+    if (data === '[DONE]') state.complete = true;
     const event = parseJsonOrNull(data);
     if (!isDoc(event)) continue; // "v1" de delta_encoding, [DONE]
+    if (event.type === 'message_stream_complete') state.complete = true;
     if (event.type === 'title_generation' && typeof event.title === 'string') {
       state.title = event.title;
     }
     if (isDoc(event.message)) {
       pushDoc(state, event); // ancien format : message complet à chaque événement
     } else if ('v' in event) {
-      applyOperation(state, event);
+      applyEvent(state, event);
     } else if (typeof event.conversation_id === 'string') {
       state.conversationId ??= event.conversation_id;
     }
@@ -113,13 +139,13 @@ function replayStream(sseText: string): StreamState {
   return state;
 }
 
-function finishedAssistantText(docs: readonly Doc[]): { id: string; text: string } | null {
+// En partant de la fin, le dernier message de réponse au texte non vide ; les autres messages sont sautés.
+function replyOf(docs: readonly Doc[]): { id: string; text: string } | null {
   for (let i = docs.length - 1; i >= 0; i--) {
     const parsed = AssistantMessageSchema.safeParse(docs[i]?.message);
     if (!parsed.success) continue;
     const text = joinTextParts(parsed.data.content.parts);
-    if (parsed.data.status !== 'finished_successfully' || text === '') return null;
-    return { id: parsed.data.id, text };
+    if (text !== '') return { id: parsed.data.id, text };
   }
   return null;
 }
@@ -129,14 +155,16 @@ export const chatgptParser: SiteParser = {
   matchesRequest: (url, method) => method === 'POST' && CONVERSATION_PATHS.includes(url.pathname),
   async parse({ requestBody, sseText, now }) {
     const request = RequestSchema.safeParse(parseJsonOrNull(requestBody));
-    if (!request.success) return null;
+    if (!request.success) return { rejected: 'format' };
     // Régénération (action « variant ») : pas de message utilisateur, rien à capter (C13).
     const user = request.data.messages?.findLast((message) => message.author.role === 'user');
     const userText = joinTextParts(user?.content.parts ?? []);
+    if (!user || userText === '') return null;
     const stream = replayStream(sseText);
-    const assistant = finishedAssistantText(stream.docs);
+    if (!stream.complete) return { rejected: 'incomplet' };
+    const assistant = replyOf(stream.docs);
     const conversationId = request.data.conversation_id ?? stream.conversationId;
-    if (!user || userText === '' || !assistant || !conversationId) return null;
+    if (!assistant || !conversationId) return { rejected: 'format' };
     const ts = now.toISOString();
     return {
       site: 'chatgpt',

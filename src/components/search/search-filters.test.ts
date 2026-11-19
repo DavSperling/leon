@@ -211,6 +211,106 @@ describe('buildMenus', () => {
   });
 });
 
+// Outil et Période suivent aussi le sens, pas le mot : la puce et l'entrée du menu disent la même chose, et un clic sur
+// une entrée cochée retire le filtre, quel que soit son nom ou sa langue. `NOW` est passé à `buildMenus` : « 7j » et
+// « 1s » donnent alors la même date.
+describe('les menus Outil et Période suivent le sens du filtre', () => {
+  const entry = (q: string, name: 'outil' | 'periode', label: string, locale = 'fr') =>
+    buildMenus(q, locale, NOW)
+      .find((m) => m.name === name)
+      ?.options.find((o) => o.label === label);
+
+  it('coche une période écrite dans l’autre langue ou dans une autre unité, et la retire', () => {
+    expect(entry('since:7d x', 'periode', '7 derniers jours')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('depuis:7j x', 'periode', 'Last 7 days', 'en')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('depuis:1s x', 'periode', '7 derniers jours')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('depuis:2026-10-01 x', 'periode', '7 derniers jours')).toMatchObject({
+      active: false,
+      href: '/?q=depuis%3A7j+x',
+    });
+  });
+
+  it('ne coche que la période que la recherche retient (la dernière valide)', () => {
+    const q = 'depuis:7j depuis:30j x';
+    expect(entry(q, 'periode', '30 derniers jours')).toMatchObject({ active: true, href: '/?q=x' });
+    expect(entry(q, 'periode', '7 derniers jours')).toMatchObject({
+      active: false,
+      href: '/?q=depuis%3A7j+x',
+    });
+    // Une valeur invalide après coup ne change pas la période retenue.
+    expect(entry('depuis:7j depuis:bientot x', 'periode', '7 derniers jours')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    // Cocher retire d'abord toutes les périodes, même si le même mot y est déjà.
+    expect(
+      entry('depuis:30j depuis:7j depuis:30j x', 'periode', '30 derniers jours'),
+    ).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('depuis:30j depuis:7j x', 'periode', '30 derniers jours')).toMatchObject({
+      active: false,
+      href: '/?q=depuis%3A30j+x',
+    });
+    expect(entry('depuis:30j depuis:7j x', 'periode', '7 derniers jours')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+  });
+
+  it('coche un outil écrit sous un autre nom, et le retire sous tous ses noms', () => {
+    expect(entry('outil:note x', 'outil', 'Note')).toMatchObject({ active: true, href: '/?q=x' });
+    expect(entry('outil:monday.com x', 'outil', 'monday.com')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('tool:"Claude Code" x', 'outil', 'Claude Code', 'en')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('tool:mcp_remember x', 'outil', 'Note')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+    expect(entry('outil:note outil:mcp_remember x', 'outil', 'Note')).toMatchObject({
+      active: true,
+      href: '/?q=x',
+    });
+  });
+
+  it('ne touche ni un outil inconnu, ni un autre filtre, ni les mots, ni une date', () => {
+    expect(entry('outil:xyz x', 'outil', 'GitHub')).toMatchObject({
+      active: false,
+      href: '/?q=outil%3Agithub+outil%3Axyz+x',
+    });
+    expect(entry('outil:xyz outil:github de:julie x', 'outil', 'GitHub')).toMatchObject({
+      active: true,
+      href: '/?q=outil%3Axyz+de%3Ajulie+x',
+    });
+    expect(entry('outil:github outil:codex x', 'outil', 'GitHub')).toMatchObject({
+      active: true,
+      href: '/?q=outil%3Acodex+x',
+    });
+    for (const label of ['7 derniers jours', '30 derniers jours', '3 derniers mois']) {
+      expect(entry('depuis:2026-10-01 x', 'periode', label)?.active, label).toBe(false);
+    }
+    expect(entry('outil:github depuis:7j x', 'periode', '30 derniers jours')).toMatchObject({
+      active: false,
+      href: '/?q=depuis%3A30j+outil%3Agithub+x',
+    });
+  });
+});
+
 // Les menus, les exemples et l'aide de la page d'accueil écrivent des filtres (`outil:github`, `type:ticket`,
 // `depuis:3m`) que `parseQuery` relit. Une collision de libellés, un renommage ou un nouvel outil qui casserait
 // cette relecture ferait écrire une puce « non reconnu » ou un filtre ignoré, sans aucune erreur : ces tests

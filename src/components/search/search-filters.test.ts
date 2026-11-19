@@ -182,6 +182,14 @@ describe('buildMenus', () => {
     });
     // Seuls les `type:` partent : `outil:note` n'est pas la nature « Note ».
     expect(type('outil:note x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+outil%3Anote+x');
+    // Tout rôle part avec une nature (pas seulement les appels d'outils) ; un `type:` inconnu n'est ni l'un ni l'autre.
+    expect(type('type:raisonnement x').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+x',
+    );
+    expect(type('type:xyz x').at(-1)?.href).toBe('/?q=type%3Aappel_outil+type%3Axyz+x');
+    expect(type('type:xyz x').find((o) => o.label === 'Ticket')?.href).toBe(
+      '/?q=type%3Aticket+type%3Axyz+x',
+    );
   });
 
   // Le sens compte, pas le mot : un lien venu de l'autre langue, ou l'aide de `leon search`, coche la bonne entrée, et

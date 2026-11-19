@@ -1,0 +1,30 @@
+{
+  "turn_attribution": { "kind": "user" },
+  "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de",
+  "action": "next",
+  "model": "gpt-5",
+  "parent_message_id": "6a1b2c3d-0000-4000-8000-0000000000e0",
+  "timezone": "Europe/Paris",
+  "timezone_offset_min": -60,
+  "is_do_not_remember": false,
+  "client_contextual_info": { "is_dark_mode": false, "time_since_loaded": 12 },
+  "local_function_names": [],
+  "messages": [
+    {
+      "author": { "metadata": {}, "name": null, "role": "user" },
+      "channel": null,
+      "content": { "content_type": "text", "parts": ["Délais"] },
+      "create_time": 1795600000.123,
+      "end_turn": null,
+      "id": "6a1b2c3d-0000-4000-8000-0000000000e1",
+      "metadata": {},
+      "recipient": "all",
+      "status": "finished_successfully",
+      "update_time": null,
+      "weight": 1.0
+    }
+  ],
+  "supported_encodings": ["v1"],
+  "genui_state_snapshots": [],
+  "client_prepare_state": "none"
+}

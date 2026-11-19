@@ -6,13 +6,14 @@ import { claudeAiParser } from '../lib/parsers/claude-ai';
 import { CAPTURE_HOSTS } from '../lib/permissions';
 
 // Monde MAIN, avant les scripts du site : observe les réponses de complétion, n'écrit jamais dans la page.
+// Poste vers sa propre origine un échange ({ exchange }) ou un rejet sans contenu ({ rejection: { site, reason } }).
 export default defineContentScript({
   matches: [...CAPTURE_HOSTS],
   world: 'MAIN',
   runAt: 'document_start',
   main() {
-    installFetchInterceptor(window, [claudeAiParser, chatgptParser], (exchange) =>
-      window.postMessage({ source: CAPTURE_MESSAGE_SOURCE, exchange }, window.location.origin),
+    installFetchInterceptor(window, [claudeAiParser, chatgptParser], (message) =>
+      window.postMessage({ source: CAPTURE_MESSAGE_SOURCE, ...message }, window.location.origin),
     );
   },
 });

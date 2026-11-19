@@ -67,4 +67,39 @@ describe('forwardCaptureMessage', () => {
     expect(forwardCaptureMessage(event, expected, send)).toBe(false);
     expect(send).not.toHaveBeenCalled();
   });
+
+  it('relaie un rejet de la page avec son site et sa raison, et rien d’autre', () => {
+    const send = vi.fn();
+    const rejection = { site: 'claude_ai', reason: 'format', text: 'CONTENU-CACHE' };
+    const event = { ...validEvent, data: { source: CAPTURE_MESSAGE_SOURCE, rejection } };
+    expect(forwardCaptureMessage(event, expected, send)).toBe(true);
+    expect(send).toHaveBeenCalledExactlyOnceWith({
+      type: 'leon/rejection',
+      site: 'claude_ai',
+      reason: 'format',
+    });
+  });
+
+  it.each([
+    ['à la raison inconnue', { site: 'claude_ai', reason: 'autre' }],
+    ['sans site', { reason: 'format' }],
+    ['d’un autre site que la page', { site: 'chatgpt', reason: 'format' }],
+  ])('refuse un rejet %s', (_label, rejection) => {
+    const send = vi.fn();
+    const event = { ...validEvent, data: { source: CAPTURE_MESSAGE_SOURCE, rejection } };
+    expect(forwardCaptureMessage(event, expected, send)).toBe(false);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('refuse un rejet venu d’une autre origine', () => {
+    const send = vi.fn();
+    const rejection = { site: 'claude_ai', reason: 'format' };
+    const event = {
+      ...validEvent,
+      origin: 'https://evil.example',
+      data: { source: CAPTURE_MESSAGE_SOURCE, rejection },
+    };
+    expect(forwardCaptureMessage(event, expected, send)).toBe(false);
+    expect(send).not.toHaveBeenCalled();
+  });
 });

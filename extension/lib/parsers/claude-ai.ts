@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { deriveMessageId } from '../message-id';
 import { parseSseText } from '../sse';
-import { parseJsonOrNull, type SiteParser } from './site-parser';
+import { parseJsonOrNull, type Rejection, type SiteParser } from './site-parser';
 
 // POST /api/organizations/<org>/chat_conversations/<conv>/completion ; retry_completion (régénération) n'est pas capté.
 const COMPLETION_PATH = /^\/api\/organizations\/[^/]+\/chat_conversations\/([^/]+)\/completion$/;
@@ -33,8 +33,8 @@ const StreamEventSchema = z.discriminatedUnion('type', [
 
 type AssistantReply = { messageId: string; text: string };
 
-// Texte des seuls blocs « text » (ni thinking ni tool_use) ; null si le flux ne s'est pas terminé.
-function readAssistantReply(sseText: string): AssistantReply | null {
+// Texte des seuls blocs « text » (ni thinking ni tool_use) ; incomplet sans message_stop, format sans id ou sans texte.
+function readAssistantReply(sseText: string): AssistantReply | Rejection {
   const textBlocks = new Set<number>();
   let messageId: string | null = null;
   let text = '';
@@ -52,7 +52,8 @@ function readAssistantReply(sseText: string): AssistantReply | null {
     }
     if (event.type === 'message_stop') stopped = true;
   }
-  if (!stopped || messageId === null || text === '') return null;
+  if (!stopped) return { rejected: 'incomplet' };
+  if (messageId === null || text === '') return { rejected: 'format' };
   return { messageId, text };
 }
 
@@ -62,8 +63,9 @@ export const claudeAiParser: SiteParser = {
   async parse({ url, requestBody, sseText, now }) {
     const conversationId = COMPLETION_PATH.exec(url.pathname)?.[1];
     const request = RequestSchema.safeParse(parseJsonOrNull(requestBody));
+    if (!conversationId || !request.success) return { rejected: 'format' };
     const reply = readAssistantReply(sseText);
-    if (!conversationId || !request.success || reply === null) return null;
+    if ('rejected' in reply) return reply;
     const { prompt, parent_message_uuid: parent = '', turn_message_uuids } = request.data;
     const userId =
       turn_message_uuids?.human_message_uuid ??

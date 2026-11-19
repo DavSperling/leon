@@ -1,5 +1,6 @@
 import { browser } from '#imports';
 import { browserStore } from '../../lib/browser-store';
+import type { RejectReason } from '../../lib/exchange';
 import { dateLocale, t, translatePage } from '../../lib/i18n';
 import { type DroppedCounts, type DropReason, takeDropped } from '../../lib/outbox';
 import {
@@ -7,6 +8,7 @@ import {
   hasConsent,
   loadSettings,
   loadStatus,
+  rejectionToShow,
   type Settings,
   saveSettings,
 } from '../../lib/settings';
@@ -90,6 +92,24 @@ const DROP_CAUSES: Record<DropReason, string> = {
   ),
 };
 
+// Le dernier échange non capté d'un site, tant que rien n'a été capté après lui.
+const REJECTION_DISPLAYS: Record<RejectReason, { text: string; tone: 'error' | 'muted' }> = {
+  format: {
+    text: t(
+      'Dernier échange non capté : Leon n’a pas su le lire (le site a peut-être changé).',
+      'Last exchange not captured: Leon could not read it (the site may have changed).',
+    ),
+    tone: 'error',
+  },
+  incomplet: {
+    text: t(
+      'Dernier échange non capté : la réponse n’était pas terminée.',
+      'Last exchange not captured: the reply was not finished.',
+    ),
+    tone: 'muted',
+  },
+};
+
 function droppedText(counts: DroppedCounts): string {
   return Object.entries(counts)
     .map(([reason, count = 0]) => {
@@ -120,6 +140,13 @@ async function render(): Promise<void> {
     const iso = status.lastCaptureAt[siteOf(element)];
     element.textContent = formatAgo(iso);
     element.title = iso ? new Date(iso).toLocaleString(dateLocale) : '';
+  }
+  for (const element of document.querySelectorAll<HTMLElement>('[data-rejection]')) {
+    const reason = rejectionToShow(status, siteOf(element));
+    const display = reason === null ? null : REJECTION_DISPLAYS[reason];
+    element.hidden = display === null;
+    element.textContent = display?.text ?? '';
+    element.className = display?.tone ?? '';
   }
   byId('pending').textContent = pendingText(status.pending);
   byId('dropped').textContent = droppedText(droppedCounts);

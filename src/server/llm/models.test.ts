@@ -14,70 +14,57 @@ import {
 describe('modelForStep', () => {
   const env = parseEnv(TEST_ENV);
 
-  it('prend Haiku 5.5 pour la réponse en tête, appelée à chaque recherche', () => {
-    expect(modelForStep('reponse', env)).toBe('claude-haiku-5-5');
+  const steps: LlmStep[] = ['reponse', 'discussion', 'point', 'resume', 'fil', 'agenda'];
+  const models = (reglee: typeof env) =>
+    Object.fromEntries(steps.map((step) => [step, modelForStep(step, reglee)]));
+  // Le mieux noté des modèles Claude au banc (docs/etudes/resumes-2026-11) : Sonnet, sauf pour la discussion (Opus)
+  // et l'agenda (Haiku).
+  const CLAUDE = {
+    reponse: 'claude-sonnet-5-5',
+    discussion: 'claude-opus-5-5',
+    point: 'claude-sonnet-5-5',
+    resume: 'claude-sonnet-5-5',
+    fil: 'claude-sonnet-5-5',
+    agenda: 'claude-haiku-5-5',
+  };
+
+  it('prend Sonnet 5.5 pour chaque étape, sauf Opus 5.5 pour la discussion et Haiku 5.5 pour l’agenda', () => {
+    expect(models(env)).toEqual(CLAUDE);
   });
 
-  it('prend Haiku 5.5 pour le résumé d’une session (D8)', () => {
-    expect(modelForStep('resume', env)).toBe('claude-haiku-5-5');
-  });
-
-  it('prend Haiku 5.5 pour l’état d’un fil (D23)', () => {
-    expect(modelForStep('fil', env)).toBe('claude-haiku-5-5');
-  });
-
-  it('suit LEON_MODEL_FIL', () => {
-    const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_FIL: 'claude-sonnet-5-5' });
-    expect(modelForStep('fil', reglee)).toBe('claude-sonnet-5-5');
-    expect(modelForStep('resume', reglee)).toBe('claude-haiku-5-5');
-  });
-
-  it('suit LEON_MODEL_RESUME', () => {
-    const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_RESUME: 'claude-sonnet-5-5' });
-    expect(modelForStep('resume', reglee)).toBe('claude-sonnet-5-5');
-    expect(modelForStep('reponse', reglee)).toBe('claude-haiku-5-5');
-  });
-
-  it('prend Sonnet 5.5 pour la discussion et pour le point du matin', () => {
-    expect(modelForStep('discussion', env)).toBe('claude-sonnet-5-5');
-    expect(modelForStep('point', env)).toBe('claude-sonnet-5-5');
+  it('garde Claude partout avec la clé OpenRouter : elle ne sert qu’aux étapes réglées sur un de ses modèles', () => {
+    expect(models(parseEnv({ ...TEST_ENV, OPENROUTER_API_KEY: 'cle-de-test' }))).toEqual(CLAUDE);
   });
 
   it('suit la variable de chaque étape, et d’elle seule', () => {
-    const reglee = parseEnv({ ...TEST_ENV, LEON_MODEL_DISCUSSION: 'claude-opus-5-5' });
-    expect(modelForStep('discussion', reglee)).toBe('claude-opus-5-5');
-    expect(modelForStep('reponse', reglee)).toBe('claude-haiku-5-5');
-    expect(modelForStep('point', reglee)).toBe('claude-sonnet-5-5');
-  });
-
-  it('suit LEON_MODEL_REPONSE et LEON_MODEL_POINT', () => {
-    const reglee = parseEnv({
-      ...TEST_ENV,
-      LEON_MODEL_REPONSE: 'claude-sonnet-5-5',
-      LEON_MODEL_POINT: 'claude-opus-5-5',
+    expect(models(parseEnv({ ...TEST_ENV, LEON_MODEL_DISCUSSION: 'claude-sonnet-5-5' }))).toEqual({
+      ...CLAUDE,
+      discussion: 'claude-sonnet-5-5',
     });
-    expect(modelForStep('reponse', reglee)).toBe('claude-sonnet-5-5');
-    expect(modelForStep('point', reglee)).toBe('claude-opus-5-5');
+    expect(
+      models(
+        parseEnv({
+          ...TEST_ENV,
+          LEON_MODEL_REPONSE: 'claude-haiku-5-5',
+          LEON_MODEL_POINT: 'claude-opus-5-5',
+          LEON_MODEL_RESUME: 'claude-haiku-5-5',
+          LEON_MODEL_FIL: 'claude-opus-5-5',
+          LEON_MODEL_AGENDA: 'claude-sonnet-5-5',
+        }),
+      ),
+    ).toEqual({
+      reponse: 'claude-haiku-5-5',
+      discussion: 'claude-opus-5-5',
+      point: 'claude-opus-5-5',
+      resume: 'claude-haiku-5-5',
+      fil: 'claude-opus-5-5',
+      agenda: 'claude-sonnet-5-5',
+    });
   });
 
   it('retombe sur le modèle par défaut quand la variable est vide', () => {
     const videe = parseEnv({ ...TEST_ENV, LEON_MODEL_DISCUSSION: '' });
-    expect(modelForStep('discussion', videe)).toBe('claude-sonnet-5-5');
-  });
-
-  // Le choix du banc des modèles par étape (docs/etudes/resumes-2026-11) : les tests ci-dessus, sans la clé
-  // OpenRouter, gardent le modèle Anthropic de chaque étape.
-  it('prend le modèle du banc pour chaque étape quand la clé OpenRouter est là', () => {
-    const avecCle = parseEnv({ ...TEST_ENV, OPENROUTER_API_KEY: 'cle-de-test' });
-    const steps: LlmStep[] = ['reponse', 'discussion', 'point', 'resume', 'fil', 'agenda'];
-    expect(Object.fromEntries(steps.map((step) => [step, modelForStep(step, avecCle)]))).toEqual({
-      reponse: 'deepseek/deepseek-v4.1-flash',
-      discussion: 'deepseek/deepseek-v4.1-flash-1017',
-      point: 'claude-sonnet-5-5',
-      resume: 'deepseek/deepseek-v4.1-flash-1017',
-      fil: 'xiaomi/mimo-v2.6-flash',
-      agenda: 'openai/gpt-6-luna',
-    });
+    expect(modelForStep('discussion', videe)).toBe('claude-opus-5-5');
   });
 });
 

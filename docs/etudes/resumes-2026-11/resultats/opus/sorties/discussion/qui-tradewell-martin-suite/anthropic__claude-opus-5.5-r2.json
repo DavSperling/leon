@@ -1,0 +1,35 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:32:03.411Z",
+  "reponse": "Martin flagged two problems. Both were picked up, but only one is fixed.\n\n1. **Webhook signatures failing on sandbox: fixed.** Ellen's team couldn't verify the signatures on payout.paid and seller.verified events (only about 1 in 20 verified), so they had turned verification off on sandbox [1]. Jake took it on the call [1]. He found that our worker was changing the message after signing it, so what Tradewell received no longer matched the signature [2]. The fix went to sandbox on Nov 16 [3] (PR core#1187 [2]). On Nov 17 Ellen turned verification back on and said all 300+ events since then verify [3].\n\n2. **Different payout schedules per seller: not making Dec 7.** About 200 of Tradewell's top sellers are paid within 7 days (net-7) and everyone else within 30 (net-30). Today we only allow one schedule for the whole platform, and Martin said that would downgrade their best sellers on day one [1]. Owen took it back to product and engineering [1] and told Martin he'd have a clear answer by Friday Nov 20 [3]. Sofia opened QPAY-2362, and Tomer estimated 3–4 weeks [4]. On Nov 16 Avi ruled it out for Dec 7: he doesn't want to change how payouts are grouped this close to the contractual go-live. He moved it to Q1 2027, with late January at the earliest, and asked Owen to tell Martin [4].\n\n**Martin hasn't been told yet.** On Nov 17 he asked Owen for an update because he needs it for his seller comms [3]. I don't see a reply from Owen in the channel [3]. He should probably pass on Avi's decision before Friday.",
+  "rendu": "Martin flagged two problems. Both were picked up, but only one is fixed.\n\n1. **Webhook signatures failing on sandbox: fixed.** Ellen's team couldn't verify the signatures on payout.paid and seller.verified events (only about 1 in 20 verified), so they had turned verification off on sandbox [1]. Jake took it on the call [1]. He found that our worker was changing the message after signing it, so what Tradewell received no longer matched the signature [2]. The fix went to sandbox on Nov 16 [3] (PR core#1187 [2]). On Nov 17 Ellen turned verification back on and said all 300+ events since then verify [3].\n\n2. **Different payout schedules per seller: not making Dec 7.** About 200 of Tradewell's top sellers are paid within 7 days (net-7) and everyone else within 30 (net-30). Today we only allow one schedule for the whole platform, and Martin said that would downgrade their best sellers on day one [1]. Owen took it back to product and engineering [1] and told Martin he'd have a clear answer by Friday Nov 20 [3]. Sofia opened QPAY-2362, and Tomer estimated 3–4 weeks [4]. On Nov 16 Avi ruled it out for Dec 7: he doesn't want to change how payouts are grouped this close to the contractual go-live. He moved it to Q1 2027, with late January at the earliest, and asked Owen to tell Martin [4].\n\n**Martin hasn't been told yet.** On Nov 17 he asked Owen for an update because he needs it for his seller comms [3]. I don't see a reply from Owen in the channel [3]. He should probably pass on Avi's decision before Friday.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 5,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.6,
+    "sourcesAttenduesCitees": 0.4,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 30315,
+    "sortie": 1013,
+    "reflexion": 0,
+    "cache": 9588,
+    "cout": 0.1050856
+  },
+  "latenceMs": 11270,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell weekly sync Martin Kobayashi flagged issues\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "lire {\"sourceId\":\"claude-code-jake-webhook-sig\"}",
+    "lire {\"sourceId\":\"jira-qpay-2362\"}",
+    "lire {\"sourceId\":\"slack-ext-tradewell\"}"
+  ],
+  "cout": 0.1050856
+}

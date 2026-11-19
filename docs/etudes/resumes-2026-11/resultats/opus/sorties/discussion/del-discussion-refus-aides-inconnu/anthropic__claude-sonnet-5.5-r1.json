@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:30.013Z",
+  "reponse": "Je ne sais pas combien de dossiers ont été refusés cette année, ni pour quelles raisons. Aucune source ne donne ce chiffre ni de liste de refus.\n\nJ'ai fait une recherche sur les dossiers d'aide refusés et leurs motifs, avec un filtre sur 2025 et après. Les résultats ne parlent que de dossiers en cours ou de sujets voisins :\n- L'Anah a demandé une pièce complémentaire pour le dossier Cariou (l'attestation de propriété). Le dossier reste en instruction, il n'est donc pas refusé [7].\n- Manon Pichon a demandé à ChatGPT comment contester un refus MaPrimeRénov', pour écrire une fiche de procédure interne. C'est une consigne générale, sans nombre de refus de l'entreprise [4].\n- Une newsletter sectorielle mentionne une hausse des refus de primes dans trois régions. Cela ne concerne pas nos propres dossiers [5].\n\nSi vous avez un suivi des dossiers (export HubSpot, tableur, ou un canal comme #aides), dites-moi où chercher. Je peux aussi relancer la recherche avec d'autres termes, par exemple « notification de refus », « dossier rejeté » ou « Anah refus ».",
+  "rendu": "Je ne sais pas combien de dossiers ont été refusés cette année, ni pour quelles raisons. Aucune source ne donne ce chiffre ni de liste de refus.\n\nJ'ai fait une recherche sur les dossiers d'aide refusés et leurs motifs, avec un filtre sur 2025 et après. Les résultats ne parlent que de dossiers en cours ou de sujets voisins :\n- L'Anah a demandé une pièce complémentaire pour le dossier Cariou (l'attestation de propriété). Le dossier reste en instruction, il n'est donc pas refusé [7].\n- Manon Pichon a demandé à ChatGPT comment contester un refus MaPrimeRénov', pour écrire une fiche de procédure interne. C'est une consigne générale, sans nombre de refus de l'entreprise [4].\n- Une newsletter sectorielle mentionne une hausse des refus de primes dans trois régions. Cela ne concerne pas nos propres dossiers [5].\n\nSi vous avez un suivi des dossiers (export HubSpot, tableur, ou un canal comme #aides), dites-moi où chercher. Je peux aussi relancer la recherche avec d'autres termes, par exemple « notification de refus », « dossier rejeté » ou « Anah refus ».",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 7263,
+    "sortie": 538,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0107974
+  },
+  "latenceMs": 5060,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"dossiers d'aide refusés clients raisons du refus\",\"depuis\":\"2025-01-01\"}"
+  ],
+  "cout": 0.0107974
+}

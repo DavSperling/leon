@@ -1,0 +1,23 @@
+{
+  "verificateur": "anthropic/claude-opus-5.5",
+  "faits": {
+    "f-cad": 1,
+    "f-sig": 1,
+    "f-date": 1,
+    "f-remise": 1,
+    "f-besoins": 0,
+    "f-reference": 1,
+    "f-brouillon": 0.5
+  },
+  "interdits": {
+    "i-cad-t1": 0,
+    "i-20": 0,
+    "i-4dec": 0,
+    "i-envoye": 0,
+    "i-bruit": 0,
+    "i-geste": 0
+  },
+  "contraires": [],
+  "premier": "f-cad",
+  "langueOk": true
+}

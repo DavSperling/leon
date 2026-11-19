@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "qui-corvane-frais-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:49.221Z",
+  "reponse": "I don't know yet, because nothing has been agreed for next year. Corvane hasn't put a new fee in writing.\n\n- **Planning assumption:** the finance memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. The current agreement runs until March 31, 2027, and Marcus is to open renewal talks in November [1].\n- **Current cost:** the October invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item, which is my own division.\n- **Risk of an increase:** on Nov 16 Marcus said Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 file rejection. He added that there is \"nothing on paper yet\" [5]. The renewal call moved to the week of Nov 23 [5].\n- **Margin trigger:** the memo's text is cut off at \"If the per-item fee goes above $0.10, r…\". I can't tell from the excerpt what happens at that threshold [1].\n\nThe fee is charged per ACH item, not per payout batch. It also affects only our margin, not customer pricing [5].\n\nI only ran one search and read the excerpts, not the full documents. The outcome of the renewal call isn't in what I found.",
+  "rendu": "I don't know yet, because nothing has been agreed for next year. Corvane hasn't put a new fee in writing.\n\n- **Planning assumption:** the finance memo assumes the Corvane per-item ACH fee stays at $0.08 in 2027. The current agreement runs until March 31, 2027, and Marcus is to open renewal talks in November [1].\n- **Current cost:** the October invoice was $14,212.40 for 177,655 ACH items [6]. That works out to about $0.08 per item, which is my own division.\n- **Risk of an increase:** on Nov 16 Marcus said Corvane's relationship manager hinted they want to raise the per-item fee after the Nov 10 file rejection. He added that there is \"nothing on paper yet\" [5]. The renewal call moved to the week of Nov 23 [5].\n- **Margin trigger:** the memo's text is cut off at \"If the per-item fee goes above $0.10, r…\". I can't tell from the excerpt what happens at that threshold [1].\n\nThe fee is charged per ACH item, not per payout batch. It also affects only our margin, not customer pricing [5].\n\nI only ran one search and read the excerpts, not the full documents. The outcome of the renewal call isn't in what I found.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 8116,
+    "sortie": 475,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.011873400000000001
+  },
+  "latenceMs": 4426,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Corvane payout fee per payout pricing next year\"}"
+  ],
+  "cout": 0.011873400000000001
+}

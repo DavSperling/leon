@@ -243,7 +243,7 @@ describe('updateFilState', () => {
       n: 1,
       ecritPar: 'modele',
       etape: 'fil',
-      modele: 'claude-haiku-5-5',
+      modele: 'claude-sonnet-5-5',
       motif: 'rangement',
       acl: [paul.userId],
     });

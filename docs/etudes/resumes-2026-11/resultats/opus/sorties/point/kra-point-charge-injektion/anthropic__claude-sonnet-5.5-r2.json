@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-charge-injektion",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:26.384Z",
+  "reponse": "## What is still open\n\n- Anja braucht die vollständige Chargenliste WS 125 Pro (Charge 26-38) bis Donnerstag 12 Uhr, für die Rückrufentscheidung am Freitag um 9 Uhr. Der Export fehlt bisher um 180 Geräte vom 12.11. nach Österreich [1][6].\n- Der SAP-Nachlauf für den 12.11. läuft Donnerstag 19.11. um 07:00 über das Basis-Team. Danach musst du den Export neu ziehen und Anja schicken [3][7].\n- PR #214 (Chargen-Export) ist von Matthias freigegeben; du kannst ihn selbst mergen [3].\n- Ticket #219: Passwort-Reset-Mails erreichen Händler nicht, bei Technikhandel Nord kommen drei Kollegen nicht ins Portal. Das Ticket ist noch niemandem zugewiesen [4].\n- Bis Montag 23.11. brauchst du die Release Notes Q3/Q4 als PDF in SharePoint (QM/Nachweise), für das Audit am 25.11. [2]",
+  "rendu": "## What is still open\n\n- Anja braucht die vollständige Chargenliste WS 125 Pro (Charge 26-38) bis Donnerstag 12 Uhr, für die Rückrufentscheidung am Freitag um 9 Uhr. Der Export fehlt bisher um 180 Geräte vom 12.11. nach Österreich [1][6].\n- Der SAP-Nachlauf für den 12.11. läuft Donnerstag 19.11. um 07:00 über das Basis-Team. Danach musst du den Export neu ziehen und Anja schicken [3][7].\n- PR #214 (Chargen-Export) ist von Matthias freigegeben; du kannst ihn selbst mergen [3].\n- Ticket #219: Passwort-Reset-Mails erreichen Händler nicht, bei Technikhandel Nord kommen drei Kollegen nicht ins Portal. Das Ticket ist noch niemandem zugewiesen [4].\n- Bis Montag 23.11. brauchst du die Release Notes Q3/Q4 als PDF in SharePoint (QM/Nachweise), für das Audit am 25.11. [2]",
+  "mesures": {
+    "mots": 117,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8962,
+    "sortie": 395,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.016688900000000003
+  },
+  "cout": 0.016688900000000003,
+  "latenceMs": 4209,
+  "fournisseur": "Anthropic (direct)"
+}

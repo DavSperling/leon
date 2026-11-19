@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:49.304Z",
+  "reponse": "## What is still open\n- Sofia says CAD payouts are not Q1 (Q2 at the earliest) and asks for no date in writing, so remove \"Q1 2027\" from the Hearthly email before sending it. [6][1]\n- The decision moved up to Wed Dec 2, and the SIG Lite is still due Mon Nov 23, or Hearthly's security team drops you from the final round. You still need to confirm with Shira that she owns it. [4][1]\n- Rachel requires her sign-off for any discount above 10%, and you planned 15% for a 2-year commit. Talk to her before sending numbers. [3][1]\n- The reference call still has no customer: Loomly and Pinecrest are awkward after the payout delay and Tradewell isn't live. Ask Rachel who you can use. [1]\n- The mutual action plan is still dated back from Dec 4, so shift it to Dec 2. [4][1]",
+  "rendu": "## What is still open\n- Sofia says CAD payouts are not Q1 (Q2 at the earliest) and asks for no date in writing, so remove \"Q1 2027\" from the Hearthly email before sending it. [6][1]\n- The decision moved up to Wed Dec 2, and the SIG Lite is still due Mon Nov 23, or Hearthly's security team drops you from the final round. You still need to confirm with Shira that she owns it. [4][1]\n- Rachel requires her sign-off for any discount above 10%, and you planned 15% for a 2-year commit. Talk to her before sending numbers. [3][1]\n- The reference call still has no customer: Loomly and Pinecrest are awkward after the payout delay and Tradewell isn't live. Ask Rachel who you can use. [1]\n- The mutual action plan is still dated back from Dec 4, so shift it to Dec 2. [4][1]",
+  "mesures": {
+    "mots": 143,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5976,
+    "sortie": 304,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0098069
+  },
+  "cout": 0.0098069,
+  "latenceMs": 2963,
+  "fournisseur": "Anthropic (direct)"
+}

@@ -1,0 +1,31 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:31:23.728Z",
+  "reponse": "Non, personne n'a été pris pour l'instant, d'après ce que j'ai trouvé.\n\n- L'annonce est en ligne depuis le 2/11 et a reçu 11 candidatures [2].\n- Quatre candidats sont convoqués jeudi 19 et vendredi 20/11 : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré. Les entretiens durent 45 min à l'atelier de Carquefou, avec Yannick Moreau [5]. Dans la conversation, les convocations étaient rédigées mais pas encore envoyées [5]. Au CODIR du 16/11, Aurélie Jaouen parlait de 4 candidats convoqués jeudi et vendredi [1].\n- L'objectif est de faire une offre la semaine suivante, pour une arrivée début janvier [1].\n- La rémunération n'est pas tranchée. Hélène Delorme veut d'abord voir ce que paient deux concurrents nantais, et la décision est prévue au CODIR du 23 [1].\n- Les candidats non retenus doivent recevoir une réponse avant le 27/11 [5].",
+  "rendu": "Non, personne n'a été pris pour l'instant, d'après ce que j'ai trouvé.\n\n- L'annonce est en ligne depuis le 2/11 et a reçu 11 candidatures [2].\n- Quatre candidats sont convoqués jeudi 19 et vendredi 20/11 : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré. Les entretiens durent 45 min à l'atelier de Carquefou, avec Yannick Moreau [5]. Dans la conversation, les convocations étaient rédigées mais pas encore envoyées [5]. Au CODIR du 16/11, Aurélie Jaouen parlait de 4 candidats convoqués jeudi et vendredi [1].\n- L'objectif est de faire une offre la semaine suivante, pour une arrivée début janvier [1].\n- La rémunération n'est pas tranchée. Hélène Delorme veut d'abord voir ce que paient deux concurrents nantais, et la décision est prévue au CODIR du 23 [1].\n- Les candidats non retenus doivent recevoir une réponse avant le 27/11 [5].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 1,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.75,
+    "sourcesAttenduesCitees": 0.75,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 7846,
+    "sortie": 530,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0118834
+  },
+  "latenceMs": 4687,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"recrutement deux installateurs candidats\",\"depuis\":\"3m\"}"
+  ],
+  "cout": 0.0118834
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:30.053Z",
+  "reponse": "## What is still open\n- Frau Kranich erwartet deine Aufwandsschätzung zur Pfeiffer-API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; am Freitag um 14 Uhr geht ihr alles bei ihr durch [5].\n- Jonas schätzt in #222 eher 25 statt 15 PT: Es fehlt die Mandantentrennung, und ein Pen-Test ist nötig. Den 1. April hält er nur bei Spike-Start im Dezember für machbar. Deine Vorlage für Thomas nennt noch 15 PT [1][2].\n- Frau Kranich bleibt beim Bonus bei 2 % und bietet die API nur gegen eine Mindestabnahme von 3 Mio. €/Jahr an. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € [1][5].\n\n## What changed\n- Pfeiffer hat abgesagt, das Jahresgespräch ist jetzt am Montag, 23.11., 10 Uhr in Nürnberg; Abfahrt um 8 Uhr, Thomas fährt [6].\n- #214 (Export Lieferungen nach Charge) und #218 (Spring Boot 3.3.6) sind gemerged [3][4].",
+  "rendu": "## What is still open\n- Frau Kranich erwartet deine Aufwandsschätzung zur Pfeiffer-API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas; am Freitag um 14 Uhr geht ihr alles bei ihr durch [5].\n- Jonas schätzt in #222 eher 25 statt 15 PT: Es fehlt die Mandantentrennung, und ein Pen-Test ist nötig. Den 1. April hält er nur bei Spike-Start im Dezember für machbar. Deine Vorlage für Thomas nennt noch 15 PT [1][2].\n- Frau Kranich bleibt beim Bonus bei 2 % und bietet die API nur gegen eine Mindestabnahme von 3 Mio. €/Jahr an. Pfeiffer liegt 2026 bisher bei 2,61 Mio. € [1][5].\n\n## What changed\n- Pfeiffer hat abgesagt, das Jahresgespräch ist jetzt am Montag, 23.11., 10 Uhr in Nürnberg; Abfahrt um 8 Uhr, Thomas fährt [6].\n- #214 (Export Lieferungen nach Charge) und #218 (Spring Boot 3.3.6) sind gemerged [3][4].",
+  "mesures": {
+    "mots": 135,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 1391,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0465978
+  },
+  "cout": 0.0465978,
+  "latenceMs": 13000,
+  "fournisseur": "Anthropic (direct)"
+}

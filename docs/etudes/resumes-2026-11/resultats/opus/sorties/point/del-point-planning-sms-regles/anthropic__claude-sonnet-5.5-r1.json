@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:15.728Z",
+  "reponse": "## What is still open\n\n- Les SMS de rappel annoncent encore 9h au lieu de 8h : Yannick veut que ce soit bon avant l'envoi de mercredi 18h. Lucas demande de corriger `sms.py` dans #214 (2 lignes), car sa réécriture n'arrivera pas avant le 30/11 [3][4].\n- Sandrine rappelle Peltier, Bréhier et Hervé demain à la première heure pour confirmer 8h, et attend que tu lui dises quand les SMS seront bons [7].\n- Après la fusion de #214, lance `reprise_heure_hiver` en prod (41 interventions, 23 à venir) : pas avant, sinon le décalage repart dans l'autre sens [1][3].\n- Verrouille dans l'admin le chantier Le Floch (CH-2604) le 8/12 pour l'audit RGE demandé par Franck, avant vendredi [2].\n\n## What changed\n\n- Le formulaire de devis du site refuse les numéros avec espaces (#219) : deux clients ont appelé, des demandes se perdent [6].",
+  "rendu": "## What is still open\n\n- Les SMS de rappel annoncent encore 9h au lieu de 8h : Yannick veut que ce soit bon avant l'envoi de mercredi 18h. Lucas demande de corriger `sms.py` dans #214 (2 lignes), car sa réécriture n'arrivera pas avant le 30/11 [3][4].\n- Sandrine rappelle Peltier, Bréhier et Hervé demain à la première heure pour confirmer 8h, et attend que tu lui dises quand les SMS seront bons [7].\n- Après la fusion de #214, lance `reprise_heure_hiver` en prod (41 interventions, 23 à venir) : pas avant, sinon le décalage repart dans l'autre sens [1][3].\n- Verrouille dans l'admin le chantier Le Floch (CH-2604) le 8/12 pour l'audit RGE demandé par Franck, avant vendredi [2].\n\n## What changed\n\n- Le formulaire de devis du site refuse les numéros avec espaces (#219) : deux clients ont appelé, des demandes se perdent [6].",
+  "mesures": {
+    "mots": 136,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9089,
+    "sortie": 375,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0167429
+  },
+  "cout": 0.0167429,
+  "latenceMs": 2828,
+  "fournisseur": "Anthropic (direct)"
+}

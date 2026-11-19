@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-refus-aides-inconnu",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:30.165Z",
+  "reponse": "Je ne sais pas combien de dossiers ont été refusés cette année, ni pour quelles raisons. Aucune source ne contient de décompte ni de motifs de refus.\n\nJ'ai fait deux recherches : « dossiers refusés aides clients raisons du refus » (depuis 2025) et « refus de dossier aide subvention client ». Je n'ai lu que les extraits qu'elles ont renvoyés. Voici ce qui s'en rapproche :\n- Le dossier Cariou est toujours en instruction. L'Anah a demandé une pièce complémentaire, l'attestation de propriété, et Manon Pichon l'a envoyée [1]. Ce n'est pas un refus.\n- Manon Pichon a préparé une fiche de procédure sur la contestation d'un refus MaPrimeRénov'. Elle ne dit pas combien de refus l'entreprise a reçus [4].\n- La newsletter Rénov'Actu Pro évoque une hausse des refus de primes dans trois régions. C'est une enquête externe, sans lien avec nos dossiers [5].\n\nPour trouver le chiffre, il faudrait un suivi des dossiers, par exemple un export HubSpot ou un tableau tenu par Manon Pichon. Il ne figure pas dans ce que j'ai retrouvé. Si vous me donnez un outil ou une période plus précise, je peux relancer la recherche.",
+  "rendu": "Je ne sais pas combien de dossiers ont été refusés cette année, ni pour quelles raisons. Aucune source ne contient de décompte ni de motifs de refus.\n\nJ'ai fait deux recherches : « dossiers refusés aides clients raisons du refus » (depuis 2025) et « refus de dossier aide subvention client ». Je n'ai lu que les extraits qu'elles ont renvoyés. Voici ce qui s'en rapproche :\n- Le dossier Cariou est toujours en instruction. L'Anah a demandé une pièce complémentaire, l'attestation de propriété, et Manon Pichon l'a envoyée [1]. Ce n'est pas un refus.\n- Manon Pichon a préparé une fiche de procédure sur la contestation d'un refus MaPrimeRénov'. Elle ne dit pas combien de refus l'entreprise a reçus [4].\n- La newsletter Rénov'Actu Pro évoque une hausse des refus de primes dans trois régions. C'est une enquête externe, sans lien avec nos dossiers [5].\n\nPour trouver le chiffre, il faudrait un suivi des dossiers, par exemple un export HubSpot ou un tableau tenu par Manon Pichon. Il ne figure pas dans ce que j'ai retrouvé. Si vous me donnez un outil ou une période plus précise, je peux relancer la recherche.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 0.5,
+    "sourcesAttenduesCitees": 0.5,
+    "jeNeSaisPas": true
+  },
+  "usage": {
+    "entree": 9496,
+    "sortie": 630,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0161834
+  },
+  "latenceMs": 5070,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"dossiers refusés aides clients raisons du refus\",\"depuis\":\"2025-01-01\"}",
+    "chercher {\"requete\":\"refus de dossier aide subvention client\"}"
+  ],
+  "cout": 0.0161834
+}

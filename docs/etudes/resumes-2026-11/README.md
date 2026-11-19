@@ -7,6 +7,11 @@ en qualité ?
 ## Verdict final (18/11 au soir)
 
 > Suite le même soir : le point du matin raccourci de moitié, avec un bouton « Refaire » (`point-court.md`).
+>
+> Depuis le 19/11 : Claude partout (Sonnet 5.5, sauf Opus 5.5 pour la discussion et Haiku 5.5 pour l'agenda), parce
+> que le crédit Anthropic du mois (200 €) laisse de la marge ; environ 14 $ par personne et par mois avec les volumes
+> supposés plus bas. Voir « Opus contre Sonnet » ci-dessous. Les modèles du tableau restent réglables par
+> `LEON_MODEL_*`.
 
 Après le premier passage (plus bas), on a **corrigé les défauts dans Leon**, re-testé 19 modèles sur le code
 corrigé, puis fait passer les finalistes sur **52 cas neufs** (anglais, français, allemand) qu'aucun modèle n'avait
@@ -71,6 +76,46 @@ premier poste ; le passer par lots le diviserait par deux.
 
 Coût de l'étude : **19,30 $** en tout (4,61 $ au premier passage, le reste pour la mise au point, l'épreuve finale
 et les vérifications).
+
+## Opus contre Sonnet (19/11)
+
+Question de David : avec 200 € de crédit Anthropic par mois, Opus 5.5 vaut-il mieux que Sonnet 5.5 là où il faut du
+jugement ? Essai sur le point du matin (10 cas) et la discussion (8 questions) de l'épreuve finale, **les deux modèles
+passés deux fois le même jour par l'API d'Anthropic** (`ANTHROPIC=direct`, l'effort de Leon, le cache de Leon), notés
+à l'aveugle par deux juges (Sonnet 5.5 et Opus 5.5, notes moyennées). Série `resultats/opus`.
+
+| Tâche | Modèle | Note | Fautes par sortie | 1re puce juste | Écart entre passages | Coût par appel | Temps |
+|---|---|---|---|---|---|---|---|
+| Discussion | **Opus 5.5** | **86** | 0,00 | – | 3 | 6,99 c | 11,5 s |
+| Discussion | Sonnet 5.5 | 76 | 0,06 | – | 9 | 2,09 c | 6,8 s |
+| Point du matin | Opus 5.5 | 80 | 0,05 | 70 % | 9 | 4,03 c | 10,8 s |
+| Point du matin | **Sonnet 5.5** | **83** | 0,15 | 90 % | 8 | 1,35 c | 3,1 s |
+
+- **Discussion : Opus.** Devant de plus de 5 points sur 4 questions sur 8 (de +10 à +30 : un risque à voir, une
+  suite à donner, une contradiction entre deux sources, une question sans réponse), à égalité sur 3, derrière sur 1
+  (−6). Ses deux passages donnent 86 et 86 ; ceux de Sonnet 73 et 80. Les deux juges disent la même chose (87 contre
+  77 pour le juge Sonnet, 85 contre 76 pour le juge Opus). Prix : 7,0 centimes la question au lieu de 2,1, et 11 s
+  au lieu de 7.
+- **Point du matin : Sonnet.** Opus ne fait pas mieux (devant sur 2 cas, derrière sur 4, à égalité sur 4), met moins
+  souvent l'essentiel en première puce, coûte trois fois plus et met 10 s au lieu de 3 (jusqu'à 24 s), alors que le
+  bouton « Refaire » fait attendre la personne.
+- **Aucun juge ne favorise son propre modèle** : le juge Opus note Sonnet au-dessus d'Opus sur le point (85 contre
+  80).
+
+Avec les volumes supposés plus bas (5 questions par jour), la discussion passe de 2,30 $ à 7,70 $ par personne et par
+mois ; le total est d'environ 14 $ par personne et par mois (9 $ si la discussion restait sur Sonnet).
+
+Limites : 8 questions et 10 cas, des données fictives, une discussion simulée (recherche par mots), des juges qui
+sont eux-mêmes des modèles Claude, et aucune contre-vérification des fautes. Opus n'a pas été essayé sur les quatre
+autres tâches. Les coûts sont calculés d'après les jetons et le tarif public, pas lus sur une facture.
+
+Coût de l'essai : **3,12 $** de crédit Anthropic (2,53 $ d'appels, 0,59 $ de notation), rien chez OpenRouter. Le banc
+renvoie maintenant au modèle sa réflexion entre deux appels d'outil (`banc/openrouter.ts`), comme le fait Leon.
+
+Pour le refaire : `ANTHROPIC=direct JEUX=jeux-validation SERIE=opus npx tsx docs/etudes/resumes-2026-11/banc/lancer.ts
+--etapes point,discussion --modeles anthropic/claude-opus-5.5,anthropic/claude-sonnet-5.5 --reps 2`, puis `noter.ts`
+avec chaque juge et `tableau.ts --verificateur anthropic/claude-sonnet-5.5,anthropic/claude-opus-5.5`. La clé est lue
+dans `ANTHROPIC_API_KEY` du `.env.local`.
 
 ## Premier passage (v1), avant les corrections
 

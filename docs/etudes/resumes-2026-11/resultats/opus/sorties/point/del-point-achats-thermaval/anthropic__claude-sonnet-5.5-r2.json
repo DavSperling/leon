@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-achats-thermaval",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:29:56.601Z",
+  "reponse": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme le 24/11 par écrit sans « sauf aléa transporteur ». Sinon, reviens vers elle avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [3][2].\n- Marchand : Yannick exige les 2 Aéro 11 sur site le 26/11 au plus tard, sinon la réception du 4/12 saute. Hélène te demande aussi de prévenir Camille [4][3].\n- Patrick demande à Thermaval une facture par lot, remise appliquée sur chacune, sinon il ne peut pas rapprocher les bons de livraison [6].\n\n## What changed\n\n- Thermaval refuse toute pénalité de retard et maintient la livraison du 24/11 « sauf aléa transporteur » [5].\n- Amrani est décalé au 25/11, Yannick a prévenu le client [4].",
+  "rendu": "## What is still open\n\n- Hélène valide 4 % + transport offert, à condition que Thermaval confirme le 24/11 par écrit sans « sauf aléa transporteur ». Sinon, reviens vers elle avant de signer. Ton brouillon d'acceptation est prêt, non envoyé [3][2].\n- Marchand : Yannick exige les 2 Aéro 11 sur site le 26/11 au plus tard, sinon la réception du 4/12 saute. Hélène te demande aussi de prévenir Camille [4][3].\n- Patrick demande à Thermaval une facture par lot, remise appliquée sur chacune, sinon il ne peut pas rapprocher les bons de livraison [6].\n\n## What changed\n\n- Thermaval refuse toute pénalité de retard et maintient la livraison du 24/11 « sauf aléa transporteur » [5].\n- Amrani est décalé au 25/11, Yannick a prévenu le client [4].",
+  "mesures": {
+    "mots": 117,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7953,
+    "sortie": 326,
+    "reflexion": 0,
+    "cache": 0,
+    "cout": 0.0205305
+  },
+  "cout": 0.0205305,
+  "latenceMs": 3041,
+  "fournisseur": "Anthropic (direct)"
+}

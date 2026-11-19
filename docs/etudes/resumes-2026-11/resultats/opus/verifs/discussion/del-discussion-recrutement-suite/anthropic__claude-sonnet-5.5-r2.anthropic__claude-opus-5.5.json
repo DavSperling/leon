@@ -1,0 +1,18 @@
+{
+  "verificateur": "anthropic/claude-opus-5.5",
+  "faits": {
+    "f1": 0.5,
+    "f2": 1,
+    "f3": 1,
+    "f4": 0,
+    "f5": 0
+  },
+  "interdits": {
+    "i1": 0,
+    "i2": 0,
+    "i3": 0
+  },
+  "contraires": [],
+  "premier": "f1",
+  "langueOk": true
+}

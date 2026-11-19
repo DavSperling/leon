@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:11.705Z",
+  "reponse": "## What is still open\n\n- Thomas refuse que la migration 0041 supprime des chantiers : des « doublons » peuvent avoir interventions, photos et dossier MPR. Il veut une commande de gestion avec `--dry-run`, et une relecture de la liste ensemble lundi. La PR #217 attend ce changement [3].\n- #216 (signature du webhook HubSpot) t'est assigné. Thomas bloque la mise en prod, pas avant lundi 23, tant que ce n'est pas fait. Il est absent jeudi et vendredi [4][7].\n- Camille veut créer le chantier seulement quand l'acompte est reçu, pas dès « gagné ». Hélène est d'accord. Ton code crée encore sur « gagné », donc il faut écouter `acompte_recu` [8][2].\n- Le formulaire de devis refuse les numéros avec espaces (#219). Sandrine signale que des demandes sont perdues, sans urgence [6].",
+  "rendu": "## What is still open\n\n- Thomas refuse que la migration 0041 supprime des chantiers : des « doublons » peuvent avoir interventions, photos et dossier MPR. Il veut une commande de gestion avec `--dry-run`, et une relecture de la liste ensemble lundi. La PR #217 attend ce changement [3].\n- #216 (signature du webhook HubSpot) t'est assigné. Thomas bloque la mise en prod, pas avant lundi 23, tant que ce n'est pas fait. Il est absent jeudi et vendredi [4][7].\n- Camille veut créer le chantier seulement quand l'acompte est reçu, pas dès « gagné ». Hélène est d'accord. Ton code crée encore sur « gagné », donc il faut écouter `acompte_recu` [8][2].\n- Le formulaire de devis refuse les numéros avec espaces (#219). Sandrine signale que des demandes sont perdues, sans urgence [6].",
+  "mesures": {
+    "mots": 123,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6884,
+    "sortie": 331,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0118929
+  },
+  "cout": 0.0118929,
+  "latenceMs": 3137,
+  "fournisseur": "Anthropic (direct)"
+}

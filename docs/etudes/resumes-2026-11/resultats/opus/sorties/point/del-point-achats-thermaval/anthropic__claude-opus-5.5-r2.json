@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-achats-thermaval",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:29:56.596Z",
+  "reponse": "## What is still open\n- Hélène accepte 4 % + transport offert seulement si Thermaval confirme le 24/11 par écrit sans « sauf aléa » ; sinon, reviens vers elle avant de signer. Ton brouillon d'acceptation n'est pas encore envoyé [2][3][5].\n- Préviens Camille pour Marchand, comme Hélène le demande : Yannick veut les 2 Aéro 11 sur site jeudi 26/11, sinon la réception du 4/12 tombe et les pénalités suivent [1][3][4].\n- Patrick demande que Thermaval émette une facture par lot, remise appliquée sur chacune, sinon il ne pourra pas rapprocher les bons de livraison [6].\n\n## What changed\n- Yannick a décalé la pose Amrani au 25/11 et a prévenu le client [4].\n\n## What you did\n- Ton suivi des 9 commandes fournisseurs montre que seule la CMD-4471 a déjà été relancée [1].",
+  "rendu": "## What is still open\n- Hélène accepte 4 % + transport offert seulement si Thermaval confirme le 24/11 par écrit sans « sauf aléa » ; sinon, reviens vers elle avant de signer. Ton brouillon d'acceptation n'est pas encore envoyé [2][3][5].\n- Préviens Camille pour Marchand, comme Hélène le demande : Yannick veut les 2 Aéro 11 sur site jeudi 26/11, sinon la réception du 4/12 tombe et les pénalités suivent [1][3][4].\n- Patrick demande que Thermaval émette une facture par lot, remise appliquée sur chacune, sinon il ne pourra pas rapprocher les bons de livraison [6].\n\n## What changed\n- Yannick a décalé la pose Amrani au 25/11 et a prévenu le client [4].\n\n## What you did\n- Ton suivi des 9 commandes fournisseurs montre que seule la CMD-4471 a déjà été relancée [1].",
+  "mesures": {
+    "mots": 123,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7953,
+    "sortie": 1247,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0463818
+  },
+  "cout": 0.0463818,
+  "latenceMs": 12324,
+  "fournisseur": "Anthropic (direct)"
+}

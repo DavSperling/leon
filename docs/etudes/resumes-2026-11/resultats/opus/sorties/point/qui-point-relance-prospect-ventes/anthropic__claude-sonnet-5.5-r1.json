@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-relance-prospect-ventes",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:48.400Z",
+  "reponse": "## What is still open\n\n- Sofia says CAD payouts are not Q1, Q2 at the earliest, and asks you not to put a date in writing. Your draft email still says \"Q1 2027\", so fix it before sending. [6][1]\n- The Hearthly decision moved up to Wed Dec 2 (was Dec 4). The SIG Lite is still due Mon Nov 23, or Quillon is dropped from the final round. You still need to ask Shira, and it's about 200 questions. [4][1]\n- Rachel requires her sign-off for any discount above 10%, and asked to talk before you send numbers. Your proposal opens at 15% off for a 2-year commit, about $1.0M/year. [3][1]\n- You still have no reference customer: Loomly and Pinecrest are awkward after the payout delay, and Tradewell isn't live. Ask Rachel who you can use. [1]\n- Your action plan still has the old Dec 4 date, so move the dates back. [1][4]",
+  "rendu": "## What is still open\n\n- Sofia says CAD payouts are not Q1, Q2 at the earliest, and asks you not to put a date in writing. Your draft email still says \"Q1 2027\", so fix it before sending. [6][1]\n- The Hearthly decision moved up to Wed Dec 2 (was Dec 4). The SIG Lite is still due Mon Nov 23, or Quillon is dropped from the final round. You still need to ask Shira, and it's about 200 questions. [4][1]\n- Rachel requires her sign-off for any discount above 10%, and asked to talk before you send numbers. Your proposal opens at 15% off for a 2-year commit, about $1.0M/year. [3][1]\n- You still have no reference customer: Loomly and Pinecrest are awkward after the payout delay, and Tradewell isn't live. Ask Rachel who you can use. [1]\n- Your action plan still has the old Dec 4 date, so move the dates back. [1][4]",
+  "mesures": {
+    "mots": 151,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 5976,
+    "sortie": 326,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0100269
+  },
+  "cout": 0.0100269,
+  "latenceMs": 3159,
+  "fournisseur": "Anthropic (direct)"
+}

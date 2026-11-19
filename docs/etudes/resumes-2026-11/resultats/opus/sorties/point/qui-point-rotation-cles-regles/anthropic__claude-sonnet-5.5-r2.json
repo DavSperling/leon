@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:58.213Z",
+  "reponse": "## What is still open\n- Elad approved #1412 but wants an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI 10.2 traceability. Avi wants it merged by Monday [3].\n- Prod run is set for Tue 24/11, 22:00–23:30 IL time, with Elad on call. Fallback is Thu 26/11, before the freeze on 1/12 [6].\n- Shira needs the rotation job's prod audit log export and the signed change ticket by Wed 25/11. Screenshots won't do for the assessor [5].\n\n## What changed\n- Dependabot opened a tokio 1.41.0 → 1.41.1 bump, which fixes a panic in `JoinSet::try_join_next` [4].",
+  "rendu": "## What is still open\n- Elad approved #1412 but wants an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI 10.2 traceability. Avi wants it merged by Monday [3].\n- Prod run is set for Tue 24/11, 22:00–23:30 IL time, with Elad on call. Fallback is Thu 26/11, before the freeze on 1/12 [6].\n- Shira needs the rotation job's prod audit log export and the signed change ticket by Wed 25/11. Screenshots won't do for the assessor [5].\n\n## What changed\n- Dependabot opened a tokio 1.41.0 → 1.41.1 bump, which fixes a panic in `JoinSet::try_join_next` [4].",
+  "mesures": {
+    "mots": 99,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8000,
+    "sortie": 252,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0133349
+  },
+  "cout": 0.0133349,
+  "latenceMs": 2548,
+  "fournisseur": "Anthropic (direct)"
+}

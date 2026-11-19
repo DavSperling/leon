@@ -1,0 +1,32 @@
+{
+  "etape": "discussion",
+  "cas": "del-discussion-recrutement-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:31:25.779Z",
+  "reponse": "Non, d'après ce que j'ai trouvé, personne n'a encore été embauché.\n\n- Le 13/11, il y avait 11 candidatures pour les 2 postes [2].\n- Quatre candidats ont été retenus pour des entretiens les 19 et 20/11 : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [4]. Aurélie Jaouen visait une offre la semaine suivante, pour une arrivée début janvier [1].\n- Mathis Le Gac a retiré sa candidature le 18/11, car il a accepté une offre près de Vannes [9]. Il reste donc trois candidats.\n- Un modèle de promesse d'embauche existe, mais je n'ai trouvé aucune promesse envoyée ni signée [3].\n- Aurélie Jaouen a noté de répondre aux candidats non retenus avant le 27/11 [4].\n\nJe n'ai rien trouvé sur le résultat des entretiens des 19 et 20/11.",
+  "rendu": "Non, d'après ce que j'ai trouvé, personne n'a encore été embauché.\n\n- Le 13/11, il y avait 11 candidatures pour les 2 postes [2].\n- Quatre candidats ont été retenus pour des entretiens les 19 et 20/11 : Kevin Le Roux, Mathis Le Gac, Dylan Perrot et Inès Carré [4]. Aurélie Jaouen visait une offre la semaine suivante, pour une arrivée début janvier [1].\n- Mathis Le Gac a retiré sa candidature le 18/11, car il a accepté une offre près de Vannes [9]. Il reste donc trois candidats.\n- Un modèle de promesse d'embauche existe, mais je n'ai trouvé aucune promesse envoyée ni signée [3].\n- Aurélie Jaouen a noté de répondre aux candidats non retenus avant le 27/11 [4].\n\nJe n'ai rien trouvé sur le résultat des entretiens des 19 et 20/11.",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 2,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 1,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 9030,
+    "sortie": 523,
+    "reflexion": 0,
+    "cache": 4794,
+    "cout": 0.0141814
+  },
+  "latenceMs": 4382,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"recrutement installateurs candidats embauche\"}",
+    "chercher {\"requete\":\"installateur recrutement entretien offre signée\",\"depuis\":\"2m\"}"
+  ],
+  "cout": 0.0141814
+}

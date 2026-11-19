@@ -1,0 +1,34 @@
+{
+  "etape": "discussion",
+  "cas": "qui-tradewell-martin-suite",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:32:04.718Z",
+  "reponse": "Martin flagged two things on the Nov 12 sync. One is fixed. The other was picked up, but the answer is bad news for Tradewell.\n\n**1. Webhook signatures failing on sandbox.** Ellen Vance said payout.paid and seller.verified events failed verification about 95% of the time, and Tradewell had turned verification off on sandbox [1].\n- Jake Whitfield took it on the call [1]. He found that we were signing a re-serialized body instead of the bytes we actually send [2][3].\n- The fix (core#1187) is merged and deployed to sandbox, and goes to production with release 2026.47 on Tue Nov 24 [4][5].\n- On Nov 17, Ellen confirmed she had turned verification back on, and 300+ events had verified [3].\n- One thing to check: production still needs the Nov 24 release, which is 13 days before Dec 7.\n\n**2. Per-seller payout schedules.** Tradewell wants net-7 for about 200 top sellers and net-30 for the rest. Today Quillon only supports one schedule per platform [1].\n- Owen Park told Martin he would take it to product and engineering, and promised a clear answer by Friday Nov 20 [3].\n- Tomer Golan estimated 3–4 weeks of work, including testing and a dry run with Corvane [6].\n- Avi Kessler's reply is that the earliest delivery is late January. He moved the ticket (QPAY-2362) to Backlog with a 2027-Q1 target, and asked Owen to set expectations with Martin [6].\n- I found no sign yet that Owen has told Martin. That's the open item, and Martin said his sellers need to know what happens in December [1].",
+  "rendu": "Martin flagged two things on the Nov 12 sync. One is fixed. The other was picked up, but the answer is bad news for Tradewell.\n\n**1. Webhook signatures failing on sandbox.** Ellen Vance said payout.paid and seller.verified events failed verification about 95% of the time, and Tradewell had turned verification off on sandbox [1].\n- Jake Whitfield took it on the call [1]. He found that we were signing a re-serialized body instead of the bytes we actually send [2][3].\n- The fix (core#1187) is merged and deployed to sandbox, and goes to production with release 2026.47 on Tue Nov 24 [4][5].\n- On Nov 17, Ellen confirmed she had turned verification back on, and 300+ events had verified [3].\n- One thing to check: production still needs the Nov 24 release, which is 13 days before Dec 7.\n\n**2. Per-seller payout schedules.** Tradewell wants net-7 for about 200 top sellers and net-30 for the rest. Today Quillon only supports one schedule per platform [1].\n- Owen Park told Martin he would take it to product and engineering, and promised a clear answer by Friday Nov 20 [3].\n- Tomer Golan estimated 3–4 weeks of work, including testing and a dry run with Corvane [6].\n- Avi Kessler's reply is that the earliest delivery is late January. He moved the ticket (QPAY-2362) to Backlog with a 2027-Q1 target, and asked Owen to set expectations with Martin [6].\n- I found no sign yet that Owen has told Martin. That's the open item, and Martin said his sellers need to know what happens in December [1].",
+  "mesures": {
+    "fin": "fini",
+    "etapes": 4,
+    "vide": false,
+    "renvoisInvalides": 0,
+    "sourcesAttenduesVues": 1,
+    "sourcesAttenduesCitees": 0.6,
+    "jeNeSaisPas": false
+  },
+  "usage": {
+    "entree": 25404,
+    "sortie": 925,
+    "reflexion": 0,
+    "cache": 7191,
+    "cout": 0.0463951
+  },
+  "latenceMs": 7615,
+  "fournisseur": "Anthropic (direct)",
+  "trace": [
+    "chercher {\"requete\":\"Tradewell Martin Kobayashi weekly sync November 12 flagged\"}",
+    "chercher {\"requete\":\"Tradewell Martin concerns follow-up action\",\"depuis\":\"2026-11-01\"}",
+    "lire {\"sourceId\":\"gong-tradewell-1112\"}",
+    "chercher {\"requete\":\"webhook signature verification failing HMAC sandbox\",\"depuis\":\"2026-11-10\"}"
+  ],
+  "cout": 0.0463951
+}

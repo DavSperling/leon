@@ -136,9 +136,10 @@ describe('streamText', () => {
   });
 
   it.each([
-    ['reponse', 'claude-haiku-5-5'],
-    ['discussion', 'claude-sonnet-5-5'],
+    ['reponse', 'claude-sonnet-5-5'],
+    ['discussion', 'claude-opus-5-5'],
     ['point', 'claude-sonnet-5-5'],
+    ['agenda', 'claude-haiku-5-5'],
   ] as const)('appelle le modèle, l’effort et la limite de l’étape %s', async (step, model) => {
     const { llm, params, stream } = setup([answerTurn('ok')]);
 
@@ -177,14 +178,14 @@ describe('streamText', () => {
 
   it('active le repli serveur des refus pour Sonnet et Opus, pas pour Haiku', async () => {
     const sonnet = setup([answerTurn('ok')]);
-    await collect(sonnet.llm.streamText(textRequest('discussion')));
+    await collect(sonnet.llm.streamText(textRequest('point')));
     expect(sonnet.params(0)).toMatchObject({
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
     });
 
     const haiku = setup([answerTurn('ok')]);
-    await collect(haiku.llm.streamText(textRequest('reponse')));
+    await collect(haiku.llm.streamText(textRequest('agenda')));
     expect(haiku.params(0)).not.toHaveProperty('betas');
     expect(haiku.params(0)).not.toHaveProperty('fallbacks');
   });
@@ -350,7 +351,7 @@ describe('runAgent', () => {
     await collect(llm.runAgent(agentRequest([chercher(async () => 'x')])));
 
     expect(params(0)).toMatchObject({
-      model: 'claude-sonnet-5-5',
+      model: 'claude-opus-5-5',
       max_tokens: 2000,
       system: [
         { type: 'text', text: 'Consignes du système', cache_control: { type: 'ephemeral' } },

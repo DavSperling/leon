@@ -1,0 +1,23 @@
+{
+  "verificateur": "anthropic/claude-sonnet-5.5",
+  "faits": {
+    "f-fenetre": 1,
+    "f-audit": 1,
+    "f-lundi": 1,
+    "f-preuves": 1,
+    "f-legacy": 0,
+    "f-anciennes": 0,
+    "f-runbook": 0
+  },
+  "interdits": {
+    "i-split": 0,
+    "i-ring": 0,
+    "i-tokio": 1,
+    "i-keyfort": 0,
+    "i-suppression": 0,
+    "i-captures": 0
+  },
+  "contraires": [],
+  "premier": "f-audit",
+  "langueOk": true
+}

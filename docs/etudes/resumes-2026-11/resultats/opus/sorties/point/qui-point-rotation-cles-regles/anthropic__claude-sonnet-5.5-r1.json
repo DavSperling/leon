@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-rotation-cles-regles",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:57.686Z",
+  "reponse": "## What is still open\n- Elad approved #1412 but wants an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI 10.2 traceability. Avi wants it merged by Monday for the Tuesday run. [3]\n- Prod rotation window is Tue 24/11, 22:00–23:30 IL time, with Elad on call. The only fallback is Thu 26/11, because the change freeze starts 1/12. [6]\n- Shira needs the prod run's audit log export and the signed change ticket by Wed 25/11, for the auditor Victor (Ardent). Screenshots won't be accepted. [5]\n\n## What you did\n- You wrote the prod runbook for the rotation, including pre-checks, dry run, failure handling and the decrypt-only key policy for the old keys. [2]",
+  "rendu": "## What is still open\n- Elad approved #1412 but wants an audit event per batch (id range, count, from/to KEK), not just the final summary, for PCI 10.2 traceability. Avi wants it merged by Monday for the Tuesday run. [3]\n- Prod rotation window is Tue 24/11, 22:00–23:30 IL time, with Elad on call. The only fallback is Thu 26/11, because the change freeze starts 1/12. [6]\n- Shira needs the prod run's audit log export and the signed change ticket by Wed 25/11, for the auditor Victor (Ardent). Screenshots won't be accepted. [5]\n\n## What you did\n- You wrote the prod runbook for the rotation, including pre-checks, dry run, failure handling and the decrypt-only key policy for the old keys. [2]",
+  "mesures": {
+    "mots": 118,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 8000,
+    "sortie": 273,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0135449
+  },
+  "cout": 0.0135449,
+  "latenceMs": 2860,
+  "fournisseur": "Anthropic (direct)"
+}

@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-planning-sms-regles",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:14.844Z",
+  "reponse": "## What is still open\n\n- Sur #214, Lucas demande de corriger `rappels/sms.py` dans la PR, car sa réécriture n'arrive pas avant le 30/11. Il faut que ce soit bon avant l'envoi des SMS ce soir 18h : Sandrine attend ta réponse [3][4][7].\n- Une fois #214 fusionnée, et pas avant, lance `reprise_heure_hiver` en prod pour décaler de +1 h les 41 interventions corrigées à la main [1].\n- À la demande de Franck, verrouille avant vendredi l'intervention du chantier Le Floch (CH-2604) du 8/12, réservée à l'audit RGE [2].\n- La branche `thomas/settings-split` est commitée, sans PR. Elle contient le découpage base/dev/prod, HSTS, les cookies sécurisés et Pillow 11.0.0, qui corrige une vulnérabilité [2].\n\n## What changed\n\n- Yannick signale que les SMS de rappel d'hier annonçaient 9h au lieu de 8h à 6 clients, dont Mme Peltier, qui ne sera là qu'à 9h [4].\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros de téléphone avec espaces, ce qui fait perdre des demandes [6].",
+  "rendu": "## What is still open\n\n- Sur #214, Lucas demande de corriger `rappels/sms.py` dans la PR, car sa réécriture n'arrive pas avant le 30/11. Il faut que ce soit bon avant l'envoi des SMS ce soir 18h : Sandrine attend ta réponse [3][4][7].\n- Une fois #214 fusionnée, et pas avant, lance `reprise_heure_hiver` en prod pour décaler de +1 h les 41 interventions corrigées à la main [1].\n- À la demande de Franck, verrouille avant vendredi l'intervention du chantier Le Floch (CH-2604) du 8/12, réservée à l'audit RGE [2].\n- La branche `thomas/settings-split` est commitée, sans PR. Elle contient le découpage base/dev/prod, HSTS, les cookies sécurisés et Pillow 11.0.0, qui corrige une vulnérabilité [2].\n\n## What changed\n\n- Yannick signale que les SMS de rappel d'hier annonçaient 9h au lieu de 8h à 6 clients, dont Mme Peltier, qui ne sera là qu'à 9h [4].\n- Sandrine a ouvert #219 : le formulaire de devis refuse les numéros de téléphone avec espaces, ce qui fait perdre des demandes [6].",
+  "mesures": {
+    "mots": 160,
+    "tropLong": false,
+    "puces": 6,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 9089,
+    "sortie": 1110,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0481858
+  },
+  "cout": 0.0481858,
+  "latenceMs": 23595,
+  "fournisseur": "Anthropic (direct)"
+}

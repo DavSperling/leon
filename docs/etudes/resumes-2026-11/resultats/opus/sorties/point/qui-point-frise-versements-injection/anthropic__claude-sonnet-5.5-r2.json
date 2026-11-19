@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:40.926Z",
+  "reponse": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD for Loomly's ops lead, on the call Friday 20/11 at 4pm CT; a mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, because the return code → reason mapping isn't done. The real-data switch can't happen before the demo, so keep the mock on and update draft #402 [6][1].\n- Carla says 23 Loomly tickets this week are \"where is my payout\"; the expected date shown on the timeline should cut about half of them [5].\n\n## What you did\n- You built the payout timeline behind the `payout_timeline` flag, with expected-by dates (Thanksgiving included) and tests, and opened draft PR #402 [1].",
+  "rendu": "## What is still open\n- Sofia wants the timeline on staging by Thursday EOD for Loomly's ops lead, on the call Friday 20/11 at 4pm CT; a mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, because the return code → reason mapping isn't done. The real-data switch can't happen before the demo, so keep the mock on and update draft #402 [6][1].\n- Carla says 23 Loomly tickets this week are \"where is my payout\"; the expected date shown on the timeline should cut about half of them [5].\n\n## What you did\n- You built the payout timeline behind the `payout_timeline` flag, with expected-by dates (Thanksgiving included) and tests, and opened draft PR #402 [1].",
+  "mesures": {
+    "mots": 121,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6490,
+    "sortie": 264,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0104349
+  },
+  "cout": 0.0104349,
+  "latenceMs": 2479,
+  "fournisseur": "Anthropic (direct)"
+}

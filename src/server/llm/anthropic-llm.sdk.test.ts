@@ -134,7 +134,7 @@ describe('createAnthropicLlm avec le vrai SDK', () => {
     expect(chunks).toEqual(['Un ', 'deux ', 'trois']);
     const [request] = requests;
     expect(request?.body).toMatchObject({
-      model: 'claude-sonnet-5-5',
+      model: 'claude-opus-5-5',
       max_tokens: 321,
       stream: true,
       system: [{ type: 'text', text: 'Consignes', cache_control: { type: 'ephemeral' } }],

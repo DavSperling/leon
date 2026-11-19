@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-frise-versements-injection",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:38.442Z",
+  "reponse": "## What is still open\n- Sofia needs the timeline on staging by Thursday EOD for Loomly's ops lead on Friday 20/11, 4pm CT. A mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, so the real data can't replace the mocks before the demo. Core's return-code mapping isn't done [6].\n- Draft PR #402 is open, with the timeline behind `payout_timeline` and the returned step showing the raw code [1][2].\n- Carla counts 23 Loomly \"where is my payout\" tickets this week and expects the expected date to remove about half of them [5].",
+  "rendu": "## What is still open\n- Sofia needs the timeline on staging by Thursday EOD for Loomly's ops lead on Friday 20/11, 4pm CT. A mocked returned state is fine for the demo [2].\n- Jake's events endpoint slips from Thursday to Monday 23/11, so the real data can't replace the mocks before the demo. Core's return-code mapping isn't done [6].\n- Draft PR #402 is open, with the timeline behind `payout_timeline` and the returned step showing the raw code [1][2].\n- Carla counts 23 Loomly \"where is my payout\" tickets this week and expects the expected date to remove about half of them [5].",
+  "mesures": {
+    "mots": 100,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 1,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6490,
+    "sortie": 220,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0099949
+  },
+  "cout": 0.0099949,
+  "latenceMs": 2480,
+  "fournisseur": "Anthropic (direct)"
+}

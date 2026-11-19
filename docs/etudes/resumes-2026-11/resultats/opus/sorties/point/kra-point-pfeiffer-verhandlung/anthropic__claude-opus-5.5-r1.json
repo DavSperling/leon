@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:27.654Z",
+  "reponse": "## What is still open\n\n- Deine API-Schätzung muss bis Donnerstag, 19.11., 17 Uhr an Sabine Kranich und Thomas; die Vorlage für Thomas nennt noch 15 PT und den 1. April [1][5].\n- Jonas hält in #222 eher 25 PT für realistisch: `/api/v1/auftraege` hat keine Mandantentrennung, vor dem Go-live ist ein Pen-Test nötig, und der 1. April klappt nur bei Spike-Start im Dezember [2].\n- Frau Kranich will die API nur bei 3 Mio. € Mindestabnahme pro Jahr anbieten; Pfeiffer liegt 2026 bei 2,61 Mio. €. Durchsprache am Freitag um 14 Uhr bei ihr [1][5].\n\n## What changed\n\n- Pfeiffer hat Donnerstag abgesagt. Neuer Termin ist Montag, 23.11., um 10 Uhr in Nürnberg, Abfahrt 8 Uhr mit Thomas [6].\n- Jonas hat den Chargen-Export #214 und das Abhängigkeits-Update #218 mit Spring Boot 3.3.6 gemergt [3][4].",
+  "rendu": "## What is still open\n\n- Deine API-Schätzung muss bis Donnerstag, 19.11., 17 Uhr an Sabine Kranich und Thomas; die Vorlage für Thomas nennt noch 15 PT und den 1. April [1][5].\n- Jonas hält in #222 eher 25 PT für realistisch: `/api/v1/auftraege` hat keine Mandantentrennung, vor dem Go-live ist ein Pen-Test nötig, und der 1. April klappt nur bei Spike-Start im Dezember [2].\n- Frau Kranich will die API nur bei 3 Mio. € Mindestabnahme pro Jahr anbieten; Pfeiffer liegt 2026 bei 2,61 Mio. €. Durchsprache am Freitag um 14 Uhr bei ihr [1][5].\n\n## What changed\n\n- Pfeiffer hat Donnerstag abgesagt. Neuer Termin ist Montag, 23.11., um 10 Uhr in Nürnberg, Abfahrt 8 Uhr mit Thomas [6].\n- Jonas hat den Chargen-Export #214 und das Abhängigkeits-Update #218 mit Spring Boot 3.3.6 gemergt [3][4].",
+  "mesures": {
+    "mots": 126,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 1056,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.039897800000000004
+  },
+  "cout": 0.039897800000000004,
+  "latenceMs": 10359,
+  "fournisseur": "Anthropic (direct)"
+}

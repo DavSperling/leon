@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "del-point-alternant-hubspot",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:05.162Z",
+  "reponse": "## What is still open\n- **PR #217** : Thomas refuse la migration 0041 qui supprime les chantiers en double, car en prod ils peuvent porter interventions, photos et dossier MPR. Il veut une commande de gestion à part avec `--dry-run`, et relire la liste avec toi [3].\n- **#216**, qui t'est assigné : le webhook ne vérifie pas `X-HubSpot-Signature-v3`, donc n'importe qui peut créer des chantiers. La synchro ne part pas en prod avant lundi 23, ni sans ce correctif. Thomas est en congé jeudi et vendredi [4][7].\n- **Création du chantier** : Camille a répondu, elle veut le créer seulement à « Acompte reçu », avec l'accord d'Hélène. Il faut donc écouter `acompte_recu` au lieu de « gagné » [2][8].\n\n## What changed\n- **#213** (photo de la plaque signalétique dans l'appli des poseurs) est fusionnée et partie en prod [5].\n\n## What you did\n- Le mapping de `type_travaux` est fait dans la PR #217 : 350 deals sur 364 sont reconnus, les 14 autres sont classés « à préciser » [2].",
+  "rendu": "## What is still open\n- **PR #217** : Thomas refuse la migration 0041 qui supprime les chantiers en double, car en prod ils peuvent porter interventions, photos et dossier MPR. Il veut une commande de gestion à part avec `--dry-run`, et relire la liste avec toi [3].\n- **#216**, qui t'est assigné : le webhook ne vérifie pas `X-HubSpot-Signature-v3`, donc n'importe qui peut créer des chantiers. La synchro ne part pas en prod avant lundi 23, ni sans ce correctif. Thomas est en congé jeudi et vendredi [4][7].\n- **Création du chantier** : Camille a répondu, elle veut le créer seulement à « Acompte reçu », avec l'accord d'Hélène. Il faut donc écouter `acompte_recu` au lieu de « gagné » [2][8].\n\n## What changed\n- **#213** (photo de la plaque signalétique dans l'appli des poseurs) est fusionnée et partie en prod [5].\n\n## What you did\n- Le mapping de `type_travaux` est fait dans la PR #217 : 350 deals sur 364 sont reconnus, les 14 autres sont classés « à préciser » [2].",
+  "mesures": {
+    "mots": 157,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 3,
+    "renvoisInvalides": 0,
+    "renvois": 6,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6884,
+    "sortie": 977,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.036705800000000004
+  },
+  "cout": 0.036705800000000004,
+  "latenceMs": 10563,
+  "fournisseur": "Anthropic (direct)"
+}

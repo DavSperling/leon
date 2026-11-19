@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "kra-point-pfeiffer-verhandlung",
+  "modele": "anthropic/claude-sonnet-5.5",
+  "rep": 1,
+  "date": "2026-11-19T14:30:30.598Z",
+  "reponse": "## What is still open\n\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas. Am Freitag um 14 Uhr besprecht ihr alles bei ihr [5].\n- Jonas hält 15 PT für zu knapp: /api/v1/auftraege hat keine Mandantentrennung, dazu kommen Token-Ableitung, Absicherung und Pen-Test, also eher 25 PT. Der 1. April klappt nur, wenn der Spike im Dezember startet (#222) [2].\n- Dein Vorlagen-Entwurf für Thomas nennt noch 15 PT und den 1. April; vor dem Versand musst du ihn anpassen [1][2].\n\n## What changed\n\n- Das Jahresgespräch bei Pfeiffer in Nürnberg ist von Donnerstag auf Montag, 23.11., 10:00 Uhr verschoben, Abfahrt 8:00 Uhr mit Thomas [6].\n- Sabine Kranich bleibt beim Jahresbonus bei 2 %. Die API gibt es nur bei einer Mindestabnahme von 3 Mio. € im Jahr [5].",
+  "rendu": "## What is still open\n\n- Sabine Kranich erwartet deine Aufwandsschätzung zur API bis Donnerstag, 19.11., 17 Uhr, an sie und Thomas. Am Freitag um 14 Uhr besprecht ihr alles bei ihr [5].\n- Jonas hält 15 PT für zu knapp: /api/v1/auftraege hat keine Mandantentrennung, dazu kommen Token-Ableitung, Absicherung und Pen-Test, also eher 25 PT. Der 1. April klappt nur, wenn der Spike im Dezember startet (#222) [2].\n- Dein Vorlagen-Entwurf für Thomas nennt noch 15 PT und den 1. April; vor dem Versand musst du ihn anpassen [1][2].\n\n## What changed\n\n- Das Jahresgespräch bei Pfeiffer in Nürnberg ist von Donnerstag auf Montag, 23.11., 10:00 Uhr verschoben, Abfahrt 8:00 Uhr mit Thomas [6].\n- Sabine Kranich bleibt beim Jahresbonus bei 2 %. Die API gibt es nur bei einer Mindestabnahme von 3 Mio. € im Jahr [5].",
+  "mesures": {
+    "mots": 129,
+    "tropLong": false,
+    "puces": 5,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 4,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 7287,
+    "sortie": 431,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0136989
+  },
+  "cout": 0.0136989,
+  "latenceMs": 3739,
+  "fournisseur": "Anthropic (direct)"
+}

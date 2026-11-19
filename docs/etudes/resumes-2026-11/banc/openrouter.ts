@@ -161,6 +161,11 @@ function cleAnthropic(): string {
   throw new Error('ANTHROPIC_API_KEY introuvable');
 }
 
+// Les blocs bruts de chaque tour d'assistant (réflexion comprise), rangés sous l'id de son premier appel d'outil :
+// la boucle d'outils les renvoie tels quels, comme anthropic-llm.ts, pour que le modèle garde sa réflexion d'un tour
+// à l'autre. Reconstruits depuis le texte et les appels seuls, ils la perdraient à chaque tour.
+const BRUTS = new Map<string, unknown[]>();
+
 // Les messages au format OpenAI deviennent ceux de l'API d'Anthropic : les résultats d'outils qui se suivent vont
 // dans un seul message `user`, comme le fait anthropic-llm.ts.
 function versAnthropic(messages: Message[]) {
@@ -174,6 +179,11 @@ function versAnthropic(messages: Message[]) {
       if (dernier?.role === 'user' && Array.isArray(dernier.content)) (dernier.content as unknown[]).push(bloc);
       else sortie.push({ role: 'user', content: [bloc] });
     } else if (m.role === 'assistant') {
+      const bruts = BRUTS.get(m.tool_calls?.[0]?.id ?? '');
+      if (bruts) {
+        sortie.push({ role: 'assistant', content: bruts });
+        continue;
+      }
       const blocs: unknown[] = m.content ? [{ type: 'text', text: m.content }] : [];
       for (const a of m.tool_calls ?? []) {
         blocs.push({ type: 'tool_use', id: a.id, name: a.function.name, input: JSON.parse(a.function.arguments || '{}') });
@@ -222,6 +232,8 @@ async function appelerAnthropic(requete: Requete): Promise<Reponse> {
     if (!res.ok) throw new Error(`HTTP ${res.status} ${texte.slice(0, 300)}`);
     const json = JSON.parse(texte);
     const blocs: Array<{ type: string; text?: string; id?: string; name?: string; input?: unknown }> = json.content ?? [];
+    const premierAppel = blocs.find((b) => b.type === 'tool_use')?.id;
+    if (premierAppel) BRUTS.set(premierAppel, json.content);
     const u = json.usage ?? {};
     const lu = u.cache_read_input_tokens ?? 0;
     const ecrit = u.cache_creation_input_tokens ?? 0;

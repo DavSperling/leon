@@ -1,0 +1,29 @@
+{
+  "etape": "point",
+  "cas": "qui-point-reserve-banque-finance",
+  "modele": "anthropic/claude-opus-5.5",
+  "rep": 2,
+  "date": "2026-11-19T14:30:52.123Z",
+  "reponse": "## What is still open\n- Corvane refused phasing: the full $900k top-up is due by November 30, and Gil has already approved moving it from the sweep, leaving runway around 18.3 months [1][3][5].\n- Gil wants the reserve change on the cash slide of Thursday's board pack [3].\n- Jenna needs your call: chase Northpeak for the missing $27,500 SRE search invoice, or keep the accrual and close October on Friday [4].\n\n## What you did\n- You coded the October card spend and prepared the CSV for Jenna, booking Northpeak's $4,500 deposit as a prepaid expense, not recruiting expense [2].",
+  "rendu": "## What is still open\n- Corvane refused phasing: the full $900k top-up is due by November 30, and Gil has already approved moving it from the sweep, leaving runway around 18.3 months [1][3][5].\n- Gil wants the reserve change on the cash slide of Thursday's board pack [3].\n- Jenna needs your call: chase Northpeak for the missing $27,500 SRE search invoice, or keep the accrual and close October on Friday [4].\n\n## What you did\n- You coded the October card spend and prepared the CSV for Jenna, booking Northpeak's $4,500 deposit as a prepaid expense, not recruiting expense [2].",
+  "mesures": {
+    "mots": 96,
+    "tropLong": false,
+    "puces": 4,
+    "parties": 2,
+    "renvoisInvalides": 0,
+    "renvois": 5,
+    "rien": false,
+    "fin": "stop"
+  },
+  "usage": {
+    "entree": 6853,
+    "sortie": 610,
+    "reflexion": 0,
+    "cache": 2729,
+    "cout": 0.0292418
+  },
+  "cout": 0.0292418,
+  "latenceMs": 6087,
+  "fournisseur": "Anthropic (direct)"
+}

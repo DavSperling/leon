@@ -80,40 +80,36 @@ export function modelSpec(model: string): ModelSpec | undefined {
     : undefined;
 }
 
-// Choix de la spec du deuxième jet : la réponse en tête est appelée à chaque recherche, elle doit coûter peu
-// et répondre vite ; la discussion et le point du matin ont besoin de plus de jugement. Essayé le 16/11/2026 sur une
-// vraie session : Haiku coûte dix fois moins, mais comprend moins ce qui se passe et met la routine en tête ; le point
-// reste sur Sonnet, et son plafond par jour (BRIEFING_DAILY_CAP) borne la dépense. Le résumé d'une session
-// (D8 du plan de la mémoire des sessions) est écrit à chaque session close : il doit coûter peu. L'état d'un fil
-// (D23 du plan de la mémoire à disposition) est réécrit après chaque résumé : de même.
-// C'est aussi le repli de chaque étape quand son modèle préféré passe par OpenRouter et que la clé manque.
+// Le modèle Claude de chaque étape : le mieux noté au banc (docs/etudes/resumes-2026-11), pas le moins cher. Choisi
+// le 19/11/2026, quand le crédit Anthropic du mois (200 €) a laissé de la marge. Notes sur 100 des trois séries
+// (premier passage, mise au point, épreuve finale), Sonnet puis Haiku :
+// - réponse en tête : 76, 82 et 70 contre 66, 66 et 57, et Sonnet répond plus vite (2,1 à 2,4 s contre 3,6 à 5,5 s) ;
+// - discussion : 80, 84 et 75 contre 77, 77 et 68, et Opus fait mieux que Sonnet : 86 contre 76 à l'essai du
+//   19/11/2026 (8 questions, deux passages, deux juges : devant sur 4 questions, derrière sur 1), pour 7,0 centimes
+//   la question au lieu de 2,1 et 11 s au lieu de 7 ;
+// - point du matin : 67, 84 et 87 contre 63, 73 et 81 ; Opus n'y fait pas mieux que Sonnet (80 contre 83 le 19/11)
+//   pour trois fois le prix et 10 s au lieu de 3 ;
+// - résumé de session : 83, 87 et 74 contre 73, 80 et 69 ;
+// - état d'un fil : 74, 84 et 84 contre 69, 69 et 78 ;
+// - agenda : Haiku reste devant, 98, 99 et 97 contre 93, 97 et 61. À l'effort « low », Sonnet écrit sans réfléchir
+//   (0 % de ses jetons de sortie au banc, 84 % pour Haiku) et rate des fuseaux et des dates relatives.
+// Opus 5.5 n'a été mesuré que sur la discussion et le point. Le plafond par jour du point (BRIEFING_DAILY_CAP) et de l'agenda borne la dépense.
+// C'est aussi le repli d'une étape réglée sur un modèle d'OpenRouter, quand l'appel échoue ou que la clé manque.
 const ANTHROPIC_MODEL_BY_STEP = {
-  reponse: 'claude-haiku-5-5',
-  discussion: 'claude-sonnet-5-5',
+  reponse: 'claude-sonnet-5-5',
+  discussion: 'claude-opus-5-5',
   point: 'claude-sonnet-5-5',
-  resume: 'claude-haiku-5-5',
-  fil: 'claude-haiku-5-5',
+  resume: 'claude-sonnet-5-5',
+  fil: 'claude-sonnet-5-5',
   agenda: 'claude-haiku-5-5',
 } as const satisfies Record<LlmStep, AnthropicModel>;
 
-// Le modèle que chaque étape prend quand la clé OpenRouter est là. Choisi au banc des modèles par étape
-// (docs/etudes/resumes-2026-11, 18/11/2026 : 19 modèles, puis les finalistes sur 52 cas neufs, deux vérificateurs et
-// une contre-vérification à l'aveugle), notes sur 100, série de mise au point puis épreuve finale :
-// - réponse en tête : DeepSeek V4.1 Flash 72 et 76, contre Haiku 66 et 57, au même prix et deux fois plus vite ;
-// - discussion : DeepSeek V4.1 Flash 1017 83 et 71, contre Sonnet 84 et 75 (dans le bruit), vingt fois moins cher ;
-// - point du matin : Sonnet reste devant (84 et 87 ; le meilleur des autres, 79 et 79) ;
-// - résumé de session : DeepSeek V4.1 Flash 1017 89 et 84, contre Haiku 80 et 69 ;
-// - état d'un fil : MiMo V2.6 Flash 82 et 78, contre Haiku 69 et 78 ;
-// - agenda : GPT-6 Luna 100 et 100, contre Haiku 99 et 97.
-// Un appel OpenRouter qui échoue avant tout texte est refait chez Anthropic (get-llm.ts).
-const PREFERRED_MODEL_BY_STEP = {
-  reponse: 'deepseek/deepseek-v4.1-flash',
-  discussion: 'deepseek/deepseek-v4.1-flash-1017',
-  point: 'claude-sonnet-5-5',
-  resume: 'deepseek/deepseek-v4.1-flash-1017',
-  fil: 'xiaomi/mimo-v2.6-flash',
-  agenda: 'openai/gpt-6-luna',
-} as const satisfies Record<LlmStep, SupportedModel>;
+// Le modèle préféré de chaque étape : aujourd'hui Claude partout. Du 18 au 19/11/2026, c'étaient les modèles
+// d'OpenRouter du banc, à qualité voisine pour 5 à 20 fois moins cher : DeepSeek V4.1 Flash (réponse en tête),
+// DeepSeek V4.1 Flash 1017 (discussion, résumé), MiMo V2.6 Flash (fil), GPT-6 Luna (agenda). Ils restent réglables
+// par LEON_MODEL_* ; pour en remettre un par défaut : `{ ...ANTHROPIC_MODEL_BY_STEP, fil: 'xiaomi/mimo-v2.6-flash' }`
+// (pris seulement avec la clé OpenRouter, et refait chez Anthropic s'il échoue avant tout texte, get-llm.ts).
+const PREFERRED_MODEL_BY_STEP: Record<LlmStep, SupportedModel> = ANTHROPIC_MODEL_BY_STEP;
 
 // Variable d'environnement qui remplace le modèle de chaque étape.
 export const SETTING_BY_STEP = {
@@ -125,8 +121,8 @@ export const SETTING_BY_STEP = {
   agenda: 'LEON_MODEL_AGENDA',
 } as const satisfies Record<LlmStep, keyof Env>;
 
-// L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots sur Haiku n'a
-// pas besoin de réfléchir longtemps, la discussion et le point pèsent leurs sources.
+// L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots n'a pas besoin de
+// réfléchir longtemps, la discussion et le point pèsent leurs sources.
 export const EFFORT_BY_STEP = {
   reponse: 'low',
   discussion: 'medium',

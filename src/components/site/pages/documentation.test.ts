@@ -387,8 +387,8 @@ describe('la page Documentation', () => {
       );
       expect(coulisses).toContain(
         words(
-          'by you and, on the Leon website, by the managers above you',
-          'par vous et, sur le site de Leon, par les managers au-dessus de vous',
+          'can be read like it: by you and, on the Leon website, by the managers above you',
+          'peut être lu comme elle : par vous et, sur le site de Leon, par les managers au-dessus de vous',
         ),
       );
       expect(coulisses).toContain(

@@ -9,9 +9,11 @@ export const STATUS_KEY = 'leon.status';
 // réaffiche jusqu'au nouvel accord. 1 : premier jet (analyse par l'API d'Anthropic pour en extraire des faits) ;
 // 2 : deuxième jet (le serveur garde et indexe la conversation, et peut envoyer des passages au fournisseur du
 // modèle d'IA pour répondre aux questions) ; 3 : la conversation est lue aussi, sur le site, par les managers en
-// remontant (0057), et leurs questions peuvent en envoyer des passages. Un réglage enregistré avant les versions vaut 0.
+// remontant (0057), et leurs questions peuvent en envoyer des passages ; 4 : la conversation « peut être lue » par
+// vous et, sur le site, par vos managers (décision d'Amos du 18/11 : un manager ne lit pas quand un interrupteur est
+// coupé). Un réglage enregistré avant les versions vaut 0.
 // consent-version.test.ts lie le texte à cette version : changer le texte impose de la monter.
-export const CONSENT_VERSION = 3;
+export const CONSENT_VERSION = 4;
 
 export type KeyValueStore = {
   get(key: string): Promise<unknown>;

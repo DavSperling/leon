@@ -42,7 +42,7 @@ const REFUSALS = {
 
 // Une note se lit comme les sessions (décision 3 d'Amos du 12/11) : par l'auteur et, sur le site, ses managers (0057).
 export const REMEMBER_DESCRIPTION =
-  "Saves a piece of information to memory. It is read like the user's sessions: by the user and, on the Leon website, by the managers above them. Leon indexes it so it can be found later. `about` names the subject (client, project, person…). To change a note you saved, give its id as `note` and the number of its last version as `version`: Leon writes the next version.";
+  "Saves a piece of information to memory. It can be read like the user's sessions: by the user and, on the Leon website, by the managers above them. Leon indexes it so it can be found later. `about` names the subject (client, project, person…). To change a note you saved, give its id as `note` and the number of its last version as `version`: Leon writes the next version.";
 
 export function registerRememberTool(server: McpServer, ctx: TenantContext, client: string): void {
   server.registerTool(

@@ -21,7 +21,9 @@ describe("écran de consentement de l'extension", () => {
     const text = consentSection();
     expect(text).toContain('Ce qui est envoyé à votre serveur Leon');
     expect(text).toContain("Ce qui ne l'est jamais");
-    expect(text).toContain('par vos managers en remontant');
+    expect(text).toContain(
+      'peut être lue par vous et, sur le site de Leon, par vos managers en remontant',
+    );
     expect(text).not.toContain('vous seul');
     expect(text).not.toContain('Only you can see');
   });

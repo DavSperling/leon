@@ -123,7 +123,7 @@ export const HOOKS: readonly HookSpec[] = [
     event: 'SessionEnd',
     subcommand: 'capter-session',
     timeout: SESSION_END_TIMEOUT_S,
-    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session is read by you and, on the Leon website, by the managers above you.',
+    role: 'at the end of every session, sends the text of the exchanges and the actions of the session to Leon (secrets masked); the session can be read by you and, on the Leon website, by the managers above you.',
   },
 ];
 
@@ -143,7 +143,7 @@ export const REMINDER_HOOK: HookSpec = {
 const CONSENT_LINES = [
   'What will be sent: these hooks are in your personal settings, so they run in ALL your Claude Code sessions, in ALL your folders (personal ones included). Sessions started by a script (`claude -p`) run them too, except with `--bare`, which loads no hooks.',
   "  - At the end of each session, the Leon server receives the text of the exchanges (your messages and Claude's answers; the messages Claude Code adds in your place, such as a background task's result, the output of a `!` or `/` command, another session's message or a script's prompt, labeled as not typed by you; the final report of each subagent, labeled the same way; a `!` command you type is sent whole) and the actions of the session, read from its transcript: the files written (paths in the repository), the commands run (only their executable, plus the subcommand for a fixed list of developer tools such as git, gh, pnpm or docker; never their other arguments), Git (branch, commits, pull requests), the task list, and a few markers (start and end times, number of messages and tool errors, whether the session used the web, an MCP server, a subagent or a network command).",
-  '  - Secrets are masked before sending, and again by the server. Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+  '  - Secrets are masked before sending, and again by the server. Each session can be read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
   "  - At the start of each session, the server receives the project key, the current Git branch and the session id. It sends back your recent sessions on this repository (their branch, pull requests, commits, files and remaining tasks) and the project's morning briefing: Claude Code adds this block to the session context, so it is given to Claude Code's model.",
 ];
 
@@ -157,7 +157,7 @@ const CONSENT_LINES = [
 export const RESUME_LINES = [
   'Session summaries (usage "resume", optional, asked separately):',
   "  - A summary of each session is written by Leon's model provider: once a session with at least 6 of your messages has ended, the Leon server sends its actions, the state of its pull requests and the end of its exchanges (40,000 characters at most, secrets already masked) to Leon's model provider, which writes the summary. If the session goes on later, a new summary replaces the old one.",
-  "  - The summary is read like the session: by you and, on the Leon website, by the managers above you. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
+  "  - The summary can be read like the session: by you and, on the Leon website, by the managers above you. Leon's search finds it; it is never added to the context of a new session. Withdrawing your consent stops new summaries: it tells the Leon server this computer is connected to (only that server and account: one this computer used before is not told). If this computer is offline then, a summary already planned may still be written within an hour, and Leon later tells the server this computer is connected to by then: at the next session start of a tool that keeps its hooks, or when you run the withdrawal again.",
   "  - The same usage also keeps the state of your work threads up to date (a thread gathers the sessions, pull requests and sources about one piece of work): the Leon server sends to Leon's model provider the actions, exchanges and summaries of your sessions that have this usage, the state of their pull requests and the sources linked to the thread that you can see, and the provider writes that state. It stays private to you. Withdrawing your consent stops this too, once the Leon server is told.",
 ];
 
@@ -197,7 +197,7 @@ export const RAPPEL_LINES = [
 // décision 4 d'Amos, sans redemander l'accord : la note se lit comme les sessions (l'auteur, et ses managers sur le site).
 export const NOTER_LINES = [
   'Agent notes (usage "noter", asked separately):',
-  "  - The agent can keep notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note is read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
+  "  - The agent can keep notes in Leon with the command `leon note`. Each note sends the Leon server this computer is connected to the text of the note (4,000 characters at most, secrets masked before sending, and again by the server), with the project key, the name of the tool, the session id and the usages this tool accepted. The note can be read like your sessions (by you and, on the Leon website, by the managers above you) and keeps its versions: Leon's search finds it, and it is never placed as it is in the context of a session.",
   "  - At the start of each session or conversation, the start request also sends the Leon server the usages this tool accepted, the Leon command of this computer (such as `~/.leon/bin/leon`) and the name of the tool, and Leon places in the agent's context one sentence that gives this command to write a note, with the tool and the session id filled in (the session id only when it is safe in a shell). The model provider of the tool sees it.",
   '  - Refusing it in a tool removes that sentence there, and `leon note` then sends nothing for that tool. It also turns off `remember`, the note tool of the Leon MCP server, for all your assistants connected to this Leon workspace, until you turn it back on in the Memory section of the Leon website settings.',
 ];
@@ -209,7 +209,7 @@ export const NOTER_LINES = [
 export const COULISSES_LINES = [
   'Full capture (usage "coulisses", optional, asked separately):',
   "  - At the end of each session, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, when Claude Code writes its text in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for an MCP tool, nothing, and only the name of its server is kept. Never the output of a tool, nor a search pattern, a URL, a query or any other argument.",
-  "  - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and read like it: by you and, on the Leon website, by the managers above you. Leon's search finds the reasoning and the subagents; it shows the tool calls only on request. None of this is ever placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.",
+  "  - Secrets are masked before sending, and again by the server. The blocks Leon placed in the session are removed, and each text is cut at 20,000 characters. All this is kept with the session and can be read like it: by you and, on the Leon website, by the managers above you. Leon's search finds the reasoning and the subagents; it shows the tool calls only on request. None of this is ever placed in the morning briefing, in the context of a new session, in a session summary or in the state of your work threads.",
   '  - Withdrawing your consent stops this sending. What was already sent stays in Leon.',
 ];
 

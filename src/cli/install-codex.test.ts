@@ -161,7 +161,7 @@ describe('installCodexHook', () => {
     expect(text).not.toContain('Nothing is captured');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la session (0057).
     expect(text).toContain(
-      'Each session is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+      'Each session can be read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
     );
     expect(text).not.toContain('private');
     expect(asked).toHaveLength(1);

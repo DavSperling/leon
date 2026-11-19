@@ -124,7 +124,7 @@ describe('installCursorHooks', () => {
     expect(text).toContain('once per conversation');
     // Décision 4 d'Amos pour le lot 14 : qui lit vraiment la conversation (0057).
     expect(text).toContain(
-      'Each conversation is read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
+      'Each conversation can be read by you and, on the Leon website, by the managers above you, never by your other colleagues.',
     );
     expect(text).not.toContain('private');
     expect(asked).toHaveLength(1);

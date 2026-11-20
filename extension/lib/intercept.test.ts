@@ -14,6 +14,7 @@ import {
   proto,
   RPC,
   sendBody,
+  smallActionBody,
 } from './parsers/fixtures/claude-ai-frames';
 import type { SiteParser, StreamParser } from './parsers/site-parser';
 
@@ -493,6 +494,81 @@ describe('installFetchInterceptor : claude.ai au fil de l’eau', () => {
     if (!reader) throw new Error('pas de corps');
     expect(await readBytes(reader, 11)).toEqual(envelope(heartbeat(1)));
     cancel.mockRestore();
+  });
+
+  it('émet l’échange quand la page prend le lecteur de son corps dès la réponse reçue', async () => {
+    const stream = pagedStream();
+    const { target, emit } = setupClaude([timelineResponse(stream.body)]);
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    // Comme connect-web : le corps est verrouillé dans la suite immédiate de fetch.
+    await target.fetch(TIMELINE, timelineInit).then((response) => {
+      reader = response.body?.getReader();
+    });
+    if (!reader) throw new Error('pas de corps');
+    const page = reader;
+    void (async () => {
+      while (!(await page.read()).done) {}
+    })();
+    await target.fetch(PERFORM, await sendInit());
+    for (const one of await exchangeEnvelopes(X)) stream.push(one);
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledExactlyOnceWith({ exchange: captured }));
+  });
+
+  it('ne copie pas la réponse d’un PerformAction sans texte arrivée après la fin de l’observation', async () => {
+    const clone = vi.spyOn(Response.prototype, 'clone');
+    const target = {
+      fetch: (async () => {
+        await settle();
+        return new Response(proto([6, 4]), { headers: { 'content-type': 'application/proto' } });
+      }) as typeof fetch,
+    };
+    installFetchInterceptor(target, [createClaudeAiParser()], vi.fn());
+    const response = await target.fetch(PERFORM, { method: 'POST', body: smallActionBody() });
+    expect(new Uint8Array(await response.arrayBuffer())).toEqual(proto([6, 4]));
+    expect(clone).not.toHaveBeenCalled();
+    clone.mockRestore();
+  });
+
+  it.each([
+    ['répond 500', () => new Response('', { status: 500 }), 'reçue'],
+    ['échoue', () => Promise.reject(new TypeError('Failed to fetch')), 'rejetée'],
+  ])(
+    'oublie l’envoi dont l’appel %s : aucun rejet 15 minutes plus tard',
+    async (_label, perform, outcome) => {
+      let clock = NOW;
+      const stream = pagedStream();
+      const original = vi.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith('/PerformAction') ? perform() : timelineResponse(stream.body),
+      );
+      const target = { fetch: original as typeof fetch };
+      const emit = vi.fn();
+      installFetchInterceptor(target, [createClaudeAiParser(() => clock)], emit);
+      // La page reçoit la réponse ou le rejet d'origine.
+      const page = await target.fetch(PERFORM, await sendInit()).then(
+        () => 'reçue',
+        () => 'rejetée',
+      );
+      expect(page).toBe(outcome);
+      await settle();
+      clock = new Date(NOW.getTime() + 16 * 60_000);
+      await target.fetch(TIMELINE, timelineInit);
+      stream.push(envelope(heartbeat(1)));
+      await settle();
+      expect(emit).not.toHaveBeenCalled();
+    },
+  );
+
+  it('ne dit rien d’un StreamTimeline en erreur quand un envoi attend', async () => {
+    const failed = new Response('{"code":"unavailable"}', {
+      status: 503,
+      headers: { 'content-type': 'application/json' },
+    });
+    const { target, emit } = setupClaude([failed]);
+    await target.fetch(PERFORM, await sendInit());
+    await settle();
+    await target.fetch(TIMELINE, timelineInit);
+    await settle();
+    expect(emit).not.toHaveBeenCalled();
   });
 
   it("rend à la page la promesse d'origine elle-même, que l'appel soit suivi ou non", async () => {

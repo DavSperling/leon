@@ -12,6 +12,7 @@ import {
   heartbeat,
   historyEnvelope,
   messageRecord,
+  piece,
   prepareBody,
   proto,
   RPC,
@@ -43,9 +44,13 @@ const NEXT = {
   rank: 3,
 };
 
-// Une suite de morceaux ; open : le flux reste ouvert ensuite, comme celui que la page garde.
-async function* chunks(parts: Uint8Array[], open = false) {
-  yield* parts;
+// Une suite de morceaux ; open : le flux reste ouvert ensuite, comme celui que la page garde ; before : appelé avant
+// chaque morceau (pour avancer l'horloge pendant que le flux arrive).
+async function* chunks(parts: Uint8Array[], open = false, before = () => {}) {
+  for (const part of parts) {
+    before();
+    yield part;
+  }
   if (open) await new Promise(() => {});
 }
 
@@ -92,14 +97,15 @@ function setup() {
   };
   const stream = (
     parts: Uint8Array[],
-    options: { open?: boolean; headers?: Record<string, string> } = {},
+    // tick : l'horloge avance d'autant avant chaque morceau.
+    options: { open?: boolean; headers?: Record<string, string>; tick?: number } = {},
   ) =>
     parser.observe({
       url: new URL(TIMELINE),
       request: { headers: new Headers(), body: Promise.resolve(envelope(proto([1, CONV]))) },
       response: Promise.resolve({
         headers: new Headers(options.headers ?? TIMELINE_HEADERS),
-        chunks: chunks(parts, options.open),
+        chunks: chunks(parts, options.open, () => advance(options.tick ?? 0)),
       }),
       report,
     });
@@ -247,6 +253,50 @@ describe('claudeAiParser.observe', () => {
     expect(results).toEqual([{ rejected: 'incomplet' }]);
   });
 
+  it('rejette comme incomplet une attente dépassée sur un flux resté ouvert, sans autre appel', async () => {
+    const { results, send, stream } = setup();
+    await send(sendOf(FIRST));
+    void stream([envelope(heartbeat(1)), envelope(heartbeat(2))], {
+      open: true,
+      tick: 8 * MINUTE,
+    });
+    await vi.waitFor(() => expect(results).toEqual([{ rejected: 'incomplet' }]));
+  });
+
+  it('rejette comme incomplet une attente dépassée dès le prochain envoi', async () => {
+    const { results, send, advance } = setup();
+    await send(sendOf(FIRST));
+    advance(16 * MINUTE);
+    await send(sendOf(NEXT));
+    expect(results).toEqual([{ rejected: 'incomplet' }]);
+  });
+
+  it('garde une réponse qui arrive encore après 15 minutes, morceau après morceau', async () => {
+    const { results, send, stream } = setup();
+    await send(sendOf(FIRST));
+    const tag = FIRST.replyId.slice(0, 8);
+    const step = `etape_${tag}`;
+    const block = `bloc_${tag}`;
+    const text = FIRST.reply[0] ?? '';
+    // Une enveloppe toutes les 5 minutes : la réponse s'écrit pendant 40 minutes.
+    await stream(
+      [
+        envelope(
+          update(
+            messageRecord({ id: FIRST.replyId, author: 2, rank: 1, replyTo: FIRST.userId }),
+            stepRecord({ id: step, message: FIRST.replyId, rank: 1, kind: 1 }),
+            textBlock({ id: block, step, text: text.slice(0, 2) }),
+          ),
+        ),
+        ...Array.from({ length: 5 }, (_, i) => envelope(piece(block, `morceau inventé ${i}`))),
+        envelope(update(textBlock({ id: block, step, text, done: true }))),
+        envelope(update(messageRecord({ id: FIRST.replyId, author: 2, rank: 1, done: true }))),
+      ],
+      { tick: 5 * MINUTE },
+    );
+    expect(results).toEqual([exchangeOf(FIRST, new Date(START.getTime() + 40 * MINUTE))]);
+  });
+
   it('rejette comme format une réponse terminée sans bloc de texte terminé', async () => {
     const { results, send, stream } = setup();
     await send(sendOf(FIRST));
@@ -299,8 +349,11 @@ describe('claudeAiParser.observe', () => {
     expect(results).toEqual([exchangeOf(FIRST)]);
   });
 
-  it('borne les étapes et les blocs gardés pour un envoi', async () => {
-    const { parser, send, stream } = setup();
+  const finished = () =>
+    envelope(update(messageRecord({ id: FIRST.replyId, author: 2, rank: 1, done: true })));
+
+  it('borne les étapes gardées pour un envoi ; au-delà, la réponse est incomplète', async () => {
+    const { parser, results, send, stream } = setup();
     await send(sendOf(FIRST));
     const records = Array.from({ length: 40 }, (_, i) => [
       stepRecord({ id: `etape_${i}`, message: FIRST.replyId, rank: i, kind: 1 }),
@@ -308,7 +361,58 @@ describe('claudeAiParser.observe', () => {
     ]).flat();
     await stream([envelope(update(...records))]);
     expect(parser.size()).toBe(1 + 32 + 32);
+    // Jamais un texte coupé rendu comme s'il était complet.
+    await stream([finished()]);
+    expect(results).toEqual([{ rejected: 'incomplet' }]);
   });
+
+  it('borne les blocs gardés pour une étape ; au-delà, la réponse est incomplète', async () => {
+    const { parser, results, send, stream } = setup();
+    await send(sendOf(FIRST));
+    const blocks = Array.from({ length: 40 }, (_, i) =>
+      textBlock({ id: `bloc_${i}`, step: 'etape_unique', text: `Bloc inventé ${i}`, done: true }),
+    );
+    const step = stepRecord({ id: 'etape_unique', message: FIRST.replyId, rank: 1, kind: 1 });
+    await stream([envelope(update(step, ...blocks))]);
+    expect(parser.size()).toBe(1 + 1 + 32);
+    await stream([finished()]);
+    expect(results).toEqual([{ rejected: 'incomplet' }]);
+  });
+
+  it('ne garde pas un bloc terminé vide', async () => {
+    const { results, send, stream } = setup();
+    await send(sendOf(FIRST));
+    const step = stepRecord({ id: 'etape_unique', message: FIRST.replyId, rank: 1, kind: 1 });
+    await stream([
+      envelope(
+        update(
+          step,
+          textBlock({ id: 'bloc_vide', step: 'etape_unique', text: '', done: true }),
+          textBlock({
+            id: 'bloc_plein',
+            step: 'etape_unique',
+            text: FIRST.reply[0] ?? '',
+            done: true,
+          }),
+        ),
+      ),
+      finished(),
+    ]);
+    expect(results).toEqual([exchangeOf(FIRST)]);
+  });
+
+  it.each([2, 3])(
+    'ne rejette rien pour une fin de flux (drapeau %i) pendant une attente',
+    async (flags) => {
+      const { parser, results, send, stream } = setup();
+      await send(sendOf(FIRST));
+      const before = parser.size();
+      const json = new TextEncoder().encode('{"metadata":{}}');
+      await stream([flags === 2 ? endOfStream() : envelope(await gzip(json), 3)]);
+      expect(results).toEqual([]);
+      expect(parser.size()).toBe(before);
+    },
+  );
 
   it('ne garde rien pour un long flux de battements', async () => {
     const { parser, results, send, stream } = setup();
@@ -362,6 +466,7 @@ describe('claudeAiParser.observe : les envois', () => {
   it.each([
     ['ne se lit pas', new Uint8Array([0xff, 0xff]), {}],
     ['est absent', null, {}],
+    ['a un champ 2 illisible', proto([1, proto([2, CONV])], [2, new Uint8Array([0x0f])]), {}],
     ['annonce gzip sans en être', sendOf(FIRST), { encoding: 'gzip' }],
     ['a un encodage inconnu', sendOf(FIRST), { encoding: 'br' }],
     [
@@ -423,6 +528,10 @@ describe('claudeAiParser.observe : un flux illisible', () => {
     ['un type de fil inconnu', async () => [envelope(recordOf([0x0f]))]],
     ['un groupe', async () => [envelope(new Uint8Array([0x0b, 0x0c]))]],
     [
+      'une mise à jour illisible',
+      async () => [envelope(proto([1, proto([1, new Uint8Array([0x0f])])]))],
+    ],
+    [
       'un encodage inconnu',
       async () => [await gzipEnvelope(update(messageRecord({ id: FIRST.replyId, author: 2 })))],
       { 'content-type': 'application/connect+proto', 'connect-content-encoding': 'br' },
@@ -454,4 +563,34 @@ describe('claudeAiParser.observe : un flux illisible', () => {
       expect(results).toEqual([]);
     },
   );
+
+  it.each(bad)(
+    'le dit au premier envoi suivant, une seule fois, quand un flux avec %s est abandonné avant',
+    async (_label, parts, headers) => {
+      const { results, send, stream } = setup();
+      // Le flux d'une conversation rouverte s'ouvre au chargement, avant tout envoi.
+      await stream(await parts(), { headers });
+      await send(sendOf(FIRST));
+      await send(sendOf(NEXT));
+      expect(results).toEqual([{ rejected: 'format' }]);
+    },
+  );
+
+  it('ne redit pas incomplet, 15 minutes plus tard, un envoi déjà rejeté comme format', async () => {
+    const { results, send, stream, advance } = setup();
+    await send(sendOf(FIRST));
+    await stream([new Uint8Array([0, 0xff, 0xff, 0xff, 0xff, 0])]);
+    advance(15 * MINUTE + 1);
+    await stream([envelope(heartbeat(1))]);
+    expect(results).toEqual([{ rejected: 'format' }]);
+  });
+
+  it('ne redit pas incomplet un envoi déjà signalé par un flux abandonné avant lui', async () => {
+    const { results, send, stream, advance } = setup();
+    await stream([envelope(heartbeat(1))], { headers: { 'content-type': 'application/json' } });
+    await send(sendOf(FIRST));
+    advance(15 * MINUTE + 1);
+    await stream([envelope(heartbeat(2))]);
+    expect(results).toEqual([{ rejected: 'format' }]);
+  });
 });

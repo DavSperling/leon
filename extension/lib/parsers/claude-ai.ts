@@ -25,7 +25,8 @@ const ID_MAX = 200;
 const TEXT_MAX = 200_000;
 
 // Un envoi vu sur cette page, en attente de sa réponse : ses étapes de texte, et le texte de ses blocs terminés dans
-// leur ordre d'arrivée.
+// leur ordre d'arrivée. at : la dernière activité ; overflow : une étape ou un bloc refusé à la borne ; reported : un
+// rejet format l'a déjà signalé.
 type Pending = {
   conversationId: string;
   userId: string;
@@ -33,6 +34,8 @@ type Pending = {
   at: number;
   textSteps: Set<string>;
   blocks: Map<string, string>;
+  overflow: boolean;
+  reported: boolean;
 };
 
 type Report = ObservedCall['report'];
@@ -46,14 +49,17 @@ function idOf(fields: ProtoField[], field: number): string | null {
 export function createClaudeAiParser(now: () => Date = () => new Date()) {
   // Par identifiant de la réponse attendue (2.2 de l'envoi).
   const pending = new Map<string, Pending>();
+  // Un flux abandonné illisible avant tout envoi ne livrera pas la réponse : on le dit au premier envoi vu.
+  let streamLost = false;
 
-  // Une attente trop vieille : la réponse n'est jamais arrivée au bout (arrêt, départ de la page, panne).
+  // Rien reçu depuis 15 minutes pour une attente : la réponse n'est jamais arrivée au bout (arrêt, départ de la page,
+  // panne). Un envoi déjà rejeté comme format sort sans second rejet.
   function expire(report: Report): void {
     const limit = now().getTime() - PENDING_TTL_MS;
     for (const [replyId, send] of pending) {
       if (send.at > limit) continue;
       pending.delete(replyId);
-      report({ rejected: 'incomplet' });
+      if (!send.reported) report({ rejected: 'incomplet' });
     }
   }
 
@@ -80,14 +86,21 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
       call.report({ rejected: 'format' });
       return null;
     }
-    pending.set(replyId, {
+    const send: Pending = {
       conversationId,
       userId,
       userText: userText.slice(0, TEXT_MAX),
       at: now().getTime(),
       textSteps: new Set(),
       blocks: new Map(),
-    });
+      overflow: false,
+      reported: streamLost,
+    };
+    pending.set(replyId, send);
+    if (streamLost) {
+      streamLost = false;
+      call.report({ rejected: 'format' });
+    }
     const oldest = pending.keys().next().value;
     if (pending.size > PENDING_MAX && oldest !== undefined) pending.delete(oldest);
     return replyId;
@@ -98,8 +111,9 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
     const messageId = idOf(fields, 2);
     const send = messageId === null ? undefined : pending.get(messageId);
     const stepId = idOf(fields, 1);
-    if (!send || !stepId || intOf(fields, 4) !== 1 || send.textSteps.size >= RECORDS_MAX) return;
-    send.textSteps.add(stepId);
+    if (!send || !stepId || intOf(fields, 4) !== 1 || send.textSteps.has(stepId)) return;
+    if (send.textSteps.size < RECORDS_MAX) send.textSteps.add(stepId);
+    else send.overflow = true;
   }
 
   // 1.1.5 : un bloc d'une étape de texte, terminé (4=1), son texte cumulé en 9.
@@ -112,6 +126,8 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
       if (!send.textSteps.has(stepId)) continue;
       if (send.blocks.has(blockId) || send.blocks.size < RECORDS_MAX) {
         send.blocks.set(blockId, text.slice(0, TEXT_MAX));
+      } else {
+        send.overflow = true;
       }
       return;
     }
@@ -124,6 +140,11 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
     const send = replyId === null ? undefined : pending.get(replyId);
     if (!send || replyId === null || intOf(fields, 3) !== 2 || intOf(fields, 6) !== 1) return;
     pending.delete(replyId);
+    // Des étapes ou des blocs refusés à la borne : jamais un texte coupé rendu comme s'il était complet.
+    if (send.overflow) {
+      report({ rejected: 'incomplet' });
+      return;
+    }
     const text = [...send.blocks.values()].join('\n\n');
     // On a reconnu la fin, mais pas son texte.
     if (text === '') {
@@ -144,6 +165,12 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
   // porte déjà tout le texte. Rend false s'il ne se lit pas.
   function readEvent(fields: ProtoField[], report: Report): boolean {
     const event = messageOf(fields, 1);
+    // Un morceau n'arrive que pendant qu'une réponse s'écrit : les 15 minutes repartent.
+    // shortcut: un morceau rafraîchit toutes les attentes de la page, à cibler par bloc si plusieurs réponses en
+    // parallèle sur une page deviennent un cas réel.
+    if (event?.some(({ field }) => field === 2)) {
+      for (const send of pending.values()) send.at = now().getTime();
+    }
     const update = event && messageOf(event, 1);
     if (!update) return false;
     // Étapes, puis blocs, puis messages : un message terminé peut arriver dans la même enveloppe que son bloc.
@@ -162,12 +189,18 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
   }
 
   // Un flux StreamTimeline, enveloppe par enveloppe, sans rien garder au-delà de celle en cours. Un flux illisible :
-  // un seul rejet, puis on cesse de le lire ; sans envoi en attente, rien à dire (on ne juge pas l'historique).
+  // un seul rejet, puis on cesse de le lire ; sans envoi en attente, le rejet attend le prochain envoi (on ne juge
+  // pas l'historique, mais la réponse ne viendra pas par ce flux).
   async function readTimeline(call: ObservedCall): Promise<void> {
     const response = await call.response;
     if (response === null) return;
     const unreadable = () => {
-      if (pending.size > 0) call.report({ rejected: 'format' });
+      if (pending.size === 0) {
+        streamLost = true;
+        return;
+      }
+      call.report({ rejected: 'format' });
+      for (const send of pending.values()) send.reported = true;
     };
     if (!response.headers.get('content-type')?.startsWith('application/connect+proto')) {
       return unreadable();

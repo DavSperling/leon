@@ -26,8 +26,10 @@ function readRequestBytes(
 ): Promise<Uint8Array<ArrayBuffer> | null> {
   const body = init?.body;
   if (body instanceof ReadableStream) return Promise.resolve(null);
-  if (body != null) return new Response(body).bytes();
-  if (input instanceof Request) return input.clone().bytes();
+  // arrayBuffer() plutôt que bytes(), qui n'existe que depuis Chrome 132.
+  const bytesOf = (buffer: ArrayBuffer) => new Uint8Array(buffer);
+  if (body != null) return new Response(body).arrayBuffer().then(bytesOf);
+  if (input instanceof Request) return input.clone().arrayBuffer().then(bytesOf);
   return Promise.resolve(null);
 }
 
@@ -86,8 +88,8 @@ function observe(response: Response, capture: Capture, report: Report, now: () =
 }
 
 // Un analyseur au fil de l'eau suit l'appel dès l'envoi et lit la copie de la réponse à son rythme. Quand il a fini,
-// la copie qu'il n'a pas lue est annulée : sinon elle garderait en file tout le flux, peut-être sans fin, que la
-// page lit.
+// la copie qu'il n'a pas lue est annulée, ou jamais prise si la réponse arrive après : sinon elle garderait en file
+// tout le flux, peut-être sans fin, que la page lit.
 function watchStream(
   parser: StreamParser,
   input: FetchInput,
@@ -101,9 +103,10 @@ function watchStream(
   };
   return (pending) => {
     let copy: Response | null = null;
+    let done = false;
     const response = pending
       .then((original) => {
-        if (!original.ok) return null;
+        if (!original.ok || done) return null;
         copy = original.clone();
         return { headers: original.headers, chunks: chunksOf(copy.body) };
       })
@@ -111,7 +114,10 @@ function watchStream(
     void parser
       .observe({ url, request, response, report })
       .catch(() => {})
-      .finally(() => copy?.body?.cancel().catch(() => {}));
+      .finally(() => {
+        done = true;
+        copy?.body?.cancel().catch(() => {});
+      });
   };
 }
 

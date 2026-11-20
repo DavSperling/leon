@@ -141,6 +141,28 @@ Après lecture de l'article d'Anthropic « The components of agent memory » (6/
 
 Effort : 0,5 j de plus pour le lot 15 (estimation du rédacteur, à confirmer). La version avec modèle du rêve reste à placer par Amos : c'est elle qui pourra dire qu'une leçon est fausse, et pas seulement qu'elle ne sert plus.
 
+## Décisions d'Amos du 20/11 pour le lot 16
+
+Ce sont ses réponses au questionnaire du 20/11, après la mesure du lot 11 (annexe 07 de l'étude) et la consigne réécrite (#213, #214). Elles priment sur le texte des tâches. Le détail et les raisons sont dans l'[annexe 12](../etudes/memoire-sessions-2026-11/annexes/12-lecture-obligee.md) et en D40.
+
+1. **Le niveau 3 est une lecture obligée, pas une poussée.**
+   - Dans Claude Code, la première fois qu'un agent veut modifier un fichier, Leon l'arrête une seule fois. Il lui demande de lire d'abord la mémoire : le fil de sa branche (`leon thread`), ou une recherche avec les mots de sa tâche (`leon search`).
+   - Rien de nouveau n'est poussé : le message d'arrêt est un texte fixe, sans contenu de la mémoire.
+   - C'est l'agent qui lit, par les commandes existantes. Le texte lu arrive comme un résultat d'outil, avec les gardes de D25.
+   - Codex, Cursor et Antigravity viennent plus tard, après un essai chacun.
+2. **Les agents lancés par un workflow ne sont pas arrêtés.** Seules le sont les sessions que mène l'humain (l'app de bureau, le terminal). La mesure (`claude -p`) l'est aussi, puisque c'est elle qui prouve l'effet.
+3. **Le critère de la mesure est strict.** Chaque session arrêtée lit bien la mémoire. Elle répond juste nettement plus souvent que sans, sur des tâches dont la réponse est dans la mémoire, et jamais moins bien sur les autres, avec au plus 10 % de tokens en plus. Sinon l'option sort de l'installation : elle reste dans le code, éteinte.
+4. **L'option est éteinte par défaut, avec son propre accord** : un usage nouveau, `passage` (D28, D30).
+
+D40 et l'annexe 12 disent comme tels les choix du rédacteur :
+- le nom `passage`, la commande `leon read-first` et son option `--mesure` ;
+- le témoin de session ;
+- les sous-agents `Agent` et `Task` laissés passer, comme les agents de workflow ;
+- les écritures par Bash, qui ne sont pas arrêtées ;
+- la coupure sur le poste seul, `leon retirer-crochets --usage passage` ;
+- le lot 16 avant le lot 15 ;
+- les seuils du critère et leur façon de compter.
+
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
@@ -149,6 +171,7 @@ Effort : 0,5 j de plus pour le lot 15 (estimation du rédacteur, à confirmer). 
 | 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2), pour Claude Code. Depuis le 04/11 : les leçons acceptées dans le bloc, avant le point du matin, et `leon lecons` ; le brouillon privé de l'agent (`leon noter`, `remember`). Depuis le 05/11 : l'historique sur le site, « Remettre cette version » et la connexion récente (T55) ; décocher `noter` coupe aussi `remember` (T65). Depuis le 11/11 : le rappel aussi pour Cursor, Codex et Antigravity, et trois PR (décisions d'Amos du 11/11 pour le lot 13) | T48, T49, T55 à T57 et T65 | 5,5 j (estimation du rédacteur, à confirmer : T55 et T57 sont lourdes ; le 05/11 y déplace la restauration retirée de T54, et ajoute l'historique des fils sur le site et la connexion récente ; puis 1 j pour T65, après A16) |
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande. Depuis le 05/11 : un sous-agent qui ne lit que le dépôt ne rend plus la session externe (T63) ; après la relecture, les appels d'outils réduits remontent aussi (`appel_outil`, T52). Depuis le 12/11 : quatre PR, les trois premières pour Claude Code, la quatrième pour Codex, Cursor et Antigravity après un essai par outil ; le rapport d'un sous-agent capté sous l'accord de base (décisions d'Amos du 12/11 pour le lot 14) | T50 à T52, T63 | 5 j (dont 0,5 j pour les appels d'outils, estimation du rédacteur, à confirmer) |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite. Depuis le 17/11 : une leçon dont la commande n'échoue plus, et ce qui a fait passer une commande | T58 à T62 | 6 j (5,5 j pour le rêve, dont 0,5 j pour les deux règles du 17/11, et 0,5 j pour T62) |
+| 16. La lecture obligée | dans Claude Code, la première modification de fichier d'une session menée par l'humain attend que l'agent ait lu la mémoire (niveau 3), en option éteinte par défaut, avec l'usage `passage` ; mesurée, et retirée de l'installation si la mesure échoue (décisions d'Amos du 20/11, D40) | T66 à T68 | 4 j (estimation du rédacteur, à confirmer) |
 
 Changements au plan mémoire des sessions (le détail est dans ses « Amendements du 03/11 ») :
 - **Le lot 10 (RAG au premier prompt) est remplacé** par le lot 13 et par la lecture à la demande du lot 12. D18 n'a plus d'objet.
@@ -166,6 +189,7 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 - **Le 05/11, le lot 14** gagne T63 (4,5 j). D17, C1, T18, T27 et T32 suivent D36 tranché : les lectures, et un sous-agent qui ne lit que le dépôt, pour Claude Code au lot 14 et pour les autres outils dans leur lot. Les contraintes globales suivent D37 : les leçons sans chiffre fixe.
 - **Le 05/11, après A16**, le lot 12 gagne T64 (1,5 j) et le lot 13 T65 (1 j), estimations du rédacteur, à confirmer. `lecture`, `rappel` et `noter` sont cochés par défaut, dans le terminal comme sur la page « Autoriser ». Les installateurs des lots d'outils (T17, T20, T29, T34) les proposent de même. Les contraintes globales suivent D37 : la place de la consigne est réservée.
 - **Le 05/11, après la relecture**, tout le niveau 1 suit l'usage `lecture` de l'outil : le sommaire, les leçons et la consigne. Sans lui, le bloc reste celui de main (lots 1 et 3), et les contraintes globales gardent leur ordre d'origine (D24, D37). Seule la phrase de `leon noter` s'y ajoute, avec l'usage `noter` (T57). Le lot 14 relève aussi les appels d'outils réduits, avec un troisième rôle, `appel_outil` (D29, C10, T52), 0,5 j de plus.
+- **Le 20/11, le lot 11 a décidé du niveau 3** : une lecture obligée, au lot 16 (D28 amendée, D40). T38 est amendé dans le plan mère, et le total passe à 62 j.
 
 **Ordre (tranché le 04/11, voir A8) :** 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15.
 - Le lot 2, fusionné, a fermé une fuite : des PR de dépôts perso étaient relevées avec l'ACL de l'organisation.
@@ -176,7 +200,9 @@ Changements au plan mémoire des sessions (le détail est dans ses « Amendement
 
 Amendé le 05/11 : 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
 
-Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 pour ses deux nouvelles règles (D39). La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos).
+Amendé le 20/11 (choix du rédacteur) : le lot 16 vient avant le lot 15. Il est court, et sa mesure décide d'une option de l'installation. Le rêve ne dépend pas de lui, et T62 non plus : ses cas ne lisent pas les réglages de l'utilisateur.
+
+Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 pour ses deux nouvelles règles (D39). La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos). Amendé le 20/11 : 62 jours, avec le lot 16 (4 j, la lecture obligée, D40), estimation du rédacteur, à confirmer.
 
 Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est accepté et le lot 6 est lancé. Pour une session sans l'usage `resume`, ou sans modèle réglé, le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
@@ -263,6 +289,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
     - Au MCP, ils ne figurent que dans `content`. Le `structuredContent` de `dossier` et `fil` ne porte que des clés.
     - Le résumé du lot 6 garde `[décision]` aux mêmes conditions que D23 (D8 amendée) ; `[consigne]` reste retirée.
   - **Limite connue :** la consigne du niveau 1 rend la lecture presque systématique, donc le tiré presque poussé. C'est pour ça que D23 fixe la provenance, vérifie les décisions et écarte le récit externe et les coulisses. Amendé le 04/11 par D36 : le récit d'une session qui a lu Leon entre au condensé, marqué « agent ». Il ne fait jamais une décision sans id vérifié, chaque ligne de l'état cite un id, et sa provenance est écrite par le serveur.
+    - Amendé le 20/11 par D40 : avec l'usage `passage`, dans Claude Code, la lecture n'est plus presque systématique. Elle l'est tout à fait, à la première modification de chaque session menée. Ce sont les gardes ci-dessus qui valent, et rien de plus n'est poussé.
 - **D26. Le rappel (niveau 2).**
   - **L'envoi.** Route `POST /api/v1/rappel` (C8). La CLI n'envoie rien sans l'usage `rappel`. Elle n'envoie que les 2 000 premiers caractères du message, masqués, et abandonne à 1,5 s (un seul `AbortSignal`).
   - **La recherche.** Le serveur masque de nouveau, puis cherche en `websearch_to_tsquery` (configurations française et simple) et en trigrammes. Il ne parcourt que les fils de l'auteur et du projet (`owner_user_id = ctx.userId and kind = 'leon_fil' and metadata.project = projet`), jamais `searchPassages`. Il cherche dans leurs branches, leurs fichiers et leurs `mots_cles` (D21). Amendé le 04/11 : seuls les mots d'une source encore visible comptent (D21). Ces mots servent à trouver, jamais à répondre. Moins de 300 ms visés. Amendé le 11/11 (T48) : le message est d'abord réduit à ses mots utiles, cherchés en OU, avec un seuil ; ces mots ne sont jamais un paramètre de la requête de recherche (les journaux de la base, ci-dessous).
@@ -283,6 +310,11 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
 - **D28. Le niveau 3 (passage obligé) n'est pas construit ici.** Le lot 11 mesure d'abord si les niveaux 1 et 2 suffisent. S'il le faut, un lot à part le conçoit, en option éteinte par défaut, avec son propre accord.
   - Amendé le 19/11 (décision d'Amos, après la mesure du lot 11, annexe 07 de l'étude). Aucun des 20 passages qui avaient le bloc n'a lu un fil. La consigne de lecture (D24) dit désormais à quoi sert la mémoire avant de dire comment la lire : reprendre là où la session précédente s'est arrêtée, sans refaire un travail déjà fait ni une erreur déjà commise. Une nouvelle mesure compte la part de sessions qui lisent. Le niveau 3 ne se conçoit que si elle reste nulle. Amos a laissé le choix (« le plus propre, le plus solide »).
   - Mesuré le 19/11, après le déploiement de #213 (annexe 07, « La consigne réécrite ne suffit pas »). Sur dix passages avec le bloc, l'agent reçoit bien la nouvelle consigne, et aucun ne lit un fil. Le niveau 3 se conçoit donc, dans un lot à part.
+  - Amendé le 20/11 (décisions d'Amos du 20/11 pour le lot 16, annexe 12 de l'étude). Le niveau 3 est une lecture obligée, pas une poussée.
+    - Dans Claude Code, la première fois qu'un agent d'une session menée par l'humain veut modifier un fichier du projet, Leon l'arrête une seule fois. Il lui demande de lire d'abord la mémoire : le fil de sa branche (`leon thread`), sinon une recherche avec quelques mots de sa tâche (`leon search`).
+    - Le message d'arrêt est un texte fixe, sans rien de la mémoire. Le texte lu arrive comme un résultat d'outil, avec les gardes de D25.
+    - C'est le lot 16 (T66 à T68), en option éteinte par défaut, avec l'usage `passage` (D40). L'option n'est gardée que si sa mesure passe (T68).
+    - Codex, Cursor et Antigravity viennent après un essai chacun.
 - **D29. La capture complète.**
   - En plus des messages et des faits, la CLI envoie :
     - le raisonnement de l'agent, quand le transcript en porte le texte ;
@@ -329,6 +361,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
     - Pas de relance quand la connexion vient de `--with-token`, ce que `connexion.json` note alors (`par`, choix du rédacteur) : un poste sans navigateur attendrait 5 minutes une page que personne n'ouvre. `leon setup` dit seulement, sur la sortie, de lancer `leon setup` dans un terminal pour choisir les usages.
   - Un refus laisse les réglages de l'outil inchangés. Depuis le 05/11, il s'écrit daté dans `accord.json` (`refus`, C7), qu'il vienne du terminal ou de la page : l'usage n'est plus proposé, ni dans le terminal ni sur la page. Pour revenir sur un refus : `leon retirer-crochets`, qui efface usages et refus, puis `leon setup` (choix du rédacteur). Un refus de `noter` date aussi le réglage du compte (T65).
 - **D31. Aucune mémoire sur le poste.** Ni texte capté, ni bloc, ni état de fil n'est écrit sur le disque de l'utilisateur : pas de fichier de règles, de Markdown ni de cache. Restent les crochets, le lanceur, l'accord, la connexion et des marqueurs techniques (curseurs de T19, témoins de conversation de T28 et T33). Le plan mère est amendé en conséquence (D16, T28, T30, T33, T35, A4).
+  - Amendé le 20/11 par D40 : s'y ajoute le témoin de session de la lecture obligée de Claude Code (`~/.leon/temoins/claude_code/`), du même modèle que ceux de T28 et T33.
 - **D32. Les quatre outils.** Chaque lot d'outil apporte, pour son outil :
   - le sommaire, avec l'usage `lecture` de l'outil (D24, D30, amendé le 05/11), sinon le bloc de main. Pour Cursor et Antigravity, il arrive au premier message, par une requête en ligne, en une seule sortie avec le rappel (les deux requêtes en parallèle, sous un même délai de 3 s), si bien qu'un outil jamais utilisé reçoit la mémoire faite ailleurs ;
   - le rappel ;
@@ -456,6 +489,57 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - **L'accord (proposé) :** aucun usage de plus. Rien ne sort de Leon, ni vers un modèle ni vers un fournisseur. Un interrupteur dans la section Mémoire des réglages coupe le rêve. Il est rangé dans `member` (C15).
   - **Ensuite :** la version avec modèle (environ 3 j) si David accepte QD1 (amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos) ; le rêve d'équipe dans un lot suivant, une fois la hiérarchie des managers codée et une lecture à l'échelle de l'équipe conçue.
 
+Décision du 20/11 (D40), qui amende D28 et D31, et précise D25 et D30 :
+
+- **D40. La lecture obligée, le niveau 3** (lot 16 ; décisions d'Amos du 20/11). Le détail, les raisons et les textes exacts sont dans l'annexe 12 de l'étude.
+  - **L'arrêt.**
+    - Dans Claude Code, un crochet `PreToolUse` (matcher `Edit|Write|MultiEdit|NotebookEdit`, 5 s) lance `leon read-first` avant chaque modification de fichier. La commande revérifie `tool_name`.
+    - La première modification de la session, sur un fichier du dossier du projet, est refusée une fois, avec un texte fixe en français : lire d'abord le fil de la branche (`leon thread`), sinon chercher avec quelques mots de la tâche, sans guillemets ni symboles (`leon search`), puis refaire la modification. Si la lecture échoue, l'agent refait sa modification sans insister.
+    - Le refus prend la forme JSON de la doc (`permissionDecision: "deny"`), avec le code 0. Le modèle en lit la raison.
+  - **Rien n'est poussé.**
+    - Le message ne recopie du poste que la commande Leon (`leonCommand`, bornée comme `commande` de C3). Il ne porte rien de la mémoire.
+    - L'agent lit par les commandes existantes. Le texte lu arrive comme un résultat d'outil, rendu comme des données (D25).
+    - Le message ne cite que des lectures qui ne rendent pas la session externe (D36) : jamais `search` ni `fetch` du MCP.
+    - Les mots de `leon search` sont masqués sur le poste, puis par la route (C11), comme le message du rappel (D26).
+    - Sa première phrase est une marque fixe, `READ_FIRST_MARK` (`api-contract.ts`), que T58 reconnaît.
+  - **Qui est arrêté.**
+    - Les sessions que mène l'humain (l'app de bureau, le terminal), et la mesure. Le signe : une entrée sans `agent_id`, et un `CLAUDE_CODE_ENTRYPOINT` qui ne vaut ni `sdk-py`, ni `sdk-ts`, ni `sdk-cli`.
+    - La mesure passe l'option `--mesure`, qui saute ce dernier test : elle ne peut qu'ajouter des arrêts.
+    - Jamais un agent de workflow ni un sous-agent (`agent_id` présent). Pour les sous-agents `Agent` et `Task`, que `agent_type` séparerait sans doute, c'est un choix du rédacteur.
+    - Jamais un autre `claude -p`, un script de l'Agent SDK, ni un autre outil qui reprend les crochets de Claude Code (`isOtherToolHook`). Limite : un `claude -p` lancé depuis le Bash d'une session de l'app hérite de `claude-desktop`, et il est arrêté.
+    - Seulement pour un fichier du dossier du projet (`CLAUDE_PROJECT_DIR`, sinon le `cwd`), hors du dossier de Claude Code : le plan et la mémoire automatique passent. Ce dossier peut être un dépôt ou un autre dossier, personnel compris : le texte d'accord le dit.
+    - Les écritures par Bash ne sont pas arrêtées (choix du rédacteur).
+  - **Une seule fois par session.**
+    - Un témoin vide, `~/.leon/temoins/claude_code/<empreinte de la session>` (D31 amendée), est créé en exclusif juste avant le refus.
+    - Il n'y a refus que si ce passage l'a créé : un témoin déjà présent laisse passer, un témoin qui ne s'écrit pas aussi. Le témoin dit « déjà arrêtée », pas « déjà lu ».
+    - Le transcript n'est pas lu.
+    - `leon read-first` purge les témoins de plus de 7 jours, une fois le refus écrit.
+  - **Ouvert en cas de panne.**
+    - Ni réseau ni git.
+    - Une erreur, une entrée illisible ou de plus de 2^20 caractères, un délai dépassé, une CLI qui ne connaît pas la commande : dans tous ces cas, la modification passe.
+    - Jamais `onFailure: "block"`.
+  - **L'usage `passage`** (C7).
+    - Éteint par défaut, en `[y/N]`, proposé juste après `noter`, dans un terminal seulement, pour Claude Code seulement, et seulement avec `lecture`.
+    - Jamais par `--oui`, `--yes` ni la page « Autoriser » : il n'est pas dans `AUTHORIZE_USAGES`.
+    - Accepté, il fait poser le crochet, comme `rappel`.
+    - Il s'éteint sur le poste seul : `leon retirer-crochets --usage passage` retire son crochet et efface la réponse donnée, sans appeler le serveur.
+    - Jamais par le retrait complet : celui-ci ferait vider au serveur les usages de toutes les sessions déjà envoyées (T43), donc cacher les états des fils (D35). `leon retirer-crochets` retire quand même ce crochet avec les autres.
+    - Le serveur ne le vérifie jamais. Il le connaît (`USAGES`) pour ne refuser aucun envoi qui le porte : c'est le piège de `z.enum` (annexe 12).
+  - **La mesure décide** (T68). L'option n'est gardée que si quatre conditions tiennent, comptées comme le dit l'annexe 12 pour tolérer le hasard de trois passages :
+    - chaque session arrêtée lit, et sa lecture rend de la mémoire ;
+    - elle répond juste nettement plus souvent sur les tâches dont la réponse est dans la mémoire ;
+    - jamais moins bien sur les autres ;
+    - avec au plus 10 % de tokens en plus.
+
+    Sinon elle sort de l'installation : elle reste dans le code, éteinte.
+  - **Ce qu'on accepte.**
+    - La limite de D25 devient vraie dans les sessions qui ont `passage` : ce qui est tiré y est lu presque à chaque fois.
+    - Une ligne de l'état marquée « agent », ou une note que la recherche trouve, est donc relue souvent. Le point 7 des décisions du 04/11 écartait « une mémoire écrite par l'agent et relue à chaque session sans relecture humaine ».
+    - La décision 1 d'Amos du 20/11 tranche ce cas : c'est l'agent qui lit, et ce qu'il lit arrive comme des données. A16 gardait déjà une telle ligne, marquée « agent ».
+    - Rien n'est poussé : tout est rendu comme des données, et rien n'y devient une décision sans id vérifié (D36).
+    - L'option est éteinte par défaut, avec un texte qui le dit (vigilance 2).
+  - **Les autres outils.** Codex, Cursor et Antigravity n'ont pas de crochet avant outil posé par Leon. Ils viennent après un essai chacun, avec Amos.
+
 ## Contrats partagés (en plus de C1 à C6)
 
 **C7 révisé. L'accord local, par usage** : `~/.leon/accord.json`, en 0600.
@@ -471,6 +555,12 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
 - C3 (`POST /api/v1/contexte`) gagne `usages` et `commande` (la forme de la commande Leon posée sur le poste). Depuis le 05/11 (A16), `commande` est bornée : 200 octets au plus, en caractères de chemin seulement (lettres, chiffres, espace, `._/~-`), sans saut de ligne ni `<` ; sinon 400. La CLI dont la commande sortirait de cette forme (un clone sous un chemin trop long ou exotique) envoie `leon` (choix du rédacteur). C'est un texte du poste recopié dans le bloc, jusqu'à trois fois : la place réservée de D37 reste ainsi bornée.
 - Un usage absent vaut refus.
 - Le lot 6 lit `resume` là où il lisait la version 3.
+- Amendé le 20/11 (D40) : `usages` peut porter `passage`, pour `claude_code` seulement.
+  - C'est un usage local : le serveur ne le vérifie jamais.
+  - Mais il le connaît (`USAGES`), pour ne refuser aucun envoi qui le porte : C2, C3, C8, C10, C11 et C14 l'acceptent dans `usages` comme les autres.
+  - Le serveur le range dans `metadata.usages` avec eux (C2).
+  - `leon retirer-crochets --usage passage` efface `passage` de `usages` et de `refus`, sur le poste seul. Il n'appelle pas la route du retrait, et ne touche ni à la version ni aux autres usages.
+  - C3 ne change pas.
 
 **C8. `POST /api/v1/rappel`** : `{ projet, branche, session, message, outil, usages }`, `.strict()`.
 - `projet` suit `ProjectSchema` ; `branche` et `session` font 200 caractères au plus ; `message`, 2 000 caractères au plus.
@@ -553,6 +643,7 @@ Tranché le 05/11 par Amos (QD9, D29) : les tours rangés par cette route, des t
 - Elles rendent `{ texte }` (le rendu gardé de C9).
 - Un serveur ancien répond 404 : la commande le dit sur la sortie d'erreur, avec le code 0.
 - Amendé le 05/11 (tranché par Amos, QD9) : `chercher` rend aussi les tours `raisonnement`, `sous_agent` et `appel_outil`, sans filtre `type`.
+- Amendé le 20/11 (D40) : `requete` est masquée sur le poste (`maskSecrets`), puis de nouveau par la route, avant la recherche et le calcul de son vecteur, comme le message du rappel (D26). Le corps ne change pas.
 
 Contrats du 04/11 :
 
@@ -1840,6 +1931,12 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 > - Le serveur l'accepte, facultatif, avant que la CLI ne l'envoie, comme `outils_en_erreur`. Un fait sans `suite` reste valide : le rêve le compte comme une suite (D39).
 > - Tests de plus, dans `session-facts.test.ts` : « pnpm test:db; echo fini » et « cd x && pnpm test » donnent `suite: true` ; « git commit -m "a; b" » et « pnpm test:db » donnent `suite: false`.
 
+> **Amendé le 20/11 (D40) :** l'arrêt de la lecture obligée n'est pas un échec.
+> - Un résultat en erreur d'un `Edit`, `Write`, `MultiEdit` ou `NotebookEdit` dont le texte contient la marque fixe de l'arrêt n'entre pas dans `outils_en_erreur`. La marque est `READ_FIRST_MARK` de `src/capture/api-contract.ts` : « Leon : cette modification attend. ». Elle se cherche n'importe où dans le texte : Claude Code peut mettre la raison en forme.
+> - Sans ça, trois sessions arrêtées en 14 jours feraient proposer une leçon sur `Edit` (`echec_repete`).
+> - `erreurs` (C1), lui, le compte : c'est un vrai refus, une fois par session.
+> - Test de plus, dans `session-facts.test.ts` : un `Edit` refusé avec la marque ne compte pas, un `Edit` en erreur sans elle compte.
+
 **Fichiers :** `src/capture/session-facts.ts` et son test, `src/capture/codex.ts`, `src/capture/cursor.ts` et `src/capture/antigravity.ts` (T18, T27, T32 du plan mère) et leurs tests, `src/capture/api-contract.ts` (C1, C2), `src/server/ingest/record-facts.ts` et son test, `src/server/api/faits-routes.db.test.ts`.
 
 **Fait quand :**
@@ -1955,6 +2052,107 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 
 **Après ce lot.** La version avec modèle (environ 3 j) vient si David accepte QD1 : une étape de modèle `reve`, qui lit aussi les résumés du lot 6 et propose des leçons, toujours vérifiées et relues de la même façon. Le rêve d'équipe vient dans un lot suivant : il faut d'abord la hiérarchie des managers et une lecture à l'échelle de l'équipe. Amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos.
 
+## Lot 16 : la lecture obligée
+
+C'est le niveau 3 (D28 amendée le 20/11, D40). Dans Claude Code, la première fois qu'un agent d'une session menée par l'humain veut modifier un fichier du projet, Leon l'arrête une fois et lui demande de lire la mémoire. C'est une option éteinte par défaut, avec l'usage `passage`.
+- Effort : environ 4 j.
+- Deux PR, à la suite, jamais empilées : l'essai et le code (T66, T67), puis la mesure et sa suite (T68).
+- Aucune migration.
+- L'[annexe 12](../etudes/memoire-sessions-2026-11/annexes/12-lecture-obligee.md) de l'étude donne le détail, les raisons et les textes exacts : elle fait foi pour eux.
+
+### T66 · L'essai : le crochet avant outil de Claude Code (porte)
+
+Comme pour T50, Claude lance seul les passages en `claude -p`, dans un dépôt jetable hors de `~/leon`, hors du bac à sable de sa propre session. Un crochet témoin est passé par `--settings` (`--setting-sources project,local`).
+- Le témoin ne note que des formes : les clés de l'entrée, la présence d'un champ et la valeur d'`agent_type`, les noms des variables `CLAUDE_*` et la valeur de `CLAUDE_CODE_ENTRYPOINT`, des durées. Jamais un texte.
+- Amos est là pour trois essais : une session de l'app de bureau, en mode `auto` et avec le bac à sable de Bash, et une du terminal, dans ce dépôt (le crochet dans son `.claude/settings.local.json`), et Cursor.
+
+**Fichiers :** `docs/etudes/memoire-sessions-2026-11/annexes/12-lecture-obligee.md` (la section « L'essai »), `docs/etudes/memoire-sessions-2026-11/essais/lecture-obligee-temoin.mjs` (nouveau).
+
+**Fait quand :**
+- l'annexe répond aux dix points de « Ce qui reste à essayer », avec la version de Claude Code ;
+- si un point contredit D40, la PR s'arrête à l'annexe, et Amos décide. Par exemple : pas d'`agent_id` chez un agent de workflow, un refus que le modèle ne voit pas, ou Cursor qui bloque ses modifications.
+
+Effort : 0,5 j.
+
+### T67 · `leon read-first`, son crochet et l'usage `passage` (après T66, dans la même PR)
+
+**Fichiers :** `src/capture/api-contract.ts`, `src/cli/read-first.ts` (nouveau), `src/cli/temoins.ts`, `src/cli/install-hooks.ts`, `src/cli/consent.ts`, `src/cli/uninstall-hooks.ts`, `src/cli/hook-commands.ts`, `src/cli/leon.ts`, `src/cli/setup.ts`, `src/cli/read-commands.ts`, `src/server/api/read-routes.ts`, `README.md`, et leurs tests (dont `src/capture/api-contract.test.ts`).
+
+**Fait quand :**
+- **Le contrat.** `USAGES` gagne `passage`, et `AUTHORIZE_USAGES` ne change pas. `READ_FIRST_MARK`, la première phrase fixe du message d'arrêt, est exportée par `api-contract.ts`, pour la commande et pour T58.
+- **La commande.** `leon read-first [--mesure]` suit l'ordre de l'annexe 12 :
+  1. un autre outil ;
+  2. `tool_name` hors des quatre outils ;
+  3. l'accord (`passage` et `lecture`) ;
+  4. `agent_id` ;
+  5. `CLAUDE_CODE_ENTRYPOINT` (`sdk-py`, `sdk-ts`, `sdk-cli`), sauf avec `--mesure` ;
+  6. le fichier dans le dossier du projet (`CLAUDE_PROJECT_DIR`, sinon le `cwd`) et hors du dossier de Claude Code, par `path.relative` après `realpath` ;
+  7. le témoin ;
+  8. puis le refus en JSON, avec le texte exact de l'annexe et la commande de `leonCommand`, et la purge après lui.
+
+  Elle n'appelle ni le réseau ni git. Elle lit l'entrée 1 s au plus, jusqu'à 2^20 caractères. Elle sort toujours avec le code 0, et n'écrit rien sur la sortie standard en dehors du refus.
+- **Les témoins.**
+  - `temoins.ts` connaît `claude_code`, par une liste à lui (`['claude_code', ...OUTILS]`), sans toucher à `OUTILS`.
+  - `claimTemoin` crée le témoin en exclusif, et dit s'il l'a créé.
+  - La purge couvre `claude_code`.
+- **L'installateur.**
+  - `PreToolUse` entre dans `HookEvent`, `read-first` dans `HookSubcommand`, et `HookSpec` gagne un `matcher` facultatif, écrit par `applyHook` à l'ajout.
+  - `READ_FIRST_HOOK` : `Edit|Write|MultiEdit|NotebookEdit`, 5 s.
+  - `PASSAGE_LINES`, la question et ses deux lignes, mot pour mot comme dans l'annexe 12.
+  - `passage` entre dans `OFFERED` après `noter`. Il n'est proposé que pour Claude Code, jamais si `lecture` est refusé, et la condition est revérifiée juste avant la question.
+  - `addLeonHooks` prend les usages (`{ rappel, passage }`) dans ses trois appels : `installHooks`, la seconde écriture, et `claudeCodeHooksInPlace` de `setup.ts`.
+  - La seconde écriture pose les crochets des usages donnés, `rappel` et `passage`, ensemble ou chacun seul. Ils sont reposés à chaque passage si l'usage est là, et ses messages ne parlent plus du seul rappel. L'aperçu montre le crochet.
+  - Après un refus de `passage`, la ligne cite `leon retirer-crochets --usage passage`, puis `leon setup`.
+- **Le retrait.**
+  - `leon retirer-crochets` retire aussi ce crochet.
+  - `leon retirer-crochets --usage passage` retire ce seul crochet et efface la réponse donnée à `passage` dans `accord.json` (`forgetUsage`, `consent.ts`). Il n'appelle pas le serveur, et ne touche ni à la version, ni aux autres usages, ni aux autres crochets.
+- **La recherche masquée.** `leon search` masque sa requête (`maskSecrets`) avant l'envoi, et la route `chercher` la masque de nouveau (C11).
+- **L'aide.** L'aide de `leon` cite `read-first` et `--usage passage`.
+- **Le README** dit les crochets de Claude Code, l'ordre des questions, ce qui est envoyé (rien par l'arrêt, les mots masqués par la recherche), la règle de permission qu'on peut ajouter soi-même pour que la lecture ne demande rien (Leon ne l'écrit jamais), et les deux retraits.
+
+**Tests :** ceux de l'annexe 12 (« Le découpage », PR 1). Effort : 2 j.
+
+### T68 · La mesure du cas D (après le déploiement de T67)
+
+**Fichiers :**
+- `docs/etudes/memoire-sessions-2026-11/essais/mesure-ancrage.mjs` ;
+- `docs/etudes/memoire-sessions-2026-11/essais/mesure-lecture-taches.json` (nouveau, ajouté une fois la mesure finie) ;
+- l'annexe 12 (« La mesure ») ;
+- ce plan (D28, D40) ;
+- puis, selon le résultat : la documentation du site, ou `OFFERED` et le README.
+
+**Fait quand :**
+- **Le script** gagne le cas D et les six changements de l'annexe 12, dont C et D sans `Task` ni `Agent`. Sa sonde montre l'arrêt, une lecture qui rend de la mémoire, et un témoin écrit.
+- **Avant de lancer.**
+  - La mesure se lance hors du bac à sable de la session qui la lance.
+  - Amos a accepté `passage`, et il a vu le coût attendu.
+  - Pendant la fenêtre, aucune autre session de Claude Code ne tourne sur le poste. Les versions des trois fils mesurés sont notées avant et après.
+- **Les tâches.** Dix tâches à coder, validées par Amos :
+  - six dont la réponse n'est que dans la mémoire : trois sur la branche de leur fil, trois sur une branche neuve ;
+  - quatre témoins ;
+  - rédigées par un `claude -p` non capté qui écrit le fichier hors du dépôt, sans que la session qui le lance les voie ;
+  - vérifiées par Amos dans un terminal, ou par un `claude -p` non capté ; aucune session captée ne les lit avant la fin de la notation ;
+  - gardées hors du dépôt jusqu'à la fin ;
+  - aucun corrigé n'est trouvable par une recherche avec leurs mots.
+- **Les passages.** Les cas C et D, trois passages chacun, au même commit et au même réglage, noté. La notation se fait à l'aveugle, comme pour T38.
+- **La validité.**
+  - La mesure est valide si les 30 passages D sont arrêtés, et aucun des 30 passages C.
+  - Une lecture qui échoue du côté de Leon rend le passage invalide : il se refait.
+  - Sinon, la mesure se refait.
+- **Le critère**, fixé avant de lancer, s'applique tel quel :
+  1. chaque passage D, avant la modification refaite, a au moins une lecture servie qui rend de la mémoire : un fil trouvé, ou une recherche avec au moins un résultat. Une lecture d'avant l'arrêt compte. Il faut 30 sur 30 ;
+  2. sur les 18 passages des tâches mémoire, D a au moins 5 réponses justes de plus que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
+  3. sur les 12 passages des tâches témoins, D a au plus une réponse juste de moins que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
+  4. les tokens totaux des passages D ne dépassent pas 110 % de ceux des passages C.
+- **S'il passe** : l'option reste, éteinte par défaut, et la documentation du site la décrit (`documentation.tsx`, `documentation-markdown.ts`, `messages/en.json`, `messages/fr.json`).
+- **S'il échoue** :
+  - `passage` sort d'`OFFERED`, avec ses tests et le README ;
+  - l'usage, la commande et le crochet restent dans le code, et dans le retrait ;
+  - Amos retire le sien par `leon retirer-crochets --usage passage`, jamais par le retrait complet.
+- **Le résultat** est écrit dans l'annexe 12 et dans D40.
+
+Effort : 1,5 j. Coût : environ 70 $ au tarif API pour les 60 passages, plus la notation.
+
 ## Points de vigilance
 
 1. **Le coût.** Un appel de modèle par session close pour le résumé (lot 6), et un par fil touché pour son état (étape `fil`). La capture complète multiplie le volume indexé. Parades :
@@ -1989,6 +2187,8 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
    Autre limite : `noter` est coché par défaut, et `leon noter` et `remember` ne rendent plus la session externe (D36). Par défaut, un agent sous injection peut donc écrire une note. Reliée au fil par proximité (D22), elle entre au condensé marquée « agent (note, <outil>) ». Une ligne `[prochaine-étape]` peut la citer, puisqu'une ligne n'a qu'à citer un id du condensé, et revenir à chaque session par `leon fil`, que la consigne fait lire. Elle n'y fait jamais une décision (D36), et sa provenance reste « agent ». Tranché le 05/11 (A16) : une telle ligne est gardée, marquée « agent ». Elle n'est jamais preuve d'une `[décision]`, et reste visible de l'auteur seul, comme le fil (D23). Décocher `noter` coupe `leon noter` dans l'outil, et `remember` dans tous les assistants branchés à cet espace (T65).
 
    Autre limite : le poste n'est pas une frontière. Le jeton de l'ordinateur est dans `~/.leon/connexion.json`, et l'accord dans `~/.leon/accord.json`, lisibles et modifiables par tout agent qui tourne sous le compte de l'utilisateur. Un agent sous injection peut donc retoucher `accord.json` pour s'ajouter un usage, ou appeler les routes avec les usages qu'il veut : le serveur croit les usages que le poste envoie (D30). Depuis le 05/11, il ne peut pas rouvrir `remember` à l'échelle du compte : la route à jeton n'accepte qu'un refus, et rouvrir passe par le navigateur (C16).
+
+   Autre limite (20/11, D40) : avec l'usage `passage`, l'agent de Claude Code lit la mémoire à la première modification de chaque session menée. Une ligne de l'état marquée « agent », ou une note `leon note` que la recherche trouve, est donc relue presque à chaque session. Le point 7 des décisions du 04/11 écartait « une mémoire écrite par l'agent et relue à chaque session sans relecture humaine ». La décision 1 d'Amos du 20/11 tranche ce cas : la mémoire est tirée par l'agent, rendue comme des données, et ne devient jamais une décision sans id vérifié (D36). A16 gardait déjà une telle ligne, marquée « agent ». L'option est éteinte par défaut, avec un texte qui le dit. L'arrêt se contourne aussi : un agent peut effacer le témoin, retirer `passage` d'`accord.json`, ou écrire par Bash. C'est un coup de pouce, pas une garantie.
 3. **Le périmé.** L'état d'un fil vieillit. Parades : des dates partout, l'état GitHub des PR lu à la lecture et non figé dans l'état, la mise à jour au démarrage. Depuis le 04/11, le rêve propose de clore un fil dormant et de retirer une leçon sans preuve récente (D39).
 4. **Le délai.** La route de contexte et celle du rappel n'appellent ni modèle ni vecteur. Le rappel est coupé à 1,5 s sur le poste. Le rangement est en tâche de fond.
 5. **La vie privée.**
@@ -2015,7 +2215,7 @@ Pour Amos :
 - A8. L'ordre : 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11 ? Avancer les lots 12 à 14 laisserait ouverte la fuite que ferme le lot 2, et priverait les fils de l'état des PR, une dizaine de jours de plus. Les lots 1 et 2 de la CLI sans clone passent avant le lot 12. Tranché le 04/11 : 2 (fusionné), 3 (PR #129), 7, 6, 12, 13, 14, puis 4, 5, 8, 9, 11 et 15. Amendé le 05/11 : 3 et 7 fusionnés (#129, #134), le lot 6 sans PR pour l'instant.
 - A9. Les décisions vérifiées : gardées dans le résumé et l'état seulement si elles renvoient à un de tes messages, à une PR, à un commit, à un message ou à une réunion (D23) ? Tranché le 04/11 : oui, et une note n'en est jamais la preuve (D36).
 - A10. La capture complète (D29) : on la détaille quand on arrive au lot 14, avec David, à partir des constats de la relecture du 03/11 ? Tranché le 05/11 par Amos : oui, sans David, puisqu'il est seul sur ce chantier.
-- A11. Le niveau 3 (D28) : construit en option, une fois la mesure du lot 11 faite ?
+- A11. Le niveau 3 (D28) : construit en option, une fois la mesure du lot 11 faite ? Tranchée le 20/11 : oui, en lecture obligée et non en poussée, au lot 16. C'est une option éteinte par défaut, avec l'usage `passage`, gardée seulement si sa mesure passe (D28 amendée, D40).
 - A12. Les fils effacés à la suppression du compte (D21), alors que les sessions sont gardées ? Depuis le 04/11 (proposé) : les notes de l'agent aussi, avec leurs versions (D38). Aujourd'hui, une note `remember` est gardée et devient invisible.
 - A13. L'accord par usage (D30) : `lecture`, `rappel`, `resume`, `coulisses`, chacun accepté à part ?
 - A14 (tranchées le 05/11). Les sous-agents rendent toute session externe. Toutes tes sessions récentes sont marquées externes dans le bloc, parce qu'elles lancent des sous-agents (`Agent`, `Task`). Lire Leon ne compte déjà plus (D36). Faut-il revoir ce signal, par exemple pour un sous-agent qui ne lit que le dépôt ? Avant tout assouplissement, il faut séparer les vrais messages humains : le rapport d'un sous-agent arrive dans le transcript comme un message `user`, et deviendrait sinon la preuve d'une `[décision]` (D36, T43). Tranché le 05/11 : d'abord le tri (T43), puis, dès le lot 14, un sous-agent qui ne lit que le dépôt ne rend plus la session externe, un sous-agent qui va sur le web ou le réseau si (T63). Seules les sessions captées après le lot 14 en profitent : tes sessions déjà marquées externes le restent. Deux points liés :

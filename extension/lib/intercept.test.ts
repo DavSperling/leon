@@ -3,7 +3,19 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CapturedExchange } from './exchange';
 import { installFetchInterceptor, STREAM_MAX_CHARS } from './intercept';
 import { chatgptParser } from './parsers/chatgpt';
-import type { SiteParser } from './parsers/site-parser';
+import { createClaudeAiParser } from './parsers/claude-ai';
+import {
+  CONV,
+  concat,
+  envelope,
+  exchangeEnvelopes,
+  gzip,
+  heartbeat,
+  proto,
+  RPC,
+  sendBody,
+} from './parsers/fixtures/claude-ai-frames';
+import type { SiteParser, StreamParser } from './parsers/site-parser';
 
 const COMPLETION = 'https://claude.ai/completion';
 const CHATGPT = 'https://chatgpt.com/backend-api/f/conversation';
@@ -271,5 +283,255 @@ describe('installFetchInterceptor', () => {
     );
     await settle();
     expect(emit).not.toHaveBeenCalled();
+  });
+});
+
+describe('installFetchInterceptor : claude.ai au fil de l’eau', () => {
+  const PERFORM = `${RPC}/PerformAction`;
+  const TIMELINE = `${RPC}/StreamTimeline`;
+  const X = {
+    userId: '6e1d2f30-2b3c-4d4e-9f00-00000000b001',
+    replyId: '6e1d2f30-2b3c-4d4e-9f00-00000000b002',
+    userText: 'Peut-on livrer le client inventé vendredi ?',
+    reply: ['Vendredi tient si la recette inventée passe jeudi.'],
+  };
+  const captured = {
+    site: 'claude_ai',
+    conversationId: CONV,
+    title: null,
+    user: { messageId: X.userId, text: X.userText, ts: expect.any(String) },
+    assistant: { messageId: X.replyId, text: X.reply[0], ts: expect.any(String) },
+  };
+  const sendInit = async (): Promise<RequestInit> => ({
+    method: 'POST',
+    headers: { 'content-type': 'application/proto', 'content-encoding': 'gzip' },
+    body: await gzip(sendBody({ userId: X.userId, replyId: X.replyId, text: X.userText })),
+  });
+  const timelineInit = { method: 'POST', body: envelope(proto([1, CONV])) };
+
+  // Un flux d'octets piloté par le test : il reste ouvert tant qu'on ne le ferme pas.
+  function pagedStream() {
+    let controller: ReadableStreamDefaultController<Uint8Array> | undefined;
+    const body = new ReadableStream<Uint8Array>({
+      start(c) {
+        controller = c;
+      },
+    });
+    return {
+      body,
+      push: (bytes: Uint8Array) => controller?.enqueue(bytes),
+      fail: (error: Error) => controller?.error(error),
+    };
+  }
+  const timelineResponse = (
+    body: ReadableStream<Uint8Array>,
+    contentType = 'application/connect+proto',
+  ) =>
+    new Response(body, {
+      headers: { 'content-type': contentType, 'connect-content-encoding': 'gzip' },
+    });
+
+  // Le réseau de la page : PerformAction répond 7 octets, chaque StreamTimeline prend le flux suivant.
+  function setupClaude(timelines: Response[], emit = vi.fn()) {
+    const original = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const href = input instanceof Request ? input.url : String(input);
+      if (href.endsWith('/PerformAction')) {
+        // L'original consomme le corps.
+        if (input instanceof Request) await input.arrayBuffer();
+        if (init?.body instanceof ReadableStream) await new Response(init.body).arrayBuffer();
+        return new Response(proto([6, 4]), { headers: { 'content-type': 'application/proto' } });
+      }
+      const next = timelines.shift();
+      if (!next) throw new Error('aucun flux prévu');
+      return next;
+    });
+    const target = { fetch: original as typeof fetch };
+    installFetchInterceptor(target, [createClaudeAiParser(() => NOW), chatgptParser], emit);
+    return { target, emit };
+  }
+
+  // La page lit son flux jusqu'à en avoir size octets.
+  async function readBytes(reader: ReadableStreamDefaultReader<Uint8Array>, size: number) {
+    const parts: Uint8Array[] = [];
+    let got = 0;
+    while (got < size) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      parts.push(value);
+      got += value.length;
+    }
+    return concat(parts);
+  }
+
+  it("émet l'échange d'un flux resté ouvert sans attendre sa fin ; la page lit tout son flux", async () => {
+    const stream = pagedStream();
+    const sent = timelineResponse(stream.body);
+    const { target, emit } = setupClaude([sent]);
+    const page = await target.fetch(TIMELINE, timelineInit);
+    expect(page).toBe(sent);
+    await target.fetch(PERFORM, await sendInit());
+    const envelopes = await exchangeEnvelopes(X);
+    const all = concat(envelopes);
+    // Des morceaux qui coupent les enveloppes n'importe où.
+    for (let at = 0; at < all.length; at += 333) stream.push(all.slice(at, at + 333));
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledExactlyOnceWith({ exchange: captured }));
+    const reader = page.body?.getReader();
+    if (!reader) throw new Error('pas de corps');
+    expect(await readBytes(reader, all.length)).toEqual(all);
+    // Le flux reste ouvert : les battements suivants passent toujours.
+    stream.push(envelope(heartbeat(9)));
+    expect(await readBytes(reader, 11)).toEqual(envelope(heartbeat(9)));
+  });
+
+  it("ne dit rien d'un flux coupé au milieu d'une enveloppe ; la page voit la coupure", async () => {
+    const stream = pagedStream();
+    const { target, emit } = setupClaude([timelineResponse(stream.body)]);
+    const page = await target.fetch(TIMELINE, timelineInit);
+    await target.fetch(PERFORM, await sendInit());
+    const all = concat(await exchangeEnvelopes(X));
+    stream.push(all.subarray(0, all.length - 10));
+    stream.fail(new TypeError('network error'));
+    await expect(page.arrayBuffer()).rejects.toThrow('network error');
+    await settle();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('émet l’échange quand le flux finit par AbortError et que le suivant livre la suite', async () => {
+    const first = pagedStream();
+    const second = pagedStream();
+    const { target, emit } = setupClaude([
+      timelineResponse(first.body),
+      timelineResponse(second.body),
+    ]);
+    const page = await target.fetch(TIMELINE, timelineInit);
+    await target.fetch(PERFORM, await sendInit());
+    const envelopes = await exchangeEnvelopes(X);
+    for (const one of envelopes.slice(0, 8)) first.push(one);
+    // Comme sur le réseau, l'annulation vient après des morceaux déjà lus : une erreur vide la file d'un flux.
+    await settle();
+    first.fail(abortError());
+    await expect(page.arrayBuffer()).rejects.toMatchObject({ name: 'AbortError' });
+    await settle();
+    expect(emit).not.toHaveBeenCalled();
+    await target.fetch(TIMELINE, timelineInit);
+    for (const one of envelopes.slice(8)) second.push(one);
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledExactlyOnceWith({ exchange: captured }));
+  });
+
+  it("lit le corps d'un objet Request avant que l'appel d'origine le consomme", async () => {
+    const stream = pagedStream();
+    const { target, emit } = setupClaude([timelineResponse(stream.body)]);
+    await target.fetch(TIMELINE, timelineInit);
+    await target.fetch(new Request(PERFORM, await sendInit()));
+    for (const one of await exchangeEnvelopes(X)) stream.push(one);
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledExactlyOnceWith({ exchange: captured }));
+  });
+
+  it("laisse à la page un corps d'envoi en flux, sans le lire", async () => {
+    const { target, emit } = setupClaude([]);
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array([1, 2, 3]));
+        controller.close();
+      },
+    });
+    const init = { method: 'POST', body, duplex: 'half' } as RequestInit;
+    // L'appel d'origine lit son flux : il ne doit pas avoir été pris.
+    await expect(target.fetch(PERFORM, init)).resolves.toBeInstanceOf(Response);
+    await vi.waitFor(() =>
+      expect(emit).toHaveBeenCalledExactlyOnceWith({
+        rejection: { site: 'claude_ai', reason: 'format' },
+      }),
+    );
+  });
+
+  it('continue de lire le flux quand une émission lève', async () => {
+    const stream = pagedStream();
+    const emit = vi.fn().mockImplementationOnce(() => {
+      throw new Error('postMessage impossible');
+    });
+    const { target } = setupClaude([timelineResponse(stream.body)], emit);
+    await target.fetch(TIMELINE, timelineInit);
+    const Y = {
+      ...X,
+      userId: X.userId.replace('b001', 'b003'),
+      replyId: X.replyId.replace('b002', 'b004'),
+    };
+    for (const one of [X, Y]) {
+      await target.fetch(PERFORM, {
+        method: 'POST',
+        body: sendBody({ userId: one.userId, replyId: one.replyId, text: one.userText }),
+      });
+      for (const part of await exchangeEnvelopes(one)) stream.push(part);
+    }
+    await vi.waitFor(() => expect(emit).toHaveBeenCalledTimes(2));
+    expect(emit).toHaveBeenLastCalledWith({
+      exchange: {
+        ...captured,
+        user: { ...captured.user, messageId: Y.userId },
+        assistant: { ...captured.assistant, messageId: Y.replyId },
+      },
+    });
+  });
+
+  it("annule la copie d'un flux que l'analyseur ne lit pas, et rejette s'il attend un envoi", async () => {
+    const cancel = vi.spyOn(ReadableStream.prototype, 'cancel');
+    const stream = pagedStream();
+    const { target, emit } = setupClaude([timelineResponse(stream.body, 'application/json')]);
+    await target.fetch(PERFORM, await sendInit());
+    await settle(); // l'envoi est lu (et ouvert) avant que le flux ne réponde
+    const page = await target.fetch(TIMELINE, timelineInit);
+    await vi.waitFor(() =>
+      expect(emit).toHaveBeenCalledExactlyOnceWith({
+        rejection: { site: 'claude_ai', reason: 'format' },
+      }),
+    );
+    // La copie seule est annulée : sinon elle garderait en file tout le flux que la page lit.
+    await vi.waitFor(() => expect(cancel).toHaveBeenCalled());
+    stream.push(envelope(heartbeat(1)));
+    const reader = page.body?.getReader();
+    if (!reader) throw new Error('pas de corps');
+    expect(await readBytes(reader, 11)).toEqual(envelope(heartbeat(1)));
+    cancel.mockRestore();
+  });
+
+  it("rend à la page la promesse d'origine elle-même, que l'appel soit suivi ou non", async () => {
+    for (const [href, init] of [
+      [TIMELINE, timelineInit],
+      [PERFORM, await sendInit()],
+      [CHATGPT, { method: 'POST', body: '{}' }],
+      ['https://claude.ai/api/autre', { method: 'POST' }],
+    ] as const) {
+      const pending = Promise.resolve(new Response('{}'));
+      const target = { fetch: (() => pending) as typeof fetch };
+      installFetchInterceptor(target, [createClaudeAiParser(), chatgptParser], vi.fn());
+      expect(target.fetch(href, init)).toBe(pending);
+    }
+  });
+
+  it('ne casse pas la page quand un analyseur au fil de l’eau lève', async () => {
+    const throwing: StreamParser[] = [
+      {
+        site: 'claude_ai',
+        matchesRequest: () => true,
+        observe: () => {
+          throw new Error('format inconnu');
+        },
+      },
+      {
+        site: 'claude_ai',
+        matchesRequest: () => true,
+        observe: async () => Promise.reject(new Error('x')),
+      },
+    ];
+    for (const parser of throwing) {
+      const sent = new Response('ok');
+      const target = { fetch: (async () => sent) as typeof fetch };
+      installFetchInterceptor(target, [parser], vi.fn());
+      const response = await target.fetch(TIMELINE, timelineInit);
+      expect(response).toBe(sent);
+      expect(await response.text()).toBe('ok');
+    }
+    await settle();
   });
 });

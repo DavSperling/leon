@@ -1,0 +1,6 @@
+# Le contexte de construction de la porte est la racine du dépôt (Railway). BuildKit lit ce fichier, placé à côté du
+# Dockerfile, au lieu d'un .dockerignore à la racine : celui-ci ne touche donc pas web ni worker (à vérifier sur Railway).
+*
+!services/porte/
+services/porte/target/
+!certs/rds-eu-central-1-bundle.pem

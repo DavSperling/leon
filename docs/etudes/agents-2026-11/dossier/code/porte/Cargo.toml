@@ -1,0 +1,48 @@
+# La porte des webhooks de Leon, en Rust (dossier agents, chapitre 15). Seconde mise en œuvre du contrat que tient
+# d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes, mêmes réponses.
+# Elle lit fournisseurs.json (compilé dans le binaire) et passe vecteurs.json (cargo test). Les deux fichiers sont
+# générés depuis le TypeScript par `pnpm porte:generer` : on ne les modifie jamais à la main.
+#
+# Versions exactes, comme package.json. Cargo.lock est commité ; la CI et le Dockerfile construisent avec --locked.
+
+[package]
+name = "porte"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.94"
+publish = false
+
+[dependencies]
+# Déchiffrement des secrets d'abonnement (format v1 de src/server/connectors/crypto.ts).
+aes-gcm = { version = "=0.11.1", default-features = false, features = ["aes", "alloc"] }
+# Le serveur HTTP : HTTP/1.1 seulement, le proxy de Railway parle HTTP/1.1 au service (à vérifier).
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "tokio"] }
+base64 = "=0.23.1"
+# La chaîne de requête d'un écho de validation et le champ `payload` d'un corps form-payload, décodés comme
+# URLSearchParams (« + » vaut une espace).
+form_urlencoded = "=1.2.2"
+hex = "=0.4.3"
+hmac = "=0.13.0"
+# Seulement l'envoi des erreurs et des paniques, par ureq et rustls : pas d'OpenSSL dans l'image.
+sentry = { version = "=0.49.6", default-features = false, features = ["backtrace", "contexts", "panic", "ureq", "rustls"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.154"
+sha1 = { version = "=0.11.0", default-features = false }
+sha2 = { version = "=0.11.1", default-features = false }
+# Postgres sans macros : aucune base n'est requise pour compiler. rustls avec ring, certificat RDS par sslrootcert.
+sqlx = { version = "=0.9.1", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "json"] }
+subtle = "=2.6.1"
+tokio = { version = "=1.54.1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tracing = "=0.1.44"
+tracing-subscriber = { version = "=0.3.23", default-features = false, features = ["fmt", "json", "std"] }
+uuid = { version = "=1.29.3", default-features = false, features = ["std"] }
+
+[dev-dependencies]
+# start_paused : le refus uniforme attend 200 ms sans ralentir les tests.
+tokio = { version = "=1.54.1", features = ["macros", "rt", "test-util"] }
+tower = { version = "=0.5.3", default-features = false, features = ["util"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

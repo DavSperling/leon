@@ -49,7 +49,8 @@ function idOf(fields: ProtoField[], field: number): string | null {
 export function createClaudeAiParser(now: () => Date = () => new Date()) {
   // Par identifiant de la réponse attendue (2.2 de l'envoi).
   const pending = new Map<string, Pending>();
-  // Un flux abandonné illisible avant tout envoi ne livrera pas la réponse : on le dit au premier envoi vu.
+  // Un flux devenu illisible ne livrera plus de réponse : on le dit à chaque envoi vu, jusqu'à ce qu'un flux se
+  // relise (sinon l'incomplet de l'envoi perdu effacerait la panne dans la petite fenêtre).
   let streamLost = false;
 
   // Rien reçu depuis 15 minutes pour une attente : la réponse n'est jamais arrivée au bout (arrêt, départ de la page,
@@ -97,10 +98,7 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
       reported: streamLost,
     };
     pending.set(replyId, send);
-    if (streamLost) {
-      streamLost = false;
-      call.report({ rejected: 'format' });
-    }
+    if (streamLost) call.report({ rejected: 'format' });
     const oldest = pending.keys().next().value;
     if (pending.size > PENDING_MAX && oldest !== undefined) pending.delete(oldest);
     return replyId;
@@ -189,16 +187,14 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
   }
 
   // Un flux StreamTimeline, enveloppe par enveloppe, sans rien garder au-delà de celle en cours. Un flux illisible :
-  // un seul rejet, puis on cesse de le lire ; sans envoi en attente, le rejet attend le prochain envoi (on ne juge
-  // pas l'historique, mais la réponse ne viendra pas par ce flux).
+  // un seul rejet s'il y a des envois en attente, puis on cesse de le lire ; les envois suivants le rediront (on ne
+  // juge pas l'historique, mais la réponse ne viendra pas par ce flux).
   async function readTimeline(call: ObservedCall): Promise<void> {
     const response = await call.response;
     if (response === null) return;
     const unreadable = () => {
-      if (pending.size === 0) {
-        streamLost = true;
-        return;
-      }
+      streamLost = true;
+      if (pending.size === 0) return;
       call.report({ rejected: 'format' });
       for (const send of pending.values()) send.reported = true;
     };
@@ -216,6 +212,7 @@ export function createClaudeAiParser(now: () => Date = () => new Date()) {
         const bytes = flags & COMPRESSED ? await decompress(message, encoding) : message;
         const fields = bytes === null ? null : readFields(bytes);
         if (fields === null || !readEvent(fields, call.report)) return unreadable();
+        streamLost = false;
         expire(call.report);
       }
     }

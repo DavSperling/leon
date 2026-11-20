@@ -1,26 +1,36 @@
 // Les cas de services/porte/vecteurs.json, rejoués par le service Rust : les mêmes que verify.test.ts et
 // hono-gate.test.ts (chapitre 03, section 13). Un verdict qui change ici change aussi en TypeScript, ou l'une des deux
-// mises en œuvre a tort. Puis ce que les vecteurs ne mesurent pas : le délai du refus, la limite par adresse IP, le
-// cache négatif, la taille du corps, une panne de base.
+// mises en œuvre a tort. Puis ce que les vecteurs ne mesurent pas : le délai du refus, la limite par adresse IP, les
+// caches, la taille et la lecture du corps, une base en panne ou lente, le bilan de santé, ce qui part vers Sentry.
 //
 // Le fichier est généré par `pnpm porte:generer` (src/server/webhooks/providers-json.ts) ; Exemple fictif : ses
 // secrets, clés, identifiants et corps sont inventés.
 
 use std::collections::BTreeMap;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex as StdMutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicUsize, Ordering};
+use std::task::{Context, Poll};
+use std::time::Duration;
 
-use axum::body::{Body, to_bytes};
+use axum::body::{Body, Bytes, HttpBody, to_bytes};
 use axum::http::{Request as HttpRequest, StatusCode};
+use axum::response::Response;
+use base64::Engine as _;
+use hmac::{Hmac, KeyInit, Mac};
 use serde::Deserialize;
 use serde_json::Value;
+use sha2::Sha256;
 use tower::ServiceExt;
 
 use crate::depot::{Deposit, PorteStore, StoreError, SubscriptionRow};
 use crate::secret::{open_subscription_secret, parse_porte_key};
 use crate::verifier::{BodyFormat, VerifyInput, WebhookVerification, verify_webhook};
-use crate::{PROVIDERS_JSON, Porte, Providers, ip_key, load_providers, porte_settings, router};
+use crate::{
+    Clock, PROVIDERS_JSON, Porte, Providers, SentryThrottle, ip_key, load_providers,
+    porte_settings, router, scrub_event,
+};
 
 const VECTORS_JSON: &str = include_str!("../vecteurs.json");
 
@@ -121,12 +131,33 @@ fn providers() -> Providers {
 }
 
 // La fausse base des vecteurs : porte_secret lit store.subscriptions, porte_deposer note ses arguments et rend 1.
+// `broken` : chaque appel échoue tout de suite. `delay` : chaque appel attend d'abord (une base lente).
 #[derive(Default)]
 struct FakeStore {
-    subscriptions: Vec<StoredSubscription>,
+    subscriptions: StdMutex<Vec<StoredSubscription>>,
     deposits: StdMutex<Vec<Deposit>>,
     lookups: AtomicUsize,
-    broken: bool,
+    broken: AtomicBool,
+    delay: Duration,
+}
+
+impl FakeStore {
+    fn with(subscriptions: &[StoredSubscription]) -> Self {
+        Self {
+            subscriptions: StdMutex::new(subscriptions.to_vec()),
+            ..Default::default()
+        }
+    }
+
+    async fn call(&self) -> Result<(), StoreError> {
+        if !self.delay.is_zero() {
+            tokio::time::sleep(self.delay).await;
+        }
+        if self.broken.load(Ordering::SeqCst) {
+            return Err(StoreError("PoolTimedOut".into()));
+        }
+        Ok(())
+    }
 }
 
 impl PorteStore for Arc<FakeStore> {
@@ -136,11 +167,11 @@ impl PorteStore for Arc<FakeStore> {
         abonnement: &str,
     ) -> Result<Option<SubscriptionRow>, StoreError> {
         self.lookups.fetch_add(1, Ordering::SeqCst);
-        if self.broken {
-            return Err(StoreError("PoolTimedOut".into()));
-        }
+        self.call().await?;
         Ok(self
             .subscriptions
+            .lock()
+            .unwrap()
             .iter()
             .find(|row| row.outil == outil && row.id == abonnement)
             .map(|row| SubscriptionRow {
@@ -150,12 +181,20 @@ impl PorteStore for Arc<FakeStore> {
     }
 
     async fn deposit(&self, deposit: &Deposit) -> Result<i32, StoreError> {
-        if self.broken {
-            return Err(StoreError("PoolTimedOut".into()));
-        }
+        self.call().await?;
         self.deposits.lock().unwrap().push(deposit.clone());
         Ok(1)
     }
+}
+
+fn porte_with_clock(
+    env: &BTreeMap<String, String>,
+    store: Arc<FakeStore>,
+    clock: Clock,
+) -> Arc<Porte<Arc<FakeStore>>> {
+    let providers = providers();
+    let settings = porte_settings(&providers, |name| env.get(name).cloned()).expect("réglages");
+    Arc::new(Porte::new(providers, settings, store, clock))
 }
 
 fn porte_with(
@@ -163,14 +202,16 @@ fn porte_with(
     store: Arc<FakeStore>,
     now: i64,
 ) -> Arc<Porte<Arc<FakeStore>>> {
-    let providers = providers();
-    let settings = porte_settings(&providers, |name| env.get(name).cloned()).expect("réglages");
-    Arc::new(Porte::new(
-        providers,
-        settings,
-        store,
-        Box::new(move || now),
-    ))
+    porte_with_clock(env, store, Box::new(move || now))
+}
+
+async fn send(porte: &Arc<Porte<Arc<FakeStore>>>, request: HttpRequest<Body>) -> Response {
+    router(porte.clone()).oneshot(request).await.unwrap()
+}
+
+async fn body_text(response: Response) -> String {
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    String::from_utf8_lossy(&body).into_owned()
 }
 
 fn request(
@@ -205,6 +246,14 @@ fn fournisseurs_est_dans_la_version_connue() {
         )
         .is_err()
     );
+    // De même un champ de plus dans la vérification de chaque outil, donc dans chaque mode que le fichier emploie
+    // (jeton, hmac-sha256, standard-webhooks).
+    let file: Value = serde_json::from_str(PROVIDERS_JSON).unwrap();
+    for tool in file["tools"].as_object().unwrap().keys() {
+        let mut changed = file.clone();
+        changed["tools"][tool]["verification"]["inconnu"] = 1.into();
+        assert!(load_providers(&changed.to_string()).is_err(), "{tool}");
+    }
 }
 
 #[test]
@@ -231,12 +280,40 @@ fn vecteurs_de_verification() {
     }
 }
 
+// Les trois parties de `v1:` réécrites dans l'autre alphabet, avec remplissage : Buffer.from(…, 'base64url') de Node
+// les lit pareil.
+fn in_standard_alphabet(stored: &str) -> String {
+    let parts: Vec<String> = stored
+        .split(':')
+        .enumerate()
+        .map(|(index, part)| {
+            if index == 0 {
+                return part.to_string();
+            }
+            let mut part = part.replace('-', "+").replace('_', "/");
+            while part.len() % 4 != 0 {
+                part.push('=');
+            }
+            part
+        })
+        .collect();
+    parts.join(":")
+}
+
 #[test]
 fn vecteurs_de_dechiffrement() {
     for case in vectors().decryption {
         let key = parse_porte_key(&case.key).expect("clé de 32 octets");
         let got = open_subscription_secret(&case.stored, &case.aad, &key).ok();
         assert_eq!(got, case.plain, "{}", case.name);
+        // La même clé écrite en base64url sans remplissage, le même secret écrit en base64 standard : même résultat.
+        let url_key = case.key.replace('+', "-").replace('/', "_");
+        let url_key = parse_porte_key(url_key.trim_end_matches('='));
+        assert_eq!(url_key, Some(key), "{}", case.name);
+        let standard = in_standard_alphabet(&case.stored);
+        assert_ne!(standard, case.stored);
+        let got = open_subscription_secret(&standard, &case.aad, &key).ok();
+        assert_eq!(got, case.plain, "{} (alphabet standard)", case.name);
     }
 }
 
@@ -247,10 +324,7 @@ async fn vecteurs_de_la_porte() {
     for case in &vectors.gate.cases {
         let mut env = vectors.gate.env.clone();
         env.extend(case.env.clone().unwrap_or_default());
-        let store = Arc::new(FakeStore {
-            subscriptions: vectors.gate.store.subscriptions.clone(),
-            ..Default::default()
-        });
+        let store = Arc::new(FakeStore::with(&vectors.gate.store.subscriptions));
         let porte = porte_with(&env, store.clone(), case.now);
         let r = &case.request;
         let response = router(porte)
@@ -303,10 +377,7 @@ fn outlook_delivery() -> (BTreeMap<String, String>, Arc<FakeStore>, String, Stri
         .iter()
         .find(|case| case.name == "outlook : livraison juste")
         .unwrap();
-    let store = Arc::new(FakeStore {
-        subscriptions: vectors.gate.store.subscriptions.clone(),
-        ..Default::default()
-    });
+    let store = Arc::new(FakeStore::with(&vectors.gate.store.subscriptions));
     (
         vectors.gate.env.clone(),
         store,
@@ -424,10 +495,221 @@ async fn un_corps_trop_gros_recoit_413() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn un_corps_trop_gros_recoit_413_avant_l_adresse() {
+    // Comme le bodyLimit de hono-gate.ts, qui lit un corps sans content-length avant toute autre étape : même vers un
+    // outil inconnu, même pour un écho de validation.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let size = providers().limits.body_max_bytes + 1;
+    for (path, query) in [("/h/inconnu", ""), (path.as_str(), "validationToken=x")] {
+        let big = request("POST", path, query, &BTreeMap::new(), vec![b'a'; size]);
+        assert!(!big.headers().contains_key("content-length"));
+        let response = send(&porte, big).await;
+        assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE, "{path}");
+        assert_eq!(
+            body_text(response).await,
+            r#"{"error":"Request too large"}"#
+        );
+    }
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+// Un corps qui échoue au milieu de sa lecture : un client qui coupe la connexion.
+struct CutBody;
+
+impl HttpBody for CutBody {
+    type Data = Bytes;
+    type Error = std::io::Error;
+
+    fn poll_frame(
+        self: Pin<&mut Self>,
+        _: &mut Context<'_>,
+    ) -> Poll<Option<Result<http_body::Frame<Bytes>, std::io::Error>>> {
+        Poll::Ready(Some(Err(std::io::Error::other("connexion coupée"))))
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_corps_interrompu_recoit_400_et_non_413() {
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let cut = HttpRequest::post(path).body(Body::new(CutBody)).unwrap();
+    let response = send(&porte, cut).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn de_l_utf8_invalide_recoit_400() {
+    // L'octet nul est dans les vecteurs (cas « octet nul dans le corps ») ; un octet invalide ne peut pas y être.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let invalid = request(
+        "POST",
+        &path,
+        "",
+        &BTreeMap::new(),
+        vec![b'{', 0xff, 0xfe, b'}'],
+    );
+    let response = send(&porte, invalid).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(body_text(response).await, r#"{"error":"Invalid request"}"#);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn l_echo_fait_1_024_caracteres_au_plus() {
+    // Le caractère de contrôle est dans les vecteurs ; la longueur, comptée en unités UTF-16 comme en JavaScript.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let max = providers().limits.echo_max_chars;
+    let fits = format!("validationToken={}", "é".repeat(max));
+    let response = send(
+        &porte,
+        request("POST", &path, &fits, &BTreeMap::new(), vec![]),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_text(response).await.chars().count(), max);
+    let too_long = format!("validationToken={}", "a".repeat(max + 1));
+    let response = send(
+        &porte,
+        request("POST", &path, &too_long, &BTreeMap::new(), vec![]),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn le_cache_positif_expire_apres_60_s() {
+    // Un abonnement résilié (ou une personne partie) cesse d'être servi au plus 60 s après : porte_secret est relu.
+    let (env, store, path, body) = outlook_delivery();
+    let now = Arc::new(AtomicI64::new(1_795_165_200_000));
+    let clock = now.clone();
+    let porte = porte_with_clock(
+        &env,
+        store.clone(),
+        Box::new(move || clock.load(Ordering::SeqCst)),
+    );
+    let deliver = || {
+        request(
+            "POST",
+            &path,
+            "",
+            &BTreeMap::new(),
+            body.clone().into_bytes(),
+        )
+    };
+    assert_eq!(send(&porte, deliver()).await.status(), StatusCode::ACCEPTED);
+    store.subscriptions.lock().unwrap().clear();
+    now.fetch_add(59_000, Ordering::SeqCst);
+    assert_eq!(send(&porte, deliver()).await.status(), StatusCode::ACCEPTED);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 1);
+    now.fetch_add(2_000, Ordering::SeqCst);
+    assert_eq!(
+        send(&porte, deliver()).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_secret_illisible_est_un_refus_et_non_une_panne() {
+    let (env, _, path, body) = outlook_delivery();
+    let mut subscriptions = vectors().gate.store.subscriptions;
+    for row in &mut subscriptions {
+        row.stored = Some("v1:AQEBAQEBAQEBAQEB:AAAA:AAAA".into());
+    }
+    let store = Arc::new(FakeStore::with(&subscriptions));
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_compte_illisible_est_accepte_sans_depot() {
+    // Signé par HubSpot, mais sans portalId : rien à ranger. 202, comme la route Hono (chapitre 03, 6.1, étape 9) ;
+    // le cas « plusieurs comptes » est dans les vecteurs.
+    let vectors = vectors();
+    let case = vectors
+        .gate
+        .cases
+        .iter()
+        .find(|case| case.name.starts_with("hubspot : livraison juste"))
+        .unwrap();
+    let secret = &vectors.gate.env["LEON_OAUTH_HUBSPOT_SECRET"];
+    let body = r#"[{"eventId":1001,"objectId":3001}]"#;
+    let stamp = &case.request.headers["x-hubspot-request-timestamp"];
+    let mut mac = <Hmac<Sha256> as KeyInit>::new_from_slice(secret.as_bytes()).unwrap();
+    mac.update(
+        format!(
+            "POST{}/h/hubspot{body}{stamp}",
+            vectors.gate.env["LEON_PORTE_URL"]
+        )
+        .as_bytes(),
+    );
+    let signature = base64::engine::general_purpose::STANDARD.encode(mac.finalize().into_bytes());
+    let mut headers = case.request.headers.clone();
+    headers.insert("x-hubspot-signature-v3".into(), signature);
+    let store = Arc::new(FakeStore::default());
+    let porte = porte_with(&vectors.gate.env, store.clone(), case.now);
+    let response = send(
+        &porte,
+        request("POST", "/h/hubspot", "", &headers, body.into()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::ACCEPTED);
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
+async fn une_base_lente_recoit_503_en_2_s() {
+    // Une base qui ne répond plus : 503 au bout de DB_CALL_TIMEOUT, pas au bout du délai de l'éditeur.
+    let (env, _, path, body) = outlook_delivery();
+    let mut store = FakeStore::with(&vectors().gate.store.subscriptions);
+    store.delay = Duration::from_secs(60);
+    let porte = porte_with(&env, Arc::new(store), 1_795_165_200_000);
+    let started = tokio::time::Instant::now();
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(started.elapsed(), Duration::from_secs(2));
+}
+
+#[tokio::test(start_paused = true)]
+async fn une_requete_ne_dure_jamais_plus_de_3_s() {
+    // Deux appels de 1,6 s chacun, sous la limite d'un appel : c'est le délai de la requête qui coupe (porte.delai).
+    let (env, _, path, body) = outlook_delivery();
+    let mut store = FakeStore::with(&vectors().gate.store.subscriptions);
+    store.delay = Duration::from_millis(1_600);
+    let store = Arc::new(store);
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let started = tokio::time::Instant::now();
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(body_text(response).await, r#"{"error":"Unavailable"}"#);
+    assert_eq!(started.elapsed(), Duration::from_secs(3));
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
 async fn une_panne_de_base_n_est_pas_un_refus() {
     let (env, _, path, body) = outlook_delivery();
     let store = Arc::new(FakeStore {
-        broken: true,
+        broken: AtomicBool::new(true),
         ..Default::default()
     });
     let porte = porte_with(&env, store, 1_795_165_200_000);
@@ -470,20 +752,96 @@ async fn sans_leon_porte_url_une_signature_sur_l_adresse_recoit_503() {
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 }
 
-#[tokio::test]
-async fn le_bilan_de_sante_ne_lit_pas_la_base() {
+#[tokio::test(start_paused = true)]
+async fn le_bilan_de_sante_attend_la_premiere_lecture_de_la_base() {
     let store = Arc::new(FakeStore {
-        broken: true,
+        broken: AtomicBool::new(true),
         ..Default::default()
     });
-    let porte = porte_with(&BTreeMap::new(), store, 0);
-    let response = router(porte)
-        .oneshot(HttpRequest::get("/sante").body(Body::empty()).unwrap())
-        .await
-        .unwrap();
+    let porte = porte_with(&BTreeMap::new(), store.clone(), 0);
+    let sante = || HttpRequest::get("/sante").body(Body::empty()).unwrap();
+    // Avant toute lecture réussie : 503. /sante elle-même ne lit jamais la base.
+    let response = send(&porte, sante()).await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(body_text(response).await, r#"{"ok":false}"#);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+    // Base injoignable (mauvais mot de passe, certificat absent…) : une lecture par seconde, /sante reste à 503, et
+    // Railway garde l'ancienne version.
+    let waiting = tokio::spawn({
+        let porte = porte.clone();
+        async move { porte.wait_for_base().await }
+    });
+    tokio::time::sleep(Duration::from_millis(3_500)).await;
+    assert!(!porte.is_ready());
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 4);
+    assert_eq!(
+        send(&porte, sante()).await.status(),
+        StatusCode::SERVICE_UNAVAILABLE
+    );
+    // La base répond : /sante passe à 200.
+    store.broken.store(false, Ordering::SeqCst);
+    waiting.await.unwrap();
+    let response = send(&porte, sante()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-    assert_eq!(&body[..], br#"{"ok":true}"#);
+    assert_eq!(body_text(response).await, r#"{"ok":true}"#);
+    // Puis une panne en régime : /sante reste à 200, sans lire la base. Les livraisons reçoivent 503.
+    store.broken.store(true, Ordering::SeqCst);
+    let lookups = store.lookups.load(Ordering::SeqCst);
+    assert_eq!(send(&porte, sante()).await.status(), StatusCode::OK);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), lookups);
+}
+
+#[test]
+fn sentry_recoit_un_envoi_par_minute_et_par_evenement() {
+    let mut throttle = SentryThrottle::new();
+    let start = std::time::Instant::now();
+    let at = |seconds: u64| start + Duration::from_secs(seconds);
+    assert_eq!(throttle.admit("porte.base", at(0)), Some(0));
+    for second in 1..60 {
+        assert_eq!(throttle.admit("porte.base", at(second)), None);
+    }
+    // Un autre événement a sa propre fenêtre : une panne de base ne tait pas une clé illisible.
+    assert_eq!(throttle.admit("porte.secret_illisible", at(30)), Some(0));
+    // La minute passée : un envoi, qui compte les 59 tus.
+    assert_eq!(throttle.admit("porte.base", at(60)), Some(59));
+    assert_eq!(throttle.admit("porte.base", at(61)), None);
+}
+
+#[test]
+fn sentry_ne_recoit_aucun_texte_recu() {
+    use sentry::protocol::{Event, Exception};
+    let body = r#"{"value":[{"clientState":"exemple-fictif"}]}"#;
+    // Une panique dont le message citerait le corps : masquée, comme tout ce qui ne vient pas de log_error.
+    let mut panic = Event {
+        message: Some(format!("byte index 3 is out of bounds of `{body}`")),
+        request: Some(Default::default()),
+        ..Default::default()
+    };
+    panic.exception.values.push(Exception {
+        ty: "panic".into(),
+        value: Some(body.into()),
+        ..Default::default()
+    });
+    panic.extra.insert("corps".into(), body.into());
+    let scrubbed = scrub_event(panic);
+    assert!(
+        !serde_json::to_string(&scrubbed)
+            .unwrap()
+            .contains("clientState")
+    );
+    assert_eq!(scrubbed.message.as_deref(), Some("[masqué]"));
+    assert!(scrubbed.request.is_none());
+    // Un message de log_error (étiquette `event`) : gardé, avec ses seuls identifiants.
+    let mut ours = Event {
+        message: Some("porte.base: PoolTimedOut".into()),
+        ..Default::default()
+    };
+    ours.tags.insert("event".into(), "porte.base".into());
+    ours.extra.insert("outil".into(), "outlook".into());
+    ours.extra.insert("corps".into(), body.into());
+    let kept = scrub_event(ours);
+    assert_eq!(kept.message.as_deref(), Some("porte.base: PoolTimedOut"));
+    assert_eq!(kept.extra.keys().collect::<Vec<_>>(), ["outil"]);
 }
 
 #[test]
@@ -528,7 +886,7 @@ fn les_secrets_d_application_sont_les_seuls_lus() {
 }
 
 // Essai différentiel, hors CI : des cas tirés autour des vecteurs par un script Node, jugés par verify.ts, dans le
-// format de la section « verification » (chapitre 15, section 14). Les cas nommés « écart connu » sont ceux où
+// format de la section « verification » (chapitre 15, section 15.3). Les cas nommés « écart connu » sont ceux où
 // serde_json refuse ce que JSON.parse accepte : ils doivent diverger, et seulement eux.
 #[derive(Deserialize)]
 struct Differential {

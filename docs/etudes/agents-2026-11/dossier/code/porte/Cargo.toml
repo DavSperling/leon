@@ -1,5 +1,6 @@
 # La porte des webhooks de Leon, en Rust (dossier agents, chapitre 15). Seconde mise en œuvre du contrat que tient
-# d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes, mêmes réponses.
+# d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes, mêmes réponses
+# sur chaque cas de vecteurs.json (les écarts hors de ces cas : chapitre 15, section 9.4).
 # Elle lit fournisseurs.json (compilé dans le binaire) et passe vecteurs.json (cargo test). Les deux fichiers sont
 # générés depuis le TypeScript par `pnpm porte:generer` : on ne les modifie jamais à la main.
 #
@@ -38,6 +39,8 @@ tracing-subscriber = { version = "=0.3.23", default-features = false, features =
 uuid = { version = "=1.29.3", default-features = false, features = ["std"] }
 
 [dev-dependencies]
+# Un corps qui échoue en cours de lecture (client qui coupe) : déjà dans l'arbre par axum, nommé ici pour les tests.
+http-body = "=1.1.0"
 # start_paused : le refus uniforme attend 200 ms sans ralentir les tests.
 tokio = { version = "=1.54.1", features = ["macros", "rt", "test-util"] }
 tower = { version = "=0.5.3", default-features = false, features = ["util"] }

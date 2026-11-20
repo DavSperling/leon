@@ -83,15 +83,25 @@ pub struct PgPorteStore {
     pool: PgPool,
 }
 
+// Le délai d'un appel de base, attente d'une connexion comprise. Au-delà, la livraison reçoit 503 (porte.base) : sous
+// les 3 secondes du plus court délai d'éditeur (chapitre 15, section 4), pas à l'heure où l'éditeur a déjà renoncé.
+// main.rs borne chaque appel par tokio::time::timeout ; statement_timeout fait aussi arrêter la requête par Postgres,
+// pour qu'une requête abandonnée ici ne continue pas de tenir une connexion là-bas.
+pub const DB_CALL_TIMEOUT: Duration = Duration::from_secs(2);
+const STATEMENT_TIMEOUT_MS: u64 = 2_000;
+
 // Le pool du service : 5 connexions (chapitre 13, 8.2), sous le rôle leon_porte. Ouvert à la demande : le service
-// démarre et répond à /sante même si la base est lente ; une livraison attend une connexion 5 secondes au plus, puis
-// reçoit 503. L'adresse porte sslmode=verify-full et sslrootcert, comme DATABASE_URL_PORTE de web.
+// démarre même si la base tarde ; /sante attend la première lecture réussie (main.rs, wait_for_base). Une livraison
+// attend une connexion DB_CALL_TIMEOUT au plus, puis reçoit 503. L'adresse porte sslmode=verify-full et sslrootcert,
+// comme DATABASE_URL_PORTE de web.
 pub fn connect(database_url: &str) -> Result<PgPorteStore, sqlx::Error> {
-    let options = PgConnectOptions::from_str(database_url)?.application_name("leon-porte");
+    let options = PgConnectOptions::from_str(database_url)?
+        .application_name("leon-porte")
+        .options([("statement_timeout", STATEMENT_TIMEOUT_MS)]);
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .min_connections(0)
-        .acquire_timeout(Duration::from_secs(5))
+        .acquire_timeout(DB_CALL_TIMEOUT)
         .idle_timeout(Some(Duration::from_secs(600)))
         .max_lifetime(Some(Duration::from_secs(1800)))
         .connect_lazy_with(options);

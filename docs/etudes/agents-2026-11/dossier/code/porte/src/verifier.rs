@@ -17,7 +17,8 @@ use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 
 // Les types de src/server/connectors/types.ts (architecture 8.3), tels que fournisseurs.json les écrit. Un champ
-// inconnu fait échouer la lecture : un changement du contrat sans changement de `version` se voit au démarrage.
+// inconnu fait échouer la lecture, dans chaque mode et dans chaque morceau signé (deny_unknown_fields sur chaque type,
+// enums comprises) : un changement du contrat sans changement de `version` se voit au démarrage.
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "from", deny_unknown_fields)]
@@ -61,7 +62,7 @@ pub enum NamedPart {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum SignedPart {
     Named(NamedPart),
     Literal { literal: String },
@@ -96,7 +97,7 @@ pub struct HmacVerification {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(tag = "mode")]
+#[serde(tag = "mode", deny_unknown_fields)]
 pub enum WebhookVerification {
     #[serde(rename = "hmac-sha256")]
     HmacSha256(HmacVerification),
@@ -651,6 +652,38 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn chaque_mode_refuse_un_champ_inconnu() {
+        let secret = r#""secret":{"from":"env","name":"S"}"#;
+        let hmac = format!(
+            r#""header":"x-sig","encoding":"hex","signed":["body",{{"literal":"v0"}}],"separator":":",{secret}"#
+        );
+        for good in [
+            format!(r#"{{"mode":"hmac-sha256",{hmac}}}"#),
+            format!(r#"{{"mode":"hmac-sha1",{hmac}}}"#),
+            format!(r#"{{"mode":"standard-webhooks",{secret}}}"#),
+            format!(r#"{{"mode":"jeton","bodyPointer":"/a",{secret}}}"#),
+        ] {
+            assert!(
+                serde_json::from_str::<WebhookVerification>(&good).is_ok(),
+                "{good}"
+            );
+            // Un champ de plus au niveau du mode : refusé, quel que soit le mode.
+            let extra = good.replacen('{', r#"{"inconnu":1,"#, 1);
+            assert!(
+                serde_json::from_str::<WebhookVerification>(&extra).is_err(),
+                "{extra}"
+            );
+        }
+        // Un champ de plus dans un morceau signé littéral, ou dans le secret : refusé aussi.
+        let literal = format!(r#"{{"mode":"hmac-sha256",{hmac}}}"#)
+            .replace(r#"{"literal":"v0"}"#, r#"{"literal":"v0","inconnu":1}"#);
+        assert!(serde_json::from_str::<WebhookVerification>(&literal).is_err());
+        let in_secret =
+            r#"{"mode":"standard-webhooks","secret":{"from":"env","name":"S","inconnu":1}}"#;
+        assert!(serde_json::from_str::<WebhookVerification>(in_secret).is_err());
     }
 
     #[test]

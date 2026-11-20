@@ -10,12 +10,12 @@ Convention : **existe** (lu dans le dépôt, avec chemin et ligne), **à créer*
 
 **Jalon.** Rien de ce chapitre n'est dans le jalon 1 (architecture, 14.3). La porte en Hono elle-même vient après le jalon 1 (chapitre 03, section 14). Le service Rust vient encore après, sur une des trois mesures de la section 4, ou sur décision de David.
 
-**Ce qui a tourné.** Contrairement aux autres chapitres, le code de celui-ci a été construit et lancé, hors du dépôt, dans un dossier de travail :
+**Ce qui a tourné.** Contrairement aux autres chapitres, le code de celui-ci a été construit et lancé, hors du dépôt, dans un dossier de travail, une première fois à l'écriture et une seconde après la relecture contradictoire (section 19) :
 
-- `cargo check`, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` et `cargo test` passent avec Rust 1.97.0 (section 5.4, sorties recopiées) ;
+- `cargo check`, `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings` et `cargo test` passent avec Rust 1.97.0 : 35 tests, plus l'essai différentiel lancé à la main (section 5.4, sorties recopiées) ;
 - les 22 cas de vérification, les 2 cas de déchiffrement et les 11 cas de porte de `vecteurs.json` passent, tels que le générateur du chapitre 03 les produit ;
 - un essai différentiel de 425 cas, jugés par le `verify.ts` du chapitre 03 sous Node, ne trouve que deux écarts, attendus et écrits (section 15.3) ;
-- le binaire de production a tourné contre une base Postgres 16 jetable portant les deux fonctions du chapitre 01, recopiées telles quelles : livraisons Outlook, HubSpot (deux organisations) et Fathom déposées, `NOTIFY leon_porte` reçu, refus en 202 ms, arrêt propre sur `SIGTERM` (section 15.4).
+- le binaire de production a tourné contre une base **Postgres 16** jetable (pas 17, la version de `docker-compose.yml` et de RDS : seule la 16 était installable dans la session) portant les deux fonctions du chapitre 01, recopiées telles quelles : livraisons Outlook, HubSpot (deux organisations) et Fathom déposées, `NOTIFY leon_porte` reçu, refus en 202 ms, arrêt propre sur `SIGTERM`. Après la relecture, aussi : un mot de passe faux (`/sante` reste en 503), une base lente (503 en 2 s, requête arrêtée par Postgres) et `comparer.sh` entre le binaire d'avant et celui d'après (section 15.4).
 
 Ni l'image Docker (pas de démon Docker dans la session), ni Railway, ni RDS n'ont été essayés. Le code est dans `dossier/code/porte/`, à l'identique de ce qui a compilé ; ce chapitre le recopie.
 
@@ -23,13 +23,13 @@ Ni l'image Docker (pas de démon Docker dans la session), ni Railway, ni RDS n'o
 
 1. **Le service `porte` en Rust, en entier** : `services/porte/Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `src/main.rs`, `src/verifier.rs`, `src/depot.rs`, `src/secret.rs`, et ses tests (`src/tests.rs`). Il lit `fournisseurs.json` et passe `vecteurs.json` tels que le chapitre 03 les génère.
 2. **L'image et la CI** : le `Dockerfile` (cargo-chef, distroless, certificat RDS au même chemin que dans l'image de `web`) et le job `porte` de `.github/workflows/tests.yml`.
-3. **La mise en service** : les variables que lit le binaire, sa colonne Railway (laissée « fixé au chapitre 15 » par le chapitre 13), la bascule du domaine de `LEON_PORTE_URL` avec la sonde qui mesure le trou, le retour arrière, et le jour où la route Hono s'éteint.
-4. **Quand construire** : les trois mesures de l'architecture (section 3), et la ligne de journal `porte.reponse` qui permet de les lire.
-5. **Les autres candidats Rust** (module `napi-rs` pour `maskSecrets` et `chunkText`, relève des connecteurs, moteur de recherche, exécution isolée en WebAssembly) : une esquisse du code et la mesure qui ferait passer, pour chacun.
+3. **La mise en service** : les variables que lit le binaire, sa colonne Railway (laissée « fixé au chapitre 15 » par le chapitre 13), la bascule du domaine de `LEON_PORTE_URL` avec la sonde qui mesure le trou et la relève forcée qui le rattrape, le retour arrière, et le jour où la route Hono s'éteint.
+4. **Quand construire** : les trois mesures de l'architecture (section 3), avec une règle d'effectif pour M2 et M3, et la ligne de journal `porte.reponse` (l'intergiciel `measure` de la porte en Hono) qui permet de les lire.
+5. **Les autres candidats Rust** (module `napi-rs` pour `maskSecrets` et `chunkText`, relève des connecteurs, moteur de recherche, exécution isolée en WebAssembly) : rien n'est fixé ici. Leur verdict et leur mesure sont ceux de l'architecture (section 3) ; la section 14 dit seulement comment prendre chaque mesure, sans code à construire.
 
 ## 2. Vue d'ensemble
 
-Le service fait ce que fait la route Hono, dans le même ordre (chapitre 03, 6.1), avec les mêmes réponses. Il ne lit que deux fichiers générés et deux fonctions SQL.
+Le service fait ce que fait la route Hono, dans le même ordre (chapitre 03, 6.1), avec les mêmes réponses sur chaque cas de `vecteurs.json` (les écarts hors de ces cas sont en 9.4). Il ne lit que deux fichiers générés et deux fonctions SQL.
 
 ```mermaid
 flowchart LR
@@ -78,9 +78,9 @@ Ce que ce chapitre ne refait pas : le SQL de `porte_secret` et `porte_deposer` (
 
 | Gain | Ce qu'il vaut | D'où il vient |
 |---|---|---|
-| Rester debout pendant une mise en ligne de `web` | Mince. Railway démarre la nouvelle version avant d'arrêter l'ancienne (architecture, 3) : le trou d'une route Hono est de quelques secondes au plus, que Microsoft et HubSpot rattrapent par leurs reprises (à vérifier pour chaque éditeur, notes 04 et 05). Seul GitHub ne reprend pas (note 05), et il n'est pas dans le premier lot | D'un **service séparé**, pas de Rust |
-| Un processus public qui ne tient aucun jeton | Réel. La porte en Hono vit dans `web`, dont le processus a `LEON_CONNECTORS_KEY`, `DATABASE_URL` et charge `connectors/pipedream` (chapitre 03, écart E-s). Le binaire Rust ne reçoit que sa base `leon_porte`, `LEON_PORTE_KEY`, son adresse et les secrets de signature : une faille dans l'analyse d'une requête n'atteint aucun jeton d'outil | D'un **service séparé**. Un service Node à part donnerait la même isolation, pour le prix d'une seconde image Node |
-| Mémoire et image | Mesuré en local (section 15.4) : binaire de 6,3 Mo, 7,6 Mo de mémoire résidente après une dizaine de requêtes. L'estimation de la note 02 (50 à 150 Mo) était large. Sur Railway (10 $ par Go et par mois, note 02), c'est moins d'un dollar | De Rust |
+| Rester debout pendant une mise en ligne de `web` | Mince. Railway démarre la nouvelle version avant d'arrêter l'ancienne (architecture, 3) : le trou d'une route Hono est de quelques secondes au plus, que Microsoft et HubSpot rattrapent par leurs reprises (à vérifier pour chaque éditeur, notes 04 et 05). Seul GitHub ne reprend pas (note 05), et il n'est pas dans le premier lot. Et la bascule elle-même ouvre un trou, sans doute plus long, à l'aller puis à chaque retour arrière (section 13, et 3.3) : le gain ne vient qu'après | D'un **service séparé**, pas de Rust |
+| Un processus public qui ne tient aucun jeton d'outil | Réel, avec une limite. La porte en Hono vit dans `web`, dont le processus a `LEON_CONNECTORS_KEY`, `DATABASE_URL` et charge `connectors/pipedream` (chapitre 03, écart E-s). Le binaire Rust ne reçoit que sa base `leon_porte`, `LEON_PORTE_KEY`, son adresse et les secrets de signature : une faille dans l'analyse d'une requête n'atteint aucun jeton d'outil, et ne permet ni de lire ni d'écrire dans un outil. Mais il tient les secrets de signature de toutes les organisations : `LEON_PORTE_KEY` ouvre le `clientState` de chaque abonnement, `LEON_OAUTH_HUBSPOT_SECRET` signe pour n'importe quel portail. Un compromis permet donc de forger des signaux. L'effet reste borné : une livraison n'est qu'un signal, et la relève qui la suit relit l'objet chez l'éditeur, par la connexion de la personne (chapitre 03, 8.5 ; architecture, section 5) | D'un **service séparé**. Un service Node à part donnerait la même isolation, pour le prix d'une seconde image Node |
+| Mémoire et image | Mesuré en local (section 15.4) : binaire de 6,4 Mo, 7,4 Mo de mémoire résidente après une dizaine de requêtes. L'estimation de la note 02 (50 à 150 Mo) était large. Sur Railway (10 $ par Go et par mois, note 02), c'est moins d'un dollar | De Rust |
 | Un analyseur en temps borné | `serde_json` et `axum` n'ont pas de cas pathologique connu sur un corps de 256 Kio ; Node non plus en pratique | Marginal |
 | Indépendance du cycle de `web` | La porte se déploie à part, ne relit pas `node_modules`, n'attend pas un `next build` | D'un service séparé |
 
@@ -89,21 +89,22 @@ Ce que le service Rust **ne** donne **pas** : il dépend du même Postgres et ne
 ### 3.3 Ce qu'il coûte
 
 - **Une seconde mise en œuvre** de chaque mode de vérification, du déchiffrement `v1:`, des caches et de la limite par adresse IP, tenue égale à la première par `vecteurs.json`. Ce chapitre montre que c'est faisable (les 35 cas passent, et 425 cas tirés au hasard ne trouvent que deux écarts connus, section 15.3), mais chaque nouveau mode ou nouvel outil se code deux fois.
-- **Une chaîne de plus** : `cargo`, `rustup`, 188 caisses compilées (195 avec celles de construction), un `Cargo.lock` de 3 017 lignes à surveiller (`cargo deny` : à ajouter plus tard, section 11).
+- **Une chaîne de plus** : `cargo`, `rustup`, 188 caisses compilées (195 avec celles de construction), un `Cargo.lock` de 3 018 lignes à surveiller (`cargo deny` : à ajouter plus tard, section 11).
 - **Du Rust à relire par deux fondateurs venus de TypeScript** (note 02, section 7). Le code de ce chapitre évite les génériques savants et les durées de vie explicites ; il garde les noms et l'ordre de `hono-gate.ts` pour se lire en parallèle.
+- **La bascule** : déplacer le domaine coupe les livraisons le temps du DNS et du certificat, à l'aller et à chaque retour arrière (13.3, 13.5). Ce trou se paie par une relève forcée juste après (13.3, geste 6) et par une heure choisie, hors des réunions des clients (Fathom ne documente aucune reprise, note 05).
 - **Le temps** : l'architecture estimait 3 à 5 jours. Le code est écrit ; restent l'image, Railway, la bascule et l'essai réel, soit 1 à 2 jours (estimation de ma part).
 
 ### 3.4 Les candidats, un par un
 
-Le tableau de l'architecture (section 3), recopié, avec la section de ce chapitre qui en donne le code ou l'esquisse.
+Le tableau de l'architecture (section 3), recopié, avec la section de ce chapitre qui en donne le code (la porte) ou la mesure (les autres).
 
 | Candidat | Verdict | Mesure qui déclenche | Ici |
 |---|---|---|---|
-| **La porte** : passerelle de webhooks (axum, tokio, sqlx), service séparé | Oui, seule pièce Rust, en second. La route Hono tient le contrat d'abord | Un abonnement désactivé par un éditeur après des échecs pendant un déploiement, ou plus de 0,1 % de livraisons en 5xx ou hors délai sur 7 jours, ou un p95 de réponse au-dessus d'une seconde | Sections 4 à 13 : le code entier |
-| Masquage de secrets (`maskSecrets`) et découpage (`chunkText`) en module `napi-rs` | Non maintenant | Un profil du worker qui montre plus de 20 % du CPU dans `normalizeItem` ou `chunkText` pendant une première relève, ou un incident de regex bloquante | 14.1 : esquisse |
-| Relève des connecteurs en Rust | Non | Aucune mesure réaliste. À rouvrir seulement si le worker sature en CPU sur du décodage JSON, profil à l'appui | 14.2 : esquisse |
-| Moteur de recherche (tantivy embarqué, Qdrant) | Non. Si besoin : acheter un service, ne pas écrire | Recherche avec mots au-dessus d'une seconde au p95 sur le corpus d'un client, après avoir épuisé Postgres | 14.3 : esquisse |
-| Exécution isolée en WebAssembly (`wasmtime` 50.0.3) | Non avant l'éditeur d'agents | La décision produit d'exécuter du code écrit par un client ou généré par un modèle | 14.4 : esquisse |
+| **La porte** : passerelle de webhooks (axum, tokio, sqlx), service séparé | Oui, seule pièce Rust, en second. La route Hono tient le contrat d'abord | Un abonnement désactivé par un éditeur après des échecs pendant un déploiement, ou plus de 0,1 % de livraisons en 5xx ou hors délai sur 7 jours, ou un p95 de réponse au-dessus d'une seconde | Sections 4 à 13 : le code entier ; la règle d'effectif des mesures (section 4, écart E15-8) |
+| Masquage de secrets (`maskSecrets`) et découpage (`chunkText`) en module `napi-rs` | Non maintenant | Un profil du worker qui montre plus de 20 % du CPU dans `normalizeItem` ou `chunkText` pendant une première relève, ou un incident de regex bloquante | 14.1 : la mesure |
+| Relève des connecteurs en Rust | Non | Aucune mesure réaliste. À rouvrir seulement si le worker sature en CPU sur du décodage JSON, profil à l'appui | 14.2 : la mesure |
+| Moteur de recherche (tantivy embarqué, Qdrant) | Non. Si besoin : acheter un service, ne pas écrire | Recherche avec mots au-dessus d'une seconde au p95 sur le corpus d'un client, après avoir épuisé Postgres | 14.3 : la mesure |
+| Exécution isolée en WebAssembly (`wasmtime` 50.0.3) | Non avant l'éditeur d'agents | La décision produit d'exécuter du code écrit par un client ou généré par un modèle | 14.4 : la mesure |
 | Moteur d'exécution durable | Rust « en dépendance » seulement (Temporal, Restate) | Architecture 9.2 | rien ici |
 | Client lourd (agent local, extension) | Non, hors produit | Le jour où Leon livre un agent sur le poste | rien ici |
 
@@ -114,33 +115,47 @@ L'architecture (section 3) fixe trois déclencheurs. Aucun n'est mesurable aujou
 | # | Déclencheur (architecture, 3) | Ce qu'on lit | Où |
 |---|---|---|---|
 | M1 | Un abonnement désactivé par un éditeur après des échecs pendant un déploiement | Les abonnements passés à `expiree` ou `erreur`, ou restés muets ; l'heure de leur dernière livraison, rapprochée des mises en ligne de `web` | Requête SQL 4.2, liste des déploiements de Railway |
-| M2 | Plus de 0,1 % de livraisons en 5xx ou hors délai sur 7 jours | Les lignes `porte.reponse` dont le statut n'est pas 401 : part des 5xx, part au-dessus de 3 secondes | Journal de `web`, 4.3 |
-| M3 | Un p95 de réponse au-dessus d'une seconde | Les mêmes lignes, statut 202 | Journal de `web`, 4.3 |
+| M2 | Plus de 0,1 % de livraisons en 5xx ou hors délai sur 7 jours | Les lignes `porte.reponse` dont le statut n'est pas 401 : les 5xx et celles au-dessus de 3 secondes. En part à partir de 1 000 livraisons dans la semaine, en nombre en dessous (plus de 3) | Journal de `web`, 4.3 |
+| M3 | Un p95 de réponse au-dessus d'une seconde | Les mêmes lignes, statut 202, à partir de 1 000 livraisons acceptées | Journal de `web`, 4.3 |
 
 « Hors délai » : plus de 3 secondes. C'est le plus court des délais relevés par les notes (Slack et Zoom, 3 s ; Front, 5 s ; Graph, GitHub et Zendesk, 10 s : notes 04 et 05, sources tierces pour la plupart). Un 401 ne compte pas : c'est le refus uniforme, qui attend 200 ms exprès.
 
 Une seule mesure suffit à déclencher. Sans aucune des trois, le service Rust reste dans ce chapitre, sauf décision de David (question Q1).
 
+**À l'échelle de Leon.** Le volume d'une société de 20 à 200 personnes va de quelques dizaines de livraisons par semaine (HubSpot et Fathom, quelques personnes branchées) à des dizaines de milliers (Outlook branché sur chaque boîte) : c'est une estimation, rien ne le mesure encore. Au bas de cette fourchette, un seul 503 dépasse 0,1 % de la semaine, et un p95 calculé sur trente réponses ne dit rien. D'où une règle d'effectif, qui précise l'architecture (écart E15-8) : M2 se lit en part à partir de 1 000 livraisons dans la semaine, et en nombre en dessous (plus de 3 livraisons en 5xx ou hors délai) ; M3 ne se lit qu'à partir de 1 000 livraisons acceptées, et ne conclut pas en dessous. M1, qui se lit en base, sans export ni effectif, reste le déclencheur principal.
+
 ### 4.1 La ligne `porte.reponse` dans la porte en Hono
 
 Fichier : `src/server/webhooks/hono-gate.ts` (à créer au chapitre 03, PR W5). L'ajout est à faire dans la même PR, ou dans une PR à part juste après. Une ligne par réponse, au format de `console.info('[leon]', …)` (architecture, section 2, observabilité), sans corps, sans en-tête, sans identifiant d'abonnement : l'outil, le statut, la durée.
 
-```ts
-// src/server/webhooks/hono-gate.ts (à créer au chapitre 03), après receive().
+C'est un intergiciel placé en tête de chaque route, avant `limit`, et non une fonction autour de `receive` : la ligne doit compter aussi les réponses que `receive` ne rend pas. Le 413 de `bodyLimit` (qui lit un corps sans `content-length` avant la route), et le 500 que Hono rend quand la lecture du corps échoue ou qu'une erreur sort de `receive` avant son `try` (`specFor` et `c.req.arrayBuffer()` sont hors de son `try`, chapitre 03, 6.2). Essayé hors du dépôt avec hono 4.13.18 : une livraison juste, un corps trop gros, une erreur levée dans la route et un flux de corps coupé donnent chacun une ligne, avec 202, 413, 500 et 500.
 
-// Mesure (dossier agents, chapitre 15, section 4) : une ligne par réponse, sans contenu ni identifiant d'abonnement.
-// Elle donne la part de 5xx et le p95 des livraisons, qui décident de la construction du service Rust. Le service Rust
-// écrit la même ligne. Un 413 du bodyLimit n'y passe pas : il a déjà son événement, porte.trop_gros.
-async function measured(c: Context, deps: PorteDeps, state: GateState, target: Target): Promise<Response> {
-  const started = deps.now();
-  const response = await receive(c, deps, state, target);
-  const outil = OUTIL.test(target.outil) ? target.outil : 'inconnu';
-  console.info('[leon]', 'porte.reponse', JSON.stringify({ outil, statut: response.status, ms: deps.now() - started }));
-  return response;
-}
+```ts
+// src/server/webhooks/hono-gate.ts (à créer au chapitre 03), dans createPorteRoutes, avant `limit`.
+// import type { MiddlewareHandler } from 'hono';
+
+  // Mesure (dossier agents, chapitre 15, section 4) : une ligne par réponse, sans contenu ni identifiant d'abonnement.
+  // Elle donne la part de 5xx et le p95 des livraisons, qui décident de la construction du service Rust ; le service
+  // Rust écrit la même ligne. Placée avant bodyLimit, elle voit aussi le 413, et le 500 que Hono rend quand la lecture
+  // du corps échoue ou qu'une erreur sort de receive avant son try.
+  const measure: MiddlewareHandler = async (c, next) => {
+    const started = deps.now();
+    const raw = c.req.param('outil') ?? '';
+    const outil = OUTIL.test(raw) ? raw : 'inconnu';
+    let failed = false;
+    try {
+      await next();
+    } catch (error) {
+      failed = true;
+      throw error;
+    } finally {
+      const statut = failed ? 500 : c.res.status;
+      console.info('[leon]', 'porte.reponse', JSON.stringify({ outil, statut, ms: deps.now() - started }));
+    }
+  };
 ```
 
-Et dans `createPorteRoutes`, les trois appels `receive(c, deps, state, …)` deviennent `measured(c, deps, state, …)`. Test à ajouter dans `hono-gate.test.ts` (chapitre 03, 13.3) : une livraison juste écrit une ligne `porte.reponse` avec `statut: 202`, et aucune ligne ne contient le corps ni l'identifiant d'abonnement (espionner `console.info` avec `vi.spyOn`).
+Et dans `createPorteRoutes`, chaque route reçoit `measure` en premier : `routes.post('/h/:outil', measure, limit, (c) => receive(…))`, de même pour les deux autres. Tests à ajouter dans `hono-gate.test.ts` (chapitre 03, 13.3), en espionnant `console.info` avec `vi.spyOn` : une livraison juste écrit une ligne `porte.reponse` avec `statut: 202` ; un corps trop gros, une ligne avec `statut: 413` ; un corps dont le flux échoue (`new ReadableStream({ pull: (ctrl) => ctrl.error(new Error('coupé')) })`, avec `duplex: 'half'`), une ligne avec `statut: 500` ; aucune ligne ne contient le corps ni l'identifiant d'abonnement.
 
 ### 4.2 M1 : les abonnements qui se taisent
 
@@ -169,25 +184,35 @@ Un abonnement muet n'est pas forcément mort : une boîte sans courrier depuis 3
 
 ### 4.3 M2 et M3 : la part de 5xx et le p95
 
-Sur un export du journal de `web` couvrant 7 jours (commande d'export de Railway, ou téléchargement depuis le tableau de bord : à vérifier dans la documentation de l'éditeur ; la durée de rétention des journaux dépend de l'offre, à vérifier aussi). Les lignes `porte.reponse` de la porte en Hono ont la forme `[leon] porte.reponse {"outil":"outlook","statut":202,"ms":12}`.
+Sur un export du journal de `web` couvrant 7 jours (commande d'export de Railway, ou téléchargement depuis le tableau de bord : à vérifier dans la documentation de l'éditeur ; la durée de rétention des journaux dépend de l'offre, à vérifier aussi). Les lignes `porte.reponse` ont deux formes : `[leon] porte.reponse {"outil":"outlook","statut":202,"ms":12}` pour la porte en Hono, et une ligne JSON de `tracing` pour le service Rust (`{"fields":{"event":"porte.reponse","outil":"outlook","statut":202,"ms":12},…}`, section 9). Le même programme lit les deux, ce qui permet de comparer les deux semaines sans rien changer (essayé sur un fichier qui mêle les deux formes).
 
 ```bash
-# M2 et M3 sur un export du journal de web (un fichier texte). jq est le seul outil demandé.
-grep -o 'porte.reponse {.*}' journal-web.txt | sed 's/^porte.reponse //' | jq -s '
-  map(select(.statut != 401)) as $l
+# M2 et M3 sur un export de journal (un fichier texte), celui de web ou celui du service porte : les deux formes de la
+# ligne porte.reponse sont lues. jq est le seul outil demandé.
+jq -nR '
+  [ inputs
+    | (fromjson? | objects | .fields | select(.event? == "porte.reponse"))
+      // (capture("porte\\.reponse (?<j>\\{.*\\})")? | .j | fromjson)
+    | {outil, statut, ms} ]
+  | map(select(.statut != 401)) as $l
+  | ($l | length) as $n
+  | ($l | map(select(.statut >= 500 or .ms > 3000)) | length) as $mauvaises
   | ($l | map(select(.statut == 202)) | map(.ms) | sort) as $ok
+  | (if ($ok | length) > 0 then $ok[(($ok | length) * 0.95 | floor)] else null end) as $p95
   | {
-      livraisons: ($l | length),
-      part_5xx: (($l | map(select(.statut >= 500)) | length) / ([($l | length), 1] | max)),
-      part_hors_delai: (($l | map(select(.ms > 3000)) | length) / ([($l | length), 1] | max)),
-      p95_ms: (if ($ok | length) > 0 then $ok[(($ok | length) * 0.95 | floor)] else null end)
-    }'
-# Déclenche : part_5xx + part_hors_delai > 0.001 (M2), ou p95_ms > 1000 (M3).
+      livraisons: $n,
+      en_5xx_ou_hors_delai: $mauvaises,
+      p95_ms: $p95,
+      M2: (if $n >= 1000 then $mauvaises / $n > 0.001 else $mauvaises > 3 end),
+      M3: (($ok | length) >= 1000 and $p95 > 1000)
+    }' journal.txt
 ```
 
-Après la bascule, le service Rust écrit la même ligne, en JSON (section 9) : `{"fields":{"event":"porte.reponse","outil":"outlook","statut":202,"ms":12},…}`. Le même calcul s'y fait en remplaçant les deux premières étapes par `jq -c 'select(.fields.event == "porte.reponse") | .fields'`. On compare les deux semaines : si le service Rust ne fait pas mieux sur la mesure qui l'a déclenché, on revient en arrière (section 13.5).
+Ce que M2 ne voit pas : une réponse que le proxy de Railway rend lui-même (un 502 pendant une mise en ligne, quand aucun processus ne répond) n'écrit aucune ligne `porte.reponse`. Pour la fenêtre d'une mise en ligne, c'est la sonde (13.2) qui compte le trou, ou le journal du proxy de Railway s'il s'exporte (à vérifier). Et si l'export du journal n'existe pas sur l'offre, ou garde moins de 7 jours, M2 et M3 ne se mesurent pas : M1 et la sonde restent.
 
-Une dernière mesure, utile avant de décider : le trou d'une mise en ligne de `web`. La sonde de la section 13.3, lancée pendant une mise en ligne ordinaire, dit combien de secondes la porte en Hono répond autre chose que son refus uniforme. Si c'est zéro, M1 a peu de chances d'arriver.
+Après la bascule, le même programme lit le journal du service Rust. On compare les deux semaines : si le service Rust ne fait pas mieux sur la mesure qui l'a déclenché, on revient en arrière (section 13.5).
+
+Une dernière mesure, utile avant de décider : le trou d'une mise en ligne de `web`. La sonde de la section 13.2, lancée pendant une mise en ligne ordinaire, dit combien de secondes la porte en Hono répond autre chose que son refus uniforme. Si c'est zéro, M1 a peu de chances d'arriver.
 
 ## 5. La caisse : `Cargo.toml`, `rust-toolchain.toml`, `Cargo.lock`
 
@@ -202,7 +227,8 @@ Versions exactes (`=`), comme `package.json` (`"hono": "4.13.18"`, sans `^`). `C
 | `axum` | 0.8.9 | 0.8.9, fonctionnalités `http1`, `tokio` | Le serveur. Pas de `json` ni de `macros` : les réponses sont des textes fixes |
 | `tokio` | 1.54.1 | 1.54.1 | `macros`, `net`, `rt-multi-thread`, `signal`, `sync`, `time` ; `test-util` en test seulement |
 | `tower` | 0.5.3 | 0.5.3, **en test seulement** (`ServiceExt::oneshot`) | Le service n'empile aucune couche |
-| `tower-http` | 0.7.1 | **non utilisée** | La limite du corps se fait par `axum::body::to_bytes`, le délai par `tokio::time::timeout` : la réponse et l'événement de journal restent ceux de la porte en Hono (413 JSON, `porte.trop_gros`) |
+| `http-body` | absent | **1.1.0, en test seulement** | Un corps qui échoue en cours de lecture (test `un_corps_interrompu_recoit_400_et_non_413`). Déjà dans l'arbre par `axum` : aucune caisse de plus. Écart E15-1 |
+| `tower-http` | 0.7.1 | **non utilisée** | La limite du corps se fait en lisant le corps (`read_body`, sur le trait `HttpBody` que réexporte `axum`), les délais par `tokio::time::timeout` : la réponse reste celle de la porte en Hono (413 JSON), et un client qui coupe se distingue d'un corps trop gros |
 | `sqlx` | 0.9.1 | 0.9.1, `runtime-tokio`, `tls-rustls-ring-webpki`, `postgres`, `uuid`, `json`, **sans `macros`** | Aucune base à la compilation (pas de `cargo sqlx prepare`, pas de dossier `.sqlx/`). Deux requêtes, écrites en texte |
 | `hmac`, `sha2`, `subtle` | 0.13.0, 0.11.1, 2.6.1 | idem | Signatures, comparaisons en temps constant |
 | `sha1` | absent | **0.11.0** | Le mode `hmac-sha1` de `WebhookVerification` (architecture 8.3) en a besoin. Écart E15-1 |
@@ -210,10 +236,10 @@ Versions exactes (`=`), comme `package.json` (`"hono": "4.13.18"`, sans `^`). `C
 | `base64`, `hex`, `uuid` | 0.23.1, 0.4.3, 1.29.3 | idem | |
 | `form_urlencoded` | absent | **1.2.2** | Décoder `validationToken` et le champ `payload` d'un formulaire comme `URLSearchParams` (« + » vaut une espace). Écart E15-1 |
 | `serde`, `serde_json` | 1.0.229, 1.0.154 | idem | |
-| `tracing`, `tracing-subscriber` | 0.1.44 ; `tracing-subscriber` 0.3.23 dans la note 02 | idem | Journal en lignes JSON sur la sortie standard |
+| `tracing`, `tracing-subscriber` | 0.1.44 ; `tracing-subscriber` 0.3.23 dans la note 02 | idem | Journal en lignes JSON sur la sortie standard, les lignes de la porte seulement (filtre `Targets`) |
 | `sentry` | 0.49.6 | 0.49.6, sans les fonctionnalités par défaut : `backtrace`, `contexts`, `panic`, `ureq`, `rustls` | Envoi par `ureq` et `rustls` : ni OpenSSL, ni second client HTTP |
 
-Ce que la résolution donne (`cargo tree`, 20/11/2026) : 188 caisses compilées pour le binaire, 195 avec celles de construction ; ni `openssl`, ni `aws-lc-sys` (le Dockerfile n'a donc besoin ni de `cmake` ni des en-têtes d'OpenSSL). `Cargo.lock` fait 3 017 lignes : il est dans `dossier/code/porte/Cargo.lock`, et n'est pas recopié ici.
+Ce que la résolution donne (`cargo tree`, 20/11/2026, recompté après la relecture) : 188 caisses compilées pour le binaire, 195 avec celles de construction ; ni `openssl`, ni `aws-lc-sys` (le Dockerfile n'a donc besoin ni de `cmake` ni des en-têtes d'OpenSSL). `Cargo.lock` fait 3 018 lignes : il est dans `dossier/code/porte/Cargo.lock`, et n'est pas recopié ici.
 
 Rust : `rust-version = "1.94"` est le minimum de `sqlx` 0.9.1 (note 02). Seul Rust 1.97.0 a été essayé ; c'est celui que fixent `rust-toolchain.toml`, l'image et la CI.
 
@@ -221,7 +247,8 @@ Rust : `rust-version = "1.94"` est le minimum de `sqlx` 0.9.1 (note 02). Seul Ru
 
 ```toml
 # La porte des webhooks de Leon, en Rust (dossier agents, chapitre 15). Seconde mise en œuvre du contrat que tient
-# d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes, mêmes réponses.
+# d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes, mêmes réponses
+# sur chaque cas de vecteurs.json (les écarts hors de ces cas : chapitre 15, section 9.4).
 # Elle lit fournisseurs.json (compilé dans le binaire) et passe vecteurs.json (cargo test). Les deux fichiers sont
 # générés depuis le TypeScript par `pnpm porte:generer` : on ne les modifie jamais à la main.
 #
@@ -260,6 +287,8 @@ tracing-subscriber = { version = "=0.3.23", default-features = false, features =
 uuid = { version = "=1.29.3", default-features = false, features = ["std"] }
 
 [dev-dependencies]
+# Un corps qui échoue en cours de lecture (client qui coupe) : déjà dans l'arbre par axum, nommé ici pour les tests.
+http-body = "=1.1.0"
 # start_paused : le refus uniforme attend 200 ms sans ralentir les tests.
 tokio = { version = "=1.54.1", features = ["macros", "rt", "test-util"] }
 tower = { version = "=0.5.3", default-features = false, features = ["util"] }
@@ -289,54 +318,67 @@ Le `.gitignore` de la racine (existe) ne couvre pas `target/` ; plutôt que de l
 
 ### 5.4 Ce que donnent les commandes
 
-Lancées dans le dossier de travail, avec le code de ce chapitre, après un `cargo clean` (machine de la session : 4 processeurs, 15 Go ; les caisses étaient déjà téléchargées). Sorties recopiées, lignes `Compiling` et `Checking` retirées :
+Lancées dans le dossier de travail, avec le code de ce chapitre tel qu'il est après la relecture (section 19), après un `cargo clean` (machine de la session : 4 processeurs, 15 Go ; les caisses étaient déjà téléchargées). Sorties recopiées, lignes `Compiling` et `Checking` retirées :
 
 ```text
 $ cargo check --locked --all-targets
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 18.39s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 20.32s
 $ cargo fmt --check
 (rien : le code est déjà formaté)
 $ cargo clippy --locked --all-targets -- -D warnings
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.20s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.90s
 $ cargo test --locked
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 23.57s
-     Running unittests src/main.rs (target/debug/deps/porte-528d9b173955f7d7)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 25.00s
+     Running unittests src/main.rs (target/debug/deps/porte-ea8cf251fcf9d1a9)
 
-running 23 tests
+running 36 tests
 test depot::tests::une_erreur_de_base_ne_garde_aucun_message ... ok
-test depot::tests::la_fenetre_ne_se_prolonge_pas ... ok
-test secret::tests::la_cle_fait_32_octets ... ok
 test depot::tests::memo_expire_et_evince_la_plus_ancienne ... ok
+test depot::tests::la_fenetre_ne_se_prolonge_pas ... ok
+test secret::tests::la_cle_se_lit_dans_les_deux_alphabets_comme_node ... ok
 test secret::tests::un_format_inconnu_est_illisible ... ok
-test tests::differentiel_avec_verify_ts ... ignored, à la main : PORTE_DIFFERENTIEL=<cas.json> cargo test -- --ignored
 test tests::cle_d_adresse_ip ... ok
+test secret::tests::la_cle_fait_32_octets ... ok
+test tests::differentiel_avec_verify_ts ... ignored, à la main : PORTE_DIFFERENTIEL=<cas.json> cargo test -- --ignored
 test tests::fournisseurs_est_dans_la_version_connue ... ok
-test tests::le_bilan_de_sante_ne_lit_pas_la_base ... ok
-test tests::les_secrets_d_application_sont_les_seuls_lus ... ok
+test tests::de_l_utf8_invalide_recoit_400 ... ok
+test tests::le_bilan_de_sante_attend_la_premiere_lecture_de_la_base ... ok
+test tests::l_echo_fait_1_024_caracteres_au_plus ... ok
 test tests::le_cache_negatif_evite_une_seconde_lecture ... ok
+test tests::les_secrets_d_application_sont_les_seuls_lus ... ok
 test tests::le_refus_attend_au_moins_200_ms ... ok
+test tests::sentry_ne_recoit_aucun_texte_recu ... ok
+test tests::sentry_recoit_un_envoi_par_minute_et_par_evenement ... ok
+test tests::le_cache_positif_expire_apres_60_s ... ok
 test tests::sans_leon_porte_url_une_signature_sur_l_adresse_recoit_503 ... ok
-test tests::une_panne_de_base_n_est_pas_un_refus ... ok
+test tests::un_compte_illisible_est_accepte_sans_depot ... ok
 test tests::un_corps_trop_gros_recoit_413 ... ok
+test tests::un_corps_interrompu_recoit_400_et_non_413 ... ok
+test tests::un_corps_trop_gros_recoit_413_avant_l_adresse ... ok
+test tests::un_secret_illisible_est_un_refus_et_non_une_panne ... ok
+test tests::une_panne_de_base_n_est_pas_un_refus ... ok
 test tests::vecteurs_de_dechiffrement ... ok
+test tests::une_base_lente_recoit_503_en_2_s ... ok
+test tests::une_requete_ne_dure_jamais_plus_de_3_s ... ok
 test verifier::tests::base64_tolere_les_bits_de_fin_comme_node ... ok
+test tests::vecteurs_de_la_porte ... ok
 test tests::vecteurs_de_verification ... ok
 test verifier::tests::formulaire_payload ... ok
 test verifier::tests::pointeur_avec_etoile_et_entiers_surs ... ok
+test verifier::tests::chaque_mode_refuse_un_champ_inconnu ... ok
 test verifier::tests::une_moitie_de_paire_seule_devient_u_fffd_comme_dans_node ... ok
-test tests::vecteurs_de_la_porte ... ok
 test tests::au_dela_de_la_limite_une_adresse_hors_cache_recoit_503 ... ok
 
-test result: ok. 22 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 35 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.03s
 ```
 
 Le binaire de production :
 
 ```text
 $ cargo build --release --locked
-    Finished `release` profile [optimized] target(s) in 1m 04s
+    Finished `release` profile [optimized] target(s) in 1m 06s
 $ ls -l target/release/porte && ldd target/release/porte
-6339208 octets
+6376608 octets
 	linux-vdso.so.1
 	libgcc_s.so.1 => /lib/x86_64-linux-gnu/libgcc_s.so.1
 	libm.so.6 => /lib/x86_64-linux-gnu/libm.so.6
@@ -344,7 +386,7 @@ $ ls -l target/release/porte && ldd target/release/porte
 	/lib64/ld-linux-x86-64.so.2
 ```
 
-6,3 Mo, lié seulement à glibc, libm et libgcc : l'image distroless `cc` lui suffit (section 10). Une minute de compilation en mode `release` sur cette machine, dépendances comprises ; la CI de la note 02 (« 2 à 4 minutes avec cache, 6 à 10 à froid ») reste une estimation tant que le job n'a pas tourné.
+6,4 Mo, lié seulement à glibc, libm et libgcc : l'image distroless `cc` lui suffit (section 10). Une minute de compilation en mode `release` sur cette machine, dépendances comprises ; la CI de la note 02 (« 2 à 4 minutes avec cache, 6 à 10 à froid ») reste une estimation tant que le job n'a pas tourné.
 
 ## 6. `src/verifier.rs` : l'interprète de `WebhookVerification`
 
@@ -368,7 +410,7 @@ Les noms suivent ceux de `verify.ts`, en forme Rust :
 - **base64 comme Node.** `Buffer.from(…, 'base64')` ignore les bits de fin non nuls ; le décodeur standard de la caisse `base64` les refuse. Sans la configuration `BASE64_LENIENT`, une signature HubSpot écrite avec des bits de fin non nuls passerait en TypeScript et serait refusée ici. Un test le fixe ; l'essai différentiel aussi (section 15.3).
 - **Les horodatages en flottant**, comme `Number()` : 16 chiffres en secondes, multipliés par 1 000, dépassent un `i64`.
 - **JSON comme `JSON.parse`, autant que possible.** `serde_json` refuse une moitié de paire UTF-16 seule (« \ud800 »), que `JSON.parse` garde. La porte n'en fait que des octets UTF-8, où Node écrit U+FFFD à sa place ; `replace_lone_surrogates` fait de même avant de relire, ce qui donne les mêmes octets (empreinte d'un jeton, compte passé à Postgres, écho). Deux écarts restent, refusés ici et acceptés en TypeScript : un nombre hors des `f64` (« 1e400 ») et plus de 128 niveaux d'imbrication. Aucun éditeur du premier lot n'envoie l'un ou l'autre dans un corps signé (déduit) ; ils sont écrits en écart E15-6.
-- **`fournisseurs.json` est lu strictement.** Un champ inconnu (un mode, un morceau signé, un champ de spec) fait échouer la lecture : le binaire refuse de démarrer, et `cargo test` échoue. C'est voulu : le chapitre 03 (7, règles communes) change `version` quand le Rust doit changer, mais un oubli de version doit se voir aussi.
+- **`fournisseurs.json` est lu strictement.** Un champ inconnu (un mode, un morceau signé, un champ de spec) fait échouer la lecture : le binaire refuse de démarrer, et `cargo test` échoue. C'est voulu : le chapitre 03 (7, règles communes) change `version` quand le Rust doit changer, mais un oubli de version doit se voir aussi. `deny_unknown_fields` est posé sur chaque structure **et sur les deux énumérations** `WebhookVerification` (modes `standard-webhooks` et `jeton`, dont les champs sont écrits dans l'énumération) et `SignedPart` (le morceau littéral) ; la première version l'avait oublié sur ces deux-là. Les tests `chaque_mode_refuse_un_champ_inconnu` et `fournisseurs_est_dans_la_version_connue` le vérifient mode par mode.
 
 ```rust
 // L'interprète de WebhookVerification (dossier agents, 8.3), seconde mise en œuvre. La première est
@@ -390,7 +432,8 @@ use sha2::{Digest, Sha256};
 use subtle::ConstantTimeEq;
 
 // Les types de src/server/connectors/types.ts (architecture 8.3), tels que fournisseurs.json les écrit. Un champ
-// inconnu fait échouer la lecture : un changement du contrat sans changement de `version` se voit au démarrage.
+// inconnu fait échouer la lecture, dans chaque mode et dans chaque morceau signé (deny_unknown_fields sur chaque type,
+// enums comprises) : un changement du contrat sans changement de `version` se voit au démarrage.
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 #[serde(tag = "from", deny_unknown_fields)]
@@ -434,7 +477,7 @@ pub enum NamedPart {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
-#[serde(untagged)]
+#[serde(untagged, deny_unknown_fields)]
 pub enum SignedPart {
     Named(NamedPart),
     Literal { literal: String },
@@ -469,7 +512,7 @@ pub struct HmacVerification {
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize)]
-#[serde(tag = "mode")]
+#[serde(tag = "mode", deny_unknown_fields)]
 pub enum WebhookVerification {
     #[serde(rename = "hmac-sha256")]
     HmacSha256(HmacVerification),
@@ -1027,6 +1070,38 @@ mod tests {
     }
 
     #[test]
+    fn chaque_mode_refuse_un_champ_inconnu() {
+        let secret = r#""secret":{"from":"env","name":"S"}"#;
+        let hmac = format!(
+            r#""header":"x-sig","encoding":"hex","signed":["body",{{"literal":"v0"}}],"separator":":",{secret}"#
+        );
+        for good in [
+            format!(r#"{{"mode":"hmac-sha256",{hmac}}}"#),
+            format!(r#"{{"mode":"hmac-sha1",{hmac}}}"#),
+            format!(r#"{{"mode":"standard-webhooks",{secret}}}"#),
+            format!(r#"{{"mode":"jeton","bodyPointer":"/a",{secret}}}"#),
+        ] {
+            assert!(
+                serde_json::from_str::<WebhookVerification>(&good).is_ok(),
+                "{good}"
+            );
+            // Un champ de plus au niveau du mode : refusé, quel que soit le mode.
+            let extra = good.replacen('{', r#"{"inconnu":1,"#, 1);
+            assert!(
+                serde_json::from_str::<WebhookVerification>(&extra).is_err(),
+                "{extra}"
+            );
+        }
+        // Un champ de plus dans un morceau signé littéral, ou dans le secret : refusé aussi.
+        let literal = format!(r#"{{"mode":"hmac-sha256",{hmac}}}"#)
+            .replace(r#"{"literal":"v0"}"#, r#"{"literal":"v0","inconnu":1}"#);
+        assert!(serde_json::from_str::<WebhookVerification>(&literal).is_err());
+        let in_secret =
+            r#"{"mode":"standard-webhooks","secret":{"from":"env","name":"S","inconnu":1}}"#;
+        assert!(serde_json::from_str::<WebhookVerification>(in_secret).is_err());
+    }
+
+    #[test]
     fn formulaire_payload() {
         let text = "?payload=%7B%22type%22%3A%22url_verification%22%7D&autre=1";
         assert_eq!(
@@ -1044,7 +1119,7 @@ Fichier : `services/porte/src/secret.rs` (à créer ; nommé par l'architecture,
 
 | `crypto.ts` (chapitres 03 et existant) | `secret.rs` |
 |---|---|
-| `porteKey()` | `parse_porte_key(value)` : 32 octets en base64, sinon `None` ; `main.rs` refuse de démarrer sur une valeur mal formée |
+| `porteKey()` | `parse_porte_key(value)` : 32 octets en base64, l'un ou l'autre alphabet comme `Buffer.from(…, 'base64')`, sinon `None` ; `main.rs` refuse de démarrer sur une valeur mal formée |
 | `subscriptionAad({ tenantId, abonnementId })` | `subscription_aad(tenant_id, abonnement_id)` |
 | `openSubscriptionSecret(stored, ids, key)` | `open_subscription_secret(stored, aad, key)` |
 | `Error('Secret illisible')` (`connectors/crypto.ts:45`, `:61`) | `UnreadableSecret`, même message, sans le secret ni le chiffré |
@@ -1052,7 +1127,7 @@ Fichier : `services/porte/src/secret.rs` (à créer ; nommé par l'architecture,
 À savoir :
 
 - La porte ne chiffre jamais : seul le worker écrit un secret, en abonnant (`sealSubscriptionSecret`, chapitre 03). Le service Rust n'a donc que la moitié lecture.
-- Les décodeurs tolèrent le remplissage et les bits de fin, comme `Buffer.from(…, 'base64url')` de Node. Les secrets écrits par `encryptSecret` n'en ont jamais : c'est une marge, pas un besoin.
+- **Un seul décodeur, comme Node.** `Buffer.from(…, 'base64')` et `Buffer.from(…, 'base64url')` acceptent tous deux les deux alphabets (« + / » et « - _ »), avec ou sans remplissage, et ignorent les bits de fin (essayé sous Node 22.23 : une clé de 43 caractères en base64url y fait 32 octets). Une `LEON_PORTE_KEY` écrite en base64url passe donc le contrôle de `env.ts` (chapitre 03, 6.3) et chiffre les secrets côté `web` et `worker` : elle doit passer ici aussi, sinon le service refuserait de démarrer le jour de la bascule. `decode_like_node` ramène « - » et « _ » à « + » et « / », puis décode en base64 standard, remplissage indifférent, bits de fin tolérés ; la clé et les trois parties de `v1:` passent par lui. Node va plus loin, il saute tout caractère hors alphabet : refusé ici, et ni `encryptSecret` ni `openssl rand -base64 32` n'en écrivent.
 - Une seule clé, pas de clé « précédente » (chapitre 03, section 5 et relecture « Fond 9 ») : une rotation se fait par la marche à suivre du chapitre 03, et le service Rust reçoit la nouvelle valeur en même temps que `web` et `worker` (section 12).
 
 ```rust
@@ -1073,20 +1148,29 @@ const KEY_BYTES: usize = 32;
 const IV_BYTES: usize = 12;
 const TAG_BYTES: usize = 16;
 
-// Les deux décodeurs tolèrent le remplissage et les bits de fin, comme Buffer.from(…, 'base64url') et
-// Buffer.from(…, 'base64') de Node. Les secrets écrits par encryptSecret n'en ont jamais : c'est une marge.
-const BASE64URL: GeneralPurpose = GeneralPurpose::new(
-    &alphabet::URL_SAFE,
-    GeneralPurposeConfig::new()
-        .with_decode_allow_trailing_bits(true)
-        .with_decode_padding_mode(DecodePaddingMode::Indifferent),
-);
+// Le décodeur de Node, autant qu'il le faut ici. Buffer.from(…, 'base64') et Buffer.from(…, 'base64url') acceptent
+// tous deux les deux alphabets (« + / » et « - _ »), avec ou sans remplissage, et ignorent les bits de fin. Une clé
+// écrite en base64url passe donc env.ts (chapitre 03, 6.3) : elle doit passer ici aussi, sinon le service refuse de
+// démarrer le jour de la bascule. Node va plus loin (il saute tout caractère hors alphabet) : encryptSecret et
+// `openssl rand -base64 32` n'en écrivent jamais, ce décodeur les refuse.
 const BASE64: GeneralPurpose = GeneralPurpose::new(
     &alphabet::STANDARD,
     GeneralPurposeConfig::new()
         .with_decode_allow_trailing_bits(true)
         .with_decode_padding_mode(DecodePaddingMode::Indifferent),
 );
+
+fn decode_like_node(text: &str) -> Option<Vec<u8>> {
+    let standard: String = text
+        .chars()
+        .map(|c| match c {
+            '-' => '+',
+            '_' => '/',
+            other => other,
+        })
+        .collect();
+    BASE64.decode(standard).ok()
+}
 
 // Un message fixe : jamais le secret, ni le chiffré, ni la clé.
 #[derive(Debug, PartialEq, Eq)]
@@ -1100,10 +1184,11 @@ impl std::fmt::Display for UnreadableSecret {
 
 impl std::error::Error for UnreadableSecret {}
 
-// LEON_PORTE_KEY : 32 octets en base64 (env.ts le vérifie côté TypeScript). None : absente, vide ou mal formée ; le
-// démarrage refuse une valeur mal formée (main.rs), une valeur absente rend 503 aux livraisons d'abonnement.
+// LEON_PORTE_KEY : 32 octets en base64, l'un ou l'autre alphabet (env.ts le vérifie côté TypeScript). None : absente,
+// vide ou mal formée ; le démarrage refuse une valeur mal formée (main.rs), une valeur absente rend 503 aux livraisons
+// d'abonnement.
 pub fn parse_porte_key(value: &str) -> Option<[u8; KEY_BYTES]> {
-    BASE64.decode(value.trim()).ok()?.try_into().ok()
+    decode_like_node(value.trim())?.try_into().ok()
 }
 
 // subscriptionAad de src/server/webhooks/crypto.ts.
@@ -1124,7 +1209,7 @@ pub fn open_subscription_secret(
     if *version != VERSION {
         return Err(UnreadableSecret);
     }
-    let decode = |part: &str| BASE64URL.decode(part).map_err(|_| UnreadableSecret);
+    let decode = |part: &str| decode_like_node(part).ok_or(UnreadableSecret);
     let (iv, tag, encrypted) = (decode(iv)?, decode(tag)?, decode(encrypted)?);
     if iv.len() != IV_BYTES || tag.len() != TAG_BYTES {
         return Err(UnreadableSecret);
@@ -1156,6 +1241,23 @@ mod tests {
         assert!(parse_porte_key("CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=").is_some());
         assert!(parse_porte_key("CQkJ").is_none());
         assert!(parse_porte_key("").is_none());
+    }
+
+    #[test]
+    fn la_cle_se_lit_dans_les_deux_alphabets_comme_node() {
+        // Buffer.from(…, 'base64') de Node rend 32 octets pour ces trois écritures : env.ts les accepte.
+        let standard = parse_porte_key("+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/s=");
+        assert!(standard.is_some());
+        assert_eq!(
+            parse_porte_key("-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_s"),
+            standard
+        );
+        assert_eq!(
+            parse_porte_key(" -_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_s=\n"),
+            standard
+        );
+        // Hors des deux alphabets : refusé ici (Node sauterait le caractère).
+        assert!(parse_porte_key("+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/s!").is_none());
     }
 
     #[test]
@@ -1196,7 +1298,7 @@ Le service les envoie en requêtes préparées par `sqlx`, sans macro : `$2` est
 | `Deposit` | `struct Deposit` (mêmes sept champs, dans l'ordre des paramètres SQL) |
 | `Memo`, `Counters`, `GateState` | `Memo`, `Counters`, `GateState` : mêmes durées, même borne (`cacheMaxEntries`), même éviction de la plus ancienne, même fenêtre fixe |
 
-**Le pool** : 5 connexions (chapitre 13, 8.2), ouvertes à la demande (`connect_lazy_with`) : le service démarre et répond à `/sante` même si la base tarde. Une livraison attend une connexion 5 secondes au plus (`acquire_timeout`, comme `connectionTimeoutMillis: 5_000` de `portePool`), puis reçoit 503. Une connexion inactive se ferme après 10 minutes, toute connexion après 30 : assez long pour ne pas payer une poignée de main TLS à chaque webhook (chapitre 13, écart E13-6), assez court pour suivre une bascule de RDS. `sqlx` vérifie une connexion avant de la prêter (`test_before_acquire`, son défaut) : un aller-retour de plus par livraison, à mesurer avec `porte.reponse`, à couper si le p95 le demande.
+**Le pool** : 5 connexions (chapitre 13, 8.2), ouvertes à la demande (`connect_lazy_with`) : le service démarre même si la base tarde, et `/sante` attend la première lecture réussie (section 9.4). **Chaque appel de base dure 2 secondes au plus** (`DB_CALL_TIMEOUT`), attente d'une connexion comprise : au-delà, la livraison reçoit 503 (`porte.base`, résumé `Timeout`), sous les 3 secondes du plus court délai d'éditeur (section 4). `statement_timeout=2000`, passé à l'ouverture de chaque connexion, fait aussi arrêter la requête par Postgres, pour qu'une requête abandonnée ici ne tienne pas une connexion là-bas (essayé : `code=57014` au bout de 2 s, section 15.4). Une écriture qui aboutirait malgré tout ne se double pas : l'éditeur réessaie, `porte_deposer` rend 0, la porte répond 202. La route Hono attend jusqu'à 5 s une connexion (`connectionTimeoutMillis: 5_000` de `portePool`), sans délai de requête : proposition au chapitre 03, écart E15-9. Une connexion inactive se ferme après 10 minutes, toute connexion après 30 : assez long pour ne pas payer une poignée de main TLS à chaque webhook (chapitre 13, écart E13-6), assez court pour suivre une bascule de RDS. `sqlx` vérifie une connexion avant de la prêter (`test_before_acquire`, son défaut) : un aller-retour de plus par livraison, à mesurer avec `porte.reponse`, à couper si le p95 le demande.
 
 **Les erreurs de base** ne gardent que des champs de diagnostic (`code`, `constraint`, `table`), comme `safeErrorSummary` (`src/server/log.ts:23`, existe) : le message d'une erreur Postgres peut citer un paramètre, donc un morceau de corps.
 
@@ -1286,15 +1388,25 @@ pub struct PgPorteStore {
     pool: PgPool,
 }
 
+// Le délai d'un appel de base, attente d'une connexion comprise. Au-delà, la livraison reçoit 503 (porte.base) : sous
+// les 3 secondes du plus court délai d'éditeur (chapitre 15, section 4), pas à l'heure où l'éditeur a déjà renoncé.
+// main.rs borne chaque appel par tokio::time::timeout ; statement_timeout fait aussi arrêter la requête par Postgres,
+// pour qu'une requête abandonnée ici ne continue pas de tenir une connexion là-bas.
+pub const DB_CALL_TIMEOUT: Duration = Duration::from_secs(2);
+const STATEMENT_TIMEOUT_MS: u64 = 2_000;
+
 // Le pool du service : 5 connexions (chapitre 13, 8.2), sous le rôle leon_porte. Ouvert à la demande : le service
-// démarre et répond à /sante même si la base est lente ; une livraison attend une connexion 5 secondes au plus, puis
-// reçoit 503. L'adresse porte sslmode=verify-full et sslrootcert, comme DATABASE_URL_PORTE de web.
+// démarre même si la base tarde ; /sante attend la première lecture réussie (main.rs, wait_for_base). Une livraison
+// attend une connexion DB_CALL_TIMEOUT au plus, puis reçoit 503. L'adresse porte sslmode=verify-full et sslrootcert,
+// comme DATABASE_URL_PORTE de web.
 pub fn connect(database_url: &str) -> Result<PgPorteStore, sqlx::Error> {
-    let options = PgConnectOptions::from_str(database_url)?.application_name("leon-porte");
+    let options = PgConnectOptions::from_str(database_url)?
+        .application_name("leon-porte")
+        .options([("statement_timeout", STATEMENT_TIMEOUT_MS)]);
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .min_connections(0)
-        .acquire_timeout(Duration::from_secs(5))
+        .acquire_timeout(DB_CALL_TIMEOUT)
         .idle_timeout(Some(Duration::from_secs(600)))
         .max_lifetime(Some(Duration::from_secs(1800)))
         .connect_lazy_with(options);
@@ -1496,7 +1608,7 @@ mod tests {
 
 ## 9. `src/main.rs` : les routes et le déroulé d'une requête
 
-Fichier : `services/porte/src/main.rs` (à créer ; nommé par l'architecture, section 6). Il lit `fournisseurs.json` et les variables, monte quatre routes, déroule chaque requête dans l'ordre du chapitre 03 (6.1), journalise, et s'arrête proprement.
+Fichier : `services/porte/src/main.rs` (à créer ; nommé par l'architecture, section 6). Il lit `fournisseurs.json` et les variables, monte quatre routes, déroule chaque requête dans l'ordre du chapitre 03 (6.1), borne chaque requête et chaque appel de base dans le temps, attend la base avant de se dire en bonne santé, journalise, filtre ce qui part vers Sentry, et s'arrête proprement.
 
 ### 9.1 Les variables que lit le binaire
 
@@ -1504,8 +1616,8 @@ Le chapitre 13 (section 9) laisse leurs noms à ce chapitre. Le binaire ne lit *
 
 | Variable | Obligatoire | Absente | Mal formée |
 |---|---|---|---|
-| `DATABASE_URL_PORTE` | oui | le service ne démarre pas (`porte.demarrage`) | idem |
-| `LEON_PORTE_KEY` | pour les outils à secret d'abonnement | 503 à leurs livraisons, `porte.cle_absente` (comme la route Hono) | le service ne démarre pas |
+| `DATABASE_URL_PORTE` | oui | le service ne démarre pas (`porte.demarrage`) | illisible : idem. Lisible, mais la base refuse ou ne répond pas (mot de passe, hôte, certificat, TLS, migration 0083) : le service démarre, `/sante` répond 503 jusqu'à la première lecture réussie, le déploiement échoue (9.4) |
+| `LEON_PORTE_KEY` | pour les outils à secret d'abonnement | 503 à leurs livraisons, `porte.cle_absente` (comme la route Hono) | le service ne démarre pas. L'un ou l'autre alphabet base64 est admis, comme dans `env.ts` (section 7) |
 | `LEON_PORTE_URL` | pour les signatures qui couvrent l'adresse (HubSpot v3) | 503 à ces livraisons (étape 5) | le service ne démarre pas (ni http ni https) |
 | `LEON_IP_HEADER` | en production | toutes les lectures vides partagent un plafond de 3 000 (chapitre 03, 6.1) | sans objet |
 | les secrets que `fournisseurs.json` nomme (`from: 'env'`) : aujourd'hui `LEON_OAUTH_HUBSPOT_SECRET` ; demain les `LEON_PORTE_SECRET_<OUTIL>` | selon les outils | 503 aux livraisons de l'outil, `porte.secret_appli_absent` | sans objet |
@@ -1521,7 +1633,7 @@ Une variable vide vaut absente, comme `emptyIsAbsent` (`src/server/env.ts`, exis
 | `POST /h/{outil}` | webhook d'application | `/api/v1/porte/h/:outil` |
 | `POST /h/{outil}/{abonnement}` | livraison d'abonnement | `/api/v1/porte/h/:outil/:abonnement` |
 | `POST /h/{outil}/{abonnement}/cycle` | notification de cycle de vie | `/api/v1/porte/h/:outil/:abonnement/cycle` |
-| `GET /sante` | bilan de santé de Railway (chapitre 13, 4.1) | `/api/health` |
+| `GET /sante` | bilan de santé de Railway (chapitre 13, 4.1) : 503 `{"ok":false}` jusqu'à la première lecture réussie de la base, puis 200 `{"ok":true}` pour toujours | `/api/health` |
 
 Les trois premières sont celles de `fournisseurs.json` (`paths`), vérifiées au démarrage. L'architecture (section 6) n'écrit que les deux premières et `/sante` : la troisième vient de 8.3 (cycle de vie de Graph), comme au chapitre 03 (écart E-i). Écart E15-2.
 
@@ -1529,46 +1641,49 @@ Les trois premières sont celles de `fournisseurs.json` (`paths`), vérifiées a
 
 | # | Étape (chapitre 03, 6.1) | Où dans `main.rs` | Réponse |
 |---|---|---|---|
-| 1 | Corps de 262 144 octets au plus : d'abord `content-length`, puis la lecture bornée (`to_bytes`) | `receive`, `too_large` | 413, `porte.trop_gros` |
+| 1 | Corps de 262 144 octets au plus, avant tout : d'abord `content-length`, puis la lecture comptée, avant l'étape 2, comme le `bodyLimit` de Hono pour un corps sans `content-length` | `receive`, `read_body`, `too_large` | 413, `porte.trop_gros` (au journal seulement) ; lecture interrompue : 400, `porte.corps_interrompu` |
 | 2 | Adresse : outil de `fournisseurs.json`, forme conforme à `scope`, UUID minuscule, `/cycle` si `lifecycle` | `spec_for` | refus uniforme |
 | 3 | Écho `validationToken`, sans lire la base | `query_param`, `echo` | 200 `text/plain`, ou 400 |
 | 4 | UTF-8 valide, sans octet nul | `receive` | 400 |
 | 5 | `LEON_PORTE_URL` si la signature couvre l'adresse | `signs_uri` | 503 |
-| 6 | Le secret : cache positif, cache négatif, limite par adresse IP, `porte_secret`, déchiffrement ; ou la variable nommée | `secret_for` | refus uniforme, ou 503 |
+| 6 | Le secret : cache positif, cache négatif, limite par adresse IP, `porte_secret` (2 s au plus), déchiffrement ; ou la variable nommée | `secret_for`, `bounded` | refus uniforme, ou 503 |
 | 7 | `verify_webhook` | `receive` | refus uniforme (et `porte.refus` au journal) |
 | 8 | `slack-challenge` | `receive` | 200 `text/plain` |
 | 9 | Le compte d'un webhook d'application | `account_of` | 202 sans dépôt, `porte.compte_illisible` ou `porte.comptes_multiples` |
 | 10 | Identifiant de livraison | `delivery_id` | |
 | 11 | En-têtes gardés | `kept_headers` | |
-| 12 | `porte_deposer` | `PorteStore::deposit` | 202, ou 503 (`porte.base`) |
+| 12 | `porte_deposer` (2 s au plus) | `PorteStore::deposit`, `bounded` | 202, ou 503 (`porte.base`) |
 
-Le refus uniforme : `401 {"error":"Invalid signature"}`, rendu au plus tôt 200 ms après l'arrivée (`refusalMinDelayMs`), par `tokio::time::sleep_until`.
+Le refus uniforme : `401 {"error":"Invalid signature"}`, rendu au plus tôt 200 ms après l'arrivée (`refusalMinDelayMs`), par `tokio::time::sleep_until`. Toute la requête dure 3 secondes au plus (`REQUEST_TIMEOUT`), puis `503 {"error":"Unavailable"}` et `porte.delai`. Chaque réponse, quelle qu'elle soit, écrit sa ligne `porte.reponse` (`handle`).
 
 ### 9.4 Ce qui diffère de la route Hono, et pourquoi
 
-Aucune réponse prévue par `vecteurs.json` ne diffère. Ce qui suit est hors du contrat, ou propre à un service séparé :
+Aucune réponse prévue par `vecteurs.json` ne diffère. Ce qui suit est hors du contrat, ou propre à un service séparé ; `comparer.sh` (13.1) en vérifie une partie sur les deux portes réelles, avant la bascule.
 
-- **Démarrage.** Sans `DATABASE_URL_PORTE`, la route Hono répond 503 ; le service Rust ne démarre pas. Un service dont c'est la seule raison d'être doit échouer à son bilan de santé : Railway garde alors l'ancienne version.
-- **Délai par requête** : 10 secondes (`REQUEST_TIMEOUT`), puis 503 et `porte.delai`. Un client lent ne tient pas une connexion de la base au-delà. La route Hono n'en a pas (Next et le proxy de Railway en ont un, non lu).
-- **Journal.** `porte.reponse` (une ligne par réponse, section 4), `porte.refus` (la raison d'un refus de signature, au journal seulement : jamais dans la réponse ni dans Sentry), `porte.demarree`, `porte.arret`, `porte.demarrage`. Les événements d'erreur gardent les noms de `hono-gate.ts` : `porte.trop_gros`, `porte.secret_absent`, `porte.cle_absente`, `porte.secret_illisible`, `porte.secret_appli_absent`, `porte.compte_illisible`, `porte.comptes_multiples`, `porte.base`.
-- **Sentry** reçoit un message par `log_error`, avec l'étiquette `event` (comme `logError`, `src/server/log.ts:37`) et l'étiquette `role = porte` (comme `role = web` ou `worker`, chapitre 13, section 13).
+- **Démarrage et bilan de santé.** Sans `DATABASE_URL_PORTE` (ou illisible), la route Hono répond 503 ; le service Rust ne démarre pas. Avec une adresse lisible mais une base qui refuse ou ne répond pas (mot de passe faux, hôte faux, certificat absent de l'image, TLS refusé, migration 0083 absente), il démarre, sert les livraisons (503, comme la route Hono), et `/sante` répond `503 {"ok":false}` tant qu'une première lecture n'a pas réussi : `wait_for_base` appelle `porte_secret` sur un outil qui n'existe pas, une fois par seconde, et journalise chaque échec (`porte.base`, `etape: demarrage`). Un déploiement mal réglé échoue donc au bilan de santé, et Railway garde l'ancienne version (comportement de Railway à vérifier, chapitre 13). Une fois la base lue, `/sante` répond 200 pour toujours, sans lire la base : une panne en régime ne fait pas redémarrer la porte en boucle. Essayé avec un mot de passe faux (section 15.4).
+- **Délais.** 3 secondes par requête (`REQUEST_TIMEOUT`, puis 503 et `porte.delai`) : le plus court délai d'éditeur relevé (section 4), et non 10 s, le délai de Graph, au bout duquel l'éditeur a déjà renoncé. 2 secondes par appel de base, attente d'une connexion comprise (`DB_CALL_TIMEOUT`, `statement_timeout`, section 8). Une base lente donne donc 503 en 2 s. La route Hono n'a ni l'un ni l'autre (5 s pour une connexion de `portePool`, aucun délai de requête) : proposition au chapitre 03, écart E15-9. Ni coupe-circuit ni borne des requêtes en vol : pendant une panne, chaque livraison attend ses 2 s ; avec 5 connexions et des corps de 256 Kio au plus, c'est un coût de mémoire et de temps, pas un risque pour la base, et aucune mesure de charge ne le chiffre (section 18).
+- **Le corps est lu avant l'adresse.** Le `bodyLimit` de hono 4.13.18 (lu dans `dist/middleware/body-limit/index.js`) lit en entier un corps sans `content-length`, en le comptant, avant la route : un corps trop gros reçoit 413 même vers un outil inconnu ou pour un écho. Le service Rust fait de même, pour tous les corps (`read_body`, étape 1). Hono ne lit un corps annoncé par `content-length` qu'à l'étape 4 : les réponses sont les mêmes, sauf pour un client qui coupe pendant l'envoi (400 ici, 500 ou rien en Hono : une réponse que personne ne lit). Un client qui coupe n'est plus pris pour un corps trop gros (`porte.corps_interrompu`, au journal seulement).
+- **Journal.** `porte.reponse` (une ligne par réponse, section 4), `porte.refus` (la raison d'un refus de signature, au journal seulement : jamais dans la réponse ni dans Sentry), `porte.demarree`, `porte.prete` (la base a répondu), `porte.arret`, `porte.demarrage`, `porte.corps_interrompu`. Les événements d'erreur gardent les noms de `hono-gate.ts` : `porte.trop_gros`, `porte.secret_absent`, `porte.cle_absente`, `porte.secret_illisible`, `porte.secret_appli_absent`, `porte.compte_illisible`, `porte.comptes_multiples`, `porte.base`, plus `porte.delai`. **`porte.trop_gros` va au journal seulement** : n'importe qui peut envoyer un gros corps à n'importe quelle adresse, avant toute vérification ; un éditeur qui en enverrait se voit dans les lignes `porte.reponse` (statut 413, par outil). La route Hono le met dans Sentry (proposition au chapitre 03, E15-9). Le journal ne contient que les lignes de la porte : les bibliothèques n'y écrivent rien, parce que `sqlx` y mettrait des messages de Postgres (constaté à l'essai : un avertissement « canceling statement due to statement timeout » après une requête coupée), que la règle de `logError` ne garde jamais.
+- **Sentry** reçoit un message par `log_error`, avec l'étiquette `event` (comme `logError`, `src/server/log.ts:37`) et l'étiquette `role = porte` (comme `role = web` ou `worker`, chapitre 13, section 13), **au plus un par nom d'événement et par minute** (`SentryThrottle`) : une panne de base (une erreur par livraison) ou un expéditeur qui insiste ne vident pas le quota et ne noient pas les autres alertes ; l'envoi suivant compte les occurrences tues, le journal les garde toutes. Ce qui part suit la règle de `src/sentry.server.config.ts` (« rien de ce qui pourrait en contenir ne part ») : `before_send` (`scrub_event`) masque tout message qui ne vient pas de `log_error`, reconnu à l'absence de l'étiquette `event` (une panique, dont le message peut citer la chaîne qu'on lisait), retire requête, utilisateur et fils d'Ariane, ne garde des extras que `outil`, `abonnement` et `etape` ; `max_breadcrumbs = 0`.
 - **En-têtes.** Lus octet par octet (latin-1) et joints par « , » quand ils se répètent, comme `Headers` de Node.
-- **Chaîne de requête.** Décodée par `form_urlencoded` ; `c.req.query` de Hono compare la clé sans la décoder. Seul l'écho de `validationToken` en dépend : une clé écrite `validation%54oken` serait reconnue ici, pas en Hono. Sans effet de sécurité (l'écho rend à l'appelant ce qu'il a envoyé).
+- **Chaîne de requête.** Décodée par `form_urlencoded`, clé comprise. Hono 4.13.18 (`getQueryParam`, `dist/utils/url.js`) cherche d'abord la clé telle quelle puis, si l'adresse contient « % » ou « + », décode aussi les clés : `validation%54oken` est reconnue des deux côtés (une ligne de `comparer.sh` le vérifie). Le décodage d'une séquence « % » mal formée peut différer, sans effet de sécurité : l'écho rend à l'appelant ce qu'il a envoyé.
 - **Adresse signée (`uri`).** La chaîne de requête est reprise telle que reçue ; Hono passe par `new URL(…).search`, qui peut réencoder certains caractères. Nos adresses n'ont pas de chaîne de requête, sauf un éditeur qui en ajouterait une (cas de vecteur « la même requête reçue sur une autre adresse »).
-- **Une méthode autre que `POST`** sur `/h/…` reçoit 405 ici, 404 en Hono.
+- **Une méthode autre que `POST`** sur `/h/…` reçoit 405 ici ; côté `web`, 404 ou 405 selon ce que la route de Next exporte (non essayé). `comparer.sh` affiche cette ligne comme « attendu ».
+- **La ligne `porte.reponse`** a la forme JSON de `tracing` ici, `[leon] porte.reponse {…}` en Hono (la règle de journal du dépôt) : le programme de 4.3 lit les deux.
 - **Écoute** sur `[::]` (note 02, section 5 : réseau de Railway), et sur `0.0.0.0` si IPv6 manque.
-- **Arrêt** sur `SIGTERM` ou Ctrl-C : plus de nouvelle connexion, les requêtes en cours finissent (au plus `REQUEST_TIMEOUT`).
+- **Arrêt** sur `SIGTERM` ou Ctrl-C : plus de nouvelle connexion, les requêtes en cours finissent (au plus `REQUEST_TIMEOUT`, 3 s).
 
 ### 9.5 Le code
 
 ```rust
 // La porte des webhooks de Leon, en Rust (dossier agents, chapitre 15). Seconde mise en œuvre du contrat que tient
 // d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes dans le même
-// ordre, mêmes réponses, mêmes limites (fournisseurs.json), mêmes cas (vecteurs.json, section « gate »).
+// ordre, mêmes limites (fournisseurs.json), mêmes réponses sur chaque cas de vecteurs.json (section « gate »). Ce qui
+// diffère hors de ces cas est écrit au chapitre 15, section 9.4.
 //
 // Elle reçoit une livraison, la vérifie sur le corps brut, la dépose par porte_deposer et répond. Rien d'autre : ni
 // pg-boss, ni jeton OAuth, ni LEON_CONNECTORS_KEY, ni lecture de la mémoire (architecture, section 3). Son rôle
-// Postgres, leon_porte, n'exécute que porte_secret et porte_deposer. Elle ne reçoit que ses variables (section 4 du
+// Postgres, leon_porte, n'exécute que porte_secret et porte_deposer. Elle ne reçoit que ses variables (section 9.1 du
 // chapitre 15) : sa base, sa clé, son adresse publique, l'en-tête de l'adresse IP et les secrets de signature que
 // fournisseurs.json nomme.
 
@@ -1580,13 +1695,16 @@ mod verifier;
 mod tests;
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::future::Future;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::pin::Pin;
 use std::process::ExitCode;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::Router;
-use axum::body::Body;
+use axum::body::{Body, HttpBody};
 use axum::extract::{Path, RawQuery, Request, State};
 use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
 use axum::response::Response;
@@ -1594,8 +1712,12 @@ use axum::routing::{get, post};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use tokio::time::Instant;
+use tracing_subscriber::Layer as _;
+use tracing_subscriber::filter::{LevelFilter, Targets};
+use tracing_subscriber::layer::SubscriberExt as _;
+use tracing_subscriber::util::SubscriberInitExt as _;
 
-use crate::depot::{Deposit, GateState, PorteStore, StoreError};
+use crate::depot::{DB_CALL_TIMEOUT, Deposit, GateState, PorteStore, StoreError};
 use crate::secret::{open_subscription_secret, parse_porte_key, subscription_aad};
 use crate::verifier::{
     BodyFormat, VerifyInput, WebhookSecret, WebhookVerification, parse_body_json, read_pointer,
@@ -1609,8 +1731,17 @@ const PORTE_FORMAT_VERSION: u64 = 1;
 const PATH_APP: &str = "/h/{outil}";
 const PATH_SUBSCRIPTION: &str = "/h/{outil}/{abonnement}";
 const PATH_LIFECYCLE: &str = "/h/{outil}/{abonnement}/cycle";
-// Au-delà, la requête reçoit 503 et l'éditeur réessaie : un client lent ne tient pas une connexion de la base.
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+// Au-delà, la requête reçoit 503 (porte.delai) et l'éditeur réessaie. 3 secondes : le plus court délai d'éditeur
+// relevé (chapitre 15, section 4). Chaque appel de base a son propre délai, plus court (DB_CALL_TIMEOUT, depot.rs).
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(3);
+// La lecture qui prouve la base au démarrage : porte_secret sur un outil qui n'existe pas. Elle passe par tout ce
+// qu'une livraison demande (adresse, TLS et certificat, mot de passe, droit d'exécuter porte_secret, migration 0083)
+// et ne rend aucune ligne.
+const PROBE_TOOL: &str = "sante";
+const PROBE_SUBSCRIPTION: &str = "00000000-0000-0000-0000-000000000000";
+const PROBE_PAUSE: Duration = Duration::from_secs(1);
+// Sentry : un envoi par nom d'événement et par fenêtre, au plus.
+const SENTRY_WINDOW: Duration = Duration::from_secs(60);
 
 // fournisseurs.json (chapitre 03, 7.1), champ pour champ.
 
@@ -1687,6 +1818,11 @@ fn is_tool_id(text: &str) -> bool {
         && bytes
             .iter()
             .all(|&b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+// Le nom d'outil écrit au journal : celui de l'adresse s'il a la forme d'un identifiant, sinon « inconnu ».
+fn tool_label(outil: &str) -> &str {
+    if is_tool_id(outil) { outil } else { "inconnu" }
 }
 
 // Un UUID en minuscules (UUID de hono-gate.ts) : l'adresse d'un abonnement, telle que le worker l'a écrite.
@@ -1925,12 +2061,60 @@ fn echo(token: &str, limits: &Limits) -> Response {
     response
 }
 
-// Le journal : une ligne JSON sur la sortie standard, et Sentry. Comme logError (src/server/log.ts) : le nom de
-// l'événement, des identifiants, un résumé d'erreur sans texte reçu. Jamais un en-tête, un corps ou un secret.
+// Sentry reçoit au plus un envoi par nom d'événement et par minute : une panne de base (une erreur par livraison) ou
+// un expéditeur qui insiste ne doivent ni épuiser le quota ni noyer les autres alertes. Le journal, lui, garde chaque
+// occurrence. L'envoi suivant dit combien ont été tues entre-temps.
+pub(crate) struct SentryThrottle {
+    last: BTreeMap<String, (std::time::Instant, u32)>, // dernier envoi, occurrences tues depuis
+}
+
+impl SentryThrottle {
+    pub(crate) const fn new() -> Self {
+        Self {
+            last: BTreeMap::new(),
+        }
+    }
+
+    // Some(n) : envoyer, n occurrences ont été tues depuis le dernier envoi. None : taire celle-ci.
+    pub(crate) fn admit(&mut self, event: &str, now: std::time::Instant) -> Option<u32> {
+        match self.last.get_mut(event) {
+            Some((sent, muted)) if now.duration_since(*sent) < SENTRY_WINDOW => {
+                *muted += 1;
+                None
+            }
+            Some((sent, muted)) => {
+                let count = *muted;
+                (*sent, *muted) = (now, 0);
+                Some(count)
+            }
+            None => {
+                self.last.insert(event.to_string(), (now, 0));
+                Some(0)
+            }
+        }
+    }
+}
+
+static SENTRY_THROTTLE: Mutex<SentryThrottle> = Mutex::new(SentryThrottle::new());
+
+// Le journal : une ligne JSON sur la sortie standard, et Sentry (au plus une fois par minute pour un même événement).
+// Comme logError (src/server/log.ts) : le nom de l'événement, des identifiants, un résumé d'erreur sans texte reçu.
+// Jamais un en-tête, un corps ou un secret.
 pub(crate) fn log_error(event: &str, summary: &str, ids: &[(&str, &str)]) {
     let details: BTreeMap<&str, &str> = ids.iter().copied().collect();
     let details = serde_json::to_string(&details).unwrap_or_default();
     tracing::error!(event, details = %details, error = summary, "[leon]");
+    let admitted = SENTRY_THROTTLE
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .admit(event, std::time::Instant::now());
+    let Some(muted) = admitted else {
+        return;
+    };
+    let message = match muted {
+        0 => format!("{event}: {summary}"),
+        n => format!("{event}: {summary} (et {n} autres depuis le dernier envoi, au journal)"),
+    };
     sentry::with_scope(
         |scope| {
             scope.set_tag("event", event);
@@ -1938,8 +2122,67 @@ pub(crate) fn log_error(event: &str, summary: &str, ids: &[(&str, &str)]) {
                 scope.set_extra(key, (*value).into());
             }
         },
-        || sentry::capture_message(&format!("{event}: {summary}"), sentry::Level::Error),
+        || sentry::capture_message(&message, sentry::Level::Error),
     );
+}
+
+// Ce qui part vers Sentry (before_send), dans l'esprit de scrubEvent (src/server/sentry-scrub.ts) : rien de ce qui
+// pourrait citer une donnée reçue. Le message d'un log_error est construit sans texte reçu : il reste, reconnu à son
+// étiquette `event`. Tout autre texte (une panique, dont le message peut citer la chaîne qu'on lisait) est masqué. Ni
+// requête, ni utilisateur, ni fil d'Ariane ; des extras, seulement les identifiants que log_error pose.
+const MASKED: &str = "[masqué]";
+const KEPT_EXTRA: [&str; 3] = ["outil", "abonnement", "etape"];
+
+pub(crate) fn scrub_event(
+    mut event: sentry::protocol::Event<'static>,
+) -> sentry::protocol::Event<'static> {
+    if !event.tags.contains_key("event") {
+        if event.message.is_some() {
+            event.message = Some(MASKED.into());
+        }
+        event.logentry = None;
+        for exception in &mut event.exception.values {
+            if exception.value.is_some() {
+                exception.value = Some(MASKED.into());
+            }
+        }
+    }
+    event.request = None;
+    event.user = None;
+    event.breadcrumbs = Default::default();
+    event
+        .extra
+        .retain(|key, _| KEPT_EXTRA.contains(&key.as_str()));
+    event
+}
+
+// Un appel de base borné par DB_CALL_TIMEOUT : au-delà, la même erreur qu'une panne (503, porte.base). Une écriture
+// qui aurait abouti malgré tout ne se double pas : l'éditeur réessaie, porte_deposer rend 0, la porte répond 202.
+async fn bounded<T>(call: impl Future<Output = Result<T, StoreError>>) -> Result<T, StoreError> {
+    tokio::time::timeout(DB_CALL_TIMEOUT, call)
+        .await
+        .unwrap_or_else(|_| Err(StoreError("Timeout".into())))
+}
+
+enum BodyError {
+    TooLarge,
+    Interrupted,
+}
+
+// Le corps, lu jusqu'à `max` octets et compté en le lisant : un corps sans content-length (envoyé par morceaux) est
+// borné comme les autres. Au-delà : TooLarge. Une erreur de lecture (le client coupe, un corps tronqué) : Interrupted.
+async fn read_body(mut body: Body, max: usize) -> Result<Vec<u8>, BodyError> {
+    let mut bytes = Vec::new();
+    while let Some(frame) = std::future::poll_fn(|cx| Pin::new(&mut body).poll_frame(cx)).await {
+        let frame = frame.map_err(|_| BodyError::Interrupted)?;
+        if let Ok(data) = frame.into_data() {
+            if bytes.len() + data.len() > max {
+                return Err(BodyError::TooLarge);
+            }
+            bytes.extend_from_slice(&data);
+        }
+    }
+    Ok(bytes)
 }
 
 #[derive(Debug, Clone)]
@@ -1969,6 +2212,7 @@ pub(crate) struct Porte<S> {
     store: S,
     state: Mutex<GateState>,
     clock: Clock,
+    ready: AtomicBool, // la base a répondu au moins une fois depuis le démarrage (wait_for_base)
 }
 
 impl<S: PorteStore> Porte<S> {
@@ -1991,6 +2235,27 @@ impl<S: PorteStore> Porte<S> {
             store,
             state: Mutex::new(state),
             clock,
+            ready: AtomicBool::new(false),
+        }
+    }
+
+    pub(crate) fn is_ready(&self) -> bool {
+        self.ready.load(Ordering::Relaxed)
+    }
+
+    // Au démarrage : lire la base jusqu'à la première lecture réussie, puis le dire à /sante. Une seule fois : une
+    // panne de base plus tard ne fait jamais échouer /sante (les livraisons reçoivent 503, l'éditeur réessaie).
+    pub(crate) async fn wait_for_base(&self) {
+        loop {
+            match bounded(self.store.secret(PROBE_TOOL, PROBE_SUBSCRIPTION)).await {
+                Ok(_) => {
+                    self.ready.store(true, Ordering::Relaxed);
+                    tracing::info!(event = "porte.prete", "[leon]");
+                    return;
+                }
+                Err(error) => log_error("porte.base", &error.0, &[("etape", "demarrage")]),
+            }
+            tokio::time::sleep(PROBE_PAUSE).await;
         }
     }
 
@@ -2031,9 +2296,14 @@ impl<S: PorteStore> Porte<S> {
         json_response(StatusCode::UNAUTHORIZED, r#"{"error":"Invalid signature"}"#)
     }
 
+    // Au journal seulement, pas dans Sentry : n'importe qui peut envoyer un gros corps à n'importe quelle adresse, avant
+    // toute vérification. Un éditeur qui en enverrait se voit dans les lignes porte.reponse (statut 413, par outil).
     fn too_large(&self, outil: &str) -> Response {
-        let outil = if is_tool_id(outil) { outil } else { "inconnu" };
-        log_error("porte.trop_gros", "Request too large", &[("outil", outil)]);
+        tracing::warn!(
+            event = "porte.trop_gros",
+            outil = tool_label(outil),
+            "[leon]"
+        );
         json_response(
             StatusCode::PAYLOAD_TOO_LARGE,
             r#"{"error":"Request too large"}"#,
@@ -2076,7 +2346,7 @@ impl<S: PorteStore> Porte<S> {
                             return Ok(SecretLookup::Unavailable);
                         }
                     }
-                    let found = self.store.secret(outil, abonnement).await?;
+                    let found = bounded(self.store.secret(outil, abonnement)).await?;
                     let mut state = self.state();
                     match found {
                         None => {
@@ -2223,11 +2493,7 @@ impl<S: PorteStore> Porte<S> {
     // hono-gate.ts, sans contenu ni identifiant d'abonnement. Elle donne la part de 5xx et le p95 des livraisons.
     async fn handle(&self, target: Target, query: Option<String>, request: Request) -> Response {
         let started = Instant::now();
-        let outil = if is_tool_id(&target.outil) {
-            target.outil.clone()
-        } else {
-            "inconnu".to_string()
-        };
+        let outil = tool_label(&target.outil).to_string();
         let response =
             match tokio::time::timeout(REQUEST_TIMEOUT, self.receive(target, query, request)).await
             {
@@ -2255,7 +2521,8 @@ impl<S: PorteStore> Porte<S> {
         let limits = &self.providers.limits;
         let (parts, body) = request.into_parts();
 
-        // 1. Un corps annoncé trop gros est refusé avant tout.
+        // 1. Le corps, avant tout, comme le bodyLimit de hono-gate.ts : un content-length trop grand est refusé sans rien
+        // lire ; sinon le corps est lu et compté (un corps envoyé par morceaux, sans content-length, aussi).
         let declared = parts
             .headers
             .get(header::CONTENT_LENGTH)
@@ -2264,6 +2531,19 @@ impl<S: PorteStore> Porte<S> {
         if declared.is_some_and(|length| length > limits.body_max_bytes as u64) {
             return self.too_large(&target.outil);
         }
+        let bytes = match read_body(body, limits.body_max_bytes).await {
+            Ok(bytes) => bytes,
+            Err(BodyError::TooLarge) => return self.too_large(&target.outil),
+            // Le client a coupé, ou le corps est tronqué : personne n'attend la réponse. Au journal seulement.
+            Err(BodyError::Interrupted) => {
+                tracing::info!(
+                    event = "porte.corps_interrompu",
+                    outil = tool_label(&target.outil),
+                    "[leon]"
+                );
+                return invalid_request();
+            }
+        };
 
         // 2. L'adresse : outil connu, forme conforme à sa portée, abonnement en UUID minuscule, /cycle si permis.
         let Some((outil, spec)) = self.spec_for(&target) else {
@@ -2276,11 +2556,6 @@ impl<S: PorteStore> Porte<S> {
         {
             return echo(&token, limits);
         }
-
-        // 1 bis. Le corps lui-même, borné (un corps sans content-length est compté en le lisant).
-        let Ok(bytes) = axum::body::to_bytes(body, limits.body_max_bytes).await else {
-            return self.too_large(&target.outil);
-        };
 
         // 4. De l'UTF-8 valide, sans octet nul : Postgres refuse l'octet nul dans un text.
         let Some(corps) = std::str::from_utf8(&bytes)
@@ -2375,7 +2650,7 @@ impl<S: PorteStore> Porte<S> {
             corps: corps.to_string(),
             entetes: self.kept_headers(spec, &headers),
         };
-        match self.store.deposit(&deposit).await {
+        match bounded(self.store.deposit(&deposit)).await {
             // 0 : déjà reçue, ou personne n'écoute ce compte. Même réponse : l'éditeur ne doit pas réessayer.
             Ok(_) => accepted(),
             Err(error) => {
@@ -2443,10 +2718,16 @@ async fn lifecycle_route<S: PorteStore>(
         .await
 }
 
-// Le bilan de santé de Railway (healthcheckPath). Il ne lit pas la base : une base en panne ne doit pas faire
-// redémarrer la porte en boucle ; les livraisons reçoivent 503 et les éditeurs réessaient.
-async fn health() -> Response {
-    json_response(StatusCode::OK, r#"{"ok":true}"#)
+// Le bilan de santé de Railway (healthcheckPath), qui ne sert qu'au déploiement (chapitre 13, 4.1, à vérifier). 503
+// tant que la base n'a jamais répondu : un déploiement dont la base est injoignable ou mal réglée (mot de passe, hôte,
+// certificat, migration) échoue, et Railway garde l'ancienne version. 200 ensuite, pour toujours : la route ne lit pas
+// la base, et une panne de base en régime ne fait pas redémarrer la porte en boucle.
+async fn health<S: PorteStore>(State(porte): State<Arc<Porte<S>>>) -> Response {
+    if porte.is_ready() {
+        json_response(StatusCode::OK, r#"{"ok":true}"#)
+    } else {
+        json_response(StatusCode::SERVICE_UNAVAILABLE, r#"{"ok":false}"#)
+    }
 }
 
 pub(crate) fn router<S: PorteStore>(porte: Arc<Porte<S>>) -> Router {
@@ -2454,7 +2735,7 @@ pub(crate) fn router<S: PorteStore>(porte: Arc<Porte<S>>) -> Router {
         .route(PATH_APP, post(app_route::<S>))
         .route(PATH_SUBSCRIPTION, post(subscription_route::<S>))
         .route(PATH_LIFECYCLE, post(lifecycle_route::<S>))
-        .route("/sante", get(health))
+        .route("/sante", get(health::<S>))
         .with_state(porte)
 }
 
@@ -2463,7 +2744,7 @@ fn env_var(name: &str) -> Option<String> {
 }
 
 // SIGTERM (Railway, à la fin du recouvrement) ou Ctrl-C : on n'accepte plus de connexion, on finit les requêtes en
-// cours. Une requête dure au plus REQUEST_TIMEOUT : drainingSeconds de 15 suffit.
+// cours. Une requête dure au plus REQUEST_TIMEOUT (3 s) : drainingSeconds de 5 suffit.
 async fn shutdown_signal() {
     let interrupt = async {
         let _ = tokio::signal::ctrl_c().await;
@@ -2509,6 +2790,11 @@ async fn run() -> Result<(), String> {
         store,
         Box::new(wall_clock_ms),
     ));
+    // /sante répond 503 jusqu'à la première lecture réussie de la base ; les livraisons sont servies dès l'écoute.
+    tokio::spawn({
+        let porte = porte.clone();
+        async move { porte.wait_for_base().await }
+    });
     // Le réseau de Railway demande d'écouter sur « :: » (note 02, section 5) ; sans IPv6, on se rabat sur IPv4.
     let listener = match tokio::net::TcpListener::bind(SocketAddr::from((
         Ipv6Addr::UNSPECIFIED,
@@ -2529,13 +2815,25 @@ async fn run() -> Result<(), String> {
 }
 
 fn main() -> ExitCode {
-    tracing_subscriber::fmt().json().with_target(false).init();
+    // Le journal : des lignes JSON, celles de la porte seulement. Les bibliothèques n'y écrivent rien : sqlx y mettrait
+    // des messages de Postgres (un avis, une erreur de connexion testée), que la règle de logError ne garde jamais.
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .json()
+                .with_target(false)
+                .with_filter(Targets::new().with_target("porte", LevelFilter::INFO)),
+        )
+        .init();
     // Sentry avant le moteur asynchrone, comme le demande sa documentation. Sans SENTRY_DSN, rien ne part.
     let mut options = sentry::ClientOptions::default();
     options.dsn = env_var("SENTRY_DSN").and_then(|dsn| dsn.parse().ok());
     options.release = env_var("RAILWAY_GIT_COMMIT_SHA").map(Into::into);
     options.environment = env_var("RAILWAY_ENVIRONMENT_NAME").map(Into::into);
     options.send_default_pii = false;
+    // Comme sentry.server.config.ts : rien de ce qui pourrait citer une donnée reçue ne part, aucun fil d'Ariane.
+    options.max_breadcrumbs = 0;
+    options.before_send = Some(Arc::new(|event| Some(scrub_event(event))));
     let _sentry = sentry::init(options);
     sentry::configure_scope(|scope| scope.set_tag("role", "porte"));
     let runtime = match tokio::runtime::Builder::new_multi_thread()
@@ -2619,7 +2917,7 @@ services/porte/target/
 docker build -f services/porte/Dockerfile -t leon-porte .
 docker images leon-porte                                   # la taille, à noter dans la PR (note 02 : 30 à 80 Mo, déduit)
 docker run --rm -p 8080:8080 -e DATABASE_URL_PORTE='postgres://leon_porte:leon_porte@host.docker.internal:54329/leon?sslmode=disable' leon-porte &
-curl -fsS http://127.0.0.1:8080/sante                      # attendu : {"ok":true}
+curl -sS http://127.0.0.1:8080/sante                       # attendu : {"ok":true} ; {"ok":false} (503) si la base refuse
 curl -sS -X POST http://127.0.0.1:8080/h/outlook/00000000-0000-4000-8000-000000000000 -d '{}'
 # attendu, au bout de 200 ms : {"error":"Invalid signature"} (ou 503 si la base locale n'a pas la migration 0083)
 ```
@@ -2672,9 +2970,9 @@ Le chapitre 13 a fixé sa place (4.1, colonne de droite ; 8.2 ; 9) et laissé qu
 | `preDeployCommand` | aucune | La porte ne migre rien |
 | `startCommand` | aucune : l'`ENTRYPOINT` de l'image | |
 | `healthcheckPath` | `/sante` | Architecture, section 6 |
-| `healthcheckTimeout` | **`30`** | Le binaire répond en quelques millisecondes ; `/sante` ne lit pas la base. 30 secondes laissent Railway démarrer le conteneur (fixé ici) |
+| `healthcheckTimeout` | **`30`** | Le binaire démarre en quelques millisecondes ; `/sante` passe à 200 après une première lecture de `porte_secret` (section 9.4), qui ouvre une connexion TLS vers RDS. 30 secondes laissent Railway démarrer le conteneur et la base répondre ; au-delà, le déploiement échoue et l'ancienne version reste (fixé ici) |
 | `overlapSeconds` | `"0"` | Comme `web` et `worker` |
-| `drainingSeconds` | **`"15"`** | Une requête dure au plus `REQUEST_TIMEOUT` (10 s, section 9.4), plus une marge (fixé ici) |
+| `drainingSeconds` | **`"5"`** | Une requête dure au plus `REQUEST_TIMEOUT` (3 s, section 9.4), plus une marge (fixé ici) |
 | `restartPolicyType` | `ON_FAILURE` | |
 | Répliques | 1 | Les caches et la limite sont en mémoire (section 8) ; deux instances resteraient sûres, chacune avec ses caches |
 | Domaines publics | aucun avant la bascule, sauf le domaine fourni par Railway pour les essais ; `porte.<domaine>` après (section 13) | |
@@ -2700,7 +2998,7 @@ Rien d'autre. En particulier ni `DATABASE_URL`, ni `DATABASE_URL_ADMIN`, ni `LEO
 
 **Les connexions Postgres** : 5 pour le service (section 8), comme le chapitre 13 (8.2) les a comptées. `web` rend ses 2 de `portePool` à l'extinction de la route Hono (13.6).
 
-**Sentry** : le même projet que `web` et `worker`, l'étiquette `role = porte` (section 9.4). À créer dans Sentry, à la main : une alerte sur `event:porte.base` (une panne de base vue par la porte) et une sur `event:porte.secret_illisible` (une clé `LEON_PORTE_KEY` qui ne correspond plus, chapitre 03, section 5).
+**Sentry** : le même projet que `web` et `worker`, l'étiquette `role = porte` (section 9.4). À créer dans Sentry, à la main : une alerte sur `event:porte.base` (une panne de base vue par la porte, ou une base injoignable au démarrage, `etape: demarrage`) et une sur `event:porte.secret_illisible` (une clé `LEON_PORTE_KEY` qui ne correspond plus, chapitre 03, section 5). Chaque événement part au plus une fois par minute (section 9.4) : les deux alertes se règlent sur la première occurrence, pas sur un nombre d'événements.
 
 ## 13. La bascule du domaine
 
@@ -2713,11 +3011,13 @@ Ce que la bascule ne touche pas : aucune adresse d'abonnement, aucun secret, auc
 1. La décision est écrite dans la PR : la mesure qui l'a déclenchée (section 4), avec ses chiffres, ou la décision de David.
 2. Le service `porte` est créé et déployé (section 12), avec toutes ses variables, `LEON_PORTE_URL` comprise. Il n'a que le domaine que Railway lui donne pour les essais (forme exacte à vérifier dans la documentation de l'éditeur ; Exemple fictif : `https://porte-production.up.railway.app`).
 3. `/sante` répond `{"ok":true}` sur ce domaine. Le journal du service montre `porte.demarree` avec les outils attendus.
-4. **La comparaison.** `services/porte/comparer.sh` envoie aux deux portes les mêmes requêtes sans secret (abonnement inconnu, outil inconnu, adresse mal formée, écho de validation, caractère de contrôle, corps trop gros, corps illisible, signature HubSpot fausse) et compare statut et corps. Toutes les lignes doivent dire « pareil » :
+4. **La comparaison.** `services/porte/comparer.sh` envoie aux deux portes les mêmes requêtes sans secret (abonnement inconnu, outil inconnu, adresse mal formée, écho de validation, écho dont la clé est encodée, caractère de contrôle, corps trop gros avec `content-length` et envoyé par morceaux sans lui, corps illisible, signature HubSpot fausse, méthode `GET`) et compare statut et corps. Toutes les lignes doivent dire « pareil », sauf « méthode GET », qui dit « attendu » (405 ici ; 404 ou 405 côté `web`, section 9.4). Une ligne « DIFFÉRENT » arrête la bascule :
 
 ```bash
 services/porte/comparer.sh https://porte.<domaine> https://porte-production.up.railway.app
 ```
+
+Essayé en local entre le binaire d'avant la relecture et celui d'après (section 15.4) : toutes les lignes disent « pareil », sauf le corps trop gros envoyé par morceaux vers un outil inconnu (401 avant, 413 après, comme le `bodyLimit` de Hono). C'est la correction de l'étape 1 (section 19).
 
 5. **Une répétition**, une fois, pour connaître la durée du trou sans toucher aux éditeurs : un sous-domaine d'essai, `porte-essai.<domaine>`, posé sur `web` (mêmes gestes que le chapitre 13, section 11), puis déplacé sur `porte` en suivant 13.3 avec la sonde. Le trou mesuré va dans la PR. Puis le sous-domaine est retiré.
 
@@ -2725,7 +3025,8 @@ services/porte/comparer.sh https://porte.<domaine> https://porte-production.up.r
 #!/usr/bin/env bash
 # Compare deux mises en œuvre de la porte sur des requêtes qui ne demandent aucun secret (dossier agents,
 # chapitre 15, section 13). Usage : services/porte/comparer.sh https://porte.<domaine> https://<service porte>.up.railway.app
-# Chaque ligne : la requête, puis le statut et le corps de chaque côté. Toute différence est signalée.
+# Chaque ligne : la requête, puis le statut et le corps de chaque côté. Toute différence est signalée, sauf celles que
+# le chapitre 15 (section 9.4) attend : la ligne dit alors « attendu » et ce qui est attendu.
 set -euo pipefail
 a="${1:?adresse de la porte en service}"
 b="${2:?adresse de la porte à essayer}"
@@ -2739,7 +3040,9 @@ essai() {
   local ra rb
   ra="$(curl -sS -o - -w ' %{http_code}' "$@" "$a$CHEMIN" || true)"
   rb="$(curl -sS -o - -w ' %{http_code}' "$@" "$b$CHEMIN" || true)"
-  if [[ "$ra" == "$rb" ]]; then echo "pareil      $nom : $ra"; else echo "DIFFÉRENT   $nom : [$ra] contre [$rb]"; fi
+  if [[ "$ra" == "$rb" ]]; then echo "pareil      $nom : $ra"
+  elif [[ -n "${ATTENDU:-}" ]]; then echo "attendu     $nom : [$ra] contre [$rb] ($ATTENDU)"
+  else echo "DIFFÉRENT   $nom : [$ra] contre [$rb]"; fi
 }
 
 CHEMIN="/h/outlook/$inconnu"            essai "abonnement inconnu" -X POST -H 'content-type: application/json' -d '{"value":[]}'
@@ -2749,9 +3052,13 @@ CHEMIN="/h/hubspot/$inconnu"            essai "outil d'application sur une adres
 CHEMIN="/h/outlook/$inconnu?validationToken=essai%20de%20comparaison" essai "écho de validation" -X POST
 CHEMIN="/h/outlook/$inconnu?validationToken=%01" essai "écho avec un caractère de contrôle" -X POST
 CHEMIN="/h/outlook/$inconnu"            essai "corps trop gros" -X POST --data-binary "@$gros"
+CHEMIN="/h/inconnu"                     essai "corps trop gros, par morceaux, outil inconnu" -X POST \
+  -H 'transfer-encoding: chunked' --data-binary "@$gros"
+CHEMIN="/h/outlook/$inconnu?validation%54oken=essai" essai "écho, clé encodée" -X POST
 CHEMIN="/h/outlook/$inconnu"            essai "corps qui n'est pas de l'UTF-8" -X POST --data-binary $'\xff\xfe'
 CHEMIN="/h/hubspot"                     essai "hubspot, signature fausse" -X POST \
   -H "x-hubspot-request-timestamp: $(($(date +%s) * 1000))" -H 'x-hubspot-signature-v3: AAAA' -d '[{"portalId":1}]'
+CHEMIN="/h/outlook/$inconnu" ATTENDU="405 ici ; 404 ou 405 côté web, selon Next" essai "méthode GET" -X GET
 ```
 
 ### 13.2 La sonde
@@ -2792,15 +3099,27 @@ La même sonde sert avant de décider (section 4) : lancée pendant une mise en 
 
 ### 13.3 Les gestes, dans l'ordre
 
-À une heure creuse, pas pendant une mise en ligne de `web`. Deux personnes : l'une fait les gestes, l'autre regarde la sonde et le journal.
+À une heure creuse, hors des heures de réunion des clients (Fathom envoie à la fin d'une réunion et ne documente aucune reprise, note 05), pas pendant une mise en ligne de `web`. Deux personnes : l'une fait les gestes, l'autre regarde la sonde et le journal.
 
 1. Lancer la sonde sur `https://porte.<domaine>`. Elle doit dire « web … ok ».
 2. Railway, service `web` : retirer le domaine personnalisé `porte.<domaine>`. Service `porte` : l'ajouter. Railway donne une nouvelle cible DNS (forme, et possibilité d'ajouter le domaine au second service avant de le retirer du premier : à vérifier dans la documentation de l'éditeur ; si c'est possible, ajouter d'abord, retirer ensuite).
 3. Chez le registraire, changer l'enregistrement de `porte.<domaine>` vers la nouvelle cible. Durée de vie : 60 secondes, posée depuis le chapitre 13.
 4. Attendre que Railway marque le domaine comme vérifié et son certificat comme émis. La sonde passe de « web » à « rust », avec un trou entre les deux.
 5. Arrêter la sonde quand elle dit « rust … ok » depuis 10 minutes. Noter dans la PR le nombre de secondes de trou.
+6. **La relève forcée**, obligatoire, dès que la sonde dit « rust … ok », sans attendre les 10 minutes du geste 5 : sous le rôle propriétaire, avancer la prochaine relève de chaque connexion des trois outils de la porte. Le tic de chaque minute (`connector-tick`, `connector_syncs_due()`, existent) les reprend aussitôt, au lieu d'attendre jusqu'à 15 minutes. C'est le geste de « Synchroniser maintenant » (`requestSyncNow`, `src/server/connectors/connections.ts:297`, existe), pour toutes les connexions à la fois. Noter dans la PR le nombre de connexions relevées.
 
-Pendant le trou, une livraison échoue (pas de réponse, 404 ou erreur de certificat). Graph et HubSpot réessaient (notes 04 et 05, sources tierces : HubSpot jusqu'à 10 fois en 24 heures ; Graph, à vérifier) ; pour Fathom, rien n'est trouvé. Le sondage de 15 minutes rattrape ce qui serait perdu : l'ingestion est idempotente (architecture, section 5).
+```sql
+-- Après le trou de la bascule : chaque connexion Outlook, HubSpot et Fathom en service est relevée au prochain tic.
+-- Des comptes seulement, aucun identifiant.
+with relevees as (
+  update connections set next_sync_at = now(), updated_at = now()
+   where provider = any (array['outlook', 'hubspot', 'fathom']) and status = any (array['active', 'error'])
+  returning provider
+)
+select provider, count(*) from relevees group by 1;
+```
+
+Pendant le trou, une livraison échoue (pas de réponse, 404 ou erreur de certificat). Graph et HubSpot réessaient (notes 04 et 05, sources tierces : HubSpot jusqu'à 10 fois en 24 heures ; Graph, à vérifier) ; pour Fathom, rien n'est trouvé. La relève forcée du geste 6 rattrape ce qui a été créé ou modifié pendant le trou, en une minute plutôt qu'en quinze : l'ingestion est idempotente (architecture, section 5). Elle ne rattrape pas une suppression HubSpot, que seul le webhook apporte (chapitre 03, 12.2) : celle-là ne revient que si HubSpot réessaie.
 
 ### 13.4 Vérifier
 
@@ -2825,7 +3144,7 @@ Et dans Sentry : aucun `porte.base`, aucun `porte.secret_illisible`, aucun `port
 
 Quand : une rafale de `porte.base` ou de `porte.secret_illisible`, une ligne « DIFFÉRENT » de `comparer.sh`, des livraisons qui n'arrivent plus (requête de 13.4 vide alors que la relève trouve du nouveau), ou une mesure de la section 4 pire qu'avec la porte en Hono.
 
-Comment : les gestes 2 à 4 de 13.3 à l'envers. La route Hono est toujours déployée dans `web`, avec `DATABASE_URL_PORTE` : elle reprend dès que le domaine revient. Aucun abonnement n'a changé. Le trou est le même qu'à l'aller.
+Comment : les gestes 2 à 4 de 13.3 à l'envers, **puis le geste 6** (la relève forcée), pour la même raison. La route Hono est toujours déployée dans `web`, avec `DATABASE_URL_PORTE` : elle reprend dès que le domaine revient. Aucun abonnement n'a changé. Le trou est le même qu'à l'aller.
 
 ### 13.6 Quand la route Hono s'éteint
 
@@ -2837,9 +3156,9 @@ Le chapitre 13 (15.6) laisse ce jour à ce chapitre. **Quatorze jours après la 
 
 Supprimer la route Hono pour de bon demande de déplacer ces deux constantes et de garder un interprète TypeScript qui passe les vecteurs. Ce n'est pas à faire avant six mois de service Rust sans retour arrière (proposition).
 
-## 14. Les autres candidats Rust : esquisses et mesures
+## 14. Les autres candidats Rust : la mesure de chacun
 
-Quatre pièces, toutes **après** le jalon 1, aucune à construire sans sa mesure. Pour chacune : ce que serait le code (esquisse commentée, **non compilée**), la mesure qui déclencherait le passage, comment la prendre, et ce qu'on essaie avant Rust.
+Quatre pièces, toutes **après** le jalon 1. **Ce chapitre ne les fixe pas** : la ligne 15 du découpage (architecture, section 11) ne fixe que la porte, et leur verdict est celui de l'architecture (section 3), recopié en 3.4. Pour chacune : ce qui existe, la mesure qui rouvrirait la question, comment la prendre, ce qu'on essaie avant Rust, et le prix. Aucun code n'est à construire ici. Une première version de cette section donnait des esquisses de code, non compilées et écrites de mémoire ; elles sont retirées (relecture, section 19), pour qu'aucun agent ne les prenne pour un plan.
 
 ### 14.1 Un module `napi-rs` pour `maskSecrets` et `chunkText`
 
@@ -2858,83 +3177,13 @@ LEON_ROLE=worker NODE_OPTIONS='--cpu-prof --cpu-prof-dir=/tmp/profil-worker' pnp
 
 **Ce qu'on essaie avant Rust** : réordonner les motifs de `WHOLE_SECRETS` pour sortir plus tôt sur un texte sans chiffres ni tirets ; ne masquer que les tours nouveaux (l'empreinte du texte existe déjà, architecture 5) ; mettre la normalisation d'une page dans un `worker_threads`. Ces trois-là gardent une seule langue.
 
-**L'esquisse**, si la mesure le demande. Une caisse `native/natif/` (à créer alors), publiée comme paquet du dépôt `@leon/natif`, chargée par le serveur seulement :
-
-```rust
-// native/natif/src/lib.rs : Esquisse, non compilée. napi 3.16.2, napi-derive 3.7.1, napi-build 2.6.0 (note 02, 1.1).
-// Deux fonctions pures, appelées depuis Node. Toute différence de sortie avec le TypeScript est un défaut : le
-// TypeScript reste la référence, et ses tests (mask-secrets.test.ts, mask-secrets.audit6.test.ts, chunk.test.ts)
-// tournent contre les deux mises en œuvre.
-use napi_derive::napi;
-
-mod masque; // les motifs de WHOLE_SECRETS, URL_PASSWORD, AUTH_SCHEME… recopiés de mask-secrets.ts
-mod passages; // PASSAGE_TARGET 1200, PASSAGE_MAX 1600, PASSAGE_MIN 1000, PASSAGE_OVERLAP 150, de chunk.ts
-
-#[napi(js_name = "maskSecrets")]
-pub fn mask_secrets(text: String) -> String {
-    // Piège 1 : la caisse regex (1.13.2, temps linéaire) n'a pas de lookbehind. Les motifs qui en ont
-    // (« (?<![A-Za-z0-9_-])sk-… ») deviennent une recherche du motif sans lookbehind, puis un test à la main du
-    // caractère qui précède. fancy-regex les accepterait, mais sans la garantie de temps linéaire : c'est elle qu'on
-    // vient chercher.
-    masque::mask(&text)
-}
-
-#[napi(object)]
-pub struct Chunk {
-    pub ord: u32,
-    pub text: String,
-    pub start: u32, // Piège 2 : en unités UTF-16, comme text.slice(start, end) (en-tête de chunk.ts). Une chaîne
-    pub end: u32,   // Rust est en UTF-8 : il faut tenir les deux positions pendant le découpage.
-}
-
-#[napi(js_name = "chunkText")]
-pub fn chunk_text(text: String) -> Vec<Chunk> {
-    // Piège 3 : stripHighlightMarks (src/lib/highlight.ts, existe) est à porter aussi, à l'identique.
-    passages::chunk(&text)
-}
-```
-
-```ts
-// src/server/natif.ts : Esquisse. Le module natif s'il est là, sinon le TypeScript. Aucun démarrage ne doit dépendre
-// d'un binaire natif : il manque sur un poste qui n'a pas construit le module, et sur une plateforme non publiée.
-import { maskSecrets as maskSecretsTs } from '@/capture/mask-secrets';
-import { chunkText as chunkTextTs } from '@/server/search/chunk';
-
-type Natif = { maskSecrets(text: string): string; chunkText: typeof chunkTextTs };
-const require = createRequire(import.meta.url); // import { createRequire } from 'node:module'
-let natif: Natif | null = null;
-// LEON_NATIF=oui (une ligne de plus dans env.ts et .env.example) : on peut couper le module sans redéployer le code.
-if (env.LEON_NATIF === 'oui') {
-  try {
-    natif = require('@leon/natif') as Natif;
-  } catch (error) {
-    logError('natif.absent', error); // le TypeScript prend le relais
-  }
-}
-export const maskSecretsFast = (text: string) => (natif ? natif.maskSecrets(text) : maskSecretsTs(text));
-```
-
-Ce qu'il coûterait : `serverExternalPackages` (`next.config.ts:13`, existe : `['officeparser', 'pdfjs-dist']`) gagne `@leon/natif` ; le traçage `standalone` de Next 16 a laissé des paquets externes de côté (tickets 88844 et 91654, note 02, 2.2 ; état en 16.4 non vérifié) ; un binaire par plateforme (Linux glibc pour Railway, macOS arm64 pour les postes) ; un plantage natif tue le processus Node entier. **Verdict : non maintenant.**
+**Ce que ce serait**, si la mesure le demandait : une caisse `napi-rs` publiée comme paquet du dépôt, chargée par le serveur seulement, derrière une variable qui permet de la couper sans redéployer ; le TypeScript reste la référence et le repli (module absent : `maskSecrets` en TypeScript), et ses tests (`mask-secrets.test.ts`, `mask-secrets.audit6.test.ts`, `chunk.test.ts`) tournent contre les deux mises en œuvre. Trois pièges connus : la caisse `regex`, qui donne le temps linéaire qu'on viendrait chercher, n'a pas de lookbehind, que des motifs de `maskSecrets` emploient ; `chunkText` compte en unités UTF-16 (`text.slice`), Rust en octets UTF-8 ; `stripHighlightMarks` (`src/lib/highlight.ts`, existe) serait à porter aussi. Et autour : `serverExternalPackages` (`next.config.ts:13`, existe : `['officeparser', 'pdfjs-dist']`) gagne `@leon/natif` ; le traçage `standalone` de Next 16 a laissé des paquets externes de côté (tickets 88844 et 91654, note 02, 2.2 ; état en 16.4 non vérifié) ; un binaire par plateforme (Linux glibc pour Railway, macOS arm64 pour les postes) ; un plantage natif tue le processus Node entier. **Verdict : non maintenant.**
 
 ### 14.2 La relève des connecteurs
 
 **Verdict de l'architecture** : non, aucune mesure réaliste. La relève attend le réseau et les limites de débit des éditeurs (HubSpot : 110 requêtes par 10 secondes, note 06), pas le processeur. Aucun concurrent ne l'écrit en Rust (Nango, Dust `connectors`, Pipedream : note 01).
 
-**Ce que serait le code** : pas un module, une réécriture. Le contrat `Connector<Config>` (`src/server/connectors/types.ts:100-117`, existe) deviendrait un trait, et chacun des 42 connecteurs, avec son client, son schéma zod, sa pagination, son OAuth et ses tests de contrat (`vendor-specs`), serait à refaire :
-
-```rust
-// Esquisse, non compilée, à ne pas construire : la taille du travail, pas un plan.
-#[async_trait::async_trait]
-pub trait Connector: Send + Sync {
-    fn id(&self) -> &'static str;                       // ProviderId
-    fn hosts(&self, config: &serde_json::Value) -> Vec<String>;
-    async fn verify(&self, config: &serde_json::Value, http: &Http) -> Result<Account, ConnectorError>;
-    // AsyncIterable<SyncPage> devient un flux ; ConnectorItem et SyncState sont à recopier, puis normalizeItem,
-    // maskSecrets, ingestConnectorItems, ensureFreshTokens (verrou renew_lock_at), le déchiffrement par
-    // LEON_CONNECTORS_KEY, et la lecture des jobs connector-sync : pg-boss n'a pas de client Rust stable (note 02, 3.3).
-    fn sync(&self, config: serde_json::Value, state: SyncState, http: Http) -> BoxStream<'static, Result<SyncPage, ConnectorError>>;
-}
-```
+**Ce que ce serait** : pas un module, une réécriture. Le contrat `Connector<Config>` (`src/server/connectors/types.ts:100-117`, existe) deviendrait un trait, et chacun des 42 connecteurs, avec son client, son schéma zod, sa pagination, son OAuth et ses tests de contrat (`vendor-specs`), serait à refaire ; puis `normalizeItem`, `maskSecrets`, `ingestConnectorItems`, `ensureFreshTokens` (verrou `renew_lock_at`), le déchiffrement par `LEON_CONNECTORS_KEY`, et la lecture des jobs `connector-sync` : pg-boss n'a pas de client Rust stable (note 02, 3.3).
 
 **La mesure qui rouvrirait la question** : le worker saturé en processeur sur du décodage JSON, profil à l'appui (même commande qu'en 14.1 ; seuil : `JSON.parse` et la validation zod au-dessus de la moitié du temps pendant une relève). **Ce qu'on essaie avant** : des pages plus petites (`$top`, `limit`), ne demander que les champs lus, la validation zod sur les seuls champs utiles, un second worker (architecture, section 4 : « plusieurs instances », d'abord les gardes en base).
 
@@ -2942,43 +3191,11 @@ pub trait Connector: Send + Sync {
 
 **Ce qui existe.** La recherche avec mots passe par le plein texte de Postgres (`websearch_to_tsquery`, `ts_rank_cd` : `src/server/search/search.ts:104`, `:382`, existe ; `searchPassages`, `:536`). Sous la sécurité par ligne, Postgres n'utilise pas l'index GIN (`@@` n'est pas « leakproof ») : chaque recherche lit tous les passages visibles de l'organisation (carte 06, coût de la recherche ; en-tête de `search.ts`).
 
-**La mesure qui déclenche** : une recherche avec mots au-dessus d'une seconde au p95 sur le corpus d'un client, **après avoir épuisé Postgres**. Pour la prendre, une ligne de journal autour de `searchPassages`, sans la requête ni les résultats :
-
-```ts
-// src/server/search/search.ts : Esquisse, dans searchPassages. Des comptes et une durée, jamais les mots cherchés.
-const started = performance.now();
-// … la recherche existante …
-// Noms à adapter aux variables de searchPassages : le nombre de mots de la requête, le nombre de sources rendues.
-console.info('[leon]', 'recherche.duree', JSON.stringify({ ms: Math.round(performance.now() - started), mots: wordCount, sources: hits.length }));
-```
+**La mesure qui déclenche** : une recherche avec mots au-dessus d'une seconde au p95 sur le corpus d'un client, **après avoir épuisé Postgres**. Pour la prendre, une ligne de journal autour de `searchPassages` (`src/server/search/search.ts:536`, existe), au format `console.info('[leon]', 'recherche.duree', …)` : la durée, le nombre de mots et le nombre de sources rendues, jamais les mots cherchés ni les résultats. À écrire le jour où la question se pose.
 
 **Ce qu'on essaie avant**, dans Postgres : une fonction `security definer` qui pose elle-même le filtre de droits (`acl && principals`, comme la politique `tenant_acl`) et laisse ainsi l'index GIN servir ; un index partiel par organisation pour les plus grosses ; `tsvector` précalculé (déjà en colonne `tsv`, carte 06). Chacune garde les droits dans Postgres, ce qui est la règle de l'architecture (section 2 : « La RLS porte les droits »).
 
-**Si Postgres ne suffit plus** : acheter un moteur écrit en Rust (Meilisearch, Qdrant pour les vecteurs, turbopuffer), ne pas l'écrire (note 01). Le prix : une base de plus à opérer, une double écriture, et les droits à refaire hors RLS, filtre par filtre. À quoi ressemblerait un moteur maison, pour mesurer ce qu'on évite :
-
-```rust
-// services/recherche (à ne pas créer) : Esquisse, non compilée. tantivy 0.27.0 (note 02, 1.1), un index par
-// organisation sur un volume Railway. Chaque passage porte son acl ; chaque requête doit le filtrer, sinon une
-// recherche lit ce que la personne n'a pas le droit de voir. C'est là que tout le risque se loge.
-fn chercher(index: &tantivy::Index, mots: &str, principaux: &[uuid::Uuid]) -> tantivy::Result<Vec<PassageTrouve>> {
-    let lecteur = index.reader()?;
-    let schema = index.schema();
-    let texte = schema.get_field("texte")?;
-    let acl = schema.get_field("acl")?; // un terme par principal autorisé à lire le passage
-    let requete_mots = tantivy::query::QueryParser::for_index(index, vec![texte]).parse_query(mots)?;
-    let droits = tantivy::query::BooleanQuery::union(
-        principaux.iter().map(|p| Box::new(tantivy::query::TermQuery::new(
-            tantivy::Term::from_field_text(acl, &p.to_string()),
-            tantivy::schema::IndexRecordOption::Basic,
-        )) as Box<dyn tantivy::query::Query>).collect(),
-    );
-    let requete = tantivy::query::BooleanQuery::intersection(vec![Box::new(requete_mots), Box::new(droits)]);
-    // … TopDocs, puis relecture des passages dans Postgres sous withTenant : la RLS refait le contrôle à la fin.
-    todo!()
-}
-```
-
-**Verdict : non.** Et si un jour oui, un service acheté plutôt que ce code.
+**Si Postgres ne suffit plus** : acheter un moteur écrit en Rust (Meilisearch, Qdrant pour les vecteurs, turbopuffer), ne pas l'écrire (note 01). Le prix : une base de plus à opérer, une double écriture, et les droits à refaire hors RLS, filtre par filtre. Chaque passage y porterait sa liste de droits, et chaque requête devrait l'intersecter avec les principaux de la personne, sinon une recherche lit ce que la personne n'a pas le droit de voir : c'est là que tout le risque se loge. **Verdict : non.** Et si un jour oui, un service acheté.
 
 ### 14.4 L'exécution isolée en WebAssembly
 
@@ -2988,76 +3205,50 @@ fn chercher(index: &tantivy::Index, mots: &str, principaux: &[uuid::Uuid]) -> ta
 
 **Ce qu'on fait alors, d'abord** : acheter un bac à sable (conteneur ou microVM chez un fournisseur), plutôt que d'en écrire un (note 01, « Exécution isolée de code d'agent : Oui, mais à acheter »). Un module WebAssembly ne lance ni Python natif ni shell (note 02, 3.10).
 
-**L'esquisse**, si l'on tenait à le faire nous-mêmes : un service séparé `services/bac-a-sable/` (un plantage reste isolé, comme la porte), appelé par le moteur sur le réseau privé de Railway, qui exécute un module sans aucun import (ni fichier, ni réseau, ni horloge), borné en mémoire, en instructions et en temps :
-
-```rust
-// services/bac-a-sable/src/executer.rs : Esquisse, non compilée. wasmtime 50.0.3 (note 02, 1.1 : Rust 1.97
-// minimum ; une branche LTS 36.0.23 existe). Le module exporte `memory`, `alloc(len) -> ptr` et
-// `run(ptr, len) -> u64` (pointeur et longueur de la sortie JSON, empaquetés).
-use wasmtime::{Config, Engine, Linker, Module, Store, StoreLimits, StoreLimitsBuilder};
-
-pub struct Limites { pub memoire_octets: usize, pub carburant: u64, pub delai: std::time::Duration }
-
-pub fn executer(octets_wasm: &[u8], entree: &[u8], limites: &Limites) -> anyhow::Result<Vec<u8>> {
-    let mut config = Config::new();
-    config.consume_fuel(true); // un plafond d'instructions
-    config.epoch_interruption(true); // un plafond de temps, par un fil qui incrémente l'époque
-    let engine = Engine::new(&config)?;
-    let module = Module::new(&engine, octets_wasm)?; // un module mal formé est refusé ici
-    let limits: StoreLimits = StoreLimitsBuilder::new().memory_size(limites.memoire_octets).instances(1).build();
-    let mut store = Store::new(&engine, limits);
-    store.limiter(|limits| limits);
-    store.set_fuel(limites.carburant)?;
-    store.set_epoch_deadline(1);
-    let moteur = engine.clone();
-    let delai = limites.delai;
-    std::thread::spawn(move || { std::thread::sleep(delai); moteur.increment_epoch(); });
-    // Aucun import : ni WASI, ni fonction de l'hôte. Le module ne voit que sa mémoire.
-    let instance = Linker::new(&engine).instantiate(&mut store, &module)?;
-    let memoire = instance.get_memory(&mut store, "memory").ok_or_else(|| anyhow::anyhow!("pas de mémoire"))?;
-    let alloc = instance.get_typed_func::<u32, u32>(&mut store, "alloc")?;
-    let run = instance.get_typed_func::<(u32, u32), u64>(&mut store, "run")?;
-    let ptr = alloc.call(&mut store, entree.len() as u32)?;
-    memoire.write(&mut store, ptr as usize, entree)?;
-    let sortie = run.call(&mut store, (ptr, entree.len() as u32))?; // carburant, mémoire ou délai épuisés : erreur
-    let (debut, longueur) = ((sortie >> 32) as usize, (sortie & 0xffff_ffff) as usize);
-    let mut octets = vec![0; longueur.min(1 << 20)]; // 1 Mio de sortie au plus
-    memoire.read(&store, debut, &mut octets)?;
-    Ok(octets)
-}
-```
-
-Ce que l'esquisse ne règle pas, et qui est le vrai travail : qui écrit le module (un modèle ? un client ?), comment il est relu, ce qu'il a le droit de lire de la mémoire de Leon (rien, sauf ce que le moteur lui passe en entrée, sous les droits de la personne), et comment sa sortie entre dans `needsClick` (comme un « texte libre », architecture 9.5). **Verdict : non avant l'éditeur d'agents, et alors acheter d'abord.**
+**Si l'on tenait à le faire nous-mêmes** : un service séparé (un plantage reste isolé, comme la porte), appelé par le moteur sur le réseau privé de Railway, qui exécute un module sans aucun import (ni fichier, ni réseau, ni horloge), borné en mémoire, en instructions (le « carburant » de `wasmtime`) et en temps (l'interruption par époque). Ce que cela ne règle pas, et qui est le vrai travail : qui écrit le module (un modèle ? un client ?), comment il est relu, ce qu'il a le droit de lire de la mémoire de Leon (rien, sauf ce que le moteur lui passe en entrée, sous les droits de la personne), et comment sa sortie entre dans `needsClick` (comme un « texte libre », architecture 9.5). **Verdict : non avant l'éditeur d'agents, et alors acheter d'abord.**
 
 ## 15. Tests à écrire
 
 ### 15.1 La liste
 
-Tous dans la caisse, lancés par `cargo test --locked` (job `porte`, section 11). Aucun ne demande de base ni de réseau. État au 20/11/2026 : tous passent (section 5.4).
+Tous dans la caisse, lancés par `cargo test --locked` (job `porte`, section 11). Aucun ne demande de base ni de réseau ; ceux qui parlent de temps tournent sur l'horloge suspendue de `tokio` (`start_paused`) et restent instantanés. État au 20/11/2026, après la relecture : 35 passent, l'essai différentiel est lancé à la main (section 5.4).
 
 | Test | Fichier | Ce qu'il prouve |
 |---|---|---|
 | `vecteurs_de_verification` | `src/tests.rs` | Les 22 cas `verification` de `vecteurs.json` : même verdict que `verify.ts` |
 | `vecteurs_de_dechiffrement` | `src/tests.rs` | Les 2 cas `decryption` : le clair attendu, ou l'échec (même secret lu pour un autre abonnement) |
 | `vecteurs_de_la_porte` | `src/tests.rs` | Les 11 cas `gate` : statut, corps exact, type de contenu, liste exacte des appels à `porte_deposer` |
-| `fournisseurs_est_dans_la_version_connue` | `src/tests.rs` | `version` 1 lue ; une version 2 ou un champ inconnu arrêtent le démarrage |
+| `fournisseurs_est_dans_la_version_connue` | `src/tests.rs` | `version` 1 lue ; une version 2, un champ inconnu dans une spec, ou dans la vérification de chaque outil (donc dans chaque mode du fichier), arrêtent le démarrage |
 | `le_refus_attend_au_moins_200_ms` | `src/tests.rs` | Le refus uniforme attend `refusalMinDelayMs` (temps de `tokio` suspendu : le test reste instantané) |
 | `le_cache_negatif_evite_une_seconde_lecture` | `src/tests.rs` | Trois livraisons vers une adresse inconnue : une seule lecture de `porte_secret` |
 | `au_dela_de_la_limite_une_adresse_hors_cache_recoit_503` | `src/tests.rs` | 300 lectures vides depuis un même /64 ; la suivante, même vers un abonnement vivant, reçoit 503 sans lire la base ; une autre adresse IP lit toujours |
 | `un_corps_trop_gros_recoit_413` | `src/tests.rs` | Un corps de `bodyMaxBytes` + 1 octets (bâti depuis `fournisseurs.json`, comme le demandait le chapitre 03, relecture « Code 6 ») : 413, aucune lecture |
+| `un_corps_trop_gros_recoit_413_avant_l_adresse` | `src/tests.rs` | Sans `content-length`, vers un outil inconnu et pour un écho de validation : 413, comme le `bodyLimit` de Hono |
+| `un_corps_interrompu_recoit_400_et_non_413` | `src/tests.rs` | Un corps dont la lecture échoue (client qui coupe) : 400, aucune lecture de base |
+| `de_l_utf8_invalide_recoit_400` | `src/tests.rs` | Des octets qui ne sont pas de l'UTF-8 : 400 (l'octet nul est dans les vecteurs) |
+| `l_echo_fait_1_024_caracteres_au_plus` | `src/tests.rs` | Un écho de 1 024 unités UTF-16 passe, un de 1 025 reçoit 400 (le caractère de contrôle est dans les vecteurs) |
+| `le_cache_positif_expire_apres_60_s` | `src/tests.rs` | Un abonnement retiré de la base reste servi 59 s par le cache, puis est refusé à 61 s après une seconde lecture |
+| `un_secret_illisible_est_un_refus_et_non_une_panne` | `src/tests.rs` | Un secret `v1:` indéchiffrable : refus uniforme (401), aucun dépôt |
+| `un_compte_illisible_est_accepte_sans_depot` | `src/tests.rs` | Une livraison HubSpot signée sans `portalId` : 202, aucun dépôt (le cas « plusieurs comptes » est dans les vecteurs) |
+| `une_base_lente_recoit_503_en_2_s` | `src/tests.rs` | Une base qui ne répond plus : 503 au bout de 2 s exactement |
+| `une_requete_ne_dure_jamais_plus_de_3_s` | `src/tests.rs` | Deux appels de 1,6 s chacun : 503 au bout de 3 s (`porte.delai`), aucun dépôt |
 | `une_panne_de_base_n_est_pas_un_refus` | `src/tests.rs` | Base en panne : 503, jamais 401 |
 | `sans_leon_porte_url_une_signature_sur_l_adresse_recoit_503` | `src/tests.rs` | HubSpot sans `LEON_PORTE_URL` : 503 |
-| `le_bilan_de_sante_ne_lit_pas_la_base` | `src/tests.rs` | `/sante` : 200 `{"ok":true}`, base en panne ou non |
+| `le_bilan_de_sante_attend_la_premiere_lecture_de_la_base` | `src/tests.rs` | `/sante` : 503 `{"ok":false}` sans lire la base ; base injoignable, une lecture par seconde et toujours 503 ; base revenue, 200 `{"ok":true}` ; puis panne en régime, toujours 200, sans lecture |
+| `sentry_recoit_un_envoi_par_minute_et_par_evenement` | `src/tests.rs` | Un envoi, 59 tus, puis un envoi qui les compte ; un autre événement a sa propre fenêtre |
+| `sentry_ne_recoit_aucun_texte_recu` | `src/tests.rs` | Une panique qui citerait un corps sort masquée, sans requête ni extra ; un message de `log_error` garde son texte et ses seuls identifiants |
 | `cle_d_adresse_ip` | `src/tests.rs` | Les cas de `ipKey` du chapitre 03 (13.3), plus `::ffff:` en hexadécimal et une zone |
 | `les_secrets_d_application_sont_les_seuls_lus` | `src/tests.rs` | Seules les variables nommées par `fournisseurs.json` sont lues ; `LEON_CONNECTORS_KEY` ne l'est jamais ; une `LEON_PORTE_KEY` mal formée arrête le démarrage |
 | `differentiel_avec_verify_ts` | `src/tests.rs`, ignoré par défaut | L'essai différentiel (15.3) |
+| `vecteurs_de_dechiffrement` (suite) | `src/tests.rs` | La même clé en base64url sans remplissage, le même secret réécrit en base64 standard avec remplissage : même résultat, comme sous Node |
 | `base64_tolere_les_bits_de_fin_comme_node`, `pointeur_avec_etoile_et_entiers_surs`, `formulaire_payload`, `une_moitie_de_paire_seule_devient_u_fffd_comme_dans_node` | `src/verifier.rs` | Les endroits où Rust et Node diffèrent d'habitude |
-| `la_cle_fait_32_octets`, `un_format_inconnu_est_illisible` | `src/secret.rs` | Le format `v1:` et la clé |
+| `chaque_mode_refuse_un_champ_inconnu` | `src/verifier.rs` | Les quatre modes, le morceau signé littéral et le secret : un champ de plus est refusé |
+| `la_cle_fait_32_octets`, `la_cle_se_lit_dans_les_deux_alphabets_comme_node`, `un_format_inconnu_est_illisible` | `src/secret.rs` | Le format `v1:` et la clé, dans les deux alphabets ; un caractère hors alphabet est refusé |
 | `memo_expire_et_evince_la_plus_ancienne`, `la_fenetre_ne_se_prolonge_pas`, `une_erreur_de_base_ne_garde_aucun_message` | `src/depot.rs` | Les caches comme `Memo` et `Counters` ; aucun message de Postgres au journal |
 
 Nommage : en français, en phrase, comme les titres de tests du dépôt (`it('…')`) ; les fonctions de test Rust ne peuvent pas porter d'espaces ni d'apostrophes, d'où les tirets bas.
 
-Un test **à ajouter côté TypeScript**, dans la PR de la section 4 : la ligne `porte.reponse` de `hono-gate.ts` (section 4.1).
+Des tests **à ajouter côté TypeScript**, dans la PR de la section 4 : la ligne `porte.reponse` de `hono-gate.ts`, pour une réponse 202, 413 et 500 (section 4.1).
 
 ### 15.2 `src/tests.rs` (à créer), en entier
 
@@ -3066,27 +3257,37 @@ Rattaché par `#[cfg(test)] mod tests;` dans `main.rs` : il ne compile qu'en tes
 ```rust
 // Les cas de services/porte/vecteurs.json, rejoués par le service Rust : les mêmes que verify.test.ts et
 // hono-gate.test.ts (chapitre 03, section 13). Un verdict qui change ici change aussi en TypeScript, ou l'une des deux
-// mises en œuvre a tort. Puis ce que les vecteurs ne mesurent pas : le délai du refus, la limite par adresse IP, le
-// cache négatif, la taille du corps, une panne de base.
+// mises en œuvre a tort. Puis ce que les vecteurs ne mesurent pas : le délai du refus, la limite par adresse IP, les
+// caches, la taille et la lecture du corps, une base en panne ou lente, le bilan de santé, ce qui part vers Sentry.
 //
 // Le fichier est généré par `pnpm porte:generer` (src/server/webhooks/providers-json.ts) ; Exemple fictif : ses
 // secrets, clés, identifiants et corps sont inventés.
 
 use std::collections::BTreeMap;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::Mutex as StdMutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicI64, AtomicUsize, Ordering};
+use std::task::{Context, Poll};
+use std::time::Duration;
 
-use axum::body::{Body, to_bytes};
+use axum::body::{Body, Bytes, HttpBody, to_bytes};
 use axum::http::{Request as HttpRequest, StatusCode};
+use axum::response::Response;
+use base64::Engine as _;
+use hmac::{Hmac, KeyInit, Mac};
 use serde::Deserialize;
 use serde_json::Value;
+use sha2::Sha256;
 use tower::ServiceExt;
 
 use crate::depot::{Deposit, PorteStore, StoreError, SubscriptionRow};
 use crate::secret::{open_subscription_secret, parse_porte_key};
 use crate::verifier::{BodyFormat, VerifyInput, WebhookVerification, verify_webhook};
-use crate::{PROVIDERS_JSON, Porte, Providers, ip_key, load_providers, porte_settings, router};
+use crate::{
+    Clock, PROVIDERS_JSON, Porte, Providers, SentryThrottle, ip_key, load_providers,
+    porte_settings, router, scrub_event,
+};
 
 const VECTORS_JSON: &str = include_str!("../vecteurs.json");
 
@@ -3187,12 +3388,33 @@ fn providers() -> Providers {
 }
 
 // La fausse base des vecteurs : porte_secret lit store.subscriptions, porte_deposer note ses arguments et rend 1.
+// `broken` : chaque appel échoue tout de suite. `delay` : chaque appel attend d'abord (une base lente).
 #[derive(Default)]
 struct FakeStore {
-    subscriptions: Vec<StoredSubscription>,
+    subscriptions: StdMutex<Vec<StoredSubscription>>,
     deposits: StdMutex<Vec<Deposit>>,
     lookups: AtomicUsize,
-    broken: bool,
+    broken: AtomicBool,
+    delay: Duration,
+}
+
+impl FakeStore {
+    fn with(subscriptions: &[StoredSubscription]) -> Self {
+        Self {
+            subscriptions: StdMutex::new(subscriptions.to_vec()),
+            ..Default::default()
+        }
+    }
+
+    async fn call(&self) -> Result<(), StoreError> {
+        if !self.delay.is_zero() {
+            tokio::time::sleep(self.delay).await;
+        }
+        if self.broken.load(Ordering::SeqCst) {
+            return Err(StoreError("PoolTimedOut".into()));
+        }
+        Ok(())
+    }
 }
 
 impl PorteStore for Arc<FakeStore> {
@@ -3202,11 +3424,11 @@ impl PorteStore for Arc<FakeStore> {
         abonnement: &str,
     ) -> Result<Option<SubscriptionRow>, StoreError> {
         self.lookups.fetch_add(1, Ordering::SeqCst);
-        if self.broken {
-            return Err(StoreError("PoolTimedOut".into()));
-        }
+        self.call().await?;
         Ok(self
             .subscriptions
+            .lock()
+            .unwrap()
             .iter()
             .find(|row| row.outil == outil && row.id == abonnement)
             .map(|row| SubscriptionRow {
@@ -3216,12 +3438,20 @@ impl PorteStore for Arc<FakeStore> {
     }
 
     async fn deposit(&self, deposit: &Deposit) -> Result<i32, StoreError> {
-        if self.broken {
-            return Err(StoreError("PoolTimedOut".into()));
-        }
+        self.call().await?;
         self.deposits.lock().unwrap().push(deposit.clone());
         Ok(1)
     }
+}
+
+fn porte_with_clock(
+    env: &BTreeMap<String, String>,
+    store: Arc<FakeStore>,
+    clock: Clock,
+) -> Arc<Porte<Arc<FakeStore>>> {
+    let providers = providers();
+    let settings = porte_settings(&providers, |name| env.get(name).cloned()).expect("réglages");
+    Arc::new(Porte::new(providers, settings, store, clock))
 }
 
 fn porte_with(
@@ -3229,14 +3459,16 @@ fn porte_with(
     store: Arc<FakeStore>,
     now: i64,
 ) -> Arc<Porte<Arc<FakeStore>>> {
-    let providers = providers();
-    let settings = porte_settings(&providers, |name| env.get(name).cloned()).expect("réglages");
-    Arc::new(Porte::new(
-        providers,
-        settings,
-        store,
-        Box::new(move || now),
-    ))
+    porte_with_clock(env, store, Box::new(move || now))
+}
+
+async fn send(porte: &Arc<Porte<Arc<FakeStore>>>, request: HttpRequest<Body>) -> Response {
+    router(porte.clone()).oneshot(request).await.unwrap()
+}
+
+async fn body_text(response: Response) -> String {
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    String::from_utf8_lossy(&body).into_owned()
 }
 
 fn request(
@@ -3271,6 +3503,14 @@ fn fournisseurs_est_dans_la_version_connue() {
         )
         .is_err()
     );
+    // De même un champ de plus dans la vérification de chaque outil, donc dans chaque mode que le fichier emploie
+    // (jeton, hmac-sha256, standard-webhooks).
+    let file: Value = serde_json::from_str(PROVIDERS_JSON).unwrap();
+    for tool in file["tools"].as_object().unwrap().keys() {
+        let mut changed = file.clone();
+        changed["tools"][tool]["verification"]["inconnu"] = 1.into();
+        assert!(load_providers(&changed.to_string()).is_err(), "{tool}");
+    }
 }
 
 #[test]
@@ -3297,12 +3537,40 @@ fn vecteurs_de_verification() {
     }
 }
 
+// Les trois parties de `v1:` réécrites dans l'autre alphabet, avec remplissage : Buffer.from(…, 'base64url') de Node
+// les lit pareil.
+fn in_standard_alphabet(stored: &str) -> String {
+    let parts: Vec<String> = stored
+        .split(':')
+        .enumerate()
+        .map(|(index, part)| {
+            if index == 0 {
+                return part.to_string();
+            }
+            let mut part = part.replace('-', "+").replace('_', "/");
+            while part.len() % 4 != 0 {
+                part.push('=');
+            }
+            part
+        })
+        .collect();
+    parts.join(":")
+}
+
 #[test]
 fn vecteurs_de_dechiffrement() {
     for case in vectors().decryption {
         let key = parse_porte_key(&case.key).expect("clé de 32 octets");
         let got = open_subscription_secret(&case.stored, &case.aad, &key).ok();
         assert_eq!(got, case.plain, "{}", case.name);
+        // La même clé écrite en base64url sans remplissage, le même secret écrit en base64 standard : même résultat.
+        let url_key = case.key.replace('+', "-").replace('/', "_");
+        let url_key = parse_porte_key(url_key.trim_end_matches('='));
+        assert_eq!(url_key, Some(key), "{}", case.name);
+        let standard = in_standard_alphabet(&case.stored);
+        assert_ne!(standard, case.stored);
+        let got = open_subscription_secret(&standard, &case.aad, &key).ok();
+        assert_eq!(got, case.plain, "{} (alphabet standard)", case.name);
     }
 }
 
@@ -3313,10 +3581,7 @@ async fn vecteurs_de_la_porte() {
     for case in &vectors.gate.cases {
         let mut env = vectors.gate.env.clone();
         env.extend(case.env.clone().unwrap_or_default());
-        let store = Arc::new(FakeStore {
-            subscriptions: vectors.gate.store.subscriptions.clone(),
-            ..Default::default()
-        });
+        let store = Arc::new(FakeStore::with(&vectors.gate.store.subscriptions));
         let porte = porte_with(&env, store.clone(), case.now);
         let r = &case.request;
         let response = router(porte)
@@ -3369,10 +3634,7 @@ fn outlook_delivery() -> (BTreeMap<String, String>, Arc<FakeStore>, String, Stri
         .iter()
         .find(|case| case.name == "outlook : livraison juste")
         .unwrap();
-    let store = Arc::new(FakeStore {
-        subscriptions: vectors.gate.store.subscriptions.clone(),
-        ..Default::default()
-    });
+    let store = Arc::new(FakeStore::with(&vectors.gate.store.subscriptions));
     (
         vectors.gate.env.clone(),
         store,
@@ -3490,10 +3752,221 @@ async fn un_corps_trop_gros_recoit_413() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn un_corps_trop_gros_recoit_413_avant_l_adresse() {
+    // Comme le bodyLimit de hono-gate.ts, qui lit un corps sans content-length avant toute autre étape : même vers un
+    // outil inconnu, même pour un écho de validation.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let size = providers().limits.body_max_bytes + 1;
+    for (path, query) in [("/h/inconnu", ""), (path.as_str(), "validationToken=x")] {
+        let big = request("POST", path, query, &BTreeMap::new(), vec![b'a'; size]);
+        assert!(!big.headers().contains_key("content-length"));
+        let response = send(&porte, big).await;
+        assert_eq!(response.status(), StatusCode::PAYLOAD_TOO_LARGE, "{path}");
+        assert_eq!(
+            body_text(response).await,
+            r#"{"error":"Request too large"}"#
+        );
+    }
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+// Un corps qui échoue au milieu de sa lecture : un client qui coupe la connexion.
+struct CutBody;
+
+impl HttpBody for CutBody {
+    type Data = Bytes;
+    type Error = std::io::Error;
+
+    fn poll_frame(
+        self: Pin<&mut Self>,
+        _: &mut Context<'_>,
+    ) -> Poll<Option<Result<http_body::Frame<Bytes>, std::io::Error>>> {
+        Poll::Ready(Some(Err(std::io::Error::other("connexion coupée"))))
+    }
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_corps_interrompu_recoit_400_et_non_413() {
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let cut = HttpRequest::post(path).body(Body::new(CutBody)).unwrap();
+    let response = send(&porte, cut).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn de_l_utf8_invalide_recoit_400() {
+    // L'octet nul est dans les vecteurs (cas « octet nul dans le corps ») ; un octet invalide ne peut pas y être.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let invalid = request(
+        "POST",
+        &path,
+        "",
+        &BTreeMap::new(),
+        vec![b'{', 0xff, 0xfe, b'}'],
+    );
+    let response = send(&porte, invalid).await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(body_text(response).await, r#"{"error":"Invalid request"}"#);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn l_echo_fait_1_024_caracteres_au_plus() {
+    // Le caractère de contrôle est dans les vecteurs ; la longueur, comptée en unités UTF-16 comme en JavaScript.
+    let (env, store, path, _) = outlook_delivery();
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let max = providers().limits.echo_max_chars;
+    let fits = format!("validationToken={}", "é".repeat(max));
+    let response = send(
+        &porte,
+        request("POST", &path, &fits, &BTreeMap::new(), vec![]),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(body_text(response).await.chars().count(), max);
+    let too_long = format!("validationToken={}", "a".repeat(max + 1));
+    let response = send(
+        &porte,
+        request("POST", &path, &too_long, &BTreeMap::new(), vec![]),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+}
+
+#[tokio::test(start_paused = true)]
+async fn le_cache_positif_expire_apres_60_s() {
+    // Un abonnement résilié (ou une personne partie) cesse d'être servi au plus 60 s après : porte_secret est relu.
+    let (env, store, path, body) = outlook_delivery();
+    let now = Arc::new(AtomicI64::new(1_795_165_200_000));
+    let clock = now.clone();
+    let porte = porte_with_clock(
+        &env,
+        store.clone(),
+        Box::new(move || clock.load(Ordering::SeqCst)),
+    );
+    let deliver = || {
+        request(
+            "POST",
+            &path,
+            "",
+            &BTreeMap::new(),
+            body.clone().into_bytes(),
+        )
+    };
+    assert_eq!(send(&porte, deliver()).await.status(), StatusCode::ACCEPTED);
+    store.subscriptions.lock().unwrap().clear();
+    now.fetch_add(59_000, Ordering::SeqCst);
+    assert_eq!(send(&porte, deliver()).await.status(), StatusCode::ACCEPTED);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 1);
+    now.fetch_add(2_000, Ordering::SeqCst);
+    assert_eq!(
+        send(&porte, deliver()).await.status(),
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 2);
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_secret_illisible_est_un_refus_et_non_une_panne() {
+    let (env, _, path, body) = outlook_delivery();
+    let mut subscriptions = vectors().gate.store.subscriptions;
+    for row in &mut subscriptions {
+        row.stored = Some("v1:AQEBAQEBAQEBAQEB:AAAA:AAAA".into());
+    }
+    let store = Arc::new(FakeStore::with(&subscriptions));
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
+async fn un_compte_illisible_est_accepte_sans_depot() {
+    // Signé par HubSpot, mais sans portalId : rien à ranger. 202, comme la route Hono (chapitre 03, 6.1, étape 9) ;
+    // le cas « plusieurs comptes » est dans les vecteurs.
+    let vectors = vectors();
+    let case = vectors
+        .gate
+        .cases
+        .iter()
+        .find(|case| case.name.starts_with("hubspot : livraison juste"))
+        .unwrap();
+    let secret = &vectors.gate.env["LEON_OAUTH_HUBSPOT_SECRET"];
+    let body = r#"[{"eventId":1001,"objectId":3001}]"#;
+    let stamp = &case.request.headers["x-hubspot-request-timestamp"];
+    let mut mac = <Hmac<Sha256> as KeyInit>::new_from_slice(secret.as_bytes()).unwrap();
+    mac.update(
+        format!(
+            "POST{}/h/hubspot{body}{stamp}",
+            vectors.gate.env["LEON_PORTE_URL"]
+        )
+        .as_bytes(),
+    );
+    let signature = base64::engine::general_purpose::STANDARD.encode(mac.finalize().into_bytes());
+    let mut headers = case.request.headers.clone();
+    headers.insert("x-hubspot-signature-v3".into(), signature);
+    let store = Arc::new(FakeStore::default());
+    let porte = porte_with(&vectors.gate.env, store.clone(), case.now);
+    let response = send(
+        &porte,
+        request("POST", "/h/hubspot", "", &headers, body.into()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::ACCEPTED);
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
+async fn une_base_lente_recoit_503_en_2_s() {
+    // Une base qui ne répond plus : 503 au bout de DB_CALL_TIMEOUT, pas au bout du délai de l'éditeur.
+    let (env, _, path, body) = outlook_delivery();
+    let mut store = FakeStore::with(&vectors().gate.store.subscriptions);
+    store.delay = Duration::from_secs(60);
+    let porte = porte_with(&env, Arc::new(store), 1_795_165_200_000);
+    let started = tokio::time::Instant::now();
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(started.elapsed(), Duration::from_secs(2));
+}
+
+#[tokio::test(start_paused = true)]
+async fn une_requete_ne_dure_jamais_plus_de_3_s() {
+    // Deux appels de 1,6 s chacun, sous la limite d'un appel : c'est le délai de la requête qui coupe (porte.delai).
+    let (env, _, path, body) = outlook_delivery();
+    let mut store = FakeStore::with(&vectors().gate.store.subscriptions);
+    store.delay = Duration::from_millis(1_600);
+    let store = Arc::new(store);
+    let porte = porte_with(&env, store.clone(), 1_795_165_200_000);
+    let started = tokio::time::Instant::now();
+    let response = send(
+        &porte,
+        request("POST", &path, "", &BTreeMap::new(), body.into_bytes()),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(body_text(response).await, r#"{"error":"Unavailable"}"#);
+    assert_eq!(started.elapsed(), Duration::from_secs(3));
+    assert!(store.deposits.lock().unwrap().is_empty());
+}
+
+#[tokio::test(start_paused = true)]
 async fn une_panne_de_base_n_est_pas_un_refus() {
     let (env, _, path, body) = outlook_delivery();
     let store = Arc::new(FakeStore {
-        broken: true,
+        broken: AtomicBool::new(true),
         ..Default::default()
     });
     let porte = porte_with(&env, store, 1_795_165_200_000);
@@ -3536,20 +4009,96 @@ async fn sans_leon_porte_url_une_signature_sur_l_adresse_recoit_503() {
     assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
 }
 
-#[tokio::test]
-async fn le_bilan_de_sante_ne_lit_pas_la_base() {
+#[tokio::test(start_paused = true)]
+async fn le_bilan_de_sante_attend_la_premiere_lecture_de_la_base() {
     let store = Arc::new(FakeStore {
-        broken: true,
+        broken: AtomicBool::new(true),
         ..Default::default()
     });
-    let porte = porte_with(&BTreeMap::new(), store, 0);
-    let response = router(porte)
-        .oneshot(HttpRequest::get("/sante").body(Body::empty()).unwrap())
-        .await
-        .unwrap();
+    let porte = porte_with(&BTreeMap::new(), store.clone(), 0);
+    let sante = || HttpRequest::get("/sante").body(Body::empty()).unwrap();
+    // Avant toute lecture réussie : 503. /sante elle-même ne lit jamais la base.
+    let response = send(&porte, sante()).await;
+    assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+    assert_eq!(body_text(response).await, r#"{"ok":false}"#);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 0);
+    // Base injoignable (mauvais mot de passe, certificat absent…) : une lecture par seconde, /sante reste à 503, et
+    // Railway garde l'ancienne version.
+    let waiting = tokio::spawn({
+        let porte = porte.clone();
+        async move { porte.wait_for_base().await }
+    });
+    tokio::time::sleep(Duration::from_millis(3_500)).await;
+    assert!(!porte.is_ready());
+    assert_eq!(store.lookups.load(Ordering::SeqCst), 4);
+    assert_eq!(
+        send(&porte, sante()).await.status(),
+        StatusCode::SERVICE_UNAVAILABLE
+    );
+    // La base répond : /sante passe à 200.
+    store.broken.store(false, Ordering::SeqCst);
+    waiting.await.unwrap();
+    let response = send(&porte, sante()).await;
     assert_eq!(response.status(), StatusCode::OK);
-    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
-    assert_eq!(&body[..], br#"{"ok":true}"#);
+    assert_eq!(body_text(response).await, r#"{"ok":true}"#);
+    // Puis une panne en régime : /sante reste à 200, sans lire la base. Les livraisons reçoivent 503.
+    store.broken.store(true, Ordering::SeqCst);
+    let lookups = store.lookups.load(Ordering::SeqCst);
+    assert_eq!(send(&porte, sante()).await.status(), StatusCode::OK);
+    assert_eq!(store.lookups.load(Ordering::SeqCst), lookups);
+}
+
+#[test]
+fn sentry_recoit_un_envoi_par_minute_et_par_evenement() {
+    let mut throttle = SentryThrottle::new();
+    let start = std::time::Instant::now();
+    let at = |seconds: u64| start + Duration::from_secs(seconds);
+    assert_eq!(throttle.admit("porte.base", at(0)), Some(0));
+    for second in 1..60 {
+        assert_eq!(throttle.admit("porte.base", at(second)), None);
+    }
+    // Un autre événement a sa propre fenêtre : une panne de base ne tait pas une clé illisible.
+    assert_eq!(throttle.admit("porte.secret_illisible", at(30)), Some(0));
+    // La minute passée : un envoi, qui compte les 59 tus.
+    assert_eq!(throttle.admit("porte.base", at(60)), Some(59));
+    assert_eq!(throttle.admit("porte.base", at(61)), None);
+}
+
+#[test]
+fn sentry_ne_recoit_aucun_texte_recu() {
+    use sentry::protocol::{Event, Exception};
+    let body = r#"{"value":[{"clientState":"exemple-fictif"}]}"#;
+    // Une panique dont le message citerait le corps : masquée, comme tout ce qui ne vient pas de log_error.
+    let mut panic = Event {
+        message: Some(format!("byte index 3 is out of bounds of `{body}`")),
+        request: Some(Default::default()),
+        ..Default::default()
+    };
+    panic.exception.values.push(Exception {
+        ty: "panic".into(),
+        value: Some(body.into()),
+        ..Default::default()
+    });
+    panic.extra.insert("corps".into(), body.into());
+    let scrubbed = scrub_event(panic);
+    assert!(
+        !serde_json::to_string(&scrubbed)
+            .unwrap()
+            .contains("clientState")
+    );
+    assert_eq!(scrubbed.message.as_deref(), Some("[masqué]"));
+    assert!(scrubbed.request.is_none());
+    // Un message de log_error (étiquette `event`) : gardé, avec ses seuls identifiants.
+    let mut ours = Event {
+        message: Some("porte.base: PoolTimedOut".into()),
+        ..Default::default()
+    };
+    ours.tags.insert("event".into(), "porte.base".into());
+    ours.extra.insert("outil".into(), "outlook".into());
+    ours.extra.insert("corps".into(), body.into());
+    let kept = scrub_event(ours);
+    assert_eq!(kept.message.as_deref(), Some("porte.base: PoolTimedOut"));
+    assert_eq!(kept.extra.keys().collect::<Vec<_>>(), ["outil"]);
 }
 
 #[test]
@@ -3594,7 +4143,7 @@ fn les_secrets_d_application_sont_les_seuls_lus() {
 }
 
 // Essai différentiel, hors CI : des cas tirés autour des vecteurs par un script Node, jugés par verify.ts, dans le
-// format de la section « verification » (chapitre 15, section 14). Les cas nommés « écart connu » sont ceux où
+// format de la section « verification » (chapitre 15, section 15.3). Les cas nommés « écart connu » sont ceux où
 // serde_json refuse ce que JSON.parse accepte : ils doivent diverger, et seulement eux.
 #[derive(Deserialize)]
 struct Differential {
@@ -3721,8 +4270,8 @@ PORTE_DIFFERENTIEL=/tmp/cas.json cargo test --locked differentiel -- --ignored -
 ```
 
 ```text
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s
-     Running unittests src/main.rs (target/debug/deps/porte-528d9b173955f7d7)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.18s
+     Running unittests src/main.rs (target/debug/deps/porte-ea8cf251fcf9d1a9)
 
 running 1 test
 425 cas, 2 divergences : [
@@ -3731,16 +4280,16 @@ running 1 test
 ]
 test tests::differentiel_avec_verify_ts ... ok
 
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.02s
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.02s
 ```
 
-Deux divergences, celles qui étaient attendues (section 6, écart E15-6). Un premier passage, avant `replace_lone_surrogates`, en trouvait une troisième : une moitié de paire UTF-16 seule ailleurs dans un corps Outlook faisait refuser en Rust ce que `verify.ts` acceptait. C'est cet essai qui l'a montrée.
+Deux divergences, celles qui étaient attendues (section 6, écart E15-6). La sortie ci-dessus est celle du passage refait après la relecture, sur les mêmes 425 cas : le résultat n'a pas changé (la relecture n'a touché, dans `verifier.rs`, que la lecture de `fournisseurs.json`). Un premier passage, avant `replace_lone_surrogates`, en trouvait une troisième : une moitié de paire UTF-16 seule ailleurs dans un corps Outlook faisait refuser en Rust ce que `verify.ts` acceptait. C'est cet essai qui l'a montrée.
 
 **Proposition** (chapitre 03, après la PR W5) : faire entrer ce tirage dans le dépôt comme `src/server/webhooks/porte-differentiel.test.ts` (projet `unit`, ne tourne que si `LEON_PORTE_DIFFERENTIEL` donne un chemin de sortie), pour le relancer à chaque mode ou outil nouveau. Pas dans la CI : des cas tirés au hasard ne doivent pas faire échouer une PR sans rapport.
 
 ### 15.4 L'essai de bout en bout
 
-Le binaire de production (`cargo build --release`), lancé contre une base Postgres 16 jetable, sur la machine de la session. La base ne porte que ce que les deux fonctions lisent : des tables réduites pour `organization`, `"user"`, `member` et `connections`, puis, **recopiés sans changement**, les tables `abonnements_webhook` et `boite_entree_webhooks` de `0083` et les fonctions `porte_secret` et `porte_deposer` du chapitre 01 (section 11), avec leurs droits. Rien de l'application n'a tourné : ni serveur, ni migration.
+Le binaire de production (`cargo build --release`), lancé contre une base **Postgres 16** jetable, sur la machine de la session : la 17 de `docker-compose.yml` (`pgvector/pgvector:pg17`) et de RDS n'était pas installable (pas de paquet, pas de démon Docker). Deux passages : le premier avec le code d'avant la relecture, le second avec celui d'après (fin de section). La base ne porte que ce que les deux fonctions lisent : des tables réduites pour `organization`, `"user"`, `member` et `connections`, puis, **recopiés sans changement**, les tables `abonnements_webhook` et `boite_entree_webhooks` de `0083` et les fonctions `porte_secret` et `porte_deposer` du chapitre 01 (section 11), avec leurs droits. Rien de l'application n'a tourné : ni serveur, ni migration.
 
 ```sql
 -- Essai local du service Rust : le strict nécessaire de 0083 pour porte_secret et porte_deposer (chapitre 01).
@@ -3822,7 +4371,7 @@ for ligne in lignes():
     print('  ', ligne)
 ```
 
-Ce qu'il a rendu (statut, corps, durée en millisecondes ; puis les lignes de `boite_entree_webhooks`) :
+Ce qu'il a rendu au premier passage (statut, corps, durée en millisecondes ; puis les lignes de `boite_entree_webhooks`) :
 
 ```text
 outlook, livraison       (202, '', 18)
@@ -3848,7 +4397,7 @@ Ce que cela montre :
 
 Le réveil du worker : une session `psql` en `LISTEN leon_porte` a reçu, pendant une livraison, `Asynchronous notification "leon_porte" with payload "d7a31ed4-…" received` : l'identifiant de la ligne, comme le chapitre 01 le prévoit.
 
-Le journal du service pendant l'essai (lignes JSON, sur la sortie standard) :
+Le journal du service pendant le premier passage (lignes JSON, sur la sortie standard) :
 
 ```json
 {"timestamp":"2026-11-20T15:28:48.717801Z","level":"INFO","fields":{"message":"[leon]","event":"porte.demarree","port":18080,"outils":"fathom,hubspot,outlook"}}
@@ -3866,13 +4415,95 @@ Le journal du service pendant l'essai (lignes JSON, sur la sortie standard) :
 
 La mémoire résidente du processus après ces requêtes (`/proc/<pid>/status`) : **7,6 Mo** (`VmRSS: 7644 kB`, pic identique). Sur la machine de la session, sans charge : c'est un ordre de grandeur, pas une mesure de production. L'arrêt sur `SIGTERM` a écrit `porte.arret` et rendu la main en moins d'une seconde. Sans `DATABASE_URL_PORTE`, ou avec une `LEON_PORTE_KEY` de travers, le binaire sort en code 1 avec `porte.demarrage` et la raison.
 
+**Le second passage, après la relecture.** Le binaire corrigé, sur une base neuve (même schéma, mêmes données) qui demande cette fois un mot de passe en TCP, pour pouvoir en donner un faux. `lancer.sh` prend le binaire, le mot de passe et le port :
+
+```bash
+#!/usr/bin/env bash
+# Lance un binaire de la porte contre la base d'essai locale (valeurs fictives des vecteurs).
+# Usage : lancer.sh <binaire> [mot de passe] [port]
+export DATABASE_URL_PORTE="postgres://leon_porte:${2:-leon_porte}@127.0.0.1:54331/essai?sslmode=disable"
+export LEON_PORTE_KEY='CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk='
+export LEON_PORTE_URL='https://porte.exemple.test'
+export LEON_OAUTH_HUBSPOT_SECRET='exemple-fictif-secret-client-hubspot'
+export LEON_IP_HEADER='x-real-ip'
+export PORT="${3:-18080}"
+exec "$1"
+```
+
+Trois essais. **Un mot de passe faux** : le service démarre, `/sante` reste en 503, une livraison reçoit 503, et le journal dit pourquoi, une fois par seconde, sans aucun message de Postgres (seulement son code, `28P01` : échec d'authentification). Un déploiement ainsi réglé échouerait au bilan de santé.
+
+```text
+$ curl -s -w ' %{http_code}' http://127.0.0.1:18080/sante          # 3,5 s après le démarrage
+{"ok":false} 503
+$ curl … -X POST …/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f
+503
+{"timestamp":"2026-11-20T18:31:49.482303Z","level":"INFO","fields":{"message":"[leon]","event":"porte.demarree","port":18080,"outils":"fathom,hubspot,outlook"}}
+{"timestamp":"2026-11-20T18:31:49.486593Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"etape\":\"demarrage\"}","error":"Database code=28P01"}}
+{"timestamp":"2026-11-20T18:31:50.493756Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"etape\":\"demarrage\"}","error":"Database code=28P01"}}
+{"timestamp":"2026-11-20T18:31:51.502130Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"etape\":\"demarrage\"}","error":"Database code=28P01"}}
+{"timestamp":"2026-11-20T18:31:52.508606Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"etape\":\"demarrage\"}","error":"Database code=28P01"}}
+{"timestamp":"2026-11-20T18:31:52.998415Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"outil\":\"outlook\"}","error":"Database code=28P01"}}
+{"timestamp":"2026-11-20T18:31:52.998468Z","level":"INFO","fields":{"message":"[leon]","event":"porte.reponse","outil":"outlook","statut":503,"ms":5}}
+{"timestamp":"2026-11-20T18:31:52.999531Z","level":"INFO","fields":{"message":"[leon]","event":"porte.arret"}}
+```
+
+**Le bon mot de passe**, et le script d'essai du premier passage (seuls changent le chemin de `vecteurs.json` et l'accès de `psql`, par le socket local). Mêmes réponses, mêmes lignes en base ; `porte.prete` apparaît 9 ms après le démarrage, et `/sante` répond 200. Mémoire résidente : **7,4 Mo** (`VmRSS: 7428 kB`).
+
+```text
+{"ok":true} 200
+outlook, livraison       (202, '', 25)
+outlook, la même         (202, '', 3)
+outlook, écho            (200, 'jeton exemple', 0)
+outlook, inconnu         (401, '{"error":"Invalid signature"}', 205)
+outlook, cycle de vie    (202, '', 1)
+hubspot, signé maintenant (202, '', 4)
+hubspot, vieux de 301 s   (401, '{"error":"Invalid signature"}', 202)
+fathom, signé maintenant  (202, '', 4)
+   outlook|abonnement|livraison|-|e80a1ac0c7a48455|recue
+   hubspot|app|livraison|12345678|4b907cad4007b804|recue
+   hubspot|app|livraison|12345678|4b907cad4007b804|recue
+   fathom|abonnement|livraison|-|msg_essai_0001|recue
+```
+
+**Une base lente** : `porte_secret` remplacée, le temps de l'essai, par une fonction qui dort 5 secondes avant d'appeler la vraie (sauf pour la lecture de démarrage). La livraison reçoit 503 au bout de 2 s ; Postgres a arrêté la requête de lui-même (`statement_timeout`), et son journal le dit.
+
+```text
+$ curl -s -w ' %{http_code} en %{time_total} s' -X POST … …/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f
+{"error":"Unavailable"} 503 en 2.001814 s
+{"timestamp":"2026-11-20T18:31:56.595984Z","level":"ERROR","fields":{"message":"[leon]","event":"porte.base","details":"{\"outil\":\"outlook\"}","error":"Database code=57014"}}
+{"timestamp":"2026-11-20T18:31:56.596039Z","level":"INFO","fields":{"message":"[leon]","event":"porte.reponse","outil":"outlook","statut":503,"ms":2000}}
+-- journal de Postgres :
+ERROR:  canceling statement due to statement timeout
+```
+
+Avant le filtre du journal (section 9.4), ce même essai avait aussi écrit deux lignes de `sqlx` : un avertissement « slow statement » avec le texte SQL, et « error occurred while testing the connection on-release » avec le message de Postgres. C'est ce qui a fait limiter le journal aux lignes de la porte.
+
+**`comparer.sh`**, entre le binaire d'avant la relecture (port 18081) et celui d'après (port 18080), tous deux sur la même base :
+
+```text
+pareil      abonnement inconnu : {"error":"Invalid signature"} 401
+pareil      outil inconnu : {"error":"Invalid signature"} 401
+pareil      abonnement mal formé : {"error":"Invalid signature"} 401
+pareil      outil d'application sur une adresse d'abonnement : {"error":"Invalid signature"} 401
+pareil      écho de validation : essai de comparaison 200
+pareil      écho avec un caractère de contrôle : {"error":"Invalid request"} 400
+pareil      corps trop gros : {"error":"Request too large"} 413
+DIFFÉRENT   corps trop gros, par morceaux, outil inconnu : [{"error":"Invalid signature"} 401] contre [{"error":"Request too large"} 413]
+pareil      écho, clé encodée : essai 200
+pareil      corps qui n'est pas de l'UTF-8 : {"error":"Invalid request"} 400
+pareil      hubspot, signature fausse : {"error":"Invalid signature"} 401
+pareil      méthode GET :  405
+```
+
+Une seule différence, celle que la relecture a voulue (étape 1, section 9.4). « méthode GET » dit « pareil » ici, puisque les deux côtés sont le service Rust ; contre `web`, elle dira « attendu ».
+
 ## 16. Ordre de mise en œuvre
 
 Rien de ceci n'est dans le jalon 1. Une PR par sujet (`CLAUDE.md`), branche `<prenom>/<sujet>` dans un worktree. Le code de `dossier/code/porte/` se recopie tel quel dans `services/porte/` ; seuls `fournisseurs.json` et `vecteurs.json` ne se recopient pas : le dépôt a déjà les siens, générés par la PR W5 du chapitre 03, et ce sont eux que le Rust doit passer.
 
 | # | Sujet | Fichiers | Tests | Dépend de | Effet en production |
 |---|---|---|---|---|---|
-| P0 | La mesure dans la porte en Hono | `src/server/webhooks/hono-gate.ts` : `measured`, et les trois routes qui l'appellent (4.1) | `hono-gate.test.ts` : une ligne `porte.reponse` par réponse, sans corps ni abonnement | W5 du chapitre 03 (ou dans W5) | une ligne de journal par livraison. **Début de la mesure : 7 jours au moins** |
+| P0 | La mesure dans la porte en Hono | `src/server/webhooks/hono-gate.ts` : l'intergiciel `measure`, en tête des trois routes (4.1) | `hono-gate.test.ts` : une ligne `porte.reponse` par réponse, 202, 413 et 500 compris, sans corps ni abonnement | W5 du chapitre 03 (ou dans W5) | une ligne de journal par livraison. **Début de la mesure : 7 jours au moins** |
 | — | La décision | aucune : la mesure qui déclenche (section 4), ses chiffres, ou la décision de David (Q1), écrits dans la description de P1 | | P0 et 7 jours | aucun |
 | P1 | Le service Rust et son job de CI | `services/porte/Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `.gitignore`, `README.md`, `src/main.rs`, `src/verifier.rs`, `src/depot.rs`, `src/secret.rs`, `src/tests.rs` ; `.github/workflows/tests.yml` (job `porte`, section 11) | `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`, `cargo test --locked` ; à la main, l'essai différentiel (15.3) contre le `verify.ts` du dépôt | la décision ; `fournisseurs.json` et `vecteurs.json` dans `services/porte/` (W5) | aucun : rien ne le construit ni ne le lance |
 | P2 | L'image et les outils de bascule | `services/porte/Dockerfile`, `Dockerfile.dockerignore`, `comparer.sh`, `sonde.sh` | `docker build -f services/porte/Dockerfile .` puis `/sante` sur un poste (section 10) ; `bash -n` des deux scripts | P1 | aucun |
@@ -3891,35 +4522,71 @@ Aucun nom de l'architecture n'est changé : fonctions SQL, rôle, variables, fic
 
 | # | Ce que dit l'architecture (ou un chapitre) | Ce qui heurte, et la preuve | Ce qui est écrit ici, et ma proposition |
 |---|---|---|---|
-| E15-1 | Section 2 : les caisses du service Rust, « `aes-gcm` : version à vérifier » | Le mode `hmac-sha1` de `WebhookVerification` (8.3) demande `sha1`, absent de la liste. Décoder `validationToken` et le champ `payload` comme `URLSearchParams` demande un décodeur de formulaire. `tower-http` ne sert pas : la limite et le délai se font sans lui, pour garder les réponses de la route Hono | `sha1` 0.11.0, `form_urlencoded` 1.2.2 ajoutées ; `aes-gcm` fixée à 0.11.1 ; `tower` en test seulement ; `tower-http` retirée. Proposition : recopier le tableau 5.1 dans la ligne « Passerelle de webhooks » de la section 2 |
+| E15-1 | Section 2 : les caisses du service Rust, « `aes-gcm` : version à vérifier » | Le mode `hmac-sha1` de `WebhookVerification` (8.3) demande `sha1`, absent de la liste. Décoder `validationToken` et le champ `payload` comme `URLSearchParams` demande un décodeur de formulaire. `tower-http` ne sert pas : la limite et le délai se font sans lui, pour garder les réponses de la route Hono | `sha1` 0.11.0, `form_urlencoded` 1.2.2 ajoutées ; `aes-gcm` fixée à 0.11.1 ; `tower` et `http-body` 1.1.0 en test seulement ; `tower-http` retirée. Proposition : recopier le tableau 5.1 dans la ligne « Passerelle de webhooks » de la section 2 |
 | E15-2 | Section 6 : `src/main.rs` : « routes `/h/:outil` et `/h/:outil/:abonnement`, `/sante` » | La section 8.3 fixe l'adresse de cycle de vie `…/<abonnement_id>/cycle` (même constat que le chapitre 03, écart E-i). Et axum 0.8 écrit `{outil}`, pas `:outil` | Trois routes de livraison plus `/sante`, lues dans `fournisseurs.json` (`paths`, qui écrit déjà `{outil}`) et vérifiées au démarrage. Proposition : corriger la ligne de la section 6 |
 | E15-3 | Section 6 : les fichiers de `services/porte/` | Les tests ont besoin d'un module (`src/tests.rs`) ; la caisse a besoin de son `.gitignore` (celui de la racine, existe, ne couvre pas `target/`) ; l'image d'un fichier d'exclusion ; la bascule de deux scripts | `src/tests.rs`, `.gitignore`, `README.md`, `Dockerfile.dockerignore`, `comparer.sh`, `sonde.sh` en plus. Proposition : les ajouter à l'arborescence de la section 6 |
 | E15-4 | Chapitre 13, tableau 9 : `LEON_IP_HEADER` « — » pour `porte` ; `DATABASE_URL_PORTE`, `LEON_PORTE_KEY`, `LEON_PORTE_URL` « après la bascule » ; tableau 4.1 : chemins surveillés « `services/porte/**` seulement » | Le service Rust applique la limite par adresse IP du chapitre 03 (6.1) : sans `LEON_IP_HEADER`, toutes ses lectures vides partagent un plafond que n'importe qui peut épuiser. Les autres variables doivent être posées **avant** la bascule : le service est essayé par son domaine Railway, et la signature HubSpot couvre `LEON_PORTE_URL` dès ce moment (13.1). L'image copie `certs/rds-eu-central-1-bundle.pem` | `LEON_IP_HEADER=x-real-ip` sur `porte` ; toutes ses variables posées à l'opération O1 ; chemins surveillés : `services/porte/**` et le certificat (section 12). Proposition : corriger les deux tableaux du chapitre 13 |
-| E15-5 | Section 3 : trois mesures déclenchent la construction ; chapitre 03 : la porte en Hono n'écrit rien au journal quand une livraison passe | Sans une ligne par réponse, ni la part de 5xx ni le p95 ne se mesurent : le service Rust ne se déclencherait que sur la décision de David | Une ligne `porte.reponse` (outil, statut, durée) dans `hono-gate.ts` (section 4.1, PR P0), et la même dans le service Rust. Proposition : l'ajouter au code du chapitre 03 dans la PR W5 |
+| E15-5 | Section 3 : trois mesures déclenchent la construction ; chapitre 03 : la porte en Hono n'écrit rien au journal quand une livraison passe | Sans une ligne par réponse, ni la part de 5xx ni le p95 ne se mesurent : le service Rust ne se déclencherait que sur la décision de David | Une ligne `porte.reponse` (outil, statut, durée) dans `hono-gate.ts`, écrite par un intergiciel en tête de chaque route pour compter aussi les 413 et les 500 (section 4.1, PR P0), et la même dans le service Rust. Proposition : l'ajouter au code du chapitre 03 dans la PR W5 |
 | E15-6 | Section 3 : « Les deux mises en œuvre passent le même jeu de vecteurs » ; chapitre 03 : les deux rendent le même verdict | Elles le rendent sur les 35 cas des vecteurs et sur 423 des 425 cas de l'essai différentiel. Deux corps restent jugés différemment : un nombre hors des `f64` (« 1e400 ») et plus de 128 niveaux d'imbrication. `JSON.parse` les accepte, `serde_json` les refuse (section 15.3) | Le service Rust refuse ces deux corps (raison `format`, ou compte illisible). Aucun éditeur du premier lot n'en envoie dans un corps signé (déduit). Proposition : aligner le TypeScript, plus simple à durcir que `serde_json` à assouplir : `parseBodyJson` (`verify.ts`) rend `undefined` pour un document qui contient un nombre non fini ou plus de 128 niveaux, puis ajouter ces deux cas à `vecteurs.json` par le générateur |
 | E15-7 | Chapitre 13, 15.6 : « `DATABASE_URL_PORTE` et `LEON_PORTE_SECRET_<OUTIL>` ne restent sur `web` que tant que la route Hono y répond (le chapitre 15 dit quand elle s'éteint) » | | Quatorze jours après la bascule, sans retour arrière ; le code de la route Hono reste (13.6). Pas un écart : la réponse à la question laissée ouverte |
+| E15-8 | Section 3 (tableau, ligne « La porte ») : « plus de 0,1 % de livraisons en 5xx ou hors délai sur 7 jours, ou un p95 de réponse au-dessus d'une seconde » | Au bas du volume d'un client de Leon (quelques dizaines de livraisons par semaine quand Outlook n'est pas branché, estimation), un seul 503 dépasse 0,1 % de la semaine, et un p95 calculé sur trente réponses ne dit rien. La règle telle quelle déclencherait au hasard (relecture, section 19) | Une règle d'effectif (section 4) : M2 en part à partir de 1 000 livraisons dans la semaine, en nombre en dessous (plus de 3 en 5xx ou hors délai) ; M3 à partir de 1 000 livraisons acceptées seulement ; M1 reste le déclencheur principal. Proposition : recopier la règle dans la ligne « La porte » du tableau de la section 3 |
+| E15-9 | Chapitre 03 (6.2, `hono-gate.ts` et `portePool`) : `porte.trop_gros` part dans Sentry par `logError` à chaque occurrence ; `logError` n'a pas de limite ; `portePool` attend une connexion 5 s (`connectionTimeoutMillis: 5_000`), sans délai de requête | Un gros corps, que n'importe qui peut envoyer avant toute vérification, et une panne de base, une erreur par livraison, remplissent le quota de Sentry et noient ses alertes. Une base lente tient chaque livraison 5 s, au-delà du plus court délai d'éditeur (3 s, section 4). Les deux portes doivent se mesurer pareil (M2) | Dans le service Rust : `porte.trop_gros` au journal seulement, un envoi Sentry par événement et par minute (`SentryThrottle`), 2 s par appel de base (`DB_CALL_TIMEOUT`, `statement_timeout`), 3 s par requête (section 9.4). Proposition : les mêmes règles dans `hono-gate.ts` et `portePool` à la PR W5 |
 
 Précisions, sans écart :
 
-- Le service Rust **refuse de démarrer** sans `DATABASE_URL_PORTE`, là où la route Hono répond 503 (section 9.4) : c'est ce qui fait échouer un déploiement mal réglé au bilan de santé, au lieu de répondre 503 en production.
-- Il ajoute un **délai par requête** (10 s, `porte.delai`) et quatre événements d'information (`porte.reponse`, `porte.refus`, `porte.demarree`, `porte.arret`) ; les événements d'erreur gardent les noms de `hono-gate.ts`.
-- La colonne `porte` du chapitre 13 (4.1) laissait `healthcheckTimeout` et `drainingSeconds` à ce chapitre : `30` et `"15"` (section 12).
+- Le service Rust **refuse de démarrer** sans `DATABASE_URL_PORTE`, là où la route Hono répond 503 ; avec une base qui refuse ou ne répond pas, il démarre mais `/sante` répond 503 jusqu'à la première lecture réussie (section 9.4). C'est ce qui fait échouer un déploiement mal réglé au bilan de santé, au lieu de répondre 503 en production.
+- Il ajoute des **délais** (3 s par requête, `porte.delai` ; 2 s par appel de base, `porte.base`) et six événements d'information (`porte.reponse`, `porte.refus`, `porte.demarree`, `porte.prete`, `porte.arret`, `porte.corps_interrompu`) ; les événements d'erreur gardent les noms de `hono-gate.ts`.
+- La colonne `porte` du chapitre 13 (4.1) laissait `healthcheckTimeout` et `drainingSeconds` à ce chapitre : `30` et `"5"` (section 12).
 - Le chemin du certificat dans l'image est celui de `web` (`/app/certs/rds-eu-central-1-bundle.pem`) : `DATABASE_URL_PORTE` est la même chaîne sur les deux services (section 10).
 
 ## 18. Ce que je n'ai pas vérifié
 
 - **L'image Docker** : non construite (pas de démon Docker dans la session). Les étiquettes `rust:1.97.0-slim-bookworm` et `gcr.io/distroless/cc-debian12:nonroot`, la lecture de `Dockerfile.dockerignore` par Railway, `RAILWAY_DOCKERFILE_PATH` : à vérifier le jour de P2. La taille de l'image n'est pas mesurée (la note 02 dit 30 à 80 Mo, déduit).
 - **Railway** (documentation injoignable, comme pour le chapitre 13) : déplacer un domaine personnalisé d'un service à l'autre (ordre des gestes, cible DNS, vérification, délai d'émission du certificat), la forme du domaine fourni pour les essais, la présence de `x-real-ip` devant un service construit par Dockerfile, l'écoute en IPv6 sur le réseau de Railway, l'export et la durée de rétention des journaux (section 4.3), l'option « attendre la CI », le sens exact de `drainingSeconds`.
-- **TLS vers RDS** : la base de l'essai était locale, sans TLS. `sslmode=verify-full` avec `sslrootcert`, lus par `sqlx` 0.9.1 avec `rustls` et `ring`, contre les autorités de `certs/rds-eu-central-1-bundle.pem` (dont une ECC384) : non essayé. Premier geste de O1 : `/sante` ne le dit pas, une livraison vers une adresse inconnue le dit (401 si la base répond, 503 sinon).
-- **Postgres 17** : l'essai a tourné sur Postgres 16 ; RDS est en 17. Les deux fonctions sont du SQL et du PL/pgSQL ordinaires.
+- **TLS vers RDS** : la base de l'essai était locale, sans TLS. `sslmode=verify-full` avec `sslrootcert`, lus par `sqlx` 0.9.1 avec `rustls` et `ring`, contre les autorités de `certs/rds-eu-central-1-bundle.pem` (dont une ECC384) : non essayé. Premier geste de O1 : `/sante` le dit désormais (503 tant que la première lecture échoue, `porte.base` au journal avec son résumé).
+- **Postgres 17** : les deux passages de l'essai ont tourné sur Postgres 16 ; le dépôt (`docker-compose.yml`) et RDS sont en 17, que la session ne pouvait pas installer. Les deux fonctions sont du SQL et du PL/pgSQL ordinaires, et `statement_timeout` existe dans les deux versions. Rejouer 15.4 sur `pgvector/pgvector:pg17` à la PR P1.
+- **Le bilan de santé ne sert qu'au déploiement** : le chapitre 13 le dit, à vérifier. Si Railway l'interrogeait aussi au redémarrage d'un service planté pendant une panne de base, la nouvelle instance resterait à 503 sur `/sante` (elle servirait quand même les livraisons, en 503) ; ce que Railway en ferait n'est pas lu. Et que Railway garde l'ancienne version quand le bilan échoue : à vérifier aussi (chapitre 13).
+- **`statement_timeout` passé à l'ouverture de la connexion** : essayé en local, sans intermédiaire. Un pooler devant RDS (RDS Proxy, PgBouncer) pourrait refuser ou ignorer l'option ; aucun n'est prévu (chapitre 13).
 - **La latence** entre Railway et RDS, et le coût de `test_before_acquire` (un aller-retour de plus par livraison) : à lire dans `porte.reponse` après la bascule.
-- **La charge** : aucun essai de charge. Les 7,6 Mo de mémoire sont ceux d'un processus qui a servi une dizaine de requêtes.
-- **Les éditeurs pendant le trou** : ce que font Graph, HubSpot et Fathom d'un 404 ou d'une erreur de certificat, et combien de temps ils réessaient (notes 04 et 05 : sources tierces pour HubSpot, rien pour Fathom).
+- **La charge** : aucun essai de charge. Les 7,4 Mo de mémoire sont ceux d'un processus qui a servi une dizaine de requêtes. Ni coupe-circuit ni borne des requêtes en vol (section 9.4) : sans mesure, on ne sait pas s'il en faut.
+- **Les seuils de la règle d'effectif** (1 000 livraisons, plus de 3 en 5xx ou hors délai : section 4, écart E15-8) sont une proposition, sans mesure du volume réel d'un client.
+- **Les éditeurs pendant le trou** : ce que font Graph, HubSpot et Fathom d'un 404 ou d'une erreur de certificat, et combien de temps ils réessaient (notes 04 et 05 : sources tierces pour HubSpot, rien pour Fathom). La relève forcée (13.3, geste 6) rattrape les créations et modifications, pas une suppression HubSpot, que seul le webhook apporte.
+- **HubSpot et plusieurs portails dans une requête** : la porte écarte (202, `porte.comptes_multiples`) une livraison qui mêle des portails, et (202, `porte.compte_illisible`) une livraison signée sans `portalId`, comme la route Hono (chapitre 03, 6.1, étape 9). Rien ne la rattrape, sauf la relève de 15 minutes pour ce qu'elle couvre. Que HubSpot ne mêle jamais les portails n'est pas vérifié (la note 04 dit seulement « 100 événements par requête ») ; c'est la question de l'étape W3-0 du chapitre 03 (12.2). Si la documentation dit le contraire, le chapitre 03 change le contrat (un dépôt par portail, `fournisseurs.json` en version 2, des cas `gate`), et le Rust suit les vecteurs.
+- **Deux notifications Graph aux mêmes octets** : pour Outlook, l'identifiant de livraison est le SHA-256 du corps (pas de `deliveryHeader`), gardé 7 jours, et la clé unique de la boîte d'entrée ne contient pas `genre` (chapitre 01). Si Graph envoyait deux fois exactement le même corps pour deux changements, le second serait écarté en 202, sans trace. Ce que Graph met dans le corps pour distinguer deux changements n'est pas lu (la note 04 parle de « doublons et désordre ») : avant le premier abonnement Outlook, relever un vrai corps, et voir s'il porte un horodatage ou un `@odata.etag` qui varie.
+- **Le mode `jeton` n'a aucune fenêtre de rejeu** : ni horodatage ni identifiant signé. Un corps Outlook capturé peut être rejoué sans limite, et redevient neuf après la purge des 7 jours. L'effet est borné : une livraison n'est qu'un signal, et la relève qu'elle déclenche est idempotente et relit l'objet chez l'éditeur.
+- **Les secrets que tient la porte** : aucun jeton d'outil, mais les secrets de signature de toutes les organisations (`LEON_PORTE_KEY`, `LEON_OAUTH_HUBSPOT_SECRET`, section 3.2). Un compromis du processus permet de forger des signaux pour toutes les organisations, pas de lire ni d'écrire dans un outil. Ni une clé par organisation, ni une rotation sans coupure ne sont prévues (chapitre 03, section 5).
 - **Rust 1.94** : `rust-version` le promet, seul 1.97.0 a tourné. `Swatinem/rust-cache@v2` et son option `save-if`, `rustup toolchain install … --component` sur les machines de GitHub : de mémoire.
-- **Hono n'a pas tourné.** Les différences de 9.4 (clé de `validationToken` décodée ou non, chaîne de requête réencodée par `new URL`, 404 contre 405) sont lues dans le code de Hono que je connais, pas essayées. Le code TypeScript comparé (essai différentiel) est celui du chapitre 03, recopié de son texte ; celui qui sera fusionné en W1 et W5 peut différer : relancer l'essai différentiel sur lui (P1).
+- **La route Hono n'a pas tourné.** Ce que 9.4 dit de Hono (le `bodyLimit` qui lit un corps sans `content-length` avant la route, la clé de requête décodée quand l'adresse contient « % » ou « + ») est lu dans le code de hono 4.13.18 (`dist/`, copie hors du dépôt), pas essayé contre `hono-gate.ts`. L'intergiciel `measure` de 4.1 a tourné contre hono 4.13.18, hors du dépôt, sans le reste de `hono-gate.ts`. La chaîne de requête réencodée par `new URL`, et 404 ou 405 pour un `GET` derrière Next, ne sont pas essayés. Le code TypeScript comparé (essai différentiel) est celui du chapitre 03, recopié de son texte ; celui qui sera fusionné en W1 et W5 peut différer : relancer l'essai différentiel sur lui (P1).
 - **`ipKey`** : les cas du chapitre 03 et trois de plus passent. Les formes IPv6 rares (zones, notations mixtes inhabituelles) peuvent être lues différemment par `isIP` de Node et par la bibliothèque standard de Rust ; sans conséquence de sécurité (une clé différente ne fait que compter à part).
 - **Les fichiers du contrat** : `fournisseurs.json` est l'exemple de la section 7.1 du chapitre 03 (deux valeurs de `limits` y ont été reportées à la main par son auteur) ; `vecteurs.json` est la sortie du générateur de la section 7.3, rejoué hors du dépôt. Les vrais fichiers seront ceux de W5 ; `cargo test` dira s'ils diffèrent.
-- **Sentry** : aucun envoi essayé (pas de DSN). Le transport `ureq` avec `rustls` et l'intégration des paniques compilent ; leur fonctionnement n'est pas vu.
+- **Sentry** : aucun envoi essayé (pas de DSN). Le transport `ureq` avec `rustls` et l'intégration des paniques compilent ; leur fonctionnement n'est pas vu. `scrub_event` et `SentryThrottle` sont essayés en test, sur des événements construits à la main, pas sur un envoi réel : que l'intégration des paniques passe bien par `before_send` (c'est ce que dit le code de `sentry-core` 0.49.6, lu) n'est pas vu. Le message d'une panique part aussi sur la sortie d'erreur par le crochet de panique de Rust, donc au journal de Railway : non masqué là.
 - **Une notification de cycle de vie au même corps qu'une livraison** n'est pas déposée (section 15.4) : la clé unique de `boite_entree_webhooks` (chapitre 01) ne contient pas `genre`. Sans effet tant qu'un éditeur ne réutilise pas le même corps ; la forme réelle des notifications de cycle de vie de Graph n'a pas été lue.
-- **Les esquisses de la section 14** ne sont pas compilées : noms d'API de `napi-rs`, `tantivy` et `wasmtime` écrits de mémoire, d'après les versions de la note 02.
 - **Les durées** (section 16) sont des estimations de ma part.
+
+## 19. Relecture contradictoire
+
+Deux relectures, l'une sur la fidélité au code, l'autre sur le fond et la faisabilité : 19 objections, aucune bloquante. Chacune a été vérifiée dans le dépôt, dans le code de hono 4.13.18 ou de Node, ou en lançant le binaire. Le code corrigé est dans `dossier/code/porte/`, recopié ici à l'identique, et repasse `cargo check`, `cargo fmt --check`, `cargo clippy` et `cargo test` (35 tests, section 5.4) ; l'essai de bout en bout a été refait (section 15.4).
+
+| # | Objection | Verdict | Ce qui a changé, ou pourquoi |
+|---|---|---|---|
+| Code 1 | Une `LEON_PORTE_KEY` en base64url passe `env.ts` mais pas le Rust, qui ne démarrerait pas le jour de la bascule | Retenue | Vrai : `Buffer.from(…, 'base64')` lit les deux alphabets (essayé sous Node 22.23). `decode_like_node` (`secret.rs`) pour la clé et les trois parties de `v1:` ; tests `la_cle_se_lit_dans_les_deux_alphabets_comme_node` et `vecteurs_de_dechiffrement` (autre alphabet) ; phrase de la section 7 corrigée |
+| Code 2 | Une base mal réglée passe le bilan de santé : `/sante` ne lit pas la base, le pool s'ouvre à la demande | Retenue, autrement | Pas de sortie en échec au démarrage (un redémarrage pendant une panne de base tournerait en boucle) : `/sante` répond 503 jusqu'à la première lecture réussie (`wait_for_base`), puis 200 pour toujours. Test `le_bilan_de_sante_attend_la_premiere_lecture_de_la_base`, essai avec un mot de passe faux (15.4) ; 9.1, 9.4, 12, 17 et 18 corrigées |
+| Code 3 | `deny_unknown_fields` manque sur les modes `standard-webhooks` et `jeton` et sur le morceau littéral | Retenue | Posé sur les énumérations `WebhookVerification` et `SignedPart` (même effet que des structures nommées, moins de code). Test `chaque_mode_refuse_un_champ_inconnu`, vu en échec sans la correction ; `fournisseurs_est_dans_la_version_connue` essaie chaque outil |
+| Code 4 | Sentry n'a aucun filet : ni `before_send`, ni nettoyage, alors que le dépôt coupe tout ce qui pourrait citer une conversation | Retenue | `scrub_event` en `before_send` (message masqué hors `log_error`, ni requête ni utilisateur ni fil d'Ariane, extras réduits aux identifiants), `max_breadcrumbs = 0` ; test `sentry_ne_recoit_aucun_texte_recu`. La sortie d'erreur du crochet de panique reste, écrite en section 18 |
+| Code 5 | `measured` n'écrit rien quand `receive` lève : le 500 échappe à M2 | Retenue, plus loin | Un intergiciel `measure` en tête de route, avant `bodyLimit` : il compte aussi le 413 et le 500 d'un flux coupé. Essayé contre hono 4.13.18 (202, 413, 500, 500). 4.3 dit que M2 ne voit pas les 502 du proxy |
+| Code 6 | Hono refuse en 413 un gros corps sans `content-length` avant tout ; le Rust le lisait après l'adresse et l'écho | Retenue | Vrai, lu dans `dist/middleware/body-limit/index.js` de hono 4.13.18. Le corps est lu à l'étape 1 (`read_body`) ; test `un_corps_trop_gros_recoit_413_avant_l_adresse` ; ligne de `comparer.sh` « par morceaux », seule différence entre l'ancien et le nouveau binaire (15.4) |
+| Code 7 | L'essai a tourné sur Postgres 16, le dépôt et RDS sont en 17 | Retenue en partie | La 17 n'était pas installable (ni paquet, ni démon Docker). La réserve est écrite dès l'en-tête, en 15.4 et en 18 ; rejouer 15.4 sur `pgvector/pgvector:pg17` à la PR P1 |
+| Code 8 | Le README du code renvoie à la « section 14 » pour l'essai différentiel | Retenue | « section 15.3 » dans `README.md` et dans `tests.rs` |
+| Fond 1 | Une base lente tient chaque livraison jusqu'à 10 s, le délai de Graph ; aucun délai de requête SQL | Retenue | 2 s par appel de base (`DB_CALL_TIMEOUT`, `acquire_timeout`, `statement_timeout`), 3 s par requête, `drainingSeconds` à 5. Tests `une_base_lente_recoit_503_en_2_s` et `une_requete_ne_dure_jamais_plus_de_3_s` ; essai réel : 503 en 2,0 s, requête arrêtée par Postgres (`57014`). Ni coupe-circuit ni borne des requêtes en vol : sans mesure de charge, non écrits (9.4, 18) |
+| Fond 2 | N'importe qui remplit le quota Sentry (`porte.trop_gros` à chaque requête, `porte.base` à chaque livraison en panne) ; une lecture coupée devient un 413 | Retenue | `porte.trop_gros` au journal seulement ; un envoi Sentry par événement et par minute (`SentryThrottle`) ; lecture coupée : 400 et `porte.corps_interrompu`. Tests `sentry_recoit_un_envoi_par_minute_et_par_evenement`, `un_corps_interrompu_recoit_400_et_non_413`. Proposition au chapitre 03 : écart E15-9 |
+| Fond 3 | Un lot HubSpot mêlant des portails, ou sans compte lisible, est acquitté et perdu ; aucun test | Retenue en partie | Le cas « plusieurs comptes » est déjà un cas `gate` des vecteurs ; le cas « compte illisible » a son test (`un_compte_illisible_est_accepte_sans_depot`) ; l'hypothèse est écrite en 18. Écarté : déposer par portail ou répondre 500 ici. C'est le contrat du chapitre 03 (6.1, étape 9 ; question W3-0 et sa relecture « Fond 10 »), tenu par les vecteurs : le Rust ne peut pas en changer seul |
+| Fond 4 | La bascule ouvre le trou qu'elle veut éviter, sans parade pour Fathom | Retenue | Geste 6 obligatoire en 13.3 et au retour arrière (13.5) : une relève forcée de chaque connexion Outlook, HubSpot et Fathom (`next_sync_at = now()`, comme `requestSyncNow`), plutôt que `connector-fetch`, qui demande un objet précis. Bascule hors des heures de réunion ; coût écrit en 3.2 et 3.3 |
+| Fond 5 | À l'échelle de Leon, 0,1 % et un p95 ne se mesurent pas ; l'export des journaux n'est pas vérifié | Retenue | Règle d'effectif (1 000 livraisons, sinon plus de 3 en nombre ; M3 seulement au-delà de 1 000 acceptées), calculée par le programme de 4.3 ; M1 reste le déclencheur principal ; sans export, M2 et M3 ne se mesurent pas. Écart E15-8 |
+| Fond 6 | Des comportements affirmés n'ont aucun test | Retenue en partie | L'octet nul et le caractère de contrôle de l'écho sont déjà des cas `gate` des vecteurs. Ajoutés : UTF-8 invalide, longueur de l'écho, expiration du cache positif, secret illisible, compte illisible, base lente, délai de requête (15.1) |
+| Fond 7 | Deux notifications Graph aux mêmes octets se confondent ; le mode `jeton` n'a aucune fenêtre de rejeu | Retenue | Deux points en section 18, avec la vérification à faire sur un vrai corps Graph avant le premier abonnement Outlook. Pas de changement de code : l'identifiant de livraison est fixé par le chapitre 03 |
+| Fond 8 | « Ne tient aucun jeton » est trop fort : la porte tient les secrets de signature de toutes les organisations | Retenue | Ligne de 3.2 réécrite (forger des signaux, pas lire ni écrire dans un outil), et un point en 18 |
+| Fond 9 | La section 14 donne du code hors de la colonne « Fixe » | Retenue | Les esquisses sont retirées ; la section garde la mesure de chaque candidat et son prix. Pas d'annexe : ce chapitre ne peut créer que lui-même et `code/porte/`. Section 1, point 5, et tableau 3.4 corrigés |
+| Fond 10 | Trois renvois internes faux, qui entreraient dans le dépôt avec le code | Retenue | `README.md` et `tests.rs` : « section 15.3 » ; `main.rs` : « section 9.1 » |
+| Fond 11 | « Mêmes réponses » est trop fort ; `comparer.sh` ne teste ni `GET` ni la clé encodée ; deux formats de journal | Retenue en partie | En-têtes de `Cargo.toml` et `main.rs` : « mêmes réponses sur chaque cas de `vecteurs.json` ». `comparer.sh` gagne `GET` (marqué « attendu »), la clé encodée et le corps par morceaux. La différence sur `validation%54oken` était fausse : hono 4.13.18 décode aussi la clé (9.4 corrigée). Un seul programme `jq` lit les deux formats (4.3). Écarté : changer la ligne de Hono, qui suit la règle de journal du dépôt (`console.info('[leon]', …)`) |
+| Essai refait | Hors objection : au second passage, `sqlx` a écrit au journal un message de Postgres (« canceling statement due to statement timeout ») | Corrigé | Le journal ne garde que les lignes de la porte (filtre `Targets`, section 9.4) |
+

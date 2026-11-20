@@ -1454,6 +1454,7 @@ dependencies = [
  "form_urlencoded",
  "hex",
  "hmac",
+ "http-body",
  "sentry",
  "serde",
  "serde_json",

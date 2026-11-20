@@ -1,10 +1,11 @@
 // La porte des webhooks de Leon, en Rust (dossier agents, chapitre 15). Seconde mise en œuvre du contrat que tient
 // d'abord la route Hono (src/server/webhooks/hono-gate.ts, chapitre 03) : mêmes adresses, mêmes étapes dans le même
-// ordre, mêmes réponses, mêmes limites (fournisseurs.json), mêmes cas (vecteurs.json, section « gate »).
+// ordre, mêmes limites (fournisseurs.json), mêmes réponses sur chaque cas de vecteurs.json (section « gate »). Ce qui
+// diffère hors de ces cas est écrit au chapitre 15, section 9.4.
 //
 // Elle reçoit une livraison, la vérifie sur le corps brut, la dépose par porte_deposer et répond. Rien d'autre : ni
 // pg-boss, ni jeton OAuth, ni LEON_CONNECTORS_KEY, ni lecture de la mémoire (architecture, section 3). Son rôle
-// Postgres, leon_porte, n'exécute que porte_secret et porte_deposer. Elle ne reçoit que ses variables (section 4 du
+// Postgres, leon_porte, n'exécute que porte_secret et porte_deposer. Elle ne reçoit que ses variables (section 9.1 du
 // chapitre 15) : sa base, sa clé, son adresse publique, l'en-tête de l'adresse IP et les secrets de signature que
 // fournisseurs.json nomme.
 
@@ -16,13 +17,16 @@ mod verifier;
 mod tests;
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::future::Future;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::pin::Pin;
 use std::process::ExitCode;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use axum::Router;
-use axum::body::Body;
+use axum::body::{Body, HttpBody};
 use axum::extract::{Path, RawQuery, Request, State};
 use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
 use axum::response::Response;
@@ -30,8 +34,12 @@ use axum::routing::{get, post};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use tokio::time::Instant;
+use tracing_subscriber::Layer as _;
+use tracing_subscriber::filter::{LevelFilter, Targets};
+use tracing_subscriber::layer::SubscriberExt as _;
+use tracing_subscriber::util::SubscriberInitExt as _;
 
-use crate::depot::{Deposit, GateState, PorteStore, StoreError};
+use crate::depot::{DB_CALL_TIMEOUT, Deposit, GateState, PorteStore, StoreError};
 use crate::secret::{open_subscription_secret, parse_porte_key, subscription_aad};
 use crate::verifier::{
     BodyFormat, VerifyInput, WebhookSecret, WebhookVerification, parse_body_json, read_pointer,
@@ -45,8 +53,17 @@ const PORTE_FORMAT_VERSION: u64 = 1;
 const PATH_APP: &str = "/h/{outil}";
 const PATH_SUBSCRIPTION: &str = "/h/{outil}/{abonnement}";
 const PATH_LIFECYCLE: &str = "/h/{outil}/{abonnement}/cycle";
-// Au-delà, la requête reçoit 503 et l'éditeur réessaie : un client lent ne tient pas une connexion de la base.
-const REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
+// Au-delà, la requête reçoit 503 (porte.delai) et l'éditeur réessaie. 3 secondes : le plus court délai d'éditeur
+// relevé (chapitre 15, section 4). Chaque appel de base a son propre délai, plus court (DB_CALL_TIMEOUT, depot.rs).
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(3);
+// La lecture qui prouve la base au démarrage : porte_secret sur un outil qui n'existe pas. Elle passe par tout ce
+// qu'une livraison demande (adresse, TLS et certificat, mot de passe, droit d'exécuter porte_secret, migration 0083)
+// et ne rend aucune ligne.
+const PROBE_TOOL: &str = "sante";
+const PROBE_SUBSCRIPTION: &str = "00000000-0000-0000-0000-000000000000";
+const PROBE_PAUSE: Duration = Duration::from_secs(1);
+// Sentry : un envoi par nom d'événement et par fenêtre, au plus.
+const SENTRY_WINDOW: Duration = Duration::from_secs(60);
 
 // fournisseurs.json (chapitre 03, 7.1), champ pour champ.
 
@@ -123,6 +140,11 @@ fn is_tool_id(text: &str) -> bool {
         && bytes
             .iter()
             .all(|&b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_')
+}
+
+// Le nom d'outil écrit au journal : celui de l'adresse s'il a la forme d'un identifiant, sinon « inconnu ».
+fn tool_label(outil: &str) -> &str {
+    if is_tool_id(outil) { outil } else { "inconnu" }
 }
 
 // Un UUID en minuscules (UUID de hono-gate.ts) : l'adresse d'un abonnement, telle que le worker l'a écrite.
@@ -361,12 +383,60 @@ fn echo(token: &str, limits: &Limits) -> Response {
     response
 }
 
-// Le journal : une ligne JSON sur la sortie standard, et Sentry. Comme logError (src/server/log.ts) : le nom de
-// l'événement, des identifiants, un résumé d'erreur sans texte reçu. Jamais un en-tête, un corps ou un secret.
+// Sentry reçoit au plus un envoi par nom d'événement et par minute : une panne de base (une erreur par livraison) ou
+// un expéditeur qui insiste ne doivent ni épuiser le quota ni noyer les autres alertes. Le journal, lui, garde chaque
+// occurrence. L'envoi suivant dit combien ont été tues entre-temps.
+pub(crate) struct SentryThrottle {
+    last: BTreeMap<String, (std::time::Instant, u32)>, // dernier envoi, occurrences tues depuis
+}
+
+impl SentryThrottle {
+    pub(crate) const fn new() -> Self {
+        Self {
+            last: BTreeMap::new(),
+        }
+    }
+
+    // Some(n) : envoyer, n occurrences ont été tues depuis le dernier envoi. None : taire celle-ci.
+    pub(crate) fn admit(&mut self, event: &str, now: std::time::Instant) -> Option<u32> {
+        match self.last.get_mut(event) {
+            Some((sent, muted)) if now.duration_since(*sent) < SENTRY_WINDOW => {
+                *muted += 1;
+                None
+            }
+            Some((sent, muted)) => {
+                let count = *muted;
+                (*sent, *muted) = (now, 0);
+                Some(count)
+            }
+            None => {
+                self.last.insert(event.to_string(), (now, 0));
+                Some(0)
+            }
+        }
+    }
+}
+
+static SENTRY_THROTTLE: Mutex<SentryThrottle> = Mutex::new(SentryThrottle::new());
+
+// Le journal : une ligne JSON sur la sortie standard, et Sentry (au plus une fois par minute pour un même événement).
+// Comme logError (src/server/log.ts) : le nom de l'événement, des identifiants, un résumé d'erreur sans texte reçu.
+// Jamais un en-tête, un corps ou un secret.
 pub(crate) fn log_error(event: &str, summary: &str, ids: &[(&str, &str)]) {
     let details: BTreeMap<&str, &str> = ids.iter().copied().collect();
     let details = serde_json::to_string(&details).unwrap_or_default();
     tracing::error!(event, details = %details, error = summary, "[leon]");
+    let admitted = SENTRY_THROTTLE
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .admit(event, std::time::Instant::now());
+    let Some(muted) = admitted else {
+        return;
+    };
+    let message = match muted {
+        0 => format!("{event}: {summary}"),
+        n => format!("{event}: {summary} (et {n} autres depuis le dernier envoi, au journal)"),
+    };
     sentry::with_scope(
         |scope| {
             scope.set_tag("event", event);
@@ -374,8 +444,67 @@ pub(crate) fn log_error(event: &str, summary: &str, ids: &[(&str, &str)]) {
                 scope.set_extra(key, (*value).into());
             }
         },
-        || sentry::capture_message(&format!("{event}: {summary}"), sentry::Level::Error),
+        || sentry::capture_message(&message, sentry::Level::Error),
     );
+}
+
+// Ce qui part vers Sentry (before_send), dans l'esprit de scrubEvent (src/server/sentry-scrub.ts) : rien de ce qui
+// pourrait citer une donnée reçue. Le message d'un log_error est construit sans texte reçu : il reste, reconnu à son
+// étiquette `event`. Tout autre texte (une panique, dont le message peut citer la chaîne qu'on lisait) est masqué. Ni
+// requête, ni utilisateur, ni fil d'Ariane ; des extras, seulement les identifiants que log_error pose.
+const MASKED: &str = "[masqué]";
+const KEPT_EXTRA: [&str; 3] = ["outil", "abonnement", "etape"];
+
+pub(crate) fn scrub_event(
+    mut event: sentry::protocol::Event<'static>,
+) -> sentry::protocol::Event<'static> {
+    if !event.tags.contains_key("event") {
+        if event.message.is_some() {
+            event.message = Some(MASKED.into());
+        }
+        event.logentry = None;
+        for exception in &mut event.exception.values {
+            if exception.value.is_some() {
+                exception.value = Some(MASKED.into());
+            }
+        }
+    }
+    event.request = None;
+    event.user = None;
+    event.breadcrumbs = Default::default();
+    event
+        .extra
+        .retain(|key, _| KEPT_EXTRA.contains(&key.as_str()));
+    event
+}
+
+// Un appel de base borné par DB_CALL_TIMEOUT : au-delà, la même erreur qu'une panne (503, porte.base). Une écriture
+// qui aurait abouti malgré tout ne se double pas : l'éditeur réessaie, porte_deposer rend 0, la porte répond 202.
+async fn bounded<T>(call: impl Future<Output = Result<T, StoreError>>) -> Result<T, StoreError> {
+    tokio::time::timeout(DB_CALL_TIMEOUT, call)
+        .await
+        .unwrap_or_else(|_| Err(StoreError("Timeout".into())))
+}
+
+enum BodyError {
+    TooLarge,
+    Interrupted,
+}
+
+// Le corps, lu jusqu'à `max` octets et compté en le lisant : un corps sans content-length (envoyé par morceaux) est
+// borné comme les autres. Au-delà : TooLarge. Une erreur de lecture (le client coupe, un corps tronqué) : Interrupted.
+async fn read_body(mut body: Body, max: usize) -> Result<Vec<u8>, BodyError> {
+    let mut bytes = Vec::new();
+    while let Some(frame) = std::future::poll_fn(|cx| Pin::new(&mut body).poll_frame(cx)).await {
+        let frame = frame.map_err(|_| BodyError::Interrupted)?;
+        if let Ok(data) = frame.into_data() {
+            if bytes.len() + data.len() > max {
+                return Err(BodyError::TooLarge);
+            }
+            bytes.extend_from_slice(&data);
+        }
+    }
+    Ok(bytes)
 }
 
 #[derive(Debug, Clone)]
@@ -405,6 +534,7 @@ pub(crate) struct Porte<S> {
     store: S,
     state: Mutex<GateState>,
     clock: Clock,
+    ready: AtomicBool, // la base a répondu au moins une fois depuis le démarrage (wait_for_base)
 }
 
 impl<S: PorteStore> Porte<S> {
@@ -427,6 +557,27 @@ impl<S: PorteStore> Porte<S> {
             store,
             state: Mutex::new(state),
             clock,
+            ready: AtomicBool::new(false),
+        }
+    }
+
+    pub(crate) fn is_ready(&self) -> bool {
+        self.ready.load(Ordering::Relaxed)
+    }
+
+    // Au démarrage : lire la base jusqu'à la première lecture réussie, puis le dire à /sante. Une seule fois : une
+    // panne de base plus tard ne fait jamais échouer /sante (les livraisons reçoivent 503, l'éditeur réessaie).
+    pub(crate) async fn wait_for_base(&self) {
+        loop {
+            match bounded(self.store.secret(PROBE_TOOL, PROBE_SUBSCRIPTION)).await {
+                Ok(_) => {
+                    self.ready.store(true, Ordering::Relaxed);
+                    tracing::info!(event = "porte.prete", "[leon]");
+                    return;
+                }
+                Err(error) => log_error("porte.base", &error.0, &[("etape", "demarrage")]),
+            }
+            tokio::time::sleep(PROBE_PAUSE).await;
         }
     }
 
@@ -467,9 +618,14 @@ impl<S: PorteStore> Porte<S> {
         json_response(StatusCode::UNAUTHORIZED, r#"{"error":"Invalid signature"}"#)
     }
 
+    // Au journal seulement, pas dans Sentry : n'importe qui peut envoyer un gros corps à n'importe quelle adresse, avant
+    // toute vérification. Un éditeur qui en enverrait se voit dans les lignes porte.reponse (statut 413, par outil).
     fn too_large(&self, outil: &str) -> Response {
-        let outil = if is_tool_id(outil) { outil } else { "inconnu" };
-        log_error("porte.trop_gros", "Request too large", &[("outil", outil)]);
+        tracing::warn!(
+            event = "porte.trop_gros",
+            outil = tool_label(outil),
+            "[leon]"
+        );
         json_response(
             StatusCode::PAYLOAD_TOO_LARGE,
             r#"{"error":"Request too large"}"#,
@@ -512,7 +668,7 @@ impl<S: PorteStore> Porte<S> {
                             return Ok(SecretLookup::Unavailable);
                         }
                     }
-                    let found = self.store.secret(outil, abonnement).await?;
+                    let found = bounded(self.store.secret(outil, abonnement)).await?;
                     let mut state = self.state();
                     match found {
                         None => {
@@ -659,11 +815,7 @@ impl<S: PorteStore> Porte<S> {
     // hono-gate.ts, sans contenu ni identifiant d'abonnement. Elle donne la part de 5xx et le p95 des livraisons.
     async fn handle(&self, target: Target, query: Option<String>, request: Request) -> Response {
         let started = Instant::now();
-        let outil = if is_tool_id(&target.outil) {
-            target.outil.clone()
-        } else {
-            "inconnu".to_string()
-        };
+        let outil = tool_label(&target.outil).to_string();
         let response =
             match tokio::time::timeout(REQUEST_TIMEOUT, self.receive(target, query, request)).await
             {
@@ -691,7 +843,8 @@ impl<S: PorteStore> Porte<S> {
         let limits = &self.providers.limits;
         let (parts, body) = request.into_parts();
 
-        // 1. Un corps annoncé trop gros est refusé avant tout.
+        // 1. Le corps, avant tout, comme le bodyLimit de hono-gate.ts : un content-length trop grand est refusé sans rien
+        // lire ; sinon le corps est lu et compté (un corps envoyé par morceaux, sans content-length, aussi).
         let declared = parts
             .headers
             .get(header::CONTENT_LENGTH)
@@ -700,6 +853,19 @@ impl<S: PorteStore> Porte<S> {
         if declared.is_some_and(|length| length > limits.body_max_bytes as u64) {
             return self.too_large(&target.outil);
         }
+        let bytes = match read_body(body, limits.body_max_bytes).await {
+            Ok(bytes) => bytes,
+            Err(BodyError::TooLarge) => return self.too_large(&target.outil),
+            // Le client a coupé, ou le corps est tronqué : personne n'attend la réponse. Au journal seulement.
+            Err(BodyError::Interrupted) => {
+                tracing::info!(
+                    event = "porte.corps_interrompu",
+                    outil = tool_label(&target.outil),
+                    "[leon]"
+                );
+                return invalid_request();
+            }
+        };
 
         // 2. L'adresse : outil connu, forme conforme à sa portée, abonnement en UUID minuscule, /cycle si permis.
         let Some((outil, spec)) = self.spec_for(&target) else {
@@ -712,11 +878,6 @@ impl<S: PorteStore> Porte<S> {
         {
             return echo(&token, limits);
         }
-
-        // 1 bis. Le corps lui-même, borné (un corps sans content-length est compté en le lisant).
-        let Ok(bytes) = axum::body::to_bytes(body, limits.body_max_bytes).await else {
-            return self.too_large(&target.outil);
-        };
 
         // 4. De l'UTF-8 valide, sans octet nul : Postgres refuse l'octet nul dans un text.
         let Some(corps) = std::str::from_utf8(&bytes)
@@ -811,7 +972,7 @@ impl<S: PorteStore> Porte<S> {
             corps: corps.to_string(),
             entetes: self.kept_headers(spec, &headers),
         };
-        match self.store.deposit(&deposit).await {
+        match bounded(self.store.deposit(&deposit)).await {
             // 0 : déjà reçue, ou personne n'écoute ce compte. Même réponse : l'éditeur ne doit pas réessayer.
             Ok(_) => accepted(),
             Err(error) => {
@@ -879,10 +1040,16 @@ async fn lifecycle_route<S: PorteStore>(
         .await
 }
 
-// Le bilan de santé de Railway (healthcheckPath). Il ne lit pas la base : une base en panne ne doit pas faire
-// redémarrer la porte en boucle ; les livraisons reçoivent 503 et les éditeurs réessaient.
-async fn health() -> Response {
-    json_response(StatusCode::OK, r#"{"ok":true}"#)
+// Le bilan de santé de Railway (healthcheckPath), qui ne sert qu'au déploiement (chapitre 13, 4.1, à vérifier). 503
+// tant que la base n'a jamais répondu : un déploiement dont la base est injoignable ou mal réglée (mot de passe, hôte,
+// certificat, migration) échoue, et Railway garde l'ancienne version. 200 ensuite, pour toujours : la route ne lit pas
+// la base, et une panne de base en régime ne fait pas redémarrer la porte en boucle.
+async fn health<S: PorteStore>(State(porte): State<Arc<Porte<S>>>) -> Response {
+    if porte.is_ready() {
+        json_response(StatusCode::OK, r#"{"ok":true}"#)
+    } else {
+        json_response(StatusCode::SERVICE_UNAVAILABLE, r#"{"ok":false}"#)
+    }
 }
 
 pub(crate) fn router<S: PorteStore>(porte: Arc<Porte<S>>) -> Router {
@@ -890,7 +1057,7 @@ pub(crate) fn router<S: PorteStore>(porte: Arc<Porte<S>>) -> Router {
         .route(PATH_APP, post(app_route::<S>))
         .route(PATH_SUBSCRIPTION, post(subscription_route::<S>))
         .route(PATH_LIFECYCLE, post(lifecycle_route::<S>))
-        .route("/sante", get(health))
+        .route("/sante", get(health::<S>))
         .with_state(porte)
 }
 
@@ -899,7 +1066,7 @@ fn env_var(name: &str) -> Option<String> {
 }
 
 // SIGTERM (Railway, à la fin du recouvrement) ou Ctrl-C : on n'accepte plus de connexion, on finit les requêtes en
-// cours. Une requête dure au plus REQUEST_TIMEOUT : drainingSeconds de 15 suffit.
+// cours. Une requête dure au plus REQUEST_TIMEOUT (3 s) : drainingSeconds de 5 suffit.
 async fn shutdown_signal() {
     let interrupt = async {
         let _ = tokio::signal::ctrl_c().await;
@@ -945,6 +1112,11 @@ async fn run() -> Result<(), String> {
         store,
         Box::new(wall_clock_ms),
     ));
+    // /sante répond 503 jusqu'à la première lecture réussie de la base ; les livraisons sont servies dès l'écoute.
+    tokio::spawn({
+        let porte = porte.clone();
+        async move { porte.wait_for_base().await }
+    });
     // Le réseau de Railway demande d'écouter sur « :: » (note 02, section 5) ; sans IPv6, on se rabat sur IPv4.
     let listener = match tokio::net::TcpListener::bind(SocketAddr::from((
         Ipv6Addr::UNSPECIFIED,
@@ -965,13 +1137,25 @@ async fn run() -> Result<(), String> {
 }
 
 fn main() -> ExitCode {
-    tracing_subscriber::fmt().json().with_target(false).init();
+    // Le journal : des lignes JSON, celles de la porte seulement. Les bibliothèques n'y écrivent rien : sqlx y mettrait
+    // des messages de Postgres (un avis, une erreur de connexion testée), que la règle de logError ne garde jamais.
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer()
+                .json()
+                .with_target(false)
+                .with_filter(Targets::new().with_target("porte", LevelFilter::INFO)),
+        )
+        .init();
     // Sentry avant le moteur asynchrone, comme le demande sa documentation. Sans SENTRY_DSN, rien ne part.
     let mut options = sentry::ClientOptions::default();
     options.dsn = env_var("SENTRY_DSN").and_then(|dsn| dsn.parse().ok());
     options.release = env_var("RAILWAY_GIT_COMMIT_SHA").map(Into::into);
     options.environment = env_var("RAILWAY_ENVIRONMENT_NAME").map(Into::into);
     options.send_default_pii = false;
+    // Comme sentry.server.config.ts : rien de ce qui pourrait citer une donnée reçue ne part, aucun fil d'Ariane.
+    options.max_breadcrumbs = 0;
+    options.before_send = Some(Arc::new(|event| Some(scrub_event(event))));
     let _sentry = sentry::init(options);
     sentry::configure_scope(|scope| scope.set_tag("role", "porte"));
     let runtime = match tokio::runtime::Builder::new_multi_thread()

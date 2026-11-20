@@ -15,20 +15,29 @@ const KEY_BYTES: usize = 32;
 const IV_BYTES: usize = 12;
 const TAG_BYTES: usize = 16;
 
-// Les deux décodeurs tolèrent le remplissage et les bits de fin, comme Buffer.from(…, 'base64url') et
-// Buffer.from(…, 'base64') de Node. Les secrets écrits par encryptSecret n'en ont jamais : c'est une marge.
-const BASE64URL: GeneralPurpose = GeneralPurpose::new(
-    &alphabet::URL_SAFE,
-    GeneralPurposeConfig::new()
-        .with_decode_allow_trailing_bits(true)
-        .with_decode_padding_mode(DecodePaddingMode::Indifferent),
-);
+// Le décodeur de Node, autant qu'il le faut ici. Buffer.from(…, 'base64') et Buffer.from(…, 'base64url') acceptent
+// tous deux les deux alphabets (« + / » et « - _ »), avec ou sans remplissage, et ignorent les bits de fin. Une clé
+// écrite en base64url passe donc env.ts (chapitre 03, 6.3) : elle doit passer ici aussi, sinon le service refuse de
+// démarrer le jour de la bascule. Node va plus loin (il saute tout caractère hors alphabet) : encryptSecret et
+// `openssl rand -base64 32` n'en écrivent jamais, ce décodeur les refuse.
 const BASE64: GeneralPurpose = GeneralPurpose::new(
     &alphabet::STANDARD,
     GeneralPurposeConfig::new()
         .with_decode_allow_trailing_bits(true)
         .with_decode_padding_mode(DecodePaddingMode::Indifferent),
 );
+
+fn decode_like_node(text: &str) -> Option<Vec<u8>> {
+    let standard: String = text
+        .chars()
+        .map(|c| match c {
+            '-' => '+',
+            '_' => '/',
+            other => other,
+        })
+        .collect();
+    BASE64.decode(standard).ok()
+}
 
 // Un message fixe : jamais le secret, ni le chiffré, ni la clé.
 #[derive(Debug, PartialEq, Eq)]
@@ -42,10 +51,11 @@ impl std::fmt::Display for UnreadableSecret {
 
 impl std::error::Error for UnreadableSecret {}
 
-// LEON_PORTE_KEY : 32 octets en base64 (env.ts le vérifie côté TypeScript). None : absente, vide ou mal formée ; le
-// démarrage refuse une valeur mal formée (main.rs), une valeur absente rend 503 aux livraisons d'abonnement.
+// LEON_PORTE_KEY : 32 octets en base64, l'un ou l'autre alphabet (env.ts le vérifie côté TypeScript). None : absente,
+// vide ou mal formée ; le démarrage refuse une valeur mal formée (main.rs), une valeur absente rend 503 aux livraisons
+// d'abonnement.
 pub fn parse_porte_key(value: &str) -> Option<[u8; KEY_BYTES]> {
-    BASE64.decode(value.trim()).ok()?.try_into().ok()
+    decode_like_node(value.trim())?.try_into().ok()
 }
 
 // subscriptionAad de src/server/webhooks/crypto.ts.
@@ -66,7 +76,7 @@ pub fn open_subscription_secret(
     if *version != VERSION {
         return Err(UnreadableSecret);
     }
-    let decode = |part: &str| BASE64URL.decode(part).map_err(|_| UnreadableSecret);
+    let decode = |part: &str| decode_like_node(part).ok_or(UnreadableSecret);
     let (iv, tag, encrypted) = (decode(iv)?, decode(tag)?, decode(encrypted)?);
     if iv.len() != IV_BYTES || tag.len() != TAG_BYTES {
         return Err(UnreadableSecret);
@@ -98,6 +108,23 @@ mod tests {
         assert!(parse_porte_key("CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=").is_some());
         assert!(parse_porte_key("CQkJ").is_none());
         assert!(parse_porte_key("").is_none());
+    }
+
+    #[test]
+    fn la_cle_se_lit_dans_les_deux_alphabets_comme_node() {
+        // Buffer.from(…, 'base64') de Node rend 32 octets pour ces trois écritures : env.ts les accepte.
+        let standard = parse_porte_key("+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/s=");
+        assert!(standard.is_some());
+        assert_eq!(
+            parse_porte_key("-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_s"),
+            standard
+        );
+        assert_eq!(
+            parse_porte_key(" -_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_v7-_s=\n"),
+            standard
+        );
+        // Hors des deux alphabets : refusé ici (Node sauterait le caractère).
+        assert!(parse_porte_key("+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/s!").is_none());
     }
 
     #[test]

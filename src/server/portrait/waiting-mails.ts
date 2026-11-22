@@ -13,9 +13,9 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 // - n'est pas d'elle (pas du côté de l'équipe) ;
 // - date de moins de WAITING_DAYS jours ;
 // - lui est adressé directement : une de ses adresses est en « à », pas seulement en copie. Ses adresses sont celles
-//   d'où partent ses mails envoyés ;
-// - vient de quelqu'un à qui elle a écrit dans ses mails envoyés des 90 derniers jours, en « à » ou en copie : c'est
-//   ce qui écarte les lettres d'information, la prospection et les notifications ;
+//   d'où partent ses mails envoyés des 90 derniers jours (sentTurns) ;
+// - vient de quelqu'un à qui elle a écrit dans ces mêmes mails envoyés, en « à » ou en copie : c'est ce qui écarte
+//   les lettres d'information, la prospection et les notifications ;
 // - n'a pas déjà été traité : ni brouillon écrit, ni mail jugé sans réponse à donner (0080).
 // shortcut: ses envois automatiques (facts.ts, handWritten) comptent ici comme des mails envoyés, le tri se faisant en
 // SQL sans lire leur texte : l'adresse qui reçoit ses notifications passe pour un correspondant, à écarter ici si de
@@ -23,13 +23,13 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 
 const WAITING_DAYS = 7;
 // Les plus récents d'abord, par passage (un appel au modèle chacun).
-export const WAITING_MAX = 5;
+const WAITING_MAX = 5;
 // Ce que le modèle reçoit du fil : ses derniers messages, chacun coupé.
 const THREAD_MESSAGES = 4;
 const MESSAGE_CHARS = 1500;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export type ThreadMessage = {
+type ThreadMessage = {
   // Son nom, à défaut son adresse.
   author: string | null;
   // Un message d'elle.

@@ -33,9 +33,9 @@ export const BROUILLONS_DAILY_CAP = 20;
 const BROUILLON_MAX_TOKENS = 8000;
 const BROUILLON_TIMEOUT_MS = 90_000;
 
-// Un passage : un brouillon pour chacun de ses mails qui attendent, WAITING_MAX au plus, un appel au modèle par mail.
-// Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à
-// l'agent, ni quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, le passage s'arrête.
+// Un passage : un brouillon pour chacun de ses mails qui attendent, cinq au plus (waiting-mails.ts), un appel au modèle
+// par mail. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu
+// « oui » à l'agent, ni quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
 // suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, ou « sans réponse ») n'est jamais
 // redemandé au modèle.

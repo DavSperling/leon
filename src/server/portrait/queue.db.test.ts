@@ -53,7 +53,7 @@ describe('la file fiche-construire sur le vrai pg-boss', () => {
     expect(await idsOf(paul)).toHaveLength(1);
   });
 
-  it('une construction est en cours tant que la file ne l’a pas finie : en attente, prise, à reprendre', async () => {
+  it('une construction est en cours tant que la file ne l’a pas finie : en attente, prise, à reprendre ; plus après son échec définitif', async () => {
     const boss = await getFicheBoss();
     const julie = person();
     expect(await ficheBuildPending(julie)).toBe(false);
@@ -72,6 +72,15 @@ describe('la file fiche-construire sur le vrai pg-boss', () => {
     await boss.fail(FICHE_QUEUE, id ?? '');
     expect((await boss.findJobs(FICHE_QUEUE, { id }))[0]?.state).toBe('retry');
     expect(await ficheBuildPending(julie)).toBe(true);
+
+    // Ses deux reprises échouent aussi (prises sans attendre leur délai) : l'échec est définitif, et l'écran ne doit
+    // pas rester sur « en cours ».
+    for (let retry = 0; retry < 2; retry++) {
+      await boss.fetch(FICHE_QUEUE, { batchSize: 10, ignoreStartAfter: true });
+      await boss.fail(FICHE_QUEUE, id ?? '');
+    }
+    expect((await boss.findJobs(FICHE_QUEUE, { id }))[0]?.state).toBe('failed');
+    expect(await ficheBuildPending(julie)).toBe(false);
   });
 
   it('une construction finie n’est plus en cours', async () => {

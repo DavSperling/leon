@@ -5,7 +5,7 @@ import { withoutDismissed } from '@/lib/briefing-view';
 import { readOnboardingMember } from '@/server/auth/onboarding';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
-import { users } from '@/server/db/schema/auth';
+import { organizations, users } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -85,6 +85,24 @@ export async function accountIsGone(userId: string): Promise<boolean> {
     .from(users)
     .where(eq(users.id, userId));
   return row === undefined || row.deletedAt !== null;
+}
+
+// À appeler en premier dans la transaction qui écrit ce que la suppression du compte efface (le calendrier, la
+// proposition « About you »). L'organisation d'abord, en FOR KEY SHARE, comme lockTarget (versions.ts) : la suppression
+// la prend en premier (lockMembers). Elle est donc validée avant, et le compte se lit supprimé (false : ne rien
+// écrire), ou elle attend la fin de cette écriture et efface la ligne. Sans ce verrou, l'insertion attend la
+// suppression par sa clé étrangère vers l'organisation, puis écrit après elle une ligne qui reste.
+export async function lockAccount(tx: Tx, ctx: TenantContext): Promise<boolean> {
+  await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, ctx.tenantId))
+    .for('key share');
+  const [account] = await tx
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, ctx.userId));
+  return account !== undefined && account.deletedAt === null;
 }
 
 // Refait le point de l'utilisateur sur ce projet et rend ce qui s'est passé : « fait » (point du modèle écrit),

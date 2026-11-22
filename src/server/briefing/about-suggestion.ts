@@ -13,7 +13,7 @@ import { textArray } from '@/server/search/filters-sql';
 import { ABOUT_MAX_CHARS, readAbout } from './about';
 import { gatherAboutMaterial } from './about-material';
 import { buildAboutPrompt } from './about-prompt';
-import { accountIsGone } from './briefings';
+import { accountIsGone, lockAccount } from './briefings';
 
 // La proposition « About you » (onboarding, lot 5) : une description de la personne, écrite par le travail de fond
 // à partir de ses seules sources, montrée une fois en haut du Chat. Tout se lit et s'écrit sous withTenant de la
@@ -88,10 +88,12 @@ export async function proposeAbout(
     organization?.name ?? '',
   );
   const text = await writeText(deps.llm, prompt);
-  // L'appel au modèle dure jusqu'à 120 s : un compte supprimé entre-temps ne garde pas de texte écrit d'après ses sources.
-  if (text === '' || (await accountIsGone(ctx.userId))) return false;
-  const written = await withTenant(ctx, (tx) =>
-    tx
+  if (text === '') return false;
+  const written = await withTenant(ctx, async (tx) => {
+    // L'appel au modèle dure jusqu'à 120 s : un compte supprimé entre-temps, ou en train de l'être, ne garde pas de
+    // texte écrit d'après ses sources.
+    if (!(await lockAccount(tx, ctx))) return [];
+    return tx
       .insert(aboutSuggestions)
       .values({
         tenantId: ctx.tenantId,
@@ -101,8 +103,8 @@ export async function proposeAbout(
         acl: [ctx.userId],
       })
       .onConflictDoNothing()
-      .returning({ id: aboutSuggestions.id }),
-  );
+      .returning({ id: aboutSuggestions.id });
+  });
   return written.length > 0;
 }
 

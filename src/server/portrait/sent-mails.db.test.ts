@@ -21,7 +21,9 @@ vi.mock('@/server/pipeline/queue');
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
-const ago = (ms: number) => new Date(Date.now() - ms);
+// Une seule lecture de l'horloge : deux dates « il y a tant » gardent leur écart à la milliseconde près.
+const START = Date.now();
+const ago = (ms: number) => new Date(START - ms);
 const LEA = 'lea@client.test';
 const PAUL = 'paul@acme.test';
 // Un long mail : des paragraphes numérotés, que la normalisation coupe en plusieurs tours.

@@ -169,6 +169,28 @@ describe('ingestConnectorItems', () => {
     ]);
   });
 
+  // Les destinataires d'un courrier suivent le tour jusqu'à la base, où la fiche de la personne les lira ; un
+  // tour sans destinataires garde deux listes vides.
+  it('enregistre les destinataires « à » et « copie » de chaque tour', async () => {
+    const connection = await connectionOf(paul);
+    const externalId = `thread:${randomUUID()}`;
+    const recipients = { to: ['Julie@Acme.test', 'paul@client.test'], cc: ['zoe@acme.test'] };
+    const item = normalized(
+      connectorItem(externalId, [
+        { ...comment(1, 'Voici le devis.'), recipients },
+        comment(2, 'Sans destinataires.'),
+      ]),
+    );
+
+    await ingestConnectorItems(paul, connection, [item]);
+
+    const stored = await readTurns(paul, await sourceIdOf(paul, externalId));
+    expect(stored.map((t) => [t.text, t.recipientsTo, t.recipientsCc]).sort()).toEqual([
+      ['Sans destinataires.', [], []],
+      ['Voici le devis.', ['julie@acme.test', 'paul@client.test'], ['zoe@acme.test']],
+    ]);
+  });
+
   it("montre la source, ses tours et son run à toute l'équipe, à personne d'autre", async () => {
     const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;

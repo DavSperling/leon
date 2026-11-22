@@ -7,7 +7,8 @@ import type { GraphEvent, Message } from './schemas';
 // même conversation lus ensemble : chaque message est un tour `participant` daté de sa réception
 // (ou de son envoi). Un événement d'agenda est une réunion, avec un seul tour `document` : ses
 // détails et sa description. Le côté vient du dossier : un message des éléments envoyés est celui du
-// propriétaire de la boîte ; rien n'est déduit pour la boîte de réception.
+// propriétaire de la boîte ; rien n'est déduit pour la boîte de réception. Les destinataires d'un
+// message sont ses toRecipients et ses ccRecipients, jamais ses bccRecipients.
 
 const iso = (value: string) => new Date(value).toISOString();
 
@@ -22,6 +23,10 @@ const REPLY_PREFIX = /^(?:(?:re|tr|fw|fwd|rv|aw)\s*:\s*)+/i;
 const titleOf = (subject: string | null | undefined): string =>
   (subject ?? '').replace(REPLY_PREFIX, '').trim() || 'Sans objet';
 
+// Les adresses seules, sans les noms.
+const addressesOf = (people: Message['toRecipients']): string[] =>
+  (people ?? []).flatMap((person) => person?.emailAddress.address ?? []);
+
 function messageTurn(message: Message, folder: Folder): ConnectorTurn | null {
   const text = textOf(message.body);
   if (text === '') return null;
@@ -31,6 +36,10 @@ function messageTurn(message: Message, folder: Folder): ConnectorTurn | null {
     role: 'participant',
     author: { name: from?.name ?? null, email: from?.address ?? null },
     ...(folder === 'sentitems' ? { side: 'team' as const } : {}),
+    recipients: {
+      to: addressesOf(message.toRecipients),
+      cc: addressesOf(message.ccRecipients),
+    },
     text,
     ts: iso(message.receivedDateTime),
   };

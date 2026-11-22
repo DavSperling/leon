@@ -22,6 +22,9 @@ export type ConnectorTurn = {
   // Une note que seule l'équipe voit (le client ne l'a pas lue). Un attribut du tour, pas une marque
   // dans le texte : le texte d'un client peut imiter n'importe quelle marque.
   internalNote?: boolean;
+  // Les destinataires d'un courrier, « à » et « copie » : des adresses seules, sans les noms (le minimum sur
+  // des tiers), jamais la copie cachée. Absent pour tout ce qui n'est pas un courrier.
+  recipients?: { to: string[]; cc: string[] };
   text: string; // texte brut (HTML déjà passé par htmlToText)
   // ISO 8601. Tour document : updatedAt de l'élément (l'état décrit vaut à cette date ; un corps
   // modifié donne un tour daté de la modification). Commentaire ou prise de parole : sa propre date.

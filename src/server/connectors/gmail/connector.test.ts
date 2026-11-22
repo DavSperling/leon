@@ -5,7 +5,7 @@ import { normalizeItem } from '../normalize';
 import type { SyncPage } from '../types';
 import { parseBatch } from './client';
 import { gmailConnector } from './connector';
-import { parseAddress, textOf, threadsOf } from './map';
+import { parseAddress, parseAddressList, textOf, threadsOf } from './map';
 import type { GmailMessage } from './schemas';
 
 const config = {
@@ -28,6 +28,9 @@ function message(
   input: {
     at: string;
     from?: string;
+    to?: string;
+    cc?: string;
+    bcc?: string;
     subject?: string;
     text?: string;
     html?: string;
@@ -51,6 +54,9 @@ function message(
       mimeType: 'multipart/alternative',
       headers: [
         { name: 'From', value: input.from ?? 'Julie Martin <julie@acme.test>' },
+        ...(input.to === undefined ? [] : [{ name: 'To', value: input.to }]),
+        ...(input.cc === undefined ? [] : [{ name: 'Cc', value: input.cc }]),
+        ...(input.bcc === undefined ? [] : [{ name: 'Bcc', value: input.bcc }]),
         { name: 'Subject', value: input.subject ?? 'Devis cuisine' },
       ],
       parts,
@@ -178,6 +184,65 @@ describe('gmail : lecture des messages', () => {
     expect(parseAddress(null)).toEqual({ name: null, email: null });
   });
 
+  it('lit les adresses d’un en-tête de destinataires, sans les noms', () => {
+    expect(
+      parseAddressList('Julie Martin <julie@acme.test>, paul@client.test, <zoe@acme.test>'),
+    ).toEqual(['julie@acme.test', 'paul@client.test', 'zoe@acme.test']);
+    expect(parseAddressList('julie@acme.test')).toEqual(['julie@acme.test']);
+    // La casse et les doublons restent tels quels : la normalisation s'en charge.
+    expect(parseAddressList('Julie <Julie@Acme.test>, julie@acme.test')).toEqual([
+      'Julie@Acme.test',
+      'julie@acme.test',
+    ]);
+  });
+
+  it('ne coupe pas à la virgule d’un nom entre guillemets ni d’un commentaire', () => {
+    expect(
+      parseAddressList(
+        '"Martin, Julie" <julie@acme.test>, "Paul \\"le chef\\", Lambert" <paul@client.test>',
+      ),
+    ).toEqual(['julie@acme.test', 'paul@client.test']);
+    expect(parseAddressList('julie@acme.test (Martin, Julie), paul@client.test')).toEqual([
+      'julie@acme.test',
+      'paul@client.test',
+    ]);
+    // Un nom entre guillemets qui ressemble à une adresse n'en est pas une.
+    expect(parseAddressList('"faux@nom.test" <julie@acme.test>')).toEqual(['julie@acme.test']);
+  });
+
+  it('garde les adresses qui suivent un guillemet ou une parenthèse jamais fermés', () => {
+    for (const header of [
+      'Julie :( <julie@acme.test>, paul@client.test',
+      'Julie "Juju <julie@acme.test>, paul@client.test',
+      'Écran 15" <julie@acme.test>, paul@client.test',
+    ]) {
+      expect(parseAddressList(header)).toEqual(['julie@acme.test', 'paul@client.test']);
+    }
+  });
+
+  it('lit les adresses d’un groupe, et rien d’un groupe vide', () => {
+    expect(
+      parseAddressList('Équipe projet: Julie <julie@acme.test>, paul@client.test;, zoe@acme.test'),
+    ).toEqual(['julie@acme.test', 'paul@client.test', 'zoe@acme.test']);
+    expect(parseAddressList('Équipe: julie@acme.test;')).toEqual(['julie@acme.test']);
+    expect(parseAddressList('undisclosed-recipients:;')).toEqual([]);
+  });
+
+  it('ne rend aucune adresse pour un en-tête absent, vide ou sans adresse', () => {
+    expect(parseAddressList(null)).toEqual([]);
+    expect(parseAddressList('')).toEqual([]);
+    expect(parseAddressList(' , ;')).toEqual([]);
+    expect(parseAddressList('Julie Martin')).toEqual([]);
+  });
+
+  it('reste rapide sur un en-tête de destinataires piégé', () => {
+    const started = Date.now();
+    for (const piece of ['"', '\\"', '(', '<', ':', ' ', ',']) {
+      expect(parseAddressList(piece.repeat(200_000))).toEqual([]);
+    }
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+
   it('regroupe par fil, dans l’ordre, sans brouillon, avec le côté de l’équipe pour un envoi', () => {
     const items = threadsOf([
       message('m3', 't1', {
@@ -205,6 +270,42 @@ describe('gmail : lecture des messages', () => {
     ]);
     expect(devis?.updatedAt).toBe('2026-10-24T10:00:00.000Z');
     for (const item of items) expect(normalizeItem(item, 'gmail')).not.toBeNull();
+  });
+
+  it('rend les destinataires « à » et « copie » d’un message reçu ou envoyé, jamais la copie cachée', () => {
+    const [item] = threadsOf([
+      message('m1', 't1', {
+        at: '2026-10-23T09:00:00Z',
+        to: 'David Morel <David@Acme.test>, "Lambert, Paul" <paul@client.test>',
+        cc: 'zoe@acme.test, david@acme.test',
+        text: 'Voici le devis',
+      }),
+      message('m2', 't1', {
+        at: '2026-10-24T10:00:00Z',
+        from: 'David Morel <david@acme.test>',
+        to: 'Julie Martin <julie@acme.test>',
+        bcc: 'archive@acme.test',
+        text: 'Merci',
+        labels: ['SENT'],
+      }),
+      message('m3', 't1', { at: '2026-10-25T08:00:00Z', text: 'Sans destinataire lisible' }),
+    ]);
+
+    expect(item?.turns.map((turn) => turn.recipients)).toEqual([
+      { to: ['David@Acme.test', 'paul@client.test'], cc: ['zoe@acme.test', 'david@acme.test'] },
+      { to: ['julie@acme.test'], cc: [] },
+      { to: [], cc: [] },
+    ]);
+    // La normalisation met les adresses en minuscules ; la même adresse reste dans chaque liste où elle figure.
+    const normalized = item && normalizeItem(item, 'gmail');
+    expect(normalized?.turns.map((turn) => [turn.recipientsTo, turn.recipientsCc])).toEqual([
+      [
+        ['david@acme.test', 'paul@client.test'],
+        ['zoe@acme.test', 'david@acme.test'],
+      ],
+      [['julie@acme.test'], []],
+      [[], []],
+    ]);
   });
 
   it('lit une réponse de lot, partie par partie', () => {

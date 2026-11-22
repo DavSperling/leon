@@ -282,6 +282,69 @@ describe('outlookConnector.sync : premier passage', () => {
     });
   });
 
+  it('demande les destinataires « à » et « copie » des deux dossiers, jamais la copie cachée', async () => {
+    const { calls } = await runSync(fullRoutes());
+
+    for (const call of [calls[0], calls[2]]) {
+      const fields = param(call?.url, '$select')?.split(',');
+      expect(fields).toEqual(expect.arrayContaining(['toRecipients', 'ccRecipients']));
+      expect(fields).not.toContain('bccRecipients');
+    }
+  });
+
+  it('rend les adresses des destinataires d’un message reçu ou envoyé, sans les noms', async () => {
+    const { pages } = await runSync(fullRoutes());
+
+    const devis = pages[0]?.items[0];
+    expect(devis?.turns.map((turn) => turn.recipients)).toEqual([
+      { to: ['marie.durand@acme.test'], cc: [] },
+      { to: ['marie.durand@acme.test'], cc: ['Sophie.Bernard@acme.test'] },
+    ]);
+    // Un destinataire sans adresse (une liste que Graph ne résout pas) n'est pas rendu.
+    expect(pages[0]?.items[1]?.turns[0]?.recipients).toEqual({
+      to: ['marie.durand@acme.test'],
+      cc: [],
+    });
+    const envoye = pages[2]?.items[0];
+    expect(envoye?.turns[0]?.recipients).toEqual({
+      to: ['paul.lambert@client.test'],
+      cc: ['Sophie.Bernard@acme.test'],
+    });
+    // La normalisation met les adresses en minuscules.
+    const normalized = envoye && normalizeItem(envoye, 'outlook');
+    expect(normalized?.turns[0]).toMatchObject({
+      recipientsTo: ['paul.lambert@client.test'],
+      recipientsCc: ['sophie.bernard@acme.test'],
+    });
+  });
+
+  it('rend des listes vides quand Graph ne donne aucun destinataire', async () => {
+    // Un champ absent de la réponse (undefined ne passe pas en JSON), l'autre nul.
+    const message = { ...inbox2.value[0], toRecipients: undefined, ccRecipients: null };
+    const { pages } = await runSync([
+      { url: INBOX, json: { value: [message] } },
+      { url: SENT, json: empty },
+      { url: EVENTS, json: empty },
+    ]);
+
+    expect(pages[0]?.items[0]?.turns[0]?.recipients).toEqual({ to: [], cc: [] });
+  });
+
+  it('écarte un destinataire illisible sans refuser la page', async () => {
+    const marie = { emailAddress: { address: 'marie.durand@acme.test' } };
+    const message = { ...inbox2.value[0], toRecipients: [{}, marie], ccRecipients: [null] };
+    const { pages } = await runSync([
+      { url: INBOX, json: { value: [message] } },
+      { url: SENT, json: empty },
+      { url: EVENTS, json: empty },
+    ]);
+
+    expect(pages[0]?.items[0]?.turns[0]?.recipients).toEqual({
+      to: ['marie.durand@acme.test'],
+      cc: [],
+    });
+  });
+
   it('ne rend pas un message sans texte, mais fait avancer le curseur', async () => {
     const { pages } = await runSync(fullRoutes());
 

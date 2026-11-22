@@ -118,6 +118,8 @@ export async function ingestConnectorItems(
         authorEmail: turn.authorEmail,
         authorSide: turn.authorSide,
         internalNote: turn.internalNote,
+        recipientsTo: turn.recipientsTo,
+        recipientsCc: turn.recipientsCc,
         acl: sourceAcl,
       }));
       const { ids, lastTs } = await insertNewTurns(tx, rows);

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { z } from 'zod';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
 import type { AuthorSide, ProviderId } from '@/capture/turn';
@@ -16,6 +17,17 @@ const ID_MAX = 200;
 const ID_ROOM = 20; // « :123456 » et « # » plus 12 caractères d'empreinte
 const AUTHOR_NAME_MAX = 200;
 const AUTHOR_EMAIL_MAX = 320;
+const RECIPIENTS_MAX = 100; // adresses gardées par liste (« à », « copie »)
+
+// Une adresse de destinataire, comme la base la garde : sans espaces autour, en minuscules. Sa forme est celle
+// qu'un navigateur accepte : celle de zod par défaut écarte des adresses qui existent (« r&d@acme.fr », une
+// extension en « .xn-- »). Un domaine accentué non encodé reste écarté.
+const AddressSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(AUTHOR_EMAIL_MAX)
+  .pipe(z.email({ pattern: z.regexes.html5Email }));
 
 export type NormalizedTurn = {
   externalId: string;
@@ -24,6 +36,8 @@ export type NormalizedTurn = {
   authorEmail: string | null;
   authorSide: AuthorSide | null;
   internalNote: boolean;
+  recipientsTo: string[];
+  recipientsCc: string[];
   text: string;
   ts: Date;
 };
@@ -318,6 +332,19 @@ function clip(value: string | null, max: number): string | null {
   return head(clean(value ?? '').trim(), max) || null;
 }
 
+// Les adresses d'une liste de destinataires : sans doublon, RECIPIENTS_MAX au plus. Ce qui n'a pas la forme
+// d'une adresse (AddressSchema), ou la dépasse en longueur, est laissé de côté plutôt que coupé : une adresse
+// coupée en désigne une autre.
+function addresses(list: string[] | undefined): string[] {
+  const kept = new Set<string>();
+  for (const value of list ?? []) {
+    if (kept.size === RECIPIENTS_MAX) break;
+    const address = AddressSchema.safeParse(value);
+    if (address.success) kept.add(address.data);
+  }
+  return [...kept];
+}
+
 function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
   const masked = maskSecrets(clean(turn.text));
   const capped =
@@ -326,6 +353,8 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
       : masked;
   const parts = splitText(capped, CONNECTOR_TURN_MAX);
   const stem = head(clean(turn.externalId), ID_MAX - ID_ROOM);
+  const recipientsTo = addresses(turn.recipients?.to);
+  const recipientsCc = addresses(turn.recipients?.cc);
   return parts.flatMap((part, index) => {
     const text = prepareTurnText(part);
     if (text === null) return [];
@@ -339,6 +368,8 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
         authorEmail: clip(turn.author.email, AUTHOR_EMAIL_MAX),
         authorSide: turn.side ?? null,
         internalNote: turn.internalNote === true,
+        recipientsTo,
+        recipientsCc,
         text,
         ts,
       },

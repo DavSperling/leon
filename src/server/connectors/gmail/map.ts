@@ -4,7 +4,8 @@ import type { GmailMessage, GmailPart } from './schemas';
 
 // Des messages de Gmail aux éléments du socle, comme Outlook : un fil regroupe les messages d'une même
 // conversation lus ensemble, chacun est un tour `participant` daté de sa réception. Le côté vient du
-// libellé SENT (envoyé depuis la boîte) ; rien n'est déduit pour les autres.
+// libellé SENT (envoyé depuis la boîte) ; rien n'est déduit pour les autres. Les destinataires viennent
+// des en-têtes To et Cc, jamais de Bcc.
 
 const headerOf = (part: GmailPart | null | undefined, name: string): string | null =>
   part?.headers?.find((header) => header.name.toLowerCase() === name)?.value ?? null;
@@ -57,6 +58,24 @@ export function parseAddress(value: string | null): { name: string | null; email
   return { name: name || null, email: (match[2] ?? '').trim() || null };
 }
 
+// Les adresses d'un en-tête To ou Cc, sans les noms : « "Martin, Julie" <julie@acme.fr>, paul@acme.fr »,
+// ou un groupe (« Équipe: julie@acme.fr, paul@acme.fr; », « undisclosed-recipients:; »). Les noms entre
+// guillemets et les commentaires entre parenthèses partent d'abord : ils peuvent contenir une virgule.
+// Un guillemet ou une parenthèse jamais fermés (« Julie :( <julie@acme.fr> ») ne retirent qu'eux-mêmes : le
+// texte qui suit reste. La fermeture est facultative dans l'expression pour le lire en une passe : sans cela,
+// un en-tête piégé serait relu depuis chacun d'eux, en temps quadratique.
+export function parseAddressList(value: string | null): string[] {
+  return (value ?? '')
+    .replace(
+      /"((?:[^"\\]|\\.)*)("?)|\(([^()]*)(\)?)/g,
+      (_whole, quoted = '', endQuote, comment = '', endComment) =>
+        endQuote || endComment ? '' : quoted + comment,
+    )
+    .split(/[,;]/)
+    .map((part) => (/<([^<>]*)>/.exec(part)?.[1] ?? part.replace(/^[^@<]*:/, '')).trim())
+    .filter((address) => address.includes('@'));
+}
+
 // « RE : », « TR : », « FW : »… changent à chaque réponse : le titre du fil ne doit pas suivre.
 const REPLY_PREFIX = /^(?:(?:re|tr|fw|fwd|rv|aw)\s*:\s*)+/i;
 const titleOf = (subject: string | null): string =>
@@ -72,6 +91,10 @@ function messageTurn(message: GmailMessage): ConnectorTurn | null {
     role: 'participant',
     author: parseAddress(headerOf(message.payload, 'from')),
     ...(message.labelIds?.includes('SENT') ? { side: 'team' as const } : {}),
+    recipients: {
+      to: parseAddressList(headerOf(message.payload, 'to')),
+      cc: parseAddressList(headerOf(message.payload, 'cc')),
+    },
     text,
     ts: iso(message.internalDate),
   };

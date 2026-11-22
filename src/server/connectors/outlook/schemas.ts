@@ -8,6 +8,9 @@ const instant = z.string().refine((value) => !Number.isNaN(Date.parse(value)));
 const person = z.object({
   emailAddress: z.object({ name: z.string().nullish(), address: z.string().nullish() }),
 });
+// Un destinataire illisible est écarté (null) sans faire échouer la page entière : il ne fait que
+// compléter le message.
+const recipients = z.array(person.nullable().catch(null)).nullish();
 const body = z.object({ contentType: z.string(), content: z.string().nullish() });
 const when = z.object({ dateTime: z.string(), timeZone: z.string() });
 
@@ -24,6 +27,8 @@ const MessageSchema = z.object({
   subject: z.string().nullish(),
   receivedDateTime: instant,
   from: person.nullish(),
+  toRecipients: recipients,
+  ccRecipients: recipients,
   body: body.nullish(),
   webLink: z.string().nullish(),
 });

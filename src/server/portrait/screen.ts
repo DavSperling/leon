@@ -1,10 +1,12 @@
+import { and, eq } from 'drizzle-orm';
 import { linesOf } from '@/lib/fiche-view';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { listConnections } from '@/server/connectors/connections';
+import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { type FicheLine, readFiche } from './fiche';
-import { enqueueFicheBuild, ficheBuildPending } from './queue';
+import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 
@@ -15,9 +17,17 @@ import { synthesisDone } from './synthese';
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
 // - faite : son rôle ou ses tâches sont écrits, même corrigés ou retirés depuis : plus de bouton ;
 // - a-completer : des lignes calculées, sans rôle ni tâche (pas de modèle, ou une panne) : le bouton reste ;
-// - a-construire : pas de fiche, et une boîte Gmail ou Outlook branchée par elle : le bouton ;
-// - sans-boite : pas de fiche, et aucune boîte branchée par elle : il en faut une.
-export type FicheEtat = 'en-cours' | 'faite' | 'a-completer' | 'a-construire' | 'sans-boite';
+// - sans-boite : pas de fiche, et aucune boîte branchée par elle : il en faut une ;
+// - sans-mail : pas de fiche, sa boîte branchée, et une construction finie qui n'a trouvé aucun mail envoyé : l'écran
+//   le dit, le bouton reste ;
+// - a-construire : pas de fiche, et une boîte Gmail ou Outlook branchée par elle : le bouton.
+export type FicheEtat =
+  | 'en-cours'
+  | 'faite'
+  | 'a-completer'
+  | 'sans-boite'
+  | 'sans-mail'
+  | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 export type FicheScreen = {
   etat: FicheEtat;
@@ -33,7 +43,18 @@ async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat>
   const mailbox = (await listConnections(ctx)).some(
     (one) => one.isCreator && MAIL_KINDS.some((kind) => kind === one.provider),
   );
-  return mailbox ? 'a-construire' : 'sans-boite';
+  if (!mailbox) return 'sans-boite';
+  // Aucune ligne, même retirée par elle depuis : la construction finie n'avait rien eu à écrire.
+  // shortcut: l'écran ne le dit que tant que la file garde ce travail fini (sept jours), à noter en base si cela doit
+  // durer.
+  const [kept] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ id: lignesFiche.id })
+      .from(lignesFiche)
+      .where(and(eq(lignesFiche.tenantId, ctx.tenantId), eq(lignesFiche.userId, ctx.userId)))
+      .limit(1),
+  );
+  return !kept && (await ficheBuildCompleted(ctx)) ? 'sans-mail' : 'a-construire';
 }
 
 // Les sources d'une tâche se relisent à chaque affichage, sous ses droits : une source supprimée, ou qu'elle ne voit
@@ -57,6 +78,7 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
 // construction est déjà en cours (elle le fera).
 export async function requestFicheBuild(ctx: TenantContext): Promise<boolean> {
   const etat = await etatOf(ctx, (await readFiche(ctx)).length > 0);
-  if (etat === 'a-construire' || etat === 'a-completer') await enqueueFicheBuild(ctx);
-  return etat !== 'sans-boite' && etat !== 'faite';
+  const refused = etat === 'sans-boite' || etat === 'faite';
+  if (!refused && etat !== 'en-cours') await enqueueFicheBuild(ctx);
+  return !refused;
 }

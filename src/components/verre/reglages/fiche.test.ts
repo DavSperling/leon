@@ -348,6 +348,14 @@ describe('FicheSection : où en est la construction', () => {
     expect(text(html)).toContain('laissez d’abord à Leon le temps de la lire');
   });
 
+  it('une construction finie sans aucun mail trouvé : l’écran le dit, et le bouton reste', () => {
+    const html = render({ etat: 'sans-mail', ...EMPTY });
+
+    expect(text(html)).toContain('Leon n’a trouvé aucun mail que vous avez envoyé');
+    expect(text(render({ etat: 'sans-mail', ...EMPTY }, 'en'))).toContain('Leon found no email');
+    expect(html).toMatch(/<button [^>]*>(<[^>]+>)*Construire ma fiche/);
+  });
+
   it('construction demandée ou en cours : l’écran le dit, annoncé, sans bouton pour la relancer', () => {
     const html = render({ etat: 'en-cours', ...COMPUTED });
 

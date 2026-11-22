@@ -44,3 +44,10 @@ export async function ficheBuildPending(job: FicheJob): Promise<boolean> {
   const jobs = await boss.findJobs(FICHE_QUEUE, { key: ficheKey(job) });
   return jobs.some(({ state }) => state === 'created' || state === 'retry' || state === 'active');
 }
+
+// Une construction menée à son terme : pg-boss garde sept jours un travail fini (deleteAfterSeconds).
+export async function ficheBuildCompleted(job: FicheJob): Promise<boolean> {
+  const boss = await getFicheBoss();
+  const jobs = await boss.findJobs(FICHE_QUEUE, { key: ficheKey(job) });
+  return jobs.some(({ state }) => state === 'completed');
+}

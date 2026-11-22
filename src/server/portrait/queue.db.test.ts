@@ -125,8 +125,31 @@ describe('la demande de construction et l’état « en cours »', () => {
     expect(ids).toHaveLength(1);
     expect((await readFicheScreen(ctx)).etat).toBe('en-cours');
 
-    // Le travail fini sans rien écrire (aucun mail) : l'écran propose de nouveau le bouton.
+    // Le travail fini sans rien écrire (aucun mail) : l'écran le dit, et la demande repart en file.
     await boss.complete(FICHE_QUEUE, ids[0] ?? '');
+    expect((await readFicheScreen(ctx)).etat).toBe('sans-mail');
+    expect(await requestFicheBuild(ctx)).toBe(true);
+    expect((await readFicheScreen(ctx)).etat).toBe('en-cours');
+  });
+
+  it('une construction finie ne dit pas « aucun mail » à qui a retiré ses lignes', async () => {
+    const boss = await getFicheBoss();
+    const ctx = await julie(true);
+    await adminDb.insert(lignesFiche).values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      genre: 'rythme',
+      valeur: { mailsParSemaine: 12 },
+      provenance: 'calcul',
+      mails: 12,
+      acl: [ctx.userId],
+      retireeLe: new Date(),
+    });
+    await requestFicheBuild(ctx);
+    const [id] = await idsOf(ctx);
+    await boss.fetch(FICHE_QUEUE, { batchSize: 10 });
+    await boss.complete(FICHE_QUEUE, id ?? '');
+
     expect((await readFicheScreen(ctx)).etat).toBe('a-construire');
   });
 

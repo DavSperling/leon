@@ -386,8 +386,9 @@ function StyleRows({
   ];
 }
 
-// Où en est la construction : ce qu'il faut pour commencer, le bouton, ou « en cours ». La page relit l'état à chaque
-// chargement (la file le dit) ; une fois le rôle ou les tâches écrits, plus rien ici.
+// Où en est la construction : ce qu'il faut pour commencer, le bouton (avec ce qu'une construction finie n'a pas
+// trouvé), ou « en cours ». La page relit l'état à chaque chargement (la file le dit) ; une fois le rôle ou les tâches
+// écrits, plus rien ici.
 function Build({ etat }: { etat: FicheEtat }) {
   const t = useTranslations('fiche');
   const router = useRouter();
@@ -429,12 +430,16 @@ function Build({ etat }: { etat: FicheEtat }) {
       {t(label)}
     </Button>
   );
-  return etat === 'a-construire' ? (
-    <EmptyState title={t('noFiche')} description={t('buildHint')} action={button('build')} />
-  ) : (
+  return etat === 'a-completer' ? (
     <Notice live="status" action={button('complete')} className="max-w-2xl">
       {nb(t('completeHint'))}
     </Notice>
+  ) : (
+    <EmptyState
+      title={t('noFiche')}
+      description={t(etat === 'sans-mail' ? 'noMail' : 'buildHint')}
+      action={button('build')}
+    />
   );
 }
 

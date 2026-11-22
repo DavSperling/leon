@@ -232,6 +232,13 @@ describe('buildBrouillonPrompt : ce que le modèle reçoit', () => {
       expect(text).not.toContain(absent);
   });
 
+  it('un emoji à cheval sur la coupe d’un exemple ne laisse pas sa moitié : le message reste bien formé', () => {
+    const text = content(build({ sent: [sent(1, `${'x'.repeat(1199)}😀`)] }));
+
+    expect(text).toContain(`<exemple>${'x'.repeat(1199)}`);
+    expect(text.isWellFormed()).toBe(true);
+  });
+
   it('sans mail envoyé, ne donne aucun exemple', () => {
     const text = content(build());
 

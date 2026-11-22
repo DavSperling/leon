@@ -86,7 +86,8 @@ function examplesOf(sent: SentMail[], from: string): string[] {
   const examples: string[] = [];
   for (const mail of [...recent.filter(toThem), ...recent.filter((mail) => !toThem(mail))]) {
     const { text } = ownText(mail.text);
-    if (text) examples.push(text.slice(0, EXAMPLE_CHARS));
+    // La coupe ne laisse jamais un demi-emoji : l'API du modèle refuse un corps qui en porte (condense.ts).
+    if (text) examples.push(text.slice(0, EXAMPLE_CHARS).toWellFormed());
     if (examples.length === EXAMPLES_MAX) break;
   }
   return examples;

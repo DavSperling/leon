@@ -196,6 +196,7 @@ describe('readSentMails', () => {
     expect(first?.repliesToAt).toBeNull();
     // La forme que lit computeFacts : une réponse à l'extérieur, en 42 minutes.
     expect(computeFacts(mails, { domains, timeZone: 'Europe/Paris' }).delaiReponse).toEqual({
+      tous: { medianeMinutes: 42, reponses: 1 },
       interne: { medianeMinutes: null, reponses: 0 },
       externe: { medianeMinutes: 42, reponses: 1 },
     });

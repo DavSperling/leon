@@ -44,7 +44,7 @@ const VALEURS = {
   langues: z.strictObject({ fr: count, en: count, autre: count, inconnue: count }),
   'delai-reponse': z.strictObject({ tous: delai, interne: delai, externe: delai }),
   horaires: z.strictObject({ heures: z.array(count).length(24), jours: z.array(count).length(7) }),
-  signature: z.strictObject({ texte: z.string().min(1).max(FICHE_MAX.signature) }),
+  signature: z.strictObject({ texte: z.string().min(1).max(2000) }),
   // Écrits par un modèle (synthese.ts), sans nombre de mails. Son rôle : une ligne, sans clé.
   role: z.strictObject({ texte: z.string().min(1).max(FICHE_MAX.role) }),
   // Une tâche qu'elle refait. Clé : son rang, de « 1 » à « 8 ». `sources` : les sources où on la voit la faire.

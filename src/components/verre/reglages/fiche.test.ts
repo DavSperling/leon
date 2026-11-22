@@ -9,7 +9,7 @@ import fr from '../../../../messages/fr.json';
 import { errorOf, FicheSection } from './fiche';
 
 // Les actions importent Better Auth : seul le dessin de l'onglet se teste ici, et la décision pure qu'il prend d'une
-// erreur. Données inventées : des adresses en .test, des sources qui n'existent pas.
+// erreur. Données inventées : des sources qui n'existent pas.
 vi.mock('@/app/(app)/settings/actions', () => ({
   buildFicheAction: vi.fn(),
   correctFicheLineAction: vi.fn(),
@@ -21,7 +21,7 @@ const DAY = new Date('2026-11-10T09:00:00Z');
 const id = (n: number) => `${String(n).padStart(8, '0')}-1111-4111-8111-111111111111`;
 let next = 0;
 const line = (
-  genre: FicheLine['genre'],
+  genre: 'role' | 'tache',
   cle: string,
   valeur: FicheLine['valeur'],
   over: Partial<FicheLine> = {},
@@ -30,75 +30,30 @@ const line = (
   genre,
   cle,
   valeur,
-  provenance: genre === 'role' || genre === 'tache' ? 'synthese' : 'calcul',
-  mails: genre === 'role' || genre === 'tache' ? null : 12,
+  provenance: 'synthese',
+  mails: null,
   corrigeeLe: null,
   ...over,
 });
 
 const [SEEN, UNLINKED, GONE] = [id(901), id(902), id(903)];
-// 24 heures à zéro, sauf la matinée et le début d'après-midi.
-const HEURES = Array.from({ length: 24 }, (_, hour) => ({ 9: 6, 10: 10, 11: 5, 14: 8 })[hour] ?? 0);
 
-const ROLE = line('role', '', { texte: 'Commerciale : suit les clients et prépare les devis.' });
+const ROLE = line('role', '', { texte: 'Commerciale : suit les clients\net prépare les devis.' });
 const TACHE = line('tache', '1', {
   titre: 'Répondre aux demandes de devis',
   detail: 'Un client demande un prix ; elle répond avec un devis.',
   sources: [SEEN, UNLINKED, GONE],
 });
-const TACHE_SANS_SOURCE = line('tache', '2', {
-  titre: 'Relancer les devis',
-  detail: '',
-  sources: [GONE],
-});
-const PAUL = line('interlocuteur', 'paul@acme.test', {
-  a: 10,
-  copie: 2,
-  dernier: DAY.toISOString(),
-  type: 'interne',
-  registre: 'tutoiement',
-  tutoiement: 4,
-  vouvoiement: 0,
-});
-const LEA = line(
-  'interlocuteur',
-  'lea@client.test',
-  {
-    a: 30,
-    copie: 0,
-    dernier: DAY.toISOString(),
-    type: null,
-    registre: null,
-    tutoiement: 0,
-    vouvoiement: 0,
-  },
-  { provenance: 'personne', mails: null, corrigeeLe: DAY },
+// Corrigée par elle, et sans aucune source qu'elle voie encore.
+const TACHE_CORRIGEE = line(
+  'tache',
+  '2',
+  { titre: 'Relancer les devis', detail: '', sources: [GONE] },
+  { provenance: 'personne', corrigeeLe: DAY },
 );
-const STYLE = (side: string) => [
-  line('appels', side, {
-    formules: [
-      { formule: 'Bonjour', mails: 9 },
-      { formule: 'Salut', mails: 1 },
-    ],
-  }),
-  line('politesses', side, { formules: [{ formule: 'Cordialement', mails: 8 }] }),
-  line('registre', side, { tutoiement: 0.25, vouvoiement: 0.75 }),
-  line('mots', side, { mediane: 84.5 }),
-];
-const RYTHME = [
-  line('rythme', '', { mailsParSemaine: 12.5 }),
-  line('horaires', '', { heures: HEURES, jours: [10, 9, 2, 8, 1, 0, 0] }),
-  line('delai-reponse', '', {
-    tous: { medianeMinutes: 150, reponses: 20 },
-    interne: { medianeMinutes: 30, reponses: 12 },
-    externe: { medianeMinutes: null, reponses: 0 },
-  }),
-  line('langues', '', { fr: 90, en: 10, autre: 0, inconnue: 0 }),
-];
-const SIGNATURE = line('signature', '', { texte: 'Julie Martin\nAcme' });
 
 // Les lignes dans un ordre quelconque : l'écran les range.
-const LINES = [SIGNATURE, ...RYTHME, ...STYLE('tous'), PAUL, LEA, TACHE_SANS_SOURCE, TACHE, ROLE];
+const LINES = [TACHE_CORRIGEE, TACHE, ROLE];
 const DATA: FicheScreen = {
   etat: 'faite',
   lines: LINES,
@@ -150,35 +105,34 @@ describe('FicheSection : la fiche en mots', () => {
     );
   });
 
-  it('range les parties dans l’ordre : rôle, tâches, interlocuteurs, façon d’écrire, rythme, signature', () => {
-    const html = render();
-    const order = [
-      'Rôle',
-      'Tâches répétées',
-      'Interlocuteurs',
-      'Façon d’écrire',
-      'Rythme',
-      'Signature',
-    ].map((title) => html.indexOf(`>${title}</h2>`));
-
-    expect(order.every((at) => at > 0)).toBe(true);
-    expect(order).toEqual(order.toSorted((a, b) => a - b));
+  it('dit que Leon garde aussi des mesures sur ses mails, sans les afficher', () => {
+    expect(text(render())).toContain(
+      'Leon garde aussi, sans les afficher, des mesures sur vos mails envoyés',
+    );
+    expect(text(render(DATA, 'en'))).toContain(
+      'Leon also keeps measurements from your sent email without showing them',
+    );
   });
 
-  it('ne montre jamais une valeur brute : ni JSON, ni nom de champ, ni 24 nombres', () => {
+  it('ne montre que deux parties, dans l’ordre : son rôle, puis ses tâches', () => {
+    const html = render();
+    const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
+
+    expect(titles).toEqual(['Ma fiche', 'Rôle', 'Tâches répétées']);
+  });
+
+  it('ne montre jamais une valeur brute : ni JSON, ni nom de champ', () => {
     const shown = text(render());
 
     expect(shown).not.toMatch(/[{}[\]]/);
-    for (const field of ['mailsParSemaine', 'medianeMinutes', 'formules', 'reponses', 'inconnue'])
-      expect(shown, field).not.toContain(field);
+    for (const field of ['detail', 'sources', 'texte']) expect(shown, field).not.toContain(field);
   });
 
-  it('le rôle et la signature se lisent tels quels, la signature sur ses lignes', () => {
-    const html = render();
+  it('le rôle se lit tel quel, sur ses lignes', () => {
+    const role = row(render(), ROLE);
 
-    expect(text(row(html, ROLE))).toContain('Commerciale : suit les clients et prépare les devis.');
-    expect(row(html, SIGNATURE)).toContain('Julie Martin\nAcme');
-    expect(row(html, SIGNATURE)).toContain('whitespace-pre-wrap');
+    expect(role).toContain('Commerciale : suit les clients\net prépare les devis.');
+    expect(role).toContain('whitespace-pre-wrap');
   });
 
   it('une tâche : son titre, son détail, et « vue dans N éléments » pour les seules sources qu’elle voit encore', () => {
@@ -202,97 +156,35 @@ describe('FicheSection : la fiche en mots', () => {
   });
 
   it('une tâche dont aucune source n’est plus visible ne dit pas « vue dans »', () => {
-    const tache = row(render(), TACHE_SANS_SOURCE);
+    const tache = row(render(), TACHE_CORRIGEE);
 
     expect(text(tache)).toContain('Relancer les devis');
     expect(text(tache)).not.toContain('Vue dans');
   });
 
-  it('les tâches suivent leur rang, les interlocuteurs le nombre de mails', () => {
+  it('les tâches suivent leur rang', () => {
     const html = render();
 
     expect(html.indexOf(`ligne-${TACHE.id}`)).toBeLessThan(
-      html.indexOf(`ligne-${TACHE_SANS_SOURCE.id}`),
+      html.indexOf(`ligne-${TACHE_CORRIGEE.id}`),
     );
-    expect(html.indexOf(`ligne-${LEA.id}`)).toBeLessThan(html.indexOf(`ligne-${PAUL.id}`));
   });
 
-  it('un interlocuteur : son adresse, ses mails, interne ou externe et le registre quand on les sait', () => {
+  it('chaque ligne dit d’où elle vient : écrite par Leon, ou corrigée par elle avec la date', () => {
     const html = render();
 
-    expect(text(row(html, PAUL))).toContain('paul@acme.test 12 mails · interne · tutoiement');
-    const lea = text(row(html, LEA));
-    expect(lea).toContain('lea@client.test 30 mails');
-    expect(lea).not.toMatch(/interne|externe|tutoiement|vouvoiement/);
-  });
-
-  it('la façon d’écrire : formules d’appel, de politesse, registre et longueur, en phrases', () => {
-    const shown = text(render());
-
-    expect(shown).toContain('Formules d’appel : Bonjour (9 mails), Salut (1 mail)');
-    expect(shown).toContain('Formules de politesse : Cordialement (8 mails)');
-    expect(shown).toContain('Tutoiement dans 25 % de vos mails, vouvoiement dans 75 %');
-    expect(shown).toContain('Longueur habituelle : environ 85 mots');
-  });
-
-  it('par type de destinataire seulement quand il y en a plusieurs', () => {
-    const one = render();
-    expect(one).not.toContain('<h3');
-
-    const several = render({
-      ...DATA,
-      lines: [...STYLE('externe'), ...LINES, ...STYLE('interne')],
-    });
-    const titles = ['Tous vos mails', 'À vos collègues', 'À l’extérieur'].map((title) =>
-      several.indexOf(`>${title}</h3>`),
-    );
-    expect(titles.every((at) => at > 0)).toBe(true);
-    expect(titles).toEqual(titles.toSorted((a, b) => a - b));
-  });
-
-  it('le rythme : mails par semaine, plages et jours les plus chargés, délai de réponse, langues', () => {
-    const shown = text(render());
-
-    expect(shown).toContain('12,5 mails par semaine');
-    expect(shown).toContain(
-      'Vous envoyez surtout vos mails de 9 h à 12 h et de 14 h à 15 h (heure de Paris).',
-    );
-    expect(shown).toContain('Vos jours les plus chargés : lundi, mardi et jeudi.');
-    expect(shown).toContain('Délai de réponse habituel : environ 3 heures');
-    expect(shown).toContain('À vos collègues : environ 30 minutes');
-    expect(shown).not.toContain('À l’extérieur : environ');
-    expect(shown).toContain('Langues de vos mails : français 90 %, anglais 10 %');
-  });
-
-  it('le rythme s’accorde avec son nombre, dans les deux langues', () => {
-    const at = (mailsParSemaine: number, locale: 'en' | 'fr') =>
-      text(render({ ...DATA, lines: [line('rythme', '', { mailsParSemaine })] }, locale));
-
-    expect(at(1, 'fr')).toContain('1 mail par semaine');
-    expect(at(0.5, 'fr')).toContain('0,5 mail par semaine');
-    expect(at(1, 'en')).toContain('1 email a week');
-    expect(at(0.5, 'en')).toContain('0.5 emails a week');
-  });
-
-  it('chaque ligne dit d’où elle vient : calculée sur N mails, écrite par Leon, ou corrigée par elle avec la date', () => {
-    const html = render();
-
-    expect(text(row(html, PAUL))).toContain('Calculée sur 12 mails');
     expect(text(row(html, ROLE))).toContain('Écrite par Leon d’après vos outils');
     expect(text(row(html, TACHE))).toContain('Écrite par Leon d’après vos outils');
-    expect(text(row(html, LEA))).toContain('Corrigée par vous le 10 nov. 2026');
-    expect(row(html, LEA)).toContain('dateTime="2026-11-10T09:00:00.000Z"');
+    expect(text(row(html, TACHE_CORRIGEE))).toContain('Corrigée par vous le 10 nov. 2026');
+    expect(row(html, TACHE_CORRIGEE)).toContain('dateTime="2026-11-10T09:00:00.000Z"');
   });
 
-  it('chaque ligne se retire ; seuls le rôle, les tâches, la signature et les interlocuteurs se corrigent', () => {
+  it('chaque ligne se corrige et se retire', () => {
     const html = render();
 
+    for (const one of LINES) expect(row(html, one), one.genre).toContain(`id="corriger-${one.id}"`);
+    expect(count(html, '>Corriger</button>')).toBe(LINES.length);
     expect(count(html, '>Retirer</button>')).toBe(LINES.length);
-    for (const one of [ROLE, TACHE, TACHE_SANS_SOURCE, PAUL, LEA, SIGNATURE])
-      expect(row(html, one), one.genre).toContain(`id="corriger-${one.id}"`);
-    for (const one of [...RYTHME, ...LINES.filter((l) => l.cle === 'tous')])
-      expect(row(html, one), one.genre).not.toContain('Corriger');
-    expect(count(html, '>Corriger</button>')).toBe(6);
   });
 
   it('relie « Corriger », « Retirer » et les sources aux mots de leur ligne', () => {
@@ -302,7 +194,7 @@ describe('FicheSection : la fiche en mots', () => {
     // « Corriger », « Retirer » et « Vue dans 2 éléments ».
     expect(count(html, `aria-describedby="ligne-${TACHE.id}"`)).toBe(3);
     expect(html).toContain(`aria-controls="sources-${TACHE.id}"`);
-    expect(count(html, `aria-describedby="ligne-${RYTHME[0]?.id}"`)).toBe(1);
+    expect(count(html, `aria-describedby="ligne-${ROLE.id}"`)).toBe(2);
   });
 
   it('se dessine en anglais avec les mêmes clés', () => {
@@ -310,15 +202,9 @@ describe('FicheSection : la fiche en mots', () => {
 
     for (const words of [
       'Work profile',
+      'Role',
       'Recurring tasks',
       'Seen in 2 items',
-      '12 emails · internal · informal “tu”',
-      'Greetings: Bonjour (9 emails), Salut (1 email)',
-      'You mostly send email from 9 AM to 12 PM and from 2 PM to 3 PM (Paris time).',
-      'Your busiest days: Monday, Tuesday, and Thursday.',
-      'Usual reply time: about 3 hours',
-      'Languages of your email: French 90%, English 10%',
-      'Computed from 12 emails',
       'Written by Leon from your tools',
       'Corrected by you on Nov 10, 2026',
     ])
@@ -328,7 +214,6 @@ describe('FicheSection : la fiche en mots', () => {
 
 describe('FicheSection : où en est la construction', () => {
   const EMPTY = { lines: [], sources: {} };
-  const COMPUTED = { lines: [...RYTHME, PAUL], sources: {} };
 
   it('sans fiche ni boîte : il en faut une, avec le lien vers les connexions, et pas de bouton', () => {
     const html = render({ etat: 'sans-boite', ...EMPTY });
@@ -357,23 +242,21 @@ describe('FicheSection : où en est la construction', () => {
   });
 
   it('construction demandée ou en cours : l’écran le dit, annoncé, sans bouton pour la relancer', () => {
-    const html = render({ etat: 'en-cours', ...COMPUTED });
+    const html = render({ etat: 'en-cours', ...EMPTY });
 
     expect(html).toContain('role="status"');
     expect(text(html)).toContain('Leon construit votre fiche.');
     expect(text(html)).toContain('Actualiser');
     expect(text(html)).not.toMatch(/Construire ma fiche|Compléter ma fiche/);
-    // Les lignes déjà calculées se montrent pendant que le modèle écrit le reste.
-    expect(text(html)).toContain('12,5 mails par semaine');
   });
 
-  it('fiche calculée sans rôle ni tâche : elle se montre, et le bouton reste pour la compléter', () => {
-    const html = render({ etat: 'a-completer', ...COMPUTED });
+  it('mesures calculées, sans rôle ni tâche : rien à montrer encore, et le bouton reste pour la compléter', () => {
+    const html = render({ etat: 'a-completer', ...EMPTY });
 
     expect(text(html)).toContain('Leon n’a pas encore écrit votre rôle ni vos tâches répétées.');
     expect(html).toMatch(/<button [^>]*>(<[^>]+>)*Compléter ma fiche/);
-    expect(text(html)).toContain('paul@acme.test');
     expect(html).not.toContain('>Rôle</h2>');
+    expect(html).not.toContain('<li');
   });
 
   it('une fois le rôle ou les tâches écrits : plus de bouton', () => {

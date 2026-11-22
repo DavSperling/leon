@@ -244,6 +244,14 @@ describe('deleteAccount', () => {
        values ($1, $2, '[]', now(), array[$2::uuid]), ($1, $3, '[]', now(), array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
+    // Et sa fiche (0076), une ligne retirée comprise, pas celle de Bob.
+    await adminPool.query(
+      `insert into lignes_fiche (tenant_id, user_id, genre, valeur, provenance, mails, retiree_le, acl)
+       values ($1, $2, 'rythme', '{"mailsParSemaine": 12}', 'calcul', 40, null, array[$2::uuid]),
+              ($1, $2, 'signature', '{"texte": "Alice"}', 'personne', null, now(), array[$2::uuid]),
+              ($1, $3, 'rythme', '{"mailsParSemaine": 8}', 'calcul', 25, null, array[$3::uuid])`,
+      [tenantId, alice.userId, bob.userId],
+    );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas
     // celles de Bob (C12).
     await adminPool.query(
@@ -336,6 +344,11 @@ describe('deleteAccount', () => {
       [tenantId],
     );
     expect(calendars).toEqual([{ user_id: bob.userId }]);
+    const { rows: fiche } = await adminPool.query(
+      'select user_id from lignes_fiche where tenant_id = $1',
+      [tenantId],
+    );
+    expect(fiche).toEqual([{ user_id: bob.userId }]);
     const { rows: versions } = await adminPool.query(
       'select owner_user_id from versions_memoire where tenant_id = $1',
       [tenantId],

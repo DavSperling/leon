@@ -51,9 +51,6 @@ import type { FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/scre
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';
-// `settle` : ce que la fiche fait d'une réponse des actions ; rend true si elle a réussi. `gone` : la ligne retirée
-// emporte le bouton qui avait le focus, il passe au haut de la fiche.
-type Control = { settle: (result: Result) => boolean; gone: () => void };
 
 export const errorOf = (code: string): ErrorKey =>
   code === 'introuvable' ? 'errorNotFound' : code === 'invalide' ? 'errorInvalid' : 'errorFailed';
@@ -100,19 +97,22 @@ function Provenance({ line }: { line: FicheLine }) {
 // Une ligne de la fiche : ses mots, d'où elle vient, « Corriger » si elle se corrige, « Retirer » toujours.
 function Row({
   line,
-  ctl,
+  onGone,
   after,
   children,
 }: {
   line: FicheLine;
-  ctl: Control;
+  // La ligne retirée emporte le bouton qui avait le focus : à l'onglet de le reprendre.
+  onGone: () => void;
   // Sous les boutons : les sources d'une tâche.
   after?: ReactNode;
   children: ReactNode;
 }) {
   const t = useTranslations('fiche');
+  const router = useRouter();
   const fields = fieldsOf(line);
   const [draft, setDraft] = useState<Record<string, string> | null>(null);
+  const [error, setError] = useState<ErrorKey | null>(null);
   const [saving, startSaving] = useTransition();
   const [removing, startRemoving] = useTransition();
   const words = `ligne-${line.id}`;
@@ -121,6 +121,17 @@ function Row({
   const startEditing = () => {
     const valeur = line.valeur as Record<string, unknown>;
     setDraft(Object.fromEntries(fields.map(({ name }) => [name, String(valeur[name] ?? UNKNOWN)])));
+  };
+  // Ce que la ligne fait d'une réponse des actions : une erreur se dit sur place. Une ligne qui n'existe plus (retirée
+  // ailleurs) disparaît quand la page relit la fiche : c'est la pastille qui le dit.
+  const settle = (result: Result): boolean => {
+    const failed = 'ok' in result ? null : errorOf(result.error);
+    setError(failed === 'errorNotFound' ? null : failed);
+    if (failed === 'errorNotFound') {
+      toast.error(t(failed));
+      router.refresh();
+    }
+    return failed === null;
   };
   const stopEditing = () => {
     setDraft(null);
@@ -138,7 +149,7 @@ function Row({
         ]),
       );
       const result = await attempt(() => correctFicheLineAction({ id: line.id, champs }));
-      if (ctl.settle(result)) {
+      if (settle(result)) {
         toast.success(t('saved'));
         stopEditing();
       }
@@ -146,14 +157,19 @@ function Row({
   const remove = () =>
     startRemoving(async () => {
       const result = await attempt(() => retireFicheLineAction(line.id));
-      if (ctl.settle(result)) {
+      if (settle(result)) {
         toast.success(t('removed'));
-        ctl.gone();
+        onGone();
       }
     });
 
   return (
     <li className="px-3 py-3.5">
+      {error && (
+        <Notice tone="error" live="alert" className="mb-3">
+          {nb(t(error))}
+        </Notice>
+      )}
       {draft ? (
         <form action={save} className="grid max-w-xl gap-3">
           {fields.map(({ name, label, max }) => (
@@ -329,11 +345,11 @@ const DELAYS = { minutes: 'delayMinutes', hours: 'delayHours', days: 'delayDays'
 function StyleRows({
   lines,
   side,
-  ctl,
+  onGone,
 }: {
   lines: FicheLine[];
   side: string;
-  ctl: Control;
+  onGone: () => void;
 }): ReactNode[] {
   const t = useTranslations('fiche');
   const of = <G extends 'appels' | 'politesses' | 'registre' | 'mots'>(genre: G) =>
@@ -342,17 +358,17 @@ function StyleRows({
     line.valeur.formules.map(({ formule, mails }) => t('formula', { formule, count: mails }));
   return [
     ...of('appels').map((line) => (
-      <Row key={line.id} line={line} ctl={ctl}>
+      <Row key={line.id} line={line} onGone={onGone}>
         <p>{nb(t('greetings', { list: formulas(line).join(', ') }))}</p>
       </Row>
     )),
     ...of('politesses').map((line) => (
-      <Row key={line.id} line={line} ctl={ctl}>
+      <Row key={line.id} line={line} onGone={onGone}>
         <p>{nb(t('closings', { list: formulas(line).join(', ') }))}</p>
       </Row>
     )),
     ...of('registre').map((line) => (
-      <Row key={line.id} line={line} ctl={ctl}>
+      <Row key={line.id} line={line} onGone={onGone}>
         <p>
           {nb(
             t('register', {
@@ -364,7 +380,7 @@ function StyleRows({
       </Row>
     )),
     ...of('mots').map((line) => (
-      <Row key={line.id} line={line} ctl={ctl}>
+      <Row key={line.id} line={line} onGone={onGone}>
         <p>{nb(t('length', { count: Math.round(line.valeur.mediane) }))}</p>
       </Row>
     )),
@@ -427,9 +443,7 @@ function Build({ etat }: { etat: FicheEtat }) {
 export function FicheSection({ data }: { data: FicheScreen | null }) {
   const t = useTranslations('fiche');
   const locale = useLocale();
-  const router = useRouter();
   const top = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<ErrorKey | null>(null);
   if (!data) {
     return (
       <Notice tone="error" live="alert">
@@ -438,15 +452,8 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
     );
   }
   const { lines } = data;
-  const ctl: Control = {
-    settle: (result) => {
-      setError('ok' in result ? null : errorOf(result.error));
-      // Une ligne introuvable a été retirée ailleurs : la page relit la fiche.
-      if ('error' in result && result.error === 'introuvable') router.refresh();
-      return 'ok' in result;
-    },
-    gone: () => requestAnimationFrame(() => top.current?.focus({ preventScroll: true })),
-  };
+  // La ligne retirée emporte le bouton qui avait le focus : il passe au haut de la fiche.
+  const onGone = () => requestAnimationFrame(() => top.current?.focus({ preventScroll: true }));
 
   const delay = (minutes: number) => {
     const { unit, n } = delayOf(minutes);
@@ -467,17 +474,12 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
   return (
     <div ref={top} tabIndex={-1} className="grid gap-12 outline-none">
       <Section title={t('title')} description={t('description')} className="mt-0">
-        {error && (
-          <Notice tone="error" live="alert" className="mb-4">
-            {nb(t(error))}
-          </Notice>
-        )}
         <Build etat={data.etat} />
       </Section>
 
       <Part title={t('roleTitle')}>
         {linesOf(lines, 'role').map((line) => (
-          <Row key={line.id} line={line} ctl={ctl}>
+          <Row key={line.id} line={line} onGone={onGone}>
             <p className="whitespace-pre-wrap">{line.valeur.texte}</p>
           </Row>
         ))}
@@ -488,7 +490,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
           <Row
             key={line.id}
             line={line}
-            ctl={ctl}
+            onGone={onGone}
             after={
               <Sources
                 id={line.id}
@@ -504,7 +506,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
 
       <Part title={t('contactsTitle')}>
         {contacts.map((line) => (
-          <Row key={line.id} line={line} ctl={ctl}>
+          <Row key={line.id} line={line} onGone={onGone}>
             <p className="font-medium">{line.cle}</p>
             <p>
               <Muted>
@@ -535,7 +537,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
                     aria-label={sides.length > 1 ? t(SIDE_LABELS[side]) : t('styleTitle')}
                     className="divide-y divide-line"
                   >
-                    <StyleRows lines={lines} side={side} ctl={ctl} />
+                    <StyleRows lines={lines} side={side} onGone={onGone} />
                   </ul>
                 </GlassCard>
               </div>
@@ -547,7 +549,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
       <Part title={t('rhythmTitle')}>
         {[
           ...linesOf(lines, 'rythme').map((line) => (
-            <Row key={line.id} line={line} ctl={ctl}>
+            <Row key={line.id} line={line} onGone={onGone}>
               <p>{nb(t('perWeek', { rate: formatNumber(line.valeur.mailsParSemaine, locale) }))}</p>
             </Row>
           )),
@@ -557,14 +559,14 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
             );
             const days = busyDays(line.valeur.jours).map((day) => weekdayName(day, locale));
             return (
-              <Row key={line.id} line={line} ctl={ctl}>
+              <Row key={line.id} line={line} onGone={onGone}>
                 {ranges.length > 0 && <p>{nb(t('hours', { ranges: joinList(ranges, locale) }))}</p>}
                 {days.length > 0 && <p>{nb(t('days', { days: joinList(days, locale) }))}</p>}
               </Row>
             );
           }),
           ...linesOf(lines, 'delai-reponse').map((line) => (
-            <Row key={line.id} line={line} ctl={ctl}>
+            <Row key={line.id} line={line} onGone={onGone}>
               {line.valeur.tous.medianeMinutes !== null && (
                 <p>{nb(t('replyDelay', { delay: delay(line.valeur.tous.medianeMinutes) }))}</p>
               )}
@@ -583,7 +585,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
             </Row>
           )),
           ...linesOf(lines, 'langues').map((line) => (
-            <Row key={line.id} line={line} ctl={ctl}>
+            <Row key={line.id} line={line} onGone={onGone}>
               <p>
                 {nb(
                   t('languages', {
@@ -602,7 +604,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
 
       <Part title={t('signatureTitle')}>
         {linesOf(lines, 'signature').map((line) => (
-          <Row key={line.id} line={line} ctl={ctl}>
+          <Row key={line.id} line={line} onGone={onGone}>
             <p className="whitespace-pre-wrap">{line.valeur.texte}</p>
           </Row>
         ))}

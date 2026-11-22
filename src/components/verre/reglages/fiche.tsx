@@ -39,7 +39,7 @@ import {
   weekdayName,
 } from '@/lib/fiche-view';
 import { SOURCE_KIND_LABELS } from '@/lib/labels';
-import { formatDate, formatNumber } from '@/lib/verre';
+import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
 import type { FicheLine } from '@/server/portrait/fiche';
 import type { FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
@@ -552,7 +552,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
         {[
           ...linesOf(lines, 'rythme').map((line) => (
             <Row key={line.id} line={line} onGone={onGone}>
-              <p>{nb(t('perWeek', { rate: formatNumber(line.valeur.mailsParSemaine, locale) }))}</p>
+              <p>{nb(t('perWeek', { count: line.valeur.mailsParSemaine }))}</p>
             </Row>
           )),
           ...linesOf(lines, 'horaires').map((line) => {

@@ -1100,7 +1100,7 @@
     "formula": "{formule} ({count, plural, one {# email} other {# emails}})",
     "register": "Informal “tu” in {tu}% of your emails, formal “vous” in {vous}%",
     "length": "Usual length: about {count, plural, one {# word} other {# words}}",
-    "perWeek": "{rate} emails a week",
+    "perWeek": "{count, plural, one {# email} other {# emails}} a week",
     "hourRange": "from {from} to {to}",
     "hours": "You mostly send email {ranges} (Paris time).",
     "days": "Your busiest days: {days}.",

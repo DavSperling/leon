@@ -1100,7 +1100,7 @@
     "formula": "{formule} ({count, plural, one {# mail} other {# mails}})",
     "register": "Tutoiement dans {tu} % de vos mails, vouvoiement dans {vous} %",
     "length": "Longueur habituelle : environ {count, plural, one {# mot} other {# mots}}",
-    "perWeek": "{rate} mails par semaine",
+    "perWeek": "{count, plural, one {# mail} other {# mails}} par semaine",
     "hourRange": "de {from} à {to}",
     "hours": "Vous envoyez surtout vos mails {ranges} (heure de Paris).",
     "days": "Vos jours les plus chargés : {days}.",

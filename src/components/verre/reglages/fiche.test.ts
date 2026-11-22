@@ -264,6 +264,16 @@ describe('FicheSection : la fiche en mots', () => {
     expect(shown).toContain('Langues de vos mails : français 90 %, anglais 10 %');
   });
 
+  it('le rythme s’accorde avec son nombre, dans les deux langues', () => {
+    const at = (mailsParSemaine: number, locale: 'en' | 'fr') =>
+      text(render({ ...DATA, lines: [line('rythme', '', { mailsParSemaine })] }, locale));
+
+    expect(at(1, 'fr')).toContain('1 mail par semaine');
+    expect(at(0.5, 'fr')).toContain('0,5 mail par semaine');
+    expect(at(1, 'en')).toContain('1 email a week');
+    expect(at(0.5, 'en')).toContain('0.5 emails a week');
+  });
+
   it('chaque ligne dit d’où elle vient : calculée sur N mails, écrite par Leon, ou corrigée par elle avec la date', () => {
     const html = render();
 

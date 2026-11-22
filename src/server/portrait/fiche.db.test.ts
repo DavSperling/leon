@@ -246,7 +246,7 @@ describe('correctLine et retireLine', () => {
   });
 });
 
-describe('correctFields : la personne ne corrige que ce qui n’est pas une mesure', () => {
+describe('correctFields : la personne ne corrige que son rôle et ses tâches', () => {
   // Une tâche et un rôle comme la synthèse les écrit.
   async function synthesized(julie: TenantContext, sources: string[]): Promise<FicheLine[]> {
     await adminDb.insert(lignesFiche).values(
@@ -267,26 +267,6 @@ describe('correctFields : la personne ne corrige que ce qui n’est pas une mesu
     );
     return readFiche(julie);
   }
-
-  it('le registre d’un interlocuteur se corrige, connu ou inconnu, sans toucher au reste de sa ligne', async () => {
-    const [julie] = await team();
-    const paul = line(await built(julie), 'interlocuteur', PAUL);
-
-    expect(await correctFields(julie, paul.id, { registre: 'vouvoiement' })).toBe('ok');
-
-    expect(line(await readFiche(julie), 'interlocuteur', PAUL)).toEqual({
-      ...paul,
-      valeur: { ...paul.valeur, registre: 'vouvoiement' },
-      provenance: 'personne',
-      mails: null,
-      corrigeeLe: expect.any(Date),
-    });
-    expect(await correctFields(julie, paul.id, { registre: null })).toBe('ok');
-    expect(line(await readFiche(julie), 'interlocuteur', PAUL).valeur).toEqual({
-      ...paul.valeur,
-      registre: null,
-    });
-  });
 
   it('le titre et le détail d’une tâche se corrigent, ses sources restent celles de la ligne', async () => {
     const [julie] = await team();
@@ -329,7 +309,7 @@ describe('correctFields : la personne ne corrige que ce qui n’est pas une mesu
     });
   });
 
-  it('une mesure ne se corrige pas, ni un champ mesuré d’une ligne qui se corrige', async () => {
+  it('une mesure ne se corrige pas : ni sa valeur, ni le registre d’un interlocuteur', async () => {
     const [julie] = await team();
     const before = await built(julie);
 
@@ -343,10 +323,7 @@ describe('correctFields : la personne ne corrige que ce qui n’est pas une mesu
       }),
     ).toBe('invalide');
     const paul = line(before, 'interlocuteur', PAUL);
-    expect(await correctFields(julie, paul.id, { registre: 'vouvoiement', a: 99 })).toBe(
-      'invalide',
-    );
-    expect(await correctFields(julie, paul.id, { a: 99 })).toBe('invalide');
+    expect(await correctFields(julie, paul.id, { registre: 'vouvoiement' })).toBe('invalide');
     expect(await correctFields(julie, paul.id, null)).toBe('invalide');
 
     expect(await readFiche(julie)).toEqual(before);

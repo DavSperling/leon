@@ -136,8 +136,8 @@ export async function correctLine(
   });
 }
 
-// Ce que la personne corrige elle-même dans une ligne : un texte, ou le registre d'un interlocuteur. Le reste de la
-// ligne (les sources d'une tâche, les comptes d'un interlocuteur) et les autres genres sont des mesures.
+// Ce que la personne corrige elle-même : le texte de son rôle, le titre et le détail d'une tâche, les seules lignes que
+// son écran montre. Les sources d'une tâche et tous les autres genres sont des mesures.
 // Postgres refuse \u0000 et un demi-caractère (la moitié d'un emoji) dans un jsonb : un tel texte est refusé ici.
 const texte = z
   .string()
@@ -145,9 +145,7 @@ const texte = z
   .refine((text) => text.isWellFormed() && !text.includes('\u0000'));
 const CHAMPS: Partial<Record<Genre, z.ZodType<Record<string, unknown>>>> = {
   role: z.strictObject({ texte }),
-  signature: z.strictObject({ texte }),
   tache: z.strictObject({ titre: texte, detail: texte }),
-  interlocuteur: z.strictObject({ registre: z.enum(['tutoiement', 'vouvoiement']).nullable() }),
 };
 
 // Corrige les seuls champs modifiables d'une ligne (CHAMPS) : la valeur entière se refait ici, d'après la ligne

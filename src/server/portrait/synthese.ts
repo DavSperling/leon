@@ -13,8 +13,8 @@ import { buildSynthesePrompt, parseSyntheseAnswer } from './synthese-prompt';
 
 // La synthèse de la fiche : un modèle lit les éléments récents de la personne dans tous ses outils (material.ts) et
 // écrit dans sa fiche son rôle et les tâches qu'elle refait (synthese-prompt.ts), une fois, à la mise en route. Tout
-// se lit et s'écrit sous withTenant de la personne ; l'appel au modèle se fait hors de toute transaction. Rien ne la
-// déclenche encore : ni tâche de fond, ni route.
+// se lit et s'écrit sous withTenant de la personne ; l'appel au modèle se fait hors de toute transaction. Le worker de
+// la file `fiche-construire` la lance (worker.ts), après les lignes calculées.
 
 // Borne le texte ET la réflexion du modèle (llm.ts) : neuf lignes JSON en prennent environ 1 500, le reste est la
 // marge de la réflexion à l'effort « medium ». Au pire 150 sources de 2 tours de 400 caractères, environ 40 000 jetons
@@ -23,7 +23,7 @@ const FICHE_MAX_TOKENS = 16_000;
 const FICHE_TIMEOUT_MS = 180_000;
 
 // Une ligne « role » ou « tache », même corrigée ou retirée, dit que la synthèse est faite.
-async function alreadyDone(tx: Tx, ctx: TenantContext): Promise<boolean> {
+export async function synthesisDone(tx: Tx, ctx: TenantContext): Promise<boolean> {
   const [line] = await tx
     .select({ id: lignesFiche.id })
     .from(lignesFiche)
@@ -40,15 +40,15 @@ async function alreadyDone(tx: Tx, ctx: TenantContext): Promise<boolean> {
 
 // Écrit le rôle et les tâches de la personne et rend true, ou ne fait rien et rend false : compte supprimé, synthèse
 // déjà faite, aucune matière, ou réponse sans rien de valide. Une seule fois par personne : une fois faite
-// (alreadyDone), le modèle n'est pas rappelé. Une panne du modèle remonte (LlmError) et rien n'est écrit.
-// shortcut: deux synthèses lancées au même instant appellent chacune le modèle, et une seule écrit : le second appel
-// est payé pour rien, au déclencheur de n'en lancer qu'une par personne.
+// (synthesisDone), le modèle n'est pas rappelé. Une panne du modèle remonte (LlmError) et rien n'est écrit.
+// Deux synthèses lancées au même instant appelleraient chacune le modèle, pour une seule écriture : la file n'en lance
+// qu'une par personne à la fois (queue.ts).
 export async function synthesizeFiche(
   ctx: TenantContext,
   deps: { llm: Llm; now?: Date },
 ): Promise<boolean> {
   if (await accountIsGone(ctx.userId)) return false;
-  if (await withTenant(ctx, (tx) => alreadyDone(tx, ctx))) return false;
+  if (await withTenant(ctx, (tx) => synthesisDone(tx, ctx))) return false;
   const material = await gatherPortraitMaterial(ctx, deps.now ?? new Date());
   if (material.sources.length === 0) return false;
   const [organization] = await db
@@ -97,7 +97,7 @@ export async function synthesizeFiche(
     await tx.execute(
       sql`select pg_advisory_xact_lock(hashtextextended(${`leon:fiche:${ctx.tenantId}:${ctx.userId}`}, 0))`,
     );
-    if (await alreadyDone(tx, ctx)) return [];
+    if (await synthesisDone(tx, ctx)) return [];
     return tx
       .insert(lignesFiche)
       .values(

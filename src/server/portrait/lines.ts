@@ -48,7 +48,8 @@ const VALEURS = {
   // Écrits par un modèle (synthese.ts), sans nombre de mails. Son rôle : une ligne, sans clé.
   role: z.strictObject({ texte: z.string().min(1).max(FICHE_MAX.role) }),
   // Une tâche qu'elle refait. Clé : son rang, de « 1 » à « 8 ». `sources` : les sources où on la voit la faire.
-  // shortcut: une source supprimée depuis reste dans la liste, à filtrer à l'affichage (étape 5).
+  // Une source supprimée ou devenue invisible depuis reste dans la liste : l'écran ne la compte ni ne la montre
+  // (screen.ts).
   tache: z.strictObject({
     titre: z.string().min(1).max(FICHE_MAX.titre),
     detail: z.string().max(FICHE_MAX.detail),

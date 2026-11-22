@@ -88,10 +88,16 @@ describe('la file brouillons-ecrire sur le vrai pg-boss', () => {
     expect(await enqueueBrouillons(one)).toBe(true);
     expect(await enqueueBrouillons(one)).toBe(false);
     expect(await statesOf(one)).toEqual(['active', 'created']);
-    // Tant que le premier n'a pas fini, le second n'est pas pris : jamais deux passages à la fois pour elle.
+    // Tant que le premier n'a pas fini, le second n'est pas pris : jamais deux passages à la fois pour elle. (Un
+    // travail resté d'un lancement interrompu peut être pris ici : seul le sien compte.)
     const fetched = await boss.fetch(BROUILLONS_QUEUE, { batchSize: 10 });
-    expect(fetched).toEqual([]);
+    expect(fetched.map((job) => job.data)).not.toContainEqual(one);
     expect(await statesOf(one)).toEqual(['active', 'created']);
+    // Le premier fini, le second part.
+    const mine = await boss.findJobs(BROUILLONS_QUEUE, { key: `${one.tenantId}:${one.userId}` });
+    await boss.complete(BROUILLONS_QUEUE, mine.find((job) => job.state === 'active')?.id ?? '');
+    const next = await boss.fetch(BROUILLONS_QUEUE, { batchSize: 10 });
+    expect(next.map((job) => job.data)).toContainEqual(one);
   });
 
   it('le travail ne porte que les deux identifiants de la personne', async () => {

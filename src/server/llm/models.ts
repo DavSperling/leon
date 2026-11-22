@@ -93,6 +93,8 @@ export function modelSpec(model: string): ModelSpec | undefined {
 // - état d'un fil : 74, 84 et 84 contre 69, 69 et 78 ;
 // - agenda : Haiku reste devant, 98, 99 et 97 contre 93, 97 et 61. À l'effort « low », Sonnet écrit sans réfléchir
 //   (0 % de ses jetons de sortie au banc, 84 % pour Haiku) et rate des fuseaux et des dates relatives.
+// - fiche (le rôle et les tâches d'une personne, portrait/synthese.ts) : Sonnet à l'effort « medium », un choix qui n'a
+//   pas été mesuré au banc. L'appel n'a lieu qu'une fois par personne.
 // Opus 5.5 n'a été mesuré que sur la discussion et le point. Le plafond par jour du point (BRIEFING_DAILY_CAP) et de l'agenda borne la dépense.
 // C'est aussi le repli d'une étape réglée sur un modèle d'OpenRouter, quand l'appel échoue ou que la clé manque.
 const ANTHROPIC_MODEL_BY_STEP = {
@@ -102,6 +104,7 @@ const ANTHROPIC_MODEL_BY_STEP = {
   resume: 'claude-sonnet-5-5',
   fil: 'claude-sonnet-5-5',
   agenda: 'claude-haiku-5-5',
+  fiche: 'claude-sonnet-5-5',
 } as const satisfies Record<LlmStep, AnthropicModel>;
 
 // Le modèle préféré de chaque étape : aujourd'hui Claude partout. Du 18 au 19/11/2026, c'étaient les modèles
@@ -119,6 +122,7 @@ export const SETTING_BY_STEP = {
   resume: 'LEON_MODEL_RESUME',
   fil: 'LEON_MODEL_FIL',
   agenda: 'LEON_MODEL_AGENDA',
+  fiche: 'LEON_MODEL_FICHE',
 } as const satisfies Record<LlmStep, keyof Env>;
 
 // L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots n'a pas besoin de
@@ -130,6 +134,7 @@ export const EFFORT_BY_STEP = {
   resume: 'low',
   fil: 'low',
   agenda: 'low',
+  fiche: 'medium',
 } as const satisfies Record<LlmStep, 'low' | 'medium' | 'high'>;
 
 // La variable de l'étape d'abord (env.ts refuse au démarrage un modèle d'OpenRouter sans sa clé), puis le modèle

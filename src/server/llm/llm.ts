@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 // Les étapes qui appellent le modèle : le modèle de chacune se règle (models.ts).
-export type LlmStep = 'reponse' | 'discussion' | 'point' | 'resume' | 'fil' | 'agenda';
+export type LlmStep = 'reponse' | 'discussion' | 'point' | 'resume' | 'fil' | 'agenda' | 'fiche';
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 

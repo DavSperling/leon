@@ -193,3 +193,40 @@ describe('parseValeur', () => {
     expect(parseValeur('rythme', null)).toBeNull();
   });
 });
+
+describe('parseValeur, pour le rôle et les tâches qu’écrit un modèle', () => {
+  const SOURCE = '00000000-0000-4000-8000-000000000001';
+  const tache = {
+    titre: 'Répondre aux demandes de devis',
+    detail: 'Un client demande un prix ; elle répond par mail.',
+    sources: [SOURCE],
+  };
+
+  it('rend un rôle de 1 à 300 caractères', () => {
+    const role = { texte: 'Commerciale : suit les clients et prépare les devis.' };
+    expect(parseValeur('role', role)).toEqual(role);
+    expect(parseValeur('role', { texte: 'x'.repeat(300) })).not.toBeNull();
+    expect(parseValeur('role', { texte: '' })).toBeNull();
+    expect(parseValeur('role', { texte: 'x'.repeat(301) })).toBeNull();
+    expect(parseValeur('role', tache)).toBeNull();
+  });
+
+  it('rend une tâche : un titre de 1 à 80 caractères, un détail de 300 au plus, 20 sources au plus', () => {
+    expect(parseValeur('tache', tache)).toEqual(tache);
+    // Le détail et les sources peuvent être vides : la personne peut les retirer en corrigeant la ligne.
+    expect(parseValeur('tache', { ...tache, detail: '', sources: [] })).not.toBeNull();
+    expect(
+      parseValeur('tache', { ...tache, sources: Array.from({ length: 20 }, () => SOURCE) }),
+    ).not.toBeNull();
+
+    expect(parseValeur('tache', { ...tache, titre: '' })).toBeNull();
+    expect(parseValeur('tache', { ...tache, titre: 'x'.repeat(81) })).toBeNull();
+    expect(parseValeur('tache', { ...tache, detail: 'x'.repeat(301) })).toBeNull();
+    expect(parseValeur('tache', { ...tache, detail: undefined })).toBeNull();
+    expect(
+      parseValeur('tache', { ...tache, sources: Array.from({ length: 21 }, () => SOURCE) }),
+    ).toBeNull();
+    expect(parseValeur('tache', { ...tache, sources: ['pas-un-id'] })).toBeNull();
+    expect(parseValeur('tache', { ...tache, rang: 1 })).toBeNull();
+  });
+});

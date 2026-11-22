@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { companyDomains, computeFacts, type SentMail } from './facts';
+import { companyDomains, computeFacts, handWritten, type SentMail } from './facts';
 
 // Mails inventés pour ces tests : Julie (acme.test) écrit à des collègues et à des clients qui n'existent pas.
 
@@ -431,6 +431,17 @@ describe('computeFacts', () => {
       expect(facts([1, 2, 3, 4].map(lead)).automatiques).toBe(0);
       const spread = [1, 2, 3, 4, 5].map((n) => ({ ...lead(n), to: [`contact${n}@client.test`] }));
       expect(facts(spread).automatiques).toBe(0);
+    });
+
+    it('handWritten rend les mails écrits de sa main, tels quels et dans leur ordre', () => {
+      const first = { ...sent(), sourceId: 'fil-a' };
+      const last = { ...sent({ to: ['zoe@client.test'] }), sourceId: 'fil-b' };
+      const automatic = [1, 2, 3, 4, 5].map((n) => ({ ...lead(n), sourceId: `fil-auto-${n}` }));
+
+      expect(handWritten([first, ...automatic, last])).toEqual([first, last]);
+      // Sous le seuil, le gabarit reste : quatre envois ne font pas une automatisation.
+      expect(handWritten(automatic.slice(0, 4))).toEqual(automatic.slice(0, 4));
+      expect(handWritten([])).toEqual([]);
     });
   });
 

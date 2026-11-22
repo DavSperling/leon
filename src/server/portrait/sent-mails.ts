@@ -21,26 +21,35 @@ const SENT_MAIL_DAYS = 90;
 const SENT_MAILS_MAX = 2000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const MAIL_KINDS = ['gmail', 'outlook'] satisfies SourceKind[];
+export const MAIL_KINDS = ['gmail', 'outlook'] satisfies SourceKind[];
 const TEAM = 'team' satisfies AuthorSide;
 // L'identifiant d'un tour de courrier (gmail/map.ts, outlook/map.ts, puis normalize.ts) : le message, et le rang du
 // morceau quand le mail a été coupé. L'identifiant d'un message ne contient ni « : » ni « # ».
 const MESSAGE = '^message:[^:#]+';
 const PART = '^message:[^:#]+:([0-9]+)#';
 
-type Row = { sent: string; to: string[]; cc: string[]; text: string; received: string | null };
+type Row = {
+  sourceId: string;
+  sent: string;
+  to: string[];
+  cc: string[];
+  text: string;
+  received: string | null;
+};
 
-// `domains` : les domaines de la société, d'après les adresses de ses membres.
+// `sourceId` : le fil du mail. `domains` : les domaines de la société, d'après les adresses de ses membres.
 export async function readSentMails(
   ctx: TenantContext,
   days = SENT_MAIL_DAYS,
-): Promise<{ mails: SentMail[]; domains: string[] }> {
-  const since = new Date(Date.now() - days * DAY_MS);
+  now = new Date(),
+): Promise<{ mails: Array<SentMail & { sourceId: string }>; domains: string[] }> {
+  const since = new Date(now.getTime() - days * DAY_MS);
   // `received` : la date du tour qui précède dans le fil, s'il n'est pas de la personne. Une relance après son propre
   // mail ne répond à rien.
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<Row>(sql`
-      select extract(epoch from m.ts) as sent, m.recipients_to as "to", m.recipients_cc as cc, m.text,
+      select m.source_id as "sourceId", extract(epoch from m.ts) as sent,
+             m.recipients_to as "to", m.recipients_cc as cc, m.text,
              (select case when p.author_side is distinct from ${TEAM} then extract(epoch from p.ts) end
               from turns p
               where p.tenant_id = m.tenant_id and p.source_id = m.source_id and p.ts < m.ts
@@ -64,6 +73,7 @@ export async function readSentMails(
   const members = await listMembers(ctx);
   return {
     mails: rows.map((row) => ({
+      sourceId: row.sourceId,
       sentAt: epochToDate(row.sent),
       to: row.to,
       cc: row.cc,

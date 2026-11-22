@@ -170,6 +170,19 @@ describe('readSentMails', () => {
     expect(older.mails[0]?.text).toBe('Un mail de l’été dernier.');
   });
 
+  it('dit le fil de chaque mail', async () => {
+    const { mails } = await readSentMails(julie);
+    const [reply, followUp, long] = mails.map((mail) => mail.sourceId);
+    // La réponse et la relance sont du même fil, le long mail d'un autre : tous sont des sources de Julie.
+    expect(followUp).toBe(reply);
+    expect(long).not.toBe(reply);
+    const own = await adminDb
+      .select({ id: sources.id })
+      .from(sources)
+      .where(eq(sources.ownerUserId, julie.userId));
+    expect(own.map((source) => source.id)).toEqual(expect.arrayContaining([reply, long]));
+  });
+
   it('regroupe en un message un long mail coupé en plusieurs tours', async () => {
     const stored = await adminDb
       .select({ externalId: turns.externalId, text: turns.text })

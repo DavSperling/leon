@@ -220,6 +220,7 @@ describe('parseEnv', () => {
     'LEON_MODEL_POINT',
     'LEON_MODEL_RESUME',
     'LEON_MODEL_FIL',
+    'LEON_MODEL_FICHE',
   ])('modèle réglé par %s', (variable) => {
     it.each(['claude-haiku-5-5', 'claude-sonnet-5-5', 'claude-opus-5-5'])('accepte %s', (model) => {
       expect(() => parseEnv({ ...TEST_ENV, [variable]: model })).not.toThrow();

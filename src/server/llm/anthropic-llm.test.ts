@@ -140,6 +140,7 @@ describe('streamText', () => {
     ['discussion', 'claude-opus-5-5'],
     ['point', 'claude-sonnet-5-5'],
     ['agenda', 'claude-haiku-5-5'],
+    ['fiche', 'claude-sonnet-5-5'],
   ] as const)('appelle le modèle, l’effort et la limite de l’étape %s', async (step, model) => {
     const { llm, params, stream } = setup([answerTurn('ok')]);
 

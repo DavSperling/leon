@@ -3,14 +3,15 @@ import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { organizations, users } from '@/server/db/schema/auth';
 import { lignesFiche } from '@/server/db/schema/portrait';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { computeFacts } from './facts';
 import { factsToLines, type Genre, type LineValue, parseValeur } from './lines';
 import { readSentMails } from './sent-mails';
 
 // La fiche d'une personne, enregistrée ligne à ligne (0076) : construite d'après ses mails envoyés, puis relue,
-// corrigée et retirée par elle seule. Tout se fait sous withTenant de la personne, avec en plus le filtre de la
-// personne. Rien ne déclenche encore la construction : ni tâche de fond, ni route.
+// corrigée et retirée par elle seule. Son rôle et ses tâches s'y ajoutent une fois, écrits par un modèle (synthese.ts).
+// Tout se fait sous withTenant de la personne, avec en plus le filtre de la personne. Rien ne déclenche encore la
+// construction : ni tâche de fond, ni route.
 
 // Les heures et les jours d'envoi se lisent à l'heure de Paris, comme le reste de l'interface (src/lib/format.ts).
 const TIME_ZONE = 'Europe/Paris';
@@ -22,7 +23,7 @@ export type FicheLine = {
   cle: string;
   valeur: LineValue;
   provenance: (typeof lignesFiche.$inferSelect)['provenance'];
-  // Le nombre de mails sur lequel un calcul repose ; nul pour une ligne écrite par la personne.
+  // Le nombre de mails sur lequel un calcul repose ; nul pour une ligne écrite par la personne ou par un modèle.
   mails: number | null;
   corrigeeLe: Date | null;
 };
@@ -36,6 +37,23 @@ const own = (ctx: TenantContext, id: string) =>
     isNull(lignesFiche.retireeLe),
   );
 
+// La garde de toute écriture dans la fiche, dans sa transaction : false pour un compte supprimé, à qui rien ne s'écrit.
+// L'organisation d'abord, en FOR KEY SHARE, comme lockTarget (versions.ts) : la suppression du compte la prend en
+// premier (lockMembers). Elle est donc validée avant, et le compte se lit supprimé, ou elle attend la fin de cette
+// écriture et efface les lignes.
+export async function lockAccount(tx: Tx, ctx: TenantContext): Promise<boolean> {
+  await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(eq(organizations.id, ctx.tenantId))
+    .for('key share');
+  const [account] = await tx
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, ctx.userId));
+  return account !== undefined && account.deletedAt === null;
+}
+
 // Construit la fiche, ou la reconstruit : les lignes calculées prennent leur nouvelle valeur, une ligne que la
 // personne a corrigée (elle n'est plus un calcul) ou retirée reste telle quelle. Un compte supprimé n'a plus de
 // fiche, et n'en reçoit plus.
@@ -46,19 +64,7 @@ export async function buildFiche(ctx: TenantContext): Promise<void> {
   const lines = factsToLines(computeFacts(mails, { domains, timeZone: TIME_ZONE }));
   if (lines.length === 0) return;
   await withTenant(ctx, async (tx) => {
-    // L'organisation d'abord, en FOR KEY SHARE, comme lockTarget (versions.ts) : la suppression du compte la prend en
-    // premier (lockMembers). Elle est donc validée avant, et le compte se lit supprimé, ou elle attend la fin de
-    // cette écriture et efface les lignes.
-    await tx
-      .select({ id: organizations.id })
-      .from(organizations)
-      .where(eq(organizations.id, ctx.tenantId))
-      .for('key share');
-    const [account] = await tx
-      .select({ deletedAt: users.deletedAt })
-      .from(users)
-      .where(eq(users.id, ctx.userId));
-    if (!account || account.deletedAt !== null) return;
+    if (!(await lockAccount(tx, ctx))) return;
     await tx
       .insert(lignesFiche)
       .values(

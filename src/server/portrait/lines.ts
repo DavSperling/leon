@@ -4,7 +4,8 @@ import type { PortraitFacts } from './facts';
 
 // Des faits (facts.ts) aux lignes de la fiche (0076) : une ligne par chose que la personne peut corriger ou retirer
 // seule. Une fonction pure, comme computeFacts. La forme de la valeur de chaque genre est ici : celle que rend
-// computeFacts, validée à chaque écriture et à chaque lecture (fiche.ts).
+// computeFacts, ou celle des deux genres qu'écrit un modèle (0077), validée à chaque écriture et à chaque lecture
+// (fiche.ts).
 
 export type Genre = (typeof lignesFiche.$inferSelect)['genre'];
 
@@ -43,6 +44,15 @@ const VALEURS = {
   'delai-reponse': z.strictObject({ tous: delai, interne: delai, externe: delai }),
   horaires: z.strictObject({ heures: z.array(count).length(24), jours: z.array(count).length(7) }),
   signature: z.strictObject({ texte: z.string().min(1).max(2000) }),
+  // Écrits par un modèle (synthese.ts), sans nombre de mails. Son rôle : une ligne, sans clé.
+  role: z.strictObject({ texte: z.string().min(1).max(300) }),
+  // Une tâche qu'elle refait. Clé : son rang, de « 1 » à « 8 ». `sources` : les sources où on la voit la faire.
+  // shortcut: une source supprimée depuis reste dans la liste, à filtrer à l'affichage (étape 5).
+  tache: z.strictObject({
+    titre: z.string().min(1).max(80),
+    detail: z.string().max(300),
+    sources: z.array(z.uuid()).max(20),
+  }),
 } satisfies Record<Genre, z.ZodType>;
 
 export type LineValue = z.infer<(typeof VALEURS)[Genre]>;

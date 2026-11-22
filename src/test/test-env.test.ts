@@ -51,6 +51,7 @@ describe('TEST_ENV', () => {
     'LEON_MODEL_POINT',
     'LEON_MODEL_RESUME',
     'LEON_MODEL_FIL',
+    'LEON_MODEL_FICHE',
   ])('vide %s : une valeur exportée dans le shell ne passe pas dans les tests', (name) => {
     expect((TEST_ENV as Record<string, string>)[name]).toBe('');
     expect(process.env[name]).toBe('');

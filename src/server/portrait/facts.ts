@@ -260,18 +260,23 @@ function templateOf(mail: SentMail): string | null {
     : [...unique([...mail.to, ...mail.cc]).sort(), ...labels].join('\n');
 }
 
+// Les mails qu'elle a écrits de sa main : sans les envois automatiques, qui se reconnaissent sur l'ensemble des mails.
+export function handWritten<Mail extends SentMail>(sent: Mail[]): Mail[] {
+  const templates = sent.map(templateOf);
+  const sameTemplate = new Map<string, number>();
+  for (const one of templates) if (one) sameTemplate.set(one, (sameTemplate.get(one) ?? 0) + 1);
+  return sent.filter(
+    (_, index) => (sameTemplate.get(templates[index] ?? '') ?? 0) < AUTO_MIN_MAILS,
+  );
+}
+
 // `domains` : les domaines de la société (companyDomains). Sans eux, personne n'est dit interne ni externe.
 // `timeZone` : le fuseau des heures et des jours d'envoi, « Europe/Paris ».
 export function computeFacts(
   sent: SentMail[],
   options: { domains: string[]; timeZone: string },
 ): PortraitFacts {
-  const templates = sent.map(templateOf);
-  const sameTemplate = new Map<string, number>();
-  for (const one of templates) if (one) sameTemplate.set(one, (sameTemplate.get(one) ?? 0) + 1);
-  const mails = sent.filter(
-    (_, index) => (sameTemplate.get(templates[index] ?? '') ?? 0) < AUTO_MIN_MAILS,
-  );
+  const mails = handWritten(sent);
   const company = new Set(
     options.domains.map((one) => one.toLowerCase()).filter((one) => !PUBLIC_DOMAINS.has(one)),
   );

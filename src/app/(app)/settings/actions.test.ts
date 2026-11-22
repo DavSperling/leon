@@ -19,9 +19,13 @@ import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
+import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
+  buildFicheAction,
   changePasswordAction,
+  correctFicheLineAction,
   correctLessonAction,
   createInvitationAction,
   createTokenAction,
@@ -32,6 +36,7 @@ import {
   readMemoryVersionAction,
   regenerateBackupCodesAction,
   restoreMemoryVersionAction,
+  retireFicheLineAction,
   retireLessonAction,
   revokeTokenAction,
   setDepotEquipeAction,
@@ -94,6 +99,8 @@ vi.mock('@/server/memory/memory-section', () => ({
   readMemoryVersion: vi.fn(),
   restoreMemoryVersion: vi.fn(),
 }));
+vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
+vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
   RESEND_BATCH_MAX: 100,
@@ -1042,5 +1049,97 @@ describe('setNotesOpenAction', () => {
 
     await expect(setNotesOpenAction(false)).rejects.toThrow('NEXT_REDIRECT /sign-in');
     expect(setNotesRefused).not.toHaveBeenCalled();
+  });
+});
+
+describe('les actions de l’onglet « Ma fiche »', () => {
+  const LIGNE = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c60';
+
+  beforeEach(() => {
+    // Ni corriger ni retirer n'exigent une connexion récente : la fiche n'est lue que par elle.
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+  });
+
+  it('construire : la demande part pour la personne connectée, et elle seule', async () => {
+    vi.mocked(requestFicheBuild).mockResolvedValue(true);
+
+    await expect(buildFicheAction()).resolves.toEqual({ ok: true });
+
+    expect(requestFicheBuild).toHaveBeenCalledExactlyOnceWith(ctx);
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+  });
+
+  it('construire : rien à construire, ou une fiche déjà faite, rend ok: false', async () => {
+    vi.mocked(requestFicheBuild).mockResolvedValue(false);
+
+    await expect(buildFicheAction()).resolves.toEqual({ ok: false });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('corriger : les champs modifiables de sa ligne, que le serveur complète et valide', async () => {
+    vi.mocked(correctFields).mockResolvedValue('ok');
+    const champs = { titre: 'Chiffrer les devis', detail: '' };
+
+    await expect(correctFicheLineAction({ id: LIGNE, champs })).resolves.toEqual({ ok: true });
+
+    expect(correctFields).toHaveBeenCalledExactlyOnceWith(ctx, LIGNE, champs);
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+  });
+
+  it('corriger : la ligne d’un autre est introuvable, un champ refusé est invalide, rien n’est relu', async () => {
+    vi.mocked(correctFields).mockResolvedValueOnce('introuvable').mockResolvedValueOnce('invalide');
+    const input = { id: LIGNE, champs: { texte: 'Responsable des devis.' } };
+
+    await expect(correctFicheLineAction(input)).resolves.toEqual({ error: 'introuvable' });
+    await expect(correctFicheLineAction(input)).resolves.toEqual({ error: 'invalide' });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', champs: {} }],
+    [{ id: LIGNE }],
+    [{ id: LIGNE, champs: 'texte' }],
+    [{ id: LIGNE, champs: null }],
+    [null],
+  ])('corriger %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(correctFicheLineAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(correctFields).not.toHaveBeenCalled();
+  });
+
+  it('retirer : sa ligne sort de sa fiche ; celle d’un autre, ou déjà retirée, est introuvable', async () => {
+    vi.mocked(retireLine).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await expect(retireFicheLineAction(LIGNE)).resolves.toEqual({ ok: true });
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    await expect(retireFicheLineAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
+
+    expect(vi.mocked(retireLine).mock.calls).toEqual([
+      [ctx, LIGNE],
+      [ctx, LIGNE],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['pas-un-id'], [null], [{ id: LIGNE }]])(
+    'retirer %j : invalide, rien n’est retiré',
+    async (id) => {
+      await expect(retireFicheLineAction(id as never)).resolves.toEqual({ error: 'invalide' });
+      expect(retireLine).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sans session du navigateur, rien ne se construit, ne se corrige ni ne se retire : la connexion', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
+
+    await expect(buildFicheAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(correctFicheLineAction({ id: LIGNE, champs: {} })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+    await expect(retireFicheLineAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+
+    expect(requestFicheBuild).not.toHaveBeenCalled();
+    expect(correctFields).not.toHaveBeenCalled();
+    expect(retireLine).not.toHaveBeenCalled();
   });
 });

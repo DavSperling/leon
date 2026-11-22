@@ -55,6 +55,8 @@ import {
   readMemoryVersion,
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
+import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { requestFicheBuild } from '@/server/portrait/screen';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
@@ -714,4 +716,47 @@ export async function readMemoryVersionAction(input: {
   if (!parsed.success) return { error: 'invalide' };
   const version = await readMemoryVersion(ctx, parsed.data);
   return version ? { ok: true, version } : { error: 'introuvable' };
+}
+
+// L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes,
+// sous la session du navigateur. Les siennes seulement : chaque fonction appelée filtre sur elle, sous ses droits, et
+// la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une valeur reçue.
+type FicheError = 'introuvable' | 'invalide';
+
+const FicheCorrectionSchema = z.object({ id: z.uuid(), champs: z.record(z.string(), z.unknown()) });
+
+// « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
+// d'autre ne la lance. `ok` faux : rien à construire, ou sa fiche est déjà faite.
+export async function buildFicheAction(): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await requestFicheBuild(ctx);
+  if (ok) revalidatePath('/settings');
+  return { ok };
+}
+
+// `champs` : les seuls champs modifiables de la ligne, validés d'après son genre (fiche.ts) ; la valeur entière se
+// refait côté serveur.
+export async function correctFicheLineAction(input: {
+  id: string;
+  champs: Record<string, unknown>;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = FicheCorrectionSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const result = await correctFields(ctx, parsed.data.id, parsed.data.champs);
+  if (result !== 'ok') return { error: result };
+  revalidatePath('/settings');
+  return { ok: true };
+}
+
+// Elle sort de la fiche, et une reconstruction ne la fait pas revenir.
+export async function retireFicheLineAction(
+  id: string,
+): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await retireLine(ctx, parsed.data))) return { error: 'introuvable' };
+  revalidatePath('/settings');
+  return { ok: true };
 }

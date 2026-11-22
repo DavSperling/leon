@@ -346,7 +346,8 @@ services/
     fournisseurs.json        à créer avec la route Hono. généré, commité, vérifié en CI
     vecteurs.json            à créer avec la route Hono. généré, commité : les cas que les deux mises en œuvre passent
     Cargo.toml, Cargo.lock, rust-toolchain.toml, Dockerfile   à créer en second (chapitre 15) : le service Rust
-    src/main.rs              routes /h/:outil et /h/:outil/:abonnement, /sante
+    src/main.rs              routes /h/{outil}, /h/{outil}/{abonnement}, /h/{outil}/{abonnement}/cycle (8.3), /sante
+                             (axum 0.8 écrit {param}, pas :param)
     src/verifier.rs          les modes de vérification
     src/depot.rs             porte_secret, porte_deposer, cache des secrets
     src/secret.rs            déchiffrement v1 (AES-256-GCM)
@@ -886,7 +887,7 @@ export type RoutingLabel = (typeof ROUTING_LABELS)[number];
 
 L'historique nourrit la mémoire et la « preuve par le passé » (chapitre 12), pas les agents. Un test par condition.
 
-**Tout de suite, ou par lot.** `signalStandard` met toujours un job `standard-trier` : les règles s'appliquent tout de suite, elles ne coûtent rien. Si aucune règle ne tranche, ce job n'appelle le modèle que pour un événement dont le tour le plus récent a moins de `URGENT_MAX_AGE_SECONDS` (120) : en pratique, ce qui arrive par webhook. Les autres restent `recu` et attendent `standard-lot`, 5 minutes au plus, ce qui ne change rien pour un élément déjà relevé avec 15 minutes de retard. Le côté de l'auteur ne compte pas ici : 29 connecteurs sur 42 ne le donnent pas, et tout serait urgent. Au jalon 1, sans tri par le modèle, un événement qu'aucune règle ne tranche passe à `ignore`, raison `sans_agent` (14.3).
+**Tout de suite, ou par lot.** `signalStandard` met toujours un job `standard-trier` : les règles s'appliquent tout de suite, elles ne coûtent rien. Si aucune règle ne tranche, ce job n'appelle le modèle que pour un événement dont le tour le plus récent a moins de `URGENT_MAX_AGE_SECONDS` (120) : en pratique, ce qui arrive par webhook. Les autres restent `recu` et attendent `standard-lot`, 5 minutes au plus, ce qui ne change rien pour un élément déjà relevé avec 15 minutes de retard. Le côté de l'auteur ne compte pas ici : 28 connecteurs sur 42 ne le donnent pas, et tout serait urgent. Au jalon 1, sans tri par le modèle, un événement qu'aucune règle ne tranche passe à `ignore`, raison `sans_agent` (14.3).
 
 **Sortie du tri par le modèle** (étape `tri`) : `{ etiquette: RoutingLabel, urgence, confiance }`. Aucun champ de texte libre. Sous `TRIAGE_MIN_CONFIDENCE` (0,8, à mesurer sur le jeu de référence), l'événement est routé mais l'exécution est forcée au cran « propose ». C'est un garde de qualité, **pas de sécurité** : un expéditeur extérieur écrit le texte que le tri lit, il peut donc en orienter l'étiquette et la confiance. Ce qu'il peut obtenir : réveiller un agent que la personne a activé, ou faire taire un élément (`bruit`). Ce qu'il ne peut pas obtenir : une écriture sans clic vers d'autres que la personne. `needsClick` ne lit rien de ce que rend le tri (section 9.5).
 
@@ -1235,7 +1236,7 @@ Le risque : un contenu venu de l'extérieur (mail, ticket, transcription) porte 
 3. **Liste d'actions fermée.** Le décideur ne reçoit comme outils que les actions de la fiche. Le contenu lu ne peut pas en ajouter.
 4. **Destinataires calculés par le code.** `allowedRecipients` rend : les participants déjà dans le fil, et les membres de l'organisation. Un paramètre de destinataire ne vient jamais du modèle.
 5. **Provenance : trois valeurs, calculées par le code, jamais par un modèle.** Elles sont tenues par exécution, ne font que monter, et sont recopiées sur chaque ligne d'`actions`.
-   - `contenu_externe` (`externalContent`). `readProvenance` regarde chaque source lue par une étape `lire` **ou** `chercher`. La source est « d'équipe » seulement si tous ses tours lus ont `author_side = 'team'` et si son outil est dans `TEAM_SIDE_TRUSTED_TOOLS` (liste fermée, `src/server/agents/provenance.ts`). Sinon elle est extérieure. Un côté nul compte comme extérieur : 13 connecteurs sur 42 posent le côté (recherche de `side:` dans les `map.ts` et `connector.ts`).
+   - `contenu_externe` (`externalContent`). `readProvenance` regarde chaque source lue par une étape `lire` **ou** `chercher`. La source est « d'équipe » seulement si tous ses tours lus ont `author_side = 'team'` et si son outil est dans `TEAM_SIDE_TRUSTED_TOOLS` (liste fermée, `src/server/agents/provenance.ts`). Sinon elle est extérieure. Un côté nul compte comme extérieur : 14 connecteurs sur 42 posent le côté, Crisp compris (recherche de `side` dans les `map.ts` et `connector.ts`).
    - Outlook, Gmail et Drive n'entrent jamais dans `TEAM_SIDE_TRUSTED_TOOLS`. Le côté `team` y dit qui a envoyé ou modifié, pas qui a écrit le texte : un mail transféré est un élément envoyé (`sentitems`, `SENT`) qui cite son expéditeur d'origine ; un document porte son dernier éditeur (`src/server/connectors/outlook/map.ts`, `gmail/map.ts`, `drive/connector.ts`, existent). Le chapitre 06 fixe la liste, avec le critère de chaque outil et un test par entrée.
    - `donnees_privees` (`privateData`). Vrai dès qu'une source lue n'est pas visible de toute l'organisation : son `acl` ne contient pas `tenantId`. C'est le cas de toute source `privateRaw` et de toute source partagée à un groupe.
    - `texte_libre` (`freeText`). Par action : `usesFreeText` dit si un paramètre vient d'une étape `rediger` qui cite une étape `lire` ou `chercher` (section 8.5).
@@ -1553,7 +1554,7 @@ Aucune objection n'est écartée en entier. Voici les corrections proposées qui
 | S13 | Forcer au cran le plus bas toute exécution née d'un auteur extérieur ; un plafond de réserve par source | `needsClick` le fait déjà, action par action, par la provenance. Le plafond par expéditeur et le plafond par personne suffisent |
 | X1 | Reconnaître une première relève à `last_sync_at` nul | Une première relève tient en plusieurs passages. On compare la date du tour à `connections.created_at` |
 | X4 | 29 $ par siège et par mois | Ce chiffre applique à une fiche le coût d'une boucle de onze appels à Sonnet. Le calcul de 9.3 donne 11 $ à dix exécutions par jour. Les deux sont à mesurer |
-| X5 | Définir « urgent » par un domaine extérieur connu | 29 connecteurs sur 42 ne donnent pas le côté de l'auteur. L'âge suffit |
+| X5 | Définir « urgent » par un domaine extérieur connu | 28 connecteurs sur 42 ne donnent pas le côté de l'auteur. L'âge suffit |
 | X9 | Fixer ici le premier client et le prix de Pipedream | Ce sont des décisions de fondateurs et un chiffre absent du dépôt : questions Q11 et Q12 |
 | X11 | Six PR au plus ; l'exécution dans une file existante, sans `DurableContext` | Une PR par sujet (`CLAUDE.md`) en donne dix. L'interface et le journal d'étapes restent dès le jalon 1 : c'est le journal qui évite de réécrire une action après une reprise |
 
@@ -1622,7 +1623,7 @@ C'est au jalon 1 que se mesurent le coût réel d'une exécution (9.3) et le tau
 - La documentation de Railway sur la fin de `railway.json` : seule la note 02 en parle. La PR n° 0 commence par la lire.
 - Les schémas de signature, les durées d'abonnement et le cycle de vie viennent des notes 04 et 05, qui n'ont ouvert aucune page d'éditeur en entier. La signature de Slack y est marquée « à vérifier ». L'API de Slack citée en 9.12 et 14.3 (`users.lookupByEmail`, appartenance à un canal, canal partagé) n'a pas été vérifiée.
 - Les plafonds de débit de 9.4 viennent de la note 06 ; celui d'Exchange y vient d'un tiers.
-- Le critère de `side` n'a été relu que pour Outlook, Gmail et Drive. Les dix autres connecteurs qui le posent sont à relire au chapitre 06, avant d'entrer dans `TEAM_SIDE_TRUSTED_TOOLS`.
+- Le critère de `side` n'a été relu que pour Outlook, Gmail et Drive. Les onze autres connecteurs qui le posent sont à relire au chapitre 06, avant d'entrer dans `TEAM_SIDE_TRUSTED_TOOLS`.
 - Si le connecteur GitHub écarte les dépôts publics : non vérifié. Le public d'une écriture GitHub se lit dans `prepare`.
 - La carte 02 au-delà de son plan : ses sections 4 à 7 sont vides. Les cartes 02 et 03 n'ont été lues que pour leurs tableaux et leur section 5, comme demandé.
 - Les notes de recherche ont été lues pour leurs synthèses, leurs tableaux et leurs recommandations, pas fiche par fiche. Les notes elles-mêmes disent qu'aucune page d'éditeur n'a été ouverte en entier.

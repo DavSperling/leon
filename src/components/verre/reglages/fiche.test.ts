@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { FicheLine } from '@/server/portrait/fiche';
 import type { Proposal } from '@/server/portrait/propositions';
-import type { FicheScreen } from '@/server/portrait/screen';
+import type { FicheBrouillon, FicheScreen } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { errorOf, FicheSection } from './fiche';
@@ -15,6 +15,7 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerAgentAction: vi.fn(),
   buildFicheAction: vi.fn(),
   correctFicheLineAction: vi.fn(),
+  discardBrouillonAction: vi.fn(),
   retireFicheLineAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -354,6 +355,126 @@ describe('FicheSection : les agents proposés', () => {
     // Aucune clé de traduction ne se montre à la place d'un texte.
     expect(text(html)).not.toMatch(/fiche\.|agents\./);
     expect(text(render({ ...DATA, agents: all }))).not.toMatch(/fiche\.|agents\./);
+  });
+});
+
+describe('FicheSection : les brouillons prêts', () => {
+  const DEVIS: FicheBrouillon = {
+    id: id(701),
+    from: 'Léa Roy',
+    receivedAt: new Date('2026-11-20T08:30:00Z'),
+    texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
+    source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
+  };
+  // Un fil sans objet ni lien, d'un correspondant sans nom.
+  const SANS_LIEN: FicheBrouillon = {
+    id: id(702),
+    from: 'marc@client.test',
+    receivedAt: new Date('2026-11-19T08:30:00Z'),
+    texte: 'Bonjour,\n\nBien reçu.',
+    source: { title: null, url: null, kind: 'outlook' },
+  };
+  const WITH_DRAFTS = { ...DATA, brouillons: [DEVIS, SANS_LIEN] };
+  const draft = (html: string, one: FicheBrouillon) =>
+    html
+      .split('<li class="px-3')
+      .find((part) => part.includes(`id="brouillon-${one.id}"`))
+      ?.split('</section>')[0] ?? '';
+
+  it('sans brouillon, la partie ne se montre pas', () => {
+    const html = render();
+
+    expect(text(html)).not.toMatch(/Brouillons prêts|Rien n’est envoyé|Écarter/);
+    expect(html).not.toContain('>Copier<');
+  });
+
+  it('avec des brouillons, la partie vient en tête, avant le rôle, et sa phrase dit que rien n’est envoyé, dans les deux langues', () => {
+    const html = render(WITH_DRAFTS);
+    const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
+
+    expect(titles).toEqual(['Ma fiche', 'Brouillons prêts', 'Rôle', 'Tâches répétées']);
+    expect(text(html)).toContain(
+      'Rien n’est envoyé ni écrit dans votre boîte : copiez un brouillon dans votre réponse, puis relisez-le.',
+    );
+    const english = text(render(WITH_DRAFTS, 'en'));
+    expect(english).toContain('Drafts ready');
+    expect(english).toContain(
+      'Nothing is sent or written to your mailbox: copy a draft into your reply, then review it.',
+    );
+  });
+
+  it('une fiche sans rôle ni tâche montre quand même ses brouillons', () => {
+    const html = render({
+      etat: 'a-completer',
+      lines: [],
+      sources: {},
+      agents: [],
+      brouillons: [DEVIS],
+    });
+
+    expect(html).toContain('>Brouillons prêts</h2>');
+    expect(html).not.toContain('>Rôle</h2>');
+  });
+
+  it('chaque brouillon : le correspondant, la date du mail reçu, le fil lié à son outil, le texte tel quel, « Copier » et « Écarter »', () => {
+    const html = render(WITH_DRAFTS);
+    const devis = draft(html, DEVIS);
+
+    expect(text(devis)).toContain('Léa Roy');
+    expect(text(devis)).toContain('Reçu le 20 nov. 2026');
+    expect(devis).toContain('dateTime="2026-11-20T08:30:00.000Z"');
+    // Le fil, comme les sources d'une tâche : son objet, son outil, et son lien vers l'outil.
+    expect(devis).toContain('href="https://mail.google.test/fil/1"');
+    expect(devis).toContain('target="_blank" rel="noopener noreferrer"');
+    expect(text(devis)).toContain('Devis 2027');
+    expect(text(devis)).toContain('Gmail');
+    // Le texte tel quel : ses lignes, ses crochets, et rien qui s'interprète.
+    expect(devis).toContain(
+      'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] &lt;b&gt;.\n\nBien à vous',
+    );
+    expect(devis).toMatch(/<p class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
+    // Deux gestes, pas un de plus : ni corriger, ni refaire, ni envoyer.
+    expect(
+      [...devis.matchAll(/<button [^>]*>(?:<span[^>]*><\/span>)?([^<]+)</g)].map((m) => m[1]),
+    ).toEqual(['Copier', 'Écarter']);
+    expect(html.indexOf(`brouillon-${DEVIS.id}`)).toBeLessThan(
+      html.indexOf(`brouillon-${SANS_LIEN.id}`),
+    );
+  });
+
+  it('un fil sans objet ni lien se montre sans s’ouvrir, et un correspondant sans nom par son adresse', () => {
+    const sansLien = draft(render(WITH_DRAFTS), SANS_LIEN);
+
+    expect(text(sansLien)).toContain('marc@client.test');
+    expect(text(sansLien)).toContain('Sans titre');
+    expect(text(sansLien)).toContain('Outlook');
+    expect(sansLien).not.toContain('href=');
+    expect(sansLien).toMatch(/<button [^>]*disabled=""/);
+  });
+
+  it('relie « Copier » et « Écarter » aux mots de leur brouillon', () => {
+    const html = render(WITH_DRAFTS);
+
+    for (const one of [DEVIS, SANS_LIEN])
+      expect(count(html, `aria-describedby="brouillon-${one.id}"`), one.id).toBe(2);
+  });
+
+  it('ne montre que les brouillons reçus : écarté ou dépassé, le serveur ne le rend plus et il n’est plus là', () => {
+    const html = render({ ...DATA, brouillons: [SANS_LIEN] });
+
+    expect(html).not.toContain(`brouillon-${DEVIS.id}`);
+    expect(text(html)).not.toContain('Devis 2027');
+    expect(html).toContain(`brouillon-${SANS_LIEN.id}`);
+  });
+
+  it('se dessine en anglais avec les mêmes clés', () => {
+    const html = render(WITH_DRAFTS, 'en');
+    const shown = text(html);
+
+    for (const words of ['Drafts ready', 'Received on Nov 20, 2026', 'Untitled', 'Dismiss'])
+      expect(shown).toContain(words);
+    expect(html).toContain('>Copy<');
+    expect(shown).not.toMatch(/fiche\.|common\./);
   });
 });
 

@@ -71,3 +71,24 @@ export const reponsesAgent = pgTable(
   },
   (table) => [primaryKey({ columns: [table.tenantId, table.userId, table.agent] })],
 );
+
+// Les brouillons de réponse que l'agent « Brouillons de réponse » prépare pour elle (0080-brouillons.sql) : une ligne
+// par mail auquel répondre, privée à la personne comme sa fiche (acl = [user_id], contrôlé par la base), et qui ne
+// survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte.
+export const brouillons = pgTable('brouillons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  // Le fil de courrier ; clé étrangère composée (tenant_id, source_id) en SQL, en cascade.
+  sourceId: uuid('source_id').notNull(),
+  // Le message auquel répondre : l'identifiant de ses tours, « message:<id> ». Un seul résultat par message.
+  message: text('message').notNull(),
+  // Nul : le modèle a jugé qu'aucune réponse n'était attendue.
+  texte: text('texte'),
+  ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
+  acl: uuid('acl').array().notNull(),
+});

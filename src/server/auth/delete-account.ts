@@ -4,7 +4,7 @@ import { members, organizations, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
 import { invitationLinks } from '@/server/db/schema/invitation-links';
 import { lecons, versionsMemoire } from '@/server/db/schema/memory';
-import { lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
+import { brouillons, lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
 import { aboutSuggestions, agendas } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import type { TenantContext } from './tenant-context';
@@ -216,6 +216,8 @@ export async function deleteAccount(
     await tx.delete(lignesFiche).where(eq(lignesFiche.userId, ctx.userId));
     // Ses réponses aux agents proposés (0078), privées comme sa fiche, partent de même.
     await tx.delete(reponsesAgent).where(eq(reponsesAgent.userId, ctx.userId));
+    // Les brouillons de réponse préparés pour elle (0080), privés de même : ses fils de courrier restent, pas eux.
+    await tx.delete(brouillons).where(eq(brouillons.userId, ctx.userId));
     // Ses versions (C12) : ses sources restent, pas ce qui a été écrit d'après elles.
     await tx.delete(versionsMemoire).where(eq(versionsMemoire.ownerUserId, ctx.userId));
     // Ses notes, écrites par ses agents (D38, A12), partent avec elle ; l'app ne supprime pas de source :

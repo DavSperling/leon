@@ -260,6 +260,17 @@ describe('deleteAccount', () => {
               ($1, $3, 'point-du-jour', true, array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
+    // Et les brouillons de réponse préparés pour elle (0080), l'écarté et le « sans réponse » compris, pas celui de
+    // Bob : sa source reste, ils ne partiraient pas avec elle.
+    const bobSource = await seedSource(bob);
+    await adminPool.query(
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, acl)
+       values ($1, $2, $3, 'message:1', 'Bonjour, voici le devis.', null, array[$2::uuid]),
+              ($1, $2, $3, 'message:2', 'Bonjour, merci.', now(), array[$2::uuid]),
+              ($1, $2, $3, 'message:3', null, null, array[$2::uuid]),
+              ($1, $4, $5, 'message:1', 'Bonjour, je regarde.', null, array[$4::uuid])`,
+      [tenantId, alice.userId, privateSource.sourceId, bob.userId, bobSource.sourceId],
+    );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas
     // celles de Bob (C12).
     await adminPool.query(
@@ -362,6 +373,11 @@ describe('deleteAccount', () => {
       [tenantId],
     );
     expect(answers).toEqual([{ user_id: bob.userId }]);
+    const { rows: drafts } = await adminPool.query(
+      'select user_id from brouillons where tenant_id = $1',
+      [tenantId],
+    );
+    expect(drafts).toEqual([{ user_id: bob.userId }]);
     const { rows: versions } = await adminPool.query(
       'select owner_user_id from versions_memoire where tenant_id = $1',
       [tenantId],

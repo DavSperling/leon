@@ -11,8 +11,9 @@ import { type FicheLine, lockAccount, readFiche } from './fiche';
 // (agents.ts), sous ses droits ; seule sa réponse, oui ou non, s'enregistre (0078). Seul l'agent en service la lit :
 // « Brouillons de réponse » ne travaille que pour qui lui a dit oui (brouillons.ts).
 
-// `oui` : la réponse enregistrée ; null tant qu'elle n'a pas répondu.
-export type Proposal = { agent: AgentId; oui: boolean | null };
+// `oui` : la réponse enregistrée ; null tant qu'elle n'a pas répondu. `enService` : l'agent travaille déjà pour qui lui
+// a dit oui ; les autres se proposent sans tourner encore.
+export type Proposal = { agent: AgentId; oui: boolean | null; enService: boolean };
 
 // Les agents proposés à la personne à cet instant. `lines` : les lignes de sa fiche (readFiche). Les outils qui
 // comptent sont ceux qu'elle a branchés elle-même : celui d'un collègue, même partagé à l'équipe, ne propose rien.
@@ -37,7 +38,11 @@ export async function readProposals(ctx: TenantContext, lines: FicheLine[]): Pro
       .where(and(eq(reponsesAgent.tenantId, ctx.tenantId), eq(reponsesAgent.userId, ctx.userId))),
   );
   const given = new Map(answers.map((one) => [one.agent, one.oui]));
-  return agents.map((agent) => ({ agent, oui: given.get(agent) ?? null }));
+  return agents.map((agent) => ({
+    agent,
+    oui: given.get(agent) ?? null,
+    enService: agent === EN_SERVICE,
+  }));
 }
 
 // Sa réponse à un agent, oui ou non : elle remplace la précédente. Rend false, sans rien écrire, pour un agent hors

@@ -137,8 +137,8 @@ describe('readFicheScreen : les agents proposés', () => {
     const screen = await readFicheScreen(julie);
 
     expect(screen.agents).toEqual([
-      { agent: 'relance', oui: false },
-      { agent: 'point-du-jour', oui: null },
+      { agent: 'relance', oui: false, enService: false },
+      { agent: 'point-du-jour', oui: null, enService: false },
     ]);
     expect(screen.lines.map((line) => line.genre)).toEqual(['role']);
   });

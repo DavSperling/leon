@@ -85,8 +85,8 @@ describe('readProposals : ce que Leon propose à la personne', () => {
     await seedConnection(julie, { provider: 'gmail' });
 
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: null },
-      { agent: 'point-du-jour', oui: null },
+      { agent: 'relance', oui: null, enService: false },
+      { agent: 'point-du-jour', oui: null, enService: false },
     ]);
   });
 
@@ -104,6 +104,10 @@ describe('readProposals : ce que Leon propose à la personne', () => {
       'relance',
       'point-du-jour',
     ]);
+    // Un seul est en service : « Brouillons de réponse ». Les quatre autres se proposent sans tourner encore.
+    expect((await proposals(julie)).filter((one) => one.enService)).toEqual([
+      { agent: 'brouillon-reponse', oui: null, enService: true },
+    ]);
   });
 });
 
@@ -114,16 +118,16 @@ describe('answerProposal : sa réponse, oui ou non', () => {
 
     expect(await answerProposal(julie, 'relance', true)).toBe(true);
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: true },
-      { agent: 'point-du-jour', oui: null },
+      { agent: 'relance', oui: true, enService: false },
+      { agent: 'point-du-jour', oui: null, enService: false },
     ]);
 
     expect(await answerProposal(julie, 'relance', false)).toBe(true);
     expect(await answerProposal(julie, 'point-du-jour', true)).toBe(true);
 
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: false },
-      { agent: 'point-du-jour', oui: true },
+      { agent: 'relance', oui: false, enService: false },
+      { agent: 'point-du-jour', oui: true, enService: false },
     ]);
     // Une ligne par agent : changer d'avis ne garde pas l'ancienne réponse.
     expect(await stored(julie)).toHaveLength(2);
@@ -168,7 +172,11 @@ describe('answerProposal : sa réponse, oui ou non', () => {
 
     await seedConnection(julie, { provider: 'outlook' });
 
-    expect(await proposals(julie)).toContainEqual({ agent: 'point-du-jour', oui: true });
+    expect(await proposals(julie)).toContainEqual({
+      agent: 'point-du-jour',
+      oui: true,
+      enService: false,
+    });
   });
 });
 

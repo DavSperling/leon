@@ -1098,7 +1098,9 @@
     "errorInvalid": "This isn’t valid. Check the text and its length.",
     "errorFailed": "Something went wrong. Try again.",
     "agentsTitle": "Suggested agents",
-    "agentsHint": "These agents aren’t running yet. Answer yes or no to each: Leon keeps your answer, and you can change it.",
+    "agentsHint": "Answer yes or no to each: Leon keeps your answer, and you can change it. An agent that is running only works for you after your yes.",
+    "agentRunning": "Running",
+    "agentNotYet": "Not running yet",
     "agentYes": "Yes",
     "agentNo": "No",
     "agentSaved": "Answer saved.",
@@ -1116,7 +1118,7 @@
       },
       "brouillon-reponse": {
         "name": "Reply drafts",
-        "text": "When an email is waiting for a reply, a draft in your mailbox, written the way you write, never sent."
+        "text": "When an email is waiting for a reply, a draft on this page, written the way you write, never sent."
       },
       "brief-rendez-vous": {
         "name": "Pre-meeting brief",

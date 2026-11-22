@@ -218,11 +218,11 @@ describe('FicheSection : la fiche en mots', () => {
 });
 
 describe('FicheSection : les agents proposés', () => {
-  // Trois propositions, dans l'ordre reçu : sans réponse, un oui, un non.
+  // Trois propositions, dans l'ordre reçu : sans réponse, un oui, un non. Le premier est le seul en service.
   const AGENTS: Proposal[] = [
-    { agent: 'brouillon-reponse', oui: null },
-    { agent: 'relance', oui: true },
-    { agent: 'point-du-jour', oui: false },
+    { agent: 'brouillon-reponse', oui: null, enService: true },
+    { agent: 'relance', oui: true, enService: false },
+    { agent: 'point-du-jour', oui: false, enService: false },
   ];
   const WITH_AGENTS = { ...DATA, agents: AGENTS };
   // La ligne d'un agent, reconnue à ses mots, jusqu'à la suivante ou la fin de la partie.
@@ -243,7 +243,7 @@ describe('FicheSection : les agents proposés', () => {
     const shown = text(render());
 
     expect(shown).not.toContain('Agents proposés');
-    expect(shown).not.toContain('pas encore en service');
+    expect(shown).not.toMatch(/en service/i);
     expect(render()).not.toContain('aria-pressed');
   });
 
@@ -253,12 +253,49 @@ describe('FicheSection : les agents proposés', () => {
 
     expect(titles).toEqual(['Ma fiche', 'Rôle', 'Tâches répétées', 'Agents proposés']);
     expect(text(html)).toContain(
-      'Ces agents ne sont pas encore en service. Répondez oui ou non à chacun : Leon garde votre réponse, et vous pouvez en changer.',
+      'Répondez oui ou non à chacun : Leon garde votre réponse, et vous pouvez en changer. Un agent en service ne travaille pour vous qu’après votre oui.',
     );
+    // La phrase ne dit plus que tous attendent : chaque agent dit son état.
+    expect(text(html)).not.toContain('Ces agents ne sont pas encore en service');
     const english = text(render(WITH_AGENTS, 'en'));
     expect(english).toContain('Suggested agents');
     expect(english).toContain(
-      'These agents aren’t running yet. Answer yes or no to each: Leon keeps your answer, and you can change it.',
+      'Answer yes or no to each: Leon keeps your answer, and you can change it. An agent that is running only works for you after your yes.',
+    );
+    expect(english).not.toContain('These agents aren’t running yet');
+  });
+
+  it('chaque agent dit vrai sur son état : « Brouillons de réponse » est en service, les autres pas encore, dans les deux langues', () => {
+    const all: Proposal[] = [
+      { agent: 'suite-reunion', oui: null, enService: false },
+      { agent: 'brouillon-reponse', oui: true, enService: true },
+      { agent: 'brief-rendez-vous', oui: null, enService: false },
+      { agent: 'relance', oui: null, enService: false },
+      { agent: 'point-du-jour', oui: false, enService: false },
+    ];
+    const states = (locale: 'fr' | 'en', running: string, notYet: string) => {
+      const html = render({ ...DATA, agents: all }, locale);
+      return all.map((one) => {
+        const shown = text(agent(html, one.agent));
+        return [one.agent, shown.includes(notYet) ? 'pas encore' : shown.includes(running)];
+      });
+    };
+    const expected = [
+      ['suite-reunion', 'pas encore'],
+      ['brouillon-reponse', true],
+      ['brief-rendez-vous', 'pas encore'],
+      ['relance', 'pas encore'],
+      ['point-du-jour', 'pas encore'],
+    ];
+
+    expect(states('fr', 'En service', 'Pas encore en service')).toEqual(expected);
+    expect(states('en', 'Running', 'Not running yet')).toEqual(expected);
+    // Son brouillon se lit sur cette page : rien ne s'écrit dans sa boîte.
+    const html = render({ ...DATA, agents: all });
+    expect(text(html)).toContain('un brouillon sur cette page, écrit comme vous, jamais envoyé.');
+    expect(text(html)).not.toContain('dans votre boîte, écrit comme vous');
+    expect(text(render({ ...DATA, agents: all }, 'en'))).toContain(
+      'a draft on this page, written the way you write, never sent.',
     );
   });
 
@@ -275,7 +312,7 @@ describe('FicheSection : les agents proposés', () => {
     expect(html).not.toContain('>Rôle</h2>');
   });
 
-  it('chaque agent : son nom et sa phrase, dans l’ordre reçu, et rien d’autre que « Oui » et « Non »', () => {
+  it('chaque agent : son nom, sa phrase et son état, dans l’ordre reçu, et rien d’autre que « Oui » et « Non »', () => {
     const html = render(WITH_AGENTS);
     // Tout le texte de la ligne, sans la fin de sa balise ouvrante.
     const words = (id: Proposal['agent']) =>
@@ -283,15 +320,15 @@ describe('FicheSection : les agents proposés', () => {
         .replace(/^[^>]*>/, '')
         .trim();
 
-    // Ni raison ni mesure : le nom, la phrase, les deux boutons.
+    // Ni raison ni mesure : le nom, la phrase, l'état, les deux boutons.
     expect(words('brouillon-reponse')).toBe(
-      'Brouillons de réponse Quand un mail attend une réponse, un brouillon dans votre boîte, écrit comme vous, jamais envoyé. Oui Non',
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon sur cette page, écrit comme vous, jamais envoyé. En service Oui Non',
     );
     expect(words('relance')).toBe(
-      'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Oui Non',
+      'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',
     );
     expect(words('point-du-jour')).toBe(
-      'Point du jour Chaque matin, votre agenda, les mails qui attendent, vos tâches. Oui Non',
+      'Point du jour Chaque matin, votre agenda, les mails qui attendent, vos tâches. Pas encore en service Oui Non',
     );
     expect(html.indexOf('id="agent-brouillon-reponse"')).toBeLessThan(
       html.indexOf('id="agent-relance"'),
@@ -331,11 +368,11 @@ describe('FicheSection : les agents proposés', () => {
 
   it('se dessine en anglais avec les mêmes clés, pour les cinq agents du catalogue', () => {
     const all: Proposal[] = [
-      { agent: 'suite-reunion', oui: null },
-      { agent: 'brouillon-reponse', oui: true },
-      { agent: 'brief-rendez-vous', oui: null },
-      { agent: 'relance', oui: null },
-      { agent: 'point-du-jour', oui: false },
+      { agent: 'suite-reunion', oui: null, enService: false },
+      { agent: 'brouillon-reponse', oui: true, enService: true },
+      { agent: 'brief-rendez-vous', oui: null, enService: false },
+      { agent: 'relance', oui: null, enService: false },
+      { agent: 'point-du-jour', oui: false, enService: false },
     ];
     const html = render({ ...DATA, agents: all }, 'en');
 

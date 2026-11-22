@@ -372,10 +372,10 @@ function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => voi
   );
 }
 
-// Un agent de départ proposé : son nom, sa phrase, « Oui » et « Non ». Le bouton enfoncé est la réponse que Leon garde
-// (aucun tant qu'elle n'a pas répondu) ; l'autre la change. Ni raison ni mesure : l'écran ne reçoit que l'agent et sa
-// réponse.
-function Agent({ agent, oui }: Proposal) {
+// Un agent de départ proposé : son nom, sa phrase, s'il est en service, « Oui » et « Non ». Le bouton enfoncé est la
+// réponse que Leon garde (aucun tant qu'elle n'a pas répondu) ; l'autre la change. Ni raison ni mesure : l'écran ne
+// reçoit que l'agent, son état et sa réponse.
+function Agent({ agent, oui, enService }: Proposal) {
   const t = useTranslations('fiche');
   const router = useRouter();
   const [failed, setFailed] = useState(false);
@@ -403,6 +403,7 @@ function Agent({ agent, oui }: Proposal) {
       <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
         <p className="font-medium">{t(`agents.${agent}.name`)}</p>
         <p className="text-fg-2">{nb(t(`agents.${agent}.text`))}</p>
+        <p className="text-label text-muted">{t(enService ? 'agentRunning' : 'agentNotYet')}</p>
       </div>
       <div
         aria-busy={answering}

@@ -20,9 +20,11 @@ import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
+  answerAgentAction,
   buildFicheAction,
   changePasswordAction,
   correctFicheLineAction,
@@ -100,6 +102,7 @@ vi.mock('@/server/memory/memory-section', () => ({
   restoreMemoryVersion: vi.fn(),
 }));
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
+vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
 vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
@@ -1056,7 +1059,7 @@ describe('les actions de l’onglet « Ma fiche »', () => {
   const LIGNE = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c60';
 
   beforeEach(() => {
-    // Ni corriger ni retirer n'exigent une connexion récente : la fiche n'est lue que par elle.
+    // Ni corriger, ni retirer, ni répondre n'exigent une connexion récente : la fiche n'est lue que par elle.
     vi.mocked(signedInRecently).mockResolvedValue(false);
   });
 
@@ -1129,7 +1132,46 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     },
   );
 
-  it('sans session du navigateur, rien ne se construit, ne se corrige ni ne se retire : la connexion', async () => {
+  it('répondre : son oui ou son non à un agent proposé s’enregistre pour la personne connectée, et elle seule', async () => {
+    vi.mocked(answerProposal).mockResolvedValue(true);
+
+    await expect(answerAgentAction({ agent: 'relance', oui: true })).resolves.toEqual({ ok: true });
+    await expect(answerAgentAction({ agent: 'relance', oui: false })).resolves.toEqual({
+      ok: true,
+    });
+
+    expect(vi.mocked(answerProposal).mock.calls).toEqual([
+      [ctx, 'relance', true],
+      [ctx, 'relance', false],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+  });
+
+  it('répondre : un agent qui ne lui est pas proposé à ce moment-là est introuvable, rien n’est relu', async () => {
+    vi.mocked(answerProposal).mockResolvedValue(false);
+
+    await expect(answerAgentAction({ agent: 'suite-reunion', oui: true })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ agent: 'agent-inconnu', oui: true }],
+    [{ agent: 'relance', oui: 'oui' }],
+    [{ agent: 'relance', oui: null }],
+    [{ agent: 'relance' }],
+    [{ oui: true }],
+    [{ agent: ['relance'], oui: true }],
+    ['relance'],
+    [null],
+  ])('répondre %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerAgentAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerProposal).not.toHaveBeenCalled();
+  });
+
+  it('sans session du navigateur, rien ne se construit, ne se corrige, ne se retire ni ne se répond : la connexion', async () => {
     vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
     await expect(buildFicheAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
@@ -1137,9 +1179,13 @@ describe('les actions de l’onglet « Ma fiche »', () => {
       'NEXT_REDIRECT /sign-in',
     );
     await expect(retireFicheLineAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerAgentAction({ agent: 'relance', oui: true })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
     expect(retireLine).not.toHaveBeenCalled();
+    expect(answerProposal).not.toHaveBeenCalled();
   });
 });

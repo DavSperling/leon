@@ -55,7 +55,9 @@ import {
   readMemoryVersion,
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
+import { AGENTS, type AgentId } from '@/server/portrait/agents';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
@@ -719,11 +721,13 @@ export async function readMemoryVersionAction(input: {
 }
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes,
-// sous la session du navigateur. Les siennes seulement : chaque fonction appelée filtre sur elle, sous ses droits, et
-// la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une valeur reçue.
+// et répond aux agents qui lui sont proposés, sous la session du navigateur. Les siennes seulement : chaque fonction
+// appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
+// valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
 
 const FicheCorrectionSchema = z.object({ id: z.uuid(), champs: z.record(z.string(), z.unknown()) });
+const AgentAnswerSchema = z.object({ agent: z.enum(AGENTS), oui: z.boolean() });
 
 // « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
 // d'autre ne la lance. `ok` faux : rien à construire, ou sa fiche est déjà faite.
@@ -757,6 +761,21 @@ export async function retireFicheLineAction(
   const parsed = z.uuid().safeParse(id);
   if (!parsed.success) return { error: 'invalide' };
   if (!(await retireLine(ctx, parsed.data))) return { error: 'introuvable' };
+  revalidatePath('/settings');
+  return { ok: true };
+}
+
+// « Oui » ou « Non » à un agent proposé : sa réponse s'enregistre, et remplace la précédente. Un agent qui ne lui est
+// pas proposé à ce moment-là est « introuvable ». Rien n'est activé : aucun agent ne tourne encore.
+export async function answerAgentAction(input: {
+  agent: AgentId;
+  oui: boolean;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = AgentAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await answerProposal(ctx, parsed.data.agent, parsed.data.oui)))
+    return { error: 'introuvable' };
   revalidatePath('/settings');
   return { ok: true };
 }

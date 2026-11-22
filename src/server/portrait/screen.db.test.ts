@@ -8,6 +8,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { seedRun } from '@/test/seed-search';
 import { type FicheLine, readFiche, retireLine } from './fiche';
+import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
 import { readFicheScreen } from './screen';
 
@@ -50,7 +51,12 @@ const ROLE = { genre: 'role' as const, cle: '', valeur: { texte: 'Commerciale.' 
 describe('readFicheScreen : où en est la fiche', () => {
   it('sans fiche ni boîte à elle, il lui faut une boîte : celle d’un collègue ou un autre outil ne comptent pas', async () => {
     const [julie, paul] = await people();
-    expect(await readFicheScreen(julie)).toEqual({ etat: 'sans-boite', lines: [], sources: {} });
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'sans-boite',
+      lines: [],
+      sources: {},
+      agents: [],
+    });
 
     await seedConnection(paul, { provider: 'gmail' });
     await seedConnection(julie, { provider: 'notion' });
@@ -72,7 +78,12 @@ describe('readFicheScreen : où en est la fiche', () => {
     const [julie] = await people();
     await seedLine(julie, RYTHME);
 
-    expect(await readFicheScreen(julie)).toEqual({ etat: 'a-completer', lines: [], sources: {} });
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'a-completer',
+      lines: [],
+      sources: {},
+      agents: [],
+    });
   });
 
   it('l’écran ne reçoit que son rôle et ses tâches : les mesures restent en base', async () => {
@@ -94,14 +105,39 @@ describe('readFicheScreen : où en est la fiche', () => {
     const role = (await readFiche(julie)).find((line) => line.genre === 'role');
     await retireLine(julie, role?.id ?? '');
 
-    expect(await readFicheScreen(julie)).toEqual({ etat: 'faite', lines: [], sources: {} });
+    // Sa boîte et la mesure de son rythme lui valent des propositions (propositions.db.test.ts) : pas le sujet ici.
+    expect(await readFicheScreen(julie)).toMatchObject({ etat: 'faite', lines: [], sources: {} });
   });
 
   it('la fiche d’un collègue ne change rien à la sienne', async () => {
     const [julie, paul] = await people();
     await seedLine(paul, ROLE);
 
-    expect(await readFicheScreen(julie)).toEqual({ etat: 'sans-boite', lines: [], sources: {} });
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'sans-boite',
+      lines: [],
+      sources: {},
+      agents: [],
+    });
+  });
+});
+
+describe('readFicheScreen : les agents proposés', () => {
+  it('l’écran reçoit les agents proposés d’après sa fiche entière, avec sa réponse, sans la mesure qui les propose', async () => {
+    const [julie, paul] = await people();
+    await seedConnection(julie, { provider: 'gmail' });
+    await seedConnection(paul, { provider: 'fathom' });
+    await seedLine(julie, RYTHME);
+    await seedLine(julie, ROLE);
+    await answerProposal(julie, 'relance', false);
+
+    const screen = await readFicheScreen(julie);
+
+    expect(screen.agents).toEqual([
+      { agent: 'relance', oui: false },
+      { agent: 'point-du-jour', oui: null },
+    ]);
+    expect(screen.lines.map((line) => line.genre)).toEqual(['role']);
   });
 });
 

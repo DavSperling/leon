@@ -61,6 +61,7 @@ const DATA: FicheScreen = {
     [SEEN]: { title: 'Demande de devis', url: 'https://app.hubspot.test/deal/1', kind: 'hubspot' },
     [UNLINKED]: { title: null, url: null, kind: 'gmail' },
   },
+  agents: [],
 };
 
 const render = (data: FicheScreen | null = DATA, locale: 'en' | 'fr' = 'fr') =>
@@ -213,7 +214,7 @@ describe('FicheSection : la fiche en mots', () => {
 });
 
 describe('FicheSection : où en est la construction', () => {
-  const EMPTY = { lines: [], sources: {} };
+  const EMPTY = { lines: [], sources: {}, agents: [] };
 
   it('sans fiche ni boîte : il en faut une, avec le lien vers les connexions, et pas de bouton', () => {
     const html = render({ etat: 'sans-boite', ...EMPTY });

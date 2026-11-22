@@ -43,7 +43,7 @@ vi.mock('@/server/memory/memory-section', () => ({
   listMemoryRepos: vi.fn(async () => []),
 }));
 vi.mock('@/server/portrait/screen', () => ({
-  readFicheScreen: vi.fn(async () => ({ etat: 'sans-boite', lines: [], sources: {} })),
+  readFicheScreen: vi.fn(async () => ({ etat: 'sans-boite', lines: [], sources: {}, agents: [] })),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({
@@ -297,7 +297,7 @@ describe('page de Réglages : l’onglet « Ma fiche »', () => {
   };
 
   it('donne à l’onglet la fiche de la personne connectée, avec son état', async () => {
-    const screen = { etat: 'a-construire' as const, lines: [], sources: {} };
+    const screen = { etat: 'a-construire' as const, lines: [], sources: {}, agents: [] };
     vi.mocked(readFicheScreen).mockResolvedValueOnce(screen);
 
     expect((await fiche())?.data).toEqual(screen);

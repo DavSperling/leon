@@ -10,8 +10,8 @@ import { readSentMails } from './sent-mails';
 
 // La fiche d'une personne, enregistrée ligne à ligne (0076) : construite d'après ses mails envoyés, puis relue,
 // corrigée et retirée par elle seule. Son rôle et ses tâches s'y ajoutent une fois, écrits par un modèle (synthese.ts).
-// Tout se fait sous withTenant de la personne, avec en plus le filtre de la personne. Rien ne déclenche encore la
-// construction : ni tâche de fond, ni route.
+// Tout se fait sous withTenant de la personne, avec en plus le filtre de la personne. Seul son bouton « Construire ma
+// fiche » lance la construction (queue.ts, worker.ts).
 
 // Les heures et les jours d'envoi se lisent à l'heure de Paris, comme le reste de l'interface (src/lib/format.ts).
 const TIME_ZONE = 'Europe/Paris';
@@ -134,6 +134,43 @@ export async function correctLine(
       .where(own(ctx, id));
     return 'ok';
   });
+}
+
+// Ce que la personne corrige elle-même dans une ligne : un texte, ou le registre d'un interlocuteur. Le reste de la
+// ligne (les sources d'une tâche, les comptes d'un interlocuteur) et les autres genres sont des mesures.
+// Postgres refuse \u0000 et un demi-caractère (la moitié d'un emoji) dans un jsonb : un tel texte est refusé ici.
+const texte = z
+  .string()
+  .trim()
+  .refine((text) => text.isWellFormed() && !text.includes('\u0000'));
+const CHAMPS: Partial<Record<Genre, z.ZodType<Record<string, unknown>>>> = {
+  role: z.strictObject({ texte }),
+  signature: z.strictObject({ texte }),
+  tache: z.strictObject({ titre: texte, detail: texte }),
+  interlocuteur: z.strictObject({ registre: z.enum(['tutoiement', 'vouvoiement']).nullable() }),
+};
+
+// Corrige les seuls champs modifiables d'une ligne (CHAMPS) : la valeur entière se refait ici, d'après la ligne
+// enregistrée, puis passe par correctLine, qui en valide la forme. Un champ de plus, ou un genre qui ne se corrige
+// pas, est refusé.
+// shortcut: la ligne se lit puis s'écrit en deux transactions : une reconstruction passée entre les deux verrait ses
+// comptes remplacés par ceux d'avant, à faire en une seule si une reconstruction devient fréquente.
+export async function correctFields(
+  ctx: TenantContext,
+  id: string,
+  champs: unknown,
+): Promise<'ok' | 'invalide' | 'introuvable'> {
+  if (!IdSchema.safeParse(id).success) return 'introuvable';
+  const [line] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ genre: lignesFiche.genre, valeur: lignesFiche.valeur })
+      .from(lignesFiche)
+      .where(own(ctx, id)),
+  );
+  if (!line) return 'introuvable';
+  const parsed = CHAMPS[line.genre]?.safeParse(champs);
+  if (!parsed?.success) return 'invalide';
+  return correctLine(ctx, id, { ...line.valeur, ...parsed.data });
 }
 
 // La retire : elle sort de la fiche et reste en base, pour qu'une reconstruction ne la fasse pas revenir. Rend false

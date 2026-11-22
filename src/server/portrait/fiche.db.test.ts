@@ -13,7 +13,14 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { buildFiche, correctLine, type FicheLine, readFiche, retireLine } from './fiche';
+import {
+  buildFiche,
+  correctFields,
+  correctLine,
+  type FicheLine,
+  readFiche,
+  retireLine,
+} from './fiche';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -236,6 +243,128 @@ describe('correctLine et retireLine', () => {
     );
     expect(await retireLine(julie, lea.id)).toBe(false);
     expect(await correctLine(julie, lea.id, lea.valeur)).toBe('introuvable');
+  });
+});
+
+describe('correctFields : la personne ne corrige que ce qui n’est pas une mesure', () => {
+  // Une tâche et un rôle comme la synthèse les écrit.
+  async function synthesized(julie: TenantContext, sources: string[]): Promise<FicheLine[]> {
+    await adminDb.insert(lignesFiche).values(
+      [
+        { genre: 'role' as const, cle: '', valeur: { texte: 'Commerciale.' } },
+        {
+          genre: 'tache' as const,
+          cle: '1',
+          valeur: { titre: 'Envoyer les devis', detail: 'Un client demande un prix.', sources },
+        },
+      ].map((one) => ({
+        ...one,
+        tenantId: julie.tenantId,
+        userId: julie.userId,
+        provenance: 'synthese' as const,
+        acl: [julie.userId],
+      })),
+    );
+    return readFiche(julie);
+  }
+
+  it('le registre d’un interlocuteur se corrige, connu ou inconnu, sans toucher au reste de sa ligne', async () => {
+    const [julie] = await team();
+    const paul = line(await built(julie), 'interlocuteur', PAUL);
+
+    expect(await correctFields(julie, paul.id, { registre: 'vouvoiement' })).toBe('ok');
+
+    expect(line(await readFiche(julie), 'interlocuteur', PAUL)).toEqual({
+      ...paul,
+      valeur: { ...paul.valeur, registre: 'vouvoiement' },
+      provenance: 'personne',
+      mails: null,
+      corrigeeLe: expect.any(Date),
+    });
+    expect(await correctFields(julie, paul.id, { registre: null })).toBe('ok');
+    expect(line(await readFiche(julie), 'interlocuteur', PAUL).valeur).toEqual({
+      ...paul.valeur,
+      registre: null,
+    });
+  });
+
+  it('le titre et le détail d’une tâche se corrigent, ses sources restent celles de la ligne', async () => {
+    const [julie] = await team();
+    const sources = [randomUUID(), randomUUID(), randomUUID()];
+    const tache = line(await synthesized(julie, sources), 'tache', '1');
+
+    expect(
+      await correctFields(julie, tache.id, { titre: '  Chiffrer les devis ', detail: '' }),
+    ).toBe('ok');
+
+    expect(line(await readFiche(julie), 'tache', '1')).toMatchObject({
+      valeur: { titre: 'Chiffrer les devis', detail: '', sources },
+      provenance: 'personne',
+    });
+    // La personne ne fournit pas de sources, et un titre ne se vide pas.
+    for (const champs of [
+      { titre: 'Autre', detail: '', sources: [] },
+      { titre: ' ', detail: 'Sans titre.' },
+      { titre: 'x'.repeat(81), detail: '' },
+      { titre: 'Sans détail' },
+    ])
+      expect(await correctFields(julie, tache.id, champs), JSON.stringify(champs)).toBe('invalide');
+    expect(line(await readFiche(julie), 'tache', '1').valeur).toMatchObject({
+      titre: 'Chiffrer les devis',
+    });
+  });
+
+  it('le rôle se corrige par son texte ; trop long, vide ou illisible pour la base, il est refusé', async () => {
+    const [julie] = await team();
+    const role = line(await synthesized(julie, []), 'role');
+
+    expect(await correctFields(julie, role.id, { texte: 'Responsable des devis.' })).toBe('ok');
+
+    for (const texte of ['', 'x'.repeat(301), 'Nul \u0000 caché', 'Moitié \ud83d d’emoji', 12])
+      expect(await correctFields(julie, role.id, { texte }), JSON.stringify(texte)).toBe(
+        'invalide',
+      );
+    expect(line(await readFiche(julie), 'role').valeur).toEqual({
+      texte: 'Responsable des devis.',
+    });
+  });
+
+  it('une mesure ne se corrige pas, ni un champ mesuré d’une ligne qui se corrige', async () => {
+    const [julie] = await team();
+    const before = await built(julie);
+
+    expect(await correctFields(julie, line(before, 'mots', 'tous').id, { mediane: 3 })).toBe(
+      'invalide',
+    );
+    expect(
+      await correctFields(julie, line(before, 'registre', 'tous').id, {
+        tutoiement: 1,
+        vouvoiement: 0,
+      }),
+    ).toBe('invalide');
+    const paul = line(before, 'interlocuteur', PAUL);
+    expect(await correctFields(julie, paul.id, { registre: 'vouvoiement', a: 99 })).toBe(
+      'invalide',
+    );
+    expect(await correctFields(julie, paul.id, { a: 99 })).toBe('invalide');
+    expect(await correctFields(julie, paul.id, null)).toBe('invalide');
+
+    expect(await readFiche(julie)).toEqual(before);
+  });
+
+  it('la ligne d’un collègue, une ligne retirée ou un identifiant mal écrit sont introuvables', async () => {
+    const [julie, paul] = await team();
+    const before = await built(julie);
+    const lea = line(before, 'interlocuteur', LEA);
+
+    expect(await correctFields(paul, lea.id, { registre: 'tutoiement' })).toBe('introuvable');
+    expect(await correctFields(julie, 'pas-un-id', { registre: 'tutoiement' })).toBe('introuvable');
+    await retireLine(julie, lea.id);
+    expect(await correctFields(julie, lea.id, { registre: 'tutoiement' })).toBe('introuvable');
+
+    expect(await stored(julie)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: lea.id, provenance: 'calcul' })]),
+    );
   });
 });
 

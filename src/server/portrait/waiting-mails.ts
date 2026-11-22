@@ -67,7 +67,8 @@ export async function readWaitingMails(
   const sentSince = new Date(now.getTime() - SENT_MAIL_DAYS * DAY_MS);
   return withTenant(ctx, async (tx) => {
     // `l` : le dernier tour du fil. Un mail coupé en plusieurs tours les date tous pareil : n'importe lequel donne son
-    // message, son auteur et ses destinataires.
+    // message, son auteur et ses destinataires. Deux messages à la même date : le plus grand identifiant, ici, dans
+    // la lecture du fil plus bas et à l'écran (readBrouillons).
     const { rows: mails } = await tx.execute<Omit<WaitingMail, 'messages'>>(sql`
       with sent as (
         select lower(t.author_email) as address, t.recipients_to || t.recipients_cc as recipients
@@ -83,7 +84,7 @@ export async function readWaitingMails(
                t.author_side, t.recipients_to, t.ts
         from turns t
         where t.tenant_id = s.tenant_id and t.source_id = s.id
-        order by t.ts desc, t.created_at desc, t.id desc
+        order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
         limit 1
       ) l
       where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
@@ -125,7 +126,7 @@ export async function readWaitingMails(
       order by "sourceId", n desc`);
     return mails.flatMap((mail) => {
       const messages = rows.filter((row) => row.sourceId === mail.sourceId);
-      // Deux messages à la même seconde : sans dernier message certain, rien à préparer.
+      // Un message arrivé entre les deux lectures : ce mail n'est plus le dernier du fil, rien à préparer.
       if (messages.at(-1)?.message !== mail.message) return [];
       return [
         {

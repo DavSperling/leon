@@ -136,7 +136,7 @@ export type ReadyBrouillon = {
 
 // Ses brouillons prêts, le mail le plus récent d'abord : ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé
 // depuis. Le dernier message du fil se relit à chaque affichage : dès qu'elle a répondu, ou qu'un nouveau message est
-// arrivé, le brouillon ne se montre plus.
+// arrivé, le brouillon ne se montre plus. À date égale, le même départage que readWaitingMails.
 export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon[]> {
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<Omit<ReadyBrouillon, 'receivedAt'> & { at: string }>(sql`
@@ -147,7 +147,7 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
         select t.external_id, t.author_name, t.author_email, t.ts
         from turns t
         where t.tenant_id = b.tenant_id and t.source_id = b.source_id
-        order by t.ts desc, t.created_at desc, t.id desc
+        order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
         limit 1
       ) l
       where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}

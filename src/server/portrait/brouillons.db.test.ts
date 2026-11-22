@@ -527,6 +527,25 @@ describe('readBrouillons : ses brouillons prêts', () => {
     expect(await shown(julie)).toEqual(['Pour la relance.', 'Trois.']);
   });
 
+  it('deux messages du fil à la même date : le brouillon répond à celui que l’écran tient aussi pour le dernier', async () => {
+    const julie = await julieWaiting();
+    const at = ago(HOUR);
+    // Relevés l'un après l'autre : le dernier entré en base n'est pas celui du plus grand identifiant.
+    const sourceId = await mailThread(julie, 'Même date', [
+      received(at, 'Un point ?', { externalId: 'message:b' }),
+    ]);
+    await extendThread(julie, sourceId, [
+      received(at, 'Un autre point ?', { externalId: 'message:a' }),
+    ]);
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm, calls } = answering(draft());
+
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+    expect(calls).toHaveLength(1);
+    expect(await stored(julie)).toMatchObject([{ message: 'message:b' }]);
+    expect(await shown(julie)).toEqual([DRAFT]);
+  });
+
   it('ne montre que les vingt plus récents', async () => {
     const [julie] = await team();
     for (let hours = 1; hours <= 21; hours++) {

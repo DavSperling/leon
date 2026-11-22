@@ -289,7 +289,7 @@ const Muted = ({ children }: { children: ReactNode }) => (
 
 // Les sources où on la voit faire une tâche, celles qu'elle voit encore : leur compte, et leur liste à ouvrir. Chacune
 // mène à son outil, comme l'activité d'une personne dans l'écran Équipe.
-function Sources({ id, sources }: { id: string; sources: FicheSource[] }) {
+function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { id: string }> }) {
   const t = useTranslations('fiche');
   const [open, setOpen] = useState(false);
   if (sources.length === 0) return null;
@@ -308,7 +308,7 @@ function Sources({ id, sources }: { id: string; sources: FicheSource[] }) {
         {label}
       </Button>
       <ul id={panel} hidden={!open} aria-label={label} className="mt-2 grid gap-2">
-        {sources.map((source, index) => {
+        {sources.map((source) => {
           const props = {
             picture: <ToolLogo kind={source.kind} size={28} />,
             name: source.title?.trim() || t('untitled'),
@@ -316,8 +316,7 @@ function Sources({ id, sources }: { id: string; sources: FicheSource[] }) {
             className: 'w-full',
           };
           return (
-            // biome-ignore lint/suspicious/noArrayIndexKey: la liste ne change pas entre deux lectures de la page
-            <li key={index}>
+            <li key={source.id}>
               {source.url ? (
                 <Thing {...props} href={source.url} target="_blank" rel="noopener noreferrer" />
               ) : (
@@ -494,7 +493,10 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
             after={
               <Sources
                 id={line.id}
-                sources={line.valeur.sources.flatMap((id) => data.sources[id] ?? [])}
+                sources={line.valeur.sources.flatMap((id) => {
+                  const source = data.sources[id];
+                  return source ? [{ id, ...source }] : [];
+                })}
               />
             }
           >

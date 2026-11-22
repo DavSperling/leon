@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 import type { AuthorSide, SourceKind } from '@/capture/turn';
 import { listMembers } from '@/server/auth/members';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -16,17 +16,25 @@ import { companyDomains, type SentMail } from './facts';
 // shortcut: un mail relu après un changement de la normalisation garde ses deux versions (deux empreintes), recollées ici
 // en un seul texte ; ne lire que la dernière si cela arrive, comme les réunions d'agenda.ts.
 
-const SENT_MAIL_DAYS = 90;
+export const SENT_MAIL_DAYS = 90;
 // Les plus récents au-delà : à 30 mails par jour ouvré, 90 jours en font 2 000.
 const SENT_MAILS_MAX = 2000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const MAIL_KINDS = ['gmail', 'outlook'] satisfies SourceKind[];
-const TEAM = 'team' satisfies AuthorSide;
+export const TEAM = 'team' satisfies AuthorSide;
 // L'identifiant d'un tour de courrier (gmail/map.ts, outlook/map.ts, puis normalize.ts) : le message, et le rang du
 // morceau quand le mail a été coupé. L'identifiant d'un message ne contient ni « : » ni « # ».
-const MESSAGE = '^message:[^:#]+';
-const PART = '^message:[^:#]+:([0-9]+)#';
+export const MESSAGE = '^message:[^:#]+';
+export const PART = '^message:[^:#]+:([0-9]+)#';
+
+// Les tours de ses mails envoyés depuis `since`, sous les alias `t` (turns) et `s` (sources) : dans SES boîtes, du côté
+// de l'équipe. Les mails qui attendent sa réponse (waiting-mails.ts) lisent les mêmes.
+export const sentTurns = (ctx: TenantContext, since: Date): SQL =>
+  sql`s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+    and s.kind = any(${textArray(MAIL_KINDS)})
+    and t.author_side = ${TEAM} and t.external_id like 'message:%'
+    and t.ts >= ${since.toISOString()}::timestamptz`;
 
 type Row = {
   sourceId: string;
@@ -60,10 +68,7 @@ export async function readSentMails(
                string_agg(t.text, ${'\n'} order by coalesce(substring(t.external_id from ${PART})::int, 0)) as text
         from turns t
         join sources s on s.tenant_id = t.tenant_id and s.id = t.source_id
-        where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
-          and s.kind = any(${textArray(MAIL_KINDS)})
-          and t.author_side = ${TEAM} and t.external_id like 'message:%'
-          and t.ts >= ${since.toISOString()}::timestamptz
+        where ${sentTurns(ctx, since)}
         group by t.tenant_id, t.source_id, substring(t.external_id from ${MESSAGE})
         order by min(t.ts) desc
         limit ${SENT_MAILS_MAX}

@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { SourceKind } from '@/capture/turn';
 import { byStart, parisTime, type RendezVous, type StoredRendezVous, weekDays } from '@/lib/agenda';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { accountIsGone } from '@/server/briefing/briefings';
+import { accountIsGone, lockAccount } from '@/server/briefing/briefings';
 import { db } from '@/server/db/client';
 import { agendas } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
@@ -190,8 +190,10 @@ async function writeAgenda(
   sourceIds: string[],
   preparedAt: Date,
 ): Promise<void> {
-  await withTenant(ctx, (tx) =>
-    tx
+  await withTenant(ctx, async (tx) => {
+    // Un compte supprimé depuis le début de la lecture, ou en train de l'être, ne garde pas de rendez-vous.
+    if (!(await lockAccount(tx, ctx))) return;
+    await tx
       .insert(agendas)
       .values({
         tenantId: ctx.tenantId,
@@ -204,8 +206,8 @@ async function writeAgenda(
       .onConflictDoUpdate({
         target: [agendas.tenantId, agendas.userId],
         set: { rendezVous, sourceIds, preparedAt },
-      }),
-  );
+      });
+  });
 }
 
 // Relit les derniers e-mails de la personne et garde les rendez-vous de cette semaine et de la suivante (le lundi

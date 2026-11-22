@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { parisTime, weekDays } from '@/lib/agenda';
+import { deleteAccount } from '@/server/auth/delete-account';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
@@ -170,6 +171,56 @@ describe('refreshAgenda', () => {
     const capped = createFakeLlm({ texts: [''] });
     await refreshAgenda(alice, { llm: capped, now: new Date(now.getTime() + 120_000) });
     expect(capped.calls).toHaveLength(0);
+  });
+});
+
+describe('le calendrier part avec le compte', () => {
+  it('une lecture des e-mails lancée en même temps que la suppression du compte, ou après, ne laisse aucun rendez-vous', async () => {
+    const team = await newTeam(['Julie Martin', 'Paul Durand'], tenantIds);
+    const [julie] = team.members as [TenantContext, TenantContext];
+    await mail(julie, 'On se voit jeudi à 14 h pour le point projet.');
+    const llm = createFakeLlm({
+      texts: [`{"n": 1, "titre": "Point projet", "debut": "${day(3)}T14:00"}`],
+    });
+
+    // La lecture écrit avant la suppression, qui efface la ligne, ou après, et n'écrit rien.
+    await Promise.all([refreshAgenda(julie, { llm, now }), deleteAccount(julie, null, false)]);
+
+    expect(await storedOf(julie)).toBeUndefined();
+    // Ses e-mails restent (ses sources ne partent pas) : sans compte, ils ne refont pas son calendrier.
+    await refreshAgenda(julie, { llm: createFakeLlm({}), now });
+    expect(await storedOf(julie)).toBeUndefined();
+  });
+
+  it('une lecture qui arrive à l’écriture pendant la suppression attend sa fin, et n’écrit rien', async () => {
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+    const team = await newTeam(['Julie Martin', 'Paul Durand'], tenantIds);
+    const [julie] = team.members as [TenantContext, TenantContext];
+    await mail(julie, 'On se voit jeudi à 14 h pour le point projet.');
+    const llm = createFakeLlm({
+      texts: [`{"n": 1, "titre": "Point projet", "debut": "${day(3)}T14:00"}`],
+    });
+    // Retient la suppression au milieu, l'organisation déjà prise (lockMembers), le compte pas encore marqué.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from member where "userId" = $1 for update', [julie.userId]);
+      const leaving = deleteAccount(julie, null, false);
+      await pause();
+      // Le compte se lit encore en place : la lecture va jusqu'à l'écriture, qui attend l'organisation.
+      const reading = refreshAgenda(julie, { llm, now });
+      await pause();
+      await holding.query('commit');
+
+      await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+      await reading;
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+
+    expect(llm.calls).toHaveLength(1);
+    expect(await storedOf(julie)).toBeUndefined();
   });
 });
 

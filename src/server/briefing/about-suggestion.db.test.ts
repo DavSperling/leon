@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterAll, describe, expect, it, vi } from 'vitest';
 import type { SourceKind } from '@/capture/turn';
+import { deleteAccount } from '@/server/auth/delete-account';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { members, users } from '@/server/db/schema/auth';
 import { connections } from '@/server/db/schema/connections';
@@ -277,6 +278,45 @@ describe('proposeAbout', () => {
     expect(await proposeAbout(alice, { llm })).toBe(false);
 
     expect(fake.calls).toHaveLength(1);
+    expect(await rowsOf(alice)).toEqual([]);
+  });
+
+  it('ne laisse aucune proposition quand elle est lancée en même temps que la suppression du compte', async () => {
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+    const llm = createFakeLlm({ texts: ['Écrit trop tard.'] });
+
+    // La proposition s'écrit avant la suppression, qui l'efface, ou après, et rien n'est écrit.
+    await Promise.all([proposeAbout(alice, { llm }), deleteAccount(alice, null, false)]);
+
+    expect(await rowsOf(alice)).toEqual([]);
+  });
+
+  it('attend la fin de la suppression quand elle arrive à l’écriture pendant celle-ci, et n’écrit rien', async () => {
+    const pause = () => new Promise((resolve) => setTimeout(resolve, 300));
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+    const llm = createFakeLlm({ texts: ['Écrit trop tard.'] });
+    // Retient la suppression au milieu, l'organisation déjà prise (lockMembers), le compte pas encore marqué.
+    const holding = await adminPool.connect();
+    try {
+      await holding.query('begin');
+      await holding.query('select 1 from member where "userId" = $1 for update', [alice.userId]);
+      const leaving = deleteAccount(alice, null, false);
+      await pause();
+      // Le compte se lit encore en place : la proposition va jusqu'à l'écriture, qui attend l'organisation.
+      const proposing = proposeAbout(alice, { llm });
+      await pause();
+      await holding.query('commit');
+
+      await expect(leaving).resolves.toMatchObject({ organizationDeleted: false });
+      await expect(proposing).resolves.toBe(false);
+    } finally {
+      await holding.query('rollback');
+      holding.release();
+    }
+
+    expect(llm.calls).toHaveLength(1);
     expect(await rowsOf(alice)).toEqual([]);
   });
 

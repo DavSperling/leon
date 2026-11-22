@@ -35,6 +35,7 @@ const STEPS: Record<string, string> = {
   fil: 'États des fils',
   agenda: 'Rendez-vous de la semaine',
   fiche: 'Fiches des personnes',
+  brouillon: 'Brouillons de réponse',
 };
 
 type Day = AdminStats['parJour'][number];

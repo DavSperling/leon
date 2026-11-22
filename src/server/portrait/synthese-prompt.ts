@@ -82,8 +82,8 @@ const TacheLine = z.object({
 });
 
 // Postgres refuse \u0000 et un demi-caractère (la moitié d'un emoji) dans un jsonb : l'écriture échouerait après un
-// appel payé.
-const clean = (text: string) => text.replaceAll('\u0000', '').toWellFormed().trim();
+// appel payé. Le brouillon de réponse (brouillon-prompt.ts) passe par là aussi.
+export const clean = (text: string) => text.replaceAll('\u0000', '').toWellFormed().trim();
 
 // Les lignes de la fiche que donne la réponse, dans la forme de leur genre (lines.ts) ; tout le reste est écarté sans
 // bruit (un modèle qui bavarde ne casse rien). Le premier rôle valide. Puis les tâches, dans l'ordre de la réponse,

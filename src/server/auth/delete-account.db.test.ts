@@ -252,6 +252,14 @@ describe('deleteAccount', () => {
               ($1, $3, 'rythme', '{"mailsParSemaine": 8}', 'calcul', 25, null, array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
+    // Et ses réponses aux agents proposés (0078), le oui comme le non, pas celle de Bob.
+    await adminPool.query(
+      `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'point-du-jour', true, array[$2::uuid]),
+              ($1, $2, 'relance', false, array[$2::uuid]),
+              ($1, $3, 'point-du-jour', true, array[$3::uuid])`,
+      [tenantId, alice.userId, bob.userId],
+    );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas
     // celles de Bob (C12).
     await adminPool.query(
@@ -349,6 +357,11 @@ describe('deleteAccount', () => {
       [tenantId],
     );
     expect(fiche).toEqual([{ user_id: bob.userId }]);
+    const { rows: answers } = await adminPool.query(
+      'select user_id from reponses_agent where tenant_id = $1',
+      [tenantId],
+    );
+    expect(answers).toEqual([{ user_id: bob.userId }]);
     const { rows: versions } = await adminPool.query(
       'select owner_user_id from versions_memoire where tenant_id = $1',
       [tenantId],

@@ -30,6 +30,7 @@ const DELETE_ALLOWED = [
   'versions_memoire', // seule deleteAccount les efface, avec le reste de la personne (0052)
   'lecons', // seule deleteAccount les efface, avec le reste de la personne (0066)
   'lignes_fiche', // seule deleteAccount les efface, avec le reste de la personne (0076)
+  'reponses_agent', // seule deleteAccount les efface, avec le reste de la personne (0078)
   'membres_groupe', // un administrateur retire quelqu'un d'un groupe libre (0055)
   'reporting_lines', // un administrateur détache un membre de son manager (0054)
 ];

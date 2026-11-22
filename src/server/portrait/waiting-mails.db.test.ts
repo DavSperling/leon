@@ -111,6 +111,22 @@ describe('readWaitingMails : ce qui n’attend pas', () => {
     expect(await subjects(julie)).toEqual([]);
   });
 
+  it('un mail qu’elle s’est envoyé : Outlook en garde une copie reçue, sous un autre identifiant et sans côté', async () => {
+    const [julie] = await people();
+    const note = 'Penser à rappeler le fournisseur.';
+    await mailThread(
+      julie,
+      'Note pour moi',
+      [
+        sent(ago(2 * HOUR), note, [JULIE]),
+        received(ago(2 * HOUR - 2000), note, { author: { name: 'Julie Martin', email: JULIE } }),
+      ],
+      { provider: 'outlook' },
+    );
+
+    expect(await subjects(julie)).toEqual([]);
+  });
+
   it('un mail de sept jours ou plus', async () => {
     const [julie] = await people();
     await mailThread(julie, 'Trop vieux', [received(ago(7 * DAY + HOUR), 'Où en est le devis ?')]);

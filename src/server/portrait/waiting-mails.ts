@@ -10,7 +10,8 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 // qu'il partage à l'équipe.
 //
 // Un mail attend quand il est le dernier message de son fil et qu'il :
-// - n'est pas d'elle (pas du côté de l'équipe) ;
+// - n'est pas d'elle : ni du côté de l'équipe, ni écrit d'une de ses adresses (d'un mail qu'elle s'envoie, Outlook
+//   garde une copie reçue, sans côté) ;
 // - date de moins de WAITING_DAYS jours ;
 // - lui est adressé directement : une de ses adresses est en « à », pas seulement en copie. Ses adresses sont celles
 //   d'où partent ses mails envoyés des 90 derniers jours (sentTurns) ;
@@ -90,6 +91,7 @@ export async function readWaitingMails(
         and a.last_ts >= ${since}::timestamptz and l.ts >= ${since}::timestamptz
         and l.message is not null
         and l.author_side is distinct from ${TEAM}
+        and not exists (select 1 from sent where sent.address = l.address)
         and l.recipients_to && array(select address from sent where address is not null)
         and exists (select 1 from sent where l.address = any(sent.recipients))
         and not exists (

@@ -1,10 +1,12 @@
 'use client';
 
+import { Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { type ReactNode, useRef, useState, useTransition } from 'react';
 import {
+  answerAgentAction,
   buildFicheAction,
   correctFicheLineAction,
   retireFicheLineAction,
@@ -18,6 +20,7 @@ import {
   GlassCard,
   Input,
   Notice,
+  Pill,
   Section,
   Textarea,
   Thing,
@@ -27,14 +30,17 @@ import {
 import { FICHE_MAX, linesOf } from '@/lib/fiche-view';
 import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { formatDate } from '@/lib/verre';
+import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { FicheLine } from '@/server/portrait/fiche';
+import type { Proposal } from '@/server/portrait/propositions';
 import type { FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
 
 // L'onglet « Ma fiche » des réglages : ce que Leon a compris du travail de la personne (portrait/), en mots : son rôle
 // et les tâches qu'elle refait. Chaque ligne dit d'où elle vient, se corrige et se retire. Les mesures calculées sur
 // ses mails (interlocuteurs, façon d'écrire, rythme, signature) restent enregistrées, sans s'afficher. Les gestes sont
 // ceux des leçons de l'onglet Mémoire (memoire.tsx), sans la connexion récente : la fiche n'est lue que par elle.
+// Sous ses tâches, les agents de départ que Leon lui propose : un oui ou un non par agent, rien d'autre.
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';
@@ -232,11 +238,20 @@ function Row({
   );
 }
 
-// Une partie de la fiche : son titre, et ses lignes sur une feuille. Sans ligne, elle ne se montre pas.
-function Part({ title, children }: { title: string; children: ReactNode[] }) {
+// Une partie de la fiche : son titre, une phrase sous lui si elle en a une, et ses lignes sur une feuille. Sans ligne,
+// elle ne se montre pas.
+function Part({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode[];
+}) {
   if (children.length === 0) return null;
   return (
-    <Section title={title} className="mt-0">
+    <Section title={title} description={description} className="mt-0">
       <GlassCard className="p-1.5">
         <ul aria-label={title} className="divide-y divide-line">
           {children}
@@ -286,6 +301,60 @@ function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { i
         })}
       </ul>
     </div>
+  );
+}
+
+// Un agent de départ proposé : son nom, sa phrase, « Oui » et « Non ». Le bouton enfoncé est la réponse que Leon garde
+// (aucun tant qu'elle n'a pas répondu) ; l'autre la change. Ni raison ni mesure : l'écran ne reçoit que l'agent et sa
+// réponse.
+function Agent({ agent, oui }: Proposal) {
+  const t = useTranslations('fiche');
+  const router = useRouter();
+  const [failed, setFailed] = useState(false);
+  const [answering, startAnswering] = useTransition();
+  const words = `agent-${agent}`;
+  const answer = (value: boolean) =>
+    startAnswering(async () => {
+      const result = await attempt(() => answerAgentAction({ agent, oui: value }));
+      // Un agent qui ne lui est plus proposé (un outil débranché depuis) disparaît quand la page relit la fiche.
+      const gone = 'error' in result && result.error === 'introuvable';
+      setFailed('error' in result && !gone);
+      if ('ok' in result) toast.success(t('agentSaved'));
+      if (gone) {
+        toast.error(t('agentGone'));
+        router.refresh();
+      }
+    });
+  return (
+    <li className="px-3 py-3.5">
+      {failed && (
+        <Notice tone="error" live="alert" className="mb-3">
+          {nb(t('errorFailed'))}
+        </Notice>
+      )}
+      <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
+        <p className="font-medium">{t(`agents.${agent}.name`)}</p>
+        <p className="text-fg-2">{nb(t(`agents.${agent}.text`))}</p>
+      </div>
+      <div
+        aria-busy={answering}
+        className={cn('mt-2 flex flex-wrap gap-2 transition-opacity', answering && 'opacity-60')}
+      >
+        {[true, false].map((value) => (
+          // Un état, pas une action : contour et coche, comme les familles suivies de l'écran Équipe.
+          <Pill
+            key={String(value)}
+            aria-pressed={oui === value}
+            aria-describedby={words}
+            icon={oui === value ? Check : undefined}
+            className="aria-pressed:border-fg aria-pressed:bg-sheet aria-pressed:text-fg aria-pressed:[&_svg]:text-fg"
+            onClick={() => !answering && oui !== value && answer(value)}
+          >
+            {t(value ? 'agentYes' : 'agentNo')}
+          </Pill>
+        ))}
+      </div>
+    </li>
   );
 }
 
@@ -395,6 +464,12 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
             <p className="font-medium">{line.valeur.titre}</p>
             {line.valeur.detail && <p className="text-fg-2">{line.valeur.detail}</p>}
           </Row>
+        ))}
+      </Part>
+
+      <Part title={t('agentsTitle')} description={t('agentsHint')}>
+        {data.agents.map((one) => (
+          <Agent key={one.agent} {...one} />
         ))}
       </Part>
     </div>

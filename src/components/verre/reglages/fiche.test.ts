@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { FicheLine } from '@/server/portrait/fiche';
+import type { Proposal } from '@/server/portrait/propositions';
 import type { FicheScreen } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -11,6 +12,7 @@ import { errorOf, FicheSection } from './fiche';
 // Les actions importent Better Auth : seul le dessin de l'onglet se teste ici, et la décision pure qu'il prend d'une
 // erreur. Données inventées : des sources qui n'existent pas.
 vi.mock('@/app/(app)/settings/actions', () => ({
+  answerAgentAction: vi.fn(),
   buildFicheAction: vi.fn(),
   correctFicheLineAction: vi.fn(),
   retireFicheLineAction: vi.fn(),
@@ -210,6 +212,141 @@ describe('FicheSection : la fiche en mots', () => {
       'Corrected by you on Nov 10, 2026',
     ])
       expect(shown).toContain(words);
+  });
+});
+
+describe('FicheSection : les agents proposés', () => {
+  // Trois propositions, dans l'ordre reçu : sans réponse, un oui, un non.
+  const AGENTS: Proposal[] = [
+    { agent: 'brouillon-reponse', oui: null },
+    { agent: 'relance', oui: true },
+    { agent: 'point-du-jour', oui: false },
+  ];
+  const WITH_AGENTS = { ...DATA, agents: AGENTS };
+  // La ligne d'un agent, reconnue à ses mots, jusqu'à la suivante ou la fin de la partie.
+  const agent = (html: string, id: Proposal['agent']) =>
+    html
+      .split('<li class="px-3')
+      .find((part) => part.includes(`id="agent-${id}"`))
+      ?.split('</section>')[0] ?? '';
+  // Les boutons d'une ligne et leur état : [« Oui », enfoncé ?], [« Non », enfoncé ?].
+  const buttons = (html: string) =>
+    [
+      ...html.matchAll(
+        /<button [^>]*aria-pressed="(true|false)"[^>]*>(?:<svg.*?<\/svg>)?([^<]+)</g,
+      ),
+    ].map((match) => [match[2], match[1] === 'true']);
+
+  it('sans proposition, la partie ne se montre pas', () => {
+    const shown = text(render());
+
+    expect(shown).not.toContain('Agents proposés');
+    expect(shown).not.toContain('pas encore en service');
+    expect(render()).not.toContain('aria-pressed');
+  });
+
+  it('avec des propositions, la partie vient après les tâches, et sa phrase dit vrai dans les deux langues', () => {
+    const html = render(WITH_AGENTS);
+    const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
+
+    expect(titles).toEqual(['Ma fiche', 'Rôle', 'Tâches répétées', 'Agents proposés']);
+    expect(text(html)).toContain(
+      'Ces agents ne sont pas encore en service. Répondez oui ou non à chacun : Leon garde votre réponse, et vous pouvez en changer.',
+    );
+    const english = text(render(WITH_AGENTS, 'en'));
+    expect(english).toContain('Suggested agents');
+    expect(english).toContain(
+      'These agents aren’t running yet. Answer yes or no to each: Leon keeps your answer, and you can change it.',
+    );
+  });
+
+  it('une fiche sans rôle ni tâche montre quand même ses propositions', () => {
+    const html = render({ etat: 'a-completer', lines: [], sources: {}, agents: AGENTS });
+
+    expect(html).toContain('>Agents proposés</h2>');
+    expect(html).not.toContain('>Rôle</h2>');
+  });
+
+  it('chaque agent : son nom et sa phrase, dans l’ordre reçu, et rien d’autre que « Oui » et « Non »', () => {
+    const html = render(WITH_AGENTS);
+    // Tout le texte de la ligne, sans la fin de sa balise ouvrante.
+    const words = (id: Proposal['agent']) =>
+      text(agent(html, id))
+        .replace(/^[^>]*>/, '')
+        .trim();
+
+    // Ni raison ni mesure : le nom, la phrase, les deux boutons.
+    expect(words('brouillon-reponse')).toBe(
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon dans votre boîte, écrit comme vous, jamais envoyé. Oui Non',
+    );
+    expect(words('relance')).toBe(
+      'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Oui Non',
+    );
+    expect(words('point-du-jour')).toBe(
+      'Point du jour Chaque matin, votre agenda, les mails qui attendent, vos tâches. Oui Non',
+    );
+    expect(html.indexOf('id="agent-brouillon-reponse"')).toBeLessThan(
+      html.indexOf('id="agent-relance"'),
+    );
+    expect(html.indexOf('id="agent-relance"')).toBeLessThan(
+      html.indexOf('id="agent-point-du-jour"'),
+    );
+    // Les agents qui ne lui sont pas proposés ne se montrent pas.
+    expect(text(html)).not.toMatch(/Suite de réunion|Brief avant rendez-vous/);
+  });
+
+  it('l’état des boutons montre la réponse enregistrée : aucun avant sa réponse, « Oui » ou « Non » ensuite', () => {
+    const html = render(WITH_AGENTS);
+
+    expect(buttons(agent(html, 'brouillon-reponse'))).toEqual([
+      ['Oui', false],
+      ['Non', false],
+    ]);
+    expect(buttons(agent(html, 'relance'))).toEqual([
+      ['Oui', true],
+      ['Non', false],
+    ]);
+    expect(buttons(agent(html, 'point-du-jour'))).toEqual([
+      ['Oui', false],
+      ['Non', true],
+    ]);
+    // Les deux boutons restent actifs : elle peut changer d'avis.
+    expect(agent(html, 'relance')).not.toContain('disabled');
+  });
+
+  it('relie « Oui » et « Non » aux mots de leur agent', () => {
+    const html = render(WITH_AGENTS);
+
+    for (const one of AGENTS)
+      expect(count(html, `aria-describedby="agent-${one.agent}"`), one.agent).toBe(2);
+  });
+
+  it('se dessine en anglais avec les mêmes clés, pour les cinq agents du catalogue', () => {
+    const all: Proposal[] = [
+      { agent: 'suite-reunion', oui: null },
+      { agent: 'brouillon-reponse', oui: true },
+      { agent: 'brief-rendez-vous', oui: null },
+      { agent: 'relance', oui: null },
+      { agent: 'point-du-jour', oui: false },
+    ];
+    const html = render({ ...DATA, agents: all }, 'en');
+
+    for (const words of [
+      'Meeting follow-up',
+      'Reply drafts',
+      'Pre-meeting brief',
+      'Follow-ups',
+      'Daily brief',
+      'After a recorded meeting, a summary and a draft follow-up email.',
+    ])
+      expect(text(html)).toContain(words);
+    expect(buttons(agent(html, 'brouillon-reponse'))).toEqual([
+      ['Yes', true],
+      ['No', false],
+    ]);
+    // Aucune clé de traduction ne se montre à la place d'un texte.
+    expect(text(html)).not.toMatch(/fiche\.|agents\./);
+    expect(text(render({ ...DATA, agents: all }))).not.toMatch(/fiche\.|agents\./);
   });
 });
 

@@ -22,6 +22,11 @@ vi.mock('@/server/briefing/worker', () => ({
     mocks.order.push('point');
   }),
 }));
+vi.mock('@/server/portrait/worker', () => ({
+  startFicheWorker: vi.fn(async () => {
+    mocks.order.push('fiche');
+  }),
+}));
 vi.mock('@/server/sessions/resume-worker', () => ({
   startResumeWorker: vi.fn(async () => {
     mocks.order.push('resume');
@@ -82,7 +87,7 @@ afterEach(() => {
 });
 
 describe('démarrage des tâches de fond', () => {
-  it('lance l’indexation, le point du matin, le résumé, le rangement des sessions, la liaison des sources et l’état des fils, puis la relève des connecteurs, même sans clé Anthropic', async () => {
+  it('lance l’indexation, le point du matin, la fiche, le résumé, le rangement des sessions, la liaison des sources et l’état des fils, puis la relève des connecteurs, même sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
 
     await startNodeInstrumentation();
@@ -91,6 +96,7 @@ describe('démarrage des tâches de fond', () => {
     expect(mocks.order).toEqual([
       'recherche',
       'point',
+      'fiche',
       'resume',
       'fils',
       'liens',
@@ -115,6 +121,7 @@ describe('démarrage des tâches de fond', () => {
     expect(mocks.order).toEqual([
       'recherche',
       'point',
+      'fiche',
       'resume',
       'fils',
       'liens',
@@ -128,7 +135,15 @@ describe('démarrage des tâches de fond', () => {
 
     await startNodeInstrumentation();
 
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'etats']);
+    expect(mocks.order).toEqual([
+      'recherche',
+      'point',
+      'fiche',
+      'resume',
+      'fils',
+      'liens',
+      'etats',
+    ]);
   });
 
   it("ne prévient pas de l'absence de clé Anthropic", async () => {
@@ -148,7 +163,15 @@ describe('démarrage des tâches de fond', () => {
 
     expect(startConnectorWorker).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(NO_KEY));
-    expect(mocks.order).toEqual(['recherche', 'point', 'resume', 'fils', 'liens', 'etats']);
+    expect(mocks.order).toEqual([
+      'recherche',
+      'point',
+      'fiche',
+      'resume',
+      'fils',
+      'liens',
+      'etats',
+    ]);
   });
 
   it('signale les paires OAuth incomplètes au démarrage', async () => {

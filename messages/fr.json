@@ -1096,7 +1096,35 @@
     "fieldDetail": "Détail",
     "errorNotFound": "Cette ligne n’existe plus. La fiche est rechargée.",
     "errorInvalid": "Ce n’est pas valide. Vérifiez le texte et sa longueur.",
-    "errorFailed": "Une erreur est survenue. Réessayez."
+    "errorFailed": "Une erreur est survenue. Réessayez.",
+    "agentsTitle": "Agents proposés",
+    "agentsHint": "Ces agents ne sont pas encore en service. Répondez oui ou non à chacun : Leon garde votre réponse, et vous pouvez en changer.",
+    "agentYes": "Oui",
+    "agentNo": "Non",
+    "agentSaved": "Réponse enregistrée.",
+    "agentGone": "Cet agent ne vous est plus proposé. La fiche est rechargée.",
+    "agents": {
+      "suite-reunion": {
+        "name": "Suite de réunion",
+        "text": "Après une réunion enregistrée, un résumé et un brouillon de mail de suivi."
+      },
+      "brouillon-reponse": {
+        "name": "Brouillons de réponse",
+        "text": "Quand un mail attend une réponse, un brouillon dans votre boîte, écrit comme vous, jamais envoyé."
+      },
+      "brief-rendez-vous": {
+        "name": "Brief avant rendez-vous",
+        "text": "Avant un rendez-vous, qui est en face, où en est le dossier, ce qui a été promis."
+      },
+      "relance": {
+        "name": "Relances",
+        "text": "Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance."
+      },
+      "point-du-jour": {
+        "name": "Point du jour",
+        "text": "Chaque matin, votre agenda, les mails qui attendent, vos tâches."
+      }
+    }
   },
   "security": {
     "name": "Nom",

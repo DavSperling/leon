@@ -6,7 +6,7 @@ import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
+import { extendThread, JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
 import { readWaitingMails } from './waiting-mails';
 
 vi.mock('@/server/pipeline/queue');
@@ -191,14 +191,7 @@ describe('readWaitingMails : ce qui n’attend pas', () => {
     expect(await subjects(julie)).toEqual(['Pas encore traité']);
 
     // Un nouveau message dans un fil déjà traité attend à son tour : le résultat vaut pour un message, pas pour le fil.
-    await adminPool.query(
-      `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, author_name,
-                          author_email, recipients_to, acl)
-       select tenant_id, id, 'message:relance#0123456789ab', 'participant', 'Une relance.', now(), 'connector',
-              'Léa Roy', $2, array[$3], acl
-       from sources where id = $1`,
-      [ids['Sans réponse'], LEA, JULIE],
-    );
+    await extendThread(julie, ids['Sans réponse'] ?? '', [received(ago(HOUR / 2), 'Une relance.')]);
 
     expect(await subjects(julie)).toEqual(['Sans réponse', 'Pas encore traité']);
   });

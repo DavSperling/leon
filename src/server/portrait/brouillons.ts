@@ -1,4 +1,5 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { accountIsGone } from '@/server/briefing/briefings';
 import { db } from '@/server/db/client';
@@ -7,12 +8,13 @@ import { brouillons } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
+import { epochToDate } from '@/server/search/filters-sql';
 import { EN_SERVICE } from './agents';
 import { buildBrouillonPrompt, parseBrouillonAnswer } from './brouillon-prompt';
 import { handWritten } from './facts';
 import { lockAccount, readFiche } from './fiche';
 import { readProposals } from './propositions';
-import { readSentMails, SENT_MAIL_DAYS } from './sent-mails';
+import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
 import { readWaitingMails } from './waiting-mails';
 
 // L'agent « Brouillons de réponse », le premier en service : pour chaque mail qui attend la réponse de la personne
@@ -117,4 +119,63 @@ export async function writeBrouillons(
     if (stored.length > 0 && result.texte !== null) written += 1;
   }
   return written;
+}
+
+// Ce que l'écran montre au plus : les brouillons des mails les plus récents.
+// shortcut: au-delà, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans les écarter.
+const SHOWN_MAX = 20;
+
+export type ReadyBrouillon = {
+  id: string;
+  sourceId: string;
+  // Le correspondant : son nom, à défaut son adresse.
+  from: string | null;
+  receivedAt: Date;
+  texte: string;
+};
+
+// Ses brouillons prêts, le mail le plus récent d'abord : ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé
+// depuis. Le dernier message du fil se relit à chaque affichage : dès qu'elle a répondu, ou qu'un nouveau message est
+// arrivé, le brouillon ne se montre plus.
+export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon[]> {
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<Omit<ReadyBrouillon, 'receivedAt'> & { at: string }>(sql`
+      select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
+             extract(epoch from l.ts) as at, b.texte
+      from brouillons b
+      cross join lateral (
+        select t.external_id, t.author_name, t.author_email, t.ts
+        from turns t
+        where t.tenant_id = b.tenant_id and t.source_id = b.source_id
+        order by t.ts desc, t.created_at desc, t.id desc
+        limit 1
+      ) l
+      where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
+        and b.texte is not null and b.ecarte_le is null
+        and substring(l.external_id from ${MESSAGE}) = b.message
+      order by l.ts desc, b.id
+      limit ${SHOWN_MAX}`),
+  );
+  return rows.map(({ at, ...row }) => ({ ...row, receivedAt: epochToDate(at) }));
+}
+
+// L'écarte : il ne se montre plus, et son mail reste traité (aucun autre brouillon ne lui sera écrit). Rend false s'il
+// n'est pas à la personne, ou déjà écarté.
+export async function discardBrouillon(ctx: TenantContext, id: string): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success) return false;
+  const discarded = await withTenant(ctx, (tx) =>
+    tx
+      .update(brouillons)
+      .set({ ecarteLe: sql`now()` })
+      .where(
+        and(
+          eq(brouillons.tenantId, ctx.tenantId),
+          eq(brouillons.userId, ctx.userId),
+          eq(brouillons.id, id),
+          isNull(brouillons.ecarteLe),
+        ),
+      )
+      .returning({ id: brouillons.id }),
+  );
+  return discarded.length > 0;
 }

@@ -56,6 +56,7 @@ import {
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
+import { discardBrouillon } from '@/server/portrait/brouillons';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
@@ -721,7 +722,7 @@ export async function readMemoryVersionAction(input: {
 }
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes,
-// et répond aux agents qui lui sont proposés, sous la session du navigateur. Les siennes seulement : chaque fonction
+// répond aux agents qui lui sont proposés et écarte un brouillon de réponse, sous la session du navigateur. Les siennes seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
@@ -776,6 +777,19 @@ export async function answerAgentAction(input: {
   if (!parsed.success) return { error: 'invalide' };
   if (!(await answerProposal(ctx, parsed.data.agent, parsed.data.oui)))
     return { error: 'introuvable' };
+  revalidatePath('/settings');
+  return { ok: true };
+}
+
+// « Écarter » un brouillon de réponse prêt : il ne se montre plus. Celui d'un autre, ou déjà écarté, est
+// « introuvable ». Rien n'est envoyé ni écrit dans sa boîte, ici comme ailleurs.
+export async function discardBrouillonAction(
+  id: string,
+): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await discardBrouillon(ctx, parsed.data))) return { error: 'introuvable' };
   revalidatePath('/settings');
   return { ok: true };
 }

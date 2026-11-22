@@ -19,6 +19,7 @@ import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
+import { discardBrouillon } from '@/server/portrait/brouillons';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
@@ -34,6 +35,7 @@ import {
   deleteAccountAction,
   deleteOrganizationAction,
   disableTotpAction,
+  discardBrouillonAction,
   enableTotpAction,
   readMemoryVersionAction,
   regenerateBackupCodesAction,
@@ -101,6 +103,7 @@ vi.mock('@/server/memory/memory-section', () => ({
   readMemoryVersion: vi.fn(),
   restoreMemoryVersion: vi.fn(),
 }));
+vi.mock('@/server/portrait/brouillons', () => ({ discardBrouillon: vi.fn() }));
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
 vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
 vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
@@ -1059,7 +1062,7 @@ describe('les actions de l’onglet « Ma fiche »', () => {
   const LIGNE = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c60';
 
   beforeEach(() => {
-    // Ni corriger, ni retirer, ni répondre n'exigent une connexion récente : la fiche n'est lue que par elle.
+    // Ni corriger, ni retirer, ni répondre, ni écarter n'exigent une connexion récente : la fiche n'est lue que par elle.
     vi.mocked(signedInRecently).mockResolvedValue(false);
   });
 
@@ -1171,7 +1174,29 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(answerProposal).not.toHaveBeenCalled();
   });
 
-  it('sans session du navigateur, rien ne se construit, ne se corrige, ne se retire ni ne se répond : la connexion', async () => {
+  it('écarter : son brouillon ne se montre plus ; celui d’un autre, ou déjà écarté, est introuvable', async () => {
+    vi.mocked(discardBrouillon).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ ok: true });
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
+
+    expect(vi.mocked(discardBrouillon).mock.calls).toEqual([
+      [ctx, LIGNE],
+      [ctx, LIGNE],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['pas-un-id'], [null], [{ id: LIGNE }]])(
+    'écarter %j : invalide, rien n’est écarté',
+    async (id) => {
+      await expect(discardBrouillonAction(id as never)).resolves.toEqual({ error: 'invalide' });
+      expect(discardBrouillon).not.toHaveBeenCalled();
+    },
+  );
+
+  it('sans session du navigateur, rien ne se construit, ne se corrige, ne se retire, ne se répond ni ne s’écarte : la connexion', async () => {
     vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
     await expect(buildFicheAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
@@ -1182,10 +1207,12 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     await expect(answerAgentAction({ agent: 'relance', oui: true })).rejects.toThrow(
       'NEXT_REDIRECT /sign-in',
     );
+    await expect(discardBrouillonAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
     expect(retireLine).not.toHaveBeenCalled();
     expect(answerProposal).not.toHaveBeenCalled();
+    expect(discardBrouillon).not.toHaveBeenCalled();
   });
 });

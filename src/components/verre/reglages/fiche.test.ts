@@ -64,6 +64,7 @@ const DATA: FicheScreen = {
     [UNLINKED]: { title: null, url: null, kind: 'gmail' },
   },
   agents: [],
+  brouillons: [],
 };
 
 const render = (data: FicheScreen | null = DATA, locale: 'en' | 'fr' = 'fr') =>
@@ -261,7 +262,13 @@ describe('FicheSection : les agents proposés', () => {
   });
 
   it('une fiche sans rôle ni tâche montre quand même ses propositions', () => {
-    const html = render({ etat: 'a-completer', lines: [], sources: {}, agents: AGENTS });
+    const html = render({
+      etat: 'a-completer',
+      lines: [],
+      sources: {},
+      agents: AGENTS,
+      brouillons: [],
+    });
 
     expect(html).toContain('>Agents proposés</h2>');
     expect(html).not.toContain('>Rôle</h2>');
@@ -351,7 +358,7 @@ describe('FicheSection : les agents proposés', () => {
 });
 
 describe('FicheSection : où en est la construction', () => {
-  const EMPTY = { lines: [], sources: {}, agents: [] };
+  const EMPTY = { lines: [], sources: {}, agents: [], brouillons: [] };
 
   it('sans fiche ni boîte : il en faut une, avec le lien vers les connexions, et pas de bouton', () => {
     const html = render({ etat: 'sans-boite', ...EMPTY });

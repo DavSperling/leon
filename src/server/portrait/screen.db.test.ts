@@ -56,6 +56,7 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
+      brouillons: [],
     });
 
     await seedConnection(paul, { provider: 'gmail' });
@@ -83,6 +84,7 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
+      brouillons: [],
     });
   });
 
@@ -118,6 +120,7 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
+      brouillons: [],
     });
   });
 });
@@ -138,6 +141,105 @@ describe('readFicheScreen : les agents proposés', () => {
       { agent: 'point-du-jour', oui: null },
     ]);
     expect(screen.lines.map((line) => line.genre)).toEqual(['role']);
+  });
+});
+
+describe('readFicheScreen : les brouillons prêts', () => {
+  // Un fil de courrier de la personne, son dernier message reçu de Léa, et le brouillon qui y répond.
+  async function seedBrouillon(
+    ctx: TenantContext,
+    title: string,
+    hoursAgo: number,
+    over: { texte?: string | null; ecarte?: boolean } = {},
+  ): Promise<{ sourceId: string; receivedAt: Date }> {
+    const receivedAt = new Date(Date.now() - hoursAgo * 3_600_000);
+    const { sourceId } = await seedRun(ctx, {
+      kind: 'gmail',
+      title,
+      metadata: { nature: 'fil', url: `https://mail.google.test/${hoursAgo}` },
+      turns: [
+        {
+          text: 'Bonjour Julie, et le devis ?',
+          ts: receivedAt,
+          role: 'participant',
+          authorName: 'Léa Roy',
+          authorEmail: 'lea@client.test',
+        },
+      ],
+      lastTurnAt: receivedAt,
+    });
+    // L'identifiant d'un tour de courrier, comme la relève l'écrit.
+    await adminPool.query(
+      "update turns set external_id = 'message:42#0123456789ab' where source_id = $1",
+      [sourceId],
+    );
+    await adminPool.query(
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, acl)
+       values ($1, $2, $3, 'message:42', $4, $5, array[$2::uuid])`,
+      [
+        ctx.tenantId,
+        ctx.userId,
+        sourceId,
+        over.texte === undefined ? `Brouillon pour ${title}.` : over.texte,
+        over.ecarte ? new Date() : null,
+      ],
+    );
+    return { sourceId, receivedAt };
+  }
+
+  it('l’écran reçoit, pour chacun, le correspondant, le fil lié à son outil, la date du mail reçu et le texte : rien d’autre', async () => {
+    const [julie, paul] = await people();
+    const older = await seedBrouillon(julie, 'Contrat', 5);
+    const recent = await seedBrouillon(julie, 'Devis 2027', 2);
+    await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
+    await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
+    await seedBrouillon(paul, 'Fil de Paul', 1);
+
+    const screen = await readFicheScreen(julie);
+
+    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse.
+    expect(screen.brouillons).toEqual([
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: recent.receivedAt,
+        texte: 'Brouillon pour Devis 2027.',
+        source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
+      },
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: older.receivedAt,
+        texte: 'Brouillon pour Contrat.',
+        source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
+      },
+    ]);
+    expect(JSON.stringify(screen.brouillons)).not.toMatch(/message:|lea@client\.test/);
+    expect(JSON.stringify(screen.brouillons)).not.toContain(recent.sourceId);
+    // Les fils des brouillons ne se mêlent pas aux sources des tâches.
+    expect(screen.sources).toEqual({});
+    expect((await readFicheScreen(paul)).brouillons.map((one) => one.texte)).toEqual([
+      'Brouillon pour Fil de Paul.',
+    ]);
+  });
+
+  it('un brouillon dont le fil a bougé ou a disparu ne part pas vers l’écran', async () => {
+    const [julie] = await people();
+    const moved = await seedBrouillon(julie, 'Elle a répondu', 3);
+    const gone = await seedBrouillon(julie, 'Fil supprimé', 2);
+    await seedBrouillon(julie, 'Intact', 1);
+    await adminPool.query(
+      `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, author_side, acl)
+       select tenant_id, id, 'message:43#0123456789ab', 'participant', 'Bonjour Léa.', now(), 'connector',
+              'team', acl
+       from sources where id = $1`,
+      [moved.sourceId],
+    );
+    await adminPool.query('delete from sources where id = $1', [gone.sourceId]);
+
+    const screen = await readFicheScreen(julie);
+
+    expect(screen.brouillons.map((one) => one.source.title)).toEqual(['Intact']);
   });
 });
 

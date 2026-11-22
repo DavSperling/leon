@@ -11,8 +11,13 @@ import { type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
-import { mailThread, received, sent } from '@/test/mail-threads';
-import { BROUILLONS_DAILY_CAP, writeBrouillons } from './brouillons';
+import { extendThread, mailThread, received, sent } from '@/test/mail-threads';
+import {
+  BROUILLONS_DAILY_CAP,
+  discardBrouillon,
+  readBrouillons,
+  writeBrouillons,
+} from './brouillons';
 import { buildFiche } from './fiche';
 
 vi.mock('@/server/pipeline/queue');
@@ -444,6 +449,137 @@ describe('writeBrouillons : deux passages simultanés', () => {
     const rows = await stored(julie);
     expect(rows).toHaveLength(2);
     expect(new Set(rows.map((row) => row.sourceId)).size).toBe(2);
+  });
+});
+
+describe('readBrouillons : ses brouillons prêts', () => {
+  // Le fil nommé, parmi ses sources.
+  const threadOf = async (ctx: TenantContext, title: string) => {
+    const { rows } = await adminPool.query<{ id: string }>(
+      'select id from sources where owner_user_id = $1 and title = $2',
+      [ctx.userId, title],
+    );
+    return rows[0]?.id ?? '';
+  };
+  const shown = async (ctx: TenantContext) => (await readBrouillons(ctx)).map((one) => one.texte);
+
+  it('rend chaque brouillon avec son correspondant et la date du mail reçu, le mail le plus récent d’abord', async () => {
+    const julie = await julieWaiting('Devis 2027', 'Contrat');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, {
+      llm: answering(draft('Pour le devis.'), draft('Pour le contrat.')).llm,
+    });
+
+    const ready = await readBrouillons(julie);
+
+    expect(ready).toEqual([
+      {
+        id: expect.any(String),
+        sourceId: await threadOf(julie, 'Devis 2027'),
+        from: 'Léa Roy',
+        receivedAt: expect.any(Date),
+        texte: 'Pour le devis.',
+      },
+      {
+        id: expect.any(String),
+        sourceId: await threadOf(julie, 'Contrat'),
+        from: 'Léa Roy',
+        receivedAt: expect.any(Date),
+        texte: 'Pour le contrat.',
+      },
+    ]);
+    // La date est celle du mail reçu, il y a une heure et deux heures, pas celle du brouillon.
+    const [first, second] = ready.map((one) => Date.now() - one.receivedAt.getTime());
+    expect(Math.round((first ?? 0) / HOUR)).toBe(1);
+    expect(Math.round((second ?? 0) / HOUR)).toBe(2);
+  });
+
+  it('ne montre pas un mail jugé sans réponse à donner', async () => {
+    const julie = await julieWaiting('Merci');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, { llm: answering(NONE).llm });
+
+    expect(await readBrouillons(julie)).toEqual([]);
+  });
+
+  it('un brouillon ne se montre plus dès que le fil a bougé : elle a répondu, ou un nouveau message est arrivé', async () => {
+    const julie = await julieWaiting('Répondu', 'Relancé', 'Intact');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, {
+      llm: answering(draft('Un.'), draft('Deux.'), draft('Trois.')).llm,
+    });
+    expect(await shown(julie)).toEqual(['Un.', 'Deux.', 'Trois.']);
+
+    await extendThread(julie, await threadOf(julie, 'Répondu'), [
+      sent(ago(HOUR / 2), 'Bonjour Léa,\nJe vous réponds moi-même.'),
+    ]);
+    await extendThread(julie, await threadOf(julie, 'Relancé'), [
+      received(ago(HOUR / 2), 'Julie, avez-vous vu mon message ?'),
+    ]);
+
+    expect(await shown(julie)).toEqual(['Trois.']);
+    // Les lignes restent : le premier mail de chaque fil garde son résultat.
+    expect(await stored(julie)).toHaveLength(3);
+    // La relance attend à son tour, et reçoit son propre brouillon.
+    const { llm, calls } = answering(draft('Pour la relance.'));
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+    expect(calls).toHaveLength(1);
+    expect(await shown(julie)).toEqual(['Pour la relance.', 'Trois.']);
+  });
+
+  it('ne montre que les vingt plus récents', async () => {
+    const [julie] = await team();
+    for (let hours = 1; hours <= 21; hours++) {
+      const mail = received(ago(hours * HOUR), 'Une question.');
+      const sourceId = await mailThread(julie, `Fil ${hours}`, [mail]);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, acl)
+         values ($1, $2, $3, $4, $5, array[$2::uuid])`,
+        [julie.tenantId, julie.userId, sourceId, mail.externalId, `Brouillon ${hours}`],
+      );
+    }
+
+    expect(await shown(julie)).toEqual(
+      Array.from({ length: 20 }, (_, index) => `Brouillon ${index + 1}`),
+    );
+  });
+});
+
+describe('discardBrouillon : « Écarter »', () => {
+  it('son brouillon ne se montre plus, reste en base, et son mail n’est pas redemandé au modèle', async () => {
+    const julie = await julieWaiting('Devis 2027', 'Contrat');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, { llm: answering(draft('Un.'), draft('Deux.')).llm });
+    const [first] = await readBrouillons(julie);
+
+    expect(await discardBrouillon(julie, first?.id ?? '')).toBe(true);
+
+    expect((await readBrouillons(julie)).map((one) => one.texte)).toEqual(['Deux.']);
+    const rows = await stored(julie);
+    expect(rows.find((row) => row.id === first?.id)).toMatchObject({
+      texte: 'Un.',
+      ecarteLe: expect.any(Date),
+    });
+    // Déjà écarté : rien à faire une seconde fois.
+    expect(await discardBrouillon(julie, first?.id ?? '')).toBe(false);
+    const { llm, calls } = answering(draft('Refait.'));
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('celui d’un collègue, ou un identifiant qui n’en est pas un, est introuvable', async () => {
+    const [julie, paul] = await team();
+    await ready(julie, 'Devis 2027');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, { llm: answering(draft()).llm });
+    const [hers] = await readBrouillons(julie);
+
+    expect(await discardBrouillon(paul, hers?.id ?? '')).toBe(false);
+    expect(await discardBrouillon(julie, 'pas-un-id')).toBe(false);
+    expect(await discardBrouillon(julie, crypto.randomUUID())).toBe(false);
+
+    expect(await readBrouillons(julie)).toHaveLength(1);
+    expect(await readBrouillons(paul)).toEqual([]);
   });
 });
 

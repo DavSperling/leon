@@ -78,3 +78,40 @@ export async function mailThread(
   if (!rows[0]) throw new Error('fil de test non créé');
   return rows[0].id;
 }
+
+// De nouveaux messages dans un fil déjà relevé, par la relève suivante de sa boîte.
+export async function extendThread(
+  owner: TenantContext,
+  sourceId: string,
+  messages: ConnectorTurn[],
+): Promise<void> {
+  const { rows } = await adminPool.query<{
+    kind: 'gmail' | 'outlook';
+    externalId: string;
+    title: string;
+    url: string | null;
+    connectionId: string;
+  }>(
+    `select kind, external_id as "externalId", title, metadata->>'url' as url,
+            connection_id as "connectionId"
+     from sources where id = $1`,
+    [sourceId],
+  );
+  const [thread] = rows;
+  if (!thread) throw new Error('fil de test introuvable');
+  const item = normalizeItem(
+    {
+      externalId: thread.externalId,
+      nature: 'fil',
+      title: thread.title,
+      url: thread.url,
+      updatedAt: messages.at(-1)?.ts ?? '',
+      origin: {},
+      turns: messages,
+    },
+    thread.kind,
+  );
+  if (!item) throw new Error('fil de test refusé par la normalisation');
+  const connection = { id: thread.connectionId, provider: thread.kind, createdBy: owner.userId };
+  await ingestConnectorItems(owner, connection, [item]);
+}

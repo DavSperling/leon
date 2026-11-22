@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SITES, type Site } from './exchange';
+import { REJECT_REASONS, type RejectReason, SITES, type Site } from './exchange';
 
 export const SETTINGS_KEY = 'leon.settings';
 export const STATUS_KEY = 'leon.status';
@@ -42,10 +42,23 @@ const CONNECTIONS = [
 
 const StatusSchema = z.object({
   lastCaptureAt: z.partialRecord(z.enum(SITES), z.string()).default({}),
+  // Le dernier échange non capté de chaque site : sa raison et son heure, sans aucun contenu.
+  lastRejection: z
+    .partialRecord(z.enum(SITES), z.object({ reason: z.enum(REJECT_REASONS), at: z.string() }))
+    .default({}),
   connection: z.enum(CONNECTIONS).default('unknown'),
   pending: z.number().int().default(0),
 });
 export type CaptureStatus = z.infer<typeof StatusSchema>;
+
+// Le dernier rejet d'un site, s'il est plus récent que sa dernière capture (après, la capture a repris).
+export function rejectionToShow(status: CaptureStatus, site: Site): RejectReason | null {
+  const rejection = status.lastRejection[site];
+  const capturedAt = status.lastCaptureAt[site];
+  if (!rejection) return null;
+  if (capturedAt !== undefined && Date.parse(capturedAt) >= Date.parse(rejection.at)) return null;
+  return rejection.reason;
+}
 
 // Les données viennent du stockage du navigateur : on les relit par le schéma, jamais à l'aveugle.
 export async function loadSettings(store: KeyValueStore): Promise<Settings> {

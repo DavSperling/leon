@@ -1,0 +1,83 @@
+{
+  "reglage": {
+    "modele": "claude-opus-5-5",
+    "effort": "medium",
+    "outil": "Claude Code, mode non interactif (claude -p)"
+  },
+  "suffixes": {
+    "code": "Travaille dans ce dépôt. Fais la modification, avec ses tests, et vérifie-la par `pnpm typecheck` et les tests unitaires concernés (`pnpm exec vitest run --project unit <fichiers>`). Ne lance pas les tests en base. Ne commite rien, ne pousse rien, n'utilise pas gh. Termine par un résumé de 10 lignes au plus : ce qui a changé, où, comment c'est vérifié, et ce qui reste.",
+    "question": "Ne modifie aucun fichier, ne commite rien, n'utilise pas gh. Réponds en 15 lignes au plus, en français simple, en citant les fichiers, les PR ou les commits qui le prouvent."
+  },
+  "taches": [
+    {
+      "id": "t01",
+      "nature": "code",
+      "titre": "leon note lit son texte sur l'entrée standard",
+      "consigne": "La commande `leon note` reçoit aujourd'hui le texte de la note en argument, après `--`. Un agent qui recopie un texte piégé entre guillemets doubles exposerait le shell à ce qu'il contient. Fais que `leon note` puisse lire son texte sur l'entrée standard, sans casser la forme actuelle.",
+      "bonne_reponse": "Une lecture sur l'entrée standard (texte absent ou `-`), la forme `--` gardée, le texte toujours masqué et borné, un test."
+    },
+    {
+      "id": "t02",
+      "nature": "code",
+      "titre": "le crochet de fin prévient quand Leon refuse ses envois",
+      "consigne": "Quand le serveur Leon refuse les envois du crochet de fin de session de Claude Code (un jeton refusé, par exemple), rien ne le signale à la personne : ses sessions peuvent ne jamais arriver pendant des semaines sans qu'elle le sache. Fais que la personne en soit prévenue, sans jamais afficher le jeton.",
+      "bonne_reponse": "Un avertissement visible dans une session suivante (bloc de démarrage ou sortie lue par la personne), qui ne recopie jamais le jeton ; un test."
+    },
+    {
+      "id": "t03",
+      "nature": "code",
+      "titre": "le rappel ignore les messages automatiques",
+      "consigne": "Le rappel à chaque message de Leon se déclenche aussi sur des messages que la personne n'a pas tapés : des messages automatiques injectés dans la conversation (notifications de tâche, événements d'une application). Il cite alors des fils sans rapport. Fais qu'il ne se déclenche que sur un message tapé par la personne.",
+      "bonne_reponse": "La liste des balises injectées que la capture connaît déjà est réutilisée (pas une liste recopiée), un message fait seulement d'un bloc injecté ne déclenche rien ; un test."
+    },
+    {
+      "id": "t04",
+      "nature": "code",
+      "titre": "l'import lit la configuration MCP",
+      "consigne": "`leon import-claude-code` ne lit pas la configuration MCP de Claude Code : une session importée qui n'a appelé que les outils de lecture du serveur MCP de Leon reste marquée externe, alors que le crochet de fin, lui, la reconnaît. Corrige l'import.",
+      "bonne_reponse": "La même lecture que le crochet (`leon-mcp.ts`), pour chaque session importée selon son dossier ; le raccourci noté dans le code retiré ; un test."
+    },
+    {
+      "id": "t05",
+      "nature": "code",
+      "titre": "les textes d'accord disent qu'un administrateur peut se nommer manager",
+      "consigne": "Depuis la #205, un administrateur peut se nommer manager d'un membre, et lire alors ce qu'un manager lit. Les textes d'accord que la CLI montre à l'installation ne le disent pas encore. Mets-les à jour, ainsi que les textes du site qui les reprennent.",
+      "bonne_reponse": "Les phrases sur qui lit, à jour dans les textes de la CLI et du site (anglais et français), et les tests qui figent ces textes mis à jour."
+    },
+    {
+      "id": "t06",
+      "nature": "code",
+      "titre": "témoin : un test d'adresse SSH à port inhabituel",
+      "consigne": "Ajoute un test à la lecture des adresses GitHub du remote (`src/cli/project-key.ts`) pour une adresse SSH avec un port inhabituel, `ssh://git@github.com:2222/acme/leon.git`, et dis si le comportement actuel est le bon.",
+      "bonne_reponse": "Un test qui attend `github.com/acme/leon`, et une phrase juste sur le comportement (le port est ignoré)."
+    },
+    {
+      "id": "t07",
+      "nature": "question",
+      "titre": "pourquoi 300 sessions importées ont perdu leur dépôt",
+      "consigne": "Le 19/11, l'import des sessions Claude Code d'un utilisateur a rangé environ 300 sessions sur 400 sous une clé de dossier anonyme, hors de leur dépôt. Pourquoi, et qu'est-ce que la correction qui a suivi a changé ? Donne aussi ses limites.",
+      "bonne_reponse": "Des worktrees supprimés que git ne lit plus ; le repli vers le clone limité aux dossiers absents ; la racine des faits ; le rangement qui fond l'ancien fil ; les limites (autre dépôt sous .claude/worktrees, session sans clé)."
+    },
+    {
+      "id": "t08",
+      "nature": "question",
+      "titre": "qui lit les coulisses et les notes",
+      "consigne": "Dans Leon, qui peut lire les coulisses (raisonnement, sous-agents, appels d'outils) et les notes d'un membre, par quel chemin (site, MCP, CLI), et où ces règles sont-elles décidées ?",
+      "bonne_reponse": "L'auteur partout ; ses managers en remontant, sur le site seulement, sous les deux interrupteurs de 0057 ; ni le MCP ni la CLI pour eux ; décisions d'Amos du 12/11 (lot 14), #205."
+    },
+    {
+      "id": "t09",
+      "nature": "question",
+      "titre": "vérifier une migration en prod sans Railway",
+      "consigne": "Comment vérifier qu'une migration de base de données de Leon est bien passée en production, et suivre un déploiement, sans accès au compte Railway ?",
+      "bonne_reponse": "Les déploiements GitHub et leurs statuts (in_progress puis success), puis la table `leon_migrations` lue en lecture seule."
+    },
+    {
+      "id": "t10",
+      "nature": "question",
+      "titre": "les prochaines étapes du lot 15",
+      "consigne": "Quelles sont les prochaines étapes du lot 15 de la mémoire de Leon, dans l'ordre, et qu'est-ce qui a changé dans son plan depuis le 17/11 ?",
+      "bonne_reponse": "T58 avec `suite`, T59, les six règles de T60, le lien `lecon_id` de T61, T62 refaite avec le même modèle ; après le lot 11."
+    }
+  ]
+}

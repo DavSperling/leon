@@ -5,9 +5,11 @@ import { loadSettings, type Settings, saveSettings } from './settings';
 
 const SiteSchema = z.enum(SITES);
 
-// Le site d'un élément `data-site` ou `data-last` du HTML.
+// Le site d'un élément `data-site`, `data-last` ou `data-rejection` du HTML.
 export function siteOf(element: HTMLElement): Site {
-  return SiteSchema.parse(element.dataset.site ?? element.dataset.last);
+  return SiteSchema.parse(
+    element.dataset.site ?? element.dataset.last ?? element.dataset.rejection,
+  );
 }
 
 // Interrupteurs `<input type="checkbox" data-site="claude_ai">` partagés par le popup et les options.

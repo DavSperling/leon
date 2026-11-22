@@ -59,9 +59,11 @@ describe('claudeAiParser.parse', () => {
       .replaceAll('"type":"thinking_delta","thinking"', '"type":"text_delta","text"')
       .replaceAll('"type":"input_json_delta","partial_json"', '"type":"text_delta","text"');
     const exchange = await claudeAiParser.parse({ url, requestBody, sseText: disguised, now });
-    expect(exchange?.assistant.text).toBe(
-      'Passer à soixante jours pèse sur votre trésorerie. Proposez quarante-cinq jours.',
-    );
+    expect(exchange).toMatchObject({
+      assistant: {
+        text: 'Passer à soixante jours pèse sur votre trésorerie. Proposez quarante-cinq jours.',
+      },
+    });
   });
 
   it("dérive l'id utilisateur quand le corps n'en porte pas", async () => {
@@ -73,32 +75,45 @@ describe('claudeAiParser.parse', () => {
       sseText,
       now,
     });
-    expect(exchange?.user.messageId).toBe(
-      await deriveMessageId('u', [CONV, body.parent_message_uuid, body.prompt]),
-    );
+    expect(exchange).toMatchObject({
+      user: {
+        messageId: await deriveMessageId('u', [CONV, body.parent_message_uuid, body.prompt]),
+      },
+    });
   });
 
   it("prend message.id quand message_start n'a pas d'uuid", async () => {
     const withoutUuid = sseText.replace('"uuid":"7c1d2e3f-0000-4000-8000-00000000a003",', '');
     const exchange = await claudeAiParser.parse({ url, requestBody, sseText: withoutUuid, now });
-    expect(exchange?.assistant.messageId).toBe('chatcompl_01AbCdEf');
+    expect(exchange).toMatchObject({ assistant: { messageId: 'chatcompl_01AbCdEf' } });
   });
 
-  it('renvoie null pour un flux interrompu', async () => {
+  it('rejette comme incomplet un flux interrompu', async () => {
     const interrupted = fixture('claude-ai-interrompu.sse');
-    expect(await claudeAiParser.parse({ url, requestBody, sseText: interrupted, now })).toBeNull();
+    expect(await claudeAiParser.parse({ url, requestBody, sseText: interrupted, now })).toEqual({
+      rejected: 'incomplet',
+    });
   });
 
   it.each([
     ['sans prompt', JSON.stringify({ parent_message_uuid: 'p' })],
     ['illisible', '{pas du json'],
     ['absent', null],
-  ])('renvoie null pour un corps %s', async (_label, body) => {
-    expect(await claudeAiParser.parse({ url, requestBody: body, sseText, now })).toBeNull();
+  ])('rejette comme format un corps %s', async (_label, body) => {
+    expect(await claudeAiParser.parse({ url, requestBody: body, sseText, now })).toEqual({
+      rejected: 'format',
+    });
   });
 
-  it('renvoie null sans texte de réponse', async () => {
-    const empty = sseText.replaceAll('"type":"text_delta"', '"type":"citation_delta"');
-    expect(await claudeAiParser.parse({ url, requestBody, sseText: empty, now })).toBeNull();
+  it.each([
+    ['sans texte de réponse', sseText.replaceAll('"type":"text_delta"', '"type":"citation_delta"')],
+    [
+      'sans identifiant de réponse',
+      sseText.replace('"id":"chatcompl_01AbCdEf",', '').replace(/"uuid":"[^"]+",/, ''),
+    ],
+  ])('rejette comme format un flux terminé %s', async (_label, finished) => {
+    expect(await claudeAiParser.parse({ url, requestBody, sseText: finished, now })).toEqual({
+      rejected: 'format',
+    });
   });
 });

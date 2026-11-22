@@ -155,52 +155,75 @@ const PERIODS_EN: Array<{ value: string; label: string }> = [
   { value: '12mo', label: 'Last 12 months' },
 ];
 
-// Ce que `parseQuery` lit dans la valeur d'un `type:` (la date ne compte pas pour lui).
-const typeFilters = (value: string) => parseQuery(`type:"${value}"`, new Date()).filters;
+// Ce que `parseQuery` lit dans un filtre d'une seule valeur.
+const filtersOf = (key: CanonicalKey, value: string, now: Date) =>
+  parseQuery(`${key}:"${value}"`, now).filters;
 
-// La nature ou le rôle d'un `type:`, quel que soit le nom écrit : leurs identifiants ne se croisent pas.
-function typeId(value: string): string | undefined {
-  const { natures, roles } = typeFilters(value);
-  return natures?.[0] ?? roles?.[0];
+// Le sens d'un `outil:` ou d'un `type:`, quel que soit le nom écrit : les identifiants d'outil, de nature et de rôle ne
+// se croisent pas.
+function meaning(key: CanonicalKey, value: string, now: Date): string | undefined {
+  const { tools, natures, roles } = filtersOf(key, value, now);
+  return tools?.[0] ?? natures?.[0] ?? roles?.[0];
 }
 
-// La requête sans ses `type:` dont la valeur vérifie `test`.
-function withoutTypes(q: string, test: (value: string) => boolean): string {
+// La requête sans ses filtres de cette clé dont la valeur vérifie `test`.
+function withoutKind(q: string, key: CanonicalKey, test: (value: string) => boolean): string {
   return filterTokens(q)
-    .filter((token) => canonicalKey(token.key) === 'type' && test(token.value))
+    .filter((token) => canonicalKey(token.key) === key && test(token.value))
     .reduce((rest, token) => withoutFilter(rest, token.key, token.value), q);
 }
 
 // Choisir une entrée déjà cochée la retire : l'adresse de chaque entrée est celle de la recherche après le clic. Une
-// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser). Pour
-// `type:`, c'est le sens qui compte, pas le mot : `type:"tool call"` coche « Appels d’outils » sur le site français, et
-// décocher retire le filtre sous tous ses noms.
-function option(q: string, key: FilterKey, value: string, label: string, base = q): FilterOption {
-  const type = canonicalKey(key) === 'type' ? typeId(value) : undefined;
-  const removed = type
-    ? withoutTypes(q, (written) => typeId(written) === type)
-    : withoutFilter(q, key, value);
-  // Un filtre présent se retire toujours : la requête change.
-  const active = removed !== q;
+// entrée non cochée s'ajoute à `base` (la requête, ou la requête sans les filtres qu'elle ne peut pas croiser). C'est le
+// sens qui compte, pas le mot : `type:"tool call"` coche « Appels d’outils » sur le site français, `outil:note` coche
+// « Note », et décocher retire le filtre sous tous ses noms. La période n'a qu'une valeur : elle est cochée si c'est la
+// date que la recherche retient (la dernière valide), et cocher ou décocher retire toutes les périodes.
+function option(
+  q: string,
+  key: FilterKey,
+  value: string,
+  label: string,
+  now: Date,
+  base = q,
+): FilterOption {
+  const kind = canonicalKey(key);
+  const single = kind === 'depuis';
+  const sense = meaning(kind, value, now);
+  const removed = withoutKind(
+    q,
+    kind,
+    (written) => single || meaning(kind, written, now) === sense,
+  );
+  const active = single
+    ? parseQuery(q, now).filters.since?.getTime() === filtersOf(kind, value, now).since?.getTime()
+    : removed !== q;
   return {
     label,
     active,
-    href: searchHref({ q: active ? removed : withFilter(base, key, value) }),
+    href: searchHref({ q: active ? removed : withFilter(single ? removed : base, key, value) }),
   };
 }
 
 // En anglais, les menus écrivent les filtres anglais (`tool:github`, `type:meeting`, `since:7d`).
-export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
+export function buildMenus(q: string, locale = 'fr', now = new Date()): FilterMenuModel[] {
   const en = locale === 'en';
   // Une nature et les appels d'outils se croisent (un ticket n'a jamais d'appels) : chaque entrée retire l'autre sorte.
-  const noRoles = withoutTypes(q, (value) => typeFilters(value).roles !== undefined);
-  const noNatures = withoutTypes(q, (value) => typeFilters(value).natures !== undefined);
+  const noRoles = withoutKind(
+    q,
+    'type',
+    (value) => filtersOf('type', value, now).roles !== undefined,
+  );
+  const noNatures = withoutKind(
+    q,
+    'type',
+    (value) => filtersOf('type', value, now).natures !== undefined,
+  );
   return [
     {
       name: 'outil',
       label: en ? 'Tool' : 'Outil',
       options: toolOptions().map((tool) =>
-        option(q, en ? 'tool' : 'outil', tool.value, tool.label),
+        option(q, en ? 'tool' : 'outil', tool.value, tool.label, now),
       ),
     },
     {
@@ -214,9 +237,10 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
                 'type',
                 NATURE_LABELS_EN[nature].toLowerCase(),
                 NATURE_LABELS_EN[nature],
+                now,
                 noRoles,
               )
-            : option(q, 'type', nature, NATURE_LABELS[nature], noRoles),
+            : option(q, 'type', nature, NATURE_LABELS[nature], now, noRoles),
         ),
         en
           ? option(
@@ -224,16 +248,17 @@ export function buildMenus(q: string, locale = 'fr'): FilterMenuModel[] {
               'type',
               BACKSTAGE_ROLE_NAMES_EN.appel_outil,
               ROLE_LABELS_EN.appel_outil,
+              now,
               noNatures,
             )
-          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil, noNatures),
+          : option(q, 'type', 'appel_outil', ROLE_LABELS.appel_outil, now, noNatures),
       ],
     },
     {
       name: 'periode',
       label: en ? 'Date' : 'Période',
       options: (en ? PERIODS_EN : PERIODS).map((period) =>
-        option(q, en ? 'since' : 'depuis', period.value, period.label),
+        option(q, en ? 'since' : 'depuis', period.value, period.label, now),
       ),
     },
   ];
@@ -272,7 +297,7 @@ export function SearchFilters({ q, now }: { q: string; now: Date }) {
           </Tooltip>
         );
       })}
-      {buildMenus(q, locale).map((menu) => (
+      {buildMenus(q, locale, now).map((menu) => (
         <FilterMenu key={menu.name} name={menu.name} label={menu.label} options={menu.options} />
       ))}
       <FilterPerson query={q} locale={locale} />

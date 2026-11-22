@@ -1,0 +1,41 @@
+event: delta_encoding
+data: "v1"
+
+data: {"type": "resume_conversation_token", "kind": "topic", "token": "jeton-invente-0000-ce-n-est-pas-un-vrai-jeton", "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de"}
+
+data: {"type": "input_message", "input_message": {"id": "6a1b2c3d-0000-4000-8000-0000000000e1", "author": {"role": "user", "name": null, "metadata": {}}, "create_time": 1795600000.123, "update_time": null, "content": {"content_type": "text", "parts": ["Délais"]}, "status": "finished_successfully", "end_turn": null, "weight": 1.0, "metadata": {}, "recipient": "all", "channel": null}, "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de"}
+
+data: {"type": "ads"}
+
+event: delta
+data: {"p": "", "o": "add", "v": {"message": {"id": "6a1b2c3d-0000-4000-8000-0000000000e2", "author": {"role": "assistant", "name": null, "metadata": {}}, "content": {"content_type": "model_editable_context", "model_set_context": ""}, "status": "finished_successfully", "end_turn": null, "metadata": {"is_visually_hidden_from_conversation": true}, "recipient": "all", "channel": null}, "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "error": null, "error_code": null}, "c": 0}
+
+event: delta
+data: {"v": {"message": {"id": "6a1b2c3d-0000-4000-8000-0000000000e3", "author": {"role": "system", "name": null, "metadata": {}}, "content": {"content_type": "text", "parts": [""]}, "status": "finished_successfully", "metadata": {"is_visually_hidden_from_conversation": true}, "recipient": "all", "channel": null}, "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "error": null, "error_code": null}, "c": 1}
+
+event: delta
+data: {"v": {"message": {"id": "6a1b2c3d-0000-4000-8000-0000000000e4", "author": {"role": "assistant", "name": null, "metadata": {}}, "create_time": 1795600001.5, "content": {"content_type": "text", "parts": [""]}, "status": "in_progress", "end_turn": false, "metadata": {"parent_id": "6a1b2c3d-0000-4000-8000-0000000000e3", "is_visually_hidden_from_conversation": true}, "recipient": "all", "channel": "final"}, "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "error": null, "error_code": null}, "c": 2}
+
+data: {"type": "message_marker", "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "message_id": "6a1b2c3d-0000-4000-8000-0000000000e4", "marker": "user_visible_token", "event": "first"}
+
+data: {"type": "message_marker", "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "message_id": "6a1b2c3d-0000-4000-8000-0000000000e4", "marker": "final_channel_token", "event": "first"}
+
+event: delta
+data: {"o": "patch", "v": [{"p": "/message/content/parts/0", "o": "append", "v": "Comptez dix jours, pas moins."}, {"p": "/message/end_turn", "o": "replace", "v": null}, {"p": "/message/metadata/is_visually_hidden_from_conversation", "o": "remove"}, {"p": "/message/metadata", "o": "append", "v": {"citations": [], "content_references": []}}]}
+
+event: delta
+data: {"v": [{"p": "/message/status", "o": "replace", "v": "finished_successfully"}, {"p": "/message/end_turn", "o": "replace", "v": true}, {"p": "/message/metadata", "o": "append", "v": {"is_complete": true, "finish_details": {"type": "stop", "stop_tokens": [200002]}}}]}
+
+data: {"type": "message_marker", "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de", "message_id": "6a1b2c3d-0000-4000-8000-0000000000e4", "marker": "last_token", "event": "last"}
+
+event: delta
+data: {"p": "/message/metadata/conversation_followup_suggestions_eligible", "o": "replace", "v": true}
+
+data: {"type": "server_ste_metadata", "metadata": {"tool_invoked": false, "turn_use_case": "text"}}
+
+data: {"type": "message_stream_complete", "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de"}
+
+data: {"type": "conversation_detail_metadata", "banner_info": null, "conversation_id": "6a1b2c3d-0000-4000-8000-00000000c0de"}
+
+data: [DONE]
+

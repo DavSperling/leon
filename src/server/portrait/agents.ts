@@ -6,7 +6,7 @@ import type { FicheLine } from './fiche';
 // Le catalogue des agents de départ : cinq, dans l'ordre du relevé qui les a choisis
 // (docs/etudes/agents-2026-11/agents-a-copier). Pas une galerie, et personne ne crée le sien. L'identifiant est stable :
 // c'est lui que la base garde avec la réponse de la personne (0078). Le nom et la phrase de chacun sont des textes de
-// l'écran (messages, fiche.agents). Aucun agent ne tourne encore. Module pur : le schéma de la base le lit.
+// l'écran (messages, fiche.agents). Module pur : le schéma de la base le lit.
 export const AGENTS = [
   'suite-reunion',
   'brouillon-reponse',
@@ -15,6 +15,10 @@ export const AGENTS = [
   'point-du-jour',
 ] as const;
 export type AgentId = (typeof AGENTS)[number];
+
+// Le seul agent en service : il prépare des brouillons (brouillons.ts) pour qui lui a répondu oui. Les quatre autres se
+// proposent sans tourner encore.
+export const EN_SERVICE = 'brouillon-reponse' satisfies AgentId;
 
 const MAILBOXES: ProviderId[] = ['gmail', 'outlook'];
 

@@ -3,12 +3,13 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { listConnections } from '@/server/connectors/connections';
 import { reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
-import { type AgentId, proposeAgents } from './agents';
+import { type AgentId, EN_SERVICE, proposeAgents } from './agents';
+import { requestBrouillons } from './brouillons-queue';
 import { type FicheLine, lockAccount, readFiche } from './fiche';
 
 // Les agents de départ proposés à une personne, et sa réponse à chacun. La proposition se calcule à chaque lecture
-// (agents.ts), sous ses droits ; seule sa réponse, oui ou non, s'enregistre (0078). Rien d'autre ne lit ses réponses,
-// et aucun agent ne tourne encore.
+// (agents.ts), sous ses droits ; seule sa réponse, oui ou non, s'enregistre (0078). Seul l'agent en service la lit :
+// « Brouillons de réponse » ne travaille que pour qui lui a dit oui (brouillons.ts).
 
 // `oui` : la réponse enregistrée ; null tant qu'elle n'a pas répondu.
 export type Proposal = { agent: AgentId; oui: boolean | null };
@@ -40,7 +41,8 @@ export async function readProposals(ctx: TenantContext, lines: FicheLine[]): Pro
 }
 
 // Sa réponse à un agent, oui ou non : elle remplace la précédente. Rend false, sans rien écrire, pour un agent hors
-// du catalogue ou qui ne lui est pas proposé à ce moment-là, et pour un compte supprimé (lockAccount).
+// du catalogue ou qui ne lui est pas proposé à ce moment-là, et pour un compte supprimé (lockAccount). Son « oui » à
+// l'agent en service lui demande un premier passage.
 export async function answerProposal(
   ctx: TenantContext,
   agent: string,
@@ -48,7 +50,7 @@ export async function answerProposal(
 ): Promise<boolean> {
   const proposed = (await proposedTo(ctx, await readFiche(ctx))).find((one) => one === agent);
   if (!proposed) return false;
-  return withTenant(ctx, async (tx) => {
+  const saved = await withTenant(ctx, async (tx) => {
     if (!(await lockAccount(tx, ctx))) return false;
     await tx
       .insert(reponsesAgent)
@@ -65,4 +67,6 @@ export async function answerProposal(
       });
     return true;
   });
+  if (saved && oui && proposed === EN_SERVICE) await requestBrouillons(ctx);
+  return saved;
 }

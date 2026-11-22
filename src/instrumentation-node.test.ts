@@ -27,6 +27,11 @@ vi.mock('@/server/portrait/worker', () => ({
     mocks.order.push('fiche');
   }),
 }));
+vi.mock('@/server/portrait/brouillons-worker', () => ({
+  startBrouillonsWorker: vi.fn(async () => {
+    mocks.order.push('brouillons');
+  }),
+}));
 vi.mock('@/server/sessions/resume-worker', () => ({
   startResumeWorker: vi.fn(async () => {
     mocks.order.push('resume');
@@ -87,7 +92,7 @@ afterEach(() => {
 });
 
 describe('démarrage des tâches de fond', () => {
-  it('lance l’indexation, le point du matin, la fiche, le résumé, le rangement des sessions, la liaison des sources et l’état des fils, puis la relève des connecteurs, même sans clé Anthropic', async () => {
+  it('lance l’indexation, le point du matin, la fiche, les brouillons, le résumé, le rangement des sessions, la liaison des sources et l’état des fils, puis la relève des connecteurs, même sans clé Anthropic', async () => {
     mocks.env.LEON_CONNECTORS_KEY = 'cle-de-test';
 
     await startNodeInstrumentation();
@@ -97,6 +102,7 @@ describe('démarrage des tâches de fond', () => {
       'recherche',
       'point',
       'fiche',
+      'brouillons',
       'resume',
       'fils',
       'liens',
@@ -122,6 +128,7 @@ describe('démarrage des tâches de fond', () => {
       'recherche',
       'point',
       'fiche',
+      'brouillons',
       'resume',
       'fils',
       'liens',
@@ -139,6 +146,7 @@ describe('démarrage des tâches de fond', () => {
       'recherche',
       'point',
       'fiche',
+      'brouillons',
       'resume',
       'fils',
       'liens',
@@ -167,6 +175,7 @@ describe('démarrage des tâches de fond', () => {
       'recherche',
       'point',
       'fiche',
+      'brouillons',
       'resume',
       'fils',
       'liens',

@@ -7,6 +7,8 @@ import { depotsEquipe } from '@/server/db/schema/connections';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError, safeErrorSummary } from '@/server/log';
 import { getBoss } from '@/server/pipeline/queue';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
+import { MAIL_KINDS } from '@/server/portrait/sent-mails';
 import {
   claimConnection,
   finishSync,
@@ -249,6 +251,9 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   if (again === 'lost') return 'skipped';
   await rememberAccountKey(ctx, fresh, deps, ready);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
+  // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
+  // réponse » pour qui l'a branchée, si elle lui a dit oui.
+  if (MAIL_KINDS.some((kind) => kind === connection.provider)) await requestBrouillons(ctx);
   return 'ok';
 }
 

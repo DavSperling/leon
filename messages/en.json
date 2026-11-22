@@ -1103,6 +1103,12 @@
     "agentNo": "No",
     "agentSaved": "Answer saved.",
     "agentGone": "This agent is no longer suggested to you. The profile was reloaded.",
+    "draftsTitle": "Drafts ready",
+    "draftsHint": "Nothing is sent or written to your mailbox: copy a draft into your reply, then review it.",
+    "draftReceived": "Received on {date}",
+    "discard": "Dismiss",
+    "discarded": "Draft dismissed.",
+    "draftGone": "This draft no longer exists. The profile was reloaded.",
     "agents": {
       "suite-reunion": {
         "name": "Meeting follow-up",

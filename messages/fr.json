@@ -1103,6 +1103,12 @@
     "agentNo": "Non",
     "agentSaved": "Réponse enregistrée.",
     "agentGone": "Cet agent ne vous est plus proposé. La fiche est rechargée.",
+    "draftsTitle": "Brouillons prêts",
+    "draftsHint": "Rien n’est envoyé ni écrit dans votre boîte : copiez un brouillon dans votre réponse, puis relisez-le.",
+    "draftReceived": "Reçu le {date}",
+    "discard": "Écarter",
+    "discarded": "Brouillon écarté.",
+    "draftGone": "Ce brouillon n’existe plus. La fiche est rechargée.",
     "agents": {
       "suite-reunion": {
         "name": "Suite de réunion",

@@ -1,5 +1,6 @@
 import type { ProviderId } from '@/capture/turn';
 import { linesOf } from '@/lib/fiche-view';
+import { PROVIDER_FAMILIES } from '@/lib/providers';
 import type { FicheLine } from './fiche';
 
 // Le catalogue des agents de départ : cinq, dans l'ordre du relevé qui les a choisis
@@ -15,17 +16,6 @@ export const AGENTS = [
 ] as const;
 export type AgentId = (typeof AGENTS)[number];
 
-// Les enregistreurs de réunion que Leon relève.
-const RECORDERS: ProviderId[] = [
-  'granola',
-  'fathom',
-  'fireflies',
-  'tldv',
-  'circleback',
-  'claap',
-  'leexi',
-  'gong',
-];
 const MAILBOXES: ProviderId[] = ['gmail', 'outlook'];
 
 // Les agents à proposer à une personne, dans l'ordre du catalogue. Une fonction pure, comme computeFacts : `tools` sont
@@ -33,10 +23,10 @@ const MAILBOXES: ProviderId[] = ['gmail', 'outlook'];
 // appelé. Sans fiche, aucune proposition.
 export function proposeAgents(tools: readonly ProviderId[], lines: FicheLine[]): AgentId[] {
   if (lines.length === 0) return [];
-  const has = (among: ProviderId[]) => tools.some((tool) => among.includes(tool));
-  const mailbox = has(MAILBOXES);
+  const mailbox = tools.some((tool) => MAILBOXES.includes(tool));
   const proposed: Record<AgentId, boolean> = {
-    'suite-reunion': has(RECORDERS),
+    // Un enregistreur de réunion : la famille « reunions » des outils, la liste que le dépôt tient déjà.
+    'suite-reunion': tools.some((tool) => PROVIDER_FAMILIES[tool] === 'reunions'),
     // Sa fiche montre qu'elle répond à des mails : au moins une réponse, tous destinataires confondus.
     'brouillon-reponse':
       mailbox && linesOf(lines, 'delai-reponse').some((line) => line.valeur.tous.reponses > 0),

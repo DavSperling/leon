@@ -11,8 +11,8 @@ import { type FicheLine, readFiche, retireLine } from './fiche';
 import { getFicheBoss } from './queue';
 import { readFicheScreen } from './screen';
 
-// La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : où en est sa construction, et les
-// sources de ses tâches qu'elle voit encore. Aucune construction n'est demandée ici : la file est lue, vide (l'état
+// La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
+// sa construction, et les sources de ses tâches qu'elle voit encore. Aucune construction n'est demandée ici : la file est lue, vide (l'état
 // « en cours » se teste avec elle, queue.db.test.ts). Données inventées : Julie et Paul dans une organisation, Zoé dans
 // une autre.
 
@@ -68,14 +68,20 @@ describe('readFicheScreen : où en est la fiche', () => {
     },
   );
 
-  it('des lignes calculées sans rôle ni tâche : la fiche se montre, et reste à compléter', async () => {
+  it('des mesures calculées sans rôle ni tâche : la fiche reste à compléter, et les mesures ne partent pas vers l’écran', async () => {
     const [julie] = await people();
     await seedLine(julie, RYTHME);
 
-    const screen = await readFicheScreen(julie);
+    expect(await readFicheScreen(julie)).toEqual({ etat: 'a-completer', lines: [], sources: {} });
+  });
 
-    expect(screen.etat).toBe('a-completer');
-    expect(screen.lines.map((line) => line.genre)).toEqual(['rythme']);
+  it('l’écran ne reçoit que son rôle et ses tâches : les mesures restent en base', async () => {
+    const [julie] = await people();
+    await seedLine(julie, RYTHME);
+    await seedLine(julie, ROLE);
+
+    expect((await readFicheScreen(julie)).lines.map((line) => line.genre)).toEqual(['role']);
+    expect((await readFiche(julie)).map((line) => line.genre).sort()).toEqual(['role', 'rythme']);
   });
 
   it('une fois le rôle écrit, même retiré depuis, la fiche est faite', async () => {
@@ -88,9 +94,7 @@ describe('readFicheScreen : où en est la fiche', () => {
     const role = (await readFiche(julie)).find((line) => line.genre === 'role');
     await retireLine(julie, role?.id ?? '');
 
-    const screen = await readFicheScreen(julie);
-    expect(screen.etat).toBe('faite');
-    expect(screen.lines.map((line) => line.genre)).toEqual(['rythme']);
+    expect(await readFicheScreen(julie)).toEqual({ etat: 'faite', lines: [], sources: {} });
   });
 
   it('la fiche d’un collègue ne change rien à la sienne', async () => {

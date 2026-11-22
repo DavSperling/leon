@@ -10,8 +10,8 @@ import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './que
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 
-// La fiche pour l'écran « Ma fiche » des réglages : ses lignes, où en est sa construction, et les sources de ses
-// tâches. Tout se lit sous les droits de la personne, et rien d'autre ne lit sa fiche.
+// La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, et les sources
+// de ses tâches. Tout se lit sous les droits de la personne, et rien d'autre ne lit sa fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -31,6 +31,7 @@ export type FicheEtat =
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 export type FicheScreen = {
   etat: FicheEtat;
+  // Son rôle et ses tâches seulement.
   lines: FicheLine[];
   // Les sources des tâches que la personne voit encore, par identifiant.
   sources: Record<string, FicheSource>;
@@ -61,12 +62,11 @@ async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat>
 // plus, n'est pas rendue, et l'écran ne la compte ni ne la montre. 8 tâches de 20 sources au plus : sous la borne de
 // briefingSources (200).
 export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> {
-  const lines = await readFiche(ctx);
+  const all = await readFiche(ctx);
+  // L'écran ne montre que son rôle et ses tâches : les mesures calculées sur ses mails restent en base.
+  const lines = all.filter((line) => line.genre === 'role' || line.genre === 'tache');
   const ids = [...new Set(linesOf(lines, 'tache').flatMap((line) => line.valeur.sources))];
-  const [etat, seen] = await Promise.all([
-    etatOf(ctx, lines.length > 0),
-    briefingSources(ctx, ids),
-  ]);
+  const [etat, seen] = await Promise.all([etatOf(ctx, all.length > 0), briefingSources(ctx, ids)]);
   const sources = Object.fromEntries(
     seen.map(({ sourceId, title, url, kind }) => [sourceId, { title, url, kind }]),
   );

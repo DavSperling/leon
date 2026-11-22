@@ -334,6 +334,8 @@ describe('FicheSection : où en est la construction', () => {
 
     expect(html).toMatch(/<button [^>]*>(<[^>]+>)*Construire ma fiche/);
     expect(html).not.toContain('href="/connections"');
+    // La fiche ne se refait pas : une boîte tout juste branchée doit d'abord être lue.
+    expect(text(html)).toContain('laissez d’abord à Leon le temps de la lire');
   });
 
   it('construction demandée ou en cours : l’écran le dit, annoncé, sans bouton pour la relancer', () => {

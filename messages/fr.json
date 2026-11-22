@@ -1069,7 +1069,7 @@
     "noFiche": "Vous n’avez pas encore de fiche.",
     "noMailbox": "Leon la construit d’après vos mails envoyés. Branchez d’abord votre boîte Gmail ou Outlook.",
     "openConnections": "Ouvrir les connexions",
-    "buildHint": "Leon lit une fois vos mails envoyés des trois derniers mois et vos outils, puis vous montre ce qu’il en retient. Comptez quelques minutes.",
+    "buildHint": "Leon lit une fois vos mails envoyés des trois derniers mois et vos outils, puis vous montre ce qu’il en retient. Comptez quelques minutes. Si vous venez de brancher votre boîte, laissez d’abord à Leon le temps de la lire, car la fiche ne se construit qu’une fois.",
     "build": "Construire ma fiche",
     "building": "Leon construit votre fiche. Cela prend quelques minutes : vous pouvez quitter cette page, la construction continue.",
     "refresh": "Actualiser",

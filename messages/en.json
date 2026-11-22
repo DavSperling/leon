@@ -1069,7 +1069,7 @@
     "noFiche": "You don’t have a work profile yet.",
     "noMailbox": "Leon builds it from your sent email. Connect your Gmail or Outlook mailbox first.",
     "openConnections": "Open connections",
-    "buildHint": "Leon reads your sent email from the last three months and your tools once, then shows you what it kept. It takes a few minutes.",
+    "buildHint": "Leon reads your sent email from the last three months and your tools once, then shows you what it kept. It takes a few minutes. If you have just connected your mailbox, give Leon time to read it first, because your work profile is built only once.",
     "build": "Build my work profile",
     "building": "Leon is building your work profile. It takes a few minutes: you can leave this page, the build keeps going.",
     "refresh": "Refresh",

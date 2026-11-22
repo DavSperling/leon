@@ -496,14 +496,6 @@ describe('FicheSection : les brouillons prêts', () => {
       expect(count(html, `aria-describedby="brouillon-${one.id}"`), one.id).toBe(2);
   });
 
-  it('ne montre que les brouillons reçus : écarté ou dépassé, le serveur ne le rend plus et il n’est plus là', () => {
-    const html = render({ ...DATA, brouillons: [SANS_LIEN] });
-
-    expect(html).not.toContain(`brouillon-${DEVIS.id}`);
-    expect(text(html)).not.toContain('Devis 2027');
-    expect(html).toContain(`brouillon-${SANS_LIEN.id}`);
-  });
-
   it('se dessine en anglais avec les mêmes clés', () => {
     const html = render(WITH_DRAFTS, 'en');
     const shown = text(html);

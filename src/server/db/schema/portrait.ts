@@ -74,7 +74,8 @@ export const reponsesAgent = pgTable(
 
 // Les brouillons de réponse que l'agent « Brouillons de réponse » prépare pour elle (0080-brouillons.sql) : une ligne
 // par mail auquel répondre, privée à la personne comme sa fiche (acl = [user_id], contrôlé par la base), et qui ne
-// survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte.
+// survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte, et
+// l'identifiant du brouillon déposé dans sa boîte Gmail (0081).
 export const brouillons = pgTable('brouillons', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')
@@ -90,5 +91,7 @@ export const brouillons = pgTable('brouillons', {
   // Nul : le modèle a jugé qu'aucune réponse n'était attendue.
   texte: text('texte'),
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
+  // Le brouillon Gmail créé pour lui (portrait/brouillon-depot.ts). Nul : rien n'est déposé dans sa boîte.
+  brouillonGmail: text('brouillon_gmail'),
   acl: uuid('acl').array().notNull(),
 });

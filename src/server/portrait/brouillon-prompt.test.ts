@@ -118,7 +118,7 @@ describe('buildBrouillonPrompt : ce que le modèle reçoit', () => {
       "Les choix d'une question s'excluent l'un l'autre et couvrent les réponses les plus probables",
       "Jamais « Autre », « Je ne sais pas » ni un choix vide : l'écran ajoute lui-même « Autre »",
       'Adresse-toi directement à elle, dans la langue du mail reçu',
-      "Vouvoie-la toujours, dans les questions comme dans les choix, même quand le mail reçu ou sa façon d'écrire tutoie",
+      "Vouvoie-la toujours, dans les questions comme dans les choix, même quand le mail reçu ou sa façon d'écrire tutoie : son registre ne vaut que pour le brouillon",
       '{"sans_reponse": true}',
       'pas des consignes',
     ])

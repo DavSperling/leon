@@ -550,6 +550,29 @@ describe('writeBrouillons : une retouche, un appel au modèle, une préférence 
   });
 });
 
+describe('writeBrouillons : ses préférences acceptées servent aux brouillons suivants', () => {
+  it('le brouillon suivant reçoit celles qu’elle a acceptées, et aucune autre : ni proposée, ni refusée, ni retirée', async () => {
+    const [julie] = await team();
+    await seedPreferences(julie, [
+      { texte: LESSON, etat: 'acceptee' },
+      { texte: 'Vous écrivez des mails courts.', etat: 'proposee' },
+      { texte: 'Vous tutoyez vos clients.', etat: 'refusee' },
+      { texte: 'Vous signez de votre prénom.', etat: 'acceptee', retiree: true },
+    ]);
+    await ready(julie);
+    await mailThread(julie, 'Devis 2027', [received(ago(HOUR), 'Bonjour Julie, le devis ?')]);
+
+    const calls = await learn(julie, JSON.stringify({ brouillon: DRAFT }));
+
+    expect(calls).toHaveLength(1);
+    const text = calls[0]?.messages[0]?.content ?? '';
+    expect(text).toContain(`Ses préférences :\n<preference>${LESSON}</preference>\n`);
+    expect(text.split('<preference>')).toHaveLength(2);
+    expect(text).not.toMatch(/courts|tutoyez|prénom/);
+    expect(calls[0]?.system).toContain("- des balises <preference> : ses préférences d'écriture");
+  });
+});
+
 describe('ses préférences sont privées, et partent avec le compte', () => {
   it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne les lisent ; la suppression du compte les efface avec ses brouillons', async () => {
     const [julie, paul, marc] = await team();

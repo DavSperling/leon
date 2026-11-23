@@ -4,6 +4,7 @@ import { linesOf } from '@/lib/fiche-view';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { lignesFiche } from '@/server/db/schema/portrait';
+import { logError } from '@/server/log';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { mailThread, received, sent } from '@/test/mail-threads';
@@ -12,12 +13,22 @@ import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
 import { readFicheScreen, readHomeBrouillons } from './screen';
+import { readUnknownMails } from './waiting-mails';
 
 // Les fils de courrier des mails d'inconnus passent par l'ingestion, qui met leur indexation en file : seule cette mise
 // en file est simulée, la file de la fiche restant la vraie.
 vi.mock('@/server/pipeline/queue', async (original) => ({
   ...(await original<typeof import('@/server/pipeline/queue')>()),
   enqueuePipelineStep: vi.fn(),
+}));
+// La lecture des mails d'inconnus reste la vraie : un seul test la fait tomber en panne, une fois.
+vi.mock('./waiting-mails', async (original) => {
+  const actual = await original<typeof import('./waiting-mails')>();
+  return { ...actual, readUnknownMails: vi.fn(actual.readUnknownMails) };
+});
+vi.mock('@/server/log', async (original) => ({
+  ...(await original<typeof import('@/server/log')>()),
+  logError: vi.fn(),
 }));
 
 // La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
@@ -539,6 +550,25 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       [julie.userId],
     );
     expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Inconnue 3', 'Inconnue 5']);
+  });
+
+  it('la lecture des mails d’inconnues en panne : ses demandes et ses brouillons prêts se montrent, et la panne est journalisée', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+    await asked(julie, 'Devis', 3);
+    await seedBrouillon(julie, 'Prêt', 4);
+    const failure = new Error('base injoignable');
+    vi.mocked(logError).mockClear();
+    vi.mocked(readUnknownMails).mockRejectedValueOnce(failure);
+
+    expect(await titles(julie)).toEqual({ demandes: ['Devis'], prets: ['Prêt'] });
+    expect(logError).toHaveBeenCalledExactlyOnceWith('accueil.inconnus', failure, {
+      userId: julie.userId,
+    });
+    // La lecture suivante les retrouve.
+    expect((await titles(julie)).demandes).toEqual(['Partenariat', 'Devis']);
   });
 
   it('sans son oui à l’agent, aucun mail d’inconnue ne part vers l’accueil ; ni vers celui d’un collègue ou d’une autre organisation', async () => {

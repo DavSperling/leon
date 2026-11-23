@@ -5,6 +5,7 @@ import { listConnections } from '@/server/connectors/connections';
 import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
+import { logError } from '@/server/log';
 import { EN_SERVICE } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
@@ -116,7 +117,14 @@ export type HomeBrouillons = {
 // restent en base, et un nouveau « oui » les remontre sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses
 // lignes et les mails d'inconnus d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
-  const [shown, unknown] = await Promise.all([readShown(ctx), readUnknownMails(ctx, HOME_MAX)]);
+  const [shown, unknown] = await Promise.all([
+    readShown(ctx),
+    // En panne, les mails d'inconnus manquent, sans emporter ses demandes ni ses brouillons prêts.
+    readUnknownMails(ctx, HOME_MAX).catch((error) => {
+      logError('accueil.inconnus', error, { userId: ctx.userId });
+      return [];
+    }),
+  ]);
   const inconnus = unknown.map(({ message, ...one }) => ({
     ...one,
     mail: { sourceId: one.sourceId, message },

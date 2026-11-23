@@ -1106,8 +1106,9 @@
     "agentSaved": "Answer saved.",
     "agentGone": "This agent is no longer suggested to you. The profile was reloaded.",
     "draftsTitle": "Drafts ready",
-    "draftsHint": "Nothing is sent or written to your mailbox: copy a draft into your reply, then review it.",
+    "draftsHint": "Nothing is sent. A complete draft is also saved to your Gmail drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.",
     "draftReceived": "Received on {date}",
+    "draftDeposited": "Saved to your Gmail drafts",
     "discard": "Dismiss",
     "discarded": "Draft dismissed.",
     "draftGone": "This draft no longer exists. The profile was reloaded.",
@@ -1118,7 +1119,7 @@
       },
       "brouillon-reponse": {
         "name": "Reply drafts",
-        "text": "When an email is waiting for a reply, a draft on this page, written the way you write, never sent."
+        "text": "When an email is waiting for a reply, a draft written the way you write, on this page. When complete, it is also saved to your Gmail drafts. Never sent."
       },
       "brief-rendez-vous": {
         "name": "Pre-meeting brief",

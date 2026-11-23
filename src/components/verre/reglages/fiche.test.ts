@@ -290,12 +290,13 @@ describe('FicheSection : les agents proposés', () => {
 
     expect(states('fr', 'En service', 'Pas encore en service')).toEqual(expected);
     expect(states('en', 'Running', 'Not running yet')).toEqual(expected);
-    // Son brouillon se lit sur cette page : rien ne s'écrit dans sa boîte.
+    // Sa phrase dit ce que son « oui » autorise : un brouillon déposé dans sa boîte Gmail, jamais envoyé.
     const html = render({ ...DATA, agents: all });
-    expect(text(html)).toContain('un brouillon sur cette page, écrit comme vous, jamais envoyé.');
-    expect(text(html)).not.toContain('dans votre boîte, écrit comme vous');
+    expect(text(html)).toContain(
+      'un brouillon écrit comme vous, sur cette page. Complet, il est aussi déposé dans vos brouillons Gmail. Jamais envoyé.',
+    );
     expect(text(render({ ...DATA, agents: all }, 'en'))).toContain(
-      'a draft on this page, written the way you write, never sent.',
+      'a draft written the way you write, on this page. When complete, it is also saved to your Gmail drafts. Never sent.',
     );
   });
 
@@ -322,7 +323,7 @@ describe('FicheSection : les agents proposés', () => {
 
     // Ni raison ni mesure : le nom, la phrase, l'état, les deux boutons.
     expect(words('brouillon-reponse')).toBe(
-      'Brouillons de réponse Quand un mail attend une réponse, un brouillon sur cette page, écrit comme vous, jamais envoyé. En service Oui Non',
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur cette page. Complet, il est aussi déposé dans vos brouillons Gmail. Jamais envoyé. En service Oui Non',
     );
     expect(words('relance')).toBe(
       'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',
@@ -425,18 +426,20 @@ describe('FicheSection : les brouillons prêts', () => {
     expect(html).not.toContain('>Copier<');
   });
 
-  it('avec des brouillons, la partie vient en tête, avant le rôle, et sa phrase dit que rien n’est envoyé, dans les deux langues', () => {
+  it('avec des brouillons, la partie vient en tête, avant le rôle, et sa phrase dit ce qui va dans sa boîte, dans les deux langues', () => {
     const html = render(WITH_DRAFTS);
     const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
 
     expect(titles).toEqual(['Ma fiche', 'Brouillons prêts', 'Rôle', 'Tâches répétées']);
+    // Rien n'est envoyé ; un brouillon complet est aussi dans ses brouillons Gmail, où « Écarter » ne touche à rien.
     expect(text(html)).toContain(
-      'Rien n’est envoyé ni écrit dans votre boîte : copiez un brouillon dans votre réponse, puis relisez-le.',
+      'Rien n’est envoyé. Un brouillon complet est aussi déposé dans vos brouillons Gmail ; les autres se copient d’ici. Écarter un brouillon ne le retire pas de Gmail.',
     );
+    expect(text(html)).not.toContain('ni écrit dans votre boîte');
     const english = text(render(WITH_DRAFTS, 'en'));
     expect(english).toContain('Drafts ready');
     expect(english).toContain(
-      'Nothing is sent or written to your mailbox: copy a draft into your reply, then review it.',
+      'Nothing is sent. A complete draft is also saved to your Gmail drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.',
     );
   });
 

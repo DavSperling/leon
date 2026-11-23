@@ -1106,8 +1106,9 @@
     "agentSaved": "Réponse enregistrée.",
     "agentGone": "Cet agent ne vous est plus proposé. La fiche est rechargée.",
     "draftsTitle": "Brouillons prêts",
-    "draftsHint": "Rien n’est envoyé ni écrit dans votre boîte : copiez un brouillon dans votre réponse, puis relisez-le.",
+    "draftsHint": "Rien n’est envoyé. Un brouillon complet est aussi déposé dans vos brouillons Gmail ; les autres se copient d’ici. Écarter un brouillon ne le retire pas de Gmail.",
     "draftReceived": "Reçu le {date}",
+    "draftDeposited": "Déposé dans vos brouillons Gmail",
     "discard": "Écarter",
     "discarded": "Brouillon écarté.",
     "draftGone": "Ce brouillon n’existe plus. La fiche est rechargée.",
@@ -1118,7 +1119,7 @@
       },
       "brouillon-reponse": {
         "name": "Brouillons de réponse",
-        "text": "Quand un mail attend une réponse, un brouillon sur cette page, écrit comme vous, jamais envoyé."
+        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur cette page. Complet, il est aussi déposé dans vos brouillons Gmail. Jamais envoyé."
       },
       "brief-rendez-vous": {
         "name": "Brief avant rendez-vous",

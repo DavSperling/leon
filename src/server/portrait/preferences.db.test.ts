@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { deleteAccount } from '@/server/auth/delete-account';
 import { setManager } from '@/server/auth/organisation';
@@ -16,6 +16,7 @@ import { extendThread, JULIE, LEA, mailThread, received, sent } from '@/test/mai
 import { BROUILLONS_DAILY_CAP, writeBrouillons } from './brouillons';
 import { buildFiche } from './fiche';
 import { buildPreferencePrompt } from './preference-prompt';
+import { answerPreference, readProposedPreferences } from './preferences';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -570,6 +571,93 @@ describe('writeBrouillons : ses préférences acceptées servent aux brouillons 
     expect(text.split('<preference>')).toHaveLength(2);
     expect(text).not.toMatch(/courts|tutoyez|prénom/);
     expect(calls[0]?.system).toContain("- des balises <preference> : ses préférences d'écriture");
+  });
+});
+
+describe('answerPreference et readProposedPreferences : son oui ou son non à une préférence proposée', () => {
+  // Julie a retouché deux brouillons, et Leon lui propose une préférence pour chacun.
+  async function proposed(julie: TenantContext): Promise<string[]> {
+    await ready(julie);
+    const threads = [await draftIn(julie, 'Un'), await draftIn(julie, 'Deux')];
+    for (const thread of threads) await extendThread(julie, thread, [sent(ago(HOUR), RETOUCHED)]);
+    await learn(
+      julie,
+      PREFERENCE,
+      JSON.stringify({ preference: 'Vous écrivez des mails de trois phrases au plus.' }),
+    );
+    return (await readProposedPreferences(julie, 20)).map((one) => one.id);
+  }
+
+  it('chaque préférence proposée se lit avec le correspondant, la date du mail reçu et son fil : rien d’autre', async () => {
+    const [julie] = await team();
+    await proposed(julie);
+
+    const read = await readProposedPreferences(julie, 20);
+
+    expect(read).toHaveLength(2);
+    for (const one of read) {
+      expect(Object.keys(one).sort()).toEqual([
+        'from',
+        'id',
+        'preference',
+        'receivedAt',
+        'sourceId',
+      ]);
+      expect(one.from).toBe('Léa Roy');
+      expect(one.receivedAt.getTime()).toBeGreaterThan(Date.now() - 3 * HOUR);
+    }
+    expect(read.map((one) => one.preference).sort()).toEqual([
+      LESSON,
+      'Vous écrivez des mails de trois phrases au plus.',
+    ]);
+    expect(await readProposedPreferences(julie, 1)).toHaveLength(1);
+  });
+
+  it('« Oui » l’accepte, « Non » la refuse : une fois, et elle ne se propose plus ; une préférence retirée ne se répond pas', async () => {
+    const [julie] = await team();
+    const [first, second] = (await proposed(julie)) as [string, string];
+
+    expect(await answerPreference(julie, first, true)).toBe(true);
+    expect(await answerPreference(julie, first, false)).toBe(false);
+    expect(await answerPreference(julie, second, false)).toBe(true);
+    expect(await answerPreference(julie, second, true)).toBe(false);
+
+    const etats = (await preferenceLines(julie)).map((one) => one.valeur);
+    expect(etats).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ etat: 'acceptee' }),
+        expect.objectContaining({ etat: 'refusee' }),
+      ]),
+    );
+    expect(await readProposedPreferences(julie, 20)).toEqual([]);
+
+    // Retirée avant sa réponse : plus rien à répondre.
+    const [julie2] = await team();
+    const [one] = (await proposed(julie2)) as [string];
+    await adminDb.update(lignesFiche).set({ retireeLe: new Date() }).where(eq(lignesFiche.id, one));
+    expect(await answerPreference(julie2, one, true)).toBe(false);
+  });
+
+  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne la lisent ni n’y répondent ; une ligne qui n’est pas une préférence ne se répond pas', async () => {
+    const [julie, paul, marc] = await team();
+    const other = await createTestTenant(['Zoé Bernard']);
+    tenantIds.push(other.tenantId);
+    const [zoe] = other.members as [TenantContext];
+    const [id] = (await proposed(julie)) as [string];
+
+    for (const ctx of [paul, marc, { ...marc, equipe: true }, zoe]) {
+      expect(await readProposedPreferences(ctx, 20)).toEqual([]);
+      expect(await answerPreference(ctx, id, true)).toBe(false);
+    }
+    expect(await answerPreference(julie, 'pas-un-id', true)).toBe(false);
+    // Une ligne de sa fiche qui n'est pas une préférence : une mesure de ses mails.
+    const [mesure] = await adminDb
+      .select({ id: lignesFiche.id })
+      .from(lignesFiche)
+      .where(and(eq(lignesFiche.userId, julie.userId), ne(lignesFiche.genre, 'preference')));
+    expect(mesure).toBeDefined();
+    expect(await answerPreference(julie, mesure?.id ?? '', true)).toBe(false);
+    expect(await readProposedPreferences(julie, 20)).toHaveLength(2);
   });
 });
 

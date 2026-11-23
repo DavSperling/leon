@@ -1,7 +1,9 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
+import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
+import { epochToDate } from '@/server/search/filters-sql';
 import { lockAccount } from './fiche';
 import { parseValeur } from './lines';
 import type { Preference } from './preference-prompt';
@@ -139,4 +141,72 @@ export async function keepRetouche(
         .onConflictDoNothing();
     return true;
   });
+}
+
+// Une préférence proposée, telle que l'accueil la montre (screen.ts) : sa ligne, son texte, le correspondant du mail
+// dont elle a retouché le brouillon (son nom, à défaut son adresse), la date de ce mail et son fil. Rien d'autre du
+// mail, ni de sa réponse.
+export type ProposedPreference = {
+  id: string;
+  sourceId: string;
+  from: string | null;
+  receivedAt: Date;
+  preference: string;
+};
+
+// Les `max` préférences qui attendent sa réponse, la plus récente d'abord (la date du mail reçu). Une préférence dont le
+// brouillon est parti avec son fil ne se montre plus.
+export async function readProposedPreferences(
+  ctx: TenantContext,
+  max: number,
+): Promise<ProposedPreference[]> {
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<Omit<ProposedPreference, 'receivedAt'> & { at: string }>(sql`
+      select l.id, l.valeur->>'texte' as preference, b.source_id as "sourceId",
+             coalesce(m.author_name, m.author_email) as "from", extract(epoch from m.ts) as at
+      from lignes_fiche l
+      join brouillons b on b.tenant_id = l.tenant_id and b.user_id = l.user_id and b.id::text = l.cle
+      cross join lateral (
+        select t.author_name, t.author_email, t.ts from turns t
+        where t.tenant_id = b.tenant_id and t.source_id = b.source_id
+          and substring(t.external_id from ${MESSAGE}) = b.message
+        order by t.ts
+        limit 1
+      ) m
+      where l.tenant_id = ${ctx.tenantId} and l.user_id = ${ctx.userId} and l.genre = 'preference'
+        and l.retiree_le is null and l.valeur->>'etat' = 'proposee'
+      order by m.ts desc, l.id
+      limit ${max}`),
+  );
+  return rows.map(({ at, ...one }) => ({ ...one, receivedAt: epochToDate(at) }));
+}
+
+// Sa réponse à une préférence proposée, depuis le panneau de l'accueil : « Oui », elle sert aux brouillons suivants
+// (brouillon-prompt.ts) ; « Non », elle reste en base, refusée, pour n'être jamais reproposée. Rend false sans rien
+// écrire si la ligne n'est pas une préférence à elle qui attend encore sa réponse (déjà répondue, retirée). Deux envois
+// simultanés n'en gardent qu'un : le second relit la ligne, et ne la trouve plus proposée.
+export async function answerPreference(
+  ctx: TenantContext,
+  id: string,
+  oui: boolean,
+): Promise<boolean> {
+  if (!z.uuid().safeParse(id).success) return false;
+  const etat: Preference['etat'] = oui ? 'acceptee' : 'refusee';
+  const answered = await withTenant(ctx, (tx) =>
+    tx
+      .update(lignesFiche)
+      .set({ valeur: sql`jsonb_set(${lignesFiche.valeur}, '{etat}', to_jsonb(${etat}::text))` })
+      .where(
+        and(
+          eq(lignesFiche.tenantId, ctx.tenantId),
+          eq(lignesFiche.userId, ctx.userId),
+          eq(lignesFiche.id, id),
+          eq(lignesFiche.genre, 'preference'),
+          isNull(lignesFiche.retireeLe),
+          sql`${lignesFiche.valeur}->>'etat' = 'proposee'`,
+        ),
+      )
+      .returning({ id: lignesFiche.id }),
+  );
+  return answered.length > 0;
 }

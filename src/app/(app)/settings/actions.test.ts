@@ -23,11 +23,13 @@ import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerPreference } from '@/server/portrait/preferences';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
   answerAgentAction,
+  answerPreferenceAction,
   answerQuestionsAction,
   answerUnknownAction,
   buildFicheAction,
@@ -115,6 +117,7 @@ vi.mock('@/server/portrait/brouillons', () => ({
 }));
 vi.mock('@/server/portrait/brouillons-queue', () => ({ requestBrouillons: vi.fn() }));
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
+vi.mock('@/server/portrait/preferences', () => ({ answerPreference: vi.fn() }));
 vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
 vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
@@ -1317,6 +1320,9 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     await expect(
       answerUnknownAction({ sourceId: LIGNE, message: 'message:1', oui: true, indications: '' }),
     ).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
@@ -1325,7 +1331,47 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(discardBrouillon).not.toHaveBeenCalled();
     expect(answerQuestions).not.toHaveBeenCalled();
     expect(answerUnknownMail).not.toHaveBeenCalled();
+    expect(answerPreference).not.toHaveBeenCalled();
     expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('« Oui » ou « Non » à une préférence d’écriture proposée : sa réponse s’enregistre pour la personne connectée, et l’accueil est relu', async () => {
+    vi.mocked(answerPreference).mockResolvedValue(true);
+
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).resolves.toEqual({ ok: true });
+    await expect(answerPreferenceAction({ id: LIGNE, oui: false })).resolves.toEqual({ ok: true });
+
+    expect(vi.mocked(answerPreference).mock.calls).toEqual([
+      [ctx, LIGNE, true],
+      [ctx, LIGNE, false],
+    ]);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/'], ['/']]);
+    // Elle ne demande aucun passage : rien n'est à écrire pour elle.
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('une préférence d’une autre, déjà répondue ou retirée, est introuvable : rien n’est relu', async () => {
+    // Chacune de ces gardes est tenue par answerPreference, sous ses droits (preferences.db.test.ts) : elle rend false.
+    vi.mocked(answerPreference).mockResolvedValue(false);
+
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', oui: true }],
+    [{ id: LIGNE, oui: 'oui' }],
+    [{ id: LIGNE, oui: null }],
+    [{ id: LIGNE }],
+    [{ oui: true }],
+    [LIGNE],
+    [null],
+  ])('sa réponse à une préférence %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerPreferenceAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerPreference).not.toHaveBeenCalled();
   });
 
   const MAIL = { sourceId: '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c61', message: 'message:18c2f0a' };

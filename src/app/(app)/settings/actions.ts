@@ -61,6 +61,7 @@ import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-pr
 import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerPreference } from '@/server/portrait/preferences';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import { clean } from '@/server/portrait/synthese-prompt';
@@ -727,13 +728,15 @@ export async function readMemoryVersionAction(input: {
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes, et
 // répond aux agents qui lui sont proposés, sous la session du navigateur. Et, depuis l'accueil, elle répond aux
-// questions de Leon, écarte sa demande ou écarte un brouillon de réponse. Les siens seulement : chaque fonction
+// questions de Leon, écarte sa demande, écarte un brouillon de réponse ou répond à une préférence d'écriture
+// proposée. Les siens seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
 
 const FicheCorrectionSchema = z.object({ id: z.uuid(), champs: z.record(z.string(), z.unknown()) });
 const AgentAnswerSchema = z.object({ agent: z.enum(AGENTS), oui: z.boolean() });
+const PreferenceAnswerSchema = z.object({ id: z.uuid(), oui: z.boolean() });
 // Une réponse par question, nettoyée de ce que la base refuserait ; une réponse peut rester vide.
 const QuestionAnswersSchema = z.object({
   id: z.uuid(),
@@ -870,4 +873,20 @@ export async function answerUnknownAction(input: {
   // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
   // autre, sous une autre clé, rangé à la fin du panneau.
   return { ok: true, id };
+}
+
+// « Oui » ou « Non » à une préférence d'écriture que Leon lui propose, depuis le panneau de l'accueil : acceptée, elle
+// sert à ses brouillons suivants ; refusée, elle reste en base pour n'être jamais reproposée (portrait/preferences.ts).
+// Celle d'une autre, ou qui n'attend plus sa réponse (déjà répondue, retirée) : « introuvable ». Rien n'est envoyé.
+export async function answerPreferenceAction(input: {
+  id: string;
+  oui: boolean;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = PreferenceAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await answerPreference(ctx, parsed.data.id, parsed.data.oui)))
+    return { error: 'introuvable' };
+  revalidatePath('/');
+  return { ok: true };
 }

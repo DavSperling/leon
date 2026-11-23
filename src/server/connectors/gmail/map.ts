@@ -7,7 +7,7 @@ import type { GmailMessage, GmailPart } from './schemas';
 // libellé SENT (envoyé depuis la boîte) ; rien n'est déduit pour les autres. Les destinataires viennent
 // des en-têtes To et Cc, jamais de Bcc.
 
-const headerOf = (part: GmailPart | null | undefined, name: string): string | null =>
+export const headerOf = (part: GmailPart | null | undefined, name: string): string | null =>
   part?.headers?.find((header) => header.name.toLowerCase() === name)?.value ?? null;
 
 // Le corps d'une partie, en base64url. Gmail le rend déjà en UTF-8 même quand l'en-tête annonce un autre

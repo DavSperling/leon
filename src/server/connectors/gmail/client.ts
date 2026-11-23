@@ -7,10 +7,28 @@ import {
   GOOGLE_RATE_LIMIT,
   ResponseTooBigError,
 } from '../http';
-import { type GmailMessage, ListSchema, MessageSchema, ProfileSchema } from './schemas';
+import { headerOf } from './map';
+import {
+  DraftSchema,
+  type GmailMessage,
+  ListSchema,
+  MessageHeadersSchema,
+  MessageSchema,
+  ProfileSchema,
+} from './schemas';
 
 // Les requêtes vers l'API Gmail. Les messages se lisent par lots (une requête, donc un crédit Pipedream,
 // pour BATCH_SIZE messages) : https://developers.google.com/workspace/gmail/api/guides/batch
+//
+// La seule écriture : un brouillon de réponse créé dans un fil (replyHeaders, puis createDraft), pour l'agent
+// « Brouillons de réponse » (portrait/brouillon-depot.ts). Rien n'est envoyé, supprimé ni modifié.
+// Non vérifié : aucune des pages ci-dessous n'a pu être relue le 23/11/2026 (hôte fermé), et aucun brouillon réel n'a
+// été créé. La forme des deux requêtes est celle que ces pages décrivaient, de mémoire :
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get (format=metadata,
+//     metadataHeaders répété ; à vérifier : la casse des noms d'en-tête demandés)
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/create (POST …/drafts, corps
+//     { message: { raw, threadId } } ; à vérifier : gmail.modify parmi les droits acceptés)
+//   https://developers.google.com/workspace/gmail/api/guides/threads (threadId, In-Reply-To et References, objet)
 
 const GMAIL = 'https://gmail.googleapis.com';
 export const LIST_SIZE = 100;
@@ -133,6 +151,40 @@ export function gmailClient(http: ConnectorHttp) {
       }
       if (missing.length > 0) throw new ConnectorHttpError(429, 'Gmail rate limit reached');
       return read;
+    },
+
+    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes, sans son corps. Une
+    // seule requête, jamais rejouée : chacune coûte un crédit.
+    async replyHeaders(id: string) {
+      const { payload } = await http.json(
+        {
+          url: `${GMAIL}/gmail/v1/users/me/messages/${encodeURIComponent(id)}`,
+          query: { format: 'metadata', metadataHeaders: ['Message-ID', 'References', 'Subject'] },
+          once: true,
+        },
+        MessageHeadersSchema,
+      );
+      return {
+        messageId: headerOf(payload, 'message-id'),
+        references: headerOf(payload, 'references'),
+        subject: headerOf(payload, 'subject'),
+      };
+    },
+
+    // Un brouillon de plus dans le fil : la seule écriture de Leon dans une boîte, jamais un envoi. `raw` : le message
+    // en RFC 2822, en base64url (reply.ts). Jamais rejouée : une réponse perdue a pu créer le brouillon. Rend son
+    // identifiant.
+    async createDraft(threadId: string, raw: string): Promise<string> {
+      const draft = await http.json(
+        {
+          url: `${GMAIL}/gmail/v1/users/me/drafts`,
+          method: 'POST',
+          body: { message: { threadId, raw } },
+          once: true,
+        },
+        DraftSchema,
+      );
+      return draft.id;
     },
   };
 }

@@ -37,8 +37,10 @@ import { SourceThing } from './source-thing';
 // et les tâches qu'elle refait. Chaque ligne dit d'où elle vient, se corrige et se retire. Les mesures calculées sur
 // ses mails (interlocuteurs, façon d'écrire, rythme, signature) restent enregistrées, sans s'afficher. Les gestes sont
 // ceux des leçons de l'onglet Mémoire (memoire.tsx), sans la connexion récente : la fiche n'est lue que par elle.
-// Sous ses tâches, les agents de départ que Leon lui propose : un oui ou un non par agent, rien d'autre. Ce que l'agent
-// « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil (recherche/reply-drafts.tsx).
+// Sous ses tâches, les préférences d'écriture qu'elle a acceptées sur l'Accueil, chacune à retirer seulement : retirée,
+// elle ne sert plus et ne se repropose pas. Puis les agents de départ que Leon lui propose : un oui ou un non par
+// agent, rien d'autre. Ce que l'agent « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil
+// (recherche/reply-drafts.tsx), avec les préférences qu'il lui propose.
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';
@@ -203,9 +205,12 @@ function Row({
           <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
             {children}
           </div>
-          <p className="mt-1 text-label text-muted">
-            <Provenance line={line} />
-          </p>
+          {/* Une préférence vient de sa retouche, et elle l'a validée : rien à en dire de plus. */}
+          {line.provenance !== 'apprise' && (
+            <p className="mt-1 text-label text-muted">
+              <Provenance line={line} />
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-2">
             {fields.length > 0 && (
               <Button
@@ -451,6 +456,14 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
           >
             <p className="font-medium">{line.valeur.titre}</p>
             {line.valeur.detail && <p className="text-fg-2">{line.valeur.detail}</p>}
+          </Row>
+        ))}
+      </Part>
+
+      <Part title={t('preferencesTitle')}>
+        {linesOf(lines, 'preference').map((line) => (
+          <Row key={line.id} line={line} onGone={onGone}>
+            <p>{line.valeur.texte}</p>
           </Row>
         ))}
       </Part>

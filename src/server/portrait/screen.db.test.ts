@@ -134,6 +134,43 @@ describe('readFicheScreen : où en est la fiche', () => {
     expect((await readFiche(julie)).map((line) => line.genre).sort()).toEqual(['role', 'rythme']);
   });
 
+  it('de ses préférences d’écriture, l’écran ne reçoit que celles qu’elle a acceptées ; retirée, une préférence ne se montre plus', async () => {
+    const [julie] = await people();
+    await seedLine(julie, ROLE);
+    await adminDb.insert(lignesFiche).values(
+      (['acceptee', 'proposee', 'refusee'] as const).map((etat) => ({
+        tenantId: julie.tenantId,
+        userId: julie.userId,
+        genre: 'preference' as const,
+        cle: `brouillon-${etat}`,
+        valeur: { texte: `Préférence ${etat}.`, etat },
+        provenance: 'apprise' as const,
+        acl: [julie.userId],
+      })),
+    );
+
+    const { lines } = await readFicheScreen(julie);
+    expect(lines.map((line) => `${line.genre} ${line.cle}`).sort()).toEqual([
+      'preference brouillon-acceptee',
+      'role ',
+    ]);
+    const accepted = lines.find((line) => line.genre === 'preference');
+    expect(accepted).toMatchObject({
+      valeur: { texte: 'Préférence acceptee.', etat: 'acceptee' },
+      provenance: 'apprise',
+    });
+
+    expect(await retireLine(julie, accepted?.id ?? '')).toBe(true);
+    expect((await readFicheScreen(julie)).lines.map((line) => line.genre)).toEqual(['role']);
+    // Retirée, elle sort aussi de sa fiche lue pour les brouillons.
+    expect(
+      (await readFiche(julie))
+        .filter((line) => line.genre === 'preference')
+        .map((one) => one.cle)
+        .sort(),
+    ).toEqual(['brouillon-proposee', 'brouillon-refusee']);
+  });
+
   it('une fois le rôle écrit, même retiré depuis, la fiche est faite', async () => {
     const [julie] = await people();
     await seedConnection(julie, { provider: 'gmail' });

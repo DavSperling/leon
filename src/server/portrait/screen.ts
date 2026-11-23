@@ -16,8 +16,8 @@ import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 import { readUnknownMails, type UnknownMail } from './waiting-mails';
 
-// La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, les sources de
-// ses tâches, et les agents de départ qui lui sont proposés. Et, pour l'accueil seulement, ce que l'agent « Brouillons
+// La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, les préférences d'écriture qu'elle a
+// acceptées, où en est sa construction, les sources de ses tâches, et les agents de départ qui lui sont proposés. Et, pour l'accueil seulement, ce que l'agent « Brouillons
 // de réponse » a pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit sa
 // fiche.
 
@@ -39,7 +39,7 @@ export type FicheEtat =
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 export type FicheScreen = {
   etat: FicheEtat;
-  // Son rôle et ses tâches seulement.
+  // Son rôle, ses tâches et ses préférences d'écriture acceptées seulement.
   lines: FicheLine[];
   // Les sources des tâches que la personne voit encore, par identifiant.
   sources: Record<string, FicheSource>;
@@ -73,8 +73,14 @@ async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat>
 // briefingSources (200). Ses brouillons de réponse ne se lisent pas ici : ils ne se montrent que sur l'accueil.
 export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> {
   const all = await readFiche(ctx);
-  // L'écran ne montre que son rôle et ses tâches : les mesures calculées sur ses mails restent en base.
-  const lines = all.filter((line) => line.genre === 'role' || line.genre === 'tache');
+  // L'écran ne montre que son rôle, ses tâches et ses préférences acceptées : les mesures calculées sur ses mails, les
+  // préférences proposées ou refusées et l'issue de ses brouillons restent en base.
+  const lines = all.filter(
+    (line) =>
+      line.genre === 'role' ||
+      line.genre === 'tache' ||
+      (line.genre === 'preference' && 'etat' in line.valeur && line.valeur.etat === 'acceptee'),
+  );
   const taskIds = [...new Set(linesOf(lines, 'tache').flatMap((line) => line.valeur.sources))];
   const [etat, seen, agents] = await Promise.all([
     etatOf(ctx, all.length > 0),

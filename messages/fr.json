@@ -1130,6 +1130,7 @@
     "buildFailed": "La construction n’a pas pu être lancée. Réessayez.",
     "roleTitle": "Rôle",
     "tasksTitle": "Tâches répétées",
+    "preferencesTitle": "Vos préférences d’écriture",
     "seenIn": "Vue dans {count, plural, one {# élément} other {# éléments}}",
     "untitled": "Sans titre",
     "fromLeon": "Écrite par Leon d’après vos outils",

@@ -23,7 +23,7 @@ const DAY = new Date('2026-11-10T09:00:00Z');
 const id = (n: number) => `${String(n).padStart(8, '0')}-1111-4111-8111-111111111111`;
 let next = 0;
 const line = (
-  genre: 'role' | 'tache',
+  genre: 'role' | 'tache' | 'preference',
   cle: string,
   valeur: FicheLine['valeur'],
   over: Partial<FicheLine> = {},
@@ -412,6 +412,66 @@ describe('FicheSection : les brouillons de réponse ne se montrent plus ici', ()
     }
     const titles = [...render(data).matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
     expect(titles).toEqual(['Ma fiche', 'Rôle', 'Tâches répétées', 'Agents proposés']);
+  });
+});
+
+describe('FicheSection : ses préférences d’écriture acceptées', () => {
+  // L'écran ne reçoit que celles qu'elle a acceptées (screen.ts), sans leur brouillon ni leur issue.
+  const COURT = line(
+    'preference',
+    id(801),
+    { texte: 'Vous écrivez des mails de trois phrases au plus.', etat: 'acceptee' },
+    { provenance: 'apprise' },
+  );
+  const FORMULE = line(
+    'preference',
+    id(802),
+    { texte: 'Vous terminez vos mails par « Belle journée ».', etat: 'acceptee' },
+    { provenance: 'apprise' },
+  );
+  const WITH = { ...DATA, lines: [...LINES, COURT, FORMULE] };
+
+  it('une partie sous les tâches, avant les agents proposés : « Vos préférences d’écriture », chacune telle quelle', () => {
+    const html = render({
+      ...WITH,
+      agents: [{ agent: 'brouillon-reponse', oui: true, enService: true }],
+    });
+    const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
+
+    expect(titles).toEqual([
+      'Ma fiche',
+      'Rôle',
+      'Tâches répétées',
+      'Vos préférences d’écriture',
+      'Agents proposés',
+    ]);
+    expect(html).toContain('aria-label="Vos préférences d’écriture"');
+    expect(text(row(html, COURT))).toContain('Vous écrivez des mails de trois phrases au plus.');
+    expect(text(row(html, FORMULE))).toContain('Vous terminez vos mails par « Belle journée ».');
+  });
+
+  it('chacune avec « Retirer », relié à ses mots, et rien d’autre : ni « Corriger », ni d’où elle vient', () => {
+    const html = render(WITH);
+
+    for (const one of [COURT, FORMULE]) {
+      const shown = row(html, one);
+      expect(shown).toMatch(/>Retirer<\/button>/);
+      expect(shown).not.toMatch(/Corriger|Écrite par Leon|Corrigée par vous|corriger-/);
+      expect(count(html, `aria-describedby="ligne-${one.id}"`)).toBe(1);
+    }
+    expect(count(html, '>Retirer</button>')).toBe(LINES.length + 2);
+    expect(count(html, '>Corriger</button>')).toBe(LINES.length);
+  });
+
+  it('sans préférence acceptée, la partie ne se montre pas', () => {
+    expect(text(render())).not.toMatch(/préférences|preferences/i);
+  });
+
+  it('se dessine en anglais avec les mêmes clés', () => {
+    const shown = text(render(WITH, 'en'));
+
+    expect(shown).toContain('Your writing preferences');
+    expect(shown).toContain('Remove');
   });
 });
 

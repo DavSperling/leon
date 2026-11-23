@@ -1130,6 +1130,7 @@
     "buildFailed": "The build couldn’t be started. Try again.",
     "roleTitle": "Role",
     "tasksTitle": "Recurring tasks",
+    "preferencesTitle": "Your writing preferences",
     "seenIn": "Seen in {count, plural, one {# item} other {# items}}",
     "untitled": "Untitled",
     "fromLeon": "Written by Leon from your tools",

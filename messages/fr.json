@@ -363,6 +363,7 @@
     },
     "count": {
       "toComplete": "{count, plural, one {# mail à compléter} other {# mails à compléter}}",
+      "toConfirm": "{count, plural, one {# préférence à valider} other {# préférences à valider}}",
       "ready": "{count, plural, one {# brouillon prêt} other {# brouillons prêts}}",
       "writing": "{count, plural, one {# réponse en cours} other {# réponses en cours}}"
     },
@@ -372,6 +373,9 @@
     "allDone": "C’est tout pour l’instant.",
     "someone": "Votre correspondant",
     "strangerAsk": "Voulez-vous une réponse ?",
+    "noticed": "J’ai remarqué une retouche sur ma réponse à {name}.",
+    "noticedAnon": "J’ai remarqué une retouche sur l’une de mes réponses.",
+    "keepInMind": "Dois-je en tenir compte pour vos prochains brouillons ?",
     "instructions": "Vos indications",
     "instructionsHelp": "Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.",
     "prepare": "Préparer la réponse",

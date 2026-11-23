@@ -9,6 +9,7 @@ import { logError } from '@/server/log';
 import { EN_SERVICE } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
+import { type ProposedPreference, readProposedPreferences } from './preferences';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
 import { MAIL_KINDS } from './sent-mails';
@@ -106,30 +107,38 @@ export type HomeInconnu = Pick<UnknownMail, 'from' | 'receivedAt'> & {
   mail: Pick<UnknownMail, 'sourceId' | 'message'>;
   source: FicheSource;
 };
+// Une préférence d'écriture que Leon a tirée d'une retouche, telle que l'accueil la propose : le correspondant du mail
+// dont elle a retouché le brouillon, la date de ce mail, le fil (son objet, lié à son outil), et la préférence. `id`
+// sert à lui répondre « Oui » ou « Non ». Rien du mail, ni de sa réponse.
+export type HomePreference = Omit<ProposedPreference, 'sourceId'> & { source: FicheSource };
 export type HomeBrouillons = {
-  demandes: Array<HomeDemande | HomeInconnu>;
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference>;
   prets: HomeBrouillon[];
 };
 
-// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon et les mails d'inconnus
-// qui l'attendent (waiting-mails.ts), puis les brouillons prêts, les plus récents d'abord, HOME_MAX (vingt) au plus de
+// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon, les mails d'inconnus
+// qui l'attendent (waiting-mails.ts) et les préférences d'écriture qu'il lui propose (preferences.ts), puis les
+// brouillons prêts, les plus récents d'abord, HOME_MAX (vingt) au plus de
 // chaque sorte (brouillons.ts). L'accueil n'en montre qu'une ligne ; son panneau les range (lib/reply-drafts.ts). Seulement tant qu'elle dit oui à l'agent et qu'il lui est proposé : après un « non », ses lignes
 // restent en base, et un nouveau « oui » les remontre sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses
 // lignes et les mails d'inconnus d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
-  const [shown, unknown] = await Promise.all([
+  const [shown, unknown, preferences] = await Promise.all([
     readShown(ctx),
     // En panne, les mails d'inconnus manquent, sans emporter ses demandes ni ses brouillons prêts.
     readUnknownMails(ctx, HOME_MAX).catch((error) => {
       logError('accueil.inconnus', error, { userId: ctx.userId });
       return [];
     }),
+    readProposedPreferences(ctx, HOME_MAX),
   ]);
   const inconnus = unknown.map(({ message, ...one }) => ({
     ...one,
     mail: { sourceId: one.sourceId, message },
   }));
-  const sourceIds = [...shown.demandes, ...inconnus, ...shown.prets].map((one) => one.sourceId);
+  const sourceIds = [...shown.demandes, ...inconnus, ...preferences, ...shown.prets].map(
+    (one) => one.sourceId,
+  );
   if (sourceIds.length === 0) return { demandes: [], prets: [] };
   const [agents, seen] = await Promise.all([
     readProposals(ctx, await readFiche(ctx)),
@@ -145,12 +154,16 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
         ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
         : [];
     });
-  // Les mails d'inconnus partagent les places des demandes : celles qui attendent un geste d'elle se comptent d'abord,
-  // les plus récentes d'abord, puis tout se rend par date du mail.
+  // Les mails d'inconnus et les préférences proposées partagent les places des demandes : celles qui attendent un geste
+  // d'elle se comptent d'abord, les plus récentes d'abord, puis tout se rend par date du mail.
   const recent = (a: { receivedAt: Date }, b: { receivedAt: Date }) =>
     b.receivedAt.getTime() - a.receivedAt.getTime();
-  const writing = (one: HomeDemande | HomeInconnu) => 'repondue' in one && one.repondue;
-  const demandes = [...withSource(shown.demandes), ...withSource(inconnus)]
+  const writing = (one: HomeBrouillons['demandes'][number]) => 'repondue' in one && one.repondue;
+  const demandes = [
+    ...withSource(shown.demandes),
+    ...withSource(inconnus),
+    ...withSource(preferences),
+  ]
     .sort((a, b) => Number(writing(a)) - Number(writing(b)) || recent(a, b))
     .slice(0, HOME_MAX)
     .sort(recent);

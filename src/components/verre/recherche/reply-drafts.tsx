@@ -12,6 +12,7 @@ import {
   useTransition,
 } from 'react';
 import {
+  answerPreferenceAction,
   answerQuestionsAction,
   answerUnknownAction,
   discardBrouillonAction,
@@ -48,7 +49,12 @@ import {
 } from '@/lib/reply-drafts';
 import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
-import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
+import type {
+  HomeBrouillon,
+  HomeDemande,
+  HomeInconnu,
+  HomePreference,
+} from '@/server/portrait/screen';
 
 const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
 const CHOICE = 'flex cursor-pointer items-start gap-2.5 text-body [overflow-wrap:anywhere] text-fg';
@@ -357,10 +363,12 @@ function Unknown({
 /**
  * Un mail du panneau : son en-tête (le correspondant, la date du mail reçu, le fil lié à son outil), puis ce qu'il
  * attend. Des questions : une à la fois, puis le récapitulatif et « Envoyer mes réponses ». Le mail d'un inconnu :
- * « Voulez-vous une réponse ? ». Un brouillon prêt : son texte, tel quel, s'il est déposé dans ses brouillons Gmail,
- * « Copier » et « Écarter » ; rien ne s'y modifie, et rien ne part d'ici. Une réponse que Leon écrit : la phrase qui le
- * dit, « Actualiser » pour voir arriver le brouillon, et « Écarter ». L'en-tête prend le focus quand le mail se montre,
- * et ses gestes le rappellent ; ce qu'ils font, c'est le panneau qui le tient (ReplyDrafts).
+ * « Voulez-vous une réponse ? ». Une préférence d'écriture tirée de sa retouche : l'en-tête dit la retouche remarquée,
+ * puis la préférence, telle quelle, et « Dois-je en tenir compte pour vos prochains brouillons ? », « Oui » et « Non ».
+ * Un brouillon prêt : son texte, tel quel, s'il est déposé dans ses brouillons Gmail, « Copier » et « Écarter » ; rien ne
+ * s'y modifie, et rien ne part d'ici. Une réponse que Leon écrit : la phrase qui le dit, « Actualiser » pour voir
+ * arriver le brouillon, et « Écarter ». L'en-tête prend le focus quand le mail se montre, et ses gestes le rappellent ;
+ * ce qu'ils font, c'est le panneau qui le tient (ReplyDrafts).
  */
 export function MailView({
   mail,
@@ -372,6 +380,7 @@ export function MailView({
   discarding,
   onAnswers,
   onUnknown,
+  onPreference,
   onDiscard,
   onRefresh,
 }: {
@@ -385,6 +394,7 @@ export function MailView({
   discarding?: boolean;
   onAnswers: (reponses: string[]) => void;
   onUnknown: (oui: boolean, indications: string) => void;
+  onPreference: (oui: boolean) => void;
   onDiscard: () => void;
   onRefresh: () => void;
 }) {
@@ -393,6 +403,7 @@ export function MailView({
   const locale = useLocale();
   const words = mail.key;
   const { from, receivedAt, source } = mail.mail;
+  const noticed = from ? t('noticed', { name: from }) : t('noticedAnon');
   return (
     <div hidden={hidden}>
       {failed && (
@@ -408,7 +419,9 @@ export function MailView({
         aria-describedby={mail.sorte === 'ecrit' ? `${place ?? ''} ${words}-ecrit` : place}
         className="grid gap-1 [overflow-wrap:anywhere] text-fg outline-none"
       >
-        <h3 className="text-lead font-semibold">{from ?? t('someone')}</h3>
+        <h3 className="text-lead font-semibold">
+          {mail.sorte === 'preference' ? noticed : (from ?? t('someone'))}
+        </h3>
         <p className="text-label text-muted">
           <time dateTime={receivedAt.toISOString()}>
             {t('received', { date: formatDate(receivedAt, locale) })}
@@ -437,6 +450,32 @@ export function MailView({
             discarding={discarding}
             onUnknown={onUnknown}
           />
+        ) : mail.sorte === 'preference' ? (
+          <div className="grid gap-3">
+            <p
+              id={`${words}-preference`}
+              className="whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg"
+            >
+              {mail.mail.preference}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p id={`${words}-tenir`} className="mr-1 text-body text-fg">
+                {nb(t('keepInMind'))}
+              </p>
+              {[true, false].map((oui) => (
+                <Button
+                  key={String(oui)}
+                  size="sm"
+                  aria-describedby={`${words}-tenir ${words}-preference`}
+                  disabled={oui ? discarding : sending}
+                  loading={oui ? sending : discarding}
+                  onClick={() => onPreference(oui)}
+                >
+                  {t(oui ? 'yes' : 'no')}
+                </Button>
+              ))}
+            </div>
+          </div>
         ) : mail.sorte === 'pret' ? (
           <div className="grid gap-3">
             <p className="text-label text-muted">{t('ready')}</p>
@@ -510,7 +549,7 @@ export function ReplyDrafts({
 }: {
   // Son prénom, celui du bonjour.
   name: string | null;
-  demandes: Array<HomeDemande | HomeInconnu>;
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference>;
   prets: HomeBrouillon[];
   max: number;
 }) {
@@ -596,6 +635,14 @@ export function ReplyDrafts({
         (result) => (oui && result.id ? writes(result.id) : null),
       );
     },
+    // « Oui » ou « Non » à une préférence : l'un ou l'autre la clôt.
+    onPreference: (oui: boolean) =>
+      close(
+        mail,
+        oui ? startSending : startDiscarding,
+        () => answerPreferenceAction({ id: mail.id, oui }),
+        () => null,
+      ),
     // Un brouillon déposé dans Gmail en sera supprimé pour de bon : le panneau demande d'abord.
     // shortcut: un mail où Leon écrit est celui de l'Accueil chargé ; si son brouillon a été déposé depuis,
     // « Écarter » le retire de Gmail sans demander (son geste vise cette réponse). Une garde dans
@@ -605,11 +652,13 @@ export function ReplyDrafts({
   });
 
   // Le titre de la ligne : ce qui attend un geste d'elle d'abord, sinon ses brouillons prêts, sinon ce que Leon écrit.
-  const kind = counts.toComplete > 0 ? 'questions' : counts.ready > 0 ? 'ready' : 'writing';
+  const kind =
+    counts.toComplete + counts.toConfirm > 0 ? 'questions' : counts.ready > 0 ? 'ready' : 'writing';
   const count = kind === 'ready' ? counts.ready : counts.writing;
   const title = name ? t(`line.${kind}`, { name, count }) : t(`lineAnon.${kind}`, { count });
   const summary = [
     counts.toComplete > 0 && t('count.toComplete', { count: counts.toComplete }),
+    counts.toConfirm > 0 && t('count.toConfirm', { count: counts.toConfirm }),
     counts.ready > 0 && t('count.ready', { count: counts.ready }),
     counts.writing > 0 && t('count.writing', { count: counts.writing }),
   ]

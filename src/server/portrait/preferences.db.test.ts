@@ -17,6 +17,7 @@ import { BROUILLONS_DAILY_CAP, writeBrouillons } from './brouillons';
 import { buildFiche } from './fiche';
 import { buildPreferencePrompt } from './preference-prompt';
 import { answerPreference, readProposedPreferences } from './preferences';
+import { readHomeBrouillons } from './screen';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -658,6 +659,44 @@ describe('answerPreference et readProposedPreferences : son oui ou son non à un
     expect(mesure).toBeDefined();
     expect(await answerPreference(julie, mesure?.id ?? '', true)).toBe(false);
     expect(await readProposedPreferences(julie, 20)).toHaveLength(2);
+  });
+});
+
+describe('readHomeBrouillons : une préférence proposée est une demande de plus pour l’accueil', () => {
+  it('avec le correspondant, la date du mail et le fil lié à son outil, rien d’autre ; répondue, elle ne se montre plus', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    await learn(julie, PREFERENCE);
+
+    const home = await readHomeBrouillons(julie);
+
+    // Le brouillon retouché, envoyé, ne se montre plus : le fil a bougé.
+    expect(home.prets).toEqual([]);
+    expect(home.demandes).toEqual([
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: expect.any(Date),
+        preference: LESSON,
+        source: { title: 'Devis 2027', url: null, kind: 'gmail' },
+      },
+    ]);
+    const [one] = home.demandes as [{ id: string }];
+    expect(await answerPreference(julie, one.id, false)).toBe(true);
+    expect((await readHomeBrouillons(julie)).demandes).toEqual([]);
+  });
+
+  it('sans son oui à l’agent, rien ne part vers l’accueil ; ni vers celui d’un collègue', async () => {
+    const [julie, paul] = await team();
+    await retouched(julie);
+    await learn(julie, PREFERENCE);
+
+    expect((await readHomeBrouillons(paul)).demandes).toEqual([]);
+    await adminDb
+      .update(reponsesAgent)
+      .set({ oui: false })
+      .where(eq(reponsesAgent.userId, julie.userId));
+    expect(await readHomeBrouillons(julie)).toEqual({ demandes: [], prets: [] });
   });
 });
 

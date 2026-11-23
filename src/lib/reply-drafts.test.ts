@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
+import type {
+  HomeBrouillon,
+  HomeDemande,
+  HomeInconnu,
+  HomePreference,
+} from '@/server/portrait/screen';
 import {
   CLOSED,
   confirmsDiscard,
@@ -30,6 +35,13 @@ const inconnu = (n: number, day: number): HomeInconnu => ({
   from: `Inconnu ${n}`,
   receivedAt: at(day),
   mail: { sourceId: id(n), message: `message:${n}` },
+  source,
+});
+const preference = (n: number, day: number): HomePreference => ({
+  id: id(n),
+  from: `Préférence ${n}`,
+  receivedAt: at(day),
+  preference: 'Vous terminez vos mails par « Belle journée ».',
   source,
 });
 const pret = (n: number, day: number, depose = false): HomeBrouillon => ({
@@ -110,8 +122,46 @@ describe('countsOf : ce que la ligne de l’Accueil compte', () => {
       {},
     );
 
-    expect(countsOf(mails)).toEqual({ toComplete: 2, ready: 3, writing: 1 });
-    expect(countsOf([])).toEqual({ toComplete: 0, ready: 0, writing: 0 });
+    expect(countsOf(mails)).toEqual({ toComplete: 2, toConfirm: 0, ready: 3, writing: 1 });
+    expect(countsOf([])).toEqual({ toComplete: 0, toConfirm: 0, ready: 0, writing: 0 });
+  });
+
+  it('les préférences à valider, à part : elles aussi attendent un geste d’elle', () => {
+    const mails = panelMails(
+      [demande(1, 10), preference(2, 11), preference(3, 12), demande(4, 13, true)],
+      [pret(5, 8)],
+      {},
+    );
+
+    expect(countsOf(mails)).toEqual({ toComplete: 1, toConfirm: 2, ready: 1, writing: 1 });
+  });
+});
+
+describe('panelMails : une préférence d’écriture proposée', () => {
+  it('se range avec ce qui attend un geste d’elle, par date du mail ; « Oui » ou « Non » la ferme', () => {
+    const all = [demande(1, 10), preference(2, 12), inconnu(3, 11), demande(4, 16, true)];
+    const mails = panelMails(all, [pret(5, 20)], {});
+
+    expect(seen(mails)).toEqual([
+      'Préférence 2 preference',
+      'Inconnu 3 inconnu',
+      'Demande 1 questions',
+      'Prêt 5 pret',
+      'Demande 4 ecrit',
+    ]);
+    expect(mails[0]).toMatchObject({ key: `preference-${id(2)}`, id: id(2) });
+    expect(confirmsDiscard(mails[0] as PanelMail)).toBe(false);
+
+    const closed = panelReducer(CLOSED, {
+      type: 'close',
+      mails,
+      key: `preference-${id(2)}`,
+      id: null,
+    });
+    expect(seen(panelMails(all, [pret(5, 20)], closed.done))).not.toContain(
+      'Préférence 2 preference',
+    );
+    expect(closed.at).toBe(id(3));
   });
 });
 
@@ -207,7 +257,7 @@ describe('panelReducer : mail par mail', () => {
 
     expect(shown).toBe('rien');
     expect(panel.at).toBeNull();
-    expect(countsOf(mails)).toEqual({ toComplete: 0, ready: 0, writing: 0 });
+    expect(countsOf(mails)).toEqual({ toComplete: 0, toConfirm: 0, ready: 0, writing: 0 });
   });
 
   it('rouvert, le panneau reprend au premier mail, ce que Leon écrit rangé à la fin', () => {

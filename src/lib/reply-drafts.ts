@@ -1,16 +1,23 @@
-import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
+import type {
+  HomeBrouillon,
+  HomeDemande,
+  HomeInconnu,
+  HomePreference,
+} from '@/server/portrait/screen';
 
 // Le panneau de l'agent « Brouillons de réponse » sur l'Accueil (recherche/reply-drafts.tsx) : ce qui l'attend, mail
 // par mail, et la ligne qui le compte. Module pur, que le navigateur lit : l'écran ne fait qu'afficher cet état.
 
-// Ce qu'un mail attend : ses réponses aux questions de Leon, ou son oui à un inconnu (un geste d'elle) ; un brouillon
-// prêt ; ou rien qu'un peu de temps : Leon écrit.
-export type Sorte = 'questions' | 'inconnu' | 'pret' | 'ecrit';
+// Ce qu'un mail attend : ses réponses aux questions de Leon, son oui à un inconnu, ou son oui ou son non à une
+// préférence d'écriture tirée de sa retouche (un geste d'elle) ; un brouillon prêt ; ou rien qu'un peu de temps : Leon
+// écrit.
+export type Sorte = 'questions' | 'inconnu' | 'preference' | 'pret' | 'ecrit';
 // `key` : le mail et sa sorte (une demande et le brouillon qui la suit partagent la ligne, pas la clé). `id` : la
 // ligne, que les gestes visent et que le panneau suit ; pour un inconnu avant son oui, son fil.
 export type PanelMail = { key: string; id: string } & (
   | { sorte: 'questions'; mail: HomeDemande }
   | { sorte: 'inconnu'; mail: HomeInconnu }
+  | { sorte: 'preference'; mail: HomePreference }
   | { sorte: 'pret'; mail: HomeBrouillon }
   | { sorte: 'ecrit'; mail: HomeDemande | HomeInconnu }
 );
@@ -18,9 +25,12 @@ export type PanelMail = { key: string; id: string } & (
 // (ses réponses envoyées, son oui à un inconnu).
 export type Done = Record<string, string | null>;
 
-const RANK: Record<Sorte, number> = { questions: 0, inconnu: 0, pret: 1, ecrit: 2 };
+const RANK: Record<Sorte, number> = { questions: 0, inconnu: 0, preference: 0, pret: 1, ecrit: 2 };
 
-function toMail(one: HomeDemande | HomeInconnu | HomeBrouillon, done: Done): PanelMail | null {
+function toMail(
+  one: HomeDemande | HomeInconnu | HomePreference | HomeBrouillon,
+  done: Done,
+): PanelMail | null {
   if ('texte' in one) {
     const key = `brouillon-${one.id}`;
     return done[key] === null ? null : { key, id: one.id, sorte: 'pret', mail: one };
@@ -32,6 +42,10 @@ function toMail(one: HomeDemande | HomeInconnu | HomeBrouillon, done: Done): Pan
     return line === undefined
       ? { key, id: one.mail.sourceId, sorte: 'inconnu', mail: one }
       : { key, id: line, sorte: 'ecrit', mail: one };
+  }
+  if ('preference' in one) {
+    const key = `preference-${one.id}`;
+    return done[key] === null ? null : { key, id: one.id, sorte: 'preference', mail: one };
   }
   const key = `demande-${one.id}`;
   if (done[key] === null) return null;
@@ -45,7 +59,7 @@ function toMail(one: HomeDemande | HomeInconnu | HomeBrouillon, done: Done): Pan
 // où le panneau les a montrées en s'ouvrant ; tant qu'il est ouvert, un mail garde sa place (des réponses envoyées
 // restent « Mail 2 sur 4 »), même quand l'Accueil relu change sa sorte, et ce qui arrive se range après.
 export function panelMails(
-  demandes: Array<HomeDemande | HomeInconnu>,
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference>,
   prets: HomeBrouillon[],
   done: Done,
   order: string[] = [],
@@ -63,12 +77,13 @@ export function panelMails(
     .sort((a, b) => place(a.key) - place(b.key));
 }
 
-// Ce que la ligne de l'Accueil compte : les mails à compléter (un geste d'elle), les brouillons prêts, et ceux que
-// Leon écrit.
+// Ce que la ligne de l'Accueil compte : les mails à compléter et les préférences à valider (un geste d'elle), les
+// brouillons prêts, et ceux que Leon écrit.
 export function countsOf(mails: PanelMail[]) {
   const count = (...sortes: Sorte[]) => mails.filter((one) => sortes.includes(one.sorte)).length;
   return {
     toComplete: count('questions', 'inconnu'),
+    toConfirm: count('preference'),
     ready: count('pret'),
     writing: count('ecrit'),
   };

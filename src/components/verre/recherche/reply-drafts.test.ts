@@ -5,7 +5,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { SidePanelProps } from '@/components/verre';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
 import { type Done, panelMails } from '@/lib/reply-drafts';
-import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
+import type {
+  HomeBrouillon,
+  HomeDemande,
+  HomeInconnu,
+  HomePreference,
+} from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { MailView, Questions, ReplyDrafts } from './reply-drafts';
@@ -15,6 +20,7 @@ import { MailView, Questions, ReplyDrafts } from './reply-drafts';
 // d'un mail à l'autre, se teste sans écran (lib/draft-questions.test.ts, lib/reply-drafts.test.ts). Les actions
 // importent Better Auth : elles ne sont pas appelées au rendu. Données inventées.
 vi.mock('@/app/(app)/settings/actions', () => ({
+  answerPreferenceAction: vi.fn(),
   answerQuestionsAction: vi.fn(),
   answerUnknownAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
@@ -70,6 +76,14 @@ const INES: HomeInconnu = {
   mail: { sourceId: id(7), message: 'message:18c2f0a' },
   source: { title: 'Partenariat', url: 'https://mail.google.test/7', kind: 'gmail' },
 };
+// Une préférence d'écriture que Leon a tirée de sa retouche.
+const RETOUCHE: HomePreference = {
+  id: id(801),
+  from: 'Léa Roy',
+  receivedAt: new Date('2026-11-13T09:00:00Z'),
+  preference: 'Vous terminez vos mails par « Belle journée », jamais par <b>.',
+  source: { title: 'Devis 2027', url: 'https://mail.google.test/8', kind: 'gmail' },
+};
 // Ses réponses envoyées : Leon écrit.
 const REPONDUE: HomeDemande = {
   ...DEVIS,
@@ -104,14 +118,14 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
     }),
   );
 const render = (
-  demandes: Array<HomeDemande | HomeInconnu>,
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference>,
   prets: HomeBrouillon[] = [],
   locale: 'en' | 'fr' = 'fr',
   name: string | null = 'Julie',
 ) => within(createElement(ReplyDrafts, { name, demandes, prets, max: 1000 }), locale);
 // Un mail du panneau, tel qu'il s'y montre (sans le préchargement du logo de son outil, que React pose devant).
 const mailView = (
-  one: HomeDemande | HomeInconnu | HomeBrouillon,
+  one: HomeDemande | HomeInconnu | HomePreference | HomeBrouillon,
   locale: 'en' | 'fr' = 'fr',
   over: { done?: Done; hidden?: boolean; failed?: boolean } = {},
 ) => {
@@ -130,6 +144,7 @@ const mailView = (
       max: 1000,
       onAnswers: () => {},
       onUnknown: () => {},
+      onPreference: () => {},
       onDiscard: () => {},
       onRefresh: () => {},
     }),
@@ -210,6 +225,23 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
     expect(text(render([REPONDUE]))).toBe('Julie, j’écris votre réponse. 1 réponse en cours');
     expect(text(render([REPONDUE, { ...CONTRAT, repondue: true }]))).toBe(
       'Julie, j’écris vos 2 réponses. 2 réponses en cours',
+    );
+  });
+
+  it('une préférence à valider attend son geste aussi : « j’ai quelques questions », et son compte, au singulier, au pluriel', () => {
+    const autre = { ...RETOUCHE, id: id(802) };
+
+    expect(text(render([RETOUCHE]))).toBe(
+      'Julie, j’ai quelques questions à vous poser. 1 préférence à valider',
+    );
+    expect(text(render([DEVIS, RETOUCHE, autre, REPONDUE], [PRET]))).toBe(
+      'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 préférences à valider · 1 brouillon prêt · 1 réponse en cours',
+    );
+    expect(text(render([RETOUCHE], [], 'en'))).toBe(
+      'Julie, I have a few questions for you. 1 preference to confirm',
+    );
+    expect(text(render([RETOUCHE, autre], [PRET], 'en', null))).toBe(
+      'I have a few questions for you. 2 preferences to confirm · 1 draft ready',
     );
   });
 
@@ -459,6 +491,40 @@ describe('MailView : un mail du panneau', () => {
     expect(text(html)).toContain('Inès Garnier Reçu le 12 nov. 2026');
     expect(text(html)).toContain('J’écris votre réponse. Actualiser Écarter');
     expect(text(html)).not.toContain('Voulez-vous une réponse');
+  });
+
+  it('une préférence d’écriture : la retouche remarquée, la date, le fil, la préférence telle quelle, puis « Dois-je en tenir compte… ? », « Oui » et « Non »', () => {
+    const html = mailView(RETOUCHE);
+    const words = `preference-${RETOUCHE.id}`;
+
+    expect(html).toMatch(
+      new RegExp(
+        `^<div><div id="${words}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*>J’ai remarqué une retouche sur ma réponse à Léa Roy\\.</h3>`,
+      ),
+    );
+    expect(text(html)).toBe(
+      'J’ai remarqué une retouche sur ma réponse à Léa Roy. Reçu le 13 nov. 2026 Devis 2027 Gmail Vous terminez vos mails par « Belle journée », jamais par &lt;b&gt;. Dois-je en tenir compte pour vos prochains brouillons ? Oui Non',
+    );
+    expect(html).toContain('href="https://mail.google.test/8"');
+    // Le texte tel quel, échappé.
+    expect(html).toContain(`<p id="${words}-preference" class="whitespace-pre-wrap`);
+    expect(html).toContain('jamais par &lt;b&gt;.</p>');
+    expect(buttons(html)).toEqual(['Oui', 'Non']);
+    // « Oui » et « Non » rappellent la question et la préférence ; ni « Écarter », ni texte à écrire.
+    expect(count(html, `aria-describedby="${words}-tenir ${words}-preference"`)).toBe(2);
+    expect(html).not.toMatch(/<textarea|<input|Écarter/);
+  });
+
+  it('une préférence sans nom de correspondant, et en anglais', () => {
+    expect(text(mailView({ ...RETOUCHE, from: null }))).toMatch(
+      /^J’ai remarqué une retouche sur l’une de mes réponses\. Reçu le 13 nov\. 2026/,
+    );
+    const english = text(mailView(RETOUCHE, 'en'));
+    expect(english).toMatch(/^I noticed you edited my reply to Léa Roy\. Received on Nov 13, 2026/);
+    expect(english).toContain('Should I keep this in mind for your next drafts? Yes No');
+    expect(text(mailView({ ...RETOUCHE, from: null }, 'en'))).toMatch(
+      /^I noticed you edited one of my replies\./,
+    );
   });
 
   it('sans nom de correspondant ni titre de fil, des mots à la place ; un fil sans lien se montre sans s’ouvrir', () => {

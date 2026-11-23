@@ -363,6 +363,7 @@
     },
     "count": {
       "toComplete": "{count, plural, one {# email to complete} other {# emails to complete}}",
+      "toConfirm": "{count, plural, one {# preference to confirm} other {# preferences to confirm}}",
       "ready": "{count, plural, one {# draft ready} other {# drafts ready}}",
       "writing": "{count, plural, one {# reply in progress} other {# replies in progress}}"
     },
@@ -372,6 +373,9 @@
     "allDone": "That’s all for now.",
     "someone": "Your correspondent",
     "strangerAsk": "Do you want a reply?",
+    "noticed": "I noticed you edited my reply to {name}.",
+    "noticedAnon": "I noticed you edited one of my replies.",
+    "keepInMind": "Should I keep this in mind for your next drafts?",
     "instructions": "Your instructions",
     "instructionsHelp": "What you want to reply, in a few words. You can leave it empty.",
     "prepare": "Prepare the reply",

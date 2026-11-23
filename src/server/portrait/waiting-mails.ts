@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { withTenant } from '@/server/db/with-tenant';
+import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
 import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './sent-mails';
 
@@ -17,14 +17,15 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 //   d'où partent ses mails envoyés des 90 derniers jours (sentTurns) ;
 // - vient de quelqu'un à qui elle a écrit dans ces mêmes mails envoyés, en « à » ou en copie : c'est ce qui écarte
 //   les lettres d'information, la prospection et les notifications ;
-// - n'a pas déjà été traité : ni brouillon écrit, ni mail jugé sans réponse à donner (0080).
+// - n'a pas déjà été traité : ni brouillon écrit, ni questions posées à la personne, ni mail jugé sans réponse à donner
+//   (0080, 0082).
 // shortcut: ses envois automatiques (facts.ts, handWritten) comptent ici comme des mails envoyés, le tri se faisant en
 // SQL sans lire leur texte : l'adresse qui reçoit ses notifications passe pour un correspondant, à écarter ici si de
 // vraies boîtes le montrent.
 
 const WAITING_DAYS = 7;
 // Les plus récents d'abord, par passage (un appel au modèle chacun).
-const WAITING_MAX = 5;
+export const WAITING_MAX = 5;
 // Ce que le modèle reçoit du fil : ses derniers messages, chacun coupé.
 const THREAD_MESSAGES = 4;
 const MESSAGE_CHARS = 1500;
@@ -50,6 +51,15 @@ export type WaitingMail = {
   messages: ThreadMessage[];
 };
 
+// Un mail pour lequel Leon a posé ses questions à la personne, qui y a répondu : son brouillon reste à écrire.
+export type AnsweredMail = WaitingMail & {
+  // La ligne du brouillon (0082).
+  id: string;
+  questions: string[];
+  // Une par question, dans le même ordre ; une réponse peut être vide.
+  reponses: string[];
+};
+
 type MessageRow = {
   sourceId: string;
   message: string;
@@ -58,6 +68,53 @@ type MessageRow = {
   at: string;
   text: string;
 };
+
+// Ces mails avec les derniers messages de leur fil, un mail coupé recollé dans l'ordre de ses morceaux (comme
+// readSentMails).
+async function withMessages<M extends { sourceId: string; message: string }>(
+  tx: Tx,
+  ctx: TenantContext,
+  mails: M[],
+): Promise<Array<M & { messages: ThreadMessage[] }>> {
+  if (mails.length === 0) return [];
+  const { rows } = await tx.execute<MessageRow>(sql`
+    select "sourceId", message, author, own, at, text from (
+      select m.source_id as "sourceId", m.message,
+             coalesce(min(m.author_name), min(m.author_email)) as author,
+             coalesce(bool_or(m.author_side = ${TEAM}), false) as own,
+             extract(epoch from min(m.ts)) as at,
+             left(string_agg(m.text, ${'\n'} order by m.part), ${MESSAGE_CHARS}) as text,
+             row_number() over (partition by m.source_id order by min(m.ts) desc, m.message desc) as n
+      from (
+        select t.source_id, t.author_name, t.author_email, t.author_side, t.ts, t.text,
+               substring(t.external_id from ${MESSAGE}) as message,
+               coalesce(substring(t.external_id from ${PART})::int, 0) as part
+        from turns t
+        where t.tenant_id = ${ctx.tenantId}
+          and t.source_id = any(${textArray(mails.map((mail) => mail.sourceId))}::uuid[])
+          and t.external_id like 'message:%'
+      ) m
+      group by m.source_id, m.message
+    ) recent
+    where n <= ${THREAD_MESSAGES}
+    order by "sourceId", n desc`);
+  return mails.flatMap((mail) => {
+    const messages = rows.filter((row) => row.sourceId === mail.sourceId);
+    // Un message arrivé entre les deux lectures : ce mail n'est plus le dernier du fil, rien à préparer.
+    if (messages.at(-1)?.message !== mail.message) return [];
+    return [
+      {
+        ...mail,
+        messages: messages.map(({ author, own, at, text }) => ({
+          author,
+          own,
+          at: epochToDate(at),
+          text,
+        })),
+      },
+    ];
+  });
+}
 
 export async function readWaitingMails(
   ctx: TenantContext,
@@ -101,44 +158,33 @@ export async function readWaitingMails(
             and b.user_id = ${ctx.userId} and b.message = l.message)
       order by l.ts desc, s.id
       limit ${WAITING_MAX}`);
-    if (mails.length === 0) return [];
-    // Les derniers messages de ces fils, un mail coupé recollé dans l'ordre de ses morceaux (comme readSentMails).
-    const { rows } = await tx.execute<MessageRow>(sql`
-      select "sourceId", message, author, own, at, text from (
-        select m.source_id as "sourceId", m.message,
-               coalesce(min(m.author_name), min(m.author_email)) as author,
-               coalesce(bool_or(m.author_side = ${TEAM}), false) as own,
-               extract(epoch from min(m.ts)) as at,
-               left(string_agg(m.text, ${'\n'} order by m.part), ${MESSAGE_CHARS}) as text,
-               row_number() over (partition by m.source_id order by min(m.ts) desc, m.message desc) as n
-        from (
-          select t.source_id, t.author_name, t.author_email, t.author_side, t.ts, t.text,
-                 substring(t.external_id from ${MESSAGE}) as message,
-                 coalesce(substring(t.external_id from ${PART})::int, 0) as part
-          from turns t
-          where t.tenant_id = ${ctx.tenantId}
-            and t.source_id = any(${textArray(mails.map((mail) => mail.sourceId))}::uuid[])
-            and t.external_id like 'message:%'
-        ) m
-        group by m.source_id, m.message
-      ) recent
-      where n <= ${THREAD_MESSAGES}
-      order by "sourceId", n desc`);
-    return mails.flatMap((mail) => {
-      const messages = rows.filter((row) => row.sourceId === mail.sourceId);
-      // Un message arrivé entre les deux lectures : ce mail n'est plus le dernier du fil, rien à préparer.
-      if (messages.at(-1)?.message !== mail.message) return [];
-      return [
-        {
-          ...mail,
-          messages: messages.map(({ author, own, at, text }) => ({
-            author,
-            own,
-            at: epochToDate(at),
-            text,
-          })),
-        },
-      ];
-    });
+    return withMessages(tx, ctx, mails);
+  });
+}
+
+// Les brouillons qu'elle attend : Leon lui avait posé ses questions, elle y a répondu, et le texte reste à écrire
+// (brouillons.ts, le second appel). Ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé depuis : le mail est
+// toujours son dernier message. Les règles d'un mail qui attend ne se rejouent pas : il les passait quand Leon a posé
+// ses questions, et sa réponse peut venir plus de WAITING_DAYS jours après.
+export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMail[]> {
+  return withTenant(ctx, async (tx) => {
+    const { rows: mails } = await tx.execute<Omit<AnsweredMail, 'messages'>>(sql`
+      select b.id, b.source_id as "sourceId", b.message, l.address as "from", s.title as subject,
+             b.questions, b.reponses
+      from brouillons b
+      join sources s on s.tenant_id = b.tenant_id and s.id = b.source_id
+      cross join lateral (
+        select substring(t.external_id from ${MESSAGE}) as message, lower(t.author_email) as address, t.ts
+        from turns t
+        where t.tenant_id = b.tenant_id and t.source_id = b.source_id
+        order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
+        limit 1
+      ) l
+      where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
+        and b.texte is null and b.reponses is not null and b.ecarte_le is null
+        and l.message = b.message
+      order by l.ts desc, b.id
+      limit ${WAITING_MAX}`);
+    return withMessages(tx, ctx, mails);
   });
 }

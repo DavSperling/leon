@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
+import { and, eq, isNull, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { accountIsGone } from '@/server/briefing/briefings';
@@ -165,6 +165,8 @@ export async function writeBrouillons(
 // Ce que l'écran montre au plus : les brouillons des mails les plus récents.
 // shortcut: au-delà, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans les écarter.
 const SHOWN_MAX = 20;
+// Ce que l'accueil montre au plus : les demandes de Leon sur les mails les plus récents.
+const DEMANDES_MAX = 3;
 
 export type ReadyBrouillon = {
   id: string;
@@ -176,15 +178,27 @@ export type ReadyBrouillon = {
   // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
   depose: boolean;
 };
+// Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, et auxquelles elle n'a pas répondu.
+export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receivedAt'> & {
+  questions: string[];
+};
 
-// Ses brouillons prêts, le mail le plus récent d'abord : ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé
-// depuis. Le dernier message du fil se relit à chaque affichage : dès qu'elle a répondu, ou qu'un nouveau message est
-// arrivé, le brouillon ne se montre plus. À date égale, le même départage que readWaitingMails.
-export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon[]> {
+// Ses lignes dans l'état `state`, le mail le plus récent d'abord : celles qu'elle n'a pas écartées, et dont le fil n'a
+// pas bougé depuis. Le dernier message du fil se relit à chaque affichage : dès qu'elle a répondu, ou qu'un nouveau
+// message est arrivé, la ligne ne se montre plus. À date égale, le même départage que readWaitingMails.
+async function shownRows(ctx: TenantContext, state: SQL, limit: number) {
   const { rows } = await withTenant(ctx, (tx) =>
-    tx.execute<Omit<ReadyBrouillon, 'receivedAt'> & { at: string }>(sql`
+    tx.execute<{
+      id: string;
+      sourceId: string;
+      from: string | null;
+      at: string;
+      texte: string | null;
+      depose: boolean;
+      questions: string[] | null;
+    }>(sql`
       select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
-             extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose
+             extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose, b.questions
       from brouillons b
       cross join lateral (
         select t.external_id, t.author_name, t.author_email, t.ts
@@ -194,12 +208,32 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
         limit 1
       ) l
       where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
-        and b.texte is not null and b.ecarte_le is null
+        and b.ecarte_le is null and ${state}
         and substring(l.external_id from ${MESSAGE}) = b.message
       order by l.ts desc, b.id
-      limit ${SHOWN_MAX}`),
+      limit ${limit}`),
   );
   return rows.map(({ at, ...row }) => ({ ...row, receivedAt: epochToDate(at) }));
+}
+
+// Ses brouillons prêts, pour « Ma fiche » : ceux qui ont leur texte, écrit au premier appel ou avec ses réponses.
+export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon[]> {
+  const rows = await shownRows(ctx, sql`b.texte is not null`, SHOWN_MAX);
+  return rows.flatMap(({ questions: _, texte, ...row }) =>
+    texte === null ? [] : [{ ...row, texte }],
+  );
+}
+
+// Les demandes de Leon qui l'attendent, pour l'accueil : des questions, pas encore de réponses.
+export async function readDemandes(ctx: TenantContext): Promise<Demande[]> {
+  const rows = await shownRows(
+    ctx,
+    sql`b.texte is null and b.questions is not null and b.reponses is null`,
+    DEMANDES_MAX,
+  );
+  return rows.flatMap(({ id, sourceId, from, receivedAt, questions }) =>
+    questions ? [{ id, sourceId, from, receivedAt, questions }] : [],
+  );
 }
 
 // Ses réponses aux questions de Leon, une par question, dans le même ordre (une réponse peut être vide) : gardées sur

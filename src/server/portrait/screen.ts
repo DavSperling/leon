@@ -6,7 +6,7 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { EN_SERVICE } from './agents';
-import { type ReadyBrouillon, readBrouillons } from './brouillons';
+import { type Demande, type ReadyBrouillon, readBrouillons, readDemandes } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -14,8 +14,9 @@ import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, les sources de
-// ses tâches, les agents de départ qui lui sont proposés, et les brouillons de réponse prêts. Tout se lit sous les
-// droits de la personne, et rien d'autre ne lit sa fiche.
+// ses tâches, les agents de départ qui lui sont proposés, et les brouillons de réponse prêts. Et, pour l'accueil, les
+// demandes de Leon qui l'attendent (readHomeDemandes). Tout se lit sous les droits de la personne, et rien d'autre ne
+// lit sa fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -101,6 +102,32 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
     return wanted && source ? [{ ...one, source }] : [];
   });
   return { etat, lines, sources, agents, brouillons };
+}
+
+// Une demande de Leon, telle que l'accueil la montre : le correspondant, le fil (son objet, lié à son outil), la date du
+// mail reçu et les questions. `id` sert à lui répondre ou à l'écarter. Rien d'autre ne part vers l'accueil.
+export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
+
+// Les demandes de Leon pour l'accueil, la plus récente d'abord, trois au plus (brouillons.ts) : seulement tant qu'elle
+// dit oui à l'agent et qu'il lui est proposé, comme ses brouillons dans « Ma fiche ». Lue à chaque chargement de
+// l'accueil : les demandes d'abord, sa fiche et ses outils seulement s'il y en a une.
+export async function readHomeDemandes(ctx: TenantContext): Promise<HomeDemande[]> {
+  const open = await readDemandes(ctx);
+  if (open.length === 0) return [];
+  const [agents, seen] = await Promise.all([
+    readProposals(ctx, await readFiche(ctx)),
+    briefingSources(
+      ctx,
+      open.map((one) => one.sourceId),
+    ),
+  ]);
+  if (!agents.some((one) => one.agent === EN_SERVICE && one.oui)) return [];
+  return open.flatMap(({ sourceId, ...one }) => {
+    const source = seen.find((found) => found.sourceId === sourceId);
+    return source
+      ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
+      : [];
+  });
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

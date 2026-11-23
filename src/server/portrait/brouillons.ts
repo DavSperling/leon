@@ -269,9 +269,8 @@ export async function answerQuestions(
 
 // L'écarte : il ne se montre plus, et son mail reste traité (aucun autre brouillon ne lui sera écrit). Une demande de
 // Leon s'écarte de même, et se clôt : ses questions ne sont plus posées, et aucun autre appel n'est fait pour ce mail.
-// Rend false s'il
-// n'est pas à la personne, ou déjà écarté. Celui que Leon avait déposé dans ses brouillons Gmail en est retiré ensuite,
-// hors d'ici (brouillon-depot.ts, withdrawBrouillon).
+// Rend false s'il n'est pas à la personne, ou déjà écarté. Celui que Leon avait déposé dans ses brouillons Gmail en est
+// retiré ensuite, hors d'ici (brouillon-depot.ts, withdrawBrouillon).
 export async function discardBrouillon(ctx: TenantContext, id: string): Promise<boolean> {
   if (!z.uuid().safeParse(id).success) return false;
   const discarded = await withTenant(ctx, (tx) =>

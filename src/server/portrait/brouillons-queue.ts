@@ -44,9 +44,10 @@ export async function enqueueBrouillons(job: {
   return (await boss.send(BROUILLONS_QUEUE, data, { singletonKey })) !== null;
 }
 
-// Demande un passage pour la personne, si elle a dit oui à l'agent : quand elle lui répond (propositions.ts), puis à la
-// fin de chaque relève de sa boîte (connectors/sync.ts). Une demande qui échoue est journalisée sans faire échouer sa
-// réponse ni la relève : la relève suivante en refait une.
+// Demande un passage pour la personne, si elle a dit oui à l'agent : quand elle lui répond (propositions.ts), quand
+// elle répond aux questions de Leon (settings/actions.ts), puis à la fin de chaque relève de sa boîte
+// (connectors/sync.ts). Une demande qui échoue est journalisée sans faire échouer sa réponse ni la relève : la relève
+// suivante en refait une.
 export async function requestBrouillons(ctx: TenantContext): Promise<void> {
   try {
     const [answer] = await withTenant(ctx, (tx) =>

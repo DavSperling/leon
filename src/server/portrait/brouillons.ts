@@ -21,6 +21,7 @@ import {
   type AnsweredMail,
   readAnsweredMails,
   readWaitingMails,
+  unknownMails,
   WAITING_MAX,
   type WaitingMail,
 } from './waiting-mails';
@@ -282,6 +283,31 @@ export async function answerQuestions(
       .returning({ id: brouillons.id }),
   );
   return answered.length > 0;
+}
+
+// Sa réponse au mail d'un inconnu (waiting-mails.ts, unknownMails), depuis l'accueil : « Oui », avec ses indications
+// (vides quand elle n'en donne pas), ou « Non » (null). Une ligne s'écrit pour ce mail (0084) : son oui attend le
+// passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend l'identifiant de la ligne,
+// ou null sans rien écrire si ce n'est pas un mail d'inconnu qui l'attend encore : à elle, pas encore traité, toujours
+// le dernier de son fil, de moins de sept jours ; ou si son compte est supprimé. Deux envois simultanés n'en gardent
+// qu'un : une seule ligne par message (0080). L'appelant a borné les indications (settings/actions.ts) ; la table aussi.
+export async function answerUnknownMail(
+  ctx: TenantContext,
+  mail: { sourceId: string; message: string },
+  indications: string | null,
+): Promise<string | null> {
+  if (!z.uuid().safeParse(mail.sourceId).success) return null;
+  const line = sql`s.tenant_id, ${ctx.userId}::uuid, s.id, l.message, ${indications}::text,
+                   array[${ctx.userId}::uuid]`;
+  return withTenant(ctx, async (tx) => {
+    if (!(await lockAccount(tx, ctx))) return null;
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      insert into brouillons (tenant_id, user_id, source_id, message, indications, acl)
+      ${unknownMails(ctx, new Date(), line, mail)}
+      on conflict do nothing
+      returning id`);
+    return rows[0]?.id ?? null;
+  });
 }
 
 // L'écarte : il ne se montre plus, et son mail reste traité (aucun autre brouillon ne lui sera écrit). Une demande de

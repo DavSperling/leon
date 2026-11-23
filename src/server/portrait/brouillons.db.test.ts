@@ -18,12 +18,14 @@ import { createTestTenant } from '@/test/fixtures';
 import { extendThread, mailThread, received, sent } from '@/test/mail-threads';
 import {
   answerQuestions,
+  answerUnknownMail,
   BROUILLONS_DAILY_CAP,
   discardBrouillon,
   readShown,
   writeBrouillons,
 } from './brouillons';
 import { buildFiche } from './fiche';
+import { readUnknownMails } from './waiting-mails';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -834,6 +836,149 @@ describe('answerQuestions : ses réponses aux questions de Leon', () => {
     expect(kept.filter(Boolean)).toHaveLength(1);
     const [row] = await stored(julie);
     expect(row?.reponses).toEqual(kept[0] ? ['Premier.', 'Envoi.'] : ['Second.', 'Envoi.']);
+  });
+});
+
+describe('answerUnknownMail : son oui ou son non au mail d’un inconnu', () => {
+  // Julie (sa fiche, sans son oui à l'agent : l'action ne le demande pas) et Paul, et un mail d'Inès, une inconnue,
+  // dans le fil de Julie. Rend le fil et le message.
+  async function strangerWrote(): Promise<
+    [TenantContext, TenantContext, { sourceId: string; message: string }]
+  > {
+    const [julie, paul] = await team();
+    await withFiche(julie);
+    const mail = received(ago(HOUR), 'Bonjour, pourrions-nous travailler ensemble ?', {
+      author: { name: 'Inès Garnier', email: 'ines@inconnue.test' },
+      automated: false,
+    });
+    return [
+      julie,
+      paul,
+      { sourceId: await mailThread(julie, 'Partenariat', [mail]), message: mail.externalId },
+    ];
+  }
+
+  it('« Oui » garde ses indications sur une ligne à elle, sans texte ni question, et le mail ne se propose plus', async () => {
+    const [julie, , mail] = await strangerWrote();
+
+    const id = await answerUnknownMail(julie, mail, 'Dites-lui que je suis intéressée.');
+
+    expect(id).toEqual(expect.any(String));
+    expect(await stored(julie)).toMatchObject([
+      {
+        id,
+        sourceId: mail.sourceId,
+        message: mail.message,
+        indications: 'Dites-lui que je suis intéressée.',
+        texte: null,
+        questions: null,
+        reponses: null,
+        ecarteLe: null,
+        acl: [julie.userId],
+      },
+    ]);
+    expect(await readUnknownMails(julie, 5)).toEqual([]);
+    // Une seconde réponse, « Oui » ou « Non », ne change rien.
+    expect(await answerUnknownMail(julie, mail, 'Autre chose.')).toBeNull();
+    expect(await answerUnknownMail(julie, mail, null)).toBeNull();
+    expect(await stored(julie)).toMatchObject([
+      { id, indications: 'Dites-lui que je suis intéressée.' },
+    ]);
+  });
+
+  it('« Oui » sans indication garde un oui vide ; « Non » ferme le mail pour de bon, sans rien à montrer', async () => {
+    const [julie, , mail] = await strangerWrote();
+    const other = received(ago(2 * HOUR), 'Nos offres.', {
+      author: { name: 'Hugo Blanc', email: 'hugo@inconnu.test' },
+      automated: false,
+    });
+    const otherMail = {
+      sourceId: await mailThread(julie, 'Offre', [other]),
+      message: other.externalId,
+    };
+
+    expect(await answerUnknownMail(julie, mail, '')).toEqual(expect.any(String));
+    expect(await answerUnknownMail(julie, otherMail, null)).toEqual(expect.any(String));
+
+    expect(await titlesOf(julie)).toEqual([
+      ['Offre', null],
+      ['Partenariat', null],
+    ]);
+    const lines = await stored(julie);
+    expect(lines.find((line) => line.sourceId === otherMail.sourceId)).toMatchObject({
+      indications: null,
+      questions: null,
+      ecarteLe: null,
+    });
+    expect(lines.find((line) => line.sourceId === mail.sourceId)?.indications).toBe('');
+    expect(await readUnknownMails(julie, 5)).toEqual([]);
+    // Ni l'un ni l'autre n'est un brouillon prêt ; seul son oui attend Leon (readShown le dit à l'accueil).
+    expect((await readShown(julie)).prets).toEqual([]);
+  });
+
+  it('rien ne s’écrit pour un mail qui ne l’attend pas : à une autre, d’un correspondant, automatique, d’un fil qui a bougé, trop ancien, ou un identifiant qui n’en est pas un', async () => {
+    const [julie, paul, mail] = await strangerWrote();
+    const fromLea = received(ago(HOUR), 'Bonjour Julie, et le devis ?');
+    const known = {
+      sourceId: await mailThread(julie, 'Devis', [fromLea]),
+      message: fromLea.externalId,
+    };
+    const stranger = (at: Date, over = {}) =>
+      received(at, 'Bonjour.', {
+        author: { name: 'Hugo Blanc', email: 'hugo@inconnu.test' },
+        automated: false,
+        ...over,
+      });
+    const robot = stranger(ago(HOUR), { automated: true });
+    const old = stranger(ago(8 * DAY));
+    const moved = stranger(ago(2 * HOUR));
+    const ofRobot = {
+      sourceId: await mailThread(julie, 'Lettre', [robot]),
+      message: robot.externalId,
+    };
+    const ofOld = { sourceId: await mailThread(julie, 'Ancien', [old]), message: old.externalId };
+    const ofMoved = {
+      sourceId: await mailThread(julie, 'Bougé', [moved]),
+      message: moved.externalId,
+    };
+    await extendThread(julie, ofMoved.sourceId, [stranger(ago(HOUR), { text: 'Une relance.' })]);
+
+    expect(await answerUnknownMail(paul, mail, 'Oui.')).toBeNull();
+    for (const one of [known, ofRobot, ofOld, ofMoved])
+      for (const indications of ['Oui.', null])
+        expect(await answerUnknownMail(julie, one, indications)).toBeNull();
+    expect(
+      await answerUnknownMail(julie, { ...mail, message: 'message:autre' }, 'Oui.'),
+    ).toBeNull();
+    expect(await answerUnknownMail(julie, { ...mail, sourceId: 'pas-un-id' }, 'Oui.')).toBeNull();
+    expect(
+      await answerUnknownMail(julie, { ...mail, sourceId: crypto.randomUUID() }, 'Oui.'),
+    ).toBeNull();
+
+    expect(await stored(julie)).toEqual([]);
+    expect(await stored(paul)).toEqual([]);
+  });
+
+  it('un compte supprimé n’écrit rien', async () => {
+    const [julie, , mail] = await strangerWrote();
+    await deleteAccountOf(julie);
+
+    expect(await answerUnknownMail(julie, mail, 'Oui.')).toBeNull();
+    expect(await stored(julie)).toEqual([]);
+  });
+
+  it('deux envois simultanés n’en gardent qu’un', async () => {
+    const [julie, , mail] = await strangerWrote();
+
+    const kept = await Promise.all([
+      answerUnknownMail(julie, mail, 'Premier envoi.'),
+      answerUnknownMail(julie, mail, null),
+    ]);
+
+    expect(kept.filter(Boolean)).toHaveLength(1);
+    const [row] = await stored(julie);
+    expect(row?.indications).toBe(kept[0] ? 'Premier envoi.' : null);
+    expect(await stored(julie)).toHaveLength(1);
   });
 });
 

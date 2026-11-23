@@ -244,11 +244,14 @@ describe('deleteAccount', () => {
        values ($1, $2, '[]', now(), array[$2::uuid]), ($1, $3, '[]', now(), array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
-    // Et sa fiche (0076), une ligne retirée comprise, pas celle de Bob.
+    // Et sa fiche (0076), une ligne retirée comprise, et une préférence d'écriture tirée de ses retouches (0087), pas
+    // celle de Bob.
     await adminPool.query(
       `insert into lignes_fiche (tenant_id, user_id, genre, valeur, provenance, mails, retiree_le, acl)
        values ($1, $2, 'rythme', '{"mailsParSemaine": 12}', 'calcul', 40, null, array[$2::uuid]),
               ($1, $2, 'signature', '{"texte": "Alice"}', 'personne', null, now(), array[$2::uuid]),
+              ($1, $2, 'preference', '{"texte": "Vous écrivez court.", "etat": "acceptee"}', 'apprise', null,
+               null, array[$2::uuid]),
               ($1, $3, 'rythme', '{"mailsParSemaine": 8}', 'calcul', 25, null, array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
@@ -260,17 +263,17 @@ describe('deleteAccount', () => {
               ($1, $3, 'point-du-jour', true, array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
-    // Et les brouillons de réponse préparés pour elle (0080), l'écarté et le « sans réponse » compris, et son oui au
-    // mail d'un inconnu avec ses indications (0084), pas celui de Bob : sa source reste, ils ne partiraient pas avec
-    // elle.
+    // Et les brouillons de réponse préparés pour elle (0080), l'écarté et le « sans réponse » compris, son oui au
+    // mail d'un inconnu avec ses indications (0084) et l'issue d'un brouillon qu'elle a envoyé (0086), pas celui de
+    // Bob : sa source reste, ils ne partiraient pas avec elle.
     const bobSource = await seedSource(bob);
     await adminPool.query(
-      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, indications, acl)
-       values ($1, $2, $3, 'message:1', 'Bonjour, voici le devis.', null, null, array[$2::uuid]),
-              ($1, $2, $3, 'message:2', 'Bonjour, merci.', now(), null, array[$2::uuid]),
-              ($1, $2, $3, 'message:3', null, null, null, array[$2::uuid]),
-              ($1, $2, $3, 'message:4', null, null, 'Dites-lui oui.', array[$2::uuid]),
-              ($1, $4, $5, 'message:1', 'Bonjour, je regarde.', null, null, array[$4::uuid])`,
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, indications, issue, acl)
+       values ($1, $2, $3, 'message:1', 'Bonjour, voici le devis.', null, null, 'retouche', array[$2::uuid]),
+              ($1, $2, $3, 'message:2', 'Bonjour, merci.', now(), null, null, array[$2::uuid]),
+              ($1, $2, $3, 'message:3', null, null, null, null, array[$2::uuid]),
+              ($1, $2, $3, 'message:4', null, null, 'Dites-lui oui.', null, array[$2::uuid]),
+              ($1, $4, $5, 'message:1', 'Bonjour, je regarde.', null, null, null, array[$4::uuid])`,
       [tenantId, alice.userId, privateSource.sourceId, bob.userId, bobSource.sourceId],
     );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas

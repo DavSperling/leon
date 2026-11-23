@@ -469,6 +469,23 @@ describe('extractClaudeCodeFacts', () => {
       expect(externe(new Map([['a1', sousAgent(...geste('s1', name, input))]]))).toBe(true);
     });
 
+    // Les accusés courts ne rendent pas externe, ni dans la session ni dans un sous-agent (décision d'Amos du 23/11).
+    const accuses: [string, unknown][] = [
+      ['SubagentHandback', { message: 'Fini.' }],
+      ['StructuredOutput', { verdict: 'ok' }],
+      ['SendMessage', { to: 'main', message: 'x' }],
+      ['SendUserFile', { files: ['a.md'], status: 'normal' }],
+    ];
+    it.each(accuses)('un sous-agent qui appelle %s %j : non externe', (name, input) => {
+      expect(externe(new Map([['a1', sousAgent(...geste('s1', name, input))]]))).toBe(false);
+    });
+    it.each(accuses)('la session qui appelle %s %j : non externe', (name, input) => {
+      expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(false);
+    });
+    it('un nom voisin d’un accusé reste externe (nom exact)', () => {
+      expect(extractClaudeCodeFacts(appel('e1', 'SendMessages', {}), RACINE).externe).toBe(true);
+    });
+
     it.each([
       ['sans table', undefined],
       ['l’appel absent de la table', new Map([['autre', sousAgent()]])],

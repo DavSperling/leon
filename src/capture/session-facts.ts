@@ -111,6 +111,12 @@ const LOCAL_TOOLS = new Set([
   'EnterPlanMode',
   'KillShell',
   'BashOutput',
+  // Des accusés courts, sans texte d'ailleurs (décision d'Amos du 23/11, D36). Un sous-agent relancé par SendMessage
+  // écrit dans le fichier de son appel Agent, jugé par T63 ; une réponse d'une autre session arrive en tour injecté (T43).
+  'SubagentHandback',
+  'StructuredOutput',
+  'SendMessage',
+  'SendUserFile',
   'ToolSearch',
   'Skill',
   'AskUserQuestion', // la réponse est celle de l'utilisateur

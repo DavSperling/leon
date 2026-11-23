@@ -350,6 +350,18 @@
     "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même.",
     "whereNext": "Vous pourrez le modifier à tout moment dans <link>Réglages › Profil</link>."
   },
+  "draftQuestions": {
+    "title": "Leon a besoin de vous",
+    "needYou": "J’ai besoin de vous pour répondre à {name}",
+    "someone": "votre correspondant",
+    "ask": "Voulez-vous voir mes questions ?",
+    "yes": "Oui",
+    "no": "Non",
+    "send": "Envoyer mes réponses",
+    "sent": "Leon écrit votre brouillon. Vous le trouverez dans Réglages › Ma fiche et, avec Gmail, dans vos brouillons.",
+    "failed": "Échec de l’envoi. Réessayez.",
+    "gone": "Cette demande n’est plus ouverte."
+  },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
     "searchEverything": "Rechercher dans tout ce que Leon a gardé",

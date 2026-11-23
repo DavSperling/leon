@@ -350,6 +350,18 @@
     "basedOnNote": "Only from your own sources: nothing you couldn’t open yourself.",
     "whereNext": "You can change it anytime in <link>Settings › Profile</link>."
   },
+  "draftQuestions": {
+    "title": "Leon needs you",
+    "needYou": "I need you to reply to {name}",
+    "someone": "your correspondent",
+    "ask": "Do you want to see my questions?",
+    "yes": "Yes",
+    "no": "No",
+    "send": "Send my answers",
+    "sent": "Leon is writing your draft. You’ll find it in Settings › Work profile and, with Gmail, in your drafts.",
+    "failed": "Couldn’t send. Try again.",
+    "gone": "This request is no longer open."
+  },
   "search": {
     "memoryLabel": "Search the team’s memory",
     "searchEverything": "Search everything Leon has saved",

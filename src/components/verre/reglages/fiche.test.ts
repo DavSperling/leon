@@ -293,10 +293,10 @@ describe('FicheSection : les agents proposés', () => {
     // Sa phrase dit ce que son « oui » autorise : un brouillon déposé dans sa boîte Gmail, jamais envoyé.
     const html = render({ ...DATA, agents: all });
     expect(text(html)).toContain(
-      'un brouillon écrit comme vous, sur cette page. Complet, il est aussi déposé dans vos brouillons Gmail. Jamais envoyé.',
+      'un brouillon écrit comme vous, sur cette page. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé.',
     );
     expect(text(render({ ...DATA, agents: all }, 'en'))).toContain(
-      'a draft written the way you write, on this page. When complete, it is also saved to your Gmail drafts. Never sent.',
+      'a draft written the way you write, on this page. With Gmail, a complete draft is also saved to your drafts. Never sent.',
     );
   });
 
@@ -323,7 +323,7 @@ describe('FicheSection : les agents proposés', () => {
 
     // Ni raison ni mesure : le nom, la phrase, l'état, les deux boutons.
     expect(words('brouillon-reponse')).toBe(
-      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur cette page. Complet, il est aussi déposé dans vos brouillons Gmail. Jamais envoyé. En service Oui Non',
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur cette page. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé. En service Oui Non',
     );
     expect(words('relance')).toBe(
       'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',
@@ -444,13 +444,13 @@ describe('FicheSection : les brouillons prêts', () => {
     expect(titles).toEqual(['Ma fiche', 'Brouillons prêts', 'Rôle', 'Tâches répétées']);
     // Rien n'est envoyé ; un brouillon complet est aussi dans ses brouillons Gmail, où « Écarter » ne touche à rien.
     expect(text(html)).toContain(
-      'Rien n’est envoyé. Un brouillon complet est aussi déposé dans vos brouillons Gmail ; les autres se copient d’ici. Écarter un brouillon ne le retire pas de Gmail.',
+      'Rien n’est envoyé. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons ; les autres se copient d’ici. Écarter un brouillon ne le retire pas de Gmail.',
     );
     expect(text(html)).not.toContain('ni écrit dans votre boîte');
     const english = text(render(WITH_DRAFTS, 'en'));
     expect(english).toContain('Drafts ready');
     expect(english).toContain(
-      'Nothing is sent. A complete draft is also saved to your Gmail drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.',
+      'Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.',
     );
   });
 

@@ -322,6 +322,11 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
   it.each<[string, FakeRoute[], string[]]>([
     ['le fil a été supprimé', [TOKEN, readRoute({ status: 404, json: {} })], ['GET']],
     ['l’accès est refusé', [TOKEN, readRoute({ status: 403, json: {} })], ['GET']],
+    [
+      'l’accès est refusé par un 401, que le proxy rejoue une fois avec un jeton neuf',
+      [TOKEN, readRoute({ status: 401, json: {} }), TOKEN, readRoute({ status: 401, json: {} })],
+      ['GET', 'GET'],
+    ],
     ['Gmail est en panne à la lecture', [TOKEN, readRoute({ status: 503, json: {} })], ['GET']],
     [
       'le message reçu n’a pas d’identifiant',
@@ -354,8 +359,9 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
 
       expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
 
-      // Chaque requête au proxy est payée : aucune n'est rejouée.
-      expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(sent);
+      // Chaque requête au proxy est payée : aucune n'est rejouée, sauf sur un 401, une fois (pipedream.ts).
+      const paid = fetchImpl.calls.filter((call) => call.url.includes('/proxy/'));
+      expect(paid.map((call) => call.method)).toEqual(sent);
       expect(await stored(id)).toMatchObject({
         brouillonGmail: null,
         texte: COMPLET,

@@ -158,7 +158,8 @@ export function gmailClient(http: ConnectorHttp) {
     // sans les corps, pour savoir d'abord s'il attend toujours : Leon ne connaît la boîte que telle qu'à la dernière
     // relève. Rend null quand il n'y a plus à répondre : le message n'y est plus, elle l'a mis à la corbeille ou en
     // indésirable, ou un message plus récent le suit (elle a répondu depuis Gmail, ou on lui a récrit ; un brouillon
-    // ne compte pas). Une seule requête, jamais rejouée : chacune coûte un crédit.
+    // ne compte pas). Une seule requête, un crédit ; jamais rejouée, sauf par le proxy de Pipedream sur un 401, une
+    // fois, avec un jeton neuf (pipedream.ts).
     async replyHeaders(threadId: string, messageId: string) {
       const { messages } = await http.json(
         {
@@ -184,8 +185,8 @@ export function gmailClient(http: ConnectorHttp) {
     },
 
     // Un brouillon de plus dans le fil : la seule écriture de Leon dans une boîte, jamais un envoi. `raw` : le message
-    // en RFC 2822, en base64url (reply.ts). Jamais rejouée : une réponse perdue a pu créer le brouillon. Rend son
-    // identifiant.
+    // en RFC 2822, en base64url (reply.ts). Jamais rejouée : une réponse perdue a pu créer le brouillon. Seul un 401
+    // l'est, une fois, par le proxy de Pipedream (pipedream.ts) : un accès refusé n'a rien créé. Rend son identifiant.
     async createDraft(threadId: string, raw: string): Promise<string> {
       const draft = await http.json(
         {

@@ -7,9 +7,10 @@ import { replyRaw } from '@/server/connectors/gmail/reply';
 import { ConnectorHttpError } from '@/server/connectors/http';
 import { connectorHttp } from '@/server/connectors/pipedream';
 import { sources } from '@/server/db/schema/memory';
-import { brouillons } from '@/server/db/schema/portrait';
+import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
+import { EN_SERVICE } from './agents';
 import { hasBlank } from './brouillon-prompt';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
@@ -21,7 +22,9 @@ import { hasBlank } from './brouillon-prompt';
 //   seulement, d'où il ne peut pas partir par erreur ;
 // - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même, par Pipedream, et qui n'est
 //   pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
-// - il n'est pas déjà déposé (0081).
+// - il n'est pas déjà déposé (0081) ;
+// - à l'instant du dépôt, elle dit toujours oui à l'agent et n'a pas écarté ce brouillon : c'est son oui qui autorise
+//   Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts).
 // shortcut: Gmail seulement, un brouillon sur un fil Outlook reste dans Leon ; à déposer par Microsoft Graph quand
 // l'agent doit servir les boîtes Outlook.
 //
@@ -58,6 +61,15 @@ export async function depositBrouillon(
           sources,
           and(eq(sources.tenantId, brouillons.tenantId), eq(sources.id, brouillons.sourceId)),
         )
+        .innerJoin(
+          reponsesAgent,
+          and(
+            eq(reponsesAgent.tenantId, brouillons.tenantId),
+            eq(reponsesAgent.userId, brouillons.userId),
+            eq(reponsesAgent.agent, EN_SERVICE),
+            eq(reponsesAgent.oui, true),
+          ),
+        )
         .where(
           and(
             eq(brouillons.tenantId, ctx.tenantId),
@@ -65,6 +77,7 @@ export async function depositBrouillon(
             eq(brouillons.id, draft.id),
             isNotNull(brouillons.texte),
             isNull(brouillons.brouillonGmail),
+            isNull(brouillons.ecarteLe),
           ),
         ),
     );

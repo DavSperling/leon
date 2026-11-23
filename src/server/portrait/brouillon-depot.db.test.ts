@@ -56,7 +56,8 @@ const gmailOf = (ctx: TenantContext) =>
     since: ago(30 * 24 * HOUR),
   });
 
-// Un mail de Léa qui attend dans un fil relevé par la boîte de `owner`, et le brouillon écrit pour `ctx`.
+// Un mail de Léa qui attend dans un fil relevé par la boîte de `owner`, et le brouillon écrit pour `ctx`, qui a dit
+// oui à l'agent.
 async function drafted(
   ctx: TenantContext,
   texte: string,
@@ -67,6 +68,11 @@ async function drafted(
     externalId: 'message:m-devis',
   });
   const sourceId = await mailThread(owner, 'Devis 2027', [mail], options);
+  await adminPool.query(
+    `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+     values ($1, $2, 'brouillon-reponse', true, array[$2::uuid]) on conflict do nothing`,
+    [ctx.tenantId, ctx.userId],
+  );
   const { rows } = await adminPool.query<{ id: string; thread: string }>(
     `insert into brouillons (tenant_id, user_id, source_id, message, texte, acl)
      values ($1, $2, $3, 'message:m-devis', $4, array[$2::uuid])
@@ -187,6 +193,16 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
       async (julie) => (await drafted(julie, A_TROU, { connectionId: await gmailOf(julie) })).id,
     ],
     [
+      'son « non » à l’agent, donné après l’écriture du brouillon',
+      async (julie) => {
+        const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+        await adminPool.query('update reponses_agent set oui = false where user_id = $1', [
+          julie.userId,
+        ]);
+        return id;
+      },
+    ],
+    [
       'un fil Outlook',
       async (julie) => (await drafted(julie, COMPLET, { provider: 'outlook' })).id,
     ],
@@ -233,6 +249,18 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
     expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('un brouillon qu’elle a écarté entre-temps', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    await adminPool.query('update brouillons set ecarte_le = now() where id = $1', [id]);
+    const fetchImpl = fakeFetch([]);
+
+    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null });
   });
 
   it('un collègue ne dépose pas le brouillon d’une autre, même avec sa propre boîte', async () => {

@@ -237,15 +237,17 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
         (await drafted(julie, COMPLET, { owner: paul, connectionId: await gmailOf(paul) })).id,
     ],
     [
-      'une boîte partagée à l’équipe, branchée par un collègue',
-      async (julie, paul) =>
-        (
+      'une boîte partagée à l’équipe, branchée par un collègue, même quand elle a sa propre boîte',
+      async (julie, paul) => {
+        await gmailOf(julie);
+        return (
           await drafted(julie, COMPLET, {
             owner: paul,
             connectionId: await gmailOf(paul),
             shared: true,
           })
-        ).id,
+        ).id;
+      },
     ],
   ];
 

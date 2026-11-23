@@ -499,6 +499,26 @@ describe('withdrawBrouillon : un brouillon écarté quitte ses brouillons Gmail'
     expect(await stored(id)).toMatchObject({ brouillonGmail: 'r/1' });
   });
 
+  it('écarté pendant le dépôt : le brouillon tout juste créé repart de Gmail', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    const routes = fakeFetch([TOKEN, readRoute(), createRoute(), deleteRoute()]);
+    // Elle clique « Écarter » entre la lecture du fil et la création du brouillon : rien n'est encore déposé.
+    const fetchImpl: typeof fetch = async (input, init) => {
+      if (routes.calls.length === 2) {
+        await adminPool.query('update brouillons set ecarte_le = now() where id = $1', [id]);
+        expect(await withdrawBrouillon(julie, id, { fetchImpl: fakeFetch([]) })).toBe(true);
+      }
+      return routes(input, init);
+    };
+
+    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+
+    expect(routes.calls.map((call) => call.method)).toEqual(['POST', 'GET', 'POST', 'DELETE']);
+    expect(target(routes.calls[3])).toBe(`${GMAIL}/drafts/r-1`);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: expect.any(Date) });
+  });
+
   it.each([403, 500])(
     'une suppression qui échoue (%s) : il reste dans Gmail, et Leon le sait',
     async (status) => {

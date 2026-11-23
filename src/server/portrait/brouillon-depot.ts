@@ -121,7 +121,9 @@ export async function depositBrouillon(
           ),
         ),
     );
-    return true;
+    // Elle a pu l'écarter pendant le dépôt (deux requêtes, quelques secondes) : son « Écarter » n'avait alors rien vu
+    // à retirer. Un brouillon écarté ne reste pas dans sa boîte : il en repart aussitôt. Sans cela, rien à retirer.
+    return !(await withdrawBrouillon(ctx, draft.id, deps));
   } catch (error) {
     // Des identifiants seulement : les erreurs du client HTTP portent un message fixe, jamais une réponse de Gmail.
     logError('brouillons.deposit_failed', error, { userId: ctx.userId, brouillonId: draft.id });

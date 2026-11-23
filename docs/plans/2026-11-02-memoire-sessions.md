@@ -35,8 +35,9 @@
 | 13. Le rappel à chaque message, les leçons et les notes | une ligne de rappel quand un message touche un fil connu (niveau 2) ; les leçons acceptées dans le bloc ; le brouillon privé de l'agent ; depuis le 05/11, décocher `noter` coupe aussi `remember` | T48, T49, T55 à T57 et T65 (idem) | suivante | 5,5 j |
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent ; depuis le 05/11, un sous-agent qui ne lit que le dépôt ne rend plus la session externe ; après la relecture, les appels d'outils réduits remontent aussi | T50 à T52 et T63 (idem) | suivante | 5 j |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, des propositions de leçons et de clôture, que l'humain accepte ou rejette ; puis la mesure refaite. Depuis le 17/11 : deux règles de plus (D39 du nouveau plan) | T58 à T62 (idem) | suivante | 6 j |
+| 16. La lecture obligée | dans Claude Code, la première modification de fichier d'une session menée par l'humain attend que l'agent ait lu la mémoire (niveau 3), en option éteinte par défaut (usage `passage`) ; mesurée, et retirée de l'installation si la mesure échoue (D40 du nouveau plan) | T66 à T68 (idem) | suivante | 4 j |
 
-Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63), puis, après A16 du nouveau plan, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils réduits, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 (deux règles du rêve, D39 du nouveau plan).
+Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63), puis, après A16 du nouveau plan, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils réduits, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 (deux règles du rêve, D39 du nouveau plan). Amendé le 20/11 : 62 jours, avec le lot 16 (4 j, la lecture obligée, D40 du nouveau plan), estimation du rédacteur, à confirmer.
 
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
 
@@ -45,6 +46,8 @@ Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était
 > **Amendé le 05/11 :** 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensuite, sans PR pour l'instant.
 >
 > **Amendé le 12/11 :** les coulisses de Codex, Cursor et Antigravity, et leur règle du sous-agent, viennent dans la quatrième PR du lot 14, après un essai par outil ([décisions d'Amos du 12/11 pour le lot 14](2026-11-03-memoire-a-disposition.md), dans le nouveau plan).
+>
+> **Amendé le 20/11 :** le lot 11 a décidé du niveau 3 : c'est le lot 16, la lecture obligée ([décisions d'Amos du 20/11 pour le lot 16](2026-11-03-memoire-a-disposition.md), dans le nouveau plan). Il vient avant le lot 15.
 
 **Ordre précédent (02/11, voir A2) :** 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 et 11. Amendé le 05/11 : le lot 6 n'attend plus l'accord de David (QD1 tranchée par Amos). Sa partie serveur (T21 à T23) peut tourner en parallèle des lots 4 et 5, mais T23 se rebase sur T18 pour `gather.ts`, et T24, qui touche l'installateur et l'accord, vient après T20. GitHub passe avant Codex, comme le veulent la décision E et l'étude : Codex reçoit donc le bloc vers le 12e jour.
 
@@ -1086,6 +1089,8 @@ Contrat : `api-contract.db.test.ts`.
 > - **Ce qui n'est pas fait.** Les seuils de proximité et du rappel, faute de cas réels. Et les compteurs de versions, puisque la mesure n'écrit rien dans la mémoire.
 > - **La recommandation pour T36 et le niveau 3 (D28), à trancher par Amos.** D'abord réécrire la consigne de lecture pour dire à quoi sert la mémoire, et mesurer la part de sessions qui lisent. Le passage obligé ne vient que si elle reste nulle.
 > - **Les 5 tâches gardées pour T62** : t01, t03, t06, t08 et t09, au même commit.
+
+> **Amendé le 20/11 :** le niveau 3 se fait au lot 16 du nouveau plan, en lecture obligée et non en poussée (D28 amendée le 20/11, D40), avec sa propre mesure (T68, annexe 12 de l'étude). Les 5 tâches gardées pour T62 ne changent pas.
 
 ## Questions ouvertes
 

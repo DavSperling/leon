@@ -574,6 +574,7 @@ Total du lot : environ 4 j.
     - Ils font partie de ce qui rend externes 68 des 71 sessions menées.
     - Un décompte par noms d'outils, sans texte, dirait combien de sessions redeviendraient non externes si une liste fermée de ces outils comptait comme locale, à la façon de `TodoWrite`.
     - Sans ça, l'état des fils reste pauvre, et l'arrêt fait surtout lire la recherche.
+    - **Tranché le 23/11** (décision d'Amos du 23/11 dans le plan, D36) : `mcp__ccd_turn__update_plan`, `mcp__ccd_turn__wrap_up` et `mcp__ccd_session__mark_chapter` comptent comme locaux, les autres `mcp__ccd_*` non. Le décompte du 23/11 : 71 des 74 sessions menées sont externes, 69 l'auraient été. Les autres causes y sont comptées.
   - **Les agents de workflow sont captés comme des sessions.**
     - Jusqu'au 06/11, chaque agent de workflow était une session `sdk-py` à part : 322 des 394 sessions de tête. L'import du 19/11 les a rangées comme des sessions menées, souvent externes (`StructuredOutput` n'est pas un outil local).
     - Depuis le 07/11, ce sont des sous-agents, sous `subagents/workflows/`, et l'outil `Workflow` rend la session de l'humain externe.

@@ -163,6 +163,20 @@ D40 et l'annexe 12 disent comme tels les choix du rédacteur :
 - le lot 16 avant le lot 15 ;
 - les seuils du critère et leur façon de compter.
 
+## Décision d'Amos du 23/11 : les outils de l'app de bureau
+
+Ce sont ses réponses au questionnaire du 23/11, sur le premier des deux constats « à part » de l'[annexe 12](../etudes/memoire-sessions-2026-11/annexes/12-lecture-obligee.md) (section « Plus tard »). Elles amendent D36, et donc le signal « externe » (D17).
+
+1. **Trois outils de l'app de bureau de Claude Code ne rendent plus la session externe** : `mcp__ccd_turn__update_plan` (le plan), `mcp__ccd_turn__wrap_up` (le récapitulatif de fin de tour) et `mcp__ccd_session__mark_chapter` (les chapitres).
+   - L'app n'y répond que par ses propres messages, plus le titre que l'agent a donné au chapitre. C'est relevé le 23/11 sur les réponses de ces trois outils dans les sessions d'Amos, sans lire la conversation.
+   - Ils comptent comme `TodoWrite`, par leur nom complet exact, jamais par un préfixe.
+   - Tout autre `mcp__ccd_*` reste externe, dont `search_session_transcripts`, `read_widget_context`, `send_message` et `get_status` (l'état d'une PR rend du texte de GitHub).
+2. **Les sessions déjà marquées externes le restent.** La marque est un OU collant (`record-facts.ts`) : seules les sessions captées après la fusion en profitent, comme pour A14.
+3. **Le gain réel est petit.** Décompte du 23/11, par le code du dépôt (`extractClaudeCodeFacts`, sous-agents compris), sur les 74 sessions menées des dossiers de Leon : 29 au terminal, 45 dans l'app, sans les anciens agents de workflow (`sdk-py`).
+   - 71 sont externes aujourd'hui ; 69 l'auraient été avec la règle.
+   - Compter tous les `mcp__ccd_*` comme locaux n'en gagnerait aucune de plus.
+   - Les autres causes, en sessions : une commande réseau dans Bash 52, `SendMessage` 32 (seule cause pour 5), un sous-agent `Agent` 27, `mcp__ccd_pr__get_status` 27, `WebFetch` 21, `WebSearch` 19, `Workflow` 17, `mcp__ccd_session__start_session` 16, le navigateur intégré 15. Amos a demandé de les étudier dans la même session, à part de ce changement.
+
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
@@ -304,7 +318,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
   - **Les commandes de la CLI.** `leon dossier`, `leon fil <id>` et `leon chercher "<requête>"` appellent ces routes, écrivent sur la sortie standard et rien sur le disque. Elles marchent dans les quatre outils, sans connecteur.
   - **Le MCP** gagne les mêmes lectures : les outils `dossier` et `fil`, et, pour `search`, le filtre `fil` (`depot` vient de T25), avec la mention du fil et des PR d'une session trouvée. `MCP_INSTRUCTIONS` gagne une phrase, sans retirer la recherche générale qui sert claude.ai et ChatGPT : « when working on a code repository, call dossier, then fil; search with depot ». Au MCP, brancher le connecteur vaut accord pour lire, comme aujourd'hui pour `search` ; les commandes de la CLI, elles, exigent l'usage `lecture`. Tranché le 05/11 (A16) : pour écrire, `remember` lit en plus le réglage `noter` du compte (D30, C16, T65). Le branchement du connecteur dans les outils et sa connexion relèvent du plan MCP distant (#121) ; ce plan n'écrit aucun jeton.
   - **La consigne du bloc et les commandes de la CLI** ne citent que `dossier`, `fil` et la recherche bornée au dépôt, jamais une recherche dans toute la mémoire (vigilance 6).
-  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe.
+  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe. Amendé le 23/11 (décision d'Amos du 23/11) : le plan, le récapitulatif et les chapitres de l'app de bureau (`mcp__ccd_turn__update_plan`, `mcp__ccd_turn__wrap_up`, `mcp__ccd_session__mark_chapter`) non plus ; les autres `mcp__ccd_*` si.
   - **Chaque lecture d'un fil ou du dossier est notée** par `recordReads`, avec l'outil et la session quand ils sont connus, pour la mesure du lot 11. Il faut pour cela étendre le check de `read_log.tool` et ajouter une colonne `session` (T44).
   - Aucune écriture de plus. Amendé le 04/11 par D38 : hormis `leon noter`, le brouillon privé de l'agent, sous l'usage `noter` (D30). Tranché le 05/11 : la restauration d'une version ne passe plus par le poste, seulement par le site (D33).
 - **D28. Le niveau 3 (passage obligé) n'est pas construit ici.** Le lot 11 mesure d'abord si les niveaux 1 et 2 suffisent. S'il le faut, un lot à part le conçoit, en option éteinte par défaut, avec son propre accord.
@@ -417,6 +431,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - Ne marquent plus la session, selon la décision d'Amos : `leon dossier`, `leon fil`, `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon.
   - Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember` du serveur MCP de Leon, ne la marquent pas non plus. `leon noter` et `remember` ne rendent qu'un id et un numéro, aucun texte : l'écart entre les deux disparaît.
   - Les autres signaux ne changent pas : les autres `mcp__*` (dont `search` et `fetch` de Leon), `WebFetch`, les commandes réseau, `gh` en lecture. `Agent` et `Task` aussi, jusqu'au lot 14.
+    > **Amendé le 23/11 (décision d'Amos du 23/11) :** trois outils de l'app de bureau de Claude Code ne marquent pas non plus la session : `mcp__ccd_turn__update_plan`, `mcp__ccd_turn__wrap_up` et `mcp__ccd_session__mark_chapter`, par leur nom complet exact. Les autres `mcp__ccd_*` restent externes. Une session déjà marquée externe le reste.
   - **Les sous-agents** (tranché le 05/11, A14).
     - D'abord le tri (T43) : la capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport de sous-agent n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`.
     - Ensuite, dès le lot 14 (T63) : un sous-agent qui ne lit que le dépôt (lecture de fichiers, recherche dans le dépôt, commandes locales) ne rend plus la session externe. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe. Un sous-agent dont on ne lit pas les échanges, ou qui n'a pas rendu son rapport final, aussi. Seules les sessions captées après le lot 14 en profitent.

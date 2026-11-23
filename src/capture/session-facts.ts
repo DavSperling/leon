@@ -109,6 +109,11 @@ const LOCAL_TOOLS = new Set([
   'ToolSearch',
   'Skill',
   'AskUserQuestion', // la réponse est celle de l'utilisateur
+  // Le plan, le récapitulatif et les chapitres de l'app de bureau : l'app n'y répond que par ses propres messages
+  // (décision d'Amos du 23/11, D36). Noms exacts : tout autre mcp__ccd_* reste externe.
+  'mcp__ccd_turn__update_plan',
+  'mcp__ccd_turn__wrap_up',
+  'mcp__ccd_session__mark_chapter',
 ]);
 // Le serveur MCP de Leon, sous le nom que pose son installation (#121 : `claude mcp add … leon`, `codex mcp add leon`),
 // et ceux de ses outils qui ne rendent que la mémoire de l'auteur (D36, A14) : ils ne rendent pas la session externe

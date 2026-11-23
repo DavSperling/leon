@@ -260,15 +260,17 @@ describe('deleteAccount', () => {
               ($1, $3, 'point-du-jour', true, array[$3::uuid])`,
       [tenantId, alice.userId, bob.userId],
     );
-    // Et les brouillons de réponse préparés pour elle (0080), l'écarté et le « sans réponse » compris, pas celui de
-    // Bob : sa source reste, ils ne partiraient pas avec elle.
+    // Et les brouillons de réponse préparés pour elle (0080), l'écarté et le « sans réponse » compris, et son oui au
+    // mail d'un inconnu avec ses indications (0084), pas celui de Bob : sa source reste, ils ne partiraient pas avec
+    // elle.
     const bobSource = await seedSource(bob);
     await adminPool.query(
-      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, acl)
-       values ($1, $2, $3, 'message:1', 'Bonjour, voici le devis.', null, array[$2::uuid]),
-              ($1, $2, $3, 'message:2', 'Bonjour, merci.', now(), array[$2::uuid]),
-              ($1, $2, $3, 'message:3', null, null, array[$2::uuid]),
-              ($1, $4, $5, 'message:1', 'Bonjour, je regarde.', null, array[$4::uuid])`,
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, indications, acl)
+       values ($1, $2, $3, 'message:1', 'Bonjour, voici le devis.', null, null, array[$2::uuid]),
+              ($1, $2, $3, 'message:2', 'Bonjour, merci.', now(), null, array[$2::uuid]),
+              ($1, $2, $3, 'message:3', null, null, null, array[$2::uuid]),
+              ($1, $2, $3, 'message:4', null, null, 'Dites-lui oui.', array[$2::uuid]),
+              ($1, $4, $5, 'message:1', 'Bonjour, je regarde.', null, null, array[$4::uuid])`,
       [tenantId, alice.userId, privateSource.sourceId, bob.userId, bobSource.sourceId],
     );
     // Ses versions partent avec elle, celles de ses fils comme celles d'une source qu'elle laisse (une note) ; pas

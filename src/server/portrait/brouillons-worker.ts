@@ -11,7 +11,8 @@ import { FicheJobSchema } from './queue';
 // a à travailler : elle a dit oui, l'agent lui est toujours proposé, un mail attend, le plafond du jour n'est pas
 // atteint.
 
-// Chaque passage fait au plus cinq appels au modèle de 90 secondes, l'un après l'autre.
+// Chaque passage fait au plus cinq appels au modèle de 90 secondes, l'un après l'autre, chacun suivi au plus d'un dépôt
+// dans Gmail (deux requêtes, brouillon-depot.ts).
 const BROUILLONS_CONCURRENCY = 2;
 
 export async function processBrouillonsJob(

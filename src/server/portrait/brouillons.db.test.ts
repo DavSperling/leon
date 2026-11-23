@@ -1,8 +1,10 @@
 import { and, eq } from 'drizzle-orm';
-import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteAccount } from '@/server/auth/delete-account';
 import { setManager } from '@/server/auth/organisation';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { createConnection } from '@/server/connectors/connections';
+import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from '@/server/connectors/pipedream';
 import { members, users } from '@/server/db/schema/auth';
 import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
@@ -10,6 +12,7 @@ import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
+import { fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
 import { extendThread, mailThread, received, sent } from '@/test/mail-threads';
 import {
@@ -449,6 +452,143 @@ describe('writeBrouillons : deux passages simultanés', () => {
     const rows = await stored(julie);
     expect(rows).toHaveLength(2);
     expect(new Set(rows.map((row) => row.sourceId)).size).toBe(2);
+  });
+});
+
+// Le dépôt lui-même (ce qui est déposé, ce qui ne l'est pas, chaque échec) : brouillon-depot.db.test.ts.
+describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gmail', () => {
+  const CONNECT = 'https://api.pipedream.com/v1/connect/proj_essai';
+  const GMAIL = 'https://gmail.googleapis.com/gmail/v1/users/me';
+  // Le proxy reçoit l'adresse entière en base64url (comme sync.db.test.ts).
+  const proxied = (url: string) => {
+    const head = Buffer.from(url.slice(0, url.length - (url.length % 3))).toString('base64url');
+    return new RegExp(`^${CONNECT}/proxy/${head}`);
+  };
+  const deposits = async (ctx: TenantContext) => {
+    const { rows } = await adminPool.query<{ title: string; depot: string | null }>(
+      `select s.title, b.brouillon_gmail as depot from brouillons b join sources s on s.id = b.source_id
+       where b.user_id = $1 order by s.title`,
+      [ctx.userId],
+    );
+    return rows.map((row) => [row.title, row.depot]);
+  };
+
+  beforeEach(() => {
+    forgetPipedreamToken();
+    vi.stubEnv('PIPEDREAM_PROJECT_ID', 'proj_essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_ID', 'client-essai');
+    vi.stubEnv('PIPEDREAM_CLIENT_SECRET', 'secret-essai-pipedream');
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  // Comme `ready`, dans sa boîte Gmail branchée par Pipedream : le message qui attend dans chaque fil porte le nom du
+  // fil (« message:<fil> »).
+  async function julieOnGmail(...titles: string[]): Promise<TenantContext> {
+    const [julie] = await team();
+    const connectionId = await createConnection(julie, {
+      provider: 'gmail',
+      label: 'boite@acme.test',
+      config: { authMode: 'pipedream', externalUserId: 'leon-essai', accountId: 'apn_gm1' },
+      secretFields: PIPEDREAM_SECRET_FIELDS,
+      since: ago(30 * DAY),
+    });
+    await mailThread(
+      julie,
+      'Premier contact',
+      [
+        received(ago(10 * DAY), 'Bonjour Julie, travaillez-vous avec des collectivités ?'),
+        sent(ago(10 * DAY - HOUR), 'Bonjour Léa,\nOui, depuis dix ans.\nBien à vous'),
+      ],
+      { connectionId },
+    );
+    await buildFiche(julie);
+    await answer(julie, true);
+    for (const [index, title] of titles.entries())
+      await mailThread(
+        julie,
+        title,
+        [
+          received(ago((index + 1) * HOUR), `Bonjour Julie, une question sur : ${title}.`, {
+            externalId: `message:${title}`,
+          }),
+        ],
+        { connectionId },
+      );
+    return julie;
+  }
+
+  it('dépose chaque brouillon complet à l’auteur du mail reçu ; un blanc ou un échec n’arrête pas les suivants, et le passage suivant ne refait rien', async () => {
+    const julie = await julieOnGmail('supprime', 'a-trou', 'devis');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { llm, calls } = answering(
+      draft('Bonjour Léa,\n\nPour le mail supprimé.'),
+      draft(),
+      draft('Bonjour Léa,\n\nÉcrivez plutôt à intrus@ailleurs.test.\n\nBien à vous'),
+    );
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: 'https://api.pipedream.com/v1/oauth/token',
+        json: { access_token: 'pd' },
+      },
+      // Le message du premier fil a été supprimé de sa boîte entre-temps.
+      { url: proxied(`${GMAIL}/messages/supprime`), status: 404 },
+      {
+        url: proxied(`${GMAIL}/messages/devis`),
+        json: {
+          payload: {
+            headers: [
+              { name: 'Message-ID', value: '<devis@mail.client.test>' },
+              { name: 'Subject', value: 'devis' },
+            ],
+          },
+        },
+      },
+      { method: 'POST', url: proxied(`${GMAIL}/drafts`), json: { id: 'r-devis' } },
+    ]);
+
+    // Les trois brouillons sont écrits : le passage va au bout.
+    expect(await writeBrouillons(julie, { llm, fetchImpl })).toBe(3);
+
+    expect(calls).toHaveLength(3);
+    // Le jeton de Pipedream, la lecture qui échoue, puis la lecture et la création du troisième : rien pour le
+    // brouillon qui porte un blanc.
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'GET', 'GET', 'POST']);
+    expect(await deposits(julie)).toEqual([
+      ['a-trou', null],
+      ['devis', 'r-devis'],
+      ['supprime', null],
+    ]);
+    const created = fetchImpl.calls[3]?.body as
+      | { message: { threadId: string; raw: string } }
+      | undefined;
+    const { rows } = await adminPool.query<{ thread: string }>(
+      "select external_id as thread from sources where owner_user_id = $1 and title = 'devis'",
+      [julie.userId],
+    );
+    expect(`thread:${created?.message.threadId}`).toBe(rows[0]?.thread);
+    // Le destinataire est l'auteur du mail reçu, quoi qu'écrive le modèle.
+    const reply = Buffer.from(created?.message.raw ?? '', 'base64url').toString('utf8');
+    expect(reply.split('\r\n').slice(0, 3)).toEqual([
+      'To: lea@client.test',
+      'Subject: Re: devis',
+      'In-Reply-To: <devis@mail.client.test>',
+    ]);
+    expect(errors.mock.calls.map((args) => args[1])).toEqual(['brouillons.deposit_failed']);
+    expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Bonjour|Léa|@/);
+
+    // Le passage suivant : ni appel au modèle, ni requête. Le dépôt manqué n'est pas retenté.
+    const again = answering(draft('Refait.'));
+    const none = fakeFetch([]);
+    expect(await writeBrouillons(julie, { llm: again.llm, fetchImpl: none })).toBe(0);
+    expect(again.calls).toHaveLength(0);
+    expect(none.calls).toHaveLength(0);
+    expect(await deposits(julie)).toEqual([
+      ['a-trou', null],
+      ['devis', 'r-devis'],
+      ['supprime', null],
+    ]);
   });
 });
 

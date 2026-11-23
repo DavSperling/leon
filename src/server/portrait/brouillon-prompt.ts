@@ -31,9 +31,11 @@ const EXAMPLES_MAX = 3;
 const EXAMPLE_CHARS = 1200;
 // Le corps d'un brouillon, au plus : le contrôle de la table (0080) a la même borne.
 export const BROUILLON_MAX_CHARS = 6000;
-// Les questions de Leon, au plus, et la longueur de chacune : la table (0082) borne leur nombre et leur longueur totale.
-const QUESTIONS_MAX = 3;
+// Les questions de Leon, au plus, la longueur de chacune, et celle d'une de ses réponses : la table (0082) borne leur
+// nombre et leur longueur totale.
+export const QUESTIONS_MAX = 3;
 const QUESTION_MAX_CHARS = 300;
+export const REPONSE_MAX_CHARS = 1000;
 
 // Ce que les deux consignes ont en commun : ce que le message contient, l'exemple d'un brouillon, écrire comme elle,
 // et la forme du texte.

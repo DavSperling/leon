@@ -20,13 +20,15 @@ import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
 import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
-import { discardBrouillon } from '@/server/portrait/brouillons';
+import { answerQuestions, discardBrouillon } from '@/server/portrait/brouillons';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
   answerAgentAction,
+  answerQuestionsAction,
   buildFicheAction,
   changePasswordAction,
   correctFicheLineAction,
@@ -105,7 +107,11 @@ vi.mock('@/server/memory/memory-section', () => ({
   restoreMemoryVersion: vi.fn(),
 }));
 vi.mock('@/server/portrait/brouillon-depot', () => ({ withdrawBrouillon: vi.fn() }));
-vi.mock('@/server/portrait/brouillons', () => ({ discardBrouillon: vi.fn() }));
+vi.mock('@/server/portrait/brouillons', () => ({
+  answerQuestions: vi.fn(),
+  discardBrouillon: vi.fn(),
+}));
+vi.mock('@/server/portrait/brouillons-queue', () => ({ requestBrouillons: vi.fn() }));
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
 vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
 vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
@@ -1216,6 +1222,64 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     },
   );
 
+  it('ses réponses aux questions de Leon : gardées pour la personne connectée, nettoyées, puis un passage est demandé', async () => {
+    vi.mocked(answerQuestions).mockResolvedValue(true);
+
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['  Oui, à 10 h.\n', '', 'Mar\u0000di'] }),
+    ).resolves.toEqual({ ok: true });
+
+    // Une réponse peut rester vide ; les blancs autour et l'octet nul que la base refuserait s'en vont.
+    expect(vi.mocked(answerQuestions).mock.calls).toEqual([
+      [ctx, LIGNE, ['Oui, à 10 h.', '', 'Mardi']],
+    ]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx]]);
+    expect(revalidatePath).toHaveBeenCalledWith('/');
+  });
+
+  it('ses réponses : la demande d’une autre, déjà répondue, écartée, ou un autre nombre de réponses que de questions, est introuvable, et aucun passage n’est demandé', async () => {
+    // Chacune de ces gardes est tenue par answerQuestions, sous ses droits (brouillons.db.test.ts) : elle rend false.
+    vi.mocked(answerQuestions).mockResolvedValue(false);
+
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui.'] })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(answerQuestions).toHaveBeenCalledWith(ctx, LIGNE, ['Oui.']);
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('ses réponses : mille caractères passent, une réponse plus longue non', async () => {
+    vi.mocked(answerQuestions).mockResolvedValue(true);
+
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['x'.repeat(1000)] }),
+    ).resolves.toEqual({ ok: true });
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['Oui.', 'x'.repeat(1001)] }),
+    ).resolves.toEqual({ error: 'invalide' });
+
+    expect(answerQuestions).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', reponses: ['Oui.'] }],
+    [{ id: LIGNE, reponses: [] }],
+    [{ id: LIGNE, reponses: ['Un.', 'Deux.', 'Trois.', 'Quatre.'] }],
+    [{ id: LIGNE, reponses: 'Oui.' }],
+    [{ id: LIGNE, reponses: ['Oui.', null] }],
+    [{ id: LIGNE, reponses: [{ texte: 'Oui.' }] }],
+    [{ id: LIGNE }],
+    [{ reponses: ['Oui.'] }],
+    [LIGNE],
+    [null],
+  ])('ses réponses %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerQuestionsAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerQuestions).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
   it('sans session du navigateur, rien ne se construit, ne se corrige, ne se retire, ne se répond ni ne s’écarte : la connexion', async () => {
     vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
 
@@ -1228,11 +1292,16 @@ describe('les actions de l’onglet « Ma fiche »', () => {
       'NEXT_REDIRECT /sign-in',
     );
     await expect(discardBrouillonAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui.'] })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
     expect(retireLine).not.toHaveBeenCalled();
     expect(answerProposal).not.toHaveBeenCalled();
     expect(discardBrouillon).not.toHaveBeenCalled();
+    expect(answerQuestions).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
   });
 });

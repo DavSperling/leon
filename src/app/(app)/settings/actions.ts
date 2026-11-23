@@ -57,10 +57,13 @@ import {
 } from '@/server/memory/memory-section';
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
 import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
-import { discardBrouillon } from '@/server/portrait/brouillons';
+import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
+import { answerQuestions, discardBrouillon } from '@/server/portrait/brouillons';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
 import { requestFicheBuild } from '@/server/portrait/screen';
+import { clean } from '@/server/portrait/synthese-prompt';
 
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
@@ -723,13 +726,22 @@ export async function readMemoryVersionAction(input: {
 }
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes,
-// répond aux agents qui lui sont proposés et écarte un brouillon de réponse, sous la session du navigateur. Les siennes seulement : chaque fonction
+// répond aux agents qui lui sont proposés et écarte un brouillon de réponse, sous la session du navigateur. Et, depuis
+// l'accueil, elle répond aux questions de Leon ou écarte sa demande. Les siennes seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
 
 const FicheCorrectionSchema = z.object({ id: z.uuid(), champs: z.record(z.string(), z.unknown()) });
 const AgentAnswerSchema = z.object({ agent: z.enum(AGENTS), oui: z.boolean() });
+// Une réponse par question, nettoyée de ce que la base refuserait ; une réponse peut rester vide.
+const QuestionAnswersSchema = z.object({
+  id: z.uuid(),
+  reponses: z
+    .array(z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS)))
+    .min(1)
+    .max(QUESTIONS_MAX),
+});
 
 // « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
 // d'autre ne la lance. `ok` faux : rien à construire, ou sa fiche est déjà faite.
@@ -796,4 +808,23 @@ export async function discardBrouillonAction(
   const withdrawn = await withdrawBrouillon(ctx, parsed.data);
   revalidatePath('/settings');
   return { ok: true, resteDansGmail: !withdrawn };
+}
+
+// Ses réponses aux questions de Leon, depuis la carte de l'accueil : une par question, dans le même ordre, de
+// REPONSE_MAX_CHARS caractères au plus, vide quand elle ne sait pas ou ne veut pas en parler. Hors de ces bornes :
+// « invalide ». Une demande qui n'est pas à elle, déjà répondue, écartée, ou un autre nombre de réponses que de
+// questions : « introuvable ». Rien n'est écrit dans les deux cas. Ses réponses gardées, un passage est demandé à la
+// file : il écrira le brouillon (portrait/brouillons.ts). Rien n'est envoyé.
+export async function answerQuestionsAction(input: {
+  id: string;
+  reponses: string[];
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = QuestionAnswersSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await answerQuestions(ctx, parsed.data.id, parsed.data.reponses)))
+    return { error: 'introuvable' };
+  await requestBrouillons(ctx);
+  revalidatePath('/');
+  return { ok: true };
 }

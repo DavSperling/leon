@@ -15,6 +15,7 @@ import {
 import { Section } from '@/components/verre';
 import { AboutSuggestionCard } from '@/components/verre/discussions/about-suggestion-card';
 import { AskTiles } from '@/components/verre/discussions/ask-tiles';
+import { DraftQuestionsCard } from '@/components/verre/recherche/draft-questions-card';
 import { BriefingSheet, Greeting, HomeAsk } from '@/components/verre/recherche/home';
 import { SearchBar } from '@/components/verre/recherche/search-bar';
 import { SearchResults } from '@/components/verre/recherche/search-results';
@@ -38,6 +39,8 @@ import { type HomeBriefing, homeBriefings } from '@/server/discussion/citation-s
 import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
+import { REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
+import { readHomeDemandes } from '@/server/portrait/screen';
 import { parseQuery } from '@/server/search/parse-query';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -117,19 +120,21 @@ const optional = <T,>(what: string, read: Promise<T>) =>
   });
 
 /**
- * L'Accueil : le bonjour et le fait du jour, le champ où l'on demande et ses questions à essayer, puis le point du
- * matin (s'il y en a un) et, à côté, le calendrier de la semaine et la proposition « About you ».
+ * L'Accueil : le bonjour et le fait du jour, les demandes de Leon quand il a besoin d'elle pour répondre à un mail, le
+ * champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le calendrier
+ * de la semaine et la proposition « About you ».
  */
 async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
   const locale = await getLocale();
   const modelAvailable = getLlm(env) !== null;
-  const [profile, member, suggestion, points, week] = await Promise.all([
+  const [profile, member, suggestion, points, week, demandes] = await Promise.all([
     optional('accueil.profil', getViewerProfile(ctx)),
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
     optional('accueil.point', homeBriefings(ctx)),
     optional('accueil.semaine', readWeek(ctx)),
+    optional('accueil.demandes', readHomeDemandes(ctx)),
   ]);
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
@@ -163,6 +168,10 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         fact={first && briefingFact(first.sections)}
         sources={first ? viewOf(first) : undefined}
       />
+      {/* Leon a besoin d'elle : dit tout de suite, sous le bonjour, avant tout le reste. */}
+      {demandes && demandes.length > 0 && (
+        <DraftQuestionsCard demandes={demandes} max={REPONSE_MAX_CHARS} />
+      )}
       <HomeAsk canAsk={modelAvailable} />
       {questions.length > 0 && (
         <div className="mt-3">

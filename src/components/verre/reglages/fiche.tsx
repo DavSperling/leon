@@ -12,7 +12,6 @@ import {
   discardBrouillonAction,
   retireFicheLineAction,
 } from '@/app/(app)/settings/actions';
-import type { SourceKind } from '@/capture/turn';
 import {
   AlertDialog,
   Button,
@@ -25,18 +24,16 @@ import {
   Pill,
   Section,
   Textarea,
-  Thing,
-  ToolLogo,
   toast,
 } from '@/components/verre';
 import { FICHE_MAX, linesOf } from '@/lib/fiche-view';
-import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import { formatDate } from '@/lib/verre';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { FicheLine } from '@/server/portrait/fiche';
 import type { Proposal } from '@/server/portrait/propositions';
 import type { FicheBrouillon, FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
+import { SourceThing } from './source-thing';
 
 // L'onglet « Ma fiche » des réglages : ce que Leon a compris du travail de la personne (portrait/), en mots : son rôle
 // et les tâches qu'elle refait. Chaque ligne dit d'où elle vient, se corrige et se retire. Les mesures calculées sur
@@ -263,23 +260,6 @@ function Part({
         </ul>
       </GlassCard>
     </Section>
-  );
-}
-
-// Une source : son outil et son titre. Avec son lien, elle mène à son outil, comme l'activité d'une personne dans
-// l'écran Équipe ; sans lien, elle se montre sans s'ouvrir.
-function SourceThing({ source }: { source: FicheSource }) {
-  const t = useTranslations('fiche');
-  const props = {
-    picture: <ToolLogo kind={source.kind} size={28} />,
-    name: source.title?.trim() || t('untitled'),
-    caption: SOURCE_KIND_LABELS[source.kind as SourceKind] ?? source.kind,
-    className: 'w-full',
-  };
-  return source.url ? (
-    <Thing {...props} href={source.url} target="_blank" rel="noopener noreferrer" />
-  ) : (
-    <Thing {...props} chevron={false} disabled />
   );
 }
 

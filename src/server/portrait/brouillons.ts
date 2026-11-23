@@ -197,6 +197,8 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
 // que readWaitingMails. Et pas la demande d'un mail trop ancien pour le second appel (readAnsweredMails) : ses réponses
 // ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
 // écrit : elles seules attendent un geste d'elle, et trois lignes « Leon écrit » ne doivent pas les cacher.
+// Un mail jugé sans réponse à donner (ni texte ni question) s'écarte sur sa ligne seule, avant de chercher le dernier
+// message de son fil : ces lignes ne se montrent jamais, et leur nombre ne fait que grandir.
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
@@ -232,6 +234,7 @@ export async function readShown(
         ) l
         where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
           and b.ecarte_le is null
+          and (b.texte is not null or b.questions is not null)
           and substring(l.external_id from ${MESSAGE}) = b.message
           and (b.texte is not null
             or (b.questions is not null and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})))

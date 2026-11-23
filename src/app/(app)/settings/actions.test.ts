@@ -1250,6 +1250,22 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(revalidatePath).not.toHaveBeenCalled();
   });
 
+  // Le message d'une erreur de requête porte ses paramètres, donc ses réponses : il passe par logError, qui le masque.
+  it('ses réponses : une panne de la base est un échec, journalisé sans ses réponses, et aucun passage n’est demandé', async () => {
+    const failure = new Error('Failed query: update "brouillons" … params: Oui, à 10 h.');
+    vi.mocked(answerQuestions).mockRejectedValue(failure);
+
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui, à 10 h.'] })).resolves.toEqual(
+      { error: 'echec' },
+    );
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.reponses', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it('ses réponses : mille caractères passent, une réponse plus longue non', async () => {
     vi.mocked(answerQuestions).mockResolvedValue(true);
 

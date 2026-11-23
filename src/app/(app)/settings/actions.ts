@@ -814,16 +814,22 @@ export async function discardBrouillonAction(
 // REPONSE_MAX_CHARS caractères au plus, vide quand elle ne sait pas ou ne veut pas en parler. Hors de ces bornes :
 // « invalide ». Une demande qui n'est pas à elle, déjà répondue, écartée, ou un autre nombre de réponses que de
 // questions : « introuvable ». Rien n'est écrit dans les deux cas. Ses réponses gardées, un passage est demandé à la
-// file : il écrira le brouillon (portrait/brouillons.ts). Rien n'est envoyé.
+// file : il écrira le brouillon (portrait/brouillons.ts). Rien n'est envoyé. Une panne de la base est « echec » : son
+// erreur citerait ses réponses (une erreur de base cite ses paramètres), elle ne remonte donc pas telle quelle.
 export async function answerQuestionsAction(input: {
   id: string;
   reponses: string[];
-}): Promise<{ ok: true } | { error: FicheError }> {
+}): Promise<{ ok: true } | { error: FicheError | 'echec' }> {
   const ctx = await requireUserContext();
   const parsed = QuestionAnswersSchema.safeParse(input);
   if (!parsed.success) return { error: 'invalide' };
-  if (!(await answerQuestions(ctx, parsed.data.id, parsed.data.reponses)))
-    return { error: 'introuvable' };
+  try {
+    if (!(await answerQuestions(ctx, parsed.data.id, parsed.data.reponses)))
+      return { error: 'introuvable' };
+  } catch (error) {
+    logError('brouillons.reponses', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
   await requestBrouillons(ctx);
   revalidatePath('/');
   return { ok: true };

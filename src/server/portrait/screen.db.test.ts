@@ -161,7 +161,7 @@ describe('readFicheScreen : les agents proposés', () => {
 });
 
 // Un fil de courrier de la personne, son dernier message reçu de Léa, et le brouillon qui y répond, ou les questions
-// de Leon avant de l'écrire.
+// de Leon avant de l'écrire, ou son oui (ses indications) ou son non au mail d'une inconnue.
 async function seedBrouillon(
   ctx: TenantContext,
   title: string,
@@ -173,6 +173,7 @@ async function seedBrouillon(
     questions?: string[];
     choix?: string[][];
     reponses?: string[];
+    indications?: string | null;
   } = {},
 ): Promise<{ sourceId: string; receivedAt: Date }> {
   const receivedAt = new Date(Date.now() - hoursAgo * 3_600_000);
@@ -198,8 +199,9 @@ async function seedBrouillon(
   );
   await adminPool.query(
     `insert into brouillons
-       (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, questions, reponses, choix, acl)
-     values ($1, $2, $3, 'message:42', $4, $5, $6, $7, $8, $9, array[$2::uuid])`,
+       (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, questions, reponses, choix,
+        indications, acl)
+     values ($1, $2, $3, 'message:42', $4, $5, $6, $7, $8, $9, $10, array[$2::uuid])`,
     [
       ctx.tenantId,
       ctx.userId,
@@ -210,6 +212,7 @@ async function seedBrouillon(
       over.questions ?? null,
       over.reponses ?? null,
       over.choix ? JSON.stringify(over.choix) : null,
+      over.indications ?? null,
     ],
   );
   return { sourceId, receivedAt };
@@ -412,6 +415,52 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
 
     // Les deux qui attendent un geste d'elle, puis la plus récente de celles où Leon écrit ; montrées par date du mail.
     expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Demande 4', 'Demande 5']);
+  });
+
+  it('son oui au mail d’une inconnue : la ligne dit que Leon écrit, sans question, le temps du premier appel ; son non ne se montre pas', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const oui = await seedBrouillon(julie, 'Partenariat', 2, {
+      texte: null,
+      indications: 'Dites-lui que je suis intéressée.',
+    });
+    await seedBrouillon(julie, 'Sans indication', 3, { texte: null, indications: '' });
+    await seedBrouillon(julie, 'Non', 1, { texte: null, indications: null });
+    await seedBrouillon(julie, 'Oui écarté', 1, { texte: null, indications: '', ecarte: true });
+    await seedBrouillon(julie, 'Oui trop ancien', 31 * 24, { texte: null, indications: '' });
+
+    const home = await readHomeBrouillons(julie);
+
+    // Ni ses indications, ni l'identifiant du fil ou du message, ni une adresse.
+    expect(home.demandes).toEqual([
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: oui.receivedAt,
+        questions: [],
+        choix: [],
+        repondue: true,
+        source: { title: 'Partenariat', url: 'https://mail.google.test/2', kind: 'gmail' },
+      },
+      expect.objectContaining({ repondue: true, questions: [] }),
+    ]);
+    expect(home.demandes.map((one) => one.source.title)).toEqual([
+      'Partenariat',
+      'Sans indication',
+    ]);
+    expect(JSON.stringify(home)).not.toMatch(/intéressée|message:|lea@client\.test/);
+    expect(JSON.stringify(home)).not.toContain(oui.sourceId);
+  });
+
+  it('parmi les trois demandes, son oui à une inconnue compte avec celles où Leon écrit, après celles qui attendent sa réponse', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    for (const hours of [1, 2])
+      await seedBrouillon(julie, `Oui ${hours}`, hours, { texte: null, indications: '' });
+    await asked(julie, 'Répondue 3', 3, { reponses: ['Oui.', ''] });
+    for (const hours of [5, 4]) await asked(julie, `Demande ${hours}`, hours);
+
+    expect((await titles(julie)).demandes).toEqual(['Oui 1', 'Demande 4', 'Demande 5']);
   });
 
   it('sans son oui à l’agent, ou quand il ne lui est plus proposé, rien ne part vers l’accueil ; un nouveau oui remontre tout', async () => {

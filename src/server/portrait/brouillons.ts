@@ -198,7 +198,8 @@ export type ReadyBrouillon = {
 };
 // Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, chacune avec ses choix de réponse,
 // dans le même ordre (aucun pour une demande posée avant les choix, 0083). `repondue` : elle a répondu, et Leon écrit
-// le brouillon.
+// le brouillon. Son oui au mail d'un inconnu, tant que le premier appel n'a rien rendu, en est une sans question, où
+// Leon écrit.
 export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receivedAt'> & {
   questions: string[];
   choix: string[][];
@@ -206,15 +207,16 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
 };
 
 // Ce que l'accueil montre de l'agent, d'une seule lecture : les demandes de Leon (ses questions, qu'elle y ait répondu
-// ou non, tant que le brouillon n'est pas écrit) et les brouillons prêts (ceux qui ont leur texte, écrit au premier
+// ou non, et son oui au mail d'un inconnu, tant que le brouillon n'est pas écrit) et les brouillons prêts (ceux qui ont leur texte, écrit au premier
 // appel ou avec ses réponses), HOME_MAX de chaque sorte, le mail le plus récent d'abord. Seulement les lignes qu'elle
 // n'a pas écartées, et dont le fil n'a pas bougé depuis : le dernier message du fil se relit à chaque affichage, et dès
 // qu'elle a répondu, ou qu'un nouveau message est arrivé, la ligne ne se montre plus. À date égale, le même départage
-// que readWaitingMails. Et pas la demande d'un mail trop ancien pour le second appel (readAnsweredMails) : ses réponses
-// ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
+// que readWaitingMails. Et pas la demande d'un mail trop ancien pour un appel (readAnsweredMails) : ses réponses, ou
+// son oui, ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
 // écrit : elles seules attendent un geste d'elle, et trois lignes « Leon écrit » ne doivent pas les cacher.
-// Un mail jugé sans réponse à donner (ni texte ni question) s'écarte sur sa ligne seule, avant de chercher le dernier
-// message de son fil : ces lignes ne se montrent jamais, et leur nombre ne fait que grandir.
+// Un mail jugé sans réponse à donner, ou son « non » à un inconnu (ni texte, ni question, ni oui), s'écarte sur sa
+// ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
+// fait que grandir.
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
@@ -235,10 +237,11 @@ export async function readShown(
       select id, "sourceId", "from", at, texte, depose, questions, choix, repondue from (
         select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
                extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose,
-               b.questions, b.choix, b.reponses is not null as repondue,
+               b.questions, b.choix, (b.reponses is not null or b.questions is null) as repondue,
+               -- Leon écrit (repondue) : vrai aussi de tout brouillon prêt, ce qui ne change pas leur ordre.
                row_number() over (
                  partition by b.texte is null
-                 order by (b.texte is null and b.reponses is not null), l.ts desc, b.id
+                 order by (b.reponses is not null or b.questions is null), l.ts desc, b.id
                ) as n
         from brouillons b
         cross join lateral (
@@ -250,10 +253,9 @@ export async function readShown(
         ) l
         where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
           and b.ecarte_le is null
-          and (b.texte is not null or b.questions is not null)
+          and (b.texte is not null or b.questions is not null or b.indications is not null)
           and substring(l.external_id from ${MESSAGE}) = b.message
-          and (b.texte is not null
-            or (b.questions is not null and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})))
+          and (b.texte is not null or l.ts >= now() - make_interval(days => ${ANSWERED_DAYS}))
       ) shown
       where n <= ${HOME_MAX}
       order by at desc, id`),
@@ -262,9 +264,9 @@ export async function readShown(
   const prets: ReadyBrouillon[] = [];
   for (const { at, texte, depose, questions, choix, repondue, ...row } of rows) {
     const one = { ...row, receivedAt: epochToDate(at) };
+    const asked = questions ?? [];
     if (texte !== null) prets.push({ ...one, texte, depose });
-    else if (questions)
-      demandes.push({ ...one, questions, choix: choix ?? questions.map(() => []), repondue });
+    else demandes.push({ ...one, questions: asked, choix: choix ?? asked.map(() => []), repondue });
   }
   return { demandes, prets };
 }

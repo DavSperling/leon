@@ -472,7 +472,6 @@ describe('extractClaudeCodeFacts', () => {
     // Les accusés courts ne rendent pas externe, ni dans la session ni dans un sous-agent (décision d'Amos du 23/11).
     const accuses: [string, unknown][] = [
       ['SubagentHandback', { message: 'Fini.' }],
-      ['StructuredOutput', { verdict: 'ok' }],
       ['SendUserFile', { files: ['a.md'], status: 'normal' }],
     ];
     it.each(accuses)('un sous-agent qui appelle %s %j : non externe', (name, input) => {

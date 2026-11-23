@@ -6,7 +6,7 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { EN_SERVICE } from './agents';
-import { type Demande, type ReadyBrouillon, readBrouillons, readDemandes } from './brouillons';
+import { type Demande, type ReadyBrouillon, readBrouillons, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -14,9 +14,9 @@ import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, les sources de
-// ses tâches, les agents de départ qui lui sont proposés, et les brouillons de réponse prêts. Et, pour l'accueil, les
-// demandes de Leon qui l'attendent (readHomeDemandes). Tout se lit sous les droits de la personne, et rien d'autre ne
-// lit sa fiche.
+// ses tâches, les agents de départ qui lui sont proposés, et les brouillons de réponse prêts. Et, pour l'accueil, ce
+// que l'agent « Brouillons de réponse » a pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne,
+// et rien d'autre ne lit sa fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -105,29 +105,34 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
 }
 
 // Une demande de Leon, telle que l'accueil la montre : le correspondant, le fil (son objet, lié à son outil), la date du
-// mail reçu et les questions. `id` sert à lui répondre ou à l'écarter. Rien d'autre ne part vers l'accueil.
+// mail reçu, les questions et leurs choix, et si elle y a répondu. `id` sert à lui répondre ou à l'écarter. Ni ses
+// réponses, ni rien d'autre, ne part vers l'accueil.
 export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
+export type HomeBrouillons = { demandes: HomeDemande[]; prets: FicheBrouillon[] };
 
-// Les demandes de Leon pour l'accueil, la plus récente d'abord, trois au plus (brouillons.ts) : seulement tant qu'elle
-// dit oui à l'agent et qu'il lui est proposé, comme ses brouillons dans « Ma fiche ». Lue à chaque chargement de
-// l'accueil : les demandes d'abord, sa fiche et ses outils seulement s'il y en a une.
-export async function readHomeDemandes(ctx: TenantContext): Promise<HomeDemande[]> {
-  const open = await readDemandes(ctx);
-  if (open.length === 0) return [];
+// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon puis les brouillons
+// prêts, les plus récents d'abord, trois au plus de chaque sorte (brouillons.ts). Seulement tant qu'elle dit oui à
+// l'agent et qu'il lui est proposé. Lu à chaque chargement de l'accueil : ses lignes d'abord, sa fiche et ses outils
+// seulement s'il y en a une.
+export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
+  const shown = await readShown(ctx);
+  const sourceIds = [...shown.demandes, ...shown.prets].map((one) => one.sourceId);
+  if (sourceIds.length === 0) return { demandes: [], prets: [] };
   const [agents, seen] = await Promise.all([
     readProposals(ctx, await readFiche(ctx)),
-    briefingSources(
-      ctx,
-      open.map((one) => one.sourceId),
-    ),
+    briefingSources(ctx, sourceIds),
   ]);
-  if (!agents.some((one) => one.agent === EN_SERVICE && one.oui)) return [];
-  return open.flatMap(({ sourceId, ...one }) => {
-    const source = seen.find((found) => found.sourceId === sourceId);
-    return source
-      ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
-      : [];
-  });
+  if (!agents.some((one) => one.agent === EN_SERVICE && one.oui))
+    return { demandes: [], prets: [] };
+  // Le fil se relit sous ses droits : une ligne dont elle ne voit plus le fil ne part pas vers l'accueil.
+  const withSource = <T extends { sourceId: string }>(rows: T[]) =>
+    rows.flatMap(({ sourceId, ...one }) => {
+      const source = seen.find((found) => found.sourceId === sourceId);
+      return source
+        ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
+        : [];
+    });
+  return { demandes: withSource(shown.demandes), prets: withSource(shown.prets) };
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

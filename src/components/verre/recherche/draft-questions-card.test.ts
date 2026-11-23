@@ -20,6 +20,11 @@ const DEVIS: HomeDemande = {
   from: 'Léa Roy',
   receivedAt: new Date('2026-11-10T09:00:00Z'),
   questions: ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'],
+  choix: [
+    ['Oui', 'Non, proposer jeudi'],
+    ['1 200 €', '1 500 €', 'Le tarif habituel'],
+  ],
+  repondue: false,
   source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
 };
 const CONTRAT: HomeDemande = {
@@ -27,6 +32,8 @@ const CONTRAT: HomeDemande = {
   from: null,
   receivedAt: new Date('2026-11-09T09:00:00Z'),
   questions: ['Can you sign before Friday?'],
+  choix: [['Yes', 'No']],
+  repondue: false,
   source: { title: null, url: null, kind: 'outlook' },
 };
 

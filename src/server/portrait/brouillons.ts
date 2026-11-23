@@ -169,8 +169,9 @@ export async function writeBrouillons(
 // Ce que l'écran montre au plus : les brouillons des mails les plus récents.
 // shortcut: au-delà, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans les écarter.
 const SHOWN_MAX = 20;
-// Ce que l'accueil montre au plus : les demandes de Leon sur les mails les plus récents.
-const DEMANDES_MAX = 3;
+// Ce que l'accueil montre au plus, de chaque sorte (les demandes de Leon, les brouillons prêts) : les mails les plus
+// récents.
+const HOME_MAX = 3;
 
 export type ReadyBrouillon = {
   id: string;
@@ -182,9 +183,13 @@ export type ReadyBrouillon = {
   // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
   depose: boolean;
 };
-// Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, et auxquelles elle n'a pas répondu.
+// Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, chacune avec ses choix de réponse,
+// dans le même ordre (aucun pour une demande posée avant les choix, 0083). `repondue` : elle a répondu, et Leon écrit
+// le brouillon.
 export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receivedAt'> & {
   questions: string[];
+  choix: string[][];
+  repondue: boolean;
 };
 
 // Ses lignes dans l'état `state`, le mail le plus récent d'abord : celles qu'elle n'a pas écartées, et dont le fil n'a
@@ -228,18 +233,56 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
   );
 }
 
-// Les demandes de Leon qui l'attendent, pour l'accueil : des questions, pas encore de réponses. Pas celles d'un mail
+// Ce que l'accueil montre de l'agent, d'une seule lecture : les demandes de Leon (ses questions, qu'elle y ait répondu
+// ou non, tant que le brouillon n'est pas écrit) et les brouillons prêts, HOME_MAX de chaque sorte, le mail le plus
+// récent d'abord. Les mêmes règles que shownRows : ni ligne écartée, ni fil qui a bougé. Et pas la demande d'un mail
 // trop ancien pour le second appel (readAnsweredMails) : ses réponses ne feraient plus rien écrire.
-export async function readDemandes(ctx: TenantContext): Promise<Demande[]> {
-  const rows = await shownRows(
-    ctx,
-    sql`b.texte is null and b.questions is not null and b.reponses is null
-        and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})`,
-    DEMANDES_MAX,
+export async function readShown(
+  ctx: TenantContext,
+): Promise<{ demandes: Demande[]; prets: ReadyBrouillon[] }> {
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<{
+      id: string;
+      sourceId: string;
+      from: string | null;
+      at: string;
+      texte: string | null;
+      depose: boolean;
+      questions: string[] | null;
+      choix: string[][] | null;
+      repondue: boolean;
+    }>(sql`
+      select id, "sourceId", "from", at, texte, depose, questions, choix, repondue from (
+        select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
+               extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose,
+               b.questions, b.choix, b.reponses is not null as repondue,
+               row_number() over (partition by b.texte is null order by l.ts desc, b.id) as n
+        from brouillons b
+        cross join lateral (
+          select t.external_id, t.author_name, t.author_email, t.ts
+          from turns t
+          where t.tenant_id = b.tenant_id and t.source_id = b.source_id
+          order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
+          limit 1
+        ) l
+        where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
+          and b.ecarte_le is null
+          and substring(l.external_id from ${MESSAGE}) = b.message
+          and (b.texte is not null
+            or (b.questions is not null and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})))
+      ) shown
+      where n <= ${HOME_MAX}
+      order by at desc, id`),
   );
-  return rows.flatMap(({ id, sourceId, from, receivedAt, questions }) =>
-    questions ? [{ id, sourceId, from, receivedAt, questions }] : [],
-  );
+  const demandes: Demande[] = [];
+  const prets: ReadyBrouillon[] = [];
+  for (const { at, texte, depose, questions, choix, repondue, ...row } of rows) {
+    const one = { ...row, receivedAt: epochToDate(at) };
+    if (texte !== null) prets.push({ ...one, texte, depose });
+    else if (questions)
+      demandes.push({ ...one, questions, choix: choix ?? questions.map(() => []), repondue });
+  }
+  return { demandes, prets };
 }
 
 // Ses réponses aux questions de Leon, une par question, dans le même ordre (une réponse peut être vide) : gardées sur

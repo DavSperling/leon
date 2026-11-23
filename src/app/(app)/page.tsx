@@ -40,7 +40,7 @@ import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
 import { REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
-import { readHomeDemandes } from '@/server/portrait/screen';
+import { readHomeBrouillons } from '@/server/portrait/screen';
 import { parseQuery } from '@/server/search/parse-query';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -128,14 +128,16 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
   const locale = await getLocale();
   const modelAvailable = getLlm(env) !== null;
-  const [profile, member, suggestion, points, week, demandes] = await Promise.all([
+  const [profile, member, suggestion, points, week, brouillons] = await Promise.all([
     optional('accueil.profil', getViewerProfile(ctx)),
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
     optional('accueil.point', homeBriefings(ctx)),
     optional('accueil.semaine', readWeek(ctx)),
-    optional('accueil.demandes', readHomeDemandes(ctx)),
+    optional('accueil.brouillons', readHomeBrouillons(ctx)),
   ]);
+  // La carte ne sait pas encore dire que Leon écrit : elle ne reçoit que les demandes sans réponse.
+  const demandes = (brouillons?.demandes ?? []).filter((one) => !one.repondue);
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
     // un point montré a vieilli : il sera à jour à la prochaine visite (le plafond du jour borne la dépense)
@@ -169,9 +171,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         sources={first ? viewOf(first) : undefined}
       />
       {/* Leon a besoin d'elle : dit tout de suite, sous le bonjour, avant tout le reste. */}
-      {demandes && demandes.length > 0 && (
-        <DraftQuestionsCard demandes={demandes} max={REPONSE_MAX_CHARS} />
-      )}
+      {demandes.length > 0 && <DraftQuestionsCard demandes={demandes} max={REPONSE_MAX_CHARS} />}
       <HomeAsk canAsk={modelAvailable} />
       {questions.length > 0 && (
         <div className="mt-3">

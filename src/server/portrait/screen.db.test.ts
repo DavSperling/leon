@@ -10,7 +10,7 @@ import { seedRun } from '@/test/seed-search';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
-import { readFicheScreen, readHomeDemandes } from './screen';
+import { readFicheScreen, readHomeBrouillons } from './screen';
 
 // La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
 // sa construction, et les sources de ses tâches qu'elle voit encore. Aucune construction n'est demandée ici : la file est lue, vide (l'état
@@ -173,6 +173,7 @@ async function seedBrouillon(
     ecarte?: boolean;
     depot?: string;
     questions?: string[];
+    choix?: string[][];
     reponses?: string[];
   } = {},
 ): Promise<{ sourceId: string; receivedAt: Date }> {
@@ -199,8 +200,8 @@ async function seedBrouillon(
   );
   await adminPool.query(
     `insert into brouillons
-       (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, questions, reponses, acl)
-     values ($1, $2, $3, 'message:42', $4, $5, $6, $7, $8, array[$2::uuid])`,
+       (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, questions, reponses, choix, acl)
+     values ($1, $2, $3, 'message:42', $4, $5, $6, $7, $8, $9, array[$2::uuid])`,
     [
       ctx.tenantId,
       ctx.userId,
@@ -210,6 +211,7 @@ async function seedBrouillon(
       over.depot ?? null,
       over.questions ?? null,
       over.reponses ?? null,
+      over.choix ? JSON.stringify(over.choix) : null,
     ],
   );
   return { sourceId, receivedAt };
@@ -302,106 +304,222 @@ describe('readFicheScreen : les brouillons prêts', () => {
   });
 });
 
-describe('readHomeDemandes : les demandes de Leon pour l’accueil', () => {
+describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a pour elle, pour l’accueil', () => {
   const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
+  const CHOIX = [
+    ['Oui', 'Non, proposer jeudi'],
+    ['1 200 €', '1 500 €', 'Le tarif habituel'],
+  ];
   const asked = (ctx: TenantContext, title: string, hoursAgo: number, over = {}) =>
-    seedBrouillon(ctx, title, hoursAgo, { texte: null, questions: QUESTIONS, ...over });
-  const titles = async (ctx: TenantContext) =>
-    (await readHomeDemandes(ctx)).map((one) => one.source.title);
+    seedBrouillon(ctx, title, hoursAgo, {
+      texte: null,
+      questions: QUESTIONS,
+      choix: CHOIX,
+      ...over,
+    });
+  // Les objets des fils montrés, de chaque sorte.
+  const titles = async (ctx: TenantContext) => {
+    const { demandes, prets } = await readHomeBrouillons(ctx);
+    return {
+      demandes: demandes.map((one) => one.source.title),
+      prets: prets.map((one) => one.source.title),
+    };
+  };
+  const NOTHING = { demandes: [], prets: [] };
 
-  it('l’accueil reçoit, pour chaque demande qui l’attend, le correspondant, le fil lié à son outil, la date du mail reçu et les questions : rien d’autre', async () => {
+  it('l’accueil reçoit, pour chaque demande, le correspondant, le fil lié à son outil, la date du mail reçu, les questions avec leurs choix, et si elle y a répondu : rien d’autre', async () => {
     const [julie, paul] = await people();
     await answered(julie);
     await answered(paul);
     const older = await asked(julie, 'Contrat', 5);
-    const recent = await asked(julie, 'Devis 2027', 2, { questions: ['Mardi ?'] });
-    // Ce qui ne l'attend pas : elle a déjà répondu, elle l'a écartée, un brouillon prêt, un mail sans réponse à donner.
-    await asked(julie, 'Répondue', 1, { reponses: ['Oui.', ''] });
+    const recent = await asked(julie, 'Devis 2027', 2, {
+      questions: ['Mardi ?'],
+      choix: [['Oui', 'Non']],
+    });
+    // Elle a répondu : la demande reste, le temps que Leon écrive. Ses réponses ne partent pas vers l'accueil.
+    const replied = await asked(julie, 'Répondue', 1, { reponses: ['Jeudi à 10 h.', ''] });
+    // Ce qui ne se montre pas : écartée, ou un mail sans réponse à donner.
     await asked(julie, 'Écartée', 1, { ecarte: true });
-    await seedBrouillon(julie, 'Brouillon prêt', 1);
     await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
     await asked(paul, 'Fil de Paul', 1);
 
-    const demandes = await readHomeDemandes(julie);
+    const home = await readHomeBrouillons(julie);
 
-    // La plus récente d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse.
-    expect(demandes).toEqual([
-      {
-        id: expect.any(String),
-        from: 'Léa Roy',
-        receivedAt: recent.receivedAt,
-        questions: ['Mardi ?'],
-        source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
-      },
-      {
-        id: expect.any(String),
-        from: 'Léa Roy',
-        receivedAt: older.receivedAt,
-        questions: QUESTIONS,
-        source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
-      },
-    ]);
-    expect(JSON.stringify(demandes)).not.toMatch(/message:|lea@client\.test/);
-    expect(JSON.stringify(demandes)).not.toContain(recent.sourceId);
-    expect(await titles(paul)).toEqual(['Fil de Paul']);
-    // Une demande n'est pas un brouillon prêt : « Ma fiche » ne la montre pas.
-    expect((await readFicheScreen(julie)).brouillons.map((one) => one.source.title)).toEqual([
-      'Brouillon prêt',
+    // La plus récente d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse, ni ses réponses.
+    expect(home).toEqual({
+      demandes: [
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: replied.receivedAt,
+          questions: QUESTIONS,
+          choix: CHOIX,
+          repondue: true,
+          source: { title: 'Répondue', url: 'https://mail.google.test/1', kind: 'gmail' },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: recent.receivedAt,
+          questions: ['Mardi ?'],
+          choix: [['Oui', 'Non']],
+          repondue: false,
+          source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: older.receivedAt,
+          questions: QUESTIONS,
+          choix: CHOIX,
+          repondue: false,
+          source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
+        },
+      ],
+      prets: [],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/message:|lea@client\.test|Jeudi à 10 h/);
+    expect(JSON.stringify(home)).not.toContain(recent.sourceId);
+    expect(await titles(paul)).toEqual({ demandes: ['Fil de Paul'], prets: [] });
+  });
+
+  it('une demande posée avant les choix garde ses questions, sans choix à proposer', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await asked(julie, 'Ancienne demande', 1, { choix: undefined });
+
+    expect((await readHomeBrouillons(julie)).demandes).toMatchObject([
+      { questions: QUESTIONS, choix: [[], []], repondue: false },
     ]);
   });
 
-  it('trois au plus, la plus récente d’abord ; sans demande, rien', async () => {
+  it('l’accueil reçoit, pour chaque brouillon prêt, le correspondant, le fil lié à son outil, la date du mail reçu, le texte, et s’il est déposé dans Gmail : rien d’autre', async () => {
     const [julie, paul] = await people();
     await answered(julie);
     await answered(paul);
-    for (const hours of [4, 1, 3, 2]) await asked(julie, `Fil ${hours}`, hours);
+    const older = await seedBrouillon(julie, 'Contrat', 5, { depot: 'r-contrat-1789' });
+    const recent = await seedBrouillon(julie, 'Devis 2027', 2);
+    // Écrit avec ses réponses : un brouillon prêt comme un autre, plus une demande.
+    await asked(julie, 'Écrit au second appel', 6, {
+      texte: 'Bonjour Léa,\n\nJeudi me convient.',
+      reponses: ['Jeudi.', ''],
+    });
+    await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
+    await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
+    await seedBrouillon(paul, 'Fil de Paul', 1);
 
-    expect(await titles(julie)).toEqual(['Fil 1', 'Fil 2', 'Fil 3']);
-    expect(await readHomeDemandes(paul)).toEqual([]);
+    const home = await readHomeBrouillons(julie);
+
+    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse ; un oui ou un non
+    // pour le dépôt, jamais l'identifiant du brouillon Gmail.
+    expect(home).toEqual({
+      demandes: [],
+      prets: [
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: recent.receivedAt,
+          texte: 'Brouillon pour Devis 2027.',
+          depose: false,
+          source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: older.receivedAt,
+          texte: 'Brouillon pour Contrat.',
+          depose: true,
+          source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: expect.any(Date),
+          texte: 'Bonjour Léa,\n\nJeudi me convient.',
+          depose: false,
+          source: {
+            title: 'Écrit au second appel',
+            url: 'https://mail.google.test/6',
+            kind: 'gmail',
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/message:|lea@client\.test|r-contrat-1789/);
+    expect(JSON.stringify(home)).not.toContain(recent.sourceId);
+    expect(await titles(paul)).toEqual({ demandes: [], prets: ['Fil de Paul'] });
   });
 
-  it('sans son oui à l’agent, ou quand il ne lui est plus proposé, aucune demande ne part vers l’accueil', async () => {
+  it('trois au plus de chaque sorte, les plus récents d’abord ; sans rien pour elle, rien', async () => {
+    const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
+    for (const hours of [4, 1, 3, 2]) await asked(julie, `Demande ${hours}`, hours);
+    for (const hours of [8, 5, 7, 6]) await seedBrouillon(julie, `Prêt ${hours}`, hours);
+
+    expect(await titles(julie)).toEqual({
+      demandes: ['Demande 1', 'Demande 2', 'Demande 3'],
+      prets: ['Prêt 5', 'Prêt 6', 'Prêt 7'],
+    });
+    expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
+  });
+
+  it('sans son oui à l’agent, ou quand il ne lui est plus proposé, rien ne part vers l’accueil ; un nouveau oui remontre tout', async () => {
     const [julie, paul] = await people();
     await answered(julie, false);
     await asked(julie, 'Devis', 1);
+    await asked(julie, 'Répondue', 2, { reponses: ['Oui.', ''] });
+    await seedBrouillon(julie, 'Prêt', 3);
     // Paul n'a jamais répondu à l'agent, qui ne lui est pas proposé.
     await asked(paul, 'Jamais répondu', 1);
+    await seedBrouillon(paul, 'Jamais répondu non plus', 2);
 
-    expect(await readHomeDemandes(julie)).toEqual([]);
-    expect(await readHomeDemandes(paul)).toEqual([]);
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+    expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
 
     await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
       julie.userId,
     ]);
-    expect(await titles(julie)).toEqual(['Devis']);
+    expect(await titles(julie)).toEqual({ demandes: ['Devis', 'Répondue'], prets: ['Prêt'] });
 
     // Sa boîte débranchée : son oui ne suffit plus.
     await adminPool.query('delete from connections where created_by = $1', [julie.userId]);
-    expect(await readHomeDemandes(julie)).toEqual([]);
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
   });
 
-  it('une demande dont le fil a bougé ou a disparu ne se montre plus, ni celle d’un mail de plus de trente jours', async () => {
+  it('une ligne dont le fil a bougé ou a disparu ne se montre plus, ni la demande d’un mail de plus de trente jours, répondue ou non', async () => {
     const [julie] = await people();
     await answered(julie);
-    const moved = await asked(julie, 'Elle a répondu', 3);
+    const moved = await asked(julie, 'Elle a répondu dans le fil', 3);
     const gone = await asked(julie, 'Fil supprimé', 2);
     await asked(julie, 'Intacte', 1);
-    // Trop ancien pour le second appel : ses réponses ne feraient plus rien écrire.
+    // Trop ancien pour le second appel : ses réponses ne feraient plus rien écrire, et Leon n'écrit plus.
     await asked(julie, 'Trop ancien', 31 * 24);
-    await asked(julie, 'Encore à temps', 29 * 24);
-    await reply(moved.sourceId);
-    await adminPool.query('delete from sources where id = $1', [gone.sourceId]);
+    await asked(julie, 'Trop ancien, répondue', 31 * 24, { reponses: ['Oui.', ''] });
+    await asked(julie, 'Encore à temps', 29 * 24, { reponses: ['Oui.', ''] });
+    const movedDraft = await seedBrouillon(julie, 'Brouillon, fil qui a bougé', 3);
+    const goneDraft = await seedBrouillon(julie, 'Brouillon, fil supprimé', 2);
+    await seedBrouillon(julie, 'Brouillon intact', 1);
+    for (const one of [moved, movedDraft]) await reply(one.sourceId);
+    await adminPool.query('delete from sources where id = any($1)', [
+      [gone.sourceId, goneDraft.sourceId],
+    ]);
 
-    expect(await titles(julie)).toEqual(['Intacte', 'Encore à temps']);
+    expect(await titles(julie)).toEqual({
+      demandes: ['Intacte', 'Encore à temps'],
+      prets: ['Brouillon intact'],
+    });
   });
 
-  it('les demandes d’une personne ne partent pas vers l’accueil d’un collègue, de son manager avec la vue de l’équipe, ni d’une autre organisation', async () => {
+  it('rien de ce que l’agent a pour une personne ne part vers l’accueil d’un collègue, de son manager avec la vue de l’équipe, ni d’une autre organisation', async () => {
     const [julie, paul, zoe] = await people();
     for (const ctx of [julie, paul, zoe]) await answered(ctx);
     await asked(julie, 'Devis', 1);
+    await asked(julie, 'Répondue', 2, { reponses: ['Oui.', ''] });
+    await seedBrouillon(julie, 'Prêt', 3);
 
     for (const ctx of [paul, { ...paul, equipe: true }, zoe])
-      expect(await readHomeDemandes(ctx)).toEqual([]);
+      expect(await readHomeBrouillons(ctx)).toEqual(NOTHING);
   });
 });
 

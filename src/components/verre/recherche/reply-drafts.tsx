@@ -687,7 +687,12 @@ export function ReplyDrafts({
                 </Button>
               )}
               {hasNext && (
-                <Button className="ml-auto" disabled={working} onClick={() => show(index + 1)}>
+                <Button
+                  variant="quiet"
+                  className="ml-auto"
+                  disabled={working}
+                  onClick={() => show(index + 1)}
+                >
                   {t('nextMail')}
                 </Button>
               )}

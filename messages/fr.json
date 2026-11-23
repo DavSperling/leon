@@ -370,7 +370,7 @@
     "received": "Reçu le {date}",
     "readyTitle": "Brouillons prêts",
     "readyFor": "Brouillon prêt pour répondre à {name}",
-    "deposited": "Déposé dans vos brouillons Gmail",
+    "deposited": "Déposé dans vos brouillons Gmail. « Écarter » l’en retire aussi.",
     "seeDraft": "Voir le brouillon",
     "discarded": "Brouillon écarté.",
     "discardedKeptInGmail": "Brouillon écarté. Leon n’a pas pu le retirer de Gmail : supprimez-le dans vos brouillons Gmail.",

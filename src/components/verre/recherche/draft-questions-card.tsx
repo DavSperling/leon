@@ -408,7 +408,7 @@ function Pret({ draft, onGone }: { draft: HomeBrouillon; onGone: () => void }) {
             {t('received', { date: formatDate(draft.receivedAt, locale) })}
           </time>
         </p>
-        {draft.depose && <p className="text-label text-muted">{t('deposited')}</p>}
+        {draft.depose && <p className="text-label text-muted">{nb(t('deposited'))}</p>}
       </div>
       <div className="mt-2">
         <SourceThing source={draft.source} />

@@ -370,7 +370,7 @@
     "received": "Received on {date}",
     "readyTitle": "Drafts ready",
     "readyFor": "Draft ready to reply to {name}",
-    "deposited": "Saved to your Gmail drafts",
+    "deposited": "Saved to your Gmail drafts. Dismissing it also removes it from Gmail.",
     "seeDraft": "See the draft",
     "discarded": "Draft dismissed.",
     "discardedKeptInGmail": "Draft dismissed. Leon couldn’t remove it from Gmail: delete it from your Gmail drafts.",

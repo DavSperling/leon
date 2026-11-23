@@ -410,19 +410,24 @@ describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
     );
   });
 
-  it('un brouillon déposé dans Gmail le dit, lui seul, dans les deux langues, sans geste de plus', () => {
+  it('un brouillon déposé dans Gmail le dit, et que « Écarter » l’en retire aussi, lui seul, dans les deux langues, sans geste de plus', () => {
     const html = render([], 'fr', ALL);
     const english = render([], 'en', ALL);
 
-    expect(text(row(html, DEPOSE))).toContain('Déposé dans vos brouillons Gmail');
-    expect(text(row(english, DEPOSE))).toContain('Saved to your Gmail drafts');
+    // « Écarter » le supprime de Gmail pour de bon, même retouché là-bas : elle le lit avant le geste.
+    expect(text(row(html, DEPOSE))).toContain(
+      'Déposé dans vos brouillons Gmail. « Écarter » l’en retire aussi.',
+    );
+    expect(text(row(english, DEPOSE))).toContain(
+      'Saved to your Gmail drafts. Dismissing it also removes it from Gmail.',
+    );
     for (const one of [PRET, SANS_LIEN]) {
-      expect(text(row(html, one)), one.id).not.toContain('Déposé');
-      expect(text(row(english, one)), one.id).not.toContain('Saved to');
+      expect(text(row(html, one)), one.id).not.toMatch(/Déposé|retire/);
+      expect(text(row(english, one)), one.id).not.toMatch(/Saved to|removes/);
     }
     // La mention fait partie des mots du brouillon, que ses gestes rappellent.
     expect(row(html, DEPOSE)).toMatch(
-      new RegExp(`id="brouillon-${DEPOSE.id}"[^]*Déposé dans vos brouillons Gmail</p></div>`),
+      new RegExp(`id="brouillon-${DEPOSE.id}"[^]*l’en retire aussi\\.</p></div>`),
     );
     expect(buttons(row(html, DEPOSE))).toEqual(['Voir le brouillon', 'Copier', 'Écarter']);
   });

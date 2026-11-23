@@ -3,15 +3,15 @@ import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
-import type { HomeDemande } from '@/server/portrait/screen';
+import type { FicheBrouillon, HomeDemande } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DraftQuestionsCard, Questions } from './draft-questions-card';
 
-// La carte des demandes de Leon, rendue côté serveur (pas de DOM ici, donc pas de clic) : ce qu'elle montre avant tout
-// geste, et ses questions dessinées dans un état donné. Passer d'un état à l'autre se teste sans écran
-// (lib/draft-questions.test.ts). Les actions importent Better Auth : elles ne sont pas appelées au rendu. Données
-// inventées.
+// La carte de l'agent « Brouillons de réponse » sur l'Accueil, rendue côté serveur (pas de DOM ici, donc pas de clic) :
+// ce qu'elle montre avant tout geste, et les questions de Leon dessinées dans un état donné. Passer d'un état à l'autre
+// se teste sans écran (lib/draft-questions.test.ts). Les actions importent Better Auth : elles ne sont pas appelées au
+// rendu. Données inventées.
 vi.mock('@/app/(app)/settings/actions', () => ({
   answerQuestionsAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
@@ -48,8 +48,11 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
       children,
     }),
   );
-const render = (demandes: HomeDemande[], locale: 'en' | 'fr' = 'fr') =>
-  within(createElement(DraftQuestionsCard, { demandes, max: 1000 }), locale);
+const render = (
+  demandes: HomeDemande[],
+  locale: 'en' | 'fr' = 'fr',
+  prets: FicheBrouillon[] = [],
+) => within(createElement(DraftQuestionsCard, { demandes, prets, max: 1000 }), locale);
 // Les questions d'une demande, dans l'état `flow`.
 const PANEL = 'panneau';
 const questions = (flow: Flow, demande = DEVIS, locale: 'en' | 'fr' = 'fr') =>
@@ -263,5 +266,141 @@ describe('Questions : une question à la fois, puis le récapitulatif', () => {
     expect(questions({ step: 0, picks: [{ choice: OTHER, text: '' }] }, CONTRAT, 'en')).toContain(
       'aria-label="Your answer"',
     );
+  });
+});
+
+describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
+  const PRET: FicheBrouillon = {
+    id: id(701),
+    from: 'Léa Roy',
+    receivedAt: new Date('2026-11-20T08:30:00Z'),
+    texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
+    depose: false,
+    source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
+  };
+  // Un fil sans objet ni lien, d'un correspondant sans nom ni adresse.
+  const SANS_LIEN: FicheBrouillon = {
+    id: id(702),
+    from: null,
+    receivedAt: new Date('2026-11-19T08:30:00Z'),
+    texte: 'Bonjour,\n\nBien reçu.',
+    depose: false,
+    source: { title: null, url: null, kind: 'outlook' },
+  };
+  // Complet : déposé aussi dans ses brouillons Gmail.
+  const DEPOSE: FicheBrouillon = {
+    id: id(703),
+    from: 'marc@client.test',
+    receivedAt: new Date('2026-11-18T08:30:00Z'),
+    texte: 'Bonjour Marc,\n\nC’est entendu.',
+    depose: true,
+    source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
+  };
+  const ALL = [PRET, SANS_LIEN, DEPOSE];
+  const row = (html: string, one: FicheBrouillon) =>
+    html
+      .split('<li class="px-3')
+      .find((part) => part.includes(`id="brouillon-${one.id}"`))
+      ?.split('</li>')[0] ?? '';
+
+  it('sans demande, les brouillons prêts se montrent seuls, dans une liste nommée, dans l’ordre reçu', () => {
+    const html = render([], 'fr', ALL);
+
+    expect(html).not.toContain('Leon a besoin de vous');
+    expect(html).toContain('<ul aria-label="Brouillons prêts"');
+    expect(count(html, '<li class="px-3')).toBe(3);
+    expect(ALL.map((one) => html.indexOf(`id="brouillon-${one.id}"`))).toEqual(
+      ALL.map((one) => html.indexOf(`id="brouillon-${one.id}"`)).sort((a, b) => a - b),
+    );
+  });
+
+  it('les brouillons prêts viennent sous les demandes, chacun dans sa liste', () => {
+    const html = render([DEVIS], 'fr', [PRET]);
+
+    expect(html.indexOf('<ul aria-label="Leon a besoin de vous"')).toBeGreaterThanOrEqual(0);
+    expect(html.indexOf('<ul aria-label="Brouillons prêts"')).toBeGreaterThan(
+      html.indexOf(`id="demande-${DEVIS.id}-questions"`),
+    );
+    // Une seule feuille pour les deux listes.
+    expect(count(html, 'shadow-sheet')).toBe(1);
+  });
+
+  it('chaque brouillon : le correspondant, la date du mail reçu, le fil lié à son outil, et trois gestes', () => {
+    const pret = row(render([], 'fr', ALL), PRET);
+
+    expect(text(pret)).toContain('Brouillon prêt pour répondre à Léa Roy');
+    expect(text(pret)).toContain('Reçu le 20 nov. 2026');
+    expect(pret).toContain('dateTime="2026-11-20T08:30:00.000Z"');
+    // Le fil, comme les sources d'une tâche : son objet, son outil, et son lien vers l'outil.
+    expect(pret).toContain('href="https://mail.google.test/fil/1"');
+    expect(pret).toContain('target="_blank" rel="noopener noreferrer"');
+    expect(text(pret)).toContain('Devis 2027');
+    expect(text(pret)).toContain('Gmail');
+    // Trois gestes, pas un de plus : ni corriger, ni refaire, ni envoyer. Chacun rappelle les mots du brouillon.
+    expect(buttons(pret)).toEqual(['Voir le brouillon', 'Copier', 'Écarter']);
+    expect(count(pret, `aria-describedby="brouillon-${PRET.id}"`)).toBe(3);
+  });
+
+  it('le texte du brouillon est replié derrière « Voir le brouillon », tel quel : ses lignes, ses crochets, et rien qui s’interprète', () => {
+    const pret = row(render([], 'fr', ALL), PRET);
+    const panel = `brouillon-${PRET.id}-texte`;
+
+    expect(pret).toMatch(
+      new RegExp(
+        `<button [^>]*aria-expanded="false" aria-controls="${panel}"[^>]*>Voir le brouillon`,
+      ),
+    );
+    expect(pret).toMatch(
+      new RegExp(`<p id="${panel}" hidden="" class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,`),
+    );
+    expect(pret).toContain(
+      'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] &lt;b&gt;.\n\nBien à vous',
+    );
+  });
+
+  it('un brouillon déposé dans Gmail le dit, lui seul, dans les deux langues, sans geste de plus', () => {
+    const html = render([], 'fr', ALL);
+    const english = render([], 'en', ALL);
+
+    expect(text(row(html, DEPOSE))).toContain('Déposé dans vos brouillons Gmail');
+    expect(text(row(english, DEPOSE))).toContain('Saved to your Gmail drafts');
+    for (const one of [PRET, SANS_LIEN]) {
+      expect(text(row(html, one)), one.id).not.toContain('Déposé');
+      expect(text(row(english, one)), one.id).not.toContain('Saved to');
+    }
+    // La mention fait partie des mots du brouillon, que ses gestes rappellent.
+    expect(row(html, DEPOSE)).toMatch(
+      new RegExp(`id="brouillon-${DEPOSE.id}"[^]*Déposé dans vos brouillons Gmail</p></div>`),
+    );
+    expect(buttons(row(html, DEPOSE))).toEqual(['Voir le brouillon', 'Copier', 'Écarter']);
+  });
+
+  it('un fil sans objet ni lien se montre sans s’ouvrir ; un correspondant sans nom se lit par son adresse, ou par des mots', () => {
+    const html = render([], 'fr', ALL);
+    const sansLien = row(html, SANS_LIEN);
+
+    expect(text(sansLien)).toContain('Brouillon prêt pour répondre à votre correspondant');
+    expect(text(sansLien)).toContain('Sans titre');
+    expect(text(sansLien)).toContain('Outlook');
+    expect(sansLien).not.toContain('href=');
+    expect(text(row(html, DEPOSE))).toContain('Brouillon prêt pour répondre à marc@client.test');
+  });
+
+  it('en anglais, les mêmes mots', () => {
+    const html = render([], 'en', ALL);
+    const words = text(html);
+
+    for (const one of [
+      'Draft ready to reply to Léa Roy',
+      'Draft ready to reply to your correspondent',
+      'Received on Nov 20, 2026',
+      'Untitled',
+      'See the draft',
+      'Copy',
+      'Dismiss',
+    ])
+      expect(words, one).toContain(one);
+    expect(html).toContain('<ul aria-label="Drafts ready"');
+    expect(words).not.toMatch(/draftQuestions\.|fiche\./);
   });
 });

@@ -3,11 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DraftQuestionsCard } from '@/components/verre/recherche/draft-questions-card';
 import { Greeting, HomeAsk } from '@/components/verre/recherche/home';
 import { logError } from '@/server/log';
-import { type HomeDemande, readHomeBrouillons } from '@/server/portrait/screen';
+import {
+  type FicheBrouillon,
+  type HomeDemande,
+  readHomeBrouillons,
+} from '@/server/portrait/screen';
 import HomePage from './page';
 
-// L'Accueil lit beaucoup de choses ; seule la carte des demandes de Leon se teste ici : montrée quand il y en a, à sa
-// place sous le bonjour, et jamais au prix du reste. Les actions importent Better Auth : l'Accueil n'est jamais
+// L'Accueil lit beaucoup de choses ; seule la carte de l'agent « Brouillons de réponse » se teste ici (les demandes de
+// Leon, les brouillons prêts) : montrée quand il y a de quoi, à sa place sous le bonjour, et jamais au prix du reste. Les actions importent Better Auth : l'Accueil n'est jamais
 // dessiné, seulement bâti. Ce que la carte reçoit se décide dans readHomeBrouillons (screen.db.test.ts).
 vi.mock('@/app/(app)/actions', () => ({}));
 vi.mock('@/app/(app)/discussions/actions', () => ({}));
@@ -46,6 +50,14 @@ const DEMANDE: HomeDemande = {
   repondue: false,
   source: { title: 'Devis 2027', url: null, kind: 'gmail' },
 };
+const PRET: FicheBrouillon = {
+  id: '00000002-1111-4111-8111-111111111111',
+  from: 'Léa Roy',
+  receivedAt: new Date('2026-11-09T09:00:00Z'),
+  texte: 'Bonjour Léa,\n\nC’est entendu.',
+  depose: true,
+  source: { title: 'Contrat', url: null, kind: 'gmail' },
+};
 
 // Les éléments de l'Accueil, dans l'ordre où il les rend (fragments compris).
 function flat(node: ReactNode): ReactElement<Record<string, unknown>>[] {
@@ -63,7 +75,7 @@ async function home() {
 
 beforeEach(() => vi.mocked(logError).mockClear());
 
-describe('l’Accueil : les demandes de Leon', () => {
+describe('l’Accueil : les demandes de Leon et les brouillons prêts', () => {
   it('une demande l’attend : la carte se montre tout de suite, sous le bonjour et avant le champ, avec ce que l’Accueil a lu et la borne d’une réponse', async () => {
     vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [DEMANDE], prets: [] });
 
@@ -74,6 +86,7 @@ describe('l’Accueil : les demandes de Leon', () => {
     expect(types.indexOf(HomeAsk)).toBeGreaterThan(types.indexOf(DraftQuestionsCard));
     expect(elements.find((element) => element.type === DraftQuestionsCard)?.props).toEqual({
       demandes: [DEMANDE],
+      prets: [],
       max: 1000,
     });
     expect(readHomeBrouillons).toHaveBeenCalledWith({
@@ -83,7 +96,21 @@ describe('l’Accueil : les demandes de Leon', () => {
     });
   });
 
-  it('sans demande, pas de carte', async () => {
+  it('un brouillon prêt, sans demande : la carte se montre à la même place, avec lui', async () => {
+    vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [], prets: [PRET] });
+
+    const { elements, types } = await home();
+
+    expect(types.indexOf(DraftQuestionsCard)).toBeGreaterThan(types.indexOf(Greeting));
+    expect(types.indexOf(HomeAsk)).toBeGreaterThan(types.indexOf(DraftQuestionsCard));
+    expect(elements.find((element) => element.type === DraftQuestionsCard)?.props).toEqual({
+      demandes: [],
+      prets: [PRET],
+      max: 1000,
+    });
+  });
+
+  it('sans demande ni brouillon prêt, pas de carte', async () => {
     vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [], prets: [] });
 
     const { types } = await home();
@@ -92,7 +119,7 @@ describe('l’Accueil : les demandes de Leon', () => {
     expect(types).toContain(HomeAsk);
   });
 
-  it('la lecture des demandes échoue : l’Accueil tient, sans la carte, et la panne est notée', async () => {
+  it('la lecture échoue : l’Accueil tient, sans la carte, et la panne est notée', async () => {
     vi.mocked(readHomeBrouillons).mockRejectedValue(new Error('base injoignable'));
 
     const { types } = await home();

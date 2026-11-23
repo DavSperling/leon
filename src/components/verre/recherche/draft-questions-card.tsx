@@ -10,7 +10,7 @@ import {
   useTransition,
 } from 'react';
 import { answerQuestionsAction, discardBrouillonAction } from '@/app/(app)/settings/actions';
-import { Button, GlassCard, Notice, Textarea, toast } from '@/components/verre';
+import { Button, CopyButton, GlassCard, Notice, Textarea, toast } from '@/components/verre';
 import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { SourceThing } from '@/components/verre/reglages/source-thing';
 import {
@@ -23,9 +23,31 @@ import {
 } from '@/lib/draft-questions';
 import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
-import type { HomeDemande } from '@/server/portrait/screen';
+import type { FicheBrouillon, HomeDemande } from '@/server/portrait/screen';
 
-type Result = { ok: true } | { error: string };
+type Done = { ok: true; resteDansGmail?: boolean };
+type Result = Done | { error: string };
+
+// Un geste sur une ligne de la carte. `done` : ce qui suit un appel réussi. Une ligne qui n'existe plus (répondue ou
+// écartée ailleurs) s'en va, avec le mot `goneWord` ; un appel qui échoue (réseau) est une erreur comme une autre, dite
+// sur la ligne, qui reste.
+function useGesture(onGone: () => void, goneWord: string) {
+  const [failed, setFailed] = useState(false);
+  const run = (
+    start: TransitionStartFunction,
+    call: () => Promise<Result>,
+    done: (result: Done) => void,
+  ) =>
+    start(async () => {
+      setFailed(false);
+      const result = await call().catch((): Result => ({ error: 'echec' }));
+      if ('ok' in result) return done(result);
+      if (result.error !== 'introuvable') return setFailed(true);
+      toast.error(goneWord);
+      onGone();
+    });
+  return { failed, run };
+}
 
 const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
 const CHOICE = 'flex cursor-pointer items-start gap-2.5 text-body [overflow-wrap:anywhere] text-fg';
@@ -217,9 +239,9 @@ function Demande({
   const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [flow, dispatch] = useReducer(flowReducer, demande.choix, startFlow);
-  const [failed, setFailed] = useState(false);
   const [sending, startSending] = useTransition();
   const [discarding, startDiscarding] = useTransition();
+  const { failed, run } = useGesture(onGone, t('gone'));
   const words = `demande-${demande.id}`;
   const ask = `demande-${demande.id}-voir`;
   const panel = `demande-${demande.id}-questions`;
@@ -230,25 +252,17 @@ function Demande({
     if (open) document.getElementById(`${panel}-etape`)?.focus();
   }, [open, flow.step, panel]);
 
-  // `done` : le mot d'après, quand il y en a un. Une demande qui n'est plus ouverte (répondue ou écartée ailleurs) s'en
-  // va aussi ; un appel qui échoue (réseau) est une erreur comme une autre, et la demande reste.
-  const run = (start: TransitionStartFunction, call: () => Promise<Result>, done?: string) =>
-    start(async () => {
-      setFailed(false);
-      const result = await call().catch((): Result => ({ error: 'echec' }));
-      if ('error' in result && result.error !== 'introuvable') return setFailed(true);
-      if ('error' in result) toast.error(t('gone'));
-      else if (done) toast.success(done);
-      onGone();
-    });
   const send = () =>
     run(
       startSending,
       () =>
         answerQuestionsAction({ id: demande.id, reponses: answersOf(demande.choix, flow.picks) }),
-      t('sent'),
+      () => {
+        toast.success(t('sent'));
+        onGone();
+      },
     );
-  const discard = () => run(startDiscarding, () => discardBrouillonAction(demande.id));
+  const discard = () => run(startDiscarding, () => discardBrouillonAction(demande.id), onGone);
 
   return (
     <li className="px-3 py-3.5">
@@ -261,7 +275,7 @@ function Demande({
         <p className="font-medium">{t('needYou', { name: demande.from ?? t('someone') })}</p>
         <p className="text-label text-muted">
           <time dateTime={demande.receivedAt.toISOString()}>
-            {f('draftReceived', { date: formatDate(demande.receivedAt, locale) })}
+            {t('received', { date: formatDate(demande.receivedAt, locale) })}
           </time>
         </p>
       </div>
@@ -309,33 +323,125 @@ function Demande({
   );
 }
 
+// Un brouillon de réponse prêt : le correspondant, la date du mail reçu, s'il est déposé dans ses brouillons Gmail, le
+// fil lié à son outil, puis le texte du brouillon, replié derrière « Voir le brouillon » pour que l'Accueil reste léger,
+// « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse, ou le
+// retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » le retire aussi de Gmail.
+function Pret({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) {
+  const t = useTranslations('draftQuestions');
+  const f = useTranslations('fiche');
+  const locale = useLocale();
+  const [open, setOpen] = useState(false);
+  const [discarding, startDiscarding] = useTransition();
+  const { failed, run } = useGesture(onGone, t('draftGone'));
+  const words = `brouillon-${draft.id}`;
+  const panel = `brouillon-${draft.id}-texte`;
+  const discard = () =>
+    run(
+      startDiscarding,
+      () => discardBrouillonAction(draft.id),
+      (result) => {
+        // Écarté dans Leon, mais resté dans sa boîte : elle doit le savoir, il peut encore en partir.
+        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
+        else toast.success(t('discarded'));
+        onGone();
+      },
+    );
+  return (
+    <li className="px-3 py-3.5">
+      {failed && (
+        <Notice tone="error" live="alert" className="mb-3">
+          {nb(f('errorFailed'))}
+        </Notice>
+      )}
+      <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
+        <p className="font-medium">{t('readyFor', { name: draft.from ?? t('someone') })}</p>
+        <p className="text-label text-muted">
+          <time dateTime={draft.receivedAt.toISOString()}>
+            {t('received', { date: formatDate(draft.receivedAt, locale) })}
+          </time>
+        </p>
+        {draft.depose && <p className="text-label text-muted">{t('deposited')}</p>}
+      </div>
+      <div className="mt-2">
+        <SourceThing source={draft.source} />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="quiet"
+          aria-expanded={open}
+          aria-controls={panel}
+          aria-describedby={words}
+          onClick={() => setOpen(!open)}
+        >
+          {t('seeDraft')}
+        </Button>
+        <CopyButton value={draft.texte} variant="quiet" aria-describedby={words} />
+        <Button
+          size="sm"
+          variant="quiet"
+          loading={discarding}
+          aria-describedby={words}
+          onClick={discard}
+        >
+          {t('discard')}
+        </Button>
+      </div>
+      <p
+        id={panel}
+        hidden={!open}
+        className="mt-3 whitespace-pre-wrap text-body [overflow-wrap:anywhere] text-fg"
+      >
+        {draft.texte}
+      </p>
+    </li>
+  );
+}
+
 /**
- * Les demandes de Leon sur l'Accueil : quand une information ou une décision lui manque pour répondre à un mail, il pose
- * ses questions ici, tout de suite, au lieu de laisser un blanc dans le brouillon (portrait/brouillons.ts). Trois au
- * plus, la plus récente d'abord. Répondue ou écartée, une demande s'en va sans attendre que l'Accueil soit relu, et un
- * mot dit où trouver le brouillon. `max` vient du serveur (brouillon-prompt.ts). Le focus ne tombe jamais sur <body> :
- * il va au titre de l'Accueil quand une demande part.
+ * Ce que l'agent « Brouillons de réponse » a pour elle, sur l'Accueil (portrait/brouillons.ts). D'abord les demandes de
+ * Leon : quand une information ou une décision lui manque pour répondre à un mail, il pose ses questions ici, tout de
+ * suite, au lieu de laisser un blanc dans le brouillon. Puis les brouillons prêts. Trois au plus de chaque sorte, les
+ * plus récents d'abord. Répondue ou écartée, une ligne s'en va sans attendre que l'Accueil soit relu. `max` vient du
+ * serveur (brouillon-prompt.ts). Le focus ne tombe jamais sur <body> : il va au titre de l'Accueil quand une ligne part.
  */
-export function DraftQuestionsCard({ demandes, max }: { demandes: HomeDemande[]; max: number }) {
+export function DraftQuestionsCard({
+  demandes,
+  prets,
+  max,
+}: {
+  demandes: HomeDemande[];
+  prets: FicheBrouillon[];
+  max: number;
+}) {
   const t = useTranslations('draftQuestions');
   const [gone, setGone] = useState<string[]>([]);
-  const open = demandes.filter((one) => !gone.includes(one.id));
-  if (open.length === 0) return null;
+  const here = <T extends { id: string }>(rows: T[]) =>
+    rows.filter((one) => !gone.includes(one.id));
+  const leave = (id: string) => () => {
+    document.getElementById(HOME_TITLE_ID)?.focus();
+    setGone((ids) => [...ids, id]);
+  };
+  const open = here(demandes);
+  const ready = here(prets);
+  if (open.length + ready.length === 0) return null;
   return (
-    <GlassCard className="mt-6 max-w-[772px] p-1.5">
-      <ul aria-label={t('title')} className="divide-y divide-line">
-        {open.map((demande) => (
-          <Demande
-            key={demande.id}
-            demande={demande}
-            max={max}
-            onGone={() => {
-              document.getElementById(HOME_TITLE_ID)?.focus();
-              setGone((ids) => [...ids, demande.id]);
-            }}
-          />
-        ))}
-      </ul>
+    <GlassCard className="mt-6 max-w-[772px] divide-y divide-line p-1.5">
+      {open.length > 0 && (
+        <ul aria-label={t('title')} className="divide-y divide-line">
+          {open.map((demande) => (
+            <Demande key={demande.id} demande={demande} max={max} onGone={leave(demande.id)} />
+          ))}
+        </ul>
+      )}
+      {ready.length > 0 && (
+        <ul aria-label={t('readyTitle')} className="divide-y divide-line">
+          {ready.map((draft) => (
+            <Pret key={draft.id} draft={draft} onGone={leave(draft.id)} />
+          ))}
+        </ul>
+      )}
     </GlassCard>
   );
 }

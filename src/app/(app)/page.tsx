@@ -120,9 +120,9 @@ const optional = <T,>(what: string, read: Promise<T>) =>
   });
 
 /**
- * L'Accueil : le bonjour et le fait du jour, les demandes de Leon quand il a besoin d'elle pour répondre à un mail, le
- * champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le calendrier
- * de la semaine et la proposition « About you ».
+ * L'Accueil : le bonjour et le fait du jour, les demandes de Leon quand il a besoin d'elle pour répondre à un mail et
+ * les brouillons de réponse prêts, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y
+ * en a un) et, à côté, le calendrier de la semaine et la proposition « About you ».
  */
 async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
@@ -138,6 +138,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   ]);
   // La carte ne sait pas encore dire que Leon écrit : elle ne reçoit que les demandes sans réponse.
   const demandes = (brouillons?.demandes ?? []).filter((one) => !one.repondue);
+  const prets = brouillons?.prets ?? [];
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
     // un point montré a vieilli : il sera à jour à la prochaine visite (le plafond du jour borne la dépense)
@@ -170,8 +171,10 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         fact={first && briefingFact(first.sections)}
         sources={first ? viewOf(first) : undefined}
       />
-      {/* Leon a besoin d'elle : dit tout de suite, sous le bonjour, avant tout le reste. */}
-      {demandes.length > 0 && <DraftQuestionsCard demandes={demandes} max={REPONSE_MAX_CHARS} />}
+      {/* Leon a besoin d'elle, ou un brouillon est prêt : dit tout de suite, sous le bonjour, avant tout le reste. */}
+      {demandes.length + prets.length > 0 && (
+        <DraftQuestionsCard demandes={demandes} prets={prets} max={REPONSE_MAX_CHARS} />
+      )}
       <HomeAsk canAsk={modelAvailable} />
       {questions.length > 0 && (
         <div className="mt-3">

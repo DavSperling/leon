@@ -139,6 +139,8 @@ export type ReadyBrouillon = {
   from: string | null;
   receivedAt: Date;
   texte: string;
+  // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
+  depose: boolean;
 };
 
 // Ses brouillons prêts, le mail le plus récent d'abord : ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé
@@ -148,7 +150,7 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<Omit<ReadyBrouillon, 'receivedAt'> & { at: string }>(sql`
       select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
-             extract(epoch from l.ts) as at, b.texte
+             extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose
       from brouillons b
       cross join lateral (
         select t.external_id, t.author_name, t.author_email, t.ts

@@ -34,7 +34,7 @@ export type FicheEtat =
   | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 // Un brouillon prêt, tel que l'écran le montre : le correspondant, le fil (son objet, lié à son outil), la date du mail
-// reçu et le texte du brouillon. `id` sert au geste « Écarter ».
+// reçu, le texte du brouillon, et s'il est déposé dans ses brouillons Gmail. `id` sert au geste « Écarter ».
 export type FicheBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
 export type FicheScreen = {
   etat: FicheEtat;

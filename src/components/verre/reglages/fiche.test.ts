@@ -402,6 +402,7 @@ describe('FicheSection : les brouillons prêts', () => {
     from: 'Léa Roy',
     receivedAt: new Date('2026-11-20T08:30:00Z'),
     texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
+    depose: false,
     source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
   };
   // Un fil sans objet ni lien, d'un correspondant sans nom.
@@ -410,7 +411,17 @@ describe('FicheSection : les brouillons prêts', () => {
     from: 'marc@client.test',
     receivedAt: new Date('2026-11-19T08:30:00Z'),
     texte: 'Bonjour,\n\nBien reçu.',
+    depose: false,
     source: { title: null, url: null, kind: 'outlook' },
+  };
+  // Complet : déposé aussi dans ses brouillons Gmail.
+  const DEPOSE: FicheBrouillon = {
+    id: id(703),
+    from: 'Léa Roy',
+    receivedAt: new Date('2026-11-18T08:30:00Z'),
+    texte: 'Bonjour Léa,\n\nC’est entendu.',
+    depose: true,
+    source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
   };
   const WITH_DRAFTS = { ...DATA, brouillons: [DEVIS, SANS_LIEN] };
   const draft = (html: string, one: FicheBrouillon) =>
@@ -480,6 +491,28 @@ describe('FicheSection : les brouillons prêts', () => {
     expect(html.indexOf(`brouillon-${DEVIS.id}`)).toBeLessThan(
       html.indexOf(`brouillon-${SANS_LIEN.id}`),
     );
+  });
+
+  it('un brouillon déposé le dit, lui seul, dans les deux langues, sans geste de plus', () => {
+    const data = { ...DATA, brouillons: [DEVIS, DEPOSE, SANS_LIEN] };
+    const html = render(data);
+    const english = render(data, 'en');
+
+    expect(text(draft(html, DEPOSE))).toContain('Déposé dans vos brouillons Gmail');
+    expect(text(draft(english, DEPOSE))).toContain('Saved to your Gmail drafts');
+    for (const one of [DEVIS, SANS_LIEN]) {
+      expect(text(draft(html, one)), one.id).not.toContain('Déposé');
+      expect(text(draft(english, one)), one.id).not.toContain('Saved to');
+    }
+    // La mention fait partie des mots du brouillon, que « Copier » et « Écarter » rappellent.
+    expect(draft(html, DEPOSE)).toMatch(
+      new RegExp(`id="brouillon-${DEPOSE.id}"[^]*Déposé dans vos brouillons Gmail</p></div>`),
+    );
+    expect(
+      [...draft(html, DEPOSE).matchAll(/<button [^>]*>(?:<span[^>]*><\/span>)?([^<]+)</g)].map(
+        (m) => m[1],
+      ),
+    ).toEqual(['Copier', 'Écarter']);
   });
 
   it('un fil sans objet ni lien se montre sans s’ouvrir, et un correspondant sans nom par son adresse', () => {

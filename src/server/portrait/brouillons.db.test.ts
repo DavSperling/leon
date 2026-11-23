@@ -577,6 +577,10 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
     ]);
     expect(errors.mock.calls.map((args) => args[1])).toEqual(['brouillons.deposit_failed']);
     expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Bonjour|Léa|@/);
+    // L'écran saura lequel est déposé, le mail le plus récent d'abord, sans recevoir l'identifiant du brouillon Gmail.
+    const ready = await readBrouillons(julie);
+    expect(ready.map((one) => one.depose)).toEqual([false, false, true]);
+    expect(JSON.stringify(ready)).not.toContain('r-devis');
 
     // Le passage suivant : ni appel au modèle, ni requête. Le dépôt manqué n'est pas retenté.
     const again = answering(draft('Refait.'));
@@ -619,6 +623,7 @@ describe('readBrouillons : ses brouillons prêts', () => {
         from: 'Léa Roy',
         receivedAt: expect.any(Date),
         texte: 'Pour le devis.',
+        depose: false,
       },
       {
         id: expect.any(String),
@@ -626,6 +631,7 @@ describe('readBrouillons : ses brouillons prêts', () => {
         from: 'Léa Roy',
         receivedAt: expect.any(Date),
         texte: 'Pour le contrat.',
+        depose: false,
       },
     ]);
     // La date est celle du mail reçu, il y a une heure et deux heures, pas celle du brouillon.

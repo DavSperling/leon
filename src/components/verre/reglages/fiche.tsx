@@ -312,7 +312,8 @@ function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { i
 }
 
 // Un brouillon de réponse prêt : le correspondant, la date du mail reçu, le fil lié à son outil, le texte du brouillon
-// tel quel, « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse.
+// tel quel, « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse,
+// ou le retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » ne touche pas à sa boîte.
 function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) {
   const t = useTranslations('fiche');
   const locale = useLocale();
@@ -349,6 +350,7 @@ function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => voi
             {t('draftReceived', { date: formatDate(draft.receivedAt, locale) })}
           </time>
         </p>
+        {draft.depose && <p className="text-label text-muted">{t('draftDeposited')}</p>}
       </div>
       <div className="mt-2">
         <SourceThing source={draft.source} />

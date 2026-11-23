@@ -168,7 +168,7 @@ describe('readFicheScreen : les brouillons prêts', () => {
     ctx: TenantContext,
     title: string,
     hoursAgo: number,
-    over: { texte?: string | null; ecarte?: boolean } = {},
+    over: { texte?: string | null; ecarte?: boolean; depot?: string } = {},
   ): Promise<{ sourceId: string; receivedAt: Date }> {
     const receivedAt = new Date(Date.now() - hoursAgo * 3_600_000);
     const { sourceId } = await seedRun(ctx, {
@@ -192,24 +192,25 @@ describe('readFicheScreen : les brouillons prêts', () => {
       [sourceId],
     );
     await adminPool.query(
-      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, acl)
-       values ($1, $2, $3, 'message:42', $4, $5, array[$2::uuid])`,
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, acl)
+       values ($1, $2, $3, 'message:42', $4, $5, $6, array[$2::uuid])`,
       [
         ctx.tenantId,
         ctx.userId,
         sourceId,
         over.texte === undefined ? `Brouillon pour ${title}.` : over.texte,
         over.ecarte ? new Date() : null,
+        over.depot ?? null,
       ],
     );
     return { sourceId, receivedAt };
   }
 
-  it('l’écran reçoit, pour chacun, le correspondant, le fil lié à son outil, la date du mail reçu et le texte : rien d’autre', async () => {
+  it('l’écran reçoit, pour chacun, le correspondant, le fil lié à son outil, la date du mail reçu, le texte, et s’il est déposé dans Gmail : rien d’autre', async () => {
     const [julie, paul] = await people();
     await answered(julie);
     await answered(paul);
-    const older = await seedBrouillon(julie, 'Contrat', 5);
+    const older = await seedBrouillon(julie, 'Contrat', 5, { depot: 'r-contrat-1789' });
     const recent = await seedBrouillon(julie, 'Devis 2027', 2);
     await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
     await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
@@ -217,13 +218,15 @@ describe('readFicheScreen : les brouillons prêts', () => {
 
     const screen = await readFicheScreen(julie);
 
-    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse.
+    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse ; un oui ou un non
+    // pour le dépôt, jamais l'identifiant du brouillon Gmail.
     expect(screen.brouillons).toEqual([
       {
         id: expect.any(String),
         from: 'Léa Roy',
         receivedAt: recent.receivedAt,
         texte: 'Brouillon pour Devis 2027.',
+        depose: false,
         source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
       },
       {
@@ -231,10 +234,13 @@ describe('readFicheScreen : les brouillons prêts', () => {
         from: 'Léa Roy',
         receivedAt: older.receivedAt,
         texte: 'Brouillon pour Contrat.',
+        depose: true,
         source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
       },
     ]);
-    expect(JSON.stringify(screen.brouillons)).not.toMatch(/message:|lea@client\.test/);
+    expect(JSON.stringify(screen.brouillons)).not.toMatch(
+      /message:|lea@client\.test|r-contrat-1789/,
+    );
     expect(JSON.stringify(screen.brouillons)).not.toContain(recent.sourceId);
     // Les fils des brouillons ne se mêlent pas aux sources des tâches.
     expect(screen.sources).toEqual({});

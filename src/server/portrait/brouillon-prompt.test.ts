@@ -387,18 +387,17 @@ describe('hasBlank : un brouillon incomplet', () => {
     'Hallo Lea,\n\nder Termin ist am [bitte ergänzen].',
     'Le montant : []',
     'Voir [1] et [2].',
-  ])('une paire de crochets sur une même ligne est un blanc : %j', (texte) => {
+    'Le devis part le [à compléter :\nla date et le montant].',
+    'Un crochet ouvert [ sans fin.',
+    'Un crochet fermé ] sans début.',
+  ])('le moindre crochet est un blanc, même sur deux lignes ou sans sa paire : %j', (texte) => {
     expect(hasBlank(texte)).toBe(true);
   });
 
   it.each([
     'Bonjour Léa,\n\nVoici le devis.\n\nCordialement',
-    'Un crochet ouvert [ sans fin.',
-    'Un crochet fermé ] sans début.',
-    'Fermé ] avant d’être ouvert [.',
-    'Ouvert [ sur une ligne,\nfermé ] sur la suivante.',
     'Des parenthèses (à voir) et des accolades {date}.',
-  ])('sans paire de crochets sur une même ligne, le brouillon est complet : %j', (texte) => {
+  ])('sans crochet, le brouillon est complet : %j', (texte) => {
     expect(hasBlank(texte)).toBe(false);
   });
 });

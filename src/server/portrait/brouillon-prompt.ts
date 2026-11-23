@@ -128,10 +128,11 @@ export function buildBrouillonPrompt(input: {
   return { system: SYSTEM, messages: [{ role: 'user', content }] };
 }
 
-// Un blanc que le modèle a laissé (« [à compléter : la date] », ou son équivalent dans la langue du mail) : une paire
-// de crochets sur une même ligne. Un brouillon qui en porte un est incomplet : il reste dans Leon, sans aller dans sa
-// boîte, d'où il pourrait partir par erreur (brouillon-depot.ts).
-export const hasBlank = (texte: string) => /\[.*\]/.test(texte);
+// Un blanc que le modèle a laissé (« [à compléter : la date] », ou son équivalent dans la langue du mail) : le moindre
+// crochet, car un blanc peut tenir sur deux lignes ou rester ouvert. Un brouillon qui en porte un est incomplet : il
+// reste dans Leon, sans aller dans sa boîte, d'où il pourrait partir par erreur (brouillon-depot.ts). Un crochet qui
+// n'est pas un blanc le garde aussi dans Leon : l'erreur va du côté sûr.
+export const hasBlank = (texte: string) => /[[\]]/.test(texte);
 
 const DraftLine = z.object({ brouillon: z.string() });
 const NoneLine = z.object({ sans_reponse: z.literal(true) });

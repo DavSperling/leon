@@ -668,6 +668,30 @@ Claude Code 2.1.326. Le crochet témoin est [`essais/lecture-obligee-temoin.mjs`
 
 Le point 9 (Codex) demande d'approuver le crochet dans `/hooks`. Il vient avec Codex, plus tard.
 
+**Avec Amos, dans l'app de bureau (23/11, mode `auto`, Opus 5.5, la session ouverte par l'app dans un worktree).**
+- **1 bis.**
+  - Les deux agents d'un workflow portent `agent_id` et `agent_type: workflow-subagent`. La session de tête n'en porte pas.
+  - La règle « `agent_id` présent : laisser passer » tient.
+  - L'entrée de l'app porte aussi `scratchpad_dir`.
+- **2.**
+  - `CLAUDE_CODE_ENTRYPOINT` vaut `claude-desktop`.
+  - Dans une session en worktree, `CLAUDE_PROJECT_DIR` est le dossier ouvert, et le `cwd` est le worktree. Ici, le worktree était sous `.claude/worktrees` du dossier : le fichier était donc dans les deux.
+  - Le test 6 de `leon read-first` doit compter un fichier comme du projet s'il est sous `CLAUDE_PROJECT_DIR` **ou** sous le `cwd`. Sinon, un worktree rangé ailleurs ne serait jamais arrêté.
+- **Le refus.** L'humain voit le bloc « Bloqué par un hook », avec tout le message, et la modification « Non appliqué ». L'agent a lancé la lecture puis refait sa modification.
+- **10. La lecture a échoué.**
+  - Le bac à sable de Bash de l'app est actif chez Amos (`sandbox.enabled`, `allowUnsandboxedCommands: true`). Son réseau ne sort que vers une liste de domaines, et `leonmemory.com` n'en fait pas partie.
+  - `~/.leon/bin/leon thread` répond donc « server unreachable or too slow » : refait le 23/11 dans le même bac à sable, l'erreur est un `ENOTFOUND` refusé par le filtre réseau.
+  - L'agent a suivi le message (« n'insiste pas ») et refait sa modification sans rien lire. La lecture obligée arrêterait l'agent pour rien.
+  - Cela vaut aussi pour la consigne du niveau 1 : dans une session sous bac à sable, aucune lecture de la CLI ne joint le serveur. C'est peut-être une part des 0 lecture de la mesure (qui, elle, avait sorti les lectures du bac à sable).
+
+> **Décision d'Amos du 23/11 :** avec l'usage `passage`, l'installateur propose aussi, en `[y/N]` et dans un terminal seulement, d'ajouter les seules lectures de Leon (`thread`, `threads`, `search`) aux exceptions du bac à sable de Claude Code (`sandbox.excludedCommands` des réglages de l'utilisateur), comme celles qu'Amos a déjà pour `gh pr *`. `leon retirer-crochets` les retire.
+>
+> À régler dans T67, avec ses tests :
+> - les formes exactes de la commande que l'agent tape (`~/.leon/bin/leon thread`, avec ou sans argument, et la forme absolue) ;
+> - et la preuve qu'une commande composée (`… thread; curl …`) ne sort pas du bac à sable par cette exception.
+>
+> Le texte d'accord le dit.
+
 ## Ce qui demande la présence d'Amos
 
 - **L'essai (T66)** : une session dans l'app de bureau, avec le bac à sable de Bash, une dans le terminal, et un essai dans Cursor, devant l'appli. C'est Cursor qui risque le plus : il reprend par défaut les crochets de Claude Code, et sa doc dit qu'un JSON invalide y bloque l'action.

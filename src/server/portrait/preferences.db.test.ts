@@ -1,18 +1,21 @@
 import { and, eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { deleteAccount } from '@/server/auth/delete-account';
 import { setManager } from '@/server/auth/organisation';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { ConnectorTurn } from '@/server/connectors/types';
-import { members } from '@/server/db/schema/auth';
-import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
+import { members, users } from '@/server/db/schema/auth';
+import { brouillons, lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { createFakeLlm } from '@/server/llm/fake-llm';
-import type { Llm } from '@/server/llm/llm';
+import { type Llm, LlmError } from '@/server/llm/llm';
+import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant } from '@/test/fixtures';
 import { extendThread, JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
-import { writeBrouillons } from './brouillons';
+import { BROUILLONS_DAILY_CAP, writeBrouillons } from './brouillons';
 import { buildFiche } from './fiche';
+import { buildPreferencePrompt } from './preference-prompt';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -28,6 +31,12 @@ const DRAFT =
 const REWRITTEN =
   'Bonjour Léa,\n\nJe ne pourrai pas vous répondre avant mon retour de congés, le 4 décembre. Paul suit le dossier en attendant.\n\nBien à vous';
 const PAUL = 'paul@acme.test';
+// Retouché : ses formules au lieu de celles du brouillon (19 mots sur 23 gardés), sous sa signature et la citation.
+const OWN = DRAFT.replace('Bonjour', 'Hello').replace('Bien à vous', 'Belle journée');
+const RETOUCHED = `${OWN}\n\n-- \nJulie Martin\n\nLe lun. 23 nov. 2026 à 09:12, Léa Roy <${LEA}> a écrit :\n> Bonjour Julie`;
+const LESSON = 'Vous terminez vos mails par « Belle journée ».';
+const PREFERENCE = JSON.stringify({ preference: LESSON });
+const NOTHING = '{"rien_a_retenir": true}';
 
 const tenantIds: string[] = [];
 const userIds: string[] = [];
@@ -62,13 +71,8 @@ function answering(...answers: string[]) {
   return { llm, calls: fake.calls };
 }
 
-// Sa fiche (un échange avec Léa, à qui elle a répondu), son « oui » à l'agent, et un mail de Léa qui attend dans le
-// fil `title`, après les messages `before` : le passage y écrit DRAFT. Rend le fil.
-async function drafted(
-  julie: TenantContext,
-  title = 'Devis 2027',
-  before: ConnectorTurn[] = [],
-): Promise<string> {
+// Sa fiche (un échange avec Léa, à qui elle a répondu) et son « oui » à l'agent.
+async function ready(julie: TenantContext): Promise<void> {
   await mailThread(julie, 'Premier contact', [
     received(ago(10 * DAY), 'Bonjour Julie, travaillez-vous avec des collectivités ?'),
     sent(ago(10 * DAY - HOUR), 'Bonjour Léa,\nOui, depuis dix ans.\nBien à vous'),
@@ -81,15 +85,32 @@ async function drafted(
     oui: true,
     acl: [julie.userId],
   });
+}
+
+// Un mail de Léa qui attend dans le fil `title`, après les messages `before` : le passage y écrit DRAFT. Rend le fil.
+async function draftIn(
+  julie: TenantContext,
+  title: string,
+  before: ConnectorTurn[] = [],
+): Promise<string> {
   const thread = await mailThread(julie, title, [
     ...before,
     received(ago(2 * HOUR), 'Bonjour Julie, pouvez-vous m’envoyer le devis ?'),
   ]);
   vi.spyOn(console, 'info').mockImplementation(() => {});
-  expect(
-    await writeBrouillons(julie, { llm: answering(JSON.stringify({ brouillon: DRAFT })).llm }),
-  ).toBe(1);
+  const { llm } = answering(JSON.stringify({ brouillon: DRAFT }));
+  expect(await writeBrouillons(julie, { llm })).toBe(1);
   return thread;
+}
+
+// Prête, avec le brouillon de Leon dans le fil `title`. Rend le fil.
+async function drafted(
+  julie: TenantContext,
+  title = 'Devis 2027',
+  before: ConnectorTurn[] = [],
+): Promise<string> {
+  await ready(julie);
+  return draftIn(julie, title, before);
 }
 
 // Un passage de la file, après la relève : aucun mail n'attend, le modèle ne doit pas être appelé.
@@ -281,5 +302,285 @@ describe('l’issue d’un brouillon : privée, posée une fois', () => {
         [julie.tenantId, julie.userId, thread],
       ),
     ).rejects.toMatchObject({ code: '23514' });
+  });
+});
+
+// Ses préférences, telles que sa fiche les garde.
+const preferenceLines = (ctx: TenantContext) =>
+  adminDb
+    .select({
+      cle: lignesFiche.cle,
+      valeur: lignesFiche.valeur,
+      provenance: lignesFiche.provenance,
+      mails: lignesFiche.mails,
+      acl: lignesFiche.acl,
+    })
+    .from(lignesFiche)
+    .where(and(eq(lignesFiche.userId, ctx.userId), eq(lignesFiche.genre, 'preference')));
+// Des préférences déjà là : `retiree` la dit retirée par elle.
+const seedPreferences = (
+  ctx: TenantContext,
+  rows: Array<{ texte: string; etat: string; retiree?: boolean }>,
+) =>
+  adminDb.insert(lignesFiche).values(
+    rows.map((row, index) => ({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      genre: 'preference' as const,
+      cle: `deja-${index}`,
+      valeur: { texte: row.texte, etat: row.etat },
+      provenance: 'apprise' as const,
+      retireeLe: row.retiree ? new Date() : null,
+      acl: [ctx.userId],
+    })),
+  );
+const counted = async (ctx: TenantContext) => {
+  const { rows } = await adminPool.query<{ nombre: number }>(
+    'select nombre from brouillons_par_jour where user_id = $1',
+    [ctx.userId],
+  );
+  return rows[0]?.nombre ?? 0;
+};
+const idOf = async (ctx: TenantContext, thread: string) =>
+  (
+    await adminDb
+      .select({ id: brouillons.id })
+      .from(brouillons)
+      .where(and(eq(brouillons.userId, ctx.userId), eq(brouillons.sourceId, thread)))
+  )[0]?.id ?? '';
+// Julie a retouché le brouillon de Leon dans le fil `title`, et l'a envoyé. Rend la ligne du brouillon.
+async function retouched(julie: TenantContext, title = 'Devis 2027'): Promise<string> {
+  const thread = await drafted(julie, title);
+  await extendThread(julie, thread, [sent(ago(HOUR), RETOUCHED)]);
+  return idOf(julie, thread);
+}
+// Un passage de la file, le modèle rendant `answers`.
+async function learn(ctx: TenantContext, ...answers: string[]) {
+  const { llm, calls } = answering(...answers);
+  await writeBrouillons(ctx, { llm });
+  return calls;
+}
+
+describe('writeBrouillons : une retouche, un appel au modèle, une préférence proposée', () => {
+  it('au passage qui suit la relève, un appel lit son brouillon et ce qu’elle a envoyé ; la préférence entre dans sa fiche, proposée, et l’issue se pose', async () => {
+    const [julie] = await team();
+    const id = await retouched(julie);
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const calls = await learn(julie, PREFERENCE);
+
+    expect(calls).toHaveLength(1);
+    const [call] = calls;
+    expect(call?.step).toBe('brouillon');
+    // La consigne de preference-prompt.ts ; son texte à elle, sans sa signature ni la citation ; aucune préférence
+    // encore.
+    const prompt = buildPreferencePrompt({ brouillon: DRAFT, envoye: OWN, preferences: [] });
+    expect(call?.system).toBe(prompt.system);
+    expect(call?.messages).toEqual(prompt.messages);
+    expect(call?.messages[0]?.content.startsWith(DATA_GUARD_LINE)).toBe(true);
+    expect(await preferenceLines(julie)).toEqual([
+      {
+        cle: id,
+        valeur: { texte: LESSON, etat: 'proposee' },
+        provenance: 'apprise',
+        mails: null,
+        acl: [julie.userId],
+      },
+    ]);
+    expect(await issues(julie)).toEqual(['retouche']);
+    // Le brouillon, puis la préférence : deux appels sous le plafond du jour.
+    expect(await counted(julie)).toBe(2);
+    // Des identifiants et des nombres seulement : rien du mail, du brouillon ni de la préférence.
+    expect(
+      info.mock.calls
+        .filter((args) => args[1] === 'brouillons.preference')
+        .map((args) => JSON.parse(String(args[2]))),
+    ).toEqual([
+      { userId: julie.userId, brouillonId: id, preference: true, chars: PREFERENCE.length },
+    ]);
+
+    // Plus aucun appel ensuite.
+    await pass(julie);
+    expect(await preferenceLines(julie)).toHaveLength(1);
+  });
+
+  it('« rien à retenir » : l’issue se pose, rien n’entre dans sa fiche, et plus aucun appel', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+
+    expect(await learn(julie, NOTHING)).toHaveLength(1);
+
+    expect(await issues(julie)).toEqual(['retouche']);
+    expect(await preferenceLines(julie)).toEqual([]);
+    await pass(julie);
+  });
+
+  it('une réponse illisible, un refus du modèle : rien ne s’écrit, et la retouche est retentée au passage suivant', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await learn(julie, 'Elle préfère « Belle journée ».')).toHaveLength(1);
+    expect(await learn(julie, JSON.stringify({ preference: 'x'.repeat(201) }))).toHaveLength(1);
+    const fake = answering(PREFERENCE);
+    const refusing: Llm = {
+      ...fake.llm,
+      async *streamText(request) {
+        yield* fake.llm.streamText(request);
+        throw new LlmError('refus du modèle');
+      },
+    };
+    await writeBrouillons(julie, { llm: refusing });
+    expect(fake.calls).toHaveLength(1);
+    expect(await issues(julie)).toEqual([null]);
+    expect(await preferenceLines(julie)).toEqual([]);
+
+    expect(await learn(julie, PREFERENCE)).toHaveLength(1);
+    expect(await issues(julie)).toEqual(['retouche']);
+    expect(await preferenceLines(julie)).toMatchObject([{ valeur: { texte: LESSON } }]);
+  });
+
+  it('le plafond du jour est celui des brouillons : atteint, aucun appel, et la retouche attend', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    await adminPool.query(
+      "update brouillons_par_jour set nombre = $2 where user_id = $1 and jour = (now() at time zone 'UTC')::date",
+      [julie.userId, BROUILLONS_DAILY_CAP],
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    expect(await learn(julie, PREFERENCE)).toHaveLength(0);
+
+    expect(warn.mock.calls.map((args) => args[1])).toEqual(['brouillons.daily_cap']);
+    expect(await issues(julie)).toEqual([null]);
+    expect(await preferenceLines(julie)).toEqual([]);
+  });
+
+  it('dans les cinq appels du passage, après ses mails qui attendent', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    for (const title of ['Un', 'Deux', 'Trois', 'Quatre', 'Cinq'])
+      await mailThread(julie, title, [
+        received(ago(HOUR / 2), `Bonjour Julie, et pour ${title} ?`),
+      ]);
+
+    const first = await learn(julie, JSON.stringify({ brouillon: DRAFT }));
+    expect(first).toHaveLength(5);
+    for (const call of first)
+      expect(call.system).not.toBe(
+        buildPreferencePrompt({ brouillon: '', envoye: '', preferences: [] }).system,
+      );
+    expect(await preferenceLines(julie)).toEqual([]);
+
+    const next = await learn(julie, PREFERENCE);
+    expect(next).toHaveLength(1);
+    expect(await preferenceLines(julie)).toHaveLength(1);
+  });
+
+  it('ses préférences déjà tirées vont au modèle, une retirée comme refusée ; une préférence déjà tirée n’est pas reproposée', async () => {
+    const [julie] = await team();
+    await seedPreferences(julie, [
+      { texte: 'Vous écrivez des mails courts.', etat: 'acceptee' },
+      { texte: 'Vous tutoyez vos clients.', etat: 'refusee' },
+      { texte: 'Vous signez de votre prénom.', etat: 'acceptee', retiree: true },
+      { texte: LESSON, etat: 'proposee' },
+    ]);
+    await retouched(julie);
+
+    // Le modèle redit, en minuscules, une préférence qu'elle a refusée.
+    const calls = await learn(julie, JSON.stringify({ preference: 'vous tutoyez vos clients.' }));
+
+    expect(calls[0]?.messages[0]?.content).toContain(
+      [
+        'Ses préférences déjà tirées :',
+        '<preference etat="acceptee">Vous écrivez des mails courts.</preference>',
+        '<preference etat="refusee">Vous tutoyez vos clients.</preference>',
+        '<preference etat="refusee">Vous signez de votre prénom.</preference>',
+        `<preference etat="proposee">${LESSON}</preference>`,
+      ].join('\n'),
+    );
+    expect(await issues(julie)).toEqual(['retouche']);
+    expect(await preferenceLines(julie)).toHaveLength(4);
+  });
+
+  it('dix au plus, proposées ou acceptées : la dixième se propose, puis plus aucun appel ; les refusées et les retirées ne comptent pas', async () => {
+    const [julie] = await team();
+    await seedPreferences(julie, [
+      ...Array.from({ length: 6 }, (_, n) => ({ texte: `Acceptée ${n}.`, etat: 'acceptee' })),
+      ...Array.from({ length: 3 }, (_, n) => ({ texte: `Proposée ${n}.`, etat: 'proposee' })),
+      ...Array.from({ length: 3 }, (_, n) => ({ texte: `Refusée ${n}.`, etat: 'refusee' })),
+      { texte: 'Retirée.', etat: 'acceptee', retiree: true },
+    ]);
+    await ready(julie);
+    const threads = [await draftIn(julie, 'Un'), await draftIn(julie, 'Deux')];
+    for (const thread of threads) await extendThread(julie, thread, [sent(ago(HOUR), RETOUCHED)]);
+
+    expect(await learn(julie, PREFERENCE)).toHaveLength(1);
+
+    expect(await issues(julie)).toEqual(['retouche', 'retouche']);
+    const kept = await preferenceLines(julie);
+    expect(kept).toHaveLength(14);
+    expect(kept.filter((one) => (one.valeur as { etat: string }).etat !== 'refusee')).toHaveLength(
+      11,
+    );
+    // Dix sans la retirée : plus aucun appel.
+    expect(await learn(julie, PREFERENCE)).toHaveLength(0);
+  });
+
+  it('un compte supprimé pendant l’appel ne reçoit rien', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    const fake = answering(PREFERENCE);
+    const llm: Llm = {
+      ...fake.llm,
+      async *streamText(request) {
+        await adminDb
+          .update(users)
+          .set({ deletedAt: new Date() })
+          .where(eq(users.id, julie.userId));
+        yield* fake.llm.streamText(request);
+      },
+    };
+
+    await writeBrouillons(julie, { llm });
+
+    expect(fake.calls).toHaveLength(1);
+    expect(await issues(julie)).toEqual([null]);
+    expect(await preferenceLines(julie)).toEqual([]);
+  });
+});
+
+describe('ses préférences sont privées, et partent avec le compte', () => {
+  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne les lisent ; la suppression du compte les efface avec ses brouillons', async () => {
+    const [julie, paul, marc] = await team();
+    const other = await createTestTenant(['Zoé Bernard']);
+    tenantIds.push(other.tenantId);
+    const [zoe] = other.members as [TenantContext];
+    const memberOf = async (ctx: TenantContext) =>
+      (
+        await adminDb
+          .select({ id: members.id })
+          .from(members)
+          .where(and(eq(members.userId, ctx.userId), eq(members.organizationId, ctx.tenantId)))
+      )[0]?.id ?? '';
+    await adminDb.update(members).set({ role: 'owner' }).where(eq(members.userId, marc.userId));
+    expect(await setManager(marc, await memberOf(julie), await memberOf(marc))).toBe('ok');
+    await retouched(julie);
+    await learn(julie, PREFERENCE);
+    expect(await preferenceLines(julie)).toHaveLength(1);
+
+    for (const ctx of [paul, marc, { ...marc, equipe: true }, zoe]) {
+      const seen = await withTenant(ctx, (tx) =>
+        tx
+          .select({ id: lignesFiche.id })
+          .from(lignesFiche)
+          .where(eq(lignesFiche.userId, julie.userId)),
+      );
+      expect(seen).toEqual([]);
+    }
+
+    await deleteAccount(julie, null, false);
+    expect(await preferenceLines(julie)).toEqual([]);
+    expect(await issues(julie)).toEqual([]);
   });
 });

@@ -1,14 +1,19 @@
-import { sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
+import { lockAccount } from './fiche';
+import { parseValeur } from './lines';
+import type { Preference } from './preference-prompt';
 import { issueOf } from './retouche';
 import { MESSAGE, PART, sentTurns } from './sent-mails';
 import { ANSWERED_DAYS } from './waiting-mails';
 
-// Ses retouches : ce qu'elle a fait des brouillons de Leon, vu sur la réponse qu'elle a vraiment envoyée. Rien ne
-// s'apprend d'un brouillon qu'elle n'a pas envoyé, ni d'un mail qu'elle a écrit sans brouillon de Leon. Tout se lit et
-// s'écrit sous withTenant de la personne, et seulement dans SES fils (sentTurns). Le passage de la file (brouillons.ts)
-// le fait en tête : il suit chaque relève de sa boîte.
+// Ses retouches : ce qu'elle a fait des brouillons de Leon, vu sur la réponse qu'elle a vraiment envoyée, et les
+// préférences d'écriture qu'un modèle en tire, une ligne de sa fiche chacune (0087). Rien ne s'apprend d'un brouillon
+// qu'elle n'a pas envoyé, ni d'un mail qu'elle a écrit sans brouillon de Leon, et une préférence ne sert qu'après son
+// oui. Tout se lit et s'écrit sous withTenant de la personne, et seulement dans SES fils (sentTurns). Le passage de la
+// file (brouillons.ts) compare en tête, et fait l'appel au modèle après ses mails : il suit chaque relève de sa boîte.
 
 // Ce que la lecture garde de sa réponse : son texte, et le début de la citation que ownText retire ensuite.
 const REPLY_CHARS = 20_000;
@@ -76,4 +81,62 @@ export async function compareReplies(ctx: TenantContext, now: Date): Promise<Rep
         await tx.execute(sql`select poser_issue(${reply.id}, ${issue})`);
     });
   return compared.flatMap(({ reply, issue }) => (issue === 'retouche' ? [reply] : []));
+}
+
+// Dix préférences au plus, proposées ou acceptées : au-delà, Leon n'en propose plus, et une retouche ne fait plus
+// d'appel. Elle en a donc dix acceptées au plus.
+// shortcut: passé dix, Leon n'apprend plus rien ; à revoir (en remplacer une) si une personne en a besoin de plus. Une
+// préférence proposée dont le brouillon a disparu avec son fil ne se montre plus et garde sa place.
+export const PREFERENCES_MAX = 10;
+
+// Toutes ses préférences, même retirées : une préférence retirée compte comme refusée, et ne se repropose pas.
+export async function readPreferences(ctx: TenantContext): Promise<Preference[]> {
+  const rows = await withTenant(ctx, (tx) =>
+    tx
+      .select({ valeur: lignesFiche.valeur, retireeLe: lignesFiche.retireeLe })
+      .from(lignesFiche)
+      .where(
+        and(
+          eq(lignesFiche.tenantId, ctx.tenantId),
+          eq(lignesFiche.userId, ctx.userId),
+          eq(lignesFiche.genre, 'preference'),
+        ),
+      ),
+  );
+  return rows.flatMap(({ valeur, retireeLe }) => {
+    const one = parseValeur('preference', valeur) as Preference | null;
+    return one ? [{ texte: one.texte, etat: retireeLe ? 'refusee' : one.etat }] : [];
+  });
+}
+
+// La leçon d'une retouche : « retouche » se pose sur la ligne du brouillon (poser_issue) et, s'il y en a une, la
+// préférence proposée entre dans sa fiche, provenance « apprise », sa clé étant le brouillon : les deux, ou rien. Rend
+// false sans rien écrire pour un compte supprimé (lockAccount), ou un brouillon qui n'attendait plus (écarté, déjà
+// traité par un autre passage).
+export async function keepRetouche(
+  ctx: TenantContext,
+  id: string,
+  preference: string | null,
+): Promise<boolean> {
+  return withTenant(ctx, async (tx) => {
+    if (!(await lockAccount(tx, ctx))) return false;
+    const { rows } = await tx.execute<{ ok: boolean }>(
+      sql`select poser_issue(${id}, 'retouche') as ok`,
+    );
+    if (rows[0]?.ok !== true) return false;
+    if (preference)
+      await tx
+        .insert(lignesFiche)
+        .values({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          genre: 'preference',
+          cle: id,
+          valeur: { texte: preference, etat: 'proposee' },
+          provenance: 'apprise',
+          acl: [ctx.userId],
+        })
+        .onConflictDoNothing();
+    return true;
+  });
 }

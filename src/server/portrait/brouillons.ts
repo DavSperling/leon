@@ -11,10 +11,22 @@ import { logError } from '@/server/log';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
 import { EN_SERVICE } from './agents';
 import { depositBrouillon } from './brouillon-depot';
-import { buildBrouillonPrompt, parseBrouillonAnswer } from './brouillon-prompt';
+import {
+  BROUILLON_MAX_CHARS,
+  buildBrouillonPrompt,
+  parseBrouillonAnswer,
+} from './brouillon-prompt';
 import { handWritten } from './facts';
 import { lockAccount, readFiche } from './fiche';
-import { compareReplies } from './preferences';
+import { ownText } from './own-text';
+import { buildPreferencePrompt, parsePreferenceAnswer } from './preference-prompt';
+import {
+  compareReplies,
+  keepRetouche,
+  PREFERENCES_MAX,
+  type Reply,
+  readPreferences,
+} from './preferences';
 import { readProposals } from './propositions';
 import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
 import {
@@ -42,7 +54,8 @@ import {
 // `brouillons-ecrire` lance un passage (brouillons-worker.ts).
 
 // Le plafond de dépense : au plus 20 appels au modèle par personne et par jour (UTC, reserver_brouillon, 0080), un par
-// mail, deux quand Leon lui a posé des questions : le premier et le second appel comptent sous le même plafond. Un
+// mail, deux quand Leon lui a posé des questions : le premier et le second appel comptent sous le même plafond, comme
+// l'appel qui tire une préférence d'une retouche (learnFrom), plus court. Un
 // appel lit environ 4 000 jetons (la consigne, quatre messages et trois exemples coupés) et en écrit un millier :
 // 2 centimes avec Sonnet, donc 40 centimes par personne et par jour au plus (estimé d'après le tarif de models.ts, pas
 // mesuré). Le dépôt dans Gmail suit le même plafond : un brouillon écrit, un dépôt au plus, de deux requêtes, donc
@@ -52,12 +65,14 @@ export const BROUILLONS_DAILY_CAP = 20;
 // est la marge de la réflexion à l'effort « medium ».
 const BROUILLON_MAX_TOKENS = 8000;
 const BROUILLON_TIMEOUT_MS = 90_000;
+// La préférence tirée d'une retouche, une phrase : la réponse entière, réflexion comprise, est bornée ici.
+const PREFERENCE_MAX_TOKENS = 4000;
 
 // Un passage : en tête, sans modèle, ses réponses envoyées aux brouillons de Leon se comparent à eux (preferences.ts) ;
 // puis les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
 // « Oui » au mail d'un inconnu, son premier appel, avec ses indications), puis ses mails qui attendent (le premier
-// appel), cinq appels au modèle au plus en tout (WAITING_MAX), un par mail. Rend le
-// nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à l'agent, ni
+// appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle au plus en tout (WAITING_MAX), un par
+// mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à l'agent, ni
 // quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
 // suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
@@ -77,18 +92,19 @@ export async function writeBrouillons(
   if (!proposals.some((one) => one.agent === EN_SERVICE && one.oui)) return 0;
   const now = deps.now ?? new Date();
   // En tête : ses réponses envoyées depuis le dernier passage, comparées aux brouillons de Leon (preferences.ts).
-  await compareReplies(ctx, now);
+  const retouches = await compareReplies(ctx, now);
   const mails: Array<AnsweredMail | WaitingMail> = [
     ...(await readAnsweredMails(ctx)),
     ...(await readWaitingMails(ctx, now)),
   ].slice(0, WAITING_MAX);
-  if (mails.length === 0) return 0;
+  if (mails.length === 0 && retouches.length === 0) return 0;
   const [person] = await db
     .select({ name: users.name })
     .from(users)
     .where(eq(users.id, ctx.userId));
-  // Ses mails écrits de sa main : le brouillon y prend ses exemples.
-  const sent = handWritten((await readSentMails(ctx, SENT_MAIL_DAYS, now)).mails);
+  // Ses mails écrits de sa main : le brouillon y prend ses exemples. Sans mail à préparer, rien à lire.
+  const sent =
+    mails.length === 0 ? [] : handWritten((await readSentMails(ctx, SENT_MAIL_DAYS, now)).mails);
   let written = 0;
   for (const mail of mails) {
     // Ce qu'elle attend : ses réponses aux questions de Leon, le second appel pour ce mail ; ou son oui au mail d'un
@@ -98,13 +114,7 @@ export async function writeBrouillons(
       owed?.questions && owed.reponses
         ? { questions: owed.questions, reponses: owed.reponses }
         : undefined;
-    const { rows } = await db.execute<{ ok: boolean }>(
-      sql`select reserver_brouillon(${ctx.userId}, ${BROUILLONS_DAILY_CAP}) as ok`,
-    );
-    if (rows[0]?.ok !== true) {
-      console.warn('[leon]', 'brouillons.daily_cap', JSON.stringify({ userId: ctx.userId }));
-      break;
-    }
+    if (!(await reserve(ctx))) return written;
     const prompt = buildBrouillonPrompt({
       personName: person?.name ?? '',
       mail,
@@ -183,7 +193,84 @@ export async function writeBrouillons(
     // échoue n'arrête rien.
     await depositBrouillon(ctx, { id: kept, to: mail.from }, deps);
   }
+  await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm);
   return written;
+}
+
+// Un appel au modèle de plus aujourd'hui, s'il en reste sous le plafond du jour (reserver_brouillon, 0080).
+async function reserve(ctx: TenantContext): Promise<boolean> {
+  const { rows } = await db.execute<{ ok: boolean }>(
+    sql`select reserver_brouillon(${ctx.userId}, ${BROUILLONS_DAILY_CAP}) as ok`,
+  );
+  if (rows[0]?.ok === true) return true;
+  console.warn('[leon]', 'brouillons.daily_cap', JSON.stringify({ userId: ctx.userId }));
+  return false;
+}
+
+// Les leçons de ses retouches (preferences.ts), après ses mails, dans les `calls` appels qui restent au passage : un
+// appel par brouillon retouché, sous le même plafond du jour, qui lit le brouillon, ce qu'elle a envoyé (own-text.ts,
+// coupé comme un brouillon) et toutes ses préférences déjà tirées (preference-prompt.ts). La préférence qu'il rend est
+// proposée dans sa fiche ; elle ne sert qu'après son oui. « Rien à retenir », ou une préférence déjà tirée mot pour mot,
+// pose l'issue sans rien proposer. Une réponse illisible, refusée ou coupée n'écrit rien : la retouche se recompare et
+// se retente au passage suivant, tant que son mail a moins de ANSWERED_DAYS jours. Avec PREFERENCES_MAX préférences
+// proposées ou acceptées, plus aucun appel : l'issue se pose seule. Un passage à la fois par personne
+// (brouillons-queue.ts) : deux appels ne se font jamais pour la même retouche.
+async function learnFrom(ctx: TenantContext, retouches: Reply[], calls: number, llm: Llm) {
+  if (retouches.length === 0) return;
+  const known = await readPreferences(ctx);
+  const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+  let room = PREFERENCES_MAX - known.filter((one) => one.etat !== 'refusee').length;
+  for (const reply of retouches) {
+    let preference: string | null = null;
+    if (room > 0) {
+      if (calls === 0 || !(await reserve(ctx))) return;
+      calls -= 1;
+      const prompt = buildPreferencePrompt({
+        brouillon: reply.texte,
+        envoye: ownText(reply.envoye).text.slice(0, BROUILLON_MAX_CHARS).toWellFormed(),
+        preferences: known,
+      });
+      let answer = '';
+      try {
+        for await (const delta of llm.streamText({
+          step: 'brouillon',
+          system: prompt.system,
+          messages: prompt.messages,
+          maxTokens: PREFERENCE_MAX_TOKENS,
+          signal: AbortSignal.timeout(BROUILLON_TIMEOUT_MS),
+        })) {
+          answer += delta;
+        }
+      } catch (error) {
+        if (!(error instanceof LlmError)) throw error;
+        logError('brouillons.preference_failed', error, {
+          userId: ctx.userId,
+          brouillonId: reply.id,
+        });
+        continue;
+      }
+      const result = parsePreferenceAnswer(answer);
+      // Des identifiants et des nombres seulement. `preference` : proposée (true), rien à retenir (false), ou réponse
+      // illisible (null).
+      console.info(
+        '[leon]',
+        'brouillons.preference',
+        JSON.stringify({
+          userId: ctx.userId,
+          brouillonId: reply.id,
+          preference: result && result.preference !== null,
+          chars: answer.length,
+        }),
+      );
+      if (!result) continue;
+      const found = result.preference;
+      preference = found && !known.some((one) => same(one.texte, found)) ? found : null;
+    }
+    if ((await keepRetouche(ctx, reply.id, preference)) && preference) {
+      known.push({ texte: preference, etat: 'proposee' });
+      room -= 1;
+    }
+  }
 }
 
 // Ce que l'accueil lit au plus pour le panneau de l'agent, de chaque sorte (les demandes de Leon, avec les mails

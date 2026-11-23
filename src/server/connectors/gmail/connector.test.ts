@@ -339,6 +339,7 @@ describe('gmail : un message reçu envoyé par une machine ou en nombre', () => 
     // Une adresse qui ne fait que contenir un mot de machine, une réponse automatique dite « no », un envoi d'une
     // autre priorité, l'onglet Principale.
     expect(automated({ from: 'julie.notifications@acme.test' })).toBe(false);
+    expect(automated({ from: 'nora.reply@acme.test' })).toBe(false);
     expect(automated(header('Auto-Submitted', 'no'))).toBe(false);
     expect(automated(header('Precedence', 'first-class'))).toBe(false);
     expect(automated({ labels: ['INBOX', 'CATEGORY_PERSONAL'] })).toBe(false);
@@ -361,6 +362,9 @@ describe('gmail : un message reçu envoyé par une machine ou en nombre', () => 
     ['une adresse « mailer-daemon »', { from: 'Mail Delivery <mailer-daemon@service.test>' }],
     ['une adresse « postmaster »', { from: 'postmaster@service.test' }],
     ['une adresse « notifications »', { from: 'GitHub <notifications@github.test>' }],
+    ['une adresse « …-noreply »', { from: 'Docs <comments-noreply@docs.google.test>' }],
+    ['une adresse « no_reply »', { from: 'Reçus <no_reply@email.apple.test>' }],
+    ['une adresse « ne-pas-repondre »', { from: 'Impôts <ne-pas-repondre@impots.test>' }],
   ])('%s : automatique', (_, input) => {
     expect(automated(input)).toBe(true);
   });

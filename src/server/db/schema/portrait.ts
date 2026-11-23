@@ -37,6 +37,8 @@ export const lignesFiche = pgTable('lignes_fiche', {
       // Écrits par un modèle (0077, portrait/synthese.ts).
       'role',
       'tache',
+      // Tirée d'une retouche par un modèle (0087, portrait/preferences.ts).
+      'preference',
     ],
   }).notNull(),
   // L'adresse de l'interlocuteur, le type de destinataire d'un fait de style, ou le rang d'une tâche ; vide pour un
@@ -44,7 +46,7 @@ export const lignesFiche = pgTable('lignes_fiche', {
   cle: text('cle').notNull().default(''),
   // Sa forme dépend du genre : portrait/lines.ts la valide.
   valeur: jsonb('valeur').$type<Record<string, unknown>>().notNull(),
-  // « synthese » : le rôle et les tâches, écrits par un modèle. « apprise » : prévue, rien ne l'écrit encore.
+  // « synthese » : le rôle et les tâches, écrits par un modèle. « apprise » : une préférence tirée de ses retouches.
   provenance: text('provenance', { enum: ['calcul', 'personne', 'synthese', 'apprise'] }).notNull(),
   mails: integer('mails'),
   corrigeeLe: timestamp('corrigee_le', { withTimezone: true }),

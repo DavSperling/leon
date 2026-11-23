@@ -230,3 +230,23 @@ describe('parseValeur, pour le rôle et les tâches qu’écrit un modèle', () 
     expect(parseValeur('tache', { ...tache, rang: 1 })).toBeNull();
   });
 });
+
+describe('parseValeur, pour une préférence d’écriture tirée d’une retouche', () => {
+  it('rend une phrase de 1 à 200 caractères, avec son état : proposée, acceptée ou refusée', () => {
+    for (const etat of ['proposee', 'acceptee', 'refusee']) {
+      const preference = { texte: 'Vous terminez vos mails par « Bien à vous ».', etat };
+      expect(parseValeur('preference', preference)).toEqual(preference);
+    }
+    expect(parseValeur('preference', { texte: 'x'.repeat(200), etat: 'acceptee' })).not.toBeNull();
+  });
+
+  it('refuse un texte vide ou trop long, un autre état, un champ manquant ou de trop', () => {
+    const texte = 'Vous écrivez court.';
+    expect(parseValeur('preference', { texte: '', etat: 'proposee' })).toBeNull();
+    expect(parseValeur('preference', { texte: 'x'.repeat(201), etat: 'proposee' })).toBeNull();
+    expect(parseValeur('preference', { texte, etat: 'retiree' })).toBeNull();
+    expect(parseValeur('preference', { texte })).toBeNull();
+    expect(parseValeur('preference', { texte, etat: 'proposee', brouillon: 'x' })).toBeNull();
+    expect(parseValeur('role', { texte, etat: 'proposee' })).toBeNull();
+  });
+});

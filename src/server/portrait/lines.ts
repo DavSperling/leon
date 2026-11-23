@@ -5,10 +5,13 @@ import type { PortraitFacts } from './facts';
 
 // Des faits (facts.ts) aux lignes de la fiche (0076) : une ligne par chose que la personne peut corriger ou retirer
 // seule. Une fonction pure, comme computeFacts. La forme de la valeur de chaque genre est ici : celle que rend
-// computeFacts, ou celle des deux genres qu'écrit un modèle (0077), validée à chaque écriture et à chaque lecture
+// computeFacts, ou celle des genres qu'écrit un modèle (0077, 0087), validée à chaque écriture et à chaque lecture
 // (fiche.ts).
 
 export type Genre = (typeof lignesFiche.$inferSelect)['genre'];
+
+// Une préférence d'écriture : une phrase courte.
+export const PREFERENCE_MAX_CHARS = 200;
 
 const count = z.number().int().nonnegative();
 const part = z.number().min(0).max(1);
@@ -54,6 +57,12 @@ const VALEURS = {
     titre: z.string().min(1).max(FICHE_MAX.titre),
     detail: z.string().max(FICHE_MAX.detail),
     sources: z.array(z.uuid()).max(20),
+  }),
+  // Une préférence d'écriture, tirée par un modèle d'une retouche qu'elle a faite (preferences.ts). Clé : le brouillon
+  // d'où elle vient. Proposée, puis acceptée ou refusée par elle.
+  preference: z.strictObject({
+    texte: z.string().min(1).max(PREFERENCE_MAX_CHARS),
+    etat: z.enum(['proposee', 'acceptee', 'refusee']),
   }),
 } satisfies Record<Genre, z.ZodType>;
 
